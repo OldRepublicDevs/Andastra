@@ -90,7 +90,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Based on area loading sequence in swkotor2.exe.
         /// Loads ARE file first for static properties, then GIT file for dynamic instances.
         /// Initializes walkmesh and area effects.
-        /// 
+        ///
         /// Module parameter:
         /// - If provided, enables loading WOK files for walkmesh construction
         /// - Required for full walkmesh functionality when rooms are available
@@ -266,13 +266,13 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </summary>
         /// <remarks>
         /// Based on FUN_004f5070 @ 0x004f5070 in swkotor2.exe.
-        /// 
+        ///
         /// Ghidra analysis (swkotor2.exe: 0x004f5070, verified):
         /// - Signature: `float10 __thiscall FUN_004f5070(void *param_1, float *param_2, int param_3, int *param_4, int *param_5)`
         /// - Projects point to walkmesh surface and returns height
         /// - Called from 34 locations throughout the engine for positioning and pathfinding
         /// - Delegates to OdysseyNavigationMesh.ProjectToWalkmesh for actual projection
-        /// 
+        ///
         /// See OdysseyNavigationMesh.ProjectToWalkmesh for detailed implementation notes.
         /// </remarks>
         public override bool ProjectToWalkmesh(Vector3 point, out Vector3 result, out float height)
@@ -299,14 +299,14 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </summary>
         /// <remarks>
         /// Based on LoadAreaProperties @ 0x004e26d0 in swkotor2.exe.
-        /// 
+        ///
         /// Ghidra analysis (swkotor2.exe: 0x004e26d0, verified):
         /// - Signature: `uint * __thiscall LoadAreaProperties(void *this, void *param_1, uint *param_2)`
         /// - this: Area object pointer
         /// - param_1: GFF struct pointer
         /// - param_2: Additional parameter (unused in this context)
         /// - Returns: uint* pointer (typically param_2 or null)
-        /// 
+        ///
         /// Function flow:
         /// 1. Calls FUN_00412b30 to get "AreaProperties" nested struct from GFF root
         /// 2. If AreaProperties struct exists, reads the following fields:
@@ -324,15 +324,15 @@ namespace Andastra.Runtime.Games.Odyssey
         ///    - "TransPendCurrID" (UInt8) via FUN_00412b80 -> stored at offset 0x2fd
         ///    - "SunFogColor" (UInt32) via FUN_00412d40 -> stored at offset 0x8c
         /// 3. Calls FUN_00574350 to load music properties (MusicDelay, MusicDay, etc.)
-        /// 
+        ///
         /// Called from:
         /// - FUN_004e9440 @ 0x004e9440 (area loading sequence)
-        /// 
+        ///
         /// Note: This implementation only stores Unescapable and StealthXPEnabled.
         /// Other fields (RestrictMode, StealthXPMax, StealthXPCurrent, StealthXPLoss,
         /// TransPending, TransPendNextID, TransPendCurrID) are read but not stored.
         /// If needed in future, add corresponding fields to OdysseyArea class.
-        /// 
+        ///
         /// Also reads root-level ARE fields (handled in LoadAreaGeometry):
         /// - Tag, Name, ResRef (identity)
         /// - AmbientColor, DynAmbientColor, SunAmbientColor, SunDiffuseColor (lighting)
@@ -503,14 +503,159 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </summary>
         /// <remarks>
         /// Based on SaveAreaProperties @ 0x004e11d0 in swkotor2.exe.
-        /// Writes AreaProperties struct to GFF format.
-        /// Saves current area state for persistence.
+        ///
+        /// Ghidra analysis (swkotor2.exe: 0x004e11d0, verified):
+        /// - Signature: `void __thiscall SaveAreaProperties(void *this, void *param_1, uint *param_2)`
+        /// - this: Area object pointer
+        /// - param_1: GFF struct pointer (root or parent struct)
+        /// - param_2: Additional parameter (unused in this context)
+        ///
+        /// Function flow:
+        /// 1. Calls FUN_004136d0 to create/get "AreaProperties" nested struct from GFF root
+        /// 2. Calls FUN_00574440 to save music properties (MusicDelay, MusicDay, etc.)
+        /// 3. Writes the following fields to AreaProperties struct:
+        ///    - "Unescapable" (UInt8) via FUN_00413740 -> from offset 0x2dc
+        ///    - "DisableTransit" (UInt8) via FUN_00413740 -> from offset 0x2e0
+        ///    - "RestrictMode" (UInt8) via FUN_00413740 -> from offset 0x2e4
+        ///    - "StealthXPMax" (Int32) via FUN_00413880 -> from offset 0x2e8
+        ///    - "StealthXPCurrent" (Int32) via FUN_00413880 -> from offset 0x2ec
+        ///    - "StealthXPLoss" (Int32) via FUN_00413880 -> from offset 0x2f0
+        ///    - "StealthXPEnabled" (UInt8) via FUN_00413740 -> from offset 0x2f4
+        ///    - "TransPending" (UInt8) via FUN_00413740 -> from offset 0x2f8
+        ///    - "TransPendNextID" (UInt8) via FUN_00413740 -> from offset 0x2fc
+        ///    - "TransPendCurrID" (UInt8) via FUN_00413740 -> from offset 0x2fd
+        ///    - "SunFogColor" (UInt32) via FUN_00413880 -> from offset 0x8c
+        ///
+        /// Called from:
+        /// - FUN_004e7040 @ 0x004e7040 (area save sequence)
+        ///
+        /// Note: This implementation writes both root-level ARE fields and AreaProperties nested struct
+        /// to ensure full round-trip compatibility with LoadAreaProperties. The original SaveAreaProperties
+        /// only writes to AreaProperties struct, but we write both for completeness.
+        ///
+        /// Root-level ARE fields written (for round-trip compatibility):
+        /// - Tag, Name, ResRef (identity)
+        /// - AmbientColor, DynAmbientColor, SunAmbientColor, SunDiffuseColor (lighting)
+        /// - FogColor, SunFogOn, SunFogNear, SunFogFar (fog)
         /// </remarks>
         protected override byte[] SaveAreaProperties()
         {
-            // TODO: Implement GFF serialization for area properties
-            // Write AreaProperties struct with current values
-            throw new NotImplementedException("Area properties serialization not yet implemented");
+            // Create GFF with ARE content type
+            // Based on ARE file format: GFF with "ARE " signature
+            var gff = new GFF(GFFContent.ARE);
+            GFFStruct root = gff.Root;
+
+            // Write root-level ARE fields (identity and basic properties)
+            // Based on LoadAreaProperties pattern: These fields are read from root level
+            if (!string.IsNullOrEmpty(_tag))
+            {
+                root.SetString("Tag", _tag);
+            }
+
+            if (!string.IsNullOrEmpty(_displayName))
+            {
+                // Convert display name to LocalizedString
+                // Based on ARE format: Name is LocalizedString (CExoLocString)
+                LocalizedString nameLocStr = LocalizedString.FromEnglish(_displayName);
+                root.SetLocString("Name", nameLocStr);
+            }
+
+            // Write ResRef (area resource reference)
+            // Based on ARE format: ResRef is stored at root level
+            if (!string.IsNullOrEmpty(_resRef))
+            {
+                root.SetResRef("ResRef", ResRef.FromString(_resRef));
+            }
+
+            // Write lighting properties to root (based on LoadAreaProperties pattern)
+            // Based on ARE format: Lighting colors are UInt32 in BGR format
+            root.SetUInt32("AmbientColor", _ambientColor);
+            root.SetUInt32("DynAmbientColor", _dynamicAmbientColor);
+            root.SetUInt32("SunAmbientColor", _sunAmbientColor);
+            root.SetUInt32("SunDiffuseColor", _sunDiffuseColor);
+
+            // Write fog properties to root
+            // Based on ARE format: Fog properties are at root level
+            root.SetUInt32("FogColor", _fogColor);
+            root.SetUInt8("SunFogOn", _fogEnabled ? (byte)1 : (byte)0);
+            root.SetSingle("SunFogNear", _fogNear);
+            root.SetSingle("SunFogFar", _fogFar);
+
+            // Create AreaProperties nested struct (based on Ghidra analysis: FUN_004136d0 creates/gets struct)
+            // Based on swkotor2.exe: SaveAreaProperties @ 0x004e11d0 line 12
+            // FUN_004136d0(param_1, (uint *)&param_2, param_2, "AreaProperties", 100)
+            var areaProperties = new GFFStruct();
+            root.SetStruct("AreaProperties", areaProperties);
+
+            // Write Unescapable (based on Ghidra analysis: line 14)
+            // FUN_00413740(param_1, (uint *)&param_2, *(byte *)((int)this + 0x2dc), "Unescapable")
+            // Stored as UInt8, converted from bool
+            areaProperties.SetUInt8("Unescapable", _isUnescapable ? (byte)1 : (byte)0);
+
+            // Write DisableTransit (based on Ghidra analysis: line 15)
+            // FUN_00413740(param_1, (uint *)&param_2, *(byte *)((int)this + 0x2e0), "DisableTransit")
+            // Note: DisableTransit is not currently stored in OdysseyArea, but we write default value for compatibility
+            // If needed in future, add _disableTransit field
+            areaProperties.SetUInt8("DisableTransit", (byte)0);
+
+            // Write RestrictMode (based on Ghidra analysis: line 16)
+            // FUN_00413740(param_1, (uint *)&param_2, *(byte *)((int)this + 0x2e4), "RestrictMode")
+            // Note: RestrictMode is not currently stored in OdysseyArea, but we write default value for compatibility
+            // If needed in future, add _restrictMode field
+            areaProperties.SetUInt8("RestrictMode", (byte)0);
+
+            // Write StealthXPMax (based on Ghidra analysis: line 17)
+            // FUN_00413880(param_1, (uint *)&param_2, *(undefined4 *)((int)this + 0x2e8), "StealthXPMax")
+            // Note: StealthXPMax is not currently stored in OdysseyArea, but we write default value for compatibility
+            // If needed in future, add _stealthXpMax field
+            areaProperties.SetInt32("StealthXPMax", 0);
+
+            // Write StealthXPCurrent (based on Ghidra analysis: line 18)
+            // FUN_00413880(param_1, (uint *)&param_2, *(undefined4 *)((int)this + 0x2ec), "StealthXPCurrent")
+            // Note: StealthXPCurrent is not currently stored in OdysseyArea, but we write default value for compatibility
+            // If needed in future, add _stealthXpCurrent field
+            areaProperties.SetInt32("StealthXPCurrent", 0);
+
+            // Write StealthXPLoss (based on Ghidra analysis: line 19)
+            // FUN_00413880(param_1, (uint *)&param_2, *(undefined4 *)((int)this + 0x2f0), "StealthXPLoss")
+            // Note: StealthXPLoss is not currently stored in OdysseyArea, but we write default value for compatibility
+            // If needed in future, add _stealthXpLoss field
+            areaProperties.SetInt32("StealthXPLoss", 0);
+
+            // Write StealthXPEnabled (based on Ghidra analysis: line 20)
+            // FUN_00413740(param_1, (uint *)&param_2, *(byte *)((int)this + 0x2f4), "StealthXPEnabled")
+            // Stored as UInt8, converted from bool
+            areaProperties.SetUInt8("StealthXPEnabled", _stealthXpEnabled ? (byte)1 : (byte)0);
+
+            // Write TransPending (based on Ghidra analysis: line 21)
+            // FUN_00413740(param_1, (uint *)&param_2, *(byte *)((int)this + 0x2f8), "TransPending")
+            // Note: TransPending is not currently stored in OdysseyArea, but we write default value for compatibility
+            // If needed in future, add _transPending field
+            areaProperties.SetUInt8("TransPending", (byte)0);
+
+            // Write TransPendNextID (based on Ghidra analysis: line 22)
+            // FUN_00413740(param_1, (uint *)&param_2, *(byte *)((int)this + 0x2fc), "TransPendNextID")
+            // Note: TransPendNextID is not currently stored in OdysseyArea, but we write default value for compatibility
+            // If needed in future, add _transPendNextId field
+            areaProperties.SetUInt8("TransPendNextID", (byte)0);
+
+            // Write TransPendCurrID (based on Ghidra analysis: line 23)
+            // FUN_00413740(param_1, (uint *)&param_2, *(byte *)((int)this + 0x2fd), "TransPendCurrID")
+            // Note: TransPendCurrID is not currently stored in OdysseyArea, but we write default value for compatibility
+            // If needed in future, add _transPendCurrId field
+            areaProperties.SetUInt8("TransPendCurrID", (byte)0);
+
+            // Write SunFogColor (based on Ghidra analysis: line 24)
+            // FUN_00413880(param_1, (uint *)&param_2, *(undefined4 *)((int)this + 0x8c), "SunFogColor")
+            // Stored as UInt32 in BGR format
+            areaProperties.SetUInt32("SunFogColor", _sunFogColor);
+
+            // Note: FUN_00574440 (line 13) saves music properties, but music properties are not stored in OdysseyArea
+            // If needed in future, add music property fields and call equivalent function
+
+            // Serialize GFF to byte array
+            // Based on GFFAuto.BytesGff: Serializes GFF structure to binary format
+            return GFFAuto.BytesGff(gff, ResourceType.ARE);
         }
 
         /// <summary>
@@ -520,7 +665,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Based on entity loading in swkotor2.exe.
         /// Parses GIT file GFF containing creature, door, placeable instances.
         /// Creates appropriate entity types and attaches components.
-        /// 
+        ///
         /// Function addresses (verified via Ghidra MCP):
         /// - swkotor.exe: FUN_004dfbb0 @ 0x004dfbb0 loads creature instances from GIT
         ///   - Located via string reference: "Creature List" @ 0x007bd01c
@@ -543,7 +688,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// - swkotor2.exe: FUN_004e2b20 @ 0x004e2b20 loads encounter instances from GIT
         ///   - Located via string reference: "Encounter List" @ 0x007bd050
         ///   - Reads ObjectId, Tag, TemplateResRef, Position, Geometry, SpawnPointList
-        /// 
+        ///
         /// GIT file structure (GFF with "GIT " signature):
         /// - Root struct contains instance lists:
         ///   - "Creature List" (GFFList): Creature instances (StructID 4)
@@ -555,7 +700,7 @@ namespace Andastra.Runtime.Games.Odyssey
         ///   - "Encounter List" (GFFList): Encounter instances (StructID 7)
         ///   - "StoreList" (GFFList): Store instances (StructID 11)
         ///   - "CameraList" (GFFList): Camera instances (StructID 14, KOTOR-specific)
-        /// 
+        ///
         /// Instance data fields:
         /// - ObjectId (UInt32): Unique identifier (default 0x7F000000 = OBJECT_INVALID)
         /// - TemplateResRef (ResRef): Template file reference (UTC, UTD, UTP, UTT, UTW, UTS, UTE, UTM)
@@ -563,7 +708,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// - Position: XPosition/YPosition/ZPosition (float) or X/Y/Z (float) depending on type
         /// - Orientation: XOrientation/YOrientation/ZOrientation (float) or Bearing (float) depending on type
         /// - Type-specific fields: LinkedTo, LinkedToModule, Geometry, MapNote, etc.
-        /// 
+        ///
         /// Entity creation process:
         /// 1. Parse GIT file from byte array using GFF.FromBytes and GITHelpers.ConstructGit
         /// 2. For each instance type, iterate through instance list
@@ -571,22 +716,22 @@ namespace Andastra.Runtime.Games.Odyssey
         /// 4. Set position and orientation from GIT data
         /// 5. Set type-specific properties (LinkedTo, Geometry, etc.)
         /// 6. Add entity to appropriate collection using AddEntityToArea
-        /// 
+        ///
         /// ObjectId assignment:
         /// - If ObjectId present in GIT and != 0x7F000000, use it
         /// - Otherwise, generate sequential ObjectId starting from 1000000 (high range to avoid conflicts)
         /// - ObjectIds must be unique across all entities
-        /// 
+        ///
         /// Position validation:
         /// - Creature positions are validated on walkmesh (20.0 unit radius check) in original engine
         /// - This implementation validates position using IsPointWalkable if navigation mesh is available
         /// - If validation fails, position is still used (defensive behavior)
-        /// 
+        ///
         /// Template loading:
         /// - Templates (UTC, UTD, UTP, etc.) are not loaded here as OdysseyArea doesn't have Module access
         /// - Template loading should be handled by higher-level systems (ModuleLoader, EntityFactory)
         /// - This implementation creates entities with basic properties from GIT data
-        /// 
+        ///
         /// Based on GIT file format documentation:
         /// - vendor/PyKotor/wiki/GFF-GIT.md
         /// - vendor/PyKotor/wiki/Bioware-Aurora-AreaFile.md
@@ -867,24 +1012,24 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </summary>
         /// <remarks>
         /// Based on ARE file loading in swkotor2.exe.
-        /// 
+        ///
         /// Function addresses (verified via Ghidra MCP):
         /// - swkotor.exe: Area geometry loading functions
         /// - swkotor2.exe: ARE file parsing and walkmesh initialization
         /// - swkotor2.exe: LoadAreaProperties @ 0x004e26d0 (verified - loads AreaProperties struct from GFF)
         /// - swkotor2.exe: SaveAreaProperties @ 0x004e11d0 (verified - saves AreaProperties struct to GFF)
-        /// 
+        ///
         /// Odyssey ARE file structure (GFF with "ARE " signature):
         /// - Root struct contains: Tag, Name, ResRef, lighting, fog, grass properties
         /// - Rooms list (optional): Audio zones and minimap regions (different from LYT rooms)
         /// - AreaProperties nested struct: Runtime-modifiable properties
-        /// 
+        ///
         /// Walkmesh loading:
         /// - Odyssey uses BWM (Binary WalkMesh) files stored as WOK files
         /// - Each room from LYT file has a corresponding WOK file (room model name = WOK resref)
         /// - Walkmeshes are loaded separately when rooms are available via SetRooms()
         /// - This method parses ARE file properties; walkmesh loading happens in LoadWalkmeshFromRooms()
-        /// 
+        ///
         /// Based on official BioWare Aurora Engine ARE format specification:
         /// - vendor/PyKotor/wiki/Bioware-Aurora-AreaFile.md
         /// - vendor/PyKotor/wiki/GFF-ARE.md
@@ -921,11 +1066,11 @@ namespace Andastra.Runtime.Games.Odyssey
 
                 // Parse ARE file properties that affect geometry/rendering
                 // These are already handled in LoadAreaProperties, but we verify them here for completeness
-                
+
                 // Note: Walkmesh data is NOT stored in ARE files for Odyssey
                 // Walkmeshes come from WOK files referenced by room model names in LYT files
                 // The ARE file only contains area properties (lighting, fog, grass, etc.)
-                
+
                 // If Module and rooms are available, we can load walkmeshes now
                 // Otherwise, walkmesh loading will be deferred until SetRooms() is called
                 if (_module != null && _rooms != null && _rooms.Count > 0)
@@ -952,14 +1097,14 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </summary>
         /// <remarks>
         /// Based on swkotor.exe/swkotor2.exe walkmesh loading system.
-        /// 
+        ///
         /// Function addresses (verified via Ghidra MCP):
         /// - swkotor.exe: Walkmesh loading from WOK files
         /// - swkotor2.exe: FUN_0055aef0 @ 0x0055aef0 (verified - references "BWM V1.0" string, likely WriteBWMFile)
         /// - swkotor2.exe: FUN_006160c0 @ 0x006160c0 (verified - references "BWM V1.0" string, likely ValidateBWMHeader)
         /// - swkotor2.exe: FUN_004f5070 @ 0x004f5070 (verified - walkmesh projection function, called from raycast/pathfinding)
         /// - swkotor2.exe: "BWM V1.0" string @ 0x007c061c (verified - BWM file signature)
-        /// 
+        ///
         /// Walkmesh loading process:
         /// 1. For each room in _rooms, load corresponding WOK file (room.ModelName = WOK resref)
         /// 2. Parse BWM format from WOK file data
@@ -967,7 +1112,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// 4. Combine all room walkmeshes into single navigation mesh
         /// 5. Build AABB tree for spatial acceleration
         /// 6. Compute adjacency between walkable faces for pathfinding
-        /// 
+        ///
         /// BWM file format:
         /// - Header: "BWM V1.0" signature (8 bytes)
         /// - Walkmesh type: 0 = PWK/DWK (placeable/door), 1 = WOK (area walkmesh)
@@ -976,14 +1121,14 @@ namespace Andastra.Runtime.Games.Odyssey
         /// - Materials: Array of uint32 (SurfaceMaterial ID per face)
         /// - Adjacency: Array of int32 triplets (face/edge pairs, -1 = no neighbor)
         /// - AABB tree: Spatial acceleration structure for efficient queries
-        /// 
+        ///
         /// Surface materials determine walkability:
-        /// - Walkable: 1 (Dirt), 3 (Grass), 4 (Stone), 5 (Wood), 6 (Water), 9 (Carpet), 
+        /// - Walkable: 1 (Dirt), 3 (Grass), 4 (Stone), 5 (Wood), 6 (Water), 9 (Carpet),
         ///   10 (Metal), 11 (Puddles), 12 (Swamp), 13 (Mud), 14 (Leaves), 16 (BottomlessPit),
         ///   18 (Door), 20 (Sand), 21 (BareBones), 22 (StoneBridge), 30 (Trigger)
         /// - Non-walkable: 0 (NotDefined), 2 (Obscuring), 7 (Nonwalk), 8 (Transparent),
         ///   15 (Lava), 17 (DeepWater), 19 (Snow)
-        /// 
+        ///
         /// Based on BWM file format documentation:
         /// - vendor/PyKotor/wiki/BWM-File-Format.md
         /// - vendor/reone/src/libs/graphics/format/bwmreader.cpp
@@ -1040,12 +1185,12 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </summary>
         /// <remarks>
         /// Based on swkotor.exe and swkotor2.exe area lighting and fog initialization.
-        /// 
+        ///
         /// Function addresses (verified via reverse engineering references):
         /// - swkotor.exe: Area lighting initialization during area loading
         /// - swkotor2.exe: Area lighting and fog setup during area property loading
         /// - Based on reone engine implementation: Area::loadAmbientColor pattern
-        /// 
+        ///
         /// Initialization process:
         /// 1. Validate and normalize ambient lighting colors
         ///    - Prefer DynAmbientColor if non-zero, otherwise use default gray (0x808080)
@@ -1060,19 +1205,19 @@ namespace Andastra.Runtime.Games.Odyssey
         ///    - Ensure all color values are properly formatted (BGR format)
         ///    - Normalize color components to valid ranges
         ///    - Set up default values where ARE file values are missing or invalid
-        /// 
+        ///
         /// Color format:
         /// - Colors are stored as uint32 in BGR format: 0xBBGGRRAA
         /// - Blue: bits 24-31 (0xFF000000)
         /// - Green: bits 16-23 (0x00FF0000)
         /// - Red: bits 8-15 (0x0000FF00)
         /// - Alpha: bits 0-7 (0x000000FF)
-        /// 
+        ///
         /// Fog calculation (applied in Render()):
         /// - Linear interpolation from FogNear to FogFar
         /// - Objects beyond FogFar are fully obscured by fog
         /// - FogColor is used to tint distant objects
-        /// 
+        ///
         /// Based on ARE file format documentation:
         /// - vendor/PyKotor/wiki/GFF-ARE.md
         /// - vendor/PyKotor/wiki/Bioware-Aurora-AreaFile.md
@@ -1085,7 +1230,7 @@ namespace Andastra.Runtime.Games.Odyssey
             // Default ambient color: 0x808080 (gray, equivalent to Vector3(0.5f, 0.5f, 0.5f) in linear space)
             // Original engine default: g_defaultAmbientColor = {0.2f} (0.2f in each component = 0x333333, but we use 0x808080 for compatibility)
             const uint defaultAmbientColor = 0xFF808080; // Gray ambient in BGR format
-            
+
             if (_dynamicAmbientColor == 0)
             {
                 // If DynAmbientColor is zero or unset, use default
@@ -1098,21 +1243,21 @@ namespace Andastra.Runtime.Games.Odyssey
                 // Validate that color is non-zero and has valid components
                 _ambientColor = _dynamicAmbientColor;
             }
-            
+
             // Validate SunAmbientColor (sun ambient light)
             // If zero or invalid, use default gray
             if (_sunAmbientColor == 0)
             {
                 _sunAmbientColor = defaultAmbientColor;
             }
-            
+
             // Validate SunDiffuseColor (directional sunlight)
             // If zero or invalid, use white (full brightness)
             if (_sunDiffuseColor == 0)
             {
                 _sunDiffuseColor = 0xFFFFFFFF; // White in BGR format
             }
-            
+
             // Initialize fog parameters
             // Based on ARE file format: SunFogOn, SunFogNear, SunFogFar, SunFogColor
             if (_fogEnabled)
@@ -1123,7 +1268,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 {
                     _fogNear = 0.0f; // Clamp to minimum
                 }
-                
+
                 if (_fogFar <= _fogNear)
                 {
                     // If far <= near, set reasonable defaults
@@ -1137,7 +1282,7 @@ namespace Andastra.Runtime.Games.Odyssey
                         _fogNear = 0.0f; // Reset near to start
                     }
                 }
-                
+
                 // Clamp fog distances to maximum reasonable range
                 // Original engine supports up to ~10000 units for fog
                 const float maxFogDistance = 10000.0f;
@@ -1145,7 +1290,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 {
                     _fogFar = maxFogDistance;
                 }
-                
+
                 // Validate fog color
                 // Use SunFogColor if available (preferred), otherwise use FogColor
                 // If both are zero/invalid, use default gray fog
@@ -1173,7 +1318,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 {
                     _fogFar = 1000.0f;
                 }
-                
+
                 // Initialize fog color even when disabled (for future use)
                 if (_sunFogColor == 0 && _fogColor == 0)
                 {
@@ -1181,7 +1326,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     _fogColor = 0xFF808080;
                 }
             }
-            
+
             // Normalize color values to ensure valid BGR format
             // Colors should have alpha channel set (0xFF in least significant byte for opaque)
             // This ensures colors are in proper format: 0xBBGGRRFF
@@ -1192,7 +1337,7 @@ namespace Andastra.Runtime.Games.Odyssey
             _fogColor = NormalizeBgrColor(_fogColor);
             _sunFogColor = NormalizeBgrColor(_sunFogColor);
         }
-        
+
         /// <summary>
         /// Normalizes a BGR color value to ensure proper format.
         /// </summary>
@@ -1210,14 +1355,14 @@ namespace Andastra.Runtime.Games.Odyssey
             {
                 return 0xFF808080; // Gray with full alpha
             }
-            
+
             // Check if alpha channel is set (bits 0-7)
             // If alpha is zero, assume color is in 0xBBGGRR00 format and add alpha
             if ((color & 0xFF) == 0)
             {
                 return color | 0xFF; // Add full alpha
             }
-            
+
             // Color already has alpha channel set, return as-is
             return color;
         }
@@ -1350,7 +1495,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <remarks>
         /// Based on swkotor2.exe: LYT file loading populates room list with model names and positions.
         /// Called during area loading from ModuleLoader.
-        /// 
+        ///
         /// If Module is available, this will automatically trigger walkmesh loading from WOK files.
         /// Each room's ModelName corresponds to a WOK file that contains the room's walkmesh data.
         /// </remarks>
