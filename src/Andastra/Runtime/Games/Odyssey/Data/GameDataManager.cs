@@ -505,7 +505,16 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
             }
 
             // Get FeatGain column value (row label in featgain.2da)
-            string featGainLabel = classRow.GetString("featgain", string.Empty);
+            string featGainLabel;
+            try
+            {
+                featGainLabel = classRow.GetString("featgain");
+            }
+            catch (System.Collections.Generic.KeyNotFoundException)
+            {
+                // FeatGain column not found - try case-insensitive search or return empty
+                featGainLabel = string.Empty;
+            }
             if (string.IsNullOrEmpty(featGainLabel))
             {
                 return featIds;
@@ -542,7 +551,15 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
             // If no indexed columns found, try single _REG column with comma-separated values
             if (!foundIndexedColumns)
             {
-                string regFeats = featgainRow.GetString("_REG", string.Empty);
+                string regFeats;
+                try
+                {
+                    regFeats = featgainRow.GetString("_REG");
+                }
+                catch (System.Collections.Generic.KeyNotFoundException)
+                {
+                    regFeats = string.Empty;
+                }
                 if (!string.IsNullOrEmpty(regFeats))
                 {
                     string[] featIdStrings = regFeats.Split(new[] { ',', ' ', '\t' }, System.StringSplitOptions.RemoveEmptyEntries);
@@ -578,7 +595,15 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
             // If no indexed columns found, try single _BON column with comma-separated values
             if (!foundIndexedColumns)
             {
-                string bonFeats = featgainRow.GetString("_BON", string.Empty);
+                string bonFeats;
+                try
+                {
+                    bonFeats = featgainRow.GetString("_BON");
+                }
+                catch (System.Collections.Generic.KeyNotFoundException)
+                {
+                    bonFeats = string.Empty;
+                }
                 if (!string.IsNullOrEmpty(bonFeats))
                 {
                     string[] featIdStrings = bonFeats.Split(new[] { ',', ' ', '\t' }, System.StringSplitOptions.RemoveEmptyEntries);
