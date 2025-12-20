@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
-using Andastra.Parsing.Resource.Formats.WAV;
+using Andastra.Parsing.Formats.WAV;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Tests.Common;
