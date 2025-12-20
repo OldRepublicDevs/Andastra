@@ -12,9 +12,11 @@ using Andastra.Parsing.Formats.MDL;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Logger;
-using Andastra.Parsing.Resource.Generics;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Avalonia;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Vector3 = System.Numerics.Vector3;
 
 namespace HolocronToolset.Data
@@ -502,7 +504,11 @@ namespace HolocronToolset.Data
             // Hook positions are in the recentered coordinate space (centered at 0,0)
             foreach (var doorhook in doorhooks)
             {
-                var position = new Vector3(doorhook["x"], doorhook["y"], doorhook["z"]);
+                var position = new Vector3(
+                    Convert.ToSingle(doorhook["x"]),
+                    Convert.ToSingle(doorhook["y"]),
+                    Convert.ToSingle(doorhook["z"])
+                );
                 float rotation = (float)doorhook["rotation"];
                 int doorIndex = (int)doorhook["door"];
                 int edge = (int)doorhook["edge"];
@@ -1205,9 +1211,56 @@ namespace HolocronToolset.Data
                         object image = null;
                         if (File.Exists(imagePath))
                         {
-                            // TODO: Load image using Avalonia image loading
-                            // For now, store path as placeholder
-                            image = imagePath;
+                            try
+                            {
+                                // Load PNG image using Avalonia Bitmap (matching PyKotor: QImage(str(png_path)))
+                                Bitmap originalBitmap;
+                                using (var fileStream = File.OpenRead(imagePath))
+                                {
+                                    originalBitmap = new Bitmap(fileStream);
+                                }
+
+                                // Mirror the image horizontally (matching PyKotor: .mirrored())
+                                // PyKotor's QImage.mirrored() flips horizontally by default
+                                // We use RenderTargetBitmap with a transformation matrix to mirror
+                                var pixelSize = originalBitmap.PixelSize;
+                                var mirroredBitmap = new RenderTargetBitmap(
+                                    new PixelSize(pixelSize.Width, pixelSize.Height),
+                                    new Vector(96, 96));
+
+                                using (var context = mirroredBitmap.CreateDrawingContext())
+                                {
+                                    // Create transformation matrix to mirror horizontally
+                                    // Scale by -1 on X axis, then translate to correct position
+                                    var transform = Matrix.CreateScale(-1.0, 1.0) *
+                                                   Matrix.CreateTranslation(pixelSize.Width, 0.0);
+                                    using (context.PushTransform(transform))
+                                    {
+                                        // Draw the original image with the transformation applied
+                                        context.DrawImage(originalBitmap, new Rect(0, 0, pixelSize.Width, pixelSize.Height));
+                                    }
+                                }
+
+                                // Convert RenderTargetBitmap to Bitmap for storage
+                                // We need to save and reload to get a proper Bitmap instance
+                                using (var memoryStream = new MemoryStream())
+                                {
+                                    mirroredBitmap.Save(memoryStream);
+                                    memoryStream.Position = 0;
+                                    image = new Bitmap(memoryStream);
+                                }
+
+                                // Dispose the intermediate bitmaps
+                                originalBitmap.Dispose();
+                                mirroredBitmap.Dispose();
+                            }
+                            catch (Exception ex)
+                            {
+                                // If image loading fails, log warning and continue without image
+                                // This matches PyKotor behavior which adds to missing_files on exception
+                                new RobustLogger().Warning($"Failed to load component image '{imagePath}': {ex.Message}");
+                                image = null;
+                            }
                         }
 
                         // Load BWM

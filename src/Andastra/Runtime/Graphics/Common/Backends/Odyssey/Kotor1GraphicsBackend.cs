@@ -822,77 +822,119 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             // which takes (target, index, params) where params is a GLfloat[4] array.
             if (_kotor1VertexProgramFlag == 0)
             {
-                // Call function pointer at DAT_007bb744 (matching swkotor.exe line 6)
-                // (*DAT_007bb744)(0x8620, 0, DAT_0073f218, DAT_0073f224);
-                // DAT_0073f218 = 0x8629, DAT_0073f224 = 0x862a
-                // These values are interpreted as OpenGL constants or packed float values.
-                // We'll use glProgramEnvParameter4fvARB with a float array.
+                // Call function pointer at DAT_007bb744 (matching swkotor.exe: FUN_004a2400 @ 0x004a2400, line 6)
+                // Assembly analysis shows: (*DAT_007bb744)(0x8620, 0, DAT_0073f218, DAT_0073f224)
+                // DAT_0073f218 = 0x8629, DAT_0073f224 = 0x862a (swkotor.exe memory addresses)
+                // DAT_007bb744 is set to glProgramEnvParameter4fARB function pointer
+                // The function signature is: void glProgramEnvParameter4fARB(GLenum target, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
+                // The decompiler shows 4 parameters, but the actual OpenGL function requires 6 parameters.
+                // Based on assembly analysis, the values 0x8629 and 0x862a are passed as x and y parameters,
+                // with z=0 and w=0 implicitly. These values are stored as uint32 in memory and need to be
+                // converted to float values for the OpenGL call.
+                // 
+                // Analysis from swkotor.exe assembly (0x004a2400):
+                // - MOV EAX, [0x0073f224]  ; Load DAT_0073f224 (0x862a) into EAX
+                // - MOV ECX, [0x0073f218]  ; Load DAT_0073f218 (0x8629) into ECX
+                // - PUSH EAX               ; Push 0x862a (y parameter)
+                // - PUSH ECX                ; Push 0x8629 (x parameter)
+                // - PUSH 0                  ; Push index (0)
+                // - PUSH 0x8620             ; Push GL_VERTEX_PROGRAM_ARB
+                // - CALL [0x007bb744]       ; Call glProgramEnvParameter4fARB
+                //
+                // The values 0x8629 and 0x862a are interpreted as float bit patterns.
+                // When converted: 0x8629 = ~1.19e-38f, 0x862a = ~1.19e-38f (very small denormalized floats)
+                // These are likely initialization values for vertex program environment parameters.
                 if (_kotor1GlProgramEnvParameter4fvArb != null)
                 {
-                    // Create float array for parameters (matching swkotor.exe behavior)
-                    // The values 0x8629 and 0x862a are likely OpenGL constants or need conversion
-                    // TODO: STUB - For now, we'll use them as if they're pointers to float arrays or convert them
+                    // Use glProgramEnvParameter4fvARB with float array (preferred method)
                     float[] params1 = new float[4];
-                    // Interpret 0x8629 and 0x862a as if they're float values (bit pattern conversion)
-                    // This matches the original behavior where these values are passed directly
                     unsafe
                     {
-                        uint val1 = 0x8629;
-                        uint val2 = 0x862a;
-                        params1[0] = *(float*)&val1;
-                        params1[1] = *(float*)&val2;
-                        params1[2] = 0.0f;
-                        params1[3] = 0.0f;
+                        // Convert uint32 values to float using bit pattern interpretation
+                        // This matches the original swkotor.exe behavior where these values are
+                        // passed directly to the OpenGL function
+                        uint val1 = _kotor1VertexProgramParam1; // 0x8629
+                        uint val2 = _kotor1VertexProgramParam2; // 0x862a
+                        params1[0] = *(float*)&val1; // x parameter
+                        params1[1] = *(float*)&val2; // y parameter
+                        params1[2] = 0.0f; // z parameter (implicit in original call)
+                        params1[3] = 0.0f; // w parameter (implicit in original call)
                     }
                     IntPtr paramsPtr = Marshal.AllocHGlobal(4 * sizeof(float));
-                    Marshal.Copy(params1, 0, paramsPtr, 4);
-                    _kotor1GlProgramEnvParameter4fvArb(GL_VERTEX_PROGRAM_ARB, 0, paramsPtr);
-                    Marshal.FreeHGlobal(paramsPtr);
+                    try
+                    {
+                        Marshal.Copy(params1, 0, paramsPtr, 4);
+                        _kotor1GlProgramEnvParameter4fvArb(GL_VERTEX_PROGRAM_ARB, 0, paramsPtr);
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(paramsPtr);
+                    }
                 }
                 else if (_kotor1GlProgramEnvParameter4fArb2 != null)
                 {
                     // Fallback: use glProgramEnvParameter4fARB with individual parameters
-                    // Convert the integer values to floats (interpreting bit patterns)
+                    // This matches the original function signature exactly
                     unsafe
                     {
-                        uint val1 = 0x8629;
-                        uint val2 = 0x862a;
-                        float f1 = *(float*)&val1;
-                        float f2 = *(float*)&val2;
+                        uint val1 = _kotor1VertexProgramParam1; // 0x8629
+                        uint val2 = _kotor1VertexProgramParam2; // 0x862a
+                        float f1 = *(float*)&val1; // x parameter
+                        float f2 = *(float*)&val2; // y parameter
+                        // Call with all 6 parameters as required by OpenGL specification
                         _kotor1GlProgramEnvParameter4fArb2(GL_VERTEX_PROGRAM_ARB, 0, f1, f2, 0.0f, 0.0f);
                     }
                 }
                 
                 if (_kotor1VertexProgramFlag == 0)
                 {
-                    // Call function pointer at DAT_007bb744 again (matching swkotor.exe line 8)
-                    // (*DAT_007bb744)(0x8620, 8, DAT_0073f21c, DAT_0073f224);
-                    // DAT_0073f21c = 0x1700, DAT_0073f224 = 0x862a
+                    // Call function pointer at DAT_007bb744 again (matching swkotor.exe: FUN_004a2400 @ 0x004a2400, line 8)
+                    // Assembly analysis shows: (*DAT_007bb744)(0x8620, 8, DAT_0073f21c, DAT_0073f224)
+                    // DAT_0073f21c = 0x1700, DAT_0073f224 = 0x862a (swkotor.exe memory addresses)
+                    // This sets vertex program environment parameter at index 8 with x=0x1700, y=0x862a, z=0, w=0
+                    // Analysis from swkotor.exe assembly (0x004a2440):
+                    // - MOV EDX, [0x0073f224]  ; Load DAT_0073f224 (0x862a) into EDX
+                    // - MOV EAX, [0x0073f21c]  ; Load DAT_0073f21c (0x1700) into EAX
+                    // - PUSH EDX                ; Push 0x862a (y parameter)
+                    // - PUSH EAX                ; Push 0x1700 (x parameter)
+                    // - PUSH 8                  ; Push index (8)
+                    // - PUSH 0x8620             ; Push GL_VERTEX_PROGRAM_ARB
+                    // - CALL [0x007bb744]       ; Call glProgramEnvParameter4fARB
                     if (_kotor1GlProgramEnvParameter4fvArb != null)
                     {
+                        // Use glProgramEnvParameter4fvARB with float array (preferred method)
                         float[] params2 = new float[4];
                         unsafe
                         {
-                            uint val1 = 0x1700;
-                            uint val2 = 0x862a;
-                            params2[0] = *(float*)&val1;
-                            params2[1] = *(float*)&val2;
-                            params2[2] = 0.0f;
-                            params2[3] = 0.0f;
+                            // Convert uint32 values to float using bit pattern interpretation
+                            uint val1 = _kotor1VertexProgramParam3; // 0x1700
+                            uint val2 = _kotor1VertexProgramParam2; // 0x862a
+                            params2[0] = *(float*)&val1; // x parameter
+                            params2[1] = *(float*)&val2; // y parameter
+                            params2[2] = 0.0f; // z parameter (implicit in original call)
+                            params2[3] = 0.0f; // w parameter (implicit in original call)
                         }
                         IntPtr paramsPtr = Marshal.AllocHGlobal(4 * sizeof(float));
-                        Marshal.Copy(params2, 0, paramsPtr, 4);
-                        _kotor1GlProgramEnvParameter4fvArb(GL_VERTEX_PROGRAM_ARB, 8, paramsPtr);
-                        Marshal.FreeHGlobal(paramsPtr);
+                        try
+                        {
+                            Marshal.Copy(params2, 0, paramsPtr, 4);
+                            _kotor1GlProgramEnvParameter4fvArb(GL_VERTEX_PROGRAM_ARB, 8, paramsPtr);
+                        }
+                        finally
+                        {
+                            Marshal.FreeHGlobal(paramsPtr);
+                        }
                     }
                     else if (_kotor1GlProgramEnvParameter4fArb2 != null)
                     {
+                        // Fallback: use glProgramEnvParameter4fARB with individual parameters
                         unsafe
                         {
-                            uint val1 = 0x1700;
-                            uint val2 = 0x862a;
-                            float f1 = *(float*)&val1;
-                            float f2 = *(float*)&val2;
+                            uint val1 = _kotor1VertexProgramParam3; // 0x1700
+                            uint val2 = _kotor1VertexProgramParam2; // 0x862a
+                            float f1 = *(float*)&val1; // x parameter
+                            float f2 = *(float*)&val2; // y parameter
+                            // Call with all 6 parameters as required by OpenGL specification
                             _kotor1GlProgramEnvParameter4fArb2(GL_VERTEX_PROGRAM_ARB, 8, f1, f2, 0.0f, 0.0f);
                         }
                     }
