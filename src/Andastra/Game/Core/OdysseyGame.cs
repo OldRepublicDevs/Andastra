@@ -1448,6 +1448,15 @@ namespace Andastra.Runtime.Game.Core
         /// Based on swkotor.exe FUN_0067c4c0: Renders 3D character model at camerahook position with rotation
         /// Based on swkotor2.exe FUN_006d2350: Renders 3D character model with menu variant and rotation
         /// Original games rotate the character model continuously around the Y-axis (vertical axis)
+        /// 
+        /// Note: Original games also play a "default" animation on the main menu model
+        /// (swkotor.exe line 37: Set animation to DAT_0073df6c, swkotor2.exe line 125: Set animation to "default")
+        /// Animation playback is not yet implemented - this would require:
+        /// 1. Loading MDL animations from the model
+        /// 2. Playing animations on the model
+        /// 3. Updating animation state each frame
+        /// 4. Applying animation transforms to bones/nodes during rendering
+        /// This is a future enhancement beyond the current static mesh rendering.
         /// </summary>
         private void RenderMainMenu3DModel()
         {
