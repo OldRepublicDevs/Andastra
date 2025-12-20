@@ -303,11 +303,18 @@ namespace Andastra.Game.GUI
                     }
                 }
             }
-            else
+            else if (SelectedGame == Game.NWN || SelectedGame == Game.NWN2 || 
+                     SelectedGame == Game.DA || SelectedGame == Game.DA2)
             {
-                // For other games, we'll need to implement path detection later
-                // For now, just allow manual entry
-                // TODO: Implement path detection for NWN, DA, ME games
+                // Use GamePathDetector to find paths for NWN, DA games
+                List<string> detectorPaths = GamePathDetector.FindGamePathsFromDefault(SelectedGame);
+                foreach (string path in detectorPaths)
+                {
+                    if (!paths.Contains(path))
+                    {
+                        paths.Add(path);
+                    }
+                }
             }
 
             // Set first path if available
