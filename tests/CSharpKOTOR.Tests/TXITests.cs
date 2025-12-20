@@ -5,7 +5,7 @@ using NUnit.Framework.Legacy;
 using Andastra.Parsing.Formats.TXI;
 using Assert = NUnit.Framework.Legacy.ClassicAssert;
 
-namespace AuroraEngine.Common.Tests
+namespace Andastra.Parsing.Tests
 {
     [TestFixture]
     public class TXIParseBlendingTests

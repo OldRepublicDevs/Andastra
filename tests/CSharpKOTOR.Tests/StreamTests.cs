@@ -4,7 +4,7 @@ using System.Text;
 using NUnit.Framework;
 using Andastra.Parsing.Common;
 
-namespace AuroraEngine.Common.Tests
+namespace Andastra.Parsing.Tests
 {
     // Matching PyKotor implementation at Libraries/PyKotor/tests/common/test_stream.py:28
     // Original: class TestBinaryReader(TestCase):

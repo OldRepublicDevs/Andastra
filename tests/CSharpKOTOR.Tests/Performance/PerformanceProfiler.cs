@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace AuroraEngine.Common.Tests.Performance
+namespace Andastra.Parsing.Tests.Performance
 {
     /// <summary>
     /// Performance profiler that tracks method execution times and generates cProfile-like output.

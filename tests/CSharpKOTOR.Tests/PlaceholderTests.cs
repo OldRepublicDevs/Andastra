@@ -1,6 +1,6 @@
 ﻿using NUnit.Framework;
 
-namespace AuroraEngine.Common.Tests
+namespace Andastra.Parsing.Tests
 {
     public class PlaceholderTests
     {

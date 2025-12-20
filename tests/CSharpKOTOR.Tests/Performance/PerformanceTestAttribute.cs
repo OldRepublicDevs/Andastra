@@ -5,7 +5,7 @@ using System.Text;
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 
-namespace AuroraEngine.Common.Tests.Performance
+namespace Andastra.Parsing.Tests.Performance
 {
     /// <summary>
     /// NUnit attribute that enforces a maximum test execution time and generates profiling output.

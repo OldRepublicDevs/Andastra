@@ -3,7 +3,7 @@ using NUnit.Framework.Legacy;
 using Andastra.Parsing.Resource;
 using Assert = NUnit.Framework.Legacy.ClassicAssert;
 
-namespace AuroraEngine.Common.Tests
+namespace Andastra.Parsing.Tests
 {
     [TestFixture]
     public class ResourceTypeTests

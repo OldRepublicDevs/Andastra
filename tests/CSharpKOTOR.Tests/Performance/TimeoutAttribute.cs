@@ -1,7 +1,7 @@
 ﻿using System;
 using NUnit.Framework;
 
-namespace AuroraEngine.Common.Tests.Performance
+namespace Andastra.Parsing.Tests.Performance
 {
     /// <summary>
     /// NUnit attribute that enforces a maximum test execution time.
