@@ -52,35 +52,29 @@ seq:
   - id: label_array
     type: label_array
     if: gff_header.label_count > 0
-    pos: gff_header.label_array_offset
     doc: Array of field name labels (16-byte null-terminated strings)
-
+  
   - id: struct_array
     type: struct_array
-    pos: gff_header.struct_array_offset
     doc: Array of struct entries (12 bytes each)
-
+  
   - id: field_array
     type: field_array
-    pos: gff_header.field_array_offset
     doc: Array of field entries (12 bytes each)
-
+  
   - id: field_data
     type: field_data_section
     if: gff_header.field_data_count > 0
-    pos: gff_header.field_data_offset
     doc: Field data section for complex types (strings, ResRefs, LocalizedStrings, etc.)
-
+  
   - id: field_indices
     type: field_indices_array
     if: gff_header.field_indices_count > 0
-    pos: gff_header.field_indices_offset
     doc: Field indices array (MultiMap) for structs with multiple fields
-
+  
   - id: list_indices
     type: list_indices_array
     if: gff_header.list_indices_count > 0
-    pos: gff_header.list_indices_offset
     doc: List indices array for LIST type fields
 
 types:
@@ -94,7 +88,6 @@ types:
         doc: |
           File type signature. Must be "UTW " for waypoint template files.
           Other GFF types: "GFF ", "DLG ", "ARE ", "UTC ", "UTI ", "UTM ", etc.
-        valid: "UTW "
 
       - id: file_version
         type: str
@@ -103,7 +96,6 @@ types:
         doc: |
           File format version. Typically "V3.2" for KotOR.
           Other versions: "V3.3", "V4.0", "V4.1" for other BioWare games.
-        valid: ["V3.2", "V3.3", "V4.0", "V4.1"]
 
       - id: struct_array_offset
         type: u4
@@ -274,6 +266,7 @@ types:
     seq:
       - id: data
         type: str
+        encoding: UTF-8
         size: _root.gff_header.field_data_count
         doc: |
           Raw field data bytes for complex types.

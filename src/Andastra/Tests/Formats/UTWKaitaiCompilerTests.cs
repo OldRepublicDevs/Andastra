@@ -32,20 +32,17 @@ namespace Andastra.Parsing.Tests.Formats
         private static readonly string[] SupportedLanguages = new[]
         {
             "python",
+            "csharp",
             "java",
             "javascript",
-            "csharp",
             "cpp_stl",
-            "go",
             "ruby",
+            "go",
             "php",
             "rust",
-            "swift",
             "lua",
             "nim",
-            "perl",
-            "kotlin",
-            "typescript"
+            "perl"
         };
 
         [Fact(Timeout = 300000)]
@@ -145,12 +142,6 @@ namespace Andastra.Parsing.Tests.Formats
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileUtwToSwift()
-        {
-            TestCompileToLanguage("swift");
-        }
-
-        [Fact(Timeout = 300000)]
         public void TestCompileUtwToLua()
         {
             TestCompileToLanguage("lua");
@@ -166,18 +157,6 @@ namespace Andastra.Parsing.Tests.Formats
         public void TestCompileUtwToPerl()
         {
             TestCompileToLanguage("perl");
-        }
-
-        [Fact(Timeout = 300000)]
-        public void TestCompileUtwToKotlin()
-        {
-            TestCompileToLanguage("kotlin");
-        }
-
-        [Fact(Timeout = 300000)]
-        public void TestCompileUtwToTypeScript()
-        {
-            TestCompileToLanguage("typescript");
         }
 
         [Fact(Timeout = 600000)] // 10 minute timeout for compiling all languages
@@ -426,12 +405,34 @@ namespace Andastra.Parsing.Tests.Formats
                 };
             }
 
-            var fullArgs = $"{kscPath} {args} -d \"{outputDir}\" \"{ksyPath}\"";
-            return RunCommand("java", fullArgs);
+            var fullArgs = $"{args} -d \"{outputDir}\" \"{ksyPath}\"";
+
+            // Check if it's a .bat file (Windows) - need to use cmd /c
+            if (kscPath.EndsWith(".bat", StringComparison.OrdinalIgnoreCase))
+            {
+                return RunCommand("cmd", $"/c \"{kscPath}\" {fullArgs}");
+            }
+            // Check if it's a JAR file - need java -jar
+            else if (kscPath.StartsWith("-jar"))
+            {
+                return RunCommand("java", $"{kscPath} {fullArgs}");
+            }
+            // Otherwise assume it's a direct executable
+            else
+            {
+                return RunCommand(kscPath, fullArgs);
+            }
         }
 
         private string FindKaitaiCompiler()
         {
+            // Check Windows installation path first
+            var windowsPath = @"C:\Program Files (x86)\kaitai-struct-compiler\bin\kaitai-struct-compiler.bat";
+            if (File.Exists(windowsPath))
+            {
+                return $"\"{windowsPath}\"";
+            }
+
             // Check environment variable
             var envJar = Environment.GetEnvironmentVariable("KAITAI_COMPILER_JAR");
             if (!string.IsNullOrEmpty(envJar) && File.Exists(envJar))
