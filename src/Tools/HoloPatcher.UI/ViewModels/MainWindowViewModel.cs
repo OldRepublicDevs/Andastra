@@ -21,7 +21,7 @@ using Andastra.Parsing.Namespaces;
 using Andastra.Parsing.TSLPatcher;
 using Andastra.Parsing.Reader;
 using Andastra.Parsing.Uninstall;
-using Andastra.Utility;
+// SystemHelpers exists in both Andastra.Parsing and Utility, so we use fully qualified names
 using HoloPatcher.UI;
 using HoloPatcher.UI.Update;
 using RteDocument = global::HoloPatcher.UI.Rte.RteDocument;
@@ -793,7 +793,7 @@ namespace HoloPatcher.UI.ViewModels
             {
                 try
                 {
-                    SystemHelpers.FixPermissions(directory, msg => AddLogEntry(msg));
+                    Andastra.Utility.SystemHelpers.FixPermissions(directory, msg => AddLogEntry(msg));
 
                     int numFiles = 0;
                     int numFolders = 0;
@@ -868,7 +868,7 @@ namespace HoloPatcher.UI.ViewModels
                 try
                 {
                     bool madeChange = false;
-                    SystemHelpers.FixCaseSensitivity(directory, msg =>
+                    Andastra.Utility.SystemHelpers.FixCaseSensitivity(directory, msg =>
                     {
                         AddLogEntry(msg);
                         madeChange = true;
@@ -986,7 +986,7 @@ namespace HoloPatcher.UI.ViewModels
             {
                 return null;
             }
-            
+
             if (options.Length == 1)
             {
                 MsBox.Avalonia.Base.IMsBox<ButtonResult> box = MessageBoxManager.GetMessageBoxStandard(
@@ -997,7 +997,7 @@ namespace HoloPatcher.UI.ViewModels
                 await box.ShowAsync();
                 return options[0];
             }
-            
+
             // For multiple options, show Yes/No dialog for first two options, or use first option
             if (options.Length == 2)
             {
@@ -1009,7 +1009,7 @@ namespace HoloPatcher.UI.ViewModels
                 ButtonResult result = await box.ShowAsync();
                 return result == ButtonResult.Yes ? options[0] : options[1];
             }
-            
+
             // For more than 2 options, default to first option
             MsBox.Avalonia.Base.IMsBox<ButtonResult> defaultBox = MessageBoxManager.GetMessageBoxStandard(
                 title,
@@ -1040,14 +1040,14 @@ namespace HoloPatcher.UI.ViewModels
             }
 
             var updater = new AutoUpdater(info, window, useBetaChannel);
-            
+
             // Create progress window and pass its ViewModel to the updater
             var progressWindow = new UpdateProgressWindow
             {
                 WindowStartupLocation = Avalonia.Controls.WindowStartupLocation.CenterOwner
             };
             progressWindow.Show(window);
-            
+
             try
             {
                 await updater.RunAsync(progressWindow.ViewModel);
