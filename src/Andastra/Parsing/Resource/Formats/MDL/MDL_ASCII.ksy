@@ -31,19 +31,8 @@ types:
         type: str
         size-eos: true
         encoding: UTF-8
-        terminator: "\n"
+        terminator: 10
         consume: false
-    instances:
-      trimmed:
-        value: content.strip()
-      is_empty:
-        value: trimmed == ""
-      is_comment:
-        value: trimmed.startswith("#") || trimmed.startswith("//")
-      keyword:
-        value: trimmed.split()[0].lower() if trimmed.split() else ""
-      args:
-        value: trimmed.split()[1:] if trimmed.split().length > 1 else []
 
   model_header:
     doc: Model header section keywords
@@ -159,7 +148,7 @@ types:
       - id: rotatetexture
         type: str
         doc: "rotatetexture <0_or_1> - Whether texture should rotate (1=rotate, 0=static)"
-      - id: m_bIsBackgroundGeometry
+      - id: m_b_is_background_geometry
         type: str
         doc: "m_bIsBackgroundGeometry <0_or_1> - Whether mesh is background geometry"
       - id: tangentspace
@@ -257,13 +246,13 @@ types:
       - id: deadspace
         type: str
         doc: "deadspace <value> - Minimum distance from emitter before particles become visible"
-      - id: blastRadius
+      - id: blast_radius
         type: str
         doc: "blastRadius <value> - Radius of explosive/blast particle effects"
-      - id: blastLength
+      - id: blast_length
         type: str
         doc: "blastLength <value> - Length/duration of blast effects"
-      - id: numBranches
+      - id: num_branches
         type: str
         doc: "numBranches <value> - Number of branching paths for particle trails"
       - id: controlptsmoothing
@@ -302,10 +291,10 @@ types:
       - id: renderorder
         type: str
         doc: "renderorder <value> - Rendering priority/order for particle sorting"
-      - id: m_bFrameBlending
+      - id: m_b_frame_blending
         type: str
         doc: "m_bFrameBlending <0_or_1> - Whether frame blending is enabled (1=enabled, 0=disabled)"
-      - id: m_sDepthTextureName
+      - id: m_s_depth_texture_name
         type: str
         doc: "m_sDepthTextureName <texture_name> - Depth/softparticle texture name"
 
@@ -318,10 +307,10 @@ types:
       - id: p2p_sel
         type: str
         doc: "p2p_sel <0_or_1> - Point-to-point selection flag (bit 0x0002)"
-      - id: affectedByWind
+      - id: affected_by_wind
         type: str
         doc: "affectedByWind <0_or_1> - Affected by wind flag (bit 0x0004)"
-      - id: m_isTinted
+      - id: m_is_tinted
         type: str
         doc: "m_isTinted <0_or_1> - Is tinted flag (bit 0x0008)"
       - id: bounce
@@ -479,11 +468,8 @@ types:
         doc: Controller name followed by 'key' (e.g., positionkey, orientationkey)
       - id: keyframes
         type: controller_keyframe
-        repeat: until
-        repeat-until: _ == "endlist"
-      - id: endlist
-        type: str
-        valid: "endlist"
+        repeat: eos
+        doc: Keyframe entries until endlist keyword
 
   controller_bezier:
     doc: Bezier (smooth animated) controller format
@@ -493,20 +479,21 @@ types:
         doc: Controller name followed by 'bezierkey' (e.g., positionbezierkey, orientationbezierkey)
       - id: keyframes
         type: controller_bezier_keyframe
-        repeat: until
-        repeat-until: _ == "endlist"
-      - id: endlist
-        type: str
-        valid: "endlist"
+        repeat: eos
+        doc: Keyframe entries until endlist keyword
 
   controller_keyframe:
     doc: Single keyframe in keyed controller
     seq:
       - id: time
         type: str
+        size-eos: true
+        encoding: UTF-8
         doc: Time value (float)
       - id: values
         type: str
+        size-eos: true
+        encoding: UTF-8
         doc: Space-separated property values (number depends on controller type and column count)
 
   controller_bezier_keyframe:
@@ -514,33 +501,37 @@ types:
     seq:
       - id: time
         type: str
+        size-eos: true
+        encoding: UTF-8
         doc: Time value (float)
       - id: value_data
         type: str
-        doc: Space-separated values (3× column_count floats: value, in_tangent, out_tangent for each column)
+        size-eos: true
+        encoding: UTF-8
+        doc: "Space-separated values (3 times column_count floats: value, in_tangent, out_tangent for each column)"
 
 enums:
   node_type:
-    dummy: 1
-    light: 3
-    emitter: 5
-    reference: 17
-    trimesh: 33
-    skinmesh: 97
-    animmesh: 161
-    danglymesh: 289
-    aabb: 545
-    lightsaber: 2081
+    1: dummy
+    3: light
+    5: emitter
+    17: reference
+    33: trimesh
+    97: skinmesh
+    161: animmesh
+    289: danglymesh
+    545: aabb
+    2081: lightsaber
 
   model_classification:
-    other: 0x00
-    effect: 0x01
-    tile: 0x02
-    character: 0x04
-    door: 0x08
-    lightsaber: 0x10
-    placeable: 0x20
-    flyer: 0x40
+    0: other
+    1: effect
+    2: tile
+    4: character
+    8: door
+    16: lightsaber
+    32: placeable
+    64: flyer
 
   controller_type_common:
     8: position
@@ -556,53 +547,53 @@ enums:
     140: multiplier
 
   controller_type_emitter:
-    80: alphaEnd
-    84: alphaStart
+    80: alpha_end
+    84: alpha_start
     88: birthrate
     92: bounce_co
     96: combinetime
     100: drag
     104: fps
-    108: frameEnd
-    112: frameStart
+    108: frame_end
+    112: frame_start
     116: grav
-    120: lifeExp
+    120: life_exp
     124: mass
     128: p2p_bezier2
     132: p2p_bezier3
-    136: particleRot
+    136: particle_rot
     140: randvel
-    144: sizeStart
-    148: sizeEnd
-    152: sizeStart_y
-    156: sizeEnd_y
+    144: size_start
+    148: size_end
+    152: size_start_y
+    156: size_end_y
     160: spread
     164: threshold
     168: velocity
     172: xsize
     176: ysize
     180: blurlength
-    184: lightningDelay
-    188: lightningRadius
-    192: lightningScale
-    196: lightningSubDiv
+    184: lightning_delay
+    188: lightning_radius
+    192: lightning_scale
+    196: lightning_sub_div
     200: lightningzigzag
-    216: alphaMid
-    220: percentStart
-    224: percentMid
-    228: percentEnd
-    232: sizeMid
-    236: sizeMid_y
-    240: m_fRandomBirthRate
+    216: alpha_mid
+    220: percent_start
+    224: percent_mid
+    228: percent_end
+    232: size_mid
+    236: size_mid_y
+    240: m_f_random_birth_rate
     252: targetsize
     256: numcontrolpts
     260: controlptradius
     264: controlptdelay
     268: tangentspread
     272: tangentlength
-    284: colorMid
-    380: colorEnd
-    392: colorStart
+    284: color_mid
+    380: color_end
+    392: color_start
     502: detonate
 
   controller_type_mesh:
