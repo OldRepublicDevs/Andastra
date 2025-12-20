@@ -80,10 +80,11 @@ namespace HolocronToolset.Utils
                             // This provides cross-platform support and proper integration with Avalonia
                             var launcher = Avalonia.Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime;
                             
-                            if (launcher != null && launcher.MainWindow != null)
+                            if (launcher != null && launcher.MainWindow != null && launcher.MainWindow.Launcher != null)
                             {
                                 // Use TopLevel-aware Launcher when available
-                                await launcher.MainWindow.StorageProvider.LaunchUriAsync(uri);
+                                // This is the recommended way to use Avalonia's Launcher API
+                                await launcher.MainWindow.Launcher.LaunchUriAsync(uri);
                             }
                             else
                             {
@@ -168,12 +169,14 @@ namespace HolocronToolset.Utils
                     {
                         var launcher = Avalonia.Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime;
                         
-                        if (launcher != null && launcher.MainWindow != null)
+                        if (launcher != null && launcher.MainWindow != null && launcher.MainWindow.Launcher != null)
                         {
-                            await launcher.MainWindow.StorageProvider.LaunchUriAsync(uri);
+                            // Use TopLevel-aware Launcher when available
+                            await launcher.MainWindow.Launcher.LaunchUriAsync(uri);
                         }
                         else
                         {
+                            // Fallback: Use static Launcher API when TopLevel is not available
                             await Avalonia.Platform.Storage.Launcher.LaunchUriAsync(uri);
                         }
                     }
@@ -187,18 +190,19 @@ namespace HolocronToolset.Utils
                 // This provides cross-platform support and proper integration with Avalonia
                 var launcher = Avalonia.Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime;
                 
-                if (launcher != null && launcher.MainWindow != null)
+                if (launcher != null && launcher.MainWindow != null && launcher.MainWindow.Launcher != null)
                 {
                     // Use TopLevel-aware Launcher when available
-                    // Create IStorageFile from FileInfo
+                    // Create IStorageFile from FileInfo using StorageProvider
                     var storageFile = await launcher.MainWindow.StorageProvider.TryGetFileFromPathAsync(absolutePath);
                     if (storageFile != null)
                     {
-                        await launcher.MainWindow.StorageProvider.LaunchFileAsync(storageFile);
+                        // Use Launcher API from TopLevel (recommended approach)
+                        await launcher.MainWindow.Launcher.LaunchFileAsync(storageFile);
                     }
                     else
                     {
-                        // Fallback: Use static Launcher API
+                        // Fallback: Use static Launcher API with FileInfo
                         await Avalonia.Platform.Storage.Launcher.LaunchFileAsync(fileInfo);
                     }
                 }
