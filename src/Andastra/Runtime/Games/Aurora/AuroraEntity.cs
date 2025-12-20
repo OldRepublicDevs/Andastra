@@ -446,11 +446,32 @@ namespace Andastra.Runtime.Games.Aurora
         /// <remarks>
         /// Sounds have audio playback, spatial positioning.
         /// Based on sound component structure in nwmain.exe.
+        /// - CNWSSoundObject constructor @ 0x1404f3600 creates sound instances with component initialization
+        /// - CNWSArea::LoadSounds @ 0x140362260 loads sound list from area GIT and creates entities with sound components
+        /// - Sound component provides: Active, Continuous, Looping, Positional, Random, RandomPosition, Volume, VolumeVrtn, MaxDistance, MinDistance, Interval, IntervalVrtn, PitchVariation, SoundFiles, Hours, GeneratedType
+        /// - Based on CNWSSoundObject class structure in nwmain.exe
+        /// - Sound entities emit positional audio in the game world (Positional field for 3D audio)
+        /// - Volume: 0-127 range (Volume field), distance falloff: MinDistance (full volume) to MaxDistance (zero volume)
+        /// - Continuous sounds: Play continuously when active (Continuous field)
+        /// - Random sounds: Can play random sounds from SoundFiles list (Random field), randomize position (RandomPosition field)
+        /// - Interval: Time between plays for non-looping sounds (Interval field, IntervalVrtn for variation)
+        /// - Volume variation: VolumeVrtn field for random volume variation
+        /// - Hours: Bitmask for time-based activation (Hours field, 0-23 hour range)
+        /// - Pitch variation: PitchVariation field for random pitch variation in sound playback
+        /// - Uses UTS file format (GFF with "UTS " signature) for sound templates, same as Odyssey
         /// </remarks>
         private void AttachSoundComponents()
         {
-            // TODO: Attach sound-specific components
-            // SoundComponent with audio playback capabilities
+            // Attach sound component if not already present
+            // Based on nwmain.exe: Sound component is attached during entity creation
+            // CNWSSoundObject constructor @ 0x1404f3600 creates sound instances with component initialization
+            // LoadSounds @ 0x140362260 loads sound list from area GIT and creates entities with sound components
+            if (!HasComponent<ISoundComponent>())
+            {
+                var soundComponent = new Components.AuroraSoundComponent();
+                soundComponent.Owner = this;
+                AddComponent<ISoundComponent>(soundComponent);
+            }
         }
 
         /// <summary>
