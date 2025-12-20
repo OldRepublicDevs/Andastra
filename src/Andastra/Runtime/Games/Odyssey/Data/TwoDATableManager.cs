@@ -32,21 +32,21 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
     {
         private readonly IGameResourceProvider _resourceProvider;
         private readonly IGameProfile _gameProfile;
-        private readonly Dictionary<string, TwoDA> _cachedTables;s;
+        private readonly Dictionary<string, TwoDA> _cachedTables;
         private readonly SemaphoreSlim _loadSemaphore;
 
         public TwoDATableManager(IGameResourceProvider resourceProvider, IGameProfile gameProfile)
         {
             _resourceProvider = resourceProvider ?? throw new ArgumentNullException("resourceProvider");
             _gameProfile = gameProfile ?? throw new ArgumentNullException("gameProfile");
-            _cachedTables = new Dictionary<string, TwoDA>(StringComparer.OrdinalIgnoreCase);););
+            _cachedTables = new Dictionary<string, TwoDA>(StringComparer.OrdinalIgnoreCase);
             _loadSemaphore = new SemaphoreSlim(1, 1);
         }
 
         /// <summary>
         /// Loads a 2DA table by name (e.g., "appearance", "baseitems").
         /// </summary>
-        public async Task<2DA> LoadTableAsync(string tableName, CancellationToken ct = default)t)t)
+        public async Task<TwoDA> LoadTableAsync(string tableName, CancellationToken ct = default)
         {
             if (string.IsNullOrEmpty(tableName))
             {
@@ -77,7 +77,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
                 Stream stream = await _resourceProvider.OpenResourceAsync(resourceId, ct);
                 if (stream == null)
                 {
-                    throw new FileNotFoundException($"2DA table '{tableName}' not found in resource provider"););););););
+                    throw new FileNotFoundException($"2DA table '{tableName}' not found in resource provider");
                 }
 
                 try
@@ -92,7 +92,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
 
                     // Parse 2DA file using Andastra.Parsing
                     TwoDABinaryReader reader = new TwoDABinaryReader(data);
-                    TwoDA table = reader.Load(););
+                    TwoDA table = reader.Load();
 
                     // Cache the loaded table
                     _cachedTables[tableName] = table;
@@ -112,7 +112,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         /// <summary>
         /// Gets a cached table, or loads it if not cached.
         /// </summary>
-        public TwoDA GetTable(string tableName)e)
+        public TwoDA GetTable(string tableName)
         {
             if (string.IsNullOrEmpty(tableName))
             {

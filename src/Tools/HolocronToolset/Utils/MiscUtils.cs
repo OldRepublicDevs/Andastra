@@ -377,28 +377,9 @@ namespace HolocronToolset.Utils
                 }
             }
 
-            // Strategy 5: Try to find a focused window from WindowUtils tracked windows
-            // This handles toolset-managed windows that might not be in desktop.Windows
-            var trackedFocusedWindow = WindowUtils.GetFocusedWindow();
-            if (trackedFocusedWindow != null)
-            {
-                return trackedFocusedWindow;
-            }
-
-            // Strategy 6: Try to find any visible window from WindowUtils tracked windows
-            var trackedVisibleWindow = WindowUtils.GetVisibleWindow();
-            if (trackedVisibleWindow != null)
-            {
-                return trackedVisibleWindow;
-            }
-
-            // Strategy 7: Try any window from WindowUtils tracked windows (last resort)
-            // This ensures we return something if toolset-managed windows exist
-            var trackedWindows = WindowUtils.GetTrackedWindows();
-            if (trackedWindows.Count > 0)
-            {
-                return trackedWindows[0];
-            }
+            // Strategy 5-7: WindowUtils tracking removed to break circular dependency
+            // These strategies required Editors project reference which created circular dependency
+            // Fall back to desktop.Windows enumeration which should cover most cases
 
             // No windows available - return null
             // The calling code should handle the null case gracefully

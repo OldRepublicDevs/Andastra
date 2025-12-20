@@ -3,6 +3,10 @@ using System.IO;
 using Andastra.Parsing.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.MDL;
+using CoreMDLModel = Andastra.Runtime.Core.MDL.MDLModel;
+using ContentMDLModel = Andastra.Runtime.Content.MDL.MDLModel;
+using CoreVector3Data = Andastra.Runtime.Core.MDL.Vector3Data;
+using ContentVector3Data = Andastra.Runtime.Content.MDL.Vector3Data;
 
 namespace Andastra.Runtime.Content.MDL
 {
@@ -104,7 +108,7 @@ namespace Andastra.Runtime.Content.MDL
         /// </summary>
         /// <param name="resRef">Resource reference (model name without extension)</param>
         /// <returns>Loaded MDL model, or null if not found</returns>
-        public MDLModel Load(string resRef)
+        public Andastra.Runtime.Core.MDL.MDLModel Load(string resRef)
         {
             if (string.IsNullOrEmpty(resRef))
             {
@@ -116,10 +120,10 @@ namespace Andastra.Runtime.Content.MDL
             // Check cache first
             if (_useCache)
             {
-                MDLModel cached;
+                ContentMDLModel cached;
                 if (MDLCache.Instance.TryGet(normalizedRef, out cached))
                 {
-                    return cached;
+                    return ConvertToCoreModel(cached);
                 }
             }
 
@@ -141,14 +145,14 @@ namespace Andastra.Runtime.Content.MDL
 
             try
             {
-                MDLModel model;
+                ContentMDLModel contentModel;
 
                 if (_useOptimizedReader)
                 {
                     // Use ultra-optimized unsafe reader (fastest)
                     using (var reader = new MDLOptimizedReader(mdlData, mdxData))
                     {
-                        model = reader.Load();
+                        contentModel = reader.Load();
                     }
                 }
                 else if (_useBulkReader)
@@ -156,7 +160,7 @@ namespace Andastra.Runtime.Content.MDL
                     // Use optimized bulk reader
                     using (var reader = new MDLBulkReader(mdlData, mdxData))
                     {
-                        model = reader.Load();
+                        contentModel = reader.Load();
                     }
                 }
                 else
@@ -164,17 +168,25 @@ namespace Andastra.Runtime.Content.MDL
                     // Fall back to streaming reader
                     using (var reader = new MDLFastReader(mdlData, mdxData))
                     {
-                        model = reader.Load();
+                        contentModel = reader.Load();
                     }
                 }
 
-                // Add to cache
-                if (_useCache && model != null)
+                if (contentModel == null)
                 {
-                    MDLCache.Instance.Add(normalizedRef, model);
+                    return null;
                 }
 
-                return model;
+                // Convert Content.MDL.MDLModel to Core.MDL.MDLModel
+                CoreMDLModel coreModel = ConvertToCoreModel(contentModel);
+
+                // Add to cache (cache uses Content model)
+                if (_useCache)
+                {
+                    MDLCache.Instance.Add(normalizedRef, contentModel);
+                }
+
+                return coreModel;
             }
             catch (Exception ex)
             {
@@ -345,6 +357,36 @@ namespace Andastra.Runtime.Content.MDL
         {
             MDLCache.Instance.MaxEntries = maxEntries;
         }
+
+        private CoreMDLModel ConvertToCoreModel(ContentMDLModel contentModel)
+        {
+            if (contentModel == null)
+            {
+                return null;
+            }
+
+            // Convert Content.MDL.MDLModel to Core.MDL.MDLModel
+            // Since they have the same structure, we can copy the fields
+            var coreModel = new CoreMDLModel
+            {
+                Name = contentModel.Name,
+                Supermodel = contentModel.Supermodel,
+                Classification = contentModel.Classification,
+                SubClassification = contentModel.SubClassification,
+                AffectedByFog = contentModel.AffectedByFog,
+                BoundingBoxMin = new CoreVector3Data(contentModel.BoundingBoxMin.X, contentModel.BoundingBoxMin.Y, contentModel.BoundingBoxMin.Z),
+                BoundingBoxMax = new CoreVector3Data(contentModel.BoundingBoxMax.X, contentModel.BoundingBoxMax.Y, contentModel.BoundingBoxMax.Z),
+                Radius = contentModel.Radius,
+                AnimationScale = contentModel.AnimationScale,
+                NodeCount = contentModel.NodeCount,
+                AnimationArrayOffset = contentModel.AnimationArrayOffset,
+                AnimationCount = contentModel.AnimationCount,
+                RootNode = null, // TODO: Convert RootNode from Content to Core
+                Animations = null // TODO: Convert Animations from Content to Core
+            };
+            return coreModel;
+        }
     }
 }
+
 

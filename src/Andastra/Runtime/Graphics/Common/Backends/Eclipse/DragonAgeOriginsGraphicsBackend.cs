@@ -5,19 +5,19 @@ using System.Threading;
 using System.Threading.Tasks;
 using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Formats.TPC;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Graphics.Common.Structs;
 using ResourceType = Andastra.Parsing.Resource.ResourceType;
+using ParsingResourceType = Andastra.Parsing.Resource.ResourceType;
 
 namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
 {
     /// <summary>
     /// Graphics backend for Dragon Age Origins, matching daorigins.exe rendering exactly 1:1.
-    /// 
+    ///
     /// This backend implements the exact rendering code from daorigins.exe,
     /// including DirectX 9 initialization, texture loading, and rendering pipeline.
     /// </summary>
@@ -68,11 +68,11 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // Dragon Age Origins specific present parameters
             // Matches daorigins.exe present parameters exactly
             var presentParams = base.CreatePresentParameters(displayMode);
-            
+
             // Dragon Age Origins specific settings
             presentParams.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
             presentParams.SwapEffect = D3DSWAPEFFECT_DISCARD;
-            
+
             return presentParams;
         }
 
@@ -507,7 +507,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 }
 
                 // Try loading TPC texture from resource provider (primary format for Dragon Age Origins)
-                ResourceIdentifier tpcId = new ResourceIdentifier(resourceName, ResourceType.TPC);
+                ResourceIdentifier tpcId = new ResourceIdentifier(resourceName, ParsingResourceType.TPC);
                 try
                 {
                     Task<bool> existsTask = _resourceProvider.ExistsAsync(tpcId, CancellationToken.None);
@@ -530,7 +530,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 }
 
                 // Try loading DDS texture from resource provider (alternative format)
-                ResourceIdentifier ddsId = new ResourceIdentifier(resourceName, ResourceType.DDS);
+                ResourceIdentifier ddsId = new ResourceIdentifier(resourceName, ParsingResourceType.DDS);
                 try
                 {
                     Task<bool> existsTask = _resourceProvider.ExistsAsync(ddsId, CancellationToken.None);
@@ -553,7 +553,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 }
 
                 // Try loading TGA texture from resource provider (alternative format)
-                ResourceIdentifier tgaId = new ResourceIdentifier(resourceName, ResourceType.TGA);
+                ResourceIdentifier tgaId = new ResourceIdentifier(resourceName, ParsingResourceType.TGA);
                 try
                 {
                     Task<bool> existsTask = _resourceProvider.ExistsAsync(tgaId, CancellationToken.None);
@@ -685,16 +685,15 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 }
 
                 // Get first mipmap (largest mip level)
-                if (tpc.MipMapCount == 0)
+                if (tpc.Layers == null || tpc.Layers.Count == 0 || tpc.Layers[0].Mipmaps == null || tpc.Layers[0].Mipmaps.Count == 0)
                 {
                     System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] ConvertTextureDataToDDS: TPC file '{path}' has no mipmaps");
                     return null;
                 }
 
                 // Get texture dimensions and format from first mipmap
-                int width = tpc.Width;
-                int height = tpc.Height;
-                var format = tpc.Format;
+                var (width, height) = tpc.Dimensions();
+                var format = tpc.Format();
 
                 // Convert TPC format to DDS format
                 // TPC formats: DXT1, DXT3, DXT5, RGB, RGBA, Grayscale
@@ -703,7 +702,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 // For uncompressed formats, we need to convert to DDS format
 
                 // Get mipmap data
-                byte[] mipmapData = tpc.Get(0, 0);
+                byte[] mipmapData = tpc.Layers[0].Mipmaps[0].Data;
                 if (mipmapData == null || mipmapData.Length == 0)
                 {
                     System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] ConvertTextureDataToDDS: TPC file '{path}' has no mipmap data");
@@ -997,11 +996,11 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                     uint pitchOrLinearSize = 0;
                     if (format == TPCTextureFormat.DXT1)
                     {
-                        pitchOrLinearSize = (uint)Math.Max(1, ((width + 3) / 4)) * ((height + 3) / 4) * 8;
+                        pitchOrLinearSize = (uint)(Math.Max(1, ((width + 3) / 4)) * ((height + 3) / 4) * 8);
                     }
                     else if (format == TPCTextureFormat.DXT3 || format == TPCTextureFormat.DXT5)
                     {
-                        pitchOrLinearSize = (uint)Math.Max(1, ((width + 3) / 4)) * ((height + 3) / 4) * 16;
+                        pitchOrLinearSize = (uint)(Math.Max(1, ((width + 3) / 4)) * ((height + 3) / 4) * 16);
                     }
                     else
                     {

@@ -1139,6 +1139,8 @@ namespace HolocronToolset.Editors
                 {
                     _speakerEditLabel.IsVisible = false;
                 }
+            }
+
             // Get selected item from tree
             var selectedItem = _dialogTree.SelectedItem;
             if (selectedItem is TreeViewItem treeItem && treeItem.Tag is DLGStandardItem dlgItem)

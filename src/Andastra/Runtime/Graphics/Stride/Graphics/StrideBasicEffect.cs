@@ -104,25 +104,25 @@ namespace Andastra.Runtime.Stride.Graphics
             UpdateShaderParameters();
         }
 
-        protected override void OnAmbientLightColorChanged(Vector3 color)
+        protected override void OnAmbientLightColorChanged(Vector3Stride color)
         {
             _parametersDirty = true;
             UpdateShaderParameters();
         }
 
-        protected override void OnDiffuseColorChanged(Vector3 color)
+        protected override void OnDiffuseColorChanged(Vector3Stride color)
         {
             _parametersDirty = true;
             UpdateShaderParameters();
         }
 
-        protected override void OnEmissiveColorChanged(Vector3 color)
+        protected override void OnEmissiveColorChanged(Vector3Stride color)
         {
             _parametersDirty = true;
             UpdateShaderParameters();
         }
 
-        protected override void OnSpecularColorChanged(Vector3 color)
+        protected override void OnSpecularColorChanged(Vector3Stride color)
         {
             _parametersDirty = true;
             UpdateShaderParameters();

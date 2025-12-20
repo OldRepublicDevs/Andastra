@@ -230,7 +230,7 @@ namespace Andastra.Runtime.Stride.Audio
                 );
 
                 // Create the actual DynamicSoundSource with the temporary SoundInstance
-                var dynamicSource = new WavDynamicSoundSource(_audioEngine, pcmData, wavFile.SampleRate, wavFile.Channels == 1, tempSoundInstance);
+                var dynamicSource = new VoiceWavDynamicSoundSource(_audioEngine, pcmData, wavFile.SampleRate, wavFile.Channels == 1, tempSoundInstance);
                 
                 // Create the actual SoundInstance with the DynamicSoundSource
                 var soundInstance = new SoundInstance(
@@ -492,7 +492,7 @@ namespace Andastra.Runtime.Stride.Audio
     }
 
     /// <summary>
-    /// DynamicSoundSource implementation for WAV PCM data.
+    /// DynamicSoundSource implementation for WAV PCM data (for voice-over playback).
     /// Provides PCM audio data to Stride's SoundInstance for runtime WAV playback.
     /// </summary>
     /// <remarks>
@@ -503,7 +503,7 @@ namespace Andastra.Runtime.Stride.Audio
     /// Note: DynamicSoundSource requires a SoundInstance in its constructor, creating a circular dependency.
     /// This implementation uses a two-phase initialization pattern to work around this limitation.
     /// </remarks>
-    internal class WavDynamicSoundSource : DynamicSoundSource
+    internal class VoiceWavDynamicSoundSource : DynamicSoundSource
     {
         private readonly byte[] _pcmData;
         private readonly int _sampleRate;
@@ -521,7 +521,7 @@ namespace Andastra.Runtime.Stride.Audio
         /// <param name="sampleRate">Sample rate in Hz.</param>
         /// <param name="isMono">True if mono, false if stereo.</param>
         /// <param name="tempSoundInstance">Temporary SoundInstance for base constructor (will be replaced).</param>
-        public WavDynamicSoundSource(AudioEngine audioEngine, byte[] pcmData, int sampleRate, bool isMono, SoundInstance tempSoundInstance)
+        public VoiceWavDynamicSoundSource(AudioEngine audioEngine, byte[] pcmData, int sampleRate, bool isMono, SoundInstance tempSoundInstance)
             : base(tempSoundInstance, 2, 65536) // 2 buffers, 64KB max buffer size
         {
             _pcmData = pcmData ?? throw new ArgumentNullException(nameof(pcmData));

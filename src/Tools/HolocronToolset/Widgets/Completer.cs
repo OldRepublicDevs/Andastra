@@ -229,7 +229,6 @@ namespace HolocronToolset.Widgets
                 BorderBrush = new SolidColorBrush(Colors.Gray),
                 BorderThickness = new Avalonia.Thickness(1),
                 MaxHeight = 300,
-                AlternationCount = 2
             };
 
             // Style for alternating rows

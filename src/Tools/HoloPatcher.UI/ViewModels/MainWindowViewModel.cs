@@ -21,6 +21,7 @@ using Andastra.Parsing.Namespaces;
 using Andastra.Parsing.TSLPatcher;
 using Andastra.Parsing.Reader;
 using Andastra.Parsing.Uninstall;
+using Andastra.Utility;
 // SystemHelpers exists in both Andastra.Parsing and Utility, so we use fully qualified names
 using HoloPatcher.UI;
 using HoloPatcher.UI.Update;
@@ -793,7 +794,7 @@ namespace HoloPatcher.UI.ViewModels
             {
                 try
                 {
-                    Andastra.Utility.SystemHelpers.FixPermissions(directory, msg => AddLogEntry(msg));
+                    SystemHelpers.FixPermissions(directory, msg => AddLogEntry(msg));
 
                     int numFiles = 0;
                     int numFolders = 0;
@@ -868,7 +869,7 @@ namespace HoloPatcher.UI.ViewModels
                 try
                 {
                     bool madeChange = false;
-                    Andastra.Utility.SystemHelpers.FixCaseSensitivity(directory, msg =>
+                    SystemHelpers.FixCaseSensitivity(directory, msg =>
                     {
                         AddLogEntry(msg);
                         madeChange = true;

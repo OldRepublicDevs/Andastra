@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using Andastra.Parsing.Resource.Formats.LYT;
 using Andastra.Parsing.Resource;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Tests.Common;
 using FluentAssertions;
 using Xunit;

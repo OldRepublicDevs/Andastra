@@ -16,6 +16,7 @@
     <ProjectReference Include="..\..\..\Andastra\Utility\Utility.csproj" />
     <ProjectReference Include="..\Rte\Rte.csproj" />
     <ProjectReference Include="..\Update\Update.csproj" />
+    <ProjectReference Include="..\HoloPatcher.UI.csproj" />
   </ItemGroup>
 
 </Project>

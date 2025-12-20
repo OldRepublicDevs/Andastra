@@ -326,100 +326,109 @@ namespace Andastra.Runtime.Content.Save
         // - CatString (list of structs with "Name" field) + ValString (list of strings, indexed by CatString entry order)
         private byte[] SerializeGlobalVariables(GlobalVariableState state)
         {
-            return Andastra.Parsing.Extract.SaveData.GlobalVars.SerializeRuntimeGlobalVariableState(state);
-        }
-
-        private GlobalVariableState DeserializeGlobalVariables(byte[] data)
-        {
-            return Andastra.Parsing.Extract.SaveData.GlobalVars.DeserializeRuntimeGlobalVariableState(data, typeof(GlobalVariableState)) as GlobalVariableState ?? new GlobalVariableState();
-        }
-
-        private byte[] SerializePartyTable(PartyState state)
-        {
-            return Andastra.Parsing.Extract.SaveData.PartyTable.SerializeRuntimePartyState(state);
-        }
-
-        private PartyState DeserializePartyTable(byte[] data)
-        {
-            return Andastra.Parsing.Extract.SaveData.PartyTable.DeserializeRuntimePartyState(data, typeof(PartyState)) as PartyState ?? new PartyState();
-        }
-
-        private float GetMemberId(string resRef)
-            }
-            // ValBoolean: Binary byte array
-            if (boolValues.Count > 0)
+            // Create a temporary GlobalVars instance and populate it from state
+            var globalVars = new Andastra.Parsing.Extract.SaveData.GlobalVars(Path.GetTempPath());
+            
+            // Populate from state
+            foreach (var kvp in state.Booleans)
             {
-                root.SetBinary("ValBoolean", boolValues.ToArray());
+                globalVars.SetBool(kvp.Key, kvp.Value);
             }
-
-            // CatNumber list: Each entry has "Name" field
-            // Based on swkotor2.exe: FUN_005ab310 @ 0x005ab310
-            // Original implementation: Stores numbers as bytes in ValNumber binary array
-            // Note: The original engine uses a byte array, but integers are typically stored as 4-byte values
-            // However, the Ghidra code shows it stores as single bytes, so we match that format
-            var catNumberList = root.Acquire<GFFList>("CatNumber", new GFFList());
-            var numValues = new List<byte>();
-            foreach (KeyValuePair<string, int> kvp in state.Numbers)
+            foreach (var kvp in state.Numbers)
             {
-                GFFStruct entry = catNumberList.Add();
-                entry.SetString("Name", kvp.Key);
-                // Store as single byte (original uses byte array per Ghidra FUN_005ab310)
-                // The original engine stores numbers as bytes, truncating to 0-255 range
-                byte numValue = (byte)(kvp.Value & 0xFF);
-                numValues.Add(numValue);
+                globalVars.SetNumber(kvp.Key, kvp.Value);
             }
-            // ValNumber: Binary byte array
-            if (numValues.Count > 0)
+            foreach (var kvp in state.Strings)
             {
-                root.SetBinary("ValNumber", numValues.ToArray());
+                globalVars.SetString(kvp.Key, kvp.Value);
             }
-
-            // CatLocation list: Each entry has "Name" field
-            var catLocationList = root.Acquire<GFFList>("CatLocation", new GFFList());
-            var locationValues = new List<float>();
-            foreach (KeyValuePair<string, SavedLocation> kvp in state.Locations)
+            foreach (var kvp in state.Locations)
             {
-                GFFStruct entry = catLocationList.Add();
-                entry.SetString("Name", kvp.Key);
-                SavedLocation loc = kvp.Value;
-                // Store 12 floats per location: x, y, z, oriX, oriY (unused), oriZ (unused), padding (6 floats)
-                locationValues.Add(loc.Position.X);
-                locationValues.Add(loc.Position.Y);
-                locationValues.Add(loc.Position.Z);
-                locationValues.Add(loc.Facing); // oriX
-                locationValues.Add(0.0f); // oriY (unused)
-                locationValues.Add(0.0f); // oriZ (unused)
-                for (int i = 0; i < 6; i++)
+                // Convert SavedLocation to Vector4 (x, y, z, facing)
+                var vec4 = new System.Numerics.Vector4(kvp.Value.Position.X, kvp.Value.Position.Y, kvp.Value.Position.Z, kvp.Value.Facing);
+                globalVars.SetLocation(kvp.Key, vec4);
+            }
+            
+            // Serialize to GFF format
+            GFF gff = new GFF(GFFContent.GVT);
+            GFFStruct root = gff.Root;
+            
+            // Booleans: pack bits LSB first
+            int boolCount = globalVars.GlobalBools.Count;
+            int boolBytes = (boolCount + 7) / 8;
+            byte[] valBool = new byte[boolBytes];
+            GFFList catBool = new GFFList();
+            for (int i = 0; i < boolCount; i++)
+            {
+                catBool.Add().SetString("Name", globalVars.GlobalBools[i].Item1);
+                if (globalVars.GlobalBools[i].Item2)
                 {
-                    locationValues.Add(0.0f); // padding
+                    int byteIndex = i / 8;
+                    int bitIndex = i % 8;
+                    valBool[byteIndex] |= (byte)(1 << bitIndex);
                 }
             }
-            // ValLocation: Binary float array (12 floats per location)
-            if (locationValues.Count > 0)
+            if (boolCount > 0)
             {
-                byte[] locationBytes = new byte[locationValues.Count * 4];
-                System.Buffer.BlockCopy(locationValues.ToArray(), 0, locationBytes, 0, locationBytes.Length);
-                root.SetBinary("ValLocation", locationBytes);
+                root.SetList("CatBoolean", catBool);
+                root.SetBinary("ValBoolean", valBool);
             }
-
-            // CatString list: Each entry has "Name" field
-            var catStringList = root.Acquire<GFFList>("CatString", new GFFList());
-            var stringValues = new List<string>();
-            foreach (KeyValuePair<string, string> kvp in state.Strings)
+            
+            // Locations: 12 floats per entry
+            if (globalVars.GlobalLocations.Count > 0)
             {
-                GFFStruct entry = catStringList.Add();
-                entry.SetString("Name", kvp.Key);
-                stringValues.Add(kvp.Value ?? "");
+                GFFList catLoc = new GFFList();
+                using (var ms = new MemoryStream())
+                using (var bw = new System.IO.BinaryWriter(ms))
+                {
+                    foreach (var entry in globalVars.GlobalLocations)
+                    {
+                        catLoc.Add().SetString("Name", entry.Item1);
+                        System.Numerics.Vector4 v = entry.Item2;
+                        bw.Write(v.X);
+                        bw.Write(v.Y);
+                        bw.Write(v.Z);
+                        bw.Write(v.W); // ori_x
+                        bw.Write(0.0f); // ori_y
+                        bw.Write(0.0f); // ori_z
+                        for (int i = 0; i < 6; i++) bw.Write(0.0f); // padding
+                    }
+                    root.SetList("CatLocation", catLoc);
+                    root.SetBinary("ValLocation", ms.ToArray());
+                }
             }
-            // ValString: List of strings (indexed by CatString entry order)
-            var valStringList = root.Acquire<GFFList>("ValString", new GFFList());
-            foreach (string strValue in stringValues)
+            
+            // Numbers: one byte each
+            if (globalVars.GlobalNumbers.Count > 0)
             {
-                GFFStruct entry = valStringList.Add();
-                entry.SetString("String", strValue);
+                GFFList catNum = new GFFList();
+                using (var ms = new MemoryStream())
+                {
+                    foreach (var entry in globalVars.GlobalNumbers)
+                    {
+                        catNum.Add().SetString("Name", entry.Item1);
+                        ms.WriteByte((byte)entry.Item2);
+                    }
+                    root.SetList("CatNumber", catNum);
+                    root.SetBinary("ValNumber", ms.ToArray());
+                }
             }
-
-            return gff.ToBytes();
+            
+            // Strings: parallel lists
+            if (globalVars.GlobalStrings.Count > 0)
+            {
+                GFFList catStr = new GFFList();
+                GFFList valStr = new GFFList();
+                foreach (var entry in globalVars.GlobalStrings)
+                {
+                    catStr.Add().SetString("Name", entry.Item1);
+                    valStr.Add().SetString("String", entry.Item2);
+                }
+                root.SetList("CatString", catStr);
+                root.SetList("ValString", valStr);
+            }
+            
+            return new GFFBinaryWriter(gff).Write();
         }
 
         // Deserialize global variables from GFF format
