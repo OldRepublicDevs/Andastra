@@ -246,12 +246,6 @@ namespace Andastra.Runtime.Game.Core
                     if (musicPlayerObj is IMusicPlayer musicPlayer)
                     {
                         _musicPlayer = musicPlayer;
-                        
-                        // Apply initial music volume from settings (combined with master volume)
-                        // Based on swkotor.exe and swkotor2.exe: Volume settings loaded from INI file
-                        float combinedMusicVolume = _settings.MasterVolume * _settings.MusicVolume;
-                        _musicPlayer.Volume = combinedMusicVolume;
-                        
                         Console.WriteLine("[Odyssey] Music player initialized successfully");
                     }
                     else
@@ -771,8 +765,10 @@ namespace Andastra.Runtime.Game.Core
                     // Based on swkotor2.exe: CSWGuiOptionsMain::OnSoundOpt @ 0x006e3e00
                     if (_currentState == GameState.OptionsMenu)
                     {
-                        Console.WriteLine("[Odyssey] Sound options button clicked - sound options submenu not yet implemented");
-                        // TODO: Implement sound options submenu
+                        // Navigate to Audio category in options menu
+                        _selectedOptionsCategoryIndex = (int)Andastra.Runtime.Game.GUI.OptionsMenu.OptionsCategory.Audio;
+                        _selectedOptionsItemIndex = 0; // Reset to first option in Audio category
+                        Console.WriteLine("[Odyssey] Sound options submenu opened - navigating to Audio category");
                     }
                     break;
 

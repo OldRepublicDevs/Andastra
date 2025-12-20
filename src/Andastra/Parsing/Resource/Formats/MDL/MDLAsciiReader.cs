@@ -566,11 +566,12 @@ namespace Andastra.Parsing.Formats.MDL
                     else if (_nodeIndex.ContainsKey(parentName))
                     {
                         // Parent is a model node - store the original parent name (preserving case)
-                        // Animation nodes with model node parents are treated as root-level nodes in the animation hierarchy
-                        // but their model node parent reference is preserved for animation application
+                        // Parent is a model node - store the parent name for later resolution during hierarchy building
+                        // Animation nodes can reference model nodes by name, but we need to resolve this
+                        // when building the hierarchy since model nodes are in a separate list
                         int animNodeIndex = _animNodes.Count - 1; // Current node was just added to _animNodes
-                        _animNodeModelParents[animNodeIndex] = parentNameOriginal;
-                        _currentNode.ParentId = -1; // Mark as root-level in animation tree
+                        _animNodeModelParents[animNodeIndex] = parentName; // Store lowercase to match _nodeIndex keys
+                        _currentNode.ParentId = -1; // Mark as no animation node parent
                     }
                     else
                     {
@@ -1814,3 +1815,25 @@ namespace Andastra.Parsing.Formats.MDL
             // Build parent-child relationships
             foreach (var node in _nodes)
             {
+                if (node.ParentId == -1)
+                {
+                    // Attach to root
+                    if (_mdl.Root != null && node != _mdl.Root)
+                    {
+                        _mdl.Root.Children.Add(node);
+                    }
+                }
+                else if (node.ParentId >= 0 && node.ParentId < _nodes.Count)
+                {
+                    var parent = _nodes[node.ParentId];
+                    parent.Children.Add(node);
+                }
+            }
+        }
+
+        public void Dispose()
+        {
+            _reader?.Dispose();
+        }
+    }
+}
