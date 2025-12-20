@@ -92,11 +92,11 @@ namespace Andastra.Runtime.Games.Common
         /// </summary>
         /// <param name="text">The text to measure.</param>
         /// <returns>The size of the text in pixels.</returns>
-        public virtual Vector2 MeasureString([CanBeNull] string text)
+        public virtual Graphics.Vector2 MeasureString([CanBeNull] string text)
         {
             if (string.IsNullOrEmpty(text))
             {
-                return Vector2.Zero;
+                return Graphics.Vector2.Zero;
             }
 
             float maxWidth = 0.0f;
@@ -128,7 +128,7 @@ namespace Andastra.Runtime.Games.Common
             }
 
             maxWidth = Math.Max(maxWidth, currentWidth);
-            return new Vector2(maxWidth, totalHeight);
+            return new Graphics.Vector2(maxWidth, totalHeight);
         }
     }
 }

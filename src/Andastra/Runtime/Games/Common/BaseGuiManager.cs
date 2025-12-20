@@ -87,7 +87,7 @@ namespace Andastra.Runtime.Games.Common
         /// <param name="controlSize">The control size.</param>
         /// <param name="textSize">The text size.</param>
         /// <returns>The calculated text position.</returns>
-        protected virtual Vector2 CalculateTextPosition(int alignment, Vector2 controlPosition, Vector2 controlSize, Vector2 textSize)
+        protected virtual Graphics.Vector2 CalculateTextPosition(int alignment, Graphics.Vector2 controlPosition, Graphics.Vector2 controlSize, Graphics.Vector2 textSize)
         {
             float x = controlPosition.X;
             float y = controlPosition.Y;
@@ -124,7 +124,7 @@ namespace Andastra.Runtime.Games.Common
             }
             // else: top align (default)
 
-            return new Vector2(x, y);
+            return new Graphics.Vector2(x, y);
         }
 
         /// <summary>

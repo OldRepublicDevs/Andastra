@@ -2,6 +2,7 @@ using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
+using System.Linq;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Runtime.Scripting.VM;
@@ -122,7 +123,7 @@ namespace Andastra.Runtime.Tooling
             // Determine game type (K1 vs K2)
             string swkotorPath = Path.Combine(path.FullName, "swkotor.exe");
             string swkotor2Path = Path.Combine(path.FullName, "swkotor2.exe");
-            
+
             if (File.Exists(swkotorPath))
             {
                 Console.WriteLine("Detected: KOTOR 1");
@@ -193,7 +194,7 @@ namespace Andastra.Runtime.Tooling
                 Console.WriteLine($"Module resources: {parsingModule.Resources.Count}");
 
                 // Resources that typically need conversion/caching
-                // Based on swkotor2.exe: MDL (models), TPC (textures), WOK (walkmeshes), 
+                // Based on swkotor2.exe: MDL (models), TPC (textures), WOK (walkmeshes),
                 // LYT (layouts), VIS (visibility), GIT (area instances), ARE (area properties)
                 var resourceTypesToCache = new[]
                 {
@@ -226,7 +227,7 @@ namespace Andastra.Runtime.Tooling
                 foreach (var resourceEntry in parsingModule.Resources)
                 {
                     ResourceIdentifier resourceId = resourceEntry.Key;
-                    ResourceType resourceType = resourceId.ResourceType;
+                    ResourceType resourceType = resourceId.ResType;
 
                     // Only process resources that need caching
                     if (!resourceTypesToCache.Contains(resourceType))
@@ -239,14 +240,16 @@ namespace Andastra.Runtime.Tooling
 
                     try
                     {
-                        // Get resource data
-                        byte[] resourceData = parsingModule.GetResource(resourceId.ResRef, resourceType);
-                        if (resourceData == null || resourceData.Length == 0)
+                        // Get resource data from installation
+                        var resourceResult = parsingModule.Installation.Resource(resourceId.ResName, resourceType);
+                        if (resourceResult == null || resourceResult.Data == null || resourceResult.Data.Length == 0)
                         {
-                            Console.WriteLine($"  Skipping {resourceId.ResRef}.{resourceType.Extension}: No data");
+                            Console.WriteLine($"  Skipping {resourceId.ResName}.{resourceType.Extension}: No data");
                             skippedResources++;
                             continue;
                         }
+
+                        byte[] resourceData = resourceResult.Data;
 
                         // Attempt to load/decode the resource to validate and trigger conversion
                         // This will populate any internal caches
@@ -266,20 +269,20 @@ namespace Andastra.Runtime.Tooling
                             else
                             {
                                 // Resource exists but couldn't be decoded - still count as processed
-                                Console.WriteLine($"  Warning: {resourceId.ResRef}.{resourceType.Extension} could not be decoded");
+                                Console.WriteLine($"  Warning: {resourceId.ResName}.{resourceType.Extension} could not be decoded");
                                 skippedResources++;
                             }
                         }
                         catch (Exception decodeEx)
                         {
                             // Decoding failed - log but continue
-                            Console.WriteLine($"  Warning: Failed to decode {resourceId.ResRef}.{resourceType.Extension}: {decodeEx.Message}");
+                            Console.WriteLine($"  Warning: Failed to decode {resourceId.ResName}.{resourceType.Extension}: {decodeEx.Message}");
                             failedResources++;
                         }
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"  Error processing {resourceId.ResRef}.{resourceType.Extension}: {ex.Message}");
+                        Console.WriteLine($"  Error processing {resourceId.ResName}.{resourceType.Extension}: {ex.Message}");
                         failedResources++;
                     }
                 }
@@ -401,7 +404,7 @@ namespace Andastra.Runtime.Tooling
                             File.WriteAllBytes(decodedFilePath, decodedBytes);
                             Console.WriteLine($"Saved decoded resource to: {decodedFilePath}");
                             Console.WriteLine($"Decoded resource size: {decodedBytes.Length} bytes");
-                            
+
                             // Compare sizes
                             if (decodedBytes.Length != resourceResult.Data.Length)
                             {
@@ -449,7 +452,7 @@ namespace Andastra.Runtime.Tooling
         private static void RunScript(FileInfo script)
         {
             Console.WriteLine("Running script: " + (script?.FullName ?? "not specified"));
-            
+
             if (script == null || !script.Exists)
             {
                 Console.Error.WriteLine("ERROR: Script file not found.");
@@ -497,44 +500,44 @@ namespace Andastra.Runtime.Tooling
 
                 // Create mocked execution environment
                 Console.WriteLine("Creating mocked execution environment...");
-                
+
                 // Create mock world
                 var world = new MockWorld();
-                
+
                 // Create mock entity (caller)
                 var caller = new MockEntity("SCRIPT_CALLER");
                 world.RegisterEntity(caller);
-                
+
                 // Create mock engine API
                 var engineApi = new MockEngineApi();
-                
+
                 // Create script globals
                 var globals = new Andastra.Runtime.Scripting.VM.ScriptGlobals();
-                
+
                 // Create execution context
                 var context = new ExecutionContext(caller, world, engineApi, globals);
                 // Set resource provider to null (scripts won't be able to load other scripts via ExecuteScript)
                 context.ResourceProvider = null;
-                
+
                 // Create NCS VM
                 var vm = new NcsVm();
                 vm.MaxInstructions = 100000; // Default instruction limit
                 vm.EnableTracing = false; // Disable tracing by default (can be enabled for debugging)
-                
+
                 Console.WriteLine("Executing script...");
                 Console.WriteLine("--- Script Output ---");
-                
+
                 // Execute script
                 int returnValue;
                 try
                 {
                     returnValue = vm.Execute(ncsBytes, context);
-                    
+
                     Console.WriteLine("--- End Script Output ---");
                     Console.WriteLine($"Script execution completed.");
                     Console.WriteLine($"Return value: {returnValue}");
                     Console.WriteLine($"Instructions executed: {vm.InstructionsExecuted}");
-                    
+
                     if (vm.InstructionsExecuted >= vm.MaxInstructions)
                     {
                         Console.WriteLine("WARNING: Script hit instruction limit (possible infinite loop).");
@@ -547,7 +550,7 @@ namespace Andastra.Runtime.Tooling
                     Environment.ExitCode = 1;
                     return;
                 }
-                
+
                 Console.WriteLine("Script execution complete.");
             }
             catch (Exception ex)

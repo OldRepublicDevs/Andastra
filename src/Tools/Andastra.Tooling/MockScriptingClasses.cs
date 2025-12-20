@@ -7,6 +7,11 @@ using Andastra.Runtime.Scripting.Interfaces;
 using Andastra.Runtime.Scripting.EngineApi;
 using Andastra.Runtime.Scripting.Types;
 using Andastra.Runtime.Scripting.VM;
+using Perception = Andastra.Runtime.Core.Perception;
+using Combat = Andastra.Runtime.Core.Combat;
+using Triggers = Andastra.Runtime.Core.Triggers;
+using AI = Andastra.Runtime.Core.AI;
+using Animation = Andastra.Runtime.Core.Animation;
 
 namespace Andastra.Runtime.Tooling
 {
@@ -181,7 +186,7 @@ namespace Andastra.Runtime.Tooling
             return null;
         }
 
-        public IEntity CreateEntity(IEntityTemplate template, Vector3 position, float facing)
+        public IEntity CreateEntity(Andastra.Runtime.Core.Templates.IEntityTemplate template, Vector3 position, float facing)
         {
             // Not implemented for CLI tooling
             return null;
@@ -228,15 +233,15 @@ namespace Andastra.Runtime.Tooling
 
         public IDelayScheduler DelayScheduler { get; set; }
 
-        public Combat.EffectSystem EffectSystem { get; set; }
+        public Andastra.Runtime.Core.Combat.EffectSystem EffectSystem { get; set; }
 
-        public Perception.PerceptionSystem PerceptionSystem { get; set; }
+        public Andastra.Runtime.Core.Perception.PerceptionSystem PerceptionSystem { get; set; }
 
-        public Combat.CombatSystem CombatSystem { get; set; }
+        public Andastra.Runtime.Core.Combat.CombatSystem CombatSystem { get; set; }
 
-        public Triggers.TriggerSystem TriggerSystem { get; set; }
+        public Andastra.Runtime.Core.Triggers.TriggerSystem TriggerSystem { get; set; }
 
-        public AI.AIController AIController { get; set; }
+        public Andastra.Runtime.Core.AI.AIController AIController { get; set; }
 
         public Animation.AnimationSystem AnimationSystem { get; set; }
 
@@ -246,7 +251,14 @@ namespace Andastra.Runtime.Tooling
         {
             if (area != null)
             {
-                _areas[area.AreaId] = area;
+                // Get or assign AreaId for the area
+                uint areaId = GetAreaId(area);
+                if (areaId == 0)
+                {
+                    // Assign new AreaId if not already assigned
+                    areaId = (uint)(_areas.Count + 1);
+                }
+                _areas[areaId] = area;
             }
         }
 
@@ -254,7 +266,11 @@ namespace Andastra.Runtime.Tooling
         {
             if (area != null)
             {
-                _areas.Remove(area.AreaId);
+                uint areaId = GetAreaId(area);
+                if (areaId != 0)
+                {
+                    _areas.Remove(areaId);
+                }
             }
         }
 
@@ -262,7 +278,14 @@ namespace Andastra.Runtime.Tooling
         {
             if (area != null)
             {
-                return area.AreaId;
+                // Find the AreaId by searching the dictionary
+                foreach (var kvp in _areas)
+                {
+                    if (kvp.Value == area)
+                    {
+                        return kvp.Key;
+                    }
+                }
             }
             return 0;
         }
