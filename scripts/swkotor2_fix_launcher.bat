@@ -42,13 +42,13 @@ REM Set process priority and affinity
 for /f "tokens=2" %%a in ('tasklist /FI "IMAGENAME eq swkotor2.exe" /FO LIST ^| findstr /C:"PID:"') do (
     set PID=%%a
     echo [swkotor2_fix] Found process PID: %%a
-    
+
     REM Set high priority
     wmic process where processid=%%a CALL setpriority "high priority" >nul 2>&1
-    
+
     REM Set single CPU affinity (prevents race conditions)
     wmic process where processid=%%a CALL setaffinity "1" >nul 2>&1
-    
+
     echo [swkotor2_fix] Applied process optimizations
 )
 

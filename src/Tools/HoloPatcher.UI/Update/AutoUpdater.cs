@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using JetBrains.Annotations;
-using HoloPatcher.UI;
 
 namespace HoloPatcher.UI.Update
 {
@@ -19,7 +18,7 @@ namespace HoloPatcher.UI.Update
     /// Handles downloading, extracting, and scheduling the self-update process.
     /// Mirrors holopatcher/app.py::_run_autoupdate.
     /// </summary>
-    internal sealed class AutoUpdater
+    public sealed class AutoUpdater
     {
         private readonly RemoteUpdateInfo _info;
         private readonly Window _owner;
@@ -284,7 +283,7 @@ namespace HoloPatcher.UI.Update
             progress?.ReportStatus("Restarting to complete the update...");
 
             await Task.Delay(TimeSpan.FromSeconds(2), token);
-            Environment.Exit((int)Core.ExitCode.CloseForUpdateProcess);
+            Environment.Exit((int)ExitCode.CloseForUpdateProcess);
         }
 
         private static bool IsWindows()

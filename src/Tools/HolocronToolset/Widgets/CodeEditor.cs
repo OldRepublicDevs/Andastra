@@ -65,7 +65,7 @@ namespace HolocronToolset.Widgets
 
             // Match brackets when cursor position changes (for bracket highlighting)
             // Matching PyKotor implementation: bracket matching happens on cursor position change
-            this.SelectionChanged += (s, e) => MatchBrackets();
+            this.TextChanged += (s, e) => MatchBrackets();
         }
 
         private void InitializeComponent()
@@ -487,7 +487,7 @@ namespace HolocronToolset.Widgets
             if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && e.KeyModifiers.HasFlag(KeyModifiers.Shift))
             {
                 // Ctrl+Shift+[ for fold region
-                if (e.Key == Key.OemOpenBrackets || e.Key == Key.BracketLeft)
+                if (e.Key == Key.OemOpenBrackets)
                 {
                     FoldRegion();
                     e.Handled = true;
@@ -495,7 +495,7 @@ namespace HolocronToolset.Widgets
                 }
 
                 // Ctrl+Shift+] for unfold region
-                if (e.Key == Key.OemCloseBrackets || e.Key == Key.BracketRight)
+                if (e.Key == Key.OemCloseBrackets)
                 {
                     UnfoldRegion();
                     e.Handled = true;

@@ -8,6 +8,7 @@ using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.TLK;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Common;
+using UTC = Andastra.Parsing.Resource.Generics.UTC.UTC;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Core.Enums;
@@ -265,28 +266,28 @@ namespace Andastra.Runtime.Content.Loaders
 
         #region Template Parsing
 
-        private CreatureTemplate ParseCreatureTemplate(Andastra.Parsing.Resource.Generics.UTC utc)
+        private CreatureTemplate ParseCreatureTemplate(Andastra.Parsing.Resource.Generics.UTC.UTC utc)
         {
             var template = new CreatureTemplate();
 
             // Basic info
-            template.TemplateResRef = utc.ResRef.Value;
+            template.TemplateResRef = utc.ResRef.ToString();
             template.Tag = utc.Tag;
-            template.FirstName = utc.FirstName;
-            template.LastName = utc.LastName;
+            template.FirstName = utc.FirstName.StringRef.ToString();
+            template.LastName = utc.LastName.StringRef.ToString();
 
             // Appearance
             template.Appearance = utc.AppearanceId;
             template.BodyVariation = (byte)utc.BodyVariation;
             template.TextureVar = (byte)utc.TextureVariation;
-            template.Portrait = utc.PortraitId.Value;
+            template.Portrait = utc.PortraitId.ToString();
             template.Soundset = utc.SoundsetId;
 
             // Stats
-            template.CurrentHP = (short)utc.CurrentHitPoints;
-            template.MaxHP = (short)utc.MaxHitPoints;
-            template.CurrentFP = (short)utc.CurrentForce;
-            template.MaxFP = (short)utc.ForcePoints;
+            template.CurrentHP = (short)utc.CurrentHp;
+            template.MaxHP = (short)utc.MaxHp;
+            template.CurrentFP = (short)utc.Fp;
+            template.MaxFP = (short)utc.MaxFp;
 
             // Attributes
             template.Strength = (byte)utc.Strength;
@@ -297,36 +298,36 @@ namespace Andastra.Runtime.Content.Loaders
             template.Charisma = (byte)utc.Charisma;
 
             // Combat
-            template.NaturalAC = GetByte(root, "NaturalAC");
-            template.FortitudeSave = GetByte(root, "fortbonus");
-            template.ReflexSave = GetByte(root, "refbonus");
-            template.WillSave = GetByte(root, "willbonus");
+            template.NaturalAC = (byte)utc.NaturalAc;
+            template.FortitudeSave = (byte)utc.FortitudeBonus;
+            template.ReflexSave = (byte)utc.ReflexBonus;
+            template.WillSave = (byte)utc.WillpowerBonus;
 
             // Flags
-            template.IsPC = GetByte(root, "IsPC") != 0;
-            template.NoPermDeath = GetByte(root, "NoPermDeath") != 0;
-            template.Plot = GetByte(root, "Plot") != 0;
-            template.Interruptable = GetByte(root, "Interruptable") != 0;
-            template.DisarmableDet = GetByte(root, "DisarmableDet") != 0;
+            template.IsPC = utc.IsPc;
+            template.NoPermDeath = utc.NoPermDeath;
+            template.Plot = utc.Plot;
+            template.Interruptable = utc.Interruptable;
+            template.DisarmableDet = utc.Disarmable;
 
             // Faction
-            template.FactionID = GetInt(root, "FactionID");
+            template.FactionID = utc.FactionId;
 
             // Scripts
-            template.OnSpawn = GetString(root, "ScriptSpawn");
-            template.OnDeath = GetString(root, "ScriptDeath");
-            template.OnHeartbeat = GetString(root, "ScriptHeartbeat");
-            template.OnPerception = GetString(root, "ScriptOnNotice");
-            template.OnDamaged = GetString(root, "ScriptDamaged");
-            template.OnAttacked = GetString(root, "ScriptAttacked");
-            template.OnEndRound = GetString(root, "ScriptEndRound");
-            template.OnDialogue = GetString(root, "ScriptDialogue");
-            template.OnDisturbed = GetString(root, "ScriptDisturbed");
-            template.OnBlocked = GetString(root, "ScriptOnBlocked");
-            template.OnUserDefined = GetString(root, "ScriptUserDefine");
+            template.OnSpawn = utc.OnSpawn.ToString();
+            template.OnDeath = utc.OnDeath.ToString();
+            template.OnHeartbeat = utc.OnHeartbeat.ToString();
+            template.OnPerception = utc.OnNotice.ToString();
+            template.OnDamaged = utc.OnDamaged.ToString();
+            template.OnAttacked = utc.OnAttacked.ToString();
+            template.OnEndRound = utc.OnEndRound.ToString();
+            template.OnDialogue = utc.OnDialog.ToString();
+            template.OnDisturbed = utc.OnDisturbed.ToString();
+            template.OnBlocked = utc.OnBlocked.ToString();
+            template.OnUserDefined = utc.OnUserDefined.ToString();
 
             // Conversation
-            template.Conversation = GetString(root, "Conversation");
+            template.Conversation = utc.Conversation.ToString();
 
             return template;
         }

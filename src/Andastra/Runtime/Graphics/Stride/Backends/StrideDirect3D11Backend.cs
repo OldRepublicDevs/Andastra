@@ -2100,11 +2100,11 @@ namespace Andastra.Runtime.Stride.Backends
         /// <summary>
         /// Dispatch rays description.
         /// Based on D3D12 API: D3D12_DISPATCH_RAYS_DESC
-        /// 
+        ///
         /// Describes the parameters for dispatching raytracing work, including:
         /// - Shader binding table addresses (ray generation, miss, hit group, callable)
         /// - Dispatch dimensions (width, height, depth)
-        /// 
+        ///
         /// The shader binding tables contain shader identifiers and optional root arguments
         /// that are used by the raytracing pipeline to determine which shaders to execute.
         /// </summary>
@@ -2278,112 +2278,5 @@ namespace Andastra.Runtime.Stride.Backends
 
         #endregion
 
-        #region D3D12 Dispatch Rays Structures
-
-        /// <summary>
-        /// GPU virtual address range.
-        /// Describes a contiguous range of GPU virtual addresses.
-        /// Based on D3D12 API: D3D12_GPU_VIRTUAL_ADDRESS_RANGE
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
-        private struct D3D12_GPU_VIRTUAL_ADDRESS_RANGE
-        {
-            /// <summary>
-            /// Starting GPU virtual address.
-            /// </summary>
-            public IntPtr StartAddress;
-
-            /// <summary>
-            /// Size of the range in bytes.
-            /// </summary>
-            public ulong SizeInBytes;
-        }
-
-        /// <summary>
-        /// GPU virtual address range with stride.
-        /// Describes a range of GPU virtual addresses with a stride between entries.
-        /// Used for shader binding tables that contain multiple entries.
-        /// Based on D3D12 API: D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
-        private struct D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE
-        {
-            /// <summary>
-            /// Starting GPU virtual address.
-            /// </summary>
-            public IntPtr StartAddress;
-
-            /// <summary>
-            /// Size of the range in bytes.
-            /// </summary>
-            public ulong SizeInBytes;
-
-            /// <summary>
-            /// Stride between entries in bytes.
-            /// For shader binding tables, this is typically 32 bytes (shader identifier size)
-            /// plus the size of any root arguments.
-            /// </summary>
-            public ulong StrideInBytes;
-        }
-
-        /// <summary>
-        /// Dispatch rays description.
-        /// Describes the parameters for dispatching raytracing work.
-        /// Based on D3D12 API: D3D12_DISPATCH_RAYS_DESC
-        ///
-        /// The shader binding tables (SBT) contain shader identifiers and optional root arguments:
-        /// - RayGenerationShaderRecord: Single entry for the ray generation shader (required)
-        /// - MissShaderTable: Table of miss shader entries (optional)
-        /// - HitGroupTable: Table of hit group entries (optional)
-        /// - CallableShaderTable: Table of callable shader entries (optional, advanced feature)
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
-        private struct D3D12_DISPATCH_RAYS_DESC
-        {
-            /// <summary>
-            /// GPU virtual address range for the ray generation shader record.
-            /// This is a single entry containing the ray generation shader identifier.
-            /// Required for all raytracing dispatches.
-            /// </summary>
-            public D3D12_GPU_VIRTUAL_ADDRESS_RANGE RayGenerationShaderRecord;
-
-            /// <summary>
-            /// GPU virtual address range and stride for the miss shader table.
-            /// Contains shader identifiers for miss shaders (one per entry).
-            /// Optional, but typically provided for proper raytracing behavior.
-            /// </summary>
-            public D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE MissShaderTable;
-
-            /// <summary>
-            /// GPU virtual address range and stride for the hit group shader table.
-            /// Contains shader identifiers for hit groups (closest hit, any hit, intersection shaders).
-            /// Optional, but typically provided for proper raytracing behavior.
-            /// </summary>
-            public D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE HitGroupTable;
-
-            /// <summary>
-            /// GPU virtual address range and stride for the callable shader table.
-            /// Contains shader identifiers for callable shaders (advanced feature).
-            /// Optional, rarely used in basic raytracing scenarios.
-            /// </summary>
-            public D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE CallableShaderTable;
-
-            /// <summary>
-            /// Width of the dispatch (number of rays in X dimension).
-            /// </summary>
-            public uint Width;
-
-            /// <summary>
-            /// Height of the dispatch (number of rays in Y dimension).
-            /// </summary>
-            public uint Height;
-
-            /// <summary>
-            /// Depth of the dispatch (number of rays in Z dimension).
-            /// Typically 1 for 2D raytracing (screen-space rays).
-            /// </summary>
-            public uint Depth;
-        }
-
-        #endregion
-
+    }
+}

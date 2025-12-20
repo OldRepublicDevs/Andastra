@@ -16,6 +16,7 @@ using Andastra.Parsing.TSLPatcher;
 using Andastra.Parsing.Reader;
 using Andastra.Parsing.Uninstall;
 using JetBrains.Annotations;
+using HoloPatcher.UI.Update;
 #if WINDOWS
 using Microsoft.Win32;
 #endif
@@ -68,20 +69,21 @@ namespace HoloPatcher.UI
 
         /// <summary>
         /// Exit codes for the application.
+        /// Alias for Update.ExitCode to maintain backward compatibility.
         /// </summary>
-        public enum ExitCode
+        public static class ExitCode
         {
-            Success = 0,
-            UnknownStartupError = 1,
-            NumberOfArgs = 2,
-            NamespacesIniNotFound = 3,
-            NamespaceIndexOutOfRange = 4,
-            ChangesIniNotFound = 5,
-            AbortInstallUnsafe = 6,
-            ExceptionDuringInstall = 7,
-            InstallCompletedWithErrors = 8,
-            Crash = 9,
-            CloseForUpdateProcess = 10
+            public static Update.ExitCode Success => Update.ExitCode.Success;
+            public static Update.ExitCode UnknownStartupError => Update.ExitCode.UnknownStartupError;
+            public static Update.ExitCode NumberOfArgs => Update.ExitCode.NumberOfArgs;
+            public static Update.ExitCode NamespacesIniNotFound => Update.ExitCode.NamespacesIniNotFound;
+            public static Update.ExitCode NamespaceIndexOutOfRange => Update.ExitCode.NamespaceIndexOutOfRange;
+            public static Update.ExitCode ChangesIniNotFound => Update.ExitCode.ChangesIniNotFound;
+            public static Update.ExitCode AbortInstallUnsafe => Update.ExitCode.AbortInstallUnsafe;
+            public static Update.ExitCode ExceptionDuringInstall => Update.ExitCode.ExceptionDuringInstall;
+            public static Update.ExitCode InstallCompletedWithErrors => Update.ExitCode.InstallCompletedWithErrors;
+            public static Update.ExitCode Crash => Update.ExitCode.Crash;
+            public static Update.ExitCode CloseForUpdateProcess => Update.ExitCode.CloseForUpdateProcess;
         }
 
         /// <summary>

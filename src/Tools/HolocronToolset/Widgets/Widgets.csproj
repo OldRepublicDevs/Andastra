@@ -16,6 +16,16 @@
     <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
     <ProjectReference Include="..\..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
     <ProjectReference Include="..\Data\Data.csproj" />
+    <ProjectReference Include="..\Utils\Utils.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Common\*.cs" />
+    <Compile Include="..\Common\Widgets\*.cs" />
+    <Compile Include="..\Dialogs\ColorPickerDialog.axaml.cs" />
+    <Compile Include="..\Dialogs\EnvVariableDialog.cs" />
+    <Compile Include="..\Dialogs\LocalizedStringDialog.axaml.cs" />
+    <Compile Include="..\Dialogs\FontDialog.cs" />
   </ItemGroup>
 
 </Project>

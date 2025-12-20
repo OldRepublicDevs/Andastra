@@ -210,7 +210,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         [CanBeNull]
         public FeatData GetFeat(int featId)
         {
-            TwoDA table = GetTable("feat"););
+            TwoDA table = GetTable("feat");
             if (table == null || featId < 0 || featId >= table.GetHeight())
             {
                 return null;
@@ -1162,15 +1162,15 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
     }
 
     #endregion
-}
 
-/// <summary>
-/// Portrait data from portraits.2da.
-/// </summary>
-public class PortraitData
-{
-    public int RowIndex { get; set; }
-    public int PortraitId { get { return RowIndex; } set { RowIndex = value; } }
-    public string Label { get; set; }
-    public string BaseResRef { get; set; }
+    /// <summary>
+    /// Portrait data from portraits.2da.
+    /// </summary>
+    public class PortraitData
+    {
+        public int RowIndex { get; set; }
+        public int PortraitId { get { return RowIndex; } set { RowIndex = value; } }
+        public string Label { get; set; }
+        public string BaseResRef { get; set; }
+    }
 }

@@ -205,7 +205,7 @@ namespace Andastra.Runtime.Content.Loaders
         {
             var instance = new CreatureInstance();
 
-            instance.TemplateResRef = creature.ResRef.Value;
+            instance.TemplateResRef = creature.ResRef.ToString();
             instance.Tag = ""; // GITCreature doesn't store tag, it would be in the template
             instance.XPosition = creature.Position.X;
             instance.YPosition = creature.Position.Y;
@@ -220,12 +220,12 @@ namespace Andastra.Runtime.Content.Loaders
         {
             var instance = new DoorInstance();
 
-            instance.TemplateResRef = door.ResRef.Value;
+            instance.TemplateResRef = door.ResRef.ToString();
             instance.Tag = door.Tag;
             instance.LinkedTo = door.LinkedTo;
             instance.LinkedToFlags = (byte)door.LinkedToFlags;
-            instance.LinkedToModule = door.LinkedToModule.Value;
-            instance.TransitionDestin = door.TransitionDestination.Value;
+            instance.LinkedToModule = door.LinkedToModule.ToString();
+            instance.TransitionDestin = door.TransitionDestination.StringRef.ToString();
             instance.XPosition = door.Position.X;
             instance.YPosition = door.Position.Y;
             instance.ZPosition = door.Position.Z;
@@ -238,12 +238,38 @@ namespace Andastra.Runtime.Content.Loaders
         {
             var instance = new PlaceableInstance();
 
-            instance.TemplateResRef = placeable.ResRef.Value;
+            instance.TemplateResRef = placeable.ResRef.ToString();
             instance.Tag = placeable.Tag;
             instance.XPosition = placeable.Position.X;
             instance.YPosition = placeable.Position.Y;
             instance.ZPosition = placeable.Position.Z;
             instance.Bearing = placeable.Bearing;
+
+            return instance;
+        }
+
+        private TriggerInstance ParseTriggerInstance(Andastra.Parsing.Resource.Generics.GITTrigger trigger)
+        {
+            var instance = new TriggerInstance();
+
+            instance.TemplateResRef = trigger.ResRef;
+            instance.Tag = trigger.Tag;
+            instance.XPosition = trigger.Position.X;
+            instance.YPosition = trigger.Position.Y;
+            instance.ZPosition = trigger.Position.Z;
+            // Note: GITTrigger doesn't have orientation fields, so we'll use defaults
+            instance.XOrientation = 0.0f;
+            instance.YOrientation = 0.0f;
+            instance.ZOrientation = 0.0f;
+
+            // Parse geometry
+            if (trigger.Geometry != null)
+            {
+                foreach (var vertex in trigger.Geometry)
+                {
+                    instance.Geometry.Add(new System.Numerics.Vector3(vertex.X, vertex.Y, vertex.Z));
+                }
+            }
 
             return instance;
         }
@@ -276,6 +302,25 @@ namespace Andastra.Runtime.Content.Loaders
             return instance;
         }
 
+        private WaypointInstance ParseWaypointInstance(Andastra.Parsing.Resource.Generics.GITWaypoint waypoint)
+        {
+            var instance = new WaypointInstance();
+
+            instance.TemplateResRef = waypoint.ResRef;
+            instance.Tag = waypoint.Tag;
+            instance.XPosition = waypoint.Position.X;
+            instance.YPosition = waypoint.Position.Y;
+            instance.ZPosition = waypoint.Position.Z;
+            // Convert bearing to orientation (bearing is rotation around Z axis)
+            float bearingRad = waypoint.Bearing;
+            instance.XOrientation = (float)Math.Sin(bearingRad);
+            instance.YOrientation = (float)Math.Cos(bearingRad);
+            instance.MapNote = waypoint.HasMapNote && waypoint.MapNote != null;
+            instance.MapNoteEnabled = waypoint.MapNoteEnabled;
+
+            return instance;
+        }
+
         private WaypointInstance ParseWaypointInstance(GFFStruct s)
         {
             var instance = new WaypointInstance();
@@ -293,6 +338,21 @@ namespace Andastra.Runtime.Content.Loaders
             return instance;
         }
 
+        private SoundInstance ParseSoundInstance(Andastra.Parsing.Resource.Generics.GITSound sound)
+        {
+            var instance = new SoundInstance();
+
+            instance.TemplateResRef = sound.ResRef;
+            instance.Tag = sound.Tag;
+            instance.XPosition = sound.Position.X;
+            instance.YPosition = sound.Position.Y;
+            instance.ZPosition = sound.Position.Z;
+            // GITSound doesn't have GeneratedType, so use default
+            instance.GeneratedType = 0;
+
+            return instance;
+        }
+
         private SoundInstance ParseSoundInstance(GFFStruct s)
         {
             var instance = new SoundInstance();
@@ -303,6 +363,43 @@ namespace Andastra.Runtime.Content.Loaders
             instance.YPosition = GetFloat(s, "YPosition");
             instance.ZPosition = GetFloat(s, "ZPosition");
             instance.GeneratedType = GetInt(s, "GeneratedType");
+
+            return instance;
+        }
+
+        private EncounterInstance ParseEncounterInstance(Andastra.Parsing.Resource.Generics.GITEncounter encounter)
+        {
+            var instance = new EncounterInstance();
+
+            instance.TemplateResRef = encounter.ResRef;
+            instance.Tag = ""; // GITEncounter doesn't have Tag
+            instance.XPosition = encounter.Position.X;
+            instance.YPosition = encounter.Position.Y;
+            instance.ZPosition = encounter.Position.Z;
+
+            // Parse spawn points
+            if (encounter.SpawnPoints != null)
+            {
+                foreach (var spawnPoint in encounter.SpawnPoints)
+                {
+                    instance.SpawnPoints.Add(new SpawnPoint
+                    {
+                        X = spawnPoint.X,
+                        Y = spawnPoint.Y,
+                        Z = spawnPoint.Z,
+                        Orientation = spawnPoint.Orientation
+                    });
+                }
+            }
+
+            // Parse geometry
+            if (encounter.Geometry != null)
+            {
+                foreach (var vertex in encounter.Geometry)
+                {
+                    instance.Geometry.Add(new System.Numerics.Vector3(vertex.X, vertex.Y, vertex.Z));
+                }
+            }
 
             return instance;
         }
@@ -348,6 +445,23 @@ namespace Andastra.Runtime.Content.Loaders
             return instance;
         }
 
+        private StoreInstance ParseStoreInstance(Andastra.Parsing.Resource.Generics.GITStore store)
+        {
+            var instance = new StoreInstance();
+
+            instance.TemplateResRef = store.ResRef.ToString();
+            instance.Tag = ""; // GITStore doesn't have Tag
+            instance.XPosition = store.Position.X;
+            instance.YPosition = store.Position.Y;
+            instance.ZPosition = store.Position.Z;
+            // Convert bearing to orientation (bearing is rotation around Z axis)
+            float bearingRad = store.Bearing;
+            instance.XOrientation = (float)Math.Sin(bearingRad);
+            instance.YOrientation = (float)Math.Cos(bearingRad);
+
+            return instance;
+        }
+
         private StoreInstance ParseStoreInstance(GFFStruct s)
         {
             var instance = new StoreInstance();
@@ -359,6 +473,22 @@ namespace Andastra.Runtime.Content.Loaders
             instance.ZPosition = GetFloat(s, "ZPosition");
             instance.XOrientation = GetFloat(s, "XOrientation");
             instance.YOrientation = GetFloat(s, "YOrientation");
+
+            return instance;
+        }
+
+        private CameraInstance ParseCameraInstance(Andastra.Parsing.Resource.Generics.GITCamera camera)
+        {
+            var instance = new CameraInstance();
+
+            instance.CameraID = camera.CameraId;
+            instance.FieldOfView = camera.Fov;
+            instance.Height = camera.Height;
+            instance.MicRange = camera.MicRange;
+            // Convert Vector4 to Quaternion (w, x, y, z)
+            instance.Orientation = new System.Numerics.Quaternion(camera.Orientation.X, camera.Orientation.Y, camera.Orientation.Z, camera.Orientation.W);
+            instance.Pitch = camera.Pitch;
+            instance.Position = new System.Numerics.Vector3(camera.Position.X, camera.Position.Y, camera.Position.Z);
 
             return instance;
         }
@@ -385,13 +515,15 @@ namespace Andastra.Runtime.Content.Loaders
             // Use the already parsed properties from the GIT object
             props.AmbientSndDay = git.AmbientSoundId;
             props.AmbientSndDayVol = git.AmbientVolume;
-            props.AmbientSndNight = git.AmbientSoundIdNight;
-            props.AmbientSndNitVol = git.AmbientVolumeNight;
+            // Note: GIT doesn't have separate night ambient sound properties in KOTOR
+            props.AmbientSndNight = git.AmbientSoundId; // Use day value as fallback
+            props.AmbientSndNitVol = git.AmbientVolume; // Use day value as fallback
             props.EnvAudio = git.EnvAudio;
-            props.MusicBattle = git.MusicBattle;
-            props.MusicDay = git.MusicDay;
+            props.MusicBattle = git.MusicBattleId;
+            props.MusicDay = git.MusicStandardId;
             props.MusicDelay = git.MusicDelay;
-            props.MusicNight = git.MusicNight;
+            // Note: GIT doesn't have separate night music property in KOTOR
+            props.MusicNight = git.MusicStandardId; // Use day value as fallback
 
             return props;
         }

@@ -49,6 +49,18 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
+    <ProjectReference Include="..\..\Andastra\Utility\Utility.csproj" />
+    <ProjectReference Include="Rte\Rte.csproj" />
+    <ProjectReference Include="Update\Update.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Rte\**" />
+    <Compile Remove="Update\**" />
+    <EmbeddedResource Remove="Rte\**" />
+    <EmbeddedResource Remove="Update\**" />
+    <None Remove="Rte\**" />
+    <None Remove="Update\**" />
   </ItemGroup>
 
 </Project>

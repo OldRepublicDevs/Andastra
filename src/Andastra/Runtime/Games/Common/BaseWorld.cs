@@ -45,7 +45,7 @@ namespace Andastra.Runtime.Games.Common
         protected readonly Dictionary<ObjectType, List<IEntity>> _entitiesByType = new Dictionary<ObjectType, List<IEntity>>();
         protected readonly Dictionary<IArea, uint> _areaIds = new Dictionary<IArea, uint>();
         protected readonly IEventBus _eventBus;
-        
+
         // Area ID assignment: Areas get sequential IDs starting from 0x7F000010
         // Common across all engines: Areas assigned ObjectIds similar to entities
         // Area ObjectId range: 0x7F000010+ (special object ID range for areas)
@@ -119,16 +119,8 @@ namespace Andastra.Runtime.Games.Common
         /// appearance data, and other game configuration data.
         /// Engine-specific implementations handle the actual table loading and lookup.
         /// </remarks>
-        public abstract IGameDataProvider GameDataProvider { get; }
+        public abstract Core.Interfaces.IGameDataProvider GameDataProvider { get; }
 
-        /// <summary>
-        /// Explicit implementation of IWorld.GameDataProvider to satisfy the interface requirement.
-        /// </summary>
-        /// <remarks>
-        /// IWorld uses object type to avoid Core depending on Games.Common.
-        /// This property returns the strongly-typed GameDataProvider cast to object.
-        /// </remarks>
-        object IWorld.GameDataProvider => GameDataProvider;
 
         /// <summary>
         /// Gets an entity by its unique ObjectId.
@@ -382,7 +374,7 @@ namespace Andastra.Runtime.Games.Common
 
             // Set world reference
             entity.World = this;
-            
+
             // Set entity's AreaId based on current area
             // Common across all engines: Entities store AreaId of area they belong to
             // Entity AreaId is set when entity is registered to world

@@ -381,7 +381,12 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         /// <param name="characterData">Optional character creation data. If provided, player entity will be created from this data. If null, a default player entity will be created.</param>
         /// <remarks>
         /// Based on exhaustive reverse engineering of swkotor.exe (K1) and swkotor2.exe (K2):
-        /// 
+        ///
+        /// KOTOR 1 (swkotor.exe) - FUN_0067afb0 @ 0x0067afb0 (New Game Button Handler):
+        /// - Similar flow but loads "END_M01AA" (Endar Spire - Command Module)
+        /// - Located via string reference: "END_M01AA" @ 0x00752f58
+        /// - Original implementation: FUN_005e5a90(aiStack_2c,"END_M01AA") sets module name
+        ///
         /// KOTOR 2 (swkotor2.exe) - FUN_006d0b00 @ 0x006d0b00 (New Game Button Handler):
         /// - Called when "New Game" button is clicked after character creation completes
         /// - Located via string reference: "001ebo" @ 0x007cc028 (prologue module name)
@@ -404,28 +409,23 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         ///   6. Line 62: FUN_0074a700(local_40[0],*(undefined4 *)((int)this + 0x1c),local_38) - Create and load module
         ///      - FUN_0074a700 @ 0x0074a700: Module loader/creator function
         ///      - Takes module name ("001ebo") and creates/loads the module into game world
-        /// 
-        /// KOTOR 1 (swkotor.exe) - FUN_0067afb0 @ 0x0067afb0 (New Game Button Handler):
-        /// - Similar flow but loads "END_M01AA" (Endar Spire - Command Module)
-        /// - Located via string reference: "END_M01AA" @ 0x00752f58
-        /// - Original implementation: FUN_005e5a90(aiStack_2c,"END_M01AA") sets module name
-        /// 
+        ///
         /// Module Selection Logic:
         /// - Default: K1 = "end_m01aa", K2 = "001ebo"
         /// - Alternative modules checked via codes 0x7db and 0xbba (K2 only, meaning unknown)
         /// - If alternatives don't exist, falls back to default
-        /// 
+        ///
         /// Module Initialization Sequence:
         /// 1. FUN_00401380: Initialize module loading system (prepare game state)
         /// 2. Load HD0:effects directory (effects resources)
         /// 3. Determine starting module (check alternatives, fallback to default)
         /// 4. FUN_0074a700: Create and load module object
         /// 5. Module loads areas, entities, scripts, etc.
-        /// 
+        ///
         /// Character Creation Flow:
-        /// Main Menu -> New Game Button -> Character Creation -> Character Creation Complete -> 
+        /// Main Menu -> New Game Button -> Character Creation -> Character Creation Complete ->
         /// FUN_006d0b00 (New Game Handler) -> Module Initialization -> Module Load -> Player Entity Creation
-        /// 
+        ///
         /// Module name casing: Ghidra shows "001ebo" (lowercase) and "END_M01AA" (uppercase)
         /// Resource lookup is case-insensitive, we use lowercase to match Andastra.Parsing conventions
         /// </remarks>

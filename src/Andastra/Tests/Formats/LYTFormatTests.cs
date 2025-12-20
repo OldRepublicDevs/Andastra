@@ -827,10 +827,10 @@ namespace Andastra.Parsing.Tests.Formats
         {
             // Test that model names are case-insensitive as per LYT.ksy documentation
             var lyt1 = new LYT();
-            lyt1.Rooms.Add(new LYTRoom("TestRoom", new Vector3(0.0f, 0.0f, 0.0f)));
+            lyt1.Rooms.Add(new LYTRoom(new ResRef("TestRoom"), new Vector3(0.0f, 0.0f, 0.0f)));
 
             var lyt2 = new LYT();
-            lyt2.Rooms.Add(new LYTRoom("testroom", new Vector3(0.0f, 0.0f, 0.0f)));
+            lyt2.Rooms.Add(new LYTRoom(new ResRef("testroom"), new Vector3(0.0f, 0.0f, 0.0f)));
 
             // Room names should be compared case-insensitively
             lyt1.Rooms[0].Model.ToString().ToLowerInvariant().Should().Be(lyt2.Rooms[0].Model.ToString().ToLowerInvariant());

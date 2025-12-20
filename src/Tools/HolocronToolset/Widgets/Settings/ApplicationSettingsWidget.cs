@@ -7,6 +7,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
+using FontInfo = HolocronToolset.Dialogs.FontInfo;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 

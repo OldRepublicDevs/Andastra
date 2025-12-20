@@ -1,6 +1,5 @@
 using System;
 using System.CommandLine;
-using System.CommandLine.Invocation;
 using System.IO;
 using System.Linq;
 using Andastra.Parsing.Installation;
@@ -40,7 +39,12 @@ namespace Andastra.Runtime.Tooling
             var warmCacheCommand = new Command("warm-cache", "Pre-convert assets for a module");
             warmCacheCommand.Options.Add(modulePath);
             warmCacheCommand.Options.Add(installPath);
-            warmCacheCommand.SetHandler((string module, DirectoryInfo install) => WarmCache(module, install), modulePath, installPath);
+            warmCacheCommand.SetAction(parseResult =>
+            {
+                var module = parseResult.GetValue(modulePath);
+                var install = parseResult.GetValue(installPath);
+                WarmCache(module, install);
+            });
             rootCommand.Add(warmCacheCommand);
 
             // dump-resource command
@@ -60,7 +64,11 @@ namespace Andastra.Runtime.Tooling
             };
             var runScriptCommand = new Command("run-script", "Execute an NCS script with mocked world");
             runScriptCommand.Options.Add(scriptPath);
-            runScriptCommand.SetHandler((FileInfo script) => RunScript(script), scriptPath);
+            runScriptCommand.SetAction(parseResult =>
+            {
+                var script = parseResult.GetValue(scriptPath);
+                RunScript(script);
+            });
             rootCommand.Add(runScriptCommand);
 
             try

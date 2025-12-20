@@ -1087,6 +1087,7 @@ namespace HolocronToolset.Data
                 UTD utd = DeepCopyUtd(sourceUtd);
                 utd.ResRef = door.ResRef;
                 utd.Static = insert.Static;
+
                 // Python: utd.tag = door_resname.title().replace("_", "")
                 // C# equivalent: capitalize first letter of each word, remove underscores
                 string tag = doorResname;

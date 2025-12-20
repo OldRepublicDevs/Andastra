@@ -91,7 +91,7 @@ This directory contains scripts and code to fix the post-character creation cras
 3. Modify the code to use MinHook's API:
    ```cpp
    #include "MinHook.h"
-   
+
    MH_Initialize();
    MH_CreateHook(OriginalSwapBuffers, HookedSwapBuffers, (LPVOID*)&OriginalSwapBuffers);
    MH_EnableHook(OriginalSwapBuffers);

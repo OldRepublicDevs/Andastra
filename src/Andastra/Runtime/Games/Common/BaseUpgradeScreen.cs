@@ -8,7 +8,7 @@ using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Parsing;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Resource.Generics.UTI;
 using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Runtime.Core.Enums;

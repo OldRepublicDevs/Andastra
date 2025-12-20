@@ -41,7 +41,7 @@ namespace Andastra.Runtime.Stride.Culling
         private readonly StrideGraphics.GraphicsDevice _graphicsDevice;
 
         // Hi-Z buffer for hierarchical depth testing
-        private StrideGraphics.Texture2D _hiZBuffer;
+        private global::Stride.Graphics.Texture _hiZBuffer;
 
         /// <summary>
         /// Initializes a new occlusion culler.
@@ -74,18 +74,18 @@ namespace Andastra.Runtime.Stride.Culling
         /// <exception cref="ArgumentNullException">Thrown if depthBuffer is null.</exception>
         public override void GenerateHiZBuffer(object depthBuffer)
         {
-            StrideGraphics.Texture2D depthTexture = depthBuffer as StrideGraphics.Texture2D;
+            global::Stride.Graphics.Texture depthTexture = depthBuffer as global::Stride.Graphics.Texture;
             if (depthTexture == null)
             {
-                throw new ArgumentException("depthBuffer must be a Stride.Graphics.Texture2D", nameof(depthBuffer));
+                throw new ArgumentException("depthBuffer must be a Stride.Graphics.Texture", nameof(depthBuffer));
             }
             GenerateHiZBufferInternal(depthTexture);
         }
 
         /// <summary>
-        /// Internal method for generating Hi-Z buffer from Stride Texture2D.
+        /// Internal method for generating Hi-Z buffer from Stride Texture.
         /// </summary>
-        private void GenerateHiZBufferInternal(StrideGraphics.Texture2D depthBuffer)
+        private void GenerateHiZBufferInternal(global::Stride.Graphics.Texture depthBuffer)
         {
             if (!Enabled)
             {
@@ -105,8 +105,8 @@ namespace Andastra.Runtime.Stride.Culling
             // Copy level 0 (full resolution) from depth buffer to Hi-Z buffer
             // Store current render target to restore later
             StrideGraphics.Texture[] previousTargets = _graphicsDevice.CurrentRenderTargets;
-            StrideGraphics.Texture2D previousTarget = previousTargets != null && previousTargets.Length > 0
-                ? previousTargets[0] as StrideGraphics.Texture2D : null;
+            global::Stride.Graphics.Texture previousTarget = previousTargets != null && previousTargets.Length > 0
+                ? previousTargets[0] as global::Stride.Graphics.Texture : null;
 
             try
             {
@@ -395,8 +395,8 @@ namespace Andastra.Runtime.Stride.Culling
             int calculatedMipLevels = maxDimension > 0 ? ((int)Math.Log(maxDimension, 2) + 1) : 1;
 
             // Create texture with mipmaps
-            // Stride's Texture2D.New2D creates a texture with specified mip levels
-            _hiZBuffer = StrideGraphics.Texture2D.New2D(
+            // Stride's Texture.New2D creates a texture with specified mip levels
+            _hiZBuffer = global::Stride.Graphics.Texture.New2D(
                 _graphicsDevice,
                 _width,
                 _height,

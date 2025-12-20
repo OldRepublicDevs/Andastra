@@ -72,12 +72,12 @@ namespace Andastra.Runtime.Stride.Converters
             /// <summary>
             /// Bounding box minimum.
             /// </summary>
-            public Vector3 BoundsMin { get; set; }
+            public global::Stride.Core.Mathematics.Vector3 BoundsMin { get; set; }
 
             /// <summary>
             /// Bounding box maximum.
             /// </summary>
-            public Vector3 BoundsMax { get; set; }
+            public global::Stride.Core.Mathematics.Vector3 BoundsMax { get; set; }
 
             public ConversionResult()
             {
@@ -127,11 +127,11 @@ namespace Andastra.Runtime.Stride.Converters
         /// </summary>
         public struct VertexPositionNormalTexture
         {
-            public Vector3 Position;
-            public Vector3 Normal;
-            public Vector2 TexCoord;
+            public System.Numerics.Vector3 Position;
+            public System.Numerics.Vector3 Normal;
+            public System.Numerics.Vector2 TexCoord;
 
-            public VertexPositionNormalTexture(Vector3 position, Vector3 normal, Vector2 texCoord)
+            public VertexPositionNormalTexture(System.Numerics.Vector3 position, System.Numerics.Vector3 normal, System.Numerics.Vector2 texCoord)
             {
                 Position = position;
                 Normal = normal;
@@ -218,7 +218,7 @@ namespace Andastra.Runtime.Stride.Converters
             );
 
             // Create translation
-            Vector3 translation = new Vector3(
+            System.Numerics.Vector3 translation = new System.Numerics.Vector3(
                 node.Position.X,
                 node.Position.Y,
                 node.Position.Z
@@ -248,18 +248,18 @@ namespace Andastra.Runtime.Stride.Converters
             var vertices = new VertexPositionNormalTexture[mesh.Vertices.Count];
             for (int i = 0; i < mesh.Vertices.Count; i++)
             {
-                Vector3 pos = new Vector3(mesh.Vertices[i].X, mesh.Vertices[i].Y, mesh.Vertices[i].Z);
-                Vector3 normal = Vector3.UnitY; // Default to up if no normal
-                Vector2 texCoord = Vector2.Zero;
+                System.Numerics.Vector3 pos = new System.Numerics.Vector3(mesh.Vertices[i].X, mesh.Vertices[i].Y, mesh.Vertices[i].Z);
+                System.Numerics.Vector3 normal = System.Numerics.Vector3.UnitY; // Default to up if no normal
+                System.Numerics.Vector2 texCoord = System.Numerics.Vector2.Zero;
 
                 if (mesh.Normals != null && i < mesh.Normals.Count)
                 {
-                    normal = new Vector3(mesh.Normals[i].X, mesh.Normals[i].Y, mesh.Normals[i].Z);
+                    normal = new System.Numerics.Vector3(mesh.Normals[i].X, mesh.Normals[i].Y, mesh.Normals[i].Z);
                 }
 
                 if (mesh.UV1 != null && i < mesh.UV1.Count)
                 {
-                    texCoord = new Vector2(mesh.UV1[i].X, mesh.UV1[i].Y);
+                    texCoord = new System.Numerics.Vector2(mesh.UV1[i].X, mesh.UV1[i].Y);
                 }
 
                 vertices[i] = new VertexPositionNormalTexture(pos, normal, texCoord);

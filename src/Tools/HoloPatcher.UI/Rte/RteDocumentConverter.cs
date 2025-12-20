@@ -9,7 +9,7 @@ using AvaloniaTextElement = Avalonia.Controls.Documents.TextElement;
 
 namespace HoloPatcher.UI.Rte
 {
-    internal static class RteDocumentConverter
+    public static class RteDocumentConverter
     {
         public static RteDocument FromFlowDocument(FlowDocument document)
         {

@@ -133,7 +133,7 @@ namespace HoloPatcher.UI.Update
         }
     }
 
-    internal static class RemoteUpdateInfoParser
+    public static class RemoteUpdateInfoParser
     {
         private static readonly JsonSerializerOptions SerializerOptions = new JsonSerializerOptions
         {
