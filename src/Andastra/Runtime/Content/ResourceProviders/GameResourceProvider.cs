@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Extract;
 using Andastra.Parsing.Extract.Capsule;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
