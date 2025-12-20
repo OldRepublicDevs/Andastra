@@ -1,6 +1,10 @@
 using System;
 using System.Numerics;
 using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Content.MDL;
+using Andastra.Runtime.Core.Interfaces.Components;
+using Andastra.Parsing.Resource;
+using Andastra.Runtime.Content.Interfaces;
 
 namespace Andastra.Runtime.Core.Camera
 {
@@ -32,6 +36,7 @@ namespace Andastra.Runtime.Core.Camera
     public class CameraController : ICameraController
     {
         private readonly IWorld _world;
+        private readonly MDLLoader _mdlLoader;
 
         /// <summary>
         /// Current camera mode.
@@ -133,9 +138,10 @@ namespace Andastra.Runtime.Core.Camera
         /// </summary>
         public event Action OnCameraUpdated;
 
-        public CameraController(IWorld world)
+        public CameraController(IWorld world, MDLLoader mdlLoader = null)
         {
             _world = world ?? throw new ArgumentNullException("world");
+            _mdlLoader = mdlLoader;
 
             // Default values (KOTOR-style)
             // Based on swkotor.exe and swkotor2.exe: Y-up coordinate system (Y is vertical axis)
@@ -713,7 +719,6 @@ namespace Andastra.Runtime.Core.Camera
                 return false;
             }
 
-            // TODO: PLACEHOLDER - Full MDL node lookup implementation needed
             // Based on swkotor2.exe: FUN_006c6020 @ 0x006c6020 searches MDL node tree for "camerahook" nodes
             // Located via string references: "camerahook" @ 0x007c7dac, "camerahook%d" @ 0x007d0448
             // Original implementation:
@@ -723,13 +728,36 @@ namespace Andastra.Runtime.Core.Camera
             //   - Calls virtual function at offset 0x10c with "camerahook" string to find node by name
             //   - Transforms node's local position to world space using entity's transform matrix
             //   - Returns world-space position of the camera hook node
-            // Current implementation: Fallback approximation based on entity facing
-            // Full implementation requires:
-            //   1. Access to MDL model cache/loader (dependency injection into CameraController)
-            //   2. Recursive node search function (search MDLNodeData tree by name)
-            //   3. World-space transform calculation (combine node local transform with entity transform)
-            //   4. Support for animated nodes (query current animation frame transform if node has controllers)
+            // Implementation: Full MDL node lookup with recursive search and world-space transform
+            
+            // Construct camera hook node name (format: "camerahook{N}")
+            string hookNodeName = string.Format("camerahook{0}", hookIndex);
+            
+            // Try to get MDL model from entity
+            MDLModel mdlModel = GetEntityMDLModel(entity);
+            if (mdlModel != null && mdlModel.RootNode != null)
+            {
+                // Search for camera hook node recursively
+                MDLNodeData hookNode = FindNodeByName(mdlModel.RootNode, hookNodeName);
+                if (hookNode != null)
+                {
+                    // Transform node position to world space
+                    Vector3 localPosition = new Vector3(
+                        hookNode.Position.X,
+                        hookNode.Position.Y,
+                        hookNode.Position.Z
+                    );
+                    
+                    // Get node's world-space transform by accumulating parent transforms
+                    Vector3 nodeWorldPosition = TransformNodeToWorldSpace(hookNode, mdlModel.RootNode, transform);
+                    
+                    hookPosition = nodeWorldPosition;
+                    return true;
+                }
+            }
+            
             // Fallback: Calculate approximate hook position based on entity facing
+            // This is used when MDL model is not available or camera hook node is not found
             Vector3 entityPos = transform.Position;
             Vector3 entityForward = GetEntityForward(transform);
             Vector3 entityRight = GetEntityRight(transform);
@@ -799,6 +827,240 @@ namespace Andastra.Runtime.Core.Camera
             Vector3 forward = transform.Forward;
             Vector3 right = transform.Right;
             return Vector3.Cross(forward, right);
+        }
+
+        /// <summary>
+        /// Gets the MDL model for an entity.
+        /// Based on swkotor2.exe: Model loading for camera hook lookup
+        /// </summary>
+        private MDLModel GetEntityMDLModel(IEntity entity)
+        {
+            if (_mdlLoader == null)
+            {
+                return null;
+            }
+
+            // Get model ResRef from renderable component
+            IRenderableComponent renderable = entity.GetComponent<IRenderableComponent>();
+            if (renderable == null || string.IsNullOrEmpty(renderable.ModelResRef))
+            {
+                return null;
+            }
+
+            try
+            {
+                // Load MDL model using MDLLoader
+                return _mdlLoader.Load(renderable.ModelResRef);
+            }
+            catch
+            {
+                // Model loading failed, return null
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Recursively searches for a node by name in the MDL node tree.
+        /// Based on swkotor2.exe: FUN_006c6020 searches MDL node tree recursively
+        /// Original implementation: Calls virtual function at offset 0x10c with node name string
+        /// </summary>
+        private MDLNodeData FindNodeByName(MDLNodeData rootNode, string nodeName)
+        {
+            if (rootNode == null || string.IsNullOrEmpty(nodeName))
+            {
+                return null;
+            }
+
+            // Use iterative depth-first search to avoid stack overflow on deep trees
+            var stack = new System.Collections.Generic.Stack<MDLNodeData>();
+            stack.Push(rootNode);
+
+            while (stack.Count > 0)
+            {
+                MDLNodeData currentNode = stack.Pop();
+
+                // Check if current node matches
+                if (currentNode.Name != null && currentNode.Name.Equals(nodeName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return currentNode;
+                }
+
+                // Add children to stack for recursive search
+                if (currentNode.Children != null)
+                {
+                    for (int i = currentNode.Children.Length - 1; i >= 0; i--)
+                    {
+                        if (currentNode.Children[i] != null)
+                        {
+                            stack.Push(currentNode.Children[i]);
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Transforms a node's local position to world space.
+        /// Based on swkotor2.exe: Node transform calculation for world-space positioning
+        /// Original implementation: Combines node's local transform with entity's world transform
+        /// </summary>
+        private Vector3 TransformNodeToWorldSpace(MDLNodeData node, MDLNodeData rootNode, Interfaces.Components.ITransformComponent entityTransform)
+        {
+            if (node == null || entityTransform == null)
+            {
+                return Vector3.Zero;
+            }
+
+            // Get node's local position
+            Vector3 localPosition = new Vector3(
+                node.Position.X,
+                node.Position.Y,
+                node.Position.Z
+            );
+
+            // Accumulate parent transforms from root to node
+            Vector3 accumulatedPosition = localPosition;
+            Vector4 accumulatedOrientation = new Vector4(
+                node.Orientation.X,
+                node.Orientation.Y,
+                node.Orientation.Z,
+                node.Orientation.W
+            );
+
+            // Build transform chain from root to node
+            MDLNodeData currentNode = node;
+            var transformChain = new System.Collections.Generic.List<MDLNodeData>();
+            
+            // Find path from root to node
+            if (FindPathToNode(rootNode, node, transformChain))
+            {
+                // Apply transforms from root to node (excluding the node itself)
+                for (int i = 0; i < transformChain.Count - 1; i++)
+                {
+                    MDLNodeData parentNode = transformChain[i];
+                    if (parentNode != null)
+                    {
+                        Vector3 parentPos = new Vector3(
+                            parentNode.Position.X,
+                            parentNode.Position.Y,
+                            parentNode.Position.Z
+                        );
+                        
+                        Vector4 parentOrient = new Vector4(
+                            parentNode.Orientation.X,
+                            parentNode.Orientation.Y,
+                            parentNode.Orientation.Z,
+                            parentNode.Orientation.W
+                        );
+
+                        // Transform position by parent's orientation and add parent's position
+                        Vector3 rotatedPos = RotateVectorByQuaternion(accumulatedPosition, parentOrient);
+                        accumulatedPosition = parentPos + rotatedPos;
+
+                        // Combine orientations (quaternion multiplication)
+                        accumulatedOrientation = MultiplyQuaternions(parentOrient, accumulatedOrientation);
+                    }
+                }
+            }
+
+            // Transform to entity's world space
+            // Entity transform: position + facing rotation (Y-up coordinate system)
+            Vector3 entityPos = entityTransform.Position;
+            float entityFacing = entityTransform.Facing;
+
+            // Rotate node position by entity's facing (rotation around Y axis)
+            Vector3 rotatedByFacing = new Vector3(
+                accumulatedPosition.X * (float)Math.Cos(entityFacing) - accumulatedPosition.Z * (float)Math.Sin(entityFacing),
+                accumulatedPosition.Y,
+                accumulatedPosition.X * (float)Math.Sin(entityFacing) + accumulatedPosition.Z * (float)Math.Cos(entityFacing)
+            );
+
+            // Apply entity's orientation quaternion if available
+            Vector3 finalPosition = rotatedByFacing;
+            if (accumulatedOrientation.W != 1.0f || accumulatedOrientation.X != 0.0f || accumulatedOrientation.Y != 0.0f || accumulatedOrientation.Z != 0.0f)
+            {
+                finalPosition = RotateVectorByQuaternion(rotatedByFacing, accumulatedOrientation);
+            }
+
+            // Add entity position
+            return entityPos + finalPosition;
+        }
+
+        /// <summary>
+        /// Finds the path from root node to target node.
+        /// </summary>
+        private bool FindPathToNode(MDLNodeData currentNode, MDLNodeData targetNode, System.Collections.Generic.List<MDLNodeData> path)
+        {
+            if (currentNode == null)
+            {
+                return false;
+            }
+
+            path.Add(currentNode);
+
+            if (currentNode == targetNode)
+            {
+                return true;
+            }
+
+            if (currentNode.Children != null)
+            {
+                foreach (MDLNodeData child in currentNode.Children)
+                {
+                    if (child != null && FindPathToNode(child, targetNode, path))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            path.RemoveAt(path.Count - 1);
+            return false;
+        }
+
+        /// <summary>
+        /// Rotates a vector by a quaternion.
+        /// </summary>
+        private Vector3 RotateVectorByQuaternion(Vector3 vector, Vector4 quaternion)
+        {
+            // Quaternion rotation: v' = q * v * q^-1
+            // Optimized version for unit quaternions
+            float qx = quaternion.X;
+            float qy = quaternion.Y;
+            float qz = quaternion.Z;
+            float qw = quaternion.W;
+
+            float vx = vector.X;
+            float vy = vector.Y;
+            float vz = vector.Z;
+
+            // Calculate quaternion * vector
+            float tx = qw * vx + qy * vz - qz * vy;
+            float ty = qw * vy + qz * vx - qx * vz;
+            float tz = qw * vz + qx * vy - qy * vx;
+            float tw = -qx * vx - qy * vy - qz * vz;
+
+            // Calculate result * quaternion^-1 (conjugate for unit quaternion)
+            return new Vector3(
+                tx * qw + tw * -qx + ty * -qz - tz * -qy,
+                ty * qw + tw * -qy + tz * -qx - tx * -qz,
+                tz * qw + tw * -qz + tx * -qy - ty * -qx
+            );
+        }
+
+        /// <summary>
+        /// Multiplies two quaternions (q1 * q2).
+        /// </summary>
+        private Vector4 MultiplyQuaternions(Vector4 q1, Vector4 q2)
+        {
+            return new Vector4(
+                q1.W * q2.X + q1.X * q2.W + q1.Y * q2.Z - q1.Z * q2.Y,
+                q1.W * q2.Y - q1.X * q2.Z + q1.Y * q2.W + q1.Z * q2.X,
+                q1.W * q2.Z + q1.X * q2.Y - q1.Y * q2.X + q1.Z * q2.W,
+                q1.W * q2.W - q1.X * q2.X - q1.Y * q2.Y - q1.Z * q2.Z
+            );
         }
 
         /// <summary>
