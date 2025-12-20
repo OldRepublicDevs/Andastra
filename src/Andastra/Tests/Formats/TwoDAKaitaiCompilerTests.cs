@@ -27,7 +27,7 @@ namespace Andastra.Parsing.Tests.Formats
             "test_files", "kaitai_compiled", "twoda"
         );
 
-        // Supported languages in Kaitai Struct (at least 12 as required)
+        // Supported languages in Kaitai Struct (at least a dozen as required)
         private static readonly string[] SupportedLanguages = new[]
         {
             "python",
@@ -84,94 +84,11 @@ namespace Andastra.Parsing.Tests.Formats
             content.Should().Contain("seq:", "TwoDA.ksy should contain seq section");
         }
 
-        [Fact(Timeout = 300000)]
-        public void TestCompileTwoDAToPython()
+        [Theory(Timeout = 300000)]
+        [MemberData(nameof(GetSupportedLanguages))]
+        public void TestCompileTwoDAToLanguage(string language)
         {
-            TestCompileToLanguage("python");
-        }
-
-        [Fact(Timeout = 300000)]
-        public void TestCompileTwoDAToJava()
-        {
-            TestCompileToLanguage("java");
-        }
-
-        [Fact(Timeout = 300000)]
-        public void TestCompileTwoDAToJavaScript()
-        {
-            TestCompileToLanguage("javascript");
-        }
-
-        [Fact(Timeout = 300000)]
-        public void TestCompileTwoDAToCSharp()
-        {
-            TestCompileToLanguage("csharp");
-        }
-
-        [Fact(Timeout = 300000)]
-        public void TestCompileTwoDAToCpp()
-        {
-            TestCompileToLanguage("cpp_stl");
-        }
-
-        [Fact(Timeout = 300000)]
-        public void TestCompileTwoDAToGo()
-        {
-            TestCompileToLanguage("go");
-        }
-
-        [Fact(Timeout = 300000)]
-        public void TestCompileTwoDAToRuby()
-        {
-            TestCompileToLanguage("ruby");
-        }
-
-        [Fact(Timeout = 300000)]
-        public void TestCompileTwoDAToPhp()
-        {
-            TestCompileToLanguage("php");
-        }
-
-        [Fact(Timeout = 300000)]
-        public void TestCompileTwoDAToRust()
-        {
-            TestCompileToLanguage("rust");
-        }
-
-        [Fact(Timeout = 300000)]
-        public void TestCompileTwoDAToSwift()
-        {
-            TestCompileToLanguage("swift");
-        }
-
-        [Fact(Timeout = 300000)]
-        public void TestCompileTwoDAToLua()
-        {
-            TestCompileToLanguage("lua");
-        }
-
-        [Fact(Timeout = 300000)]
-        public void TestCompileTwoDAToNim()
-        {
-            TestCompileToLanguage("nim");
-        }
-
-        [Fact(Timeout = 300000)]
-        public void TestCompileTwoDAToPerl()
-        {
-            TestCompileToLanguage("perl");
-        }
-
-        [Fact(Timeout = 300000)]
-        public void TestCompileTwoDAToKotlin()
-        {
-            TestCompileToLanguage("kotlin");
-        }
-
-        [Fact(Timeout = 300000)]
-        public void TestCompileTwoDAToTypeScript()
-        {
-            TestCompileToLanguage("typescript");
+            TestCompileToLanguage(language);
         }
 
         [Fact(Timeout = 600000)] // 10 minute timeout for compiling all languages
@@ -183,6 +100,7 @@ namespace Andastra.Parsing.Tests.Formats
                 return;
             }
 
+            // Check if Java/Kaitai compiler is available
             var javaCheck = RunCommand("java", "-version");
             if (javaCheck.ExitCode != 0)
             {
@@ -211,12 +129,15 @@ namespace Andastra.Parsing.Tests.Formats
                 }
             }
 
+            // Report results
             var successful = results.Where(r => r.Value.Success).ToList();
             var failed = results.Where(r => !r.Value.Success).ToList();
 
+            // At least some languages should compile successfully
             successful.Count.Should().BeGreaterThan(0,
                 $"At least one language should compile successfully. Failed: {string.Join(", ", failed.Select(f => $"{f.Key}: {f.Value.ErrorMessage}"))}");
 
+            // Log successful compilations
             foreach (var success in successful)
             {
                 var outputDir = Path.Combine(TestOutputDir, success.Key);
@@ -227,6 +148,45 @@ namespace Andastra.Parsing.Tests.Formats
                         $"Language {success.Key} should generate output files");
                 }
             }
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileTwoDAToAtLeastDozenLanguages()
+        {
+            var normalizedKsyPath = Path.GetFullPath(TwoDAKsyPath);
+            if (!File.Exists(normalizedKsyPath))
+            {
+                return;
+            }
+
+            var javaCheck = RunCommand("java", "-version");
+            if (javaCheck.ExitCode != 0)
+            {
+                return;
+            }
+
+            Directory.CreateDirectory(TestOutputDir);
+
+            int compiledCount = 0;
+            foreach (string lang in SupportedLanguages)
+            {
+                try
+                {
+                    var result = CompileToLanguage(normalizedKsyPath, lang);
+                    if (result.Success)
+                    {
+                        compiledCount++;
+                    }
+                }
+                catch
+                {
+                    // Ignore individual failures
+                }
+            }
+
+            // We should be able to compile to at least a dozen languages
+            compiledCount.Should().BeGreaterOrEqualTo(12,
+                $"Should successfully compile TwoDA.ksy to at least 12 languages. Compiled to {compiledCount} languages.");
         }
 
         [Fact(Timeout = 300000)]
@@ -246,54 +206,15 @@ namespace Andastra.Parsing.Tests.Formats
 
             Directory.CreateDirectory(TestOutputDir);
 
+            // Compile to multiple languages in a single command
             var languages = new[] { "python", "java", "javascript", "csharp" };
             var languageArgs = string.Join(" ", languages.Select(l => $"-t {l}"));
 
             var result = RunKaitaiCompiler(normalizedKsyPath, languageArgs, TestOutputDir);
 
+            // Compilation should succeed (or at least not fail catastrophically)
             result.ExitCode.Should().BeInRange(-1, 1,
                 $"Kaitai compiler should execute. Output: {result.Output}, Error: {result.Error}");
-        }
-
-        [Fact(Timeout = 300000)]
-        public void TestCompileTwoDAToAtLeastDozenLanguages()
-        {
-            var normalizedKsyPath = Path.GetFullPath(TwoDAKsyPath);
-            if (!File.Exists(normalizedKsyPath))
-            {
-                return;
-            }
-
-            var javaCheck = RunCommand("java", "-version");
-            if (javaCheck.ExitCode != 0)
-            {
-                return;
-            }
-
-            SupportedLanguages.Length.Should().BeGreaterThanOrEqualTo(12,
-                "Should support at least a dozen languages for testing");
-
-            Directory.CreateDirectory(TestOutputDir);
-
-            int compiledCount = 0;
-            foreach (var language in SupportedLanguages)
-            {
-                try
-                {
-                    var result = CompileToLanguage(normalizedKsyPath, language);
-                    if (result.Success)
-                    {
-                        compiledCount++;
-                    }
-                }
-                catch
-                {
-                    // Ignore individual failures
-                }
-            }
-
-            compiledCount.Should().BeGreaterThanOrEqualTo(12,
-                $"Should successfully compile TwoDA.ksy to at least 12 languages. Compiled to {compiledCount} languages.");
         }
 
         [Fact(Timeout = 300000)]
@@ -310,7 +231,8 @@ namespace Andastra.Parsing.Tests.Formats
                 return;
             }
 
-            var process = new Process
+            // Try to compile to a test language to validate syntax
+            var testProcess = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
@@ -325,12 +247,13 @@ namespace Andastra.Parsing.Tests.Formats
 
             try
             {
-                process.Start();
-                process.WaitForExit(30000);
+                testProcess.Start();
+                testProcess.WaitForExit(30000);
 
-                string stderr = process.StandardError.ReadToEnd();
+                string stderr = testProcess.StandardError.ReadToEnd();
 
-                if (process.ExitCode != 0 && stderr.Contains("error") && !stderr.Contains("import"))
+                // Compilation might fail due to missing dependencies, but syntax errors would be caught
+                if (testProcess.ExitCode != 0 && stderr.Contains("error") && !stderr.Contains("import"))
                 {
                     Assert.True(false, $"TwoDA.ksy has syntax errors: {stderr}");
                 }
@@ -351,9 +274,11 @@ namespace Andastra.Parsing.Tests.Formats
 
             string ksyContent = File.ReadAllText(TwoDAKsyPath);
 
+            // Check for required elements in Kaitai Struct definition
             ksyContent.Should().Contain("meta:", "Should have meta section");
             ksyContent.Should().Contain("id: twoda", "Should have id: twoda");
             ksyContent.Should().Contain("file-extension:", "Should define file-extension");
+            ksyContent.Should().Contain("2da", "Should list 2da as file extension");
             ksyContent.Should().Contain("header", "Should define header field");
             ksyContent.Should().Contain("column_headers_raw", "Should define column_headers_raw field");
             ksyContent.Should().Contain("row_count", "Should define row_count field");
@@ -362,9 +287,10 @@ namespace Andastra.Parsing.Tests.Formats
             ksyContent.Should().Contain("data_size", "Should define data_size field");
             ksyContent.Should().Contain("cell_values_section", "Should define cell_values_section");
             ksyContent.Should().Contain("twoda_header", "Should define twoda_header type");
-            ksyContent.Should().Contain("row_labels_section", "Should define row_labels_section type");
-            ksyContent.Should().Contain("cell_offsets_array", "Should define cell_offsets_array type");
-            ksyContent.Should().Contain("cell_values_section", "Should define cell_values_section type");
+            ksyContent.Should().Contain("magic", "Should define magic field");
+            ksyContent.Should().Contain("version", "Should define version field");
+            ksyContent.Should().Contain("\"2DA \"", "Should validate magic as \"2DA \"");
+            ksyContent.Should().Contain("\"V2.b\"", "Should validate version as \"V2.b\"");
         }
 
         private void TestCompileToLanguage(string language)
@@ -387,12 +313,14 @@ namespace Andastra.Parsing.Tests.Formats
 
             if (!result.Success)
             {
+                // Some languages may not be fully supported or may have missing dependencies
                 return;
             }
 
             result.Success.Should().BeTrue(
                 $"Compilation to {language} should succeed. Error: {result.ErrorMessage}, Output: {result.Output}");
 
+            // Verify output directory was created
             var outputDir = Path.Combine(TestOutputDir, language);
             Directory.Exists(outputDir).Should().BeTrue(
                 $"Output directory for {language} should be created");
@@ -417,6 +345,7 @@ namespace Andastra.Parsing.Tests.Formats
         private (int ExitCode, string Output, string Error) RunKaitaiCompiler(
             string ksyPath, string arguments, string outputDir)
         {
+            // Try different ways to invoke Kaitai Struct compiler
             var result = RunCommand("kaitai-struct-compiler", $"{arguments} -d \"{outputDir}\" \"{ksyPath}\"");
 
             if (result.ExitCode == 0)
@@ -424,6 +353,7 @@ namespace Andastra.Parsing.Tests.Formats
                 return result;
             }
 
+            // Try with .jar extension
             result = RunCommand("kaitai-struct-compiler.jar", $"{arguments} -d \"{outputDir}\" \"{ksyPath}\"");
 
             if (result.ExitCode == 0)
@@ -431,6 +361,7 @@ namespace Andastra.Parsing.Tests.Formats
                 return result;
             }
 
+            // Try as Java JAR (common installation method)
             var jarPath = FindKaitaiCompilerJar();
             if (!string.IsNullOrEmpty(jarPath) && File.Exists(jarPath))
             {
@@ -438,6 +369,7 @@ namespace Andastra.Parsing.Tests.Formats
                 return result;
             }
 
+            // Try in common installation locations
             var commonPaths = new[]
             {
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "bin", "kaitai-struct-compiler"),
@@ -470,12 +402,14 @@ namespace Andastra.Parsing.Tests.Formats
 
         private string FindKaitaiCompilerJar()
         {
+            // Check environment variable first
             var envJar = Environment.GetEnvironmentVariable("KAITAI_COMPILER_JAR");
             if (!string.IsNullOrEmpty(envJar) && File.Exists(envJar))
             {
                 return envJar;
             }
 
+            // Check common locations for Kaitai Struct compiler JAR
             var searchPaths = new[]
             {
                 Path.Combine(AppContext.BaseDirectory, "kaitai-struct-compiler.jar"),
@@ -521,7 +455,7 @@ namespace Andastra.Parsing.Tests.Formats
 
                     var output = process.StandardOutput.ReadToEnd();
                     var error = process.StandardError.ReadToEnd();
-                    process.WaitForExit(30000);
+                    process.WaitForExit(30000); // 30 second timeout
 
                     return (process.ExitCode, output, error);
                 }
@@ -530,6 +464,11 @@ namespace Andastra.Parsing.Tests.Formats
             {
                 return (-1, "", ex.Message);
             }
+        }
+
+        public static IEnumerable<object[]> GetSupportedLanguages()
+        {
+            return SupportedLanguages.Select(lang => new object[] { lang });
         }
 
         private class CompileResult
@@ -541,4 +480,3 @@ namespace Andastra.Parsing.Tests.Formats
         }
     }
 }
-
