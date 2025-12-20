@@ -103,12 +103,10 @@ namespace Andastra.Runtime.Content.Loaders
                 return null;
             }
 
-            using (var stream = new MemoryStream(data))
-            {
-                var reader = new GFFBinaryReader(stream);
-                GFF gff = reader.Load();
-                return ParseCreatureTemplate(gff.Root);
-            }
+            // Use Parsing UTCHelpers to parse the GFF
+            GFF gff = GFF.FromBytes(data);
+            var utc = Andastra.Parsing.Resource.Generics.UTC.UTCHelpers.ConstructUtc(gff);
+            return ParseCreatureTemplate(utc);
         }
 
         /// <summary>
@@ -267,36 +265,36 @@ namespace Andastra.Runtime.Content.Loaders
 
         #region Template Parsing
 
-        private CreatureTemplate ParseCreatureTemplate(GFFStruct root)
+        private CreatureTemplate ParseCreatureTemplate(Andastra.Parsing.Resource.Generics.UTC utc)
         {
             var template = new CreatureTemplate();
 
             // Basic info
-            template.TemplateResRef = GetString(root, "TemplateResRef");
-            template.Tag = GetString(root, "Tag");
-            template.FirstName = GetLocalizedString(root, "FirstName");
-            template.LastName = GetLocalizedString(root, "LastName");
+            template.TemplateResRef = utc.ResRef.Value;
+            template.Tag = utc.Tag;
+            template.FirstName = utc.FirstName;
+            template.LastName = utc.LastName;
 
             // Appearance
-            template.Appearance = GetInt(root, "Appearance_Type");
-            template.BodyVariation = GetByte(root, "BodyVariation");
-            template.TextureVar = GetByte(root, "TextureVar");
-            template.Portrait = GetString(root, "Portrait");
-            template.Soundset = GetInt(root, "SoundSetFile");
+            template.Appearance = utc.AppearanceId;
+            template.BodyVariation = (byte)utc.BodyVariation;
+            template.TextureVar = (byte)utc.TextureVariation;
+            template.Portrait = utc.PortraitId.Value;
+            template.Soundset = utc.SoundsetId;
 
             // Stats
-            template.CurrentHP = GetShort(root, "CurrentHitPoints");
-            template.MaxHP = GetShort(root, "MaxHitPoints");
-            template.CurrentFP = GetShort(root, "CurrentForce");
-            template.MaxFP = GetShort(root, "MaxForce");
+            template.CurrentHP = (short)utc.CurrentHitPoints;
+            template.MaxHP = (short)utc.MaxHitPoints;
+            template.CurrentFP = (short)utc.CurrentForce;
+            template.MaxFP = (short)utc.ForcePoints;
 
             // Attributes
-            template.Strength = GetByte(root, "Str");
-            template.Dexterity = GetByte(root, "Dex");
-            template.Constitution = GetByte(root, "Con");
-            template.Intelligence = GetByte(root, "Int");
-            template.Wisdom = GetByte(root, "Wis");
-            template.Charisma = GetByte(root, "Cha");
+            template.Strength = (byte)utc.Strength;
+            template.Dexterity = (byte)utc.Dexterity;
+            template.Constitution = (byte)utc.Constitution;
+            template.Intelligence = (byte)utc.Intelligence;
+            template.Wisdom = (byte)utc.Wisdom;
+            template.Charisma = (byte)utc.Charisma;
 
             // Combat
             template.NaturalAC = GetByte(root, "NaturalAC");
