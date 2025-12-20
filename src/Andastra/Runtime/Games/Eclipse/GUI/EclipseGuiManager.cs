@@ -679,70 +679,39 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
                     // Cube maps: Detected when height == width * 6 for compressed textures
                     // Mipmaps: Multiple mip levels supported, stored sequentially after base level
                     // Based on Eclipse engine: TPC parsing follows same format specification as Odyssey engine (KotOR)
-                    // Located via codebase analysis: TPCBinaryReader handles TPC format parsing
+                    // Located via codebase analysis: TpcParser handles TPC format parsing
                     // Located via vendor references: xoreos and reone implementations confirm format structure
-                    using (TPCBinaryReader parser = new TPCBinaryReader(tpcResult.Data))
+                    // Based on PyKotor TPCBinaryReader implementation and KotOR Modding Wiki format specification
+                    using (TpcParser parser = new TpcParser(tpcResult.Data))
                     {
-                        TPC tpc = parser.Load();
+                        TpcParser.TpcParseResult result = parser.Parse();
                         
-                        if (tpc == null || tpc.Layers.Count == 0 || tpc.Layers[0].Mipmaps.Count == 0)
+                        if (result == null || result.Width <= 0 || result.Height <= 0 || result.RgbaData == null || result.RgbaData.Length == 0)
                         {
-                            System.Diagnostics.Debug.WriteLine($"[EclipseGuiManager] ERROR: Failed to parse TPC texture {textureName}: Invalid TPC structure");
+                            System.Diagnostics.Debug.WriteLine($"[EclipseGuiManager] ERROR: Failed to parse TPC texture {textureName}: Invalid TPC structure or dimensions");
+                        }
+                        else if (result.RgbaData.Length != result.Width * result.Height * 4)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[EclipseGuiManager] ERROR: TPC texture {textureName} RGBA data size mismatch: expected {result.Width * result.Height * 4}, got {result.RgbaData.Length}");
                         }
                         else
                         {
-                            // Get texture dimensions from first layer, first mipmap
-                            // TPC.Dimensions() returns (width, height) tuple from base mipmap
-                            (int width, int height) = tpc.Dimensions();
+                            // Create texture from parsed TPC RGBA data
+                            // IGraphicsDevice.CreateTexture2D accepts RGBA byte array (width * height * 4 bytes)
+                            // Format: RGBA interleaved, row-major order (top-left to bottom-right)
+                            // Based on Eclipse engine: Creates DirectX texture from TPC pixel data
+                            // Located via codebase analysis: IGraphicsDevice.CreateTexture2D signature and usage patterns
+                            // TpcParser.Parse() already converts all formats (DXT1/DXT5/RGB/RGBA/BGRA/Greyscale) to RGBA
+                            texture = _graphicsDevice.CreateTexture2D(result.Width, result.Height, result.RgbaData);
                             
-                            if (width <= 0 || height <= 0)
+                            if (texture != null)
                             {
-                                System.Diagnostics.Debug.WriteLine($"[EclipseGuiManager] ERROR: Invalid TPC texture dimensions {textureName}: {width}x{height}");
+                                _textureCache[key] = texture;
+                                System.Diagnostics.Debug.WriteLine($"[EclipseGuiManager] Successfully loaded TPC texture: {textureName} ({result.Width}x{result.Height})");
                             }
                             else
                             {
-                                // Convert TPC texture to RGBA format for IGraphicsDevice.CreateTexture2D
-                                // TpcToMonoGameTextureConverter.ConvertToRgba handles all TPC formats:
-                                // - Uncompressed: RGBA, BGRA, RGB, BGR, Greyscale
-                                // - Compressed: DXT1, DXT3, DXT5 (decompressed to RGBA)
-                                // Conversion logic:
-                                // - RGBA: Direct copy (already in RGBA format)
-                                // - BGRA: Swizzles B<->R channels
-                                // - RGB/BGR: Expands to RGBA with alpha=255, swizzles if BGR
-                                // - Greyscale: Expands to RGBA (R=G=B=greyscale value, A=255)
-                                // - DXT1/DXT3/DXT5: Decompresses block-compressed data to RGBA
-                                // Based on TpcToMonoGameTextureConverter: ConvertToRgba extracts first layer, first mipmap
-                                // Located via codebase analysis: TpcToMonoGameTextureConverter.ConvertToRgba is public API
-                                // Located via vendor references: DXT decompression algorithms match xoreos/reone implementations
-                                byte[] rgbaData = TpcToMonoGameTextureConverter.ConvertToRgba(tpc);
-                                
-                                if (rgbaData == null || rgbaData.Length == 0)
-                                {
-                                    System.Diagnostics.Debug.WriteLine($"[EclipseGuiManager] ERROR: Failed to convert TPC texture {textureName} to RGBA");
-                                }
-                                else if (rgbaData.Length != width * height * 4)
-                                {
-                                    System.Diagnostics.Debug.WriteLine($"[EclipseGuiManager] ERROR: TPC texture {textureName} RGBA data size mismatch: expected {width * height * 4}, got {rgbaData.Length}");
-                                }
-                                else
-                                {
-                                    // Create texture from parsed TPC RGBA data
-                                    // IGraphicsDevice.CreateTexture2D accepts RGBA byte array (width * height * 4 bytes)
-                                    // Format: RGBA interleaved, row-major order (top-left to bottom-right)
-                                    // Based on Eclipse engine: Creates DirectX texture from TPC pixel data
-                                    // Located via codebase analysis: IGraphicsDevice.CreateTexture2D signature and usage patterns
-                                    texture = _graphicsDevice.CreateTexture2D(width, height, rgbaData);
-                                    
-                                    if (texture != null)
-                                    {
-                                        _textureCache[key] = texture;
-                                        System.Diagnostics.Debug.WriteLine($"[EclipseGuiManager] Successfully loaded TPC texture: {textureName} ({width}x{height}, format: {tpc.Format()})");
-                                    }
-                                    else
-                                    {
-                                        System.Diagnostics.Debug.WriteLine($"[EclipseGuiManager] ERROR: Failed to create texture from TPC data {textureName}");
-                                    }
-                                }
+                                System.Diagnostics.Debug.WriteLine($"[EclipseGuiManager] ERROR: Failed to create texture from TPC data {textureName}");
                             }
                         }
                     }
