@@ -273,6 +273,63 @@ namespace Andastra.Parsing.Resource.Generics
         public int StartYear { get; set; }
         public int XpScale { get; set; }
 
+        // Game time fields (current game time stored in IFO)
+        // Based on swkotor2.exe: FUN_00500290 @ 0x00500290 (IFO serialization function)
+        // Lines 96-100: Writes current game time as Mod_StartMinute/Second/MiliSec and Mod_PauseDay/PauseTime
+        // These fields are written from the current game time when the IFO is saved
+        /// <summary>
+        /// Current game time - minute component (0-59).
+        /// Written to IFO as Mod_StartMinute field.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_00500290 @ 0x00500290 line 96
+        /// Written via FUN_004137e0(param_1, param_2, local_5c[0], "Mod_StartMinute")
+        /// </remarks>
+        public int StartMinute { get; set; }
+
+        /// <summary>
+        /// Current game time - second component (0-59).
+        /// Written to IFO as Mod_StartSecond field.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_00500290 @ 0x00500290 line 97
+        /// Written via FUN_004137e0(param_1, param_2, local_58[0], "Mod_StartSecond")
+        /// </remarks>
+        public int StartSecond { get; set; }
+
+        /// <summary>
+        /// Current game time - millisecond component (0-999).
+        /// Written to IFO as Mod_StartMiliSec field.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_00500290 @ 0x00500290 line 98
+        /// Written via FUN_004137e0(param_1, param_2, local_54[0], "Mod_StartMiliSec")
+        /// </remarks>
+        public int StartMiliSec { get; set; }
+
+        /// <summary>
+        /// Pause day (day when time was paused).
+        /// Written to IFO as Mod_PauseDay field.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_00500290 @ 0x00500290 line 99
+        /// Written via FUN_00413880(param_1, param_2, uVar1, "Mod_PauseDay")
+        /// Value comes from offset +0x28 of time system object (from FUN_004dc6e0 result)
+        /// </remarks>
+        public uint PauseDay { get; set; }
+
+        /// <summary>
+        /// Pause time (time when paused, in milliseconds).
+        /// Written to IFO as Mod_PauseTime field.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_00500290 @ 0x00500290 line 100
+        /// Written via FUN_00413880(param_1, param_2, uVar2, "Mod_PauseTime")
+        /// Value comes from offset +0x2c of time system object (from FUN_004dc6e0 result)
+        /// String reference: "Mod_PauseTime" @ 0x007be89c (swkotor2.exe)
+        /// </remarks>
+        public uint PauseTime { get; set; }
+
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/ifo.py:123-124
         // Original: Additional script hooks
         public ResRef StartMovie { get; set; } = ResRef.FromBlank();
