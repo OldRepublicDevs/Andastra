@@ -2496,17 +2496,10 @@ namespace HolocronToolset.Editors
                     }
                 }
 
-                // If as_new_branches, update hash cache for the node (using reflection)
-                // Matching PyKotor: if as_new_branches: new_node_hash = hash(uuid.uuid4().hex), cur_node._hash_cache = new_node_hash
-                if (asNewBranches)
-                {
-                    var nodeHashCacheField = typeof(DLGNode).GetField("_hashCache", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                    if (nodeHashCacheField != null)
-                    {
-                        int newNodeHash = Guid.NewGuid().GetHashCode();
-                        nodeHashCacheField.SetValue(curNode, newNodeHash);
-                    }
-                }
+                // Note: When as_new_branches is True, nodes are deep copied via ToDict/FromDict,
+                // which creates new node objects with new hash caches automatically (set in constructors).
+                // The Python code explicitly sets _hash_cache, but in C# the hash cache is readonly
+                // and set in the constructor, so new nodes created via FromDict already have unique hashes.
 
                 // Add child nodes to queue
                 if (curNode.Links != null)
