@@ -189,6 +189,18 @@ namespace Andastra.Parsing.Common
             return new LocalizedString(-1);
         }
 
+        // Convenience method for creating LocalizedString from string ID (string reference)
+        public static LocalizedString FromStringId(int stringId)
+        {
+            return new LocalizedString(stringId);
+        }
+
+        // Alias for FromStringId - string reference
+        public static LocalizedString FromStrRef(int stringRef)
+        {
+            return new LocalizedString(stringRef);
+        }
+
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/language.py:525-538
         // Original: def from_english(cls, text: str) -> Self:
         public static LocalizedString FromEnglish(string text)
