@@ -5525,11 +5525,34 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
                 // Based on swkotor2.exe: Faction component creation during entity faction change
                 // Original implementation: Creates new faction component and assigns it to entity
                 // Located via string references: "FactionID" @ 0x007c40b4 (swkotor2.exe)
+                // Function: FUN_005fb0f0 @ 0x005fb0f0 loads FactionID from creature template
+                // Component initialization: Faction component should be initialized with FactionManager for proper reputation lookups
                 if (objectToChange is Andastra.Runtime.Core.Entities.Entity concreteEntity)
                 {
-                    var factionComponent = new OdysseyFactionComponent();
+                    // Get FactionManager from GameServicesContext if available
+                    // FactionManager enables proper faction reputation calculations and hostility checks
+                    FactionManager factionManager = null;
+                    if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+                    {
+                        factionManager = services.FactionManager as FactionManager;
+                    }
+
+                    // Create faction component with FactionManager if available
+                    OdysseyFactionComponent factionComponent;
+                    if (factionManager != null)
+                    {
+                        factionComponent = new OdysseyFactionComponent(factionManager);
+                    }
+                    else
+                    {
+                        factionComponent = new OdysseyFactionComponent();
+                    }
+
+                    // Initialize component properties
                     factionComponent.Owner = concreteEntity;
                     factionComponent.FactionId = memberFaction.FactionId;
+
+                    // Add component to entity
                     concreteEntity.AddComponent<IFactionComponent>(factionComponent);
                 }
             }
