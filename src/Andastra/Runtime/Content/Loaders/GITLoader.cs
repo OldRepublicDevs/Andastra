@@ -102,150 +102,148 @@ namespace Andastra.Runtime.Content.Loaders
                 return null;
             }
 
-            using (var stream = new MemoryStream(data))
-            {
-                var reader = new GFFBinaryReader(stream);
-                GFF gff = reader.Load();
-                return ParseGIT(gff.Root);
-            }
+            // Use Parsing GITHelpers to parse the GFF
+            GFF gff = GFF.FromBytes(data);
+            var git = Andastra.Parsing.Resource.Generics.GITHelpers.ConstructGit(gff);
+            return ParseGIT(git);
         }
 
-        private GITData ParseGIT(GFFStruct root)
+        private GITData ParseGIT(Andastra.Parsing.Resource.Generics.GIT git)
         {
-            var git = new GITData();
+            var gitData = new GITData();
 
             // Parse creature instances
-            if (root.TryGetList("Creature List", out GFFList creatureList))
+            if (git.Creatures != null)
             {
-                foreach (GFFStruct creatureStruct in creatureList)
+                foreach (var creature in git.Creatures)
                 {
-                    git.Creatures.Add(ParseCreatureInstance(creatureStruct));
+                    gitData.Creatures.Add(ParseCreatureInstance(creature));
                 }
             }
 
             // Parse door instances
-            if (root.TryGetList("Door List", out GFFList doorList))
+            if (git.Doors != null)
             {
-                foreach (GFFStruct doorStruct in doorList)
+                foreach (var door in git.Doors)
                 {
-                    git.Doors.Add(ParseDoorInstance(doorStruct));
+                    gitData.Doors.Add(ParseDoorInstance(door));
                 }
             }
 
             // Parse placeable instances
-            if (root.TryGetList("Placeable List", out GFFList placeableList))
+            if (git.Placeables != null)
             {
-                foreach (GFFStruct placeableStruct in placeableList)
+                foreach (var placeable in git.Placeables)
                 {
-                    git.Placeables.Add(ParsePlaceableInstance(placeableStruct));
+                    gitData.Placeables.Add(ParsePlaceableInstance(placeable));
                 }
             }
 
             // Parse trigger instances
-            if (root.TryGetList("TriggerList", out GFFList triggerList))
+            if (git.Triggers != null)
             {
-                foreach (GFFStruct triggerStruct in triggerList)
+                foreach (var trigger in git.Triggers)
                 {
-                    git.Triggers.Add(ParseTriggerInstance(triggerStruct));
+                    gitData.Triggers.Add(ParseTriggerInstance(trigger));
                 }
             }
 
             // Parse waypoint instances
-            if (root.TryGetList("WaypointList", out GFFList waypointList))
+            if (git.Waypoints != null)
             {
-                foreach (GFFStruct waypointStruct in waypointList)
+                foreach (var waypoint in git.Waypoints)
                 {
-                    git.Waypoints.Add(ParseWaypointInstance(waypointStruct));
+                    gitData.Waypoints.Add(ParseWaypointInstance(waypoint));
                 }
             }
 
             // Parse sound instances
-            if (root.TryGetList("SoundList", out GFFList soundList))
+            if (git.Sounds != null)
             {
-                foreach (GFFStruct soundStruct in soundList)
+                foreach (var sound in git.Sounds)
                 {
-                    git.Sounds.Add(ParseSoundInstance(soundStruct));
+                    gitData.Sounds.Add(ParseSoundInstance(sound));
                 }
             }
 
             // Parse encounter instances
-            if (root.TryGetList("Encounter List", out GFFList encounterList))
+            if (git.Encounters != null)
             {
-                foreach (GFFStruct encounterStruct in encounterList)
+                foreach (var encounter in git.Encounters)
                 {
-                    git.Encounters.Add(ParseEncounterInstance(encounterStruct));
+                    gitData.Encounters.Add(ParseEncounterInstance(encounter));
                 }
             }
 
             // Parse store instances
-            if (root.TryGetList("StoreList", out GFFList storeList))
+            if (git.Stores != null)
             {
-                foreach (GFFStruct storeStruct in storeList)
+                foreach (var store in git.Stores)
                 {
-                    git.Stores.Add(ParseStoreInstance(storeStruct));
+                    gitData.Stores.Add(ParseStoreInstance(store));
                 }
             }
 
             // Parse camera instances (KOTOR specific)
-            if (root.TryGetList("CameraList", out GFFList cameraList))
+            if (git.Cameras != null)
             {
-                foreach (GFFStruct cameraStruct in cameraList)
+                foreach (var camera in git.Cameras)
                 {
-                    git.Cameras.Add(ParseCameraInstance(cameraStruct));
+                    gitData.Cameras.Add(ParseCameraInstance(camera));
                 }
             }
 
             // Parse area properties if present
-            git.AreaProperties = ParseAreaProperties(root);
+            gitData.AreaProperties = ParseAreaProperties(git);
 
-            return git;
+            return gitData;
         }
 
         #region Instance Parsers
 
-        private CreatureInstance ParseCreatureInstance(GFFStruct s)
+        private CreatureInstance ParseCreatureInstance(Andastra.Parsing.Resource.Generics.GITCreature creature)
         {
             var instance = new CreatureInstance();
 
-            instance.TemplateResRef = GetResRef(s, "TemplateResRef");
-            instance.Tag = GetString(s, "Tag");
-            instance.XPosition = GetFloat(s, "XPosition");
-            instance.YPosition = GetFloat(s, "YPosition");
-            instance.ZPosition = GetFloat(s, "ZPosition");
-            instance.XOrientation = GetFloat(s, "XOrientation");
-            instance.YOrientation = GetFloat(s, "YOrientation");
+            instance.TemplateResRef = creature.ResRef.Value;
+            instance.Tag = ""; // GITCreature doesn't store tag, it would be in the template
+            instance.XPosition = creature.Position.X;
+            instance.YPosition = creature.Position.Y;
+            instance.ZPosition = creature.Position.Z;
+            instance.XOrientation = 0.0f; // Not stored in GITCreature
+            instance.YOrientation = creature.Bearing;
 
             return instance;
         }
 
-        private DoorInstance ParseDoorInstance(GFFStruct s)
+        private DoorInstance ParseDoorInstance(Andastra.Parsing.Resource.Generics.GITDoor door)
         {
             var instance = new DoorInstance();
 
-            instance.TemplateResRef = GetResRef(s, "TemplateResRef");
-            instance.Tag = GetString(s, "Tag");
-            instance.LinkedTo = GetString(s, "LinkedTo");
-            instance.LinkedToFlags = GetByte(s, "LinkedToFlags");
-            instance.LinkedToModule = GetResRef(s, "LinkedToModule");
-            instance.TransitionDestin = GetString(s, "TransitionDestin");
-            instance.XPosition = GetFloat(s, "X");
-            instance.YPosition = GetFloat(s, "Y");
-            instance.ZPosition = GetFloat(s, "Z");
-            instance.Bearing = GetFloat(s, "Bearing");
+            instance.TemplateResRef = door.ResRef.Value;
+            instance.Tag = door.Tag;
+            instance.LinkedTo = door.LinkedTo;
+            instance.LinkedToFlags = (byte)door.LinkedToFlags;
+            instance.LinkedToModule = door.LinkedToModule.Value;
+            instance.TransitionDestin = door.TransitionDestination.Value;
+            instance.XPosition = door.Position.X;
+            instance.YPosition = door.Position.Y;
+            instance.ZPosition = door.Position.Z;
+            instance.Bearing = door.Bearing;
 
             return instance;
         }
 
-        private PlaceableInstance ParsePlaceableInstance(GFFStruct s)
+        private PlaceableInstance ParsePlaceableInstance(Andastra.Parsing.Resource.Generics.GITPlaceable placeable)
         {
             var instance = new PlaceableInstance();
 
-            instance.TemplateResRef = GetResRef(s, "TemplateResRef");
-            instance.Tag = GetString(s, "Tag");
-            instance.XPosition = GetFloat(s, "X");
-            instance.YPosition = GetFloat(s, "Y");
-            instance.ZPosition = GetFloat(s, "Z");
-            instance.Bearing = GetFloat(s, "Bearing");
+            instance.TemplateResRef = placeable.ResRef.Value;
+            instance.Tag = placeable.Tag;
+            instance.XPosition = placeable.Position.X;
+            instance.YPosition = placeable.Position.Y;
+            instance.ZPosition = placeable.Position.Z;
+            instance.Bearing = placeable.Bearing;
 
             return instance;
         }
@@ -380,22 +378,20 @@ namespace Andastra.Runtime.Content.Loaders
             return instance;
         }
 
-        private AreaPropertiesData ParseAreaProperties(GFFStruct root)
+        private AreaPropertiesData ParseAreaProperties(Andastra.Parsing.Resource.Generics.GIT git)
         {
             var props = new AreaPropertiesData();
 
-            if (root.TryGetStruct("AreaProperties", out GFFStruct areaProps))
-            {
-                props.AmbientSndDay = GetInt(areaProps, "AmbientSndDay");
-                props.AmbientSndDayVol = GetInt(areaProps, "AmbientSndDayVol");
-                props.AmbientSndNight = GetInt(areaProps, "AmbientSndNight");
-                props.AmbientSndNitVol = GetInt(areaProps, "AmbientSndNitVol");
-                props.EnvAudio = GetInt(areaProps, "EnvAudio");
-                props.MusicBattle = GetInt(areaProps, "MusicBattle");
-                props.MusicDay = GetInt(areaProps, "MusicDay");
-                props.MusicDelay = GetInt(areaProps, "MusicDelay");
-                props.MusicNight = GetInt(areaProps, "MusicNight");
-            }
+            // Use the already parsed properties from the GIT object
+            props.AmbientSndDay = git.AmbientSoundId;
+            props.AmbientSndDayVol = git.AmbientVolume;
+            props.AmbientSndNight = git.AmbientSoundIdNight;
+            props.AmbientSndNitVol = git.AmbientVolumeNight;
+            props.EnvAudio = git.EnvAudio;
+            props.MusicBattle = git.MusicBattle;
+            props.MusicDay = git.MusicDay;
+            props.MusicDelay = git.MusicDelay;
+            props.MusicNight = git.MusicNight;
 
             return props;
         }
