@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Avalonia.Platform.Storage;
 using Andastra.Parsing.Extract;
 using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
@@ -259,10 +261,236 @@ namespace HolocronToolset.Dialogs
             }
         }
 
-        private void ExtractSelected()
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:455-481
+        // Original: def _save_files(self, file_path: Path, table_item: FileTableWidgetItem):
+        // This method extracts selected resources to the filesystem
+        private async void ExtractSelected()
         {
-            // TODO: Extract selected resources
-            System.Console.WriteLine("Extract selected not yet implemented");
+            var selectedResources = SelectedResources();
+            if (selectedResources == null || selectedResources.Count == 0)
+            {
+                // No resources selected - show message to user
+                try
+                {
+                    var msgBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
+                        "No Selection",
+                        "Please select one or more resources to extract.",
+                        MsBox.Avalonia.Enums.ButtonEnum.Ok,
+                        MsBox.Avalonia.Enums.Icon.Information);
+                    await msgBox.ShowAsync();
+                }
+                catch
+                {
+                    // MessageBox not available, just log to console
+                    System.Console.WriteLine("No resources selected for extraction");
+                }
+                return;
+            }
+
+            try
+            {
+                var topLevel = TopLevel.GetTopLevel(this);
+                if (topLevel == null)
+                {
+                    System.Console.WriteLine("Cannot extract resources: TopLevel not available");
+                    return;
+                }
+
+                Dictionary<FileResource, string> pathsToWrite = null;
+
+                if (selectedResources.Count == 1)
+                {
+                    // Single file - show SaveFileDialog with resource filename as default
+                    var resource = selectedResources[0];
+                    string defaultFilename = $"{resource.ResName}.{resource.ResType.Extension}";
+
+                    var saveOptions = new FilePickerSaveOptions
+                    {
+                        Title = "Save Resource As",
+                        SuggestedFileName = defaultFilename
+                    };
+
+                    var storageFile = await topLevel.StorageProvider.SaveFilePickerAsync(saveOptions);
+                    if (storageFile == null)
+                    {
+                        // User cancelled
+                        return;
+                    }
+
+                    string savePath = storageFile.Path.LocalPath;
+                    if (string.IsNullOrWhiteSpace(savePath))
+                    {
+                        return;
+                    }
+
+                    pathsToWrite = new Dictionary<FileResource, string>
+                    {
+                        { resource, savePath }
+                    };
+                }
+                else
+                {
+                    // Multiple files - show folder selection dialog
+                    var folderOptions = new FolderPickerOpenOptions
+                    {
+                        Title = $"Save {selectedResources.Count} files to..."
+                    };
+
+                    var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(folderOptions);
+                    if (folders == null || folders.Count == 0)
+                    {
+                        // User cancelled
+                        return;
+                    }
+
+                    string folderPath = folders[0].Path.LocalPath;
+                    if (string.IsNullOrWhiteSpace(folderPath))
+                    {
+                        return;
+                    }
+
+                    // Build paths for all selected resources
+                    pathsToWrite = new Dictionary<FileResource, string>();
+                    foreach (var resource in selectedResources)
+                    {
+                        string filename = $"{resource.ResName}.{resource.ResType.Extension}";
+                        string filePath = Path.Combine(folderPath, filename);
+                        
+                        // Handle duplicate filenames by appending a number
+                        int counter = 1;
+                        string originalFilePath = filePath;
+                        while (pathsToWrite.Values.Contains(filePath) || File.Exists(filePath))
+                        {
+                            string nameWithoutExt = Path.GetFileNameWithoutExtension(originalFilePath);
+                            string extension = Path.GetExtension(originalFilePath);
+                            filePath = Path.Combine(folderPath, $"{nameWithoutExt}_{counter}{extension}");
+                            counter++;
+                        }
+                        
+                        pathsToWrite[resource] = filePath;
+                    }
+                }
+
+                // Extract and write all files
+                int successCount = 0;
+                int failureCount = 0;
+                List<string> failedPaths = new List<string>();
+                List<Exception> failedExceptions = new List<Exception>();
+
+                foreach (var kvp in pathsToWrite)
+                {
+                    try
+                    {
+                        // Ensure directory exists
+                        string directoryPath = Path.GetDirectoryName(kvp.Value);
+                        if (!string.IsNullOrWhiteSpace(directoryPath) && !Directory.Exists(directoryPath))
+                        {
+                            Directory.CreateDirectory(directoryPath);
+                        }
+
+                        // Extract resource data
+                        byte[] data = kvp.Key.GetData();
+                        
+                        // Write to file
+                        File.WriteAllBytes(kvp.Value, data);
+                        successCount++;
+                    }
+                    catch (Exception ex)
+                    {
+                        failureCount++;
+                        failedPaths.Add(kvp.Value);
+                        failedExceptions.Add(ex);
+                        System.Console.WriteLine($"Failed to extract resource to {kvp.Value}: {ex}");
+                    }
+                }
+
+                // Show results to user
+                if (failureCount == 0)
+                {
+                    // All successful
+                    try
+                    {
+                        var successMsg = selectedResources.Count == 1
+                            ? $"Successfully extracted resource to:\n{pathsToWrite.Values.First()}"
+                            : $"Successfully extracted {successCount} resource(s) to:\n{Path.GetDirectoryName(pathsToWrite.Values.First())}";
+                        
+                        var msgBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
+                            "Extraction Complete",
+                            successMsg,
+                            MsBox.Avalonia.Enums.ButtonEnum.Ok,
+                            MsBox.Avalonia.Enums.Icon.Success);
+                        await msgBox.ShowAsync();
+                    }
+                    catch
+                    {
+                        // MessageBox not available, just log to console
+                        System.Console.WriteLine($"Successfully extracted {successCount} resource(s)");
+                    }
+                }
+                else if (successCount > 0)
+                {
+                    // Partial success
+                    try
+                    {
+                        string failedDetails = string.Join("\n", failedPaths.Select((path, idx) => $"{path}: {failedExceptions[idx].Message}"));
+                        string message = $"Extracted {successCount} resource(s) successfully.\n\n" +
+                                        $"Failed to extract {failureCount} resource(s):\n{failedDetails}";
+                        
+                        var msgBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
+                            "Extraction Complete with Errors",
+                            message,
+                            MsBox.Avalonia.Enums.ButtonEnum.Ok,
+                            MsBox.Avalonia.Enums.Icon.Warning);
+                        await msgBox.ShowAsync();
+                    }
+                    catch
+                    {
+                        // MessageBox not available, just log to console
+                        System.Console.WriteLine($"Extracted {successCount} resource(s) successfully, {failureCount} failed");
+                    }
+                }
+                else
+                {
+                    // All failed
+                    try
+                    {
+                        string failedDetails = string.Join("\n", failedPaths.Select((path, idx) => $"{path}: {failedExceptions[idx].Message}"));
+                        string message = $"Failed to extract all {selectedResources.Count} resource(s):\n{failedDetails}";
+                        
+                        var msgBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
+                            "Extraction Failed",
+                            message,
+                            MsBox.Avalonia.Enums.ButtonEnum.Ok,
+                            MsBox.Avalonia.Enums.Icon.Error);
+                        await msgBox.ShowAsync();
+                    }
+                    catch
+                    {
+                        // MessageBox not available, just log to console
+                        System.Console.WriteLine($"Failed to extract all resources");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error and show message to user
+                System.Console.WriteLine($"Error extracting selected resources: {ex}");
+                
+                // Show error dialog if MessageBox is available
+                try
+                {
+                    var msgBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
+                        "Error",
+                        $"Failed to extract resources:\n{ex.Message}",
+                        MsBox.Avalonia.Enums.ButtonEnum.Ok,
+                        MsBox.Avalonia.Enums.Icon.Error);
+                    await msgBox.ShowAsync();
+                }
+                catch
+                {
+                    // MessageBox not available, just log to console
+                }
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:689-690

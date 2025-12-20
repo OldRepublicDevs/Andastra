@@ -79,7 +79,7 @@ namespace HolocronToolset.Dialogs
 
             // Connect events
             _openButton.Click += (s, e) => Confirm();
-            _cancelButton.Click += (s, e) => Close();
+            _cancelButton.Click += (s, e) => { Close(false); };
             _browseButton.Click += (s, e) => Browse();
             _moduleList.SelectionChanged += (s, e) => OnRowChanged();
             _moduleList.DoubleTapped += (s, e) => Confirm();
@@ -342,6 +342,58 @@ namespace HolocronToolset.Dialogs
 
         public string SelectedModule => _selectedModule;
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/select_module.py
+        // Original: dialog.exec() - blocking modal dialog that returns true if accepted
+        // PyKotor's QDialog.exec() is a blocking modal dialog that returns QDialog.DialogCode.Accepted (true) or Rejected (false)
+        // This synchronous method provides the same behavior for compatibility with existing code
+        /// <summary>
+        /// Shows the dialog modally and returns true if the user clicked Open, false if Cancel was clicked or the dialog was closed.
+        /// This is a blocking synchronous method that matches PyKotor's QDialog.exec() behavior.
+        /// </summary>
+        /// <param name="parent">The parent window for the dialog. If null, the dialog will be shown without a parent.</param>
+        /// <returns>True if Open was clicked, false if Cancel was clicked or the dialog was closed.</returns>
+        public bool ShowDialog(Window parent = null)
+        {
+            // Use ShowDialogAsync and block synchronously to match Qt's exec() behavior
+            // This is safe here because we're blocking the UI thread waiting for user input
+            Task<bool> dialogTask = ShowDialogAsync(parent);
+            return dialogTask.GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Shows the dialog modally asynchronously and returns true if the user clicked Open, false if Cancel was clicked or the dialog was closed.
+        /// </summary>
+        /// <param name="parent">The parent window for the dialog. If null, the dialog will be shown without a parent.</param>
+        /// <returns>Task that completes with true if Open was clicked, false if Cancel was clicked or the dialog was closed.</returns>
+        public async Task<bool> ShowDialogAsync(Window parent = null)
+        {
+            Window dialogParent = parent;
+            if (dialogParent == null)
+            {
+                // In Avalonia, we still need a parent for ShowDialogAsync, so we'll find the main window
+                var app = Avalonia.Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime;
+                if (app != null && app.MainWindow != null)
+                {
+                    dialogParent = app.MainWindow;
+                }
+            }
+
+            // ShowDialogAsync<bool> will handle setting the parent relationship
+            // We return true if a module was selected (SelectedModule is not empty), false otherwise
+            bool? result = null;
+            if (dialogParent != null)
+            {
+                result = await ShowDialogAsync<bool?>(dialogParent);
+            }
+            else
+            {
+                result = await ShowDialogAsync<bool?>(this);
+            }
+
+            // Return true if dialog was closed with a result (user clicked Open) and a module was selected
+            return result == true && !string.IsNullOrEmpty(_selectedModule);
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/select_module.py:50-52
         // Original: self.ui = Ui_Dialog()
         // UI wrapper class for testing access
@@ -353,5 +405,3 @@ namespace HolocronToolset.Dialogs
             public Button CancelButton { get; set; }
             public Button BrowseButton { get; set; }
         }
-    }
-}
