@@ -298,14 +298,6 @@ namespace HolocronToolset.Dialogs
             }
         }
 
-        // Helper class for tree view items
-        private class GFFFieldItem
-        {
-            public string FieldPath { get; set; }
-            public string OldValue { get; set; }
-            public string NewValue { get; set; }
-            public string Type { get; set; }
-        }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:350-373
         // Original: def _create_scripts_tab(self):
@@ -615,17 +607,251 @@ namespace HolocronToolset.Dialogs
                     }
                 }
 
-                // Load other settings from INI
-                // TODO: Load mod name, author, description, and other settings from [settings] section
-                // TODO: Load 2DA memory tokens from [2DAMEMORY] section
-                // TODO: Load TLK strings from [TLKList] section
-                // TODO: Load GFF files from [GFF files] section
+                // Load other settings from INI using ConfigReader
+                try
+                {
+                    var logger = new Andastra.Parsing.Logger.PatchLogger();
+                    var configReader = Andastra.Parsing.Reader.ConfigReader.FromFilepath(iniPath, logger, _tslpatchdataPath);
+                    var config = new Andastra.Parsing.PatcherConfig();
+                    config = configReader.Load(config);
+
+                    // Load general settings
+                    if (config.Settings != null)
+                    {
+                        if (_modNameEdit != null)
+                        {
+                            _modNameEdit.Text = config.Settings.ModName ?? "";
+                        }
+                        if (_modAuthorEdit != null)
+                        {
+                            _modAuthorEdit.Text = config.Settings.Author ?? "";
+                        }
+                    }
+
+                    // Load GFF modifications
+                    _gffModifications = config.PatchesGFF.ToList();
+                    RefreshGffFileList();
+                }
+                catch
+                {
+                    // If ConfigReader fails, continue with basic loading
+                }
 
                 UpdateIniPreview();
             }
             catch (Exception ex)
             {
                 System.Console.WriteLine($"Error loading existing config: {ex.Message}");
+            }
+        }
+
+        private void RefreshGffFileList()
+        {
+            if (_gffFileList == null)
+            {
+                return;
+            }
+
+            _gffFileList.Items.Clear();
+            foreach (var modGff in _gffModifications)
+            {
+                if (!string.IsNullOrEmpty(modGff.SourceFile))
+                {
+                    _gffFileList.Items.Add(modGff.SourceFile);
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:521-523
+        // Original: def _on_gff_file_selected(self, item):
+        private void OnGffFileSelected(object sender, SelectionChangedEventArgs e)
+        {
+            if (_gffFileList == null || _gffFieldsTree == null)
+            {
+                return;
+            }
+
+            var selectedItem = _gffFileList.SelectedItem as string;
+            if (string.IsNullOrEmpty(selectedItem))
+            {
+                _gffFieldsTree.Items.Clear();
+                return;
+            }
+
+            // Find the ModificationsGFF for the selected file
+            var modGff = _gffModifications.FirstOrDefault(m => m.SourceFile == selectedItem);
+            if (modGff == null)
+            {
+                _gffFieldsTree.Items.Clear();
+                return;
+            }
+
+            // Populate tree view with field modifications
+            var treeItems = new List<TreeViewItem>();
+            foreach (var modifier in modGff.Modifiers)
+            {
+                string headerText = "";
+                if (modifier is ModifyFieldGFF modifyField)
+                {
+                    headerText = $"{modifyField.Path} = {GetFieldValueString(modifyField.Value)} ({GetModifierTypeString(modifier)})";
+                }
+                else if (modifier is AddFieldGFF addField)
+                {
+                    headerText = $"Add Field: {addField.Label} ({addField.FieldType}) at {addField.Path}";
+                }
+                else if (modifier is AddStructToListGFF addStruct)
+                {
+                    headerText = $"Add Struct to List at {addStruct.Path}";
+                }
+                else if (modifier is Memory2DAModifierGFF mem2DA)
+                {
+                    headerText = $"2DAMEMORY{mem2DA.DestTokenId} = {mem2DA.Path}";
+                }
+                else
+                {
+                    headerText = $"{GetModifierTypeString(modifier)}: {modifier.GetType().Name}";
+                }
+
+                var item = new TreeViewItem
+                {
+                    Header = new TextBlock { Text = headerText }
+                };
+                treeItems.Add(item);
+            }
+
+            _gffFieldsTree.Items.Clear();
+            foreach (var item in treeItems)
+            {
+                _gffFieldsTree.Items.Add(item);
+            }
+        }
+
+        private string GetFieldValueString(Andastra.Parsing.Mods.FieldValue value)
+        {
+            if (value == null)
+            {
+                return "";
+            }
+
+            // Try to get a string representation of the value
+            if (value is Andastra.Parsing.Mods.FieldValueConstant constant)
+            {
+                return constant.Value?.ToString() ?? "";
+            }
+            else if (value is Andastra.Parsing.Mods.FieldValue2DAMemory mem2DA)
+            {
+                return $"2DAMEMORY{mem2DA.TokenId}";
+            }
+            else if (value is Andastra.Parsing.Mods.FieldValueTLKStrRef tlkStrRef)
+            {
+                return $"TLK StrRef: {tlkStrRef.StrRef}";
+            }
+
+            return value.ToString();
+        }
+
+        private string GetModifierTypeString(ModifyGFF modifier)
+        {
+            if (modifier is ModifyFieldGFF)
+            {
+                return "Modify";
+            }
+            else if (modifier is AddFieldGFF)
+            {
+                return "Add Field";
+            }
+            else if (modifier is AddStructToListGFF)
+            {
+                return "Add Struct";
+            }
+            else if (modifier is Memory2DAModifierGFF)
+            {
+                return "2DAMEMORY";
+            }
+
+            return modifier.GetType().Name;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:525-527
+        // Original: def _open_gff_editor(self):
+        private async void OpenGffEditor()
+        {
+            if (_gffFileList == null || _installation == null)
+            {
+                return;
+            }
+
+            var selectedItem = _gffFileList.SelectedItem as string;
+            if (string.IsNullOrEmpty(selectedItem))
+            {
+                var msgBox = MessageBoxManager.GetMessageBoxStandard(
+                    "No File Selected",
+                    "Please select a GFF file from the list first.",
+                    ButtonEnum.Ok,
+                    Icon.Warning);
+                await msgBox.ShowAsync();
+                return;
+            }
+
+            // Try to find the file in the installation
+            string filePath = null;
+            try
+            {
+                // Check if file exists in tslpatchdata folder
+                string tslpatchdataFile = Path.Combine(_tslpatchdataPath, selectedItem);
+                if (File.Exists(tslpatchdataFile))
+                {
+                    filePath = tslpatchdataFile;
+                }
+                else if (_installation != null)
+                {
+                    // Try to find in installation
+                    var resource = _installation.Resource(selectedItem, ResourceType.GFF);
+                    if (resource != null)
+                    {
+                        filePath = resource.Filepath;
+                    }
+                }
+            }
+            catch
+            {
+                // File not found
+            }
+
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+            {
+                var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    "File Not Found",
+                    $"Could not find GFF file: {selectedItem}\n\nPlease ensure the file exists in the tslpatchdata folder or installation.",
+                    ButtonEnum.Ok,
+                    Icon.Error);
+                await errorBox.ShowAsync();
+                return;
+            }
+
+            // Open GFF editor
+            try
+            {
+                var result = WindowUtils.OpenResourceEditor(
+                    filepath: filePath,
+                    resname: Path.GetFileNameWithoutExtension(selectedItem),
+                    restype: ResourceType.GFF,
+                    installation: _installation,
+                    parentWindow: this);
+
+                if (result != null && result.Item2 != null)
+                {
+                    result.Item2.Show();
+                }
+            }
+            catch (Exception ex)
+            {
+                var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Error",
+                    $"Failed to open GFF editor:\n{ex.Message}",
+                    ButtonEnum.Ok,
+                    Icon.Error);
+                await errorBox.ShowAsync();
             }
         }
 
