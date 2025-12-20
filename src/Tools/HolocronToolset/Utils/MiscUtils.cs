@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -70,26 +72,15 @@ namespace HolocronToolset.Utils
                     
                     if (isUrl)
                     {
-                        // Handle URLs using StorageProvider.LaunchUriAsync
+                        // Handle URLs using Process.Start (cross-platform)
                         // This matches PyKotor's QDesktopServices.openUrl behavior
                         if (Uri.TryCreate(link, UriKind.Absolute, out Uri uri))
                         {
-                            // Get TopLevel from application for Avalonia's StorageProvider API
-                            // This provides proper integration with Avalonia's windowing system
-                            TopLevel topLevel = GetTopLevel();
-                            
-                            if (topLevel != null)
+                            Process.Start(new ProcessStartInfo
                             {
-                                // Use TopLevel-aware StorageProvider when available
-                                // This is the recommended way to use Avalonia's Launcher API
-                                await topLevel.StorageProvider.LaunchUriAsync(uri);
-                            }
-                            else
-                            {
-                                // Fallback: Use static Launcher API when TopLevel is not available
-                                // This works in all Avalonia contexts
-                                await Avalonia.Platform.Storage.Launcher.LaunchUriAsync(uri);
-                            }
+                                FileName = uri.ToString(),
+                                UseShellExecute = true
+                            });
                         }
                         else
                         {
@@ -99,7 +90,7 @@ namespace HolocronToolset.Utils
                     }
                     else
                     {
-                        // Handle file paths using StorageProvider.LaunchFileAsync
+                        // Handle file paths using Process.Start
                         await OpenFileAsync(link);
                     }
                 }
@@ -141,15 +132,15 @@ namespace HolocronToolset.Utils
         }
 
         /// <summary>
-        /// Opens a file using Avalonia's Launcher API.
+        /// Opens a file using Process.Start (cross-platform).
         /// Handles both absolute and relative file paths.
         /// </summary>
         /// <param name="filePath">The file path to open</param>
-        private static async Task OpenFileAsync(string filePath)
+        private static Task OpenFileAsync(string filePath)
         {
             if (string.IsNullOrEmpty(filePath))
             {
-                return;
+                return Task.CompletedTask;
             }
 
             try
@@ -159,59 +150,34 @@ namespace HolocronToolset.Utils
                     ? filePath 
                     : Path.GetFullPath(filePath);
 
-                // Get TopLevel from application for Avalonia's StorageProvider API
-                TopLevel topLevel = GetTopLevel();
-                
                 // Check if file exists
                 if (!File.Exists(absolutePath) && !Directory.Exists(absolutePath))
                 {
                     // File doesn't exist, try opening as URL anyway (might be a protocol handler)
                     if (Uri.TryCreate(filePath, UriKind.Absolute, out Uri uri))
                     {
-                        if (topLevel != null)
+                        Process.Start(new ProcessStartInfo
                         {
-                            // Use TopLevel-aware StorageProvider when available
-                            await topLevel.StorageProvider.LaunchUriAsync(uri);
-                        }
-                        else
-                        {
-                            // Fallback: Use static Launcher API when TopLevel is not available
-                            await Avalonia.Platform.Storage.Launcher.LaunchUriAsync(uri);
-                        }
+                            FileName = uri.ToString(),
+                            UseShellExecute = true
+                        });
                     }
-                    return;
+                    return Task.CompletedTask;
                 }
 
-                // Use Avalonia's StorageProvider API for files
-                // This provides cross-platform support and proper integration with Avalonia
-                if (topLevel != null)
+                // Use Process.Start for cross-platform file opening
+                Process.Start(new ProcessStartInfo
                 {
-                    // Use TopLevel-aware StorageProvider when available (recommended approach)
-                    // Create IStorageFile from path using StorageProvider
-                    var storageFile = await topLevel.StorageProvider.TryGetFileFromPathAsync(absolutePath);
-                    if (storageFile != null)
-                    {
-                        // Use StorageProvider.LaunchFileAsync from TopLevel (recommended approach)
-                        await topLevel.StorageProvider.LaunchFileAsync(storageFile);
-                    }
-                    else
-                    {
-                        // If TryGetFileFromPathAsync fails, fallback to static Launcher API
-                        var fileInfo = new FileInfo(absolutePath);
-                        await Avalonia.Platform.Storage.Launcher.LaunchFileAsync(fileInfo);
-                    }
-                }
-                else
-                {
-                    // Fallback: Use static Launcher API when TopLevel is not available
-                    var fileInfo = new FileInfo(absolutePath);
-                    await Avalonia.Platform.Storage.Launcher.LaunchFileAsync(fileInfo);
-                }
+                    FileName = absolutePath,
+                    UseShellExecute = true
+                });
             }
             catch
             {
                 // Ignore errors - matches PyKotor's behavior
             }
+
+            return Task.CompletedTask;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/misc.py:148-153
@@ -294,8 +260,8 @@ namespace HolocronToolset.Utils
             { Key.RightAlt, "ALT" },
             { Key.LWin, "META" },
             { Key.RWin, "META" },
-            { Key.AltLeft, "ALT" },
-            { Key.AltRight, "ALT" },
+            { Key.LeftAlt, "ALT" },
+            { Key.RightAlt, "ALT" },
             { Key.CapsLock, "CAPSLOCK" },
             { Key.NumLock, "NUMLOCK" },
             { Key.Scroll, "SCROLLLOCK" }

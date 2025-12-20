@@ -496,28 +496,28 @@ namespace HolocronToolset.Dialogs
         {
             if (parent != null)
             {
-                bool result = await ShowDialogAsync<bool>(parent);
-                DialogResult = result;
-                return result;
+                bool? result = await ShowDialogAsync<bool?>(parent);
+                DialogResult = result ?? false;
+                return DialogResult;
             }
             else
             {
                 Window mainWindow = null;
-                if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                if (Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                 {
                     mainWindow = desktop.MainWindow;
                 }
 
                 if (mainWindow != null)
                 {
-                    bool result = await ShowDialogAsync<bool>(mainWindow);
-                    DialogResult = result;
-                    return result;
+                    bool? result = await ShowDialogAsync<bool?>(mainWindow);
+                    DialogResult = result ?? false;
+                    return DialogResult;
                 }
                 else
                 {
                     bool result = false;
-                    EventHandler<WindowEventArgs> closedHandler = null;
+                    EventHandler closedHandler = null;
                     closedHandler = (s, e) =>
                     {
                         this.Closed -= closedHandler;

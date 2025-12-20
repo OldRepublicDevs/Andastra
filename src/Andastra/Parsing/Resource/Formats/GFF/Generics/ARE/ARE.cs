@@ -91,6 +91,75 @@ namespace Andastra.Parsing.Resource.Generics.ARE
         public int DirtyFormula1 { get; set; }
         public int DirtyFormula2 { get; set; }
         public int DirtyFormula3 { get; set; }
+        public int DirtySize1 { get; set; }
+        public int DirtySize2 { get; set; }
+        public int DirtySize3 { get; set; }
+        public int DirtyFunc1 { get; set; }
+        public int DirtyFunc2 { get; set; }
+        public int DirtyFunc3 { get; set; }
+        public Color DirtyArgb1 { get; set; } = new Color(0.0f, 0.0f, 0.0f);
+        public Color DirtyArgb2 { get; set; } = new Color(0.0f, 0.0f, 0.0f);
+        public Color DirtyArgb3 { get; set; } = new Color(0.0f, 0.0f, 0.0f);
+
+        // Sun fog properties (aliases for Fog properties for editor compatibility)
+        public bool SunFogEnabled
+        {
+            get => FogEnabled;
+            set => FogEnabled = value;
+        }
+        public float SunFogNear
+        {
+            get => FogNear;
+            set => FogNear = value;
+        }
+        public float SunFogFar
+        {
+            get => FogFar;
+            set => FogFar = value;
+        }
+        public Color SunFogColor
+        {
+            get => FogColor;
+            set => FogColor = value;
+        }
+
+        // Toolset-only/deprecated properties (for editor compatibility)
+        public int ChancesOfFog { get; set; }
+        public int Weather { get; set; }
+        public string SkyBox { get; set; } = string.Empty;
+        public Color DawnAmbient { get; set; } = new Color(0.0f, 0.0f, 0.0f);
+        public Color DayAmbient { get; set; } = new Color(0.0f, 0.0f, 0.0f);
+        public Color DuskAmbient { get; set; } = new Color(0.0f, 0.0f, 0.0f);
+        public Color NightAmbient { get; set; } = new Color(0.0f, 0.0f, 0.0f);
+        public float DawnDir1 { get; set; }
+        public float DawnDir2 { get; set; }
+        public float DawnDir3 { get; set; }
+        public float DayDir1 { get; set; }
+        public float DayDir2 { get; set; }
+        public float DayDir3 { get; set; }
+        public float DuskDir1 { get; set; }
+        public float DuskDir2 { get; set; }
+        public float DuskDir3 { get; set; }
+        public float NightDir1 { get; set; }
+        public float NightDir2 { get; set; }
+        public float NightDir3 { get; set; }
+        public Color DawnColor1 { get; set; } = new Color(0.0f, 0.0f, 0.0f);
+        public Color DawnColor2 { get; set; } = new Color(0.0f, 0.0f, 0.0f);
+        public Color DawnColor3 { get; set; } = new Color(0.0f, 0.0f, 0.0f);
+        public Color DayColor1 { get; set; } = new Color(0.0f, 0.0f, 0.0f);
+        public Color DayColor2 { get; set; } = new Color(0.0f, 0.0f, 0.0f);
+        public Color DayColor3 { get; set; } = new Color(0.0f, 0.0f, 0.0f);
+        public Color DuskColor1 { get; set; } = new Color(0.0f, 0.0f, 0.0f);
+        public Color DuskColor2 { get; set; } = new Color(0.0f, 0.0f, 0.0f);
+        public Color DuskColor3 { get; set; } = new Color(0.0f, 0.0f, 0.0f);
+        public Color NightColor1 { get; set; } = new Color(0.0f, 0.0f, 0.0f);
+        public Color NightColor2 { get; set; } = new Color(0.0f, 0.0f, 0.0f);
+        public Color NightColor3 { get; set; } = new Color(0.0f, 0.0f, 0.0f);
+        public ResRef OnEnter2 { get; set; } = ResRef.FromBlank();
+        public ResRef OnExit2 { get; set; } = ResRef.FromBlank();
+        public ResRef OnHeartbeat2 { get; set; } = ResRef.FromBlank();
+        public ResRef OnUserDefined2 { get; set; } = ResRef.FromBlank();
+        public List<string> AreaList { get; set; } = new List<string>();
 
         // Comments
         public string Comment { get; set; } = string.Empty;

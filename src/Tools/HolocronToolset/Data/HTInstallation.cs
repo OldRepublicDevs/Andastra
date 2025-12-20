@@ -275,6 +275,9 @@ namespace HolocronToolset.Data
             }
         }
 
+        // Alias for Tsl property (used by AREEditor)
+        public bool IsTsl => Tsl;
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:549-550
         // Original: def htClearCache2DA(self):
         public void HtClearCache2DA()
