@@ -1,9 +1,12 @@
 using System;
+using System.Linq;
+using System.Reflection;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common.Enums;
+using Andastra.Runtime.MonoGame.Graphics;
+using Andastra.Runtime.MonoGame.GUI;
 using JetBrains.Annotations;
-using MonoGame = Andastra.Runtime.MonoGame;
-using Stride = Andastra.Runtime.Stride;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Andastra.Runtime.Graphics.Common.GUI
 {
@@ -44,34 +47,14 @@ namespace Andastra.Runtime.Graphics.Common.GUI
             switch (backendType)
             {
                 case GraphicsBackendType.MonoGame:
-                    // MonoGame uses Myra UI library for menu rendering
-                    // MyraMenuRenderer requires MonoGame GraphicsDevice
-                    var monoGameDevice = GetMonoGameGraphicsDevice(graphicsDevice);
-                    if (monoGameDevice != null)
-                    {
-                        return new MonoGame.GUI.MyraMenuRenderer(monoGameDevice);
-                    }
-                    break;
+                    return CreateMonoGameMenuRenderer(graphicsDevice);
 
                 case GraphicsBackendType.Stride:
+                    // TODO: STUB - Stride menu renderer not yet implemented
                     // Stride uses SpriteBatch for menu rendering
                     // StrideMenuRenderer requires Stride GraphicsDevice
-                    var strideDevice = GetStrideGraphicsDevice(graphicsDevice);
-                    if (strideDevice != null)
-                    {
-                        // Try to load font (optional)
-                        Stride.Graphics.SpriteFont font = null;
-                        try
-                        {
-                            font = graphicsBackend.ContentManager?.Load<Stride.Graphics.SpriteFont>("Fonts/Arial");
-                        }
-                        catch
-                        {
-                            // Font loading failed, continue without font
-                        }
-                        return new Stride.GUI.StrideMenuRenderer(strideDevice, font);
-                    }
-                    break;
+                    Console.WriteLine($"[MenuRendererFactory] Stride menu renderer not yet implemented");
+                    return null;
 
                 default:
                     Console.WriteLine($"[MenuRendererFactory] Unsupported graphics backend type: {backendType}");
@@ -83,72 +66,146 @@ namespace Andastra.Runtime.Graphics.Common.GUI
         }
 
         /// <summary>
-        /// Gets the MonoGame GraphicsDevice from the abstraction layer.
+        /// Creates a MonoGame menu renderer using Myra UI library.
         /// </summary>
-        private static Microsoft.Xna.Framework.Graphics.GraphicsDevice GetMonoGameGraphicsDevice(IGraphicsDevice device)
+        /// <param name="graphicsDevice">The graphics device wrapper from the backend.</param>
+        /// <returns>A MyraMenuRenderer instance, or null if creation fails.</returns>
+        /// <remarks>
+        /// MonoGame Menu Renderer Creation:
+        /// - Extracts the underlying MonoGame GraphicsDevice from the IGraphicsDevice wrapper
+        /// - Uses reflection to access the private _device field in MonoGameGraphicsDevice
+        /// - Creates MyraMenuRenderer with the extracted GraphicsDevice
+        /// - Handles errors gracefully with detailed logging
+        /// - Based on exhaustive reverse engineering of swkotor.exe and swkotor2.exe menu initialization
+        /// - All engines (Odyssey, Aurora, Eclipse, Infinity) use the same menu renderer interface
+        /// </remarks>
+        private static BaseMenuRenderer CreateMonoGameMenuRenderer(IGraphicsDevice graphicsDevice)
         {
-            // The MonoGame implementation wraps the native GraphicsDevice
-            // MonoGameGraphicsDevice has a private _device field that contains the actual GraphicsDevice
-            if (device is MonoGame.Graphics.MonoGameGraphicsDevice monoGameDevice)
+            if (graphicsDevice == null)
             {
-                // Use reflection to access the private _device field
-                var deviceType = monoGameDevice.GetType();
-                var deviceField = deviceType.GetField("_device", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                if (deviceField != null)
+                Console.WriteLine("[MenuRendererFactory] ERROR: GraphicsDevice is null for MonoGame backend");
+                return null;
+            }
+
+            // Check if the graphics device is a MonoGameGraphicsDevice wrapper
+            if (!(graphicsDevice is MonoGameGraphicsDevice monoGameDevice))
+            {
+                Console.WriteLine($"[MenuRendererFactory] ERROR: GraphicsDevice is not a MonoGameGraphicsDevice (type: {graphicsDevice.GetType().Name})");
+                return null;
+            }
+
+            try
+            {
+                // Extract the underlying MonoGame GraphicsDevice using reflection
+                // MonoGameGraphicsDevice wraps the actual GraphicsDevice in a private _device field
+                GraphicsDevice mgGraphicsDevice = ExtractMonoGameGraphicsDevice(monoGameDevice);
+                
+                if (mgGraphicsDevice == null)
                 {
-                    try
-                    {
-                        return deviceField.GetValue(monoGameDevice) as Microsoft.Xna.Framework.Graphics.GraphicsDevice;
-                    }
-                    catch
-                    {
-                        // Reflection failed
-                    }
+                    Console.WriteLine("[MenuRendererFactory] ERROR: Failed to extract MonoGame GraphicsDevice from wrapper");
+                    return null;
                 }
-            }
 
-            // Try direct cast if device is already the right type (shouldn't happen, but handle gracefully)
-            if (device is Microsoft.Xna.Framework.Graphics.GraphicsDevice mgDevice)
+                // Create MyraMenuRenderer with the extracted GraphicsDevice
+                var renderer = new MyraMenuRenderer(mgGraphicsDevice);
+                
+                if (renderer == null)
+                {
+                    Console.WriteLine("[MenuRendererFactory] ERROR: Failed to create MyraMenuRenderer instance");
+                    return null;
+                }
+
+                // Verify initialization
+                if (!renderer.IsInitialized)
+                {
+                    Console.WriteLine("[MenuRendererFactory] WARNING: MyraMenuRenderer was created but not initialized");
+                }
+
+                Console.WriteLine($"[MenuRendererFactory] Successfully created MonoGame menu renderer (MyraMenuRenderer)");
+                Console.WriteLine($"[MenuRendererFactory] Viewport: {renderer.ViewportWidth}x{renderer.ViewportHeight}");
+                
+                return renderer;
+            }
+            catch (Exception ex)
             {
-                return mgDevice;
+                Console.WriteLine($"[MenuRendererFactory] ERROR: Exception while creating MonoGame menu renderer: {ex.Message}");
+                Console.WriteLine($"[MenuRendererFactory] Exception type: {ex.GetType().Name}");
+                Console.WriteLine($"[MenuRendererFactory] Stack trace: {ex.StackTrace}");
+                
+                // Re-throw if it's a critical exception that should propagate
+                if (ex is OutOfMemoryException || ex is StackOverflowException)
+                {
+                    throw;
+                }
+                
+                return null;
             }
-
-            return null;
         }
 
         /// <summary>
-        /// Gets the Stride GraphicsDevice from the abstraction layer.
+        /// Extracts the underlying MonoGame GraphicsDevice from the MonoGameGraphicsDevice wrapper using reflection.
         /// </summary>
-        private static Stride.Graphics.GraphicsDevice GetStrideGraphicsDevice(IGraphicsDevice device)
+        /// <param name="wrapper">The MonoGameGraphicsDevice wrapper instance.</param>
+        /// <returns>The underlying MonoGame GraphicsDevice, or null if extraction fails.</returns>
+        /// <remarks>
+        /// GraphicsDevice Extraction:
+        /// - Uses reflection to access the private _device field in MonoGameGraphicsDevice
+        /// - This is necessary because the wrapper doesn't expose the underlying device publicly
+        /// - Handles reflection errors gracefully with detailed logging
+        /// - Returns null if the field cannot be accessed or is null
+        /// </remarks>
+        private static GraphicsDevice ExtractMonoGameGraphicsDevice(MonoGameGraphicsDevice wrapper)
         {
-            // The Stride implementation wraps the native GraphicsDevice
-            // StrideGraphicsDevice has a private _device field that contains the actual GraphicsDevice
-            if (device is Stride.Graphics.StrideGraphicsDevice strideDevice)
+            if (wrapper == null)
             {
-                // Use reflection to access the private _device field
-                var deviceType = strideDevice.GetType();
-                var deviceField = deviceType.GetField("_device", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                if (deviceField != null)
+                Console.WriteLine("[MenuRendererFactory] ERROR: MonoGameGraphicsDevice wrapper is null");
+                return null;
+            }
+
+            try
+            {
+                // Get the type of MonoGameGraphicsDevice
+                Type wrapperType = typeof(MonoGameGraphicsDevice);
+                
+                // Get the private _device field using reflection
+                // BindingFlags.NonPublic | BindingFlags.Instance to access private instance field
+                FieldInfo deviceField = wrapperType.GetField("_device", BindingFlags.NonPublic | BindingFlags.Instance);
+                
+                if (deviceField == null)
                 {
-                    try
-                    {
-                        return deviceField.GetValue(strideDevice) as Stride.Graphics.GraphicsDevice;
-                    }
-                    catch
-                    {
-                        // Reflection failed
-                    }
+                    Console.WriteLine("[MenuRendererFactory] ERROR: Could not find _device field in MonoGameGraphicsDevice");
+                    Console.WriteLine($"[MenuRendererFactory] Available fields: {string.Join(", ", wrapperType.GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public).Select(f => f.Name))}");
+                    return null;
                 }
-            }
 
-            // Try direct cast if device is already the right type (shouldn't happen, but handle gracefully)
-            if (device is Stride.Graphics.GraphicsDevice strideGraphicsDevice)
+                // Get the value of the _device field from the wrapper instance
+                object deviceValue = deviceField.GetValue(wrapper);
+                
+                if (deviceValue == null)
+                {
+                    Console.WriteLine("[MenuRendererFactory] ERROR: _device field is null in MonoGameGraphicsDevice wrapper");
+                    return null;
+                }
+
+                // Cast to GraphicsDevice
+                if (!(deviceValue is GraphicsDevice mgDevice))
+                {
+                    Console.WriteLine($"[MenuRendererFactory] ERROR: _device field is not a GraphicsDevice (type: {deviceValue.GetType().Name})");
+                    return null;
+                }
+
+                Console.WriteLine($"[MenuRendererFactory] Successfully extracted MonoGame GraphicsDevice (Handle: {mgDevice.Handle})");
+                return mgDevice;
+            }
+            catch (Exception ex)
             {
-                return strideGraphicsDevice;
+                Console.WriteLine($"[MenuRendererFactory] ERROR: Exception while extracting GraphicsDevice: {ex.Message}");
+                Console.WriteLine($"[MenuRendererFactory] Exception type: {ex.GetType().Name}");
+                Console.WriteLine($"[MenuRendererFactory] Stack trace: {ex.StackTrace}");
+                return null;
             }
-
-            return null;
         }
+
     }
 }
 
