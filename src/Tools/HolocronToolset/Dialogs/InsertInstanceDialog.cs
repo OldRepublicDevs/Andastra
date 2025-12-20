@@ -6,6 +6,8 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Resource;
+using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Formats.RIM;
 using Andastra.Parsing.Tools;
@@ -280,11 +282,72 @@ namespace HolocronToolset.Dialogs
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:148-165
         // Original: Create new resource data based on type
+        // Comprehensive implementation matching PyKotor's resource creation logic
         private byte[] CreateNewResourceData(ResourceType restype)
         {
-            // TODO: Implement resource creation when resource builders are available
-            // For now, return empty data
-            return new byte[0];
+            // Get game type from installation, defaulting to K2 if not available
+            // Matching PyKotor: Uses installation's game type for format compatibility
+            Game gameToUse = _installation?.Game ?? Game.K2;
+
+            // Create new resource instance based on type and convert to bytes
+            // Matching PyKotor implementation: Creates new instances with default values
+            // Original: if self._restype is ResourceType.UTC: self.data = bytes_utc(UTC())
+            if (restype == ResourceType.UTC)
+            {
+                UTC utc = new UTC();
+                return UTCHelpers.BytesUtc(utc, gameToUse);
+            }
+            else if (restype == ResourceType.UTP)
+            {
+                UTP utp = new UTP();
+                // UTP uses DismantleUtp + BytesGff pattern
+                GFF utpGff = UTPHelpers.DismantleUtp(utp, gameToUse);
+                return GFFAuto.BytesGff(utpGff, UTP.BinaryType);
+            }
+            else if (restype == ResourceType.UTD)
+            {
+                UTD utd = new UTD();
+                // UTD uses DismantleUtd + BytesGff pattern
+                GFF utdGff = UTDHelpers.DismantleUtd(utd, gameToUse);
+                return GFFAuto.BytesGff(utdGff, UTD.BinaryType);
+            }
+            else if (restype == ResourceType.UTE)
+            {
+                UTE ute = new UTE();
+                // UTE uses DismantleUte + BytesGff pattern
+                GFF uteGff = UTEHelpers.DismantleUte(ute, gameToUse);
+                return GFFAuto.BytesGff(uteGff, UTE.BinaryType);
+            }
+            else if (restype == ResourceType.UTT)
+            {
+                UTT utt = new UTT();
+                return UTTAuto.BytesUtt(utt, gameToUse);
+            }
+            else if (restype == ResourceType.UTS)
+            {
+                UTS uts = new UTS();
+                // UTS uses DismantleUts + BytesGff pattern
+                GFF utsGff = UTSHelpers.DismantleUts(uts, gameToUse);
+                return GFFAuto.BytesGff(utsGff, UTS.BinaryType);
+            }
+            else if (restype == ResourceType.UTM)
+            {
+                UTM utm = new UTM();
+                // UTM uses DismantleUtm + BytesGff pattern
+                GFF utmGff = UTMHelpers.DismantleUtm(utm, gameToUse);
+                return GFFAuto.BytesGff(utmGff, UTM.BinaryType);
+            }
+            else if (restype == ResourceType.UTW)
+            {
+                UTW utw = new UTW();
+                return UTWAuto.BytesUtw(utw, gameToUse);
+            }
+            else
+            {
+                // For unsupported resource types, return empty data
+                // Matching PyKotor: else: self.data = b""
+                return new byte[0];
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:167-178
