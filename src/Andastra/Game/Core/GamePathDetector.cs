@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
 using Microsoft.Win32;
+using Andastra.Parsing.Common;
 using Andastra.Runtime.Core;
 
 namespace Andastra.Runtime.Game.Core
@@ -520,6 +523,483 @@ namespace Andastra.Runtime.Game.Core
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Finds all installation paths for NWN, DA, ME games from default locations.
+        /// Similar to FindKotorPathsFromDefault but for other BioWare games.
+        /// </summary>
+        public static List<string> FindGamePathsFromDefault(Game game)
+        {
+            var paths = new List<string>();
+
+            // Try environment variable first
+            string envPath = TryEnvironmentVariableForGame(game);
+            if (!string.IsNullOrEmpty(envPath) && !paths.Contains(envPath))
+            {
+                paths.Add(envPath);
+            }
+
+            // Try registry paths
+            string registryPath = TryRegistryForGame(game);
+            if (!string.IsNullOrEmpty(registryPath) && !paths.Contains(registryPath))
+            {
+                paths.Add(registryPath);
+            }
+
+            // Try Steam paths (check multiple library locations)
+            List<string> steamPaths = TrySteamPathsForGame(game);
+            foreach (string path in steamPaths)
+            {
+                if (!string.IsNullOrEmpty(path) && !paths.Contains(path))
+                {
+                    paths.Add(path);
+                }
+            }
+
+            // Try GOG paths
+            List<string> gogPaths = TryGogPathsForGame(game);
+            foreach (string path in gogPaths)
+            {
+                if (!string.IsNullOrEmpty(path) && !paths.Contains(path))
+                {
+                    paths.Add(path);
+                }
+            }
+
+            // Try common paths
+            List<string> commonPaths = TryCommonPathsForGame(game);
+            foreach (string path in commonPaths)
+            {
+                if (!string.IsNullOrEmpty(path) && !paths.Contains(path))
+                {
+                    paths.Add(path);
+                }
+            }
+
+            return paths;
+        }
+
+        /// <summary>
+        /// Tries to get the game path from environment variables.
+        /// Supports NWN_PATH, NWN2_PATH, DA_PATH, DA2_PATH, ME_PATH, ME2_PATH, ME3_PATH.
+        /// </summary>
+        private static string TryEnvironmentVariableForGame(Game game)
+        {
+            // Load .env file if it exists
+            LoadEnvFile();
+
+            string envVarName = GetEnvironmentVariableName(game);
+            if (string.IsNullOrEmpty(envVarName))
+            {
+                return null;
+            }
+
+            string path = Environment.GetEnvironmentVariable(envVarName);
+            if (!string.IsNullOrEmpty(path) && IsValidGameInstallation(path, game))
+            {
+                return path;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Gets the environment variable name for a game.
+        /// </summary>
+        private static string GetEnvironmentVariableName(Game game)
+        {
+            switch (game)
+            {
+                case Game.NWN:
+                    return "NWN_PATH";
+                case Game.NWN2:
+                    return "NWN2_PATH";
+                case Game.DA:
+                    return "DA_PATH";
+                case Game.DA2:
+                    return "DA2_PATH";
+                default:
+                    return null;
+            }
+        }
+
+        /// <summary>
+        /// Tries to get the game path from Windows registry.
+        /// </summary>
+        private static string TryRegistryForGame(Game game)
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return null;
+            }
+
+            try
+            {
+                string[] registryKeys = GetRegistryKeysForGame(game);
+                if (registryKeys == null || registryKeys.Length == 0)
+                {
+                    return null;
+                }
+
+                foreach (string keyPath in registryKeys)
+                {
+                    using (RegistryKey key = Registry.LocalMachine.OpenSubKey(keyPath))
+                    {
+                        if (key != null)
+                        {
+                            // Try common registry value names
+                            string[] valueNames = { "Path", "InstallPath", "Install Dir", "INSTALLDIR", "Location" };
+                            foreach (string valueName in valueNames)
+                            {
+                                string path = key.GetValue(valueName) as string;
+                                if (!string.IsNullOrEmpty(path) && IsValidGameInstallation(path, game))
+                                {
+                                    return path;
+                                }
+                            }
+                        }
+                    }
+
+                    // Also try Wow6432Node for 64-bit Windows
+                    string wow64KeyPath = keyPath.Replace(@"SOFTWARE\", @"SOFTWARE\Wow6432Node\");
+                    using (RegistryKey key = Registry.LocalMachine.OpenSubKey(wow64KeyPath))
+                    {
+                        if (key != null)
+                        {
+                            string[] valueNames = { "Path", "InstallPath", "Install Dir", "INSTALLDIR", "Location" };
+                            foreach (string valueName in valueNames)
+                            {
+                                string path = key.GetValue(valueName) as string;
+                                if (!string.IsNullOrEmpty(path) && IsValidGameInstallation(path, game))
+                                {
+                                    return path;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Registry access may fail
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Gets registry key paths for a game.
+        /// </summary>
+        private static string[] GetRegistryKeysForGame(Game game)
+        {
+            switch (game)
+            {
+                case Game.NWN:
+                    return new[]
+                    {
+                        @"SOFTWARE\BioWare\NWN\Neverwinter",
+                        @"SOFTWARE\BioWare\Neverwinter Nights",
+                        @"SOFTWARE\Wizards of the Coast\Neverwinter Nights"
+                    };
+                case Game.NWN2:
+                    return new[]
+                    {
+                        @"SOFTWARE\Obsidian\Neverwinter Nights 2",
+                        @"SOFTWARE\Atari\Neverwinter Nights 2"
+                    };
+                case Game.DA:
+                    return new[]
+                    {
+                        @"SOFTWARE\BioWare\Dragon Age",
+                        @"SOFTWARE\BioWare\Dragon Age Origins",
+                        @"SOFTWARE\Electronic Arts\Dragon Age Origins"
+                    };
+                case Game.DA2:
+                    return new[]
+                    {
+                        @"SOFTWARE\BioWare\Dragon Age 2",
+                        @"SOFTWARE\Electronic Arts\Dragon Age II"
+                    };
+                default:
+                    return null;
+            }
+        }
+
+        /// <summary>
+        /// Tries to find game paths in Steam library locations.
+        /// </summary>
+        private static List<string> TrySteamPathsForGame(Game game)
+        {
+            var paths = new List<string>();
+            string steamApps = null;
+
+            // Try to find Steam installation from registry
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                try
+                {
+                    using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Valve\Steam"))
+                    {
+                        if (key != null)
+                        {
+                            steamApps = Path.Combine(key.GetValue("InstallPath") as string ?? "", "steamapps", "common");
+                        }
+                    }
+
+                    using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Wow6432Node\Valve\Steam"))
+                    {
+                        if (key != null)
+                        {
+                            steamApps = Path.Combine(key.GetValue("InstallPath") as string ?? "", "steamapps", "common");
+                        }
+                    }
+                }
+                catch { }
+            }
+
+            // Common Steam library locations
+            string[] steamLibraries = new[]
+            {
+                steamApps,
+                @"C:\Program Files (x86)\Steam\steamapps\common",
+                @"C:\Program Files\Steam\steamapps\common",
+                @"D:\Steam\steamapps\common",
+                @"D:\SteamLibrary\steamapps\common",
+                @"E:\Steam\steamapps\common",
+                @"E:\SteamLibrary\steamapps\common"
+            };
+
+            string gameName = GetSteamGameName(game);
+            if (string.IsNullOrEmpty(gameName))
+            {
+                return paths;
+            }
+
+            foreach (string library in steamLibraries)
+            {
+                if (string.IsNullOrEmpty(library)) continue;
+
+                string path = Path.Combine(library, gameName);
+                if (IsValidGameInstallation(path, game))
+                {
+                    paths.Add(path);
+                }
+            }
+
+            return paths;
+        }
+
+        /// <summary>
+        /// Gets the Steam game folder name for a game.
+        /// </summary>
+        private static string GetSteamGameName(Game game)
+        {
+            switch (game)
+            {
+                case Game.NWN:
+                    return "Neverwinter Nights";
+                case Game.NWN2:
+                    return "Neverwinter Nights 2";
+                case Game.DA:
+                    return "Dragon Age Origins";
+                case Game.DA2:
+                    return "Dragon Age II";
+                default:
+                    return null;
+            }
+        }
+
+        /// <summary>
+        /// Tries to find game paths in GOG installation locations.
+        /// </summary>
+        private static List<string> TryGogPathsForGame(Game game)
+        {
+            var paths = new List<string>();
+            string[] gogPaths = GetGogPathsForGame(game);
+
+            foreach (string path in gogPaths)
+            {
+                if (IsValidGameInstallation(path, game))
+                {
+                    paths.Add(path);
+                }
+            }
+
+            return paths;
+        }
+
+        /// <summary>
+        /// Gets common GOG installation paths for a game.
+        /// </summary>
+        private static string[] GetGogPathsForGame(Game game)
+        {
+            switch (game)
+            {
+                case Game.NWN:
+                    return new[]
+                    {
+                        @"C:\GOG Games\Neverwinter Nights",
+                        @"C:\Program Files (x86)\GOG Galaxy\Games\Neverwinter Nights",
+                        @"D:\GOG Games\Neverwinter Nights"
+                    };
+                case Game.NWN2:
+                    return new[]
+                    {
+                        @"C:\GOG Games\Neverwinter Nights 2",
+                        @"C:\Program Files (x86)\GOG Galaxy\Games\Neverwinter Nights 2",
+                        @"D:\GOG Games\Neverwinter Nights 2"
+                    };
+                case Game.DA:
+                    return new[]
+                    {
+                        @"C:\GOG Games\Dragon Age Origins",
+                        @"C:\Program Files (x86)\GOG Galaxy\Games\Dragon Age Origins",
+                        @"D:\GOG Games\Dragon Age Origins"
+                    };
+                case Game.DA2:
+                    return new[]
+                    {
+                        @"C:\GOG Games\Dragon Age II",
+                        @"C:\Program Files (x86)\GOG Galaxy\Games\Dragon Age II",
+                        @"D:\GOG Games\Dragon Age II"
+                    };
+                default:
+                    return new string[0];
+            }
+        }
+
+        /// <summary>
+        /// Tries to find game paths in common installation locations.
+        /// </summary>
+        private static List<string> TryCommonPathsForGame(Game game)
+        {
+            var paths = new List<string>();
+            string[] commonPaths = GetCommonPathsForGame(game);
+
+            foreach (string path in commonPaths)
+            {
+                if (IsValidGameInstallation(path, game))
+                {
+                    paths.Add(path);
+                }
+            }
+
+            return paths;
+        }
+
+        /// <summary>
+        /// Gets common installation paths for a game.
+        /// </summary>
+        private static string[] GetCommonPathsForGame(Game game)
+        {
+            switch (game)
+            {
+                case Game.NWN:
+                    return new[]
+                    {
+                        @"C:\Program Files (x86)\Neverwinter Nights",
+                        @"C:\Program Files\Neverwinter Nights",
+                        @"C:\Games\Neverwinter Nights",
+                        @"D:\Games\Neverwinter Nights"
+                    };
+                case Game.NWN2:
+                    return new[]
+                    {
+                        @"C:\Program Files (x86)\Neverwinter Nights 2",
+                        @"C:\Program Files\Neverwinter Nights 2",
+                        @"C:\Program Files (x86)\Obsidian\Neverwinter Nights 2",
+                        @"C:\Games\Neverwinter Nights 2",
+                        @"D:\Games\Neverwinter Nights 2"
+                    };
+                case Game.DA:
+                    return new[]
+                    {
+                        @"C:\Program Files (x86)\Dragon Age",
+                        @"C:\Program Files\Dragon Age",
+                        @"C:\Program Files (x86)\BioWare\Dragon Age",
+                        @"C:\Games\Dragon Age Origins",
+                        @"D:\Games\Dragon Age Origins"
+                    };
+                case Game.DA2:
+                    return new[]
+                    {
+                        @"C:\Program Files (x86)\Dragon Age 2",
+                        @"C:\Program Files\Dragon Age 2",
+                        @"C:\Program Files (x86)\BioWare\Dragon Age 2",
+                        @"C:\Games\Dragon Age II",
+                        @"D:\Games\Dragon Age II"
+                    };
+                default:
+                    return new string[0];
+            }
+        }
+
+        /// <summary>
+        /// Verifies a path is a valid game installation.
+        /// Uses the same validation logic as GameLauncher.ValidateInstallation.
+        /// </summary>
+        public static bool IsValidGameInstallation(string path, Game game)
+        {
+            if (string.IsNullOrEmpty(path) || !Directory.Exists(path))
+            {
+                return false;
+            }
+
+            switch (game)
+            {
+                case Game.NWN:
+                    // Validate Neverwinter Nights installation
+                    string nwnChitinKey = Path.Combine(path, "chitin.key");
+                    string nwnExe = Path.Combine(path, "nwmain.exe");
+                    string nwnExeUpper = Path.Combine(path, "NWMAIN.EXE");
+                    string nwnGuiErf = Path.Combine(path, "gui_32bit.erf");
+                    string nwnDataDir = Path.Combine(path, "data");
+                    
+                    return File.Exists(nwnChitinKey) &&
+                           (File.Exists(nwnExe) || File.Exists(nwnExeUpper)) &&
+                           File.Exists(nwnGuiErf) &&
+                           Directory.Exists(nwnDataDir);
+                    
+                case Game.NWN2:
+                    // Validate Neverwinter Nights 2 installation
+                    string nwn2Exe = Path.Combine(path, "nwn2main.exe");
+                    string nwn2ExeUpper = Path.Combine(path, "NWN2MAIN.EXE");
+                    string nwn2DataDir = Path.Combine(path, "data");
+                    string nwn2TwoDaZip = Path.Combine(path, "2da.zip");
+                    string nwn2ActorsZip = Path.Combine(path, "actors.zip");
+                    string nwn2ModelsZip = Path.Combine(path, "nwn2_models.zip");
+                    string nwn2ScriptsZip = Path.Combine(path, "scripts.zip");
+                    
+                    return (File.Exists(nwn2Exe) || File.Exists(nwn2ExeUpper)) &&
+                           Directory.Exists(nwn2DataDir) &&
+                           File.Exists(nwn2TwoDaZip) &&
+                           File.Exists(nwn2ActorsZip) &&
+                           File.Exists(nwn2ModelsZip) &&
+                           File.Exists(nwn2ScriptsZip);
+
+                case Game.DA:
+                    // Validate Dragon Age: Origins installation
+                    string daExe = Path.Combine(path, "DragonAge.exe");
+                    string daExeLower = Path.Combine(path, "dragonage.exe");
+                    string daDataDir = Path.Combine(path, "data");
+                    string daOriginsExe = Path.Combine(path, "daorigins.exe");
+                    
+                    return (File.Exists(daExe) || File.Exists(daExeLower) || File.Exists(daOriginsExe)) &&
+                           Directory.Exists(daDataDir);
+
+                case Game.DA2:
+                    // Validate Dragon Age II installation
+                    string da2Exe = Path.Combine(path, "DragonAge2.exe");
+                    string da2ExeLower = Path.Combine(path, "dragonage2.exe");
+                    string da2DataDir = Path.Combine(path, "data");
+                    
+                    return (File.Exists(da2Exe) || File.Exists(da2ExeLower)) &&
+                           Directory.Exists(da2DataDir);
+
+                default:
+                    return false;
+            }
         }
     }
 }
