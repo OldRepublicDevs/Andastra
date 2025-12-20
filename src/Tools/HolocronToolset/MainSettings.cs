@@ -25,11 +25,14 @@ namespace HolocronToolset.NET
         {
             // Some application settings must be set before the app starts.
             // These ones are accessible through the in-app settings window widget.
-            var settings = new GlobalSettings();
+            // Matching PyKotor: settings_widget = ApplicationSettings()
+            var settingsWidget = new ApplicationSettings();
             
-            // Get environment variables from settings
-            Dictionary<string, string> environmentVariables = settings.AppEnvVariables;
+            // Matching PyKotor: environment_variables: dict[str, str] = settings_widget.app_env_variables
+            Dictionary<string, string> environmentVariables = settingsWidget.AppEnvVariables;
             
+            // Matching PyKotor: for key, value in environment_variables.items():
+            //                     os.environ[key] = os.environ.get(key, value)  # Use os.environ.get to prioritize the existing env.
             // Set environment variables, prioritizing existing environment variable values
             // This matches Python's os.environ.get(key, value) behavior - only set if not already set
             foreach (var kvp in environmentVariables)
@@ -39,6 +42,7 @@ namespace HolocronToolset.NET
                 
                 // Use Environment.GetEnvironmentVariable to check if already set
                 // Only set if not already set (preserves existing env vars)
+                // This matches Python's os.environ.get(key, value) - prioritizes existing env
                 string existingValue = Environment.GetEnvironmentVariable(key);
                 if (string.IsNullOrEmpty(existingValue))
                 {
@@ -46,9 +50,23 @@ namespace HolocronToolset.NET
                 }
             }
             
+            // Matching PyKotor: for attr_name, attr_value in settings_widget.REQUIRES_RESTART.items():
+            //                     if attr_value is None:  # attr not available in this qt version.
+            //                         continue
+            //                     QApplication.setAttribute(
+            //                         attr_value,
+            //                         settings_widget.settings.value(attr_name, QApplication.testAttribute(attr_value), bool),
+            //                     )
             // Note: In PyKotor, this also applies Qt attributes from REQUIRES_RESTART dict
             // Since we're using Avalonia instead of Qt, Qt-specific attributes don't apply.
             // However, we maintain the structure for potential future Avalonia equivalents.
+            foreach (var kvp in ApplicationSettings.RequiresRestart)
+            {
+                string attrName = kvp.Key;
+                // In Avalonia, we don't have QApplication.setAttribute, so we skip this
+                // but maintain the structure for compatibility
+                // If needed in the future, these could be applied through Avalonia's AppBuilder
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_settings.py:40-72
