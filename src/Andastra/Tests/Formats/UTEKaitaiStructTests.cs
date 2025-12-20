@@ -98,66 +98,92 @@ namespace Andastra.Parsing.Tests.Formats
         public void TestKsyFileValid()
         {
             // Validate that UTE.ksy is valid YAML and can be parsed by compiler
-            if (!File.Exists(KsyFile))
+            var normalizedKsyPath = Path.GetFullPath(KsyFile);
+            if (!File.Exists(normalizedKsyPath))
             {
                 Assert.True(true, "UTE.ksy not found - skipping validation");
                 return;
             }
 
-            var process = new Process
+            // Check if Java is available (required for Kaitai Struct compiler)
+            var javaCheck = RunCommand("java", "-version");
+            if (javaCheck.ExitCode != 0)
             {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "kaitai-struct-compiler",
-                    Arguments = $"--version",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                }
-            };
+                Assert.True(true, "Java not available - skipping validation");
+                return;
+            }
 
-            try
+            string compilerPath = FindKaitaiCompilerJar();
+            if (string.IsNullOrEmpty(compilerPath))
             {
-                process.Start();
-                process.WaitForExit(5000);
-
-                if (process.ExitCode != 0)
+                // Try command
+                var cmdCheck = RunCommand("kaitai-struct-compiler", "--version");
+                if (cmdCheck.ExitCode != 0)
                 {
                     Assert.True(true, "Kaitai Struct compiler not available - skipping validation");
                     return;
                 }
+                compilerPath = "kaitai-struct-compiler";
+            }
 
-                // Try to compile to a test language to validate syntax
-                var testProcess = new Process
+            // Use Python as validation target (most commonly supported)
+            string tempOutputDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            Directory.CreateDirectory(tempOutputDir);
+
+            try
+            {
+                var validateInfo = new ProcessStartInfo
                 {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = "kaitai-struct-compiler",
-                        Arguments = $"-t python \"{KsyFile}\" -d \"{Path.GetTempPath()}\"",
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    }
+                    FileName = compilerPath.EndsWith(".jar") ? "java" : compilerPath,
+                    Arguments = compilerPath.EndsWith(".jar")
+                        ? $"-jar \"{compilerPath}\" -t python \"{normalizedKsyPath}\" -d \"{tempOutputDir}\" --debug"
+                        : $"-t python \"{normalizedKsyPath}\" -d \"{tempOutputDir}\" --debug",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    WorkingDirectory = Path.GetDirectoryName(normalizedKsyPath)
                 };
 
-                testProcess.Start();
-                testProcess.WaitForExit(30000);
-
-                // If compilation succeeds, the file is valid
-                // If it fails, we'll get error output
-                string stderr = testProcess.StandardError.ReadToEnd();
-
-                // Compilation might fail due to missing dependencies, but syntax errors would be caught
-                if (testProcess.ExitCode != 0 && stderr.Contains("error") && !stderr.Contains("import"))
+                using (var process = Process.Start(validateInfo))
                 {
-                    Assert.True(false, $"UTE.ksy has syntax errors: {stderr}");
+                    if (process != null)
+                    {
+                        string stdout = process.StandardOutput.ReadToEnd();
+                        string stderr = process.StandardError.ReadToEnd();
+                        process.WaitForExit(60000); // 60 second timeout
+
+                        // Compiler should not report syntax errors
+                        // Allow import/dependency errors but not syntax errors
+                        bool hasSyntaxError = stderr.ToLower().Contains("error") &&
+                                             !stderr.ToLower().Contains("import") &&
+                                             !stderr.ToLower().Contains("dependency") &&
+                                             !stderr.ToLower().Contains("warning");
+
+                        if (hasSyntaxError && process.ExitCode != 0)
+                        {
+                            Assert.True(false, $"UTE.ksy should not have syntax errors. STDOUT: {stdout}, STDERR: {stderr}");
+                        }
+
+                        process.ExitCode.Should().Be(0,
+                            $"UTE.ksy syntax should be valid. STDOUT: {stdout}, STDERR: {stderr}");
+                    }
                 }
             }
-            catch (System.ComponentModel.Win32Exception)
+            finally
             {
-                Assert.True(true, "Kaitai Struct compiler not installed - skipping validation");
+                // Cleanup temp directory
+                try
+                {
+                    if (Directory.Exists(tempOutputDir))
+                    {
+                        Directory.Delete(tempOutputDir, true);
+                    }
+                }
+                catch
+                {
+                    // Ignore cleanup errors
+                }
             }
         }
 
@@ -488,4 +514,5 @@ namespace Andastra.Parsing.Tests.Formats
         }
     }
 }
+
 
