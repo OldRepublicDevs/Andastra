@@ -918,6 +918,175 @@ namespace HolocronToolset.Widgets
             SelectionEnd = SelectionStart;
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/code_editor.py:1307-1349
+        // Original: def move_line_up_or_down(self, direction: Literal["up", "down"] = "up"):
+        /// <summary>
+        /// Moves the current line or selected lines up or down.
+        /// Matching VS Code Alt+Up/Down behavior.
+        /// </summary>
+        public void MoveLineUp()
+        {
+            MoveLineUpOrDown("up");
+        }
+
+        /// <summary>
+        /// Moves the current line or selected lines down.
+        /// Matching VS Code Alt+Down behavior.
+        /// </summary>
+        public void MoveLineDown()
+        {
+            MoveLineUpOrDown("down");
+        }
+
+        /// <summary>
+        /// Moves the current line or selected lines up or down.
+        /// Based on PyKotor implementation which moves the entire line including newline.
+        /// </summary>
+        private void MoveLineUpOrDown(string direction)
+        {
+            if (string.IsNullOrEmpty(Text))
+            {
+                return;
+            }
+
+            string[] lines = Text.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+            string newline = Text.Contains("\r\n") ? "\r\n" : (Text.Contains("\n") ? "\n" : "\r");
+            
+            if (lines.Length == 0)
+            {
+                return;
+            }
+
+            // Get the start and end lines of the current selection
+            int selectionStart = SelectionStart;
+            int selectionEnd = SelectionEnd;
+            int startLine = GetLineFromPosition(selectionStart);
+            int endLine = GetLineFromPosition(selectionEnd);
+
+            // Bounds checking
+            if (direction == "up" && startLine == 0)
+            {
+                return; // Can't move up from first line
+            }
+            if (direction == "down" && endLine >= lines.Length - 1)
+            {
+                return; // Can't move down from last line
+            }
+
+            // Get the full line(s) including newline(s)
+            int lineStartPos = GetPositionFromLine(startLine);
+            int lineEndPos = GetPositionFromLineEndIncludingNewline(endLine);
+            
+            if (lineEndPos <= lineStartPos)
+            {
+                return;
+            }
+
+            // Get the text to move (lines including their newlines)
+            string textToMove = Text.Substring(lineStartPos, lineEndPos - lineStartPos);
+
+            // Remove the lines
+            string newText = Text.Remove(lineStartPos, lineEndPos - lineStartPos);
+
+            // Calculate the number of lines being moved
+            int numLinesMoved = endLine - startLine + 1;
+
+            if (direction == "up")
+            {
+                // Move up: insert before the previous line
+                int insertPos = GetPositionFromLine(startLine - 1);
+                newText = newText.Insert(insertPos, textToMove);
+                
+                // Update cursor position: move it up by the number of lines moved
+                int newSelectionStart = insertPos + (selectionStart - lineStartPos);
+                int newSelectionEnd = insertPos + (selectionEnd - lineStartPos);
+                
+                Text = newText;
+                SelectionStart = newSelectionStart;
+                SelectionEnd = newSelectionEnd;
+            }
+            else // down
+            {
+                // Move down: insert after the line that was immediately below endLine
+                // After removal, we need to find where that line is now in the new text
+                // Note: endLine >= lines.Length - 1 is already checked above, so we know there's a line below
+                
+                // The line that was at endLine+1 is now at position (endLine+1 - numLinesMoved) after removal
+                // Calculate position after that line in the new text
+                string[] newLines = newText.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+                int targetLineIndex = endLine - numLinesMoved + 1;
+                
+                int insertPos;
+                if (targetLineIndex >= newLines.Length)
+                {
+                    // Shouldn't happen given our bounds check, but handle edge case
+                    insertPos = newText.Length;
+                }
+                else
+                {
+                    // Calculate position at end of target line including newline
+                    int pos = 0;
+                    for (int i = 0; i <= targetLineIndex && i < newLines.Length; i++)
+                    {
+                        pos += newLines[i].Length;
+                        if (i < newLines.Length - 1)
+                        {
+                            pos += newline.Length;
+                        }
+                    }
+                    insertPos = pos;
+                }
+                
+                // Insert the moved text
+                newText = newText.Insert(insertPos, textToMove);
+                
+                // Update cursor position
+                // Offset = where we inserted - where we removed
+                int offset = insertPos - lineStartPos;
+                int newSelectionStart = selectionStart + offset;
+                int newSelectionEnd = selectionEnd + offset;
+                
+                Text = newText;
+                SelectionStart = newSelectionStart;
+                SelectionEnd = newSelectionEnd;
+            }
+        }
+
+        /// <summary>
+        /// Gets the character position of the end of a line including the newline (0-based).
+        /// For the last line, returns the end of the text (no newline).
+        /// </summary>
+        private int GetPositionFromLineEndIncludingNewline(int line)
+        {
+            if (string.IsNullOrEmpty(Text) || line < 0)
+            {
+                return 0;
+            }
+
+            string[] lines = Text.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+            if (line >= lines.Length)
+            {
+                return Text.Length;
+            }
+
+            int position = 0;
+            string newline = Text.Contains("\r\n") ? "\r\n" : (Text.Contains("\n") ? "\n" : "\r");
+            int newlineLength = newline.Length;
+
+            // Calculate position up to and including the specified line's content and newline
+            for (int i = 0; i <= line && i < lines.Length; i++)
+            {
+                position += lines[i].Length;
+                // Add newline for all lines except the last one
+                if (i < lines.Length - 1)
+                {
+                    position += newlineLength;
+                }
+            }
+
+            return position;
+        }
+
         /// <summary>
         /// Gets the line number (0-based) from a character position.
         /// </summary>

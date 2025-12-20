@@ -2235,10 +2235,10 @@ namespace HolocronToolset.Editors
             // Note: Code editor operations like toggle comment, duplicate line, etc. would need to be implemented in CodeEditor
             // For now, we register them but they may not work until CodeEditor implements these methods
             _commandPalette.RegisterCommand("edit.toggleComment", "Toggle Line Comment", () => { /* TODO: Implement in CodeEditor */ }, "Edit");
-            _commandPalette.RegisterCommand("edit.duplicateLine", "Duplicate Line", () => { /* TODO: Implement in CodeEditor */ }, "Edit");
+            _commandPalette.RegisterCommand("edit.duplicateLine", "Duplicate Line", () => { if (_codeEdit != null) _codeEdit.DuplicateLine(); }, "Edit");
             _commandPalette.RegisterCommand("edit.deleteLine", "Delete Line", () => { /* TODO: Implement in CodeEditor */ }, "Edit");
-            _commandPalette.RegisterCommand("edit.moveLineUp", "Move Line Up", () => { /* TODO: Implement in CodeEditor */ }, "Edit");
-            _commandPalette.RegisterCommand("edit.moveLineDown", "Move Line Down", () => { /* TODO: Implement in CodeEditor */ }, "Edit");
+            _commandPalette.RegisterCommand("edit.moveLineUp", "Move Line Up", () => { if (_codeEdit != null) _codeEdit.MoveLineUp(); }, "Edit");
+            _commandPalette.RegisterCommand("edit.moveLineDown", "Move Line Down", () => { if (_codeEdit != null) _codeEdit.MoveLineDown(); }, "Edit");
 
             // View operations
             // Note: Toggle Explorer, Terminal, Output Panel would need UI actions to trigger
