@@ -1,8 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <Nullable>enable</Nullable>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
+
+  <!-- This file exists for solution compatibility but is not used for compilation -->
+  <!-- All compilation uses Andastra.Parsing.csproj -->
+  <ItemGroup>
+    <!-- Exclude all source files to prevent duplicate compilation -->
+    <Compile Remove="**\*.cs" />
+  </ItemGroup>
 
 </Project>
