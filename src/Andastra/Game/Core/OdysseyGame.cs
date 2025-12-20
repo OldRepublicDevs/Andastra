@@ -64,6 +64,7 @@ namespace Andastra.Runtime.Game.Core
         
         // Character creation
         private CharacterCreationScreen _characterCreationScreen;
+        private CharacterCreationData _characterData;
         private int _selectedMenuIndex = 0;
         private readonly string[] _menuItems = { "Start Game", "Options", "Exit" };
         private ITexture2D _menuTexture; // 1x1 white texture for drawing rectangles
@@ -1089,13 +1090,8 @@ namespace Andastra.Runtime.Game.Core
                 }
 
                 // Start the game session with created character (if provided)
-                if (characterData != null)
-                {
-                    // TODO: Create player entity from character data
-                    // _session.CreatePlayerCharacter(characterData);
-                }
-                
-                _session.StartNewGame();
+                // Character creation data is passed to GameSession.StartNewGame() which creates the player entity
+                _session.StartNewGame(characterData);
 
                 // Initialize camera after player is created
                 UpdateCamera(0.016f); // Approximate frame time for initialization
