@@ -230,7 +230,7 @@ namespace Andastra.Parsing.Tests.Formats
             var failed = results.Where(r => !r.Value.Success).ToList();
 
             // At least 12 languages should compile successfully (as required)
-            successful.Count.Should().BeGreaterOrEqualTo(12,
+            successful.Count.Should().BeGreaterThanOrEqualTo(12,
                 $"At least 12 languages should compile successfully. " +
                 $"Succeeded: {successful.Count}/{SupportedLanguages.Length}. " +
                 $"Failed: {string.Join(", ", failed.Select(f => $"{f.Key}: {f.Value.ErrorMessage}"))}");

@@ -81,14 +81,14 @@ namespace Andastra.Parsing.Tests.Formats
             uint listIndicesOffset = BitConverter.ToUInt32(header, 48);
             uint listIndicesCount = BitConverter.ToUInt32(header, 52);
 
-            structArrayOffset.Should().BeGreaterOrEqualTo(56, "Struct array offset should be >= 56 (after header)");
-            fieldArrayOffset.Should().BeGreaterOrEqualTo(56, "Field array offset should be >= 56 (after header)");
-            labelArrayOffset.Should().BeGreaterOrEqualTo(56, "Label array offset should be >= 56 (after header)");
-            fieldDataOffset.Should().BeGreaterOrEqualTo(56, "Field data offset should be >= 56 (after header)");
-            fieldIndicesOffset.Should().BeGreaterOrEqualTo(56, "Field indices offset should be >= 56 (after header)");
-            listIndicesOffset.Should().BeGreaterOrEqualTo(56, "List indices offset should be >= 56 (after header)");
+            structArrayOffset.Should().BeGreaterThanOrEqualTo(56, "Struct array offset should be >= 56 (after header)");
+            fieldArrayOffset.Should().BeGreaterThanOrEqualTo(56, "Field array offset should be >= 56 (after header)");
+            labelArrayOffset.Should().BeGreaterThanOrEqualTo(56, "Label array offset should be >= 56 (after header)");
+            fieldDataOffset.Should().BeGreaterThanOrEqualTo(56, "Field data offset should be >= 56 (after header)");
+            fieldIndicesOffset.Should().BeGreaterThanOrEqualTo(56, "Field indices offset should be >= 56 (after header)");
+            listIndicesOffset.Should().BeGreaterThanOrEqualTo(56, "List indices offset should be >= 56 (after header)");
 
-            structCount.Should().BeGreaterOrEqualTo(1, "Struct count should be >= 1 (root struct always present)");
+            structCount.Should().BeGreaterThanOrEqualTo(1, "Struct count should be >= 1 (root struct always present)");
         }
 
         [Fact(Timeout = 120000)]
@@ -214,9 +214,9 @@ namespace Andastra.Parsing.Tests.Formats
             uts.Tag.Should().NotBeNull("Tag should not be null");
             uts.ResRef.Should().NotBeNull("ResRef should not be null");
             uts.Name.Should().NotBeNull("Name should not be null");
-            uts.Volume.Should().BeGreaterOrEqualTo(0, "Volume should be non-negative");
-            uts.Priority.Should().BeGreaterOrEqualTo(0, "Priority should be non-negative");
-            uts.VolumeVariance.Should().BeGreaterOrEqualTo(0, "VolumeVariance should be non-negative");
+            uts.Volume.Should().BeGreaterThanOrEqualTo(0, "Volume should be non-negative");
+            uts.Priority.Should().BeGreaterThanOrEqualTo(0, "Priority should be non-negative");
+            uts.VolumeVariance.Should().BeGreaterThanOrEqualTo(0, "VolumeVariance should be non-negative");
         }
 
         [Fact(Timeout = 120000)]
@@ -257,9 +257,9 @@ namespace Andastra.Parsing.Tests.Formats
             uts.PitchVariance.Should().NotBe(float.NegativeInfinity, "PitchVariance should not be -Infinity");
 
             uts.Elevation.Should().NotBe(float.NaN, "Elevation should not be NaN");
-            uts.MinDistance.Should().BeGreaterOrEqualTo(0.0f, "MinDistance should be non-negative");
-            uts.MaxDistance.Should().BeGreaterOrEqualTo(uts.MinDistance, "MaxDistance should be >= MinDistance");
-            uts.DistanceCutoff.Should().BeGreaterOrEqualTo(0.0f, "DistanceCutoff should be non-negative");
+            uts.MinDistance.Should().BeGreaterThanOrEqualTo(0.0f, "MinDistance should be non-negative");
+            uts.MaxDistance.Should().BeGreaterThanOrEqualTo(uts.MinDistance, "MaxDistance should be >= MinDistance");
+            uts.DistanceCutoff.Should().BeGreaterThanOrEqualTo(0.0f, "DistanceCutoff should be non-negative");
             uts.RandomRangeX.Should().NotBe(float.NaN, "RandomRangeX should not be NaN");
             uts.RandomRangeY.Should().NotBe(float.NaN, "RandomRangeY should not be NaN");
         }
@@ -276,10 +276,10 @@ namespace Andastra.Parsing.Tests.Formats
             UTS uts = UTSHelpers.ConstructUts(gff);
 
             // Validate integer properties
-            uts.Hours.Should().BeGreaterOrEqualTo(0, "Hours should be non-negative");
-            uts.Times.Should().BeGreaterOrEqualTo(0, "Times should be non-negative");
-            uts.Interval.Should().BeGreaterOrEqualTo(0, "Interval should be non-negative");
-            uts.IntervalVariance.Should().BeGreaterOrEqualTo(0, "IntervalVariance should be non-negative");
+            uts.Hours.Should().BeGreaterThanOrEqualTo(0, "Hours should be non-negative");
+            uts.Times.Should().BeGreaterThanOrEqualTo(0, "Times should be non-negative");
+            uts.Interval.Should().BeGreaterThanOrEqualTo(0, "Interval should be non-negative");
+            uts.IntervalVariance.Should().BeGreaterThanOrEqualTo(0, "IntervalVariance should be non-negative");
         }
 
         [Fact(Timeout = 120000)]

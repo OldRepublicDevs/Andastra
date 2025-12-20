@@ -235,7 +235,7 @@ namespace Andastra.Parsing.Tests.Formats
             // At least 12 languages should compile successfully
             var resultsStr = string.Join(", ", results.Select(kvp => $"{kvp.Key}: {(kvp.Value ? "OK" : "FAIL")}"));
             var errorsStr = string.Join("; ", errors.Select(kvp => $"{kvp.Key}: {kvp.Value}"));
-            successCount.Should().BeGreaterOrEqualTo(12,
+            successCount.Should().BeGreaterThanOrEqualTo(12,
                 $"At least 12 languages should compile successfully. Results: {resultsStr}. Errors: {errorsStr}");
         }
 

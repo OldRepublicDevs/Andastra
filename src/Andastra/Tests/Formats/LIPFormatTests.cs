@@ -88,14 +88,14 @@ namespace Andastra.Parsing.Tests.Formats
             LIP lip = new LIPBinaryReader(BinaryTestFile).Load();
 
             // Validate keyframe structure
-            lip.Count.Should().BeGreaterOrEqualTo(0, "Keyframe count should be non-negative");
-            lip.Length.Should().BeGreaterOrEqualTo(0.0f, "Length should be non-negative");
+            lip.Count.Should().BeGreaterThanOrEqualTo(0, "Keyframe count should be non-negative");
+            lip.Length.Should().BeGreaterThanOrEqualTo(0.0f, "Length should be non-negative");
 
             // Validate each keyframe has required fields (matching keyframe_entry in LIP.ksy)
             foreach (var keyframe in lip.Frames)
             {
-                keyframe.Time.Should().BeGreaterOrEqualTo(0.0f, "Timestamp should be non-negative");
-                keyframe.Time.Should().BeLessOrEqualTo(lip.Length, "Timestamp should not exceed length");
+                keyframe.Time.Should().BeGreaterThanOrEqualTo(0.0f, "Timestamp should be non-negative");
+                keyframe.Time.Should().BeLessThanOrEqualTo(lip.Length, "Timestamp should not exceed length");
                 keyframe.Shape.Should().BeInRange(LIPShape.Neutral, LIPShape.KG, "Shape should be valid enum value (0-15)");
             }
         }
@@ -113,7 +113,7 @@ namespace Andastra.Parsing.Tests.Formats
             // Validate keyframes are sorted chronologically (as per LIP.ksy documentation)
             for (int i = 1; i < lip.Frames.Count; i++)
             {
-                lip.Frames[i].Time.Should().BeGreaterOrEqualTo(lip.Frames[i - 1].Time,
+                lip.Frames[i].Time.Should().BeGreaterThanOrEqualTo(lip.Frames[i - 1].Time,
                     $"Keyframe {i} should be sorted after keyframe {i - 1}");
             }
         }
@@ -255,7 +255,7 @@ namespace Andastra.Parsing.Tests.Formats
             lip.Add(-0.5f, LIPShape.AH); // Negative time should be handled
 
             // The Add method should handle this - let's verify behavior
-            lip.Count.Should().BeGreaterOrEqualTo(1, "Should have at least one keyframe");
+            lip.Count.Should().BeGreaterThanOrEqualTo(1, "Should have at least one keyframe");
         }
 
         [Fact(Timeout = 120000)]
@@ -311,8 +311,8 @@ namespace Andastra.Parsing.Tests.Formats
         {
             // Basic validation
             lip.Should().NotBeNull();
-            lip.Count.Should().BeGreaterOrEqualTo(0);
-            lip.Length.Should().BeGreaterOrEqualTo(0.0f);
+            lip.Count.Should().BeGreaterThanOrEqualTo(0);
+            lip.Length.Should().BeGreaterThanOrEqualTo(0.0f);
         }
 
         private static void CreateTestLipFile(string path)

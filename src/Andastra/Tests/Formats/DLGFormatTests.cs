@@ -78,14 +78,14 @@ namespace Andastra.Parsing.Tests.Formats
             uint listIndicesOffset = BitConverter.ToUInt32(header, 48);
             uint listIndicesCount = BitConverter.ToUInt32(header, 52);
 
-            structArrayOffset.Should().BeGreaterOrEqualTo(56, "Struct array offset should be >= 56 (after header)");
-            fieldArrayOffset.Should().BeGreaterOrEqualTo(56, "Field array offset should be >= 56 (after header)");
-            labelArrayOffset.Should().BeGreaterOrEqualTo(56, "Label array offset should be >= 56 (after header)");
-            fieldDataOffset.Should().BeGreaterOrEqualTo(56, "Field data offset should be >= 56 (after header)");
-            fieldIndicesOffset.Should().BeGreaterOrEqualTo(56, "Field indices offset should be >= 56 (after header)");
-            listIndicesOffset.Should().BeGreaterOrEqualTo(56, "List indices offset should be >= 56 (after header)");
+            structArrayOffset.Should().BeGreaterThanOrEqualTo(56, "Struct array offset should be >= 56 (after header)");
+            fieldArrayOffset.Should().BeGreaterThanOrEqualTo(56, "Field array offset should be >= 56 (after header)");
+            labelArrayOffset.Should().BeGreaterThanOrEqualTo(56, "Label array offset should be >= 56 (after header)");
+            fieldDataOffset.Should().BeGreaterThanOrEqualTo(56, "Field data offset should be >= 56 (after header)");
+            fieldIndicesOffset.Should().BeGreaterThanOrEqualTo(56, "Field indices offset should be >= 56 (after header)");
+            listIndicesOffset.Should().BeGreaterThanOrEqualTo(56, "List indices offset should be >= 56 (after header)");
 
-            structCount.Should().BeGreaterOrEqualTo(1, "Struct count should be >= 1 (root struct always present)");
+            structCount.Should().BeGreaterThanOrEqualTo(1, "Struct count should be >= 1 (root struct always present)");
         }
 
         [Fact(Timeout = 120000)]
@@ -180,7 +180,7 @@ namespace Andastra.Parsing.Tests.Formats
             GFFStruct root = gff.Root;
 
             // Core DLG fields should be present or have defaults
-            root.Acquire("NumWords", (uint)0).Should().BeGreaterOrEqualTo(0, "NumWords should be non-negative");
+            root.Acquire("NumWords", (uint)0).Should().BeGreaterThanOrEqualTo(0, "NumWords should be non-negative");
             root.Acquire("Skippable", (byte)0).Should().BeOneOf((byte)0, (byte)1, "Skippable should be 0 or 1");
             root.Acquire("ComputerType", (byte)0).Should().BeOneOf((byte)0, (byte)1, "ComputerType should be 0 (Modern) or 1 (Ancient)");
             root.Acquire("ConversationType", 0).Should().BeInRange(0, 3, "ConversationType should be 0-3");
@@ -204,7 +204,7 @@ namespace Andastra.Parsing.Tests.Formats
             foreach (var entry in allEntries)
             {
                 entry.Should().NotBeNull("Entry should not be null");
-                entry.ListIndex.Should().BeGreaterOrEqualTo(-1, "ListIndex should be >= -1");
+                entry.ListIndex.Should().BeGreaterThanOrEqualTo(-1, "ListIndex should be >= -1");
                 entry.Speaker.Should().NotBeNull("Speaker should not be null");
             }
         }
@@ -227,7 +227,7 @@ namespace Andastra.Parsing.Tests.Formats
             foreach (var reply in allReplies)
             {
                 reply.Should().NotBeNull("Reply should not be null");
-                reply.ListIndex.Should().BeGreaterOrEqualTo(-1, "ListIndex should be >= -1");
+                reply.ListIndex.Should().BeGreaterThanOrEqualTo(-1, "ListIndex should be >= -1");
             }
         }
 
@@ -487,7 +487,7 @@ namespace Andastra.Parsing.Tests.Formats
         {
             // Basic validation
             dlg.Should().NotBeNull();
-            dlg.WordCount.Should().BeGreaterOrEqualTo(0);
+            dlg.WordCount.Should().BeGreaterThanOrEqualTo(0);
             dlg.Starters.Should().NotBeNull();
             dlg.Stunts.Should().NotBeNull();
         }

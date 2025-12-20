@@ -78,14 +78,14 @@ namespace Andastra.Parsing.Tests.Formats
             uint listIndicesOffset = BitConverter.ToUInt32(header, 48);
             uint listIndicesCount = BitConverter.ToUInt32(header, 52);
 
-            structArrayOffset.Should().BeGreaterOrEqualTo(56, "Struct array offset should be >= 56 (after header)");
-            fieldArrayOffset.Should().BeGreaterOrEqualTo(56, "Field array offset should be >= 56 (after header)");
-            labelArrayOffset.Should().BeGreaterOrEqualTo(56, "Label array offset should be >= 56 (after header)");
-            fieldDataOffset.Should().BeGreaterOrEqualTo(56, "Field data offset should be >= 56 (after header)");
-            fieldIndicesOffset.Should().BeGreaterOrEqualTo(56, "Field indices offset should be >= 56 (after header)");
-            listIndicesOffset.Should().BeGreaterOrEqualTo(56, "List indices offset should be >= 56 (after header)");
+            structArrayOffset.Should().BeGreaterThanOrEqualTo(56, "Struct array offset should be >= 56 (after header)");
+            fieldArrayOffset.Should().BeGreaterThanOrEqualTo(56, "Field array offset should be >= 56 (after header)");
+            labelArrayOffset.Should().BeGreaterThanOrEqualTo(56, "Label array offset should be >= 56 (after header)");
+            fieldDataOffset.Should().BeGreaterThanOrEqualTo(56, "Field data offset should be >= 56 (after header)");
+            fieldIndicesOffset.Should().BeGreaterThanOrEqualTo(56, "Field indices offset should be >= 56 (after header)");
+            listIndicesOffset.Should().BeGreaterThanOrEqualTo(56, "List indices offset should be >= 56 (after header)");
 
-            structCount.Should().BeGreaterOrEqualTo(1, "Struct count should be >= 1 (root struct always present)");
+            structCount.Should().BeGreaterThanOrEqualTo(1, "Struct count should be >= 1 (root struct always present)");
         }
 
         [Fact(Timeout = 120000)]
@@ -183,7 +183,7 @@ namespace Andastra.Parsing.Tests.Formats
             root.Acquire<string>("Tag", "").Should().NotBeNull("Tag should not be null");
             root.Acquire<LocalizedString>("LocalizedName", LocalizedString.FromInvalid()).Should().NotBeNull("LocalizedName should not be null");
             root.Acquire<string>("KeyName", "").Should().NotBeNull("KeyName should not be null");
-            root.Acquire<int>("Type", 0).Should().BeGreaterOrEqualTo(0, "Type should be non-negative");
+            root.Acquire<int>("Type", 0).Should().BeGreaterThanOrEqualTo(0, "Type should be non-negative");
             
             // TrapFlag should be valid byte (0 or 1)
             byte? trapFlag = root.GetUInt8("TrapFlag");
@@ -532,7 +532,7 @@ namespace Andastra.Parsing.Tests.Formats
             utt.Should().NotBeNull();
             utt.ResRef.Should().NotBeNull();
             utt.Name.Should().NotBeNull();
-            utt.TypeId.Should().BeGreaterOrEqualTo(0);
+            utt.TypeId.Should().BeGreaterThanOrEqualTo(0);
         }
 
         private static void CreateTestUttFile(string path)

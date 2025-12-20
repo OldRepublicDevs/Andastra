@@ -337,7 +337,7 @@ namespace Andastra.Parsing.Tests.Formats
                 return;
             }
 
-            SupportedLanguages.Length.Should().BeGreaterOrEqualTo(12,
+            SupportedLanguages.Length.Should().BeGreaterThanOrEqualTo(12,
                 "Should support at least a dozen languages for testing");
 
             var javaCheck = RunCommand("java", "-version");
@@ -364,7 +364,7 @@ namespace Andastra.Parsing.Tests.Formats
             }
 
             // We should be able to compile to at least a dozen languages
-            compiledCount.Should().BeGreaterOrEqualTo(12,
+            compiledCount.Should().BeGreaterThanOrEqualTo(12,
                 $"Should successfully compile PTH.ksy to at least 12 languages. Compiled to {compiledCount} languages.");
         }
 

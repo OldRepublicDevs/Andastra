@@ -222,7 +222,7 @@ namespace Andastra.Parsing.Tests.Formats
             int totalCount = SupportedLanguages.Length;
 
             // At least 12 languages should compile successfully
-            successCount.Should().BeGreaterOrEqualTo(12,
+            successCount.Should().BeGreaterThanOrEqualTo(12,
                 $"At least 12 languages should compile successfully. " +
                 $"Results: {string.Join(", ", results.Select(kvp => $"{kvp.Key}: {(kvp.Value ? "OK" : "FAIL")}"))}. " +
                 $"Errors: {string.Join("; ", errors.Select(kvp => $"{kvp.Key}: {kvp.Value}"))}");

@@ -90,7 +90,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             // After decompression, BZF should behave like a BIF
             bif.BifType.Should().Be(BIFType.BZF);
-            bif.VarCount.Should().BeGreaterOrEqualTo(0);
+            bif.VarCount.Should().BeGreaterThanOrEqualTo(0);
             bif.FixedCount.Should().Be(0);
         }
 

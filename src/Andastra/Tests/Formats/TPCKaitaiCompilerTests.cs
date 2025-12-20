@@ -313,7 +313,7 @@ namespace Andastra.Parsing.Tests.Formats
             // At least 12 languages should compile successfully for each format
             // (4 formats * 12 languages = 48 minimum successful compilations)
             int expectedMinimum = 4 * 12; // At least 12 languages per format
-            successCount.Should().BeGreaterOrEqualTo(expectedMinimum,
+            successCount.Should().BeGreaterThanOrEqualTo(expectedMinimum,
                 $"At least {expectedMinimum} compilations should succeed out of {totalCount} total. " +
                 $"Results: {string.Join(", ", results.Select(kvp => $"{kvp.Key}: {(kvp.Value ? "OK" : "FAIL")}"))}. " +
                 $"Errors: {string.Join("; ", errors.Select(kvp => $"{kvp.Key}: {kvp.Value}"))}");

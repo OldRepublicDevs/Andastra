@@ -128,7 +128,7 @@ namespace Andastra.Parsing.Tests.Formats
             emptySsf.Get(SSFSound.BATTLE_CRY_1).Should().Be(-1, "Default SSF should have -1 for all sounds");
 
             // Test that valid StrRefs are preserved
-            ssf.Get(SSFSound.BATTLE_CRY_1).Should().BeGreaterOrEqualTo(-1, "StrRef should be >= -1");
+            ssf.Get(SSFSound.BATTLE_CRY_1).Should().BeGreaterThanOrEqualTo(-1, "StrRef should be >= -1");
         }
 
         [Fact(Timeout = 120000)]
@@ -629,7 +629,7 @@ namespace Andastra.Parsing.Tests.Formats
             {
                 uint rawValue = BitConverter.ToUInt32(soundArray, i * 4);
                 // Value should be either a valid StrRef (>= 0) or 0xFFFFFFFF (-1)
-                rawValue.Should().BeGreaterOrEqualTo(0u, $"Sound entry {i} raw value should be >= 0");
+                rawValue.Should().BeGreaterThanOrEqualTo(0u, $"Sound entry {i} raw value should be >= 0");
             }
         }
 

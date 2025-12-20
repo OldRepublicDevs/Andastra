@@ -92,10 +92,10 @@ namespace Andastra.Parsing.Tests.Formats
             GFF gff = GFF.FromBytes(File.ReadAllBytes(BinaryTestFile));
 
             // Validate GFF structure
-            gff.Header.StructCount.Should().BeGreaterOrEqualTo(1, "UTC should have at least one struct (root struct)");
-            gff.Header.FieldCount.Should().BeGreaterOrEqualTo(0, "Field count should be non-negative");
-            gff.Header.LabelCount.Should().BeGreaterOrEqualTo(0, "Label count should be non-negative");
-            gff.Header.FieldDataCount.Should().BeGreaterOrEqualTo(0, "Field data count should be non-negative");
+            gff.Header.StructCount.Should().BeGreaterThanOrEqualTo(1, "UTC should have at least one struct (root struct)");
+            gff.Header.FieldCount.Should().BeGreaterThanOrEqualTo(0, "Field count should be non-negative");
+            gff.Header.LabelCount.Should().BeGreaterThanOrEqualTo(0, "Label count should be non-negative");
+            gff.Header.FieldDataCount.Should().BeGreaterThanOrEqualTo(0, "Field data count should be non-negative");
         }
 
         [Fact(Timeout = 120000)]
@@ -143,12 +143,12 @@ namespace Andastra.Parsing.Tests.Formats
             UTC utc = UTCHelpers.ReadUtc(File.ReadAllBytes(BinaryTestFile));
 
             // Validate appearance fields exist (may be 0/default)
-            utc.AppearanceId.Should().BeGreaterOrEqualTo(0, "Appearance_Type should be non-negative");
-            utc.PortraitId.Should().BeGreaterOrEqualTo(0, "PortraitId should be non-negative");
-            utc.GenderId.Should().BeGreaterOrEqualTo(0, "Gender should be non-negative");
-            utc.RaceId.Should().BeGreaterOrEqualTo(0, "Race should be non-negative");
-            utc.BodyVariation.Should().BeGreaterOrEqualTo(0, "BodyVariation should be non-negative");
-            utc.TextureVariation.Should().BeGreaterOrEqualTo(0, "TextureVar should be non-negative");
+            utc.AppearanceId.Should().BeGreaterThanOrEqualTo(0, "Appearance_Type should be non-negative");
+            utc.PortraitId.Should().BeGreaterThanOrEqualTo(0, "PortraitId should be non-negative");
+            utc.GenderId.Should().BeGreaterThanOrEqualTo(0, "Gender should be non-negative");
+            utc.RaceId.Should().BeGreaterThanOrEqualTo(0, "Race should be non-negative");
+            utc.BodyVariation.Should().BeGreaterThanOrEqualTo(0, "BodyVariation should be non-negative");
+            utc.TextureVariation.Should().BeGreaterThanOrEqualTo(0, "TextureVar should be non-negative");
         }
 
         [Fact(Timeout = 120000)]
@@ -162,14 +162,14 @@ namespace Andastra.Parsing.Tests.Formats
             UTC utc = UTCHelpers.ReadUtc(File.ReadAllBytes(BinaryTestFile));
 
             // Validate stats fields exist
-            utc.Strength.Should().BeGreaterOrEqualTo(0, "Str should be non-negative");
-            utc.Dexterity.Should().BeGreaterOrEqualTo(0, "Dex should be non-negative");
-            utc.Constitution.Should().BeGreaterOrEqualTo(0, "Con should be non-negative");
-            utc.Intelligence.Should().BeGreaterOrEqualTo(0, "Int should be non-negative");
-            utc.Wisdom.Should().BeGreaterOrEqualTo(0, "Wis should be non-negative");
-            utc.Charisma.Should().BeGreaterOrEqualTo(0, "Cha should be non-negative");
-            utc.CurrentHp.Should().BeGreaterOrEqualTo(0, "CurrentHitPoints should be non-negative");
-            utc.MaxHp.Should().BeGreaterOrEqualTo(0, "MaxHitPoints should be non-negative");
+            utc.Strength.Should().BeGreaterThanOrEqualTo(0, "Str should be non-negative");
+            utc.Dexterity.Should().BeGreaterThanOrEqualTo(0, "Dex should be non-negative");
+            utc.Constitution.Should().BeGreaterThanOrEqualTo(0, "Con should be non-negative");
+            utc.Intelligence.Should().BeGreaterThanOrEqualTo(0, "Int should be non-negative");
+            utc.Wisdom.Should().BeGreaterThanOrEqualTo(0, "Wis should be non-negative");
+            utc.Charisma.Should().BeGreaterThanOrEqualTo(0, "Cha should be non-negative");
+            utc.CurrentHp.Should().BeGreaterThanOrEqualTo(0, "CurrentHitPoints should be non-negative");
+            utc.MaxHp.Should().BeGreaterThanOrEqualTo(0, "MaxHitPoints should be non-negative");
         }
 
         [Fact(Timeout = 120000)]
@@ -188,8 +188,8 @@ namespace Andastra.Parsing.Tests.Formats
             // Validate each class entry
             foreach (var utcClass in utc.Classes)
             {
-                utcClass.ClassId.Should().BeGreaterOrEqualTo(0, "Class ID should be non-negative");
-                utcClass.ClassLevel.Should().BeGreaterOrEqualTo(0, "ClassLevel should be non-negative");
+                utcClass.ClassId.Should().BeGreaterThanOrEqualTo(0, "Class ID should be non-negative");
+                utcClass.ClassLevel.Should().BeGreaterThanOrEqualTo(0, "ClassLevel should be non-negative");
                 utcClass.Powers.Should().NotBeNull("Powers list should exist");
             }
         }
@@ -210,7 +210,7 @@ namespace Andastra.Parsing.Tests.Formats
             // Validate each feat entry
             foreach (var feat in utc.Feats)
             {
-                feat.Should().BeGreaterOrEqualTo(0, "Feat ID should be non-negative");
+                feat.Should().BeGreaterThanOrEqualTo(0, "Feat ID should be non-negative");
             }
         }
 
@@ -294,14 +294,14 @@ namespace Andastra.Parsing.Tests.Formats
             UTC utc = UTCHelpers.ReadUtc(File.ReadAllBytes(BinaryTestFile));
 
             // Validate skills exist (may be 0)
-            utc.ComputerUse.Should().BeGreaterOrEqualTo(0, "ComputerUse skill should be non-negative");
-            utc.Demolitions.Should().BeGreaterOrEqualTo(0, "Demolitions skill should be non-negative");
-            utc.Stealth.Should().BeGreaterOrEqualTo(0, "Stealth skill should be non-negative");
-            utc.Awareness.Should().BeGreaterOrEqualTo(0, "Awareness skill should be non-negative");
-            utc.Persuade.Should().BeGreaterOrEqualTo(0, "Persuade skill should be non-negative");
-            utc.Repair.Should().BeGreaterOrEqualTo(0, "Repair skill should be non-negative");
-            utc.Security.Should().BeGreaterOrEqualTo(0, "Security skill should be non-negative");
-            utc.TreatInjury.Should().BeGreaterOrEqualTo(0, "TreatInjury skill should be non-negative");
+            utc.ComputerUse.Should().BeGreaterThanOrEqualTo(0, "ComputerUse skill should be non-negative");
+            utc.Demolitions.Should().BeGreaterThanOrEqualTo(0, "Demolitions skill should be non-negative");
+            utc.Stealth.Should().BeGreaterThanOrEqualTo(0, "Stealth skill should be non-negative");
+            utc.Awareness.Should().BeGreaterThanOrEqualTo(0, "Awareness skill should be non-negative");
+            utc.Persuade.Should().BeGreaterThanOrEqualTo(0, "Persuade skill should be non-negative");
+            utc.Repair.Should().BeGreaterThanOrEqualTo(0, "Repair skill should be non-negative");
+            utc.Security.Should().BeGreaterThanOrEqualTo(0, "Security skill should be non-negative");
+            utc.TreatInjury.Should().BeGreaterThanOrEqualTo(0, "TreatInjury skill should be non-negative");
         }
 
         [Fact(Timeout = 120000)]

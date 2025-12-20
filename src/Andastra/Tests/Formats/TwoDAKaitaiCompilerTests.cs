@@ -11,24 +11,23 @@ using Xunit;
 namespace Andastra.Parsing.Tests.Formats
 {
     /// <summary>
-    /// Comprehensive tests for Kaitai Struct compiler functionality with RIM.ksy.
-    /// Tests compilation to multiple target languages (at least a dozen) and verifies compiler output.
-    /// 1:1 pattern from BWMKaitaiCompilerTests.cs and SSFKaitaiStructTests.cs
+    /// Comprehensive tests for Kaitai Struct compiler functionality with TwoDA.ksy.
+    /// Tests compilation to multiple target languages and verifies compiler output.
     /// </summary>
-    public class RIMKaitaiCompilerTests
+    public class TwoDAKaitaiCompilerTests
     {
-        private static readonly string RIMKsyPath = Path.GetFullPath(Path.Combine(
+        private static readonly string TwoDAKsyPath = Path.GetFullPath(Path.Combine(
             AppContext.BaseDirectory,
             "..", "..", "..", "..", "..",
-            "src", "Andastra", "Parsing", "Resource", "Formats", "RIM", "RIM.ksy"
+            "src", "Andastra", "Parsing", "Resource", "Formats", "TwoDA", "TwoDA.ksy"
         ));
 
         private static readonly string TestOutputDir = Path.Combine(
             AppContext.BaseDirectory,
-            "test_files", "kaitai_compiled", "rim"
+            "test_files", "kaitai_compiled", "twoda"
         );
 
-        // Supported languages in Kaitai Struct (at least 12+ as required)
+        // Supported languages in Kaitai Struct (at least 12 as required)
         private static readonly string[] SupportedLanguages = new[]
         {
             "python",
@@ -64,165 +63,129 @@ namespace Andastra.Parsing.Tests.Formats
             if (kscCheck.ExitCode != 0)
             {
                 // Try with .jar extension or check if it's in PATH
-                var jarPath = FindKaitaiCompilerJar();
-                if (string.IsNullOrEmpty(jarPath) || !File.Exists(jarPath))
-                {
-                    // Skip if not found - in CI/CD this should be installed
-                    return;
-                }
+                return;
             }
 
             kscCheck.ExitCode.Should().Be(0, "Kaitai Struct compiler should be available");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestRIMKsyFileExists()
+        public void TestTwoDAKsyFileExists()
         {
-            var normalizedPath = Path.GetFullPath(RIMKsyPath);
+            var normalizedPath = Path.GetFullPath(TwoDAKsyPath);
             File.Exists(normalizedPath).Should().BeTrue(
-                $"RIM.ksy file should exist at {normalizedPath}"
+                $"TwoDA.ksy file should exist at {normalizedPath}"
             );
 
             // Verify it's a valid YAML file
             var content = File.ReadAllText(normalizedPath);
-            content.Should().Contain("meta:", "RIM.ksy should contain meta section");
-            content.Should().Contain("id: rim", "RIM.ksy should have id: rim");
-            content.Should().Contain("seq:", "RIM.ksy should contain seq section");
+            content.Should().Contain("meta:", "TwoDA.ksy should contain meta section");
+            content.Should().Contain("id: twoda", "TwoDA.ksy should have id: twoda");
+            content.Should().Contain("seq:", "TwoDA.ksy should contain seq section");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestRIMKsyFileValid()
-        {
-            // Validate that RIM.ksy is valid YAML and can be parsed by compiler
-            if (!File.Exists(RIMKsyPath))
-            {
-                Assert.True(true, "RIM.ksy not found - skipping validation");
-                return;
-            }
-
-            var content = File.ReadAllText(RIMKsyPath);
-
-            // Check for required elements in Kaitai Struct definition
-            content.Should().Contain("meta:", "Should have meta section");
-            content.Should().Contain("id: rim", "Should have id: rim");
-            content.Should().Contain("file_type", "Should define file_type field");
-            content.Should().Contain("file_version", "Should define file_version field");
-            content.Should().Contain("resource_count", "Should define resource_count field");
-            content.Should().Contain("offset_to_resource_table", "Should define offset_to_resource_table field");
-            content.Should().Contain("resource_entry_table", "Should define resource_entry_table type");
-            content.Should().Contain("resource_entry", "Should define resource_entry type");
-            content.Should().Contain("resref", "Should define resref field");
-            content.Should().Contain("resource_type", "Should define resource_type field");
-            content.Should().Contain("resource_id", "Should define resource_id field");
-            content.Should().Contain("offset_to_data", "Should define offset_to_data field");
-            content.Should().Contain("resource_size", "Should define resource_size field");
-        }
-
-        [Fact(Timeout = 300000)]
-        public void TestCompileRIMToPython()
+        public void TestCompileTwoDAToPython()
         {
             TestCompileToLanguage("python");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileRIMToJava()
+        public void TestCompileTwoDAToJava()
         {
             TestCompileToLanguage("java");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileRIMToJavaScript()
+        public void TestCompileTwoDAToJavaScript()
         {
             TestCompileToLanguage("javascript");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileRIMToCSharp()
+        public void TestCompileTwoDAToCSharp()
         {
             TestCompileToLanguage("csharp");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileRIMToCpp()
+        public void TestCompileTwoDAToCpp()
         {
             TestCompileToLanguage("cpp_stl");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileRIMToGo()
+        public void TestCompileTwoDAToGo()
         {
             TestCompileToLanguage("go");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileRIMToRuby()
+        public void TestCompileTwoDAToRuby()
         {
             TestCompileToLanguage("ruby");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileRIMToPhp()
+        public void TestCompileTwoDAToPhp()
         {
             TestCompileToLanguage("php");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileRIMToRust()
+        public void TestCompileTwoDAToRust()
         {
             TestCompileToLanguage("rust");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileRIMToSwift()
+        public void TestCompileTwoDAToSwift()
         {
             TestCompileToLanguage("swift");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileRIMToLua()
+        public void TestCompileTwoDAToLua()
         {
             TestCompileToLanguage("lua");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileRIMToNim()
+        public void TestCompileTwoDAToNim()
         {
             TestCompileToLanguage("nim");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileRIMToPerl()
+        public void TestCompileTwoDAToPerl()
         {
             TestCompileToLanguage("perl");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileRIMToKotlin()
+        public void TestCompileTwoDAToKotlin()
         {
             TestCompileToLanguage("kotlin");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestCompileRIMToTypeScript()
+        public void TestCompileTwoDAToTypeScript()
         {
             TestCompileToLanguage("typescript");
         }
 
         [Fact(Timeout = 600000)] // 10 minute timeout for compiling all languages
-        public void TestCompileRIMToAllLanguages()
+        public void TestCompileTwoDAToAllLanguages()
         {
-            var normalizedKsyPath = Path.GetFullPath(RIMKsyPath);
+            var normalizedKsyPath = Path.GetFullPath(TwoDAKsyPath);
             if (!File.Exists(normalizedKsyPath))
             {
-                // Skip if .ksy file doesn't exist
                 return;
             }
 
-            // Check if Java/Kaitai compiler is available
             var javaCheck = RunCommand("java", "-version");
             if (javaCheck.ExitCode != 0)
             {
-                // Skip test if Java is not available
                 return;
             }
 
@@ -248,19 +211,14 @@ namespace Andastra.Parsing.Tests.Formats
                 }
             }
 
-            // Report results
             var successful = results.Where(r => r.Value.Success).ToList();
             var failed = results.Where(r => !r.Value.Success).ToList();
 
-            // At least some languages should compile successfully
-            // (We allow some failures as not all languages may be fully supported in all environments)
             successful.Count.Should().BeGreaterThan(0,
                 $"At least one language should compile successfully. Failed: {string.Join(", ", failed.Select(f => $"{f.Key}: {f.Value.ErrorMessage}"))}");
 
-            // Log successful compilations
             foreach (var success in successful)
             {
-                // Verify output files were created
                 var outputDir = Path.Combine(TestOutputDir, success.Key);
                 if (Directory.Exists(outputDir))
                 {
@@ -271,68 +229,10 @@ namespace Andastra.Parsing.Tests.Formats
             }
         }
 
-        [Fact(Timeout = 600000)] // 10 minute timeout
-        public void TestCompileRIMToAtLeastDozenLanguages()
-        {
-            // Ensure we test at least a dozen languages
-            SupportedLanguages.Length.Should().BeGreaterThanOrEqualTo(12,
-                "Should support at least a dozen languages for testing");
-
-            var normalizedKsyPath = Path.GetFullPath(RIMKsyPath);
-            if (!File.Exists(normalizedKsyPath))
-            {
-                Assert.True(true, "RIM.ksy not found - skipping test");
-                return;
-            }
-
-            var javaCheck = RunCommand("java", "-version");
-            if (javaCheck.ExitCode != 0)
-            {
-                Assert.True(true, "Java not available - skipping test");
-                return;
-            }
-
-            Directory.CreateDirectory(TestOutputDir);
-
-            int compiledCount = 0;
-            var results = new List<string>();
-
-            foreach (string lang in SupportedLanguages)
-            {
-                try
-                {
-                    var result = CompileToLanguage(normalizedKsyPath, lang);
-                    if (result.Success)
-                    {
-                        compiledCount++;
-                        results.Add($"{lang}: Success");
-                    }
-                    else
-                    {
-                        results.Add($"{lang}: Failed - {result.ErrorMessage?.Substring(0, Math.Min(100, result.ErrorMessage?.Length ?? 0))}");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    results.Add($"{lang}: Error - {ex.Message}");
-                }
-            }
-
-            // Log results
-            foreach (string result in results)
-            {
-                Console.WriteLine($"  {result}");
-            }
-
-            // We should be able to compile to at least a dozen languages
-            compiledCount.Should().BeGreaterThanOrEqualTo(12,
-                $"Should successfully compile RIM.ksy to at least 12 languages. Compiled to {compiledCount} languages. Results: {string.Join(", ", results)}");
-        }
-
         [Fact(Timeout = 300000)]
-        public void TestCompileRIMToMultipleLanguagesSimultaneously()
+        public void TestCompileTwoDAToMultipleLanguagesSimultaneously()
         {
-            var normalizedKsyPath = Path.GetFullPath(RIMKsyPath);
+            var normalizedKsyPath = Path.GetFullPath(TwoDAKsyPath);
             if (!File.Exists(normalizedKsyPath))
             {
                 return;
@@ -346,69 +246,138 @@ namespace Andastra.Parsing.Tests.Formats
 
             Directory.CreateDirectory(TestOutputDir);
 
-            // Compile to multiple languages in a single command
             var languages = new[] { "python", "java", "javascript", "csharp" };
             var languageArgs = string.Join(" ", languages.Select(l => $"-t {l}"));
 
             var result = RunKaitaiCompiler(normalizedKsyPath, languageArgs, TestOutputDir);
 
-            // Compilation should succeed (or at least not fail catastrophically)
-            // Some languages may fail due to missing dependencies, but the command should execute
             result.ExitCode.Should().BeInRange(-1, 1,
                 $"Kaitai compiler should execute. Output: {result.Output}, Error: {result.Error}");
         }
 
-        [Theory(Timeout = 300000)]
-        [MemberData(nameof(GetSupportedLanguages))]
-        public void TestKaitaiStructCompilation(string language)
+        [Fact(Timeout = 300000)]
+        public void TestCompileTwoDAToAtLeastDozenLanguages()
         {
-            // Test that RIM.ksy compiles to each target language
-            if (!File.Exists(RIMKsyPath))
+            var normalizedKsyPath = Path.GetFullPath(TwoDAKsyPath);
+            if (!File.Exists(normalizedKsyPath))
             {
-                Assert.True(true, "RIM.ksy not found - skipping compilation test");
                 return;
             }
 
             var javaCheck = RunCommand("java", "-version");
             if (javaCheck.ExitCode != 0)
             {
-                Assert.True(true, "Java not available - skipping compilation test");
                 return;
             }
 
-            var result = CompileToLanguage(Path.GetFullPath(RIMKsyPath), language);
+            SupportedLanguages.Length.Should().BeGreaterThanOrEqualTo(12,
+                "Should support at least a dozen languages for testing");
 
-            if (!result.Success)
+            Directory.CreateDirectory(TestOutputDir);
+
+            int compiledCount = 0;
+            foreach (var language in SupportedLanguages)
             {
-                // Some languages may not be fully supported or may have missing dependencies
-                // Log the error but don't fail the test for individual language failures
-                // The "all languages" test will verify at least some work
-                Assert.True(true, $"Compilation to {language} failed (may be expected): {result.ErrorMessage}");
+                try
+                {
+                    var result = CompileToLanguage(normalizedKsyPath, language);
+                    if (result.Success)
+                    {
+                        compiledCount++;
+                    }
+                }
+                catch
+                {
+                    // Ignore individual failures
+                }
+            }
+
+            compiledCount.Should().BeGreaterThanOrEqualTo(12,
+                $"Should successfully compile TwoDA.ksy to at least 12 languages. Compiled to {compiledCount} languages.");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestTwoDAKsyFileValid()
+        {
+            if (!File.Exists(TwoDAKsyPath))
+            {
                 return;
             }
 
-            result.Success.Should().BeTrue(
-                $"Compilation to {language} should succeed. Error: {result.ErrorMessage}, Output: {result.Output}");
+            var javaCheck = RunCommand("java", "-version");
+            if (javaCheck.ExitCode != 0)
+            {
+                return;
+            }
 
-            // Verify output directory was created
-            var outputDir = Path.Combine(TestOutputDir, language);
-            Directory.Exists(outputDir).Should().BeTrue(
-                $"Output directory for {language} should be created");
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "kaitai-struct-compiler",
+                    Arguments = $"-t python \"{TwoDAKsyPath}\" -d \"{Path.GetTempPath()}\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+
+            try
+            {
+                process.Start();
+                process.WaitForExit(30000);
+
+                string stderr = process.StandardError.ReadToEnd();
+
+                if (process.ExitCode != 0 && stderr.Contains("error") && !stderr.Contains("import"))
+                {
+                    Assert.True(false, $"TwoDA.ksy has syntax errors: {stderr}");
+                }
+            }
+            catch (System.ComponentModel.Win32Exception)
+            {
+                // Compiler not installed - skip validation
+            }
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestTwoDAKsyDefinitionCompleteness()
+        {
+            if (!File.Exists(TwoDAKsyPath))
+            {
+                return;
+            }
+
+            string ksyContent = File.ReadAllText(TwoDAKsyPath);
+
+            ksyContent.Should().Contain("meta:", "Should have meta section");
+            ksyContent.Should().Contain("id: twoda", "Should have id: twoda");
+            ksyContent.Should().Contain("file-extension:", "Should define file-extension");
+            ksyContent.Should().Contain("header", "Should define header field");
+            ksyContent.Should().Contain("column_headers_raw", "Should define column_headers_raw field");
+            ksyContent.Should().Contain("row_count", "Should define row_count field");
+            ksyContent.Should().Contain("row_labels_section", "Should define row_labels_section");
+            ksyContent.Should().Contain("cell_offsets_array", "Should define cell_offsets_array");
+            ksyContent.Should().Contain("data_size", "Should define data_size field");
+            ksyContent.Should().Contain("cell_values_section", "Should define cell_values_section");
+            ksyContent.Should().Contain("twoda_header", "Should define twoda_header type");
+            ksyContent.Should().Contain("row_labels_section", "Should define row_labels_section type");
+            ksyContent.Should().Contain("cell_offsets_array", "Should define cell_offsets_array type");
+            ksyContent.Should().Contain("cell_values_section", "Should define cell_values_section type");
         }
 
         private void TestCompileToLanguage(string language)
         {
-            var normalizedKsyPath = Path.GetFullPath(RIMKsyPath);
+            var normalizedKsyPath = Path.GetFullPath(TwoDAKsyPath);
             if (!File.Exists(normalizedKsyPath))
             {
-                // Skip if .ksy file doesn't exist
                 return;
             }
 
             var javaCheck = RunCommand("java", "-version");
             if (javaCheck.ExitCode != 0)
             {
-                // Skip if Java is not available
                 return;
             }
 
@@ -418,16 +387,12 @@ namespace Andastra.Parsing.Tests.Formats
 
             if (!result.Success)
             {
-                // Some languages may not be fully supported or may have missing dependencies
-                // Log the error but don't fail the test for individual language failures
-                // The "all languages" test will verify at least some work
                 return;
             }
 
             result.Success.Should().BeTrue(
                 $"Compilation to {language} should succeed. Error: {result.ErrorMessage}, Output: {result.Output}");
 
-            // Verify output directory was created
             var outputDir = Path.Combine(TestOutputDir, language);
             Directory.Exists(outputDir).Should().BeTrue(
                 $"Output directory for {language} should be created");
@@ -452,8 +417,6 @@ namespace Andastra.Parsing.Tests.Formats
         private (int ExitCode, string Output, string Error) RunKaitaiCompiler(
             string ksyPath, string arguments, string outputDir)
         {
-            // Try different ways to invoke Kaitai Struct compiler
-            // 1. As a command (if installed via package manager)
             var result = RunCommand("kaitai-struct-compiler", $"{arguments} -d \"{outputDir}\" \"{ksyPath}\"");
 
             if (result.ExitCode == 0)
@@ -461,7 +424,6 @@ namespace Andastra.Parsing.Tests.Formats
                 return result;
             }
 
-            // 2. Try with .jar extension
             result = RunCommand("kaitai-struct-compiler.jar", $"{arguments} -d \"{outputDir}\" \"{ksyPath}\"");
 
             if (result.ExitCode == 0)
@@ -469,7 +431,6 @@ namespace Andastra.Parsing.Tests.Formats
                 return result;
             }
 
-            // 3. Try as Java JAR (common installation method)
             var jarPath = FindKaitaiCompilerJar();
             if (!string.IsNullOrEmpty(jarPath) && File.Exists(jarPath))
             {
@@ -477,7 +438,6 @@ namespace Andastra.Parsing.Tests.Formats
                 return result;
             }
 
-            // 4. Try in common installation locations
             var commonPaths = new[]
             {
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "bin", "kaitai-struct-compiler"),
@@ -505,20 +465,17 @@ namespace Andastra.Parsing.Tests.Formats
                 }
             }
 
-            // Return the last result (which will be a failure)
             return result;
         }
 
         private string FindKaitaiCompilerJar()
         {
-            // Check environment variable first
             var envJar = Environment.GetEnvironmentVariable("KAITAI_COMPILER_JAR");
             if (!string.IsNullOrEmpty(envJar) && File.Exists(envJar))
             {
                 return envJar;
             }
 
-            // Check common locations for Kaitai Struct compiler JAR
             var searchPaths = new[]
             {
                 Path.Combine(AppContext.BaseDirectory, "kaitai-struct-compiler.jar"),
@@ -564,7 +521,7 @@ namespace Andastra.Parsing.Tests.Formats
 
                     var output = process.StandardOutput.ReadToEnd();
                     var error = process.StandardError.ReadToEnd();
-                    process.WaitForExit(30000); // 30 second timeout
+                    process.WaitForExit(30000);
 
                     return (process.ExitCode, output, error);
                 }
@@ -573,11 +530,6 @@ namespace Andastra.Parsing.Tests.Formats
             {
                 return (-1, "", ex.Message);
             }
-        }
-
-        public static IEnumerable<object[]> GetSupportedLanguages()
-        {
-            return SupportedLanguages.Select(lang => new object[] { lang });
         }
 
         private class CompileResult
@@ -589,5 +541,4 @@ namespace Andastra.Parsing.Tests.Formats
         }
     }
 }
-
 

@@ -92,10 +92,10 @@ namespace Andastra.Parsing.Tests.Formats
             GFF gff = GFF.FromBytes(File.ReadAllBytes(BinaryTestFile));
 
             // Validate GFF structure
-            gff.Header.StructCount.Should().BeGreaterOrEqualTo(1, "UTI should have at least one struct (root struct)");
-            gff.Header.FieldCount.Should().BeGreaterOrEqualTo(0, "Field count should be non-negative");
-            gff.Header.LabelCount.Should().BeGreaterOrEqualTo(0, "Label count should be non-negative");
-            gff.Header.FieldDataCount.Should().BeGreaterOrEqualTo(0, "Field data count should be non-negative");
+            gff.Header.StructCount.Should().BeGreaterThanOrEqualTo(1, "UTI should have at least one struct (root struct)");
+            gff.Header.FieldCount.Should().BeGreaterThanOrEqualTo(0, "Field count should be non-negative");
+            gff.Header.LabelCount.Should().BeGreaterThanOrEqualTo(0, "Label count should be non-negative");
+            gff.Header.FieldDataCount.Should().BeGreaterThanOrEqualTo(0, "Field data count should be non-negative");
         }
 
         [Fact(Timeout = 120000)]
@@ -143,15 +143,15 @@ namespace Andastra.Parsing.Tests.Formats
             UTI uti = UTIHelpers.ReadUti(File.ReadAllBytes(BinaryTestFile));
 
             // Validate base item configuration fields exist
-            uti.BaseItem.Should().BeGreaterOrEqualTo(0, "BaseItem should be non-negative");
-            uti.Cost.Should().BeGreaterOrEqualTo(0, "Cost should be non-negative");
-            uti.AddCost.Should().BeGreaterOrEqualTo(0, "AddCost should be non-negative");
-            uti.Plot.Should().BeGreaterOrEqualTo(0, "Plot should be non-negative (0 or 1)");
-            uti.Plot.Should().BeLessOrEqualTo(1, "Plot should be 0 or 1");
-            uti.Charges.Should().BeGreaterOrEqualTo(0, "Charges should be non-negative");
-            uti.Charges.Should().BeLessOrEqualTo(255, "Charges should be <= 255 (UInt8)");
-            uti.StackSize.Should().BeGreaterOrEqualTo(0, "StackSize should be non-negative");
-            uti.StackSize.Should().BeLessOrEqualTo(65535, "StackSize should be <= 65535 (UInt16)");
+            uti.BaseItem.Should().BeGreaterThanOrEqualTo(0, "BaseItem should be non-negative");
+            uti.Cost.Should().BeGreaterThanOrEqualTo(0, "Cost should be non-negative");
+            uti.AddCost.Should().BeGreaterThanOrEqualTo(0, "AddCost should be non-negative");
+            uti.Plot.Should().BeGreaterThanOrEqualTo(0, "Plot should be non-negative (0 or 1)");
+            uti.Plot.Should().BeLessThanOrEqualTo(1, "Plot should be 0 or 1");
+            uti.Charges.Should().BeGreaterThanOrEqualTo(0, "Charges should be non-negative");
+            uti.Charges.Should().BeLessThanOrEqualTo(255, "Charges should be <= 255 (UInt8)");
+            uti.StackSize.Should().BeGreaterThanOrEqualTo(0, "StackSize should be non-negative");
+            uti.StackSize.Should().BeLessThanOrEqualTo(65535, "StackSize should be <= 65535 (UInt16)");
         }
 
         [Fact(Timeout = 120000)]
@@ -165,12 +165,12 @@ namespace Andastra.Parsing.Tests.Formats
             UTI uti = UTIHelpers.ReadUti(File.ReadAllBytes(BinaryTestFile));
 
             // Validate visual variation fields exist
-            uti.ModelVariation.Should().BeGreaterOrEqualTo(0, "ModelVariation should be non-negative");
-            uti.ModelVariation.Should().BeLessOrEqualTo(255, "ModelVariation should be <= 255 (UInt8)");
-            uti.BodyVariation.Should().BeGreaterOrEqualTo(0, "BodyVariation should be non-negative");
-            uti.BodyVariation.Should().BeLessOrEqualTo(255, "BodyVariation should be <= 255 (UInt8)");
-            uti.TextureVariation.Should().BeGreaterOrEqualTo(0, "TextureVar should be non-negative");
-            uti.TextureVariation.Should().BeLessOrEqualTo(255, "TextureVar should be <= 255 (UInt8)");
+            uti.ModelVariation.Should().BeGreaterThanOrEqualTo(0, "ModelVariation should be non-negative");
+            uti.ModelVariation.Should().BeLessThanOrEqualTo(255, "ModelVariation should be <= 255 (UInt8)");
+            uti.BodyVariation.Should().BeGreaterThanOrEqualTo(0, "BodyVariation should be non-negative");
+            uti.BodyVariation.Should().BeLessThanOrEqualTo(255, "BodyVariation should be <= 255 (UInt8)");
+            uti.TextureVariation.Should().BeGreaterThanOrEqualTo(0, "TextureVar should be non-negative");
+            uti.TextureVariation.Should().BeLessThanOrEqualTo(255, "TextureVar should be <= 255 (UInt8)");
         }
 
         [Fact(Timeout = 120000)]
@@ -190,20 +190,20 @@ namespace Andastra.Parsing.Tests.Formats
             foreach (var prop in uti.Properties)
             {
                 prop.Should().NotBeNull("Property should not be null");
-                prop.PropertyName.Should().BeGreaterOrEqualTo(0, "PropertyName should be non-negative");
-                prop.PropertyName.Should().BeLessOrEqualTo(65535, "PropertyName should be <= 65535 (UInt16)");
-                prop.Subtype.Should().BeGreaterOrEqualTo(0, "Subtype should be non-negative");
-                prop.Subtype.Should().BeLessOrEqualTo(65535, "Subtype should be <= 65535 (UInt16)");
-                prop.CostTable.Should().BeGreaterOrEqualTo(0, "CostTable should be non-negative");
-                prop.CostTable.Should().BeLessOrEqualTo(255, "CostTable should be <= 255 (UInt8)");
-                prop.CostValue.Should().BeGreaterOrEqualTo(0, "CostValue should be non-negative");
-                prop.CostValue.Should().BeLessOrEqualTo(65535, "CostValue should be <= 65535 (UInt16)");
-                prop.Param1.Should().BeGreaterOrEqualTo(0, "Param1 should be non-negative");
-                prop.Param1.Should().BeLessOrEqualTo(255, "Param1 should be <= 255 (UInt8)");
-                prop.Param1Value.Should().BeGreaterOrEqualTo(0, "Param1Value should be non-negative");
-                prop.Param1Value.Should().BeLessOrEqualTo(255, "Param1Value should be <= 255 (UInt8)");
-                prop.ChanceAppear.Should().BeGreaterOrEqualTo(0, "ChanceAppear should be non-negative");
-                prop.ChanceAppear.Should().BeLessOrEqualTo(255, "ChanceAppear should be <= 255 (UInt8)");
+                prop.PropertyName.Should().BeGreaterThanOrEqualTo(0, "PropertyName should be non-negative");
+                prop.PropertyName.Should().BeLessThanOrEqualTo(65535, "PropertyName should be <= 65535 (UInt16)");
+                prop.Subtype.Should().BeGreaterThanOrEqualTo(0, "Subtype should be non-negative");
+                prop.Subtype.Should().BeLessThanOrEqualTo(65535, "Subtype should be <= 65535 (UInt16)");
+                prop.CostTable.Should().BeGreaterThanOrEqualTo(0, "CostTable should be non-negative");
+                prop.CostTable.Should().BeLessThanOrEqualTo(255, "CostTable should be <= 255 (UInt8)");
+                prop.CostValue.Should().BeGreaterThanOrEqualTo(0, "CostValue should be non-negative");
+                prop.CostValue.Should().BeLessThanOrEqualTo(65535, "CostValue should be <= 65535 (UInt16)");
+                prop.Param1.Should().BeGreaterThanOrEqualTo(0, "Param1 should be non-negative");
+                prop.Param1.Should().BeLessThanOrEqualTo(255, "Param1 should be <= 255 (UInt8)");
+                prop.Param1Value.Should().BeGreaterThanOrEqualTo(0, "Param1Value should be non-negative");
+                prop.Param1Value.Should().BeLessThanOrEqualTo(255, "Param1Value should be <= 255 (UInt8)");
+                prop.ChanceAppear.Should().BeGreaterThanOrEqualTo(0, "ChanceAppear should be non-negative");
+                prop.ChanceAppear.Should().BeLessThanOrEqualTo(255, "ChanceAppear should be <= 255 (UInt8)");
             }
         }
 
@@ -218,8 +218,8 @@ namespace Andastra.Parsing.Tests.Formats
             UTI uti = UTIHelpers.ReadUti(File.ReadAllBytes(BinaryTestFile));
 
             // Validate palette and editor fields exist
-            uti.PaletteId.Should().BeGreaterOrEqualTo(0, "PaletteID should be non-negative");
-            uti.PaletteId.Should().BeLessOrEqualTo(255, "PaletteID should be <= 255 (UInt8)");
+            uti.PaletteId.Should().BeGreaterThanOrEqualTo(0, "PaletteID should be non-negative");
+            uti.PaletteId.Should().BeLessThanOrEqualTo(255, "PaletteID should be <= 255 (UInt8)");
             uti.Comment.Should().NotBeNull("Comment should exist");
         }
 
@@ -234,10 +234,10 @@ namespace Andastra.Parsing.Tests.Formats
             UTI uti = UTIHelpers.ReadUti(File.ReadAllBytes(BinaryTestFile));
 
             // Validate quest and special item flags exist
-            uti.Stolen.Should().BeGreaterOrEqualTo(0, "Stolen should be non-negative");
-            uti.Stolen.Should().BeLessOrEqualTo(1, "Stolen should be 0 or 1");
-            uti.Identified.Should().BeGreaterOrEqualTo(0, "Identified should be non-negative");
-            uti.Identified.Should().BeLessOrEqualTo(1, "Identified should be 0 or 1");
+            uti.Stolen.Should().BeGreaterThanOrEqualTo(0, "Stolen should be non-negative");
+            uti.Stolen.Should().BeLessThanOrEqualTo(1, "Stolen should be 0 or 1");
+            uti.Identified.Should().BeGreaterThanOrEqualTo(0, "Identified should be non-negative");
+            uti.Identified.Should().BeLessThanOrEqualTo(1, "Identified should be 0 or 1");
         }
 
         [Fact(Timeout = 120000)]
@@ -251,8 +251,8 @@ namespace Andastra.Parsing.Tests.Formats
             UTI uti = UTIHelpers.ReadUti(File.ReadAllBytes(BinaryTestFile));
 
             // Validate UpgradeLevel exists (KotOR2 field)
-            uti.UpgradeLevel.Should().BeGreaterOrEqualTo(0, "UpgradeLevel should be non-negative");
-            uti.UpgradeLevel.Should().BeLessOrEqualTo(255, "UpgradeLevel should be <= 255 (UInt8)");
+            uti.UpgradeLevel.Should().BeGreaterThanOrEqualTo(0, "UpgradeLevel should be non-negative");
+            uti.UpgradeLevel.Should().BeLessThanOrEqualTo(255, "UpgradeLevel should be <= 255 (UInt8)");
         }
 
         [Fact(Timeout = 120000)]

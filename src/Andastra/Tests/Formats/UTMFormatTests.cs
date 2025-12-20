@@ -78,14 +78,14 @@ namespace Andastra.Parsing.Tests.Formats
             uint listIndicesOffset = BitConverter.ToUInt32(header, 48);
             uint listIndicesCount = BitConverter.ToUInt32(header, 52);
 
-            structArrayOffset.Should().BeGreaterOrEqualTo(56, "Struct array offset should be >= 56 (after header)");
-            fieldArrayOffset.Should().BeGreaterOrEqualTo(56, "Field array offset should be >= 56 (after header)");
-            labelArrayOffset.Should().BeGreaterOrEqualTo(56, "Label array offset should be >= 56 (after header)");
-            fieldDataOffset.Should().BeGreaterOrEqualTo(56, "Field data offset should be >= 56 (after header)");
-            fieldIndicesOffset.Should().BeGreaterOrEqualTo(56, "Field indices offset should be >= 56 (after header)");
-            listIndicesOffset.Should().BeGreaterOrEqualTo(56, "List indices offset should be >= 56 (after header)");
+            structArrayOffset.Should().BeGreaterThanOrEqualTo(56, "Struct array offset should be >= 56 (after header)");
+            fieldArrayOffset.Should().BeGreaterThanOrEqualTo(56, "Field array offset should be >= 56 (after header)");
+            labelArrayOffset.Should().BeGreaterThanOrEqualTo(56, "Label array offset should be >= 56 (after header)");
+            fieldDataOffset.Should().BeGreaterThanOrEqualTo(56, "Field data offset should be >= 56 (after header)");
+            fieldIndicesOffset.Should().BeGreaterThanOrEqualTo(56, "Field indices offset should be >= 56 (after header)");
+            listIndicesOffset.Should().BeGreaterThanOrEqualTo(56, "List indices offset should be >= 56 (after header)");
 
-            structCount.Should().BeGreaterOrEqualTo(1, "Struct count should be >= 1 (root struct always present)");
+            structCount.Should().BeGreaterThanOrEqualTo(1, "Struct count should be >= 1 (root struct always present)");
         }
 
         [Fact(Timeout = 120000)]
@@ -183,8 +183,8 @@ namespace Andastra.Parsing.Tests.Formats
             root.Acquire<ResRef>("ResRef", ResRef.FromBlank()).Should().NotBeNull("ResRef should not be null");
             root.Acquire<LocalizedString>("LocName", LocalizedString.FromInvalid()).Should().NotBeNull("LocName should not be null");
             root.Acquire<string>("Tag", "").Should().NotBeNull("Tag should not be null");
-            root.Acquire<int>("MarkUp", 0).Should().BeGreaterOrEqualTo(0, "MarkUp should be non-negative");
-            root.Acquire<int>("MarkDown", 0).Should().BeGreaterOrEqualTo(0, "MarkDown should be non-negative");
+            root.Acquire<int>("MarkUp", 0).Should().BeGreaterThanOrEqualTo(0, "MarkUp should be non-negative");
+            root.Acquire<int>("MarkDown", 0).Should().BeGreaterThanOrEqualTo(0, "MarkDown should be non-negative");
 
             // BuySellFlag should be valid byte (0-3, as it's a 2-bit flag)
             byte? buySellFlag = root.GetUInt8("BuySellFlag");
@@ -583,8 +583,8 @@ namespace Andastra.Parsing.Tests.Formats
             utm.ResRef.Should().NotBeNull();
             utm.Name.Should().NotBeNull();
             utm.Items.Should().NotBeNull();
-            utm.MarkUp.Should().BeGreaterOrEqualTo(0);
-            utm.MarkDown.Should().BeGreaterOrEqualTo(0);
+            utm.MarkUp.Should().BeGreaterThanOrEqualTo(0);
+            utm.MarkDown.Should().BeGreaterThanOrEqualTo(0);
         }
 
         private static void CreateTestUtmFile(string path)
