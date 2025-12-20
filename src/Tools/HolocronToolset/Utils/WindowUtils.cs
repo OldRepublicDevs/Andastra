@@ -9,6 +9,9 @@ using Andastra.Parsing.Resource;
 using FileResource = Andastra.Parsing.Extract.FileResource;
 using JetBrains.Annotations;
 using NSSEditor = HolocronToolset.Editors.NSSEditor;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
+using HolocronToolset.Common;
 
 namespace HolocronToolset.Utils
 {
@@ -96,7 +99,14 @@ namespace HolocronToolset.Utils
             catch (Exception ex)
             {
                 System.Console.WriteLine($"Error getting resource data: {ex}");
-                // TODO: Show MessageBox when MessageBox.Avalonia is available
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/window.py:178
+                // Original: QMessageBox(QMessageBox.Icon.Critical, tr("Failed to get the file data."), tr("An error occurred while attempting to read the data of the file.")).exec()
+                var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    Localization.Translate("Failed to get the file data."),
+                    Localization.Translate("An error occurred while attempting to read the data of the file."),
+                    ButtonEnum.Ok,
+                    Icon.Error);
+                errorBox.ShowAsync();
                 return null;
             }
         }
@@ -161,8 +171,14 @@ namespace HolocronToolset.Utils
             {
                 if (installation == null && restype == Andastra.Parsing.Resource.ResourceType.NCS)
                 {
-                    // Show warning for NCS without installation
-                    // TODO: Show MessageBox when MessageBox.Avalonia is available
+                    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/window.py:215-219
+                    // Original: QMessageBox.warning(parent_window_widget, tr("Cannot decompile NCS without an installation active"), tr("Please select an installation from the dropdown before loading an NCS."))
+                    var warningBox = MessageBoxManager.GetMessageBoxStandard(
+                        Localization.Translate("Cannot decompile NCS without an installation active"),
+                        Localization.Translate("Please select an installation from the dropdown before loading an NCS."),
+                        ButtonEnum.Ok,
+                        Icon.Warning);
+                    warningBox.ShowAsync();
                     return null;
                 }
                 editor = new NSSEditor(parentWindow, installation);
@@ -350,7 +366,16 @@ namespace HolocronToolset.Utils
 
             if (editor == null)
             {
-                // TODO: Show error message when MessageBox.Avalonia is available
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/window.py:326-335
+                // Original: QMessageBox(QMessageBox.Icon.Critical, tr("Failed to open file"), trf("The selected file format '{format}' is not yet supported.", format=str(restype)), ...).show()
+                // Note: C# string.Format uses positional placeholders {0}, {1}, etc., so we convert the Python named placeholder {format} to {0}
+                string message = Localization.Trf("The selected file format '{0}' is not yet supported.", restype?.ToString() ?? "unknown");
+                var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    Localization.Translate("Failed to open file"),
+                    message,
+                    ButtonEnum.Ok,
+                    Icon.Error);
+                errorBox.ShowAsync();
                 return null;
             }
 
@@ -362,7 +387,20 @@ namespace HolocronToolset.Utils
             }
             catch (Exception ex)
             {
-                // TODO: Show error message when MessageBox.Avalonia is available
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/window.py:345-352
+                // Original: QMessageBox(QMessageBox.Icon.Critical, tr("An unexpected error has occurred"), str(universal_simplify_exception(e)), ...).show()
+                // Note: Using ex.Message for error details (similar to universal_simplify_exception in PyKotor)
+                string errorMessage = ex.Message;
+                if (string.IsNullOrEmpty(errorMessage))
+                {
+                    errorMessage = ex.ToString();
+                }
+                var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    Localization.Translate("An unexpected error has occurred"),
+                    errorMessage,
+                    ButtonEnum.Ok,
+                    Icon.Error);
+                errorBox.ShowAsync();
                 System.Console.WriteLine($"Error loading resource: {ex}");
                 return null;
             }
