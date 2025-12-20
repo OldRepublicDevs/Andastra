@@ -260,8 +260,8 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Validate map note functionality
             // HasMapNote and MapNoteEnabled are boolean flags
-            utw.HasMapNote.Should().BeTrue().Or.BeFalse();
-            utw.MapNoteEnabled.Should().BeTrue().Or.BeFalse();
+            utw.HasMapNote.Should().BeOfType<bool>();
+            utw.MapNoteEnabled.Should().BeOfType<bool>();
 
             // If HasMapNote is true, MapNote should typically be set
             if (utw.HasMapNote)
@@ -443,8 +443,8 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Validate boolean fields are properly set
             // These are stored as Byte (0 or 1) in GFF but exposed as bool in UTW class
-            utw.HasMapNote.Should().BeTrue().Or.BeFalse();
-            utw.MapNoteEnabled.Should().BeTrue().Or.BeFalse();
+            utw.HasMapNote.Should().BeOfType<bool>("HasMapNote should be boolean");
+            utw.MapNoteEnabled.Should().BeOfType<bool>("MapNoteEnabled should be boolean");
         }
 
         [Fact(Timeout = 120000)]
