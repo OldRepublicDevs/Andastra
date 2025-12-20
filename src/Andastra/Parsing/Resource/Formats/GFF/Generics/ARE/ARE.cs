@@ -37,7 +37,11 @@ namespace Andastra.Parsing.Resource.Generics.ARE
         // Basic fields
         public string Tag { get; set; } = string.Empty;
         public LocalizedString Name { get; set; } = LocalizedString.FromInvalid();
-        public int AlphaTest { get; set; }
+        // Engine reads and stores AlphaTest as float (swkotor.exe: 0x00508c50 line 303-304, swkotor2.exe: 0x004e3ff0 line 307-308)
+        // Default value: 0.2 (verified from engine behavior)
+        // Line 303-304 in swkotor.exe: fVar14 = FUN_00411d00(..., "AlphaTest", ..., 0.2); *(float *)((int)this + 0xfc) = (float)fVar14;
+        // Line 307-308 in swkotor2.exe: fVar14 = FUN_00412e20(..., "AlphaTest", ..., 0.2); *(float *)((int)this + 0x100) = (float)fVar14;
+        public float AlphaTest { get; set; } = 0.2f;
         public int CameraStyle { get; set; }
         public ResRef DefaultEnvMap { get; set; } = ResRef.FromBlank();
         public bool Unescapable { get; set; }

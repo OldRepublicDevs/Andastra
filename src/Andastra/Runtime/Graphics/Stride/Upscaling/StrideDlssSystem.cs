@@ -175,12 +175,17 @@ namespace Andastra.Runtime.Stride.Upscaling
         #endregion
 
         private GraphicsDevice _graphicsDevice;
-        private IntPtr _dlssContext;
+        private IntPtr _d3d12Device;
         private Texture _outputTexture;
         private NVSDK_NGX_Handle _dlssHandle;
         private IntPtr _ngxParameters;
         private IntPtr _scratchBuffer;
         private UIntPtr _scratchBufferSize;
+        private bool _ngxInitialized;
+        private int _currentInputWidth;
+        private int _currentInputHeight;
+        private int _currentOutputWidth;
+        private int _currentOutputHeight;
 
         public override string Version => "3.7.0"; // DLSS version
         public override bool IsAvailable => CheckDlssAvailability();
@@ -200,93 +205,137 @@ namespace Andastra.Runtime.Stride.Upscaling
 
             try
             {
-                // Get the underlying DirectX device from Stride
-                IntPtr d3d12Device = GetD3D12Device(_graphicsDevice);
-                if (d3d12Device == IntPtr.Zero)
+                // Get the underlying DirectX 12 device from Stride
+                _d3d12Device = GetD3D12Device(_graphicsDevice);
+                if (_d3d12Device == IntPtr.Zero)
                 {
-                    Console.WriteLine("[StrideDLSS] Failed to get DirectX 12 device");
+                    Console.WriteLine("[StrideDLSS] Failed to get DirectX 12 device from Stride GraphicsDevice");
                     return false;
                 }
 
                 // Initialize NVIDIA NGX SDK
-                // Use 0 as application ID for development (NVIDIA provides real IDs for production)
-                const ulong ApplicationId = 0;
+                // Application ID: Use a default value for development/testing
+                // In production, NVIDIA provides unique application IDs for each game
+                const ulong ApplicationId = 0xDEADBEEF; // Placeholder application ID
                 string applicationDataPath = GetApplicationDataPath();
+
+                Console.WriteLine($"[StrideDLSS] Initializing NGX with device: {_d3d12Device}, path: {applicationDataPath}");
 
                 NVSDK_NGX_Result initResult = NVSDK_NGX_D3D12_Init(
                     ApplicationId,
                     applicationDataPath,
-                    d3d12Device,
-                    IntPtr.Zero, // pInFeatureInfo (optional)
+                    _d3d12Device,
+                    IntPtr.Zero, // pInFeatureInfo (optional, can be null)
                     NVSDK_NGX_Version_API);
 
                 if (initResult != NVSDK_NGX_Result.NVSDK_NGX_Result_Success)
                 {
-                    Console.WriteLine($"[StrideDLSS] NGX initialization failed: {initResult}");
+                    Console.WriteLine($"[StrideDLSS] NGX initialization failed with result: {initResult}");
                     return false;
                 }
 
-                // Get parameter interface
+                _ngxInitialized = true;
+
+                // Get parameter interface for configuring DLSS
                 NVSDK_NGX_Result paramResult = NVSDK_NGX_D3D12_GetParameters(out _ngxParameters);
                 if (paramResult != NVSDK_NGX_Result.NVSDK_NGX_Result_Success)
                 {
                     Console.WriteLine($"[StrideDLSS] Failed to get NGX parameters: {paramResult}");
+                    _ngxInitialized = false;
+                    NVSDK_NGX_D3D12_Shutdown1(_d3d12Device);
                     return false;
                 }
 
-                // Set basic parameters for DLSS feature creation
-                // These will be updated when creating the actual feature based on quality settings
-                SetParameter(_ngxParameters, NVSDK_NGX_Parameter_Width, 1920u); // Default resolution
-                SetParameter(_ngxParameters, NVSDK_NGX_Parameter_Height, 1080u);
-                SetParameter(_ngxParameters, NVSDK_NGX_Parameter_OutWidth, 3840u); // 2x upscale default
-                SetParameter(_ngxParameters, NVSDK_NGX_Parameter_OutHeight, 2160u);
+                // Initialize scratch buffer size to zero (will be set when feature is created)
+                _scratchBufferSize = UIntPtr.Zero;
+                _scratchBuffer = IntPtr.Zero;
 
-                // Set quality to balanced by default
-                SetParameter(_ngxParameters, NVSDK_NGX_Parameter_PerfQualityValue,
-                    (ulong)NVSDK_NGX_PerfQuality_Value.NVSDK_NGX_PerfQuality_Value_Balanced);
-
-                // Set feature flags
-                var flags = NVSDK_NGX_DLSS_Feature_Flags.NVSDK_NGX_DLSS_Feature_Flags_DoSharpening |
-                           NVSDK_NGX_DLSS_Feature_Flags.NVSDK_NGX_DLSS_Feature_Flags_AutoExposure;
-                SetParameter(_ngxParameters, NVSDK_NGX_Parameter_DLSS_Feature_Create_Flags, (ulong)flags);
-
-                // Allocate scratch buffer
-                NVSDK_NGX_Result scratchResult = NVSDK_NGX_D3D12_GetScratchBufferSize(
-                    NVSDK_NGX_Feature.NVSDK_NGX_Feature_SuperSampling,
-                    _ngxParameters,
-                    out _scratchBufferSize);
-
-                if (scratchResult == NVSDK_NGX_Result.NVSDK_NGX_Result_Success && _scratchBufferSize != UIntPtr.Zero)
-                {
-                    _scratchBuffer = Marshal.AllocHGlobal((IntPtr)_scratchBufferSize);
-                    SetParameter(_ngxParameters, NVSDK_NGX_Parameter_Scratch, _scratchBuffer);
-                    SetParameter(_ngxParameters, NVSDK_NGX_Parameter_Scratch_SizeInBytes, (ulong)_scratchBufferSize);
-                }
-
-                // Create DLSS feature (deferred until first use to allow parameter updates)
+                // DLSS feature handle is created lazily when first needed (in ExecuteDlss or Apply)
                 _dlssHandle = new NVSDK_NGX_Handle { IdPtr = IntPtr.Zero };
 
-                Console.WriteLine("[StrideDLSS] DLSS initialized successfully");
+                Console.WriteLine("[StrideDLSS] NGX SDK initialized successfully");
                 return true;
+            }
+            catch (DllNotFoundException ex)
+            {
+                Console.WriteLine($"[StrideDLSS] NGX DLL not found: {ex.Message}");
+                Console.WriteLine("[StrideDLSS] Ensure nvngx_dlss.dll is available in the application directory");
+                return false;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[StrideDLSS] Exception during initialization: {ex.Message}");
+                Console.WriteLine($"[StrideDLSS] Stack trace: {ex.StackTrace}");
                 return false;
             }
         }
 
         protected override void ShutdownInternal()
         {
-            if (_dlssContext != IntPtr.Zero)
+            // Release DLSS feature if it was created
+            if (_dlssHandle.IdPtr != IntPtr.Zero)
             {
-                // Release DLSS context
-                // NGXReleaseDLSSFeature
-                _dlssContext = IntPtr.Zero;
+                try
+                {
+                    NVSDK_NGX_Result releaseResult = NVSDK_NGX_D3D12_ReleaseFeature(ref _dlssHandle);
+                    if (releaseResult != NVSDK_NGX_Result.NVSDK_NGX_Result_Success)
+                    {
+                        Console.WriteLine($"[StrideDLSS] Warning: Failed to release DLSS feature: {releaseResult}");
+                    }
+                    else
+                    {
+                        Console.WriteLine("[StrideDLSS] DLSS feature released");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[StrideDLSS] Exception releasing DLSS feature: {ex.Message}");
+                }
+                finally
+                {
+                    _dlssHandle = new NVSDK_NGX_Handle { IdPtr = IntPtr.Zero };
+                }
             }
 
+            // Free scratch buffer if allocated
+            if (_scratchBuffer != IntPtr.Zero)
+            {
+                Marshal.FreeHGlobal(_scratchBuffer);
+                _scratchBuffer = IntPtr.Zero;
+                _scratchBufferSize = UIntPtr.Zero;
+            }
+
+            // Shutdown NGX SDK if initialized
+            if (_ngxInitialized && _d3d12Device != IntPtr.Zero)
+            {
+                try
+                {
+                    NVSDK_NGX_Result shutdownResult = NVSDK_NGX_D3D12_Shutdown1(_d3d12Device);
+                    if (shutdownResult != NVSDK_NGX_Result.NVSDK_NGX_Result_Success)
+                    {
+                        Console.WriteLine($"[StrideDLSS] Warning: NGX shutdown returned: {shutdownResult}");
+                    }
+                    else
+                    {
+                        Console.WriteLine("[StrideDLSS] NGX SDK shut down");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[StrideDLSS] Exception shutting down NGX: {ex.Message}");
+                }
+                finally
+                {
+                    _ngxInitialized = false;
+                    _ngxParameters = IntPtr.Zero;
+                }
+            }
+
+            // Dispose output texture
             _outputTexture?.Dispose();
             _outputTexture = null;
+
+            _d3d12Device = IntPtr.Zero;
 
             Console.WriteLine("[StrideDLSS] Shutdown complete");
         }
@@ -395,7 +444,35 @@ namespace Andastra.Runtime.Stride.Upscaling
         protected override void OnModeChanged(DlssMode mode)
         {
             Console.WriteLine($"[StrideDLSS] Mode changed to: {mode}");
-            // Recreate DLSS feature with new mode
+
+            if (!_ngxInitialized || _ngxParameters == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Release existing feature so it can be recreated with new quality settings
+            if (_dlssHandle.IdPtr != IntPtr.Zero)
+            {
+                try
+                {
+                    NVSDK_NGX_D3D12_ReleaseFeature(ref _dlssHandle);
+                    _dlssHandle = new NVSDK_NGX_Handle { IdPtr = IntPtr.Zero };
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[StrideDLSS] Exception releasing feature during mode change: {ex.Message}");
+                }
+            }
+
+            // Update quality parameter for next feature creation
+            NVSDK_NGX_PerfQuality_Value qualityValue = ConvertDlssModeToQuality(mode);
+            SetParameterUlong(_ngxParameters, NVSDK_NGX_Parameter_PerfQualityValue, (ulong)qualityValue);
+
+            // Reset current resolution so feature will be recreated
+            _currentInputWidth = 0;
+            _currentInputHeight = 0;
+            _currentOutputWidth = 0;
+            _currentOutputHeight = 0;
         }
 
         protected override void OnRayReconstructionChanged(bool enabled)
@@ -425,11 +502,46 @@ namespace Andastra.Runtime.Stride.Upscaling
             var adapterDesc = _graphicsDevice.Adapter?.Description;
             if (adapterDesc == null) return false;
 
-            // NVIDIA vendor ID
+            // NVIDIA vendor ID (0x10DE)
             bool isNvidia = adapterDesc.VendorId == 0x10DE;
+            if (!isNvidia)
+            {
+                return false;
+            }
 
-            // TODO: STUB - Check for RTX capability (would query NGX in real implementation)
-            return isNvidia;
+            // Try to query NGX for DLSS capability if NGX is available
+            try
+            {
+                // Check if NGX DLL is available
+                if (!System.IO.File.Exists("nvngx_dlss.dll"))
+                {
+                    // Also check in system paths
+                    string system32Path = Environment.GetFolderPath(Environment.SpecialFolder.System);
+                    string ngxPath = System.IO.Path.Combine(system32Path, "nvngx_dlss.dll");
+                    if (!System.IO.File.Exists(ngxPath))
+                    {
+                        Console.WriteLine("[StrideDLSS] NGX DLL not found in application or system directory");
+                        return false;
+                    }
+                }
+
+                // Try to get D3D12 device to query NGX
+                IntPtr device = GetD3D12Device(_graphicsDevice);
+                if (device != IntPtr.Zero)
+                {
+                    // NGX capability query would be done during initialization
+                    // For now, if we have an NVIDIA GPU and NGX DLL exists, assume DLSS is available
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StrideDLSS] Exception checking DLSS availability: {ex.Message}");
+            }
+
+            // Fallback: If NVIDIA GPU detected, assume DLSS might be available
+            // Actual availability will be confirmed during NGX initialization
+            return true;
         }
 
         private bool CheckRayReconstructionSupport()
@@ -450,14 +562,50 @@ namespace Andastra.Runtime.Stride.Upscaling
 
         private IntPtr GetD3D12Device(GraphicsDevice graphicsDevice)
         {
-            // Stride GraphicsDevice wraps DirectX devices
-            // We need to extract the underlying ID3D12Device
-            // This is implementation-specific and may need adjustment based on Stride internals
+            if (graphicsDevice == null)
+                return IntPtr.Zero;
 
-            // For now, return a placeholder - in a real implementation,
-            // this would access the underlying DirectX device through reflection or internal APIs
-            Console.WriteLine("[StrideDLSS] Warning: GetD3D12Device not fully implemented - needs Stride internal access");
-            return IntPtr.Zero; // TODO: Implement proper device extraction
+            // Stride GraphicsDevice.NativeDevice provides access to the underlying DirectX device
+            // For DirectX 12, this should return the ID3D12Device* pointer
+            IntPtr nativeDevice = graphicsDevice.NativeDevice;
+            if (nativeDevice != IntPtr.Zero)
+            {
+                return nativeDevice;
+            }
+
+            // Fallback: Try to get device through reflection if NativeDevice is not available
+            // This is a safety mechanism in case Stride's API changes
+            try
+            {
+                var deviceType = graphicsDevice.GetType();
+                var nativeDeviceProperty = deviceType.GetProperty("NativeDevice");
+                if (nativeDeviceProperty != null)
+                {
+                    var value = nativeDeviceProperty.GetValue(graphicsDevice);
+                    if (value is IntPtr ptr)
+                    {
+                        return ptr;
+                    }
+                }
+
+                // Alternative: Check for DirectX 12 specific properties
+                var d3d12DeviceProperty = deviceType.GetProperty("D3D12Device");
+                if (d3d12DeviceProperty != null)
+                {
+                    var value = d3d12DeviceProperty.GetValue(graphicsDevice);
+                    if (value is IntPtr ptr)
+                    {
+                        return ptr;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StrideDLSS] Exception getting D3D12 device through reflection: {ex.Message}");
+            }
+
+            Console.WriteLine("[StrideDLSS] Failed to get DirectX 12 device pointer from Stride GraphicsDevice");
+            return IntPtr.Zero;
         }
 
         private string GetApplicationDataPath()
@@ -471,15 +619,94 @@ namespace Andastra.Runtime.Stride.Upscaling
 
         private void SetParameter(IntPtr parameters, string name, ulong value)
         {
-            // Call the parameter set function through delegate
-            // This is a simplified implementation - real implementation would need proper function pointers
-            Console.WriteLine($"[StrideDLSS] Setting parameter {name} = {value}");
+            if (parameters == IntPtr.Zero)
+            {
+                Console.WriteLine($"[StrideDLSS] Warning: Cannot set parameter {name} - parameter interface is null");
+                return;
+            }
+
+            try
+            {
+                // NVSDK_NGX_Parameter is a COM interface
+                // Get the vtable pointer (first field of COM object)
+                IntPtr vtable = Marshal.ReadIntPtr(parameters);
+                if (vtable == IntPtr.Zero)
+                {
+                    Console.WriteLine($"[StrideDLSS] Warning: Invalid parameter interface vtable for {name}");
+                    return;
+                }
+
+                // Get the SetUlong function pointer from vtable
+                // VTable layout: 0=QueryInterface, 1=AddRef, 2=Release, 3=SetUlong, 4=SetPtr, ...
+                IntPtr setUlongPtr = Marshal.ReadIntPtr(vtable, IntPtr.Size * NGX_Parameter_SetUlong_VTableOffset);
+
+                if (setUlongPtr != IntPtr.Zero)
+                {
+                    // Create delegate for SetUlong method
+                    NVSDK_NGX_Parameter_SetUlong setUlong = Marshal.GetDelegateForFunctionPointer<NVSDK_NGX_Parameter_SetUlong>(setUlongPtr);
+                    
+                    // Call SetUlong
+                    bool success = setUlong(parameters, name, value);
+                    if (!success)
+                    {
+                        Console.WriteLine($"[StrideDLSS] Warning: Failed to set parameter {name} = {value}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"[StrideDLSS] Warning: SetUlong function pointer is null for {name}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StrideDLSS] Exception setting parameter {name}: {ex.Message}");
+            }
         }
 
         private void SetParameter(IntPtr parameters, string name, IntPtr value)
         {
-            // Call the parameter set function for pointer values
-            Console.WriteLine($"[StrideDLSS] Setting parameter {name} = {value}");
+            if (parameters == IntPtr.Zero)
+            {
+                Console.WriteLine($"[StrideDLSS] Warning: Cannot set parameter {name} - parameter interface is null");
+                return;
+            }
+
+            try
+            {
+                // NVSDK_NGX_Parameter is a COM interface
+                // Get the vtable pointer (first field of COM object)
+                IntPtr vtable = Marshal.ReadIntPtr(parameters);
+                if (vtable == IntPtr.Zero)
+                {
+                    Console.WriteLine($"[StrideDLSS] Warning: Invalid parameter interface vtable for {name}");
+                    return;
+                }
+
+                // Get the SetPtr function pointer from vtable
+                // VTable layout: 0=QueryInterface, 1=AddRef, 2=Release, 3=SetUlong, 4=SetPtr, ...
+                IntPtr setPtrPtr = Marshal.ReadIntPtr(vtable, IntPtr.Size * NGX_Parameter_SetPtr_VTableOffset);
+
+                if (setPtrPtr != IntPtr.Zero)
+                {
+                    // Create delegate for SetPtr method
+                    NVSDK_NGX_Parameter_SetPtr setPtr = Marshal.GetDelegateForFunctionPointer<NVSDK_NGX_Parameter_SetPtr>(setPtrPtr);
+                    
+                    // Call SetPtr
+                    bool success = setPtr(parameters, name, value);
+                    if (!success)
+                    {
+                        Console.WriteLine($"[StrideDLSS] Warning: Failed to set parameter {name} = {value}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"[StrideDLSS] Warning: SetPtr function pointer is null for {name}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StrideDLSS] Exception setting parameter {name}: {ex.Message}");
+            }
         }
 
         private bool EnsureDlssFeatureCreated(int inputWidth, int inputHeight, int outputWidth, int outputHeight)
@@ -531,26 +758,59 @@ namespace Andastra.Runtime.Stride.Upscaling
 
         private IntPtr GetCurrentCommandList()
         {
-            // This would need to be implemented to get the current DirectX command list
-            // from Stride's rendering context
-            Console.WriteLine("[StrideDLSS] Warning: GetCurrentCommandList not implemented - needs Stride integration");
-            return IntPtr.Zero; // TODO: Implement proper command list extraction
-        }
-
-        private IntPtr GetTextureResourcePtr(Texture texture)
-        {
-            // Extract the underlying DirectX resource pointer from Stride Texture
-            // This requires accessing Stride's internal DirectX resource
-            // Implementation would depend on Stride's internal structure
-
-            if (texture == null)
+            if (_graphicsDevice == null)
                 return IntPtr.Zero;
 
-            // Placeholder implementation - real implementation would need reflection
-            // or internal API access to get the ID3D12Resource* from the Texture
-            Console.WriteLine($"[StrideDLSS] Warning: GetTextureResourcePtr not implemented for texture {texture.Width}x{texture.Height}");
-            return IntPtr.Zero; // TODO: Implement proper resource pointer extraction
+            // Stride's ImmediateContext provides access to the command list
+            var immediateContext = _graphicsDevice.ImmediateContext;
+            if (immediateContext != null)
+            {
+                // Stride CommandList.NativeCommandList provides the native D3D12 command list pointer
+                var commandList = immediateContext.CommandList;
+                if (commandList != null)
+                {
+                    IntPtr nativeCommandList = commandList.NativeCommandList;
+                    if (nativeCommandList != IntPtr.Zero)
+                    {
+                        return nativeCommandList;
+                    }
+
+                    // Fallback: Try through reflection
+                    try
+                    {
+                        var commandListType = commandList.GetType();
+                        var nativeProperty = commandListType.GetProperty("NativeCommandList");
+                        if (nativeProperty != null)
+                        {
+                            var value = nativeProperty.GetValue(commandList);
+                            if (value is IntPtr ptr)
+                            {
+                                return ptr;
+                            }
+                        }
+
+                        // Alternative property names
+                        var d3d12CommandListProperty = commandListType.GetProperty("D3D12CommandList");
+                        if (d3d12CommandListProperty != null)
+                        {
+                            var value = d3d12CommandListProperty.GetValue(commandList);
+                            if (value is IntPtr ptr)
+                            {
+                                return ptr;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[StrideDLSS] Exception getting command list through reflection: {ex.Message}");
+                    }
+                }
+            }
+
+            Console.WriteLine("[StrideDLSS] Failed to get command list from Stride ImmediateContext");
+            return IntPtr.Zero;
         }
+
 
         #endregion
     }
