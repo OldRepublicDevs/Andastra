@@ -815,6 +815,7 @@ namespace Andastra.Runtime.Game.Core
                             {
                                 _musicPlayer.Stop();
                                 _musicStarted = false;
+                                _musicPaused = false;
                             }
                             _musicEnabled = false;
                             Console.WriteLine("[Odyssey] Music disabled by user");
@@ -829,6 +830,7 @@ namespace Andastra.Runtime.Game.Core
                                 if (_musicPlayer.Play(musicResRef, _settings.Audio.MusicVolume))
                                 {
                                     _musicStarted = true;
+                                    _musicPaused = false;
                                     Console.WriteLine($"[Odyssey] Music enabled and started: {musicResRef}");
                                 }
                                 else
@@ -4162,13 +4164,36 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Initializes the options menu.
         /// </summary>
+        /// <remarks>
+        /// Options Menu Initialization:
+        /// - Loads options GUI panel ("optionsmain" for main menu, "optionsingame" for in-game menu)
+        /// - Initializes options settings from GameSettings (configuration loaded at startup)
+        /// - Sets up options menu UI elements (categories, options, navigation state)
+        /// - Based on swkotor2.exe: CSWGuiOptionsMain @ 0x006e3e80 (constructor)
+        /// </remarks>
         private void InitializeOptionsMenu()
         {
-            _optionsByCategory = Andastra.Runtime.Game.GUI.OptionsMenu.CreateDefaultOptions(_settings);
+            // Initialize options settings from configuration
+            // Settings are loaded from GameSettings which is initialized at startup
+            // Future enhancement: Load from swkotor.ini/swkotor2.ini file if available
+            _optionsByCategory = Andastra.Runtime.Game.GUI.OptionsMenu.CreateDefaultOptions(
+                _settings,
+                _soundPlayer,
+                _musicPlayer,
+                _voicePlayer);
+            
+            // Set up options menu UI elements (tabs/categories, navigation state)
             _selectedOptionsCategoryIndex = 0;
             _selectedOptionsItemIndex = 0;
             _isEditingOptionValue = false;
             _editingOptionValue = string.Empty;
+            
+            // Mark GUI panel for loading (actual loading happens in Update() when state changes to OptionsMenu)
+            // GUI panel name: "optionsmain" for main menu options, "optionsingame" for in-game options
+            // Based on swkotor2.exe: CSWGuiOptionsMain loads "optionsmain" GUI file
+            _optionsMenuGuiLoaded = false; // Will be loaded in Update() when entering OptionsMenu state
+            
+            Console.WriteLine("[Odyssey] Options menu initialized - GUI will be loaded when entering options menu state");
         }
 
         /// <summary>
@@ -4666,6 +4691,109 @@ namespace Andastra.Runtime.Game.Core
             _editingOptionValue = string.Empty;
 
             Console.WriteLine($"[Odyssey] Options menu initialized from {iniFileName}");
+        }
+
+        /// <summary>
+        /// Checks autopause conditions and pauses the game if appropriate.
+        /// </summary>
+        /// <param name="condition">The autopause condition to check.</param>
+        /// <remarks>
+        /// Autopause Logic:
+        /// - Based on swkotor.exe and swkotor2.exe autopause system
+        /// - Game automatically pauses under various conditions based on user settings
+        /// - Only pauses when in InGame state (not during menus, loading, etc.)
+        /// - Autopause conditions are checked at appropriate times during gameplay
+        /// - Based on swkotor2.exe: Autopause triggers are checked in various game systems
+        /// </remarks>
+        private void CheckAutopause(AutopauseCondition condition)
+        {
+            // Only autopause when actively in-game
+            if (_currentState != GameState.InGame)
+            {
+                return;
+            }
+
+            bool shouldPause = false;
+            string reason = "";
+
+            switch (condition)
+            {
+                case AutopauseCondition.LostFocus:
+                    if (_settings.Autopause.PauseOnLostFocus)
+                    {
+                        shouldPause = true;
+                        reason = "window lost focus";
+                    }
+                    break;
+
+                case AutopauseCondition.Conversation:
+                    if (_settings.Autopause.PauseOnConversation)
+                    {
+                        shouldPause = true;
+                        reason = "conversation started";
+                    }
+                    break;
+
+                case AutopauseCondition.Container:
+                    if (_settings.Autopause.PauseOnContainer)
+                    {
+                        shouldPause = true;
+                        reason = "container opened";
+                    }
+                    break;
+
+                case AutopauseCondition.Corpse:
+                    if (_settings.Autopause.PauseOnCorpse)
+                    {
+                        shouldPause = true;
+                        reason = "corpse looted";
+                    }
+                    break;
+
+                case AutopauseCondition.AreaTransition:
+                    if (_settings.Autopause.PauseOnAreaTransition)
+                    {
+                        shouldPause = true;
+                        reason = "area transition";
+                    }
+                    break;
+
+                case AutopauseCondition.PartyDeath:
+                    if (_settings.Autopause.PauseOnPartyDeath)
+                    {
+                        shouldPause = true;
+                        reason = "party member died";
+                    }
+                    break;
+
+                case AutopauseCondition.PlayerDeath:
+                    if (_settings.Autopause.PauseOnPlayerDeath)
+                    {
+                        shouldPause = true;
+                        reason = "player died";
+                    }
+                    break;
+            }
+
+            if (shouldPause)
+            {
+                _currentState = GameState.Paused;
+                Console.WriteLine($"[Odyssey] Game autopause: {reason}");
+            }
+        }
+
+        /// <summary>
+        /// Autopause condition enumeration.
+        /// </summary>
+        private enum AutopauseCondition
+        {
+            LostFocus,
+            Conversation,
+            Container,
+            Corpse,
+            AreaTransition,
+            PartyDeath,
+            PlayerDeath
         }
     }
 }

@@ -34,6 +34,7 @@ namespace Andastra.Runtime.Game.GUI
             Graphics,
             Audio,
             Game,
+            Feedback,
             Controls
         }
 
