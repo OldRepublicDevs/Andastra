@@ -130,6 +130,17 @@ namespace Andastra.Runtime.Game.GUI
                                     settings.ShadowQuality = shadowQual;
                                 }
                                 break;
+                            case "ANISOTROPICFILTERING":
+                            case "ANISOTROPIC_FILTERING":
+                                if (int.TryParse(value, out int af))
+                                {
+                                    settings.AnisotropicFiltering = af;
+                                }
+                                break;
+                            case "ANTIALIASING":
+                            case "ANTI_ALIASING":
+                                settings.AntiAliasing = ParseBool(value);
+                                break;
                         }
                     }
                     else if (currentSection == "SOUND" || currentSection == "AUDIO")
@@ -164,6 +175,15 @@ namespace Andastra.Runtime.Game.GUI
                                     settings.VoiceVolume = Math.Max(0.0f, Math.Min(1.0f, voiceVol));
                                 }
                                 break;
+
+                            case "SOUNDENABLED":
+                            case "SOUND_ENABLED":
+                                settings.SoundEnabled = ParseBool(value);
+                                break;
+                            case "MUSICENABLED":
+                            case "MUSIC_ENABLED":
+                                settings.MusicEnabled = ParseBool(value);
+                                break;
                         }
                     }
                     else if (currentSection == "GAMEPLAY" || currentSection == "GAME")
@@ -187,6 +207,27 @@ namespace Andastra.Runtime.Game.GUI
                                 break;
                             case "TOOLTIPS":
                                 settings.Tooltips = ParseBool(value);
+                                break;
+                            case "AUTOSAVEINTERVAL":
+                            case "AUTO_SAVE_INTERVAL":
+                                if (int.TryParse(value, out int interval))
+                                {
+                                    settings.AutoSaveInterval = interval;
+                                }
+                                break;
+                            case "SUBTITLES":
+                                settings.Subtitles = ParseBool(value);
+                                break;
+                            case "DIALOGUESPEED":
+                            case "DIALOGUE_SPEED":
+                                if (float.TryParse(value, out float speed))
+                                {
+                                    settings.DialogueSpeed = Math.Max(0.5f, Math.Min(2.0f, speed));
+                                }
+                                break;
+                            case "CLASSICCONTROLS":
+                            case "CLASSIC_CONTROLS":
+                                settings.ClassicControls = ParseBool(value);
                                 break;
                         }
                     }
@@ -235,6 +276,8 @@ namespace Andastra.Runtime.Game.GUI
                     writer.WriteLine($"MusicVolume={MusicVolume:F2}");
                     writer.WriteLine($"EffectsVolume={EffectsVolume:F2}");
                     writer.WriteLine($"VoiceVolume={VoiceVolume:F2}");
+                    writer.WriteLine($"SoundEnabled={SoundEnabled}");
+                    writer.WriteLine($"MusicEnabled={MusicEnabled}");
                     writer.WriteLine();
 
                     // Gameplay Section
@@ -242,7 +285,11 @@ namespace Andastra.Runtime.Game.GUI
                     writer.WriteLine($"MouseSensitivity={MouseSensitivity:F2}");
                     writer.WriteLine($"InvertMouseY={InvertMouseY}");
                     writer.WriteLine($"AutoSave={AutoSave}");
+                    writer.WriteLine($"AutoSaveInterval={AutoSaveInterval}");
                     writer.WriteLine($"Tooltips={Tooltips}");
+                    writer.WriteLine($"Subtitles={Subtitles}");
+                    writer.WriteLine($"DialogueSpeed={DialogueSpeed:F2}");
+                    writer.WriteLine($"ClassicControls={ClassicControls}");
                     writer.WriteLine();
 
                     // Controls Section
