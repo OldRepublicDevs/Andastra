@@ -92,28 +92,37 @@ namespace HolocronToolset.Widgets
 
             // Matching PyKotor: Adjust light position if it starts before the progress bar
             // In PyKotor: if light_rect.left() < rect.left(): light_rect.moveLeft(rect.left())
-            // We adjust to 0 (left edge of widget) instead
+            // moveLeft moves the rectangle so its left edge is at the specified position
             if (lightLeft < 0)
             {
-                double adjust = -lightLeft;
+                lightRight = lightRight - lightLeft; // Adjust right edge by the same amount
                 lightLeft = 0;
-                lightRight = lightRight + adjust;
             }
 
             // Matching PyKotor: Adjust light position if it ends after the progress bar
             // In PyKotor: if light_rect.right() > rect.right(): light_rect.moveRight(rect.right())
-            // We adjust to filledWidth (right edge of filled area) instead
+            // moveRight moves the rectangle so its right edge is at the specified position
             if (lightRight > filledWidth)
             {
-                double adjust = lightRight - filledWidth;
+                lightLeft = lightLeft - (lightRight - filledWidth); // Adjust left edge by the same amount
                 lightRight = filledWidth;
-                lightLeft = lightLeft - adjust;
             }
 
             // Only draw if the light rectangle intersects the filled area
             if (lightRight <= 0 || lightLeft >= filledWidth)
             {
                 return;
+            }
+
+            // Ensure light rectangle doesn't go outside filled area after adjustments
+            // This handles the case where lightWidth > filledWidth
+            if (lightLeft < 0)
+            {
+                lightLeft = 0;
+            }
+            if (lightRight > filledWidth)
+            {
+                lightRight = filledWidth;
             }
 
             // Matching PyKotor: chunk_radius: float = chunk_height / 2

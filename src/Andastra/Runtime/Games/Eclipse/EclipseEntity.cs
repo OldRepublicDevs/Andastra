@@ -311,14 +311,11 @@ namespace Andastra.Runtime.Games.Eclipse
             // Attach renderable component for creatures
             // Based on daorigins.exe and DragonAge2.exe: Creatures are renderable entities (3D models)
             // Renderable component provides: ModelResRef, AppearanceRow, TextureResRefs, ModelType
-            // Eclipse-specific: Uses RenderableComponent for 3D model rendering
+            // Eclipse-specific: Uses EclipseRenderableComponent for 3D model rendering
             // Renderable data is loaded from entity templates and appearance.2da table
             if (!HasComponent<IRenderableComponent>())
             {
-                // TODO: Create EclipseRenderableComponent if Eclipse-specific rendering behavior is needed
-                // For now, using Odyssey RenderableComponent as it implements IRenderableComponent interface
-                // Eclipse may have different model formats, texture systems, or appearance data structures
-                var renderableComponent = new RenderableComponent();
+                var renderableComponent = new EclipseRenderableComponent();
                 AddComponent<IRenderableComponent>(renderableComponent);
             }
 
