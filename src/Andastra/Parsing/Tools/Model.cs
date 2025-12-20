@@ -8,11 +8,35 @@ using BinaryReader = Andastra.Parsing.Common.BinaryReader;
 namespace Andastra.Parsing.Tools
 {
     /// <summary>
+    /// Tuple class for returning MDL and MDX data pairs.
+    /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/model.py:87-89
+    /// </summary>
+    public class MDLMDXTuple
+    {
+        public byte[] Mdl { get; set; }
+        public byte[] Mdx { get; set; }
+
+        public MDLMDXTuple(byte[] mdl, byte[] mdx)
+        {
+            Mdl = mdl;
+            Mdx = mdx;
+        }
+    }
+
+    /// <summary>
     /// Utility functions for working with 3D model data.
     /// </summary>
     [PublicAPI]
     public static class ModelTools
     {
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/model.py:34-78
+        // Mesh type constants for determining TSL vs K1
+        private const uint _MESH_FP0_K1 = 4216656;
+        private const uint _SKIN_FP0_K1 = 4216592;
+        private const uint _DANGLY_FP0_K2 = 4216864;
+        private const uint _AABB_FP0_K1 = 4216656;
+        private const uint _SABER_FP0_K1 = 4216656;
+        private const int _NODE_TYPE_MESH = 32;
         /// <summary>
         /// Extracts texture and lightmap names from MDL model data.
         /// </summary>
@@ -374,6 +398,251 @@ namespace Andastra.Parsing.Tools
             }
 
             return parsedData;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/model.py:724-886
+        // Original: def flip(mdl_data: bytes | bytearray, mdx_data: bytes | bytearray, *, flip_x: bool, flip_y: bool) -> MDLMDXTuple:
+        /// <summary>
+        /// Flips a model by negating X and/or Y coordinates in vertices and normals.
+        /// </summary>
+        /// <param name="mdlData">The MDL model data.</param>
+        /// <param name="mdxData">The MDX material index data.</param>
+        /// <param name="flipX">Whether to flip along the X axis.</param>
+        /// <param name="flipY">Whether to flip along the Y axis.</param>
+        /// <returns>A tuple containing the flipped MDL and MDX data.</returns>
+        public static MDLMDXTuple Flip(byte[] mdlData, byte[] mdxData, bool flipX, bool flipY)
+        {
+            // If neither bools are set to True, no transformations need to be done and we can just return the original data
+            if (!flipX && !flipY)
+            {
+                return new MDLMDXTuple(mdlData, mdxData);
+            }
+
+            // The data we need to change:
+            //    1. The vertices stored in the MDL
+            //    2. The vertex positions, normals, stored in the MDX
+
+            // Trim the data to correct the offsets
+            byte[] mdlStart = new byte[12];
+            Array.Copy(mdlData, 0, mdlStart, 0, 12);
+            byte[] parsedMdlData = new byte[mdlData.Length - 12];
+            Array.Copy(mdlData, 12, parsedMdlData, 0, parsedMdlData.Length);
+            byte[] parsedMdxData = new byte[mdxData.Length];
+            Array.Copy(mdxData, 0, parsedMdxData, 0, mdxData.Length);
+
+            // Lists to store offsets: (count, offset) for MDL vertices
+            var mdlVertexOffsets = new List<Tuple<int, int>>();
+            // Lists to store offsets: (count, offset, stride, position) for MDX vertices and normals
+            var mdxVertexOffsets = new List<Tuple<int, int, int, int>>();
+            var mdxNormalOffsets = new List<Tuple<int, int, int, int>>();
+            var elementsOffsets = new List<Tuple<int, int>>();
+            var facesOffsets = new List<Tuple<int, int>>();
+
+            using (BinaryReader reader = BinaryReader.FromBytes(parsedMdlData, 0))
+            {
+                reader.Seek(168);
+                uint rootOffset = reader.ReadUInt32();
+
+                var nodes = new Stack<uint>();
+                nodes.Push(rootOffset);
+
+                while (nodes.Count > 0)
+                {
+                    uint nodeOffset = nodes.Pop();
+                    reader.Seek((int)nodeOffset);
+                    uint nodeId = reader.ReadUInt32();
+
+                    mdlVertexOffsets.Add(new Tuple<int, int>(1, (int)nodeOffset + 16));
+
+                    // Need to determine the location of the position controller
+                    reader.Seek((int)nodeOffset + 56);
+                    uint controllersOffset = reader.ReadUInt32();
+                    uint controllersCount = reader.ReadUInt32();
+
+                    reader.Seek((int)nodeOffset + 68);
+                    uint controllerDatasOffset = reader.ReadUInt32();
+                    reader.ReadUInt32(); // Skip next uint32
+
+                    for (uint i = 0; i < controllersCount; i++)
+                    {
+                        reader.Seek((int)(controllersOffset + i * 16));
+                        uint controllerType = reader.ReadUInt32();
+                        if (controllerType == 8)
+                        {
+                            reader.Seek((int)(controllersOffset + i * 16 + 6));
+                            ushort dataOffset = reader.ReadUInt16();
+                            mdlVertexOffsets.Add(new Tuple<int, int>(1, (int)(controllerDatasOffset + dataOffset * 4)));
+                        }
+                    }
+
+                    reader.Seek((int)nodeOffset + 44);
+                    uint childOffsetsOffset = reader.ReadUInt32();
+                    uint childOffsetsCount = reader.ReadUInt32();
+
+                    reader.Seek((int)childOffsetsOffset);
+                    for (uint i = 0; i < childOffsetsCount; i++)
+                    {
+                        nodes.Push(reader.ReadUInt32());
+                    }
+
+                    if ((nodeId & _NODE_TYPE_MESH) != 0)
+                    {
+                        reader.Seek((int)nodeOffset + 80);
+                        uint fp = reader.ReadUInt32();
+                        bool tsl = fp != _MESH_FP0_K1 && fp != _SKIN_FP0_K1 && fp != _DANGLY_FP0_K2 && fp != _AABB_FP0_K1 && fp != _SABER_FP0_K1;
+
+                        reader.Seek((int)nodeOffset + 80 + 8);
+                        uint facesOffset = reader.ReadUInt32();
+                        uint facesCount = reader.ReadUInt32();
+                        facesOffsets.Add(new Tuple<int, int>((int)facesCount, (int)facesOffset));
+
+                        reader.Seek((int)nodeOffset + 80 + 188);
+                        uint offsetToElementsOffset = reader.ReadUInt32();
+                        reader.Seek((int)offsetToElementsOffset);
+                        uint elementsOffset = reader.ReadUInt32();
+                        elementsOffsets.Add(new Tuple<int, int>((int)facesCount, (int)elementsOffset));
+
+                        reader.Seek((int)nodeOffset + 80 + 304);
+                        ushort vertexCount = reader.ReadUInt16();
+                        reader.Seek((int)(nodeOffset + 80 + (tsl ? 336 : 328)));
+                        uint vertexOffset = reader.ReadUInt32();
+                        mdlVertexOffsets.Add(new Tuple<int, int>(vertexCount, (int)vertexOffset));
+
+                        reader.Seek((int)nodeOffset + 80 + 252);
+                        uint mdxStride = reader.ReadUInt32();
+                        reader.ReadUInt32(); // Skip next uint32
+                        reader.Seek((int)nodeOffset + 80 + 260);
+                        uint mdxOffsetPos = reader.ReadUInt32();
+                        uint mdxOffsetNorm = reader.ReadUInt32();
+                        reader.Seek((int)(nodeOffset + 80 + (tsl ? 332 : 324)));
+                        uint mdxStart = reader.ReadUInt32();
+                        mdxVertexOffsets.Add(new Tuple<int, int, int, int>((int)vertexCount, (int)mdxStart, (int)mdxStride, (int)mdxOffsetPos));
+                        mdxNormalOffsets.Add(new Tuple<int, int, int, int>((int)vertexCount, (int)mdxStart, (int)mdxStride, (int)mdxOffsetNorm));
+                    }
+                }
+            }
+
+            // Fix vertex order
+            if (flipX != flipY)
+            {
+                foreach (var tuple in elementsOffsets)
+                {
+                    int count = tuple.Item1;
+                    int startOffset = tuple.Item2;
+                    for (int i = 0; i < count; i++)
+                    {
+                        int offset = startOffset + i * 6;
+                        ushort v1 = BitConverter.ToUInt16(parsedMdlData, offset);
+                        ushort v2 = BitConverter.ToUInt16(parsedMdlData, offset + 2);
+                        ushort v3 = BitConverter.ToUInt16(parsedMdlData, offset + 4);
+                        byte[] v1Bytes = BitConverter.GetBytes(v1);
+                        byte[] v3Bytes = BitConverter.GetBytes(v3);
+                        byte[] v2Bytes = BitConverter.GetBytes(v2);
+                        Array.Copy(v1Bytes, 0, parsedMdlData, offset, 2);
+                        Array.Copy(v3Bytes, 0, parsedMdlData, offset + 2, 2);
+                        Array.Copy(v2Bytes, 0, parsedMdlData, offset + 4, 2);
+                    }
+                }
+
+                foreach (var tuple in facesOffsets)
+                {
+                    int count = tuple.Item1;
+                    int startOffset = tuple.Item2;
+                    for (int i = 0; i < count; i++)
+                    {
+                        int offset = startOffset + i * 32 + 26;
+                        ushort v1 = BitConverter.ToUInt16(parsedMdlData, offset);
+                        ushort v2 = BitConverter.ToUInt16(parsedMdlData, offset + 2);
+                        ushort v3 = BitConverter.ToUInt16(parsedMdlData, offset + 4);
+                        byte[] v1Bytes = BitConverter.GetBytes(v1);
+                        byte[] v3Bytes = BitConverter.GetBytes(v3);
+                        byte[] v2Bytes = BitConverter.GetBytes(v2);
+                        Array.Copy(v1Bytes, 0, parsedMdlData, offset, 2);
+                        Array.Copy(v3Bytes, 0, parsedMdlData, offset + 2, 2);
+                        Array.Copy(v2Bytes, 0, parsedMdlData, offset + 4, 2);
+                    }
+                }
+            }
+
+            // Update the MDL vertices
+            foreach (var tuple in mdlVertexOffsets)
+            {
+                int count = tuple.Item1;
+                int startOffset = tuple.Item2;
+                for (int i = 0; i < count; i++)
+                {
+                    int offset = startOffset + i * 12;
+                    if (flipX)
+                    {
+                        float x = BitConverter.ToSingle(parsedMdlData, offset);
+                        byte[] xBytes = BitConverter.GetBytes(-x);
+                        Array.Copy(xBytes, 0, parsedMdlData, offset, 4);
+                    }
+                    if (flipY)
+                    {
+                        float y = BitConverter.ToSingle(parsedMdlData, offset + 4);
+                        byte[] yBytes = BitConverter.GetBytes(-y);
+                        Array.Copy(yBytes, 0, parsedMdlData, offset + 4, 4);
+                    }
+                }
+            }
+
+            // Update the MDX vertices
+            foreach (var tuple in mdxVertexOffsets)
+            {
+                int count = tuple.Item1;
+                int startOffset = tuple.Item2;
+                int stride = tuple.Item3;
+                int position = tuple.Item4;
+                for (int i = 0; i < count; i++)
+                {
+                    int offset = startOffset + i * stride + position;
+                    if (flipX)
+                    {
+                        float x = BitConverter.ToSingle(parsedMdxData, offset);
+                        byte[] xBytes = BitConverter.GetBytes(-x);
+                        Array.Copy(xBytes, 0, parsedMdxData, offset, 4);
+                    }
+                    if (flipY)
+                    {
+                        float y = BitConverter.ToSingle(parsedMdxData, offset + 4);
+                        byte[] yBytes = BitConverter.GetBytes(-y);
+                        Array.Copy(yBytes, 0, parsedMdxData, offset + 4, 4);
+                    }
+                }
+            }
+
+            // Update the MDX normals
+            foreach (var tuple in mdxNormalOffsets)
+            {
+                int count = tuple.Item1;
+                int startOffset = tuple.Item2;
+                int stride = tuple.Item3;
+                int position = tuple.Item4;
+                for (int i = 0; i < count; i++)
+                {
+                    int offset = startOffset + i * stride + position;
+                    if (flipX)
+                    {
+                        float x = BitConverter.ToSingle(parsedMdxData, offset);
+                        byte[] xBytes = BitConverter.GetBytes(-x);
+                        Array.Copy(xBytes, 0, parsedMdxData, offset, 4);
+                    }
+                    if (flipY)
+                    {
+                        float y = BitConverter.ToSingle(parsedMdxData, offset + 4);
+                        byte[] yBytes = BitConverter.GetBytes(-y);
+                        Array.Copy(yBytes, 0, parsedMdxData, offset + 4, 4);
+                    }
+                }
+            }
+
+            // Re-add the first 12 bytes
+            byte[] resultMdl = new byte[mdlStart.Length + parsedMdlData.Length];
+            Array.Copy(mdlStart, 0, resultMdl, 0, mdlStart.Length);
+            Array.Copy(parsedMdlData, 0, resultMdl, mdlStart.Length, parsedMdlData.Length);
+
+            return new MDLMDXTuple(resultMdl, parsedMdxData);
         }
     }
 }

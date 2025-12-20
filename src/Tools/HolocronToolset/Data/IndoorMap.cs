@@ -1031,7 +1031,8 @@ namespace HolocronToolset.Data
         }
 
         // Helper method to deep copy a BWM
-        private BWM DeepCopyBwm(BWM original)
+        // Made public static for use by IndoorMapRoom
+        public static BWM DeepCopyBwm(BWM original)
         {
             if (original == null)
             {
@@ -1245,7 +1246,7 @@ namespace HolocronToolset.Data
         // Original: def walkmesh(self) -> BWM:
         public BWM Walkmesh()
         {
-            var bwm = IndoorMapRoomHelper.DeepCopyBwm(BaseWalkmesh());
+            var bwm = IndoorMap.DeepCopyBwm(BaseWalkmesh());
             bwm.Flip(FlipX, FlipY);
             bwm.Rotate(Rotation);
             bwm.Translate(Position.X, Position.Y, Position.Z);
@@ -1265,7 +1266,7 @@ namespace HolocronToolset.Data
         {
             if (WalkmeshOverride == null)
             {
-                WalkmeshOverride = IndoorMapRoomHelper.DeepCopyBwm(Component.Bwm);
+                WalkmeshOverride = IndoorMap.DeepCopyBwm(Component.Bwm);
             }
             return WalkmeshOverride;
         }
