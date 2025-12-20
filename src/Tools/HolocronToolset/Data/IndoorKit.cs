@@ -502,6 +502,19 @@ namespace HolocronToolset.Data
             return mdxResource.Data();
         }
 
+        /// <summary>
+        /// Create a placeholder BWM with a single quad.
+        /// 
+        /// This method is used as a fallback when a room's walkmesh (WOK) is missing or empty.
+        /// It creates a simple 10x10 unit square walkmesh at the origin with Stone material,
+        /// providing a minimal walkable surface for collision and snapping logic.
+        /// 
+        /// The position parameter is provided for consistency with the PyKotor interface but
+        /// is not used - the BWM is always created at the origin and positioning is handled
+        /// by the caller via _RecenterBwm().
+        /// </summary>
+        /// <param name="position">Room position (unused - BWM is created at origin)</param>
+        /// <returns>A new BWM with a single quad face</returns>
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:294-313
         // Original: def _create_placeholder_bwm(self, position: Vector3) -> BWM:
         private BWM _CreatePlaceholderBwm(Vector3 position)
