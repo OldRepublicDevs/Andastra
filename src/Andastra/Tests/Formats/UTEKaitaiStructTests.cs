@@ -268,6 +268,12 @@ namespace Andastra.Parsing.Tests.Formats
                     // Use Java to run JAR
                     return RunCommand("java", $"-jar \"{compilerPath}\" {arguments} -d \"{outputDir}\" \"{ksyPath}\"");
                 }
+                else if (compilerPath.EndsWith(".bat", StringComparison.OrdinalIgnoreCase) ||
+                         (File.Exists(compilerPath) && Path.GetExtension(compilerPath).Equals(".bat", StringComparison.OrdinalIgnoreCase)))
+                {
+                    // Use cmd.exe to run .bat file on Windows
+                    return RunCommand("cmd.exe", $"/c \"{compilerPath}\" {arguments} -d \"{outputDir}\" \"{ksyPath}\"");
+                }
                 else
                 {
                     // Use compiler directly
@@ -302,7 +308,10 @@ namespace Andastra.Parsing.Tests.Formats
             {
                 "kaitai-struct-compiler",
                 "ksc",
+
+                @"C:\Program Files (x86)\kaitai-struct-compiler\bin\kaitai-struct-compiler.bat",
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "kaitai-struct-compiler", "kaitai-struct-compiler.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "kaitai-struct-compiler", "bin", "kaitai-struct-compiler.bat"),
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "kaitai-struct-compiler", "kaitai-struct-compiler.exe"),
                 "/usr/bin/kaitai-struct-compiler",
                 "/usr/local/bin/kaitai-struct-compiler",
@@ -313,15 +322,32 @@ namespace Andastra.Parsing.Tests.Formats
             {
                 try
                 {
-                    var processInfo = new ProcessStartInfo
+                    ProcessStartInfo processInfo;
+                    if (path.EndsWith(".bat", StringComparison.OrdinalIgnoreCase))
                     {
-                        FileName = path,
-                        Arguments = "--version",
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    };
+                        // .bat files need to be run via cmd.exe on Windows
+                        processInfo = new ProcessStartInfo
+                        {
+                            FileName = "cmd.exe",
+                            Arguments = $"/c \"{path}\" --version",
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            UseShellExecute = false,
+                            CreateNoWindow = true
+                        };
+                    }
+                    else
+                    {
+                        processInfo = new ProcessStartInfo
+                        {
+                            FileName = path,
+                            Arguments = "--version",
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            UseShellExecute = false,
+                            CreateNoWindow = true
+                        };
+                    }
 
                     using (var process = Process.Start(processInfo))
                     {
@@ -536,7 +562,7 @@ namespace Andastra.Parsing.Tests.Formats
             // For now, we validate the structure matches expectations
 
             GFF gff = GFFAuto.ReadGff(TestUteFile);
-            UTE ute = UTEHelpers.ConstructUte(gff);
+            UTE constructedUte = UTEHelpers.ConstructUte(gff);
 
             // Validate structure matches Kaitai Struct definition
             // UTE files are GFF-based, so they follow GFF structure
