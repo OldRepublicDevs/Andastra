@@ -12,7 +12,12 @@ namespace Andastra.Runtime.Games.Odyssey.Components
     /// Odyssey Door Component:
     /// - Inherits from BaseDoorComponent for common door functionality
     /// - Odyssey-specific: UTD file format, GFF field names, transition flag system
-    /// - Based on swkotor.exe and swkotor2.exe door systems (Kotor1DoorComponent and Kotor2DoorComponent provide game-specific implementations)
+    /// - Based on swkotor.exe and swkotor2.exe door systems
+    /// - KOTOR 1 specific implementation: Kotor1DoorComponent (Runtime.Games.Odyssey.Kotor1.Components)
+    /// - KOTOR 2 specific implementation: Kotor2DoorComponent (Runtime.Games.Odyssey.Kotor2.Components)
+    /// - Game-specific implementations:
+    ///   - KOTOR 1: Kotor1DoorComponent (Runtime.Games.Odyssey.Kotor1.Components) - swkotor.exe specific addresses and behaviors
+    ///   - TSL: Kotor2DoorComponent (Runtime.Games.Odyssey.Kotor2.Components) - swkotor2.exe specific addresses and behaviors
     /// - Located via string references: "Door List" @ 0x007bd248 (swkotor2.exe GIT door list), "GenericDoors" @ 0x007c4ba8 (generic doors 2DA table)
     /// - "DoorTypes" @ 0x007c4b9c (door types field), "SecretDoorDC" @ 0x007c1acc (secret door DC field)
     /// - Transition fields: "LinkedTo" @ 0x007bd798 (linked to waypoint/area), "LinkedToModule" @ 0x007bd7bc (linked to module)

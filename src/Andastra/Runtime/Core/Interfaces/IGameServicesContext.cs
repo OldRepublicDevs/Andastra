@@ -86,6 +86,11 @@ namespace Andastra.Runtime.Core.Interfaces
         Audio.ISoundPlayer SoundPlayer { get; }
 
         /// <summary>
+        /// Gets the music player for background music playback.
+        /// </summary>
+        Audio.IMusicPlayer MusicPlayer { get; }
+
+        /// <summary>
         /// Gets the journal system (KOTOR-specific, accessed as object to avoid dependency).
         /// </summary>
         object JournalSystem { get; }

@@ -1125,4 +1125,52 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
     }
 
     #endregion
+
+    #region Portrait Data
+
+    /// <summary>
+    /// Gets portrait data from portraits.2da.
+    /// </summary>
+    /// <param name="portraitId">Portrait ID (row index in portraits.2da).</param>
+    /// <returns>Portrait data if found, null otherwise.</returns>
+    /// <remarks>
+    /// Portrait Data Access:
+    /// - Based on swkotor.exe and swkotor2.exe: Portrait loading from portraits.2da
+    /// - Located via string references: "portraits.2da" in resource loading
+    /// - Original implementation: Loads portrait ResRef from portraits.2da table
+    /// - Portrait ID is row index in portraits.2da (0-based)
+    /// - Portraits.2da structure: Row index = Portrait ID, "baseresref" column = portrait texture ResRef
+    /// - Portrait textures are stored as TPC or TGA files in game resources
+    /// </remarks>
+    [CanBeNull]
+    public PortraitData GetPortrait(int portraitId)
+    {
+        TwoDA table = GetTable("portraits");
+        if (table == null || portraitId < 0 || portraitId >= table.GetHeight())
+        {
+            return null;
+        }
+
+        TwoDARow row = table.GetRow(portraitId);
+        return new PortraitData
+        {
+            RowIndex = portraitId,
+            PortraitId = portraitId,
+            Label = row.Label(),
+            BaseResRef = row.GetString("baseresref") ?? row.GetString("resref") ?? string.Empty
+        };
+    }
+
+    #endregion
+}
+
+/// <summary>
+/// Portrait data from portraits.2da.
+/// </summary>
+public class PortraitData
+{
+    public int RowIndex { get; set; }
+    public int PortraitId { get { return RowIndex; } set { RowIndex = value; } }
+    public string Label { get; set; }
+    public string BaseResRef { get; set; }
 }

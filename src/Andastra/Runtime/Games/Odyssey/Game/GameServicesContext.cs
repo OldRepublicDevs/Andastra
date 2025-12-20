@@ -43,8 +43,9 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             object perceptionManager = null,
             object cameraController = null,
             ISoundPlayer soundPlayer = null,
+            IMusicPlayer musicPlayer = null,
             object journalSystem = null)
-            : base(soundPlayer, new OdysseyUISystem(installation, world))
+            : base(soundPlayer, musicPlayer, new OdysseyUISystem(installation, world))
         {
             if (gameSession == null)
             {

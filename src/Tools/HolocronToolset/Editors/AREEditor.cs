@@ -215,8 +215,10 @@ namespace HolocronToolset.Editors
             panel.Children.Add(_unescapableCheck);
 
             // Alpha Test spin - matching Python: self.ui.alphaTestSpin
+            // Engine uses float for AlphaTest (swkotor.exe: 0x00508c50 line 303-304, swkotor2.exe: 0x004e3ff0 line 307-308)
+            // Default value: 0.2, range typically 0.0-1.0 but allowing up to 255 for compatibility
             var alphaTestLabel = new Avalonia.Controls.TextBlock { Text = "Alpha Test:" };
-            _alphaTestSpin = new NumericUpDown { Minimum = 0, Maximum = 255, Value = 0 };
+            _alphaTestSpin = new NumericUpDown { Minimum = 0, Maximum = 255, Value = 0, Increment = 0.1m };
             panel.Children.Add(alphaTestLabel);
             panel.Children.Add(_alphaTestSpin);
 
@@ -541,6 +543,8 @@ namespace HolocronToolset.Editors
         public NumericUpDown DirtSize1Spin => _dirtSize1Spin;
         public NumericUpDown DirtSize2Spin => _dirtSize2Spin;
         public NumericUpDown DirtSize3Spin => _dirtSize3Spin;
+        public CheckBox ShadowsCheck => _shadowsCheck;
+        public NumericUpDown ShadowsSpin => _shadowsSpin;
         public TextBox CommentsEdit => _commentsEdit;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:134-149
@@ -837,18 +841,16 @@ namespace HolocronToolset.Editors
                 _lightningCheck.IsChecked = are.ChanceLightning == 100;
             }
             // Matching Python: self.ui.shadowsCheck.setChecked(are.shadows) (line 213)
-            // Note: ARE class doesn't have Shadows bool, but has ShadowOpacity as ResRef
-            // For now, default to false
+            // Note: ARE class doesn't have Shadows bool - shadow is enabled if ShadowOpacity > 0
             if (_shadowsCheck != null)
             {
-                _shadowsCheck.IsChecked = false;
+                _shadowsCheck.IsChecked = are.ShadowOpacity > 0;
             }
             // Matching Python: self.ui.shadowsSpin.setValue(are.shadow_opacity) (line 214)
-            // Note: ARE class doesn't have ShadowOpacity as int, but as ResRef
-            // For now, default to 0
+            // ShadowOpacity is byte (0-255) in ARE class
             if (_shadowsSpin != null)
             {
-                _shadowsSpin.Value = 0;
+                _shadowsSpin.Value = are.ShadowOpacity;
             }
             // Matching Python: self.ui.dirtColor1Edit.set_color(are.dirty_argb_1) (line 227)
             // Note: ARE class doesn't have DirtyArgb properties - these may need to be extracted from GFF
@@ -1013,9 +1015,10 @@ namespace HolocronToolset.Editors
                 are.Unescapable = _unescapableCheck.IsChecked == true;
             }
             // Matching Python: are.alpha_test = float(self.ui.alphaTestSpin.value()) (line 289)
+            // Engine uses float for AlphaTest (swkotor.exe: 0x00508c50 line 303-304, swkotor2.exe: 0x004e3ff0 line 307-308)
             if (_alphaTestSpin != null && _alphaTestSpin.Value.HasValue)
             {
-                are.AlphaTest = (int)_alphaTestSpin.Value.Value;
+                are.AlphaTest = (float)_alphaTestSpin.Value.Value;
             }
             // Matching Python: are.stealth_xp = self.ui.stealthCheck.isChecked() (line 290)
             if (_stealthCheck != null)
@@ -1244,9 +1247,24 @@ namespace HolocronToolset.Editors
                 are.ChanceLightning = 0;
             }
             // Original: are.shadows = self.ui.shadowsCheck.isChecked() (line 323)
-            // Note: ARE class doesn't have Shadows bool - would need to write to GFF directly
+            // Note: ARE class doesn't have Shadows bool - shadow is enabled if ShadowOpacity > 0
             // Original: are.shadow_opacity = self.ui.shadowsSpin.value() (line 324)
-            // Note: ARE class has ShadowOpacity as ResRef, not int
+            // ShadowOpacity is byte (0-255) in ARE class
+            if (_shadowsSpin != null && _shadowsSpin.Value.HasValue)
+            {
+                byte shadowOpacityValue = (byte)_shadowsSpin.Value.Value;
+                // Clamp to 0-255 range
+                if (shadowOpacityValue > 255)
+                {
+                    shadowOpacityValue = 255;
+                }
+                are.ShadowOpacity = shadowOpacityValue;
+            }
+            // If shadows checkbox is unchecked, set opacity to 0
+            if (_shadowsCheck != null && _shadowsCheck.IsChecked == false)
+            {
+                are.ShadowOpacity = 0;
+            }
 
             // Scripts section - matching Python lines 350-354
             // Original: are.on_enter = ResRef(self.ui.onEnterSelect.currentText()) (line 351)
@@ -1321,18 +1339,8 @@ namespace HolocronToolset.Editors
                 }
 
                 // Special handling for fields that may have type/value mismatches
-                // Preserve original ShadowOpacity if it's UInt8 (original) vs ResRef (new)
-                if (originalRoot.Exists("ShadowOpacity"))
-                {
-                    var originalShadowType = originalRoot.GetFieldType("ShadowOpacity");
-                    var newShadowType = newRoot.GetFieldType("ShadowOpacity");
-                    if (originalShadowType == GFFFieldType.UInt8 && newShadowType == GFFFieldType.ResRef)
-                    {
-                        // Preserve original UInt8 value
-                        newRoot.Remove("ShadowOpacity");
-                        newRoot.SetUInt8("ShadowOpacity", originalRoot.GetUInt8("ShadowOpacity"));
-                    }
-                }
+                // ShadowOpacity is now correctly handled as UInt8 in both ConstructAre and DismantleAre
+                // No special handling needed - both read and write as UInt8
 
                 // Preserve original SunFogOn if values don't match (ConstructAre/DismantleAre may have conversion issues)
                 if (originalRoot.Exists("SunFogOn") && newRoot.Exists("SunFogOn"))
@@ -1346,7 +1354,7 @@ namespace HolocronToolset.Editors
                     }
                 }
 
-                // Preserve original AlphaTest if type differs (original may be Single/float, but ARE.AlphaTest is int)
+                // Preserve original AlphaTest (engine uses float: swkotor.exe: 0x00508c50 line 303-304, swkotor2.exe: 0x004e3ff0 line 307-308)
                 if (originalRoot.Exists("AlphaTest"))
                 {
                     var originalAlphaType = originalRoot.GetFieldType("AlphaTest");

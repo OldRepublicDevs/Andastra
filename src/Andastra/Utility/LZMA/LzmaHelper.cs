@@ -304,104 +304,51 @@ namespace Andastra.Utility.LZMA
                 throw new ArgumentException("Uncompressed data cannot be empty", nameof(uncompressedData));
             }
 
-            // LZMA compression implementation using LZMA SDK
+            // Use SharpCompress LzmaStream for compression
             // The properties byte array encodes: lc=3, lp=0, pb=2, dict=8MB (0x5D, 0x00, 0x00, 0x80, 0x00)
             // Property byte 0: pb*5*9 + lp*9 + lc = 2*45 + 0*9 + 3 = 93 = 0x5D
             // Property bytes 1-4: Dictionary size in little-endian format (0x00800000 = 8MB = 8388608 bytes)
-            //
-            // For raw LZMA1 format matching PyKotor's lzma.compress with FORMAT_RAW, FILTER_LZMA1:
-            // Output format: properties (5 bytes) + compressed data
-            //
-            // Implementation uses LZMA SDK Encoder class via reflection (classes may be internal)
             using (MemoryStream inputStream = new MemoryStream(uncompressedData))
-            using (MemoryStream tempStream = new MemoryStream())
+            using (MemoryStream outputStream = new MemoryStream())
             {
-                // Write properties manually (5 bytes for LZMA1) - matching our known properties
-                tempStream.Write(LzmaProperties, 0, LzmaProperties.Length);
-                
-                // Write uncompressed size (8 bytes, little-endian) - required by LZMA SDK format
-                tempStream.Write(BitConverter.GetBytes((long)uncompressedData.Length), 0, 8);
-                
-                // Use LZMA SDK Encoder class via reflection (may be internal)
-                // Get the Encoder type from the LZMA SDK assembly
-                // Try to find the Encoder type in loaded assemblies
-                Type encoderType = null;
-                foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+                // Create LZMA encoder stream with the known properties
+                // For compression, SharpCompress LzmaStream constructor signature is:
+                // LzmaStream(properties, outputStream, uncompressedSize) for compression
+                // Let's try using the properties byte array directly with output stream
+                using (LzmaStream lzmaStream = new LzmaStream(LzmaProperties, outputStream, uncompressedData.Length))
                 {
-                    encoderType = assembly.GetType("SevenZip.Compression.LZMA.Encoder");
-                    if (encoderType != null)
+                    // Copy input data to LZMA encoder stream
+                    inputStream.CopyTo(lzmaStream);
+                    lzmaStream.Flush();
+                }
+                
+                // Get compressed data (properties + compressed data for raw LZMA1 format)
+                byte[] compressedData = outputStream.ToArray();
+                
+                // For raw LZMA1 format matching PyKotor, we need: properties (5 bytes) + compressed data
+                // SharpCompress should write: properties (5 bytes) + compressed data
+                // Verify the output starts with our known properties
+                if (compressedData.Length < 5)
+                {
+                    throw new InvalidOperationException("Compressed data is too short to contain properties");
+                }
+                
+                // Verify properties match our expected properties (first 5 bytes)
+                for (int i = 0; i < LzmaProperties.Length; i++)
+                {
+                    if (compressedData[i] != LzmaProperties[i])
                     {
+                        // Properties don't match - replace with our known properties
+                        compressedData[0] = LzmaProperties[0];
+                        compressedData[1] = LzmaProperties[1];
+                        compressedData[2] = LzmaProperties[2];
+                        compressedData[3] = LzmaProperties[3];
+                        compressedData[4] = LzmaProperties[4];
                         break;
                     }
-                    encoderType = assembly.GetType("LZMA.Encoder");
-                    if (encoderType != null)
-                    {
-                        break;
-                    }
                 }
                 
-                if (encoderType == null)
-                {
-                    throw new InvalidOperationException(
-                        "LZMA SDK Encoder class not found. Ensure the LZMA-SDK NuGet package is installed.");
-                }
-                
-                object encoder = Activator.CreateInstance(encoderType);
-                
-                // Get Code method via reflection
-                MethodInfo codeMethod = encoderType.GetMethod("Code", BindingFlags.Public | BindingFlags.Instance);
-                if (codeMethod == null)
-                {
-                    codeMethod = encoderType.GetMethod("Code", BindingFlags.NonPublic | BindingFlags.Instance);
-                }
-                
-                if (codeMethod != null)
-                {
-                    // Reset input stream position
-                    inputStream.Position = 0;
-                    
-                    // Call Code method: Code(Stream inStream, Stream outStream, long inSize, long outSize, ICodeProgress progress)
-                    codeMethod.Invoke(encoder, new object[] { inputStream, tempStream, -1L, -1L, null });
-                    
-                    // Get compressed data with header (properties + size + compressed data)
-                    byte[] compressedWithHeader = tempStream.ToArray();
-                    
-                    // For raw LZMA1 format matching PyKotor, we need: properties (5 bytes) + compressed data
-                    // The LZMA SDK writes: properties (5 bytes) + uncompressed size (8 bytes) + compressed data
-                    // We need to remove the 8-byte size header to match raw format
-                    if (compressedWithHeader.Length < 13)
-                    {
-                        throw new InvalidOperationException(
-                            $"Compressed data is too short: got {compressedWithHeader.Length} bytes, expected at least 13 bytes (properties + size header)");
-                    }
-                    
-                    // Extract properties (first 5 bytes) and compressed data (skip 8-byte size header after properties)
-                    byte[] result = new byte[5 + (compressedWithHeader.Length - 13)];
-                    Array.Copy(compressedWithHeader, 0, result, 0, 5); // Copy properties
-                    Array.Copy(compressedWithHeader, 13, result, 5, compressedWithHeader.Length - 13); // Copy compressed data (skip properties + size)
-                    
-                    // Verify properties match our expected properties
-                    for (int i = 0; i < LzmaProperties.Length && i < result.Length; i++)
-                    {
-                        if (result[i] != LzmaProperties[i])
-                        {
-                            // Properties don't match - replace with our known properties
-                            result[0] = LzmaProperties[0];
-                            result[1] = LzmaProperties[1];
-                            result[2] = LzmaProperties[2];
-                            result[3] = LzmaProperties[3];
-                            result[4] = LzmaProperties[4];
-                            break;
-                        }
-                    }
-                    
-                    return result;
-                }
-                else
-                {
-                    throw new InvalidOperationException(
-                        "LZMA SDK Encoder.Code method not found. The LZMA-SDK package may have a different API structure.");
-                }
+                return compressedData;
             }
         }
     }

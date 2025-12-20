@@ -101,7 +101,7 @@ doc: |
   Environment & Camera:
   - "DefaultEnvMap" (ResRef): Default environment map texture (cubemap for reflections)
   - "CameraStyle" (Int32): Camera behavior type (defines zoom, rotation, collision)
-  - "AlphaTest" (Int32/Byte): Alpha testing threshold
+  - "AlphaTest" (Single/Float): Alpha testing threshold (default: 0.2, verified from engine: swkotor.exe: 0x00508c50, swkotor2.exe: 0x004e3ff0)
   - "WindPower" (Int32): Wind strength (0 = still, 1 = weak, 2 = strong)
   - "LightingScheme" (Int32/Byte): Lighting scheme identifier (index into environment.2da, unused)
 
@@ -468,8 +468,8 @@ types:
           - Byte (0/UInt8): Boolean flags (Unescapable, DisableTransit, StealthXPEnabled, SunFogOn, SunShadows)
           - UInt16 (2): LoadScreenID (if present)
           - UInt32 (4): Color values (SunAmbientColor, Grass_Ambient, etc. in BGR format)
-          - Int32 (5): Numeric values (AlphaTest, CameraStyle, WindPower, StealthXPLoss/Max, DirtyFormulaOne/Two/Thre, NorthAxis, MapZoom, MapResX, EnvAudio, ForceRating)
-          - Single/Float (8): Float values (fog distances, grass properties, map coordinates: SunFogNear/Far, Grass_Density, MapPt1X/Y, WorldPt1X/Y, AmbientScale)
+          - Int32 (5): Numeric values (CameraStyle, WindPower, StealthXPLoss/Max, DirtyFormulaOne/Two/Thre, NorthAxis, MapZoom, MapResX, EnvAudio, ForceRating)
+          - Single/Float (8): Float values (AlphaTest, fog distances, grass properties, map coordinates: SunFogNear/Far, Grass_Density, MapPt1X/Y, WorldPt1X/Y, AmbientScale)
           - String (10/CExoString): Text values (Tag, Comments, RoomName, DisplayName)
           - ResRef (11): Resource references (DefaultEnvMap, Grass_TexName, script hooks OnEnter/OnExit/OnHeartbeat/OnUserDefined)
           - LocalizedString (12/CExoLocString): Localized text (Name)
@@ -633,10 +633,11 @@ enums:
     5: int32
     doc: |
       32-bit signed integer (Int).
-      Used in ARE files for: AlphaTest, CameraStyle, WindPower, StealthXPLoss, StealthXPMax,
+      Used in ARE files for: CameraStyle, WindPower, StealthXPLoss, StealthXPMax,
       DirtyFormulaOne, DirtyFormulaTwo, DirtyFormulaThre, DirtyFuncOne, DirtyFuncTwo, DirtyFuncThree,
       NorthAxis (Map struct), MapZoom (Map struct), MapResX (Map struct),
-      ChanceRain, ChanceSnow, ChanceLightning (KotOR 2 only),
+      ChanceRain, ChanceSnow, ChanceLightning (KotOR 2 only).
+      Note: AlphaTest is stored as Single/Float (type 8), not Int32, as verified from engine behavior (swkotor.exe: 0x00508c50, swkotor2.exe: 0x004e3ff0).
       EnvAudio (room structs, Aurora/NWN), ForceRating (room structs, KotOR 2 only),
       Version, Creator_ID, ID, Flags, ModSpotCheck, ModListenCheck (deprecated fields).
     6: uint64
@@ -646,7 +647,8 @@ enums:
     8: single
     doc: |
       32-bit floating point (Float, IEEE 754 single precision).
-      Used in ARE files for: SunFogNear, SunFogFar, MoonFogNear, MoonFogFar (if present),
+      Used in ARE files for: AlphaTest (default: 0.2, verified from engine: swkotor.exe: 0x00508c50, swkotor2.exe: 0x004e3ff0),
+      SunFogNear, SunFogFar, MoonFogNear, MoonFogFar (if present),
       Grass_Density, Grass_QuadSize, Grass_Prob_LL, Grass_Prob_LR, Grass_Prob_UL, Grass_Prob_UR,
       DirtySizeOne, DirtySizeTwo, DirtySizeThree (KotOR 2 only),
       MapPt1X, MapPt1Y, MapPt2X, MapPt2Y (Map struct, normalized 0.0-1.0),

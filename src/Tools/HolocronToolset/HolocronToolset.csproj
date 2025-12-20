@@ -70,6 +70,26 @@
     <ProjectReference Include="..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
     <ProjectReference Include="..\Utils\Utils.csproj" />
     <ProjectReference Include="..\Data\Data.csproj" />
+    <ProjectReference Include="..\Windows\Windows.csproj" />
+  </ItemGroup>
+
+  <!-- Exclude subdirectories that are separate projects -->
+  <ItemGroup>
+    <Compile Remove="Data\**" />
+    <Compile Remove="Windows\**" />
+    <Compile Remove="Editors\**" />
+    <Compile Remove="Dialogs\**" />
+    <Compile Remove="Widgets\**" />
+    <EmbeddedResource Remove="Data\**" />
+    <EmbeddedResource Remove="Windows\**" />
+    <EmbeddedResource Remove="Editors\**" />
+    <EmbeddedResource Remove="Dialogs\**" />
+    <EmbeddedResource Remove="Widgets\**" />
+    <None Remove="Data\**" />
+    <None Remove="Windows\**" />
+    <None Remove="Editors\**" />
+    <None Remove="Dialogs\**" />
+    <None Remove="Widgets\**" />
   </ItemGroup>
 
   <!-- Resources -->

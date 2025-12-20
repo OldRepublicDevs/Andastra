@@ -100,8 +100,9 @@ namespace Andastra.Runtime.MonoGame.Graphics
 
         public IDepthStencilBuffer CreateDepthStencilBuffer(int width, int height)
         {
-            // MonoGame doesn't support separate depth buffers, they're part of render targets
-            throw new NotSupportedException("MonoGame does not support separate depth-stencil buffers. Use CreateRenderTarget with hasDepthStencil=true.");
+            // Create a dedicated depth-stencil buffer using RenderTarget2D
+            // This provides separate depth-stencil functionality for advanced rendering techniques
+            return new MonoGameDepthStencilBuffer(_device, width, height);
         }
 
         public IVertexBuffer CreateVertexBuffer<T>(T[] data) where T : struct

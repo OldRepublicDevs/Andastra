@@ -256,44 +256,100 @@ namespace HolocronToolset.Tests.Editors
 
         // TODO: STUB - Implement test_dlg_editor_add_child_node (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:431-456)
 
-        // TODO: STUB - Implement test_dlg_editor_manipulate_conversation_type (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:458-483)
-        // Original: def test_dlg_editor_manipulate_conversation_type(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating conversation type field
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:458-483
+        // Original: def test_dlg_editor_manipulate_conversation_type(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating conversation type combo box
         [Fact]
         public void TestDlgEditorManipulateConversationType()
         {
-            // TODO: STUB - Implement conversation type manipulation test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:458-483
-            throw new NotImplementedException("TestDlgEditorManipulateConversationType: Conversation type manipulation test not yet implemented");
+            var editor = new DLGEditor(null, null);
+            editor.New();
+
+            // Test all conversation types (matching Python: for i in range(editor.ui.conversationSelect.count()))
+            var conversationTypes = Enum.GetValues(typeof(DLGConversationType));
+            foreach (DLGConversationType convType in conversationTypes)
+            {
+                // Modify conversation type via CoreDlg (matching Python: editor.ui.conversationSelect.setCurrentIndex(i))
+                editor.CoreDlg.ConversationType = convType;
+
+                // Save and verify (matching Python: data, _ = editor.build(), modified_dlg = read_dlg(data), assert modified_dlg.conversation_type == DLGConversationType(i))
+                var (savedData, _) = editor.Build();
+                DLG modifiedDlg = DLGHelper.ReadDlg(savedData);
+                modifiedDlg.ConversationType.Should().Be(convType, $"ConversationType should be {convType}");
+
+                // Load back and verify (matching Python: editor.load(dlg_file, "ORIHA", ResourceType.DLG, data), assert editor.ui.conversationSelect.currentIndex() == i)
+                editor.Load("test.dlg", "TEST", ResourceType.DLG, savedData);
+                editor.CoreDlg.ConversationType.Should().Be(convType, $"ConversationType should be {convType} after reload");
+            }
         }
 
-        // TODO: STUB - Implement test_dlg_editor_manipulate_computer_type (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:485-505)
-        // Original: def test_dlg_editor_manipulate_computer_type(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating computer type field
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:485-505
+        // Original: def test_dlg_editor_manipulate_computer_type(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating computer type combo box
         [Fact]
         public void TestDlgEditorManipulateComputerType()
         {
-            // TODO: STUB - Implement computer type manipulation test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:485-505
-            throw new NotImplementedException("TestDlgEditorManipulateComputerType: Computer type manipulation test not yet implemented");
+            var editor = new DLGEditor(null, null);
+            editor.New();
+
+            // Test all computer types (matching Python: for i in range(editor.ui.computerSelect.count()))
+            var computerTypes = Enum.GetValues(typeof(DLGComputerType));
+            foreach (DLGComputerType compType in computerTypes)
+            {
+                // Modify computer type via CoreDlg (matching Python: editor.ui.computerSelect.setCurrentIndex(i))
+                editor.CoreDlg.ComputerType = compType;
+
+                // Save and verify (matching Python: data, _ = editor.build(), modified_dlg = read_dlg(data), assert modified_dlg.computer_type == DLGComputerType(i))
+                var (savedData, _) = editor.Build();
+                DLG modifiedDlg = DLGHelper.ReadDlg(savedData);
+                modifiedDlg.ComputerType.Should().Be(compType, $"ComputerType should be {compType}");
+            }
         }
 
-        // TODO: STUB - Implement test_dlg_editor_manipulate_reply_delay_spin (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:507-532)
-        // Original: def test_dlg_editor_manipulate_reply_delay_spin(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating reply delay spinbox
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:507-532
+        // Original: def test_dlg_editor_manipulate_reply_delay_spin(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating reply delay spin box
         [Fact]
         public void TestDlgEditorManipulateReplyDelaySpin()
         {
-            // TODO: STUB - Implement reply delay spin manipulation test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:507-532
-            throw new NotImplementedException("TestDlgEditorManipulateReplyDelaySpin: Reply delay spin manipulation test not yet implemented");
+            var editor = new DLGEditor(null, null);
+            editor.New();
+
+            // Test various delay values (matching Python: test_values = [0, 100, 500, 1000, 5000])
+            int[] testValues = { 0, 100, 500, 1000, 5000 };
+            foreach (int val in testValues)
+            {
+                // Modify delay via CoreDlg (matching Python: editor.ui.replyDelaySpin.setValue(val))
+                editor.CoreDlg.DelayReply = val;
+
+                // Save and verify (matching Python: data, _ = editor.build(), modified_dlg = read_dlg(data), assert modified_dlg.delay_reply == val)
+                var (savedData, _) = editor.Build();
+                DLG modifiedDlg = DLGHelper.ReadDlg(savedData);
+                modifiedDlg.DelayReply.Should().Be(val, $"DelayReply should be {val}");
+
+                // Load back and verify (matching Python: editor.load(dlg_file, "ORIHA", ResourceType.DLG, data), assert editor.ui.replyDelaySpin.value() == val)
+                editor.Load("test.dlg", "TEST", ResourceType.DLG, savedData);
+                editor.CoreDlg.DelayReply.Should().Be(val, $"DelayReply should be {val} after reload");
+            }
         }
 
-        // TODO: STUB - Implement test_dlg_editor_manipulate_entry_delay_spin (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:534-555)
-        // Original: def test_dlg_editor_manipulate_entry_delay_spin(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating entry delay spinbox
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:534-555
+        // Original: def test_dlg_editor_manipulate_entry_delay_spin(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating entry delay spin box
         [Fact]
         public void TestDlgEditorManipulateEntryDelaySpin()
         {
-            // TODO: STUB - Implement entry delay spin manipulation test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:534-555
-            throw new NotImplementedException("TestDlgEditorManipulateEntryDelaySpin: Entry delay spin manipulation test not yet implemented");
+            var editor = new DLGEditor(null, null);
+            editor.New();
+
+            // Test various delay values (matching Python: test_values = [0, 200, 1000, 2000])
+            int[] testValues = { 0, 200, 1000, 2000 };
+            foreach (int val in testValues)
+            {
+                // Modify delay via CoreDlg (matching Python: editor.ui.entryDelaySpin.setValue(val))
+                editor.CoreDlg.DelayEntry = val;
+
+                // Save and verify (matching Python: data, _ = editor.build(), modified_dlg = read_dlg(data), assert modified_dlg.delay_entry == val)
+                var (savedData, _) = editor.Build();
+                DLG modifiedDlg = DLGHelper.ReadDlg(savedData);
+                modifiedDlg.DelayEntry.Should().Be(val, $"DelayEntry should be {val}");
+            }
         }
 
         // TODO: STUB - Implement test_dlg_editor_manipulate_vo_id_edit (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:557-578)

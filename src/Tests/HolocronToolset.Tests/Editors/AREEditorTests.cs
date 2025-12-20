@@ -797,15 +797,17 @@ namespace HolocronToolset.Tests.Editors
             editor.Load(areFile, "tat001", ResourceType.ARE, originalData);
 
             // Matching Python: test_values = [0, 1, 50, 100, 255]
-            int[] testValues = { 0, 1, 50, 100, 255 };
+            // Engine uses float for AlphaTest (swkotor.exe: 0x00508c50 line 303-304, swkotor2.exe: 0x004e3ff0 line 307-308)
+            // Using float values to match engine behavior
+            float[] testValues = { 0.0f, 0.1f, 0.2f, 0.5f, 1.0f };
 
             // Matching Python: for val in test_values:
-            foreach (int val in testValues)
+            foreach (float val in testValues)
             {
                 // Matching Python: editor.ui.alphaTestSpin.setValue(val)
                 if (editor.AlphaTestSpin != null)
                 {
-                    editor.AlphaTestSpin.Value = val;
+                    editor.AlphaTestSpin.Value = (decimal)val;
                 }
 
                 // Matching Python: data, _ = editor.build()
@@ -815,7 +817,8 @@ namespace HolocronToolset.Tests.Editors
                 var modifiedAre = AREHelpers.ReadAre(data);
 
                 // Matching Python: assert modified_are.alpha_test == val
-                modifiedAre.AlphaTest.Should().Be(val);
+                // Using approximate comparison for float values
+                modifiedAre.AlphaTest.Should().BeApproximately(val, 0.001f);
 
                 // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, data)
                 editor.Load(areFile, "tat001", ResourceType.ARE, data);
@@ -823,7 +826,7 @@ namespace HolocronToolset.Tests.Editors
                 // Matching Python: assert editor.ui.alphaTestSpin.value() == val
                 if (editor.AlphaTestSpin != null)
                 {
-                    ((int)editor.AlphaTestSpin.Value).Should().Be(val);
+                    ((float)editor.AlphaTestSpin.Value.Value).Should().BeApproximately(val, 0.001f);
                 }
             }
         }
@@ -1824,14 +1827,86 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestAreEditorManipulateShadowsCheckbox: Shadows checkbox manipulation test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_are_editor_manipulate_shadow_opacity_spin (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:677-697)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:677-697
         // Original: def test_are_editor_manipulate_shadow_opacity_spin(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path): Test manipulating shadow opacity spin box.
         [Fact]
         public void TestAreEditorManipulateShadowOpacitySpin()
         {
-            // TODO: STUB - Implement shadow opacity spin box manipulation test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:677-697
-            throw new NotImplementedException("TestAreEditorManipulateShadowOpacitySpin: Shadow opacity spin box manipulation test not yet implemented");
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            if (!System.IO.File.Exists(areFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            }
+
+            if (!System.IO.File.Exists(areFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            // Matching Python: editor = AREEditor(None, installation)
+            var editor = new AREEditor(null, installation);
+
+            // Matching Python: original_data = are_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(areFile);
+
+            // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, original_data)
+            editor.Load(areFile, "tat001", ResourceType.ARE, originalData);
+
+            // Matching Python: test_values = [0, 25, 50, 75, 100, 255]
+            // ShadowOpacity is byte (0-255) in ARE class
+            byte[] testValues = { 0, 25, 50, 75, 100, 255 };
+
+            // Matching Python: for val in test_values:
+            foreach (byte val in testValues)
+            {
+                // Matching Python: editor.ui.shadowsSpin.setValue(val)
+                if (editor.ShadowsSpin != null)
+                {
+                    editor.ShadowsSpin.Value = val;
+                }
+
+                // Matching Python: data, _ = editor.build()
+                var (data, _) = editor.Build();
+
+                // Matching Python: modified_are = read_are(data)
+                var modifiedAre = AREHelpers.ReadAre(data);
+
+                // Matching Python: assert modified_are.shadow_opacity == val
+                modifiedAre.ShadowOpacity.Should().Be(val);
+
+                // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, data)
+                editor.Load(areFile, "tat001", ResourceType.ARE, data);
+
+                // Matching Python: assert editor.ui.shadowsSpin.value() == val
+                if (editor.ShadowsSpin != null)
+                {
+                    ((byte)editor.ShadowsSpin.Value.Value).Should().Be(val);
+                }
+            }
         }
 
         // TODO: STUB - Implement test_are_editor_manipulate_grass_texture (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:703-723)
@@ -2432,7 +2507,7 @@ namespace HolocronToolset.Tests.Editors
             // Matching Python: assert editor.ui.alphaTestSpin.value() == 200
             if (editor.AlphaTestSpin != null)
             {
-                editor.AlphaTestSpin.Value.Should().Be(200);
+                editor.AlphaTestSpin.Value.Should().BeApproximately(0.784f, 0.001f);
             }
             // Matching Python: assert editor.ui.fogEnabledCheck.isChecked()
             if (editor.FogEnabledCheck != null)
@@ -2465,7 +2540,8 @@ namespace HolocronToolset.Tests.Editors
             // Matching Python: assert saved_are2.tag == saved_are1.tag
             savedAre2.Tag.Should().Be(savedAre1.Tag);
             // Matching Python: assert saved_are2.alpha_test == saved_are1.alpha_test
-            savedAre2.AlphaTest.Should().Be(savedAre1.AlphaTest);
+            // Using approximate comparison for float values
+            savedAre2.AlphaTest.Should().BeApproximately(savedAre1.AlphaTest, 0.001f);
             // Matching Python: assert saved_are2.fog_enabled == saved_are1.fog_enabled
             savedAre2.FogEnabled.Should().Be(savedAre1.FogEnabled);
             // Matching Python: assert saved_are2.comment == saved_are1.comment
@@ -2585,9 +2661,10 @@ namespace HolocronToolset.Tests.Editors
             }
 
             // Matching Python: editor.ui.alphaTestSpin.setValue(150)
+            // AlphaTest is a float (0.0 to 1.0): converting 150/255 = 0.588
             if (editor.AlphaTestSpin != null)
             {
-                editor.AlphaTestSpin.Value = 150;
+                editor.AlphaTestSpin.Value = 0.588f;
             }
 
             // Matching Python: editor.ui.fogEnabledCheck.setChecked(True)
@@ -2611,7 +2688,7 @@ namespace HolocronToolset.Tests.Editors
             modifiedAre.Tag.Should().Be("modified_gff_test");
 
             // Matching Python: assert modified_are.alpha_test == 150
-            modifiedAre.AlphaTest.Should().Be(150);
+            modifiedAre.AlphaTest.Should().BeApproximately(0.588f, 0.001f);
 
             // Matching Python: assert modified_are.fog_enabled
             modifiedAre.FogEnabled.Should().BeTrue();
@@ -2948,7 +3025,7 @@ namespace HolocronToolset.Tests.Editors
                 // Set all basic fields
                 are.Tag = "test_tag_" + game.ToString();
                 are.Name = LocalizedString.FromEnglish("Test Area " + game.ToString());
-                are.AlphaTest = 100;
+                are.AlphaTest = 100.0f;
                 are.CameraStyle = 1;
                 are.DefaultEnvMap = new ResRef("envmap");
                 are.Unescapable = true;
@@ -2967,7 +3044,7 @@ namespace HolocronToolset.Tests.Editors
                 are.FogNear = 10.0f;
                 are.FogFar = 200.0f;
                 are.WindPower = 1;
-                are.ShadowOpacity = new ResRef("shadow");
+                are.ShadowOpacity = 128; // Shadow opacity: 0-255 (128 = 50% opacity)
                 are.OnEnter = new ResRef("onenter");
                 are.OnExit = new ResRef("onexit");
                 are.OnHeartbeat = new ResRef("onheartbeat");
@@ -3087,7 +3164,7 @@ namespace HolocronToolset.Tests.Editors
                 
                 // Verify defaults are preserved
                 reconstructedAre.Tag.Should().BeEmpty();
-                reconstructedAre.AlphaTest.Should().Be(0);
+                reconstructedAre.AlphaTest.Should().BeApproximately(0.2f, 0.001f); // Engine default is 0.2: swkotor.exe: 0x00508c50 line 303, swkotor2.exe: 0x004e3ff0 line 307
                 reconstructedAre.CameraStyle.Should().Be(0);
                 reconstructedAre.Unescapable.Should().BeFalse();
                 reconstructedAre.DisableTransit.Should().BeFalse();

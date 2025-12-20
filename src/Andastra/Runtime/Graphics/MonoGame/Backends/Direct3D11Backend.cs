@@ -300,19 +300,19 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // This matches the original engine's pattern of uploading texture data after creation
                 // Original engine: swkotor.exe and swkotor2.exe use DirectX 8/9 LockRect/UnlockRect pattern
                 // DirectX 11 equivalent: UpdateSubresource for each mipmap level
-                // Based on swkotor.exe and swkotor2.exe texture upload patterns (DirectX 8/9 LockRect/UnlockRect -> D3D11 UpdateSubresource)
+                // Based on DirectX 11 API documentation: https://learn.microsoft.com/en-us/windows/win32/api/d3d11/nf-d3d11-id3d11devicecontext-updatesubresource
+                // Implementation follows Microsoft's recommended pattern for uploading texture mipmaps
 
-                // Ensure texture is created before uploading
-                // If NativeTexture is not set, we need to create it first
+                // Check if texture resource exists
+                // If NativeTexture is not set, store upload data for deferred upload when texture is created
                 if (info.NativeTexture == IntPtr.Zero)
                 {
-                    // Create the texture resource if it doesn't exist
+                    // Texture resource doesn't exist yet - store upload data for deferred upload
                     // This handles the case where CreateTexture was called but the actual D3D11 texture wasn't created yet
-                    if (!CreateTextureResource(ref info, data))
-                    {
-                        Console.WriteLine($"[Direct3D11Backend] UploadTextureData: Failed to create texture resource for {info.DebugName}");
-                        return false;
-                    }
+                    info.UploadData = data;
+                    _resources[handle] = info;
+                    Console.WriteLine($"[Direct3D11Backend] UploadTextureData: Stored {data.Mipmaps.Length} mipmap levels for deferred upload (texture {info.DebugName} not yet created)");
+                    return true;
                 }
 
                 // Validate texture format matches upload data format
@@ -324,6 +324,8 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                 // Upload each mipmap level using UpdateSubresource
                 // This matches the original engine's per-mipmap upload pattern
+                // Based on DirectX 11 documentation: UpdateSubresource uploads data to a specific subresource (mip level)
+                // Reference: https://learn.microsoft.com/en-us/windows/win32/api/d3d11/nf-d3d11-id3d11devicecontext-updatesubresource
                 for (int mipIndex = 0; mipIndex < data.Mipmaps.Length; mipIndex++)
                 {
                     TextureMipmapData mipmap = data.Mipmaps[mipIndex];

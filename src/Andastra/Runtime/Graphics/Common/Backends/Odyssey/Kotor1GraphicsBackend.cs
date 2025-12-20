@@ -2429,7 +2429,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     _kotor1GlProgramStringArb(GL_VERTEX_PROGRAM_ARB, 0x8875, vertexProgramStrings[i].Length, vertexProgramStrings[i]);
                     
                     // Check for errors
-                    int error = glGetError();
+                    int error = (int)glGetError();
                     if (error != 0)
                     {
                         // Program compilation failed, delete it
@@ -2516,7 +2516,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     glGenTextures(1, ref _kotor1Texture0);
                     glBindTexture(GL_TEXTURE_2D, _kotor1Texture0);
                     GCHandle handle0 = GCHandle.Alloc(textureData0, GCHandleType.Pinned);
-                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, handle0.AddrOfPinnedObject());
+                    glTexImage2D(GL_TEXTURE_2D, 0, (int)GL_RGBA8, 1, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, handle0.AddrOfPinnedObject());
                     handle0.Free();
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP_TO_EDGE);
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP_TO_EDGE);
@@ -2527,7 +2527,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     glGenTextures(1, ref _kotor1Texture1);
                     glBindTexture(GL_TEXTURE_2D, _kotor1Texture1);
                     GCHandle handle1 = GCHandle.Alloc(textureData1, GCHandleType.Pinned);
-                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, handle1.AddrOfPinnedObject());
+                    glTexImage2D(GL_TEXTURE_2D, 0, (int)GL_RGBA, 256, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, handle1.AddrOfPinnedObject());
                     handle1.Free();
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP_TO_EDGE);
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP_TO_EDGE);
@@ -2538,7 +2538,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     glGenTextures(1, ref _kotor1Texture2);
                     glBindTexture(GL_TEXTURE_2D, _kotor1Texture2);
                     GCHandle handle2 = GCHandle.Alloc(textureData2, GCHandleType.Pinned);
-                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, handle2.AddrOfPinnedObject());
+                    glTexImage2D(GL_TEXTURE_2D, 0, (int)GL_RGBA, 1, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, handle2.AddrOfPinnedObject());
                     handle2.Free();
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP_TO_EDGE);
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP_TO_EDGE);

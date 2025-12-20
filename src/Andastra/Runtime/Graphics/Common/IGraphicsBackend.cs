@@ -117,6 +117,13 @@ namespace Andastra.Runtime.Graphics
         object CreateSoundPlayer(object resourceProvider);
 
         /// <summary>
+        /// Creates a music player for background music playback.
+        /// </summary>
+        /// <param name="resourceProvider">Resource provider for loading music files.</param>
+        /// <returns>IMusicPlayer instance.</returns>
+        object CreateMusicPlayer(object resourceProvider);
+
+        /// <summary>
         /// Creates a voice player for playing voice-over dialogue.
         /// </summary>
         /// <param name="resourceProvider">Resource provider for loading audio files.</param>

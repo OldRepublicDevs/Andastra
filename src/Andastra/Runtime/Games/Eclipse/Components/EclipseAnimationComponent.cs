@@ -88,7 +88,8 @@ namespace Andastra.Runtime.Games.Eclipse.Components
 
             // Check cache first for performance optimization
             // Cache key: "ModelResRef:AnimationID" format
-            string cacheKey = string.Format("{0}:{1}", renderable.ModelResRef, animationId);
+            // Using string interpolation for better performance than string.Format
+            string cacheKey = $"{renderable.ModelResRef}:{animationId}";
             if (_animationDurationCache.TryGetValue(cacheKey, out float cachedDuration))
             {
                 return cachedDuration; // Return cached duration if available

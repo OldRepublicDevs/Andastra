@@ -64,7 +64,10 @@ namespace Andastra.Parsing.Resource.Generics.ARE
         public float FogNear { get; set; }
         public float FogFar { get; set; }
         public int WindPower { get; set; }
-        public ResRef ShadowOpacity { get; set; } = ResRef.FromBlank();
+        // Shadow opacity: 0-255 (0 = no shadows, 255 = fully opaque shadows)
+        // Engine reads as UInt8 from GFF (swkotor.exe: 0x00508c50, swkotor2.exe: 0x004e3ff0)
+        // Aurora uses 0-100 range, Eclipse uses 0-255 range
+        public byte ShadowOpacity { get; set; } = 0;
 
         // Weather (K2-specific)
         public int ChanceRain { get; set; }

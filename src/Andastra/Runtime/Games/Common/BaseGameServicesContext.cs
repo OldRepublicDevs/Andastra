@@ -44,6 +44,7 @@ namespace Andastra.Runtime.Games.Common
     public abstract class BaseGameServicesContext : IGameServicesContext
     {
         protected readonly ISoundPlayer _soundPlayer;
+        protected readonly IMusicPlayer _musicPlayer;
         protected readonly IUISystem _uiSystem;
         protected bool _isLoadingFromSave;
 
@@ -51,10 +52,12 @@ namespace Andastra.Runtime.Games.Common
         /// Creates a new base game services context.
         /// </summary>
         /// <param name="soundPlayer">The sound player for audio playback.</param>
+        /// <param name="musicPlayer">The music player for background music playback.</param>
         /// <param name="uiSystem">The UI system for screen management.</param>
-        protected BaseGameServicesContext(ISoundPlayer soundPlayer, IUISystem uiSystem)
+        protected BaseGameServicesContext(ISoundPlayer soundPlayer, IMusicPlayer musicPlayer, IUISystem uiSystem)
         {
             _soundPlayer = soundPlayer;
+            _musicPlayer = musicPlayer;
             _uiSystem = uiSystem;
         }
 
@@ -76,6 +79,17 @@ namespace Andastra.Runtime.Games.Common
         public ISoundPlayer SoundPlayer
         {
             get { return _soundPlayer; }
+        }
+
+        /// <summary>
+        /// Gets the music player for background music playback.
+        /// </summary>
+        /// <remarks>
+        /// Common across all engines: Music player provides looping background music functionality.
+        /// </remarks>
+        public IMusicPlayer MusicPlayer
+        {
+            get { return _musicPlayer; }
         }
 
         /// <summary>

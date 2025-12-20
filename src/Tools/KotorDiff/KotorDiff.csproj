@@ -9,6 +9,35 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
+    <ProjectReference Include="..\Cli\Cli.csproj" />
+  </ItemGroup>
+
+  <!-- Exclude subdirectories that are separate projects -->
+  <ItemGroup>
+    <Compile Remove="App\**" />
+    <Compile Remove="Cli\**" />
+    <Compile Remove="Cache\**" />
+    <Compile Remove="Diff\**" />
+    <Compile Remove="Differ\**" />
+    <Compile Remove="Formatters\**" />
+    <Compile Remove="Logger\**" />
+    <Compile Remove="Resolution\**" />
+    <EmbeddedResource Remove="App\**" />
+    <EmbeddedResource Remove="Cli\**" />
+    <EmbeddedResource Remove="Cache\**" />
+    <EmbeddedResource Remove="Diff\**" />
+    <EmbeddedResource Remove="Differ\**" />
+    <EmbeddedResource Remove="Formatters\**" />
+    <EmbeddedResource Remove="Logger\**" />
+    <EmbeddedResource Remove="Resolution\**" />
+    <None Remove="App\**" />
+    <None Remove="Cli\**" />
+    <None Remove="Cache\**" />
+    <None Remove="Diff\**" />
+    <None Remove="Differ\**" />
+    <None Remove="Formatters\**" />
+    <None Remove="Logger\**" />
+    <None Remove="Resolution\**" />
   </ItemGroup>
 
 </Project>
