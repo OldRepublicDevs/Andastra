@@ -35,14 +35,12 @@ seq:
     encoding: ASCII
     size: 4
     doc: File type signature. Must be "LIP " (space-padded) for LIP files.
-    valid: "LIP "
   
   - id: file_version
     type: str
     encoding: ASCII
     size: 4
     doc: File format version. Must be "V1.0" for LIP files.
-    valid: "V1.0"
   
   - id: length
     type: f4
@@ -50,7 +48,7 @@ seq:
       Duration in seconds. Must equal the paired WAV file playback time for
       glitch-free animation. This is the total length of the lip sync animation.
   
-  - id: entry_count
+  - id: num_keyframes
     type: u4
     doc: |
       Number of keyframes immediately following. Each keyframe contains a timestamp
@@ -59,7 +57,7 @@ seq:
   - id: keyframes
     type: keyframe_entry
     repeat: expr
-    repeat-expr: entry_count
+    repeat-expr: num_keyframes
     doc: |
       Array of keyframe entries. Each entry maps a timestamp to a mouth shape.
       Entries must be stored in chronological order (ascending by timestamp).
@@ -86,26 +84,6 @@ types:
     
 enums:
   lip_shapes:
-    doc: |
-      Viseme (mouth shape) indices using the 16-shape Preston Blair phoneme set.
-      Each value maps to a specific mouth position used for lip sync animation.
-      
-      0: Neutral - Rest/closed mouth position. Used for pauses and neutral state.
-      1: EE - Teeth apart, wide smile (long "ee" sound). Used for "see", "be", "me" sounds.
-      2: EH - Relaxed mouth ("eh" sound). Used for "get", "bet", "head" sounds.
-      3: AH - Mouth open ("ah/aa" sound). Used for "father", "cat", "but" sounds.
-      4: OH - Rounded lips ("oh" sound). Used for "go", "bought", "low" sounds.
-      5: OOH - Pursed lips ("oo", "w" sound). Used for "too", "wow", "who" sounds.
-      6: Y - Slight smile ("y" sound). Used for "yes", "you", "year" sounds.
-      7: STS - Teeth touching ("s", "z", "ts" sounds). Used for "stop", "see", "zoo" sounds.
-      8: FV - Lower lip touches upper teeth ("f", "v" sounds). Used for "five", "fee", "view" sounds.
-      9: NG - Tongue raised ("n", "ng" sounds). Used for "ring", "sing", "no" sounds.
-      10: TH - Tongue between teeth ("th" sound). Used for "thin", "thee", "this" sounds.
-      11: MPB - Lips closed ("m", "p", "b" sounds). Used for "bump", "map", "be" sounds.
-      12: TD - Tongue up ("t", "d" sounds). Used for "top", "dee", "time" sounds.
-      13: SH - Rounded relaxed ("sh", "ch", "j" sounds). Used for "measure", "cheese", "joy" sounds.
-      14: L - Tongue forward ("l", "r" sounds). Used for "lip", "red", "light" sounds.
-      15: KG - Back of tongue raised ("k", "g", "h" sounds). Used for "kick", "green", "he" sounds.
     0: neutral
     1: ee
     2: eh

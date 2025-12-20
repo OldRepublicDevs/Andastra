@@ -103,7 +103,7 @@ namespace Andastra.Parsing.Tests.Formats
             content.Should().Contain("file_type", "LIP.ksy should define file_type field");
             content.Should().Contain("file_version", "LIP.ksy should define file_version field");
             content.Should().Contain("length", "LIP.ksy should define length field");
-            content.Should().Contain("entry_count", "LIP.ksy should define entry_count field");
+            content.Should().Contain("num_keyframes", "LIP.ksy should define num_keyframes field");
             content.Should().Contain("keyframes", "LIP.ksy should define keyframes field");
             content.Should().Contain("keyframe_entry", "LIP.ksy should define keyframe_entry type");
             content.Should().Contain("lip_shapes", "LIP.ksy should define lip_shapes enum");
@@ -410,6 +410,7 @@ namespace Andastra.Parsing.Tests.Formats
             // 4. Try in common installation locations
             var commonPaths = new[]
             {
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "kaitai-struct-compiler", "bin", "kaitai-struct-compiler.bat"),
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "bin", "kaitai-struct-compiler"),
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "kaitai-struct-compiler", "kaitai-struct-compiler.jar"),
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "kaitai-struct-compiler", "kaitai-struct-compiler.jar"),
