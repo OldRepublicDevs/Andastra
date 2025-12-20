@@ -55,6 +55,7 @@
     </TargetFrameworks>
     <!-- Ensure we always have at least one framework to avoid empty TargetFrameworks -->
     <TargetFrameworks Condition="'$(TargetFrameworks)' == ''">net9.0</TargetFrameworks>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <!-- Release Configuration -->
