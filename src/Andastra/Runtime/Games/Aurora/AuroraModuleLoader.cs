@@ -17,6 +17,7 @@ using Andastra.Parsing.Resource;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.GFF.IO;
 using Andastra.Parsing.Formats.ERF;
+using Andastra.Runtime.Games.Odyssey.Components;
 
 namespace Andastra.Runtime.Games.Aurora
 {
@@ -1475,11 +1476,25 @@ namespace Andastra.Runtime.Games.Aurora
         /// Spawns an encounter entity from GIT instance data.
         /// </summary>
         /// <remarks>
-        /// Based on nwmain.exe: CNWSArea::LoadEncounters @ 0x140364120
-        /// - CNWSEncounter::LoadEncounter @ 0x14050a520 loads encounter properties from GIT struct
+        /// Based on nwmain.exe: CNWSArea::LoadEncounters @ 0x140360cb0
+        /// - CNWSEncounter::LoadEncounter @ 0x14043c490 loads encounter properties from GIT struct
+        /// - CNWSEncounter::ReadEncounterFromGff @ 0x14043d1c0 reads encounter data from GFF
         /// - Creates encounter entity with ObjectId assigned by world
         /// - Sets Tag, Position, SpawnPoints, Geometry properties
+        /// - SpawnPointList loaded from GIT: X, Y, Z, Orientation fields (nwmain.exe: 0x14043dc52 lines 170-230)
+        /// - Geometry loaded from GIT: List of vertices with X, Y, Z fields
         /// - Adds encounter to area
+        /// 
+        /// GIT Encounter Structure (nwmain.exe: CNWSEncounter::ReadEncounterFromGff):
+        /// - XPosition, YPosition, ZPosition: Encounter position
+        /// - SpawnPointList: List of spawn points with X, Y, Z, Orientation fields
+        /// - Geometry: List of vertices with X, Y, Z fields defining encounter polygon area
+        /// - Active, Reset, ResetTime, SpawnOption, MaxCreatures, RecCreatures, PlayerOnly, Faction, Difficulty fields
+        /// 
+        /// Based on nwmain.exe: CNWSEncounter::ReadEncounterFromGff @ 0x14043d1c0:
+        /// - Lines 170-230: Loads SpawnPointList from GIT, reads X, Y, Z, Orientation for each spawn point
+        /// - Spawn points are stored in encounter object at offset 0x3a0 (CEncounterSpawnPoint array)
+        /// - Geometry vertices are loaded similarly (referenced in SaveEncounter @ 0x14043e760)
         /// </remarks>
         private async Task SpawnEncounterAsync(EncounterInstance encounter, AuroraArea area)
         {
@@ -1488,9 +1503,11 @@ namespace Andastra.Runtime.Games.Aurora
                 return;
             }
 
-            // Create encounter entity (encounters are typically placeables or triggers)
+            // Create encounter entity
+            // Based on nwmain.exe: CNWSArea::LoadEncounters @ 0x140360cb0 line 48
+            // Creates CNWSEncounter object with ObjectId from GIT or default (0x7f000000)
             Vector3 position = new Vector3(encounter.XPosition, encounter.YPosition, encounter.ZPosition);
-            IEntity entity = _world.CreateEntity(ObjectType.Placeable, position, 0.0f);
+            IEntity entity = _world.CreateEntity(ObjectType.Encounter, position, 0.0f);
 
             if (entity == null)
             {
@@ -1498,14 +1515,64 @@ namespace Andastra.Runtime.Games.Aurora
             }
 
             // Set tag from GIT
+            // Based on nwmain.exe: CNWSEncounter::ReadEncounterFromGff @ 0x14043d1c0 line 86
+            // Tag is read from GIT struct and set on encounter object
             if (!string.IsNullOrEmpty(encounter.Tag))
             {
                 entity.Tag = encounter.Tag;
             }
 
-            // TODO: Set encounter spawn points and geometry when encounter component supports them
+            // Get or create encounter component
+            // Based on nwmain.exe: Encounter entities have CNWSEncounter component
+            // Using Odyssey EncounterComponent since Aurora and Odyssey share the same encounter structure
+            var encounterComponent = entity.GetComponent<EncounterComponent>();
+            if (encounterComponent == null)
+            {
+                // Add encounter component if it doesn't exist
+                // Based on nwmain.exe: Encounter entities always have encounter component
+                encounterComponent = new EncounterComponent();
+                entity.AddComponent(encounterComponent);
+            }
+
+            // Set encounter geometry from GIT
+            // Based on nwmain.exe: CNWSEncounter::ReadEncounterFromGff loads Geometry list from GIT
+            // Geometry is a list of vertices (X, Y, Z) defining the encounter polygon area
+            // Referenced in SaveEncounter @ 0x14043e760 line 0x14043ea4e (Geometry string @ 0x140de9540)
+            if (encounter.Geometry != null && encounter.Geometry.Count > 0)
+            {
+                encounterComponent.Vertices = new List<Vector3>(encounter.Geometry);
+            }
+            else
+            {
+                encounterComponent.Vertices = new List<Vector3>();
+            }
+
+            // Set encounter spawn points from GIT
+            // Based on nwmain.exe: CNWSEncounter::ReadEncounterFromGff @ 0x14043dc52 lines 170-230
+            // SpawnPointList is loaded from GIT with X, Y, Z, Orientation fields for each spawn point
+            // Spawn points are stored in encounter object at offset 0x3a0 (CEncounterSpawnPoint array)
+            // Each spawn point has: X, Y, Z (position), Orientation (facing angle in radians)
+            if (encounter.SpawnPoints != null && encounter.SpawnPoints.Count > 0)
+            {
+                encounterComponent.SpawnPoints = new List<EncounterSpawnPoint>();
+                foreach (SpawnPoint spawnPoint in encounter.SpawnPoints)
+                {
+                    var encounterSpawnPoint = new EncounterSpawnPoint
+                    {
+                        Position = new Vector3(spawnPoint.X, spawnPoint.Y, spawnPoint.Z),
+                        Orientation = spawnPoint.Orientation
+                    };
+                    encounterComponent.SpawnPoints.Add(encounterSpawnPoint);
+                }
+            }
+            else
+            {
+                encounterComponent.SpawnPoints = new List<EncounterSpawnPoint>();
+            }
 
             // Add entity to area
+            // Based on nwmain.exe: CNWSArea::LoadEncounters @ 0x140360cb0 line 58
+            // CNWSEncounter::AddToArea adds encounter to area after loading
             area.AddEntity(entity);
 
             await Task.CompletedTask;
