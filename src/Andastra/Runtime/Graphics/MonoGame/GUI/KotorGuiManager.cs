@@ -207,6 +207,12 @@ namespace Andastra.Runtime.MonoGame.GUI
                 _loadedGuis[guiName] = loadedGui;
                 _currentGui = loadedGui;
 
+                // Note: RIM file loading (e.g., "RIMS:MAINMENU") is handled automatically by InstallationResourceManager
+                // Based on swkotor.exe FUN_0067c4c0 @ 0x0067c4c0:65-69 and swkotor2.exe FUN_006d2350 @ 0x006d2350:76-80
+                // Original engines explicitly load "RIMS:MAINMENU" RIM file after GUI load (FUN_004087c0/FUN_004089f0)
+                // Our resource system automatically searches RIM files during resource lookup, so explicit loading is not required
+                // The RIM file contains additional resources (textures, etc.) needed for the menu, which are loaded on-demand
+
                 Console.WriteLine($"[KotorGuiManager] Successfully loaded GUI: {guiName} ({width}x{height}) - {gui.Controls.Count} controls");
                 return true;
             }
