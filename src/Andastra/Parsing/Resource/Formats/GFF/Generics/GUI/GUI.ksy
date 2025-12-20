@@ -759,25 +759,14 @@ types:
     doc: |
       Panel control-specific properties (CONTROLTYPE = 2).
       Fields:
-      - CONTROLS (list): Child controls list
+      - CONTROLS (list): Child controls list (stored as GFF LIST field, not sequential)
       - BORDER (struct, optional): Panel border/background
       - COLOR (vector3, optional): Panel color modulation
       - ALPHA (float, optional): Panel transparency (0.0-1.0)
-    seq:
-      - id: controls
-        type: gui_control
-        repeat: until
-        repeat-until: _io.eof
-        doc: CONTROLS list of child controls
-      - id: border
-        type: gui_border
-        doc: BORDER struct for panel background (optional)
-      - id: color
-        type: vector3
-        doc: Panel color modulation (optional)
-      - id: alpha
-        type: f4
-        doc: Panel transparency (0.0-1.0, optional)
+
+      Note: This is a logical type representing Panel properties when accessed through GFF.
+      The actual binary structure is defined by the GFF format. CONTROLS is stored as a LIST
+      field in GFF, not as a sequential array in the binary stream.
 
   gui_protoitem:
     doc: |

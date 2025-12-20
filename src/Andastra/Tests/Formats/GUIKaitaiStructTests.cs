@@ -15,7 +15,7 @@ namespace Andastra.Parsing.Tests.Formats
     /// Comprehensive tests for GUI format using Kaitai Struct generated parsers.
     /// Tests validate that the GUI.ksy definition compiles correctly to multiple languages
     /// and that the generated parsers correctly parse GUI files.
-    /// 
+    ///
     /// Tests compilation to at least a dozen languages:
     /// - Python, Java, JavaScript, C#, C++, Go, Ruby, PHP, Rust, Swift, Perl, Nim, Lua, Kotlin, TypeScript
     /// </summary>
@@ -63,6 +63,7 @@ namespace Andastra.Parsing.Tests.Formats
                 {
                     string version = process.StandardOutput.ReadToEnd();
                     version.Should().NotBeNullOrEmpty("Kaitai Struct compiler should return version");
+                    Console.WriteLine($"Kaitai Struct compiler version: {version}");
                 }
                 else
                 {
@@ -86,6 +87,8 @@ namespace Andastra.Parsing.Tests.Formats
                         jarProcess.WaitForExit(5000);
                         if (jarProcess.ExitCode == 0)
                         {
+                            string version = jarProcess.StandardOutput.ReadToEnd();
+                            Console.WriteLine($"Kaitai Struct compiler version (JAR): {version}");
                             Assert.True(true, "Kaitai Struct compiler available via JAR");
                             return;
                         }
@@ -99,6 +102,71 @@ namespace Andastra.Parsing.Tests.Formats
             {
                 // Compiler not installed - skip tests
                 Assert.True(true, "Kaitai Struct compiler not installed - skipping compiler tests");
+            }
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestKaitaiStructCompilerFunctional()
+        {
+            // Test that Kaitai Struct compiler is fully functional by compiling a simple test
+            var javaCheck = RunCommand("java", "-version");
+            if (javaCheck.ExitCode != 0)
+            {
+                Assert.True(true, "Java not available - skipping functional test");
+                return;
+            }
+
+            string compilerPath = FindKaitaiCompilerJar();
+            if (string.IsNullOrEmpty(compilerPath))
+            {
+                var cmdCheck = RunCommand("kaitai-struct-compiler", "--version");
+                if (cmdCheck.ExitCode != 0)
+                {
+                    Assert.True(true, "Kaitai Struct compiler not available - skipping functional test");
+                    return;
+                }
+                compilerPath = "kaitai-struct-compiler";
+            }
+
+            // Test compilation to Python (most commonly supported)
+            var normalizedKsyPath = Path.GetFullPath(KsyFile);
+            if (!File.Exists(normalizedKsyPath))
+            {
+                Assert.True(true, "GUI.ksy not found - skipping functional test");
+                return;
+            }
+
+            string tempOutputDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            Directory.CreateDirectory(tempOutputDir);
+
+            try
+            {
+                var result = RunKaitaiCompiler(normalizedKsyPath, "-t python", tempOutputDir);
+
+                // Compiler should be functional (able to compile)
+                // We don't require success here, but we verify the compiler runs
+                result.ExitCode.Should().NotBe(-1, "Kaitai Struct compiler should be able to run");
+
+                if (result.ExitCode == 0)
+                {
+                    // Verify output was generated
+                    var files = Directory.GetFiles(tempOutputDir, "*", SearchOption.AllDirectories);
+                    files.Length.Should().BeGreaterThan(0, "Functional compiler should generate output files");
+                }
+            }
+            finally
+            {
+                if (Directory.Exists(tempOutputDir))
+                {
+                    try
+                    {
+                        Directory.Delete(tempOutputDir, true);
+                    }
+                    catch
+                    {
+                        // Ignore cleanup errors
+                    }
+                }
             }
         }
 
@@ -122,100 +190,166 @@ namespace Andastra.Parsing.Tests.Formats
         public void TestKsyFileValid()
         {
             // Validate that GUI.ksy is valid YAML and can be parsed by compiler
-            if (!File.Exists(KsyFile))
+            var normalizedKsyPath = Path.GetFullPath(KsyFile);
+            if (!File.Exists(normalizedKsyPath))
             {
                 Assert.True(true, "GUI.ksy not found - skipping validation");
                 return;
             }
 
-            var process = new Process
+            // Check if Java is available (required for Kaitai Struct compiler)
+            var javaCheck = RunCommand("java", "-version");
+            if (javaCheck.ExitCode != 0)
             {
-                StartInfo = new ProcessStartInfo
+                Assert.True(true, "Java not available - skipping validation");
+                return;
+            }
+
+            string compilerPath = FindKaitaiCompilerJar();
+            if (string.IsNullOrEmpty(compilerPath))
+            {
+                // Try command
+                var cmdCheck = RunCommand("kaitai-struct-compiler", "--version");
+                if (cmdCheck.ExitCode != 0)
                 {
-                    FileName = "kaitai-struct-compiler",
-                    Arguments = $"--version",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
+                    Assert.True(true, "Kaitai Struct compiler not available - skipping validation");
+                    return;
                 }
-            };
+                compilerPath = "kaitai-struct-compiler";
+            }
+
+            // Use Python as validation target (most commonly supported)
+            string tempOutputDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            Directory.CreateDirectory(tempOutputDir);
 
             try
             {
-                process.Start();
-                process.WaitForExit(5000);
-
-                if (process.ExitCode != 0)
+                var validateInfo = new ProcessStartInfo
                 {
-                    // Try Java JAR
-                    string jarPath = FindKaitaiCompilerJar();
-                    if (string.IsNullOrEmpty(jarPath) || !File.Exists(jarPath))
-                    {
-                        Assert.True(true, "Kaitai Struct compiler not available - skipping validation");
-                        return;
-                    }
-                    process = new Process
-                    {
-                        StartInfo = new ProcessStartInfo
-                        {
-                            FileName = "java",
-                            Arguments = $"-jar \"{jarPath}\" --version",
-                            RedirectStandardOutput = true,
-                            RedirectStandardError = true,
-                            UseShellExecute = false,
-                            CreateNoWindow = true
-                        }
-                    };
-                    process.Start();
-                    process.WaitForExit(5000);
-                    if (process.ExitCode != 0)
-                    {
-                        Assert.True(true, "Kaitai Struct compiler not available - skipping validation");
-                        return;
-                    }
-                }
-
-                // Try to compile to a test language to validate syntax
-                string jarPath2 = FindKaitaiCompilerJar();
-                string compilerCmd = "kaitai-struct-compiler";
-                string compilerArgs = $"-t python \"{KsyFile}\" -d \"{Path.GetTempPath()}\"";
-
-                if (!string.IsNullOrEmpty(jarPath2) && File.Exists(jarPath2))
-                {
-                    compilerCmd = "java";
-                    compilerArgs = $"-jar \"{jarPath2}\" -t python \"{KsyFile}\" -d \"{Path.GetTempPath()}\"";
-                }
-
-                var testProcess = new Process
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = compilerCmd,
-                        Arguments = compilerArgs,
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    }
+                    FileName = compilerPath.EndsWith(".jar") ? "java" : compilerPath,
+                    Arguments = compilerPath.EndsWith(".jar")
+                        ? $"-jar \"{compilerPath}\" -t python \"{normalizedKsyPath}\" -d \"{tempOutputDir}\" --debug"
+                        : $"-t python \"{normalizedKsyPath}\" -d \"{tempOutputDir}\" --debug",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    WorkingDirectory = Path.GetDirectoryName(normalizedKsyPath)
                 };
 
-                testProcess.Start();
-                testProcess.WaitForExit(30000);
-
-                // If compilation succeeds, the file is valid
-                // If it fails, we'll get error output
-                string stderr = testProcess.StandardError.ReadToEnd();
-
-                // Compilation might fail due to missing dependencies, but syntax errors would be caught
-                if (testProcess.ExitCode != 0 && stderr.Contains("error") && !stderr.Contains("import"))
+                using (var process = Process.Start(validateInfo))
                 {
-                    Assert.True(false, $"GUI.ksy has syntax errors: {stderr}");
+                    if (process != null)
+                    {
+                        string stdout = process.StandardOutput.ReadToEnd();
+                        string stderr = process.StandardError.ReadToEnd();
+                        process.WaitForExit(60000); // 60 second timeout
+
+                        // Compiler should not report syntax errors
+                        // Allow import/dependency errors but not syntax errors
+                        bool hasSyntaxError = stderr.ToLower().Contains("error") &&
+                                             !stderr.ToLower().Contains("import") &&
+                                             !stderr.ToLower().Contains("dependency") &&
+                                             !stderr.ToLower().Contains("warning");
+
+                        if (hasSyntaxError && process.ExitCode != 0)
+                        {
+                            Assert.True(false, $"GUI.ksy should not have syntax errors. STDOUT: {stdout}, STDERR: {stderr}");
+                        }
+
+                        process.ExitCode.Should().Be(0,
+                            $"GUI.ksy syntax should be valid. STDOUT: {stdout}, STDERR: {stderr}");
+                    }
                 }
             }
-            catch (System.ComponentModel.Win32Exception)
+            finally
             {
-                Assert.True(true, "Kaitai Struct compiler not installed - skipping validation");
+                // Cleanup temp directory
+                if (Directory.Exists(tempOutputDir))
+                {
+                    try
+                    {
+                        Directory.Delete(tempOutputDir, true);
+                    }
+                    catch
+                    {
+                        // Ignore cleanup errors
+                    }
+                }
+            }
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestGuiKsySyntaxValidation()
+        {
+            // Comprehensive syntax validation test
+            var normalizedKsyPath = Path.GetFullPath(KsyFile);
+            if (!File.Exists(normalizedKsyPath))
+            {
+                Assert.True(true, "GUI.ksy not found - skipping syntax validation");
+                return;
+            }
+
+            // Check if Java is available
+            var javaCheck = RunCommand("java", "-version");
+            if (javaCheck.ExitCode != 0)
+            {
+                Assert.True(true, "Java not available - skipping syntax validation");
+                return;
+            }
+
+            string compilerPath = FindKaitaiCompilerJar();
+            if (string.IsNullOrEmpty(compilerPath))
+            {
+                var cmdCheck = RunCommand("kaitai-struct-compiler", "--version");
+                if (cmdCheck.ExitCode != 0)
+                {
+                    Assert.True(true, "Kaitai Struct compiler not available - skipping syntax validation");
+                    return;
+                }
+                compilerPath = "kaitai-struct-compiler";
+            }
+
+            // Validate syntax by attempting compilation to Python (most commonly supported)
+            string tempOutputDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            Directory.CreateDirectory(tempOutputDir);
+
+            try
+            {
+                var result = RunKaitaiCompiler(normalizedKsyPath, "-t python", tempOutputDir);
+
+                // Compilation should succeed (syntax errors would cause failure)
+                // Allow import/dependency warnings but not syntax errors
+                bool hasSyntaxError = result.Error.ToLower().Contains("error") &&
+                                     !result.Error.ToLower().Contains("import") &&
+                                     !result.Error.ToLower().Contains("dependency");
+
+                if (hasSyntaxError && result.ExitCode != 0)
+                {
+                    Assert.True(false, $"GUI.ksy has syntax errors: {result.Error}");
+                }
+
+                // If compilation succeeds, syntax is valid
+                if (result.ExitCode == 0)
+                {
+                    // Verify output files were generated
+                    var files = Directory.GetFiles(tempOutputDir, "*", SearchOption.AllDirectories);
+                    files.Length.Should().BeGreaterThan(0, "Compilation should generate output files");
+                }
+            }
+            finally
+            {
+                if (Directory.Exists(tempOutputDir))
+                {
+                    try
+                    {
+                        Directory.Delete(tempOutputDir, true);
+                    }
+                    catch
+                    {
+                        // Ignore cleanup errors
+                    }
+                }
             }
         }
 
@@ -226,6 +360,52 @@ namespace Andastra.Parsing.Tests.Formats
             // Test that GUI.ksy compiles to each target language
             TestCompileToLanguage(language);
         }
+
+        // Individual test methods for each language to ensure comprehensive testing
+        [Fact(Timeout = 300000)]
+        public void TestCompileGuiKsyToPython() => TestCompileToLanguage("python");
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileGuiKsyToJava() => TestCompileToLanguage("java");
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileGuiKsyToJavaScript() => TestCompileToLanguage("javascript");
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileGuiKsyToCSharp() => TestCompileToLanguage("csharp");
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileGuiKsyToCppStl() => TestCompileToLanguage("cpp_stl");
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileGuiKsyToGo() => TestCompileToLanguage("go");
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileGuiKsyToRuby() => TestCompileToLanguage("ruby");
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileGuiKsyToPhp() => TestCompileToLanguage("php");
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileGuiKsyToRust() => TestCompileToLanguage("rust");
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileGuiKsyToSwift() => TestCompileToLanguage("swift");
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileGuiKsyToPerl() => TestCompileToLanguage("perl");
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileGuiKsyToNim() => TestCompileToLanguage("nim");
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileGuiKsyToLua() => TestCompileToLanguage("lua");
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileGuiKsyToKotlin() => TestCompileToLanguage("kotlin");
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileGuiKsyToTypeScript() => TestCompileToLanguage("typescript");
 
         private void TestCompileToLanguage(string language)
         {
@@ -244,6 +424,19 @@ namespace Andastra.Parsing.Tests.Formats
                 return;
             }
 
+            string compilerPath = FindKaitaiCompilerJar();
+            if (string.IsNullOrEmpty(compilerPath))
+            {
+                // Try command
+                var cmdCheck = RunCommand("kaitai-struct-compiler", "--version");
+                if (cmdCheck.ExitCode != 0)
+                {
+                    Assert.True(true, "Kaitai Struct compiler not available - skipping compilation test");
+                    return;
+                }
+                compilerPath = "kaitai-struct-compiler";
+            }
+
             Directory.CreateDirectory(KaitaiOutputDir);
             var result = CompileToLanguage(normalizedKsyPath, language);
 
@@ -251,7 +444,19 @@ namespace Andastra.Parsing.Tests.Formats
             {
                 // Some languages may not be fully supported or may have missing dependencies
                 // Log the error but don't fail the test for individual language failures
-                // The "all languages" test will verify at least some work
+                // The "all languages" test will verify at least 12 work
+                // Check if it's a syntax error vs. dependency issue
+                bool isSyntaxError = result.ErrorMessage != null &&
+                                     result.ErrorMessage.ToLower().Contains("error") &&
+                                     !result.ErrorMessage.ToLower().Contains("import") &&
+                                     !result.ErrorMessage.ToLower().Contains("dependency") &&
+                                     !result.ErrorMessage.ToLower().Contains("not supported");
+
+                if (isSyntaxError)
+                {
+                    Assert.True(false, $"GUI.ksy has syntax errors when compiling to {language}: {result.ErrorMessage}");
+                }
+
                 Assert.True(true, $"Compilation to {language} failed (may not be supported): {result.ErrorMessage}");
                 return;
             }
@@ -268,6 +473,56 @@ namespace Andastra.Parsing.Tests.Formats
             var files = Directory.GetFiles(outputDir, "*", SearchOption.AllDirectories);
             files.Length.Should().BeGreaterThan(0,
                 $"Language {language} should generate output files");
+
+            // Verify language-specific file patterns
+            switch (language)
+            {
+                case "python":
+                    files.Should().Contain(f => f.EndsWith(".py"), "Python compilation should generate .py files");
+                    break;
+                case "java":
+                    files.Should().Contain(f => f.EndsWith(".java"), "Java compilation should generate .java files");
+                    break;
+                case "javascript":
+                    files.Should().Contain(f => f.EndsWith(".js"), "JavaScript compilation should generate .js files");
+                    break;
+                case "csharp":
+                    files.Should().Contain(f => f.EndsWith(".cs"), "C# compilation should generate .cs files");
+                    break;
+                case "cpp_stl":
+                    files.Should().Contain(f => f.EndsWith(".h") || f.EndsWith(".cpp"), "C++ compilation should generate .h or .cpp files");
+                    break;
+                case "go":
+                    files.Should().Contain(f => f.EndsWith(".go"), "Go compilation should generate .go files");
+                    break;
+                case "ruby":
+                    files.Should().Contain(f => f.EndsWith(".rb"), "Ruby compilation should generate .rb files");
+                    break;
+                case "php":
+                    files.Should().Contain(f => f.EndsWith(".php"), "PHP compilation should generate .php files");
+                    break;
+                case "rust":
+                    files.Should().Contain(f => f.EndsWith(".rs"), "Rust compilation should generate .rs files");
+                    break;
+                case "swift":
+                    files.Should().Contain(f => f.EndsWith(".swift"), "Swift compilation should generate .swift files");
+                    break;
+                case "perl":
+                    files.Should().Contain(f => f.EndsWith(".pm"), "Perl compilation should generate .pm files");
+                    break;
+                case "nim":
+                    files.Should().Contain(f => f.EndsWith(".nim"), "Nim compilation should generate .nim files");
+                    break;
+                case "lua":
+                    files.Should().Contain(f => f.EndsWith(".lua"), "Lua compilation should generate .lua files");
+                    break;
+                case "kotlin":
+                    files.Should().Contain(f => f.EndsWith(".kt"), "Kotlin compilation should generate .kt files");
+                    break;
+                case "typescript":
+                    files.Should().Contain(f => f.EndsWith(".ts"), "TypeScript compilation should generate .ts files");
+                    break;
+            }
         }
 
         private CompileResult CompileToLanguage(string ksyPath, string language)
@@ -384,10 +639,10 @@ namespace Andastra.Parsing.Tests.Formats
             public int ExitCode { get; set; }
         }
 
-        [Fact(Timeout = 300000)]
+        [Fact(Timeout = 600000)] // 10 minute timeout for compiling to all languages
         public void TestKaitaiStructCompilesToAllLanguages()
         {
-            // Test compilation to all supported languages
+            // Test compilation to all supported languages (at least a dozen)
             var normalizedKsyPath = Path.GetFullPath(KsyFile);
             if (!File.Exists(normalizedKsyPath))
             {
@@ -401,6 +656,19 @@ namespace Andastra.Parsing.Tests.Formats
             {
                 Assert.True(true, "Java not available - skipping compilation test");
                 return;
+            }
+
+            string compilerPath = FindKaitaiCompilerJar();
+            if (string.IsNullOrEmpty(compilerPath))
+            {
+                // Try command
+                var cmdCheck = RunCommand("kaitai-struct-compiler", "--version");
+                if (cmdCheck.ExitCode != 0)
+                {
+                    Assert.True(true, "Kaitai Struct compiler not available - skipping compilation test");
+                    return;
+                }
+                compilerPath = "kaitai-struct-compiler";
             }
 
             Directory.CreateDirectory(KaitaiOutputDir);
@@ -433,8 +701,8 @@ namespace Andastra.Parsing.Tests.Formats
             // (We allow some failures as not all languages may be fully supported in all environments)
             successful.Count.Should().BeGreaterOrEqualTo(12,
                 $"At least 12 languages should compile successfully. " +
-                $"Successful: {string.Join(", ", successful.Select(s => s.Key))}. " +
-                $"Failed: {string.Join(", ", failed.Select(f => $"{f.Key}: {f.Value.ErrorMessage?.Substring(0, Math.Min(100, f.Value.ErrorMessage?.Length ?? 0))}"))}");
+                $"Successful ({successful.Count}): {string.Join(", ", successful.Select(s => s.Key))}. " +
+                $"Failed ({failed.Count}): {string.Join(", ", failed.Select(f => $"{f.Key}: {f.Value.ErrorMessage?.Substring(0, Math.Min(100, f.Value.ErrorMessage?.Length ?? 0))}"))}");
 
             // Log successful compilations
             foreach (var success in successful)
@@ -450,15 +718,19 @@ namespace Andastra.Parsing.Tests.Formats
             }
 
             // Log all results
+            Console.WriteLine($"\nKaitai Struct Compilation Results for GUI.ksy:");
+            Console.WriteLine($"Total languages tested: {SupportedLanguages.Length}");
+            Console.WriteLine($"Successful: {successful.Count}");
+            Console.WriteLine($"Failed: {failed.Count}");
             foreach (var result in results)
             {
                 if (result.Value.Success)
                 {
-                    Console.WriteLine($"  {result.Key}: Success");
+                    Console.WriteLine($"  ✓ {result.Key}: Success");
                 }
                 else
                 {
-                    Console.WriteLine($"  {result.Key}: Failed - {result.Value.ErrorMessage?.Substring(0, Math.Min(100, result.Value.ErrorMessage?.Length ?? 0))}");
+                    Console.WriteLine($"  ✗ {result.Key}: Failed - {result.Value.ErrorMessage?.Substring(0, Math.Min(100, result.Value.ErrorMessage?.Length ?? 0))}");
                 }
             }
         }
@@ -678,4 +950,5 @@ namespace Andastra.Parsing.Tests.Formats
         }
     }
 }
+
 
