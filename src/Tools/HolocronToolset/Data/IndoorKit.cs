@@ -729,7 +729,13 @@ namespace HolocronToolset.Data
                 return null;
             }
 
-            byte[] data = wokResource.Data();
+            // Use reflection to call Data() method on ModuleResource<T>
+            byte[] data = null;
+            var dataMethod = wokResource.GetType().GetMethod("Data");
+            if (dataMethod != null)
+            {
+                data = dataMethod.Invoke(wokResource, null) as byte[];
+            }
             if (data == null)
             {
                 return null;
@@ -762,7 +768,13 @@ namespace HolocronToolset.Data
                 return null;
             }
 
-            return mdlResource.Data();
+            // Use reflection to call Data() method on ModuleResource<T>
+            var dataMethod = mdlResource.GetType().GetMethod("Data");
+            if (dataMethod != null)
+            {
+                return dataMethod.Invoke(mdlResource, null) as byte[];
+            }
+            return null;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:283-292
@@ -780,7 +792,13 @@ namespace HolocronToolset.Data
                 return null;
             }
 
-            return mdxResource.Data();
+            // Use reflection to call Data() method on ModuleResource<T>
+            var dataMethod = mdxResource.GetType().GetMethod("Data");
+            if (dataMethod != null)
+            {
+                return dataMethod.Invoke(mdxResource, null) as byte[];
+            }
+            return null;
         }
 
         /// <summary>
@@ -1231,9 +1249,12 @@ namespace HolocronToolset.Data
                                 using (var context = mirroredBitmap.CreateDrawingContext())
                                 {
                                     // Create transformation matrix to mirror horizontally
-                                    // Scale by -1 on X axis, then translate to correct position
-                                    var transform = Matrix.CreateScale(-1.0, 1.0) *
-                                                   Matrix.CreateTranslation(pixelSize.Width, 0.0);
+                                    // Matching PyKotor: QImage.mirrored() flips horizontally (mirrored(True, False))
+                                    // For horizontal mirroring: scale X by -1 (flips around origin), then translate to correct position
+                                    // Matrix multiplication applies right-to-left, so we want: translate * scale
+                                    // This means: first scale (flip), then translate (move back)
+                                    var transform = Matrix.CreateTranslation(pixelSize.Width, 0.0) *
+                                                   Matrix.CreateScale(-1.0, 1.0);
                                     using (context.PushTransform(transform))
                                     {
                                         // Draw the original image with the transformation applied
