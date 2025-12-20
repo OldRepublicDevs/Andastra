@@ -244,6 +244,13 @@ namespace Andastra.Runtime.Game.Core
             {
                 UpdateLoadMenu(deltaTime, keyboardState, mouseState);
             }
+            else if (_currentState == GameState.CharacterCreation)
+            {
+                if (_characterCreationScreen != null)
+                {
+                    _characterCreationScreen.Update(deltaTime, keyboardState, mouseState);
+                }
+            }
 
             // Update game systems if in game
             if (_currentState == GameState.InGame)
