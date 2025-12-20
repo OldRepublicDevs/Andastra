@@ -70,6 +70,11 @@ namespace Andastra.Runtime.Core
         public bool SkipIntro { get; set; } = true;
 
         /// <summary>
+        /// Invert mouse Y axis.
+        /// </summary>
+        public bool InvertMouseY { get; set; } = false;
+
+        /// <summary>
         /// Mouse sensitivity for camera controls.
         /// </summary>
         /// <remarks>
@@ -114,6 +119,11 @@ namespace Andastra.Runtime.Core
         }
 
         /// <summary>
+        /// Master volume (affects all audio).
+        /// </summary>
+        public float MasterVolume { get; set; } = 1.0f;
+
+        /// <summary>
         /// Audio settings (volume levels for music, sound effects, and voice).
         /// </summary>
         /// <remarks>
@@ -126,6 +136,20 @@ namespace Andastra.Runtime.Core
         /// - Based on swkotor2.exe: FUN_00633270 @ 0x00633270 (loads audio settings from INI file)
         /// </remarks>
         public AudioSettings Audio { get; set; } = new AudioSettings();
+
+        /// <summary>
+        /// Graphics settings (resolution, quality, display options).
+        /// </summary>
+        /// <remarks>
+        /// Graphics Settings:
+        /// - Based on swkotor.exe and swkotor2.exe graphics configuration system
+        /// - Located via string references: "Width" @ 0x007c2cd0, "Height" @ 0x007c2cd4, "Fullscreen" @ 0x007c2cd8
+        /// - Original implementation: Graphics settings stored in INI file (swkotor2.ini for K2, swkotor.ini for K1)
+        /// - Settings include: Resolution, Fullscreen mode, Texture quality, Shadow quality, Anti-aliasing
+        /// - Based on swkotor2.exe: FUN_00633270 @ 0x00633270 (loads graphics settings from INI file)
+        /// - Based on swkotor2.exe: FUN_00631ff0 @ 0x00631ff0 (writes graphics settings to INI file)
+        /// </remarks>
+        public GraphicsSettings Graphics { get; set; } = new GraphicsSettings();
 
         /// <summary>
         /// Invert mouse Y axis for camera controls.
@@ -169,5 +193,141 @@ namespace Andastra.Runtime.Core
             /// </summary>
             public bool MusicEnabled { get; set; } = true;
         }
+
+        /// <summary>
+        /// Autopause settings configuration.
+        /// </summary>
+        /// <remarks>
+        /// Autopause Settings:
+        /// - Based on swkotor.exe and swkotor2.exe autopause system
+        /// - Controls automatic pausing of the game under various conditions
+        /// - Each setting corresponds to a different autopause trigger
+        /// - Original implementation: Stored in INI file as boolean values
+        /// - Based on swkotor2.exe: CSWGuiOptionsMain::OnAutopauseOpt handles autopause menu
+        /// </remarks>
+        public class AutopauseSettings
+        {
+            /// <summary>
+            /// Pause when the game window loses focus.
+            /// </summary>
+            public bool PauseOnLostFocus { get; set; } = true;
+
+            /// <summary>
+            /// Pause when starting a conversation.
+            /// </summary>
+            public bool PauseOnConversation { get; set; } = false;
+
+            /// <summary>
+            /// Pause when opening containers.
+            /// </summary>
+            public bool PauseOnContainer { get; set; } = false;
+
+            /// <summary>
+            /// Pause when looting corpses.
+            /// </summary>
+            public bool PauseOnCorpse { get; set; } = false;
+
+            /// <summary>
+            /// Pause during area transitions.
+            /// </summary>
+            public bool PauseOnAreaTransition { get; set; } = false;
+
+            /// <summary>
+            /// Pause when a party member dies.
+            /// </summary>
+            public bool PauseOnPartyDeath { get; set; } = false;
+
+            /// <summary>
+            /// Pause when the player dies.
+            /// </summary>
+            public bool PauseOnPlayerDeath { get; set; } = true;
+        }
+
+        /// <summary>
+        /// Graphics settings configuration.
+        /// </summary>
+        public class GraphicsSettings
+        {
+            /// <summary>
+            /// Window width in pixels.
+            /// </summary>
+            public int ResolutionWidth { get; set; } = 1920;
+
+            /// <summary>
+            /// Window height in pixels.
+            /// </summary>
+            public int ResolutionHeight { get; set; } = 1080;
+
+            /// <summary>
+            /// Whether to run in fullscreen mode.
+            /// </summary>
+            public bool Fullscreen { get; set; } = false;
+
+            /// <summary>
+            /// Whether vertical sync is enabled.
+            /// </summary>
+            public bool VSync { get; set; } = true;
+
+            /// <summary>
+            /// Texture quality level (0=Low, 1=Medium, 2=High).
+            /// </summary>
+            public int TextureQuality { get; set; } = 2;
+
+            /// <summary>
+            /// Shadow quality level (0=Off, 1=Low, 2=Medium, 3=High).
+            /// </summary>
+            public int ShadowQuality { get; set; } = 2;
+
+            /// <summary>
+            /// Anisotropic filtering level (0=Off, 2=2x, 4=4x, 8=8x, 16=16x).
+            /// </summary>
+            public int AnisotropicFiltering { get; set; } = 4;
+
+            /// <summary>
+            /// Whether anti-aliasing is enabled.
+            /// </summary>
+            public bool AntiAliasing { get; set; } = true;
+        }
+
+        /// <summary>
+        /// Gameplay settings configuration.
+        /// </summary>
+        public class GameplaySettings
+        {
+            /// <summary>
+            /// Whether auto-save is enabled.
+            /// </summary>
+            public bool AutoSave { get; set; } = true;
+
+            /// <summary>
+            /// Auto-save interval in seconds.
+            /// </summary>
+            public int AutoSaveInterval { get; set; } = 300;
+
+            /// <summary>
+            /// Whether tooltips are enabled.
+            /// </summary>
+            public bool Tooltips { get; set; } = true;
+
+            /// <summary>
+            /// Whether subtitles are enabled.
+            /// </summary>
+            public bool Subtitles { get; set; } = true;
+
+            /// <summary>
+            /// Dialogue speed multiplier (0.5x to 2.0x).
+            /// </summary>
+            public float DialogueSpeed { get; set; } = 1.0f;
+
+            /// <summary>
+            /// Whether to use classic controls.
+            /// </summary>
+            public bool ClassicControls { get; set; } = false;
+        }
+
+        /// <summary>
+        /// Gameplay settings.
+        /// </summary>
+        public GameplaySettings Gameplay { get; set; } = new GameplaySettings();
     }
 }

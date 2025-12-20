@@ -759,12 +759,14 @@ namespace Andastra.Runtime.Game.Core
                     break;
                 
                 case "BTN_AUTOPAUSE":
-                    // Autopause options button - open autopause options submenu
+                    // Autopause options button - switch to autopause options tab
                     // Based on swkotor2.exe: CSWGuiOptionsMain::OnAutopauseOpt @ 0x006de2c0
                     if (_currentState == GameState.OptionsMenu)
                     {
-                        Console.WriteLine("[Odyssey] Autopause options button clicked - autopause options submenu not yet implemented");
-                        // TODO: Implement autopause options submenu
+                        // Switch to Autopause category (index 3: Graphics=0, Audio=1, Game=2, Autopause=3, Controls=4)
+                        _selectedOptionsCategoryIndex = 3;
+                        _selectedOptionsItemIndex = 0;
+                        Console.WriteLine("[Odyssey] Autopause options button clicked - switched to autopause options tab");
                     }
                     break;
                 
