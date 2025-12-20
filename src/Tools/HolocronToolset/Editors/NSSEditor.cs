@@ -762,18 +762,23 @@ namespace HolocronToolset.Editors
             // This would need to parse the code, find all references to the symbol, and display them
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:690
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:3806-3814
         // Original: def _toggle_bookmark_at_cursor(self):
         /// <summary>
         /// Toggles a bookmark at the current cursor position.
         /// </summary>
         private void ToggleBookmarkAtCursor()
         {
-            // Check if there's already a bookmark at the current line
             int currentLine = GetCurrentLineNumber();
-            // TODO: Check if bookmark exists and remove it, otherwise add it
-            // For now, just add a bookmark
-            AddBookmark();
+            
+            if (HasBookmarkAtLine(currentLine))
+            {
+                RemoveBookmarkAtLine(currentLine);
+            }
+            else
+            {
+                AddBookmark();
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2121-2162
@@ -2236,7 +2241,7 @@ namespace HolocronToolset.Editors
             // For now, we register them but they may not work until CodeEditor implements these methods
             _commandPalette.RegisterCommand("edit.toggleComment", "Toggle Line Comment", () => { /* TODO: Implement in CodeEditor */ }, "Edit");
             _commandPalette.RegisterCommand("edit.duplicateLine", "Duplicate Line", () => { if (_codeEdit != null) _codeEdit.DuplicateLine(); }, "Edit");
-            _commandPalette.RegisterCommand("edit.deleteLine", "Delete Line", () => { /* TODO: Implement in CodeEditor */ }, "Edit");
+            _commandPalette.RegisterCommand("edit.deleteLine", "Delete Line", () => { if (_codeEdit != null) _codeEdit.DeleteLine(); }, "Edit");
             _commandPalette.RegisterCommand("edit.moveLineUp", "Move Line Up", () => { if (_codeEdit != null) _codeEdit.MoveLineUp(); }, "Edit");
             _commandPalette.RegisterCommand("edit.moveLineDown", "Move Line Down", () => { if (_codeEdit != null) _codeEdit.MoveLineDown(); }, "Edit");
 
