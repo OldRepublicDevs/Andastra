@@ -854,15 +854,15 @@ namespace Andastra.Parsing.Formats.MDL
                 binNode.Trimesh.HasLightmap = (byte)(mdlNode.Mesh.HasLightmap ? 1 : 0);
                 binNode.Trimesh.RotateTexture = (byte)(mdlNode.Mesh.Rotational != 0 ? 1 : 0);
                 
-                // Background geometry flag (not available in MDLMesh, default to 0)
-                // Reference: PyKotor mdl_data.py:MDLMesh.background_geometry
-                binNode.Trimesh.Background = 0;
+                // Background geometry flag (matching PyKotor io_mdl.py:2027)
+                // Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/io_mdl.py:2027
+                binNode.Trimesh.Background = mdlNode.Mesh.BackgroundGeometry ? (byte)1 : (byte)0;
                 
-                // UV animation properties (not available in MDLMesh, default to 0)
-                // Reference: PyKotor mdl_data.py:MDLMesh.uv_jitter, uv_jitter_speed, uv_direction_x/y
-                binNode.Trimesh.UvJitter = 0.0f;
-                binNode.Trimesh.UvSpeed = 0.0f;
-                binNode.Trimesh.UvDirection = Vector2.Zero;
+                // UV animation properties (matching PyKotor io_mdl.py:2021-2024)
+                // Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/io_mdl.py:2021-2024
+                binNode.Trimesh.UvJitter = mdlNode.Mesh.UvJitter;
+                binNode.Trimesh.UvSpeed = mdlNode.Mesh.UvJitterSpeed;
+                binNode.Trimesh.UvDirection = new Vector2(mdlNode.Mesh.UvDirectionX, mdlNode.Mesh.UvDirectionY);
                 
                 // Texture count: 1 if texture2 is present and not "NULL", otherwise 0
                 // Reference: PyKotor io_mdl.py:2035 (texture_count calculation)
