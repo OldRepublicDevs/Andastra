@@ -2621,9 +2621,7 @@ namespace Andastra.Runtime.Games.Aurora
             // Based on nwmain.exe: CNWSArea::RenderWeather renders snow particles
             if (_isSnowing)
             {
-                // TODO: Implement snow particle rendering
-                // Snow particles would be rendered as billboard sprites or particle system
-                // For now, this is a placeholder - full implementation would render snow particles
+                RenderSnowParticles(graphicsDevice, basicEffect, viewMatrix, projectionMatrix);
             }
 
             // Render lightning flash if active
