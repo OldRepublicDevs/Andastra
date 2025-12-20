@@ -1,15 +1,22 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
 using HolocronToolset.Data;
+using HolocronToolset.Utils;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
+using Andastra.Parsing.Mods.GFF;
+using Andastra.Parsing.Resource;
+using Andastra.Parsing.Formats.GFF;
 
 namespace HolocronToolset.Dialogs
 {
@@ -36,6 +43,17 @@ namespace HolocronToolset.Dialogs
         
         // INI Preview control
         private TextBox _iniPreviewText;
+        
+        // GFF Fields controls
+        private ListBox _gffFileList;
+        private TreeView _gffFieldsTree;
+        private List<ModificationsGFF> _gffModifications = new List<ModificationsGFF>();
+        
+        // Scripts controls
+        private ListBox _scriptList;
+        // Dictionary to store full file paths for scripts (key: filename, value: full path)
+        // This allows us to copy the actual files during generation
+        private Dictionary<string, string> _scriptPaths = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         // Public parameterless constructor for XAML
         public TSLPatchDataEditorDialog() : this(null, null, null)
@@ -223,11 +241,56 @@ namespace HolocronToolset.Dialogs
             }
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:305-348
+        // Original: def _create_gff_fields_tab(self):
         private void CreateGFFFieldsTab()
         {
             var tab = new TabItem { Header = "GFF Fields" };
-            var content = new StackPanel();
-            // TODO: Add GFF fields controls
+            var content = new StackPanel { Spacing = 10, Margin = new Avalonia.Thickness(10) };
+
+            // Header
+            content.Children.Add(new TextBlock 
+            { 
+                Text = "GFF Field Modifications:", 
+                FontWeight = Avalonia.Media.FontWeight.Bold 
+            });
+            content.Children.Add(new TextBlock 
+            { 
+                Text = "View and edit fields that will be modified in GFF files." 
+            });
+
+            // Splitter for file list and field modifications
+            var splitter = new Grid();
+            splitter.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            splitter.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) });
+
+            // Left: File list
+            var leftWidget = new StackPanel { Spacing = 5 };
+            leftWidget.Children.Add(new TextBlock { Text = "Modified GFF Files:" });
+            _gffFileList = new ListBox();
+            _gffFileList.SelectionChanged += OnGffFileSelected;
+            leftWidget.Children.Add(_gffFileList);
+            Grid.SetColumn(leftWidget, 0);
+            splitter.Children.Add(leftWidget);
+
+            // Right: Field modifications
+            var rightWidget = new StackPanel { Spacing = 5 };
+            rightWidget.Children.Add(new TextBlock { Text = "Field Modifications:" });
+            _gffFieldsTree = new TreeView();
+            rightWidget.Children.Add(_gffFieldsTree);
+
+            var btnLayout = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5 };
+            var openGffEditorBtn = new Button { Content = "Open in GFF Editor" };
+            openGffEditorBtn.Click += (s, e) => OpenGffEditor();
+            btnLayout.Children.Add(openGffEditorBtn);
+            btnLayout.Children.Add(new TextBlock()); // Spacer
+            rightWidget.Children.Add(btnLayout);
+
+            Grid.SetColumn(rightWidget, 1);
+            splitter.Children.Add(rightWidget);
+
+            content.Children.Add(splitter);
+
             tab.Content = content;
             if (_configTabs != null)
             {
@@ -235,11 +298,43 @@ namespace HolocronToolset.Dialogs
             }
         }
 
+        // Helper class for tree view items
+        private class GFFFieldItem
+        {
+            public string FieldPath { get; set; }
+            public string OldValue { get; set; }
+            public string NewValue { get; set; }
+            public string Type { get; set; }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:350-373
+        // Original: def _create_scripts_tab(self):
         private void CreateScriptsTab()
         {
             var tab = new TabItem { Header = "Scripts" };
-            var content = new StackPanel();
-            // TODO: Add scripts controls
+            var content = new StackPanel { Spacing = 10, Margin = new Avalonia.Thickness(10) };
+
+            // Header labels
+            content.Children.Add(new TextBlock { Text = "Scripts:", FontWeight = Avalonia.Media.FontWeight.Bold });
+            content.Children.Add(new TextBlock { Text = "Compiled scripts (.ncs) that will be installed." });
+
+            // Script list
+            _scriptList = new ListBox { MinHeight = 300 };
+            content.Children.Add(_scriptList);
+
+            // Buttons
+            var btnLayout = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5 };
+            var addScriptBtn = new Button { Content = "Add Script" };
+            addScriptBtn.Click += async (s, e) => await AddScript();
+            btnLayout.Children.Add(addScriptBtn);
+            
+            var removeScriptBtn = new Button { Content = "Remove Script" };
+            removeScriptBtn.Click += (s, e) => RemoveScript();
+            btnLayout.Children.Add(removeScriptBtn);
+            
+            btnLayout.Children.Add(new TextBlock()); // Spacer
+            content.Children.Add(btnLayout);
+
             tab.Content = content;
             if (_configTabs != null)
             {
@@ -465,10 +560,187 @@ namespace HolocronToolset.Dialogs
             }
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:422-430
+        // Original: def _load_existing_config(self):
         private void LoadExistingConfig()
         {
-            // TODO: Load existing TSLPatchData configuration
-            System.Console.WriteLine($"Loading existing config from {_tslpatchdataPath}");
+            if (string.IsNullOrEmpty(_tslpatchdataPath) || !Directory.Exists(_tslpatchdataPath))
+            {
+                return;
+            }
+
+            string iniPath = Path.Combine(_tslpatchdataPath, "changes.ini");
+            if (!File.Exists(iniPath))
+            {
+                return;
+            }
+
+            try
+            {
+                // Read INI file
+                string[] iniLines = File.ReadAllLines(iniPath, Encoding.UTF8);
+                bool inCompileListSection = false;
+                List<string> scripts = new List<string>();
+
+                foreach (string line in iniLines)
+                {
+                    string trimmedLine = line.Trim();
+                    
+                    // Check for section headers
+                    if (trimmedLine.StartsWith("[") && trimmedLine.EndsWith("]"))
+                    {
+                        inCompileListSection = trimmedLine.Equals("[CompileList]", StringComparison.OrdinalIgnoreCase);
+                        continue;
+                    }
+
+                    // If we're in CompileList section and line is not empty or a comment
+                    if (inCompileListSection && !string.IsNullOrWhiteSpace(trimmedLine) && !trimmedLine.StartsWith(";") && !trimmedLine.StartsWith("#"))
+                    {
+                        // Script entries in CompileList are just filenames (without path)
+                        scripts.Add(trimmedLine);
+                    }
+                }
+
+                // Populate script list
+                if (_scriptList != null)
+                {
+                    _scriptList.Items.Clear();
+                    _scriptPaths.Clear();
+                    foreach (string script in scripts)
+                    {
+                        _scriptList.Items.Add(script);
+                        // Note: When loading from INI, we don't have the full paths
+                        // The user will need to re-add scripts if they want to generate the mod
+                        // This matches PyKotor behavior where only filenames are stored in INI
+                    }
+                }
+
+                // Load other settings from INI
+                // TODO: Load mod name, author, description, and other settings from [settings] section
+                // TODO: Load 2DA memory tokens from [2DAMEMORY] section
+                // TODO: Load TLK strings from [TLKList] section
+                // TODO: Load GFF files from [GFF files] section
+
+                UpdateIniPreview();
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Error loading existing config: {ex.Message}");
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:529-534
+        // Original: def _add_script(self):
+        private async Task AddScript()
+        {
+            if (_scriptList == null)
+            {
+                return;
+            }
+
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel == null)
+            {
+                return;
+            }
+
+            try
+            {
+                var options = new FilePickerOpenOptions
+                {
+                    Title = "Select Scripts (.ncs)",
+                    AllowMultiple = true,
+                    FileTypeFilter = new[]
+                    {
+                        new FilePickerFileType("Scripts")
+                        {
+                            Patterns = new[] { "*.ncs" }
+                        },
+                        new FilePickerFileType("All Files")
+                        {
+                            Patterns = new[] { "*" }
+                        }
+                    }
+                };
+
+                // Set initial directory if available
+                if (!string.IsNullOrEmpty(_tslpatchdataPath) && Directory.Exists(_tslpatchdataPath))
+                {
+                    var storageFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(_tslpatchdataPath);
+                    if (storageFolder != null)
+                    {
+                        options.SuggestedStartLocation = storageFolder;
+                    }
+                }
+
+                var files = await topLevel.StorageProvider.OpenFilePickerAsync(options);
+                if (files != null && files.Count > 0)
+                {
+                    foreach (var file in files)
+                    {
+                        string filePath = file.Path.LocalPath;
+                        if (!string.IsNullOrWhiteSpace(filePath) && File.Exists(filePath))
+                        {
+                            // Add just the filename to the list (matching PyKotor behavior)
+                            string fileName = Path.GetFileName(filePath);
+                            
+                            // Check if script is already in the list
+                            bool alreadyExists = false;
+                            foreach (var item in _scriptList.Items)
+                            {
+                                if (item is string existingScript && existingScript.Equals(fileName, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    alreadyExists = true;
+                                    break;
+                                }
+                            }
+
+                            if (!alreadyExists)
+                            {
+                                _scriptList.Items.Add(fileName);
+                                // Store the full path for later copying during generation
+                                _scriptPaths[fileName] = filePath;
+                            }
+                        }
+                    }
+                    
+                    // Update INI preview to reflect changes
+                    UpdateIniPreview();
+                }
+            }
+            catch (Exception ex)
+            {
+                var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Error",
+                    $"Failed to add script:\n{ex.Message}",
+                    ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Error);
+                await errorBox.ShowAsync();
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:536-540
+        // Original: def _remove_script(self):
+        private void RemoveScript()
+        {
+            if (_scriptList == null)
+            {
+                return;
+            }
+
+            var selectedItem = _scriptList.SelectedItem;
+            if (selectedItem != null)
+            {
+                string scriptName = selectedItem as string;
+                if (!string.IsNullOrEmpty(scriptName))
+                {
+                    // Remove from list and dictionary
+                    _scriptList.Items.Remove(selectedItem);
+                    _scriptPaths.Remove(scriptName);
+                    // Update INI preview to reflect changes
+                    UpdateIniPreview();
+                }
+            }
         }
 
         private void GenerateTslpatchdata()
@@ -511,8 +783,16 @@ namespace HolocronToolset.Dialogs
             previewLines.AppendLine();
 
             // GFF files section
-            previewLines.AppendLine("[GFF files]");
+            previewLines.AppendLine("[GFFList]");
             previewLines.AppendLine("; Files to be patched");
+            if (_gffModifications != null && _gffModifications.Count > 0)
+            {
+                foreach (var modGff in _gffModifications)
+                {
+                    string identifier = modGff.ReplaceFile ? $"Replace{modGff.SourceFile}" : modGff.SourceFile ?? "Unknown";
+                    previewLines.AppendLine($"{identifier}={modGff.SourceFile ?? "Unknown"}");
+                }
+            }
             previewLines.AppendLine();
 
             // 2DAMEMORY section
@@ -538,6 +818,16 @@ namespace HolocronToolset.Dialogs
             // CompileList section
             previewLines.AppendLine("[CompileList]");
             previewLines.AppendLine("; Scripts to compile");
+            if (_scriptList != null && _scriptList.Items.Count > 0)
+            {
+                foreach (var item in _scriptList.Items)
+                {
+                    if (item is string scriptName && !string.IsNullOrWhiteSpace(scriptName))
+                    {
+                        previewLines.AppendLine(scriptName);
+                    }
+                }
+            }
             previewLines.AppendLine();
 
             _iniPreviewText.Text = previewLines.ToString();
