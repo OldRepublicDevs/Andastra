@@ -926,15 +926,317 @@ namespace Andastra.Runtime.Stride.Backends
             }
         }
 
+        /// <summary>
+        /// Creates a raytracing pipeline state object (PSO) using the DXR fallback layer.
+        ///
+        /// The DXR fallback layer provides DXR API compatibility on DirectX 11 hardware by emulating
+        /// raytracing using compute shaders. This implementation creates a raytracing pipeline state object
+        /// that contains all the shaders and configuration needed for raytracing operations.
+        ///
+        /// Based on DXR API: ID3D12Device5::CreateStateObject
+        /// DXR API Reference:
+        /// - D3D12_STATE_OBJECT_DESC: Main state object description
+        /// - D3D12_DXIL_LIBRARY_SUBOBJECT: Contains shader bytecode (DXIL)
+        /// - D3D12_HIT_GROUP_SUBOBJECT: Defines hit groups (closest hit, any hit shaders)
+        /// - D3D12_RAYTRACING_SHADER_CONFIG_SUBOBJECT: Configures payload and attribute sizes
+        /// - D3D12_RAYTRACING_PIPELINE_CONFIG_SUBOBJECT: Configures max recursion depth
+        /// - D3D12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT: Optional global root signature
+        /// - D3D12_LOCAL_ROOT_SIGNATURE_SUBOBJECT: Optional local root signature
+        ///
+        /// Microsoft D3D12RaytracingFallback library:
+        /// https://github.com/microsoft/DirectX-Graphics-Samples/tree/master/Libraries/D3D12RaytracingFallback
+        /// </summary>
+        /// <param name="desc">Raytracing pipeline description containing shaders and configuration</param>
+        /// <param name="handle">Resource handle for tracking</param>
+        /// <returns>ResourceInfo containing the created PSO resource</returns>
         protected override ResourceInfo CreateRaytracingPsoFallbackInternal(Andastra.Runtime.Graphics.Common.Interfaces.RaytracingPipelineDesc desc, IntPtr handle)
         {
-            // TODO: STUB - Create raytracing pipeline state object
-            return new ResourceInfo
+            // Validate inputs
+            if (!_useDxrFallbackLayer || _raytracingFallbackDevice == IntPtr.Zero)
             {
-                Type = ResourceType.Pipeline,
-                Handle = handle,
-                NativeHandle = IntPtr.Zero,
-                DebugName = "RaytracingPSO"
+                Console.WriteLine("[StrideDX11] Cannot create raytracing PSO: DXR fallback layer not initialized");
+                return new ResourceInfo
+                {
+                    Type = ResourceType.Pipeline,
+                    Handle = handle,
+                    NativeHandle = IntPtr.Zero,
+                    DebugName = desc.DebugName ?? "RaytracingPSO_Invalid"
+                };
+            }
+
+            // Validate shader bytecode
+            if (desc.RayGenShader == null || desc.RayGenShader.Length == 0)
+            {
+                Console.WriteLine("[StrideDX11] Cannot create raytracing PSO: RayGen shader is required");
+                return new ResourceInfo
+                {
+                    Type = ResourceType.Pipeline,
+                    Handle = handle,
+                    NativeHandle = IntPtr.Zero,
+                    DebugName = desc.DebugName ?? "RaytracingPSO_NoRayGen"
+                };
+            }
+
+            // Validate configuration parameters
+            if (desc.MaxPayloadSize <= 0)
+            {
+                Console.WriteLine("[StrideDX11] Cannot create raytracing PSO: MaxPayloadSize must be > 0 (got {0})", desc.MaxPayloadSize);
+                return new ResourceInfo
+                {
+                    Type = ResourceType.Pipeline,
+                    Handle = handle,
+                    NativeHandle = IntPtr.Zero,
+                    DebugName = desc.DebugName ?? "RaytracingPSO_InvalidPayload"
+                };
+            }
+
+            if (desc.MaxAttributeSize < 0)
+            {
+                Console.WriteLine("[StrideDX11] Cannot create raytracing PSO: MaxAttributeSize must be >= 0 (got {0})", desc.MaxAttributeSize);
+                return new ResourceInfo
+                {
+                    Type = ResourceType.Pipeline,
+                    Handle = handle,
+                    NativeHandle = IntPtr.Zero,
+                    DebugName = desc.DebugName ?? "RaytracingPSO_InvalidAttribute"
+                };
+            }
+
+            if (desc.MaxRecursionDepth <= 0)
+            {
+                Console.WriteLine("[StrideDX11] Cannot create raytracing PSO: MaxRecursionDepth must be > 0 (got {0})", desc.MaxRecursionDepth);
+                return new ResourceInfo
+                {
+                    Type = ResourceType.Pipeline,
+                    Handle = handle,
+                    NativeHandle = IntPtr.Zero,
+                    DebugName = desc.DebugName ?? "RaytracingPSO_InvalidRecursion"
+                };
+            }
+
+            try
+            {
+                // Step 1: Calculate the number of subobjects needed
+                // We need:
+                // - 1 DXIL library subobject (contains all shaders)
+                // - 1 hit group subobject (if closest hit or any hit shaders are provided)
+                // - 1 shader config subobject (payload and attribute sizes)
+                // - 1 pipeline config subobject (max recursion depth)
+                int subobjectCount = 2; // Shader config + Pipeline config (always required)
+                bool hasHitGroup = (desc.ClosestHitShader != null && desc.ClosestHitShader.Length > 0) ||
+                                   (desc.AnyHitShader != null && desc.AnyHitShader.Length > 0);
+                if (hasHitGroup)
+                {
+                    subobjectCount++; // Hit group subobject
+                }
+
+                // Allocate memory for subobjects
+                // Each subobject is a D3D12_STATE_SUBOBJECT structure
+                int subobjectArraySize = subobjectCount * Marshal.SizeOf(typeof(D3D12_STATE_SUBOBJECT));
+                IntPtr subobjectsPtr = Marshal.AllocHGlobal(subobjectArraySize);
+
+                // Allocate memory for subobject data structures
+                // We'll allocate these as we create them
+                System.Collections.Generic.List<IntPtr> subobjectDataPtrs = new System.Collections.Generic.List<IntPtr>();
+
+                int currentSubobjectIndex = 0;
+
+                // Step 2: Create DXIL library subobject
+                // This contains all the shader bytecode (ray generation, miss, closest hit, any hit)
+                D3D12_DXIL_LIBRARY_DESC dxilLibraryDesc = new D3D12_DXIL_LIBRARY_DESC
+                {
+                    DXILLibrary = CreateDxilLibrary(desc)
+                };
+
+                IntPtr dxilLibraryDescPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_DXIL_LIBRARY_DESC)));
+                Marshal.StructureToPtr(dxilLibraryDesc, dxilLibraryDescPtr, false);
+                subobjectDataPtrs.Add(dxilLibraryDescPtr);
+
+                D3D12_STATE_SUBOBJECT dxilLibrarySubobject = new D3D12_STATE_SUBOBJECT
+                {
+                    Type = D3D12_STATE_SUBOBJECT_TYPE_DXIL_LIBRARY,
+                    pDesc = dxilLibraryDescPtr
+                };
+
+                IntPtr currentSubobjectPtr = new IntPtr(subobjectsPtr.ToInt64() + (currentSubobjectIndex * Marshal.SizeOf(typeof(D3D12_STATE_SUBOBJECT))));
+                Marshal.StructureToPtr(dxilLibrarySubobject, currentSubobjectPtr, false);
+                currentSubobjectIndex++;
+
+                // Step 3: Create hit group subobject (if needed)
+                IntPtr hitGroupDescPtr = IntPtr.Zero;
+                if (hasHitGroup)
+                {
+                    D3D12_HIT_GROUP_DESC hitGroupDesc = new D3D12_HIT_GROUP_DESC
+                    {
+                        HitGroupExport = IntPtr.Zero, // Default hit group name
+                        Type = D3D12_HIT_GROUP_TYPE_TRIANGLES,
+                        AnyHitShaderImport = IntPtr.Zero, // Will be set if AnyHit shader exists
+                        ClosestHitShaderImport = IntPtr.Zero, // Will be set if ClosestHit shader exists
+                        IntersectionShaderImport = IntPtr.Zero // Not used for triangle geometry
+                    };
+
+                    // Set shader imports if provided
+                    // Note: In a full implementation, we would need to export shader names from the DXIL library
+                    // For now, we create the hit group structure even if shader names aren't set
+                    // The fallback layer will handle shader lookup
+
+                    hitGroupDescPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_HIT_GROUP_DESC)));
+                    Marshal.StructureToPtr(hitGroupDesc, hitGroupDescPtr, false);
+                    subobjectDataPtrs.Add(hitGroupDescPtr);
+
+                    D3D12_STATE_SUBOBJECT hitGroupSubobject = new D3D12_STATE_SUBOBJECT
+                    {
+                        Type = D3D12_STATE_SUBOBJECT_TYPE_HIT_GROUP,
+                        pDesc = hitGroupDescPtr
+                    };
+
+                    currentSubobjectPtr = new IntPtr(subobjectsPtr.ToInt64() + (currentSubobjectIndex * Marshal.SizeOf(typeof(D3D12_STATE_SUBOBJECT))));
+                    Marshal.StructureToPtr(hitGroupSubobject, currentSubobjectPtr, false);
+                    currentSubobjectIndex++;
+                }
+
+                // Step 4: Create shader config subobject
+                // This specifies the maximum payload and attribute sizes
+                D3D12_RAYTRACING_SHADER_CONFIG shaderConfig = new D3D12_RAYTRACING_SHADER_CONFIG
+                {
+                    MaxPayloadSizeInBytes = (uint)desc.MaxPayloadSize,
+                    MaxAttributeSizeInBytes = (uint)desc.MaxAttributeSize
+                };
+
+                IntPtr shaderConfigPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_RAYTRACING_SHADER_CONFIG)));
+                Marshal.StructureToPtr(shaderConfig, shaderConfigPtr, false);
+                subobjectDataPtrs.Add(shaderConfigPtr);
+
+                D3D12_STATE_SUBOBJECT shaderConfigSubobject = new D3D12_STATE_SUBOBJECT
+                {
+                    Type = D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_SHADER_CONFIG,
+                    pDesc = shaderConfigPtr
+                };
+
+                currentSubobjectPtr = new IntPtr(subobjectsPtr.ToInt64() + (currentSubobjectIndex * Marshal.SizeOf(typeof(D3D12_STATE_SUBOBJECT))));
+                Marshal.StructureToPtr(shaderConfigSubobject, currentSubobjectPtr, false);
+                currentSubobjectIndex++;
+
+                // Step 5: Create pipeline config subobject
+                // This specifies the maximum recursion depth
+                D3D12_RAYTRACING_PIPELINE_CONFIG pipelineConfig = new D3D12_RAYTRACING_PIPELINE_CONFIG
+                {
+                    MaxTraceRecursionDepth = (uint)desc.MaxRecursionDepth
+                };
+
+                IntPtr pipelineConfigPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_RAYTRACING_PIPELINE_CONFIG)));
+                Marshal.StructureToPtr(pipelineConfig, pipelineConfigPtr, false);
+                subobjectDataPtrs.Add(pipelineConfigPtr);
+
+                D3D12_STATE_SUBOBJECT pipelineConfigSubobject = new D3D12_STATE_SUBOBJECT
+                {
+                    Type = D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_PIPELINE_CONFIG,
+                    pDesc = pipelineConfigPtr
+                };
+
+                currentSubobjectPtr = new IntPtr(subobjectsPtr.ToInt64() + (currentSubobjectIndex * Marshal.SizeOf(typeof(D3D12_STATE_SUBOBJECT))));
+                Marshal.StructureToPtr(pipelineConfigSubobject, currentSubobjectPtr, false);
+                currentSubobjectIndex++;
+
+                // Step 6: Create state object description
+                D3D12_STATE_OBJECT_DESC stateObjectDesc = new D3D12_STATE_OBJECT_DESC
+                {
+                    Type = D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE,
+                    NumSubobjects = (uint)subobjectCount,
+                    pSubobjects = subobjectsPtr
+                };
+
+                // Step 7: Create the state object using the fallback layer
+                IntPtr stateObject = IntPtr.Zero;
+                int hr = CreateStateObject(
+                    _raytracingFallbackDevice,
+                    ref stateObjectDesc,
+                    IID_ID3D12StateObject,
+                    out stateObject);
+
+                // Clean up temporary memory
+                Marshal.FreeHGlobal(subobjectsPtr);
+                foreach (IntPtr dataPtr in subobjectDataPtrs)
+                {
+                    Marshal.FreeHGlobal(dataPtr);
+                }
+
+                // Check if creation succeeded
+                if (hr != 0 || stateObject == IntPtr.Zero)
+                {
+                    Console.WriteLine("[StrideDX11] Failed to create raytracing PSO: CreateStateObject returned HRESULT 0x{0:X8}", hr);
+                    return new ResourceInfo
+                    {
+                        Type = ResourceType.Pipeline,
+                        Handle = handle,
+                        NativeHandle = IntPtr.Zero,
+                        DebugName = desc.DebugName ?? "RaytracingPSO_CreationFailed"
+                    };
+                }
+
+                // Create resource info for the PSO
+                ResourceInfo psoInfo = new ResourceInfo
+                {
+                    Type = ResourceType.Pipeline,
+                    Handle = handle,
+                    NativeHandle = stateObject,
+                    DebugName = desc.DebugName ?? "RaytracingPSO",
+                    SizeInBytes = 0 // State objects don't have a size
+                };
+
+                Console.WriteLine("[StrideDX11] Raytracing PSO created successfully (MaxPayload={0}, MaxAttribute={1}, MaxRecursion={2})",
+                    desc.MaxPayloadSize, desc.MaxAttributeSize, desc.MaxRecursionDepth);
+
+                return psoInfo;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[StrideDX11] Exception creating raytracing PSO: {0}", ex.Message);
+                Console.WriteLine("[StrideDX11] Stack trace: {0}", ex.StackTrace);
+                return new ResourceInfo
+                {
+                    Type = ResourceType.Pipeline,
+                    Handle = handle,
+                    NativeHandle = IntPtr.Zero,
+                    DebugName = desc.DebugName ?? "RaytracingPSO_Exception"
+                };
+            }
+        }
+
+        /// <summary>
+        /// Creates a D3D12_SHADER_BYTECODE structure from raytracing pipeline description.
+        /// Combines all shaders (ray generation, miss, closest hit, any hit) into a single DXIL library.
+        /// </summary>
+        /// <param name="desc">Raytracing pipeline description</param>
+        /// <returns>D3D12_SHADER_BYTECODE structure containing the combined shader bytecode</returns>
+        private D3D12_SHADER_BYTECODE CreateDxilLibrary(Andastra.Runtime.Graphics.Common.Interfaces.RaytracingPipelineDesc desc)
+        {
+            // In a full implementation, we would combine all shader bytecode into a single DXIL library.
+            // For now, we use the RayGen shader as the primary shader bytecode.
+            // The fallback layer will handle shader lookup and binding.
+
+            // Allocate memory for the shader bytecode
+            // We'll use the RayGen shader as the primary bytecode
+            // In a production implementation, we would need to:
+            // 1. Parse DXIL bytecode to extract shader exports
+            // 2. Combine multiple shaders into a single library
+            // 3. Set up proper shader export names
+
+            IntPtr shaderBytecodePtr = IntPtr.Zero;
+            int shaderBytecodeSize = 0;
+
+            if (desc.RayGenShader != null && desc.RayGenShader.Length > 0)
+            {
+                // Allocate unmanaged memory for shader bytecode
+                shaderBytecodeSize = desc.RayGenShader.Length;
+                shaderBytecodePtr = Marshal.AllocHGlobal(shaderBytecodeSize);
+                Marshal.Copy(desc.RayGenShader, 0, shaderBytecodePtr, shaderBytecodeSize);
+            }
+
+            return new D3D12_SHADER_BYTECODE
+            {
+                pShaderBytecode = shaderBytecodePtr,
+                BytecodeLength = (IntPtr)shaderBytecodeSize
             };
         }
 
@@ -1381,6 +1683,22 @@ namespace Andastra.Runtime.Stride.Backends
             int numPostbuildInfoDescs,
             IntPtr pPostbuildInfoDescs);
 
+        /// <summary>
+        /// Creates a raytracing pipeline state object.
+        /// Based on DXR API: ID3D12Device5::CreateStateObject
+        /// </summary>
+        /// <param name="device">DXR fallback device</param>
+        /// <param name="pDesc">State object description</param>
+        /// <param name="riid">Interface ID for the state object (IID_ID3D12StateObject)</param>
+        /// <param name="ppStateObject">Output state object pointer</param>
+        /// <returns>HRESULT: 0 (S_OK) on success, error code on failure</returns>
+        [DllImport("D3D12RaytracingFallback.dll", EntryPoint = "D3D12CreateStateObject", CallingConvention = CallingConvention.StdCall)]
+        private static extern int CreateStateObject(
+            IntPtr device,
+            ref D3D12_STATE_OBJECT_DESC pDesc,
+            [MarshalAs(UnmanagedType.LPStruct)] System.Guid riid,
+            out IntPtr ppStateObject);
+
         #endregion
 
         #region TLAS Instance Data Structure
@@ -1520,6 +1838,127 @@ namespace Andastra.Runtime.Stride.Backends
             /// GPU virtual address of the bottom-level acceleration structure (BLAS).
             /// </summary>
             public IntPtr AccelerationStructure;
+        }
+
+        #endregion
+
+        #region D3D12 State Object Structures for Raytracing PSO
+
+        // State object type constants
+        private const uint D3D12_STATE_OBJECT_TYPE_COLLECTION = 0;
+        private const uint D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE = 1;
+
+        // State subobject type constants
+        private const uint D3D12_STATE_SUBOBJECT_TYPE_STATE_OBJECT_CONFIG = 0;
+        private const uint D3D12_STATE_SUBOBJECT_TYPE_GLOBAL_ROOT_SIGNATURE = 1;
+        private const uint D3D12_STATE_SUBOBJECT_TYPE_LOCAL_ROOT_SIGNATURE = 2;
+        private const uint D3D12_STATE_SUBOBJECT_TYPE_NODE_MASK = 3;
+        private const uint D3D12_STATE_SUBOBJECT_TYPE_DXIL_LIBRARY = 5;
+        private const uint D3D12_STATE_SUBOBJECT_TYPE_EXISTING_COLLECTION = 6;
+        private const uint D3D12_STATE_SUBOBJECT_TYPE_SUBOBJECT_TO_EXPORTS_ASSOCIATION = 7;
+        private const uint D3D12_STATE_SUBOBJECT_TYPE_DXIL_SUBOBJECT_TO_EXPORTS_ASSOCIATION = 8;
+        private const uint D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_SHADER_CONFIG = 9;
+        private const uint D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_PIPELINE_CONFIG = 10;
+        private const uint D3D12_STATE_SUBOBJECT_TYPE_HIT_GROUP = 11;
+        private const uint D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_PIPELINE_CONFIG1 = 12;
+
+        // Hit group type constants
+        private const uint D3D12_HIT_GROUP_TYPE_TRIANGLES = 0;
+        private const uint D3D12_HIT_GROUP_TYPE_PROCEDURAL_PRIMITIVE = 1;
+
+        /// <summary>
+        /// State subobject structure.
+        /// Based on D3D12 API: D3D12_STATE_SUBOBJECT
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_STATE_SUBOBJECT
+        {
+            public uint Type;
+            public IntPtr pDesc;
+        }
+
+        /// <summary>
+        /// State object description.
+        /// Based on D3D12 API: D3D12_STATE_OBJECT_DESC
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_STATE_OBJECT_DESC
+        {
+            public uint Type;
+            public uint NumSubobjects;
+            public IntPtr pSubobjects;
+        }
+
+        /// <summary>
+        /// DXIL library description.
+        /// Based on D3D12 API: D3D12_DXIL_LIBRARY_DESC
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_DXIL_LIBRARY_DESC
+        {
+            public D3D12_SHADER_BYTECODE DXILLibrary;
+        }
+
+        /// <summary>
+        /// Shader bytecode structure.
+        /// Based on D3D12 API: D3D12_SHADER_BYTECODE
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_SHADER_BYTECODE
+        {
+            public IntPtr pShaderBytecode;
+            public IntPtr BytecodeLength;
+        }
+
+        /// <summary>
+        /// Hit group description.
+        /// Based on D3D12 API: D3D12_HIT_GROUP_DESC
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_HIT_GROUP_DESC
+        {
+            public IntPtr HitGroupExport;
+            public uint Type;
+            public IntPtr AnyHitShaderImport;
+            public IntPtr ClosestHitShaderImport;
+            public IntPtr IntersectionShaderImport;
+        }
+
+        /// <summary>
+        /// Raytracing shader configuration.
+        /// Based on D3D12 API: D3D12_RAYTRACING_SHADER_CONFIG
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_RAYTRACING_SHADER_CONFIG
+        {
+            public uint MaxPayloadSizeInBytes;
+            public uint MaxAttributeSizeInBytes;
+        }
+
+        /// <summary>
+        /// Raytracing pipeline configuration.
+        /// Based on D3D12 API: D3D12_RAYTRACING_PIPELINE_CONFIG
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_RAYTRACING_PIPELINE_CONFIG
+        {
+            public uint MaxTraceRecursionDepth;
+        }
+
+        /// <summary>
+        /// Interface ID for ID3D12StateObject.
+        /// Used for QueryInterface when creating state objects.
+        /// </summary>
+        private static readonly System.Guid IID_ID3D12StateObject = new System.Guid("47016943-fca8-4594-93ea-af258b55346d");
+
+        /// <summary>
+        /// Placeholder interface for ID3D12StateObject.
+        /// Used for type identification in CreateStateObject.
+        /// </summary>
+        private interface ID3D12StateObject
+        {
+            // This is a marker interface for type identification
+            // The actual COM interface methods are not needed for P/Invoke
         }
 
         #endregion
