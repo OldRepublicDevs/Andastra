@@ -51,6 +51,15 @@ namespace HolocronToolset.Editors
         private Label _statusLabel;
         private Border _statusBar;
 
+        // Panel container structure for output, terminal, etc.
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py
+        // Original: self.ui.mainSplitter (QSplitter), self.ui.panelTabs (QTabWidget)
+        private Grid _mainSplitter;  // Grid used as splitter (Avalonia equivalent of QSplitter)
+        private GridSplitter _gridSplitter;  // GridSplitter for resizing
+        private TabControl _panelTabs;  // TabControl for panels (output, terminal, etc.)
+        private TabItem _outputTab;  // Output panel tab
+        private Control _mainContentContainer;  // Container for main content (code editor)
+
         // Error and warning line tracking
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:178-179
         // Original: self._error_lines: set[int] = set()  # Line numbers with errors (1-indexed)
@@ -79,11 +88,13 @@ namespace HolocronToolset.Editors
         {
             public MenuItem ActionCompile { get; set; }
             public TextBox OutputEdit { get; set; }
+            public CodeEditor CodeEdit { get; set; }
 
             public NSSEditorUi()
             {
                 ActionCompile = null;
                 OutputEdit = null;
+                CodeEdit = null;
             }
         }
 
@@ -202,6 +213,12 @@ namespace HolocronToolset.Editors
             if (_codeEdit == null)
             {
                 _codeEdit = new CodeEditor();
+            }
+
+            // Set in UI wrapper for test access (matching PyKotor's self.ui.codeEdit pattern)
+            if (_ui != null)
+            {
+                _ui.CodeEdit = _codeEdit;
             }
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:479-484
@@ -404,6 +421,15 @@ namespace HolocronToolset.Editors
                 // Update status bar on key events (arrow keys, etc. move cursor)
                 _codeEdit.KeyDown += (s, e) => UpdateStatusBar();
                 _codeEdit.KeyUp += (s, e) => UpdateStatusBar();
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2657-2658
+                // Original: self.ui.codeEdit.cursorPositionChanged.connect(self._update_breadcrumbs)
+                // Update breadcrumbs on cursor position changes (selection changes include cursor moves)
+                _codeEdit.SelectionChanged += (s, e) => UpdateBreadcrumbs();
+                _codeEdit.PointerPressed += (s, e) => UpdateBreadcrumbs();
+                _codeEdit.PointerReleased += (s, e) => UpdateBreadcrumbs();
+                _codeEdit.KeyDown += (s, e) => UpdateBreadcrumbs();
+                _codeEdit.KeyUp += (s, e) => UpdateBreadcrumbs();
 
                 // Validate bookmarks when text changes
                 _codeEdit.TextChanged += (s, e) => ValidateBookmarks();
@@ -749,10 +775,10 @@ namespace HolocronToolset.Editors
         {
             // Try common documentation file names in order of preference
             string[] documentationFiles = { "README.md", "index.md", "documentation.md", "help.md" };
-            
+
             // Get wiki path to check if files exist
             string wikiPath = Dialogs.EditorHelpDialog.GetWikiPath();
-            
+
             // Find the first existing documentation file
             string wikiFile = null;
             foreach (string filename in documentationFiles)
@@ -764,13 +790,13 @@ namespace HolocronToolset.Editors
                     break;
                 }
             }
-            
+
             // If no documentation file found, use README.md as default (EditorHelpDialog will show error if missing)
             if (wikiFile == null)
             {
                 wikiFile = "README.md";
             }
-            
+
             // Show help dialog with the documentation file
             // NSSEditor inherits from Editor, which has ShowHelpDialog method
             ShowHelpDialog(wikiFile);
@@ -818,7 +844,7 @@ namespace HolocronToolset.Editors
         private void ToggleBookmarkAtCursor()
         {
             int currentLine = GetCurrentLineNumber();
-            
+
             if (HasBookmarkAtLine(currentLine))
             {
                 RemoveBookmarkAtLine(currentLine);
@@ -1402,7 +1428,7 @@ namespace HolocronToolset.Editors
                 {
                     var firstResult = results[0];
                     GotoLine(firstResult.Line);
-                    
+
                     // Try to position cursor at the match column
                     if (_codeEdit != null)
                     {
@@ -1410,7 +1436,7 @@ namespace HolocronToolset.Editors
                         int lineStart = 0;
                         int currentLine = 1;
                         string text = _codeEdit.Text;
-                        
+
                         // Find the start of the target line
                         for (int i = 0; i < text.Length && currentLine < firstResult.Line; i++)
                         {
@@ -1435,7 +1461,7 @@ namespace HolocronToolset.Editors
                                 }
                             }
                         }
-                        
+
                         // Calculate position including column (1-indexed to 0-indexed)
                         int targetPosition = lineStart + (firstResult.Column - 1);
                         if (targetPosition >= 0 && targetPosition < text.Length)
@@ -1777,6 +1803,10 @@ namespace HolocronToolset.Editors
         // Public property to access resname for testing
         // Matching PyKotor: editor._resname in test_nss_editor_bookmark_persistence
         public string Resname => _resname;
+
+        // Public property to access filepath for testing
+        // Matching PyKotor: editor._filepath in test_nss_editor_load_real_ncs_file
+        public string Filepath => _filepath;
 
         // Matching PyKotor implementation: highlighter is accessible for testing
         // Original: editor._highlighter in test_nss_editor_syntax_highlighting_game_switch
@@ -4047,6 +4077,80 @@ namespace HolocronToolset.Editors
         /// Exposed for testing purposes to match Python test behavior.
         /// </summary>
         public TreeView FileExplorerView => _fileExplorerView;
+
+        /// <summary>
+        /// Gets the file explorer dock panel.
+        /// Exposed for testing purposes to match Python test behavior.
+        /// </summary>
+        public Panel FileExplorerDock => _fileExplorerDock;
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2739-2741
+        // Original: def _toggle_file_explorer(self):
+        // Original:     """Toggle file explorer dock visibility."""
+        // Original:     self.ui.fileExplorerDock.setVisible(not self.ui.fileExplorerDock.isVisible())
+        /// <summary>
+        /// Toggle file explorer dock visibility.
+        /// Shows or hides the file explorer panel based on current visibility state.
+        /// </summary>
+        private void ToggleFileExplorer()
+        {
+            if (_fileExplorerDock == null)
+            {
+                return;
+            }
+
+            // Toggle visibility
+            _fileExplorerDock.IsVisible = !_fileExplorerDock.IsVisible;
+        }
+
+        /// <summary>
+        /// Integrate the file explorer dock into the main UI layout.
+        /// Adds the file explorer panel to the window's content structure.
+        /// </summary>
+        private void IntegrateFileExplorerDock()
+        {
+            if (_fileExplorerDock == null)
+            {
+                return;
+            }
+
+            // Start with hidden by default (matching common IDE behavior)
+            _fileExplorerDock.IsVisible = false;
+
+            // Get or create the main layout container
+            // The Content should be a DockPanel (from SetupStatusBar or AddHelpAction)
+            if (Content is DockPanel mainDockPanel)
+            {
+                // Check if file explorer dock is already added
+                if (!mainDockPanel.Children.Contains(_fileExplorerDock))
+                {
+                    // Add file explorer dock to the left side
+                    mainDockPanel.Children.Add(_fileExplorerDock);
+                    DockPanel.SetDock(_fileExplorerDock, Dock.Left);
+                }
+            }
+            else
+            {
+                // Content is not a DockPanel, wrap it in one
+                var newDockPanel = new DockPanel();
+                
+                // Add file explorer to the left
+                newDockPanel.Children.Add(_fileExplorerDock);
+                DockPanel.SetDock(_fileExplorerDock, Dock.Left);
+
+                // Add existing content
+                if (Content != null && Content is Control existingContent)
+                {
+                    newDockPanel.Children.Add(existingContent);
+                }
+                else if (_codeEdit != null)
+                {
+                    newDockPanel.Children.Add(_codeEdit);
+                }
+
+                Content = newDockPanel;
+            }
+        }
 
         /// <summary>
         /// Gets the error lines set.

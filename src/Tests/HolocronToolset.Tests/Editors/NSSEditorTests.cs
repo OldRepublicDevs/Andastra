@@ -3144,14 +3144,118 @@ void helper() {
             breadcrumbs.Parent.Should().NotBeNull("Breadcrumbs should be in the UI (have a parent)");
         }
 
-        // TODO: STUB - Implement test_nss_editor_breadcrumbs_update_on_cursor_move (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1486-1516)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1486-1516
         // Original: def test_nss_editor_breadcrumbs_update_on_cursor_move(qtbot, installation: HTInstallation, complex_nss_script: str): Test breadcrumbs update on cursor move
         [Fact]
         public void TestNssEditorBreadcrumbsUpdateOnCursorMove()
         {
-            // TODO: STUB - Implement breadcrumbs update on cursor move test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1486-1516
-            throw new NotImplementedException("TestNssEditorBreadcrumbsUpdateOnCursorMove: Breadcrumbs update on cursor move test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            // Matching Python: editor = NSSEditor(None, installation)
+            var editor = new NSSEditor(null, installation);
+
+            // Matching Python: editor.new()
+            editor.New();
+
+            // Matching Python: complex_nss_script fixture (from conftest.py:38-59)
+            string complexNssScript = @"// Global variable
+int g_globalVar = 10;
+
+// Main function
+void main() {
+    int localVar = 20;
+
+    if (localVar > 10) {
+        SendMessageToPC(GetFirstPC(), ""Condition met"");
+    }
+
+    for (int i = 0; i < 5; i++) {
+        localVar += i;
+    }
+}
+
+// Helper function
+void helper() {
+    int helperVar = 30;
+}";
+
+            // Matching Python: editor.ui.codeEdit.setPlainText(complex_nss_script)
+            // Get the code editor using reflection
+            var codeEditField = typeof(NSSEditor).GetField("_codeEdit", BindingFlags.NonPublic | BindingFlags.Instance);
+            codeEditField.Should().NotBeNull("_codeEdit field should exist");
+            var codeEdit = codeEditField.GetValue(editor) as HolocronToolset.Widgets.CodeEditor;
+            codeEdit.Should().NotBeNull("Code editor should be initialized");
+            codeEdit.SetPlainText(complexNssScript);
+
+            // Matching Python: qtbot.wait(200)  # Wait for parsing
+            // In C# tests, we need to manually trigger breadcrumb update since language server may not be available
+            // Matching Python: editor._update_breadcrumbs_from_symbols([])  # Empty symbols list, but still adds filename
+            // UpdateBreadcrumbs is public, so we can call it directly
+            editor.UpdateBreadcrumbs();
+
+            // Matching Python: qtbot.wait(50)  # Wait for Qt to process updates
+            // In C# tests, we can proceed immediately as events are synchronous
+
+            // Matching Python: cursor = editor.ui.codeEdit.textCursor()
+            // Matching Python: doc = editor.ui.codeEdit.document()
+            // Matching Python: block = doc.findBlockByLineNumber(2)  # Around main function
+            // Matching Python: if block.isValid():
+            // Matching Python:     cursor.setPosition(block.position())
+            // Matching Python:     editor.ui.codeEdit.setTextCursor(cursor)
+            // In Avalonia, we move cursor to line 2 (around main function) by finding "void main()"
+            string text = codeEdit.ToPlainText();
+            
+            // Find position of "void main()" which should be on line 2 (0-indexed line 1)
+            int mainFunctionPos = text.IndexOf("void main()");
+            if (mainFunctionPos >= 0)
+            {
+                // Set cursor position to the start of "void main()"
+                codeEdit.CaretIndex = mainFunctionPos;
+                codeEdit.SelectionStart = mainFunctionPos;
+                codeEdit.SelectionEnd = mainFunctionPos;
+
+                // Matching Python: qtbot.wait(200)
+                // Trigger breadcrumb update (should happen automatically via event handlers, but ensure it's called)
+                editor.UpdateBreadcrumbs();
+            }
+
+            // Matching Python: assert editor._breadcrumbs is not None
+            // Matching Python: path = editor._breadcrumbs._path
+            // Matching Python: assert len(path) > 0, f"Expected breadcrumb path with at least filename, got {path}"  # Should have at least filename
+            var breadcrumbs = editor.Breadcrumbs;
+            breadcrumbs.Should().NotBeNull("Breadcrumbs widget should exist");
+
+            // Get breadcrumb path using reflection (matching Python: editor._breadcrumbs._path)
+            var pathField = typeof(BreadcrumbsWidget).GetField("_path", BindingFlags.NonPublic | BindingFlags.Instance);
+            pathField.Should().NotBeNull("_path field should exist");
+            var path = pathField.GetValue(breadcrumbs) as List<string>;
+            path.Should().NotBeNull("Breadcrumb path should not be null");
+            path.Count.Should().BeGreaterThan(0, "Expected breadcrumb path with at least filename, got {0}", path);
         }
 
         // TODO: STUB - Implement test_nss_editor_breadcrumbs_navigation (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1518-1536)
@@ -4086,14 +4190,39 @@ void helper() {
             }
         }
 
-        // TODO: STUB - Implement test_nss_editor_command_palette_shortcut (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1877-1897)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1877-1897
         // Original: def test_nss_editor_command_palette_shortcut(qtbot, installation: HTInstallation): Test command palette shortcut
         [Fact]
         public void TestNssEditorCommandPaletteShortcut()
         {
-            // TODO: STUB - Implement command palette shortcut test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1877-1897
-            throw new NotImplementedException("TestNssEditorCommandPaletteShortcut: Command palette shortcut test not yet implemented");
+            // Matching PyKotor implementation: editor = NSSEditor(None, installation)
+            var editor = new NSSEditor(null, null);
+            
+            // Matching PyKotor implementation: editor.new()
+            editor.New();
+            
+            // Matching PyKotor implementation: Trigger shortcut
+            // Note: In PyKotor test, a QKeyEvent is created but not actually sent - the test just calls _show_command_palette() directly
+            // This verifies that the command palette can be shown via the shortcut handler
+            // Use reflection to call private method ShowCommandPalette (which is what the shortcut triggers)
+            var showMethod = typeof(NSSEditor).GetMethod("ShowCommandPalette",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            
+            showMethod.Should().NotBeNull("NSSEditor should have ShowCommandPalette method");
+            
+            // Matching PyKotor implementation: editor._show_command_palette()
+            // This simulates what happens when Ctrl+Shift+P is pressed
+            showMethod.Invoke(editor, null);
+            
+            // Matching PyKotor implementation: assert editor._command_palette is not None
+            // Use reflection to access private field _commandPalette
+            var commandPaletteField = typeof(NSSEditor).GetField("_commandPalette",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            
+            commandPaletteField.Should().NotBeNull("NSSEditor should have _commandPalette field");
+            
+            var commandPalette = commandPaletteField.GetValue(editor);
+            commandPalette.Should().NotBeNull("_commandPalette should be initialized after ShowCommandPalette() is called");
         }
 
         // TODO: STUB - Implement test_nss_editor_bracket_matching (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1899-1930)
