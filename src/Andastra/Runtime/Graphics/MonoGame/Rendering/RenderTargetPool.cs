@@ -209,6 +209,41 @@ namespace Andastra.Runtime.MonoGame.Rendering
         }
 
         /// <summary>
+        /// Clears all render targets from the pool, disposing them and resetting the pool to an empty state.
+        /// The pool object remains usable after clearing and can be reused for new render targets.
+        /// </summary>
+        /// <remarks>
+        /// This method differs from Dispose() in that it keeps the pool object alive and reusable.
+        /// Dispose() should be called when the pool is no longer needed and will be garbage collected.
+        /// 
+        /// Based on swkotor2.exe rendering system architecture:
+        /// - Original engine: Render targets allocated on-demand, released when done
+        /// - Modern enhancement: Pooling with clear capability for memory management
+        /// - Clear operation: Disposes all render targets and resets pool state
+        /// </remarks>
+        public void Clear()
+        {
+            lock (_lock)
+            {
+                // Dispose all render targets in all pools
+                foreach (List<PoolEntry> pool in _pools.Values)
+                {
+                    foreach (PoolEntry entry in pool)
+                    {
+                        entry.RenderTarget?.Dispose();
+                    }
+                }
+
+                // Clear all pools
+                _pools.Clear();
+
+                // Reset frame counter to start fresh
+                // Note: This is optional but helps with tracking after clear
+                _currentFrame = 0;
+            }
+        }
+
+        /// <summary>
         /// Creates a key for render target lookup.
         /// </summary>
         private string CreateKey(int width, int height, SurfaceFormat format, DepthFormat depthFormat)

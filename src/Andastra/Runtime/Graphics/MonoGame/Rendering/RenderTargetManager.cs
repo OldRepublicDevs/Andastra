@@ -132,13 +132,16 @@ namespace Andastra.Runtime.MonoGame.Rendering
         /// <summary>
         /// Clears all render targets.
         /// </summary>
+        /// <remarks>
+        /// Clears all render target pools, disposing all render targets and resetting the manager
+        /// to an empty state. The pools are cleared (not disposed) so they can be reused if needed,
+        /// but the manager's pool dictionary is cleared, so new pools will be created on demand.
+        /// </remarks>
         public void Clear()
         {
             foreach (RenderTargetPool pool in _pools.Values)
             {
-                // TODO: Clear pool when method is implemented
-                // pool.Clear();
-                pool.Dispose();
+                pool.Clear();
             }
             _pools.Clear();
             _currentMemoryUsage = 0;
