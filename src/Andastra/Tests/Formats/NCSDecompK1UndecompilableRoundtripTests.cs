@@ -99,8 +99,30 @@ namespace Andastra.Parsing.Tests.Formats
 
             int failed = 0;
 
-            // TODO: Initialize FileDecompiler once it's properly converted
-            // FileDecompiler decompiler = new FileDecompiler();
+            // Set game flag for K1 (this is a K1 test)
+            bool wasK2 = FileDecompiler.isK2Selected;
+            FileDecompiler.isK2Selected = false;
+
+            // Initialize FileDecompiler with nwscript.nss if available
+            FileDecompiler decompiler = null;
+            if (nwscriptPath != null && IOFile.Exists(nwscriptPath))
+            {
+                try
+                {
+                    NcsFile nwscriptFile = new NcsFile(nwscriptPath);
+                    decompiler = new FileDecompiler(nwscriptFile);
+                }
+                catch
+                {
+                    // Failed to load nwscript.nss, create decompiler without actions
+                    decompiler = new FileDecompiler();
+                }
+            }
+            else
+            {
+                // Create decompiler without actions
+                decompiler = new FileDecompiler();
+            }
 
             foreach (string ncsPath in ncsFiles)
             {
@@ -108,16 +130,15 @@ namespace Andastra.Parsing.Tests.Formats
 
                 try
                 {
-                    // TODO: Implement testRoundtrip once FileDecompiler is ready
-                    // bool result = TestRoundtrip(decompiler, ncsPath, testId, tempNwnnsscomp);
-                    // if (result)
-                    // {
-                    //     // Test passed
-                    // }
-                    // else
-                    // {
-                    //     failed++;
-                    // }
+                    bool result = TestRoundtrip(decompiler, ncsPath, testId, tempNwnnsscomp);
+                    if (result)
+                    {
+                        // Test passed
+                    }
+                    else
+                    {
+                        failed++;
+                    }
                 }
                 catch
                 {
@@ -125,8 +146,14 @@ namespace Andastra.Parsing.Tests.Formats
                 }
             }
 
-            // For now, just verify we found test files
+            // Verify we found test files
             ncsFiles.Should().NotBeEmpty("Test files should exist");
+            
+            // Assert that all roundtrips passed
+            failed.Should().Be(0, $"All {ncsFiles.Count} NCS files should roundtrip successfully, but {failed} failed");
+            
+            // Restore original game flag
+            FileDecompiler.isK2Selected = wasK2;
         }
 
         private string FindTestDirectory()
@@ -222,43 +249,42 @@ namespace Andastra.Parsing.Tests.Formats
             byte[] originalBytes = IOFile.ReadAllBytes(originalNcsPath);
 
             // Decompile to NSS
-            // TODO: Use FileDecompiler once converted
-            // int result = decompiler.Decompile(new File(originalNcsPath));
-            // if (result == FileDecompiler.FAILURE)
-            // {
-            //     return false;
-            // }
-            //
-            // string decompiled = decompiler.GetGeneratedCode(new File(originalNcsPath));
-            // if (string.IsNullOrWhiteSpace(decompiled))
-            // {
-            //     return false;
-            // }
+            NcsFile originalNcsFile = new NcsFile(originalNcsPath);
+            int result = decompiler.Decompile(originalNcsFile);
+            if (result == FileDecompiler.FAILURE)
+            {
+                return false;
+            }
+
+            string decompiled = decompiler.GetGeneratedCode(originalNcsFile);
+            if (string.IsNullOrWhiteSpace(decompiled))
+            {
+                return false;
+            }
 
             // Write decompiled NSS to temp file
-            // string tempNss = Path.Combine(_tempDir, Path.GetFileNameWithoutExtension(originalNcsPath) + ".nss");
-            // IOFile.WriteAllText(tempNss, decompiled);
-            // _tempFiles.Add(tempNss);
+            string tempNss = Path.Combine(_tempDir, Path.GetFileNameWithoutExtension(originalNcsPath) + ".nss");
+            IOFile.WriteAllText(tempNss, decompiled);
+            _tempFiles.Add(tempNss);
 
             // Compile NSS back to NCS
-            // string recompiledNcs = CompileNss(tempNss, nwnnsscompPath, false);
-            // if (recompiledNcs is null || !IOFile.Exists(recompiledNcs))
-            // {
-            //     return false;
-            // }
+            string recompiledNcs = CompileNss(tempNss, nwnnsscompPath, false);
+            if (recompiledNcs is null || !IOFile.Exists(recompiledNcs))
+            {
+                return false;
+            }
 
             // Compare byte arrays
-            // byte[] recompiledBytes = IOFile.ReadAllBytes(recompiledNcs);
-            // bool identical = originalBytes.SequenceEqual(recompiledBytes);
+            byte[] recompiledBytes = IOFile.ReadAllBytes(recompiledNcs);
+            bool identical = originalBytes.SequenceEqual(recompiledBytes);
 
             // Clean up
-            // if (IOFile.Exists(recompiledNcs))
-            // {
-            //     IOFile.Delete(recompiledNcs);
-            // }
+            if (IOFile.Exists(recompiledNcs))
+            {
+                IOFile.Delete(recompiledNcs);
+            }
 
-            // return identical;
-            return false; // Placeholder
+            return identical;
         }
 
         private string CompileNss(string nssPath, string nwnnsscompPath, bool k2)
