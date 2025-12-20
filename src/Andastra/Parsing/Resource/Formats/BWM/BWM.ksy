@@ -58,58 +58,59 @@ seq:
     type: data_table_offsets
     doc: Data table offsets section (84 bytes) - counts and offsets for all data tables
 
-  - id: vertices
+instances:
+  vertices:
+    pos: _root.data_table_offsets.vertex_offset
     type: vertices_array
-    if: data_table_offsets.vertex_count > 0
-    pos: data_table_offsets.vertex_offset
+    if: _root.data_table_offsets.vertex_count > 0
     doc: Array of vertex positions (float3 triplets)
 
-  - id: face_indices
+  face_indices:
+    pos: _root.data_table_offsets.face_indices_offset
     type: face_indices_array
-    if: data_table_offsets.face_count > 0
-    pos: data_table_offsets.face_indices_offset
+    if: _root.data_table_offsets.face_count > 0
     doc: Array of face vertex indices (uint32 triplets)
 
-  - id: materials
+  materials:
+    pos: _root.data_table_offsets.materials_offset
     type: materials_array
-    if: data_table_offsets.face_count > 0
-    pos: data_table_offsets.materials_offset
+    if: _root.data_table_offsets.face_count > 0
     doc: Array of surface material IDs per face
 
-  - id: normals
+  normals:
+    pos: _root.data_table_offsets.normals_offset
     type: normals_array
-    if: walkmesh_properties.walkmesh_type == 1 && data_table_offsets.face_count > 0
-    pos: data_table_offsets.normals_offset
+    if: _root.walkmesh_properties.walkmesh_type == 1 and _root.data_table_offsets.face_count > 0
     doc: Array of face normal vectors (float3 triplets) - WOK only
 
-  - id: planar_distances
+  planar_distances:
+    pos: _root.data_table_offsets.distances_offset
     type: planar_distances_array
-    if: walkmesh_properties.walkmesh_type == 1 && data_table_offsets.face_count > 0
-    pos: data_table_offsets.distances_offset
+    if: _root.walkmesh_properties.walkmesh_type == 1 and _root.data_table_offsets.face_count > 0
     doc: Array of planar distances (float32 per face) - WOK only
 
-  - id: aabb_nodes
+  aabb_nodes:
+    pos: _root.data_table_offsets.aabb_offset
     type: aabb_nodes_array
-    if: walkmesh_properties.walkmesh_type == 1 && data_table_offsets.aabb_count > 0
-    pos: data_table_offsets.aabb_offset
+    if: _root.walkmesh_properties.walkmesh_type == 1 and _root.data_table_offsets.aabb_count > 0
     doc: Array of AABB tree nodes for spatial acceleration - WOK only
 
-  - id: adjacencies
+  adjacencies:
+    pos: _root.data_table_offsets.adjacency_offset
     type: adjacencies_array
-    if: walkmesh_properties.walkmesh_type == 1 && data_table_offsets.adjacency_count > 0
-    pos: data_table_offsets.adjacency_offset
+    if: _root.walkmesh_properties.walkmesh_type == 1 and _root.data_table_offsets.adjacency_count > 0
     doc: Array of adjacency indices (int32 triplets per walkable face) - WOK only
 
-  - id: edges
+  edges:
+    pos: _root.data_table_offsets.edge_offset
     type: edges_array
-    if: walkmesh_properties.walkmesh_type == 1 && data_table_offsets.edge_count > 0
-    pos: data_table_offsets.edge_offset
+    if: _root.walkmesh_properties.walkmesh_type == 1 and _root.data_table_offsets.edge_count > 0
     doc: Array of perimeter edges (edge_index, transition pairs) - WOK only
 
-  - id: perimeters
+  perimeters:
+    pos: _root.data_table_offsets.perimeter_offset
     type: perimeters_array
-    if: walkmesh_properties.walkmesh_type == 1 && data_table_offsets.perimeter_count > 0
-    pos: data_table_offsets.perimeter_offset
+    if: _root.walkmesh_properties.walkmesh_type == 1 and _root.data_table_offsets.perimeter_count > 0
     doc: Array of perimeter markers (edge indices marking end of loops) - WOK only
 
 types:
@@ -122,7 +123,6 @@ types:
         doc: |
           File type signature. Must be "BWM " (space-padded).
           The space after "BWM" is significant and must be present.
-        valid: "BWM "
 
       - id: version
         type: str
@@ -131,11 +131,10 @@ types:
         doc: |
           File format version. Always "V1.0" for KotOR BWM files.
           This is the first and only version of the BWM format used in KotOR games.
-        valid: "V1.0"
 
     instances:
       is_valid_bwm:
-        value: magic == "BWM " && version == "V1.0"
+        value: magic == "BWM " and version == "V1.0"
         doc: |
           Validation check that the file is a valid BWM file.
           Both magic and version must match expected values.
