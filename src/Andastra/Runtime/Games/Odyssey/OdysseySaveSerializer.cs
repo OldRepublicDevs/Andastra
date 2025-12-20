@@ -411,57 +411,85 @@ namespace Andastra.Runtime.Games.Odyssey
 
                 // Determine variable type by attempting to retrieve it as each type
                 // Priority: bool (type 0), int (type 1), string (type 3)
-                // Boolean variables: Try to get as bool first (most specific)
+                // Based on swkotor2.exe: Variables are stored in separate typed dictionaries
+                // The IGameState interface routes GetGlobal<T> to the appropriate dictionary based on T
+                // Based on SaveSystem implementation: ScriptGlobals uses separate dictionaries (_globalBools, _globalInts, _globalStrings)
+                
+                bool serialized = false;
+                
+                // Boolean variables: Try to get as bool first (most specific type)
+                // IGameState.GetGlobal<bool> should route to the bool dictionary if the variable is stored as bool
                 try
                 {
                     bool boolValue = gameState.GetGlobal<bool>(varName, false);
-                    // Check if it's actually a boolean by seeing if we can get a different value
-                    // For now, we'll trust the type system and serialize as bool
+                    // If GetGlobal<bool> succeeds (doesn't throw), the variable is stored as bool
+                    // Note: false is a valid bool value, so we serialize even if the value is false
                     var varStruct = varList.Add();
                     SetStringField(varStruct, "VariableName", varName);
                     SetIntField(varStruct, "VariableType", 0); // BOOLEAN
                     SetIntField(varStruct, "VariableValue", boolValue ? 1 : 0);
                     processedVariables.Add(varName);
-                    continue;
+                    serialized = true;
                 }
                 catch
                 {
-                    // Not a boolean, try next type
+                    // GetGlobal<bool> threw exception - variable is not stored as bool, try next type
+                }
+
+                if (serialized)
+                {
+                    continue;
                 }
 
                 // Integer variables: Try to get as int
+                // IGameState.GetGlobal<int> should route to the int dictionary if the variable is stored as int
                 try
                 {
                     int intValue = gameState.GetGlobal<int>(varName, 0);
-                    // Check if we already have this as a bool by seeing if it matches the bool default
-                    // For now, we'll serialize as int if it's not a bool
+                    // If GetGlobal<int> succeeds (doesn't throw), the variable is stored as int
+                    // Note: 0 is a valid int value, so we serialize even if the value is 0
                     var varStruct = varList.Add();
                     SetStringField(varStruct, "VariableName", varName);
                     SetIntField(varStruct, "VariableType", 1); // INT
                     SetIntField(varStruct, "VariableValue", intValue);
                     processedVariables.Add(varName);
-                    continue;
+                    serialized = true;
                 }
                 catch
                 {
-                    // Not an integer, try next type
+                    // GetGlobal<int> threw exception - variable is not stored as int, try next type
+                }
+
+                if (serialized)
+                {
+                    continue;
                 }
 
                 // String variables: Try to get as string
+                // IGameState.GetGlobal<string> should route to the string dictionary if the variable is stored as string
                 try
                 {
                     string stringValue = gameState.GetGlobal<string>(varName, string.Empty);
+                    // If GetGlobal<string> succeeds (doesn't throw), the variable is stored as string
+                    // Note: empty string is a valid string value, so we serialize even if the value is empty
                     var varStruct = varList.Add();
                     SetStringField(varStruct, "VariableName", varName);
                     SetIntField(varStruct, "VariableType", 3); // STRING
                     SetStringField(varStruct, "VariableValue", stringValue ?? string.Empty);
                     processedVariables.Add(varName);
-                    continue;
+                    serialized = true;
                 }
                 catch
                 {
-                    // Not a string, skip this variable (unsupported type)
-                    System.Diagnostics.Debug.WriteLine($"[OdysseySaveSerializer] Skipping unsupported global variable type: {varName}");
+                    // GetGlobal<string> threw exception - variable is not stored as string
+                }
+
+                if (!serialized)
+                {
+                    // Variable exists (HasGlobal returned true) but couldn't be retrieved as any supported type
+                    // This could happen for unsupported types like location, float, or custom objects
+                    // Location globals are not supported in VariableList format (they use different GFF structure)
+                    System.Diagnostics.Debug.WriteLine($"[OdysseySaveSerializer] Skipping unsupported global variable type: {varName} (exists but not bool/int/string - may be location or other unsupported type)");
                 }
             }
 
