@@ -110,6 +110,24 @@ namespace HolocronToolset.Editors
         private ComboBox _condition2ResrefEdit;
         private NumericUpDown _logicSpin;
         private TreeView _dialogTree;
+        
+        // Condition parameter widgets (K2-specific, but available in UI for all games)
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
+        // Original: QSpinBox condition1Param1Spin, condition1Param2Spin, etc., QCheckBox condition1NotCheckbox, condition2NotCheckbox
+        private NumericUpDown _condition1Param1Spin;
+        private NumericUpDown _condition1Param2Spin;
+        private NumericUpDown _condition1Param3Spin;
+        private NumericUpDown _condition1Param4Spin;
+        private NumericUpDown _condition1Param5Spin;
+        private TextBox _condition1Param6Edit;
+        private CheckBox _condition1NotCheckbox;
+        private NumericUpDown _condition2Param1Spin;
+        private NumericUpDown _condition2Param2Spin;
+        private NumericUpDown _condition2Param3Spin;
+        private NumericUpDown _condition2Param4Spin;
+        private NumericUpDown _condition2Param5Spin;
+        private TextBox _condition2Param6Edit;
+        private CheckBox _condition2NotCheckbox;
 
         // UI Controls - Node widgets (Quest/Plot)
         // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
@@ -226,11 +244,76 @@ namespace HolocronToolset.Editors
             _logicSpin = new NumericUpDown { Minimum = 0, Maximum = 1, Value = 0 };
             _logicSpin.ValueChanged += (s, e) => OnNodeUpdate();
 
+            // Initialize condition parameter widgets (K2-specific fields, but available in UI)
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
+            // Original: QSpinBox condition1Param1Spin, condition1Param2Spin, etc., QCheckBox condition1NotCheckbox
+            _condition1Param1Spin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = 0 };
+            _condition1Param1Spin.ValueChanged += (s, e) => OnNodeUpdate();
+            _condition1Param2Spin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = 0 };
+            _condition1Param2Spin.ValueChanged += (s, e) => OnNodeUpdate();
+            _condition1Param3Spin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = 0 };
+            _condition1Param3Spin.ValueChanged += (s, e) => OnNodeUpdate();
+            _condition1Param4Spin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = 0 };
+            _condition1Param4Spin.ValueChanged += (s, e) => OnNodeUpdate();
+            _condition1Param5Spin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = 0 };
+            _condition1Param5Spin.ValueChanged += (s, e) => OnNodeUpdate();
+            _condition1Param6Edit = new TextBox();
+            _condition1Param6Edit.LostFocus += (s, e) => OnNodeUpdate();
+            _condition1NotCheckbox = new CheckBox();
+            _condition1NotCheckbox.Checked += (s, e) => OnNodeUpdate();
+            _condition1NotCheckbox.Unchecked += (s, e) => OnNodeUpdate();
+
+            _condition2Param1Spin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = 0 };
+            _condition2Param1Spin.ValueChanged += (s, e) => OnNodeUpdate();
+            _condition2Param2Spin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = 0 };
+            _condition2Param2Spin.ValueChanged += (s, e) => OnNodeUpdate();
+            _condition2Param3Spin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = 0 };
+            _condition2Param3Spin.ValueChanged += (s, e) => OnNodeUpdate();
+            _condition2Param4Spin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = 0 };
+            _condition2Param4Spin.ValueChanged += (s, e) => OnNodeUpdate();
+            _condition2Param5Spin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = 0 };
+            _condition2Param5Spin.ValueChanged += (s, e) => OnNodeUpdate();
+            _condition2Param6Edit = new TextBox();
+            _condition2Param6Edit.LostFocus += (s, e) => OnNodeUpdate();
+            _condition2NotCheckbox = new CheckBox();
+            _condition2NotCheckbox.Checked += (s, e) => OnNodeUpdate();
+            _condition2NotCheckbox.Unchecked += (s, e) => OnNodeUpdate();
+
             var linkPanel = new StackPanel();
             linkPanel.Children.Add(new TextBlock { Text = "Condition 1 ResRef:" });
             linkPanel.Children.Add(_condition1ResrefEdit);
+            linkPanel.Children.Add(new TextBlock { Text = "Condition 1 Param1:" });
+            linkPanel.Children.Add(_condition1Param1Spin);
+            linkPanel.Children.Add(new TextBlock { Text = "Condition 1 Param2:" });
+            linkPanel.Children.Add(_condition1Param2Spin);
+            linkPanel.Children.Add(new TextBlock { Text = "Condition 1 Param3:" });
+            linkPanel.Children.Add(_condition1Param3Spin);
+            linkPanel.Children.Add(new TextBlock { Text = "Condition 1 Param4:" });
+            linkPanel.Children.Add(_condition1Param4Spin);
+            linkPanel.Children.Add(new TextBlock { Text = "Condition 1 Param5:" });
+            linkPanel.Children.Add(_condition1Param5Spin);
+            linkPanel.Children.Add(new TextBlock { Text = "Condition 1 Param6:" });
+            linkPanel.Children.Add(_condition1Param6Edit);
+            linkPanel.Children.Add(_condition1NotCheckbox);
+            linkPanel.Children.Add(new TextBlock { Text = "Condition 1 Not" });
+            
             linkPanel.Children.Add(new TextBlock { Text = "Condition 2 ResRef:" });
             linkPanel.Children.Add(_condition2ResrefEdit);
+            linkPanel.Children.Add(new TextBlock { Text = "Condition 2 Param1:" });
+            linkPanel.Children.Add(_condition2Param1Spin);
+            linkPanel.Children.Add(new TextBlock { Text = "Condition 2 Param2:" });
+            linkPanel.Children.Add(_condition2Param2Spin);
+            linkPanel.Children.Add(new TextBlock { Text = "Condition 2 Param3:" });
+            linkPanel.Children.Add(_condition2Param3Spin);
+            linkPanel.Children.Add(new TextBlock { Text = "Condition 2 Param4:" });
+            linkPanel.Children.Add(_condition2Param4Spin);
+            linkPanel.Children.Add(new TextBlock { Text = "Condition 2 Param5:" });
+            linkPanel.Children.Add(_condition2Param5Spin);
+            linkPanel.Children.Add(new TextBlock { Text = "Condition 2 Param6:" });
+            linkPanel.Children.Add(_condition2Param6Edit);
+            linkPanel.Children.Add(_condition2NotCheckbox);
+            linkPanel.Children.Add(new TextBlock { Text = "Condition 2 Not" });
+            
             linkPanel.Children.Add(new TextBlock { Text = "Logic:" });
             linkPanel.Children.Add(_logicSpin);
             panel.Children.Add(linkPanel);
@@ -577,6 +660,23 @@ namespace HolocronToolset.Editors
         public ComboBox Condition2ResrefEdit => _condition2ResrefEdit;
         public NumericUpDown LogicSpin => _logicSpin;
         public TreeView DialogTree => _dialogTree;
+        
+        // Expose condition parameter widgets for testing
+        // Matching PyKotor implementation: editor.ui.condition1Param1Spin, etc.
+        public NumericUpDown Condition1Param1Spin => _condition1Param1Spin;
+        public NumericUpDown Condition1Param2Spin => _condition1Param2Spin;
+        public NumericUpDown Condition1Param3Spin => _condition1Param3Spin;
+        public NumericUpDown Condition1Param4Spin => _condition1Param4Spin;
+        public NumericUpDown Condition1Param5Spin => _condition1Param5Spin;
+        public TextBox Condition1Param6Edit => _condition1Param6Edit;
+        public CheckBox Condition1NotCheckbox => _condition1NotCheckbox;
+        public NumericUpDown Condition2Param1Spin => _condition2Param1Spin;
+        public NumericUpDown Condition2Param2Spin => _condition2Param2Spin;
+        public NumericUpDown Condition2Param3Spin => _condition2Param3Spin;
+        public NumericUpDown Condition2Param4Spin => _condition2Param4Spin;
+        public NumericUpDown Condition2Param5Spin => _condition2Param5Spin;
+        public TextBox Condition2Param6Edit => _condition2Param6Edit;
+        public CheckBox Condition2NotCheckbox => _condition2NotCheckbox;
 
         // Expose quest widgets for testing
         // Matching PyKotor implementation: editor.ui.questEdit, editor.ui.questEntrySpin
@@ -619,9 +719,65 @@ namespace HolocronToolset.Editors
                 {
                     _condition1ResrefEdit.Text = string.Empty;
                 }
+                if (_condition1Param1Spin != null)
+                {
+                    _condition1Param1Spin.Value = 0;
+                }
+                if (_condition1Param2Spin != null)
+                {
+                    _condition1Param2Spin.Value = 0;
+                }
+                if (_condition1Param3Spin != null)
+                {
+                    _condition1Param3Spin.Value = 0;
+                }
+                if (_condition1Param4Spin != null)
+                {
+                    _condition1Param4Spin.Value = 0;
+                }
+                if (_condition1Param5Spin != null)
+                {
+                    _condition1Param5Spin.Value = 0;
+                }
+                if (_condition1Param6Edit != null)
+                {
+                    _condition1Param6Edit.Text = string.Empty;
+                }
+                if (_condition1NotCheckbox != null)
+                {
+                    _condition1NotCheckbox.IsChecked = false;
+                }
                 if (_condition2ResrefEdit != null)
                 {
                     _condition2ResrefEdit.Text = string.Empty;
+                }
+                if (_condition2Param1Spin != null)
+                {
+                    _condition2Param1Spin.Value = 0;
+                }
+                if (_condition2Param2Spin != null)
+                {
+                    _condition2Param2Spin.Value = 0;
+                }
+                if (_condition2Param3Spin != null)
+                {
+                    _condition2Param3Spin.Value = 0;
+                }
+                if (_condition2Param4Spin != null)
+                {
+                    _condition2Param4Spin.Value = 0;
+                }
+                if (_condition2Param5Spin != null)
+                {
+                    _condition2Param5Spin.Value = 0;
+                }
+                if (_condition2Param6Edit != null)
+                {
+                    _condition2Param6Edit.Text = string.Empty;
+                }
+                if (_condition2NotCheckbox != null)
+                {
+                    _condition2NotCheckbox.IsChecked = false;
                 }
                 if (_logicSpin != null)
                 {
@@ -681,18 +837,84 @@ namespace HolocronToolset.Editors
             var node = link.Node;
 
             // Load condition1
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2364-2454
+            // Original: self.ui.condition1ResrefEdit.set_combo_box_text(str(item.link.active1))
+            // Original: self.ui.condition1Param1Spin.setValue(item.link.active1_param1)
+            // Original: self.ui.condition1NotCheckbox.setChecked(item.link.active1_not)
             if (_condition1ResrefEdit != null)
             {
                 _condition1ResrefEdit.Text = link.Active1?.ToString() ?? string.Empty;
             }
+            if (_condition1Param1Spin != null)
+            {
+                _condition1Param1Spin.Value = link.Active1Param1;
+            }
+            if (_condition1Param2Spin != null)
+            {
+                _condition1Param2Spin.Value = link.Active1Param2;
+            }
+            if (_condition1Param3Spin != null)
+            {
+                _condition1Param3Spin.Value = link.Active1Param3;
+            }
+            if (_condition1Param4Spin != null)
+            {
+                _condition1Param4Spin.Value = link.Active1Param4;
+            }
+            if (_condition1Param5Spin != null)
+            {
+                _condition1Param5Spin.Value = link.Active1Param5;
+            }
+            if (_condition1Param6Edit != null)
+            {
+                _condition1Param6Edit.Text = link.Active1Param6 ?? string.Empty;
+            }
+            if (_condition1NotCheckbox != null)
+            {
+                _condition1NotCheckbox.IsChecked = link.Active1Not;
+            }
 
             // Load condition2
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2364-2454
+            // Original: self.ui.condition2ResrefEdit.set_combo_box_text(str(item.link.active2))
+            // Original: self.ui.condition2Param1Spin.setValue(item.link.active2_param1)
+            // Original: self.ui.condition2NotCheckbox.setChecked(item.link.active2_not)
             if (_condition2ResrefEdit != null)
             {
                 _condition2ResrefEdit.Text = link.Active2?.ToString() ?? string.Empty;
             }
+            if (_condition2Param1Spin != null)
+            {
+                _condition2Param1Spin.Value = link.Active2Param1;
+            }
+            if (_condition2Param2Spin != null)
+            {
+                _condition2Param2Spin.Value = link.Active2Param2;
+            }
+            if (_condition2Param3Spin != null)
+            {
+                _condition2Param3Spin.Value = link.Active2Param3;
+            }
+            if (_condition2Param4Spin != null)
+            {
+                _condition2Param4Spin.Value = link.Active2Param4;
+            }
+            if (_condition2Param5Spin != null)
+            {
+                _condition2Param5Spin.Value = link.Active2Param5;
+            }
+            if (_condition2Param6Edit != null)
+            {
+                _condition2Param6Edit.Text = link.Active2Param6 ?? string.Empty;
+            }
+            if (_condition2NotCheckbox != null)
+            {
+                _condition2NotCheckbox.IsChecked = link.Active2Not;
+            }
 
             // Load logic (0 = AND/false, 1 = OR/true)
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2364-2454
+            // Original: self.ui.logicSpin.setValue(1 if item.link.logic else 0)
             if (_logicSpin != null)
             {
                 _logicSpin.Value = link.Logic ? 1 : 0;
@@ -820,20 +1042,86 @@ namespace HolocronToolset.Editors
             var node = link.Node;
 
             // Update condition1
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2477-2484
+            // Original: item.link.active1 = ResRef(self.ui.condition1ResrefEdit.currentText())
+            // Original: item.link.active1_param1 = self.ui.condition1Param1Spin.value()
+            // Original: item.link.active1_not = self.ui.condition1NotCheckbox.isChecked()
             if (_condition1ResrefEdit != null)
             {
                 string text = _condition1ResrefEdit.Text ?? string.Empty;
                 link.Active1 = string.IsNullOrEmpty(text) ? ResRef.FromBlank() : new ResRef(text);
             }
+            if (_condition1Param1Spin != null)
+            {
+                link.Active1Param1 = _condition1Param1Spin.Value.HasValue ? (int)_condition1Param1Spin.Value.Value : 0;
+            }
+            if (_condition1Param2Spin != null)
+            {
+                link.Active1Param2 = _condition1Param2Spin.Value.HasValue ? (int)_condition1Param2Spin.Value.Value : 0;
+            }
+            if (_condition1Param3Spin != null)
+            {
+                link.Active1Param3 = _condition1Param3Spin.Value.HasValue ? (int)_condition1Param3Spin.Value.Value : 0;
+            }
+            if (_condition1Param4Spin != null)
+            {
+                link.Active1Param4 = _condition1Param4Spin.Value.HasValue ? (int)_condition1Param4Spin.Value.Value : 0;
+            }
+            if (_condition1Param5Spin != null)
+            {
+                link.Active1Param5 = _condition1Param5Spin.Value.HasValue ? (int)_condition1Param5Spin.Value.Value : 0;
+            }
+            if (_condition1Param6Edit != null)
+            {
+                link.Active1Param6 = _condition1Param6Edit.Text ?? string.Empty;
+            }
+            if (_condition1NotCheckbox != null)
+            {
+                link.Active1Not = _condition1NotCheckbox.IsChecked.HasValue && _condition1NotCheckbox.IsChecked.Value;
+            }
 
             // Update condition2
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2485-2492
+            // Original: item.link.active2 = ResRef(self.ui.condition2ResrefEdit.currentText())
+            // Original: item.link.active2_param1 = self.ui.condition2Param1Spin.value()
+            // Original: item.link.active2_not = self.ui.condition2NotCheckbox.isChecked()
             if (_condition2ResrefEdit != null)
             {
                 string text = _condition2ResrefEdit.Text ?? string.Empty;
                 link.Active2 = string.IsNullOrEmpty(text) ? ResRef.FromBlank() : new ResRef(text);
             }
+            if (_condition2Param1Spin != null)
+            {
+                link.Active2Param1 = _condition2Param1Spin.Value.HasValue ? (int)_condition2Param1Spin.Value.Value : 0;
+            }
+            if (_condition2Param2Spin != null)
+            {
+                link.Active2Param2 = _condition2Param2Spin.Value.HasValue ? (int)_condition2Param2Spin.Value.Value : 0;
+            }
+            if (_condition2Param3Spin != null)
+            {
+                link.Active2Param3 = _condition2Param3Spin.Value.HasValue ? (int)_condition2Param3Spin.Value.Value : 0;
+            }
+            if (_condition2Param4Spin != null)
+            {
+                link.Active2Param4 = _condition2Param4Spin.Value.HasValue ? (int)_condition2Param4Spin.Value.Value : 0;
+            }
+            if (_condition2Param5Spin != null)
+            {
+                link.Active2Param5 = _condition2Param5Spin.Value.HasValue ? (int)_condition2Param5Spin.Value.Value : 0;
+            }
+            if (_condition2Param6Edit != null)
+            {
+                link.Active2Param6 = _condition2Param6Edit.Text ?? string.Empty;
+            }
+            if (_condition2NotCheckbox != null)
+            {
+                link.Active2Not = _condition2NotCheckbox.IsChecked.HasValue && _condition2NotCheckbox.IsChecked.Value;
+            }
 
             // Update logic (0 = AND/false, 1 = OR/true)
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2493
+            // Original: item.link.logic = bool(self.ui.logicSpin.value())
             if (_logicSpin != null)
             {
                 link.Logic = _logicSpin.Value.HasValue && _logicSpin.Value.Value != 0;
