@@ -1398,54 +1398,52 @@ namespace HolocronToolset.Editors
             else
             {
                 // Navigate to first result
-                if (results.Count > 0 && _codeEdit != null)
+                if (results.Count > 0)
                 {
                     var firstResult = results[0];
+                    GotoLine(firstResult.Line);
                     
-                    // Calculate absolute position in text
-                    string[] fileLines = _codeEdit.Text.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
-                    if (firstResult.Line > 0 && firstResult.Line <= fileLines.Length)
+                    // Try to position cursor at the match column
+                    if (_codeEdit != null)
                     {
-                        int lineIndex = firstResult.Line - 1;
-                        int position = 0;
+                        // Calculate position by finding the line start and adding column offset
+                        int lineStart = 0;
+                        int currentLine = 1;
+                        string text = _codeEdit.Text;
                         
-                        // Sum lengths of previous lines with newline characters
-                        for (int i = 0; i < lineIndex; i++)
+                        // Find the start of the target line
+                        for (int i = 0; i < text.Length && currentLine < firstResult.Line; i++)
                         {
-                            position += fileLines[i].Length;
-                            // Add newline length (check what newline was actually used)
-                            if (i < fileLines.Length - 1)
+                            if (text[i] == '\n')
                             {
-                                // Try to determine actual newline from original text
-                                int nextLineStart = position;
-                                if (nextLineStart < _codeEdit.Text.Length)
+                                currentLine++;
+                                lineStart = i + 1;
+                            }
+                            else if (text[i] == '\r')
+                            {
+                                // Handle \r\n or \r
+                                if (i + 1 < text.Length && text[i + 1] == '\n')
                                 {
-                                    if (_codeEdit.Text.Length > nextLineStart + 1 && 
-                                        _codeEdit.Text[nextLineStart] == '\r' && 
-                                        _codeEdit.Text[nextLineStart + 1] == '\n')
-                                    {
-                                        position += 2; // \r\n
-                                    }
-                                    else if (_codeEdit.Text[nextLineStart] == '\n' || 
-                                             _codeEdit.Text[nextLineStart] == '\r')
-                                    {
-                                        position += 1; // \n or \r
-                                    }
+                                    currentLine++;
+                                    lineStart = i + 2;
+                                    i++; // Skip the \n
+                                }
+                                else
+                                {
+                                    currentLine++;
+                                    lineStart = i + 1;
                                 }
                             }
                         }
                         
-                        // Add column offset (convert from 1-indexed to 0-indexed)
-                        int columnOffset = firstResult.Column - 1;
-                        position += columnOffset;
-                        
-                        // Ensure position is within bounds
-                        if (position >= 0 && position < _codeEdit.Text.Length)
+                        // Calculate position including column (1-indexed to 0-indexed)
+                        int targetPosition = lineStart + (firstResult.Column - 1);
+                        if (targetPosition >= 0 && targetPosition < text.Length)
                         {
-                            // Set selection to highlight the word
-                            _codeEdit.SelectionStart = position;
-                            _codeEdit.SelectionEnd = position + word.Length;
-                            _codeEdit.CaretIndex = position;
+                            // Select the word at that position
+                            _codeEdit.SelectionStart = targetPosition;
+                            _codeEdit.SelectionEnd = targetPosition + word.Length;
+                            _codeEdit.CaretIndex = targetPosition;
                         }
                     }
                 }
