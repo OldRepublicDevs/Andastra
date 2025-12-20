@@ -797,6 +797,32 @@ namespace Andastra.Runtime.Game.Core
                     // However, original games go to character creation first, then load module
                     // Original implementation: Character creation completes -> module loads -> player entity created
                     Console.WriteLine("[Odyssey] New Game button clicked - transitioning to character creation");
+                    
+                    // Stop main menu music and start character creation music
+                    // Based on swkotor.exe FUN_005f9af0: Plays "mus_theme_rep" for character creation (param_1 == 0)
+                    // Based on swkotor2.exe: Plays "mus_main" for character creation (vendor/reone implementation)
+                    if (_musicPlayer != null && _musicStarted)
+                    {
+                        _musicPlayer.Stop();
+                        _musicStarted = false;
+                        Console.WriteLine("[Odyssey] Main menu music stopped");
+                    }
+                    
+                    // Start character creation music
+                    if (_musicPlayer != null && _musicEnabled)
+                    {
+                        string chargenMusicResRef = _settings.Game == Andastra.Runtime.Core.KotorGame.K1 ? "mus_theme_rep" : "mus_main";
+                        if (_musicPlayer.Play(chargenMusicResRef, 1.0f))
+                        {
+                            _musicStarted = true;
+                            Console.WriteLine($"[Odyssey] Character creation music started: {chargenMusicResRef}");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[Odyssey] WARNING: Failed to play character creation music: {chargenMusicResRef}");
+                        }
+                    }
+                    
                     _currentState = GameState.CharacterCreation;
                     if (_characterCreationScreen == null)
                     {

@@ -5275,9 +5275,18 @@ namespace HolocronToolset.Tests.Windows
                     // Matching Python: assert isinstance(component.image, QImage)
                     component.Image.Should().NotBeNull("Component image should not be null");
 
-                    // Note: In C#, Image is object type, so we can't check QImage type directly
-                    // TODO: STUB - The actual image validation will happen when ModuleKit._load_module_components is implemented
-                    return; // Found a component with image, test passes
+                    // Matching Python: assert component.image.width() > 0
+                    // Matching Python: assert component.image.height() > 0
+                    // Matching Python: assert not component.image.isNull()
+                    // In Avalonia, images are Bitmap with PixelSize property
+                    var image = component.Image as Avalonia.Media.Imaging.Bitmap;
+                    image.Should().NotBeNull("Component image should be a Bitmap instance");
+                    image.PixelSize.Width.Should().BeGreaterThan(0, "Component image width should be greater than 0");
+                    image.PixelSize.Height.Should().BeGreaterThan(0, "Component image height should be greater than 0");
+
+                    // Matching Python: print(f"Component '{component.name}' image: {component.image.width()}x{component.image.height()}")
+                    // Note: Test output will show image dimensions if test framework supports it
+                    return; // Found a component with valid image, test passes
                 }
             }
 
