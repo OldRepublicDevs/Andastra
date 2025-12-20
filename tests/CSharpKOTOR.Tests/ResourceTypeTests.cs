@@ -1,5 +1,5 @@
 ﻿using NUnit.Framework;
-using AuroraEngine.Common.Resources;
+using Andastra.Parsing.Resource;
 
 namespace AuroraEngine.Common.Tests
 {

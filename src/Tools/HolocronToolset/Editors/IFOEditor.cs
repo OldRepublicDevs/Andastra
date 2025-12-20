@@ -8,8 +8,17 @@ using Andastra.Parsing;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource;
+using Avalonia.Controls.Primitives;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
+using Window = Avalonia.Controls.Window;
+using IFO = Andastra.Parsing.Resource.Generics.IFO;
+using NumericUpDown = Avalonia.Controls.NumericUpDown;
+using TextBox = Avalonia.Controls.TextBox;
+using Button = Avalonia.Controls.Button;
+using ScrollViewer = Avalonia.Controls.ScrollViewer;
+using StackPanel = Avalonia.Controls.StackPanel;
+using Expander = Avalonia.Controls.Expander;
 
 namespace HolocronToolset.Editors
 {

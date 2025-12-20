@@ -5689,7 +5689,7 @@ int GN_TalentMasterRoutine(int nTalentConstant, object oTarget)
         {
             GN_MyPrintString(""GENERIC DEBUG *************** Clear 2300"");
             int nSpell = GetIdFromTalent(tUse);
-            GN_MyPrintString(""GENERIC DEBUG *************** Spells.TwoDA ID = "" + GN_ITS(nSpell));
+            GN_MyPrintString(""GENERIC DEBUG *************** Spells.2DA ID = "" + GN_ITS(nSpell));
             ClearAllActions();
             ActionUseTalentOnObject(tUse, OBJECT_SELF);
             return TRUE;
@@ -29666,7 +29666,7 @@ int GN_TalentMasterRoutine(int nTalentConstant, object oTarget)
         {
             GN_MyPrintString(""GENERIC DEBUG *************** Clear 2300"");
             int nSpell = GetIdFromTalent(tUse);
-            GN_MyPrintString(""GENERIC DEBUG *************** Spells.TwoDA ID = "" + GN_ITS(nSpell));
+            GN_MyPrintString(""GENERIC DEBUG *************** Spells.2DA ID = "" + GN_ITS(nSpell));
             ClearAllActions();
             ActionUseTalentOnObject(tUse, OBJECT_SELF);
             return TRUE;

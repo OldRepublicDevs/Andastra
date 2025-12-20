@@ -48,7 +48,7 @@ namespace Andastra.Utility.MiscString
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/utility/common/misc_string/case_insens_str.py:40-46
         // Original: def __eq__(self, __value):
-        public override bool Equals(object obj)
+        public override bool Equals([CanBeNull] object obj)
         {
             if (ReferenceEquals(this, obj))
             {

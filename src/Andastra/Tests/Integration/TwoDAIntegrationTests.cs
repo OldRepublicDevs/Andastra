@@ -25,7 +25,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void ChangeRow_ExistingRowIndex_ShouldModifyCorrectRow()
         {
             // Arrange
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2", "Col3" },
                 new[]
                 {
@@ -54,7 +54,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void ChangeRow_ExistingRowLabel_ShouldModifyCorrectRow()
         {
             // Arrange
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2", "Col3" },
                 new[]
                 {
@@ -80,7 +80,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void ChangeRow_ExistingLabelIndex_ShouldModifyCorrectRow()
         {
             // Arrange - LABEL_COLUMN searches for a column named "label", not row labels
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "label", "Col2", "Col3" },
                 new[]
                 {
@@ -106,7 +106,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void ChangeRow_AssignTLKMemory_ShouldUseTokenValue()
         {
             // Arrange
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "name", "description" },
                 new[]
                 {
@@ -131,7 +131,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void ChangeRow_Assign2DAMemory_ShouldUseTokenValue()
         {
             // Arrange
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "appearance", "health" },
                 new[]
                 {
@@ -155,7 +155,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void ChangeRow_AssignHigh_ShouldUseHighestValue()
         {
             // Arrange
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "id", "value" },
                 new[]
                 {
@@ -180,7 +180,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void ChangeRow_Set2DAMemory_RowIndex_ShouldStoreRowIndex()
         {
             // Arrange
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[]
                 {
@@ -204,7 +204,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void ChangeRow_Set2DAMemory_RowLabel_ShouldStoreRowLabel()
         {
             // Arrange
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[]
                 {
@@ -227,7 +227,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void ChangeRow_Set2DAMemory_ColumnLabel_ShouldStoreCellValue()
         {
             // Arrange
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "name", "value" },
                 new[]
                 {
@@ -253,7 +253,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void AddRow_RowLabel_UseMaxRowLabel_ShouldGenerateNewLabel()
         {
             // Arrange
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[]
                 {
@@ -279,7 +279,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void AddRow_RowLabel_UseConstant_ShouldUseProvidedLabel()
         {
             // Arrange
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[]
                 {
@@ -303,7 +303,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void AddRow_Exclusive_NotExists_ShouldAddRow()
         {
             // Arrange
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "label", "value" },
                 new[]
                 {
@@ -326,7 +326,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void AddRow_Exclusive_Exists_ShouldSkipAddition()
         {
             // Arrange
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "label", "value" },
                 new[]
                 {
@@ -350,7 +350,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void AddRow_Exclusive_None_ShouldAlwaysAdd()
         {
             // Arrange
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "label", "value" },
                 new[]
                 {
@@ -374,7 +374,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void AddRow_Store2DAMemory_RowIndex_ShouldStoreIndex()
         {
             // Arrange
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "Col1" },
                 new[]
                 {
@@ -397,7 +397,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void AddRow_Store2DAMemory_RowLabel_ShouldStoreLabel()
         {
             // Arrange
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "Col1" },
                 new[]
                 {
@@ -419,7 +419,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void AddRow_Store2DAMemory_Cell_ShouldStoreCellValue()
         {
             // Arrange
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "name", "value" },
                 new[]
                 {
@@ -446,7 +446,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void CopyRow_ExistingRowIndex_ShouldCopyAndModify()
         {
             // Arrange
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2", "Col3" },
                 new[]
                 {
@@ -472,7 +472,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void CopyRow_ExistingRowLabel_ShouldCopyCorrectRow()
         {
             // Arrange
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[]
                 {
@@ -495,7 +495,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void CopyRow_Exclusive_NotExists_ShouldCopy()
         {
             // Arrange
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "label", "value" },
                 new[]
                 {
@@ -517,7 +517,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void CopyRow_Exclusive_Exists_ShouldSkipCopy()
         {
             // Arrange
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "label", "value" },
                 new[]
                 {
@@ -539,7 +539,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void CopyRow_Store2DAMemory_RowIndex_ShouldStoreNewIndex()
         {
             // Arrange
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "Col1" },
                 new[]
                 {
@@ -561,7 +561,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void CopyRow_Store2DAMemory_RowLabel_ShouldStoreNewLabel()
         {
             // Arrange
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "Col1" },
                 new[]
                 {
@@ -583,7 +583,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void CopyRow_Store2DAMemory_Cell_ShouldStoreCellValue()
         {
             // Arrange
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "name", "value" },
                 new[]
                 {
@@ -609,7 +609,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void AddColumn_Empty_ShouldAddColumnWithEmptyCells()
         {
             // Arrange
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[]
                 {
@@ -632,7 +632,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void AddColumn_WithDefaultValue_ShouldFillCells()
         {
             // Arrange
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "Col1" },
                 new[]
                 {
@@ -655,7 +655,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void AddColumn_AlreadyExists_ShouldNotAddDuplicate()
         {
             // Arrange
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[]
                 {
@@ -677,7 +677,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void AddColumn_Multiple_ShouldAddAllColumns()
         {
             // Arrange
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "Col1" },
                 new[]
                 {
@@ -713,7 +713,7 @@ ColumnLabel=Col3
 DefaultValue=****
 ";
             Andastra.Parsing.Config.PatcherConfig config = SetupIniAndConfig(iniText);
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[]
                 {
@@ -745,7 +745,7 @@ ColumnLabel=Col3
 DefaultValue=X
 ";
             Andastra.Parsing.Config.PatcherConfig config = SetupIniAndConfig(iniText);
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[]
                 {
@@ -778,7 +778,7 @@ DefaultValue=****
 I0=X
 ";
             Andastra.Parsing.Config.PatcherConfig config = SetupIniAndConfig(iniText);
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[]
                 {
@@ -811,7 +811,7 @@ DefaultValue=****
 L1=2DAMEMORY5
 ";
             Andastra.Parsing.Config.PatcherConfig config = SetupIniAndConfig(iniText);
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[]
                 {
@@ -845,7 +845,7 @@ DefaultValue=****
 L1=StrRef5
 ";
             Andastra.Parsing.Config.PatcherConfig config = SetupIniAndConfig(iniText);
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[]
                 {
@@ -881,7 +881,7 @@ I1=Y
 2DAMEMORY0=I0
 ";
             Andastra.Parsing.Config.PatcherConfig config = SetupIniAndConfig(iniText);
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[]
                 {
@@ -917,7 +917,7 @@ I1=Y
 2DAMEMORY0=L1
 ";
             Andastra.Parsing.Config.PatcherConfig config = SetupIniAndConfig(iniText);
-            2DA twoda = CreateTest2DA(
+            TwoDA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[]
                 {

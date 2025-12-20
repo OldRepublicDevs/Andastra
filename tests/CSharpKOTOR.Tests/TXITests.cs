@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using NUnit.Framework;
-using AuroraEngine.Common.Formats.TXI;
+using Andastra.Parsing.Formats.TXI;
 
 namespace AuroraEngine.Common.Tests
 {

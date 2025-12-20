@@ -20,6 +20,19 @@ using HolocronToolset.Widgets.Edit;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
+using Window = Avalonia.Controls.Window;
+using UTE = Andastra.Parsing.Resource.Generics.UTE;
+using Avalonia;
+using TextBlock = Avalonia.Controls.TextBlock;
+using LocalizedString = Andastra.Parsing.Common.LocalizedString;
+using ResourceType = Andastra.Parsing.Resource.ResourceType;
+using Button = Avalonia.Controls.Button;
+using ComboBox = Avalonia.Controls.ComboBox;
+using NumericUpDown = Avalonia.Controls.NumericUpDown;
+using CheckBox = Avalonia.Controls.CheckBox;
+using DataGrid = Avalonia.Controls.DataGrid;
+using TabControl = Avalonia.Controls.TabControl;
+using TabItem = Avalonia.Controls.TabItem;
 
 namespace HolocronToolset.Editors
 {
@@ -50,7 +63,7 @@ namespace HolocronToolset.Editors
         private Button _tagGenerateBtn;
         private TextBox _resrefEdit;
         private Button _resrefGenerateBtn;
-        private ComboBoxTwoDA _difficultySelect;
+        private ComboBox2DA _difficultySelect;
         private ComboBox _spawnSelect;
         private NumericUpDown _minCreatureSpin;
         private NumericUpDown _maxCreatureSpin;
@@ -58,7 +71,7 @@ namespace HolocronToolset.Editors
         // UI Controls - Advanced
         private CheckBox _activeCheckbox;
         private CheckBox _playerOnlyCheckbox;
-        private ComboBoxTwoDA _factionSelect;
+        private ComboBox2DA _factionSelect;
         private CheckBox _respawnsCheckbox;
         private CheckBox _infiniteRespawnCheckbox;
         private NumericUpDown _respawnTimeSpin;
@@ -77,7 +90,7 @@ namespace HolocronToolset.Editors
         private ComboBox _onUserDefinedSelect;
 
         // UI Controls - Comments
-        private TextBox _commentsEdit;
+        private TextBlock _commentsEdit;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:27-66
         // Original: def __init__(self, parent, installation):
@@ -117,13 +130,13 @@ namespace HolocronToolset.Editors
                 _tagGenerateBtn = this.FindControl<Button>("tagGenerateButton");
                 _resrefEdit = this.FindControl<TextBox>("resrefEdit");
                 _resrefGenerateBtn = this.FindControl<Button>("resrefGenerateButton");
-                _difficultySelect = this.FindControl<ComboBoxTwoDA>("difficultySelect");
+                _difficultySelect = this.FindControl<ComboBox2DA>("difficultySelect");
                 _spawnSelect = this.FindControl<ComboBox>("spawnSelect");
                 _minCreatureSpin = this.FindControl<NumericUpDown>("minCreatureSpin");
                 _maxCreatureSpin = this.FindControl<NumericUpDown>("maxCreatureSpin");
                 _activeCheckbox = this.FindControl<CheckBox>("activeCheckbox");
                 _playerOnlyCheckbox = this.FindControl<CheckBox>("playerOnlyCheckbox");
-                _factionSelect = this.FindControl<ComboBoxTwoDA>("factionSelect");
+                _factionSelect = this.FindControl<ComboBox2DA>("factionSelect");
                 _respawnsCheckbox = this.FindControl<CheckBox>("respawnsCheckbox");
                 _infiniteRespawnCheckbox = this.FindControl<CheckBox>("infiniteRespawnCheckbox");
                 _respawnTimeSpin = this.FindControl<NumericUpDown>("respawnTimeSpin");
@@ -136,7 +149,7 @@ namespace HolocronToolset.Editors
                 _onExhaustedEdit = this.FindControl<ComboBox>("onExhaustedEdit");
                 _onHeartbeatSelect = this.FindControl<ComboBox>("onHeartbeatSelect");
                 _onUserDefinedSelect = this.FindControl<ComboBox>("onUserDefinedSelect");
-                _commentsEdit = this.FindControl<TextBox>("commentsEdit");
+                _commentsEdit = this.FindControl<TextBlock>("commentsEdit");
             }
             catch
             {
@@ -200,7 +213,7 @@ namespace HolocronToolset.Editors
             }
 
             // Matching PyKotor implementation: difficulties: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_ENC_DIFFICULTIES)
-            TwoDA difficulties = installation.HtGetCacheTwoDA(HTInstallation.TwoDAEncDifficulties);
+            TwoDA difficulties = installation.HtGetCache2DA(HTInstallation.TwoDAEncDifficulties);
             if (_difficultySelect != null)
             {
                 _difficultySelect.Items.Clear();
@@ -213,7 +226,7 @@ namespace HolocronToolset.Editors
             }
 
             // Matching PyKotor implementation: factions: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_FACTIONS)
-            TwoDA factions = installation.HtGetCacheTwoDA(HTInstallation.TwoDAFactions);
+            TwoDA factions = installation.HtGetCache2DA(HTInstallation.TwoDAFactions);
             if (_factionSelect != null)
             {
                 _factionSelect.Items.Clear();
@@ -300,7 +313,7 @@ namespace HolocronToolset.Editors
 
             // Difficulty
             var difficultyLabel = new TextBlock { Text = "Difficulty:" };
-            _difficultySelect = new ComboBoxTwoDA();
+            _difficultySelect = new ComboBox2DA();
             basicPanel.Children.Add(difficultyLabel);
             basicPanel.Children.Add(_difficultySelect);
 
@@ -334,7 +347,7 @@ namespace HolocronToolset.Editors
             _playerOnlyCheckbox = new CheckBox { Content = "Player Triggered Only" };
 
             var factionLabel = new TextBlock { Text = "Faction:" };
-            _factionSelect = new ComboBoxTwoDA();
+            _factionSelect = new ComboBox2DA();
 
             _respawnsCheckbox = new CheckBox { Content = "Respawns" };
             _infiniteRespawnCheckbox = new CheckBox { Content = "Infinite Respawns" };

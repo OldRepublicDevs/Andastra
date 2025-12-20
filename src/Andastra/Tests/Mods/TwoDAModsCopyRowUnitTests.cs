@@ -17,7 +17,7 @@ namespace Andastra.Parsing.Tests.Mods
     /// </summary>
     public class TwoDAModsCopyRowUnitTests
     {
-        private static TwoDAFile CreateTestTwoDA(List<string> columns, params (string label, Dictionary<string, object> data)[] rows)
+        private static TwoDAFile CreateTest2DA(List<string> columns, params (string label, Dictionary<string, object> data)[] rows)
         {
             var twoda = new TwoDAFile(columns);
             foreach ((string label, Dictionary<string, object> data) in rows)
@@ -30,7 +30,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void CopyRow_ByRowIndex_ShouldCopyAndModify()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new List<string> { "Col1", "Col2" },
                 ("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } }),
                 ("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "d" } })
@@ -59,7 +59,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void CopyRow_ByRowLabel_ShouldCopyAndModify()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new List<string> { "Col1", "Col2" },
                 ("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } }),
                 ("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "d" } })
@@ -87,7 +87,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void CopyRow_ExclusiveNotExists_ShouldAddRow()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new List<string> { "Col1", "Col2" },
                 ("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } })
             );
@@ -119,7 +119,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void CopyRow_ExclusiveExists_ShouldUpdateExisting()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new List<string> { "Col1", "Col2" },
                 ("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } })
             );
@@ -151,7 +151,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void CopyRow_NoExclusive_ShouldAlwaysAdd()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new List<string> { "Col1", "Col2" },
                 ("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } })
             );
@@ -195,7 +195,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void CopyRow_WithNewRowLabel_ShouldUseProvidedLabel()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new List<string> { "Col1", "Col2", "Col3" },
                 ("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } }),
                 ("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "d" } })
@@ -223,7 +223,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void CopyRow_WithHigh_ShouldCalculateHighest()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new List<string> { "Col1", "Col2", "Col3" },
                 ("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "1" } }),
                 ("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "2" } })
@@ -251,7 +251,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void CopyRow_WithTLKMemory_ShouldUseMemoryValue()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new List<string> { "Col1", "Col2", "Col3" },
                 ("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "1" } }),
                 ("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "2" } })
@@ -279,7 +279,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void CopyRow_With2DAMemory_ShouldUseMemoryValue()
         {
-            TwoDAFile twoda = CreateTestTwoDA(new List<string> { "Col1", "Col2" },
+            TwoDAFile twoda = CreateTest2DA(new List<string> { "Col1", "Col2" },
                 ("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "1" } }),
                 ("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "2" } })
             );
@@ -306,7 +306,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void CopyRow_Store2DAMemoryRowIndex_ShouldStoreNewRowIndex()
         {
-            TwoDAFile twoda = CreateTestTwoDA(new List<string> { "Col1" },
+            TwoDAFile twoda = CreateTest2DA(new List<string> { "Col1" },
                 ("0", new Dictionary<string, object> { { "Col1", "a" } }),
                 ("1", new Dictionary<string, object> { { "Col1", "b" } })
             );

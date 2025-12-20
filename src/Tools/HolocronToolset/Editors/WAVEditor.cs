@@ -5,6 +5,7 @@ using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
+using Avalonia.Controls.Primitives;
 
 namespace HolocronToolset.Editors
 {

@@ -82,7 +82,7 @@ namespace Andastra.Parsing.Resource
                     byte[] data2da = source is string s3 ? File.ReadAllBytes(s3) : source as byte[];
                     var reader2da = new TwoDABinaryReader(data2da);
                     TwoDA twoda = reader2da.Load();
-                    return TwoDAAuto.BytesTwoDA(twoda);
+                    return TwoDAAuto.Bytes2DA(twoda);
                 }
                 if (resourceExt == "lip")
                 {
@@ -180,7 +180,7 @@ namespace Andastra.Parsing.Resource
                 byte[] data2da = source is string s3 ? File.ReadAllBytes(s3) : source as byte[];
                 var reader2da = new TwoDABinaryReader(data2da);
                 TwoDA twoda = reader2da.Load();
-                return TwoDAAuto.BytesTwoDA(twoda);
+                return TwoDAAuto.Bytes2DA(twoda);
             }
             catch { }
 
@@ -408,7 +408,7 @@ namespace Andastra.Parsing.Resource
             }
             if (resource is TwoDA twoda)
             {
-                return TwoDAAuto.BytesTwoDA(twoda);
+                return TwoDAAuto.Bytes2DA(twoda);
             }
             if (resource is VIS vis)
             {

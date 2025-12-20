@@ -26,7 +26,7 @@ namespace Andastra.Runtime.Games.Eclipse.Data
     public class EclipseTwoDATableManager
     {
         private readonly Installation _installation;
-        private readonly Dictionary<string, 2DA> _cachedTables;
+        private readonly Dictionary<string, TwoDA> _cachedTables;
 
         /// <summary>
         /// Initializes a new instance of the Eclipse 2DA table manager.
@@ -35,7 +35,7 @@ namespace Andastra.Runtime.Games.Eclipse.Data
         public EclipseTwoDATableManager(Installation installation)
         {
             _installation = installation ?? throw new ArgumentNullException("installation");
-            _cachedTables = new Dictionary<string, 2DA>(StringComparer.OrdinalIgnoreCase);
+            _cachedTables = new Dictionary<string, TwoDA>(StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -47,7 +47,7 @@ namespace Andastra.Runtime.Games.Eclipse.Data
         /// Based on Eclipse engine: Loads 2DA files from installation resource system with caching
         /// Eclipse engines use the same 2DA file format and resource lookup system as Odyssey/Aurora
         /// </remarks>
-        public 2DA GetTable(string tableName)
+        public TwoDA GetTable(string tableName)
         {
             if (string.IsNullOrEmpty(tableName))
             {
@@ -55,7 +55,7 @@ namespace Andastra.Runtime.Games.Eclipse.Data
             }
 
             // Check cache first
-            2DA cached;
+            TwoDA cached;
             if (_cachedTables.TryGetValue(tableName, out cached))
             {
                 return cached;
@@ -70,7 +70,7 @@ namespace Andastra.Runtime.Games.Eclipse.Data
                     return null;
                 }
 
-                2DA table = 2DA.FromBytes(resource.Data);
+                TwoDA table = TwoDA.FromBytes(resource.Data);
                 _cachedTables[tableName] = table;
                 return table;
             }
@@ -88,7 +88,7 @@ namespace Andastra.Runtime.Games.Eclipse.Data
         /// <returns>The TwoDARow, or null if not found</returns>
         public TwoDARow GetRow(string tableName, int rowIndex)
         {
-            2DA table = GetTable(tableName);
+            TwoDA table = GetTable(tableName);
             if (table == null)
             {
                 return null;
@@ -105,7 +105,7 @@ namespace Andastra.Runtime.Games.Eclipse.Data
         /// <returns>The TwoDARow, or null if not found</returns>
         public TwoDARow GetRowByLabel(string tableName, string rowLabel)
         {
-            2DA table = GetTable(tableName);
+            TwoDA table = GetTable(tableName);
             if (table == null)
             {
                 return null;

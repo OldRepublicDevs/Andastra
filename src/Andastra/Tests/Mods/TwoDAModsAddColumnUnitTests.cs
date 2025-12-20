@@ -18,7 +18,7 @@ namespace Andastra.Parsing.Tests.Mods
     /// </summary>
     public class TwoDAModsAddColumnUnitTests
     {
-        private static TwoDAFile CreateTestTwoDA(string[] columns, params (string label, string[] values)[] rows)
+        private static TwoDAFile CreateTest2DA(string[] columns, params (string label, string[] values)[] rows)
         {
             var twoda = new TwoDAFile(columns.ToList());
             foreach ((string label, string[] values) in rows)
@@ -36,7 +36,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_Empty_ShouldAddEmptyColumn()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 ("0", new[] { "a", "b" }),
                 ("1", new[] { "c", "d" })
@@ -65,7 +65,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_WithDefault_ShouldFillWithDefaultValue()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 ("0", new[] { "a", "b" }),
                 ("1", new[] { "c", "d" })
@@ -94,7 +94,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_RowIndexConstant_ShouldSetSpecificRowValue()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 ("0", new[] { "a", "b" }),
                 ("1", new[] { "c", "d" })
@@ -123,7 +123,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_RowLabel2DAMemory_ShouldUseMemoryValue()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 ("0", new[] { "a", "b" }),
                 ("1", new[] { "c", "d" })
@@ -153,7 +153,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_RowLabelTLKMemory_ShouldUseMemoryValue()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 ("0", new[] { "a", "b" }),
                 ("1", new[] { "c", "d" })
@@ -183,7 +183,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_Store2DAMemoryFromIndex_ShouldStoreValue()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 ("0", new[] { "a", "b" }),
                 ("1", new[] { "c", "d" })
@@ -220,7 +220,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_WithMultipleIndexAndLabelInserts_ShouldApplyAll()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new[] { "Col1" },
                 ("0", new[] { "a" }),
                 ("1", new[] { "b" }),
@@ -249,7 +249,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_ToEmptyTable_ShouldStillAddColumn()
         {
-            TwoDAFile twoda = CreateTestTwoDA(new[] { "Col1" });
+            TwoDAFile twoda = CreateTest2DA(new[] { "Col1" });
 
             var memory = new PatcherMemory();
             var logger = new PatchLogger();
@@ -273,7 +273,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddColumn_MultipleColumns_ShouldAddInOrder()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new[] { "Col1" },
                 ("0", new[] { "a" })
             );

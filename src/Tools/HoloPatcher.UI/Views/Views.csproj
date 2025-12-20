@@ -7,13 +7,13 @@
       $([System.String]::Copy('$(TargetFrameworks)').TrimEnd(';').TrimStart(';'))
     </TargetFrameworks>
     <!-- Add each TFM conditionally -->
-    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '10.0.0'))">
+    <TargetFrameworks Condition="$([System.Version]::Parse('$(NETCoreSdkVersion)').Major) >= 10">  
       $(TargetFrameworks);net10.0
     </TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '9.0.0'))">
+    <TargetFrameworks Condition="$([System.Version]::Parse('$(NETCoreSdkVersion)').Major) >= 9">
       $(TargetFrameworks);net9.0
     </TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '8.0.0'))">
+    <TargetFrameworks Condition="$([System.Version]::Parse('$(NETCoreSdkVersion)').Major) >= 8">
       $(TargetFrameworks);net8.0
     </TargetFrameworks>
     <!-- === .NET 7 SDK: include net7.0 + net6.0 (legacy support) === -->
@@ -36,5 +36,4 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
-</Project>
 </Project>

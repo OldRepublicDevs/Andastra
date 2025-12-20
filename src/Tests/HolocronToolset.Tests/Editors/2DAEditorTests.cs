@@ -76,12 +76,12 @@ namespace HolocronToolset.Tests.Editors
                 }
                 // Use the resource data directly
                 byte[] data = resource.Data;
-                2DA old = new TwoDABinaryReader(data).Load();
+                TwoDA old = new TwoDABinaryReader(data).Load();
                 var editor = new TwoDAEditor(null, _installation);
                 editor.Load("appearance.2da", "appearance", ResourceType.TwoDA, data);
 
                 var (newData, _) = editor.Build();
-                2DA newTwoda = new TwoDABinaryReader(newData).Load();
+                TwoDA newTwoda = new TwoDABinaryReader(newData).Load();
 
                 bool diff = old.Compare(newTwoda, LogFunc);
                 diff.Should().BeTrue($"2DA comparison failed. Log messages: {string.Join(Environment.NewLine, _logMessages)}");
@@ -95,7 +95,7 @@ namespace HolocronToolset.Tests.Editors
 
                 // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:84
                 // Original: old = read_2da(data)
-                2DA old = new TwoDABinaryReader(data).Load();
+                TwoDA old = new TwoDABinaryReader(data).Load();
 
                 // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:85
                 // Original: self.editor.load(filepath, "appearance", ResourceType.TwoDA, data)
@@ -108,7 +108,7 @@ namespace HolocronToolset.Tests.Editors
 
                 // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:88
                 // Original: new = read_2da(data)
-                2DA newTwoda = new TwoDABinaryReader(newData).Load();
+                TwoDA newTwoda = new TwoDABinaryReader(newData).Load();
 
                 // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:90
                 // Original: diff = old.compare(new, self.log_func)
@@ -126,7 +126,7 @@ namespace HolocronToolset.Tests.Editors
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:126-143
         // Original: def assertDeepEqual(self, obj1, obj2, context=""):
-        private void AssertDeepEqual(2DA obj1, 2DA obj2, string context = "")
+        private void AssertDeepEqual(TwoDA obj1, TwoDA obj2, string context = "")
         {
             // Compare headers
             var oldHeaders = new HashSet<string>(obj1.GetHeaders());
@@ -232,7 +232,7 @@ namespace HolocronToolset.Tests.Editors
                     continue; // Skip if resource data is invalid
                 }
 
-                2DA old = new TwoDABinaryReader(resourceData).Load();
+                TwoDA old = new TwoDABinaryReader(resourceData).Load();
 
                 // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:118
                 // Original: self.editor.load(twoda_resource.filepath(), twoda_resource.resname(), twoda_resource.restype(), twoda_resource.data())
@@ -244,7 +244,7 @@ namespace HolocronToolset.Tests.Editors
 
                 // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:121
                 // Original: new = read_2da(data)
-                2DA newTwoda = new TwoDABinaryReader(newData).Load();
+                TwoDA newTwoda = new TwoDABinaryReader(newData).Load();
 
                 // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:123
                 // Original: diff = old.compare(new, self.log_func)

@@ -17,7 +17,7 @@ namespace Andastra.Parsing.Tests.Mods
     /// </summary>
     public class TwoDAModsAddRowAdvancedTests
     {
-        private static TwoDAFile CreateTestTwoDA(List<string> columns, params (string label, Dictionary<string, object> data)[] rows)
+        private static TwoDAFile CreateTest2DA(List<string> columns, params (string label, Dictionary<string, object> data)[] rows)
         {
             var twoda = new TwoDAFile(columns);
             foreach ((string label, Dictionary<string, object> data) in rows)
@@ -30,7 +30,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_WithHigh_ShouldCalculateHighestValuePlusOne()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new List<string> { "Col1", "Col2", "Col3" },
                 ("0", new Dictionary<string, object> { { "Col1", "1" }, { "Col2", "b" }, { "Col3", "c" } }),
                 ("1", new Dictionary<string, object> { { "Col1", "2" }, { "Col2", "e" }, { "Col3", "f" } })
@@ -55,7 +55,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_WithTLKMemory_ShouldUseTLKMemoryValue()
         {
-            TwoDAFile twoda = CreateTestTwoDA(new List<string> { "Col1" });
+            TwoDAFile twoda = CreateTest2DA(new List<string> { "Col1" });
 
             var memory = new PatcherMemory();
             memory.MemoryStr[0] = 5;
@@ -74,7 +74,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_With2DAMemory_ShouldUse2DAMemoryValue()
         {
-            TwoDAFile twoda = CreateTestTwoDA(new List<string> { "Col1" });
+            TwoDAFile twoda = CreateTest2DA(new List<string> { "Col1" });
 
             var memory = new PatcherMemory();
             memory.Memory2DA[0] = "5";
@@ -93,7 +93,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_Store2DAMemoryRowIndex_WithExclusive_ShouldStoreExistingRowIndex()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new List<string> { "Col1" },
                 ("0", new Dictionary<string, object> { { "Col1", "X" } })
             );
@@ -121,7 +121,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_Store2DAMemoryRowIndex_WithoutExclusive_ShouldStoreNewRowIndex()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new List<string> { "Col1" },
                 ("0", new Dictionary<string, object> { { "Col1", "X" } })
             );
@@ -149,7 +149,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_MultipleTokensStoredInDifferentMemorySlots()
         {
-            TwoDAFile twoda = CreateTestTwoDA(new List<string> { "Col1" });
+            TwoDAFile twoda = CreateTest2DA(new List<string> { "Col1" });
 
             var memory = new PatcherMemory();
             var logger = new PatchLogger();
@@ -177,7 +177,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_StoreRowLabelFromTokenUsage()
         {
-            TwoDAFile twoda = CreateTestTwoDA(new List<string> { "Col1" });
+            TwoDAFile twoda = CreateTest2DA(new List<string> { "Col1" });
 
             var memory = new PatcherMemory();
             var logger = new PatchLogger();
@@ -201,7 +201,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_StoreCellDataFromTokenUsage()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new List<string> { "Col1", "Col2" },
                 ("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } })
             );
@@ -231,7 +231,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_WithHighAndTokenStorage_ShouldStoreCalculatedValue()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new List<string> { "Col1" },
                 ("0", new Dictionary<string, object> { { "Col1", "5" } }),
                 ("1", new Dictionary<string, object> { { "Col1", "10" } })
@@ -259,7 +259,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_ExclusiveMatchExisting_TokenUsageShouldReferToExistingRow()
         {
-            TwoDAFile twoda = CreateTestTwoDA(new List<string> { "Col1", "Col2" },
+            TwoDAFile twoda = CreateTest2DA(new List<string> { "Col1", "Col2" },
                 ("original_label", new Dictionary<string, object> { { "Col1", "unique_val" }, { "Col2", "old" } })
             );
 

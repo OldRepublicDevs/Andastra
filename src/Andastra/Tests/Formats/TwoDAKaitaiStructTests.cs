@@ -341,7 +341,7 @@ namespace Andastra.Parsing.Tests.Formats
             if (!File.Exists(TestTwoDAFile))
             {
                 // Create test file if needed
-                var testTwoda = new 2DA(new List<string> { "col1", "col2", "col3" });
+                var testTwoda = new TwoDA(new List<string> { "col1", "col2", "col3" });
                 testTwoda.AddRow("0", new Dictionary<string, object> { { "col1", "abc" }, { "col2", "def" }, { "col3", "ghi" } });
                 testTwoda.AddRow("1", new Dictionary<string, object> { { "col1", "def" }, { "col2", "ghi" }, { "col3", "123" } });
                 testTwoda.AddRow("2", new Dictionary<string, object> { { "col1", "123" }, { "col2", "" }, { "col3", "abc" } });
@@ -352,7 +352,7 @@ namespace Andastra.Parsing.Tests.Formats
             }
 
             // This test validates the structure matches expectations
-            2DA twoda = new TwoDABinaryReader(TestTwoDAFile).Load();
+            TwoDA twoda = new TwoDABinaryReader(TestTwoDAFile).Load();
 
             // Validate structure matches Kaitai Struct definition expectations
             twoda.GetCellString(0, "col1").Should().Be("abc");

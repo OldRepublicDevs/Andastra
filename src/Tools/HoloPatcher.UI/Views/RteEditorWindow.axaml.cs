@@ -14,6 +14,17 @@ using HoloPatcher.UI.Rte;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 using AvaloniaTextElement = Avalonia.Controls.Documents.TextElement;
+using KeyEventArgs = Avalonia.Input.KeyEventArgs;
+using TextRange = Avalonia.Controls.Documents.TextRange;
+using TextAlignment = Avalonia.Controls.Documents.TextAlignment;
+using TextDecorationCollection = Avalonia.Controls.Documents.TextDecorationCollection;
+using TextDecoration = Avalonia.Controls.Documents.TextDecoration;
+using FontWeight = Avalonia.Media.FontWeight;
+using FontStyle = Avalonia.Media.FontStyle;
+using FontFamily = Avalonia.Media.FontFamily;
+using SolidColorBrush = Avalonia.Media.SolidColorBrush;
+using Color = Avalonia.Media.Color;
+using Colors = Avalonia.Media.Colors;
 
 namespace HoloPatcher.UI.Views
 {

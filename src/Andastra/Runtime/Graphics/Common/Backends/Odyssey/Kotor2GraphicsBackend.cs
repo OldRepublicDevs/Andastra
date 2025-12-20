@@ -386,7 +386,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             SendMessageA(windowHandle, WM_SIZE, IntPtr.Zero,
                 (IntPtr)(((rect.bottom - rect.top) << 16) | (rect.right - rect.left & 0xffff)));
             
-            ShowWindow(windowHandle, SW_SHOW);
+            ShowWindow(windowHandle, (int)SW_SHOW);
             
             // Get device context
             IntPtr hdc = GetDC(windowHandle);
@@ -542,7 +542,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     {
                         glGenTextures(1, ref _kotor2RenderTargetTexture);
                         glBindTexture(GL_TEXTURE_RECTANGLE_NV, _kotor2RenderTargetTexture);
-                        glCopyTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, (uint)GL_RGBA8, 0, 0, _kotor2ScreenWidth, _kotor2ScreenHeight, 0);
+                        glCopyTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, (uint)GL_RGBA8, 0, 0, (int)_kotor2ScreenWidth, (int)_kotor2ScreenHeight, 0);
                         glBindTexture(GL_TEXTURE_RECTANGLE_NV, 0);
                     }
                     
@@ -943,9 +943,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             // For now, this is a placeholder matching the function structure
             // In the real implementation, this would create a window with specific pixel format attributes
             
+            WndProcDelegate wndProc = (hWnd, uMsg, wParam, lParam) => DefWindowProcA(hWnd, uMsg, wParam, lParam);
             WNDCLASSA wndClass = new WNDCLASSA();
             wndClass.style = 0;
-            wndClass.lpfnWndProc = DefWindowProcA;
+            wndClass.lpfnWndProc = Marshal.GetFunctionPointerForDelegate(wndProc);
             wndClass.cbClsExtra = 0;
             wndClass.cbWndExtra = 0;
             wndClass.hInstance = IntPtr.Zero;
@@ -1079,7 +1080,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             widthPower = (widthPower >> 2 & 0x33333333) + (widthPower & 0x33333333);
             widthPower = (widthPower >> 4) + widthPower & 0xf0f0f0f;
             int widthBits = (int)(widthPower + (widthPower >> 8));
-            textureWidth = 1 << ((char)((uint)widthBits >> 16) + (char)widthBits + 1U & 0x1f);
+            textureWidth = 1 << (int)((char)((uint)widthBits >> 16) + (char)widthBits + 1U & 0x1f);
             
             uint heightPower = (uint)height;
             heightPower = heightPower >> 1 | heightPower;
@@ -1091,7 +1092,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             heightPower = (heightPower >> 2 & 0x33333333) + (heightPower & 0x33333333);
             heightPower = (heightPower >> 4) + heightPower & 0xf0f0f0f;
             int heightBits = (int)(heightPower + (heightPower >> 8));
-            textureHeight = 1 << ((char)((uint)heightBits >> 16) + (char)heightBits + 1U & 0x1f);
+            textureHeight = 1 << (int)((char)((uint)heightBits >> 16) + (char)heightBits + 1U & 0x1f);
         }
         
         /// <summary>

@@ -37,7 +37,7 @@ namespace Andastra.Parsing.Tests.Formats
             "javascript",
             "rust",
             "java",
-            "perl"
+            "perl",
             "cpp_stl",
             "ruby",
             "lua",

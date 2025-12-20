@@ -146,7 +146,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey.Culling
                     float[] mipData = _mipLevelCache[mip];
                     if (mipData != null)
                     {
-                        glTexImage2D(GL_TEXTURE_2D, mip, GL_R32F, mipWidth, mipHeight, 0, GL_RED, GL_FLOAT, mipData);
+                        glTexImage2D(GL_TEXTURE_2D, (int)mip, GL_R32F, mipWidth, mipHeight, 0, GL_RED, GL_FLOAT, mipData);
                     }
                 }
 

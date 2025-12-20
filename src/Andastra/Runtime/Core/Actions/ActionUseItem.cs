@@ -218,7 +218,7 @@ namespace Andastra.Runtime.Core.Actions
             }
 
             // Try to access itempropdef.2da through world's resource system
-            2DA itempropDefTable = TryGetItemPropDefTable(property);
+            TwoDA itempropDefTable = TryGetItemPropDefTable(property);
 
             if (itempropDefTable != null)
             {
@@ -236,7 +236,7 @@ namespace Andastra.Runtime.Core.Actions
         /// Attempts to load itempropdef.2da table from the world's resource system.
         /// </summary>
         [CanBeNull]
-        private 2DA TryGetItemPropDefTable(ItemProperty property)
+        private TwoDA TryGetItemPropDefTable(ItemProperty property)
         {
             // Try to access 2DA table through IWorld if it exposes a resource provider
             // This is engine-specific, so we use reflection or a service interface if available
@@ -249,7 +249,7 @@ namespace Andastra.Runtime.Core.Actions
         /// Converts property to effect using itempropdef.2da table lookup.
         /// </summary>
         [CanBeNull]
-        private Combat.Effect ConvertPropertyToEffectFrom2DA(ItemProperty property, 2DA itempropDefTable)
+        private Combat.Effect ConvertPropertyToEffectFrom2DA(ItemProperty property, TwoDA itempropDefTable)
         {
             if (property.PropertyType < 0 || property.PropertyType >= itempropDefTable.GetHeight())
             {

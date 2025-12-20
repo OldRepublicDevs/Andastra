@@ -58,7 +58,7 @@ namespace KotorDiff.Tests.Comprehensive
                     ("0", new Dictionary<string, string> { { "label", "spell_0" }, { "name", "100" } }),
                     ("1", new Dictionary<string, string> { { "label", "spell_1" }, { "name", "101" } })
                 });
-            TwoDAAuto.WriteTwoDA(vanilla2da, Path.Combine(_vanillaDir.FullName, "spells.2da"), ResourceType.TwoDA);
+            TwoDAAuto.Write2DA(vanilla2da, Path.Combine(_vanillaDir.FullName, "spells.2da"), ResourceType.TwoDA);
 
             // Modded: 3 rows (new row added)
             var modded2da = TestDataHelper.CreateBasic2DA(
@@ -69,7 +69,7 @@ namespace KotorDiff.Tests.Comprehensive
                     ("1", new Dictionary<string, string> { { "label", "spell_1" }, { "name", "101" } }),
                     ("2", new Dictionary<string, string> { { "label", "new_spell" }, { "name", "102" } })
                 });
-            TwoDAAuto.WriteTwoDA(modded2da, Path.Combine(_moddedDir.FullName, "spells.2da"), ResourceType.TwoDA);
+            TwoDAAuto.Write2DA(modded2da, Path.Combine(_moddedDir.FullName, "spells.2da"), ResourceType.TwoDA);
 
             // Run diff
             string iniContent = TestDataHelper.RunDiff(_vanillaDir, _moddedDir, _tslpatchdataDir);
@@ -101,7 +101,7 @@ namespace KotorDiff.Tests.Comprehensive
                     ("1", new Dictionary<string, string> { { "label", "item_1" }, { "value", "20" } }),
                     ("2", new Dictionary<string, string> { { "label", "item_2" }, { "value", "30" } })
                 });
-            TwoDAAuto.WriteTwoDA(vanilla2da, Path.Combine(_vanillaDir.FullName, "baseitems.2da"), ResourceType.TwoDA);
+            TwoDAAuto.Write2DA(vanilla2da, Path.Combine(_vanillaDir.FullName, "baseitems.2da"), ResourceType.TwoDA);
 
             // Modded: row 1 modified
             var modded2da = TestDataHelper.CreateBasic2DA(
@@ -112,7 +112,7 @@ namespace KotorDiff.Tests.Comprehensive
                     ("1", new Dictionary<string, string> { { "label", "item_1_modified" }, { "value", "999" } }),
                     ("2", new Dictionary<string, string> { { "label", "item_2" }, { "value", "30" } })
                 });
-            TwoDAAuto.WriteTwoDA(modded2da, Path.Combine(_moddedDir.FullName, "baseitems.2da"), ResourceType.TwoDA);
+            TwoDAAuto.Write2DA(modded2da, Path.Combine(_moddedDir.FullName, "baseitems.2da"), ResourceType.TwoDA);
 
             // Run diff
             string iniContent = TestDataHelper.RunDiff(_vanillaDir, _moddedDir, _tslpatchdataDir);
@@ -144,7 +144,7 @@ namespace KotorDiff.Tests.Comprehensive
                     ("0", new Dictionary<string, string> { { "label", "weapon_sound_0" }, { "cloth0", "snd0" } }),
                     ("1", new Dictionary<string, string> { { "label", "weapon_sound_1" }, { "cloth0", "snd1" } })
                 });
-            TwoDAAuto.WriteTwoDA(vanillaWeaponsounds, Path.Combine(_vanillaDir.FullName, "weaponsounds.2da"), ResourceType.TwoDA);
+            TwoDAAuto.Write2DA(vanillaWeaponsounds, Path.Combine(_vanillaDir.FullName, "weaponsounds.2da"), ResourceType.TwoDA);
 
             // Vanilla: baseitems.2da with 2 rows
             var vanillaBaseitems = TestDataHelper.CreateBasic2DA(
@@ -154,7 +154,7 @@ namespace KotorDiff.Tests.Comprehensive
                     ("0", new Dictionary<string, string> { { "label", "base_0" }, { "weaponmattype", "0" } }),
                     ("1", new Dictionary<string, string> { { "label", "base_1" }, { "weaponmattype", "1" } })
                 });
-            TwoDAAuto.WriteTwoDA(vanillaBaseitems, Path.Combine(_vanillaDir.FullName, "baseitems.2da"), ResourceType.TwoDA);
+            TwoDAAuto.Write2DA(vanillaBaseitems, Path.Combine(_vanillaDir.FullName, "baseitems.2da"), ResourceType.TwoDA);
 
             // Vanilla GFF
             var vanillaGff = TestDataHelper.CreateBasicGFF(new Dictionary<string, (GFFFieldType, object)>
@@ -172,7 +172,7 @@ namespace KotorDiff.Tests.Comprehensive
                     ("1", new Dictionary<string, string> { { "label", "weapon_sound_1" }, { "cloth0", "snd1" } }),
                     ("2", new Dictionary<string, string> { { "label", "new_weapon_sound" }, { "cloth0", "snd2" } })
                 });
-            TwoDAAuto.WriteTwoDA(moddedWeaponsounds, Path.Combine(_moddedDir.FullName, "weaponsounds.2da"), ResourceType.TwoDA);
+            TwoDAAuto.Write2DA(moddedWeaponsounds, Path.Combine(_moddedDir.FullName, "weaponsounds.2da"), ResourceType.TwoDA);
 
             // Modded: baseitems.2da with 3 rows (new row 2 references new weaponsounds row)
             var moddedBaseitems = TestDataHelper.CreateBasic2DA(
@@ -183,7 +183,7 @@ namespace KotorDiff.Tests.Comprehensive
                     ("1", new Dictionary<string, string> { { "label", "base_1" }, { "weaponmattype", "1" } }),
                     ("2", new Dictionary<string, string> { { "label", "new_base" }, { "weaponmattype", "2" } }) // References new weaponsounds row
                 });
-            TwoDAAuto.WriteTwoDA(moddedBaseitems, Path.Combine(_moddedDir.FullName, "baseitems.2da"), ResourceType.TwoDA);
+            TwoDAAuto.Write2DA(moddedBaseitems, Path.Combine(_moddedDir.FullName, "baseitems.2da"), ResourceType.TwoDA);
 
             // Modded GFF: references new baseitems row
             var moddedGff = TestDataHelper.CreateBasicGFF(new Dictionary<string, (GFFFieldType, object)>
@@ -233,7 +233,7 @@ namespace KotorDiff.Tests.Comprehensive
                     ("4", new Dictionary<string, string> { { "label", "row_4" } }),
                     ("5", new Dictionary<string, string> { { "label", "row_5" } })
                 });
-            TwoDAAuto.WriteTwoDA(vanilla2da, Path.Combine(_vanillaDir.FullName, "test.2da"), ResourceType.TwoDA);
+            TwoDAAuto.Write2DA(vanilla2da, Path.Combine(_vanillaDir.FullName, "test.2da"), ResourceType.TwoDA);
 
             // Modded: 6 rows, 2 columns (new column added)
             var modded2da = TestDataHelper.CreateBasic2DA(
@@ -247,7 +247,7 @@ namespace KotorDiff.Tests.Comprehensive
                     ("4", new Dictionary<string, string> { { "label", "row_4" }, { "newcol", "0" } }),
                     ("5", new Dictionary<string, string> { { "label", "row_5" }, { "newcol", "special" } })
                 });
-            TwoDAAuto.WriteTwoDA(modded2da, Path.Combine(_moddedDir.FullName, "test.2da"), ResourceType.TwoDA);
+            TwoDAAuto.Write2DA(modded2da, Path.Combine(_moddedDir.FullName, "test.2da"), ResourceType.TwoDA);
 
             // Run diff
             string iniContent = TestDataHelper.RunDiff(_vanillaDir, _moddedDir, _tslpatchdataDir);
@@ -278,7 +278,7 @@ namespace KotorDiff.Tests.Comprehensive
                     ("0", new Dictionary<string, string> { { "label", "soundset_0" } }),
                     ("1", new Dictionary<string, string> { { "label", "soundset_1" } })
                 });
-            TwoDAAuto.WriteTwoDA(vanilla2da, Path.Combine(_vanillaDir.FullName, "soundset.2da"), ResourceType.TwoDA);
+            TwoDAAuto.Write2DA(vanilla2da, Path.Combine(_vanillaDir.FullName, "soundset.2da"), ResourceType.TwoDA);
 
             // Vanilla: 2 GFF files reference row 0
             var vanillaGff1 = TestDataHelper.CreateBasicGFF(new Dictionary<string, (GFFFieldType, object)>
@@ -302,7 +302,7 @@ namespace KotorDiff.Tests.Comprehensive
                     ("1", new Dictionary<string, string> { { "label", "soundset_1" } }),
                     ("2", new Dictionary<string, string> { { "label", "new_soundset" } })
                 });
-            TwoDAAuto.WriteTwoDA(modded2da, Path.Combine(_moddedDir.FullName, "soundset.2da"), ResourceType.TwoDA);
+            TwoDAAuto.Write2DA(modded2da, Path.Combine(_moddedDir.FullName, "soundset.2da"), ResourceType.TwoDA);
 
             // Modded: Both GFF files now reference row 2
             var moddedGff1 = TestDataHelper.CreateBasicGFF(new Dictionary<string, (GFFFieldType, object)>

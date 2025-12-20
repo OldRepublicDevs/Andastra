@@ -21,7 +21,7 @@ namespace KotorDiff.Diff
         /// Compare two 2DA files and return structured diff.
         /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/structured.py:41-87
         /// </summary>
-        public TwoDADiffResult Compare2Da(
+        public TwoDADiffResult Compare2DA(
             byte[] leftData,
             byte[] rightData,
             string leftId,
@@ -35,9 +35,9 @@ namespace KotorDiff.Diff
                 var right2da = rightReader.Load();
 
                 // Check for differences
-                var headerDiffs = Compare2DaHeaders(left2da, right2da);
-                var columnDiffs = Compare2DaColumns(left2da, right2da);
-                var rowDiffs = Compare2DaRows(left2da, right2da);
+                var headerDiffs = Compare2DAHeaders(left2da, right2da);
+                var columnDiffs = Compare2DAColumns(left2da, right2da);
+                var rowDiffs = Compare2DARows(left2da, right2da);
 
                 // Determine overall diff type
                 DiffType diffType;
@@ -78,7 +78,7 @@ namespace KotorDiff.Diff
         /// Compare 2DA headers.
         /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/structured.py:89-127
         /// </summary>
-        private List<HeaderDiff> Compare2DaHeaders(2DA left2da, 2DA right2da)
+        private List<HeaderDiff> Compare2DAHeaders(TwoDA left2da, TwoDA right2da)
         {
             var headerDiffs = new List<HeaderDiff>();
             var leftHeaders = left2da.GetHeaders();
@@ -124,7 +124,7 @@ namespace KotorDiff.Diff
         /// Compare 2DA columns.
         /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/structured.py:129-168
         /// </summary>
-        private List<ColumnDiff> Compare2DaColumns(2DA left2da, 2DA right2da)
+            private List<ColumnDiff> Compare2DAColumns(TwoDA left2da, TwoDA right2da)
         {
             var columnDiffs = new List<ColumnDiff>();
             var leftHeaders = new HashSet<string>(left2da.GetHeaders());
@@ -163,7 +163,7 @@ namespace KotorDiff.Diff
         /// Compare 2DA rows.
         /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/structured.py:170-253
         /// </summary>
-        private List<RowDiff> Compare2DaRows(2DA left2da, 2DA right2da)
+        private List<RowDiff> Compare2DARows(TwoDA left2da, TwoDA right2da)
         {
             var rowDiffs = new List<RowDiff>();
             int leftHeight = left2da.GetHeight();

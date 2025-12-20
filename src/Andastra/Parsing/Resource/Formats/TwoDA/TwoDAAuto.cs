@@ -12,11 +12,46 @@ namespace Andastra.Parsing.Formats.TwoDA
     /// </summary>
     public static class TwoDAAuto
     {
+
+        /// <summary>
+        /// Reads a 2DA file from a file path, byte array, or stream.
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tlk/tlk_auto.py
+        /// </summary>
+        public static TwoDA Read2DA(object source, int offset = 0, int? size = null, ResourceType fileFormat = null)
+        {
+            if (source is string filepath)
+            {
+                // Assume full file read; let TwoDABinaryReader handle actual range
+                var reader = new TwoDABinaryReader(File.ReadAllBytes(filepath));
+                return reader.Load();
+            }
+            if (source is byte[] data)
+            {
+                // Ignore offset/size in constructor; pass entire data, let .Load handle offset/size if needed
+                var reader = new TwoDABinaryReader(data);
+                return reader.Load();
+            }
+            if (source is Stream stream)
+            {
+                var reader = new TwoDABinaryReader(stream);
+                return reader.Load();
+            }
+            throw new ArgumentException("Source must be string, byte[], or Stream");
+        }
+
+        /// <summary>
+        /// Alias for Read2DA (alternative naming, matches common style).
+        /// </summary>
+        public static TwoDA ReadTwoDA(object source, int offset = 0, int? size = null, ResourceType fileFormat = null)
+        {
+            return Read2DA(source, offset, size, fileFormat);
+        }
+
         /// <summary>
         /// Writes the 2DA data to the target location with the specified format.
         /// 1:1 port of Python write_2da function.
         /// </summary>
-        public static void WriteTwoDA(TwoDA twoda, string target, ResourceType fileFormat)
+        public static void Write2DA(TwoDA twoda, string target, ResourceType fileFormat)
         {
             if (fileFormat == ResourceType.TwoDA)
             {
@@ -31,29 +66,29 @@ namespace Andastra.Parsing.Formats.TwoDA
         }
 
         /// <summary>
-        /// Alias for WriteTwoDA (alternative naming, matches common style).
+        /// Alias for Write2DA (alternative naming, matches common style).
         /// </summary>
-        public static void Write2DA(TwoDA twoda, string target, ResourceType fileFormat)
+        public static void WriteTwoDA(TwoDA twoda, string target, ResourceType fileFormat)
         {
-            WriteTwoDA(twoda, target, fileFormat);
+            Write2DA(twoda, target, fileFormat);
         }
 
         /// <summary>
         /// Returns the 2DA data as a byte array.
         /// 1:1 port of Python bytes_2da function.
         /// </summary>
-        public static byte[] BytesTwoDA(TwoDA twoda, [CanBeNull] ResourceType fileFormat = null)
+        public static byte[] Bytes2DA(TwoDA twoda, [CanBeNull] ResourceType fileFormat = null)
         {
             var writer = new TwoDABinaryWriter(twoda);
             return writer.Write();
         }
 
         /// <summary>
-        /// Alias for BytesTwoDA (alternative naming, matches common style).
+        /// Alias for Bytes2DA (alternative naming, matches common style).
         /// </summary>
-        public static byte[] Bytes2DA(TwoDA twoda, [CanBeNull] ResourceType fileFormat = null)
+        public static byte[] BytesTwoDA(TwoDA twoda, [CanBeNull] ResourceType fileFormat = null)
         {
-            return BytesTwoDA(twoda, fileFormat);
+            return Bytes2DA(twoda, fileFormat);
         }
     }
 }

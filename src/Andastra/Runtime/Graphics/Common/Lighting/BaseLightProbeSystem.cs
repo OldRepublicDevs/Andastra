@@ -43,7 +43,7 @@ namespace Andastra.Runtime.Graphics.Common.Lighting
         /// <summary>
         /// Bounding box structure for spatial queries.
         /// </summary>
-        protected struct BoundingBox
+        public struct BoundingBox
         {
             public Vector3 Min;
             public Vector3 Max;
