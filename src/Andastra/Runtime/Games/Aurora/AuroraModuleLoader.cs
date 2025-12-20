@@ -372,8 +372,60 @@ namespace Andastra.Runtime.Games.Aurora
                     return gff.Root;
                 }
 
-                // TODO: Try loading from HAK files when HAK parsing is available
-                // For now, return null if file doesn't exist
+                // Try loading from HAK files (Aurora-specific)
+                // Based on nwmain.exe: Module.ifo can be stored in HAK files
+                // Module.ifo in HAK files is stored as: ResName = moduleName, ResType = IFO
+                // Based on nwmain.exe: CExoResMan::Demand @ 0x14018ef90 searches encapsulated resources (HAK files)
+                // Based on nwmain.exe: CExoResMan::ServiceFromEncapsulated @ 0x140192cf0 checks ERF archives for resources
+                // Resource lookup precedence: Module directory -> HAK files -> Base game resources
+                // When Module.ifo is not in module directory, search all HAK files in hak directory
+                // This is necessary because Module.ifo might be in a HAK file that's not yet listed in any Module.ifo
+                // (since we don't have Module.ifo yet to know which HAK files to load)
+                string hakPath = _auroraResourceProvider.HakPath();
+                if (Directory.Exists(hakPath))
+                {
+                    // Search all HAK files in the hak directory
+                    // Based on nwmain.exe: Module.ifo loading searches all registered HAK files
+                    // HAK files are registered via CExoResMan::AddKeyTable @ 0x14018e330
+                    // For Module.ifo loading, we search all HAK files in the hak directory
+                    // HAK files are searched in directory enumeration order (not Module.ifo order, since we don't have Module.ifo yet)
+                    string[] hakFiles = Directory.GetFiles(hakPath, "*.hak", SearchOption.TopDirectoryOnly);
+                    foreach (string hakFilePath in hakFiles)
+                    {
+                        try
+                        {
+                            // HAK files are ERF format archives
+                            // Based on nwmain.exe: HAK files use ERF format (same as MOD files)
+                            // Parse HAK file as ERF and check if it contains Module.ifo for this module
+                            var erf = ERFAuto.ReadErf(hakFilePath);
+                            
+                            // Check if HAK file contains Module.ifo for this module
+                            // Module.ifo in HAK files is stored as: ResName = moduleName, ResType = IFO
+                            // Based on nwmain.exe: Resource lookup uses ResName (16-char resref) and ResType
+                            // Based on nwmain.exe: CExoResMan::ServiceFromEncapsulated @ 0x140192cf0 extracts resources from ERF archives
+                            byte[] moduleIfoData = erf.Get(moduleName, ResourceType.IFO);
+                            if (moduleIfoData != null && moduleIfoData.Length > 0)
+                            {
+                                // Module.ifo found in HAK file - parse and return
+                                // Based on nwmain.exe: Module.ifo is GFF format, parsed using CResGFF
+                                var gff = new GFF(moduleIfoData);
+                                if (gff?.Root != null)
+                                {
+                                    return gff.Root;
+                                }
+                            }
+                        }
+                        catch
+                        {
+                            // Skip corrupted or invalid HAK files
+                            // Based on nwmain.exe: Invalid HAK files are skipped during resource lookup
+                            // Continue searching other HAK files
+                            continue;
+                        }
+                    }
+                }
+
+                // Module.ifo not found in module directory or HAK files
                 return null;
             }
             catch
