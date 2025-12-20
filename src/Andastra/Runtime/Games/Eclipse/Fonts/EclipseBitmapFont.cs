@@ -10,8 +10,10 @@ using Andastra.Parsing.Formats.TXI;
 using Andastra.Parsing.Resource.Formats.TEX;
 using Andastra.Parsing.Formats.DDS;
 using Andastra.Runtime.Games.Common;
+using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.MonoGame.Converters;
 using Andastra.Runtime.Graphics.MonoGame.Graphics;
+using MonoGameTexture2D = Andastra.Runtime.Graphics.MonoGame.Graphics.MonoGameTexture2D;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Eclipse.Fonts
@@ -104,7 +106,7 @@ namespace Andastra.Runtime.Games.Eclipse.Fonts
         /// </summary>
         private class CharacterInfo
         {
-            public Rectangle SourceRect { get; set; }
+            public Microsoft.Xna.Framework.Rectangle SourceRect { get; set; }
             public float Width { get; set; }
             public float Height { get; set; }
         }

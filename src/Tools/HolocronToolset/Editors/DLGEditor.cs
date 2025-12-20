@@ -25,6 +25,7 @@ using DLGNode = Andastra.Parsing.Resource.Generics.DLG.DLGNode;
 using DLGEntry = Andastra.Parsing.Resource.Generics.DLG.DLGEntry;
 using DLGReply = Andastra.Parsing.Resource.Generics.DLG.DLGReply;
 using DLGHelper = Andastra.Parsing.Resource.Generics.DLG.DLGHelper;
+using DLGStunt = Andastra.Parsing.Resource.Formats.GFF.Generics.DLG.DLGStunt;
 using CNVHelper = Andastra.Parsing.Resource.Generics.CNV.CNVHelper;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
@@ -88,6 +89,11 @@ namespace HolocronToolset.Editors
         private Button _addAnimButton;
         private Button _removeAnimButton;
         private Button _editAnimButton;
+        private ListBox _stuntList;
+        private TextBox _commentsEdit;
+        private Panel _leftDockWidget;
+        private DLGListWidget _orphanedNodesList;
+        private DLGListWidget _pinnedItemsList;
 
         private int _currentResultIndex = 0;
 
@@ -148,6 +154,11 @@ namespace HolocronToolset.Editors
         // Original: QComboBox script1ResrefEdit, script2ResrefEdit
         private ComboBox _script1ResrefEdit;
         private ComboBox _script2ResrefEdit;
+        private NumericUpDown _script1Param1Spin;
+        private StackPanel _script1Param1Panel;
+        private NumericUpDown _waitFlagSpin;
+        private NumericUpDown _fadeTypeSpin;
+        private ComboBox _voiceComboBox;
 
         // UI Controls - Node timing widgets
         // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
@@ -584,18 +595,18 @@ namespace HolocronToolset.Editors
             var deleteItem = new MenuItem
             {
                 Header = "Delete",
-                Command = ReactiveUI.ReactiveCommand.Create(DeleteSelectedItem)
+                Command = ReactiveUI.ReactiveCommand.Create(() => DeleteSelectedNode())
             };
             menuItems.Add(deleteItem);
 
             // Add separator
-            menuItems.Add(new Separator());
+            menuItems.Add(new MenuItem { Header = "-" });
 
             // Add menu item for copying nodes
             var copyItem = new MenuItem
             {
                 Header = "Copy",
-                Command = ReactiveUI.ReactiveCommand.Create(CopySelectedItem)
+                Command = ReactiveUI.ReactiveCommand.Create(() => CopyLinkAndNode())
             };
             menuItems.Add(copyItem);
 
@@ -603,11 +614,14 @@ namespace HolocronToolset.Editors
             var pasteItem = new MenuItem
             {
                 Header = "Paste",
-                Command = ReactiveUI.ReactiveCommand.Create(PasteToSelectedItem)
+                Command = ReactiveUI.ReactiveCommand.Create(() => PasteItem(asNewBranches: false))
             };
             menuItems.Add(pasteItem);
 
-            contextMenu.Items = menuItems;
+            foreach (var item in menuItems)
+            {
+                contextMenu.Items.Add(item);
+            }
             _dialogTree.ContextMenu = contextMenu;
         }
 

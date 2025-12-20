@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Andastra.Parsing.Formats.BWM;
+using Andastra.Runtime.Games.Eclipse;
 
 namespace Andastra.Runtime.Games.Eclipse.Loading
 {
@@ -483,7 +484,7 @@ namespace Andastra.Runtime.Games.Eclipse.Loading
             return adjacency;
         }
 
-        private static EclipseNavigationMesh.AabbNode BuildAabbTree(BWM bwm, Vector3[] vertices, int[] faces)
+        private static AabbNode BuildAabbTree(BWM bwm, Vector3[] vertices, int[] faces)
         {
             // Use Andastra.Parsing's AABB generation
             List<BWMNodeAABB> aabbs = bwm.Aabbs();
@@ -821,7 +822,7 @@ namespace Andastra.Runtime.Games.Eclipse.Loading
         /// Builds an AABB tree from face data for spatial acceleration.
         /// Uses recursive top-down construction with longest-axis splitting.
         /// </summary>
-        private static EclipseNavigationMesh.AabbNode BuildAabbTreeFromFaces(
+        private static AabbNode BuildAabbTreeFromFaces(
             Vector3[] vertices,
             int[] faceIndices,
             int[] surfaceMaterials,
@@ -845,7 +846,7 @@ namespace Andastra.Runtime.Games.Eclipse.Loading
         /// <summary>
         /// Recursively builds the AABB tree using top-down construction.
         /// </summary>
-        private static EclipseNavigationMesh.AabbNode BuildAabbTreeRecursive(
+        private static AabbNode BuildAabbTreeRecursive(
             Vector3[] vertices,
             int[] faceIndices,
             int[] surfaceMaterials,
