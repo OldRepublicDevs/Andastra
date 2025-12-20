@@ -1223,14 +1223,19 @@ namespace Andastra.Runtime.Games.Aurora
 
             // Deserialize Inventory component
             // Based on nwmain.exe: CNWSCreature::LoadCreature loads items from Equip_ItemList GFFList
+            // CNWSCreature::LoadCreature @ 0x1403975e0 loads inventory from Equip_ItemList GFFList
+            // CNWSInventory is always present for creatures - if missing during deserialization, create it
+            // This matches the behavior in CNWSCreature constructor where inventory is attached during creature creation
             if (root.Exists("Equip_ItemList"))
             {
                 var inventoryComponent = GetComponent<IInventoryComponent>();
                 if (inventoryComponent == null)
                 {
                     // Inventory component should exist for creatures, but we ensure it's present
-                    // TODO: Create AuroraInventoryComponent if it exists
-                    throw new InvalidOperationException("Inventory component not found and cannot be created automatically");
+                    // Based on nwmain.exe: CNWSInventory is attached during creature creation
+                    // If missing during deserialization (edge case), create it automatically
+                    inventoryComponent = new Components.AuroraInventoryComponent(this);
+                    AddComponent<IInventoryComponent>(inventoryComponent);
                 }
 
                 var inventoryList = root.GetList("Equip_ItemList");
