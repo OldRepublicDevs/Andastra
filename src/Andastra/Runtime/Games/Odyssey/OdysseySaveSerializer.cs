@@ -1198,6 +1198,10 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Reverse mapping: member ID -> ResRef by reading row label at index = member ID
         /// Based on swkotor2.exe: FUN_0057dcd0 @ 0x0057dcd0 (LoadPartyTable function) reads PT_MEMBER_ID and converts to ResRef
         /// Original implementation reads PT_MEMBER_ID (float) and converts to ResRef using partytable.2da lookup
+        ///
+        /// CRITICAL: This method REQUIRES partytable.2da to be available via GameDataManager.
+        /// K1 and K2 have different NPCs for the same member IDs (e.g., member ID 0 = "bastila" in K1, "atton" in K2).
+        /// Without partytable.2da, we cannot determine the correct ResRef. This matches original engine behavior.
         /// </remarks>
         private string GetResRefFromMemberId(float memberId)
         {
@@ -1211,11 +1215,12 @@ namespace Andastra.Runtime.Games.Odyssey
 
             int memberIdInt = (int)memberId;
 
-            // Try to load from partytable.2da if GameDataManager is available
+            // REQUIRED: Load from partytable.2da to get correct ResRef
             // Based on swkotor2.exe: partytable.2da system
             // Located via string reference: "PARTYTABLE" @ 0x007c1910
             // Original implementation: partytable.2da row index = member ID (0-11 for K2, 0-8 for K1)
-            // Row label in partytable.2da is the NPC ResRef (e.g., "bastila", "atton")
+            // Row label in partytable.2da is the NPC ResRef (e.g., "bastila" for K1, "atton" for K2)
+            // CRITICAL: K1 and K2 have different NPCs for the same member IDs, so partytable.2da is REQUIRED
             if (_gameDataManager != null)
             {
                 Andastra.Parsing.Formats.TwoDA.TwoDA partyTable = _gameDataManager.GetTable("partytable");
@@ -1230,33 +1235,12 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
             }
 
-            // Fallback: Hardcoded reverse mapping for common NPCs when partytable.2da not available
-            // Based on nwscript.nss constants and common ResRef patterns
-            // Note: K1 and K2 use different NPCs for the same member IDs, so we provide both mappings
-            // The partytable.2da lookup above should handle this correctly, but this is a fallback
-            // Since we can't determine game version here, we'll try common mappings
-            // In practice, partytable.2da should always be available, so this is rarely used
-
-            // Common NPC mappings (try K1 first, then K2 if needed)
-            // This is a best-effort fallback - partytable.2da should be used when available
-            switch (memberIdInt)
-            {
-                case 0: return "bastila"; // K1, or "atton" for K2
-                case 1: return "canderous"; // K1, or "bao-dur" for K2
-                case 2: return "carth"; // K1, or "disciple" for K2
-                case 3: return "hk47"; // K1, or "handmaiden" for K2
-                case 4: return "jolee"; // K1, or "hanharr" for K2
-                case 5: return "juhani"; // K1, or "g0-t0" for K2
-                case 6: return "mission"; // K1, or "kreia" for K2
-                case 7: return "t3m4"; // K1, or "mira" for K2
-                case 8: return "zaalbar"; // K1, or "visas" for K2
-                case 9: return "mandalore"; // K2 only
-                case 11: return "sion"; // K2 only
-                default:
-                    // If no mapping found, return empty string
-                    // This matches original engine behavior when member ID cannot be resolved
-                    return "";
-            }
+            // If partytable.2da is not available, we cannot determine the correct ResRef
+            // K1 and K2 have different NPCs for the same member IDs, so guessing is incorrect
+            // This matches original engine behavior: returns empty string when member ID cannot be resolved
+            // Original engine always has partytable.2da available, so this fallback should rarely be hit
+            System.Diagnostics.Debug.WriteLine($"[OdysseySaveSerializer] GetResRefFromMemberId: partytable.2da not available, cannot resolve member ID {memberIdInt}");
+            return "";
         }
 
         /// <summary>
