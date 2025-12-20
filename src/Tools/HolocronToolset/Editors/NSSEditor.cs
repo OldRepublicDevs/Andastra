@@ -1206,8 +1206,45 @@ namespace HolocronToolset.Editors
         {
             _bookmarkTree = new TreeView();
 
+            // Create bookmarks dock panel container
+            // Matching PyKotor: self.ui.bookmarksDock
+            if (_bookmarksDock == null)
+            {
+                var bookmarksPanel = new StackPanel
+                {
+                    Orientation = Orientation.Vertical,
+                    Name = "bookmarksDock"
+                };
+
+                // Add label for bookmarks
+                var bookmarksLabel = new TextBlock
+                {
+                    Text = "Bookmarks",
+                    FontWeight = Avalonia.Media.FontWeight.Bold,
+                    Margin = new Avalonia.Thickness(5)
+                };
+                bookmarksPanel.Children.Add(bookmarksLabel);
+
+                // Add bookmark tree view with scroll viewer
+                var scrollViewer = new ScrollViewer
+                {
+                    Content = _bookmarkTree,
+                    VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
+                    HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto
+                };
+                bookmarksPanel.Children.Add(scrollViewer);
+
+                // Set minimum width for the panel
+                bookmarksPanel.MinWidth = 200;
+
+                _bookmarksDock = bookmarksPanel;
+            }
+
             // Load bookmarks when editor is initialized
             LoadBookmarks();
+
+            // Integrate bookmarks dock into main UI layout
+            IntegrateBookmarksDock();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:327-347
@@ -1219,8 +1256,45 @@ namespace HolocronToolset.Editors
         {
             _snippetList = new ListBox();
 
+            // Create snippets dock panel container
+            // Matching PyKotor: self.ui.snippetsDock
+            if (_snippetsDock == null)
+            {
+                var snippetsPanel = new StackPanel
+                {
+                    Orientation = Orientation.Vertical,
+                    Name = "snippetsDock"
+                };
+
+                // Add label for snippets
+                var snippetsLabel = new TextBlock
+                {
+                    Text = "Snippets",
+                    FontWeight = Avalonia.Media.FontWeight.Bold,
+                    Margin = new Avalonia.Thickness(5)
+                };
+                snippetsPanel.Children.Add(snippetsLabel);
+
+                // Add snippet list box with scroll viewer
+                var scrollViewer = new ScrollViewer
+                {
+                    Content = _snippetList,
+                    VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
+                    HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto
+                };
+                snippetsPanel.Children.Add(scrollViewer);
+
+                // Set minimum width for the panel
+                snippetsPanel.MinWidth = 200;
+
+                _snippetsDock = snippetsPanel;
+            }
+
             // Load snippets when editor is initialized
             LoadSnippets();
+
+            // Integrate snippets dock into main UI layout
+            IntegrateSnippetsDock();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:327-347
