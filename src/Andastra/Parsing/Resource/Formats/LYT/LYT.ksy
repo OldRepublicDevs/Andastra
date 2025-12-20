@@ -182,31 +182,31 @@ instances:
       This validates that the file follows the expected LYT format structure.
 
   has_valid_footer:
-    value: "donelayout" in raw_content
+    value: raw_content.find("donelayout") >= 0
     doc: |
       True if the file contains "donelayout" as required by the format.
       This validates that the file properly terminates with the expected footer.
 
   has_rooms_section:
-    value: "roomcount" in raw_content
+    value: raw_content.find("roomcount") >= 0
     doc: |
       True if the file contains a roomcount section.
       The rooms section is optional but common in most LYT files.
 
   has_tracks_section:
-    value: "trackcount" in raw_content
+    value: raw_content.find("trackcount") >= 0
     doc: |
       True if the file contains a trackcount section.
       The tracks section is optional and typically only present in KotOR II racing modules.
 
   has_obstacles_section:
-    value: "obstaclecount" in raw_content
+    value: raw_content.find("obstaclecount") >= 0
     doc: |
       True if the file contains an obstaclecount section.
       The obstacles section is optional and typically only present in KotOR II racing modules.
 
   has_doorhooks_section:
-    value: "doorhookcount" in raw_content
+    value: raw_content.find("doorhookcount") >= 0
     doc: |
       True if the file contains a doorhookcount section.
       The doorhooks section is optional but common in LYT files that define area transitions.
