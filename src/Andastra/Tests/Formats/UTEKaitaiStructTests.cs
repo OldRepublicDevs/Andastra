@@ -561,12 +561,12 @@ namespace Andastra.Parsing.Tests.Formats
             // 3. Comparing results across languages
             // For now, we validate the structure matches expectations
 
-            GFF gff = GFFAuto.ReadGff(TestUteFile);
-            UTE constructedUte = UTEHelpers.ConstructUte(gff);
+            GFF parsedGff = GFFAuto.ReadGff(TestUteFile, 0, null);
+            UTE constructedUte = UTEHelpers.ConstructUte(parsedGff);
 
             // Validate structure matches Kaitai Struct definition
             // UTE files are GFF-based, so they follow GFF structure
-            gff.Content.Should().Be(GFFContent.UTE, "UTE file should have UTE content type");
+            parsedGff.Content.Should().Be(GFFContent.UTE, "UTE file should have UTE content type");
         }
 
         [Fact(Timeout = 300000)]

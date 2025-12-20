@@ -512,7 +512,7 @@ namespace Andastra.Runtime.Core.Camera
             var direction = Vector3.Normalize(other - subject);
             // Perpendicular in XZ plane (Y-up: horizontal plane is XZ)
             var perpendicular = new Vector3(-direction.Z, 0, direction.X);
-            
+
             if (!leftSide)
             {
                 perpendicular = -perpendicular;

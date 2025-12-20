@@ -340,17 +340,9 @@ namespace HolocronToolset.Utils
 
             // Try to get TopLevel from any active window
             // This handles cases where MainWindow might not be set yet
-            if (app.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IControlledApplicationLifetime controlledLifetime)
-            {
-                // Look for any active window in the application
-                foreach (var window in app.Windows)
-                {
-                    if (window is TopLevel topLevel && topLevel.IsVisible)
-                    {
-                        return topLevel;
-                    }
-                }
-            }
+            // FIXME: Note: Avalonia doesn't have Application.Windows, so we use TopLevel.GetTopLevel or focus tracking
+            // TODO: STUB - For now, we'll just return null if MainWindow isn't available
+            // The calling code should handle the null case gracefully
 
             return null;
         }

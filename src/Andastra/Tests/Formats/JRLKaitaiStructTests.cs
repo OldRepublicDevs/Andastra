@@ -628,7 +628,7 @@ namespace Andastra.Parsing.Tests.Formats
 
                 testJrl.Quests.Add(testQuest);
 
-                GFF testGff = JRLHelper.DismantleJrl(testJrl);
+                GFF testGff = JRLHelpers.DismantleJrl(testJrl);
                 byte[] data = GFFAuto.BytesGff(testGff);
                 Directory.CreateDirectory(Path.GetDirectoryName(TestJrlFile));
                 File.WriteAllBytes(TestJrlFile, data);
@@ -641,7 +641,7 @@ namespace Andastra.Parsing.Tests.Formats
             // For now, we validate the structure matches expectations
 
             GFF parsedGff = GFFAuto.ReadGff(TestJrlFile, 0, null, ResourceType.JRL);
-            JRL parsedJrl = JRLHelper.ConstructJrl(parsedGff);
+            JRL parsedJrl = JRLHelpers.ConstructJrl(parsedGff);
 
             // Validate structure matches Kaitai Struct definition
             // JRL files are GFF-based, so they follow GFF structure
@@ -746,7 +746,7 @@ namespace Andastra.Parsing.Tests.Formats
                 
                 testJrl.Quests.Add(testQuest1);
 
-                GFF testGff = JRLHelper.DismantleJrl(testJrl);
+                GFF testGff = JRLHelpers.DismantleJrl(testJrl);
                 byte[] data = GFFAuto.BytesGff(testGff);
                 Directory.CreateDirectory(Path.GetDirectoryName(TestJrlFile));
                 File.WriteAllBytes(TestJrlFile, data);
@@ -762,7 +762,7 @@ namespace Andastra.Parsing.Tests.Formats
             parsedGff.Content.Should().Be(GFFContent.JRL, "File should have JRL content type");
             
             // Validate JRL structure
-            JRL parsedJrl = JRLHelper.ConstructJrl(parsedGff);
+            JRL parsedJrl = JRLHelpers.ConstructJrl(parsedGff);
             parsedJrl.Should().NotBeNull("JRL should be constructible from GFF");
             parsedJrl.Quests.Should().NotBeEmpty("JRL should have at least one quest");
             

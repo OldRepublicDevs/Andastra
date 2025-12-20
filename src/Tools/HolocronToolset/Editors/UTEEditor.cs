@@ -149,7 +149,7 @@ namespace HolocronToolset.Editors
                 _onExhaustedEdit = this.FindControl<ComboBox>("onExhaustedEdit");
                 _onHeartbeatSelect = this.FindControl<ComboBox>("onHeartbeatSelect");
                 _onUserDefinedSelect = this.FindControl<ComboBox>("onUserDefinedSelect");
-                _commentsEdit = this.FindControl<TextBlock>("commentsEdit");
+                _commentsEdit = this.FindControl<TextBox>("commentsEdit");
             }
             catch
             {

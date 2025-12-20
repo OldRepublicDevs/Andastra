@@ -74,7 +74,19 @@ namespace HolocronToolset.Dialogs
             PopulateFontSizes();
             _fontSizeComboBox.SelectionChanged += (s, e) => UpdatePreview();
             // Note: ComboBox doesn't have TextChanged in Avalonia - use observable pattern for editable ComboBox
-            _fontSizeComboBox.GetObservable(ComboBox.TextProperty).Subscribe(text => UpdatePreview());
+            // In Avalonia, for editable ComboBox, subscribe to property changes
+            // Since ComboBox doesn't have GetObservable, use PropertyChanged event or SelectionChanged
+            // For editable ComboBox, we'll also handle when user types in the text box part
+            if (_fontSizeComboBox != null)
+            {
+                _fontSizeComboBox.PropertyChanged += (s, e) =>
+                {
+                    if (e.Property == ComboBox.TextProperty || e.Property == ComboBox.SelectedItemProperty)
+                    {
+                        UpdatePreview();
+                    }
+                };
+            }
             fontSizePanel.Children.Add(_fontSizeComboBox);
             mainPanel.Children.Add(fontSizePanel);
 
@@ -145,7 +157,19 @@ namespace HolocronToolset.Dialogs
                 PopulateFontSizes();
                 _fontSizeComboBox.SelectionChanged += (s, e) => UpdatePreview();
                 // TODO: determine if this is 1:1 equivalent with TextChanged in avalonia, or if there's a closer equivalent.
-                _fontSizeComboBox.GetObservable(ComboBox.TextProperty).Subscribe(text => UpdatePreview());
+                // In Avalonia, for editable ComboBox, subscribe to property changes
+            // Since ComboBox doesn't have GetObservable, use PropertyChanged event or SelectionChanged
+            // For editable ComboBox, we'll also handle when user types in the text box part
+            if (_fontSizeComboBox != null)
+            {
+                _fontSizeComboBox.PropertyChanged += (s, e) =>
+                {
+                    if (e.Property == ComboBox.TextProperty || e.Property == ComboBox.SelectedItemProperty)
+                    {
+                        UpdatePreview();
+                    }
+                };
+            }
             }
             if (_boldCheckBox != null)
             {

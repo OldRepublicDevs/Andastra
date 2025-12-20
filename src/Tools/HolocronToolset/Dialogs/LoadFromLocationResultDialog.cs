@@ -276,7 +276,7 @@ namespace HolocronToolset.Dialogs
                         "No Selection",
                         "Please select one or more resources to extract.",
                         MsBox.Avalonia.Enums.ButtonEnum.Ok,
-                        MsBox.Avalonia.Enums.Icon.Information);
+                        MsBox.Avalonia.Enums.Icon.Info);
                     await msgBox.ShowAsync();
                 }
                 catch

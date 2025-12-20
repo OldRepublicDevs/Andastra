@@ -340,7 +340,7 @@ namespace Andastra.Parsing.Tests.Formats
         public void TestMdlEmptyFile()
         {
             // Test MDL with minimal structure
-            var mdl = new MDLData.MDL();
+            var mdl = new MDL();
             mdl.Name.Should().BeEmpty();
             mdl.Anims.Should().NotBeNull();
             mdl.Anims.Count.Should().Be(0);

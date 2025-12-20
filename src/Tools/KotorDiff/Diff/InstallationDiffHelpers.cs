@@ -20,7 +20,7 @@ using KotorDiff.Diff;
 using Andastra.Parsing.TSLPatcher;
 using JetBrains.Annotations;
 
-namespace KotorDiff.Resolution
+namespace KotorDiff.Diff
 {
     /// <summary>
     /// Helper functions for installation diff operations.

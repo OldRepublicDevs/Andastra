@@ -302,6 +302,14 @@ namespace Andastra.Parsing.Reader
             // HoloPatcher optional
             Config.IgnoreFileExtensions = bool.TryParse(settingsIni.GetValueOrDefault("IgnoreExtensions"), out bool ign) && ign;
 
+            // Mod metadata (ModName, Author)
+            if (Config.Settings == null)
+            {
+                Config.Settings = new PatcherSettings();
+            }
+            Config.Settings.ModName = settingsIni.GetValueOrDefault("ModName", "");
+            Config.Settings.Author = settingsIni.GetValueOrDefault("Author", "");
+
             // Can be null if key not found
             string lookupGameNumber = settingsIni.GetValueOrDefault("LookupGameNumber");
             if (lookupGameNumber != null)

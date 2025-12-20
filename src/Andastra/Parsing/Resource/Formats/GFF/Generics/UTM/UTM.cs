@@ -4,7 +4,7 @@ using Andastra.Parsing.Resource;
 using JetBrains.Annotations;
 using Andastra.Parsing.Common;
 
-namespace Andastra.Parsing.Resource.Generics
+namespace Andastra.Parsing.Resource.Generics.UTM
 {
     /// <summary>
     /// Stores merchant data.
@@ -76,3 +76,4 @@ namespace Andastra.Parsing.Resource.Generics
         }
     }
 }
+

@@ -146,7 +146,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey.Culling
                     float[] mipData = _mipLevelCache[mip];
                     if (mipData != null)
                     {
-                        glTexImage2D(GL_TEXTURE_2D, (int)mip, GL_R32F, mipWidth, mipHeight, 0, GL_RED, GL_FLOAT, mipData);
+                        glTexImage2D(GL_TEXTURE_2D, (int)mip, (int)GL_R32F, mipWidth, mipHeight, 0, GL_RED, GL_FLOAT, mipData);
                     }
                 }
 
@@ -354,7 +354,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey.Culling
 
                 // Allocate texture storage (mip level 0 will be filled when GenerateHiZBuffer is called)
                 // Matches swkotor2.exe: glTexImage2D pattern from FUN_0042a100
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width, height, 0, GL_RED, GL_FLOAT, IntPtr.Zero);
+                glTexImage2D(GL_TEXTURE_2D, 0, (int)GL_R32F, width, height, 0, GL_RED, GL_FLOAT, IntPtr.Zero);
             }
             finally
             {

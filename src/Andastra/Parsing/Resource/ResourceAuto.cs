@@ -20,6 +20,11 @@ using Andastra.Parsing.Formats.VIS;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource.Generics.DLG;
 using Andastra.Parsing.Resource.Generics.CNV;
+using Andastra.Parsing.Resource.Generics.ARE;
+using Andastra.Parsing.Resource.Generics.UTI;
+using Andastra.Parsing.Resource.Generics.UTM;
+using Andastra.Parsing.Resource.Generics.UTC;
+using AREHelpers = Andastra.Parsing.Resource.Generics.ARE.AREHelpers;
 using Andastra.Parsing.Common;
 using JetBrains.Annotations;
 

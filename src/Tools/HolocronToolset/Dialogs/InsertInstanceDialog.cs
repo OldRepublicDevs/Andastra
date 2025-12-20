@@ -9,6 +9,10 @@ using Andastra.Parsing.Common;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Formats.GFF;
+using UTCHelpers = Andastra.Parsing.Resource.Generics.UTC.UTCHelpers;
+using UTMHelpers = Andastra.Parsing.Resource.Generics.UTM.UTMHelpers;
+using UTC = Andastra.Parsing.Resource.Generics.UTC.UTC;
+using UTM = Andastra.Parsing.Resource.Generics.UTM.UTM;
 using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Formats.RIM;
 using Andastra.Parsing.Tools;
@@ -414,8 +418,8 @@ namespace HolocronToolset.Dialogs
             // Original: if self._restype is ResourceType.UTC: self.data = bytes_utc(UTC())
             if (restype == ResourceType.UTC)
             {
-                UTC utc = new UTC();
-                return UTCHelpers.BytesUtc(utc, gameToUse);
+                Andastra.Parsing.Resource.Generics.UTC.UTC utc = new Andastra.Parsing.Resource.Generics.UTC.UTC();
+                return Andastra.Parsing.Resource.Generics.UTC.UTCHelpers.BytesUtc(utc, gameToUse);
             }
             else if (restype == ResourceType.UTP)
             {
@@ -452,10 +456,10 @@ namespace HolocronToolset.Dialogs
             }
             else if (restype == ResourceType.UTM)
             {
-                UTM utm = new UTM();
+                Andastra.Parsing.Resource.Generics.UTM.UTM utm = new Andastra.Parsing.Resource.Generics.UTM.UTM();
                 // UTM uses DismantleUtm + BytesGff pattern
-                GFF utmGff = UTMHelpers.DismantleUtm(utm, gameToUse);
-                return GFFAuto.BytesGff(utmGff, UTM.BinaryType);
+                GFF utmGff = Andastra.Parsing.Resource.Generics.UTM.UTMHelpers.DismantleUtm(utm, gameToUse);
+                return GFFAuto.BytesGff(utmGff, Andastra.Parsing.Resource.Generics.UTM.UTM.BinaryType);
             }
             else if (restype == ResourceType.UTW)
             {

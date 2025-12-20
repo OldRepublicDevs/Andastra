@@ -10,6 +10,7 @@ using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
+using JRLHelper = Andastra.Parsing.Resource.Generics.JRLHelpers;
 
 namespace HolocronToolset.Editors
 {

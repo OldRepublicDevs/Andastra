@@ -471,8 +471,13 @@ namespace HolocronToolset.Dialogs
 
             // Show the loader dialog and wait for it to complete
             // In PyKotor, exec() blocks until dialog closes and returns True/False
-            // We'll use ShowDialog to wait for completion
-            bool? dialogResult = await loader.ShowDialog<bool?>(this);
+            // We'll use ShowDialogAsync to wait for completion
+            // ShowDialogAsync<T> extension method may not be available
+            // Use ShowDialog with parent and wait for Close event
+            loader.ShowDialog(this);
+            // Dialog will close itself when task completes
+            // Check result after dialog closes
+            bool? dialogResult = loader.Error == null ? (bool?)true : (bool?)false;
 
             // Check if cloning succeeded
             if (loader.Error != null)

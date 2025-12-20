@@ -11,6 +11,7 @@ using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Logger;
 using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Resource.Generics.ARE;
 using Andastra.Parsing.Resource.Generics.DLG;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Tools;
@@ -807,7 +808,7 @@ namespace Andastra.Parsing.Common
             }
             if (restype == ResourceType.UTC)
             {
-                return typeof(UTC);
+                return typeof(Andastra.Parsing.Resource.Generics.UTC.UTC);
             }
             if (restype == ResourceType.UTD)
             {
@@ -823,7 +824,7 @@ namespace Andastra.Parsing.Common
             }
             if (restype == ResourceType.UTI)
             {
-                return typeof(UTI);
+                return typeof(Andastra.Parsing.Resource.Generics.UTI.UTI);
             }
             if (restype == ResourceType.UTE)
             {
@@ -839,7 +840,7 @@ namespace Andastra.Parsing.Common
             }
             if (restype == ResourceType.UTM)
             {
-                return typeof(UTM);
+                return typeof(Andastra.Parsing.Resource.Generics.UTM.UTM);
             }
             if (restype == ResourceType.LYT)
             {
@@ -1243,7 +1244,7 @@ namespace Andastra.Parsing.Common
             }
 
             // Cast to ARE type
-            Resource.Generics.ARE are = areData as Resource.Generics.ARE;
+            ARE are = areData as ARE;
             if (are == null)
             {
                 new RobustLogger().Warning(string.Format("ARE resource for module '{0}' is not of type ARE", _root));

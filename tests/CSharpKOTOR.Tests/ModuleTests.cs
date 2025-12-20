@@ -9,6 +9,8 @@ using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource.Formats.LYT;
 using Andastra.Parsing.Resource.Formats.VIS;
+using UTC = Andastra.Parsing.Resource.Generics.UTC.UTC;
+using Andastra.Parsing.Resource.Generics.UTC;
 using Assert = NUnit.Framework.Legacy.ClassicAssert;
 
 namespace Andastra.Parsing.Tests

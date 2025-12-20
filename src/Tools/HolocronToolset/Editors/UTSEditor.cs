@@ -638,7 +638,7 @@ namespace HolocronToolset.Editors
                     "Could not find audio file",
                     $"Could not find audio resource '{resname}'.",
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 msgBox.ShowAsync();
             }
         }
@@ -687,7 +687,7 @@ namespace HolocronToolset.Editors
                     "Error Playing Sound",
                     $"Failed to play sound:\n{ex.Message}",
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 msgBox.ShowAsync();
                 return false;
             }

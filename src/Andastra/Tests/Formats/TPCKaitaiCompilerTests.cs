@@ -967,7 +967,9 @@ namespace Andastra.Parsing.Tests.Formats
             tpc.AlphaTest = 0.5f;
             tpc.IsCubeMap = false;
             tpc.IsAnimated = false;
-            tpc._format = TPCTextureFormat.RGBA;
+            // Use SetSingle to set the format (since _format is internal)
+            byte[] testData = new byte[64 * 64 * 4]; // RGBA format, 64x64 pixels
+            tpc.SetSingle(testData, TPCTextureFormat.RGBA, 64, 64);
 
             var layer = new TPCLayer();
             int width = 64;

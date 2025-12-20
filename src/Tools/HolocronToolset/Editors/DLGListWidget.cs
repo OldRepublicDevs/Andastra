@@ -20,6 +20,13 @@ namespace HolocronToolset.Editors
         private bool _useHoverText = true;
 
         /// <summary>
+        /// Initializes a new instance of the DLGListWidget class.
+        /// </summary>
+        public DLGListWidget()
+        {
+        }
+
+        /// <summary>
         /// Gets or sets the editor associated with this widget.
         /// </summary>
         public DLGEditor Editor
@@ -41,7 +48,7 @@ namespace HolocronToolset.Editors
         /// Initializes a new instance of DLGListWidget.
         /// </summary>
         /// <param name="editor">The DLG editor associated with this widget.</param>
-        public DLGListWidget(DLGEditor editor = null)
+        public DLGListWidget(DLGEditor editor)
         {
             _editor = editor;
             SelectionChanged += OnSelectionChanged;

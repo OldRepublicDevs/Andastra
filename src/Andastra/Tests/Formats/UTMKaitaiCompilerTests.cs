@@ -12,6 +12,9 @@ using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Tests.Common;
 using FluentAssertions;
 using Xunit;
+using UTM = Andastra.Parsing.Resource.Generics.UTM.UTM;
+using UTMHelpers = Andastra.Parsing.Resource.Generics.UTM.UTMHelpers;
+using UTMItem = Andastra.Parsing.Resource.Generics.UTM.UTMItem;
 
 namespace Andastra.Parsing.Tests.Formats
 {

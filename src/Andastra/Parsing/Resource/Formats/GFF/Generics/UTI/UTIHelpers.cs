@@ -7,7 +7,7 @@ using static Andastra.Parsing.Common.GameExtensions;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
 using Andastra.Parsing.Common;
 
-namespace Andastra.Parsing.Resource.Generics
+namespace Andastra.Parsing.Resource.Generics.UTI
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/uti.py
     // Original: construct_uti and dismantle_uti functions
@@ -187,3 +187,4 @@ namespace Andastra.Parsing.Resource.Generics
         }
     }
 }
+

@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using Andastra.Parsing.Common;
-using Andastra.Parsing.Resource.Formats.TPC;
+using Andastra.Parsing.Formats.TPC;
 
 namespace Andastra.Parsing.Resource.Formats.TEX
 {

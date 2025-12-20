@@ -4,7 +4,7 @@ using Andastra.Parsing.Resource;
 using JetBrains.Annotations;
 using Andastra.Parsing.Common;
 
-namespace Andastra.Parsing.Resource.Generics
+namespace Andastra.Parsing.Resource.Generics.UTC
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utc.py:18
     // Original: class UTC:
@@ -163,3 +163,4 @@ namespace Andastra.Parsing.Resource.Generics
         }
     }
 }
+

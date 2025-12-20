@@ -1,6 +1,7 @@
 using System;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Resource.Generics.ARE;
 using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Resource
@@ -30,11 +31,11 @@ namespace Andastra.Parsing.Resource
             return IFOHelpers.ConstructIfo(gff);
         }
 
-        public static UTC ReadUtc(byte[] data)
+        public static Andastra.Parsing.Resource.Generics.UTC.UTC ReadUtc(byte[] data)
         {
             var reader = new GFFBinaryReader(data);
             GFF gff = reader.Load();
-            return UTCHelpers.ConstructUtc(gff);
+            return Andastra.Parsing.Resource.Generics.UTC.UTCHelpers.ConstructUtc(gff);
         }
 
         public static PTH ReadPth(byte[] data)
@@ -65,11 +66,11 @@ namespace Andastra.Parsing.Resource
             return UTSHelpers.ConstructUts(gff);
         }
 
-        public static UTI ReadUti(byte[] data)
+        public static Andastra.Parsing.Resource.Generics.UTI.UTI ReadUti(byte[] data)
         {
             var reader = new GFFBinaryReader(data);
             GFF gff = reader.Load();
-            return UTIHelpers.ConstructUti(gff);
+            return Andastra.Parsing.Resource.Generics.UTI.UTIHelpers.ConstructUti(gff);
         }
     }
 }

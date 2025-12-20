@@ -113,7 +113,7 @@ namespace Andastra.Parsing.Common
                 };
             }
 
-            var utc = creatureResource.Resource() as UTC;
+            var utc = creatureResource.Resource() as Andastra.Parsing.Resource.Generics.UTC.UTC;
             if (utc == null)
             {
                 return new Dictionary<string, object>

@@ -127,11 +127,11 @@ namespace HolocronToolset.Widgets.Edit
                     parentWindow = window;
                     break;
                 }
-                current = current.Parent;
+                current = current.Parent as Control;
             }
 
             // If no parent found, try to get main window
-            if (parentWindow == null && Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            if (parentWindow == null && Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 parentWindow = desktop.MainWindow;
             }

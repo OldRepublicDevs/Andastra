@@ -5,7 +5,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Headless;
-using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
 using Andastra.Parsing.Formats.NCS.NCSDecomp;
 using FluentAssertions;

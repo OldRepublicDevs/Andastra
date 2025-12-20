@@ -471,7 +471,7 @@ namespace Andastra.Parsing.Tests.Formats
                 }
             }
 
-            compiledCount.Should().BeGreaterOrEqualTo(12,
+            compiledCount.Should().BeGreaterThanOrEqualTo(12,
                 $"Should successfully compile 2DA.ksy to at least 12 languages. Compiled to {compiledCount} languages.");
         }
 

@@ -16,9 +16,12 @@ using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource;
+using UTCHelpers = Andastra.Parsing.Resource.Generics.UTC.UTCHelpers;
+using UTCClass = Andastra.Parsing.Resource.Generics.UTC.UTCClass;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
+using UTC = Andastra.Parsing.Resource.Generics.UTC.UTC;
 
 namespace HolocronToolset.Editors
 {
@@ -117,7 +120,7 @@ namespace HolocronToolset.Editors
                 installation)
         {
             _installation = installation;
-            _utc = new UTC();
+            _utc = new Andastra.Parsing.Resource.Generics.UTC.UTC();
             _scriptFields = new Dictionary<string, TextBox>();
             _settings = new UTCEditorSettings();
             _globalSettings = new GlobalSettings();
@@ -785,18 +788,18 @@ namespace HolocronToolset.Editors
 
             // Matching Python: gff: GFF = dismantle_utc(utc); write_gff(gff, data)
             Game game = _installation?.Game ?? Game.K2;
-            var gff = UTCHelpers.DismantleUtc(utc, game);
+            var gff = Andastra.Parsing.Resource.Generics.UTC.UTCHelpers.DismantleUtc(utc, game);
             byte[] data = GFFAuto.BytesGff(gff, ResourceType.UTC);
             return Tuple.Create(data, new byte[0]);
         }
 
         // Matching Python: deepcopy(self._utc)
-        private static UTC CopyUtc(UTC source)
+        private static Andastra.Parsing.Resource.Generics.UTC.UTC CopyUtc(Andastra.Parsing.Resource.Generics.UTC.UTC source)
         {
             // Use Dismantle/Construct pattern for reliable deep copy (matching Python deepcopy behavior)
             Game game = Game.K2; // Default game for serialization
-            var gff = UTCHelpers.DismantleUtc(source, game);
-            return UTCHelpers.ConstructUtc(gff);
+            var gff = Andastra.Parsing.Resource.Generics.UTC.UTCHelpers.DismantleUtc(source, game);
+            return Andastra.Parsing.Resource.Generics.UTC.UTCHelpers.ConstructUtc(gff);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:665-668
@@ -804,7 +807,7 @@ namespace HolocronToolset.Editors
         public override void New()
         {
             base.New();
-            _utc = new UTC();
+            _utc = new Andastra.Parsing.Resource.Generics.UTC.UTC();
             LoadUTC(_utc);
             UpdateItemCount();
         }

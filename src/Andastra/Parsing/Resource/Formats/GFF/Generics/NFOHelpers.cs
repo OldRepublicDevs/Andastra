@@ -84,9 +84,9 @@ namespace Andastra.Parsing.Resource.Generics
                 // Leave list as-is; consumers can choose legacy or indexed.
             }
 
-            // Engine default: "" (empty ResRef) for each PORTRAIT field
+            // Engine default: "" (swkotor.exe:0x006c8e50 line 236, swkotor2.exe:0x00707290 line 304)
             // Engine reads PORTRAIT fields in loop using format "PORTRAIT%d" (0, 1, 2)
-            // (swkotor2.exe:0x00707290 lines 302-312, swkotor.exe:0x006c8e50 lines 234-244)
+            // (swkotor.exe:0x006c8e50 lines 234-244, swkotor2.exe:0x00707290 lines 302-312)
             nfo.Portrait0 = root.Acquire("PORTRAIT0", ResRef.FromBlank());
             nfo.Portrait1 = root.Acquire("PORTRAIT1", ResRef.FromBlank());
             nfo.Portrait2 = root.Acquire("PORTRAIT2", ResRef.FromBlank());
@@ -95,7 +95,7 @@ namespace Andastra.Parsing.Resource.Generics
             nfo.LiveContentBitmask = root.Acquire("LIVECONTENT", (byte)0);
 
             // Live entries: tolerate 1..9.
-            // Engine default: "" for each LIVE field (swkotor2.exe:0x00707290 line 264, swkotor.exe:0x006c8e50 line 207)
+            // Engine default: "" for each LIVE field (swkotor.exe:0x006c8e50 line 207, swkotor2.exe:0x00707290 line 264)
             for (int i = 1; i <= 9; i++)
             {
                 string field = "LIVE" + i;
@@ -105,7 +105,7 @@ namespace Andastra.Parsing.Resource.Generics
                 }
             }
 
-            // Engine default: "" (swkotor2.exe:0x00707290 line 209, swkotor.exe:0x006c8e50 - not explicitly read in K1)
+            // Engine default: "" (swkotor.exe:0x006c8e50 - not explicitly read in K1, swkotor2.exe:0x00707290 line 209)
             nfo.PcName = root.Acquire("PCNAME", string.Empty);
 
             return nfo;

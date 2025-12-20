@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Markup.Xaml;
 
 namespace HoloPatcher.UI.Views.Dialogs
 {
@@ -10,6 +11,11 @@ namespace HoloPatcher.UI.Views.Dialogs
             ViewModel = new UpdateProgressViewModel();
             DataContext = ViewModel;
             CanResize = false;
+        }
+
+        private void InitializeComponent()
+        {
+            AvaloniaXamlLoader.Load(this);
         }
 
         public UpdateProgressViewModel ViewModel { get; }

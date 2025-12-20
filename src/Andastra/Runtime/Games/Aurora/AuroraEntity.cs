@@ -550,10 +550,41 @@ namespace Andastra.Runtime.Games.Aurora
 
             _isValid = false;
 
-            // Remove from world/area
+            // Remove from world and area collections
+            // Based on nwmain.exe: Entity destruction pattern
+            // - CNWSCreature::RemoveFromArea @ 0x14039e6b0 removes entity from area collections
+            // - CNWSArea::RemoveObjectFromArea removes entity from type-specific lists
+            // - Entity removal sequence: Remove from area collections first, then remove from world collections
+            // - Located via string references: "RemoveObjectFromArea" in nwmain.exe entity management
+            // - Original implementation: Entities are removed from all lookup indices when destroyed
+            // - World maintains indices: ObjectId dictionary, Tag dictionary, ObjectType dictionary
+            // - Areas maintain indices: Type-specific lists (Creatures, Placeables, Doors, Triggers, Waypoints, Sounds)
             if (_world != null)
             {
-                // TODO: Remove from world's entity collections
+                // Remove from area collections first (if entity belongs to an area)
+                // Based on nwmain.exe: CNWSCreature::RemoveFromArea calls CNWSArea::RemoveObjectFromArea
+                // Located via string references: "RemoveObjectFromArea" in nwmain.exe
+                // Original implementation: Area.RemoveObjectFromArea removes entity from area's type-specific collections
+                if (_areaId != 0)
+                {
+                    IArea area = _world.GetArea(_areaId);
+                    if (area != null && area is AuroraArea auroraArea)
+                    {
+                        // Remove entity from area's collections
+                        // Based on nwmain.exe: CNWSArea::RemoveObjectFromArea removes from type-specific lists
+                        // AuroraArea.RemoveEntity handles removal from Creatures, Placeables, Doors, Triggers, Waypoints, Sounds lists
+                        auroraArea.RemoveEntity(this);
+                    }
+                }
+
+                // Unregister from world collections
+                // Based on nwmain.exe: World.UnregisterEntity removes entity from all world lookup indices
+                // Original implementation: UnregisterEntity removes from:
+                // - _entitiesById dictionary (ObjectId lookup)
+                // - _entitiesByTag dictionary (Tag-based lookup, case-insensitive)
+                // - _entitiesByType dictionary (ObjectType-based lookup)
+                // This ensures entity is no longer accessible via GetEntity, GetEntityByTag, GetEntitiesOfType, GetAllEntities
+                _world.UnregisterEntity(this);
             }
 
             // Clean up components

@@ -9,7 +9,7 @@ using static Andastra.Parsing.Common.GameExtensions;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
 using Andastra.Parsing.Common;
 
-namespace Andastra.Parsing.Resource.Generics
+namespace Andastra.Parsing.Resource.Generics.UTC
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utc.py
     // Original: construct_utc and dismantle_utc functions
@@ -476,3 +476,4 @@ namespace Andastra.Parsing.Resource.Generics
         }
     }
 }
+

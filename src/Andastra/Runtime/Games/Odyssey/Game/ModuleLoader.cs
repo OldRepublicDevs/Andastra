@@ -18,6 +18,7 @@ using Andastra.Parsing.Formats.MDL;
 using Andastra.Parsing.Formats.TPC;
 using MDLData = Andastra.Parsing.Formats.MDLData;
 using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Resource.Generics.ARE;
 using Andastra.Parsing.Resource.Generics.DLG;
 using Andastra.Parsing.Common;
 using ResRef = Andastra.Parsing.Common.ResRef;

@@ -97,6 +97,7 @@
     <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="SharpCompress" Version="0.38.0" />
     <PackageReference Include="sly" Version="3.7.7" />
     <PackageReference Include="System.Collections.Immutable" Version="10.0.1" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.1" />
