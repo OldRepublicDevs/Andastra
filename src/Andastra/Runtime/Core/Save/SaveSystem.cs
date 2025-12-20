@@ -466,6 +466,16 @@ namespace Andastra.Runtime.Core.Save
         /// <summary>
         /// Creates a creature state from an entity.
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 (save creature data to GFF)
+        /// Original implementation saves complete creature state including:
+        /// - Position, orientation, HP, FP
+        /// - Level, XP, ClassLevels, Skills, Attributes
+        /// - Equipment (all slots), Inventory (all items)
+        /// - KnownPowers (Force powers/spells), KnownFeats
+        /// - Alignment and other creature-specific data
+        /// Uses GFF format with fields for each data type
+        /// </remarks>
         private CreatureState CreateCreatureState(IEntity entity)
         {
             var state = new CreatureState();
@@ -473,6 +483,7 @@ namespace Andastra.Runtime.Core.Save
             state.ObjectId = entity.ObjectId;
             state.ObjectType = entity.ObjectType;
 
+            // Save transform (position and facing)
             Interfaces.Components.ITransformComponent transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
             if (transform != null)
             {
@@ -480,6 +491,7 @@ namespace Andastra.Runtime.Core.Save
                 state.Facing = transform.Facing;
             }
 
+            // Save stats component data
             Interfaces.Components.IStatsComponent stats = entity.GetComponent<Interfaces.Components.IStatsComponent>();
             if (stats != null)
             {
@@ -487,14 +499,289 @@ namespace Andastra.Runtime.Core.Save
                 state.MaxHP = stats.MaxHP;
                 state.CurrentFP = stats.CurrentFP;
                 state.MaxFP = stats.MaxFP;
-                // Note: Level, XP, ClassLevels, Skills, Attributes would need to be extracted from stats component
-                // TODO: SIMPLIFIED - For now, we save basic HP/FP state
+                state.Level = stats.Level;
+
+                // Save attributes (STR, DEX, CON, INT, WIS, CHA)
+                state.Attributes = new AttributeSet
+                {
+                    Strength = stats.GetAbility(Ability.Strength),
+                    Dexterity = stats.GetAbility(Ability.Dexterity),
+                    Constitution = stats.GetAbility(Ability.Constitution),
+                    Intelligence = stats.GetAbility(Ability.Intelligence),
+                    Wisdom = stats.GetAbility(Ability.Wisdom),
+                    Charisma = stats.GetAbility(Ability.Charisma)
+                };
+
+                // Save all skills (iterate through skill IDs)
+                // KOTOR has 8 skills: 0-7 (COMPUTER_USE, DEMOLITIONS, STEALTH, AWARENESS, PERSUADE, REPAIR, SECURITY, TREAT_INJURY)
+                for (int skillId = 0; skillId < 8; skillId++)
+                {
+                    int skillRank = stats.GetSkillRank(skillId);
+                    if (skillRank > 0)
+                    {
+                        // Use skill ID as string key (e.g., "0", "1", etc.)
+                        state.Skills[skillId.ToString()] = skillRank;
+                    }
+                }
+
+                // Save known spells/powers using reflection to access GetKnownSpells method if available
+                // Based on Odyssey StatsComponent implementation which has GetKnownSpells()
+                var statsType = stats.GetType();
+                var getKnownSpellsMethod = statsType.GetMethod("GetKnownSpells", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                if (getKnownSpellsMethod != null)
+                {
+                    var knownSpells = getKnownSpellsMethod.Invoke(stats, null) as System.Collections.IEnumerable;
+                    if (knownSpells != null)
+                    {
+                        foreach (object spellId in knownSpells)
+                        {
+                            if (spellId is int)
+                            {
+                                state.KnownPowers.Add(((int)spellId).ToString());
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // Fallback: Check for spells using HasSpell method (iterate through spell IDs)
+                    // This is less efficient but works if GetKnownSpells is not available
+                    // Typical KOTOR spell ID range: 0-200 (approximate)
+                    for (int spellId = 0; spellId < 500; spellId++)
+                    {
+                        if (stats.HasSpell(spellId))
+                        {
+                            state.KnownPowers.Add(spellId.ToString());
+                        }
+                    }
+                }
+
+                // Save XP using reflection to access Experience property if available
+                // Based on Odyssey StatsComponent which has Experience property
+                var experienceProperty = statsType.GetProperty("Experience", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                if (experienceProperty != null)
+                {
+                    object experienceValue = experienceProperty.GetValue(stats);
+                    if (experienceValue is int)
+                    {
+                        state.XP = (int)experienceValue;
+                    }
+                }
             }
 
-            // Save inventory and equipment would require IInventoryComponent access
-            // TODO: SIMPLIFIED - This is a simplified version - full implementation would save all creature data
+            // Save class levels using reflection to access CreatureComponent if available
+            // Based on Odyssey CreatureComponent which has ClassList property
+            var creatureComponentType = entity.GetType().Assembly.GetType("Andastra.Runtime.Engines.Odyssey.Components.CreatureComponent");
+            if (creatureComponentType != null)
+            {
+                // Try to get CreatureComponent from entity using reflection
+                var getComponentMethod = entity.GetType().GetMethod("GetComponent", new System.Type[] { typeof(System.Type) });
+                if (getComponentMethod != null)
+                {
+                    object creatureComp = getComponentMethod.Invoke(entity, new object[] { creatureComponentType });
+                    if (creatureComp != null)
+                    {
+                        // Get ClassList property
+                        var classListProperty = creatureComponentType.GetProperty("ClassList");
+                        if (classListProperty != null)
+                        {
+                            var classList = classListProperty.GetValue(creatureComp) as System.Collections.IEnumerable;
+                            if (classList != null)
+                            {
+                                foreach (object cls in classList)
+                                {
+                                    var classType = cls.GetType();
+                                    var classIdProperty = classType.GetProperty("ClassId");
+                                    var levelProperty = classType.GetProperty("Level");
+                                    if (classIdProperty != null && levelProperty != null)
+                                    {
+                                        object classId = classIdProperty.GetValue(cls);
+                                        object level = levelProperty.GetValue(cls);
+                                        if (classId is int && level is int)
+                                        {
+                                            state.ClassLevels.Add(new ClassLevel
+                                            {
+                                                ClassId = (int)classId,
+                                                Level = (int)level
+                                            });
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Get FeatList property
+                        var featListProperty = creatureComponentType.GetProperty("FeatList");
+                        if (featListProperty != null)
+                        {
+                            var featList = featListProperty.GetValue(creatureComp) as System.Collections.IEnumerable;
+                            if (featList != null)
+                            {
+                                foreach (object featId in featList)
+                                {
+                                    if (featId is int)
+                                    {
+                                        state.KnownFeats.Add(((int)featId).ToString());
+                                    }
+                                }
+                            }
+                        }
+
+                        // Get KnownPowers property (additional to stats component)
+                        var knownPowersProperty = creatureComponentType.GetProperty("KnownPowers");
+                        if (knownPowersProperty != null)
+                        {
+                            var knownPowers = knownPowersProperty.GetValue(creatureComp) as System.Collections.IEnumerable;
+                            if (knownPowers != null)
+                            {
+                                foreach (object powerId in knownPowers)
+                                {
+                                    if (powerId is int)
+                                    {
+                                        string powerIdStr = ((int)powerId).ToString();
+                                        if (!state.KnownPowers.Contains(powerIdStr))
+                                        {
+                                            state.KnownPowers.Add(powerIdStr);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Save inventory and equipment
+            Interfaces.Components.IInventoryComponent inventory = entity.GetComponent<Interfaces.Components.IInventoryComponent>();
+            if (inventory != null)
+            {
+                // Save equipped items (KOTOR equipment slots)
+                // Based on swkotor2.exe: Equipment slots saved in PARTYTABLE.res
+                // Slot constants: INVENTORY_SLOT_HEAD=0, INVENTORY_SLOT_BODY=1, INVENTORY_SLOT_HANDS=3,
+                // INVENTORY_SLOT_RIGHTWEAPON=4, INVENTORY_SLOT_LEFTWEAPON=5, INVENTORY_SLOT_LEFTARM=7,
+                // INVENTORY_SLOT_RIGHTARM=8, INVENTORY_SLOT_IMPLANT=9, INVENTORY_SLOT_BELT=10
+                IEntity headItem = inventory.GetItemInSlot(0); // INVENTORY_SLOT_HEAD
+                if (headItem != null)
+                {
+                    state.Equipment.Head = CreateItemState(headItem);
+                }
+
+                IEntity armorItem = inventory.GetItemInSlot(1); // INVENTORY_SLOT_BODY
+                if (armorItem != null)
+                {
+                    state.Equipment.Armor = CreateItemState(armorItem);
+                }
+
+                IEntity glovesItem = inventory.GetItemInSlot(3); // INVENTORY_SLOT_HANDS
+                if (glovesItem != null)
+                {
+                    state.Equipment.Gloves = CreateItemState(glovesItem);
+                }
+
+                IEntity rightHandItem = inventory.GetItemInSlot(4); // INVENTORY_SLOT_RIGHTWEAPON
+                if (rightHandItem != null)
+                {
+                    state.Equipment.RightHand = CreateItemState(rightHandItem);
+                }
+
+                IEntity leftHandItem = inventory.GetItemInSlot(5); // INVENTORY_SLOT_LEFTWEAPON
+                if (leftHandItem != null)
+                {
+                    state.Equipment.LeftHand = CreateItemState(leftHandItem);
+                }
+
+                IEntity leftArmItem = inventory.GetItemInSlot(7); // INVENTORY_SLOT_LEFTARM
+                if (leftArmItem != null)
+                {
+                    state.Equipment.LeftArm = CreateItemState(leftArmItem);
+                }
+
+                IEntity rightArmItem = inventory.GetItemInSlot(8); // INVENTORY_SLOT_RIGHTARM
+                if (rightArmItem != null)
+                {
+                    state.Equipment.RightArm = CreateItemState(rightArmItem);
+                }
+
+                IEntity implantItem = inventory.GetItemInSlot(9); // INVENTORY_SLOT_IMPLANT
+                if (implantItem != null)
+                {
+                    state.Equipment.Implant = CreateItemState(implantItem);
+                }
+
+                IEntity beltItem = inventory.GetItemInSlot(10); // INVENTORY_SLOT_BELT
+                if (beltItem != null)
+                {
+                    state.Equipment.Belt = CreateItemState(beltItem);
+                }
+
+                // Save all inventory items (non-equipped items in inventory bag)
+                // Based on swkotor2.exe: Inventory items saved in PARTYTABLE.res
+                foreach (IEntity invItem in inventory.GetAllItems())
+                {
+                    // Skip items that are already saved as equipped items
+                    if (invItem != headItem && invItem != armorItem && invItem != glovesItem &&
+                        invItem != rightHandItem && invItem != leftHandItem && invItem != leftArmItem &&
+                        invItem != rightArmItem && invItem != implantItem && invItem != beltItem)
+                    {
+                        ItemState itemState = CreateItemState(invItem);
+                        state.Inventory.Add(itemState);
+                    }
+                }
+            }
+
+            // Save alignment using reflection to access Alignment property if available
+            // Based on creature templates which may have Alignment property
+            var alignmentProperty = entity.GetType().GetProperty("Alignment", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            if (alignmentProperty != null)
+            {
+                object alignmentValue = alignmentProperty.GetValue(entity);
+                if (alignmentValue is int)
+                {
+                    state.Alignment = (int)alignmentValue;
+                }
+            }
 
             return state;
+        }
+
+        /// <summary>
+        /// Creates an item state from an item entity.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Item data saved in PARTYTABLE.res
+        /// Saves item template ResRef, stack size, charges, identified flag, and upgrades
+        /// </remarks>
+        private ItemState CreateItemState(IEntity itemEntity)
+        {
+            var itemState = new ItemState();
+
+            if (itemEntity == null)
+            {
+                return itemState;
+            }
+
+            // Get item component
+            Interfaces.Components.IItemComponent itemComponent = itemEntity.GetComponent<Interfaces.Components.IItemComponent>();
+            if (itemComponent != null)
+            {
+                itemState.TemplateResRef = itemComponent.TemplateResRef ?? string.Empty;
+                itemState.StackSize = itemComponent.StackSize;
+                itemState.Charges = itemComponent.Charges;
+                itemState.Identified = itemComponent.Identified;
+
+                // Save item upgrades
+                // Based on swkotor2.exe: Item upgrades saved in save files
+                foreach (Interfaces.Components.ItemUpgrade upgrade in itemComponent.Upgrades)
+                {
+                    itemState.Upgrades.Add(new ItemUpgrade
+                    {
+                        UpgradeSlot = upgrade.UpgradeType,
+                        UpgradeResRef = upgrade.Index.ToString() // Store index as ResRef string (may need adjustment based on actual upgrade format)
+                    });
+                }
+            }
+
+            return itemState;
         }
 
         #endregion
@@ -731,6 +1018,15 @@ namespace Andastra.Runtime.Core.Save
         /// <summary>
         /// Restores creature state to an entity.
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_0057dcd0 @ 0x0057dcd0 (load party data from PARTYTABLE.res)
+        /// Original implementation restores complete creature state including:
+        /// - Position, orientation, HP, FP
+        /// - Level, XP, ClassLevels, Skills, Attributes
+        /// - Equipment (all slots), Inventory (all items)
+        /// - KnownPowers (Force powers/spells), KnownFeats
+        /// - Alignment and other creature-specific data
+        /// </remarks>
         private void RestoreCreatureState(IEntity entity, CreatureState state)
         {
             if (entity == null || state == null)
@@ -738,7 +1034,7 @@ namespace Andastra.Runtime.Core.Save
                 return;
             }
 
-            // Restore transform
+            // Restore transform (position and facing)
             Interfaces.Components.ITransformComponent transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
             if (transform != null)
             {
@@ -746,7 +1042,7 @@ namespace Andastra.Runtime.Core.Save
                 transform.Facing = state.Facing;
             }
 
-            // Restore stats
+            // Restore stats component data
             Interfaces.Components.IStatsComponent stats = entity.GetComponent<Interfaces.Components.IStatsComponent>();
             if (stats != null)
             {
@@ -754,12 +1050,293 @@ namespace Andastra.Runtime.Core.Save
                 stats.MaxHP = state.MaxHP;
                 stats.CurrentFP = state.CurrentFP;
                 stats.MaxFP = state.MaxFP;
-                // Note: Level, XP, ClassLevels, Skills, Attributes would need to be restored
-                // TODO: SIMPLIFIED - This is a simplified version - full implementation would restore all creature data
+
+                // Restore level using reflection to set Level property if available
+                var statsType = stats.GetType();
+                var levelProperty = statsType.GetProperty("Level", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                if (levelProperty != null && levelProperty.CanWrite)
+                {
+                    levelProperty.SetValue(stats, state.Level);
+                }
+
+                // Restore attributes (STR, DEX, CON, INT, WIS, CHA)
+                if (state.Attributes != null)
+                {
+                    stats.SetAbility(Ability.Strength, state.Attributes.Strength);
+                    stats.SetAbility(Ability.Dexterity, state.Attributes.Dexterity);
+                    stats.SetAbility(Ability.Constitution, state.Attributes.Constitution);
+                    stats.SetAbility(Ability.Intelligence, state.Attributes.Intelligence);
+                    stats.SetAbility(Ability.Wisdom, state.Attributes.Wisdom);
+                    stats.SetAbility(Ability.Charisma, state.Attributes.Charisma);
+                }
+
+                // Restore skills using reflection to access SetSkillRank method if available
+                // Based on Odyssey StatsComponent which has SetSkillRank method
+                var setSkillRankMethod = statsType.GetMethod("SetSkillRank", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                if (setSkillRankMethod != null && state.Skills != null)
+                {
+                    foreach (var kvp in state.Skills)
+                    {
+                        if (int.TryParse(kvp.Key, out int skillId))
+                        {
+                            setSkillRankMethod.Invoke(stats, new object[] { skillId, kvp.Value });
+                        }
+                    }
+                }
+
+                // Restore XP using reflection to set Experience property if available
+                var experienceProperty = statsType.GetProperty("Experience", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                if (experienceProperty != null && experienceProperty.CanWrite)
+                {
+                    experienceProperty.SetValue(stats, state.XP);
+                }
+
+                // Restore known spells/powers using reflection to access AddSpell method if available
+                // Based on Odyssey StatsComponent which has AddSpell method
+                var addSpellMethod = statsType.GetMethod("AddSpell", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                if (addSpellMethod != null && state.KnownPowers != null)
+                {
+                    foreach (string powerIdStr in state.KnownPowers)
+                    {
+                        if (int.TryParse(powerIdStr, out int powerId))
+                        {
+                            addSpellMethod.Invoke(stats, new object[] { powerId });
+                        }
+                    }
+                }
             }
 
-            // Restore inventory and equipment would require IInventoryComponent access
-            // TODO: SIMPLIFIED - This is a simplified version - full implementation would restore all creature data
+            // Restore class levels using reflection to access CreatureComponent if available
+            // Based on Odyssey CreatureComponent which has ClassList property
+            var creatureComponentType = entity.GetType().Assembly.GetType("Andastra.Runtime.Engines.Odyssey.Components.CreatureComponent");
+            if (creatureComponentType != null)
+            {
+                // Try to get CreatureComponent from entity using reflection
+                var getComponentMethod = entity.GetType().GetMethod("GetComponent", new System.Type[] { typeof(System.Type) });
+                if (getComponentMethod != null)
+                {
+                    object creatureComp = getComponentMethod.Invoke(entity, new object[] { creatureComponentType });
+                    if (creatureComp != null && state.ClassLevels != null)
+                    {
+                        // Get ClassList property and restore class levels
+                        var classListProperty = creatureComponentType.GetProperty("ClassList");
+                        if (classListProperty != null)
+                        {
+                            var classList = classListProperty.GetValue(creatureComp) as System.Collections.IList;
+                            if (classList != null)
+                            {
+                                classList.Clear();
+                                var classType = System.Type.GetType("Andastra.Runtime.Engines.Odyssey.Components.CreatureClass");
+                                if (classType != null)
+                                {
+                                    foreach (ClassLevel classLevel in state.ClassLevels)
+                                    {
+                                        object cls = System.Activator.CreateInstance(classType);
+                                        var classIdProperty = classType.GetProperty("ClassId");
+                                        var levelProperty = classType.GetProperty("Level");
+                                        if (classIdProperty != null && levelProperty != null)
+                                        {
+                                            classIdProperty.SetValue(cls, classLevel.ClassId);
+                                            levelProperty.SetValue(cls, classLevel.Level);
+                                            classList.Add(cls);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Get FeatList property and restore feats
+                        if (state.KnownFeats != null)
+                        {
+                            var featListProperty = creatureComponentType.GetProperty("FeatList");
+                            if (featListProperty != null)
+                            {
+                                var featList = featListProperty.GetValue(creatureComp) as System.Collections.IList;
+                                if (featList != null)
+                                {
+                                    featList.Clear();
+                                    foreach (string featIdStr in state.KnownFeats)
+                                    {
+                                        if (int.TryParse(featIdStr, out int featId))
+                                        {
+                                            featList.Add(featId);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Get KnownPowers property and restore powers (additional to stats component)
+                        if (state.KnownPowers != null)
+                        {
+                            var knownPowersProperty = creatureComponentType.GetProperty("KnownPowers");
+                            if (knownPowersProperty != null)
+                            {
+                                var knownPowers = knownPowersProperty.GetValue(creatureComp) as System.Collections.IList;
+                                if (knownPowers != null)
+                                {
+                                    knownPowers.Clear();
+                                    foreach (string powerIdStr in state.KnownPowers)
+                                    {
+                                        if (int.TryParse(powerIdStr, out int powerId))
+                                        {
+                                            knownPowers.Add(powerId);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Restore inventory and equipment
+            Interfaces.Components.IInventoryComponent inventory = entity.GetComponent<Interfaces.Components.IInventoryComponent>();
+            if (inventory != null)
+            {
+                // Restore equipped items (KOTOR equipment slots)
+                // Based on swkotor2.exe: Equipment slots restored from PARTYTABLE.res
+                if (state.Equipment != null)
+                {
+                    if (state.Equipment.Head != null)
+                    {
+                        IEntity headItem = RestoreItemFromState(state.Equipment.Head);
+                        if (headItem != null)
+                        {
+                            inventory.SetItemInSlot(0, headItem); // INVENTORY_SLOT_HEAD
+                        }
+                    }
+
+                    if (state.Equipment.Armor != null)
+                    {
+                        IEntity armorItem = RestoreItemFromState(state.Equipment.Armor);
+                        if (armorItem != null)
+                        {
+                            inventory.SetItemInSlot(1, armorItem); // INVENTORY_SLOT_BODY
+                        }
+                    }
+
+                    if (state.Equipment.Gloves != null)
+                    {
+                        IEntity glovesItem = RestoreItemFromState(state.Equipment.Gloves);
+                        if (glovesItem != null)
+                        {
+                            inventory.SetItemInSlot(3, glovesItem); // INVENTORY_SLOT_HANDS
+                        }
+                    }
+
+                    if (state.Equipment.RightHand != null)
+                    {
+                        IEntity rightHandItem = RestoreItemFromState(state.Equipment.RightHand);
+                        if (rightHandItem != null)
+                        {
+                            inventory.SetItemInSlot(4, rightHandItem); // INVENTORY_SLOT_RIGHTWEAPON
+                        }
+                    }
+
+                    if (state.Equipment.LeftHand != null)
+                    {
+                        IEntity leftHandItem = RestoreItemFromState(state.Equipment.LeftHand);
+                        if (leftHandItem != null)
+                        {
+                            inventory.SetItemInSlot(5, leftHandItem); // INVENTORY_SLOT_LEFTWEAPON
+                        }
+                    }
+
+                    if (state.Equipment.LeftArm != null)
+                    {
+                        IEntity leftArmItem = RestoreItemFromState(state.Equipment.LeftArm);
+                        if (leftArmItem != null)
+                        {
+                            inventory.SetItemInSlot(7, leftArmItem); // INVENTORY_SLOT_LEFTARM
+                        }
+                    }
+
+                    if (state.Equipment.RightArm != null)
+                    {
+                        IEntity rightArmItem = RestoreItemFromState(state.Equipment.RightArm);
+                        if (rightArmItem != null)
+                        {
+                            inventory.SetItemInSlot(8, rightArmItem); // INVENTORY_SLOT_RIGHTARM
+                        }
+                    }
+
+                    if (state.Equipment.Implant != null)
+                    {
+                        IEntity implantItem = RestoreItemFromState(state.Equipment.Implant);
+                        if (implantItem != null)
+                        {
+                            inventory.SetItemInSlot(9, implantItem); // INVENTORY_SLOT_IMPLANT
+                        }
+                    }
+
+                    if (state.Equipment.Belt != null)
+                    {
+                        IEntity beltItem = RestoreItemFromState(state.Equipment.Belt);
+                        if (beltItem != null)
+                        {
+                            inventory.SetItemInSlot(10, beltItem); // INVENTORY_SLOT_BELT
+                        }
+                    }
+                }
+
+                // Restore inventory items (non-equipped items in inventory bag)
+                // Based on swkotor2.exe: Inventory items restored from PARTYTABLE.res
+                if (state.Inventory != null)
+                {
+                    foreach (ItemState itemState in state.Inventory)
+                    {
+                        IEntity invItem = RestoreItemFromState(itemState);
+                        if (invItem != null)
+                        {
+                            inventory.AddItem(invItem);
+                        }
+                    }
+                }
+            }
+
+            // Restore alignment using reflection to set Alignment property if available
+            if (state.Alignment != 0)
+            {
+                var alignmentProperty = entity.GetType().GetProperty("Alignment", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                if (alignmentProperty != null && alignmentProperty.CanWrite)
+                {
+                    alignmentProperty.SetValue(entity, state.Alignment);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Restores an item entity from item state.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Item data restored from PARTYTABLE.res
+        /// Creates item entity from template ResRef and restores stack size, charges, identified flag, and upgrades
+        /// Note: This is a simplified implementation - full implementation would need access to entity factory
+        /// to create items from templates. For now, returns null as item creation requires module/entity factory context.
+        /// </remarks>
+        private IEntity RestoreItemFromState(ItemState itemState)
+        {
+            if (itemState == null || string.IsNullOrEmpty(itemState.TemplateResRef))
+            {
+                return null;
+            }
+
+            // Note: Full implementation would require:
+            // 1. Access to entity factory to create items from template ResRefs
+            // 2. Module context to load item templates
+            // 3. Ability to restore item upgrades and properties
+            // For now, this is a placeholder that indicates the item needs to be restored
+            // The actual item restoration would be handled by the entity factory when loading the save
+            
+            // In a complete implementation, this would:
+            // 1. Get entity factory from world/module
+            // 2. Create item entity from TemplateResRef
+            // 3. Get IItemComponent and set StackSize, Charges, Identified
+            // 4. Restore item upgrades from itemState.Upgrades
+            // 5. Return the created entity
+            
+            return null;
         }
 
         /// <summary>
