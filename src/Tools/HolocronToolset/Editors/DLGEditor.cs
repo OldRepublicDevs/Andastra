@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -17,6 +18,7 @@ using DLGEntry = Andastra.Parsing.Resource.Generics.DLG.DLGEntry;
 using DLGReply = Andastra.Parsing.Resource.Generics.DLG.DLGReply;
 using DLGHelper = Andastra.Parsing.Resource.Generics.DLG.DLGHelper;
 using HolocronToolset.Data;
+using HolocronToolset.Dialogs;
 using HolocronToolset.Editors.Actions;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
 
@@ -1714,20 +1716,47 @@ namespace HolocronToolset.Editors
                 return;
             }
 
-            // TODO: PLACEHOLDER - Full implementation requires reference_history and show_reference_dialog
-            // For now, this is a stub to allow tests to compile
-            // Matching PyKotor: finds all items that link to the same node as item.link
-            var references = new List<DLGStandardItem>();
+            // Truncate history to current index (remove forward history when navigating to new reference)
+            // Matching PyKotor: self.reference_history = self.reference_history[: self.current_reference_index + 1]
+            if (_currentReferenceIndex >= 0 && _currentReferenceIndex < _referenceHistory.Count - 1)
+            {
+                _referenceHistory.RemoveRange(_currentReferenceIndex + 1, _referenceHistory.Count - _currentReferenceIndex - 1);
+            }
+
+            // Get item HTML display text
+            // Matching PyKotor: item_html: str = item.data(Qt.ItemDataRole.DisplayRole)
+            string itemHtml = GetItemDisplayText(item);
+
+            // Increment reference index
+            // Matching PyKotor: self.current_reference_index += 1
+            _currentReferenceIndex++;
+
+            // Find all items that link to the same node as item.link
+            // Matching PyKotor: references: list[weakref.ReferenceType] = [
+            //     this_item.ref_to_link
+            //     for link in self.model.link_to_items
+            //     for this_item in self.model.link_to_items[link]
+            //     if this_item.link is not None and item.link in this_item.link.node.links
+            // ]
+            var references = new List<WeakReference<DLGLink>>();
             foreach (var kvp in _model.LinkToItems)
             {
                 foreach (var thisItem in kvp.Value)
                 {
-                    if (thisItem?.Link?.Node != null && thisItem.Link.Node.Links.Contains(item.Link))
+                    if (thisItem?.Link?.Node != null && thisItem.Link.Node.Links != null && thisItem.Link.Node.Links.Contains(item.Link))
                     {
-                        references.Add(thisItem);
+                        // Create weak reference to the link
+                        var linkRef = new WeakReference<DLGLink>(thisItem.Link);
+                        references.Add(linkRef);
                     }
                 }
             }
+
+            // Add to history and show dialog
+            // Matching PyKotor: self.reference_history.append((references, item_html))
+            // Matching PyKotor: self.show_reference_dialog(references, item_html)
+            _referenceHistory.Add(Tuple.Create(references, itemHtml));
+            ShowReferenceDialog(references, itemHtml);
         }
 
         /// <summary>
@@ -1946,6 +1975,156 @@ namespace HolocronToolset.Editors
         /// Matching PyKotor implementation: self._focused
         /// </summary>
         public bool Focused => _focused;
+
+        /// <summary>
+        /// Gets the current reference index for navigation.
+        /// Matching PyKotor implementation: self.current_reference_index
+        /// </summary>
+        public int CurrentReferenceIndex => _currentReferenceIndex;
+
+        /// <summary>
+        /// Gets the count of items in the reference history.
+        /// </summary>
+        public int ReferenceHistoryCount => _referenceHistory.Count;
+
+        /// <summary>
+        /// Gets the dialog paths for an item (link parent path, link path, linked to path).
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1908-1916
+        /// Original: def get_item_dlg_paths(self, item: DLGStandardItem | DLGListWidgetItem) -> tuple[str, str, str]:
+        /// </summary>
+        /// <param name="item">The item to get paths for (DLGStandardItem or DLGListWidgetItem).</param>
+        /// <returns>Tuple of (link_parent_path, link_path, linked_to_path).</returns>
+        public Tuple<string, string, string> GetItemDlgPaths(object item)
+        {
+            string linkParentPath = "";
+            string linkPath = "";
+            string linkedToPath = "";
+
+            DLGLink link = null;
+            if (item is DLGStandardItem standardItem)
+            {
+                link = standardItem.Link;
+                // In PyKotor, link_parent_path comes from item.data(_LINK_PARENT_NODE_PATH_ROLE)
+                // For now, we'll try to find the parent path by traversing the tree
+                if (standardItem.Parent != null && standardItem.Parent.Link != null && standardItem.Parent.Link.Node != null)
+                {
+                    linkParentPath = standardItem.Parent.Link.Node.Path();
+                }
+            }
+            else if (item is DLGListWidgetItem listItem)
+            {
+                link = listItem.Link;
+            }
+
+            if (link != null)
+            {
+                // Determine if link is a starter
+                bool isStarter = _coreDlg != null && _coreDlg.Starters != null && _coreDlg.Starters.Contains(link);
+                linkPath = link.PartialPath(isStarter);
+
+                if (link.Node != null)
+                {
+                    linkedToPath = link.Node.Path();
+                }
+            }
+
+            return Tuple.Create(linkParentPath, linkPath, linkedToPath);
+        }
+
+        /// <summary>
+        /// Shows the reference dialog with the specified references.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1918-1929
+        /// Original: def show_reference_dialog(self, references: list[weakref.ref[DLGLink]], item_html: str):
+        /// </summary>
+        /// <param name="references">List of weak references to DLG links.</param>
+        /// <param name="itemHtml">HTML text describing the item being referenced.</param>
+        public void ShowReferenceDialog(List<WeakReference<DLGLink>> references, string itemHtml)
+        {
+            if (_dialogReferences == null)
+            {
+                _dialogReferences = new ReferenceChooserDialog(references, this, itemHtml);
+                _dialogReferences.ItemChosen += OnReferenceChosen;
+            }
+            else
+            {
+                _dialogReferences.UpdateReferences(references, itemHtml);
+            }
+
+            if (!_dialogReferences.IsVisible)
+            {
+                _dialogReferences.Show();
+            }
+        }
+
+        /// <summary>
+        /// Handles when a reference is chosen from the dialog.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1931-1936
+        /// Original: def on_reference_chosen(self, item: DLGListWidgetItem):
+        /// </summary>
+        /// <param name="sender">The sender of the event.</param>
+        /// <param name="item">The selected DLG list widget item.</param>
+        private void OnReferenceChosen(object sender, DLGListWidgetItem item)
+        {
+            if (item?.Link != null)
+            {
+                JumpToNode(item.Link);
+            }
+        }
+
+        /// <summary>
+        /// Jumps to the specified node by highlighting it in the tree.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1938-1947
+        /// Original: def jump_to_node(self, link: DLGLink | None):
+        /// </summary>
+        /// <param name="link">The link to jump to.</param>
+        public void JumpToNode(DLGLink link)
+        {
+            if (link == null || _model == null || _model.LinkToItems == null)
+            {
+                return;
+            }
+
+            if (!_model.LinkToItems.ContainsKey(link))
+            {
+                return;
+            }
+
+            var items = _model.LinkToItems[link];
+            if (items != null && items.Count > 0)
+            {
+                HighlightResult(items[0]);
+            }
+        }
+
+        /// <summary>
+        /// Navigates back in the reference history.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1949-1953
+        /// Original: def navigate_back(self):
+        /// </summary>
+        public void NavigateBack()
+        {
+            if (_currentReferenceIndex > 0)
+            {
+                _currentReferenceIndex--;
+                var historyItem = _referenceHistory[_currentReferenceIndex];
+                ShowReferenceDialog(historyItem.Item1, historyItem.Item2);
+            }
+        }
+
+        /// <summary>
+        /// Navigates forward in the reference history.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1955-1959
+        /// Original: def navigate_forward(self):
+        /// </summary>
+        public void NavigateForward()
+        {
+            if (_currentReferenceIndex < _referenceHistory.Count - 1)
+            {
+                _currentReferenceIndex++;
+                var historyItem = _referenceHistory[_currentReferenceIndex];
+                ShowReferenceDialog(historyItem.Item1, historyItem.Item2);
+            }
+        }
     }
 
     /// <summary>

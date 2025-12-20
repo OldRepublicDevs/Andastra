@@ -996,10 +996,81 @@ namespace Andastra.Runtime.Games.Aurora
         /// <summary>
         /// Checks if a face is walkable.
         /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: Aurora tile-based face walkability check.
+        /// In Aurora, faces map to tiles in the tile grid. Each face index corresponds to a unique tile.
+        /// 
+        /// Algorithm:
+        /// 1. Convert face index to tile coordinates: tileY = faceIndex / tileWidth, tileX = faceIndex % tileWidth
+        /// 2. Validate tile coordinates are within bounds
+        /// 3. Check if tile is valid using IsTileValid
+        /// 4. Check if tile is loaded and has walkable surfaces
+        /// 
+        /// Based on reverse engineering of:
+        /// - nwmain.exe: CNWSArea::GetTile @ 0x14035edc0 - Tile coordinate conversion and validation
+        /// - nwmain.exe: CNWTile walkability checks - Tiles have walkable surface flags
+        /// - Face index calculation: faceIndex = tileY * tileWidth + tileX (from FindFaceAt)
+        /// - Tile array indexing pattern: width * y + x (matches face index calculation)
+        /// 
+        /// Note: Unlike Odyssey's triangle-based walkmesh where faces are actual triangles,
+        /// Aurora uses a tile-based system where each face index maps to a tile in the grid.
+        /// Walkability is determined by the tile's IsWalkable flag, which indicates whether
+        /// the tile has walkable surfaces.
+        /// </remarks>
         public bool IsWalkable(int faceIndex)
         {
-            // TODO: Implement Aurora face walkability check
-            throw new NotImplementedException("Aurora face walkability check not yet implemented");
+            // Handle empty tile grid
+            if (_tileWidth <= 0 || _tileHeight <= 0 || _tiles == null || _tiles.Length == 0)
+            {
+                return false;
+            }
+
+            // Validate face index is within expected range
+            // Maximum face index should be (tileHeight - 1) * tileWidth + (tileWidth - 1) = tileHeight * tileWidth - 1
+            int maxFaceIndex = _tileHeight * _tileWidth - 1;
+            if (faceIndex < 0 || faceIndex > maxFaceIndex)
+            {
+                // Face index is out of bounds
+                return false;
+            }
+
+            // Convert face index to tile coordinates
+            // Based on FindFaceAt: faceIndex = tileY * tileWidth + tileX
+            // Reverse: tileY = faceIndex / tileWidth, tileX = faceIndex % tileWidth
+            int tileY = faceIndex / _tileWidth;
+            int tileX = faceIndex % _tileWidth;
+
+            // Validate tile coordinates are within bounds
+            // This should always be true if faceIndex is valid, but check for safety
+            if (tileX < 0 || tileX >= _tileWidth || tileY < 0 || tileY >= _tileHeight)
+            {
+                return false;
+            }
+
+            // Check if tile is valid (loaded and has valid tile ID)
+            // Based on nwmain.exe: CNWSArea::GetTile @ 0x14035edc0 validation checks
+            if (!IsTileValid(tileX, tileY))
+            {
+                // Tile is not valid (not loaded, out of bounds, or invalid tile ID)
+                return false;
+            }
+
+            // Get the tile at the specified coordinates
+            // Based on nwmain.exe: Tile array access pattern (width * y + x)
+            AuroraTile tile = _tiles[tileY, tileX];
+
+            // Tile must be loaded to be walkable
+            // Based on nwmain.exe: CNWTileSet::GetTileData() validation
+            // Tiles must be loaded before they can be used
+            if (!tile.IsLoaded)
+            {
+                return false;
+            }
+
+            // Check if tile has walkable surfaces
+            // Based on nwmain.exe: CNWTile walkability checks
+            // Tiles with IsWalkable flag set to true have walkable surfaces
+            return tile.IsWalkable;
         }
 
         /// <summary>
