@@ -60,7 +60,7 @@ namespace Andastra.Parsing.Formats.NCS
         KOTOR_SCRIPTING_TOOL,
         NCSDecomp,
         XOREOS,
-        KNSSCOMP
+        NSSCOMP
     }
 
     /// <summary>
@@ -145,9 +145,9 @@ namespace Andastra.Parsing.Formats.NCS
                     "Xoreos Team",
                     new Dictionary<string, List<string>>()
                 ),
-                [KnownExternalCompilers.KNSSCOMP] = new ExternalCompilerConfig(
+                [KnownExternalCompilers.NSSCOMP] = new ExternalCompilerConfig(
                     "",
-                    "knsscomp",
+                    "nsscomp",
                     new DateTime(2022, 1, 1),
                     "Nick Hugi",
                     new Dictionary<string, List<string>>

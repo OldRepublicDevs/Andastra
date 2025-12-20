@@ -39,7 +39,7 @@ src/
     ├── HoloPatcher/             # Main patcher application
     ├── HoloPatcher.UI/          # Patcher UI (if separate)
     ├── HolocronToolset/         # Renamed from HolocronToolset.NET
-    ├── KNSSComp/                # Renamed from KNSSComp.NET
+    ├── NSSComp/                # Renamed from NSSComp.NET
     ├── KotorDiff/               # Renamed from KotorDiff.NET
     └── NCSDecomp/               # NCS decompiler
 ```
@@ -56,7 +56,7 @@ src/
 
 ### Tools
 - Remove `.NET` suffix from all tool projects
-- Use PascalCase: `HoloPatcher`, `HolocronToolset`, `KNSSComp`, `KotorDiff`, `NCSDecomp`
+- Use PascalCase: `HoloPatcher`, `HolocronToolset`, `NSSComp`, `KotorDiff`, `NCSDecomp`
 
 ## Migration Steps
 

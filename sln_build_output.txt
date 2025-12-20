@@ -7,8 +7,8 @@ Restore complete (2.4s)
   Andastra.Tooling failed with 2 error(s) (0.3s)
     G:\GitHub\Andastra\src\Tools\Andastra.Tooling\Program.cs(2,14): error CS0234: The type or namespace name 'CommandLine' does not exist in the namespace 'System' (are you missing an assembly reference?)
     G:\GitHub\Andastra\src\Tools\Andastra.Tooling\Program.cs(3,14): error CS0234: The type or namespace name 'CommandLine' does not exist in the namespace 'System' (are you missing an assembly reference?)
-  KNSSComp failed with 1 error(s) (0.6s)                                                                       
-    C:\Program Files\dotnet\sdk\9.0.307\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1005: Assets file 'G:\GitHub\Andastra\src\Tools\KNSSComp\obj\project.assets.json' doesn't have a target for 'net8.0'. Ensure that restore has run and that you have included 'net8.0' in the TargetFrameworks for your project.                                                                                    
+  NSSComp failed with 1 error(s) (0.6s)                                                                       
+    C:\Program Files\dotnet\sdk\9.0.307\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1005: Assets file 'G:\GitHub\Andastra\src\Tools\NSSComp\obj\project.assets.json' doesn't have a target for 'net8.0'. Ensure that restore has run and that you have included 'net8.0' in the TargetFrameworks for your project.                                                                                    
   KNCSDecomp.Tests failed with 1 error(s) (0.1s)
     C:\Program Files\dotnet\sdk\9.0.307\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1005: Assets file 'G:\GitHub\Andastra\src\Tests\NCSDecomp.Tests\obj\project.assets.json' doesn't have a target for 'net9.0'. Ensure that restore has run and that you have included 'net9.0' in the TargetFrameworks for your project.
   GenerateScriptDefs failed with 12 error(s) (0.8s)

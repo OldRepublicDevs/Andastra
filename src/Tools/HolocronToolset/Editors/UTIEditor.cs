@@ -42,6 +42,7 @@ namespace HolocronToolset.Editors
         private NumericUpDown _modelVarSpin;
         private NumericUpDown _bodyVarSpin;
         private NumericUpDown _textureVarSpin;
+        private Avalonia.Controls.Image _iconLabel;
 
         // UI Controls - Properties
         private TreeView _availablePropertyList;
@@ -142,6 +143,7 @@ namespace HolocronToolset.Editors
         public Button RemovePropertyBtn => _removePropertyBtn;
         public Button EditPropertyBtn => _editPropertyBtn;
         public TextBox CommentsEdit => _commentsEdit;
+        public Avalonia.Controls.Image IconLabel => _iconLabel;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:46-87
         // Original: def __init__(self, parent, installation):
@@ -189,6 +191,7 @@ namespace HolocronToolset.Editors
                 _modelVarSpin = this.FindControl<NumericUpDown>("modelVarSpin");
                 _bodyVarSpin = this.FindControl<NumericUpDown>("bodyVarSpin");
                 _textureVarSpin = this.FindControl<NumericUpDown>("textureVarSpin");
+                _iconLabel = this.FindControl<Avalonia.Controls.Image>("iconLabel");
                 _availablePropertyList = this.FindControl<TreeView>("availablePropertyList");
                 _assignedPropertiesList = this.FindControl<ListBox>("assignedPropertiesList");
                 _addPropertyBtn = this.FindControl<Button>("addPropertyBtn");
@@ -272,6 +275,15 @@ namespace HolocronToolset.Editors
             _baseSelect.SelectionChanged += (s, e) => UpdateIcon();
             basicPanel.Children.Add(baseLabel);
             basicPanel.Children.Add(_baseSelect);
+
+            // Icon Label (shows item icon based on base item and variations)
+            _iconLabel = new Avalonia.Controls.Image
+            {
+                Width = 32,
+                Height = 32,
+                Margin = new Avalonia.Thickness(0, 5, 0, 5)
+            };
+            basicPanel.Children.Add(_iconLabel);
 
             // Cost
             var costLabel = new TextBlock { Text = "Cost:" };

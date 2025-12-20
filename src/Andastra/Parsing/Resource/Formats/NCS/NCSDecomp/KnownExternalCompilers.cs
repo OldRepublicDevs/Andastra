@@ -75,10 +75,10 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
         );
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/KnownExternalCompilers.java:90-97
-        // Original: KNSSCOMP(...)
-        public static readonly CompilerInfo KNSSCOMP = new CompilerInfo(
+        // Original: NSSCOMP(...)
+        public static readonly CompilerInfo NSSCOMP = new CompilerInfo(
             "",
-            "knsscomp",
+            "nsscomp",
             new DateTime(2022, 1, 1),
             "Nick Hugi",
             new string[] { "-c", "{source}", "-o", "{output}" },
@@ -117,7 +117,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 V1,
                 KOTOR_SCRIPTING_TOOL,
                 XOREOS,
-                KNSSCOMP
+                NSSCOMP
             };
 
             foreach (CompilerInfo compiler in allCompilers)
