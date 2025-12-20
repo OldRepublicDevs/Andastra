@@ -105,7 +105,7 @@ namespace KotorDiff.Resolution
                         // Group by module basename to handle composite loading correctly
                         try
                         {
-                            string moduleRoot = DiffEngineUtils.GetModuleRoot(filepath);
+                            string moduleRoot = ResolutionUtils.GetModuleRoot(filepath);
                             if (!moduleGroups.ContainsKey(moduleRoot))
                             {
                                 moduleGroups[moduleRoot] = new List<(string, FileResource)>();
@@ -455,7 +455,7 @@ namespace KotorDiff.Resolution
                 // It's in a .rim - need to redirect to corresponding .mod
                 if (filepathStr.Contains(".rim"))
                 {
-                    string moduleRoot = DiffEngineUtils.GetModuleRoot(filepathB);
+                    string moduleRoot = ResolutionUtils.GetModuleRoot(filepathB);
                     return $"modules\\{moduleRoot}.mod";
                 }
             }
@@ -559,7 +559,7 @@ namespace KotorDiff.Resolution
                             {
                                 try
                                 {
-                                    string fileModuleRoot = DiffEngineUtils.GetModuleRoot(f);
+                                    string fileModuleRoot = ResolutionUtils.GetModuleRoot(f);
                                     if (fileModuleRoot != chosenModuleRoot)
                                     {
                                         continue; // Skip files with different base names
