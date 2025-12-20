@@ -180,6 +180,20 @@ namespace Andastra.Runtime.Scripting.Interfaces
             return null;
         }
 
+        /// <summary>
+        /// Extracts an Effect object from this Variable.
+        /// Returns the Effect if this Variable contains one, otherwise returns null.
+        /// Based on swkotor.exe and swkotor2.exe: Effect extraction from Variable type system
+        /// </summary>
+        public object AsEffect()
+        {
+            if (Type == VariableType.Effect)
+            {
+                return ComplexValue;
+            }
+            return null;
+        }
+
         public override string ToString()
         {
             switch (Type)

@@ -3831,10 +3831,104 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             return Variable.FromInt(1); // Default stack size
         }
 
+        /// <summary>
+        /// Extracts an Effect object from various container types.
+        /// Handles direct Effect objects, Variable wrappers, nested Variables, and other containers.
+        /// Based on swkotor.exe and swkotor2.exe: Effect extraction from Variable type system
+        /// </summary>
+        /// <param name="effectObj">The object that may contain an Effect (can be Effect, Variable, or other container)</param>
+        /// <returns>The extracted Effect object, or null if extraction fails</returns>
+        private CoreCombat.Effect ExtractEffect(object effectObj)
+        {
+            if (effectObj == null)
+            {
+                return null;
+            }
+
+            // Case 1: Direct Effect object
+            if (effectObj is CoreCombat.Effect directEffect)
+            {
+                return directEffect;
+            }
+
+            // Case 2: Variable wrapper (nested Variable)
+            if (effectObj is Variable variable)
+            {
+                // Check if Variable contains an Effect type
+                if (variable.Type == VariableType.Effect)
+                {
+                    object complexValue = variable.ComplexValue;
+                    // Recursively extract from ComplexValue
+                    return ExtractEffect(complexValue);
+                }
+                // If Variable is not Effect type, try extracting from ComplexValue anyway
+                // (in case of type mismatch or conversion)
+                if (variable.ComplexValue != null)
+                {
+                    return ExtractEffect(variable.ComplexValue);
+                }
+                return null;
+            }
+
+            // Case 3: Try to extract from ComplexValue if it's a container with ComplexValue property
+            // This handles cases where effectObj might be wrapped in another container type
+            System.Reflection.PropertyInfo complexValueProp = effectObj.GetType().GetProperty("ComplexValue");
+            if (complexValueProp != null)
+            {
+                object complexValue = complexValueProp.GetValue(effectObj);
+                if (complexValue != null)
+                {
+                    return ExtractEffect(complexValue);
+                }
+            }
+
+            // Case 4: Try to extract from Value property (some wrapper types use Value)
+            System.Reflection.PropertyInfo valueProp = effectObj.GetType().GetProperty("Value");
+            if (valueProp != null)
+            {
+                object value = valueProp.GetValue(effectObj);
+                if (value != null)
+                {
+                    return ExtractEffect(value);
+                }
+            }
+
+            // Case 5: If effectObj implements IEnumerable, try to extract from first element
+            // (handles cases where effect might be in a collection)
+            if (effectObj is System.Collections.IEnumerable enumerable)
+            {
+                System.Collections.IEnumerator enumerator = enumerable.GetEnumerator();
+                if (enumerator.MoveNext())
+                {
+                    return ExtractEffect(enumerator.Current);
+                }
+            }
+
+            // Case 6: Try type conversion/casting (last resort)
+            // Some containers might need explicit conversion
+            try
+            {
+                CoreCombat.Effect convertedEffect = effectObj as CoreCombat.Effect;
+                if (convertedEffect != null)
+                {
+                    return convertedEffect;
+                }
+            }
+            catch
+            {
+                // Conversion failed, continue to return null
+            }
+
+            return null;
+        }
+
         private Variable Func_ApplyEffectToObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // ApplyEffectToObject(int nDurationType, effect eEffect, object oTarget, float fDuration=0.0f)
             // nDurationType: DURATION_TYPE_INSTANT (0), DURATION_TYPE_TEMPORARY (1), DURATION_TYPE_PERMANENT (2)
+            // Based on swkotor.exe: ApplyEffectToObject function implementation
+            // Located via string references: "ApplyEffectToObject" in NWScript function dispatch
+            // Original implementation: Extracts effect from Variable wrapper, validates duration type, applies to target entity
             int durationType = args.Count > 0 ? args[0].AsInt() : 0;
             object effectObj = args.Count > 1 ? args[1].ComplexValue : null;
             uint targetId = args.Count > 2 ? args[2].AsObjectId() : ObjectSelf;
@@ -3856,33 +3950,24 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
                 return Variable.Void();
             }
 
-            // Convert effect object to Effect
-            Effect effect = null;
-            if (effectObj is Effect directEffect)
+            // Extract Effect from various container types using comprehensive extraction
+            CoreCombat.Effect effect = ExtractEffect(effectObj);
+            if (effect == null)
             {
-                effect = directEffect;
-            }
-            else if (effectObj != null)
-            {
-                // Try to extract Effect from Variable wrapper or other container
-                // TODO: SIMPLIFIED - For now, if it's not an Effect, we can't process it
-                Console.WriteLine($"[KotOR1] ApplyEffectToObject: Invalid effect type: {effectObj.GetType().Name}");
-                return Variable.Void();
-            }
-            else
-            {
+                // Log warning but don't crash - this helps with debugging
+                Console.WriteLine($"[KotOR1] ApplyEffectToObject: Failed to extract Effect from type: {effectObj?.GetType().Name ?? "null"}");
                 return Variable.Void();
             }
 
             // Map duration type
-            EffectDurationType effectDurationType;
+            CoreCombat.EffectDurationType effectDurationType;
             switch (durationType)
             {
                 case 0: // DURATION_TYPE_INSTANT
-                    effectDurationType = EffectDurationType.Instant;
+                    effectDurationType = CoreCombat.EffectDurationType.Instant;
                     break;
                 case 1: // DURATION_TYPE_TEMPORARY
-                    effectDurationType = EffectDurationType.Temporary;
+                    effectDurationType = CoreCombat.EffectDurationType.Temporary;
                     if (duration > 0f)
                     {
                         // Convert seconds to rounds (assuming 6 seconds per round)
@@ -3890,7 +3975,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
                     }
                     break;
                 case 2: // DURATION_TYPE_PERMANENT
-                    effectDurationType = EffectDurationType.Permanent;
+                    effectDurationType = CoreCombat.EffectDurationType.Permanent;
                     break;
                 default:
                     return Variable.Void();
@@ -4225,20 +4310,12 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
                 return Variable.Void();
             }
 
-            // Convert effect object to Effect
-            CoreCombat.Effect effect = null;
-            if (effectObj is CoreCombat.Effect directEffect)
+            // Extract Effect from various container types using comprehensive extraction
+            CoreCombat.Effect effect = ExtractEffect(effectObj);
+            if (effect == null)
             {
-                effect = directEffect;
-            }
-            else if (effectObj != null)
-            {
-                // Try to extract from Variable wrapper
-                Console.WriteLine($"[KotOR1] RemoveEffect: Invalid effect type: {effectObj.GetType().Name}");
-                return Variable.Void();
-            }
-            else
-            {
+                // Log warning but don't crash - this helps with debugging
+                Console.WriteLine($"[KotOR1] RemoveEffect: Failed to extract Effect from type: {effectObj?.GetType().Name ?? "null"}");
                 return Variable.Void();
             }
 
@@ -4267,8 +4344,9 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             return Variable.FromInt(0);
         }
 
-            // Check if effect is a valid Effect object
-            if (effectObj is CoreCombat.Effect)
+            // Check if effect is a valid Effect object (using comprehensive extraction)
+            CoreCombat.Effect effect = ExtractEffect(effectObj);
+            if (effect != null)
             {
                 return Variable.FromInt(1);
             }
@@ -4290,7 +4368,9 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         {
             object effectObj = args.Count > 0 ? args[0].ComplexValue : null;
 
-            if (effectObj is CoreCombat.Effect effect)
+            // Extract Effect from various container types using comprehensive extraction
+            CoreCombat.Effect effect = ExtractEffect(effectObj);
+            if (effect != null)
             {
                 // Map EffectDurationType to NWScript constants
                 // DURATION_TYPE_INSTANT = 0, DURATION_TYPE_TEMPORARY = 1, DURATION_TYPE_PERMANENT = 2
@@ -4315,7 +4395,9 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         {
             object effectObj = args.Count > 0 ? args[0].ComplexValue : null;
 
-            if (effectObj is CoreCombat.Effect effect)
+            // Extract Effect from various container types using comprehensive extraction
+            CoreCombat.Effect effect = ExtractEffect(effectObj);
+            if (effect != null)
             {
                 return Variable.FromInt(effect.SubType);
             }
@@ -4349,9 +4431,11 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
                 return Variable.FromObject(ObjectInvalid);
             }
 
-            // Find matching effect and return creator
-            if (effectObj is CoreCombat.Effect effect)
+            // Extract Effect from various container types using comprehensive extraction
+            CoreCombat.Effect effect = ExtractEffect(effectObj);
+            if (effect != null)
             {
+                // Find matching effect and return creator
                 foreach (CoreCombat.ActiveEffect activeEffect in ctx.World.EffectSystem.GetEffects(entity))
                 {
                     if (activeEffect.Effect == effect)
