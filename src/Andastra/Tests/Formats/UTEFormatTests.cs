@@ -115,7 +115,8 @@ namespace Andastra.Parsing.Tests.Formats
             UTE ute = UTEHelpers.ConstructUte(gff);
 
             // Validate spawn configuration properties
-            ute.Active.Should().BeOfType<bool>("Active should be boolean");
+            // Active is already a bool type, so we just verify it's accessible
+            _ = ute.Active; // Verify property is accessible
             ute.DifficultyId.Should().BeGreaterThanOrEqualTo(0, "DifficultyId should be non-negative");
             ute.DifficultyIndex.Should().BeGreaterThanOrEqualTo(0, "DifficultyIndex should be non-negative");
             ute.Faction.Should().BeGreaterThanOrEqualTo(0, "Faction should be non-negative");

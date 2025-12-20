@@ -232,12 +232,14 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Validate boolean fields are properly set
             // These are stored as UInt8 (0 or 1) in GFF but exposed as bool in UTS class
-            uts.Active.Should().BeOfType<bool>();
-            uts.Continuous.Should().BeOfType<bool>();
-            uts.Looping.Should().BeOfType<bool>();
-            uts.Positional.Should().BeOfType<bool>();
-            uts.RandomPosition.Should().BeOfType<bool>();
-            uts.Random.Should().BeOfType<bool>();
+            // Since these are already bool types, we just verify they are accessible
+            // (Type checking is not needed as the compiler enforces bool type)
+            _ = uts.Active; // Verify property is accessible
+            _ = uts.Continuous; // Verify property is accessible
+            _ = uts.Looping; // Verify property is accessible
+            _ = uts.Positional; // Verify property is accessible
+            _ = uts.RandomPosition; // Verify property is accessible
+            _ = uts.Random; // Verify property is accessible
         }
 
         [Fact(Timeout = 120000)]
