@@ -18,6 +18,7 @@ using Andastra.Runtime.Engines.Odyssey.Systems;
 using Andastra.Runtime.Engines.Odyssey.Dialogue;
 using Andastra.Runtime.Engines.Odyssey.Loading;
 using Andastra.Runtime.Engines.Odyssey.EngineApi;
+using Andastra.Runtime.Engines.Odyssey.Components;
 using Andastra.Runtime.Scripting.VM;
 using Andastra.Runtime.Scripting.Interfaces;
 using Andastra.Runtime.Core.Dialogue;
@@ -598,6 +599,115 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         }
 
         /// <summary>
+        /// Creates or retrieves the module entity for script execution.
+        /// </summary>
+        /// <param name="runtimeModule">The runtime module to create entity for.</param>
+        /// <returns>The module entity, or null if module is invalid.</returns>
+        /// <remarks>
+        /// Module Entity Creation (Odyssey-specific):
+        /// - Based on swkotor2.exe: Module entity created with fixed ObjectId 0x7F000002
+        /// - Located via string references: Module entity ObjectId constant, GetModule() NWScript function
+        /// - Cross-engine analysis:
+        ///   - Aurora (nwmain.exe): Similar module entity system with fixed ObjectId
+        ///   - Eclipse (daorigins.exe, DragonAge2.exe): Different module entity system (UnrealScript-based)
+        /// - Inheritance: Base class BaseGameSession (Runtime.Games.Common) - abstract module entity creation, Odyssey override (Runtime.Games.Odyssey) - Odyssey-specific module entity
+        /// - Original implementation: Module entity is a special system entity with fixed ObjectId (0x7F000002)
+        /// - Entity Properties:
+        ///   - ObjectId: Fixed at 0x7F000002 (World.ModuleObjectId)
+        ///   - ObjectType: Invalid (no Module ObjectType in enum, modules are special system entities)
+        ///   - Tag: Module ResRef (used for GetEntityByTag lookups)
+        ///   - Components: IScriptHooksComponent (required for script execution)
+        ///   - Position: Vector3.Zero (modules have no physical position)
+        ///   - AreaId: 0 (modules are not area entities)
+        /// - Module scripts: All module scripts (OnModuleLoad, OnModuleStart, OnClientEnter, OnClientLeave, OnModuleHeartbeat) are stored in module entity's IScriptHooksComponent
+        /// - This allows GetModule() NWScript function to access module scripts via GetScript()
+        /// - Module entity is registered in world for GetEntityByTag and GetEntity lookups
+        /// </remarks>
+        private IEntity CreateOrGetModuleEntity(RuntimeModule runtimeModule)
+        {
+            if (runtimeModule == null || string.IsNullOrEmpty(runtimeModule.ResRef))
+            {
+                return null;
+            }
+
+            // Check if module entity with fixed ObjectId already exists (canonical check)
+            // Based on swkotor2.exe: Module entity has fixed ObjectId 0x7F000002
+            // Original implementation: Module entity persists across module heartbeat calls
+            // Module entity is created during module load and reused for all module script execution
+            IEntity existingModuleEntity = _world.GetEntity(World.ModuleObjectId);
+            if (existingModuleEntity != null)
+            {
+                // Verify it has the correct Tag
+                if (existingModuleEntity.Tag == runtimeModule.ResRef)
+                {
+                    return existingModuleEntity;
+                }
+                // If existing module entity has wrong Tag, destroy it and create a new one
+                // (This shouldn't happen in normal operation, but handle defensively)
+                _world.DestroyEntity(existingModuleEntity.ObjectId);
+            }
+
+            // Create new module entity with fixed ObjectId
+            // Based on swkotor2.exe: Module entity created with ObjectId 0x7F000002
+            // Entity constructor: Entity(uint objectId, ObjectType objectType)
+            var entity = new Entity(World.ModuleObjectId, Andastra.Runtime.Core.Enums.ObjectType.Invalid);
+            entity.World = _world;
+            entity.Tag = runtimeModule.ResRef;
+            entity.Position = System.Numerics.Vector3.Zero;
+            entity.Facing = 0f;
+            entity.AreaId = 0;
+
+            // Initialize components for module entity
+            // Module entities need IScriptHooksComponent for script execution
+            // Based on swkotor2.exe: Module scripts require script hooks component
+            // ComponentInitializer.InitializeComponents adds IScriptHooksComponent to all entities
+            Systems.ComponentInitializer.InitializeComponents(entity);
+
+            // Ensure IScriptHooksComponent is present (ComponentInitializer should add it, but verify for safety)
+            if (!entity.HasComponent<IScriptHooksComponent>())
+            {
+                entity.AddComponent(new ScriptHooksComponent());
+            }
+
+            // Load module scripts into script hooks component
+            // Based on swkotor2.exe: Module scripts (OnModuleLoad, OnModuleStart, etc.) stored in module entity
+            // This allows GetModule() NWScript function to access module scripts via GetScript()
+            IScriptHooksComponent scriptHooks = entity.GetComponent<IScriptHooksComponent>();
+            if (scriptHooks != null)
+            {
+                // Copy scripts from RuntimeModule to module entity's script hooks component
+                // Module scripts are executed with module entity as owner (OBJECT_SELF in script context)
+                if (!string.IsNullOrEmpty(runtimeModule.GetScript(ScriptEvent.OnModuleLoad)))
+                {
+                    scriptHooks.SetScript(ScriptEvent.OnModuleLoad, runtimeModule.GetScript(ScriptEvent.OnModuleLoad));
+                }
+                if (!string.IsNullOrEmpty(runtimeModule.GetScript(ScriptEvent.OnModuleStart)))
+                {
+                    scriptHooks.SetScript(ScriptEvent.OnModuleStart, runtimeModule.GetScript(ScriptEvent.OnModuleStart));
+                }
+                if (!string.IsNullOrEmpty(runtimeModule.GetScript(ScriptEvent.OnClientEnter)))
+                {
+                    scriptHooks.SetScript(ScriptEvent.OnClientEnter, runtimeModule.GetScript(ScriptEvent.OnClientEnter));
+                }
+                if (!string.IsNullOrEmpty(runtimeModule.GetScript(ScriptEvent.OnClientLeave)))
+                {
+                    scriptHooks.SetScript(ScriptEvent.OnClientLeave, runtimeModule.GetScript(ScriptEvent.OnClientLeave));
+                }
+                if (!string.IsNullOrEmpty(runtimeModule.GetScript(ScriptEvent.OnModuleHeartbeat)))
+                {
+                    scriptHooks.SetScript(ScriptEvent.OnModuleHeartbeat, runtimeModule.GetScript(ScriptEvent.OnModuleHeartbeat));
+                }
+            }
+
+            // Register module entity with world
+            // Based on swkotor2.exe: Module entity registered in world for GetEntityByTag and GetEntity lookups
+            // Module entity can be looked up by Tag (module ResRef) or by ObjectId (ModuleObjectId)
+            _world.RegisterEntity(entity);
+
+            return entity;
+        }
+
+        /// <summary>
         /// Fires the module heartbeat script.
         /// </summary>
         private void FireModuleHeartbeat()
@@ -618,15 +728,14 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             // Based on swkotor2.exe: Module heartbeat script execution
             // Located via string references: "Mod_OnHeartbeat" @ 0x007be840
             // Original implementation: Module heartbeat fires every 6 seconds for module-level scripts
-            // Module scripts use module ResRef as context (no physical entity required)
-            IEntity moduleEntity = _world.GetEntityByTag(_currentModule.ResRef, 0);
-            if (moduleEntity == null)
+            // Module scripts use module entity with fixed ObjectId 0x7F000002 (World.ModuleObjectId)
+            // Based on swkotor2.exe: Module entity created with fixed ObjectId 0x7F000002 for script execution
+            // Module entity has IScriptHooksComponent for script execution, Tag set to module ResRef
+            IEntity moduleEntity = CreateOrGetModuleEntity(_currentModule);
+            if (moduleEntity != null)
             {
-                // TODO: SIMPLIFIED - Create a temporary entity for module script execution
-                moduleEntity = _world.CreateEntity(Andastra.Runtime.Core.Enums.ObjectType.Invalid, System.Numerics.Vector3.Zero, 0f);
-                moduleEntity.Tag = _currentModule.ResRef;
+                _scriptExecutor.ExecuteScript(heartbeatScript, moduleEntity, null);
             }
-            _scriptExecutor.ExecuteScript(heartbeatScript, moduleEntity, null);
         }
 
         private void FireScriptEvent(IEntity entity, ScriptEvent scriptEvent, IEntity target)
