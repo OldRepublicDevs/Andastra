@@ -224,11 +224,24 @@ namespace Andastra.Runtime.Games.Aurora
         /// <remarks>
         /// Creatures have stats, inventory, combat capabilities, etc.
         /// Based on creature component structure in nwmain.exe.
+        /// - CNWSCreature constructor creates creature instances with component initialization
+        /// - LoadCreatures @ 0x140360570 loads creature list from area GIT and creates entities with creature components
+        /// - Components attached: StatsComponent, InventoryComponent, CombatComponent, CreatureComponent, etc.
         /// </remarks>
         private void AttachCreatureComponents()
         {
-            // TODO: Attach creature-specific components
-            // StatsComponent, InventoryComponent, CombatComponent, etc.
+            // Attach stats component for creatures
+            // Based on nwmain.exe: CNWSCreatureStats is attached during creature creation
+            // CNWSCreatureStats::LoadStats @ 0x1403975e0 loads stats from GFF
+            if (!HasComponent<IStatsComponent>())
+            {
+                var statsComponent = new AuroraStatsComponent();
+                statsComponent.Owner = this;
+                AddComponent<IStatsComponent>(statsComponent);
+            }
+
+            // TODO: Attach other creature-specific components
+            // InventoryComponent, CombatComponent, CreatureComponent, etc.
         }
 
         /// <summary>
@@ -965,10 +978,11 @@ namespace Andastra.Runtime.Games.Aurora
                 var statsComponent = GetComponent<IStatsComponent>();
                 if (statsComponent == null)
                 {
-                    // Create stats component - we'll need to check what the Aurora stats component type is
-                    // For now, we'll use reflection or a factory method
-                    // TODO: Create AuroraStatsComponent if it exists
-                    throw new InvalidOperationException("Stats component not found and cannot be created automatically");
+                    // Create AuroraStatsComponent if missing (e.g., during deserialization)
+                    // Based on nwmain.exe: CNWSCreatureStats is created during creature loading
+                    statsComponent = new AuroraStatsComponent();
+                    statsComponent.Owner = this;
+                    AddComponent<IStatsComponent>(statsComponent);
                 }
 
                 statsComponent.CurrentHP = root.GetInt32("CurrentHP");
