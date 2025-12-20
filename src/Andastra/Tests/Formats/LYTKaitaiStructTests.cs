@@ -607,9 +607,9 @@ namespace Andastra.Parsing.Tests.Formats
         private static void CreateTestLytFile(string path)
         {
             var lyt = new LYT();
-            lyt.Rooms.Add(new LYTRoom("testroom", new System.Numerics.Vector3(0.0f, 0.0f, 0.0f)));
-            lyt.Tracks.Add(new LYTTrack("testtrack", new System.Numerics.Vector3(1.0f, 1.0f, 1.0f)));
-            lyt.Obstacles.Add(new LYTObstacle("testobstacle", new System.Numerics.Vector3(2.0f, 2.0f, 2.0f)));
+            lyt.Rooms.Add(new LYTRoom(new ResRef("testroom"), new System.Numerics.Vector3(0.0f, 0.0f, 0.0f)));
+            lyt.Tracks.Add(new LYTTrack(new ResRef("testtrack"), new System.Numerics.Vector3(1.0f, 1.0f, 1.0f)));
+            lyt.Obstacles.Add(new LYTObstacle(new ResRef("testobstacle"), new System.Numerics.Vector3(2.0f, 2.0f, 2.0f)));
             lyt.Doorhooks.Add(new LYTDoorHook("testroom", "testdoor", new System.Numerics.Vector3(3.0f, 3.0f, 3.0f), new System.Numerics.Vector4(0.0f, 0.0f, 0.0f, 1.0f)));
 
             Directory.CreateDirectory(Path.GetDirectoryName(path));
