@@ -16,14 +16,8 @@
 
         <!-- Language and Gender Selection -->
         <Grid Name="substringFrame" Grid.Row="1" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,10" IsVisible="False">
-            <ComboBox Name="languageSelect" Grid.Column="0" Margin="0,0,10,0">
-                <ComboBoxItem Content="English" IsSelected="True" />
-                <ComboBoxItem Content="French" />
-                <ComboBoxItem Content="German" />
-                <ComboBoxItem Content="Italian" />
-                <ComboBoxItem Content="Spanish" />
-                <ComboBoxItem Content="Polish" />
-            </ComboBox>
+            <!-- Language combo box is populated programmatically with all Language enum values -->
+            <ComboBox Name="languageSelect" Grid.Column="0" Margin="0,0,10,0" />
             <RadioButton Name="maleRadio" Grid.Column="1" Content="Male" IsChecked="True" Margin="0,0,10,0" />
             <RadioButton Name="femaleRadio" Grid.Column="2" Content="Female" />
         </Grid>
