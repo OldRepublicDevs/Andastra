@@ -351,7 +351,7 @@ namespace Andastra.Parsing.Tests.Formats
         {
             // Basic validation
             wav.Should().NotBeNull();
-            wav.WavType.Should().BeOneOf(WAVType.VO, WAVType.SFX);
+            wav.WavType.Should().BeOneOf(new[] { WAVType.VO, WAVType.SFX });
             wav.Channels.Should().BeGreaterThan(0);
             wav.SampleRate.Should().BeGreaterThan(0);
             wav.BitsPerSample.Should().BeGreaterThan(0);
