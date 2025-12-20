@@ -594,5 +594,27 @@ namespace Andastra.Parsing.Resource.Formats.LYT
         /// Quaternions are a way to represent 3D rotations using 4 numbers.
         /// </summary>
         public Quaternion Orientation { get; set; }
+
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public LYTDoorHook()
+        {
+        }
+
+        /// <summary>
+        /// Constructor with room, door, position, and orientation.
+        /// </summary>
+        /// <param name="room">The room name.</param>
+        /// <param name="door">The door name.</param>
+        /// <param name="position">The position in 3D space.</param>
+        /// <param name="orientation">The orientation quaternion.</param>
+        public LYTDoorHook(string room, string door, Vector3 position, Vector4 orientation)
+        {
+            Room = room;
+            Door = door;
+            Position = position;
+            Orientation = new Quaternion(orientation.X, orientation.Y, orientation.Z, orientation.W);
+        }
     }
 }
