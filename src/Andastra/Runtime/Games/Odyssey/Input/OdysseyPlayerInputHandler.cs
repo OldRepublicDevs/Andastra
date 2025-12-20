@@ -36,7 +36,7 @@ namespace Andastra.Runtime.Games.Odyssey.Input
     ///   - K1PlayerInputHandler (Runtime.Games.Odyssey.Input): K1-specific (swkotor.exe)
     ///   - K2PlayerInputHandler (Runtime.Games.Odyssey.Input): K2-specific (swkotor2.exe)
     /// </remarks>
-    public abstract class OdysseyPlayerInputHandler : PlayerInputHandler
+    public class OdysseyPlayerInputHandler : PlayerInputHandler
     {
         /// <summary>
         /// Initializes a new instance of the Odyssey player input handler.
