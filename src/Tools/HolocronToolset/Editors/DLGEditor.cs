@@ -123,6 +123,11 @@ namespace HolocronToolset.Editors
         private TextBox _speakerEdit;
         private TextBlock _speakerEditLabel;
 
+        // UI Controls - Listener widget
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
+        // Original: QLineEdit listenerEdit
+        private TextBox _listenerEdit;
+
         // UI Controls - Script widgets
         // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
         // Original: QSpinBox script1Param1Spin, script1Param2Spin, etc.
@@ -275,6 +280,16 @@ namespace HolocronToolset.Editors
             voicePanel.Children.Add(new TextBlock { Text = "Voice ResRef:" });
             voicePanel.Children.Add(_voiceComboBox);
             panel.Children.Add(voicePanel);
+
+            // Initialize listener text box
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:374
+            // Original: self.ui.listenerEdit.textEdited.connect(self.on_node_update)
+            _listenerEdit = new TextBox();
+            _listenerEdit.LostFocus += (s, e) => OnNodeUpdate();
+            var listenerPanel = new StackPanel();
+            listenerPanel.Children.Add(new TextBlock { Text = "Listener:" });
+            listenerPanel.Children.Add(_listenerEdit);
+            panel.Children.Add(listenerPanel);
 
             // Initialize animation UI controls
             // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui:966-992
@@ -576,6 +591,10 @@ namespace HolocronToolset.Editors
         public TextBox SpeakerEdit => _speakerEdit;
         public TextBlock SpeakerEditLabel => _speakerEditLabel;
 
+        // Expose listener widget for testing
+        // Matching PyKotor implementation: editor.ui.listenerEdit
+        public TextBox ListenerEdit => _listenerEdit;
+
         // Expose script widgets for testing
         // Matching PyKotor implementation: editor.ui.script1Param1Spin
         public NumericUpDown Script1Param1Spin => _script1Param1Spin;
@@ -707,6 +726,14 @@ namespace HolocronToolset.Editors
                 }
             }
 
+            // Load listener field from node
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2407
+            // Original: self.ui.listenerEdit.setText(item.link.node.listener)
+            if (_listenerEdit != null && node != null)
+            {
+                _listenerEdit.Text = node.Listener ?? string.Empty;
+            }
+
             // Load quest fields from node
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2433-2434
             // Original: self.ui.questEdit.setText(item.link.node.quest), self.ui.questEntrySpin.setValue(item.link.node.quest_entry or 0)
@@ -818,6 +845,14 @@ namespace HolocronToolset.Editors
             if (_speakerEdit != null && node is DLGEntry entry)
             {
                 entry.Speaker = _speakerEdit.Text ?? string.Empty;
+            }
+
+            // Update listener field in node
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2495
+            // Original: item.link.node.listener = self.ui.listenerEdit.text()
+            if (_listenerEdit != null && node != null)
+            {
+                node.Listener = _listenerEdit.Text ?? string.Empty;
             }
 
             // Update quest fields in node

@@ -2199,14 +2199,124 @@ RtfDomParserAv.dll
             throw new NotImplementedException("TestDlgEditorManipulateSpeakerRoundtrip: Speaker roundtrip test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_manipulate_listener_roundtrip (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2406-2438)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2406-2438
         // Original: def test_dlg_editor_manipulate_listener_roundtrip(qtbot, installation: HTInstallation, test_files_dir: Path): Test listener roundtrip
         [Fact]
         public void TestDlgEditorManipulateListenerRoundtrip()
         {
-            // TODO: STUB - Implement listener roundtrip test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2406-2438
-            throw new NotImplementedException("TestDlgEditorManipulateListenerRoundtrip: Listener roundtrip test not yet implemented");
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Try to find a DLG file
+            string dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            }
+
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Skip if no DLG files available for testing (matching Python pytest.skip behavior)
+                return;
+            }
+
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new DLGEditor(null, installation);
+            editor.Show();
+
+            byte[] originalData = System.IO.File.ReadAllBytes(dlgFile);
+            editor.Load(dlgFile, "ORIHA", ResourceType.DLG, originalData);
+
+            // Verify tree populated
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2418-2438
+            // Original: if editor.model.rowCount() > 0:
+            if (editor.Model.RowCount > 0)
+            {
+                // Get first item from model
+                // Matching PyKotor implementation: first_item = editor.model.item(0, 0)
+                var firstItem = editor.Model.Item(0, 0);
+                if (firstItem != null && firstItem.Link != null && firstItem.Link.Node != null)
+                {
+                    // Select the first item in the tree view
+                    // Matching PyKotor implementation: editor.ui.dialogTree.setCurrentIndex(first_item.index())
+                    // In C#, we need to select the item in the tree view
+                    SelectTreeViewItem(editor, firstItem);
+
+                    // Modify listener with various test values
+                    // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2424-2438
+                    // Original: test_listeners = ["PLAYER", "COMPANION", "NPC", ""]
+                    string[] testListeners = { "PLAYER", "COMPANION", "NPC", "" };
+                    foreach (string listener in testListeners)
+                    {
+                        // Set listener in UI
+                        // Matching PyKotor implementation: editor.ui.listenerEdit.setText(listener)
+                        editor.ListenerEdit.Text = listener;
+                        editor.OnNodeUpdate();
+
+                        // Save and verify
+                        // Matching PyKotor implementation: data, _ = editor.build()
+                        var (data, _) = editor.Build();
+                        var modifiedDlg = DLGHelper.ReadDlg(data);
+
+                        // Matching PyKotor implementation: if modified_dlg.starters: assert modified_dlg.starters[0].node.listener == listener
+                        if (modifiedDlg.Starters != null && modifiedDlg.Starters.Count > 0)
+                        {
+                            modifiedDlg.Starters[0].Node.Listener.Should().Be(listener, $"Listener should be '{listener}' after save");
+
+                            // Load back and verify
+                            // Matching PyKotor implementation: editor.load(dlg_file, "ORIHA", ResourceType.DLG, data)
+                            editor.Load(dlgFile, "ORIHA", ResourceType.DLG, data);
+
+                            // Re-select the first item after reload
+                            // Matching PyKotor implementation: editor.ui.dialogTree.setCurrentIndex(first_item.index())
+                            var reloadedFirstItem = editor.Model.Item(0, 0);
+                            if (reloadedFirstItem != null)
+                            {
+                                SelectTreeViewItem(editor, reloadedFirstItem);
+
+                                // Verify UI shows correct listener
+                                // Matching PyKotor implementation: assert editor.ui.listenerEdit.text() == listener
+                                editor.ListenerEdit.Text.Should().Be(listener, $"ListenerEdit should show '{listener}' after reload");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Helper method to select a tree view item in the DLG editor.
+        /// Matching pattern used in other tests (e.g., TestDlgEditorEntryShowsSpeaker, TestDlgEditorReplyHidesSpeaker).
+        /// </summary>
+        private void SelectTreeViewItem(DLGEditor editor, DLGStandardItem item)
+        {
+            if (editor?.DialogTree == null || item == null)
+            {
+                return;
+            }
+
+            // Create a TreeViewItem with the DLGStandardItem as Tag to simulate selection
+            // Matching pattern from TestDlgEditorEntryShowsSpeaker and TestDlgEditorReplyHidesSpeaker
+            var treeItem = new Avalonia.Controls.TreeViewItem { Tag = item };
+            editor.DialogTree.SelectedItem = treeItem;
         }
 
         // TODO: STUB - Implement test_dlg_editor_manipulate_script1_roundtrip (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2440-2470)
