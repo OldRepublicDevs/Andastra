@@ -5,8 +5,8 @@ using System.Threading;
 using Avalonia;
 using Andastra.Parsing;
 using Andastra.Parsing.Logger;
-using Andastra.Patcher.UI;
-using Andastra.Patcher.UI.ViewModels;
+using HoloPatcher.UI;
+using HoloPatcher.UI.ViewModels;
 using JetBrains.Annotations;
 
 namespace Andastra.Patcher

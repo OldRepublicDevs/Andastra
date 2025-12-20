@@ -12,6 +12,11 @@ using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Tests.Common;
 using FluentAssertions;
 using Xunit;
+using UTI = Andastra.Parsing.Resource.Generics.UTI.UTI;
+using UTIHelpers = Andastra.Parsing.Resource.Generics.UTI.UTIHelpers;
+using UTIProperty = Andastra.Parsing.Resource.Generics.UTI.UTIProperty;
+using UTC = Andastra.Parsing.Resource.Generics.UTC.UTC;
+using UTCHelpers = Andastra.Parsing.Resource.Generics.UTC.UTCHelpers;
 
 namespace Andastra.Parsing.Tests.Formats
 {

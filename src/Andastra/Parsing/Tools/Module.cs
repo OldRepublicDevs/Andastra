@@ -11,6 +11,7 @@ using Andastra.Parsing.Formats.VIS;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Logger;
 using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Resource.Generics.ARE;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Common;
 
@@ -115,7 +116,7 @@ namespace Andastra.Parsing.Tools
             }
 
             var areRes = oldModule.Are();
-            var are = areRes?.Resource() as Resource.Generics.ARE;
+            var are = areRes?.Resource() as ARE;
             if (are != null)
             {
                 are.Name = LocalizedString.FromEnglish(name);

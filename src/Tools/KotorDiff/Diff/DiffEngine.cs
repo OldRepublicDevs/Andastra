@@ -13,7 +13,6 @@ using Andastra.Parsing.TSLPatcher;
 using Andastra.Parsing.Formats.Capsule;
 using Andastra.Parsing.Resource;
 using KotorDiff.Cache;
-using KotorDiff.Resolution;
 using CachedFileComparison = KotorDiff.Cache.CachedFileComparison;
 
 namespace KotorDiff.Diff

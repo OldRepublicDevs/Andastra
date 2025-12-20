@@ -496,7 +496,7 @@ namespace HolocronToolset.Dialogs
         {
             if (parent != null)
             {
-                bool? result = await ShowDialogAsync<bool?>(parent);
+                bool? result = await ShowDialogAsync(parent) ? (bool?)true : (bool?)false;
                 DialogResult = result ?? false;
                 return DialogResult;
             }
@@ -510,7 +510,7 @@ namespace HolocronToolset.Dialogs
 
                 if (mainWindow != null)
                 {
-                    bool? result = await ShowDialogAsync<bool?>(mainWindow);
+                    bool? result = await ShowDialogAsync(mainWindow) ? (bool?)true : (bool?)false;
                     DialogResult = result ?? false;
                     return DialogResult;
                 }

@@ -8,6 +8,9 @@ using Andastra.Parsing.Common;
 using Andastra.Parsing.Tests.Common;
 using FluentAssertions;
 using Xunit;
+using UTI = Andastra.Parsing.Resource.Generics.UTI.UTI;
+using UTIHelpers = Andastra.Parsing.Resource.Generics.UTI.UTIHelpers;
+using UTIProperty = Andastra.Parsing.Resource.Generics.UTI.UTIProperty;
 
 namespace Andastra.Parsing.Tests.Formats
 {
@@ -719,7 +722,7 @@ namespace Andastra.Parsing.Tests.Formats
             if (gff.Header.FieldDataCount > 0)
             {
                 gff.FieldData.Should().NotBeNull("Field data section should exist");
-                gff.FieldData.Length.Should().Be((int)gff.Header.FieldDataCount, "Field data size should match header");
+                gff.FieldData.Count().Should().Be((int)gff.Header.FieldDataCount, "Field data size should match header");
             }
         }
 
@@ -740,7 +743,7 @@ namespace Andastra.Parsing.Tests.Formats
             if (gff.Header.FieldIndicesCount > 0)
             {
                 gff.FieldIndices.Should().NotBeNull("Field indices array should exist");
-                gff.FieldIndices.Length.Should().Be((int)gff.Header.FieldIndicesCount, "Field indices count should match header");
+                gff.FieldIndices.Count.Should().Be((int)gff.Header.FieldIndicesCount, "Field indices count should match header");
             }
         }
 
@@ -761,7 +764,7 @@ namespace Andastra.Parsing.Tests.Formats
             if (gff.Header.ListIndicesCount > 0)
             {
                 gff.ListIndices.Should().NotBeNull("List indices array should exist");
-                gff.ListIndices.Length.Should().Be((int)gff.Header.ListIndicesCount, "List indices count should match header");
+                gff.ListIndices.Count.Should().Be((int)gff.Header.ListIndicesCount, "List indices count should match header");
             }
         }
 

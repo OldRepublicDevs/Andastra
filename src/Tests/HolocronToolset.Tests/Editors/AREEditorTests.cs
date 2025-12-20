@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Resource.Generics.ARE;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
@@ -2071,14 +2072,107 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestAreEditorManipulateDirtFunctionSpins: Dirt function spin boxes manipulation test not yet implemented (TSL-only features)");
         }
 
-        // TODO: STUB - Implement test_are_editor_manipulate_dirt_size_spins (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:917-945)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:917-945
         // Original: def test_are_editor_manipulate_dirt_size_spins(qtbot: QtBot, tsl_installation: HTInstallation, test_files_dir: Path): Test manipulating dirt size spin boxes (TSL only).
         [Fact]
         public void TestAreEditorManipulateDirtSizeSpins()
         {
-            // TODO: STUB - Implement dirt size spin boxes manipulation test (TSL only - dirtSize1Spin, dirtSize2Spin, dirtSize3Spin)
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:917-945
-            throw new NotImplementedException("TestAreEditorManipulateDirtSizeSpins: Dirt size spin boxes manipulation test not yet implemented (TSL-only features)");
+            // Get TSL installation path
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor2";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no TSL installation available
+            }
+
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            if (!System.IO.File.Exists(areFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            }
+
+            if (!System.IO.File.Exists(areFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            // Matching Python: editor = AREEditor(None, tsl_installation)
+            var editor = new AREEditor(null, installation);
+
+            // Matching Python: original_data = are_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(areFile);
+
+            // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, original_data)
+            editor.Load(areFile, "tat001", ResourceType.ARE, originalData);
+
+            // Matching Python: test_sizes = [0, 1, 2, 5, 10]
+            int[] testSizes = { 0, 1, 2, 5, 10 };
+            foreach (int size in testSizes)
+            {
+                // Matching Python: editor.ui.dirtSize1Spin.setValue(size)
+                if (editor.DirtSize1Spin != null)
+                {
+                    editor.DirtSize1Spin.Value = size;
+                }
+
+                // Matching Python: data, _ = editor.build()
+                var (data, _) = editor.Build();
+
+                // Matching Python: modified_are = read_are(data)
+                var modifiedAre = AREHelpers.ReadAre(data);
+
+                // Matching Python: assert abs(modified_are.dirty_size_1 - float(size)) < 0.001
+                // Note: Python compares as float with tolerance, but we store as int, so direct comparison is fine
+                modifiedAre.DirtySize1.Should().Be(size);
+
+                // Matching Python: editor.ui.dirtSize2Spin.setValue(size)
+                if (editor.DirtSize2Spin != null)
+                {
+                    editor.DirtSize2Spin.Value = size;
+                }
+
+                // Matching Python: data, _ = editor.build()
+                (data, _) = editor.Build();
+
+                // Matching Python: modified_are = read_are(data)
+                modifiedAre = AREHelpers.ReadAre(data);
+
+                // Matching Python: assert abs(modified_are.dirty_size_2 - float(size)) < 0.001
+                modifiedAre.DirtySize2.Should().Be(size);
+
+                // Matching Python: editor.ui.dirtSize3Spin.setValue(size)
+                if (editor.DirtSize3Spin != null)
+                {
+                    editor.DirtSize3Spin.Value = size;
+                }
+
+                // Matching Python: data, _ = editor.build()
+                (data, _) = editor.Build();
+
+                // Matching Python: modified_are = read_are(data)
+                modifiedAre = AREHelpers.ReadAre(data);
+
+                // Matching Python: assert abs(modified_are.dirty_size_3 - float(size)) < 0.001
+                modifiedAre.DirtySize3.Should().Be(size);
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:951-973

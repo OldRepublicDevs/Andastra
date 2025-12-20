@@ -11,6 +11,7 @@ using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Graphics.Common.Structs;
+using ParsingResourceType = Andastra.Parsing.Resource.ResourceType;
 
 namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
 {
@@ -1010,11 +1011,11 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             
             RegisterClassA(ref wndClass);
             
-            IntPtr hWnd = CreateWindowExA(0, "KOTOR2SecondaryWindow", "Secondary Window", 0, 0, 0, 1, 1, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+            IntPtr hWnd2 = CreateWindowExA(0, "KOTOR2SecondaryWindow", "Secondary Window", 0, 0, 0, 1, 1, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
             
-            if (hWnd != IntPtr.Zero && _kotor2WglChoosePixelFormatArb != null)
+            if (hWnd2 != IntPtr.Zero && _kotor2WglChoosePixelFormatArb != null)
             {
-                IntPtr hdc = GetDC(hWnd);
+                IntPtr hdc = GetDC(hWnd2);
                 
                 int[] attribs = new int[]
                 {
@@ -1040,10 +1041,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     SetPixelFormat(hdc, format, ref pfd);
                 }
                 
-                ReleaseDC(hWnd, hdc);
+                ReleaseDC(hWnd2, hdc);
             }
             
-            return hWnd;
+            return hWnd2;
         }
         
         /// <summary>
@@ -1429,7 +1430,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             if (_resourceProvider != null)
             {
                 // Try TPC first (most common format for KOTOR 2)
-                ResourceIdentifier tpcId = new ResourceIdentifier(resRef, ResourceType.TPC);
+                ResourceIdentifier tpcId = new ResourceIdentifier(resRef, ParsingResourceType.TPC);
                 Task<bool> existsTask = _resourceProvider.ExistsAsync(tpcId, CancellationToken.None);
                 existsTask.Wait();
                 if (existsTask.Result)
@@ -1440,7 +1441,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 }
                 
                 // Try TGA format as fallback
-                ResourceIdentifier tgaId = new ResourceIdentifier(resRef, ResourceType.TGA);
+                ResourceIdentifier tgaId = new ResourceIdentifier(resRef, ParsingResourceType.TGA);
                 existsTask = _resourceProvider.ExistsAsync(tgaId, CancellationToken.None);
                 existsTask.Wait();
                 if (existsTask.Result)
@@ -1451,7 +1452,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 }
                 
                 // Try DDS format (compressed textures)
-                ResourceIdentifier ddsId = new ResourceIdentifier(resRef, ResourceType.DDS);
+                ResourceIdentifier ddsId = new ResourceIdentifier(resRef, ParsingResourceType.DDS);
                 existsTask = _resourceProvider.ExistsAsync(ddsId, CancellationToken.None);
                 existsTask.Wait();
                 if (existsTask.Result)

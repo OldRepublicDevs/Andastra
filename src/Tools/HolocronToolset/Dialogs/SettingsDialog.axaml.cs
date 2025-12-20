@@ -298,7 +298,7 @@ namespace HolocronToolset.Dialogs
                 "Reset All Settings",
                 "Are you sure you want to reset all settings to their default values? This action cannot be undone.",
                 ButtonEnum.YesNo,
-                Icon.Question);
+                MsBox.Avalonia.Enums.Icon.Question);
             
             var confirmResult = await confirmBox.ShowAsync();
             
@@ -312,7 +312,7 @@ namespace HolocronToolset.Dialogs
                     "Settings Reset",
                     "All settings have been cleared and reset to their default values.",
                     ButtonEnum.Ok,
-                    Icon.Info);
+                    MsBox.Avalonia.Enums.Icon.Info);
                 await infoBox.ShowAsync();
                 
                 _isResetting = true;

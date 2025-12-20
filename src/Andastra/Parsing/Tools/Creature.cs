@@ -18,7 +18,7 @@ namespace Andastra.Parsing.Tools
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/creature.py:22-151
         // Original: def get_body_model(utc: UTC, installation: Installation, *, appearance: 2DA | None = None, baseitems: 2DA | None = None) -> tuple[str | None, str | None]:
         public static (string bodyModel, string bodyTexture) GetBodyModel(
-            UTC utc,
+            Andastra.Parsing.Resource.Generics.UTC.UTC utc,
             Installation.Installation installation,
             TwoDA appearance = null,
             TwoDA baseitems = null)
@@ -164,7 +164,7 @@ namespace Andastra.Parsing.Tools
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/creature.py:154-194
         // Original: def get_weapon_models(utc: UTC, installation: Installation, *, appearance: 2DA | None = None, baseitems: 2DA | None = None) -> tuple[str | None, str | None]:
         public static (string rightHandModel, string leftHandModel) GetWeaponModels(
-            UTC utc,
+            Andastra.Parsing.Resource.Generics.UTC.UTC utc,
             Installation.Installation installation,
             TwoDA appearance = null,
             TwoDA baseitems = null)
@@ -230,7 +230,7 @@ namespace Andastra.Parsing.Tools
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/creature.py:214-289
         // Original: def get_head_model(utc: UTC, installation: Installation, *, appearance: 2DA | None = None, heads: 2DA | None = None) -> tuple[str | None, str | None]:
         public static (string model, string texture) GetHeadModel(
-            UTC utc,
+            Andastra.Parsing.Resource.Generics.UTC.UTC utc,
             Installation.Installation installation,
             TwoDA appearance = null,
             TwoDA heads = null)
@@ -321,7 +321,7 @@ namespace Andastra.Parsing.Tools
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/creature.py:292-309
         // Original: def get_mask_model(utc: UTC, installation: Installation) -> str | None:
         public static string GetMaskModel(
-            UTC utc,
+            Andastra.Parsing.Resource.Generics.UTC.UTC utc,
             Installation.Installation installation)
         {
             string model = null;

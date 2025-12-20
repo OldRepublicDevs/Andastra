@@ -11,6 +11,7 @@ using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Graphics.Common.Structs;
+using ResourceType = Andastra.Parsing.Resource.ResourceType;
 
 namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
 {
@@ -1188,7 +1189,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 do
                 {
                     IntPtr uVar1 = sourceArray[iVar4];
-                    int iVar3 = targetCount;
+                    int iVar3Local = targetCount;
                     
                     if (targetCount == GetArrayCapacity(targetArray))
                     {
@@ -1294,7 +1295,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                         // Delete textures
                         if (textureIds.Length > 0)
                         {
-                            glDeleteTextures((uint)textureCount, textureIds);
+                            glDeleteTextures((int)textureCount, ref textureIds[0]);
                         }
                     }
                     
@@ -1312,11 +1313,14 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             // Matching swkotor.exe: FUN_00421ac0 @ 0x00421ac0 exactly
             // This is a complex function that manages texture arrays and calculates display parameters
             
-            int* param3Ptr = &param3;
-            
+            // Create a local copy and pin it to get a pointer (can't take address of ref parameter directly)
+            int param3Local = param3;
+            // Use stackalloc to create a pinned buffer
+            int* param3Ptr = stackalloc int[1];
+            param3Ptr[0] = param3Local;
             // FUN_00420db0(param_1, param_3);
             InitializeKotor1DisplayParameterReset(param1, param3Ptr);
-            param3 = Marshal.ReadInt32(new IntPtr(param3Ptr));
+            param3 = param3Ptr[0];
             
             float fVar2 = (float)param2 * param4;
             
@@ -1402,15 +1406,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     int iVar7_2 = local_14_2;
                     
                     // Update param3 values (matching swkotor.exe lines 69-73)
-                    unsafe
-                    {
-                        int* param3Array = (int*)param3Ptr;
-                        param3Array[4] = param3Array[4] - 0; // local_4
-                        param3Array[2] = param3Array[2] - 0; // local_c
-                        param3Array[3] = param3Array[3] - 0; // local_8
-                        param3Array[1] = param3Array[1] - 0; // local_10
-                        param3Array[0] = param3Array[0] - local_14_2;
-                    }
+                    // Note: param3 is a single int, not an array, so we update it directly
+                    param3 = param3 - local_14_2;
                     
                     // Update texture counter (matching swkotor.exe lines 74-78)
                     unsafe
@@ -1477,11 +1474,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     
                     LAB_00421cd6:
                     InitializeKotor1TextureSizeCalculation(this_00, &local_14_2);
-                    unsafe
-                    {
-                        int* param3Array = (int*)param3Ptr;
-                        param3 = Marshal.ReadInt32(new IntPtr(param3Array)) + (local_14_2 - iVar7_2);
-                    }
+                    // Update param3 directly (param3 is a ref int, not an array)
+                    param3 = param3 + (local_14_2 - iVar7_2);
                 }
             }
         }
@@ -1602,8 +1596,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                             
                             if (result == 0)
                             {
-                                int* iVar3 = (int*)((byte*)thisPtr + 0x5c);
-                                if (*iVar3 < 1)
+                                int* iVar3Ptr = (int*)((byte*)thisPtr + 0x5c);
+                                if (*iVar3Ptr < 1)
                                 {
                                     return;
                                 }
@@ -2053,7 +2047,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         /// Calculates texture size recursively for mipmap levels.
         /// Matches swkotor.exe texture size calculation pattern.
         /// </summary>
-        private int CalculateTextureSizeRecursive(int width, int height, int format)
+        private int CalculateTextureSizeRecursive(int width, int height, Andastra.Parsing.Formats.TPC.TPCTextureFormat format)
         {
             // Matching swkotor.exe texture size calculation
             // This calculates the total size needed for all mipmap levels
@@ -2070,7 +2064,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             // Calculate size for each mip level
             while (currentWidth > 0 && currentHeight > 0)
             {
-                int levelSize = CalculateSingleMipLevelSize(currentWidth, currentHeight, format);
+                int levelSize = CalculateSingleMipLevelSize(currentWidth, currentHeight, (int)format);
                 totalSize += levelSize;
                 
                 // Halve dimensions for next mip level
@@ -2209,14 +2203,14 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 {
                     glGenTextures(1, ref _kotor1RenderTargetTexture);
                     glBindTexture(GL_TEXTURE_RECTANGLE_NV, _kotor1RenderTargetTexture);
-                    glCopyTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, GL_RGBA8, 0, 0, _kotor1ScreenWidth, _kotor1ScreenHeight, 0);
+                    glCopyTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, (int)GL_RGBA8, 0, 0, _kotor1ScreenWidth, _kotor1ScreenHeight, 0);
                     glBindTexture(GL_TEXTURE_RECTANGLE_NV, 0);
                 }
                 
                 // Create first secondary context texture (matching swkotor.exe lines 16-23)
                 glGenTextures(1, ref _kotor1SecondaryTextures[0]);
                 glBindTexture(GL_TEXTURE_RECTANGLE_NV, _kotor1SecondaryTextures[0]);
-                glCopyTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, GL_RGBA8, 0, 0, _kotor1ScreenWidth, _kotor1ScreenHeight, 0);
+                glCopyTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, (int)GL_RGBA8, 0, 0, _kotor1ScreenWidth, _kotor1ScreenHeight, 0);
                 glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_WRAP_S, (int)GL_CLAMP_TO_EDGE);
                 glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_WRAP_T, (int)GL_CLAMP_TO_EDGE);
                 glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
@@ -2240,8 +2234,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                             glBindTexture(GL_TEXTURE_2D, _kotor1SecondaryTextures[1]);
                             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP_TO_EDGE);
                             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP_TO_EDGE);
-                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
                             
                             // Create second secondary window and context (matching swkotor.exe lines 34-38)
                             _kotor1SecondaryWindows[1] = CreateKotor1SecondaryWindow();
@@ -2259,10 +2253,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                                         // Create texture in second secondary context (matching swkotor.exe lines 39-44)
                                         glGenTextures(1, ref _kotor1SecondaryTextures[2]);
                                         glBindTexture(GL_TEXTURE_2D, _kotor1SecondaryTextures[2]);
-                                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP_TO_EDGE);
+                                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP_TO_EDGE);
+                                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+                                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
                                     }
                                 }
                             }
@@ -2290,22 +2284,22 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 {
                     glGenTextures(1, ref _kotor1RenderTargetTexture);
                     glBindTexture(GL_TEXTURE_2D, _kotor1RenderTargetTexture);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                    glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 0, 0, textureWidth, textureHeight, 0);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP_TO_EDGE);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP_TO_EDGE);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
+                    glCopyTexImage2D(GL_TEXTURE_2D, 0, (int)GL_RGBA8, 0, 0, textureWidth, textureHeight, 0);
                     glBindTexture(GL_TEXTURE_2D, 0);
                 }
                 
                 // Create first secondary context texture (matching swkotor.exe lines 61-67)
                 glGenTextures(1, ref _kotor1SecondaryTextures[0]);
                 glBindTexture(GL_TEXTURE_2D, _kotor1SecondaryTextures[0]);
-                glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 0, 0, textureWidth, textureHeight, 0);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                glCopyTexImage2D(GL_TEXTURE_2D, 0, (int)GL_RGBA8, 0, 0, textureWidth, textureHeight, 0);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
                 
                 // Create first secondary window and context (matching swkotor.exe lines 68-72)
                 _kotor1SecondaryWindows[0] = CreateKotor1SecondaryWindow();
@@ -2320,10 +2314,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                         // Create texture in secondary context (matching swkotor.exe lines 72-77)
                         glGenTextures(1, ref _kotor1SecondaryTextures[1]);
                         glBindTexture(GL_TEXTURE_2D, _kotor1SecondaryTextures[1]);
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP_TO_EDGE);
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP_TO_EDGE);
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
                         
                         // Restore primary context (matching swkotor.exe line 78)
                         wglMakeCurrent(_kotor1PrimaryDC, _kotor1PrimaryContext);
@@ -2341,10 +2335,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                                 // Create texture in second secondary context (matching swkotor.exe lines 83-88)
                                 glGenTextures(1, ref _kotor1SecondaryTextures[2]);
                                 glBindTexture(GL_TEXTURE_2D, _kotor1SecondaryTextures[2]);
-                                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP_TO_EDGE);
+                                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP_TO_EDGE);
+                                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+                                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
                                 
                                 // Restore primary context (matching swkotor.exe line 89)
                                 wglMakeCurrent(_kotor1PrimaryDC, _kotor1PrimaryContext);
@@ -2484,7 +2478,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     {
                         glGenTextures(1, ref _kotor1RenderTargetTexture);
                         glBindTexture(GL_TEXTURE_RECTANGLE_NV, _kotor1RenderTargetTexture);
-                        glCopyTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, GL_RGBA8, 0, 0, _kotor1ScreenWidth, _kotor1ScreenHeight, 0);
+                        glCopyTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, (int)GL_RGBA8, 0, 0, _kotor1ScreenWidth, _kotor1ScreenHeight, 0);
                         glBindTexture(GL_TEXTURE_RECTANGLE_NV, 0);
                     }
                     
@@ -2524,10 +2518,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     GCHandle handle0 = GCHandle.Alloc(textureData0, GCHandleType.Pinned);
                     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, handle0.AddrOfPinnedObject());
                     handle0.Free();
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP_TO_EDGE);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP_TO_EDGE);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
                     
                     // Create texture 1 (matching swkotor.exe lines 72-78)
                     glGenTextures(1, ref _kotor1Texture1);
@@ -2535,10 +2529,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     GCHandle handle1 = GCHandle.Alloc(textureData1, GCHandleType.Pinned);
                     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, handle1.AddrOfPinnedObject());
                     handle1.Free();
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP_TO_EDGE);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP_TO_EDGE);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
                     
                     // Create texture 2 (matching swkotor.exe lines 79-85)
                     glGenTextures(1, ref _kotor1Texture2);
@@ -2546,10 +2540,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     GCHandle handle2 = GCHandle.Alloc(textureData2, GCHandleType.Pinned);
                     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, handle2.AddrOfPinnedObject());
                     handle2.Free();
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP_TO_EDGE);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP_TO_EDGE);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
                     
                     // Clear secondary context arrays (matching swkotor.exe lines 86-105)
                     for (int i = 0; i < 6; i++)
@@ -2573,10 +2567,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                         wglMakeCurrent(_kotor1SecondaryDCs[0], _kotor1SecondaryContexts[0]);
                         glGenTextures(1, ref _kotor1SecondaryTextures[0]);
                         glBindTexture(GL_TEXTURE_2D, _kotor1SecondaryTextures[0]);
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP_TO_EDGE);
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP_TO_EDGE);
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
                         wglMakeCurrent(_kotor1PrimaryDC, _kotor1PrimaryContext);
                     }
                     
@@ -2594,8 +2588,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                             glBindTexture(GL_TEXTURE_2D, _kotor1SecondaryTextures[i]);
                             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP_TO_EDGE);
                             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP_TO_EDGE);
-                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
                             wglMakeCurrent(_kotor1PrimaryDC, _kotor1PrimaryContext);
                         }
                     }
@@ -2616,10 +2610,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                         wglMakeCurrent(_kotor1AdditionalDC, _kotor1AdditionalContext);
                         glGenTextures(1, ref _kotor1AdditionalTexture);
                         glBindTexture(GL_TEXTURE_2D, _kotor1AdditionalTexture);
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP_TO_EDGE);
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP_TO_EDGE);
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
                         wglMakeCurrent(_kotor1PrimaryDC, _kotor1PrimaryContext);
                     }
                     
@@ -3276,7 +3270,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             if (_resourceProvider != null)
             {
                 // Try TPC first (most common format for KOTOR 1)
-                ResourceIdentifier tpcId = new ResourceIdentifier(resRef, ResourceType.TPC);
+                ResourceIdentifier tpcId = new ResourceIdentifier(resRef, Andastra.Parsing.Resource.ResourceType.TPC);
                 Task<bool> existsTask = _resourceProvider.ExistsAsync(tpcId, CancellationToken.None);
                 existsTask.Wait();
                 if (existsTask.Result)
@@ -3287,7 +3281,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 }
                 
                 // Try TGA format as fallback
-                ResourceIdentifier tgaId = new ResourceIdentifier(resRef, ResourceType.TGA);
+                ResourceIdentifier tgaId = new ResourceIdentifier(resRef, Andastra.Parsing.Resource.ResourceType.TGA);
                 existsTask = _resourceProvider.ExistsAsync(tgaId, CancellationToken.None);
                 existsTask.Wait();
                 if (existsTask.Result)
@@ -3298,7 +3292,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 }
                 
                 // Try DDS format (compressed textures)
-                ResourceIdentifier ddsId = new ResourceIdentifier(resRef, ResourceType.DDS);
+                ResourceIdentifier ddsId = new ResourceIdentifier(resRef, Andastra.Parsing.Resource.ResourceType.DDS);
                 existsTask = _resourceProvider.ExistsAsync(ddsId, CancellationToken.None);
                 existsTask.Wait();
                 if (existsTask.Result)

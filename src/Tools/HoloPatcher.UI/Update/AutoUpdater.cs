@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using JetBrains.Annotations;
+using HoloPatcher.UI;
 
 namespace HoloPatcher.UI.Update
 {
@@ -272,7 +273,9 @@ namespace HoloPatcher.UI.Update
             if (!IsWindows())
             {
 #if NET8_0_OR_GREATER
+#pragma warning disable CA1416 // Validate platform compatibility
                 File.SetUnixFileMode(scriptPath, UnixFileMode.UserRead | UnixFileMode.UserExecute | UnixFileMode.UserWrite);
+#pragma warning restore CA1416
 #endif
             }
 

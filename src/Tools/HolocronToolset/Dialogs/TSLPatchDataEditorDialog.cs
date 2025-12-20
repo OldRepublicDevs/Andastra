@@ -871,7 +871,7 @@ namespace HolocronToolset.Dialogs
             // Try to get a string representation of the value
             if (value is Andastra.Parsing.Mods.GFF.FieldValueConstant constant)
             {
-                return constant.Value?.ToString() ?? "";
+                return constant.Stored?.ToString() ?? "";
             }
             else if (value is Andastra.Parsing.Mods.GFF.FieldValue2DAMemory mem2DA)
             {

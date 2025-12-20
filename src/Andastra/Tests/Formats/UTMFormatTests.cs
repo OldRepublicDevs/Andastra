@@ -8,6 +8,9 @@ using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Tests.Common;
 using FluentAssertions;
 using Xunit;
+using UTM = Andastra.Parsing.Resource.Generics.UTM.UTM;
+using UTMHelpers = Andastra.Parsing.Resource.Generics.UTM.UTMHelpers;
+using UTMItem = Andastra.Parsing.Resource.Generics.UTM.UTMItem;
 
 namespace Andastra.Parsing.Tests.Formats
 {
@@ -229,7 +232,8 @@ namespace Andastra.Parsing.Tests.Formats
                 testUtm.CanSell = testCase.canSell;
 
                 GFF gff = UTMHelpers.DismantleUtm(testUtm, Game.K2);
-                byte buySellFlag = gff.Root.GetUInt8("BuySellFlag").Value;
+                byte? buySellFlagNullable = gff.Root.GetUInt8("BuySellFlag");
+                byte buySellFlag = buySellFlagNullable ?? 0;
 
                 buySellFlag.Should().Be(testCase.flag, $"BuySellFlag should be {testCase.flag} for canBuy={testCase.canBuy}, canSell={testCase.canSell}");
 

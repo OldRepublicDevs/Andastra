@@ -10,6 +10,7 @@ using Andastra.Parsing.Extract;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Resource.Generics.ARE;
 using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
@@ -537,6 +538,9 @@ namespace HolocronToolset.Editors
         public NumericUpDown DirtFormula1Spin => _dirtFormula1Spin;
         public NumericUpDown DirtFormula2Spin => _dirtFormula2Spin;
         public NumericUpDown DirtFormula3Spin => _dirtFormula3Spin;
+        public NumericUpDown DirtSize1Spin => _dirtSize1Spin;
+        public NumericUpDown DirtSize2Spin => _dirtSize2Spin;
+        public NumericUpDown DirtSize3Spin => _dirtSize3Spin;
         public TextBox CommentsEdit => _commentsEdit;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:134-149
@@ -892,19 +896,19 @@ namespace HolocronToolset.Editors
                 _dirtFunction3Spin.Value = 0;
             }
             // Matching Python: self.ui.dirtSize1Spin.setValue(are.dirty_size_1) (line 236)
-            // Note: ARE class doesn't have DirtySize properties - these may need to be extracted from GFF
-            // For now, default to 0
             if (_dirtSize1Spin != null)
             {
-                _dirtSize1Spin.Value = 0;
+                _dirtSize1Spin.Value = are.DirtySize1;
             }
+            // Matching Python: self.ui.dirtSize2Spin.setValue(are.dirty_size_2) (line 237)
             if (_dirtSize2Spin != null)
             {
-                _dirtSize2Spin.Value = 0;
+                _dirtSize2Spin.Value = are.DirtySize2;
             }
+            // Matching Python: self.ui.dirtSize3Spin.setValue(are.dirty_size_3) (line 238)
             if (_dirtSize3Spin != null)
             {
-                _dirtSize3Spin.Value = 0;
+                _dirtSize3Spin.Value = are.DirtySize3;
             }
             // Matching Python: self.ui.onEnterSelect.set_combo_box_text(str(are.on_enter)) (line 241)
             if (_onEnterSelect != null)
@@ -1183,7 +1187,20 @@ namespace HolocronToolset.Editors
             // Original: are.dirty_func_1 = self.ui.dirtFunction1Spin.value() (line 343)
             // Note: ARE class doesn't have DirtyFunc properties - these may need to be written to GFF directly
             // Original: are.dirty_size_1 = self.ui.dirtSize1Spin.value() (line 346)
-            // Note: ARE class doesn't have DirtySize properties - these may need to be written to GFF directly
+            if (_dirtSize1Spin != null && _dirtSize1Spin.Value.HasValue)
+            {
+                are.DirtySize1 = (int)_dirtSize1Spin.Value.Value;
+            }
+            // Original: are.dirty_size_2 = self.ui.dirtSize2Spin.value() (line 347)
+            if (_dirtSize2Spin != null && _dirtSize2Spin.Value.HasValue)
+            {
+                are.DirtySize2 = (int)_dirtSize2Spin.Value.Value;
+            }
+            // Original: are.dirty_size_3 = self.ui.dirtSize3Spin.value() (line 348)
+            if (_dirtSize3Spin != null && _dirtSize3Spin.Value.HasValue)
+            {
+                are.DirtySize3 = (int)_dirtSize3Spin.Value.Value;
+            }
 
             // Weather section - matching Python lines 303-324
             // Original: are.wind_power = AREWindPower(self.ui.windPowerSelect.currentIndex()) (line 311)

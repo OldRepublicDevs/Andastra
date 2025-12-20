@@ -158,7 +158,7 @@ namespace HolocronToolset.Windows
 
             // Matching Python lines 1234-1239: Set UI to match renderer state
             // Matching Python line 1238: self.ui.gridSizeSpin.setValue(renderer.grid_size)
-            Ui.GridSizeSpinValue = renderer.GridSize;
+            Ui.GridSizeSpinValue = (decimal)renderer.GridSize;
             // Matching Python line 1239: self.ui.rotSnapSpin.setValue(int(renderer.rotation_snap))
             Ui.RotSnapSpinValue = (decimal)renderer.RotationSnap;
 

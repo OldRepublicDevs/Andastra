@@ -1,6 +1,7 @@
 using System;
 using Avalonia.Controls;
 using HolocronToolset.Data;
+using UTC = Andastra.Parsing.Resource.Generics.UTC.UTC;
 
 namespace HolocronToolset.Widgets
 {
@@ -47,7 +48,7 @@ namespace HolocronToolset.Widgets
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/renderer/model.py:202-203
         // Original: def set_creature(self, utc: UTC):
-        public void SetCreature(Andastra.Parsing.Resource.Generics.UTC utc)
+        public void SetCreature(UTC utc)
         {
             // Store UTC for creature rendering
             // In full implementation, this would load the creature model into the OpenGL scene
@@ -55,6 +56,6 @@ namespace HolocronToolset.Widgets
             _creatureToLoad = utc;
         }
 
-        private Andastra.Parsing.Resource.Generics.UTC _creatureToLoad;
+        private UTC _creatureToLoad;
     }
 }

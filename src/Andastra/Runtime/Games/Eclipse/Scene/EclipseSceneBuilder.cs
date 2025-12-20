@@ -12,6 +12,7 @@ using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.VIS;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Resource.Generics.ARE;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Eclipse.Scene

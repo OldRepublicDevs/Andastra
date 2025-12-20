@@ -15,6 +15,9 @@ using HolocronToolset.Dialogs;
 using HolocronToolset.Widgets;
 using InventoryItem = Andastra.Parsing.Common.InventoryItem;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
+using UTM = Andastra.Parsing.Resource.Generics.UTM.UTM;
+using UTMHelpers = Andastra.Parsing.Resource.Generics.UTM.UTMHelpers;
+using UTMItem = Andastra.Parsing.Resource.Generics.UTM.UTMItem;
 
 namespace HolocronToolset.Editors
 {

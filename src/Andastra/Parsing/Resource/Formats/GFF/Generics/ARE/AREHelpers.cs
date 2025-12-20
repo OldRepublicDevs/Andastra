@@ -2,10 +2,11 @@ using System.Collections.Generic;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
+using Andastra.Parsing.Resource.Generics;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
 using Andastra.Parsing.Common;
 
-namespace Andastra.Parsing.Resource.Generics
+namespace Andastra.Parsing.Resource.Generics.ARE
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py
     // Original: construct_are and dismantle_are functions
@@ -180,7 +181,7 @@ namespace Andastra.Parsing.Resource.Generics
             // Original: are.fog_color = Color.from_rgb_integer(root.acquire("SunFogColor", 0))
             // Engine default: 0 (swkotor.exe: 0x00508c50 line 239, swkotor2.exe: 0x004e3ff0 line 241)
             are.FogColor = Color.FromRgbInteger(root.Acquire<int>("SunFogColor", 0));
-            
+
             // Extract K2-specific dirty formula fields (KotOR 2 Only) - all optional
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:183,191,199
             // Original: are.dirty_formula_1 = root.acquire("DirtyFormulaOne", 0)
@@ -193,7 +194,7 @@ namespace Andastra.Parsing.Resource.Generics
             // Original: are.dirty_formula_3 = root.acquire("DirtyFormulaThre", 0)
             // Engine default: 1, but engine inverts value (1->0, 0->1) (swkotor2.exe: 0x004e3ff0 line 572-579)
             are.DirtyFormula3 = root.Acquire<int>("DirtyFormulaThre", 0);
-            
+
             // Extract Comments field (toolset-only, not used by game engine)
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:356
             // Original: are.comment = root.acquire("Comments", "")
@@ -384,14 +385,14 @@ namespace Andastra.Parsing.Resource.Generics
             // This may need to be fixed if ShadowOpacity should be int instead of ResRef
             // For now, writing as ResRef to match current ARE class definition
             root.SetResRef("ShadowOpacity", are.ShadowOpacity);
-            
+
             // Set script hooks - written for ALL game types
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:620-623
             root.SetResRef("OnEnter", are.OnEnter);
             root.SetResRef("OnExit", are.OnExit);
             root.SetResRef("OnHeartbeat", are.OnHeartbeat);
             root.SetResRef("OnUserDefined", are.OnUserDefined);
-            
+
             // Set rooms list - written for ALL game types, but with K2-specific fields conditionally
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:625-633
             // Original: rooms_list = root.set_list("Rooms", GFFList())
@@ -417,7 +418,7 @@ namespace Andastra.Parsing.Resource.Generics
                     roomStruct.SetInt32("ForceRating", room.ForceRating);
                 }
             }
-            
+
             // Set load screen ID - written for ALL game types
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:673
             // Original: root.set_uint16("LoadScreenID", are.loadscreen_id)
@@ -515,3 +516,4 @@ namespace Andastra.Parsing.Resource.Generics
         }
     }
 }
+

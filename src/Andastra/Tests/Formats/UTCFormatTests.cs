@@ -8,6 +8,9 @@ using Andastra.Parsing.Common;
 using Andastra.Parsing.Tests.Common;
 using FluentAssertions;
 using Xunit;
+using UTC = Andastra.Parsing.Resource.Generics.UTC.UTC;
+using UTCHelpers = Andastra.Parsing.Resource.Generics.UTC.UTCHelpers;
+using UTCClass = Andastra.Parsing.Resource.Generics.UTC.UTCClass;
 
 namespace Andastra.Parsing.Tests.Formats
 {

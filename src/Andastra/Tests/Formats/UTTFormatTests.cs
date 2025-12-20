@@ -152,7 +152,7 @@ namespace Andastra.Parsing.Tests.Formats
             // Validate basic GFF structure
             gff.Should().NotBeNull("GFF object should not be null");
             gff.Content.Should().Be(GFFContent.UTT, "Content should be UTT");
-            gff.RootStruct.Should().NotBeNull("Root struct should not be null");
+            gff.Root.Should().NotBeNull("Root struct should not be null");
         }
 
         private static void CreateTestUttFile(string path)
@@ -162,7 +162,7 @@ namespace Andastra.Parsing.Tests.Formats
             var gff = new GFF(GFFContent.UTT);
             
             // Add minimal required fields for a trigger template
-            var rootStruct = gff.RootStruct;
+            var rootStruct = gff.Root;
             rootStruct.SetString("Tag", "TEST_TRIGGER");
             
             byte[] data = new GFFBinaryWriter(gff).Write();

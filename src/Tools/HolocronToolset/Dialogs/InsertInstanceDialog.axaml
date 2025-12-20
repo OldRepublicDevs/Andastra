@@ -13,7 +13,10 @@
                 <Grid RowDefinitions="Auto,*">
                     <TextBlock Grid.Row="0" Text="Preview" FontWeight="Bold" Margin="5" />
                     <Border Grid.Row="1" MinWidth="250" MinHeight="250" Background="LightGray" Margin="5">
-                        <Widgets:ModelRenderer Name="previewRenderer" />
+                        <!-- TODO: ModelRenderer temporarily commented out - needs implementation
+                        <Widgets:ModelRenderer x:Name="previewRenderer" />
+                        -->
+                        <TextBlock Text="Preview (ModelRenderer not yet implemented)" VerticalAlignment="Center" HorizontalAlignment="Center" />
                     </Border>
                 </Grid>
             </Border>

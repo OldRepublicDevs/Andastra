@@ -135,11 +135,11 @@ namespace HolocronToolset.Widgets
             // setColorAt(0.5, QColor(255, 255, 255, 150))  # Semi-transparent white in the center
             // setColorAt(1, QColor(255, 255, 255, 0))  # Transparent at the edges
             var gradientStops = new GradientStops();
-            // GradientStop constructor: (double offset, Color color) - offset first, then color
+            // GradientStop constructor: (Color color, double offset) - Color first, then offset
             // Color constructor: Color(byte a, byte r, byte g, byte b) - ARGB format
-            gradientStops.Add(new GradientStop(0.0, new Avalonia.Media.Color(0, 255, 255, 255))); // Transparent at the edges (A=0)
-            gradientStops.Add(new GradientStop(0.5, new Avalonia.Media.Color(150, 255, 255, 255))); // Semi-transparent white in the center (A=150)
-            gradientStops.Add(new GradientStop(1.0, new Avalonia.Media.Color(0, 255, 255, 255))); // Transparent at the edges (A=0)
+            gradientStops.Add(new GradientStop(new Avalonia.Media.Color(0, 255, 255, 255), 0.0)); // Transparent at the edges (A=0)
+            gradientStops.Add(new GradientStop(new Avalonia.Media.Color(150, 255, 255, 255), 0.5)); // Semi-transparent white in the center (A=150)
+            gradientStops.Add(new GradientStop(new Avalonia.Media.Color(0, 255, 255, 255), 1.0)); // Transparent at the edges (A=0)
 
             // Create the linear gradient brush with absolute coordinates
             // Matching PyKotor: QLinearGradient(light_rect.left(), 0, light_rect.right(), 0)

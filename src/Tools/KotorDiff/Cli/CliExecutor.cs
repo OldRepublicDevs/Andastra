@@ -29,7 +29,7 @@ namespace KotorDiff.Cli
                 }
             }
 
-            Console.WriteLine($"KotorDiff version {Program.CURRENT_VERSION}");
+            Console.WriteLine($"KotorDiff version {KotorDiff.Program.CURRENT_VERSION}");
 
             // Gather all path inputs
             var rawPathInputs = new List<string>();

@@ -12,10 +12,12 @@ using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Formats.LYT;
 using Andastra.Parsing.Formats.VIS;
 using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Resource.Generics.ARE;
 using Andastra.Parsing.Formats.BWM;
 using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Tools;
+using SystemTextEncoding = System.Text.Encoding;
 using Andastra.Parsing.Logger;
 using Andastra.Parsing.Extract;
 using Andastra.Parsing.Installation;
@@ -1542,15 +1544,26 @@ namespace HolocronToolset.Data
                     AlphaFormat.Premul);
                 
                 // Copy pixel data from renderTarget to convertedBitmap
-                using (var sourceLocked = renderTarget.Lock())
-                using (var destLocked = convertedBitmap.Lock())
+                // In Avalonia 11, RenderTargetBitmap doesn't have Lock(), so we save to stream and reload
+                using (var memoryStream = new MemoryStream())
                 {
-                    var sourceBuffer = sourceLocked.Address;
-                    var destBuffer = destLocked.Address;
-                    int bytesPerPixel = 4; // RGBA8888
-                    int stride = sourceLocked.RowBytes;
-                    int size = stride * sourceLocked.Size.Height;
-                    System.Buffer.MemoryCopy((void*)sourceBuffer, (void*)destBuffer, size, size);
+                    renderTarget.Save(memoryStream);
+                    memoryStream.Position = 0;
+                    var loadedBitmap = WriteableBitmap.Decode(memoryStream);
+                    
+                    // Copy pixel data from loaded bitmap to convertedBitmap
+                    using (var sourceLocked = loadedBitmap.Lock())
+                    using (var destLocked = convertedBitmap.Lock())
+                    {
+                        var sourceBuffer = sourceLocked.Address;
+                        var destBuffer = destLocked.Address;
+                        int stride = sourceLocked.RowBytes;
+                        int size = stride * sourceLocked.Size.Height;
+                        unsafe
+                        {
+                            System.Buffer.MemoryCopy((void*)sourceBuffer, (void*)destBuffer, size, size);
+                        }
+                    }
                 }
                 
                 using (var lockedBitmap = convertedBitmap.Lock())
@@ -2046,7 +2059,7 @@ namespace HolocronToolset.Data
 
             data["rooms"] = roomsList;
 
-            return Encoding.UTF8.GetBytes(JsonSerializer.Serialize(data));
+            return SystemTextEncoding.UTF8.GetBytes(JsonSerializer.Serialize(data));
         }
 
         /// <summary>
@@ -2094,7 +2107,7 @@ namespace HolocronToolset.Data
         public List<MissingRoomInfo> Load(byte[] raw, List<Kit> kits)
         {
             Reset();
-            var data = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(Encoding.UTF8.GetString(raw));
+            var data = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(SystemTextEncoding.UTF8.GetString(raw));
 
             try
             {
@@ -2164,7 +2177,9 @@ namespace HolocronToolset.Data
             {
                 if (int.TryParse(prop.Name, out int substringId))
                 {
-                    var (language, gender) = LocalizedString.SubstringPair(substringId);
+                    Language language;
+                    Gender gender;
+                    LocalizedString.SubstringPair(substringId, out language, out gender);
                     Name.SetData(language, gender, prop.Value.GetString());
                 }
             }
@@ -2461,10 +2476,10 @@ namespace HolocronToolset.Data
             using (var context = flippedImage.CreateDrawingContext())
             {
                 // Draw the final pixmap flipped vertically
-                using (context.PushTransform())
+                // Scale Y by -1 and translate to flip
+                var flipMatrix = Matrix.CreateScale(1, -1) * Matrix.CreateTranslation(0, 256);
+                using (context.PushTransform(flipMatrix))
                 {
-                    // Scale Y by -1 and translate to flip
-                    context.Transform = Matrix.CreateScale(1, -1) * Matrix.CreateTranslation(0, 256);
                     context.DrawImage(finalPixmap, new Rect(0, 0, 512, 256));
                 }
             }
@@ -2482,7 +2497,9 @@ namespace HolocronToolset.Data
                     memoryStream.Position = 0;
 
                     // Load as PNG and extract RGB data
-                    var loadedBitmap = new Bitmap(memoryStream);
+                    // In Avalonia 11, Bitmap doesn't have Lock(), so we decode as WriteableBitmap
+                    memoryStream.Position = 0;
+                    var loadedBitmap = WriteableBitmap.Decode(memoryStream);
                     using (var sourceLocked = loadedBitmap.Lock())
                     {
                         // Copy RGBA data (Avalonia uses RGBA, but we'll use it as RGB888 equivalent)

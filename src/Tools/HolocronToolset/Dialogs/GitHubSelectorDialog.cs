@@ -230,7 +230,7 @@ namespace HolocronToolset.Dialogs
                     "Repository Not Found",
                     $"The repository '{_owner}/{_repo}' had an unexpected error:\n\n{ex.Message}",
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 await errorMsgBox.ShowAsync();
 
                 // Try to fetch forks
@@ -270,7 +270,7 @@ namespace HolocronToolset.Dialogs
                         "No Forks Available",
                         "No forks are available to load.",
                         ButtonEnum.Ok,
-                        Icon.Error);
+                        MsBox.Avalonia.Enums.Icon.Error);
                     await noForksMsgBox.ShowAsync();
                 }
                 catch (Exception forkEx)
@@ -279,7 +279,7 @@ namespace HolocronToolset.Dialogs
                         "Forks Load Error",
                         $"Failed to load forks: {forkEx.Message}",
                         ButtonEnum.Ok,
-                        Icon.Error);
+                        MsBox.Avalonia.Enums.Icon.Error);
                     await forkErrorMsgBox.ShowAsync();
                 }
             }
@@ -289,7 +289,7 @@ namespace HolocronToolset.Dialogs
                     "Error",
                     $"Failed to initialize repository data: {ex.Message}",
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 await errorMsgBox.ShowAsync();
             }
         }
@@ -570,7 +570,7 @@ namespace HolocronToolset.Dialogs
                     "Error Loading Fork",
                     $"Failed to load fork '{forkName}': {ex.Message}",
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 await errorMsgBox.ShowAsync();
             }
         }
@@ -838,7 +838,7 @@ namespace HolocronToolset.Dialogs
                         "Git Not Found",
                         "Git is not installed or not available in PATH. Please install Git and ensure it is accessible from the command line.",
                         ButtonEnum.Ok,
-                        Icon.Error);
+                        MsBox.Avalonia.Enums.Icon.Error);
                     errorMsgBox.ShowAsync();
                     return;
                 }
@@ -880,7 +880,7 @@ namespace HolocronToolset.Dialogs
                             "Clone Successful",
                             $"Repository {selectedFork} cloned successfully.",
                             ButtonEnum.Ok,
-                            Icon.Success);
+                            MsBox.Avalonia.Enums.Icon.Success);
                         successMsgBox.ShowAsync();
                     }
                     else
@@ -907,7 +907,7 @@ namespace HolocronToolset.Dialogs
                     "Clone Failed",
                     $"Failed to clone repository: {ex.Message}",
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 errorMsgBox.ShowAsync();
             }
         }
@@ -968,7 +968,7 @@ namespace HolocronToolset.Dialogs
                     "Refresh Error",
                     $"Failed to refresh data: {ex.Message}",
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 errorMsgBox.ShowAsync();
             }
         }

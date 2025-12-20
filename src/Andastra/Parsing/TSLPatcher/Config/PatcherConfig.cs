@@ -28,6 +28,9 @@ namespace Andastra.Parsing.Config
         // Optional HoloPatcher features
         public bool IgnoreFileExtensions { get; set; }
 
+        // Settings for mod metadata (ModName, Author, etc.)
+        public PatcherSettings Settings { get; set; } = new PatcherSettings();
+
         // Patch lists
         public List<InstallFile> InstallList { get; set; } = new List<InstallFile>();
         public List<Modifications2DA> Patches2DA { get; set; } = new List<Modifications2DA>();
@@ -128,6 +131,15 @@ namespace Andastra.Parsing.Config
 
             return flattenedGffPatches;
         }
+    }
+
+    /// <summary>
+    /// Settings for TSLPatcher mod metadata (ModName, Author, etc.)
+    /// </summary>
+    public class PatcherSettings
+    {
+        public string ModName { get; set; } = string.Empty;
+        public string Author { get; set; } = string.Empty;
     }
 }
 

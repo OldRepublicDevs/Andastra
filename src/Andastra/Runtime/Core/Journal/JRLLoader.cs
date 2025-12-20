@@ -97,7 +97,7 @@ namespace Andastra.Runtime.Core.Journal
                 byte[] jrlData = resource.Data;
 
                 // Parse JRL file
-                JRL jrl = JRLHelper.ReadJrl(jrlData);
+                JRL jrl = JRLHelpers.ReadJrl(jrlData);
                 if (jrl != null)
                 {
                     // Cache the loaded JRL

@@ -32,7 +32,8 @@
     <PackageReference Include="Eto.Platform.Gtk" Version="2.7.4" Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
     <PackageReference Include="Eto.Platform.Mac" Version="2.7.4" Condition="$([MSBuild]::IsOSPlatform('OSX'))" />
     <!-- Eto.Platform.Windows cannot be referenced here due to NETSDK1136 (Windows Forms dependency) -->
-    <!-- It will be included via a target that runs after SDK dependency analysis -->
+    <!-- Eto.Platform.Detect will load it dynamically at runtime if the package is available -->
+    <!-- For Windows runtime, install via: dotnet add package Eto.Platform.Windows -v 2.10.2 -->
     <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
     <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.4.1" />
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
@@ -47,5 +48,14 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+
+  <!-- Restore Eto.Platform.Windows separately to avoid NETSDK1136 during SDK dependency analysis -->
+  <!-- This target adds it as a PackageReference after restore, so it's available at runtime -->
+  <!-- but not evaluated by the SDK's Windows Forms/WPF dependency check -->
+  <Target Name="RestoreEtoPlatformWindows" BeforeTargets="Restore" Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+    <Exec Command="dotnet add package Eto.Platform.Windows --version 2.10.2 --no-restore" 
+          ContinueOnError="true" 
+          IgnoreExitCode="true" />
+  </Target>
 
 </Project>

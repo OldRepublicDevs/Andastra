@@ -12,6 +12,9 @@ using Andastra.Parsing.Resource.Generics;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
 using HolocronToolset.Widgets.Edit;
+using UTC = Andastra.Parsing.Resource.Generics.UTC.UTC;
+using UTI = Andastra.Parsing.Resource.Generics.UTI.UTI;
+using UTIProperty = Andastra.Parsing.Resource.Generics.UTI.UTIProperty;
 
 namespace HolocronToolset.Dialogs
 {
@@ -41,13 +44,13 @@ namespace HolocronToolset.Dialogs
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:573-655
         // Original: def __init__(self, installation: HTInstallation, uti_property: UTIProperty):
-        public PropertyEditorDialog(Window parent, HTInstallation installation, UTIProperty utiProperty)
+        public PropertyEditorDialog(Window parent, HTInstallation installation, Andastra.Parsing.Resource.Generics.UTI.UTIProperty utiProperty)
         {
             InitializeComponent();
             _installation = installation;
             
             // Create a deep copy of the property
-            _utiProperty = new UTIProperty
+            _utiProperty = new Andastra.Parsing.Resource.Generics.UTI.UTIProperty
             {
                 PropertyName = utiProperty.PropertyName,
                 Subtype = utiProperty.Subtype,
@@ -356,7 +359,7 @@ namespace HolocronToolset.Dialogs
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:687-691
         // Original: def uti_property(self) -> UTIProperty:
-        public UTIProperty GetUtiProperty()
+        public Andastra.Parsing.Resource.Generics.UTI.UTIProperty GetUtiProperty()
         {
             // Matching PyKotor implementation: self._uti_property.upgrade_type = self.ui.upgradeSelect.currentIndex() - 1
             if (_upgradeSelect != null)
