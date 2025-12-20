@@ -3088,14 +3088,93 @@ namespace HolocronToolset.Tests.Editors
             modifiedAre2.GrassTexture.ToString().Should().Be(specialGrassTexture, "Grass texture should be preserved through multiple roundtrips");
         }
 
-        // TODO: STUB - Implement test_are_editor_gff_roundtrip_comparison (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1464-1497)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1464-1497
         // Original: def test_are_editor_gff_roundtrip_comparison(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path): Test GFF roundtrip comparison like resource tests.
         [Fact]
         public void TestAreEditorGffRoundtripComparison()
         {
-            // TODO: STUB - Implement GFF roundtrip comparison test (validates GFF structure preservation)
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1464-1497
-            throw new NotImplementedException("TestAreEditorGffRoundtripComparison: GFF roundtrip comparison test not yet implemented");
+            // Get installation if available (K2 preferred for ARE files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            // Find test ARE file (matching Python: are_file = test_files_dir / "tat001.are")
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+            string areFilePath = System.IO.Path.Combine(testFilesDir, "tat001.are");
+
+            if (!System.IO.File.Exists(areFilePath))
+            {
+                throw new SkipException("tat001.are not found - required for roundtrip test");
+            }
+
+            // Create ARE editor
+            var editor = new AREEditor(null, installation);
+
+            // Load original ARE file (matching Python: original_data = are_file.read_bytes(), original_are = read_are(original_data))
+            byte[] originalData = System.IO.File.ReadAllBytes(areFilePath);
+            var originalAre = Andastra.Parsing.Resource.Formats.ARE.AREHelper.ReadAre(originalData);
+
+            // Load into editor (matching Python: editor.load(are_file, "tat001", ResourceType.ARE, original_data))
+            editor.Load(areFilePath, "tat001", ResourceType.ARE, originalData);
+
+            // Save without modifications (matching Python: data, _ = editor.build())
+            var (newData, _) = editor.Build();
+            var newAre = Andastra.Parsing.Resource.Formats.ARE.AREHelper.ReadAre(newData);
+
+            // Verify key fields match (allowing for floating point precision differences)
+            // Tag (matching Python: assert new_are.tag == original_are.tag)
+            newAre.Tag.Should().Be(originalAre.Tag, "Tag should match after roundtrip");
+
+            // Camera style (matching Python: assert new_are.camera_style == original_are.camera_style)
+            newAre.CameraStyle.Should().Be(originalAre.CameraStyle, "CameraStyle should match after roundtrip");
+
+            // Default envmap (matching Python: assert str(new_are.default_envmap) == str(original_are.default_envmap))
+            newAre.DefaultEnvmap.Should().Be(originalAre.DefaultEnvmap, "DefaultEnvmap should match after roundtrip");
+
+            // Disable transit (matching Python: assert new_are.disable_transit == original_are.disable_transit)
+            newAre.DisableTransit.Should().Be(originalAre.DisableTransit, "DisableTransit should match after roundtrip");
+
+            // Unescapable (matching Python: assert new_are.unescapable == original_are.unescapable)
+            newAre.Unescapable.Should().Be(originalAre.Unescapable, "Unescapable should match after roundtrip");
+
+            // Alpha test (matching Python: assert new_are.alpha_test == original_are.alpha_test)
+            newAre.AlphaTest.Should().Be(originalAre.AlphaTest, "AlphaTest should match after roundtrip");
+
+            // Map points may have floating point precision differences (matching Python comments)
+            // Map point 1 X (matching Python: assert abs(new_are.map_point_1.x - original_are.map_point_1.x) < 0.01)
+            System.Math.Abs(newAre.MapPoint1.X - originalAre.MapPoint1.X).Should().BeLessThan(0.01f, "MapPoint1.X should match within floating point precision");
+
+            // Map point 1 Y (matching Python: assert abs(new_are.map_point_1.y - original_are.map_point_1.y) < 0.01)
+            System.Math.Abs(newAre.MapPoint1.Y - originalAre.MapPoint1.Y).Should().BeLessThan(0.01f, "MapPoint1.Y should match within floating point precision");
+
+            // Map point 2 X (matching Python: assert abs(new_are.map_point_2.x - original_are.map_point_2.x) < 0.01)
+            System.Math.Abs(newAre.MapPoint2.X - originalAre.MapPoint2.X).Should().BeLessThan(0.01f, "MapPoint2.X should match within floating point precision");
+
+            // Map point 2 Y (matching Python: assert abs(new_are.map_point_2.y - original_are.map_point_2.y) < 0.01)
+            System.Math.Abs(newAre.MapPoint2.Y - originalAre.MapPoint2.Y).Should().BeLessThan(0.01f, "MapPoint2.Y should match within floating point precision");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1499-1527
