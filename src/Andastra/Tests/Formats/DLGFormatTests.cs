@@ -181,8 +181,10 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Core DLG fields should be present or have defaults
             root.Acquire("NumWords", (uint)0).Should().BeGreaterThanOrEqualTo(0, "NumWords should be non-negative");
-            root.Acquire("Skippable", (byte)0).Should().BeOneOf((byte)0, (byte)1, "Skippable should be 0 or 1");
-            root.Acquire("ComputerType", (byte)0).Should().BeOneOf((byte)0, (byte)1, "ComputerType should be 0 (Modern) or 1 (Ancient)");
+            byte skippable = root.Acquire("Skippable", (byte)0);
+            skippable.Should().BeOneOf(new byte[] { 0, 1 }, "Skippable should be 0 or 1");
+            byte computerType = root.Acquire("ComputerType", (byte)0);
+            computerType.Should().BeOneOf(new byte[] { 0, 1 }, "ComputerType should be 0 (Modern) or 1 (Ancient)");
             root.Acquire("ConversationType", 0).Should().BeInRange(0, 3, "ConversationType should be 0-3");
         }
 

@@ -96,7 +96,8 @@ namespace Andastra.Parsing.Tests.Formats
             {
                 keyframe.Time.Should().BeGreaterThanOrEqualTo(0.0f, "Timestamp should be non-negative");
                 keyframe.Time.Should().BeLessThanOrEqualTo(lip.Length, "Timestamp should not exceed length");
-                keyframe.Shape.Should().BeInRange(LIPShape.Neutral, LIPShape.KG, "Shape should be valid enum value (0-15)");
+                int shapeValue = (int)keyframe.Shape;
+                shapeValue.Should().BeInRange((int)LIPShape.Neutral, (int)LIPShape.KG, "Shape should be valid enum value (0-15)");
             }
         }
 
@@ -288,7 +289,7 @@ namespace Andastra.Parsing.Tests.Formats
             // Test that all 16 shapes can be serialized and deserialized
             var lip = new LIP();
             float time = 0.0f;
-            
+
             foreach (LIPShape shape in Enum.GetValues(typeof(LIPShape)))
             {
                 lip.Add(time, shape);

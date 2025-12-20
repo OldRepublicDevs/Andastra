@@ -257,16 +257,30 @@ namespace Andastra.Parsing.Tests.Formats
                 $"Successful ({successful.Count}): {string.Join(", ", successful.Select(s => s.Key))}. " +
                 $"Failed ({failed.Count}): {string.Join(", ", failed.Select(f => $"{f.Key}: {f.Value.ErrorMessage}"))}");
 
-            // Log successful compilations
+
+            // Log successful compilations and verify output files
             foreach (var success in successful)
             {
                 // Verify output files were created
                 var outputDir = Path.Combine(TestOutputDir, success.Key);
                 if (Directory.Exists(outputDir))
                 {
-                    var files = Directory.GetFiles(outputDir, "*", SearchOption.AllDirectories);
-                    files.Length.Should().BeGreaterThan(0,
-                        $"Language {success.Key} should generate output files");
+                    var files = Directory.GetFiles(outputDir, "*", SearchOption.AllDirectories)
+                        .Where(f => !f.EndsWith("compile_output.txt") && !f.EndsWith("compile_error.txt"))
+                        .ToList();
+                    files.Count.Should().BeGreaterThan(0,
+                        $"Language {success.Key} should generate output files. Found: {string.Join(", ", files.Select(Path.GetFileName))}");
+
+                    // Verify at least one parser file was generated (language-specific patterns)
+                    var hasParserFile = files.Any(f =>
+                        f.Contains("dlg") || f.Contains("Dlg") || f.Contains("DLG") ||
+                        f.EndsWith(".py") || f.EndsWith(".java") || f.EndsWith(".js") ||
+                        f.EndsWith(".cs") || f.EndsWith(".cpp") || f.EndsWith(".h") ||
+                        f.EndsWith(".go") || f.EndsWith(".rb") || f.EndsWith(".php") ||
+                        f.EndsWith(".rs") || f.EndsWith(".swift") || f.EndsWith(".lua") ||
+                        f.EndsWith(".nim") || f.EndsWith(".pm") || f.EndsWith(".vb"));
+                    hasParserFile.Should().BeTrue(
+                        $"Language {success.Key} should generate parser files. Files found: {string.Join(", ", files.Select(Path.GetFileName))}");
                 }
             }
         }

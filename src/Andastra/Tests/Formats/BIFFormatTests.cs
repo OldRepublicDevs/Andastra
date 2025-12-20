@@ -153,7 +153,7 @@ namespace Andastra.Parsing.Tests.Formats
             bif.VarCount.Should().Be(0, "Empty BIF should have 0 variable resources");
             bif.FixedCount.Should().Be(0, "Empty BIF should have 0 fixed resources");
 
-            byte[] data = BIFBinaryWriter.BytesBif(bif);
+            byte[] data = new BIFBinaryWriter(bif).Write();
             BIF loaded = new BIFBinaryReader(data).Load();
 
             loaded.VarCount.Should().Be(0);

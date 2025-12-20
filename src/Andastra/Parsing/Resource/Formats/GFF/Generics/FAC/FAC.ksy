@@ -13,7 +13,6 @@ doc: |
   FAC (Faction) files are GFF-based format files that define faction relationships for determining
   how game objects interact with each other in terms of friendly, neutral, and hostile reactions.
   FAC files use the GFF (Generic File Format) binary structure with file type signature "FAC ".
-
   FAC files are typically named "repute.fac" and are stored in module archives or savegames.
   They define:
   - FactionList: List of factions that exist in the module

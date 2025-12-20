@@ -8,7 +8,7 @@ meta:
 doc: |
   TwoDA CSV format is a human-readable CSV (Comma-Separated Values) representation of TwoDA files.
   Provides easier editing in spreadsheet applications than binary TwoDA format.
-  
+
   Each row represents a data row, with the first row containing column headers.
 
 seq:

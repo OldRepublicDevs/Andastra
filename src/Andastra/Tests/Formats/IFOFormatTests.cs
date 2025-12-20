@@ -574,7 +574,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Validate that IFO fields can be accessed
             // Mod_ID should be Binary type
-            if (gff.Root.HasField("Mod_ID"))
+            if (gff.Root.Exists("Mod_ID"))
             {
                 var modId = gff.Root.GetBinary("Mod_ID");
                 modId.Should().NotBeNull("Mod_ID should not be null");
@@ -582,21 +582,21 @@ namespace Andastra.Parsing.Tests.Formats
             }
 
             // Mod_Tag should be String type
-            if (gff.Root.HasField("Mod_Tag"))
+            if (gff.Root.Exists("Mod_Tag"))
             {
                 var tag = gff.Root.GetString("Mod_Tag");
                 tag.Should().NotBeNull("Mod_Tag should not be null");
             }
 
             // Mod_Entry_Area should be ResRef type
-            if (gff.Root.HasField("Mod_Entry_Area"))
+            if (gff.Root.Exists("Mod_Entry_Area"))
             {
                 var entryArea = gff.Root.GetResRef("Mod_Entry_Area");
                 entryArea.Should().NotBeNull("Mod_Entry_Area should not be null");
             }
 
             // Mod_Entry_X/Y/Z should be Single (Float) type
-            if (gff.Root.HasField("Mod_Entry_X"))
+            if (gff.Root.Exists("Mod_Entry_X"))
             {
                 var entryX = gff.Root.GetSingle("Mod_Entry_X");
                 float.IsNaN(entryX).Should().BeFalse("Mod_Entry_X should be a valid float");
@@ -614,7 +614,7 @@ namespace Andastra.Parsing.Tests.Formats
             GFF gff = new GFFBinaryReader(BinaryTestFile).Load();
 
             // Validate Mod_Area_list is a List type
-            if (gff.Root.HasField("Mod_Area_list"))
+            if (gff.Root.Exists("Mod_Area_list"))
             {
                 var areaList = gff.Root.GetList("Mod_Area_list");
                 areaList.Should().NotBeNull("Mod_Area_list should not be null");
@@ -623,7 +623,7 @@ namespace Andastra.Parsing.Tests.Formats
                 foreach (var areaStruct in areaList)
                 {
                     areaStruct.Should().NotBeNull("Area struct should not be null");
-                    if (areaStruct.HasField("Area_Name"))
+                    if (areaStruct.Exists("Area_Name"))
                     {
                         var areaName = areaStruct.GetResRef("Area_Name");
                         areaName.Should().NotBeNull("Area_Name should not be null");
