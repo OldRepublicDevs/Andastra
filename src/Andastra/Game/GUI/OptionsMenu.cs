@@ -261,7 +261,7 @@ namespace Andastra.Runtime.Game.GUI
                     }
                 }, 0, 100),
                 new OptionItem("SFX Volume", OptionType.Numeric, () => settings.Audio.SfxVolume * 100, v => settings.Audio.SfxVolume = (float)v / 100.0f, 0, 100),
-                new OptionItem("Voice Volume", OptionType.Numeric, () => settings.VoiceVolume * 100, v => settings.VoiceVolume = (float)v / 100.0f, 0, 100)
+                new OptionItem("Voice Volume", OptionType.Numeric, () => settings.Audio.VoiceVolume * 100, v => settings.Audio.VoiceVolume = (float)v / 100.0f, 0, 100)
             };
             options[OptionsCategory.Audio] = audioOptions;
 
