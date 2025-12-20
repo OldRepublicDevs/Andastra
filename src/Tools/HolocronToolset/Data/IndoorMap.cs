@@ -251,11 +251,7 @@ namespace HolocronToolset.Data
                 _roomNames[room] = modelname;
 
                 // Add room to layout
-                var lytRoom = new LYTRoom
-                {
-                    Model = new ResRef(modelname),
-                    Position = room.Position
-                };
+                var lytRoom = new LYTRoom(modelname, room.Position);
                 _lyt.Rooms.Add(lytRoom);
 
                 // Add static resources
@@ -1358,7 +1354,7 @@ namespace HolocronToolset.Data
         // Original: def walkmesh(self) -> BWM:
         public BWM Walkmesh()
         {
-            var bwm = DeepCopyBwm(BaseWalkmesh());
+            var bwm = IndoorMapRoomHelper.DeepCopyBwm(BaseWalkmesh());
             bwm.Flip(FlipX, FlipY);
             bwm.Rotate(Rotation);
             bwm.Translate(Position.X, Position.Y, Position.Z);
@@ -1378,7 +1374,7 @@ namespace HolocronToolset.Data
         {
             if (WalkmeshOverride == null)
             {
-                WalkmeshOverride = DeepCopyBwm(Component.Bwm);
+                WalkmeshOverride = IndoorMapRoomHelper.DeepCopyBwm(Component.Bwm);
             }
             return WalkmeshOverride;
         }
