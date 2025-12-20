@@ -87,5 +87,21 @@ namespace HolocronToolset.Data
             get => GetValue<bool>("showPreviewUTC", false);
             set => SetValue("showPreviewUTC", value);
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/installations.py
+        // Original: showPreviewUTD: SettingsProperty[bool] = Settings.addSetting("showPreviewUTD", ...)
+        public bool ShowPreviewUTD
+        {
+            get => GetValue<bool>("showPreviewUTD", false);
+            set => SetValue("showPreviewUTD", value);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/installations.py
+        // Original: showPreviewUTP: SettingsProperty[bool] = Settings.addSetting("showPreviewUTP", ...)
+        public bool ShowPreviewUTP
+        {
+            get => GetValue<bool>("showPreviewUTP", false);
+            set => SetValue("showPreviewUTP", value);
+        }
     }
 }

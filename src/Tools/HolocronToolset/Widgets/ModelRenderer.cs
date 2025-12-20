@@ -44,5 +44,17 @@ namespace HolocronToolset.Widgets
             _mdlData = null;
             _mdxData = null;
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/renderer/model.py:202-203
+        // Original: def set_creature(self, utc: UTC):
+        public void SetCreature(Andastra.Parsing.Resource.Generics.UTC utc)
+        {
+            // Store UTC for creature rendering
+            // In full implementation, this would load the creature model into the OpenGL scene
+            // Matching PyKotor: self._creature_to_load = utc
+            _creatureToLoad = utc;
+        }
+
+        private Andastra.Parsing.Resource.Generics.UTC _creatureToLoad;
     }
 }
