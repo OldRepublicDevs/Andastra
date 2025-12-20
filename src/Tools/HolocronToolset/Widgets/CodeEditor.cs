@@ -32,6 +32,14 @@ namespace HolocronToolset.Widgets
         // In Avalonia, we track selections as tuples of (start, end) positions
         private List<Tuple<int, int>> _extraSelections = new List<Tuple<int, int>>(); // Extra selections for highlighting multiple occurrences
 
+        // Zoom functionality - tracks zoom level and base font size
+        // Matching VS Code and modern IDE zoom behavior (Ctrl+Plus, Ctrl+Minus, Ctrl+0)
+        private double _baseFontSize = 12.0; // Base font size in points (default Avalonia TextBox size)
+        private double _zoomLevel = 1.0; // Current zoom level (1.0 = 100%, 1.1 = 110%, etc.)
+        private const double ZoomStep = 0.1; // Zoom increment/decrement step (10%)
+        private const double MinZoomLevel = 0.5; // Minimum zoom level (50%)
+        private const double MaxZoomLevel = 5.0; // Maximum zoom level (500%)
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/code_editor.py:95-121
         // Original: def __init__(self, parent: QWidget):
         public CodeEditor()
@@ -40,6 +48,17 @@ namespace HolocronToolset.Widgets
             AcceptsReturn = true;
             AcceptsTab = true;
             TextWrapping = Avalonia.Media.TextWrapping.NoWrap;
+
+            // Initialize font size with base size
+            // If FontSize is already set (e.g., from XAML), use that as base
+            if (FontSize <= 0 || double.IsNaN(FontSize))
+            {
+                FontSize = _baseFontSize;
+            }
+            else
+            {
+                _baseFontSize = FontSize;
+            }
 
             // Update foldable regions when text changes
             this.TextChanged += (s, e) => UpdateFoldableRegions();
@@ -314,6 +333,17 @@ namespace HolocronToolset.Widgets
                 return;
             }
 
+            // Handle Ctrl+Shift+K shortcut for delete line
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2485-2487
+            // Original: delete_line_shortcut = QShortcut(QKeySequence("Ctrl+Shift+K"), self)
+            // Original: delete_line_shortcut.activated.connect(self._delete_line)
+            if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && e.KeyModifiers.HasFlag(KeyModifiers.Shift) && e.Key == Key.K)
+            {
+                DeleteLine();
+                e.Handled = true;
+                return;
+            }
+
             // Code folding shortcuts
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2475-2483
             // Original: fold_shortcut = QShortcut(QKeySequence("Ctrl+Shift+["), self)
@@ -355,6 +385,31 @@ namespace HolocronToolset.Widgets
             if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && e.KeyModifiers.HasFlag(KeyModifiers.Shift) && e.Key == Key.J)
             {
                 UnfoldAll();
+                e.Handled = true;
+                return;
+            }
+
+            // Zoom shortcuts - matching VS Code behavior
+            // Ctrl+Plus or Ctrl+= for zoom in
+            if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && (e.Key == Key.OemPlus || e.Key == Key.Add))
+            {
+                ZoomIn();
+                e.Handled = true;
+                return;
+            }
+
+            // Ctrl+Minus for zoom out
+            if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && (e.Key == Key.OemMinus || e.Key == Key.Subtract))
+            {
+                ZoomOut();
+                e.Handled = true;
+                return;
+            }
+
+            // Ctrl+0 for reset zoom
+            if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && e.Key == Key.D0 && !e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+            {
+                ResetZoom();
                 e.Handled = true;
                 return;
             }
@@ -600,14 +655,14 @@ namespace HolocronToolset.Widgets
         {
             // Check if Alt+Shift is pressed for column selection
             // Matching PyKotor implementation: Alt+Shift modifier activates column selection mode
-            if (e.KeyModifiers.HasFlag(KeyModifiers.Alt) && 
+            if (e.KeyModifiers.HasFlag(KeyModifiers.Alt) &&
                 e.KeyModifiers.HasFlag(KeyModifiers.Shift) &&
                 e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
             {
                 _columnSelectionMode = true;
                 Point pos = e.GetPosition(this);
                 _columnSelectionAnchor = pos;
-                
+
                 // Get character position at click and set cursor
                 int charIndex = GetCharacterIndexFromPoint(pos);
                 if (charIndex >= 0 && charIndex <= (Text?.Length ?? 0))
@@ -615,11 +670,11 @@ namespace HolocronToolset.Widgets
                     SelectionStart = charIndex;
                     SelectionEnd = charIndex;
                 }
-                
+
                 e.Handled = true;
                 return;
             }
-            
+
             _columnSelectionMode = false;
             _columnSelectionAnchor = null;
             base.OnPointerPressed(e);
@@ -638,41 +693,41 @@ namespace HolocronToolset.Widgets
                 // Perform column/block selection
                 Point anchorPos = _columnSelectionAnchor.Value;
                 Point currentPos = e.GetPosition(this);
-                
+
                 // Get character positions at both points
                 int anchorCharIndex = GetCharacterIndexFromPoint(anchorPos);
                 int currentCharIndex = GetCharacterIndexFromPoint(currentPos);
-                
+
                 if (anchorCharIndex < 0 || currentCharIndex < 0)
                 {
                     base.OnPointerMoved(e);
                     return;
                 }
-                
+
                 // Calculate line and column positions
                 GetLineAndColumn(anchorCharIndex, out int anchorLine, out int anchorCol);
                 GetLineAndColumn(currentCharIndex, out int currentLine, out int currentCol);
-                
+
                 // Determine selection bounds
                 int startLine = Math.Min(anchorLine, currentLine);
                 int endLine = Math.Max(anchorLine, currentLine);
                 int startCol = Math.Min(anchorCol, currentCol);
                 int endCol = Math.Max(anchorCol, currentCol);
-                
+
                 // Create column selection by selecting same column range across all lines
                 // Build selection string that spans the column range
                 string[] lines = (Text ?? "").Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
-                
+
                 if (startLine < 0 || endLine >= lines.Length)
                 {
                     base.OnPointerMoved(e);
                     return;
                 }
-                
+
                 // Calculate selection start and end positions
                 int selectionStart = GetCharacterIndexFromLineAndColumn(startLine, startCol, lines);
                 int selectionEnd = GetCharacterIndexFromLineAndColumn(endLine, endCol, lines);
-                
+
                 // For column selection, we need to select the rectangular region
                 // This means selecting from startLine:startCol to endLine:endCol across all lines
                 // Since TextBox doesn't support true column selection, we'll select the entire range
@@ -682,11 +737,11 @@ namespace HolocronToolset.Widgets
                     SelectionStart = Math.Min(selectionStart, selectionEnd);
                     SelectionEnd = Math.Max(selectionStart, selectionEnd);
                 }
-                
+
                 e.Handled = true;
                 return;
             }
-            
+
             base.OnPointerMoved(e);
         }
 
@@ -704,7 +759,7 @@ namespace HolocronToolset.Widgets
                 e.Handled = true;
                 return;
             }
-            
+
             _columnSelectionAnchor = null;
             base.OnPointerReleased(e);
         }
@@ -719,31 +774,31 @@ namespace HolocronToolset.Widgets
             {
                 return 0;
             }
-            
+
             // For Avalonia TextBox, we need to calculate character position from point
             // This is a simplified implementation - in a real scenario, you'd use TextLayout.HitTestPoint
             // For now, we'll use a basic approximation based on font metrics
-            
+
             // Get approximate character width (this is a simplification)
             // In a real implementation, you'd measure actual character widths
             double charWidth = 8.0; // Approximate character width in pixels (monospace font)
             double lineHeight = 20.0; // Approximate line height in pixels
-            
+
             // Calculate approximate line number
             int lineNumber = (int)(point.Y / lineHeight);
             if (lineNumber < 0) lineNumber = 0;
-            
+
             // Split text into lines
             string[] lines = Text.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
             if (lineNumber >= lines.Length)
             {
                 lineNumber = lines.Length - 1;
             }
-            
+
             // Calculate character position in line
             int charInLine = (int)(point.X / charWidth);
             if (charInLine < 0) charInLine = 0;
-            
+
             // Calculate absolute character index
             int charIndex = 0;
             for (int i = 0; i < lineNumber && i < lines.Length; i++)
@@ -755,14 +810,14 @@ namespace HolocronToolset.Widgets
                     charIndex += Text.Contains("\r\n") ? 2 : 1;
                 }
             }
-            
+
             // Add character position in current line
             if (lineNumber < lines.Length)
             {
                 charInLine = Math.Min(charInLine, lines[lineNumber].Length);
                 charIndex += charInLine;
             }
-            
+
             return Math.Min(charIndex, Text.Length);
         }
 
@@ -773,36 +828,36 @@ namespace HolocronToolset.Widgets
         {
             line = 0;
             column = 0;
-            
+
             if (string.IsNullOrEmpty(Text) || charIndex < 0)
             {
                 return;
             }
-            
+
             if (charIndex > Text.Length)
             {
                 charIndex = Text.Length;
             }
-            
+
             // Split text into lines
             string[] lines = Text.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
-            
+
             int currentIndex = 0;
             for (int i = 0; i < lines.Length; i++)
             {
                 int lineLength = lines[i].Length;
                 int newlineLength = (i < lines.Length - 1) ? (Text.Contains("\r\n") ? 2 : 1) : 0;
-                
+
                 if (charIndex >= currentIndex && charIndex <= currentIndex + lineLength)
                 {
                     line = i;
                     column = charIndex - currentIndex;
                     return;
                 }
-                
+
                 currentIndex += lineLength + newlineLength;
             }
-            
+
             // If we get here, the character index is at or beyond the end
             line = lines.Length - 1;
             column = lines[line].Length;
@@ -817,7 +872,7 @@ namespace HolocronToolset.Widgets
             {
                 return -1;
             }
-            
+
             int charIndex = 0;
             for (int i = 0; i < line && i < lines.Length; i++)
             {
@@ -828,14 +883,14 @@ namespace HolocronToolset.Widgets
                     charIndex += Text.Contains("\r\n") ? 2 : 1;
                 }
             }
-            
+
             // Add column position, but don't exceed line length
             if (line < lines.Length)
             {
                 column = Math.Min(column, lines[line].Length);
                 charIndex += column;
             }
-            
+
             return Math.Min(charIndex, Text?.Length ?? 0);
         }
 
@@ -880,7 +935,7 @@ namespace HolocronToolset.Widgets
                 // Get end position of last selected line (end of line content, NOT including newline)
                 // This matches Python's EndOfLine behavior which stops before the newline
                 int lastLineEnd = GetPositionFromLineContentEnd(endLine);
-                
+
                 // Select the full lines (content only, no trailing newline)
                 SelectionStart = firstLineStart;
                 SelectionEnd = lastLineEnd;
@@ -890,14 +945,14 @@ namespace HolocronToolset.Widgets
                 // No selection - select current line (content only, no trailing newline)
                 int lineStart = GetPositionFromLine(currentLine);
                 int lineEnd = GetPositionFromLineContentEnd(currentLine);
-                
+
                 SelectionStart = lineStart;
                 SelectionEnd = lineEnd;
             }
 
             // Get the selected text (the line(s) to duplicate, without trailing newline)
             string selectedText = SelectedText;
-            
+
             if (string.IsNullOrEmpty(selectedText))
             {
                 return;
@@ -905,17 +960,105 @@ namespace HolocronToolset.Widgets
 
             // Move cursor to end of the selected line(s) (where SelectionEnd is now)
             int insertPosition = SelectionEnd;
-            
+
             // Insert newline + selected text (matching Python: cursor.insertText("\n" + text))
             string textToInsert = newline + selectedText;
-            
+
             // Update the text
             string newText = Text.Insert(insertPosition, textToInsert);
             Text = newText;
-            
+
             // Move cursor to end of inserted text
             SelectionStart = insertPosition + textToInsert.Length;
             SelectionEnd = SelectionStart;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:3326-3345
+        // Original: def _delete_line(self): Delete current line(s) - VS Code Ctrl+Shift+K
+        /// <summary>
+        /// Deletes the current line or selected lines.
+        /// If there's a selection, deletes all lines containing the selection.
+        /// If there's no selection, deletes the current line.
+        /// Matching VS Code Ctrl+Shift+K behavior.
+        /// </summary>
+        public void DeleteLine()
+        {
+            if (string.IsNullOrEmpty(Text))
+            {
+                return;
+            }
+
+            string[] lines = Text.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+            string newline = Text.Contains("\r\n") ? "\r\n" : (Text.Contains("\n") ? "\n" : "\r");
+
+            int selectionStart = SelectionStart;
+            int selectionEnd = SelectionEnd;
+
+            int deleteStartPos;
+            int deleteEndPos;
+
+            if (selectionStart != selectionEnd)
+            {
+                // Delete selected lines
+                // Matching PyKotor: cursor.setPosition(start), cursor.movePosition(StartOfBlock)
+                // Then cursor.setPosition(end, KeepAnchor), cursor.movePosition(EndOfBlock, KeepAnchor)
+                int startLine = GetLineFromPosition(selectionStart);
+                int endLine = GetLineFromPosition(selectionEnd);
+
+                // Get start position of first selected line
+                deleteStartPos = GetPositionFromLine(startLine);
+                // Get end position of last selected line including newline
+                deleteEndPos = GetPositionFromLineEndIncludingNewline(endLine);
+            }
+            else
+            {
+                // Delete current line
+                // Matching PyKotor: cursor.movePosition(StartOfBlock), cursor.movePosition(EndOfBlock, KeepAnchor)
+                // Then if not atEnd(), cursor.movePosition(Right, KeepAnchor) to include newline
+                int currentLine = GetLineFromPosition(selectionStart);
+                deleteStartPos = GetPositionFromLine(currentLine);
+                deleteEndPos = GetPositionFromLineContentEnd(currentLine);
+
+                // Include newline if not last line
+                // Matching PyKotor: if not cursor.atEnd(): cursor.movePosition(Right, KeepAnchor)
+                if (currentLine < lines.Length - 1)
+                {
+                    deleteEndPos = GetPositionFromLineEndIncludingNewline(currentLine);
+                }
+                else
+                {
+                    // Last line - delete to end of text (no newline to include)
+                    deleteEndPos = Text.Length;
+                }
+            }
+
+            // Validate positions
+            if (deleteStartPos < 0 || deleteEndPos < deleteStartPos || deleteStartPos > Text.Length)
+            {
+                return;
+            }
+
+            // Ensure deleteEndPos doesn't exceed text length
+            if (deleteEndPos > Text.Length)
+            {
+                deleteEndPos = Text.Length;
+            }
+
+            // Delete the selected text
+            // Matching PyKotor: cursor.removeSelectedText()
+            string newText = Text.Remove(deleteStartPos, deleteEndPos - deleteStartPos);
+            Text = newText;
+
+            // Set cursor position after deletion
+            // Place cursor at the position where deletion started (or at start of next line if we deleted newline)
+            int newCursorPos = deleteStartPos;
+            if (newCursorPos > Text.Length)
+            {
+                newCursorPos = Text.Length;
+            }
+
+            SelectionStart = newCursorPos;
+            SelectionEnd = newCursorPos;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/code_editor.py:1307-1349
@@ -951,7 +1094,7 @@ namespace HolocronToolset.Widgets
 
             string[] lines = Text.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
             string newline = Text.Contains("\r\n") ? "\r\n" : (Text.Contains("\n") ? "\n" : "\r");
-            
+
             if (lines.Length == 0)
             {
                 return;
@@ -976,7 +1119,7 @@ namespace HolocronToolset.Widgets
             // Get the full line(s) including newline(s)
             int lineStartPos = GetPositionFromLine(startLine);
             int lineEndPos = GetPositionFromLineEndIncludingNewline(endLine);
-            
+
             if (lineEndPos <= lineStartPos)
             {
                 return;
@@ -996,11 +1139,11 @@ namespace HolocronToolset.Widgets
                 // Move up: insert before the previous line
                 int insertPos = GetPositionFromLine(startLine - 1);
                 newText = newText.Insert(insertPos, textToMove);
-                
+
                 // Update cursor position: move it up by the number of lines moved
                 int newSelectionStart = insertPos + (selectionStart - lineStartPos);
                 int newSelectionEnd = insertPos + (selectionEnd - lineStartPos);
-                
+
                 Text = newText;
                 SelectionStart = newSelectionStart;
                 SelectionEnd = newSelectionEnd;
@@ -1010,12 +1153,12 @@ namespace HolocronToolset.Widgets
                 // Move down: insert after the line that was immediately below endLine
                 // After removal, we need to find where that line is now in the new text
                 // Note: endLine >= lines.Length - 1 is already checked above, so we know there's a line below
-                
+
                 // The line that was at endLine+1 is now at position (endLine+1 - numLinesMoved) after removal
                 // Calculate position after that line in the new text
                 string[] newLines = newText.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
                 int targetLineIndex = endLine - numLinesMoved + 1;
-                
+
                 int insertPos;
                 if (targetLineIndex >= newLines.Length)
                 {
@@ -1036,16 +1179,16 @@ namespace HolocronToolset.Widgets
                     }
                     insertPos = pos;
                 }
-                
+
                 // Insert the moved text
                 newText = newText.Insert(insertPos, textToMove);
-                
+
                 // Update cursor position
                 // Offset = where we inserted - where we removed
                 int offset = insertPos - lineStartPos;
                 int newSelectionStart = selectionStart + offset;
                 int newSelectionEnd = selectionEnd + offset;
-                
+
                 Text = newText;
                 SelectionStart = newSelectionStart;
                 SelectionEnd = newSelectionEnd;
@@ -1104,20 +1247,20 @@ namespace HolocronToolset.Widgets
 
             string[] lines = Text.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
             int currentPos = 0;
-            
+
             for (int i = 0; i < lines.Length; i++)
             {
                 int lineLength = lines[i].Length;
                 int newlineLength = (i < lines.Length - 1) ? (Text.Contains("\r\n") ? 2 : 1) : 0;
-                
+
                 if (position >= currentPos && position <= currentPos + lineLength)
                 {
                     return i;
                 }
-                
+
                 currentPos += lineLength + newlineLength;
             }
-            
+
             return lines.Length - 1;
         }
 
@@ -1464,6 +1607,97 @@ namespace HolocronToolset.Widgets
         public void UpdateFoldableRegionsForTesting()
         {
             UpdateFoldableRegions();
+        }
+
+        /// <summary>
+        /// Zooms in the editor by increasing the font size.
+        /// Matching VS Code Ctrl+Plus behavior - increases zoom by 10% up to maximum of 500%.
+        /// </summary>
+        public void ZoomIn()
+        {
+            double newZoomLevel = _zoomLevel + ZoomStep;
+            if (newZoomLevel <= MaxZoomLevel)
+            {
+                _zoomLevel = newZoomLevel;
+                UpdateFontSize();
+            }
+        }
+
+        /// <summary>
+        /// Zooms out the editor by decreasing the font size.
+        /// Matching VS Code Ctrl+Minus behavior - decreases zoom by 10% down to minimum of 50%.
+        /// </summary>
+        public void ZoomOut()
+        {
+            double newZoomLevel = _zoomLevel - ZoomStep;
+            if (newZoomLevel >= MinZoomLevel)
+            {
+                _zoomLevel = newZoomLevel;
+                UpdateFontSize();
+            }
+        }
+
+        /// <summary>
+        /// Resets the zoom level to 100% (1.0).
+        /// Matching VS Code Ctrl+0 behavior - resets to base font size.
+        /// </summary>
+        public void ResetZoom()
+        {
+            _zoomLevel = 1.0;
+            UpdateFontSize();
+        }
+
+        /// <summary>
+        /// Gets the current zoom level.
+        /// Returns a value between 0.5 (50%) and 5.0 (500%).
+        /// </summary>
+        public double GetZoomLevel()
+        {
+            return _zoomLevel;
+        }
+
+        /// <summary>
+        /// Sets the zoom level programmatically.
+        /// Clamps the value between MinZoomLevel and MaxZoomLevel.
+        /// </summary>
+        /// <param name="zoomLevel">The zoom level to set (1.0 = 100%, 1.1 = 110%, etc.)</param>
+        public void SetZoomLevel(double zoomLevel)
+        {
+            _zoomLevel = Math.Max(MinZoomLevel, Math.Min(MaxZoomLevel, zoomLevel));
+            UpdateFontSize();
+        }
+
+        /// <summary>
+        /// Gets the base font size (the font size at 100% zoom).
+        /// </summary>
+        public double GetBaseFontSize()
+        {
+            return _baseFontSize;
+        }
+
+        /// <summary>
+        /// Sets the base font size and updates the current font size accordingly.
+        /// This allows changing the base font size while preserving the current zoom level.
+        /// </summary>
+        /// <param name="baseFontSize">The new base font size in points</param>
+        public void SetBaseFontSize(double baseFontSize)
+        {
+            if (baseFontSize > 0 && !double.IsNaN(baseFontSize) && !double.IsInfinity(baseFontSize))
+            {
+                _baseFontSize = baseFontSize;
+                UpdateFontSize();
+            }
+        }
+
+        /// <summary>
+        /// Updates the FontSize property based on the current zoom level and base font size.
+        /// </summary>
+        private void UpdateFontSize()
+        {
+            double newFontSize = _baseFontSize * _zoomLevel;
+            // Clamp font size to reasonable bounds (prevent UI issues)
+            newFontSize = Math.Max(6.0, Math.Min(72.0, newFontSize));
+            FontSize = newFontSize;
         }
     }
 }
