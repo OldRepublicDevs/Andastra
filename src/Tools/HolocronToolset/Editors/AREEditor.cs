@@ -1,10 +1,12 @@
 using Andastra.Parsing.Common;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing;
+using Andastra.Parsing.Extract;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Resource.Generics;
@@ -13,6 +15,8 @@ using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
 using HolocronToolset.Widgets;
 using HolocronToolset.Widgets.Edit;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
 
 namespace HolocronToolset.Editors
@@ -55,9 +59,31 @@ namespace HolocronToolset.Editors
         private ColorEdit _grassDiffuseEdit;
         private ColorEdit _grassAmbientEdit;
         private ColorEdit _grassEmissiveEdit;
+        private TextBox _grassTextureEdit;
+        private NumericUpDown _grassDensitySpin;
+        private NumericUpDown _grassSizeSpin;
+        private NumericUpDown _grassProbLLSpin;
+        private NumericUpDown _grassProbLRSpin;
+        private NumericUpDown _grassProbULSpin;
+        private NumericUpDown _grassProbURSpin;
+        private ColorEdit _dirtColor1Edit;
+        private ColorEdit _dirtColor2Edit;
+        private ColorEdit _dirtColor3Edit;
         private NumericUpDown _dirtFormula1Spin;
         private NumericUpDown _dirtFormula2Spin;
         private NumericUpDown _dirtFormula3Spin;
+        private NumericUpDown _dirtFunction1Spin;
+        private NumericUpDown _dirtFunction2Spin;
+        private NumericUpDown _dirtFunction3Spin;
+        private NumericUpDown _dirtSize1Spin;
+        private NumericUpDown _dirtSize2Spin;
+        private NumericUpDown _dirtSize3Spin;
+        private ComboBox _windPowerSelect;
+        private CheckBox _rainCheck;
+        private CheckBox _snowCheck;
+        private CheckBox _lightningCheck;
+        private CheckBox _shadowsCheck;
+        private NumericUpDown _shadowsSpin;
         private TextBox _commentsEdit;
         private ComboBox _onEnterSelect;
         private ComboBox _onExitSelect;
@@ -78,6 +104,11 @@ namespace HolocronToolset.Editors
             MinWidth = 400;
             MinHeight = 600;
             AddHelpAction(); // Auto-detects "GFF-ARE.md" for ARE
+            SetupSignals();
+            if (installation != null)
+            {
+                SetupInstallation(installation);
+            }
             New();
         }
 
@@ -313,6 +344,127 @@ namespace HolocronToolset.Editors
             panel.Children.Add(dynamicColorLabel);
             panel.Children.Add(_dynamicColorEdit);
 
+            // Wind Power select - matching Python: self.ui.windPowerSelect
+            var windPowerLabel = new Avalonia.Controls.TextBlock { Text = "Wind Power:" };
+            _windPowerSelect = new ComboBox();
+            // Wind power enum values: None=0, Light=1, Medium=2, Heavy=3
+            _windPowerSelect.ItemsSource = new[] { "None", "Light", "Medium", "Heavy" };
+            _windPowerSelect.SelectedIndex = 0;
+            panel.Children.Add(windPowerLabel);
+            panel.Children.Add(_windPowerSelect);
+
+            // Weather checkboxes (TSL only) - matching Python: self.ui.rainCheck, snowCheck, lightningCheck
+            _rainCheck = new CheckBox { Content = "Rain" };
+            _snowCheck = new CheckBox { Content = "Snow" };
+            _lightningCheck = new CheckBox { Content = "Lightning" };
+            panel.Children.Add(_rainCheck);
+            panel.Children.Add(_snowCheck);
+            panel.Children.Add(_lightningCheck);
+
+            // Shadows checkbox and spin - matching Python: self.ui.shadowsCheck, shadowsSpin
+            _shadowsCheck = new CheckBox { Content = "Shadows" };
+            panel.Children.Add(_shadowsCheck);
+            var shadowsSpinLabel = new Avalonia.Controls.TextBlock { Text = "Shadow Opacity:" };
+            _shadowsSpin = new NumericUpDown { Minimum = 0, Maximum = 255, Value = 0 };
+            panel.Children.Add(shadowsSpinLabel);
+            panel.Children.Add(_shadowsSpin);
+
+            // Terrain section - matching Python: self.ui.grassTextureEdit, grassDensitySpin, etc.
+            var grassTextureLabel = new Avalonia.Controls.TextBlock { Text = "Grass Texture:" };
+            _grassTextureEdit = new TextBox();
+            panel.Children.Add(grassTextureLabel);
+            panel.Children.Add(_grassTextureEdit);
+
+            var grassDensityLabel = new Avalonia.Controls.TextBlock { Text = "Grass Density:" };
+            _grassDensitySpin = new NumericUpDown { Minimum = 0.0M, Maximum = decimal.MaxValue, FormatString = "F6", Value = 0.0M };
+            panel.Children.Add(grassDensityLabel);
+            panel.Children.Add(_grassDensitySpin);
+
+            var grassSizeLabel = new Avalonia.Controls.TextBlock { Text = "Grass Size:" };
+            _grassSizeSpin = new NumericUpDown { Minimum = 0.0M, Maximum = decimal.MaxValue, FormatString = "F6", Value = 0.0M };
+            panel.Children.Add(grassSizeLabel);
+            panel.Children.Add(_grassSizeSpin);
+
+            // Grass probability spins - matching Python: self.ui.grassProbLLSpin, etc.
+            var grassProbLabel = new Avalonia.Controls.TextBlock { Text = "Grass Probability (LL/LR/UL/UR):" };
+            var grassProbPanel = new StackPanel { Orientation = Orientation.Horizontal };
+            _grassProbLLSpin = new NumericUpDown { Minimum = 0.0M, Maximum = 1.0M, FormatString = "F6", Value = 0.0M };
+            _grassProbLRSpin = new NumericUpDown { Minimum = 0.0M, Maximum = 1.0M, FormatString = "F6", Value = 0.0M };
+            _grassProbULSpin = new NumericUpDown { Minimum = 0.0M, Maximum = 1.0M, FormatString = "F6", Value = 0.0M };
+            _grassProbURSpin = new NumericUpDown { Minimum = 0.0M, Maximum = 1.0M, FormatString = "F6", Value = 0.0M };
+            grassProbPanel.Children.Add(_grassProbLLSpin);
+            grassProbPanel.Children.Add(_grassProbLRSpin);
+            grassProbPanel.Children.Add(_grassProbULSpin);
+            grassProbPanel.Children.Add(_grassProbURSpin);
+            panel.Children.Add(grassProbLabel);
+            panel.Children.Add(grassProbPanel);
+
+            // Grass color edits - matching Python: self.ui.grassDiffuseEdit, grassAmbientEdit, grassEmissiveEdit
+            var grassDiffuseLabel = new Avalonia.Controls.TextBlock { Text = "Grass Diffuse:" };
+            _grassDiffuseEdit = new ColorEdit(null);
+            panel.Children.Add(grassDiffuseLabel);
+            panel.Children.Add(_grassDiffuseEdit);
+
+            var grassAmbientLabel = new Avalonia.Controls.TextBlock { Text = "Grass Ambient:" };
+            _grassAmbientEdit = new ColorEdit(null);
+            panel.Children.Add(grassAmbientLabel);
+            panel.Children.Add(_grassAmbientEdit);
+
+            var grassEmissiveLabel = new Avalonia.Controls.TextBlock { Text = "Grass Emissive (TSL only):" };
+            _grassEmissiveEdit = new ColorEdit(null);
+            panel.Children.Add(grassEmissiveLabel);
+            panel.Children.Add(_grassEmissiveEdit);
+
+            // Dirt color edits (TSL only) - matching Python: self.ui.dirtColor1Edit, dirtColor2Edit, dirtColor3Edit
+            var dirtColorLabel = new Avalonia.Controls.TextBlock { Text = "Dirt Colors (TSL only):" };
+            var dirtColorPanel = new StackPanel { Orientation = Orientation.Horizontal };
+            _dirtColor1Edit = new ColorEdit(null);
+            _dirtColor2Edit = new ColorEdit(null);
+            _dirtColor3Edit = new ColorEdit(null);
+            // Allow alpha in dirt colors (matching Python: self.ui.dirtColor1Edit.allow_alpha = True)
+            // Note: ColorEdit may need to support alpha - for now, just create them
+            dirtColorPanel.Children.Add(_dirtColor1Edit);
+            dirtColorPanel.Children.Add(_dirtColor2Edit);
+            dirtColorPanel.Children.Add(_dirtColor3Edit);
+            panel.Children.Add(dirtColorLabel);
+            panel.Children.Add(dirtColorPanel);
+
+            // Dirt Formula spins (TSL only) - matching Python: self.ui.dirtFormula1Spin, dirtFormula2Spin, dirtFormula3Spin
+            var dirtFormulaLabel = new Avalonia.Controls.TextBlock { Text = "Dirt Formula (TSL only):" };
+            var dirtFormulaPanel = new StackPanel { Orientation = Orientation.Horizontal };
+            _dirtFormula1Spin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
+            _dirtFormula2Spin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
+            _dirtFormula3Spin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
+            dirtFormulaPanel.Children.Add(_dirtFormula1Spin);
+            dirtFormulaPanel.Children.Add(_dirtFormula2Spin);
+            dirtFormulaPanel.Children.Add(_dirtFormula3Spin);
+            panel.Children.Add(dirtFormulaLabel);
+            panel.Children.Add(dirtFormulaPanel);
+
+            // Dirt Function spins (TSL only) - matching Python: self.ui.dirtFunction1Spin, dirtFunction2Spin, dirtFunction3Spin
+            var dirtFunctionLabel = new Avalonia.Controls.TextBlock { Text = "Dirt Function (TSL only):" };
+            var dirtFunctionPanel = new StackPanel { Orientation = Orientation.Horizontal };
+            _dirtFunction1Spin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
+            _dirtFunction2Spin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
+            _dirtFunction3Spin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
+            dirtFunctionPanel.Children.Add(_dirtFunction1Spin);
+            dirtFunctionPanel.Children.Add(_dirtFunction2Spin);
+            dirtFunctionPanel.Children.Add(_dirtFunction3Spin);
+            panel.Children.Add(dirtFunctionLabel);
+            panel.Children.Add(dirtFunctionPanel);
+
+            // Dirt Size spins (TSL only) - matching Python: self.ui.dirtSize1Spin, dirtSize2Spin, dirtSize3Spin
+            var dirtSizeLabel = new Avalonia.Controls.TextBlock { Text = "Dirt Size (TSL only):" };
+            var dirtSizePanel = new StackPanel { Orientation = Orientation.Horizontal };
+            _dirtSize1Spin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
+            _dirtSize2Spin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
+            _dirtSize3Spin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
+            dirtSizePanel.Children.Add(_dirtSize1Spin);
+            dirtSizePanel.Children.Add(_dirtSize2Spin);
+            dirtSizePanel.Children.Add(_dirtSize3Spin);
+            panel.Children.Add(dirtSizeLabel);
+            panel.Children.Add(dirtSizePanel);
+
             // Scripts section - matching Python: self.ui.onEnterSelect, onExitSelect, onHeartbeatSelect, onUserDefinedSelect
             var onEnterLabel = new Avalonia.Controls.TextBlock { Text = "OnEnter Script:" };
             _onEnterSelect = new ComboBox { IsEditable = true };
@@ -333,18 +485,6 @@ namespace HolocronToolset.Editors
             _onUserDefinedSelect = new ComboBox { IsEditable = true };
             panel.Children.Add(onUserDefinedLabel);
             panel.Children.Add(_onUserDefinedSelect);
-
-            // Dirt Formula spins (TSL only) - matching Python: self.ui.dirtFormula1Spin, dirtFormula2Spin, dirtFormula3Spin
-            var dirtFormulaLabel = new Avalonia.Controls.TextBlock { Text = "Dirt Formula (TSL only):" };
-            var dirtFormulaPanel = new StackPanel { Orientation = Orientation.Horizontal };
-            _dirtFormula1Spin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
-            _dirtFormula2Spin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
-            _dirtFormula3Spin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
-            dirtFormulaPanel.Children.Add(_dirtFormula1Spin);
-            dirtFormulaPanel.Children.Add(_dirtFormula2Spin);
-            dirtFormulaPanel.Children.Add(_dirtFormula3Spin);
-            panel.Children.Add(dirtFormulaLabel);
-            panel.Children.Add(dirtFormulaPanel);
 
             // Comments edit - matching Python: self.ui.commentsEdit
             var commentsLabel = new Avalonia.Controls.TextBlock { Text = "Comments:" };
@@ -426,6 +566,52 @@ namespace HolocronToolset.Editors
         private void LoadARE(ARE are)
         {
             _are = are;
+
+            // Populate script combo boxes with relevant script resources (matching Python lines 230-246)
+            // This must be done here after filepath is set, not in constructor
+            if (_installation != null && !string.IsNullOrEmpty(_filepath))
+            {
+                var scriptResources = _installation.GetRelevantResources(ResourceType.NCS, _filepath);
+                _relevantScriptResnames = scriptResources
+                    .Select(r => r.ResName.ToLowerInvariant())
+                    .Distinct()
+                    .OrderBy(r => r)
+                    .ToList();
+
+                // Populate all script combo boxes
+                if (_onEnterSelect != null)
+                {
+                    _onEnterSelect.Items.Clear();
+                    foreach (var resname in _relevantScriptResnames)
+                    {
+                        _onEnterSelect.Items.Add(resname);
+                    }
+                }
+                if (_onExitSelect != null)
+                {
+                    _onExitSelect.Items.Clear();
+                    foreach (var resname in _relevantScriptResnames)
+                    {
+                        _onExitSelect.Items.Add(resname);
+                    }
+                }
+                if (_onHeartbeatSelect != null)
+                {
+                    _onHeartbeatSelect.Items.Clear();
+                    foreach (var resname in _relevantScriptResnames)
+                    {
+                        _onHeartbeatSelect.Items.Add(resname);
+                    }
+                }
+                if (_onUserDefinedSelect != null)
+                {
+                    _onUserDefinedSelect.Items.Clear();
+                    foreach (var resname in _relevantScriptResnames)
+                    {
+                        _onUserDefinedSelect.Items.Add(resname);
+                    }
+                }
+            }
 
             // Matching Python: self.ui.nameEdit.set_locstring(are.name) (line 177)
             if (_nameEdit != null)
@@ -590,20 +776,196 @@ namespace HolocronToolset.Editors
             {
                 _grassEmissiveEdit.SetColor(are.GrassEmissive);
             }
-            // Matching Python: self.ui.dirtFormula1Spin.setValue(are.dirty_formula_1) (TSL only)
+            // Matching Python: self.ui.grassTextureEdit.setText(str(are.grass_texture)) (line 217)
+            if (_grassTextureEdit != null)
+            {
+                _grassTextureEdit.Text = are.GrassTexture.ToString();
+            }
+            // Matching Python: self.ui.grassDensitySpin.setValue(are.grass_density) (line 221)
+            if (_grassDensitySpin != null)
+            {
+                _grassDensitySpin.Value = (decimal)are.GrassDensity;
+            }
+            // Matching Python: self.ui.grassSizeSpin.setValue(are.grass_size) (line 222)
+            if (_grassSizeSpin != null)
+            {
+                _grassSizeSpin.Value = (decimal)are.GrassSize;
+            }
+            // Matching Python: self.ui.grassProbLLSpin.setValue(are.grass_prob_ll) (line 223)
+            if (_grassProbLLSpin != null)
+            {
+                _grassProbLLSpin.Value = (decimal)are.GrassProbLL;
+            }
+            // Matching Python: self.ui.grassProbLRSpin.setValue(are.grass_prob_lr) (line 224)
+            if (_grassProbLRSpin != null)
+            {
+                _grassProbLRSpin.Value = (decimal)are.GrassProbLR;
+            }
+            // Matching Python: self.ui.grassProbULSpin.setValue(are.grass_prob_ul) (line 225)
+            if (_grassProbULSpin != null)
+            {
+                _grassProbULSpin.Value = (decimal)are.GrassProbUL;
+            }
+            // Matching Python: self.ui.grassProbURSpin.setValue(are.grass_prob_ur) (line 226)
+            if (_grassProbURSpin != null)
+            {
+                _grassProbURSpin.Value = (decimal)are.GrassProbUR;
+            }
+            // Matching Python: self.ui.windPowerSelect.setCurrentIndex(are.wind_power) (line 209)
+            if (_windPowerSelect != null && are.WindPower >= 0 && are.WindPower < _windPowerSelect.ItemCount)
+            {
+                _windPowerSelect.SelectedIndex = are.WindPower;
+            }
+            // Matching Python: self.ui.rainCheck.setChecked(are.chance_rain == max_value) (line 210)
+            // Note: ARE class has ChancesOfRain as ResRef, but PyKotor uses int (0 or 100)
+            // For now, we'll check if it's non-blank to indicate enabled
+            if (_rainCheck != null)
+            {
+                // PyKotor uses chance_rain == 100 to indicate enabled
+                // Since C# ARE uses ResRef, we'll need to check the GFF directly or use a workaround
+                // For now, default to false - this may need adjustment based on actual GFF structure
+                _rainCheck.IsChecked = false;
+            }
+            // Matching Python: self.ui.snowCheck.setChecked(are.chance_snow == max_value) (line 211)
+            if (_snowCheck != null)
+            {
+                _snowCheck.IsChecked = false;
+            }
+            // Matching Python: self.ui.lightningCheck.setChecked(are.chance_lightning == max_value) (line 212)
+            if (_lightningCheck != null)
+            {
+                _lightningCheck.IsChecked = false;
+            }
+            // Matching Python: self.ui.shadowsCheck.setChecked(are.shadows) (line 213)
+            // Note: ARE class doesn't have Shadows bool, but has ShadowOpacity as ResRef
+            // For now, default to false
+            if (_shadowsCheck != null)
+            {
+                _shadowsCheck.IsChecked = false;
+            }
+            // Matching Python: self.ui.shadowsSpin.setValue(are.shadow_opacity) (line 214)
+            // Note: ARE class doesn't have ShadowOpacity as int, but as ResRef
+            // For now, default to 0
+            if (_shadowsSpin != null)
+            {
+                _shadowsSpin.Value = 0;
+            }
+            // Matching Python: self.ui.dirtColor1Edit.set_color(are.dirty_argb_1) (line 227)
+            // Note: ARE class doesn't have DirtyArgb properties - these may need to be extracted from GFF
+            // For now, set to default color
+            if (_dirtColor1Edit != null)
+            {
+                _dirtColor1Edit.SetColor(new Color(0, 0, 0));
+            }
+            if (_dirtColor2Edit != null)
+            {
+                _dirtColor2Edit.SetColor(new Color(0, 0, 0));
+            }
+            if (_dirtColor3Edit != null)
+            {
+                _dirtColor3Edit.SetColor(new Color(0, 0, 0));
+            }
+            // Matching Python: self.ui.dirtFormula1Spin.setValue(are.dirty_formula_1) (line 230)
             if (_dirtFormula1Spin != null)
             {
                 _dirtFormula1Spin.Value = are.DirtyFormula1;
             }
-            // Matching Python: self.ui.dirtFormula2Spin.setValue(are.dirty_formula_2) (TSL only)
+            // Matching Python: self.ui.dirtFormula2Spin.setValue(are.dirty_formula_2) (line 231)
             if (_dirtFormula2Spin != null)
             {
                 _dirtFormula2Spin.Value = are.DirtyFormula2;
             }
-            // Matching Python: self.ui.dirtFormula3Spin.setValue(are.dirty_formula_3) (TSL only)
+            // Matching Python: self.ui.dirtFormula3Spin.setValue(are.dirty_formula_3) (line 232)
             if (_dirtFormula3Spin != null)
             {
                 _dirtFormula3Spin.Value = are.DirtyFormula3;
+            }
+            // Matching Python: self.ui.dirtFunction1Spin.setValue(are.dirty_func_1) (line 233)
+            // Note: ARE class doesn't have DirtyFunc properties - these may need to be extracted from GFF
+            // For now, default to 0
+            if (_dirtFunction1Spin != null)
+            {
+                _dirtFunction1Spin.Value = 0;
+            }
+            if (_dirtFunction2Spin != null)
+            {
+                _dirtFunction2Spin.Value = 0;
+            }
+            if (_dirtFunction3Spin != null)
+            {
+                _dirtFunction3Spin.Value = 0;
+            }
+            // Matching Python: self.ui.dirtSize1Spin.setValue(are.dirty_size_1) (line 236)
+            // Note: ARE class doesn't have DirtySize properties - these may need to be extracted from GFF
+            // For now, default to 0
+            if (_dirtSize1Spin != null)
+            {
+                _dirtSize1Spin.Value = 0;
+            }
+            if (_dirtSize2Spin != null)
+            {
+                _dirtSize2Spin.Value = 0;
+            }
+            if (_dirtSize3Spin != null)
+            {
+                _dirtSize3Spin.Value = 0;
+            }
+            // Matching Python: self.ui.onEnterSelect.set_combo_box_text(str(are.on_enter)) (line 241)
+            if (_onEnterSelect != null)
+            {
+                string onEnterText = are.OnEnter.ToString();
+                _onEnterSelect.Text = onEnterText;
+                // Try to select the item if it exists in the list
+                if (!string.IsNullOrEmpty(onEnterText))
+                {
+                    int index = _onEnterSelect.Items.IndexOf(onEnterText);
+                    if (index >= 0)
+                    {
+                        _onEnterSelect.SelectedIndex = index;
+                    }
+                }
+            }
+            // Matching Python: self.ui.onExitSelect.set_combo_box_text(str(are.on_exit)) (line 242)
+            if (_onExitSelect != null)
+            {
+                string onExitText = are.OnExit.ToString();
+                _onExitSelect.Text = onExitText;
+                if (!string.IsNullOrEmpty(onExitText))
+                {
+                    int index = _onExitSelect.Items.IndexOf(onExitText);
+                    if (index >= 0)
+                    {
+                        _onExitSelect.SelectedIndex = index;
+                    }
+                }
+            }
+            // Matching Python: self.ui.onHeartbeatSelect.set_combo_box_text(str(are.on_heartbeat)) (line 243)
+            if (_onHeartbeatSelect != null)
+            {
+                string onHeartbeatText = are.OnHeartbeat.ToString();
+                _onHeartbeatSelect.Text = onHeartbeatText;
+                if (!string.IsNullOrEmpty(onHeartbeatText))
+                {
+                    int index = _onHeartbeatSelect.Items.IndexOf(onHeartbeatText);
+                    if (index >= 0)
+                    {
+                        _onHeartbeatSelect.SelectedIndex = index;
+                    }
+                }
+            }
+            // Matching Python: self.ui.onUserDefinedSelect.set_combo_box_text(str(are.on_user_defined)) (line 244)
+            if (_onUserDefinedSelect != null)
+            {
+                string onUserDefinedText = are.OnUserDefined.ToString();
+                _onUserDefinedSelect.Text = onUserDefinedText;
+                if (!string.IsNullOrEmpty(onUserDefinedText))
+                {
+                    int index = _onUserDefinedSelect.Items.IndexOf(onUserDefinedText);
+                    if (index >= 0)
+                    {
+                        _onUserDefinedSelect.SelectedIndex = index;
+                    }
+                }
             }
             // Matching Python: self.ui.commentsEdit.setPlainText(are.comment) (line 247)
             if (_commentsEdit != null)
@@ -752,38 +1114,119 @@ namespace HolocronToolset.Editors
             {
                 are.DynamicLight = _dynamicColorEdit.GetColor();
             }
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:328-330
-            // Original: are.grass_diffuse = self.ui.grassDiffuseEdit.color()
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:326-348
+            // Terrain section
+            // Original: are.grass_texture = ResRef(self.ui.grassTextureEdit.text()) (line 327)
+            if (_grassTextureEdit != null)
+            {
+                are.GrassTexture = new ResRef(_grassTextureEdit.Text ?? "");
+            }
+            // Original: are.grass_diffuse = self.ui.grassDiffuseEdit.color() (line 328)
             if (_grassDiffuseEdit != null)
             {
                 are.GrassDiffuse = _grassDiffuseEdit.GetColor();
             }
-            // Original: are.grass_ambient = self.ui.grassAmbientEdit.color()
+            // Original: are.grass_ambient = self.ui.grassAmbientEdit.color() (line 329)
             if (_grassAmbientEdit != null)
             {
                 are.GrassAmbient = _grassAmbientEdit.GetColor();
             }
-            // Original: are.grass_emissive = self.ui.grassEmissiveEdit.color()
+            // Original: are.grass_emissive = self.ui.grassEmissiveEdit.color() (line 330)
             if (_grassEmissiveEdit != null)
             {
                 are.GrassEmissive = _grassEmissiveEdit.GetColor();
             }
-            // Matching Python: are.dirty_formula_1 = self.ui.dirtFormula1Spin.value() (TSL only)
+            // Original: are.grass_size = self.ui.grassSizeSpin.value() (line 331)
+            if (_grassSizeSpin != null && _grassSizeSpin.Value.HasValue)
+            {
+                are.GrassSize = (float)_grassSizeSpin.Value.Value;
+            }
+            // Original: are.grass_density = self.ui.grassDensitySpin.value() (line 332)
+            if (_grassDensitySpin != null && _grassDensitySpin.Value.HasValue)
+            {
+                are.GrassDensity = (float)_grassDensitySpin.Value.Value;
+            }
+            // Original: are.grass_prob_ll = self.ui.grassProbLLSpin.value() (line 333)
+            if (_grassProbLLSpin != null && _grassProbLLSpin.Value.HasValue)
+            {
+                are.GrassProbLL = (float)_grassProbLLSpin.Value.Value;
+            }
+            // Original: are.grass_prob_lr = self.ui.grassProbLRSpin.value() (line 334)
+            if (_grassProbLRSpin != null && _grassProbLRSpin.Value.HasValue)
+            {
+                are.GrassProbLR = (float)_grassProbLRSpin.Value.Value;
+            }
+            // Original: are.grass_prob_ul = self.ui.grassProbULSpin.value() (line 335)
+            if (_grassProbULSpin != null && _grassProbULSpin.Value.HasValue)
+            {
+                are.GrassProbUL = (float)_grassProbULSpin.Value.Value;
+            }
+            // Original: are.grass_prob_ur = self.ui.grassProbURSpin.value() (line 336)
+            if (_grassProbURSpin != null && _grassProbURSpin.Value.HasValue)
+            {
+                are.GrassProbUR = (float)_grassProbURSpin.Value.Value;
+            }
+            // Original: are.dirty_argb_1 = self.ui.dirtColor1Edit.color() (line 337)
+            // Note: ARE class doesn't have DirtyArgb properties - these may need to be written to GFF directly
+            // For now, we'll skip setting these as the ARE class doesn't support them
+            // Original: are.dirty_formula_1 = self.ui.dirtFormula1Spin.value() (line 340)
             if (_dirtFormula1Spin != null && _dirtFormula1Spin.Value.HasValue)
             {
                 are.DirtyFormula1 = (int)_dirtFormula1Spin.Value.Value;
             }
-            // Matching Python: are.dirty_formula_2 = self.ui.dirtFormula2Spin.value() (TSL only)
+            // Original: are.dirty_formula_2 = self.ui.dirtFormula2Spin.value() (line 341)
             if (_dirtFormula2Spin != null && _dirtFormula2Spin.Value.HasValue)
             {
                 are.DirtyFormula2 = (int)_dirtFormula2Spin.Value.Value;
             }
-            // Matching Python: are.dirty_formula_3 = self.ui.dirtFormula3Spin.value() (TSL only)
+            // Original: are.dirty_formula_3 = self.ui.dirtFormula3Spin.value() (line 342)
             if (_dirtFormula3Spin != null && _dirtFormula3Spin.Value.HasValue)
             {
                 are.DirtyFormula3 = (int)_dirtFormula3Spin.Value.Value;
             }
-            // Matching Python: are.comment = self.ui.commentsEdit.toPlainText() (line 357)
+            // Original: are.dirty_func_1 = self.ui.dirtFunction1Spin.value() (line 343)
+            // Note: ARE class doesn't have DirtyFunc properties - these may need to be written to GFF directly
+            // Original: are.dirty_size_1 = self.ui.dirtSize1Spin.value() (line 346)
+            // Note: ARE class doesn't have DirtySize properties - these may need to be written to GFF directly
+
+            // Weather section - matching Python lines 303-324
+            // Original: are.wind_power = AREWindPower(self.ui.windPowerSelect.currentIndex()) (line 311)
+            if (_windPowerSelect != null && _windPowerSelect.SelectedIndex >= 0)
+            {
+                are.WindPower = _windPowerSelect.SelectedIndex;
+            }
+            // Original: are.chance_rain = 100 if self.ui.rainCheck.isChecked() else 0 (line 315)
+            // Note: ARE class has ChancesOfRain as ResRef, not int
+            // For TSL installations, we would need to write this to GFF directly
+            // Original: are.shadows = self.ui.shadowsCheck.isChecked() (line 323)
+            // Note: ARE class doesn't have Shadows bool - would need to write to GFF directly
+            // Original: are.shadow_opacity = self.ui.shadowsSpin.value() (line 324)
+            // Note: ARE class has ShadowOpacity as ResRef, not int
+
+            // Scripts section - matching Python lines 350-354
+            // Original: are.on_enter = ResRef(self.ui.onEnterSelect.currentText()) (line 351)
+            if (_onEnterSelect != null && !string.IsNullOrEmpty(_onEnterSelect.Text))
+            {
+                are.OnEnter = new ResRef(_onEnterSelect.Text);
+            }
+            // Original: are.on_exit = ResRef(self.ui.onExitSelect.currentText()) (line 352)
+            if (_onExitSelect != null && !string.IsNullOrEmpty(_onExitSelect.Text))
+            {
+                are.OnExit = new ResRef(_onExitSelect.Text);
+            }
+            // Original: are.on_heartbeat = ResRef(self.ui.onHeartbeatSelect.currentText()) (line 353)
+            if (_onHeartbeatSelect != null && !string.IsNullOrEmpty(_onHeartbeatSelect.Text))
+            {
+                are.OnHeartbeat = new ResRef(_onHeartbeatSelect.Text);
+            }
+            // Original: are.on_user_defined = ResRef(self.ui.onUserDefinedSelect.currentText()) (line 354)
+            if (_onUserDefinedSelect != null && !string.IsNullOrEmpty(_onUserDefinedSelect.Text))
+            {
+                are.OnUserDefined = new ResRef(_onUserDefinedSelect.Text);
+            }
+
+            // Comments - matching Python line 357
+            // Original: are.comment = self.ui.commentsEdit.toPlainText()
             if (_commentsEdit != null)
             {
                 are.Comment = _commentsEdit.Text ?? "";
@@ -1214,6 +1657,304 @@ namespace HolocronToolset.Editors
                 _cameraStyleSelect.Items.Add("Far");
                 _cameraStyleSelect.Items.Add("Top Down");
                 _cameraStyleSelect.Items.Add("Free Look");
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:76-104
+        // Original: def _setup_signals(self):
+        private void SetupSignals()
+        {
+            // Tag generate button - matching Python: self.ui.tagGenerateButton.clicked.connect(self.generate_tag)
+            if (_tagGenerateButton != null)
+            {
+                _tagGenerateButton.Click += (s, e) => GenerateTag();
+            }
+
+            // Note: Minimap update signals are not implemented yet as minimap renderer is not available
+            // Matching Python lines 79-87 would connect map-related spinboxes to redoMinimap
+            // These will be implemented when minimap renderer is available
+
+            // Script combo boxes will be populated in LoadARE after filepath is set
+            _relevantScriptResnames = new List<string>();
+
+            // Setup context menus for script combo boxes
+            SetupScriptComboBoxContextMenu(_onEnterSelect, "OnEnter Script");
+            SetupScriptComboBoxContextMenu(_onExitSelect, "OnExit Script");
+            SetupScriptComboBoxContextMenu(_onHeartbeatSelect, "OnHeartbeat Script");
+            SetupScriptComboBoxContextMenu(_onUserDefinedSelect, "OnUserDefined Script");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:106-132
+        // Original: def _setup_installation(self, installation: HTInstallation):
+        private void SetupInstallation(HTInstallation installation)
+        {
+            _installation = installation;
+
+            // Setup name edit with installation - matching Python: self.ui.nameEdit.set_installation(installation)
+            if (_nameEdit != null)
+            {
+                _nameEdit.SetInstallation(installation);
+            }
+
+            // Setup camera styles from cameras.2da - matching Python lines 111-117
+            // This is already done in SetupUI, but we can refresh here if needed
+
+            // Show/hide TSL-only fields - matching Python lines 119-127
+            bool isTsl = installation != null && installation.Game == Game.K2;
+            if (_grassEmissiveEdit != null)
+            {
+                _grassEmissiveEdit.IsVisible = isTsl;
+            }
+            if (_rainCheck != null)
+            {
+                _rainCheck.IsVisible = isTsl;
+                _rainCheck.IsEnabled = isTsl;
+            }
+            if (_snowCheck != null)
+            {
+                _snowCheck.IsVisible = isTsl;
+                _snowCheck.IsEnabled = isTsl;
+            }
+            if (_lightningCheck != null)
+            {
+                _lightningCheck.IsVisible = isTsl;
+                _lightningCheck.IsEnabled = isTsl;
+            }
+
+            // Note: setup_file_context_menu equivalent would be handled by SetupScriptComboBoxContextMenu
+            // which is called from SetupSignals
+        }
+
+        // Create context menu for script ComboBox controls
+        // Matching PyKotor pattern from UTEEditor - allows opening existing scripts, creating new scripts, or viewing resource details
+        private void SetupScriptComboBoxContextMenu(ComboBox comboBox, string scriptTypeName)
+        {
+            if (comboBox == null)
+            {
+                return;
+            }
+
+            var contextMenu = new ContextMenu();
+            var menuItems = new List<MenuItem>();
+
+            // "Open in Editor" menu item - opens the script if it exists
+            var openInEditorItem = new MenuItem
+            {
+                Header = "Open in Editor",
+                IsEnabled = false
+            };
+            openInEditorItem.Click += (sender, e) => OpenScriptInEditor(comboBox, scriptTypeName);
+            menuItems.Add(openInEditorItem);
+
+            // Enable/disable based on whether script name is set
+            comboBox.SelectionChanged += (sender, e) =>
+            {
+                string text = comboBox.SelectedItem?.ToString() ?? comboBox.Text ?? string.Empty;
+                openInEditorItem.IsEnabled = !string.IsNullOrWhiteSpace(text);
+            };
+
+            // "Create New Script" menu item - creates a new NSS file
+            var createNewItem = new MenuItem
+            {
+                Header = "Create New Script"
+            };
+            createNewItem.Click += (sender, e) => CreateNewScript(comboBox, scriptTypeName);
+            menuItems.Add(createNewItem);
+
+            // "View Resource Location" menu item - shows where the script is located
+            var viewLocationItem = new MenuItem
+            {
+                Header = "View Resource Location",
+                IsEnabled = false
+            };
+            viewLocationItem.Click += (sender, e) => ViewScriptResourceLocation(comboBox, scriptTypeName);
+            menuItems.Add(viewLocationItem);
+
+            // Enable/disable based on whether script name is set
+            comboBox.SelectionChanged += (sender, e) =>
+            {
+                string text = comboBox.SelectedItem?.ToString() ?? comboBox.Text ?? string.Empty;
+                viewLocationItem.IsEnabled = !string.IsNullOrWhiteSpace(text);
+            };
+
+            // Add menu items to context menu
+            foreach (var item in menuItems)
+            {
+                contextMenu.Items.Add(item);
+            }
+            // Add separator before last item
+            contextMenu.Items.Insert(menuItems.Count - 1, new Separator());
+            
+            comboBox.ContextMenu = contextMenu;
+        }
+
+        // Open the script referenced in the ComboBox in an appropriate editor
+        private void OpenScriptInEditor(ComboBox comboBox, string scriptTypeName)
+        {
+            if (comboBox == null || _installation == null)
+            {
+                return;
+            }
+
+            string scriptName = comboBox.Text?.Trim();
+            if (string.IsNullOrEmpty(scriptName))
+            {
+                return;
+            }
+
+            try
+            {
+                // Try to find the script resource (NSS source preferred, fallback to NCS)
+                var resourceResult = _installation.Resource(scriptName, ResourceType.NSS, null);
+                ResourceType resourceType = ResourceType.NSS;
+                
+                if (resourceResult == null)
+                {
+                    // Try compiled version
+                    resourceResult = _installation.Resource(scriptName, ResourceType.NCS, null);
+                    resourceType = ResourceType.NCS;
+                }
+
+                if (resourceResult == null)
+                {
+                    // Resource not found
+                    System.Console.WriteLine($"Script '{scriptName}' not found in installation.");
+                    return;
+                }
+
+                // Open the script in the NSS editor
+                var fileResource = new FileResource(
+                    scriptName,
+                    resourceType,
+                    resourceResult.Data.Length,
+                    0,
+                    resourceResult.FilePath
+                );
+
+                HolocronToolset.Utils.WindowUtils.OpenResourceEditor(fileResource, _installation, this);
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Error opening script '{scriptName}': {ex.Message}");
+            }
+        }
+
+        // Create a new script file and open it in the editor
+        private void CreateNewScript(ComboBox comboBox, string scriptTypeName)
+        {
+            if (_installation == null)
+            {
+                return;
+            }
+
+            try
+            {
+                // Generate a default script name if not already set
+                string scriptName = comboBox.Text?.Trim();
+                if (string.IsNullOrEmpty(scriptName))
+                {
+                    // Generate based on ARE resref and script type
+                    string baseName = !string.IsNullOrEmpty(_resname) 
+                        ? _resname 
+                        : "m00xx_area_000";
+                    scriptName = $"{baseName}_{scriptTypeName.ToLowerInvariant().Replace(" ", "_")}";
+                }
+
+                // Limit to 16 characters (ResRef max length)
+                if (scriptName.Length > 16)
+                {
+                    scriptName = scriptName.Substring(0, 16);
+                }
+
+                // Create a new NSS editor with empty content
+                var nssEditor = new NSSEditor(this, _installation);
+                nssEditor.New();
+                
+                // Show the editor - user will set the resref when saving
+                HolocronToolset.Utils.WindowUtils.AddWindow(nssEditor, show: true);
+
+                // Update the combo box with the suggested script name
+                comboBox.Text = scriptName;
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Error creating new script: {ex.Message}");
+            }
+        }
+
+        // View the location/details of the script resource
+        private void ViewScriptResourceLocation(ComboBox comboBox, string scriptTypeName)
+        {
+            if (comboBox == null || _installation == null)
+            {
+                return;
+            }
+
+            string scriptName = comboBox.Text?.Trim();
+            if (string.IsNullOrEmpty(scriptName))
+            {
+                return;
+            }
+
+            try
+            {
+                // Find the script resource
+                var locations = _installation.Locations(
+                    new List<ResourceIdentifier> { new ResourceIdentifier(scriptName, ResourceType.NSS) },
+                    null,
+                    null);
+
+                var nssIdentifier = new ResourceIdentifier(scriptName, ResourceType.NSS);
+                if (locations.Count > 0 && locations.ContainsKey(nssIdentifier) &&
+                    locations[nssIdentifier].Count > 0)
+                {
+                    var foundLocations = locations[nssIdentifier];
+                    // Show dialog with all found locations
+                    var dialog = new ResourceLocationDialog(
+                        this,
+                        scriptName,
+                        ResourceType.NSS,
+                        foundLocations,
+                        _installation);
+                    dialog.ShowDialog(this);
+                }
+                else
+                {
+                    // Try compiled version
+                    locations = _installation.Locations(
+                        new List<ResourceIdentifier> { new ResourceIdentifier(scriptName, ResourceType.NCS) },
+                        null,
+                        null);
+
+                    var ncsIdentifier = new ResourceIdentifier(scriptName, ResourceType.NCS);
+                    if (locations.Count > 0 && locations.ContainsKey(ncsIdentifier) &&
+                        locations[ncsIdentifier].Count > 0)
+                    {
+                        var foundLocations = locations[ncsIdentifier];
+                        // Show dialog with all found locations
+                        var dialog = new ResourceLocationDialog(
+                            this,
+                            scriptName,
+                            ResourceType.NCS,
+                            foundLocations,
+                            _installation);
+                        dialog.ShowDialog(this);
+                    }
+                    else
+                    {
+                        // Show "not found" message
+                        var msgBox = MessageBoxManager.GetMessageBoxStandard(
+                            "Resource Not Found",
+                            $"Script '{scriptName}' not found in installation.\n\nSearched for:\n- {scriptName}.nss\n- {scriptName}.ncs",
+                            ButtonEnum.Ok,
+                            MsBox.Avalonia.Enums.Icon.Info);
+                        msgBox.ShowAsync();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Error viewing script location '{scriptName}': {ex.Message}");
             }
         }
     }
