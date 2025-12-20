@@ -1,6 +1,7 @@
 ﻿using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using Andastra.Parsing.Resource;
-using static NUnit.Framework.Assert;
+using Assert = NUnit.Framework.Legacy.ClassicAssert;
 
 namespace AuroraEngine.Common.Tests
 {
@@ -12,33 +13,33 @@ namespace AuroraEngine.Common.Tests
         {
             // Test common resource type extensions
             ResourceType gitType = ResourceType.FromExtension(".git");
-            IsNotNull(gitType);
-            AreEqual("GIT", gitType.Name);
+            Assert.IsTrue(gitType != null);
+            Assert.IsTrue(gitType.Name == "GIT");
 
             ResourceType tlkType = ResourceType.FromExtension(".tlk");
-            IsNotNull(tlkType);
-            AreEqual("TLK", tlkType.Name);
+            Assert.IsTrue(tlkType != null);
+            Assert.IsTrue(tlkType.Name == "TLK");
 
             ResourceType erfType = ResourceType.FromExtension(".erf");
-            IsNotNull(erfType);
-            AreEqual("ERF", erfType.Name);
+            Assert.IsTrue(erfType != null);
+            Assert.IsTrue(erfType.Name == "ERF");
 
             ResourceType rimType = ResourceType.FromExtension(".rim");
-            IsNotNull(rimType);
-            AreEqual("RIM", rimType.Name);
+            Assert.IsTrue(rimType != null);
+            Assert.IsTrue(rimType.Name == "RIM");
 
             ResourceType ncsType = ResourceType.FromExtension(".ncs");
-            IsNotNull(ncsType);
-            AreEqual("NCS", ncsType.Name);
+            Assert.IsTrue(ncsType != null);
+            Assert.IsTrue(ncsType.Name == "NCS");
 
             ResourceType utcType = ResourceType.FromExtension(".utc");
-            IsNotNull(utcType);
-            AreEqual("UTC", utcType.Name);
-            IsFalse(utcType.IsInvalid);
+            Assert.IsTrue(utcType != null);
+            Assert.IsTrue(utcType.Name == "UTC");
+            Assert.IsFalse(utcType.IsInvalid);
 
             // Test case insensitivity
             ResourceType upperCase = ResourceType.FromExtension(".GIT");
-            AreEqual(gitType, upperCase);
+            Assert.IsTrue(gitType == upperCase);
         }
 
         [Test]
@@ -46,27 +47,27 @@ namespace AuroraEngine.Common.Tests
         {
             // Test getting resource types by ID
             ResourceType gitType = ResourceType.FromId(2023); // GIT type ID (corrected from Python source)
-            IsNotNull(gitType);
-            AreEqual("GIT", gitType.Name);
-            IsFalse(gitType.IsInvalid);
+            Assert.IsTrue(gitType != null);
+            Assert.IsTrue(gitType.Name == "GIT");
+            Assert.IsFalse(gitType.IsInvalid);
 
             ResourceType tlkType = ResourceType.FromId(2018); // TLK type ID
-            IsNotNull(tlkType);
-            AreEqual("TLK", tlkType.Name);
-            IsFalse(tlkType.IsInvalid);
+            Assert.IsTrue(tlkType != null);
+            Assert.IsTrue(tlkType.Name == "TLK");
+            Assert.IsFalse(tlkType.IsInvalid);
         }
 
         [Test]
         public void TestResourceTypeProperties()
         {
             ResourceType gitType = ResourceType.FromExtension(".git");
-            IsNotNull(gitType);
-            IsFalse(gitType.IsInvalid);
+            Assert.IsTrue(gitType != null);
+            Assert.IsFalse(gitType.IsInvalid);
 
-            AreEqual(2023, gitType.TypeId); // Corrected from Python source
-            AreEqual("git", gitType.Extension); // Extension is stored without leading dot
-            AreEqual("gff", gitType.Contents); // Corrected from Python source
-            AreEqual("Module Data", gitType.Category); // Corrected from Python source
+            Assert.IsTrue(gitType.TypeId == 2023); // Corrected from Python source
+            Assert.IsTrue(gitType.Extension == "git"); // Extension is stored without leading dot
+            Assert.IsTrue(gitType.Contents == "gff"); // Corrected from Python source
+            Assert.IsTrue(gitType.Category == "Module Data"); // Corrected from Python source
         }
 
         [Test]
@@ -74,18 +75,18 @@ namespace AuroraEngine.Common.Tests
         {
             // Test invalid extension - should return INVALID ResourceType, not null
             ResourceType invalidType = ResourceType.FromExtension(".invalid");
-            IsNotNull(invalidType);
-            IsTrue(invalidType.IsInvalid);
+            Assert.IsTrue(invalidType != null);
+            Assert.IsTrue(invalidType.IsInvalid);
 
             // Test invalid ID - should return INVALID ResourceType, not null
             ResourceType invalidId = ResourceType.FromId(-1);
-            IsNotNull(invalidId);
-            IsTrue(invalidId.IsInvalid);
+            Assert.IsTrue(invalidId != null);
+            Assert.IsTrue(invalidId.IsInvalid);
 
             // Test invalid large ID - should return INVALID ResourceType, not null
             ResourceType invalidLargeId = ResourceType.FromId(99999);
-            IsNotNull(invalidLargeId);
-            IsTrue(invalidLargeId.IsInvalid);
+            Assert.IsTrue(invalidLargeId != null);
+            Assert.IsTrue(invalidLargeId.IsInvalid);
         }
     }
 }
