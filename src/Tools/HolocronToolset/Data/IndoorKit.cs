@@ -198,15 +198,101 @@ namespace HolocronToolset.Data
         public byte[] Mdx { get; set; }
         public List<KitComponentHook> Hooks { get; set; }
 
-        // Matching PyKotor implementation: deepcopy(component) behavior
-        // Creates a deep copy of the component so hooks can be edited independently
-        // This matches the behavior in indoor_builder.py:338 and indoor_builder.py:1721
+        /// <summary>
+        /// Creates a deep copy of this KitComponent so it can be transformed independently.
+        /// </summary>
+        /// <remarks>
+        /// WHAT IS DEEP COPYING?
+        /// 
+        /// Deep copying creates a completely independent copy of an object. Unlike a shallow copy
+        /// (which just copies references), a deep copy creates new objects for all nested data.
+        /// 
+        /// WHY DO WE NEED DEEP COPYING FOR COMPONENTS?
+        /// 
+        /// When placing a component in an indoor map, each placement needs to be independent. If
+        /// multiple rooms use the same component, they each need their own copy so they can be
+        /// transformed (flipped, rotated, translated) independently. Without deep copying, transforming
+        /// one room would affect all other rooms that share that component.
+        /// 
+        /// WHAT GETS COPIED?
+        /// 
+        /// The DeepCopy method creates a new KitComponent and copies:
+        /// 1. BWM (Walkmesh): Creates a completely new BWM with all faces copied
+        ///    - CRITICAL: Material is explicitly copied to preserve walkability
+        ///    - All vertices, materials, and transitions are copied
+        /// 2. MDL/MDX (Model Data): Creates new byte arrays with copied model data
+        ///    - Models are copied so each placement can be transformed independently
+        /// 3. Hooks: Creates new KitComponentHook objects for each hook
+        ///    - Hook positions are copied (Vector3 is a struct, so copied by value)
+        ///    - Door references stay the same (doors are shared within a kit)
+        /// 
+        /// WHAT DOESN'T GET COPIED?
+        /// 
+        /// These are shared references (not copied):
+        /// - Kit: The component still belongs to the same kit
+        /// - Image: Preview images are typically immutable or shared
+        /// - Name: Strings are immutable in C#, so safe to share
+        /// - Door (in hooks): Doors are shared within a kit, so references stay the same
+        /// 
+        /// CRITICAL: MATERIAL PRESERVATION:
+        /// 
+        /// The DeepCopyBwm method MUST explicitly copy Material: newFace.Material = face.Material
+        /// 
+        /// If materials are not preserved during deep copying, faces that should be walkable will
+        /// become non-walkable, causing the bug where "levels/modules are NOT walkable despite having
+        /// the right surface material."
+        /// 
+        /// This bug was fixed by ensuring Material is explicitly copied in DeepCopyBwm(). The original
+        /// implementation might have relied on default copying behavior, which could fail if the
+        /// BWMFace constructor doesn't initialize Material properly.
+        /// 
+        /// HOW IT WORKS:
+        /// 
+        /// STEP 1: Deep Copy BWM
+        /// - Calls DeepCopyBwm() to create an independent walkmesh copy
+        /// - This ensures each component placement has its own walkmesh
+        /// 
+        /// STEP 2: Deep Copy Model Data
+        /// - Creates new byte arrays for MDL and MDX
+        /// - Copies all bytes from original to new arrays
+        /// - This ensures each placement can transform models independently
+        /// 
+        /// STEP 3: Create New Component
+        /// - Creates new KitComponent with copied BWM and models
+        /// - Shares Kit, Name, and Image (these are safe to share)
+        /// 
+        /// STEP 4: Deep Copy Hooks
+        /// - Creates new KitComponentHook for each hook
+        /// - Copies position (Vector3 is a struct, so copied by value)
+        /// - Shares Door reference (doors are shared within a kit)
+        /// 
+        /// STEP 5: Return Independent Copy
+        /// - Returns a completely independent KitComponent that can be transformed without affecting the original
+        /// 
+        /// WHEN IS IT USED?
+        /// 
+        /// DeepCopy is called when:
+        /// 1. Placing a component in an indoor map (each placement needs its own copy)
+        /// 2. Editing hooks on a component (hooks can be edited independently)
+        /// 3. Applying transformations (flip, rotate, translate) to a component
+        /// 
+        /// ORIGINAL IMPLEMENTATION:
+        /// 
+        /// Based on PyKotor's deepcopy(component) behavior. The original code also explicitly copies
+        /// materials to ensure walkability is preserved during transformations.
+        /// 
+        /// Matching PyKotor implementation: deepcopy(component) behavior
+        /// This matches the behavior in indoor_builder.py:338 and indoor_builder.py:1721
+        /// </remarks>
+        /// <returns>A new, independent KitComponent copy that can be transformed without affecting the original</returns>
         public KitComponent DeepCopy()
         {
             // Deep copy the BWM (walkmesh) - each component needs its own instance
+            // CRITICAL: This ensures materials are preserved and each placement can be transformed independently
             BWM bwmCopy = DeepCopyBwm(Bwm);
 
             // Deep copy the byte arrays (MDL and MDX model data)
+            // This ensures each placement can transform models independently
             byte[] mdlCopy = null;
             if (Mdl != null)
             {
@@ -228,6 +314,7 @@ namespace HolocronToolset.Data
             var componentCopy = new KitComponent(Kit, Name, Image, bwmCopy, mdlCopy, mdxCopy);
 
             // Deep copy all hooks - each hook needs to be a new instance
+            // This allows hooks to be edited independently for each component placement
             foreach (var hook in Hooks)
             {
                 if (hook != null)
@@ -248,7 +335,24 @@ namespace HolocronToolset.Data
             return componentCopy;
         }
 
-        // Helper method to deep copy a BWM (matching _DeepCopyBwm pattern from ModuleKit)
+        /// <summary>
+        /// Helper method to deep copy a BWM walkmesh, ensuring all data is independently copied.
+        /// </summary>
+        /// <remarks>
+        /// CRITICAL: MATERIAL PRESERVATION:
+        /// 
+        /// The Material property MUST be explicitly copied: newFace.Material = face.Material
+        /// 
+        /// If materials are not preserved during deep copying, faces that should be walkable will
+        /// become non-walkable, causing the bug where "levels/modules are NOT walkable despite having
+        /// the right surface material."
+        /// 
+        /// This bug was fixed by ensuring Material is explicitly copied. The original implementation
+        /// might have relied on default copying behavior, which could fail if the BWMFace constructor
+        /// doesn't initialize Material properly.
+        /// </remarks>
+        /// <param name="original">The original BWM to copy</param>
+        /// <returns>A new, independent BWM copy that can be transformed without affecting the original</returns>
         private BWM DeepCopyBwm(BWM original)
         {
             if (original == null)
@@ -265,10 +369,11 @@ namespace HolocronToolset.Data
             copy.AbsoluteHook2 = original.AbsoluteHook2;
 
             // Deep copy all faces
+            // CRITICAL: Material MUST be explicitly copied to preserve walkability!
             foreach (var face in original.Faces)
             {
                 var newFace = new BWMFace(face.V1, face.V2, face.V3);
-                newFace.Material = face.Material;
+                newFace.Material = face.Material;  // CRITICAL: Explicitly copy material
                 newFace.Trans1 = face.Trans1;
                 newFace.Trans2 = face.Trans2;
                 newFace.Trans3 = face.Trans3;
