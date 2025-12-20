@@ -223,22 +223,22 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         private static GlDisableDelegate _kotor2GlDisable = null;
         
         // DAT_0084015c - glBindProgramARB function pointer (duplicate)
-        private static GlBindProgramArbDelegate _kotor2GlBindProgramArb2 = null;
+        private static GlBindProgramArbDelegate _kotor2GlBindProgramArb2_dup = null;
         
         // DAT_0083fef8 - glGenProgramsARB function pointer (duplicate)
-        private static GlGenProgramsArbDelegate _kotor2GlGenProgramsArb2 = null;
+        private static GlGenProgramsArbDelegate _kotor2GlGenProgramsArb2_dup = null;
         
         // DAT_0083ff50 - glProgramStringARB function pointer (duplicate)
-        private static GlProgramStringArbDelegate _kotor2GlProgramStringArb2 = null;
+        private static GlProgramStringArbDelegate _kotor2GlProgramStringArb2_dup = null;
         
         // DAT_0083ffb8 - glProgramLocalParameter4fARB function pointer (duplicate)
-        private static GlProgramLocalParameter4fArbDelegate _kotor2GlProgramLocalParameter4fArb2 = null;
+        private static GlProgramLocalParameter4fArbDelegate _kotor2GlProgramLocalParameter4fArb2_dup = null;
         
         // DAT_00840050 - glProgramLocalParameter4fvARB function pointer (duplicate)
-        private static GlProgramLocalParameter4fvArbDelegate _kotor2GlProgramLocalParameter4fvArb2 = null;
+        private static GlProgramLocalParameter4fvArbDelegate _kotor2GlProgramLocalParameter4fvArb2_dup = null;
         
         // DAT_008401d4 - glProgramLocalParameter4dvARB function pointer (duplicate)
-        private static GlProgramLocalParameter4dvArbDelegate _kotor2GlProgramLocalParameter4dvArb = null;
+        private static GlProgramLocalParameter4dvArbDelegate _kotor2GlProgramLocalParameter4dvArb_dup = null;
         
         #endregion
         

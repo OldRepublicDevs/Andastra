@@ -92,6 +92,7 @@
   <!-- Default to Library -->
   <PropertyGroup>
     <OutputType>Library</OutputType>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <!-- NuGet Package Configuration -->

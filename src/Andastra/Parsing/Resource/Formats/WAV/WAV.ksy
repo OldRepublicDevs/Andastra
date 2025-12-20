@@ -23,29 +23,21 @@ doc: |
   - vendor/PyKotor/wiki/WAV-File-Format.md
   - vendor/reone/src/libs/audio/format/wavreader.cpp:30-56
   - vendor/xoreos/src/sound/decoders/wave.cpp:34-84
-  - vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/wav/io_wav.py:112-220
 
 seq:
-  - id: first_magic_bytes
-    type: str
-    size: 4
-    doc: |
-      First 4 bytes used to detect file type
-      - 0xFF 0xF3 0x60 0xC4 = SFX header
-      - "RIFF" = Standard or VO header
-      Reference: vendor/reone/src/libs/audio/format/wavreader.cpp:34
+  - id: first_byte
+    type: u1
+    doc: First byte to detect header type (0xFF for SFX, 0x52 'R' for RIFF)
   
   - id: sfx_header
     type: sfx_header
-    if: first_magic_bytes[0] == 0xFF && first_magic_bytes[1] == 0xF3 && first_magic_bytes[2] == 0x60 && first_magic_bytes[3] == 0xC4
+    if: first_byte == 0xFF
     doc: 470-byte SFX obfuscation header (only present for SFX files)
   
   - id: vo_header
     type: vo_header
-    if: first_magic_bytes == "RIFF"
-    doc: |
-      20-byte VO header (only present for VO files)
-      VO files have "RIFF" at offset 0, then again at offset 20
+    if: first_byte == 0x52
+    doc: 20-byte VO header (only present for VO files)
   
   - id: riff_wave
     type: riff_wave
@@ -54,12 +46,24 @@ seq:
 types:
   sfx_header:
     seq:
-      - id: magic
-        type: str
-        size: 4
-        doc: |
-          SFX magic bytes: 0xFF 0xF3 0x60 0xC4
-          Reference: vendor/reone/src/libs/audio/format/wavreader.cpp:34
+      - id: magic_byte1
+        type: u1
+        doc: Magic byte 0xFF (already read as first_byte)
+      
+      - id: magic_byte2
+        type: u1
+        doc: Magic byte 0xF3
+        valid: 0xF3
+      
+      - id: magic_byte3
+        type: u1
+        doc: Magic byte 0x60
+        valid: 0x60
+      
+      - id: magic_byte4
+        type: u1
+        doc: Magic byte 0xC4
+        valid: 0xC4
       
       - id: padding
         type: str
@@ -71,12 +75,12 @@ types:
   
   vo_header:
     seq:
-      - id: magic
+      - id: magic_riff
         type: str
         encoding: ASCII
         size: 4
         doc: |
-          VO header magic: "RIFF" (repeated at offset 20)
+          VO header magic: "RIFF" (first byte already read as first_byte)
           Reference: vendor/PyKotor/src/pykotor/resource/formats/wav/wav_obfuscation.py:42-52
         valid: "RIFF"
       
@@ -151,39 +155,18 @@ types:
           Chunks are word-aligned (even byte boundaries)
           Reference: vendor/xoreos/src/sound/decoders/wave.cpp:66
       
-      - id: format_chunk_body
-        type: format_chunk_body
-        if: id == "fmt "
-        doc: Format chunk body (audio format parameters)
-      
-      - id: data_body
-        type: str
-        size: size
-        if: id == "data"
-        doc: |
-          Raw audio data (PCM samples or compressed audio)
-          Reference: vendor/xoreos/src/sound/decoders/wave.cpp:79-80
-      
-      - id: fact_chunk_body
-        type: fact_chunk_body
-        if: id == "fact"
-        doc: Fact chunk body (sample count for compressed formats)
-      
-      - id: unknown_body
-        type: str
-        size: size
-        if: id != "fmt " && id != "data" && id != "fact"
-        doc: |
-          Unknown chunk body (skip for compatibility)
-          Reference: vendor/xoreos/src/sound/decoders/wave.cpp:53-54
-      
-      - id: padding
-        type: u1
-        if: size % 2 == 1 && id != "fmt " && id != "data" && id != "fact"
-        doc: |
-          Padding byte to align to word boundary (only if chunk size is odd)
-          RIFF chunks must be aligned to 2-byte boundaries
-          Reference: vendor/PyKotor/src/pykotor/resource/formats/wav/io_wav.py:153-156
+      - id: body
+        type: chunk_body
+        doc: Chunk body (content depends on chunk ID)
+  
+  chunk_body:
+    switch-on: _parent.id
+    cases:
+      '"fmt "': format_chunk_body
+      '"data"': data_chunk_body
+      '"fact"': fact_chunk_body
+      _: unknown_chunk_body
+    doc: Chunk body type depends on chunk ID
   
   format_chunk_body:
     seq:
@@ -296,4 +279,3 @@ types:
           Padding byte to align to word boundary (only if chunk size is odd)
           RIFF chunks must be aligned to 2-byte boundaries
           Reference: vendor/PyKotor/src/pykotor/resource/formats/wav/io_wav.py:153-156
-

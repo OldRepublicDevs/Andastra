@@ -114,5 +114,31 @@ namespace Andastra.Parsing.Resource.Generics
 
             return gff;
         }
+
+        // Matching pattern from DLGHelper.ReadDlg
+        // Original: def read_utm(source: SOURCE_TYPES, offset: int = 0, size: int | None = None) -> UTM:
+        public static UTM ReadUtm(byte[] data, int offset = 0, int size = -1)
+        {
+            byte[] dataToRead = data;
+            if (size > 0 && offset + size <= data.Length)
+            {
+                dataToRead = new byte[size];
+                System.Array.Copy(data, offset, dataToRead, 0, size);
+            }
+            GFF gff = GFF.FromBytes(dataToRead);
+            return ConstructUtm(gff);
+        }
+
+        // Matching pattern from DLGHelper.BytesDlg
+        // Original: def bytes_utm(utm: UTM, game: Game = Game.K2, file_format: ResourceType = ResourceType.GFF, *, use_deprecated: bool = True) -> bytes:
+        public static byte[] BytesUtm(UTM utm, Game game = Game.K2, ResourceType fileFormat = null, bool useDeprecated = true)
+        {
+            if (fileFormat == null)
+            {
+                fileFormat = ResourceType.UTM;
+            }
+            GFF gff = DismantleUtm(utm, game, useDeprecated);
+            return GFFAuto.BytesGff(gff, fileFormat);
+        }
     }
 }

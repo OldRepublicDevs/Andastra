@@ -225,8 +225,9 @@ types:
     seq:
       - id: field_type
         type: u4
+        enum: gff_field_type
         doc: |
-          Field data type (see GFFFieldType enum):
+          Field data type (see gff_field_type enum):
           0 = Byte (UInt8)
           1 = Char (Int8)
           2 = UInt16
@@ -261,14 +262,49 @@ types:
             Struct index into struct_array
           For List type:
             Byte offset into list_indices array
+    instances:
+      is_simple_type:
+        value: (field_type.value >= 0 && field_type.value <= 5) || field_type.value == 8
+        doc: True if field stores data inline (simple types)
+      is_complex_type:
+        value: (field_type.value >= 6 && field_type.value <= 13) || (field_type.value >= 16 && field_type.value <= 17)
+        doc: True if field stores data in field_data section
+      is_struct_type:
+        value: field_type.value == 14
+        doc: True if field is a nested struct
+      is_list_type:
+        value: field_type.value == 15
+        doc: True if field is a list of structs
+      field_data_offset_value:
+        value: _root.gff_header.field_data_offset + data_or_offset
+        if: is_complex_type
+        doc: Absolute file offset to field data for complex types
+      struct_index_value:
+        value: data_or_offset
+        if: is_struct_type
+        doc: Struct index for struct type fields
+      list_indices_offset_value:
+        value: _root.gff_header.list_indices_offset + data_or_offset
+        if: is_list_type
+        doc: Absolute file offset to list indices for list type fields
   
   # Field Data Section
   field_data_section:
     seq:
-      - id: data
+      - id: raw_data
         type: str
         size: _root.gff_header.field_data_count
-        doc: Raw field data bytes for complex types
+        doc: |
+          Raw field data storage. Individual field data entries are accessed via
+          field_entry.field_data_offset_value offsets. The structure of each entry
+          depends on the field_type:
+          - UInt64/Int64/Double: 8 bytes
+          - String: 4-byte length (u4) + string bytes (ASCII)
+          - ResRef: 1-byte length (u1, max 16) + string bytes (ASCII, null-padded)
+          - LocalizedString: variable (see localized_string_data type)
+          - Binary: 4-byte length (u4) + binary bytes
+          - Vector3: 12 bytes (3×f4, little-endian)
+          - Vector4: 16 bytes (4×f4, little-endian)
   
   # Field Indices Array (MultiMap)
   field_indices_array:
@@ -282,9 +318,126 @@ types:
   # List Indices Array
   list_indices_array:
     seq:
-      - id: indices
+      - id: raw_data
+        type: str
+        size: _root.gff_header.list_indices_count
+        doc: |
+          Raw list indices data. List entries are accessed via offsets stored in
+          list-type field entries (field_entry.list_indices_offset_value).
+          Each entry starts with a count (u4), followed by that many struct indices (u4 each).
+          
+          Note: This is a raw data block. In practice, list entries are accessed via
+          offsets stored in list-type field entries, not as a sequential array.
+          Use list_entry type to parse individual entries at specific offsets.
+  
+  list_entry:
+    seq:
+      - id: count
+        type: u4
+        doc: Number of struct indices in this list
+      - id: struct_indices
         type: u4
         repeat: expr
-        repeat-expr: _root.gff_header.list_indices_count
-        doc: Array of list indices (uint32 values) for LIST type fields
+        repeat-expr: count
+        doc: Array of struct indices (indices into struct_array)
+
+enums:
+  gff_field_type:
+    0: uint8
+    doc: 8-bit unsigned integer (byte)
+    1: int8
+    doc: 8-bit signed integer (char)
+    2: uint16
+    doc: 16-bit unsigned integer (word)
+    3: int16
+    doc: 16-bit signed integer (short)
+    4: uint32
+    doc: 32-bit unsigned integer (dword)
+    5: int32
+    doc: 32-bit signed integer (int)
+    6: uint64
+    doc: 64-bit unsigned integer (stored in field_data)
+    7: int64
+    doc: 64-bit signed integer (stored in field_data)
+    8: single
+    doc: 32-bit floating point (float)
+    9: double
+    doc: 64-bit floating point (stored in field_data)
+    10: string
+    doc: Null-terminated string (CExoString, stored in field_data)
+    11: resref
+    doc: Resource reference (ResRef, max 16 chars, stored in field_data)
+    12: localized_string
+    doc: Localized string (CExoLocString, stored in field_data)
+    13: binary
+    doc: Binary data blob (Void, stored in field_data)
+    14: struct
+    doc: Nested struct (struct index stored inline)
+    15: list
+    doc: List of structs (offset to list_indices stored inline)
+    16: vector4
+    doc: Quaternion/Orientation (4×float, stored in field_data as Vector4)
+    17: vector3
+    doc: 3D vector (3×float, stored in field_data)
+
+types:
+  # Complex field data types (used when accessing field_data section)
+
+  localized_string_data:
+    seq:
+      - id: total_size
+        type: u4
+        doc: |
+          Total size of this LocalizedString structure in bytes (not including this count).
+          Used for skipping over the structure, but can be calculated from the data.
+      
+      - id: string_ref
+        type: u4
+        doc: |
+          String reference ID (StrRef) into dialog.tlk file.
+          Value 0xFFFFFFFF indicates no string reference (-1).
+      
+      - id: string_count
+        type: u4
+        doc: Number of language-specific string substrings
+      
+      - id: substrings
+        type: localized_substring
+        repeat: expr
+        repeat-expr: string_count
+        doc: Array of language-specific string substrings
+    instances:
+      string_ref_value:
+        value: string_ref == 0xFFFFFFFF ? -1 : string_ref
+        doc: String reference as signed integer (-1 if none)
+  
+  localized_substring:
+    seq:
+      - id: string_id
+        type: u4
+        doc: |
+          String ID encoding language and gender:
+          - Bits 0-7: Gender (0 = Male, 1 = Female)
+          - Bits 8-15: Language ID (see Language enum)
+          - Bits 16-31: Reserved/unused
+      
+      - id: string_length
+        type: u4
+        doc: Length of string data in bytes
+      
+      - id: string_data
+        type: str
+        size: string_length
+        encoding: UTF-8
+        doc: |
+          String data (encoding depends on language, but UTF-8 is common).
+          Trailing null bytes should be trimmed.
+    instances:
+      language_id:
+        value: (string_id >> 8) & 0xFF
+        doc: Language ID (extracted from string_id)
+      gender_id:
+        value: string_id & 0xFF
+        doc: Gender ID (0 = Male, 1 = Female)
+
 

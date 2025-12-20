@@ -29,7 +29,7 @@ Write-Host "[2/5] Checking GITKaitaiCompilerTests.cs..." -NoNewline
 $testFile = "src\Andastra\Tests\Formats\GITKaitaiCompilerTests.cs"
 if (Test-Path $testFile) {
     $testContent = Get-Content $testFile -Raw
-    if ($testContent -match "TestCompileGITToAllLanguages" -and 
+    if ($testContent -match "TestCompileGITToAllLanguages" -and
         $testContent -match "SupportedLanguages" -and
         $testContent -match "python.*java.*javascript") {
         # Count languages

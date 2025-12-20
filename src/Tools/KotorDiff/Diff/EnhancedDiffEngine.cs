@@ -2,7 +2,8 @@
 // Original: class EnhancedDiffEngine: ...
 using System;
 using KotorDiff.Diff.Objects;
-using KotorDiff.Formatters;
+// TODO: Formatters creates circular dependency - EnhancedDiffEngine needs to be moved or Formatters need to be in a shared location
+// using KotorDiff.Formatters;
 using JetBrains.Annotations;
 
 namespace KotorDiff.Diff
@@ -14,7 +15,8 @@ namespace KotorDiff.Diff
     public class EnhancedDiffEngine
     {
         private readonly StructuredDiffEngine _structuredEngine;
-        private readonly DiffFormatter _formatter;
+        // TODO: Formatters creates circular dependency - EnhancedDiffEngine needs to be moved or Formatters need to be in a shared location
+        // private readonly DiffFormatter _formatter;
 
         /// <summary>
         /// Initialize with format and output function.
@@ -25,7 +27,8 @@ namespace KotorDiff.Diff
             [CanBeNull] Action<string> outputFunc = null)
         {
             _structuredEngine = new StructuredDiffEngine();
-            _formatter = FormatterFactory.CreateFormatter(diffFormat, outputFunc);
+            // TODO: Formatters creates circular dependency - EnhancedDiffEngine needs to be moved or Formatters need to be in a shared location
+            // _formatter = FormatterFactory.CreateFormatter(diffFormat, outputFunc);
         }
 
         /// <summary>
@@ -109,7 +112,12 @@ namespace KotorDiff.Diff
             }
 
             // Format and output the result
-            _formatter.OutputDiff(diffResult);
+            // TODO: Formatters creates circular dependency - EnhancedDiffEngine needs to be moved or Formatters need to be in a shared location
+            // _formatter.OutputDiff(diffResult);
+            if (diffResult.ErrorMessage != null)
+            {
+                System.Console.WriteLine($"[Error] {diffResult.ErrorMessage}");
+            }
 
             // Return whether they're identical
             return !diffResult.IsDifferent;

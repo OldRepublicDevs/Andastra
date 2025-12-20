@@ -29,126 +29,134 @@ doc: |
     - WaypointList (List): Array of GITWaypoint structs (struct_id=5)
     - List (List, deprecated): Deprecated list field (KotOR 1 compatibility)
   
-  AreaProperties struct contains:
-  - AmbientSndDayVol (Int32): Day ambient sound volume
-  - AmbientSndDay (Int32): Day ambient sound ID
-  - AmbientSndNitVol (Int32): Night ambient sound volume
-  - AmbientSndNight (Int32): Night ambient sound ID
-  - EnvAudio (Int32): Environment audio ID
-  - MusicDay (Int32): Day music ID
-  - MusicNight (Int32): Night music ID
-  - MusicBattle (Int32): Battle music ID
-  - MusicDelay (Int32): Music delay in milliseconds
+  AreaProperties struct (struct_id=100) contains:
+  - AmbientSndDayVol (Int32): Day ambient sound volume (0-127, typically 50-100)
+  - AmbientSndDay (Int32): Day ambient sound ID (index into ambient sound tables, 0 = no sound)
+  - AmbientSndNitVol (Int32): Night ambient sound volume (0-127, typically matches day volume)
+  - AmbientSndNight (Int32): Night ambient sound ID (index into ambient sound tables, 0 = no sound)
+  - EnvAudio (Int32): Environment audio ID (reverb/echo type, 0 = no effect)
+  - MusicDay (Int32): Day music ID (index into ambientmusic.2da, 0 = no music)
+  - MusicNight (Int32): Night music ID (index into ambientmusic.2da, typically matches day, 0 = no music)
+  - MusicBattle (Int32): Battle music ID (index into musicbattle.2da, 0 = no battle music)
+  - MusicDelay (Int32): Music delay in milliseconds (delay before music starts playing, typically 0-5000)
   
   GITCamera (struct_id=14) contains:
-  - CameraID (Int32): Unique camera identifier
-  - FieldOfView (Single): Camera field of view in degrees
-  - Height (Single): Camera height
-  - MicRange (Single): Microphone range
-  - Orientation (Vector4): Camera orientation quaternion
-  - Position (Vector3): Camera position in 3D space
-  - Pitch (Single): Camera pitch angle
+  - CameraID (Int32): Unique camera identifier (must be unique per GIT file, typically 1, 2, 3, ...)
+  - FieldOfView (Single): Camera field of view in degrees (typically 30-90, default 45)
+  - Height (Single): Camera height offset in world units (typically 0.0-5.0)
+  - MicRange (Single): Microphone range for audio occlusion in world units (typically 0.0-50.0)
+  - Orientation (Vector4): Camera orientation quaternion (w, x, y, z components, normalized)
+  - Position (Vector3): Camera position in 3D space (world coordinates)
+  - Pitch (Single): Camera pitch angle in degrees (-90 to 90, typically -45 to 45)
   
   GITCreature (struct_id=4) contains:
-  - TemplateResRef (ResRef): Reference to creature template (UTC file)
-  - XPosition (Single): X coordinate
-  - YPosition (Single): Y coordinate
-  - ZPosition (Single): Z coordinate
-  - XOrientation (Single): X component of orientation vector
-  - YOrientation (Single): Y component of orientation vector
+  - TemplateResRef (ResRef): Reference to creature template (UTC file, max 16 characters)
+  - XPosition (Single): X coordinate in world space
+  - YPosition (Single): Y coordinate in world space
+  - ZPosition (Single): Z coordinate in world space (height/elevation)
+  - XOrientation (Single): X component of orientation vector (normalized, used with YOrientation to calculate bearing)
+  - YOrientation (Single): Y component of orientation vector (normalized, used with XOrientation to calculate bearing)
+  Note: Bearing is calculated as atan2(YOrientation, XOrientation) - π/2 radians
   
   GITDoor (struct_id=8) contains:
-  - TemplateResRef (ResRef): Reference to door template (UTD file)
-  - Bearing (Single): Door bearing/rotation angle
-  - Tag (String): Door tag identifier
-  - LinkedTo (String): Linked object tag
+  - TemplateResRef (ResRef): Reference to door template (UTD file, max 16 characters)
+  - Bearing (Single): Door bearing/rotation angle in radians (0 = north, π/2 = east, π = south, 3π/2 = west)
+  - Tag (String): Door tag identifier (used for scripting and linking, max 32 characters typically)
+  - LinkedTo (String): Linked object tag (target waypoint or door tag in destination module)
   - LinkedToFlags (Byte): Module link flags (0=NoLink, 1=ToDoor, 2=ToWaypoint)
-  - LinkedToModule (ResRef): Linked module reference
-  - TransitionDestin (LocalizedString): Transition destination name
-  - X (Single): X coordinate
-  - Y (Single): Y coordinate
-  - Z (Single): Z coordinate
-  - TweakColor (UInt32, KotOR 2 only): Color tweak value (BGR format)
-  - UseTweakColor (Byte, KotOR 2 only): Flag indicating if color tweak is used
+  - LinkedToModule (ResRef): Linked module reference (target module ResRef, max 16 characters)
+  - TransitionDestin (LocalizedString): Transition destination name (displayed on loading screen)
+  - X (Single): X coordinate in world space
+  - Y (Single): Y coordinate in world space
+  - Z (Single): Z coordinate in world space (height/elevation)
+  - TweakColor (UInt32, KotOR 2 only): Color tweak value in BGR format (0xBBGGRR, 0x000000 = no tint)
+  - UseTweakColor (Byte, KotOR 2 only): Flag indicating if color tweak is used (0 = false, 1 = true)
   
   GITEncounter (struct_id=7) contains:
-  - TemplateResRef (ResRef): Reference to encounter template (UTE file)
-  - XPosition (Single): X coordinate
-  - YPosition (Single): Y coordinate
-  - ZPosition (Single): Z coordinate
-  - Geometry (List): List of geometry points (struct_id=1)
-  - SpawnPointList (List): List of spawn points (struct_id=2)
+  - TemplateResRef (ResRef): Reference to encounter template (UTE file, max 16 characters)
+  - XPosition (Single): X coordinate of encounter center in world space
+  - YPosition (Single): Y coordinate of encounter center in world space
+  - ZPosition (Single): Z coordinate of encounter center in world space (height/elevation)
+  - Geometry (List): List of geometry points defining encounter trigger zone boundary (struct_id=1, minimum 3 points for triangle)
+  - SpawnPointList (List): List of spawn points where creatures appear (struct_id=2, can be empty)
   
   GITEncounterGeometry (struct_id=1) contains:
-  - X (Single): X coordinate of geometry point
-  - Y (Single): Y coordinate of geometry point
-  - Z (Single): Z coordinate of geometry point
+  - X (Single): X coordinate of geometry point in world space
+  - Y (Single): Y coordinate of geometry point in world space
+  - Z (Single): Z coordinate of geometry point in world space (typically same Z as encounter center)
+  Note: Geometry points form a polygon boundary. Points should be ordered (clockwise or counter-clockwise).
   
   GITEncounterSpawnPoint (struct_id=2) contains:
-  - X (Single): X coordinate of spawn point
-  - Y (Single): Y coordinate of spawn point
-  - Z (Single): Z coordinate of spawn point
-  - Orientation (Single): Spawn point orientation angle
+  - X (Single): X coordinate of spawn point in world space
+  - Y (Single): Y coordinate of spawn point in world space
+  - Z (Single): Z coordinate of spawn point in world space (height/elevation)
+  - Orientation (Single): Spawn point orientation angle in radians (0 = north, π/2 = east, π = south, 3π/2 = west)
   
   GITPlaceable (struct_id=9) contains:
-  - TemplateResRef (ResRef): Reference to placeable template (UTP file)
-  - Bearing (Single): Placeable bearing/rotation angle
-  - X (Single): X coordinate
-  - Y (Single): Y coordinate
-  - Z (Single): Z coordinate
-  - TweakColor (UInt32, KotOR 2 only): Color tweak value (BGR format)
-  - UseTweakColor (Byte, KotOR 2 only): Flag indicating if color tweak is used
+  - TemplateResRef (ResRef): Reference to placeable template (UTP file, max 16 characters)
+  - Bearing (Single): Placeable bearing/rotation angle in radians (0 = north, π/2 = east, π = south, 3π/2 = west)
+  - X (Single): X coordinate in world space
+  - Y (Single): Y coordinate in world space
+  - Z (Single): Z coordinate in world space (height/elevation)
+  - TweakColor (UInt32, KotOR 2 only): Color tweak value in BGR format (0xBBGGRR, 0x000000 = no tint)
+  - UseTweakColor (Byte, KotOR 2 only): Flag indicating if color tweak is used (0 = false, 1 = true)
   
   GITSound (struct_id=6) contains:
-  - TemplateResRef (ResRef): Reference to sound template (UTS file)
-  - GeneratedType (UInt32): Generated type identifier
-  - XPosition (Single): X coordinate
-  - YPosition (Single): Y coordinate
-  - ZPosition (Single): Z coordinate
+  - TemplateResRef (ResRef): Reference to sound template (UTS file, max 16 characters)
+  - GeneratedType (UInt32): Generated type identifier (typically 0, used by engine for sound generation)
+  - XPosition (Single): X coordinate of sound emitter in world space
+  - YPosition (Single): Y coordinate of sound emitter in world space
+  - ZPosition (Single): Z coordinate of sound emitter in world space (height/elevation)
+  Note: Sound emitters play 3D positional audio with distance-based volume falloff
   
   GITStore (struct_id=11) contains:
-  - ResRef (ResRef): Reference to store template (UTM file)
-  - XPosition (Single): X coordinate
-  - YPosition (Single): Y coordinate
-  - ZPosition (Single): Z coordinate
-  - XOrientation (Single): X component of orientation vector
-  - YOrientation (Single): Y component of orientation vector
+  - ResRef (ResRef): Reference to store template (UTM file, max 16 characters)
+  - XPosition (Single): X coordinate in world space (used for toolset display, not physical position)
+  - YPosition (Single): Y coordinate in world space (used for toolset display, not physical position)
+  - ZPosition (Single): Z coordinate in world space (used for toolset display, not physical position)
+  - XOrientation (Single): X component of orientation vector (normalized, used with YOrientation to calculate bearing)
+  - YOrientation (Single): Y component of orientation vector (normalized, used with XOrientation to calculate bearing)
+  Note: Stores don't have physical presence in the game world. Position is for toolset only.
+  Bearing is calculated as atan2(YOrientation, XOrientation) - π/2 radians
   
   GITTrigger (struct_id=1) contains:
-  - TemplateResRef (ResRef): Reference to trigger template (UTT file)
-  - XPosition (Single): X coordinate
-  - YPosition (Single): Y coordinate
-  - ZPosition (Single): Z coordinate
-  - XOrientation (Single): X component of orientation vector
-  - YOrientation (Single): Y component of orientation vector
-  - ZOrientation (Single): Z component of orientation vector
-  - Tag (String): Trigger tag identifier
-  - LinkedTo (String): Linked object tag
+  - TemplateResRef (ResRef): Reference to trigger template (UTT file, max 16 characters)
+  - XPosition (Single): X coordinate of trigger center in world space
+  - YPosition (Single): Y coordinate of trigger center in world space
+  - ZPosition (Single): Z coordinate of trigger center in world space (height/elevation)
+  - XOrientation (Single): X component of orientation vector (typically 0.0 for triggers)
+  - YOrientation (Single): Y component of orientation vector (typically 0.0 for triggers)
+  - ZOrientation (Single): Z component of orientation vector (typically 0.0 for triggers)
+  - Tag (String): Trigger tag identifier (used for scripting, max 32 characters typically)
+  - LinkedTo (String): Linked object tag (target waypoint or door tag in destination module)
   - LinkedToFlags (Byte): Module link flags (0=NoLink, 1=ToDoor, 2=ToWaypoint)
-  - LinkedToModule (ResRef): Linked module reference
-  - TransitionDestin (LocalizedString): Transition destination name
-  - Geometry (List): List of geometry points (struct_id=3)
+  - LinkedToModule (ResRef): Linked module reference (target module ResRef, max 16 characters)
+  - TransitionDestin (LocalizedString): Transition destination name (displayed on loading screen)
+  - Geometry (List): List of geometry points defining trigger volume boundary (struct_id=3, minimum 3 points for triangle)
   
   GITTriggerGeometry (struct_id=3) contains:
-  - PointX (Single): X coordinate of geometry point
-  - PointY (Single): Y coordinate of geometry point
-  - PointZ (Single): Z coordinate of geometry point
+  - PointX (Single): X coordinate of geometry point in world space
+  - PointY (Single): Y coordinate of geometry point in world space
+  - PointZ (Single): Z coordinate of geometry point in world space (typically same Z as trigger center)
+  Note: Geometry points form a polygon boundary. Points should be ordered (clockwise or counter-clockwise).
+  Triggers fire scripts when objects enter/exit the geometry volume.
   
   GITWaypoint (struct_id=5) contains:
-  - TemplateResRef (ResRef): Reference to waypoint template (UTW file)
-  - LocalizedName (LocalizedString): Waypoint display name
-  - Tag (String): Waypoint tag identifier
-  - XPosition (Single): X coordinate
-  - YPosition (Single): Y coordinate
-  - ZPosition (Single): Z coordinate
-  - XOrientation (Single): X component of orientation vector
-  - YOrientation (Single): Y component of orientation vector
-  - MapNoteEnabled (Byte): Flag indicating if map note is enabled
-  - HasMapNote (Byte): Flag indicating if map note exists
-  - MapNote (LocalizedString): Map note text (only if HasMapNote is true)
-  - Appearance (Byte, deprecated): Appearance flag (KotOR 1 compatibility)
-  - Description (LocalizedString, deprecated): Description (KotOR 1 compatibility)
-  - LinkedTo (String, deprecated): Linked object tag (KotOR 1 compatibility)
+  - TemplateResRef (ResRef): Reference to waypoint template (UTW file, max 16 characters)
+  - LocalizedName (LocalizedString): Waypoint display name (shown on map and in conversations)
+  - Tag (String): Waypoint tag identifier (used for scripting and pathfinding, max 32 characters typically)
+  - XPosition (Single): X coordinate in world space
+  - YPosition (Single): Y coordinate in world space
+  - ZPosition (Single): Z coordinate in world space (height/elevation)
+  - XOrientation (Single): X component of orientation vector (normalized, used with YOrientation to calculate bearing)
+  - YOrientation (Single): Y component of orientation vector (normalized, used with XOrientation to calculate bearing)
+  - MapNoteEnabled (Byte): Flag indicating if map note is enabled (0 = disabled, 1 = enabled)
+  - HasMapNote (Byte): Flag indicating if map note exists (0 = no note, 1 = has note)
+  - MapNote (LocalizedString): Map note text (only present if HasMapNote is true, displayed on map)
+  - Appearance (Byte, deprecated): Appearance flag (KotOR 1 compatibility, typically 1)
+  - Description (LocalizedString, deprecated): Description (KotOR 1 compatibility, typically invalid)
+  - LinkedTo (String, deprecated): Linked object tag (KotOR 1 compatibility, typically empty)
+  Note: Bearing is calculated as atan2(YOrientation, XOrientation) - π/2 radians. If both XOrientation and YOrientation are 0, bearing defaults to 0.
   
   References:
   - vendor/PyKotor/wiki/GFF-File-Format.md
@@ -579,4 +587,5 @@ enums:
     doc: Quaternion/Orientation (4×float, stored in field_data as Vector4)
     17: vector3
     doc: 3D vector (3×float, stored in field_data)
+
 

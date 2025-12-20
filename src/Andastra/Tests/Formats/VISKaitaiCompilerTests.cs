@@ -13,7 +13,7 @@ namespace Andastra.Parsing.Tests.Formats
     /// <summary>
     /// Comprehensive tests for Kaitai Struct compiler functionality with VIS.ksy.
     /// Tests compilation to multiple target languages and verifies compiler output.
-    /// 
+    ///
     /// Tests validate that VIS.ksy compiles correctly to at least a dozen languages
     /// and that the generated parsers correctly parse VIS files.
     /// </summary>
@@ -251,10 +251,10 @@ namespace Andastra.Parsing.Tests.Formats
             var successful = results.Where(r => r.Value.Success).ToList();
             var failed = results.Where(r => !r.Value.Success).ToList();
 
-            // At least some languages should compile successfully
+            // At least 12 languages should compile successfully (as required)
             // (We allow some failures as not all languages may be fully supported in all environments)
-            successful.Count.Should().BeGreaterThan(0,
-                $"At least one language should compile successfully. Failed: {string.Join(", ", failed.Select(f => $"{f.Key}: {f.Value.ErrorMessage}"))}");
+            successful.Count.Should().BeGreaterThanOrEqualTo(12,
+                $"At least 12 languages should compile successfully (got {successful.Count}). Failed: {string.Join(", ", failed.Select(f => $"{f.Key}: {f.Value.ErrorMessage}"))}");
 
             // Log successful compilations
             foreach (var success in successful)
@@ -403,7 +403,7 @@ namespace Andastra.Parsing.Tests.Formats
             if (!result.Success)
             {
                 // Check if it's a known limitation vs actual error
-                if (result.ErrorMessage?.Contains("not supported") == true || 
+                if (result.ErrorMessage?.Contains("not supported") == true ||
                     result.ErrorMessage?.Contains("unsupported") == true)
                 {
                     Assert.True(true, $"Language {language} not supported by compiler: {result.ErrorMessage}");
