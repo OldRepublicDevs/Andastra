@@ -720,7 +720,7 @@ namespace HolocronToolset.Editors
 
             var dialog = new GoToLineDialog(currentLine, totalLines);
             dialog.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-            
+
             // Set parent window if available
             var parentWindow = TopLevel.GetTopLevel(this) as Window;
             if (parentWindow != null)
