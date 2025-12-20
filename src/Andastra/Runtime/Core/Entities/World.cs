@@ -94,6 +94,7 @@ namespace Andastra.Runtime.Core.Entities
             TriggerSystem = new TriggerSystem(this);
             AIController = new AIController(this, CombatSystem);
             AnimationSystem = new AnimationSystem(this);
+            AppearAnimationFadeSystem = new AppearAnimationFadeSystem(this);
             // ModuleTransitionSystem will be initialized when SaveSystem and ModuleLoader are available
             ModuleTransitionSystem = null;
         }
@@ -254,6 +255,7 @@ namespace Andastra.Runtime.Core.Entities
         public TriggerSystem TriggerSystem { get; }
         public AIController AIController { get; }
         public AnimationSystem AnimationSystem { get; }
+        public AppearAnimationFadeSystem AppearAnimationFadeSystem { get; }
         public ModuleTransitionSystem ModuleTransitionSystem { get; }
         /// <summary>
         /// The game data provider for accessing engine-agnostic game data tables.
@@ -537,6 +539,9 @@ namespace Andastra.Runtime.Core.Entities
 
             // Update animation system
             AnimationSystem.Update(deltaTime);
+            
+            // Update appear animation fade system
+            AppearAnimationFadeSystem.Update(deltaTime);
 
             // Update combat system
             CombatSystem.Update(deltaTime);

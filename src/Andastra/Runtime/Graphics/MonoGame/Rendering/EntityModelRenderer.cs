@@ -214,6 +214,13 @@ namespace Andastra.Runtime.MonoGame.Rendering
                 effect.VertexColorEnabled = false;
                 effect.TextureEnabled = true;
                 effect.LightingEnabled = true;
+                
+                // Apply opacity from renderable component for fade-in/fade-out effects
+                // Based on swkotor2.exe: FadeTime @ 0x007c60ec (fade duration), alpha blending for entity rendering
+                // Opacity is updated by AppearAnimationFadeSystem for appear animations
+                // Opacity is updated by ActionDestroyObject for destroy animations
+                float opacity = renderable.Opacity;
+                effect.Alpha = opacity;
 
                 // Render mesh
                 foreach (EffectPass pass in effect.CurrentTechnique.Passes)
