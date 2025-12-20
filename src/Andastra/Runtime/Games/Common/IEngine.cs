@@ -83,7 +83,7 @@ namespace Andastra.Runtime.Engines.Common
     ///      * Pattern: All use abstract CreateResourceProvider() method implemented in subclasses
     ///    - Game Session Creation:
     ///      * Odyssey: Returns OdysseyGameSession instance
-    ///      * Aurora: Returns AuroraGameSession instance (TODO: not yet implemented)
+    ///      * Aurora: Returns AuroraGameSession instance
     ///      * Eclipse: Returns EclipseGameSession instance (abstract, game-specific subclasses)
     ///      * Pattern: All use abstract CreateGameSession() method implemented in subclasses
     ///    - Constructor Parameters:
