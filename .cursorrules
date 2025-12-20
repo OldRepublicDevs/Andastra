@@ -70,6 +70,12 @@ AI agents MUST maintain proper file organization in the repository root:
 
 **When creating or moving files, always verify they are in the correct location according to these rules.**
 
+## Cross-Platform Target Framework Requirements
+
+**CRITICAL: NEVER use platform-specific TFMs like `net9.0-windows`, `net9.0-linux`, or `net9.0-macos`.**
+
+All projects MUST use platform-agnostic TFMs (e.g., `net9.0`, `net8.0`) to ensure cross-platform compatibility. The codebase requires cross-platform solutions exclusively.
+
 ## C# Language Version Requirements
 
 **CRITICAL: The maximum C# language version allowed is 7.3. NEVER upgrade to C# 8.0 or higher.**
