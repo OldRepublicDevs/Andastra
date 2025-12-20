@@ -319,7 +319,7 @@ namespace Andastra.Parsing.Tests.Formats
         {
             // Basic validation
             pcc.Should().NotBeNull();
-            pcc.PackageType.Should().NotBeNull();
+            pcc.PackageType.Should().BeDefined("Package type should be a valid enum value");
             pcc.Count.Should().BeGreaterThanOrEqualTo(0);
         }
 
