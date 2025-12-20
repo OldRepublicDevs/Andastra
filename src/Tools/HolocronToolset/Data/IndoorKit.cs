@@ -12,10 +12,71 @@ using Andastra.Parsing.Formats.MDL;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Logger;
+using Andastra.Parsing.Resource.Formats.GFF.Generics;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Vector3 = System.Numerics.Vector3;
 
 namespace HolocronToolset.Data
 {
+    /// <summary>
+    /// Represents a "kit" - a collection of reusable building blocks for creating indoor modules.
+    /// Kits contain components (rooms), doors, textures, lightmaps, and other assets that can be
+    /// assembled to build complete game areas.
+    /// </summary>
+    /// <remarks>
+    /// WHAT IS A KIT?
+    /// 
+    /// A kit is like a box of LEGO pieces for building game levels. Instead of building rooms from
+    /// scratch every time, you can use pre-made room pieces (components) from a kit. Each kit
+    /// contains:
+    /// 
+    /// 1. COMPONENTS: Pre-made room pieces that can be placed in the indoor map builder.
+    ///    - Each component has a 3D model (MDL/MDX files), a walkmesh (BWM), and a preview image
+    ///    - Components can be rotated, flipped, and positioned anywhere in the map
+    ///    - Components have "hooks" (connection points) where doors can be placed
+    /// 
+    /// 2. DOORS: Door templates that can be placed at component hooks.
+    ///    - Each door has a width, height, and door definition (UTD)
+    ///    - Doors connect components together, allowing characters to move between rooms
+    /// 
+    /// 3. TEXTURES: Image files used to texture the 3D models.
+    ///    - Stored as TPC (texture) files
+    ///    - Applied to component models during rendering
+    /// 
+    /// 4. LIGHTMAPS: Pre-computed lighting data for components.
+    ///    - Lightmaps make rooms look realistic by adding shadows and lighting
+    ///    - Stored as TPC files
+    /// 
+    /// 5. TXIS: Texture information files that describe how textures should be applied.
+    /// 
+    /// 6. ALWAYS: Resources that are always included in modules built from this kit.
+    /// 
+    /// 7. SIDE/TOP PADDING: Additional model pieces used to fill gaps between components.
+    /// 
+    /// 8. SKYBOXES: Background images that appear outside the module.
+    /// 
+    /// HOW KITS ARE USED:
+    /// 
+    /// When building an indoor module:
+    /// 1. Load a kit (or create one from an existing module)
+    /// 2. Select components from the kit
+    /// 3. Place components in the map builder, rotating/flipping as needed
+    /// 4. Connect components using doors at hook points
+    /// 5. The builder combines all component walkmeshes into one navigation mesh
+    /// 6. The builder combines all component models into one 3D scene
+    /// 
+    /// KITS FROM MODULES:
+    /// 
+    /// Kits can be extracted from existing game modules. The ModuleKit class loads a module file
+    /// (.rim or .mod), extracts all rooms as components, and creates a kit from them. This allows
+    /// you to reuse rooms from existing game areas in your own modules.
+    /// 
+    /// ORIGINAL IMPLEMENTATION:
+    /// 
+    /// Based on PyKotor's Kit class. Kits are a standard feature of the Aurora engine's module
+    /// building system, allowing level designers to create modular, reusable room pieces.
+    /// </remarks>
     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit.py:24
     // Original: class Kit:
     public class Kit
@@ -48,8 +109,41 @@ namespace HolocronToolset.Data
         public Dictionary<string, MDLMDXTuple> Skyboxes { get; set; }
     }
 
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit.py:38
-    // Original: class KitComponent:
+    /// <summary>
+    /// A KitComponent represents a single room that can be placed in the Indoor Map Builder.
+    /// 
+    /// WHAT IS A KIT COMPONENT?
+    /// 
+    /// A KitComponent is a reusable room template. It contains all the data needed to place
+    /// a room in an indoor module:
+    /// - Bwm: The walkmesh (BWM) that defines where characters can walk
+    /// - Mdl/Mdx: The 3D model files that define the visual appearance
+    /// - Image: A preview image (top-down view) used in the editor
+    /// - Hooks: Connection points where doors can be placed
+    /// 
+    /// HOW DOES IT WORK?
+    /// 
+    /// When a component is created:
+    /// 1. The walkmesh (BWM) is loaded from the module or kit
+    /// 2. If the walkmesh is missing or empty, a placeholder walkmesh is created (10x10 unit square)
+    /// 3. The walkmesh is deep-copied so each component instance has its own walkmesh
+    /// 4. The walkmesh is re-centered at the origin (0, 0, 0) so the preview image aligns correctly
+    /// 5. A preview image is generated from the walkmesh (white for walkable, gray for non-walkable)
+    /// 6. Door hooks are extracted from the walkmesh edges that have transitions
+    /// 
+    /// DEEP COPYING:
+    /// 
+    /// When DeepCopy() is called, a new KitComponent is created with:
+    /// - A deep copy of the BWM (all faces and their materials are copied)
+    /// - A copy of the MDL/MDX byte arrays
+    /// - New hook instances (so hooks can be edited independently)
+    /// 
+    /// CRITICAL: The Material property of each face is preserved during deep copying. This ensures
+    /// that walkability is maintained when components are used in multiple rooms.
+    /// 
+    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit.py:38
+    /// Original: class KitComponent:
+    /// </summary>
     public class KitComponent
     {
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit.py:39-47
@@ -787,6 +881,229 @@ namespace HolocronToolset.Data
         {
             _cache.Clear();
             _moduleNames = null;
+        }
+    }
+
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit.py:71-180
+    // Original: def load_kits(path: os.PathLike | str) -> list[Kit]:
+    public static class KitLoader
+    {
+        public static List<Kit> LoadKits(string path)
+        {
+            var kits = new List<Kit>();
+
+            var kitsPath = new DirectoryInfo(path);
+            if (!kitsPath.Exists)
+            {
+                kitsPath.Create();
+            }
+
+            foreach (var file in kitsPath.GetFiles("*.json"))
+            {
+                try
+                {
+                    string jsonContent = File.ReadAllText(file.FullName);
+                    var kitJson = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonContent);
+                    string kitName = kitJson["name"].ToString();
+                    var kit = new Kit(kitName);
+                    string kitIdentifier = kitJson["id"].ToString();
+
+                    // Load always resources
+                    var alwaysPath = Path.Combine(kitsPath.FullName, kitIdentifier, "always");
+                    if (Directory.Exists(alwaysPath))
+                    {
+                        foreach (var alwaysFile in new DirectoryInfo(alwaysPath).GetFiles())
+                        {
+                            kit.Always[alwaysFile.FullName] = File.ReadAllBytes(alwaysFile.FullName);
+                        }
+                    }
+
+                    // Load textures
+                    var texturesPath = Path.Combine(kitsPath.FullName, kitIdentifier, "textures");
+                    if (Directory.Exists(texturesPath))
+                    {
+                        foreach (var textureFile in new DirectoryInfo(texturesPath).GetFiles("*.tga"))
+                        {
+                            string texture = textureFile.Name.Replace(".tga", "").ToUpperInvariant();
+                            kit.Textures[texture] = File.ReadAllBytes(textureFile.FullName);
+                            var txiPath = Path.Combine(texturesPath, $"{texture}.txi");
+                            kit.Txis[texture] = File.Exists(txiPath) ? File.ReadAllBytes(txiPath) : new byte[0];
+                        }
+                    }
+
+                    // Load lightmaps
+                    var lightmapsPath = Path.Combine(kitsPath.FullName, kitIdentifier, "lightmaps");
+                    if (Directory.Exists(lightmapsPath))
+                    {
+                        foreach (var lightmapFile in new DirectoryInfo(lightmapsPath).GetFiles("*.tga"))
+                        {
+                            string lightmap = lightmapFile.Name.Replace(".tga", "").ToUpperInvariant();
+                            kit.Lightmaps[lightmap] = File.ReadAllBytes(lightmapFile.FullName);
+                            var txiPath = Path.Combine(lightmapsPath, $"{lightmap}.txi");
+                            kit.Txis[lightmap] = File.Exists(txiPath) ? File.ReadAllBytes(txiPath) : new byte[0];
+                        }
+                    }
+
+                    // Load skyboxes
+                    var skyboxesPath = Path.Combine(kitsPath.FullName, kitIdentifier, "skyboxes");
+                    if (Directory.Exists(skyboxesPath))
+                    {
+                        foreach (var skyboxFile in new DirectoryInfo(skyboxesPath).GetFiles("*.mdl"))
+                        {
+                            string skyboxResref = skyboxFile.Name.Replace(".mdl", "").ToUpperInvariant();
+                            var mdxPath = Path.Combine(skyboxesPath, $"{skyboxResref}.mdx");
+                            byte[] mdl = File.ReadAllBytes(skyboxFile.FullName);
+                            byte[] mdx = File.Exists(mdxPath) ? File.ReadAllBytes(mdxPath) : new byte[0];
+                            kit.Skyboxes[skyboxResref] = new MDLMDXTuple(mdl, mdx);
+                        }
+                    }
+
+                    // Load doorway padding
+                    var doorwayPath = Path.Combine(kitsPath.FullName, kitIdentifier, "doorway");
+                    if (Directory.Exists(doorwayPath))
+                    {
+                        foreach (var paddingFile in new DirectoryInfo(doorwayPath).GetFiles("*.mdl"))
+                        {
+                            string paddingId = paddingFile.Name.Replace(".mdl", "");
+                            var mdxPath = Path.Combine(doorwayPath, $"{paddingId}.mdx");
+                            byte[] mdl = File.ReadAllBytes(paddingFile.FullName);
+                            byte[] mdx = File.Exists(mdxPath) ? File.ReadAllBytes(mdxPath) : new byte[0];
+
+                            // Extract door ID and padding size from filename (e.g., "side0_100.mdl" -> doorId=0, paddingSize=100)
+                            var nums = GetNums(paddingId);
+                            if (nums.Count >= 2)
+                            {
+                                int doorId = nums[0];
+                                int paddingSize = nums[1];
+
+                                if (paddingId.ToLowerInvariant().StartsWith("side"))
+                                {
+                                    if (!kit.SidePadding.ContainsKey(doorId))
+                                    {
+                                        kit.SidePadding[doorId] = new Dictionary<int, MDLMDXTuple>();
+                                    }
+                                    kit.SidePadding[doorId][paddingSize] = new MDLMDXTuple(mdl, mdx);
+                                }
+                                if (paddingId.ToLowerInvariant().StartsWith("top"))
+                                {
+                                    if (!kit.TopPadding.ContainsKey(doorId))
+                                    {
+                                        kit.TopPadding[doorId] = new Dictionary<int, MDLMDXTuple>();
+                                    }
+                                    kit.TopPadding[doorId][paddingSize] = new MDLMDXTuple(mdl, mdx);
+                                }
+                            }
+                        }
+                    }
+
+                    // Load doors
+                    var doorsArray = (Newtonsoft.Json.Linq.JArray)kitJson["doors"];
+                    foreach (var doorJson in doorsArray)
+                    {
+                        var doorDict = (Newtonsoft.Json.Linq.JObject)doorJson;
+                        string utdK1Path = Path.Combine(kitsPath.FullName, kitIdentifier, $"{doorDict["utd_k1"]}.utd");
+                        string utdK2Path = Path.Combine(kitsPath.FullName, kitIdentifier, $"{doorDict["utd_k2"]}.utd");
+                        var utdK1 = ResourceAutoHelpers.ReadUtd(File.ReadAllBytes(utdK1Path));
+                        var utdK2 = ResourceAutoHelpers.ReadUtd(File.ReadAllBytes(utdK2Path));
+                        float width = Convert.ToSingle(doorDict["width"]);
+                        float height = Convert.ToSingle(doorDict["height"]);
+                        var door = new KitDoor(utdK1, utdK2, width, height);
+                        kit.Doors.Add(door);
+                    }
+
+                    // Load components
+                    var componentsArray = (Newtonsoft.Json.Linq.JArray)kitJson["components"];
+                    foreach (var componentJson in componentsArray)
+                    {
+                        var componentDict = (Newtonsoft.Json.Linq.JObject)componentJson;
+                        string name = componentDict["name"].ToString();
+                        string componentIdentifier = componentDict["id"].ToString();
+
+                        // Load component image (PNG)
+                        string imagePath = Path.Combine(kitsPath.FullName, kitIdentifier, $"{componentIdentifier}.png");
+                        object image = null;
+                        if (File.Exists(imagePath))
+                        {
+                            // TODO: Load image using Avalonia image loading
+                            // For now, store path as placeholder
+                            image = imagePath;
+                        }
+
+                        // Load BWM
+                        string bwmPath = Path.Combine(kitsPath.FullName, kitIdentifier, $"{componentIdentifier}.wok");
+                        var bwm = BWMAuto.ReadBwm(File.ReadAllBytes(bwmPath));
+
+                        // Load MDL/MDX
+                        string mdlPath = Path.Combine(kitsPath.FullName, kitIdentifier, $"{componentIdentifier}.mdl");
+                        string mdxPath = Path.Combine(kitsPath.FullName, kitIdentifier, $"{componentIdentifier}.mdx");
+                        byte[] mdl = File.ReadAllBytes(mdlPath);
+                        byte[] mdx = File.Exists(mdxPath) ? File.ReadAllBytes(mdxPath) : new byte[0];
+
+                        var component = new KitComponent(kit, name, image, bwm, mdl, mdx);
+
+                        // Load doorhooks
+                        var doorhooksArray = (Newtonsoft.Json.Linq.JArray)componentDict["doorhooks"];
+                        foreach (var hookJson in doorhooksArray)
+                        {
+                            var hookDict = (Newtonsoft.Json.Linq.JObject)hookJson;
+                            var position = new Vector3(
+                                Convert.ToSingle(hookDict["x"]),
+                                Convert.ToSingle(hookDict["y"]),
+                                Convert.ToSingle(hookDict["z"])
+                            );
+                            float rotation = Convert.ToSingle(hookDict["rotation"]);
+                            int doorIndex = Convert.ToInt32(hookDict["door"]);
+                            var door = kit.Doors[doorIndex];
+                            int edge = Convert.ToInt32(hookDict["edge"]);
+                            var hook = new KitComponentHook(position, rotation, edge, door);
+                            component.Hooks.Add(hook);
+                        }
+
+                        kit.Components.Add(component);
+                    }
+
+                    kits.Add(kit);
+                }
+                catch (Exception ex)
+                {
+                    new RobustLogger().Warning($"Failed to load kit from '{file.FullName}': {ex.Message}");
+                }
+            }
+
+            return kits;
+        }
+
+        // Helper method to extract numbers from a string (matching PyKotor get_nums utility)
+        private static List<int> GetNums(string text)
+        {
+            var nums = new List<int>();
+            var currentNum = new System.Text.StringBuilder();
+            foreach (char c in text)
+            {
+                if (char.IsDigit(c))
+                {
+                    currentNum.Append(c);
+                }
+                else
+                {
+                    if (currentNum.Length > 0)
+                    {
+                        if (int.TryParse(currentNum.ToString(), out int num))
+                        {
+                            nums.Add(num);
+                        }
+                        currentNum.Clear();
+                    }
+                }
+            }
+            if (currentNum.Length > 0)
+            {
+                if (int.TryParse(currentNum.ToString(), out int num))
+                {
+                    nums.Add(num);
+                }
+            }
+            return nums;
         }
     }
 }

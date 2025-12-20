@@ -1472,29 +1472,26 @@ namespace Andastra.Parsing.Formats.BWM
         }
 
         /// <summary>
-        /// Flips (mirrors) all vertices of the walkmesh along the X and/or Y axes.
+        /// Flips the walkmesh along the X axis, Y axis, or both axes.
         /// 
         /// WHAT THIS FUNCTION DOES:
         /// 
-        /// This function flips (mirrors) every vertex in the walkmesh along the specified axes.
-        /// It's like looking at the walkmesh in a mirror.
+        /// This function flips (mirrors) the walkmesh by negating coordinates. If x is true, all
+        /// X coordinates are negated (flipped horizontally). If y is true, all Y coordinates are
+        /// negated (flipped vertically). Z coordinates (height) are never changed.
         /// 
         /// HOW IT WORKS:
         /// 
-        /// For each vertex:
-        /// - If x is true: new X = -old X (flip along Y-axis, mirror left/right)
-        /// - If y is true: new Y = -old Y (flip along X-axis, mirror front/back)
-        /// - Z stays the same (height doesn't change)
+        /// For each triangle in the walkmesh:
+        /// - If x is true: new V1.X = -V1.X, new V2.X = -V2.X, new V3.X = -V3.X
+        /// - If y is true: new V1.Y = -V1.Y, new V2.Y = -V2.Y, new V3.Y = -V3.Y
         /// 
-        /// FIXING FACE NORMALS:
+        /// FACE NORMAL CORRECTION:
         /// 
-        /// After flipping, if we flipped along only one axis (x != y), we need to fix the face normals.
-        /// Face normals determine which side of the triangle is "up" and which is "down". When we flip
-        /// along one axis, the normal points in the wrong direction, so we need to swap two vertices
-        /// of each triangle to fix it.
-        /// 
-        /// The fix: Swap V1 and V3 for each triangle. This reverses the triangle's winding order,
-        /// which flips the normal direction.
+        /// If exactly one axis is flipped (x != y), the function also reverses the vertex order
+        /// of each face by swapping V1 and V3. This is necessary because flipping along one axis
+        /// reverses the triangle's winding order, which would make the face normal point in the
+        /// wrong direction. The normal must always point upward (positive Z) for walkable faces.
         /// 
         /// OPTIMIZATION:
         /// 
@@ -1504,14 +1501,18 @@ namespace Andastra.Parsing.Formats.BWM
         /// 
         /// USAGE:
         /// 
-        /// This is commonly used when placing room walkmeshes in a module. Rooms can be flipped to
-        /// create mirror images, and their walkmeshes need to be flipped to match.
+        /// This is commonly used when placing room walkmeshes in a module. Rooms can be flipped
+        /// horizontally or vertically to create mirror images, and the walkmesh must be flipped
+        /// to match.
+        /// 
+        /// CRITICAL: This function only modifies vertex positions. The Material property of each
+        /// face is preserved. This ensures that walkability is maintained after flipping.
         /// 
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bwm/bwm_data.py:1369-1394
         /// Original: def flip(self, x: bool, y: bool)
         /// </summary>
-        /// <param name="x">If true, flip along the Y-axis (mirror left/right)</param>
-        /// <param name="y">If true, flip along the X-axis (mirror front/back)</param>
+        /// <param name="x">If true, flip along the X axis (horizontal flip)</param>
+        /// <param name="y">If true, flip along the Y axis (vertical flip)</param>
         public void Flip(bool x, bool y)
         {
             if (!x && !y)
