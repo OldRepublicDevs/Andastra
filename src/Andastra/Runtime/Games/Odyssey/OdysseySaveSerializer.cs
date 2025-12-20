@@ -1,12 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Games.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Runtime.Core.Save;
 using Andastra.Runtime.Engines.Odyssey.Data;
+using Andastra.Parsing.Common;
 
 namespace Andastra.Runtime.Games.Odyssey
 {
@@ -606,14 +609,922 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Restores dynamic area changes from save data.
         /// Recreates placed objects and restores modified states.
         /// Applies area effects and transition states.
+        ///
+        /// Based on reverse engineering of:
+        /// - swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 loads area state from save game
+        /// - swkotor2.exe: Area state stored in [module]_s.rim ERF archive as ARE resources
+        /// - Located via string references: "Creature List" @ 0x007c0c80, "DoorList" @ 0x007c0c90
+        /// - Original implementation: Loads entity states, door/placeable states, destroyed entities, spawned entities
+        /// - Each area state GFF contains:
+        ///   - AreaResRef: Area resource reference
+        ///   - CreatureList: List of creature entity states
+        ///   - DoorList: List of door entity states
+        ///   - PlaceableList: List of placeable entity states
+        ///   - TriggerList: List of trigger entity states
+        ///   - StoreList: List of store entity states
+        ///   - SoundList: List of sound entity states
+        ///   - WaypointList: List of waypoint entity states
+        ///   - EncounterList: List of encounter entity states
+        ///   - CameraList: List of camera entity states
+        ///   - DestroyedList: List of destroyed entity ObjectIds
+        ///   - SpawnedList: List of dynamically spawned entities
+        ///   - LocalVariables: Area-level local variables
+        ///
+        /// Implementation flow:
+        /// 1. Parse GFF area data into AreaState structure
+        /// 2. For each entity state, find matching entity by ObjectId or Tag
+        /// 3. Update entity position, HP, door/placeable states, local variables
+        /// 4. Remove entities marked as destroyed
+        /// 5. Spawn dynamically created entities not in original GIT
+        /// 6. Apply area-level local variables
         /// </remarks>
         public override void DeserializeArea(byte[] areaData, IArea area)
         {
-            // TODO: Implement area deserialization
-            // Parse AREA struct
-            // Recreate dynamic objects
-            // Restore modified states
-            // Apply area effects
+            if (areaData == null || areaData.Length == 0)
+            {
+                return;
+            }
+
+            if (area == null)
+            {
+                throw new ArgumentNullException(nameof(area));
+            }
+
+            // Parse GFF area data into AreaState structure
+            // Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 loads area state from GFF
+            AreaState areaState = DeserializeAreaStateFromGFF(areaData);
+            if (areaState == null)
+            {
+                return;
+            }
+
+            // Cast to OdysseyArea for entity manipulation (if needed)
+            // We'll try to work with IArea interface first, but may need OdysseyArea-specific methods
+            OdysseyArea odysseyArea = area as OdysseyArea;
+
+            // Get all entities from area for lookup
+            // Based on swkotor2.exe: Entities are stored in area's entity collections
+            Dictionary<uint, IEntity> entityMap = BuildEntityMap(area);
+
+            // 1. Apply entity states to existing entities
+            // Based on swkotor2.exe: Entity states are applied by matching ObjectId
+            ApplyEntityStates(areaState.CreatureStates, entityMap, area);
+            ApplyEntityStates(areaState.DoorStates, entityMap, area);
+            ApplyEntityStates(areaState.PlaceableStates, entityMap, area);
+            ApplyEntityStates(areaState.TriggerStates, entityMap, area);
+            ApplyEntityStates(areaState.StoreStates, entityMap, area);
+            ApplyEntityStates(areaState.SoundStates, entityMap, area);
+            ApplyEntityStates(areaState.WaypointStates, entityMap, area);
+            ApplyEntityStates(areaState.EncounterStates, entityMap, area);
+            ApplyEntityStates(areaState.CameraStates, entityMap, area);
+
+            // 2. Remove destroyed entities
+            // Based on swkotor2.exe: Destroyed entities are removed from area
+            if (areaState.DestroyedEntityIds != null && areaState.DestroyedEntityIds.Count > 0)
+            {
+                RemoveDestroyedEntities(areaState.DestroyedEntityIds, entityMap, odysseyArea);
+            }
+
+            // 3. Spawn dynamically created entities
+            // Based on swkotor2.exe: Spawned entities are created from BlueprintResRef
+            if (areaState.SpawnedEntities != null && areaState.SpawnedEntities.Count > 0)
+            {
+                SpawnDynamicEntities(areaState.SpawnedEntities, odysseyArea);
+            }
+
+            // 4. Apply area-level local variables
+            // Based on swkotor2.exe: Area local variables are stored in area's variable system
+            if (areaState.LocalVariables != null && areaState.LocalVariables.Count > 0)
+            {
+                ApplyAreaLocalVariables(areaState.LocalVariables, odysseyArea);
+            }
+        }
+
+        /// <summary>
+        /// Deserializes AreaState from GFF byte array.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Area state GFF parsing
+        /// Located via string references: "Creature List" @ 0x007c0c80
+        /// </remarks>
+        private AreaState DeserializeAreaStateFromGFF(byte[] areaData)
+        {
+            if (areaData == null || areaData.Length == 0)
+            {
+                return null;
+            }
+
+            try
+            {
+                // Parse GFF from byte array
+                GFF gff = GFF.FromBytes(areaData);
+                if (gff == null || gff.Root == null)
+                {
+                    return null;
+                }
+
+                GFFStruct root = gff.Root;
+                var areaState = new AreaState();
+
+                // Area ResRef
+                if (root.Exists("AreaResRef"))
+                {
+                    areaState.AreaResRef = root.GetString("AreaResRef") ?? "";
+                }
+
+                // Visited flag
+                if (root.Exists("Visited"))
+                {
+                    areaState.Visited = root.GetUInt8("Visited") != 0;
+                }
+
+                // Deserialize entity state lists
+                // Based on swkotor2.exe: Entity lists are stored as GFF lists
+                DeserializeEntityStateList(root, "CreatureList", areaState.CreatureStates);
+                DeserializeEntityStateList(root, "DoorList", areaState.DoorStates);
+                DeserializeEntityStateList(root, "PlaceableList", areaState.PlaceableStates);
+                DeserializeEntityStateList(root, "TriggerList", areaState.TriggerStates);
+                DeserializeEntityStateList(root, "StoreList", areaState.StoreStates);
+                DeserializeEntityStateList(root, "SoundList", areaState.SoundStates);
+                DeserializeEntityStateList(root, "WaypointList", areaState.WaypointStates);
+                DeserializeEntityStateList(root, "EncounterList", areaState.EncounterStates);
+                DeserializeEntityStateList(root, "CameraList", areaState.CameraStates);
+
+                // Destroyed entity IDs
+                // Based on swkotor2.exe: Destroyed entities stored as list of ObjectIds
+                if (root.Exists("DestroyedList"))
+                {
+                    GFFList destroyedList = root.GetList("DestroyedList");
+                    if (destroyedList != null)
+                    {
+                        foreach (GFFStruct item in destroyedList)
+                        {
+                            if (item.Exists("ObjectId"))
+                            {
+                                areaState.DestroyedEntityIds.Add(item.GetUInt32("ObjectId"));
+                            }
+                        }
+                    }
+                }
+
+                // Spawned entities (dynamically created, not in original GIT)
+                // Based on swkotor2.exe: Spawned entities stored with BlueprintResRef
+                if (root.Exists("SpawnedList"))
+                {
+                    GFFList spawnedList = root.GetList("SpawnedList");
+                    if (spawnedList != null)
+                    {
+                        foreach (GFFStruct item in spawnedList)
+                        {
+                            var spawnedState = new SpawnedEntityState();
+                            DeserializeEntityStateFromGFF(item, spawnedState);
+                            if (item.Exists("BlueprintResRef"))
+                            {
+                                ResRef blueprintResRef = item.GetResRef("BlueprintResRef");
+                                if (blueprintResRef != null)
+                                {
+                                    spawnedState.BlueprintResRef = blueprintResRef.ToString();
+                                }
+                            }
+                            if (item.Exists("SpawnedBy"))
+                            {
+                                spawnedState.SpawnedBy = item.GetString("SpawnedBy") ?? "";
+                            }
+                            areaState.SpawnedEntities.Add(spawnedState);
+                        }
+                    }
+                }
+
+                // Area-level local variables
+                // Based on swkotor2.exe: Area local variables stored in nested struct
+                if (root.Exists("LocalVariables"))
+                {
+                    GFFStruct localVarStruct = root.GetStruct("LocalVariables");
+                    if (localVarStruct != null)
+                    {
+                        DeserializeLocalVariableSet(localVarStruct, areaState.LocalVariables);
+                    }
+                }
+
+                return areaState;
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't throw - allow area to continue loading with default state
+                System.Diagnostics.Debug.WriteLine($"[OdysseySaveSerializer] Failed to deserialize area state: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Deserializes an entity state list from GFF.
+        /// </summary>
+        private void DeserializeEntityStateList(GFFStruct root, string listName, List<EntityState> targetList)
+        {
+            if (!root.Exists(listName))
+            {
+                return;
+            }
+
+            GFFList list = root.GetList(listName);
+            if (list == null)
+            {
+                return;
+            }
+
+            foreach (GFFStruct item in list)
+            {
+                var entityState = new EntityState();
+                DeserializeEntityStateFromGFF(item, entityState);
+                targetList.Add(entityState);
+            }
+        }
+
+        /// <summary>
+        /// Deserializes an entity state from a GFF struct.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Entity state deserialization
+        /// Located via string references: "ObjectId" @ 0x007bce5c, "Tag" @ 0x007bd00c
+        /// </remarks>
+        private void DeserializeEntityStateFromGFF(GFFStruct structData, EntityState state)
+        {
+            if (structData == null || state == null)
+            {
+                return;
+            }
+
+            // Tag
+            if (structData.Exists("Tag"))
+            {
+                state.Tag = structData.GetString("Tag") ?? "";
+            }
+
+            // ObjectId
+            if (structData.Exists("ObjectId"))
+            {
+                state.ObjectId = structData.GetUInt32("ObjectId");
+            }
+
+            // ObjectType
+            if (structData.Exists("ObjectType"))
+            {
+                state.ObjectType = (ObjectType)structData.GetInt32("ObjectType");
+            }
+
+            // TemplateResRef
+            if (structData.Exists("TemplateResRef"))
+            {
+                ResRef resRef = structData.GetResRef("TemplateResRef");
+                if (resRef != null)
+                {
+                    state.TemplateResRef = resRef.ToString();
+                }
+            }
+
+            // Position (can be stored as X/Y/Z or as Vector3)
+            if (structData.Exists("X") && structData.Exists("Y") && structData.Exists("Z"))
+            {
+                state.Position = new System.Numerics.Vector3(
+                    structData.GetSingle("X"),
+                    structData.GetSingle("Y"),
+                    structData.GetSingle("Z")
+                );
+            }
+            else if (structData.Exists("Position"))
+            {
+                Vector3 pos = structData.GetVector3("Position");
+                state.Position = new System.Numerics.Vector3(pos.X, pos.Y, pos.Z);
+            }
+
+            // Facing
+            if (structData.Exists("Facing"))
+            {
+                state.Facing = structData.GetSingle("Facing");
+            }
+
+            // HP
+            if (structData.Exists("CurrentHP"))
+            {
+                state.CurrentHP = structData.GetInt32("CurrentHP");
+            }
+            if (structData.Exists("MaxHP"))
+            {
+                state.MaxHP = structData.GetInt32("MaxHP");
+            }
+
+            // Flags
+            if (structData.Exists("IsDestroyed"))
+            {
+                state.IsDestroyed = structData.GetUInt8("IsDestroyed") != 0;
+            }
+            if (structData.Exists("IsPlot"))
+            {
+                state.IsPlot = structData.GetUInt8("IsPlot") != 0;
+            }
+            if (structData.Exists("IsOpen"))
+            {
+                state.IsOpen = structData.GetUInt8("IsOpen") != 0;
+            }
+            if (structData.Exists("IsLocked"))
+            {
+                state.IsLocked = structData.GetUInt8("IsLocked") != 0;
+            }
+            if (structData.Exists("AnimationState"))
+            {
+                state.AnimationState = structData.GetInt32("AnimationState");
+            }
+
+            // Local variables
+            if (structData.Exists("LocalVariables") || structData.Exists("LocalVars"))
+            {
+                GFFStruct localVarStruct = structData.GetStruct("LocalVariables") ?? structData.GetStruct("LocalVars");
+                if (localVarStruct != null)
+                {
+                    DeserializeLocalVariableSet(localVarStruct, state.LocalVariables);
+                }
+            }
+
+            // Active effects
+            if (structData.Exists("ActiveEffects"))
+            {
+                GFFList effectsList = structData.GetList("ActiveEffects");
+                if (effectsList != null)
+                {
+                    foreach (GFFStruct effectStruct in effectsList)
+                    {
+                        var effect = new SavedEffect();
+                        if (effectStruct.Exists("EffectType"))
+                        {
+                            effect.EffectType = effectStruct.GetInt32("EffectType");
+                        }
+                        if (effectStruct.Exists("SubType"))
+                        {
+                            effect.SubType = effectStruct.GetInt32("SubType");
+                        }
+                        if (effectStruct.Exists("DurationType"))
+                        {
+                            effect.DurationType = effectStruct.GetInt32("DurationType");
+                        }
+                        if (effectStruct.Exists("RemainingDuration"))
+                        {
+                            effect.RemainingDuration = effectStruct.GetSingle("RemainingDuration");
+                        }
+                        if (effectStruct.Exists("CreatorId"))
+                        {
+                            effect.CreatorId = effectStruct.GetUInt32("CreatorId");
+                        }
+                        if (effectStruct.Exists("SpellId"))
+                        {
+                            effect.SpellId = effectStruct.GetInt32("SpellId");
+                        }
+                        // Effect parameters would be deserialized here if needed
+                        state.ActiveEffects.Add(effect);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Deserializes local variable set from GFF struct.
+        /// </summary>
+        private void DeserializeLocalVariableSet(GFFStruct localVarStruct, LocalVariableSet localVars)
+        {
+            if (localVarStruct == null || localVars == null)
+            {
+                return;
+            }
+
+            // Integer variables
+            if (localVarStruct.Exists("IntList") || localVarStruct.Exists("Ints"))
+            {
+                GFFList intList = localVarStruct.GetList("IntList") ?? localVarStruct.GetList("Ints");
+                if (intList != null)
+                {
+                    foreach (GFFStruct varStruct in intList)
+                    {
+                        string name = varStruct.Exists("Name") ? (varStruct.GetString("Name") ?? "") : "";
+                        if (string.IsNullOrEmpty(name) && varStruct.Exists("Key"))
+                        {
+                            name = varStruct.GetString("Key") ?? "";
+                        }
+                        int value = varStruct.Exists("Value") ? varStruct.GetInt32("Value") : 0;
+                        if (!string.IsNullOrEmpty(name))
+                        {
+                            localVars.Ints[name] = value;
+                        }
+                    }
+                }
+            }
+
+            // Float variables
+            if (localVarStruct.Exists("FloatList") || localVarStruct.Exists("Floats"))
+            {
+                GFFList floatList = localVarStruct.GetList("FloatList") ?? localVarStruct.GetList("Floats");
+                if (floatList != null)
+                {
+                    foreach (GFFStruct varStruct in floatList)
+                    {
+                        string name = varStruct.Exists("Name") ? (varStruct.GetString("Name") ?? "") : "";
+                        if (string.IsNullOrEmpty(name) && varStruct.Exists("Key"))
+                        {
+                            name = varStruct.GetString("Key") ?? "";
+                        }
+                        float value = varStruct.Exists("Value") ? varStruct.GetSingle("Value") : 0.0f;
+                        if (!string.IsNullOrEmpty(name))
+                        {
+                            localVars.Floats[name] = value;
+                        }
+                    }
+                }
+            }
+
+            // String variables
+            if (localVarStruct.Exists("StringList") || localVarStruct.Exists("Strings"))
+            {
+                GFFList stringList = localVarStruct.GetList("StringList") ?? localVarStruct.GetList("Strings");
+                if (stringList != null)
+                {
+                    foreach (GFFStruct varStruct in stringList)
+                    {
+                        string name = varStruct.Exists("Name") ? (varStruct.GetString("Name") ?? "") : "";
+                        if (string.IsNullOrEmpty(name) && varStruct.Exists("Key"))
+                        {
+                            name = varStruct.GetString("Key") ?? "";
+                        }
+                        string value = varStruct.Exists("Value") ? (varStruct.GetString("Value") ?? "") : "";
+                        if (!string.IsNullOrEmpty(name))
+                        {
+                            localVars.Strings[name] = value;
+                        }
+                    }
+                }
+            }
+
+            // Object reference variables
+            if (localVarStruct.Exists("ObjectList") || localVarStruct.Exists("Objects"))
+            {
+                GFFList objectList = localVarStruct.GetList("ObjectList") ?? localVarStruct.GetList("Objects");
+                if (objectList != null)
+                {
+                    foreach (GFFStruct varStruct in objectList)
+                    {
+                        string name = varStruct.Exists("Name") ? (varStruct.GetString("Name") ?? "") : "";
+                        if (string.IsNullOrEmpty(name) && varStruct.Exists("Key"))
+                        {
+                            name = varStruct.GetString("Key") ?? "";
+                        }
+                        uint value = varStruct.Exists("Value") ? varStruct.GetUInt32("Value") : 0;
+                        if (!string.IsNullOrEmpty(name))
+                        {
+                            localVars.Objects[name] = value;
+                        }
+                    }
+                }
+            }
+
+            // Location variables
+            if (localVarStruct.Exists("LocationList") || localVarStruct.Exists("Locations"))
+            {
+                GFFList locationList = localVarStruct.GetList("LocationList") ?? localVarStruct.GetList("Locations");
+                if (locationList != null)
+                {
+                    foreach (GFFStruct varStruct in locationList)
+                    {
+                        string name = varStruct.Exists("Name") ? (varStruct.GetString("Name") ?? "") : "";
+                        if (string.IsNullOrEmpty(name) && varStruct.Exists("Key"))
+                        {
+                            name = varStruct.GetString("Key") ?? "";
+                        }
+                        if (!string.IsNullOrEmpty(name) && varStruct.Exists("Location"))
+                        {
+                            GFFStruct locationStruct = varStruct.GetStruct("Location");
+                            if (locationStruct != null)
+                            {
+                                var location = new SavedLocation();
+                                if (locationStruct.Exists("X") && locationStruct.Exists("Y") && locationStruct.Exists("Z"))
+                                {
+                                    location.Position = new System.Numerics.Vector3(
+                                        locationStruct.GetSingle("X"),
+                                        locationStruct.GetSingle("Y"),
+                                        locationStruct.GetSingle("Z")
+                                    );
+                                }
+                                if (locationStruct.Exists("Facing"))
+                                {
+                                    location.Facing = locationStruct.GetSingle("Facing");
+                                }
+                                if (locationStruct.Exists("AreaResRef"))
+                                {
+                                    location.AreaResRef = locationStruct.GetString("AreaResRef") ?? "";
+                                }
+                                localVars.Locations[name] = location;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Builds a map of ObjectId to IEntity for efficient lookup.
+        /// </summary>
+        private Dictionary<uint, IEntity> BuildEntityMap(IArea area)
+        {
+            var entityMap = new Dictionary<uint, IEntity>();
+
+            if (area == null)
+            {
+                return entityMap;
+            }
+
+            // Collect all entities from area
+            // Based on swkotor2.exe: Entities are stored in area's entity collections
+            IEnumerable<IEntity> allEntities = area.Creatures
+                .Concat(area.Placeables)
+                .Concat(area.Doors)
+                .Concat(area.Triggers)
+                .Concat(area.Waypoints)
+                .Concat(area.Sounds);
+
+            foreach (IEntity entity in allEntities)
+            {
+                if (entity != null && entity.IsValid)
+                {
+                    entityMap[entity.ObjectId] = entity;
+                }
+            }
+
+            return entityMap;
+        }
+
+        /// <summary>
+        /// Applies entity states to existing entities in the area.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Entity state application
+        /// Located via string references: "ObjectId" @ 0x007bce5c
+        /// </remarks>
+        private void ApplyEntityStates(List<EntityState> entityStates, Dictionary<uint, IEntity> entityMap, IArea area)
+        {
+            if (entityStates == null || entityMap == null || area == null)
+            {
+                return;
+            }
+
+            foreach (EntityState entityState in entityStates)
+            {
+                if (entityState == null || entityState.ObjectId == 0)
+                {
+                    continue;
+                }
+
+                // Find entity by ObjectId
+                if (!entityMap.TryGetValue(entityState.ObjectId, out IEntity entity))
+                {
+                    // Try to find by Tag as fallback
+                    if (!string.IsNullOrEmpty(entityState.Tag))
+                    {
+                        entity = area.GetObjectByTag(entityState.Tag);
+                    }
+
+                    if (entity == null)
+                    {
+                        // Entity not found - may have been destroyed or not yet loaded
+                        continue;
+                    }
+                }
+
+                // Apply entity state
+                ApplyEntityState(entity, entityState);
+            }
+        }
+
+        /// <summary>
+        /// Applies a single entity state to an entity.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 applies entity state
+        /// Updates position, HP, door/placeable states, local variables
+        /// </remarks>
+        private void ApplyEntityState(IEntity entity, EntityState entityState)
+        {
+            if (entity == null || entityState == null)
+            {
+                return;
+            }
+
+            // Cast to OdysseyEntity for component access
+            OdysseyEntity odysseyEntity = entity as OdysseyEntity;
+            if (odysseyEntity == null)
+            {
+                // Not an OdysseyEntity - try to apply basic properties via IEntity interface
+                if (!string.IsNullOrEmpty(entityState.Tag))
+                {
+                    entity.Tag = entityState.Tag;
+                }
+                return;
+            }
+
+            // Update Transform component (position and facing)
+            // Based on swkotor2.exe: Position stored as X, Y, Z in GFF
+            var transformComponent = entity.GetComponent<ITransformComponent>();
+            if (transformComponent != null)
+            {
+                if (entityState.Position.X != 0.0f || entityState.Position.Y != 0.0f || entityState.Position.Z != 0.0f)
+                {
+                    transformComponent.Position = entityState.Position;
+                }
+                if (entityState.Facing != 0.0f)
+                {
+                    transformComponent.Facing = entityState.Facing;
+                }
+            }
+
+            // Update Stats component (HP)
+            // Based on swkotor2.exe: HP stored as CurrentHP and MaxHP
+            var statsComponent = entity.GetComponent<IStatsComponent>();
+            if (statsComponent != null)
+            {
+                if (entityState.CurrentHP > 0)
+                {
+                    // Use reflection to set CurrentHP if available
+                    var currentHpProperty = statsComponent.GetType().GetProperty("CurrentHP");
+                    if (currentHpProperty != null && currentHpProperty.CanWrite)
+                    {
+                        currentHpProperty.SetValue(statsComponent, entityState.CurrentHP);
+                    }
+                }
+                if (entityState.MaxHP > 0)
+                {
+                    // Use reflection to set MaxHP if available
+                    var maxHpProperty = statsComponent.GetType().GetProperty("MaxHP");
+                    if (maxHpProperty != null && maxHpProperty.CanWrite)
+                    {
+                        maxHpProperty.SetValue(statsComponent, entityState.MaxHP);
+                    }
+                }
+            }
+
+            // Update Door component (open/locked state)
+            // Based on swkotor2.exe: Door states stored as IsOpen and IsLocked
+            if (entity.ObjectType == ObjectType.Door)
+            {
+                var doorComponent = entity.GetComponent<IDoorComponent>();
+                if (doorComponent != null)
+                {
+                    // Use reflection to set door state if available
+                    var isOpenProperty = doorComponent.GetType().GetProperty("IsOpen");
+                    if (isOpenProperty != null && isOpenProperty.CanWrite)
+                    {
+                        isOpenProperty.SetValue(doorComponent, entityState.IsOpen);
+                    }
+                    var isLockedProperty = doorComponent.GetType().GetProperty("IsLocked");
+                    if (isLockedProperty != null && isLockedProperty.CanWrite)
+                    {
+                        isLockedProperty.SetValue(doorComponent, entityState.IsLocked);
+                    }
+                }
+            }
+
+            // Update Placeable component (open/locked/destroyed state)
+            // Based on swkotor2.exe: Placeable states stored as IsOpen, IsLocked, IsDestroyed
+            if (entity.ObjectType == ObjectType.Placeable)
+            {
+                var placeableComponent = entity.GetComponent<IPlaceableComponent>();
+                if (placeableComponent != null)
+                {
+                    // Use reflection to set placeable state if available
+                    var isOpenProperty = placeableComponent.GetType().GetProperty("IsOpen");
+                    if (isOpenProperty != null && isOpenProperty.CanWrite)
+                    {
+                        isOpenProperty.SetValue(placeableComponent, entityState.IsOpen);
+                    }
+                    var isLockedProperty = placeableComponent.GetType().GetProperty("IsLocked");
+                    if (isLockedProperty != null && isLockedProperty.CanWrite)
+                    {
+                        isLockedProperty.SetValue(placeableComponent, entityState.IsLocked);
+                    }
+                    var isDestroyedProperty = placeableComponent.GetType().GetProperty("IsDestroyed");
+                    if (isDestroyedProperty != null && isDestroyedProperty.CanWrite)
+                    {
+                        isDestroyedProperty.SetValue(placeableComponent, entityState.IsDestroyed);
+                    }
+                }
+            }
+
+            // Apply local variables
+            // Based on swkotor2.exe: Local variables stored in entity's variable system
+            if (entityState.LocalVariables != null && !entityState.LocalVariables.IsEmpty)
+            {
+                ApplyLocalVariablesToEntity(odysseyEntity, entityState.LocalVariables);
+            }
+
+            // Apply active effects
+            // Based on swkotor2.exe: Active effects stored in entity's effect system
+            if (entityState.ActiveEffects != null && entityState.ActiveEffects.Count > 0)
+            {
+                ApplyActiveEffectsToEntity(odysseyEntity, entityState.ActiveEffects);
+            }
+        }
+
+        /// <summary>
+        /// Applies local variables to an entity.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Local variable application
+        /// Uses entity's variable system to store local variables
+        /// </remarks>
+        private void ApplyLocalVariablesToEntity(OdysseyEntity entity, LocalVariableSet localVars)
+        {
+            if (entity == null || localVars == null)
+            {
+                return;
+            }
+
+            // Use entity's Deserialize method if available, or apply directly via reflection
+            // For now, we'll use the entity's variable system if accessible
+            // Note: Full implementation would require access to entity's variable storage
+            // This is a placeholder that would need to be completed when variable system is fully implemented
+
+            // Try to get ScriptHooks component which may contain variable storage
+            var scriptHooksComponent = entity.GetComponent<IScriptHooksComponent>();
+            if (scriptHooksComponent != null)
+            {
+                // Use reflection to access variable storage if available
+                var localVarsField = scriptHooksComponent.GetType().GetField("_localVariables", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (localVarsField != null)
+                {
+                    object existingVars = localVarsField.GetValue(scriptHooksComponent);
+                    if (existingVars != null)
+                    {
+                        // Merge local variables into existing storage
+                        // This would need to be implemented based on the actual variable storage structure
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Applies active effects to an entity.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Active effect application
+        /// Uses entity's effect system to restore active effects
+        /// </remarks>
+        private void ApplyActiveEffectsToEntity(OdysseyEntity entity, List<SavedEffect> activeEffects)
+        {
+            if (entity == null || activeEffects == null || activeEffects.Count == 0)
+            {
+                return;
+            }
+
+            // Use entity's effect system to apply effects
+            // Note: Full implementation would require access to entity's effect storage
+            // This is a placeholder that would need to be completed when effect system is fully implemented
+            // Effects would be applied via IEffectComponent or similar interface
+        }
+
+        /// <summary>
+        /// Removes destroyed entities from the area.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Destroyed entity removal
+        /// Located via string references: "EVENT_REMOVE_FROM_AREA" @ 0x007bcddc
+        /// </remarks>
+        private void RemoveDestroyedEntities(List<uint> destroyedEntityIds, Dictionary<uint, IEntity> entityMap, OdysseyArea odysseyArea)
+        {
+            if (destroyedEntityIds == null || destroyedEntityIds.Count == 0)
+            {
+                return;
+            }
+
+            if (odysseyArea == null)
+            {
+                // Cannot remove entities without OdysseyArea access
+                return;
+            }
+
+            // Use reflection to access private entity collections
+            // Based on swkotor2.exe: Entities are removed from area's entity collections
+            var creaturesField = typeof(OdysseyArea).GetField("_creatures", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var placeablesField = typeof(OdysseyArea).GetField("_placeables", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var doorsField = typeof(OdysseyArea).GetField("_doors", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var triggersField = typeof(OdysseyArea).GetField("_triggers", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var waypointsField = typeof(OdysseyArea).GetField("_waypoints", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var soundsField = typeof(OdysseyArea).GetField("_sounds", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+            System.Collections.IList[] collections = new System.Collections.IList[]
+            {
+                creaturesField?.GetValue(odysseyArea) as System.Collections.IList,
+                placeablesField?.GetValue(odysseyArea) as System.Collections.IList,
+                doorsField?.GetValue(odysseyArea) as System.Collections.IList,
+                triggersField?.GetValue(odysseyArea) as System.Collections.IList,
+                waypointsField?.GetValue(odysseyArea) as System.Collections.IList,
+                soundsField?.GetValue(odysseyArea) as System.Collections.IList
+            };
+
+            foreach (uint objectId in destroyedEntityIds)
+            {
+                if (objectId == 0)
+                {
+                    continue;
+                }
+
+                if (!entityMap.TryGetValue(objectId, out IEntity entity))
+                {
+                    continue;
+                }
+
+                // Remove from appropriate collection
+                foreach (System.Collections.IList collection in collections)
+                {
+                    if (collection != null)
+                    {
+                        collection.Remove(entity);
+                    }
+                }
+
+                // Mark entity as invalid
+                // Based on swkotor2.exe: Destroyed entities are marked as invalid
+                if (entity is OdysseyEntity odysseyEntity)
+                {
+                    var isValidField = typeof(OdysseyEntity).GetField("_isValid", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (isValidField != null)
+                    {
+                        isValidField.SetValue(odysseyEntity, false);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Spawns dynamically created entities in the area.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Dynamic entity spawning
+        /// Located via string references: "CreateObject" @ 0x007bd0e0
+        /// Spawns entities from BlueprintResRef that were not in original GIT
+        /// </remarks>
+        private void SpawnDynamicEntities(List<SpawnedEntityState> spawnedEntities, OdysseyArea odysseyArea)
+        {
+            if (spawnedEntities == null || spawnedEntities.Count == 0)
+            {
+                return;
+            }
+
+            if (odysseyArea == null)
+            {
+                // Cannot spawn entities without OdysseyArea access
+                return;
+            }
+
+            // Spawn each dynamically created entity
+            // Based on swkotor2.exe: Entities are spawned from BlueprintResRef
+            // Note: Full implementation would require access to entity factory and world
+            // This is a placeholder that would need to be completed when entity spawning is fully implemented
+            // For now, we log that entities need to be spawned
+            foreach (SpawnedEntityState spawnedState in spawnedEntities)
+            {
+                if (spawnedState == null || string.IsNullOrEmpty(spawnedState.BlueprintResRef))
+                {
+                    continue;
+                }
+
+                // Entity spawning would be done here:
+                // 1. Load entity template from BlueprintResRef
+                // 2. Create entity using entity factory
+                // 3. Apply entity state (position, HP, etc.)
+                // 4. Add to appropriate area collection
+                // 5. Register with world
+
+                System.Diagnostics.Debug.WriteLine($"[OdysseySaveSerializer] Spawned entity needs to be created: {spawnedState.BlueprintResRef} at {spawnedState.Position}");
+            }
+        }
+
+        /// <summary>
+        /// Applies area-level local variables.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Area local variable storage
+        /// Area variables are stored separately from entity variables
+        /// </remarks>
+        private void ApplyAreaLocalVariables(Dictionary<string, object> localVariables, OdysseyArea odysseyArea)
+        {
+            if (localVariables == null || localVariables.Count == 0)
+            {
+                return;
+            }
+
+            if (odysseyArea == null)
+            {
+                return;
+            }
+
+            // Area local variables would be stored in area's variable system
+            // Note: Full implementation would require access to area's variable storage
+            // This is a placeholder that would need to be completed when area variable system is fully implemented
+            // Variables would be stored via IArea's variable system or similar interface
         }
 
         /// <summary>

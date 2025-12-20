@@ -6,14 +6,12 @@ namespace Andastra.Runtime.Core.Interfaces
 {
     /// <summary>
     /// Interface for game services context accessible from script execution context.
-    /// This interface allows Odyssey.Scripting to access game services without depending on Odyssey.Kotor.
+    /// This interface allows script execution to access game services without depending on engine-specific implementations.
     /// </summary>
     /// <remarks>
-    /// Game Services Context:
-    /// - TODO: lookup data from daorigins.exe/dragonage2.exe///swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
-    /// - Based on swkotor2.exe script execution context system
-    /// - Located via string references: Script execution context provides access to game systems
-    /// - Original implementation: NWScript execution context (IExecutionContext) provides access to game services
+    /// Game Services Context Interface:
+    /// - Common interface for game services accessible from script execution context across all BioWare engines
+    /// - Script execution context provides access to game systems for engine API functions
     /// - Services accessible from scripts: DialogueManager, PlayerEntity, CombatManager, PartyManager, ModuleLoader
     /// - FactionManager: Manages faction relationships and hostility (repute.2da lookup)
     /// - PerceptionManager: Handles creature perception (sight/hearing, OnPerception events)
@@ -21,7 +19,14 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - SoundPlayer: Plays sound effects and ambient audio (positional audio, volume control)
     /// - GameSession: Manages game state (current module, save/load, player progression)
     /// - IsLoadingFromSave: Flag indicating if game is loading from save file (prevents script execution during load)
-    /// - Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 (script execution context setup)
+    /// - UISystem: Manages UI screens and overlays
+    /// - JournalSystem: Quest and journal management
+    ///
+    /// Base implementation: BaseGameServicesContext (Runtime.Games.Common) provides common functionality
+    /// Engine-specific implementations:
+    /// - Odyssey: OdysseyGameServicesContext (swkotor.exe, swkotor2.exe)
+    /// - Aurora: AuroraGameServicesContext (nwmain.exe)
+    /// - Eclipse: EclipseGameServicesContext (daorigins.exe, DragonAge2.exe)
     /// </remarks>
     public interface IGameServicesContext
     {
