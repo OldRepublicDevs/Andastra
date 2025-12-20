@@ -1,0 +1,98 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="HolocronToolset.Dialogs.ColorPickerDialog"
+        Title="Select Color"
+        Width="450" Height="550"
+        MinWidth="400" MinHeight="500"
+        WindowStartupLocation="CenterOwner">
+    <Grid RowDefinitions="*,Auto" Margin="10">
+        <Grid Grid.Row="0" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="0,0,0,10">
+            <!-- Color Preview Area -->
+            <Border Grid.Row="0" 
+                    Name="colorPreviewBorder"
+                    Height="200"
+                    BorderBrush="Gray" 
+                    BorderThickness="2"
+                    Margin="0,0,0,10"
+                    Background="White">
+                <Grid>
+                    <Border Name="previewBorder" 
+                            Background="White" />
+                    <!-- Checkerboard pattern for transparency -->
+                    <Canvas Name="checkerboardCanvas" IsHitTestVisible="False" />
+                </Grid>
+            </Border>
+            
+            <!-- RGB Sliders -->
+            <StackPanel Grid.Row="1" Margin="0,0,0,5">
+                <TextBlock Text="Red:" Margin="0,0,0,5" />
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <TextBlock Grid.Column="0" Text="0" Width="30" VerticalAlignment="Center" />
+                    <Slider Name="redSlider" Grid.Column="1" Minimum="0" Maximum="255" ValueChanged="RgbSlider_ValueChanged" />
+                    <NumericUpDown Name="redSpin" Grid.Column="2" Minimum="0" Maximum="255" Width="60" ValueChanged="RgbSpin_ValueChanged" />
+                </Grid>
+            </StackPanel>
+            
+            <StackPanel Grid.Row="2" Margin="0,0,0,5">
+                <TextBlock Text="Green:" Margin="0,0,0,5" />
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <TextBlock Grid.Column="0" Text="0" Width="30" VerticalAlignment="Center" />
+                    <Slider Name="greenSlider" Grid.Column="1" Minimum="0" Maximum="255" ValueChanged="RgbSlider_ValueChanged" />
+                    <NumericUpDown Name="greenSpin" Grid.Column="2" Minimum="0" Maximum="255" Width="60" ValueChanged="RgbSpin_ValueChanged" />
+                </Grid>
+            </StackPanel>
+            
+            <StackPanel Grid.Row="3" Margin="0,0,0,5">
+                <TextBlock Text="Blue:" Margin="0,0,0,5" />
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <TextBlock Grid.Column="0" Text="0" Width="30" VerticalAlignment="Center" />
+                    <Slider Name="blueSlider" Grid.Column="1" Minimum="0" Maximum="255" ValueChanged="RgbSlider_ValueChanged" />
+                    <NumericUpDown Name="blueSpin" Grid.Column="2" Minimum="0" Maximum="255" Width="60" ValueChanged="RgbSpin_ValueChanged" />
+                </Grid>
+            </StackPanel>
+            
+            <!-- Alpha Channel (if enabled) -->
+            <StackPanel Name="alphaPanel" Grid.Row="4" Margin="0,0,0,5" IsVisible="False">
+                <TextBlock Text="Alpha:" Margin="0,0,0,5" />
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <TextBlock Grid.Column="0" Text="0" Width="30" VerticalAlignment="Center" />
+                    <Slider Name="alphaSlider" Grid.Column="1" Minimum="0" Maximum="255" ValueChanged="AlphaSlider_ValueChanged" />
+                    <NumericUpDown Name="alphaSpin" Grid.Column="2" Minimum="0" Maximum="255" Width="60" ValueChanged="AlphaSpin_ValueChanged" />
+                </Grid>
+            </StackPanel>
+            
+            <!-- Hex Value -->
+            <StackPanel Grid.Row="5" Orientation="Horizontal" Margin="0,0,0,5">
+                <TextBlock Text="Hex:" Width="50" VerticalAlignment="Center" />
+                <TextBox Name="hexEdit" Width="120" TextChanged="HexEdit_TextChanged" />
+            </StackPanel>
+            
+            <!-- Current vs New Color Display -->
+            <Grid Grid.Row="6" ColumnDefinitions="*,*" Margin="0,0,0,5">
+                <StackPanel Grid.Column="0" Margin="0,0,5,0">
+                    <TextBlock Text="Current:" Margin="0,0,0,5" />
+                    <Border Name="currentColorBorder" 
+                            Height="40" 
+                            BorderBrush="Gray" 
+                            BorderThickness="1"
+                            Background="White" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Margin="5,0,0,0">
+                    <TextBlock Text="New:" Margin="0,0,0,5" />
+                    <Border Name="newColorBorder" 
+                            Height="40" 
+                            BorderBrush="Gray" 
+                            BorderThickness="1"
+                            Background="White" />
+                </StackPanel>
+            </Grid>
+        </Grid>
+        
+        <!-- Buttons -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Name="okButton" Content="OK" Width="75" Margin="0,0,10,0" />
+            <Button Name="cancelButton" Content="Cancel" Width="75" />
+        </StackPanel>
+    </Grid>
+</Window>
+
