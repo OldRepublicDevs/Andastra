@@ -4046,14 +4046,44 @@ void helper() {
             commandPalette.Should().NotBeNull("_commandPalette should be initialized after ShowCommandPalette()");
         }
 
-        // TODO: STUB - Implement test_nss_editor_command_palette_actions (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1863-1875)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1863-1875
         // Original: def test_nss_editor_command_palette_actions(qtbot, installation: HTInstallation): Test command palette actions
         [Fact]
         public void TestNssEditorCommandPaletteActions()
         {
-            // TODO: STUB - Implement command palette actions test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1863-1875
-            throw new NotImplementedException("TestNssEditorCommandPaletteActions: Command palette actions test not yet implemented");
+            // Matching PyKotor implementation: editor = NSSEditor(None, installation)
+            var editor = new NSSEditor(null, null);
+            
+            // Matching PyKotor implementation: editor.new()
+            editor.New();
+
+            // Matching PyKotor implementation: Don't show the palette (exec_() is modal and hangs in headless mode)
+            // Just verify that commands are registered
+            // Use reflection to access private field _commandPalette
+            var commandPaletteField = typeof(NSSEditor).GetField("_commandPalette",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            commandPaletteField.Should().NotBeNull("NSSEditor should have _commandPalette field");
+
+            // Initialize command palette if needed (it's created lazily)
+            var showMethod = typeof(NSSEditor).GetMethod("ShowCommandPalette",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            showMethod.Should().NotBeNull("NSSEditor should have ShowCommandPalette method");
+            showMethod.Invoke(editor, null);
+
+            // Matching PyKotor implementation: if editor._command_palette is not None:
+            var commandPalette = commandPaletteField.GetValue(editor);
+            if (commandPalette != null)
+            {
+                // Matching PyKotor implementation: assert hasattr(editor._command_palette, '_commands')
+                var commandsField = commandPalette.GetType().GetField("_commands",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                commandsField.Should().NotBeNull("CommandPalette should have _commands field");
+
+                // Matching PyKotor implementation: assert len(editor._command_palette._commands) > 0
+                var commands = commandsField.GetValue(commandPalette) as System.Collections.IDictionary;
+                commands.Should().NotBeNull("_commands should be a dictionary");
+                commands.Count.Should().BeGreaterThan(0, $"Expected commands to be registered, got {commands.Count}");
+            }
         }
 
         // TODO: STUB - Implement test_nss_editor_command_palette_shortcut (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1877-1897)
