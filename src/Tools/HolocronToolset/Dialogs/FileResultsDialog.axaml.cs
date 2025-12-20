@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
+using HolocronToolset.Utils;
 using FileResource = Andastra.Parsing.Extract.FileResource;
 
 namespace HolocronToolset.Dialogs
@@ -184,9 +185,12 @@ namespace HolocronToolset.Dialogs
             {
                 _selection = item.Resource;
                 SearchResultsSelected?.Invoke(_selection);
-                // TODO: Open resource editor when available
-                // For now, just emit signal and close
-                Close();
+                
+                // Open resource editor (matching PyKotor: open_resource_editor(resource, installation=self.installation, parent_window=self.window().parent()))
+                var parentWindow = this.Parent as Window ?? this;
+                WindowUtils.OpenResourceEditor(_selection, _installation, parentWindow);
+                
+                // Note: Dialog does NOT close on open (unlike accept method) - matches PyKotor behavior
             }
             else
             {
