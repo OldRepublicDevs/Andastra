@@ -246,36 +246,40 @@ namespace Andastra.Runtime.Games.Eclipse
         ///   - Eclipse-specific: Talents/abilities system, different property calculations, enhanced component interactions
         /// - Infinity (, ): Streamlined component system (to be reverse engineered)
         /// 
-        /// Note: Currently using Odyssey StatsComponent and InventoryComponent implementations as they implement the common interfaces.
-        /// TODO: Create Eclipse-specific StatsComponent and InventoryComponent implementations if Eclipse-specific behavior is needed.
+        /// Note: Uses EclipseStatsComponent and EclipseInventoryComponent for Eclipse-specific behavior.
+        /// EclipseStatsComponent: Maps Health/Stamina to HP/FP for interface compatibility, uses Attributes terminology.
+        /// EclipseInventoryComponent: Uses Equip_ItemList structure and EquipmentLayout system.
         /// </remarks>
         private void AttachCreatureComponents()
         {
             // Attach stats component for creatures
-            // Based on daorigins.exe and DragonAge2.exe: Creatures have stats (HP, abilities, skills, saves)
-            // Stats component provides: CurrentHP, MaxHP, Abilities (STR, DEX, CON, INT, WIS, CHA), Skills, Saves, BaseAttackBonus, ArmorClass
+            // Based on daorigins.exe and DragonAge2.exe: Creatures have stats (Health, Stamina, Attributes, skills, saves)
+            // Stats component provides: CurrentHealth/MaxHealth (maps to CurrentHP/MaxHP), CurrentStamina/MaxStamina (maps to CurrentFP/MaxFP),
+            // Attributes (maps to Abilities), Skills, Saves, BaseAttackBonus, Defense (maps to ArmorClass)
+            // Eclipse-specific: Uses Health/Stamina terminology instead of HP/FP, Attributes terminology instead of Abilities
             // Eclipse-specific: Different ability score calculations and skill systems compared to Odyssey/Aurora
             // Stats are loaded from entity templates and can be modified at runtime
+            // Located via string references: "CurrentHealth" @ 0x00aedb28, "MaxHealth" @ 0x00aedb1c (daorigins.exe)
+            // "CurrentStamina" @ 0x00aedb0c, "MaxStamina" @ 0x00aedb00 (daorigins.exe)
+            // "Attributes" @ 0x00af78c8 (daorigins.exe)
             if (!HasComponent<IStatsComponent>())
             {
-                // TODO: Create EclipseStatsComponent if Eclipse-specific stats behavior is needed
-                // For now, using Odyssey StatsComponent as it implements IStatsComponent interface
-                // Eclipse may have different ability score calculations, skill systems, or HP regeneration mechanics
-                var statsComponent = new StatsComponent();
+                var statsComponent = new EclipseStatsComponent();
+                statsComponent.Owner = this;
                 AddComponent<IStatsComponent>(statsComponent);
             }
 
             // Attach inventory component for creatures
             // Based on daorigins.exe and DragonAge2.exe: Creatures have inventory (equipped items and inventory bag)
             // Inventory component provides: Equipped items (weapon, armor, shield, etc.), Inventory bag (array of item slots)
-            // Eclipse-specific: Different inventory slot system and equipment types compared to Odyssey/Aurora
+            // Eclipse-specific: Uses Equip_ItemList structure instead of GFF format, EquipmentLayout system
+            // Eclipse-specific: Different inventory slot numbering and equipment types compared to Odyssey/Aurora
             // Inventory is loaded from entity templates and can be modified at runtime
+            // Located via string references: "Inventory" @ 0x00ae88ec, "Equip_ItemList" @ 0x00af6e54 (daorigins.exe)
+            // "EquippedItems" @ 0x00aeda94, "Equipment" @ 0x00af7768, "EquipmentLayout" @ 0x00af7690 (daorigins.exe)
             if (!HasComponent<IInventoryComponent>())
             {
-                // TODO: Create EclipseInventoryComponent if Eclipse-specific inventory behavior is needed
-                // For now, using Odyssey InventoryComponent as it implements IInventoryComponent interface
-                // Eclipse may have different inventory slot numbering, equipment types, or storage formats
-                var inventoryComponent = new InventoryComponent(this);
+                var inventoryComponent = new EclipseInventoryComponent(this);
                 AddComponent<IInventoryComponent>(inventoryComponent);
             }
 
