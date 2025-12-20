@@ -2160,14 +2160,85 @@ xyz uvw";
             throw new NotImplementedException("TestNssEditorFoldMalformedCode: Fold malformed code test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_nss_editor_breadcrumbs_multiple_functions (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:2102-2135)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:2102-2135
         // Original: def test_nss_editor_breadcrumbs_multiple_functions(qtbot, installation: HTInstallation): Test breadcrumbs multiple functions
         [Fact]
         public void TestNssEditorBreadcrumbsMultipleFunctions()
         {
-            // TODO: STUB - Implement breadcrumbs multiple functions test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:2102-2135
-            throw new NotImplementedException("TestNssEditorBreadcrumbsMultipleFunctions: Breadcrumbs multiple functions test not yet implemented");
+            // Create editor with installation
+            var installation = new HTInstallation
+            {
+                Path = System.IO.Path.GetTempPath(),
+                Tsl = false
+            };
+            var editor = new NSSEditor(null, installation);
+            editor.New();
+
+            // Get code editor using reflection (matching pattern from other tests)
+            var codeEditorField = typeof(NSSEditor).GetField("_codeEdit", BindingFlags.NonPublic | BindingFlags.Instance);
+            codeEditorField.Should().NotBeNull("NSSEditor should have _codeEdit field");
+            var codeEditor = codeEditorField.GetValue(editor) as HolocronToolset.Widgets.CodeEditor;
+            codeEditor.Should().NotBeNull("_codeEdit should be initialized");
+
+            // Set up script with multiple functions
+            // Matching Python test: script has func1() and func2()
+            string script = @"void func1() {
+}
+
+void func2() {
+}";
+            codeEditor.SetPlainText(script);
+
+            // Wait a bit for UI to update (simulating qtbot.wait(200))
+            System.Threading.Thread.Sleep(200);
+
+            // Move cursor to second function (line 4, 1-indexed)
+            // In the script: 
+            // Line 1: "void func1() {"
+            // Line 2: "}"
+            // Line 3: "" (empty)
+            // Line 4: "void func2() {"
+            // We want to move to line 4 which contains "void func2() {"
+            editor.GotoLine(4);
+
+            // Wait a bit for cursor to move (simulating qtbot.wait(200))
+            System.Threading.Thread.Sleep(200);
+
+            // Update breadcrumbs (matching Python: editor._update_breadcrumbs())
+            editor.UpdateBreadcrumbs();
+
+            // Verify breadcrumbs are set correctly
+            // Matching Python test: assert editor._breadcrumbs is not None
+            editor.Breadcrumbs.Should().NotBeNull("Breadcrumbs widget should exist");
+
+            // Verify breadcrumbs show correct function (func2)
+            var breadcrumbPath = editor.Breadcrumbs.Path;
+            breadcrumbPath.Should().NotBeEmpty("Breadcrumb path should not be empty");
+            breadcrumbPath.Count.Should().BeGreaterOrEqual(2, "Breadcrumb path should have at least filename and function");
+            
+            // Last item should be the function we're in (func2)
+            breadcrumbPath[breadcrumbPath.Count - 1].Should().Be("Function: func2", 
+                "Breadcrumb should show Function: func2 when cursor is in func2");
+
+            // Additional verification: Move cursor to first function and verify breadcrumbs update
+            editor.GotoLine(1);
+            System.Threading.Thread.Sleep(200);
+            editor.UpdateBreadcrumbs();
+
+            // Verify breadcrumbs show first function (func1)
+            breadcrumbPath = editor.Breadcrumbs.Path;
+            breadcrumbPath[breadcrumbPath.Count - 1].Should().Be("Function: func1", 
+                "Breadcrumb should show Function: func1 when cursor is in func1");
+
+            // Move cursor back to second function and verify
+            editor.GotoLine(4);
+            System.Threading.Thread.Sleep(200);
+            editor.UpdateBreadcrumbs();
+
+            // Final verification - breadcrumbs should detect correct function (func2)
+            breadcrumbPath = editor.Breadcrumbs.Path;
+            breadcrumbPath[breadcrumbPath.Count - 1].Should().Be("Function: func2", 
+                "Breadcrumb should show Function: func2 when cursor moves back to func2");
         }
 
         // TODO: STUB - Implement test_nss_editor_foldable_regions_large_file (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:2137-2163)
