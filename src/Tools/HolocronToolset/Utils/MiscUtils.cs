@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Formats.RIM;
 
 namespace HolocronToolset.Utils
@@ -92,8 +93,19 @@ namespace HolocronToolset.Utils
             // Check if it's an ERF type file
             if (ext == ".erf" || ext == ".mod" || ext == ".sav" || ext == ".hak")
             {
-                // TODO: STUB - Implement ERF file reading using Andastra.Parsing
-                throw new NotImplementedException("ERF file reading not yet implemented");
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/misc.py:249-251
+                // Original: erf: ERF = read_erf(filepath); data = erf.get(resname, restype)
+                ERF erf = ERFAuto.ReadErf(filepath);
+                byte[] data = erf.Get(resname, restype);
+                
+                if (data == null)
+                {
+                    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/misc.py:258-260
+                    // Original: if data is None: raise ValueError("Could not find resource in RIM/ERF")
+                    throw new ArgumentException($"Could not find resource '{resname}.{restype.Extension}' in ERF file '{filepath}'");
+                }
+                
+                return data;
             }
             else if (ext == ".rim")
             {
