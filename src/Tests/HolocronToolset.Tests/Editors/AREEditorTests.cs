@@ -11,6 +11,7 @@ using HolocronToolset.Editors;
 using HolocronToolset.Tests.TestHelpers;
 using Xunit;
 using Andastra.Parsing.Common;
+using AREHelpers = Andastra.Parsing.Resource.ResourceAutoHelpers;
 
 namespace HolocronToolset.Tests.Editors
 {
@@ -3337,14 +3338,132 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestAreEditorMaximumValues: Maximum values edge case test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_are_editor_empty_strings (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1399-1432)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1399-1432
         // Original: def test_are_editor_empty_strings(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path): Test handling of empty strings in text fields.
         [Fact]
         public void TestAreEditorEmptyStrings()
         {
-            // TODO: STUB - Implement empty strings edge case test (all text fields set to empty)
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1399-1432
-            throw new NotImplementedException("TestAreEditorEmptyStrings: Empty strings edge case test not yet implemented");
+            // Get test files directory (matching Python: test_files_dir: Path)
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Try to find tat001.are (matching Python: are_file = test_files_dir / "tat001.are")
+            string areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            if (!System.IO.File.Exists(areFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            }
+
+            if (!System.IO.File.Exists(areFile))
+            {
+                return; // Skip if test file not available (matching Python: pytest.skip("tat001.are not found"))
+            }
+
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            // Matching Python: editor = AREEditor(None, installation)
+            var editor = new AREEditor(null, installation);
+
+            // Matching Python: original_data = are_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(areFile);
+
+            // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, original_data)
+            editor.Load(areFile, "tat001", ResourceType.ARE, originalData);
+
+            // Matching Python: Set all text fields to empty
+            // editor.ui.tagEdit.setText("")
+            if (editor.TagEdit != null)
+            {
+                editor.TagEdit.Text = "";
+            }
+
+            // editor.ui.envmapEdit.setText("")
+            if (editor.EnvmapEdit != null)
+            {
+                editor.EnvmapEdit.Text = "";
+            }
+
+            // editor.ui.grassTextureEdit.setText("")
+            if (editor.GrassTextureEdit != null)
+            {
+                editor.GrassTextureEdit.Text = "";
+            }
+
+            // editor.ui.onEnterSelect.set_combo_box_text("")
+            if (editor.OnEnterSelect != null)
+            {
+                editor.OnEnterSelect.Text = "";
+            }
+
+            // editor.ui.onExitSelect.set_combo_box_text("")
+            if (editor.OnExitSelect != null)
+            {
+                editor.OnExitSelect.Text = "";
+            }
+
+            // editor.ui.onHeartbeatSelect.set_combo_box_text("")
+            if (editor.OnHeartbeatSelect != null)
+            {
+                editor.OnHeartbeatSelect.Text = "";
+            }
+
+            // editor.ui.onUserDefinedSelect.set_combo_box_text("")
+            if (editor.OnUserDefinedSelect != null)
+            {
+                editor.OnUserDefinedSelect.Text = "";
+            }
+
+            // editor.ui.commentsEdit.setPlainText("")
+            if (editor.CommentsEdit != null)
+            {
+                editor.CommentsEdit.Text = "";
+            }
+
+            // Matching Python: data, _ = editor.build()
+            var (data, _) = editor.Build();
+
+            // Matching Python: modified_are = read_are(data)
+            var modifiedAre = AREHelpers.ReadAre(data);
+
+            // Matching Python: assert modified_are.tag == ""
+            modifiedAre.Tag.Should().Be("");
+
+            // Matching Python: assert str(modified_are.default_envmap) == ""
+            modifiedAre.DefaultEnvMap.ToString().Should().Be("");
+
+            // Matching Python: assert str(modified_are.grass_texture) == ""
+            modifiedAre.GrassTexture.ToString().Should().Be("");
+
+            // Matching Python: assert str(modified_are.on_enter) == ""
+            modifiedAre.OnEnter.ToString().Should().Be("");
+
+            // Matching Python: assert str(modified_are.on_exit) == ""
+            modifiedAre.OnExit.ToString().Should().Be("");
+
+            // Matching Python: assert str(modified_are.on_heartbeat) == ""
+            modifiedAre.OnHeartbeat.ToString().Should().Be("");
+
+            // Matching Python: assert str(modified_are.on_user_defined) == ""
+            modifiedAre.OnUserDefined.ToString().Should().Be("");
+
+            // Matching Python: assert modified_are.comment == ""
+            modifiedAre.Comment.Should().Be("");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1434-1458
