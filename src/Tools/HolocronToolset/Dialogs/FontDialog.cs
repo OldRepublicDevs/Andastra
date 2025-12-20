@@ -73,7 +73,8 @@ namespace HolocronToolset.Dialogs
             _fontSizeComboBox = new ComboBox { MinWidth = 100, IsEditable = true };
             PopulateFontSizes();
             _fontSizeComboBox.SelectionChanged += (s, e) => UpdatePreview();
-            _fontSizeComboBox.TextChanged += (s, e) => UpdatePreview();
+            // Note: ComboBox doesn't have TextChanged in Avalonia - use observable pattern for editable ComboBox
+            _fontSizeComboBox.GetObservable(ComboBox.TextProperty).Subscribe(text => UpdatePreview());
             fontSizePanel.Children.Add(_fontSizeComboBox);
             mainPanel.Children.Add(fontSizePanel);
 
@@ -138,7 +139,8 @@ namespace HolocronToolset.Dialogs
             {
                 PopulateFontSizes();
                 _fontSizeComboBox.SelectionChanged += (s, e) => UpdatePreview();
-                _fontSizeComboBox.TextChanged += (s, e) => UpdatePreview();
+                // Note: ComboBox doesn't have TextChanged in Avalonia - use observable pattern for editable ComboBox
+                _fontSizeComboBox.GetObservable(ComboBox.TextProperty).Subscribe(text => UpdatePreview());
             }
             if (_boldCheckBox != null)
             {
