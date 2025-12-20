@@ -641,12 +641,15 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
             }
 
             // Texture not found or format parsing not yet implemented
-            if (texResult == null && ddsResult == null && tpcResult == null)
+            if (texture == null)
             {
-                System.Diagnostics.Debug.WriteLine($"[EclipseGuiManager] Texture not found: {textureName}");
+                if (texResult == null && ddsResult == null && tpcResult == null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[EclipseGuiManager] Texture not found: {textureName}");
+                }
             }
 
-            return null;
+            return texture;
         }
 
         private GUIBorder ConvertSelectedToBorder(GUISelected selected)
