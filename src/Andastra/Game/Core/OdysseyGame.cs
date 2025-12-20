@@ -1045,11 +1045,22 @@ namespace Andastra.Runtime.Game.Core
             try
             {
                 // Update settings with game path
+                // Based on swkotor.exe (K1) and swkotor2.exe (K2) entry points:
+                // - K1: "END_M01AA" (Endar Spire - Command Module) @ swkotor.exe: 0x0067afb0 (OnNewGamePicked)
+                //   - Located via string reference: "END_M01AA" @ 0x00752f58
+                //   - Original implementation: FUN_005e5a90(aiStack_2c,"END_M01AA") sets module name
+                // - K2: "001ebo" (Ebon Hawk Interior - Prologue) @ swkotor2.exe: 0x0067afb0 (OnNewGamePicked equivalent)
+                //   - Located via string reference: "001ebo" @ 0x007cc028
+                //   - Original implementation: Character generation finishes and loads module "001ebo"
+                //   - Note: Module names are case-insensitive in resource lookup, but we use lowercase for consistency
+                // Module name casing: Ghidra shows "END_M01AA" (uppercase) but resource lookup is case-insensitive
+                // We use lowercase "end_m01aa" and "001ebo" to match Andastra.Parsing conventions
+                string startingModule = _settings.Game == Andastra.Runtime.Core.KotorGame.K1 ? "end_m01aa" : "001ebo";
                 var updatedSettings = new Andastra.Runtime.Core.GameSettings
                 {
                     Game = _settings.Game,
                     GamePath = gamePath,
-                    StartModule = "end_m01aa" // Default starting module
+                    StartModule = startingModule
                 };
 
                 // Create new session
