@@ -14,13 +14,36 @@ namespace HolocronToolset.Windows
     {
         private HTInstallation _installation;
 
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py
         // Original: def __init__(self, parent, installation):
         public IndoorBuilderWindow(Window parent = null, HTInstallation installation = null)
         {
             InitializeComponent();
             _installation = installation;
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:512-515
+            // Original: if installation is not None:
+            // Original:     self._module_kit_manager: ModuleKitManager = ModuleKitManager(installation)
+            // Original: else:
+            // Original:     self._module_kit_manager = None
+            if (installation != null)
+            {
+                ModuleKitManager = new ModuleKitManager(installation);
+            }
+            else
+            {
+                ModuleKitManager = null;
+            }
+
             SetupUI();
+
+            // Disable ActionSettings when no installation is provided (matching Python test expectation)
+            // Original: assert builder.ui.actionSettings.isEnabled() is False
+            if (Ui != null && Ui.ActionSettings != null)
+            {
+                Ui.ActionSettings.IsEnabled = (_installation != null);
+            }
         }
 
         private void InitializeComponent()
@@ -76,6 +99,11 @@ namespace HolocronToolset.Windows
         // Intentionally hides base Clipboard property (IClipboard? - system clipboard)
         // to provide domain-specific room clipboard (List<RoomClipboardData>)
         public new List<RoomClipboardData> Clipboard { get; private set; }
+
+        // Matching PyKotor implementation - self._module_kit_manager property
+        // Original: self._module_kit_manager: ModuleKitManager | None
+        // Module kit management (lazy loading) - handles converting game modules to kit-like components
+        public ModuleKitManager ModuleKitManager { get; private set; }
 
         private void SetupUI()
         {
@@ -135,9 +163,12 @@ namespace HolocronToolset.Windows
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:632-638
             // Original: self.ui.gridSizeSpin.valueChanged.connect(self.ui.mapRenderer.set_grid_size)
             // Original: self.ui.rotSnapSpin.valueChanged.connect(self.ui.mapRenderer.set_rotation_snap)
+            // Original: self.ui.snapToHooksCheck.toggled.connect(self.ui.mapRenderer.set_snap_to_hooks)
             // Setup spinbox bindings for grid size and rotation snap
             Ui.GridSizeSpinValueChanged = (value) => Ui.MapRenderer.SetGridSize((float)value);
             Ui.RotSnapSpinValueChanged = (value) => Ui.MapRenderer.SetRotationSnap((float)value);
+            // Setup checkbox binding for snap to hooks
+            Ui.SnapToHooksCheckToggled = (value) => Ui.MapRenderer.SetSnapToHooks(value);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1222-1247
             // Original: def _initialize_options_ui(self):
@@ -155,8 +186,13 @@ namespace HolocronToolset.Windows
             // Matching Python lines 1226-1231: Block signals temporarily to avoid triggering updates during initialization
             // In Avalonia/C#, we use a flag to prevent event handlers from firing during initialization
             Ui.BlockSpinboxSignals = true;
+            Ui.BlockCheckboxSignals = true;
 
             // Matching Python lines 1234-1239: Set UI to match renderer state
+            // Matching Python line 1234: self.ui.snapToGridCheck.setChecked(renderer.snap_to_grid)
+            // Note: snapToGridCheck will be implemented when needed
+            // Matching Python line 1235: self.ui.snapToHooksCheck.setChecked(renderer.snap_to_hooks)
+            Ui.SetSnapToHooksCheckChecked(renderer.SnapToHooks);
             // Matching Python line 1238: self.ui.gridSizeSpin.setValue(renderer.grid_size)
             Ui.GridSizeSpinValue = (decimal)renderer.GridSize;
             // Matching Python line 1239: self.ui.rotSnapSpin.setValue(int(renderer.rotation_snap))
@@ -164,6 +200,7 @@ namespace HolocronToolset.Windows
 
             // Matching Python lines 1242-1247: Unblock signals
             Ui.BlockSpinboxSignals = false;
+            Ui.BlockCheckboxSignals = false;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1751-1755
@@ -343,6 +380,10 @@ namespace HolocronToolset.Windows
         // Original: self.ui.actionUndo.triggered.connect(self._undo_stack.undo)
         public Action ActionUndo { get; set; }
 
+        // Matching PyKotor implementation - actionSettings menu action
+        // Original: self.ui.actionSettings - settings dialog action, disabled when no installation
+        public Action ActionSettings { get; set; }
+
         // Matching PyKotor implementation - actionRedo menu action
         // Original: self.ui.actionRedo.triggered.connect(self._undo_stack.redo)
         public Action ActionRedo { get; set; }
@@ -412,8 +453,10 @@ namespace HolocronToolset.Windows
         // Matching PyKotor implementation - blockSignals functionality
         // Original: self.ui.gridSizeSpin.blockSignals(True/False)
         // Original: self.ui.rotSnapSpin.blockSignals(True/False)
+        // Original: self.ui.snapToHooksCheck.blockSignals(True/False)
         // Flag to prevent value changed events from firing during initialization
         public bool BlockSpinboxSignals { get; set; } = false;
+        public bool BlockCheckboxSignals { get; set; } = false;
 
         // Matching PyKotor implementation - valueChanged signal/event
         // Original: self.ui.gridSizeSpin.valueChanged.connect(self.ui.mapRenderer.set_grid_size)
@@ -424,6 +467,56 @@ namespace HolocronToolset.Windows
         // Original: self.ui.rotSnapSpin.valueChanged.connect(self.ui.mapRenderer.set_rotation_snap)
         // Action to call when rotation snap spinbox value changes
         public Action<double> RotSnapSpinValueChanged { get; set; }
+
+        // Matching PyKotor implementation - snapToHooksCheck widget
+        // Original: self.ui.snapToHooksCheck (QCheckBox)
+        // Snap to hooks checkbox checked property
+        private bool _snapToHooksCheckChecked = true; // Default matches renderer default (SnapToHooks = true)
+        public bool SnapToHooksCheckChecked
+        {
+            get { return _snapToHooksCheckChecked; }
+            set
+            {
+                if (_snapToHooksCheckChecked != value)
+                {
+                    _snapToHooksCheckChecked = value;
+                    // Trigger toggled event if signals are not blocked
+                    if (!BlockCheckboxSignals && SnapToHooksCheckToggled != null)
+                    {
+                        SnapToHooksCheckToggled(value);
+                    }
+                }
+            }
+        }
+
+        // Matching PyKotor implementation - toggled signal/event
+        // Original: self.ui.snapToHooksCheck.toggled.connect(self.ui.mapRenderer.set_snap_to_hooks)
+        // Action to call when snap to hooks checkbox is toggled
+        public Action<bool> SnapToHooksCheckToggled { get; set; }
+
+        // Matching PyKotor implementation - setChecked method
+        // Original: self.ui.snapToHooksCheck.setChecked(value)
+        // Method to set snap to hooks checkbox checked state programmatically (for testing and initialization)
+        public void SetSnapToHooksCheckChecked(bool value)
+        {
+            SnapToHooksCheckChecked = value;
+        }
+
+        // Matching PyKotor implementation - snapToHooksCheck widget accessor
+        // Original: self.ui.snapToHooksCheck (QCheckBox)
+        // Property to access checkbox for testing (matches Python API: builder.ui.snapToHooksCheck.setChecked())
+        private SnapToHooksCheckboxWrapper _snapToHooksCheck;
+        public SnapToHooksCheckboxWrapper SnapToHooksCheck
+        {
+            get
+            {
+                if (_snapToHooksCheck == null)
+                {
+                    _snapToHooksCheck = new SnapToHooksCheckboxWrapper(this);
+                }
+                return _snapToHooksCheck;
+            }
+        }
 
         // Matching PyKotor implementation - setValue method
         // Original: self.ui.gridSizeSpin.setValue(value)
@@ -439,6 +532,33 @@ namespace HolocronToolset.Windows
         public void SetRotSnapSpinValue(int value)
         {
             RotSnapSpinValue = (decimal)value;
+        }
+    }
+
+    // Matching PyKotor implementation - checkbox wrapper for API compatibility
+    // Original: self.ui.snapToHooksCheck.setChecked(value)
+    // Wrapper class to match Python API where checkbox has setChecked method
+    public class SnapToHooksCheckboxWrapper
+    {
+        private readonly IndoorBuilderWindowUi _ui;
+
+        public SnapToHooksCheckboxWrapper(IndoorBuilderWindowUi ui)
+        {
+            _ui = ui;
+        }
+
+        // Matching PyKotor implementation - setChecked method
+        // Original: self.ui.snapToHooksCheck.setChecked(value)
+        public void SetChecked(bool value)
+        {
+            _ui.SetSnapToHooksCheckChecked(value);
+        }
+
+        // Matching PyKotor implementation - isChecked method
+        // Original: self.ui.snapToHooksCheck.isChecked()
+        public bool IsChecked()
+        {
+            return _ui.SnapToHooksCheckChecked;
         }
     }
 

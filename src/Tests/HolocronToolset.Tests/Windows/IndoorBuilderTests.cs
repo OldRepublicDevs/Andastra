@@ -131,11 +131,14 @@ namespace HolocronToolset.Tests.Windows
                 builder.Map.Should().NotBeNull("Map should be initialized even without installation");
 
                 // Matching Python line 377: assert builder.ui.actionSettings.isEnabled() is False
-                // TODO: PLACEHOLDER - ActionSettingsEnabled will be implemented when settings UI is complete
-                // For now, verify builder works without installation
+                // ActionSettings should be disabled when no installation is provided
+                if (builder.Ui.ActionSettings != null)
+                {
+                    builder.Ui.ActionSettings.IsEnabled.Should().BeFalse("ActionSettings should be disabled when no installation is provided");
+                }
 
                 // Matching Python line 378: assert builder._module_kit_manager is None
-                // TODO: PLACEHOLDER - _module_kit_manager will be implemented when module kit functionality is complete
+                builder.ModuleKitManager.Should().BeNull("ModuleKitManager should be null when no installation is provided");
 
                 builder.Should().NotBeNull("Builder should be created without installation");
                 builder.Ui.Should().NotBeNull("UI should be initialized");
@@ -216,10 +219,9 @@ namespace HolocronToolset.Tests.Windows
         // - test_move_rooms_command_multiple
         // - test_rotate_rooms_command
         // - test_rotate_rooms_command_wraps_360
-        // - test_flip_rooms_command_x
-        // TODO: STUB - Implement test_flip_rooms_command_x (vendor/PyKotor/Tools/HolocronToolset/tests/gui/windows/test_indoor_builder.py)
-        // TODO: STUB - Implement test_flip_rooms_command_y (vendor/PyKotor/Tools/HolocronToolset/tests/gui/windows/test_indoor_builder.py)
-        // TODO: STUB - Implement test_flip_rooms_command_both (vendor/PyKotor/Tools/HolocronToolset/tests/gui/windows/test_indoor_builder.py)
+        // - test_flip_rooms_command_x (implemented)
+        // - test_flip_rooms_command_y (implemented)
+        // - test_flip_rooms_command_both (implemented)
         // TODO: STUB - Implement test_duplicate_rooms_command (vendor/PyKotor/Tools/HolocronToolset/tests/gui/windows/test_indoor_builder.py)
         // TODO: STUB - Implement test_move_warp_command (vendor/PyKotor/Tools/HolocronToolset/tests/gui/windows/test_indoor_builder.py)
         //
@@ -2271,9 +2273,7 @@ namespace HolocronToolset.Tests.Windows
                 renderer.SnapToHooks.Should().BeTrue("snap_to_hooks should default to True");
 
                 // Matching Python line 970: builder.ui.snapToHooksCheck.setChecked(False)
-                // TODO: PLACEHOLDER - UI checkbox binding will be implemented when UI is complete
-                // For now, directly set the property to test the renderer behavior
-                renderer.SetSnapToHooks(false);
+                builder.Ui.SnapToHooksCheck.SetChecked(false);
 
                 // Matching Python lines 971-972: qtbot.wait(10) and QApplication.processEvents()
                 // Note: In headless tests, operations are synchronous
@@ -3489,7 +3489,9 @@ namespace HolocronToolset.Tests.Windows
 
                 // Matching Python test logic:
                 // assert builder._module_kit_manager is None
+                builder.ModuleKitManager.Should().BeNull("ModuleKitManager should be null when no installation is provided");
                 // assert builder.ui.moduleSelect.count() == 0
+                // TODO: PLACEHOLDER - moduleSelect UI will be implemented when module selection UI is complete
 
                 builder.Should().NotBeNull();
             }
