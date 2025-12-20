@@ -255,6 +255,85 @@ namespace Andastra.Parsing.Tests.Formats
         }
 
         [Fact(Timeout = 300000)]
+        public void TestBWMKsySyntaxValidation()
+        {
+            var normalizedKsyPath = Path.GetFullPath(BWMKsyPath);
+            if (!File.Exists(normalizedKsyPath))
+            {
+                // Skip if .ksy file doesn't exist
+                return;
+            }
+
+            // Check if Java/Kaitai compiler is available
+            var javaCheck = RunCommand("java", "-version");
+            if (javaCheck.ExitCode != 0)
+            {
+                // Skip if Java is not available
+                return;
+            }
+
+            // Try to validate syntax by attempting compilation (syntax errors will show up)
+            // We don't need successful compilation, just syntax validation
+            var jarPath = FindKaitaiCompilerJar();
+            if (string.IsNullOrEmpty(jarPath) || !File.Exists(jarPath))
+            {
+                // Try direct command
+                var result = RunCommand("kaitai-struct-compiler", $"--version");
+                if (result.ExitCode != 0)
+                {
+                    // Skip if compiler not available
+                    return;
+                }
+            }
+
+            // Try to compile to a simple target to validate syntax
+            // Use Python as it's usually well-supported
+            var tempOutput = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            try
+            {
+                Directory.CreateDirectory(tempOutput);
+                var compileResult = RunKaitaiCompiler(normalizedKsyPath, "-t python", tempOutput);
+
+                // Even if compilation fails due to dependencies, syntax errors should be caught
+                // We're mainly checking that the .ksy file is valid YAML and Kaitai Struct syntax
+                if (compileResult.ExitCode != 0 && !string.IsNullOrEmpty(compileResult.Error))
+                {
+                    // Check if error is a syntax error (vs dependency/runtime error)
+                    var errorLower = compileResult.Error.ToLowerInvariant();
+                    if (errorLower.Contains("syntax") || errorLower.Contains("parse") ||
+                        errorLower.Contains("yaml") || errorLower.Contains("invalid"))
+                    {
+                        // This is likely a syntax error, fail the test
+                        compileResult.Error.Should().NotContainAny("syntax", "parse", "yaml", "invalid",
+                            because: $"BWM.ksy should not have syntax errors. Error: {compileResult.Error}");
+                    }
+                    // Otherwise, it might be a dependency issue, which is OK for syntax validation
+                }
+
+                // Verify the file content is valid Kaitai Struct format
+                var content = File.ReadAllText(normalizedKsyPath);
+                content.Should().Contain("meta:", "BWM.ksy should contain meta section");
+                content.Should().Contain("id: bwm", "BWM.ksy should have id: bwm");
+                content.Should().Contain("seq:", "BWM.ksy should contain seq section");
+                content.Should().Contain("valid: \"BWM \"", "BWM.ksy should validate file type signature as 'BWM '");
+            }
+            finally
+            {
+                if (Directory.Exists(tempOutput))
+                {
+                    try
+                    {
+                        Directory.Delete(tempOutput, true);
+                    }
+                    catch
+                    {
+                        // Ignore cleanup errors
+                    }
+                }
+            }
+        }
+
+        [Fact(Timeout = 300000)]
         public void TestCompileBWMToMultipleLanguagesSimultaneously()
         {
             var normalizedKsyPath = Path.GetFullPath(BWMKsyPath);
