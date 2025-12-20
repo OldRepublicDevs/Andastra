@@ -33,6 +33,18 @@ namespace Andastra.Parsing.Formats.WAV
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/wav/io_wav.py:240-294
         // Original: @autoclose def write(self, *, auto_close: bool = True) -> None
+        public byte[] Write()
+        {
+            using (var ms = new MemoryStream())
+            {
+                using (var writer = new WAVBinaryWriter(_wav, ms))
+                {
+                    writer.Write(false); // Don't auto-close
+                }
+                return ms.ToArray();
+            }
+        }
+
         public void Write(bool autoClose = true)
         {
             try

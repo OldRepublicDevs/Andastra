@@ -49,7 +49,7 @@ namespace Andastra.Parsing.Tests.Formats
             WAV wav = new WAVBinaryReader(BinaryTestFile).Load();
 
             // Validate WAV type
-            wav.WavType.Should().BeOneOf(WAVType.VO, WAVType.SFX, "WAV type should be VO or SFX");
+            wav.WavType.Should().BeOneOf(new[] { WAVType.VO, WAVType.SFX }, "WAV type should be VO or SFX");
         }
 
         [Fact(Timeout = 120000)]
@@ -63,7 +63,7 @@ namespace Andastra.Parsing.Tests.Formats
             WAV wav = new WAVBinaryReader(BinaryTestFile).Load();
 
             // Validate audio format
-            wav.AudioFormat.Should().BeOneOf(AudioFormat.Wave, AudioFormat.MP3, "Audio format should be Wave or MP3");
+            wav.AudioFormat.Should().BeOneOf(new[] { AudioFormat.Wave, AudioFormat.MP3 }, "Audio format should be Wave or MP3");
             wav.Encoding.Should().BeGreaterThanOrEqualTo(0, "Encoding should be non-negative");
             wav.Channels.Should().BeGreaterThan(0, "Channels should be positive");
             wav.SampleRate.Should().BeGreaterThan(0, "Sample rate should be positive");
@@ -136,17 +136,17 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Validate format chunk structure matches WAV.ksy
             // audio_format, channels, sample_rate, bytes_per_sec, block_align, bits_per_sample
-            wav.Encoding.Should().BeOneOf(
+            wav.Encoding.Should().BeOneOf(new[] {
                 (int)WaveEncoding.PCM,
                 (int)WaveEncoding.IMA_ADPCM,
-                (int)WaveEncoding.MP3,
-                "Audio format should match WAV.ksy valid values");
+                (int)WaveEncoding.MP3
+            }, "Audio format should match WAV.ksy valid values");
 
             wav.Channels.Should().BeInRange(1, 2, "Channels should be 1 (mono) or 2 (stereo) as per WAV.ksy");
             wav.SampleRate.Should().BePositive("Sample rate should be positive");
             wav.BytesPerSec.Should().BePositive("Bytes per second should be positive");
             wav.BlockAlign.Should().BePositive("Block align should be positive");
-            wav.BitsPerSample.Should().BeOneOf(8, 16, "Bits per sample should be 8 or 16 as per WAV.ksy");
+            wav.BitsPerSample.Should().BeOneOf(new[] { 8, 16 }, "Bits per sample should be 8 or 16 as per WAV.ksy");
         }
 
         [Fact(Timeout = 120000)]
