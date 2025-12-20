@@ -2790,6 +2790,104 @@ namespace Andastra.Runtime.Core.Navigation
         /// 1. Pathfinding: The A* algorithm only considers walkable faces when finding paths
         /// 2. Collision Detection: Characters are prevented from standing on non-walkable faces
         /// 3. Height Calculation: ProjectToSurface only works on walkable faces
+        /// 
+        /// HOW PROJECTTOSURFACE WORKS (Based on swkotor2.exe):
+        /// 
+        /// ProjectToSurface is based on FUN_0055b1d0 @ 0x0055b1d0 and FUN_005761f0 @ 0x005761f0.
+        /// 
+        /// FUN_0055b1d0 @ 0x0055b1d0 (Height Calculation Entry Point):
+        /// - Takes a 3D point (x, y, z) and finds the height at that (x, y) position
+        /// - Line 10: Checks if AABB tree exists (offset 0x3c in walkmesh structure)
+        ///   - If tree doesn't exist, returns _DAT_007b56fc (special value indicating no height)
+        /// - Line 12: Calls FUN_00576640 with AABB tree pointer, point coordinates, and flag
+        /// - FUN_00576640 finds the triangle containing the point and calculates height
+        /// 
+        /// FUN_005761f0 @ 0x005761f0 (Find Face for Height Calculation):
+        /// - Finds which triangle contains a given (x, y) point
+        /// - This function is called by FUN_00576640 when calculating height at a point
+        /// - Line 14: Calls FUN_00557540 to transform point coordinates (if needed)
+        ///   - FUN_00557540 may apply coordinate system transformations or offsets
+        ///   - The transformed point is stored in local_2c (x) and local_28 (y)
+        /// - Lines 15-25: Initializes result array (local_20) with default values:
+        ///   - local_20[0] = 0xffffffff (special marker value, indicates no face found yet)
+        ///   - local_20[1] = 0 (flags for traversal, initially zero)
+        ///   - local_20[2] = 0 (intersection flag, 0 = no intersection, 1 = intersection found)
+        ///   - local_20[3] = -1 (face index, -1 means not found, valid face index if found)
+        ///   - local_20[4] = 0 (intersection point x coordinate, set if intersection found)
+        ///   - local_20[5] = 0 (intersection point y coordinate, set if intersection found)
+        ///   - local_20[6] = 0 (intersection point z coordinate, set if intersection found)
+        ///   - local_20[7] = 0 (additional data, used for face flags)
+        /// - Line 26: If param_2 == 0 (use alternative traversal method):
+        ///   - Line 27: Calls FUN_00576090 with vertical line segment
+        ///   - Vertical line: from (x, y, 1000.0) to (x, y, -1000.0)
+        ///   - FUN_00576090 is similar to FUN_00575f60 but uses a different AABB tree traversal method
+        ///   - FUN_00576090 uses param_4[0] (e4 offset) instead of param_4[0] (e0 offset) for root node
+        /// - Line 29: Else (use standard method, param_2 != 0):
+        ///   - Line 30: Calls FUN_00575f60 with vertical line segment
+        ///   - Vertical line: from (x, y, 1000.0) to (x, y, -1000.0)
+        ///   - FUN_00575f60 uses AABB tree to find triangles intersecting the vertical line
+        ///   - FUN_00575f60 calls FUN_00575350 for AABB tree traversal
+        /// - Line 32: If no face found (local_20[3] == -1):
+        ///   - This means the vertical line segment didn't intersect any triangle
+        ///   - This can happen if the point is outside all triangles, or if there's a precision issue
+        ///   - Lines 33-36: Calculates a small offset vector to help with edge cases:
+        ///     - Creates a vector (1.0, 1.0, 0.0) and normalizes it
+        ///     - Multiplies by _DAT_007b5704 (typically a small value like 0.01 or 0.1)
+        ///     - This creates a small random offset in the X and Y directions
+        ///   - Line 37: If param_2 != 0 (use standard method):
+        ///     - Line 38-39: Calls FUN_00575f60 again with offset point
+        ///     - Offset point: (x + offset_x, y + offset_y, z + tolerance) to (x + offset_x, y + offset_y, z - tolerance)
+        ///     - The offset helps catch edge cases where the point is exactly on a triangle boundary
+        ///   - Line 42: Else (use alternative method):
+        ///     - Line 42-44: Calls FUN_00576090 again with offset point
+        /// - Line 46: Returns local_20[3] (face index, or -1 if not found)
+        /// - Why the large z range (1000.0 to -1000.0)? 
+        ///   - The input point's z coordinate might be far from the walkmesh surface
+        ///   - For example, a character might be at z=50, but the walkmesh is at z=5
+        ///   - The large range ensures we find the triangle even if the z coordinate is wrong
+        ///   - The actual intersection point's z coordinate is calculated later from the plane equation
+        /// - Why the offset retry?
+        ///   - Sometimes points exactly on triangle edges or vertices can be missed due to floating-point precision
+        ///   - The small offset (typically 0.01 units) moves the point slightly, which helps catch these edge cases
+        ///   - This is especially important for points on the boundary between two triangles
+        /// 
+        /// FUN_00576640 @ 0x00576640 (Calculate Height from Face):
+        /// - Calculates the height at a point after finding which triangle contains it
+        /// - Line 17: Calls FUN_005761f0 to find the face containing the point
+        /// - Line 18: If face not found (iVar1 == -1):
+        ///   - Line 19: Returns _DAT_007c14e4 (special value indicating no height found)
+        /// - Lines 21-23: Prepares parameters for plane equation calculation:
+        ///   - local_c = param_2 (x coordinate)
+        ///   - local_8 = param_3 (y coordinate)
+        ///   - local_4 = 0xc1100000 (special float value, likely -4.0)
+        /// - Line 24-25: Calls FUN_004d6b10 to calculate height from plane equation:
+        ///   - Gets triangle normal from walkmesh structure (offset 0x68 + face_index * 12)
+        ///   - Gets plane distance from walkmesh structure (offset 0x6c + face_index * 4)
+        ///   - Calculates z = (-d - a*x - b*y) / c
+        /// - Line 26: Returns calculated height
+        /// 
+        /// FUN_00575050 @ 0x00575050 (Height Calculation with Known Face):
+        /// - Faster version when you already know which triangle contains the point
+        /// - Lines 9-11: Prepares parameters for plane equation:
+        ///   - local_c = param_2 (x coordinate)
+        ///   - local_8 = param_3 (y coordinate)
+        ///   - local_4 = 0xc1100000 (special float value)
+        /// - Line 12-13: Calls FUN_004d6b10 to calculate height:
+        ///   - Gets triangle normal from walkmesh structure (offset 0x68 + face_index * 12)
+        ///   - Gets plane distance from walkmesh structure (offset 0x6c + face_index * 4)
+        ///   - Calculates z = (-d - a*x - b*y) / c
+        /// - This is faster than FUN_00576640 because it skips the face-finding step
+        /// 
+        /// FUN_004d6b10 @ 0x004d6b10 (Plane Equation Height Calculation):
+        /// - The core function that calculates height from plane equation
+        /// - Takes: triangle normal vector (3 floats), plane distance (1 float), point (x, y)
+        /// - Line 7: Checks if normal.Z (c component) is very close to 0:
+        ///   - If yes, returns _DAT_007b56fc (special value, triangle is vertical)
+        ///   - Can't divide by zero, so vertical triangles need special handling
+        /// - Lines 10-11: Calculates height using plane equation:
+        ///   - z = (-d - a*x - b*y) / c
+        ///   - Where (a, b, c) is the normal vector, d is plane distance
+        /// - Returns calculated z coordinate
         /// 4. Line of Sight: Non-walkable faces can block line of sight
         /// 
         /// ORIGINAL IMPLEMENTATION:
