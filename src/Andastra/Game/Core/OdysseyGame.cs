@@ -246,6 +246,12 @@ namespace Andastra.Runtime.Game.Core
                     if (musicPlayerObj is IMusicPlayer musicPlayer)
                     {
                         _musicPlayer = musicPlayer;
+                        
+                        // Apply initial music volume from settings (combined with master volume)
+                        // Based on swkotor.exe and swkotor2.exe: Volume settings loaded from INI file
+                        float combinedMusicVolume = _settings.MasterVolume * _settings.MusicVolume;
+                        _musicPlayer.Volume = combinedMusicVolume;
+                        
                         Console.WriteLine("[Odyssey] Music player initialized successfully");
                     }
                     else

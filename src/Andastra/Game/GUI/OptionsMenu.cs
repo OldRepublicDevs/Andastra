@@ -260,7 +260,7 @@ namespace Andastra.Runtime.Game.GUI
                         musicPlayer.Volume = volume;
                     }
                 }, 0, 100),
-                new OptionItem("SFX Volume", OptionType.Numeric, () => settings.EffectsVolume * 100, v => settings.EffectsVolume = (float)v / 100.0f, 0, 100),
+                new OptionItem("SFX Volume", OptionType.Numeric, () => settings.Audio.SfxVolume * 100, v => settings.Audio.SfxVolume = (float)v / 100.0f, 0, 100),
                 new OptionItem("Voice Volume", OptionType.Numeric, () => settings.VoiceVolume * 100, v => settings.VoiceVolume = (float)v / 100.0f, 0, 100)
             };
             options[OptionsCategory.Audio] = audioOptions;
@@ -276,7 +276,7 @@ namespace Andastra.Runtime.Game.GUI
             var controlsOptions = new List<OptionItem>
             {
                 new OptionItem("Mouse Sensitivity", OptionType.Numeric, () => 50, v => { /* TODO: Implement mouse sensitivity */ }, 1, 100),
-                new OptionItem("Invert Mouse Y", OptionType.Boolean, () => 0, v => { /* TODO: Implement mouse invert */ }, 0, 1)
+                new OptionItem("Invert Mouse Y", OptionType.Boolean, () => settings.InvertMouseY ? 1 : 0, v => settings.InvertMouseY = v > 0, 0, 1)
             };
             options[OptionsCategory.Controls] = controlsOptions;
 
@@ -337,7 +337,7 @@ namespace Andastra.Runtime.Game.GUI
             var controlsOptions = new List<OptionItem>
             {
                 new OptionItem("Mouse Sensitivity", OptionType.Numeric, () => 50, v => { /* TODO: Implement mouse sensitivity */ }, 1, 100),
-                new OptionItem("Invert Mouse Y", OptionType.Boolean, () => 0, v => { /* TODO: Implement mouse invert */ }, 0, 1)
+                new OptionItem("Invert Mouse Y", OptionType.Boolean, () => settings.InvertMouseY ? 1 : 0, v => settings.InvertMouseY = v > 0, 0, 1)
             };
             options[OptionsCategory.Controls] = controlsOptions;
 
