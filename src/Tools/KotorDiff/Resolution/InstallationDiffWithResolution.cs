@@ -77,7 +77,7 @@ namespace KotorDiff.Resolution
                         pathStr = fileInfo.DirectoryName;
                     }
 
-                    if (pathStr != null && DiffEngineUtils.IsKotorInstallDir(pathStr))
+                    if (pathStr != null && ResolutionUtils.IsKotorInstallDir(pathStr))
                     {
                         try
                         {

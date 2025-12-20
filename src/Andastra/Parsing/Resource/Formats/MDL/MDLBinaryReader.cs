@@ -616,7 +616,7 @@ namespace Andastra.Parsing.Formats.MDL
             RawBinaryReader tempReader = CreateReader(source, offset, 12);
             tempReader.ReadUInt32(); // unused (always 0)
             uint mdlSize = tempReader.ReadUInt32();
-            uint mdxSize = tempReader.ReadUInt32();
+            uint mdxSizeFromHeader = tempReader.ReadUInt32();
             tempReader.Dispose();
 
             // Now create reader with offset 12 (after file header)
@@ -624,7 +624,7 @@ namespace Andastra.Parsing.Formats.MDL
 
             if (mdxSource != null)
             {
-                _readerExt = CreateReader(mdxSource, mdxOffset, mdxSize > 0 ? (int?)mdxSize : null);
+                _readerExt = CreateReader(mdxSource, mdxOffset, mdxSize > 0 ? (int?)mdxSize : (mdxSizeFromHeader > 0 ? (int?)mdxSizeFromHeader : null));
             }
             else
             {
@@ -715,8 +715,8 @@ namespace Andastra.Parsing.Formats.MDL
             if (binNode.Trimesh != null)
             {
                 node.Mesh = new MDLMesh();
-                node.Mesh.Shadow = binNode.Trimesh.HasShadow != 0;
-                node.Mesh.Render = binNode.Trimesh.Render != 0;
+                node.Mesh.Shadow = binNode.Trimesh.HasShadow;
+                node.Mesh.Render = binNode.Trimesh.Render;
                 node.Mesh.BackgroundGeometry = binNode.Trimesh.Background != 0;
                 node.Mesh.HasLightmap = binNode.Trimesh.HasLightmap != 0;
                 node.Mesh.Beaming = binNode.Trimesh.Beaming;
@@ -856,8 +856,8 @@ namespace Andastra.Parsing.Formats.MDL
             {
                 for (int i = 0; i < binNode.Header.ControllerCount; i++)
                 {
-                    uint offset = binNode.Header.OffsetToControllers + (uint)(i * Controller.SIZE);
-                    MDLController controller = LoadController(offset, binNode.Header.OffsetToControllerData);
+                    uint controllerOffset = binNode.Header.OffsetToControllers + (uint)(i * Controller.SIZE);
+                    MDLController controller = LoadController(controllerOffset, binNode.Header.OffsetToControllerData);
                     node.Controllers.Add(controller);
                 }
             }
