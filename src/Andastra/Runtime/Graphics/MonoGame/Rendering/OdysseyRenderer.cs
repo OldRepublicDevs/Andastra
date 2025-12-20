@@ -1,10 +1,13 @@
 using System;
 using System.Numerics;
+using Andastra.Parsing.Installation;
 using Andastra.Runtime.MonoGame.Backends;
 using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
+using Andastra.Runtime.MonoGame.Materials;
 using Andastra.Runtime.MonoGame.Raytracing;
 using Andastra.Runtime.MonoGame.Remix;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.MonoGame.Rendering
 {
@@ -119,8 +122,12 @@ namespace Andastra.Runtime.MonoGame.Rendering
         /// - Supports Vulkan, DirectX 12, DirectX 11, DirectX 10, DirectX 9 Remix, and OpenGL
         /// - Falls back gracefully if preferred backend is unavailable
         /// - Initializes raytracing and lighting systems based on backend capabilities
+        /// - Initializes material factory for PBR material creation from KOTOR resources
         /// </summary>
-        public bool Initialize(RenderSettings settings, IntPtr windowHandle)
+        /// <param name="settings">Render settings.</param>
+        /// <param name="windowHandle">Window handle for rendering.</param>
+        /// <param name="installation">Optional game installation for resource loading. If provided, enables material factory initialization.</param>
+        public bool Initialize(RenderSettings settings, IntPtr windowHandle, [CanBeNull] Installation installation = null)
         {
             if (_initialized)
             {
@@ -222,7 +229,27 @@ namespace Andastra.Runtime.MonoGame.Rendering
             }
 
             // TODO: Initialize lighting system when ILightingSystem implementation is available
-            // TODO: Initialize material factory when IPbrMaterialFactory implementation is available
+
+            // Initialize material factory if installation is provided
+            if (installation != null)
+            {
+                try
+                {
+                    _materialFactory = new PbrMaterialFactory(_backend, installation);
+                    Console.WriteLine("[OdysseyRenderer] Material factory initialized successfully");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("[OdysseyRenderer] WARNING: Material factory initialization failed: " + ex.Message);
+                    Console.WriteLine("[OdysseyRenderer] Stack trace: " + ex.StackTrace);
+                    _materialFactory?.Dispose();
+                    _materialFactory = null;
+                }
+            }
+            else
+            {
+                Console.WriteLine("[OdysseyRenderer] Material factory not initialized (Installation not provided)");
+            }
 
             _initialized = true;
             _frameNumber = 0;
@@ -250,6 +277,9 @@ namespace Andastra.Runtime.MonoGame.Rendering
 
             _lighting?.Dispose();
             _lighting = null;
+
+            _materialFactory?.Dispose();
+            _materialFactory = null;
 
             _backend?.Dispose();
             _backend = null;
