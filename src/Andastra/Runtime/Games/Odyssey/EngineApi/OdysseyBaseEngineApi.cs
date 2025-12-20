@@ -287,49 +287,13 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             return Variable.Void();
         }
 
-        /// <summary>
-        /// GetFacing(object oObject) - Gets the facing direction of an object
-        /// </summary>
-        /// <remarks>
-        /// Based on swkotor.exe: Transform system
-        /// Original implementation: Returns entity facing angle (degrees, anticlockwise from East)
-        /// </remarks>
-        protected Variable Func_GetFacing(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            IEntity entity = ResolveObject(objectId, ctx);
-            if (entity != null)
-            {
-                ITransformComponent transform = entity.GetComponent<ITransformComponent>();
-                if (transform != null)
-                {
-                    return Variable.FromFloat(transform.Facing * 180f / (float)Math.PI);
-                }
-            }
-            return Variable.FromFloat(0f);
-        }
-
-        /// <summary>
-        /// GetPosition(object oObject) - Gets the position of an object
-        /// </summary>
-        /// <remarks>
-        /// Based on swkotor.exe: Transform system
-        /// Original implementation: Returns entity position as vector
-        /// </remarks>
-        protected Variable Func_GetPosition(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            IEntity entity = ResolveObject(objectId, ctx);
-            if (entity != null)
-            {
-                ITransformComponent transform = entity.GetComponent<ITransformComponent>();
-                if (transform != null)
-                {
-                    return Variable.FromVector(transform.Position);
-                }
-            }
-            return Variable.FromVector(Vector3.Zero);
-        }
+        // GetPosition and GetFacing are now implemented in BaseEngineApi
+        // They are identical across all engines (Odyssey, Aurora, Eclipse, Infinity)
+        // Verified via Ghidra MCP analysis:
+        // - nwmain.exe: ExecuteCommandGetPosition @ 0x14052f5b0, ExecuteCommandGetFacing @ 0x140523a70
+        // - swkotor.exe/swkotor2.exe: Equivalent transform system implementations
+        // - daorigins.exe: Equivalent transform system implementations
+        // Kotor1.cs and TheSithLords.cs call base.Func_GetPosition/base.Func_GetFacing which now resolve to BaseEngineApi
 
 
         /// <summary>

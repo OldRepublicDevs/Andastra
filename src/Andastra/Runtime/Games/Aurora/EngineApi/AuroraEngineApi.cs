@@ -111,9 +111,7 @@ namespace Andastra.Runtime.Engines.Aurora.EngineApi
             // are common across engines but may have engine-specific implementations
             // For now, these are not in BaseEngineApi, so they will be unimplemented until added
 
-            // Object functions - delegate to base class where available
-            // Note: GetPosition and GetFacing are not yet in BaseEngineApi but should be moved there
-            // as they are common across all engines (Odyssey, Aurora, Eclipse)
+            // Object functions - delegate to base class (common across all engines)
             _functionDispatch[27] = Func_GetPosition;
             _functionDispatch[28] = Func_GetFacing;
             _functionDispatch[41] = Func_GetDistanceToObject;
@@ -163,55 +161,8 @@ namespace Andastra.Runtime.Engines.Aurora.EngineApi
 
         #region Common Object Functions
 
-        /// <summary>
-        /// GetPosition(object oObject) - Gets the position of an object
-        /// </summary>
-        /// <remarks>
-        /// Based on nwmain.exe: ExecuteCommandGetPosition (routine ID 27)
-        /// Located via function dispatch table: CNWSVirtualMachineCommands::InitializeCommands @ 0x14054de30 (nwmain.exe)
-        /// Original implementation: Returns entity position as vector
-        /// Common across all engines: Odyssey, Aurora, Eclipse
-        /// TODO: Move to BaseEngineApi once confirmed identical across all engines
-        /// </remarks>
-        private Variable Func_GetPosition(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
-            if (entity != null)
-            {
-                Core.Interfaces.Components.ITransformComponent transform = entity.GetComponent<Core.Interfaces.Components.ITransformComponent>();
-                if (transform != null)
-                {
-                    return Variable.FromVector(transform.Position);
-                }
-            }
-            return Variable.FromVector(System.Numerics.Vector3.Zero);
-        }
-
-        /// <summary>
-        /// GetFacing(object oObject) - Gets the facing direction of an object
-        /// </summary>
-        /// <remarks>
-        /// Based on nwmain.exe: ExecuteCommandGetFacing (routine ID 28)
-        /// Located via function dispatch table: CNWSVirtualMachineCommands::InitializeCommands @ 0x14054de30 (nwmain.exe)
-        /// Original implementation: Returns entity facing angle (degrees, anticlockwise from East)
-        /// Common across all engines: Odyssey, Aurora, Eclipse
-        /// TODO: Move to BaseEngineApi once confirmed identical across all engines
-        /// </remarks>
-        private Variable Func_GetFacing(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
-            if (entity != null)
-            {
-                Core.Interfaces.Components.ITransformComponent transform = entity.GetComponent<Core.Interfaces.Components.ITransformComponent>();
-                if (transform != null)
-                {
-                    return Variable.FromFloat(transform.Facing * 180f / (float)System.Math.PI);
-                }
-            }
-            return Variable.FromFloat(0f);
-        }
+        // GetPosition and GetFacing are now implemented in BaseEngineApi (common across all engines)
+        // These methods delegate to the base class implementations
 
         #endregion
 

@@ -209,8 +209,8 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 case 5: return Func_PrintObject(args, ctx);
 
                 // Object functions
-                case 27: return Func_GetPosition(args, ctx);
-                case 28: return Func_GetFacing(args, ctx);
+                case 27: return base.Func_GetPosition(args, ctx);
+                case 28: return base.Func_GetFacing(args, ctx);
                 case 41: return base.Func_GetDistanceToObject(args, ctx);
                 case 42: return base.Func_GetIsObjectValid(args, ctx);
 
@@ -252,7 +252,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 case 118: return Func_GetIsWaypoint(args, ctx);
                 case 119: return Func_GetIsArea(args, ctx);
                 case 120: return Func_GetIsModule(args, ctx);
-                case 201: return Func_GetFacing(args, ctx);
+                case 201: return base.Func_GetFacing(args, ctx);
                 case 202: return Func_SetPosition(args, ctx);
                 case 203: return Func_SetFacing(args, ctx);
                 case 204: return Func_MoveToObject(args, ctx);
@@ -321,57 +321,13 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
 
         #region Eclipse-Specific Functions
 
-        /// <summary>
-        /// GetPosition(object oObject) - Returns the position vector of an object
-        /// </summary>
-        /// <remarks>
-        /// Based on Eclipse engine: GetPosition implementation
-        /// Eclipse engines (Dragon Age, ) use 3D position vectors for object placement
-        /// Returns Vector3 with X, Y, Z coordinates
-        /// </remarks>
-        private Variable Func_GetPosition(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
-            
-            if (entity != null)
-            {
-                ITransformComponent transform = entity.GetComponent<ITransformComponent>();
-                if (transform != null)
-                {
-                    return Variable.FromVector(transform.Position);
-                }
-            }
-            
-            return Variable.FromVector(Vector3.Zero);
-        }
-
-        /// <summary>
-        /// GetFacing(object oObject) - Returns the facing direction (in degrees) of an object
-        /// </summary>
-        /// <remarks>
-        /// Based on Eclipse engine: GetFacing implementation
-        /// Facing is expressed as degrees from East (0.0 = East, 90.0 = North, 180.0 = West, 270.0 = South)
-        /// </remarks>
-        private Variable Func_GetFacing(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
-            
-            if (entity != null)
-            {
-                ITransformComponent transform = entity.GetComponent<ITransformComponent>();
-                if (transform != null)
-                {
-                    // Convert facing angle (radians) to degrees from East
-                    float facingDegrees = (float)(transform.Facing * 180.0 / Math.PI);
-                    if (facingDegrees < 0) facingDegrees += 360.0f;
-                    return Variable.FromFloat(facingDegrees);
-                }
-            }
-            
-            return Variable.FromFloat(0.0f);
-        }
+        // GetPosition and GetFacing are now implemented in BaseEngineApi
+        // They are identical across all engines (Odyssey, Aurora, Eclipse, Infinity)
+        // Verified via Ghidra MCP analysis:
+        // - nwmain.exe: ExecuteCommandGetPosition @ 0x14052f5b0, ExecuteCommandGetFacing @ 0x140523a70
+        // - swkotor.exe/swkotor2.exe: Equivalent transform system implementations
+        // - daorigins.exe: Equivalent transform system implementations
+        // EclipseEngineApi now calls base.Func_GetPosition/base.Func_GetFacing for routine IDs 27, 28, and 201
 
         /// <summary>
         /// SetPosition(object oObject, vector vPosition) - Sets the position of an object
