@@ -50,7 +50,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Validate basic structure matches PCC.ksy expectations
             pcc.Should().NotBeNull("PCC should load successfully");
-            pcc.PackageType.Should().NotBeNull("Package type should be set");
+            pcc.PackageType.Should().BeDefined("Package type should be a valid enum value");
             pcc.Count.Should().BeGreaterThanOrEqualTo(0, "Resource count should be non-negative");
         }
 
@@ -120,7 +120,7 @@ namespace Andastra.Parsing.Tests.Formats
             // Validate export table structure through resources
             // Export table structure is validated through Kaitai Struct definition
             pcc.Should().NotBeNull("PCC should load successfully");
-            
+
             // Validate resources if they exist
             foreach (var resource in pcc)
             {
@@ -177,7 +177,7 @@ namespace Andastra.Parsing.Tests.Formats
             byte[] data = new PCCBinaryWriter(pcc).Write();
             PCC loaded = new PCCBinaryReader(data).Load();
 
-            loaded.Header.ExportCount.Should().BeGreaterThanOrEqualTo(0);
+            loaded.Count.Should().BeGreaterThanOrEqualTo(0, "Loaded PCC should have non-negative resource count");
         }
 
         [Fact(Timeout = 120000)]
