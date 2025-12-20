@@ -1066,7 +1066,7 @@ namespace HolocronToolset.Tests.Editors
                 // Verify index changed (moved forward)
                 int newIndex = currentResultIndexField != null ? (int)currentResultIndexField.GetValue(editor) : 0;
                 // The index should have changed (wrapped around if needed)
-                newIndex.Should().BeGreaterOrEqualTo(0, "Result index should be valid after forward navigation");
+                newIndex.Should().BeGreaterThanOrEqualTo(0, "Result index should be valid after forward navigation");
                 newIndex.Should().BeLessThan(searchResults.Count, "Result index should be within bounds");
 
                 // Matching PyKotor implementation: editor.handle_back()  # Move back
@@ -1078,7 +1078,7 @@ namespace HolocronToolset.Tests.Editors
                 // Verify index changed back (moved backward)
                 int backIndex = currentResultIndexField != null ? (int)currentResultIndexField.GetValue(editor) : 0;
                 // The index should have changed back (wrapped around if needed)
-                backIndex.Should().BeGreaterOrEqualTo(0, "Result index should be valid after backward navigation");
+                backIndex.Should().BeGreaterThanOrEqualTo(0, "Result index should be valid after backward navigation");
                 backIndex.Should().BeLessThan(searchResults.Count, "Result index should be within bounds");
 
                 // Matching PyKotor implementation: # Just verify no crash
@@ -2369,14 +2369,48 @@ namespace HolocronToolset.Tests.Editors
             data.Should().NotBeNull("Empty DLG should build successfully");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_deep_nesting (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2243-2268)
-        // Original: def test_dlg_editor_deep_nesting(qtbot, installation: HTInstallation): Test deep nesting
+        // Matching PyKotor implementation at vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2243-2268
+        // Original: def test_dlg_editor_deep_nesting(qtbot, installation: HTInstallation): Test handling deeply nested dialog tree
         [Fact]
         public void TestDlgEditorDeepNesting()
         {
-            // TODO: STUB - Implement deep nesting test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2243-2268
-            throw new NotImplementedException("TestDlgEditorDeepNesting: Deep nesting test not yet implemented");
+            var installation = CreateTestInstallation();
+            var editor = new DLGEditor(null, installation);
+            editor.Show();
+            editor.New();
+
+            // Matching PyKotor: Create deep nesting
+            // Original: editor.model.add_root_node()
+            // Original: current = editor.model.item(0, 0)
+            editor.Model.AddRootNode();
+            DLGStandardItem current = editor.Model.Item(0, 0);
+
+            // Matching PyKotor: for _ in range(10): current = editor.model.add_child_to_item(current)
+            for (int i = 0; i < 10; i++)
+            {
+                current = editor.Model.AddChildToItem(current);
+            }
+
+            // Matching PyKotor: Build should work
+            // Original: data, _ = editor.build()
+            // Original: dlg = read_dlg(data)
+            var result = editor.Build();
+            var data = result.Item1;
+            var dlg = DLGHelper.ReadDlg(data);
+
+            // Matching PyKotor: Verify structure depth
+            // Original: depth = 0
+            // Original: node = dlg.starters[0].node
+            // Original: while node.links: depth += 1; node = node.links[0].node
+            // Original: assert depth == 10
+            int depth = 0;
+            DLGNode node = dlg.Starters[0].Node;
+            while (node != null && node.Links != null && node.Links.Count > 0)
+            {
+                depth++;
+                node = node.Links[0].Node;
+            }
+            depth.Should().Be(10, "Dialog tree should have depth of 10 after creating 10 nested children");
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2270-2288
