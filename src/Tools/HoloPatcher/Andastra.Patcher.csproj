@@ -109,7 +109,7 @@
 
   <!-- Reference the UI library which contains all the Views, ViewModels, etc. -->
   <ItemGroup>
-    <ProjectReference Include="..\Andastra.Patcher.UI\Andastra.Patcher.UI.csproj" />
+    <ProjectReference Include="..\HoloPatcher.UI\Andastra.Patcher.UI.csproj" />
   </ItemGroup>
 
 </Project>
