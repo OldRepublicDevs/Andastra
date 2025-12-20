@@ -812,6 +812,126 @@ namespace HolocronToolset.Editors
             _codeEdit.SelectionEnd = position;
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:1153-1174
+        // Original: def _goto_next_bookmark(self):
+        /// <summary>
+        /// Navigates to the next bookmark after the current line.
+        /// If no bookmark exists after the current line, wraps around to the first bookmark.
+        /// </summary>
+        public void GotoNextBookmark()
+        {
+            if (_codeEdit == null || _bookmarkTree == null)
+            {
+                return;
+            }
+
+            int currentLine = GetCurrentLineNumber();
+
+            // Collect all bookmarks after current line
+            var bookmarks = new List<int>();
+            var itemsList = _bookmarkTree.Items as IEnumerable<TreeViewItem> ?? new List<TreeViewItem>();
+
+            foreach (var item in itemsList)
+            {
+                if (item?.Tag is BookmarkData bookmarkData)
+                {
+                    int line = bookmarkData.LineNumber;
+                    if (line > currentLine)
+                    {
+                        bookmarks.Add(line);
+                    }
+                }
+            }
+
+            if (bookmarks.Count > 0)
+            {
+                // Navigate to the closest next bookmark
+                int nextLine = bookmarks.Min();
+                GotoLine(nextLine);
+            }
+            else
+            {
+                // Wrap around to first bookmark
+                int? firstLine = null;
+                foreach (var item in itemsList)
+                {
+                    if (item?.Tag is BookmarkData bookmarkData)
+                    {
+                        int line = bookmarkData.LineNumber;
+                        if (!firstLine.HasValue || line < firstLine.Value)
+                        {
+                            firstLine = line;
+                        }
+                    }
+                }
+
+                if (firstLine.HasValue)
+                {
+                    GotoLine(firstLine.Value);
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:1176-1199
+        // Original: def _goto_previous_bookmark(self):
+        /// <summary>
+        /// Navigates to the previous bookmark before the current line.
+        /// If no bookmark exists before the current line, wraps around to the last bookmark.
+        /// </summary>
+        public void GotoPreviousBookmark()
+        {
+            if (_codeEdit == null || _bookmarkTree == null)
+            {
+                return;
+            }
+
+            int currentLine = GetCurrentLineNumber();
+
+            // Collect all bookmarks before current line
+            var bookmarks = new List<int>();
+            var itemsList = _bookmarkTree.Items as IEnumerable<TreeViewItem> ?? new List<TreeViewItem>();
+
+            foreach (var item in itemsList)
+            {
+                if (item?.Tag is BookmarkData bookmarkData)
+                {
+                    int line = bookmarkData.LineNumber;
+                    if (line < currentLine)
+                    {
+                        bookmarks.Add(line);
+                    }
+                }
+            }
+
+            if (bookmarks.Count > 0)
+            {
+                // Navigate to the closest previous bookmark
+                int previousLine = bookmarks.Max();
+                GotoLine(previousLine);
+            }
+            else
+            {
+                // Wrap around to last bookmark
+                int? lastLine = null;
+                foreach (var item in itemsList)
+                {
+                    if (item?.Tag is BookmarkData bookmarkData)
+                    {
+                        int line = bookmarkData.LineNumber;
+                        if (!lastLine.HasValue || line > lastLine.Value)
+                        {
+                            lastLine = line;
+                        }
+                    }
+                }
+
+                if (lastLine.HasValue)
+                {
+                    GotoLine(lastLine.Value);
+                }
+            }
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:282-303
         // Original: def _save_bookmarks(self):
         private void SaveBookmarks()

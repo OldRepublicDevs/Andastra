@@ -526,14 +526,108 @@ void helper() {
             finalCount.Should().Be(0, "All bookmarks should be removed");
         }
 
-        // TODO: STUB - Implement test_nss_editor_bookmark_next_previous (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:311-350)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:311-350
         // Original: def test_nss_editor_bookmark_next_previous(qtbot, installation: HTInstallation, complex_nss_script: str): Test bookmark next/previous navigation
         [Fact]
         public void TestNssEditorBookmarkNextPrevious()
         {
-            // TODO: STUB - Implement bookmark next/previous test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:311-350
-            throw new NotImplementedException("TestNssEditorBookmarkNextPrevious: Bookmark next/previous test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            // Complex NSS script matching Python fixture (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:38-59)
+            string complexNssScript = @"// Global variable
+int g_globalVar = 10;
+
+// Main function
+void main() {
+    int localVar = 20;
+    
+    if (localVar > 10) {
+        SendMessageToPC(GetFirstPC(), ""Condition met"");
+    }
+    
+    for (int i = 0; i < 5; i++) {
+        localVar += i;
+    }
+}
+
+// Helper function
+void helper() {
+    int helperVar = 30;
+}";
+
+            var editor = new NSSEditor(null, installation);
+            editor.New();
+
+            // Set the text (matching Python: editor.ui.codeEdit.setPlainText(complex_nss_script))
+            editor.Load("test_script.nss", "test_script", ResourceType.NSS, Encoding.UTF8.GetBytes(complexNssScript));
+
+            // Add bookmarks at specific lines (matching Python: bookmark_lines = [3, 7, 12])
+            int[] bookmarkLines = { 3, 7, 12 };
+            foreach (int lineNum in bookmarkLines)
+            {
+                // Set cursor to the specified line (matching Python: cursor.setPosition(block.position()))
+                editor.GotoLine(lineNum);
+                
+                // Add bookmark (matching Python: editor.add_bookmark())
+                editor.AddBookmark();
+            }
+
+            // Test next bookmark navigation (matching Python: lines 330-338)
+            // Start at beginning (matching Python: cursor.setPosition(0))
+            editor.GotoLine(1);
+
+            // Navigate to next bookmark (matching Python: editor._goto_next_bookmark())
+            editor.GotoNextBookmark();
+            
+            // Verify we're at one of the bookmark lines (matching Python: assert current_line in bookmark_lines)
+            int currentLine = editor.GetCurrentLine();
+            currentLine.Should().BeOneOf(bookmarkLines, "Should navigate to one of the bookmark lines");
+
+            // Test previous bookmark navigation (matching Python: lines 340-349)
+            // Move to end (matching Python: cursor.movePosition(QTextCursor.MoveOperation.End))
+            // Calculate end line by counting newlines
+            int endLine = 1;
+            string text = complexNssScript;
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (text[i] == '\n')
+                {
+                    endLine++;
+                }
+            }
+            editor.GotoLine(endLine);
+
+            // Navigate to previous bookmark (matching Python: editor._goto_previous_bookmark())
+            editor.GotoPreviousBookmark();
+            
+            // Verify we're at one of the bookmark lines (matching Python: assert current_line in bookmark_lines)
+            currentLine = editor.GetCurrentLine();
+            currentLine.Should().BeOneOf(bookmarkLines, "Should navigate to one of the bookmark lines when going backwards");
         }
 
         // TODO: STUB - Implement test_nss_editor_bookmark_persistence (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:352-419)
