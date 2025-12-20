@@ -1261,6 +1261,152 @@ namespace HolocronToolset.Editors
             return GetCurrentLineNumber();
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:3818-3820
+        // Original: cursor.select(QTextCursor.SelectionType.WordUnderCursor); word = cursor.selectedText().strip()
+        /// <summary>
+        /// Gets the word under the current cursor position.
+        /// </summary>
+        /// <returns>The word under cursor, or empty string if no word found.</returns>
+        private string GetWordUnderCursor()
+        {
+            if (_codeEdit == null || string.IsNullOrEmpty(_codeEdit.Text) || _codeEdit.SelectionStart < 0)
+            {
+                return "";
+            }
+
+            int cursorPos = _codeEdit.SelectionStart;
+            string text = _codeEdit.Text;
+
+            // Find word boundaries (letters, digits, underscore)
+            int start = cursorPos;
+            int end = cursorPos;
+
+            // Move start backward to beginning of word
+            while (start > 0 && (char.IsLetterOrDigit(text[start - 1]) || text[start - 1] == '_'))
+            {
+                start--;
+            }
+
+            // Move end forward to end of word
+            while (end < text.Length && (char.IsLetterOrDigit(text[end]) || text[end] == '_'))
+            {
+                end++;
+            }
+
+            if (end > start)
+            {
+                return text.Substring(start, end - start).Trim();
+            }
+
+            return "";
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:1201-1240
+        // Original: def _find_all_references(self, word: str):
+        /// <summary>
+        /// Finds all references to a symbol in the current file.
+        /// </summary>
+        /// <param name="word">The word/symbol to search for.</param>
+        private void FindAllReferences(string word)
+        {
+            if (string.IsNullOrEmpty(word) || string.IsNullOrWhiteSpace(word))
+            {
+                return;
+            }
+
+            if (_codeEdit == null)
+            {
+                return;
+            }
+
+            // Search in current file
+            string text = _codeEdit.Text;
+            if (string.IsNullOrEmpty(text))
+            {
+                return;
+            }
+
+            string[] lines = text.Split(new[] { '\n', '\r' }, StringSplitOptions.None);
+            var results = new List<FindResult>();
+
+            // Simple word boundary matching (matching PyKotor implementation)
+            string escapedWord = Regex.Escape(word);
+            string pattern = @"\b" + escapedWord + @"\b";
+            Regex searchRegex = new Regex(pattern, RegexOptions.IgnoreCase);
+
+            for (int lineNum = 0; lineNum < lines.Length; lineNum++)
+            {
+                string line = lines[lineNum];
+                MatchCollection matches = searchRegex.Matches(line);
+                foreach (Match match in matches)
+                {
+                    results.Add(new FindResult
+                    {
+                        Line = lineNum + 1, // 1-indexed
+                        Column = match.Index + 1, // 1-indexed
+                        Content = line.Trim().Length > 100 ? line.Trim().Substring(0, 100) : line.Trim()
+                    });
+                }
+            }
+
+            // Show results
+            if (results.Count == 0)
+            {
+                var messageBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Find All References",
+                    $"No references to '{word}' found in current file.",
+                    ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Information);
+                messageBox.ShowAsync();
+            }
+            else
+            {
+                // Navigate to first result
+                if (results.Count > 0)
+                {
+                    var firstResult = results[0];
+                    GotoLine(firstResult.Line);
+                    
+                    // Set cursor to the column position
+                    if (_codeEdit != null)
+                    {
+                        string[] fileLines = _codeEdit.Text.Split(new[] { '\n', '\r' }, StringSplitOptions.None);
+                        if (firstResult.Line > 0 && firstResult.Line <= fileLines.Length)
+                        {
+                            int lineIndex = firstResult.Line - 1;
+                            int position = 0;
+                            for (int i = 0; i < lineIndex; i++)
+                            {
+                                position += fileLines[i].Length + 1; // +1 for newline
+                            }
+                            position += firstResult.Column - 1; // -1 because column is 1-indexed
+                            if (position < _codeEdit.Text.Length)
+                            {
+                                _codeEdit.SelectionStart = position;
+                                _codeEdit.SelectionEnd = position + word.Length;
+                            }
+                        }
+                    }
+                }
+
+                // Show message with result count
+                var messageBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Find All References",
+                    $"Found {results.Count} reference(s) to '{word}'. Navigated to first occurrence.",
+                    ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Information);
+                messageBox.ShowAsync();
+            }
+        }
+
+        // Helper class to store find results
+        private class FindResult
+        {
+            public int Line { get; set; }
+            public int Column { get; set; }
+            public string Content { get; set; }
+        }
+
         // Helper method to set cursor to a specific line number (for testing)
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:271-280
         // Original: def _goto_line(self, line_number: int):
@@ -2276,7 +2422,7 @@ namespace HolocronToolset.Editors
             // Code operations
             _commandPalette.RegisterCommand("code.compile", "Compile Script", () => CompileCurrentScript(), "Code");
             // Note: Format and Analyze would need implementation
-            _commandPalette.RegisterCommand("code.format", "Format Document", () => { /* TODO: Implement */ }, "Code");
+            _commandPalette.RegisterCommand("code.format", "Format Document", () => FormatDocument(), "Code");
             _commandPalette.RegisterCommand("code.analyze", "Analyze Code", () => AnalyzeCode(), "Code");
 
             // Bookmarks
