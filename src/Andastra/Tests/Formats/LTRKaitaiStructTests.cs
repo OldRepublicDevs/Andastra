@@ -132,7 +132,7 @@ namespace Andastra.Parsing.Tests.Formats
             var validateInfo = new ProcessStartInfo
             {
                 FileName = compilerPath.EndsWith(".jar") ? "java" : compilerPath,
-                Arguments = compilerPath.EndsWith(".jar") 
+                Arguments = compilerPath.EndsWith(".jar")
                     ? $"-jar \"{compilerPath}\" -t python \"{normalizedKsyPath}\" --debug"
                     : $"-t python \"{normalizedKsyPath}\" --debug",
                 RedirectStandardOutput = true,
@@ -301,7 +301,7 @@ namespace Andastra.Parsing.Tests.Formats
                                         stderr.ToLower().Contains("dependency") ||
                                         stderr.ToLower().Contains("import") ||
                                         stderr.ToLower().Contains("not available");
-                
+
                 if (isKnownLimitation)
                 {
                     // Log but don't fail - some languages may not be available in all compiler versions
@@ -321,7 +321,7 @@ namespace Andastra.Parsing.Tests.Formats
                 // Verify output files were generated
                 string[] generatedFiles = Directory.GetFiles(langOutputDir, "*", SearchOption.AllDirectories);
                 generatedFiles.Should().NotBeEmpty($"{language} compilation should generate output files");
-                
+
                 // Verify at least one file matches expected patterns for the language
                 bool hasExpectedFile = false;
                 switch (language.ToLower())
@@ -370,7 +370,7 @@ namespace Andastra.Parsing.Tests.Formats
                         hasExpectedFile = generatedFiles.Any(f => f.EndsWith(".kt"));
                         break;
                 }
-                
+
                 if (hasExpectedFile)
                 {
                     // Log success
@@ -565,10 +565,10 @@ namespace Andastra.Parsing.Tests.Formats
             var successful = results.Where(r => r.Value.Success).ToList();
             var failed = results.Where(r => !r.Value.Success).ToList();
 
-            // At least some languages should compile successfully
+            // At least 12 languages (a dozen) should compile successfully
             // (We allow some failures as not all languages may be fully supported in all environments)
-            successful.Count.Should().BeGreaterThan(0,
-                $"At least one language should compile successfully. Failed: {string.Join(", ", failed.Select(f => $"{f.Key}: {f.Value.ErrorMessage}"))}");
+            successful.Count.Should().BeGreaterThanOrEqualTo(12,
+                $"At least 12 languages (a dozen) should compile successfully (got {successful.Count}). Failed: {string.Join(", ", failed.Select(f => $"{f.Key}: {f.Value.ErrorMessage?.Substring(0, Math.Min(50, f.Value.ErrorMessage?.Length ?? 0))}"))}");
 
             // Log successful compilations
             foreach (var success in successful)
