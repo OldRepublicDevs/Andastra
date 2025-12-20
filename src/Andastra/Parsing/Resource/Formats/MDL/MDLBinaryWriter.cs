@@ -1410,13 +1410,15 @@ namespace Andastra.Parsing.Formats.MDL
             if (mdlNode.Mesh.VertexUv1 != null && mdlNode.Mesh.VertexUv1.Count > 0)
             {
                 // Write null vector2 for UV1 (0, 0)
-                _mdxWriter.WriteVector2(new Vector2(0.0f, 0.0f));
+                _mdxWriter.WriteSingle(0.0f);
+                _mdxWriter.WriteSingle(0.0f);
             }
 
             if (mdlNode.Mesh.VertexUv2 != null && mdlNode.Mesh.VertexUv2.Count > 0)
             {
                 // Write null vector2 for UV2 (0, 0)
-                _mdxWriter.WriteVector2(new Vector2(0.0f, 0.0f));
+                _mdxWriter.WriteSingle(0.0f);
+                _mdxWriter.WriteSingle(0.0f);
             }
 
             // For skin meshes, write additional padding
