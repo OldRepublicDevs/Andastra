@@ -10,6 +10,7 @@ using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics.GUI;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Formats.DDS;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Games.Eclipse.Fonts;
 using Andastra.Runtime.Graphics;
@@ -601,12 +602,30 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
             var ddsResult = _installation.Resources.LookupResource(textureName, ResourceType.DDS, null, null);
             if (ddsResult != null && ddsResult.Data != null && ddsResult.Data.Length > 0)
             {
-                // DDS format parsing requires DDS format parser implementation
-                // Note: Full implementation would parse DDS header to get width/height, then create texture
-                // DDS format has standard header structure that can be parsed
-                // TODO: Implement DDS format parser to extract width/height and pixel data
-                // Then use: texture = _graphicsDevice.CreateTexture2D(width, height, pixelData);
-                System.Diagnostics.Debug.WriteLine($"[EclipseGuiManager] DDS texture found but parsing not yet implemented: {textureName}");
+                try
+                {
+                    // Parse DDS format to extract width/height and pixel data
+                    // Based on Eclipse engine: DDS format parser extracts texture dimensions and pixel data
+                    // Located via string references: DDS file extensions and texture loading in Eclipse engine
+                    using (DdsParser parser = new DdsParser(ddsResult.Data))
+                    {
+                        DdsParser.DdsParseResult result = parser.Parse();
+                        
+                        // Create texture from parsed DDS data
+                        // Based on Eclipse engine: Creates DirectX texture from DDS pixel data
+                        texture = _graphicsDevice.CreateTexture2D(result.Width, result.Height, result.RgbaData);
+                        
+                        if (texture != null)
+                        {
+                            _textureCache[key] = texture;
+                            System.Diagnostics.Debug.WriteLine($"[EclipseGuiManager] Successfully loaded DDS texture: {textureName} ({result.Width}x{result.Height})");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[EclipseGuiManager] ERROR: Failed to parse DDS texture {textureName}: {ex.Message}");
+                }
             }
 
             // Try loading as TPC format (KotOR texture format, for compatibility)
