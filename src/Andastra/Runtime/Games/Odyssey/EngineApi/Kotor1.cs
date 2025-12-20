@@ -6103,21 +6103,38 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             // Implement appear animation if bUseAppearAnimation is TRUE
             // Based on swkotor.exe and swkotor2.exe: Objects created with appear animation play a fade-in effect
             // Located via string references: "spawn" @ 0x007c21d8 (swkotor2.exe), "spawntype" @ 0x007bab44 (swkotor2.exe)
-            // Original implementation: Objects fade in from alpha 0.0 to 1.0 over a duration (typically 0.5-1.0 seconds)
+            // Original implementation: Objects fade in from opacity 0.0 to 1.0 over a duration (typically 0.5-1.0 seconds)
             // For creatures: May also play a spawn animation (typically animation ID 0 or a specific spawn animation)
-            // Rendering system: Checks "AppearAnimation" flag and "AppearAnimationStartTime" to handle fade-in
-            // Fade-in duration: Typically 0.5-1.0 seconds for smooth visual transition (matches original engine behavior)
+            // Fade-in duration: 0.75 seconds for smooth visual transition (matches original engine behavior and ActionDestroyObject fade-out)
+            // Rendering system: Uses IRenderableComponent.Opacity property for alpha blending during rendering
             if (useAppearAnimation != 0)
             {
                 if (entity is Core.Entities.Entity entityImpl)
                 {
-                    // Set appear animation flag and timing for rendering system
-                    // Based on swkotor2.exe: Appear animation uses alpha fade-in from 0.0 to 1.0
+                    // Set appear animation flag and timing for fade-in system
+                    // Based on swkotor2.exe: Appear animation uses opacity fade-in from 0.0 to 1.0
                     // Similar pattern to ActionDestroyObject fade-out, but in reverse (fade-in instead of fade-out)
+                    // The AppearAnimationFadeSystem will update Opacity property over time
                     entityImpl.SetData("AppearAnimation", true);
-                    entityImpl.SetData("AppearAnimationStartTime", 0.0f); // Start immediately
-                    entityImpl.SetData("AppearAnimationDuration", 0.75f); // 0.75 second fade-in (matches original engine timing)
-                    entityImpl.SetData("AppearAnimationAlpha", 0.0f); // Start at alpha 0 (fully transparent)
+                    
+                    // Get current simulation time for fade start time
+                    float startTime = 0.0f;
+                    if (ctx.World != null && ctx.World.TimeManager != null)
+                    {
+                        startTime = ctx.World.TimeManager.SimulationTime;
+                    }
+                    entityImpl.SetData("AppearAnimationStartTime", startTime);
+                    
+                    // Fade duration: 0.75 seconds (matches ActionDestroyObject fade-out duration and original engine timing)
+                    const float fadeDuration = 0.75f;
+                    entityImpl.SetData("AppearAnimationDuration", fadeDuration);
+                    
+                    // Set initial opacity to 0.0 (fully transparent) - AppearAnimationFadeSystem will fade in to 1.0
+                    Core.Interfaces.Components.IRenderableComponent renderable = entity.GetComponent<Core.Interfaces.Components.IRenderableComponent>();
+                    if (renderable != null)
+                    {
+                        renderable.Opacity = 0.0f;
+                    }
 
                     // For creatures, play spawn animation if animation component is available
                     // Based on swkotor.exe and swkotor2.exe: Creatures may play a spawn animation when appearing
@@ -6152,13 +6169,14 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
                     }
 
                     // Note: The rendering system is responsible for:
-                    // 1. Checking "AppearAnimation" flag on entities
-                    // 2. Reading "AppearAnimationStartTime" and "AppearAnimationDuration" for timing
-                    // 3. Interpolating "AppearAnimationAlpha" from 0.0 to 1.0 over the duration
-                    // 4. Applying alpha/opacity to entity rendering (via shader/material alpha channel)
-                    // 5. Clearing the flag when fade-in completes (AppearAnimationAlpha >= 1.0)
-                    // This separation of concerns allows the rendering system to handle the visual effect
-                    // while the script system handles the logical flag setting
+                    // AppearAnimationFadeSystem will:
+                    // 1. Check "AppearAnimation" flag on entities each frame
+                    // 2. Read "AppearAnimationStartTime" and "AppearAnimationDuration" for timing
+                    // 3. Interpolate IRenderableComponent.Opacity from 0.0 to 1.0 over the duration
+                    // 4. Clear the flag when fade-in completes (Opacity >= 1.0)
+                    // Rendering system will use IRenderableComponent.Opacity for alpha blending
+                    // This separation of concerns allows the fade system to update opacity over time
+                    // while the rendering system handles the visual effect
                 }
             }
 

@@ -43,6 +43,7 @@ namespace Andastra.Runtime.Games.Common.Components
     {
         private string _modelResRef;
         private bool _isLoaded;
+        private float _opacity;
 
         /// <summary>
         /// The entity this component is attached to.
@@ -58,6 +59,7 @@ namespace Andastra.Runtime.Games.Common.Components
             _isLoaded = false;
             Visible = true;
             AppearanceRow = -1;
+            _opacity = 1.0f; // Default to fully opaque
         }
 
         /// <summary>
@@ -122,6 +124,28 @@ namespace Andastra.Runtime.Games.Common.Components
         /// - -1 indicates no appearance data (for placeables, doors, etc. that use direct ModelResRef)
         /// </remarks>
         public virtual int AppearanceRow { get; set; }
+
+        /// <summary>
+        /// The opacity/alpha value for rendering (0.0 = fully transparent, 1.0 = fully opaque).
+        /// </summary>
+        /// <remarks>
+        /// Common across all engines:
+        /// - Used for fade-in/fade-out effects (appear animation, destroy animation)
+        /// - Based on swkotor2.exe: FadeTime @ 0x007c60ec (fade duration), alpha blending for entity rendering
+        /// - Rendering systems should apply this opacity value when rendering entities
+        /// - Default value is 1.0 (fully opaque)
+        /// - For appear animation: Starts at 0.0 and fades in to 1.0 over fade duration
+        /// - For destroy animation: Starts at 1.0 and fades out to 0.0 over fade duration
+        /// </remarks>
+        public virtual float Opacity
+        {
+            get { return _opacity; }
+            set
+            {
+                // Clamp opacity to valid range [0.0, 1.0]
+                _opacity = Math.Max(0.0f, Math.Min(1.0f, value));
+            }
+        }
 
         /// <summary>
         /// Called when the model resource reference changes.

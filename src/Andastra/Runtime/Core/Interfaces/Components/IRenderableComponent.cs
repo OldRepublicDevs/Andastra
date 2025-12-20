@@ -63,6 +63,20 @@ namespace Andastra.Runtime.Core.Interfaces.Components
         /// The appearance row from appearance.2da (for creatures).
         /// </summary>
         int AppearanceRow { get; set; }
+
+        /// <summary>
+        /// The opacity/alpha value for rendering (0.0 = fully transparent, 1.0 = fully opaque).
+        /// </summary>
+        /// <remarks>
+        /// Common across all engines:
+        /// - Used for fade-in/fade-out effects (appear animation, destroy animation)
+        /// - Based on swkotor2.exe: FadeTime @ 0x007c60ec (fade duration), alpha blending for entity rendering
+        /// - Rendering systems should apply this opacity value when rendering entities
+        /// - Default value is 1.0 (fully opaque)
+        /// - For appear animation: Starts at 0.0 and fades in to 1.0 over fade duration
+        /// - For destroy animation: Starts at 1.0 and fades out to 0.0 over fade duration
+        /// </remarks>
+        float Opacity { get; set; }
     }
 }
 

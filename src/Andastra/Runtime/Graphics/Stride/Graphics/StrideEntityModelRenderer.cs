@@ -240,6 +240,13 @@ namespace Andastra.Runtime.Stride.Graphics
                     strideEffect.World = finalWorld;
                     strideEffect.View = viewMatrix;
                     strideEffect.Projection = projectionMatrix;
+                    
+                    // Apply opacity from renderable component for fade-in/fade-out effects
+                    // Based on swkotor2.exe: FadeTime @ 0x007c60ec (fade duration), alpha blending for entity rendering
+                    // Opacity is updated by AppearAnimationFadeSystem for appear animations
+                    // Opacity is updated by ActionDestroyObject for destroy animations
+                    float opacity = renderable.Opacity;
+                    strideEffect.Alpha = opacity;
 
                     // Apply effect
                     var effectInstance = strideEffect.GetEffectInstance();
