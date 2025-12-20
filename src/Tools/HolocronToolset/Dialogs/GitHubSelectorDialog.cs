@@ -238,7 +238,7 @@ namespace HolocronToolset.Dialogs
                 {
                     string forksUrl = $"https://api.github.com/repos/{_owner}/{_repo}/forks";
                     string forksJson = await HttpClient.GetStringAsync(forksUrl);
-                    List<ForkContentsData> forks = JsonConvert.DeserializeObject<List<ForkContentsData>>(forksJson);
+                    List<Utils.ForkContentsData> forks = JsonConvert.DeserializeObject<List<Utils.ForkContentsData>>(forksJson);
                     
                     if (forks != null && forks.Count > 0)
                     {
@@ -335,7 +335,7 @@ namespace HolocronToolset.Dialogs
             if (repoData.ContainsKey("repo_info") && repoData["repo_info"] != null)
             {
                 var repoInfoJson = JsonConvert.SerializeObject(repoData["repo_info"]);
-                var repoInfo = JsonConvert.DeserializeObject<RepoIndexData>(repoInfoJson);
+                var repoInfo = JsonConvert.DeserializeObject<Utils.RepoIndexData>(repoInfoJson);
                 if (repoInfo != null && !string.IsNullOrEmpty(repoInfo.DefaultBranch))
                 {
                     defaultBranch = repoInfo.DefaultBranch;
@@ -426,7 +426,7 @@ namespace HolocronToolset.Dialogs
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:240-269
         // Original: def populate_tree_widget(self, files: list[TreeInfoData] | None = None, parent_item: QTreeWidgetItem | None = None) -> None:
-        private void PopulateTreeWidget(List<TreeInfoData> files = null)
+        private void PopulateTreeWidget(List<Utils.TreeInfoData> files = null)
         {
             if (files == null)
             {
@@ -460,10 +460,21 @@ namespace HolocronToolset.Dialogs
                     itemName = itemPath;
                 }
 
+                // Convert Utils.TreeInfoData to local TreeInfoData for Tag storage
+                var localTreeInfo = new TreeInfoData
+                {
+                    Mode = item.Mode,
+                    Type = item.Type,
+                    Sha = item.Sha,
+                    Size = item.Size,
+                    Url = item.Url,
+                    Path = item.Path
+                };
+
                 var treeItem = new TreeViewItem
                 {
                     Header = itemName,
-                    Tag = item
+                    Tag = localTreeInfo
                 };
 
                 // Set tooltip to URL (matching PyKotor's setToolTip behavior)
@@ -556,7 +567,7 @@ namespace HolocronToolset.Dialogs
                 if (contentsDict != null && contentsDict.ContainsKey("tree"))
                 {
                     var treeArray = JsonConvert.SerializeObject(contentsDict["tree"]);
-                    List<TreeInfoData> repoIndex = JsonConvert.DeserializeObject<List<TreeInfoData>>(treeArray);
+                    List<Utils.TreeInfoData> repoIndex = JsonConvert.DeserializeObject<List<Utils.TreeInfoData>>(treeArray);
                     PopulateTreeWidget(repoIndex);
                     SearchFiles();
                 }
@@ -954,7 +965,6 @@ namespace HolocronToolset.Dialogs
         // Original: def refresh_data(self) -> None:
         private void RefreshData()
         {
-            CompleteRepoData data = null;
             try
             {
                 // InitializeRepoData is async, so we need to handle it differently
@@ -982,7 +992,7 @@ namespace HolocronToolset.Dialogs
 
             // Find paths that match any of the partial names (case-insensitive, matching against the last part of the path)
             HashSet<string> pathsToHighlight = new HashSet<string>();
-            foreach (TreeInfoData item in _repoData.Tree)
+            foreach (Utils.TreeInfoData item in _repoData.Tree)
             {
                 if (string.IsNullOrEmpty(item.Path))
                 {
@@ -1112,25 +1122,6 @@ namespace HolocronToolset.Dialogs
             }
         }
 
-        // Helper method to convert TreeInfoData from Utils namespace
-        private TreeInfoData ConvertTreeInfoData(Utils.TreeInfoData source)
-        {
-            if (source == null)
-            {
-                return null;
-            }
-
-            return new TreeInfoData
-            {
-                Mode = source.Mode,
-                Type = source.Type,
-                Sha = source.Sha,
-                Size = source.Size,
-                Url = source.Url,
-                Path = source.Path
-            };
-        }
-
         // Local TreeInfoData class for backward compatibility with existing code
         private class TreeInfoData
         {
@@ -1140,7 +1131,6 @@ namespace HolocronToolset.Dialogs
             public int? Size { get; set; }
             public string Url { get; set; }
             public string Path { get; set; }
-        }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:361-367
