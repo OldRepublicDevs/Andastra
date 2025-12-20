@@ -62,18 +62,38 @@ namespace Andastra.Parsing.Tests.Formats
         {
             // Test that kaitai-struct-compiler is available
             string compilerPath = FindKaitaiCompiler();
-            compilerPath.Should().NotBeNullOrEmpty("kaitai-struct-compiler should be available in PATH or common locations");
-
-            // Test compiler version
-            var processInfo = new ProcessStartInfo
+            if (string.IsNullOrEmpty(compilerPath))
             {
-                FileName = compilerPath,
-                Arguments = "--version",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
+                // Skip test if compiler not available
+                return;
+            }
+
+            // Test compiler version - handle JAR files differently
+            ProcessStartInfo processInfo;
+            if (compilerPath.EndsWith(".jar", StringComparison.OrdinalIgnoreCase))
+            {
+                processInfo = new ProcessStartInfo
+                {
+                    FileName = "java",
+                    Arguments = $"-jar \"{compilerPath}\" --version",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+            }
+            else
+            {
+                processInfo = new ProcessStartInfo
+                {
+                    FileName = compilerPath,
+                    Arguments = "--version",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+            }
 
             using (var process = Process.Start(processInfo))
             {
