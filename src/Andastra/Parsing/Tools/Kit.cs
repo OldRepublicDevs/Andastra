@@ -1824,10 +1824,15 @@ namespace Andastra.Parsing.Tools
                 g.SmoothingMode = SmoothingMode.AntiAlias;
 
                 // Draw walkable faces in white, non-walkable in gray
+                // Matching Python line 1412: is_walkable = face.material.value in (1, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14, 16, 18, 20, 21, 22)
                 foreach (BWMFace face in bwm.Faces)
                 {
-                    // Determine if face is walkable based on material
-                    bool isWalkable = face.Material.Walkable();
+                    // Determine if face is walkable based on material (matching Python hardcoded list)
+                    int materialValue = (int)face.Material;
+                    bool isWalkable = materialValue == 1 || materialValue == 3 || materialValue == 4 || materialValue == 5 || 
+                                     materialValue == 6 || materialValue == 9 || materialValue == 10 || materialValue == 11 || 
+                                     materialValue == 12 || materialValue == 13 || materialValue == 14 || materialValue == 16 || 
+                                     materialValue == 18 || materialValue == 20 || materialValue == 21 || materialValue == 22;
                     System.Drawing.Color color = isWalkable ? System.Drawing.Color.White : System.Drawing.Color.Gray;
 
                     // Get face vertices

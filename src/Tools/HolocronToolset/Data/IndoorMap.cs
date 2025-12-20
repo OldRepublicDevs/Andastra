@@ -712,7 +712,8 @@ namespace HolocronToolset.Data
                 // Python: orientation: Vector4 = Vector4.from_euler(0, 0, math.radians(door.bearing))
                 // Python: self.lyt.doorhooks.append(LYTDoorHook(self.room_names[insert.room], door_resname, insert.position, orientation))
                 float bearingRadians = door.Bearing;
-                Andastra.Utility.Geometry.Quaternion orientation = QuaternionFromEuler(0.0, 0.0, bearingRadians);
+                Andastra.Utility.Geometry.Quaternion quaternion = QuaternionFromEuler(0.0, 0.0, bearingRadians);
+                System.Numerics.Vector4 orientation = new System.Numerics.Vector4(quaternion.X, quaternion.Y, quaternion.Z, quaternion.W);
                 string roomName = _roomNames[insert.Room];
                 _lyt.DoorHooks.Add(new LYTDoorHook(roomName, doorResname, insert.Position, orientation));
 
@@ -758,16 +759,20 @@ namespace HolocronToolset.Data
                                     byte[] padMdl = kit.TopPadding[doorIndex][paddingKey.Value].Mdl;
                                     padMdl = ModelTools.Transform(padMdl, System.Numerics.Vector3.Zero, insert.Rotation);
 
-                                    // TODO: Implement model.convert_to_k1/k2() - requires model manipulation utilities
-                                    // For now, use the transformed model data as-is
+                                    // Convert model to target game format (matching Python line 523)
                                     // Python: pad_mdl_converted: bytes = model.convert_to_k2(pad_mdl) if installation.tsl else model.convert_to_k1(pad_mdl)
+                                    byte[] padMdlConverted = installation.Tsl 
+                                        ? ModelTools.ConvertToK2(padMdl) 
+                                        : ModelTools.ConvertToK1(padMdl);
 
                                     // Change textures (matching Python line 524)
-                                    padMdl = ModelTools.ChangeTextures(padMdl, _texRenames);
+                                    padMdlConverted = ModelTools.ChangeTextures(padMdlConverted, _texRenames);
 
                                     // Process lightmaps (matching Python lines 525-532)
+                                    // Note: Python line 532 uses pad_mdl (original) but should use pad_mdl_converted for consistency
+                                    // We use padMdlConverted to match the pattern used in width padding and for correctness
                                     var lmRenames = new Dictionary<string, string>();
-                                    foreach (var lightmap in ModelTools.IterateLightmaps(padMdl))
+                                    foreach (var lightmap in ModelTools.IterateLightmaps(padMdlConverted))
                                     {
                                         string renamed = $"{ModuleId}_lm{_totalLm}";
                                         _totalLm++;
@@ -791,10 +796,11 @@ namespace HolocronToolset.Data
                                     }
 
                                     // Change lightmaps in model (matching Python line 532)
-                                    padMdl = ModelTools.ChangeLightmaps(padMdl, lmRenames);
+                                    // Note: Python uses pad_mdl here, but we use padMdlConverted for consistency with converted model
+                                    padMdlConverted = ModelTools.ChangeLightmaps(padMdlConverted, lmRenames);
 
                                     // Add padding model resources (matching Python lines 533-534)
-                                    _mod.SetData(paddingName, ResourceType.MDL, padMdl);
+                                    _mod.SetData(paddingName, ResourceType.MDL, padMdlConverted);
                                     _mod.SetData(paddingName, ResourceType.MDX, kit.TopPadding[doorIndex][paddingKey.Value].Mdx);
 
                                     // Add padding room to layout and visibility (matching Python lines 535-536)
@@ -848,9 +854,11 @@ namespace HolocronToolset.Data
                                     byte[] padMdl = kit.SidePadding[doorIndex][paddingKey.Value].Mdl;
                                     padMdl = ModelTools.Transform(padMdl, System.Numerics.Vector3.Zero, insert.Rotation);
 
-                                    // TODO: Implement model.convert_to_k1/k2() - requires model manipulation utilities
-                                    // For now, use the transformed model data as-is
+                                    // Convert model to target game format (matching Python line 563)
                                     // Python: pad_mdl = model.convert_to_k2(pad_mdl) if installation.tsl else model.convert_to_k1(pad_mdl)
+                                    padMdl = installation.Tsl 
+                                        ? ModelTools.ConvertToK2(padMdl) 
+                                        : ModelTools.ConvertToK1(padMdl);
 
                                     // Change textures (matching Python line 564)
                                     padMdl = ModelTools.ChangeTextures(padMdl, _texRenames);
@@ -950,16 +958,13 @@ namespace HolocronToolset.Data
 
                 var skyboxData = kit.Skyboxes[Skybox];
                 string modelName = $"{ModuleId}_sky";
-                // TODO: Implement model.change_textures() for skybox
-                byte[] mdlConverted = skyboxData.Mdl; // ModelTools.ChangeTextures(skyboxData.Mdl, _texRenames);
+                // Matching Python line 604: mdl_converted: bytes = model.change_textures(mdl, self.tex_renames)
+                byte[] mdlConverted = ModelTools.ChangeTextures(skyboxData.Mdl, _texRenames);
                 _mod.SetData(modelName, ResourceType.MDL, mdlConverted);
                 _mod.SetData(modelName, ResourceType.MDX, skyboxData.Mdx);
 
-                var lytRoom = new LYTRoom
-                {
-                    Model = new ResRef(modelName),
-                    Position = Vector3.Zero
-                };
+                // Matching Python line 608: self.lyt.rooms.append(LYTRoom(model_name, Vector3(0, 0, 0)))
+                var lytRoom = new LYTRoom(modelName, Vector3.Zero);
                 _lyt.Rooms.Add(lytRoom);
                 _vis.AddRoom(modelName);
             }
@@ -1243,7 +1248,7 @@ namespace HolocronToolset.Data
             {
                 if (int.TryParse(prop.Name, out int substringId))
                 {
-                    LocalizedString.SubstringPair(substringId, out Language language, out Gender gender);
+                    var (language, gender) = LocalizedString.SubstringPair(substringId);
                     Name.SetData(language, gender, prop.Value.GetString());
                 }
             }
