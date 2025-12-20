@@ -79,6 +79,17 @@ namespace HolocronToolset.Editors
         private TextBox _fileExplorerAddressBar;
         private TextBox _fileSearchEdit;
         private Button _refreshFileExplorerButton;
+        // File explorer dock/panel container
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2739-2741
+        // Original: self.ui.fileExplorerDock.setVisible(not self.ui.fileExplorerDock.isVisible())
+        private Panel _fileExplorerDock;
+
+        // Bookmarks and snippets dock/panel containers
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2743-2747
+        // Original: self.ui.bookmarksDock.setVisible(not is_visible)
+        // Original: self.ui.snippetsDock.setVisible(not is_visible)
+        private Panel _bookmarksDock;
+        private Panel _snippetsDock;
 
         // UI wrapper class to match PyKotor's self.ui pattern
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:136
