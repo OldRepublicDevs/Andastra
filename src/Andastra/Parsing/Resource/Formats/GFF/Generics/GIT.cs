@@ -12,12 +12,94 @@ namespace Andastra.Parsing.Resource.Generics
 {
     /// <summary>
     /// Game Instance Template (GIT) file handler.
-    ///
-    /// GIT files store dynamic area information including creatures, doors, placeables,
-    /// triggers, waypoints, stores, encounters, sounds, and cameras. This is the runtime
-    /// instance data for areas, stored as a GFF file. GIT files define where objects are
-    /// placed in an area, their positions, orientations, and instance-specific properties.
     /// </summary>
+    /// <remarks>
+    /// WHAT IS A GIT FILE?
+    /// 
+    /// A GIT file is a Game Instance Template file that stores all the dynamic (changeable) information
+    /// about a game area. While ARE files store static information like lighting and fog, GIT files
+    /// store information about objects that can move, change, or be interacted with, like creatures,
+    /// doors, placeables, triggers, waypoints, stores, encounters, sounds, and cameras.
+    /// 
+    /// WHAT DATA DOES IT STORE?
+    /// 
+    /// A GIT file contains:
+    /// 
+    /// 1. AUDIO PROPERTIES:
+    ///    - AmbientSoundId: The ID of the ambient sound that plays in the area
+    ///    - AmbientVolume: The volume of the ambient sound (0-127)
+    ///    - EnvAudio: The environment audio ID (affects reverb and echo)
+    ///    - MusicStandardId: The ID of the standard (non-combat) music track
+    ///    - MusicBattleId: The ID of the battle music track
+    ///    - MusicDelay: The delay before music starts playing (in seconds)
+    /// 
+    /// 2. INSTANCE LISTS:
+    ///    - Creatures: List of creatures (NPCs, enemies, animals) placed in the area
+    ///    - Doors: List of doors placed in the area
+    ///    - Placeables: List of placeable objects (chests, tables, decorations) placed in the area
+    ///    - Triggers: List of triggers (invisible areas that activate scripts) placed in the area
+    ///    - Waypoints: List of waypoints (navigation points) placed in the area
+    ///    - Stores: List of stores (merchants) placed in the area
+    ///    - Encounters: List of encounters (spawn points for groups of enemies) placed in the area
+    ///    - Sounds: List of sound objects (3D positioned sounds) placed in the area
+    ///    - Cameras: List of cameras (cutscene cameras) placed in the area
+    /// 
+    /// HOW DOES THE GAME ENGINE USE GIT FILES?
+    /// 
+    /// STEP 1: Loading the Area
+    /// - When the player enters an area, the engine loads the GIT file
+    /// - It reads the audio properties to set up ambient sounds and music
+    /// - It reads all the instance lists to know what objects to place
+    /// 
+    /// STEP 2: Placing Objects
+    /// - For each creature in Creatures, the engine loads the creature template (UTC file) and places it
+    /// - For each door in Doors, the engine loads the door template (UTD file) and places it
+    /// - For each placeable in Placeables, the engine loads the placeable template (UTP file) and places it
+    /// - And so on for all object types
+    /// 
+    /// STEP 3: Setting Up Audio
+    /// - The engine plays the ambient sound at the specified volume
+    /// - It plays the standard music track (switches to battle music during combat)
+    /// - It applies the environment audio settings for reverb and echo
+    /// 
+    /// STEP 4: Managing Instances
+    /// - The engine keeps track of all instances (objects) in the area
+    /// - When objects are destroyed, moved, or changed, the GIT file can be updated
+    /// - When the player saves the game, the current state of all instances is saved
+    /// 
+    /// WHY ARE GIT FILES NEEDED?
+    /// 
+    /// Without GIT files, the game engine wouldn't know:
+    /// - Where to place creatures, doors, placeables, etc.
+    /// - What music and sounds to play
+    /// - What triggers to activate
+    /// - Where waypoints are for navigation
+    /// 
+    /// The GIT file acts as a blueprint that tells the engine exactly what objects to place and where.
+    /// 
+    /// RELATIONSHIP TO OTHER FILES:
+    /// 
+    /// - ARE files: The static area information (lighting, fog, etc.)
+    /// - UTC files: Creature templates referenced by Creatures
+    /// - UTD files: Door templates referenced by Doors
+    /// - UTP files: Placeable templates referenced by Placeables
+    /// - UTT files: Trigger templates referenced by Triggers
+    /// - UTW files: Waypoint templates referenced by Waypoints
+    /// - UTM files: Store templates referenced by Stores
+    /// - UTE files: Encounter templates referenced by Encounters
+    /// - UTS files: Sound templates referenced by Sounds
+    /// 
+    /// Together, these files define a complete game area with all its objects and audio.
+    /// 
+    /// ORIGINAL IMPLEMENTATION:
+    /// 
+    /// Based on swkotor2.exe: GIT files are loaded when an area is initialized. The engine reads
+    /// all instance lists and places objects at their specified positions. Audio properties are
+    /// used to set up ambient sounds and music. When the player saves, the current state of all
+    /// instances is written back to the GIT file.
+    /// 
+    /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/git.py:62-378
+    /// </remarks>
     [PublicAPI]
     public sealed class GIT
     {
@@ -25,53 +107,164 @@ namespace Andastra.Parsing.Resource.Generics
         // Original: BINARY_TYPE = ResourceType.GIT
         public static readonly ResourceType BinaryType = ResourceType.GIT;
 
-        // Area audio properties (ambient sounds, music, environment audio)
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/git.py:72-77
-        // Original: self.ambient_sound_id: int = 0
+        /// <summary>
+        /// Area audio properties - control ambient sounds, music, and environment audio.
+        /// </summary>
+        /// <remarks>
+        /// WHAT ARE AUDIO PROPERTIES?
+        /// 
+        /// Audio properties control what sounds and music play in the area. They determine the
+        /// ambient background sounds, the music tracks, and the acoustic environment (reverb, echo).
+        /// 
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/git.py:72-77
+        /// </remarks>
+        
+        /// <summary>
+        /// The ID of the ambient sound that plays in the area.
+        /// This is an index into the ambient sound list (usually defined in a 2DA file).
+        /// </summary>
+        /// <remarks>
+        /// Original: self.ambient_sound_id: int = 0
+        /// </remarks>
         public int AmbientSoundId { get; set; }
 
-        // Original: self.ambient_volume: int = 0
+        /// <summary>
+        /// The volume of the ambient sound (0-127).
+        /// 0 = silent, 127 = maximum volume.
+        /// </summary>
+        /// <remarks>
+        /// Original: self.ambient_volume: int = 0
+        /// </remarks>
         public int AmbientVolume { get; set; }
 
-        // Original: self.env_audio: int = 0
+        /// <summary>
+        /// The environment audio ID (affects reverb and echo).
+        /// This ID determines the acoustic properties of the area (indoor, outdoor, cave, etc.).
+        /// </summary>
+        /// <remarks>
+        /// Original: self.env_audio: int = 0
+        /// </remarks>
         public int EnvAudio { get; set; }
 
-        // Original: self.music_standard_id: int = 0
+        /// <summary>
+        /// The ID of the standard (non-combat) music track.
+        /// This music plays when the player is not in combat.
+        /// </summary>
+        /// <remarks>
+        /// Original: self.music_standard_id: int = 0
+        /// </remarks>
         public int MusicStandardId { get; set; }
 
-        // Original: self.music_battle_id: int = 0
+        /// <summary>
+        /// The ID of the battle music track.
+        /// This music plays when the player enters combat.
+        /// </summary>
+        /// <remarks>
+        /// Original: self.music_battle_id: int = 0
+        /// </remarks>
         public int MusicBattleId { get; set; }
 
-        // Original: self.music_delay: int = 0
+        /// <summary>
+        /// The delay before music starts playing (in seconds).
+        /// This prevents music from starting immediately when the area loads.
+        /// </summary>
+        /// <remarks>
+        /// Original: self.music_delay: int = 0
+        /// </remarks>
         public int MusicDelay { get; set; }
 
-        // Instance lists (creatures, doors, placeables, triggers, waypoints, stores, encounters, sounds, cameras)
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/git.py:85-93
-        // Original: self.cameras: list[GITCamera] = []
+        /// <summary>
+        /// Instance lists - all the objects placed in the area.
+        /// </summary>
+        /// <remarks>
+        /// WHAT ARE INSTANCE LISTS?
+        /// 
+        /// Instance lists are collections of objects that are placed in the area. Each object has
+        /// a template (UTC, UTD, UTP, etc.) that defines what it is, and the GIT file defines where
+        /// it's placed and how it's oriented.
+        /// 
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/git.py:85-93
+        /// </remarks>
+        
+        /// <summary>
+        /// List of cameras (cutscene cameras) placed in the area.
+        /// Cameras are used for cutscenes and scripted camera movements.
+        /// </summary>
+        /// <remarks>
+        /// Original: self.cameras: list[GITCamera] = []
+        /// </remarks>
         public List<GITCamera> Cameras { get; set; } = new List<GITCamera>();
 
-        // Original: self.creatures: list[GITCreature] = []
+        /// <summary>
+        /// List of creatures (NPCs, enemies, animals) placed in the area.
+        /// Each creature references a UTC (creature template) file that defines its appearance and stats.
+        /// </summary>
+        /// <remarks>
+        /// Original: self.creatures: list[GITCreature] = []
+        /// </remarks>
         public List<GITCreature> Creatures { get; set; } = new List<GITCreature>();
 
-        // Original: self.doors: list[GITDoor] = []
+        /// <summary>
+        /// List of doors placed in the area.
+        /// Each door references a UTD (door template) file that defines its appearance and behavior.
+        /// </summary>
+        /// <remarks>
+        /// Original: self.doors: list[GITDoor] = []
+        /// </remarks>
         public List<GITDoor> Doors { get; set; } = new List<GITDoor>();
 
-        // Original: self.encounters: list[GITEncounter] = []
+        /// <summary>
+        /// List of encounters (spawn points for groups of enemies) placed in the area.
+        /// Each encounter references a UTE (encounter template) file that defines which enemies spawn.
+        /// </summary>
+        /// <remarks>
+        /// Original: self.encounters: list[GITEncounter] = []
+        /// </remarks>
         public List<GITEncounter> Encounters { get; set; } = new List<GITEncounter>();
 
-        // Original: self.placeables: list[GITPlaceable] = []
+        /// <summary>
+        /// List of placeable objects (chests, tables, decorations) placed in the area.
+        /// Each placeable references a UTP (placeable template) file that defines its appearance and behavior.
+        /// </summary>
+        /// <remarks>
+        /// Original: self.placeables: list[GITPlaceable] = []
+        /// </remarks>
         public List<GITPlaceable> Placeables { get; set; } = new List<GITPlaceable>();
 
-        // Original: self.sounds: list[GITSound] = []
+        /// <summary>
+        /// List of sound objects (3D positioned sounds) placed in the area.
+        /// Each sound references a UTS (sound template) file that defines the sound to play.
+        /// </summary>
+        /// <remarks>
+        /// Original: self.sounds: list[GITSound] = []
+        /// </remarks>
         public List<GITSound> Sounds { get; set; } = new List<GITSound>();
 
-        // Original: self.stores: list[GITStore] = []
+        /// <summary>
+        /// List of stores (merchants) placed in the area.
+        /// Each store references a UTM (store template) file that defines what items are sold.
+        /// </summary>
+        /// <remarks>
+        /// Original: self.stores: list[GITStore] = []
+        /// </remarks>
         public List<GITStore> Stores { get; set; } = new List<GITStore>();
 
-        // Original: self.triggers: list[GITTrigger] = []
+        /// <summary>
+        /// List of triggers (invisible areas that activate scripts) placed in the area.
+        /// Each trigger references a UTT (trigger template) file that defines its shape and behavior.
+        /// </summary>
+        /// <remarks>
+        /// Original: self.triggers: list[GITTrigger] = []
+        /// </remarks>
         public List<GITTrigger> Triggers { get; set; } = new List<GITTrigger>();
 
-        // Original: self.waypoints: list[GITWaypoint] = []
+        /// <summary>
+        /// List of waypoints (navigation points) placed in the area.
+        /// Each waypoint references a UTW (waypoint template) file that defines its appearance and name.
+        /// </summary>
+        /// <remarks>
+        /// Original: self.waypoints: list[GITWaypoint] = []
+        /// </remarks>
         public List<GITWaypoint> Waypoints { get; set; } = new List<GITWaypoint>();
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/git.py:64-67
