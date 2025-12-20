@@ -172,6 +172,15 @@ namespace Andastra.Runtime.Games.Aurora
             LoadAreaGeometry(areData);
             LoadEntities(gitData);
             LoadAreaProperties(areData);
+
+            // Initialize rain particle system for weather rendering (after width/height are loaded)
+            // Based on nwmain.exe: CNWSArea::RenderWeather uses particle system for rain
+            _rainParticleSystem = new RainParticleSystem(_width, _height);
+
+            // Initialize snow particle system for weather rendering
+            // Based on nwmain.exe: CNWSArea::RenderWeather uses particle system for snow
+            _snowParticleSystem = new SnowParticleSystem();
+
             InitializeAreaEffects();
         }
 
@@ -2107,6 +2116,19 @@ namespace Andastra.Runtime.Games.Aurora
                     // Flash will trigger again on next lightning roll
                 }
             }
+
+            // Update rain particle system if active
+            // Based on nwmain.exe: CNWSArea::RenderWeather updates rain particle positions
+            if (_rainParticleSystem != null && _isRaining)
+            {
+                // Calculate wind direction from wind power
+                // WindPower in ARE file is INT (0-2: None=0, Weak=1, Strong=2), convert to 0.0-1.0 range for particle system
+                float windPowerNormalized = _windPower / 2.0f; // 0.0 for None, 0.5 for Weak, 1.0 for Strong
+                // Wind direction is typically horizontal (X and Z axes), minimal Y component
+                // For simplicity, use a default horizontal wind direction (can be enhanced with ARE wind direction data)
+                Vector3 windDirection = new Vector3(1.0f, 0.0f, 0.0f); // Default: wind from west (positive X)
+                _rainParticleSystem.Update(deltaTime, windDirection, windPowerNormalized, _width, _height);
+            }
         }
 
         /// <summary>
@@ -2610,11 +2632,9 @@ namespace Andastra.Runtime.Games.Aurora
 
             // Render rain if active
             // Based on nwmain.exe: CNWSArea::RenderWeather renders rain particles
-            if (_isRaining)
+            if (_isRaining && _rainParticleSystem != null)
             {
-                // TODO: Implement rain particle rendering
-                // Rain particles would be rendered as billboard sprites or particle system
-                // For now, this is a placeholder - full implementation would render rain particles
+                _rainParticleSystem.Render(graphicsDevice, basicEffect, viewMatrix, projectionMatrix);
             }
 
             // Render snow if active
