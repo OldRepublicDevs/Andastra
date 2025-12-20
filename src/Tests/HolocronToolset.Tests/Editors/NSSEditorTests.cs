@@ -500,14 +500,123 @@ namespace HolocronToolset.Tests.Editors
             }
         }
 
-        // TODO: STUB - Implement test_nss_editor_bookmark_add_and_navigate (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:234-276)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:234-276
         // Original: def test_nss_editor_bookmark_add_and_navigate(qtbot, installation: HTInstallation, complex_nss_script: str): Test bookmark add and navigate
         [Fact]
         public void TestNssEditorBookmarkAddAndNavigate()
         {
-            // TODO: STUB - Implement bookmark add and navigate test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:234-276
-            throw new NotImplementedException("TestNssEditorBookmarkAddAndNavigate: Bookmark add and navigate test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            // Complex NSS script matching Python fixture (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:38-59)
+            string complexNssScript = @"// Global variable
+int g_globalVar = 10;
+
+// Main function
+void main() {
+    int localVar = 20;
+
+    if (localVar > 10) {
+        SendMessageToPC(GetFirstPC(), ""Condition met"");
+    }
+
+    for (int i = 0; i < 5; i++) {
+        localVar += i;
+    }
+}
+
+// Helper function
+void helper() {
+    int helperVar = 30;
+}";
+
+            var editor = new NSSEditor(null, installation);
+            editor.New();
+
+            // Set up multi-line script (matching Python: editor.ui.codeEdit.setPlainText(complex_nss_script))
+            editor.Load("test_script.nss", "test_script", ResourceType.NSS, Encoding.UTF8.GetBytes(complexNssScript));
+
+            // Add bookmarks at different lines (matching Python: for line_num in [1, 5, 10])
+            int[] bookmarkLines = { 1, 5, 10 };
+            foreach (int lineNum in bookmarkLines)
+            {
+                // Set cursor to the specified line (matching Python: cursor.setPosition(block.position()))
+                editor.GotoLine(lineNum);
+
+                // Add bookmark (matching Python: editor.add_bookmark())
+                editor.AddBookmark();
+            }
+
+            // Verify bookmarks exist (matching Python: assert editor.ui.bookmarkTree.topLevelItemCount() >= 3)
+            var bookmarkTree = editor.BookmarkTree;
+            bookmarkTree.Should().NotBeNull("BookmarkTree should be initialized");
+
+            var itemsList = bookmarkTree.Items as System.Collections.Generic.IEnumerable<Avalonia.Controls.TreeViewItem> ?? new System.Collections.Generic.List<Avalonia.Controls.TreeViewItem>();
+            int bookmarkCount = itemsList.Count();
+            bookmarkCount.Should().BeGreaterThanOrEqualTo(3, "At least 3 bookmarks should be added");
+
+            // Test editing bookmark descriptions (matching Python: item.setText(1, f"Custom Description {i}"))
+            var itemsListMutable = itemsList.ToList();
+            int itemsToEdit = Math.Min(3, itemsListMutable.Count);
+            for (int i = 0; i < itemsToEdit; i++)
+            {
+                var item = itemsListMutable[i];
+                if (item != null && item.Tag is NSSEditor.BookmarkData bookmarkData)
+                {
+                    // Update description in BookmarkData (matching Python: item.setText(1, ...))
+                    string customDescription = $"Custom Description {i}";
+                    bookmarkData.Description = customDescription;
+                    
+                    // Update Header to reflect new description (matching Python behavior where column 1 is updated)
+                    item.Header = $"{bookmarkData.LineNumber} - {customDescription}";
+                    
+                    // Verify description was updated
+                    bookmarkData.Description.Should().Be(customDescription, $"Bookmark {i} description should be updated");
+                }
+            }
+
+            // Test navigating to bookmarks (matching Python: editor._goto_bookmark(item))
+            for (int i = 0; i < itemsToEdit; i++)
+            {
+                var item = itemsListMutable[i];
+                if (item != null && item.Tag is NSSEditor.BookmarkData bookmarkData)
+                {
+                    // Set current item (matching Python: editor.ui.bookmarkTree.setCurrentItem(item))
+                    bookmarkTree.SelectedItem = item;
+
+                    // Navigate to bookmark (matching Python: editor._goto_bookmark(item))
+                    editor.GotoBookmark(item);
+
+                    // Cursor should move to bookmark line (matching Python: current_line == bookmark_line)
+                    int currentLine = editor.GetCurrentLine();
+                    int bookmarkLine = bookmarkData.LineNumber;
+                    currentLine.Should().Be(bookmarkLine, $"Cursor should be at bookmark line {bookmarkLine} after navigation");
+                }
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:278-309
