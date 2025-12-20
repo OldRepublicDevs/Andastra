@@ -191,7 +191,7 @@ namespace HolocronToolset.Tests.Editors
             savedGff.Root.Should().NotBeNull();
         }
 
-        // TODO: STUB - Implement test_dlg_editor_all_widgets_exist (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:364-398)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:364-398
         // Original: def test_dlg_editor_all_widgets_exist(qtbot, installation: HTInstallation): Verify all UI widgets exist in the editor
         /// <summary>
         /// Verify ALL widgets exist in DLG editor.
@@ -210,10 +210,43 @@ namespace HolocronToolset.Tests.Editors
             editor.SpeakerEdit.Should().NotBeNull("speakerEdit should exist");
             editor.SpeakerEditLabel.Should().NotBeNull("speakerEditLabel should exist");
 
-            // Script widgets
+            // Script resref widgets (matching Python: script1ResrefEdit, script2ResrefEdit)
+            // These are accessed via reflection since they may not be public yet
+            var script1ResrefEditField = editorType.GetField("_script1ResrefEdit", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            script1ResrefEditField.Should().NotBeNull("_script1ResrefEdit field should exist");
+            script1ResrefEditField.GetValue(editor).Should().NotBeNull("script1ResrefEdit should be initialized");
+
+            var script2ResrefEditField = editorType.GetField("_script2ResrefEdit", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            script2ResrefEditField.Should().NotBeNull("_script2ResrefEdit field should exist");
+            script2ResrefEditField.GetValue(editor).Should().NotBeNull("script2ResrefEdit should be initialized");
+
+            // Listener widget
+            editor.ListenerEdit.Should().NotBeNull("listenerEdit should exist");
+
+            // VO resref widget (voice over) - already checking voiceComboBox above
+
+            // Sound combo box (matching Python: soundComboBox)
+            var soundComboBoxField = editorType.GetField("_soundComboBox", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            soundComboBoxField.Should().NotBeNull("_soundComboBox field should exist");
+            soundComboBoxField.GetValue(editor).Should().NotBeNull("soundComboBox should be initialized");
+
+            // Camera angle widget (matching Python: cameraAngleSelect or cameraAngleSpin)
+            var cameraAngleSpinField = editorType.GetField("_cameraAngleSpin", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            cameraAngleSpinField.Should().NotBeNull("_cameraAngleSpin field should exist");
+            cameraAngleSpinField.GetValue(editor).Should().NotBeNull("cameraAngleSpin should be initialized");
+
+            // Plot index widget (matching Python: plotIndexCombo or plotIndexSpin)
+            var plotIndexSpinField = editorType.GetField("_plotIndexSpin", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            plotIndexSpinField.Should().NotBeNull("_plotIndexSpin field should exist");
+            plotIndexSpinField.GetValue(editor).Should().NotBeNull("plotIndexSpin should be initialized");
+
+            // Comments widget
+            editor.CommentsEdit.Should().NotBeNull("commentsEdit should exist");
+
+            // Script parameter widgets
             editor.Script1Param1Spin.Should().NotBeNull("script1Param1Spin should exist");
 
-            // Link widgets
+            // Link condition widgets
             editor.Condition1ResrefEdit.Should().NotBeNull("condition1ResrefEdit should exist");
             editor.Condition2ResrefEdit.Should().NotBeNull("condition2ResrefEdit should exist");
             editor.LogicSpin.Should().NotBeNull("logicSpin should exist");
@@ -235,6 +268,23 @@ namespace HolocronToolset.Tests.Editors
             editor.AddAnimButton.Should().NotBeNull("addAnimButton should exist");
             editor.RemoveAnimButton.Should().NotBeNull("removeAnimButton should exist");
             editor.EditAnimButton.Should().NotBeNull("editAnimButton should exist");
+
+            // Dock widgets
+            // Right dock widget (matching Python: rightDockWidget)
+            var rightDockWidgetField = editorType.GetField("_rightDockWidget", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            rightDockWidgetField.Should().NotBeNull("_rightDockWidget field should exist");
+            rightDockWidgetField.GetValue(editor).Should().NotBeNull("rightDockWidget should be initialized");
+
+            // Top dock widget (matching Python: topDockWidget)
+            var topDockWidgetField = editorType.GetField("_topDockWidget", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            topDockWidgetField.Should().NotBeNull("_topDockWidget field should exist");
+            topDockWidgetField.GetValue(editor).Should().NotBeNull("topDockWidget should be initialized");
+
+            // Left dock widget (already checking via public property)
+            editor.LeftDockWidget.Should().NotBeNull("leftDockWidget should exist");
+
+            // Orphaned nodes list (already checking via public property)
+            editor.OrphanedNodesList.Should().NotBeNull("orphanedNodesList should exist");
 
             // Search/find widgets - check via reflection since they're private
             var editorType = typeof(DLGEditor);
