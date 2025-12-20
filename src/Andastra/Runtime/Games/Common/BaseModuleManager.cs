@@ -19,7 +19,11 @@ namespace Andastra.Runtime.Games.Common
     /// - swkotor2.exe: Enhanced module system with transitions
     /// - nwmain.exe: Aurora module management
     /// - daorigins.exe: Eclipse module streaming
-    /// - TODO: dragonage2
+    /// - DragonAge2.exe: Eclipse message-based module loading (LoadModuleMessage @ 0x00bf5df8, MODULES: @ 0x00bf5d10, WRITE_MODULES: @ 0x00bf5d24)
+    ///   ModuleID @ 0x00be9688, ModuleStartupInfo @ 0x00bebb64, ModuleInfoList @ 0x00bfa278
+    ///   GetMainModuleName @ 0x00c0ed00, GetCurrentModuleName @ 0x00c0ed24, CModule @ 0x00c236b4
+    ///   Architecture: UnrealScript message-based module loading (LoadModuleMessage) vs DA:O direct LoadModule call
+    ///   Module format: .rim files, area files, UnrealScript packages (same as DA:O but message-driven)
     /// - Common concepts: Module definition, area loading, entity spawning, transitions
     ///
     /// Common functionality across engines:
