@@ -4,6 +4,7 @@ using Andastra.Parsing.Installation;
 using Andastra.Runtime.MonoGame.Backends;
 using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
+using Andastra.Runtime.MonoGame.Lighting;
 using Andastra.Runtime.MonoGame.Materials;
 using Andastra.Runtime.MonoGame.Raytracing;
 using Andastra.Runtime.MonoGame.Remix;
@@ -228,7 +229,46 @@ namespace Andastra.Runtime.MonoGame.Rendering
                 Console.WriteLine("[OdysseyRenderer] WARNING: Remix compatibility requested but backend is not Direct3D9Remix");
             }
 
-            // TODO: Initialize lighting system when ILightingSystem implementation is available
+            // Initialize lighting system if dynamic lighting is enabled
+            // Based on original engine lighting behavior:
+            // - swkotor.exe: Uses OpenGL fixed-function lighting with glLightfv, glEnable(GL_LIGHTING)
+            // - swkotor2.exe: Uses OpenGL fixed-function lighting with glLightfv, glEnable(GL_LIGHTING)
+            // - Original implementation: Supports up to 8 OpenGL lights (GL_MAX_LIGHTS), uses ambient and directional lights
+            // - Modern implementation: Uses clustered forward+ lighting for hundreds of dynamic lights
+            // - ClusteredLightingSystem: Supports point, spot, directional, and area lights with 3D clustering
+            if (settings.DynamicLighting)
+            {
+                try
+                {
+                    // Validate max lights setting and ensure it's within reasonable bounds
+                    // Original engine: Maximum 8 OpenGL lights (hardware limit)
+                    // Modern implementation: Supports up to 4096 lights (configurable, validated in RenderSettings)
+                    int maxLights = Math.Max(1, Math.Min(4096, settings.MaxDynamicLights));
+
+                    // Create clustered lighting system instance
+                    // ClusteredLightingSystem divides view frustum into 3D clusters (16x8x24) and assigns lights to clusters
+                    // This enables efficient per-pixel lighting with hundreds/thousands of dynamic lights
+                    // Original engine used fixed-function OpenGL lighting (8 lights max)
+                    // Modern implementation uses clustered forward+ shading for much better scalability
+                    _lighting = new ClusteredLightingSystem(maxLights);
+
+                    Console.WriteLine("[OdysseyRenderer] Lighting system initialized successfully");
+                    Console.WriteLine("[OdysseyRenderer] Max dynamic lights: " + maxLights);
+                    Console.WriteLine("[OdysseyRenderer] Clustered lighting: 16x8x24 clusters, 128 max lights per cluster");
+                    Console.WriteLine("[OdysseyRenderer] Supported light types: Point, Spot, Directional, Area");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("[OdysseyRenderer] ERROR: Exception during lighting system initialization: " + ex.Message);
+                    Console.WriteLine("[OdysseyRenderer] Stack trace: " + ex.StackTrace);
+                    _lighting?.Dispose();
+                    _lighting = null;
+                }
+            }
+            else
+            {
+                Console.WriteLine("[OdysseyRenderer] Dynamic lighting disabled - lighting system not initialized");
+            }
 
             // Initialize material factory if installation is provided
             if (installation != null)
@@ -480,7 +520,10 @@ namespace Andastra.Runtime.MonoGame.Rendering
                 _remixBridge.SubmitLight(remixLight);
             }
 
-            // Standard lighting path handled by lighting system
+            // Standard lighting path: lights are managed through ILightingSystem
+            // Lights should be created via Lighting.CreateLight() and managed through the lighting system
+            // The lighting system handles clustered light culling and GPU data submission
+            // This SubmitLight method is primarily for RTX Remix integration
         }
 
         /// <summary>
