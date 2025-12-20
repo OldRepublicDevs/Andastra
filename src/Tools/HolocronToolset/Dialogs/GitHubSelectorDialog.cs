@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using MsBox.Avalonia;
@@ -97,6 +99,7 @@ namespace HolocronToolset.Dialogs
             mainPanel.Children.Add(buttonPanel);
 
             _cloneButton = new Button { Content = "Clone Repository" };
+            _cloneButton.Click += (s, e) => CloneRepository();
             mainPanel.Children.Add(_cloneButton);
 
             Content = mainPanel;
@@ -205,8 +208,155 @@ namespace HolocronToolset.Dialogs
         // Original: def clone_repository(self) -> None:
         private void CloneRepository()
         {
-            // TODO: Implement git clone when available
-            System.Console.WriteLine("Clone repository not yet implemented");
+            // Get selected fork from combo box
+            string selectedFork = null;
+            if (_forkComboBox != null)
+            {
+                selectedFork = _forkComboBox.SelectedItem?.ToString() ?? _forkComboBox.Text;
+                // Remove " (main)" suffix if present (matching PyKotor behavior)
+                if (!string.IsNullOrEmpty(selectedFork))
+                {
+                    selectedFork = selectedFork.Replace(" (main)", "");
+                }
+            }
+
+            // Validate that a fork is selected
+            if (string.IsNullOrWhiteSpace(selectedFork))
+            {
+                var warningMsgBox = MessageBoxManager.GetMessageBoxStandard(
+                    "No Fork Selected",
+                    "Please select a fork to clone.",
+                    ButtonEnum.Ok,
+                    Icon.Warning);
+                warningMsgBox.ShowAsync();
+                return;
+            }
+
+            // Construct GitHub URL
+            string url = $"https://github.com/{selectedFork}.git";
+
+            try
+            {
+                // Check if git is available
+                if (!IsGitAvailable())
+                {
+                    var errorMsgBox = MessageBoxManager.GetMessageBoxStandard(
+                        "Git Not Found",
+                        "Git is not installed or not available in PATH. Please install Git and ensure it is accessible from the command line.",
+                        ButtonEnum.Ok,
+                        Icon.Error);
+                    errorMsgBox.ShowAsync();
+                    return;
+                }
+
+                // Prepare git clone command
+                ProcessStartInfo startInfo = new ProcessStartInfo
+                {
+                    FileName = "git",
+                    Arguments = $"clone {url}",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                };
+
+                // Windows-specific: Set CREATE_NO_WINDOW flag (matching PyKotor behavior)
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    startInfo.CreateNoWindow = true;
+                }
+
+                // Execute git clone
+                using (Process process = Process.Start(startInfo))
+                {
+                    if (process == null)
+                    {
+                        throw new InvalidOperationException("Failed to start git process");
+                    }
+
+                    // Read output and error streams
+                    string output = process.StandardOutput.ReadToEnd();
+                    string error = process.StandardError.ReadToEnd();
+                    process.WaitForExit();
+
+                    if (process.ExitCode == 0)
+                    {
+                        // Clone successful
+                        var successMsgBox = MessageBoxManager.GetMessageBoxStandard(
+                            "Clone Successful",
+                            $"Repository {selectedFork} cloned successfully.",
+                            ButtonEnum.Ok,
+                            Icon.Success);
+                        successMsgBox.ShowAsync();
+                    }
+                    else
+                    {
+                        // Clone failed
+                        string errorMessage = !string.IsNullOrEmpty(error) ? error : output;
+                        if (string.IsNullOrEmpty(errorMessage))
+                        {
+                            errorMessage = $"Git clone failed with exit code {process.ExitCode}";
+                        }
+                        var errorMsgBox = MessageBoxManager.GetMessageBoxStandard(
+                            "Clone Failed",
+                            $"Failed to clone repository: {errorMessage}",
+                            ButtonEnum.Ok,
+                            Icon.Error);
+                        errorMsgBox.ShowAsync();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions during git clone execution
+                var errorMsgBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Clone Failed",
+                    $"Failed to clone repository: {ex.Message}",
+                    ButtonEnum.Ok,
+                    Icon.Error);
+                errorMsgBox.ShowAsync();
+            }
+        }
+
+        /// <summary>
+        /// Checks if git is available in the system PATH.
+        /// </summary>
+        /// <returns>True if git is available, false otherwise.</returns>
+        private bool IsGitAvailable()
+        {
+            try
+            {
+                ProcessStartInfo startInfo = new ProcessStartInfo
+                {
+                    FileName = "git",
+                    Arguments = "--version",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                };
+
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    startInfo.CreateNoWindow = true;
+                }
+
+                using (Process process = Process.Start(startInfo))
+                {
+                    if (process == null)
+                    {
+                        return false;
+                    }
+
+                    process.WaitForExit(5000); // 5 second timeout
+                    return process.ExitCode == 0;
+                }
+            }
+            catch
+            {
+                // If we can't start git, it's not available
+                return false;
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:630-633
