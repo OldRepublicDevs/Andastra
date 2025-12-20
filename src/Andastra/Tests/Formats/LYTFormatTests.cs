@@ -63,10 +63,10 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Read file as text to validate structure
             string content = File.ReadAllText(TestFile, Encoding.ASCII);
-            
+
             // Validate header (beginlayout)
             content.Should().StartWith("beginlayout", "LYT file should start with 'beginlayout' as defined in LYT.ksy");
-            
+
             // Validate footer (donelayout)
             content.Should().Contain("donelayout", "LYT file should contain 'donelayout' as defined in LYT.ksy");
         }
@@ -84,11 +84,11 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Validate structure: beginlayout, sections, donelayout
             lines[0].Trim().Should().Be("beginlayout", "First line should be 'beginlayout'");
-            
+
             // Should contain section keywords
             bool hasRoomCount = lines.Any(l => l.Trim().StartsWith("roomcount", StringComparison.OrdinalIgnoreCase));
             bool hasDonelayout = lines.Any(l => l.Trim().Equals("donelayout", StringComparison.OrdinalIgnoreCase));
-            
+
             hasDonelayout.Should().BeTrue("File should contain 'donelayout' keyword");
         }
 
@@ -109,7 +109,8 @@ namespace Andastra.Parsing.Tests.Formats
             // Validate each room entry has required fields
             foreach (var room in lyt.Rooms)
             {
-                room.Model.Should().NotBeNullOrEmpty("Room model should not be null or empty");
+                room.Model.Should().NotBeNull("Room model should not be null");
+                room.Model.ToString().Should().NotBeNullOrEmpty("Room model should not be empty");
                 room.Position.Should().NotBeNull("Room position should not be null");
             }
         }
@@ -131,7 +132,8 @@ namespace Andastra.Parsing.Tests.Formats
             // Validate each track entry has required fields
             foreach (var track in lyt.Tracks)
             {
-                track.Model.Should().NotBeNullOrEmpty("Track model should not be null or empty");
+                track.Model.Should().NotBeNull("Track model should not be null");
+                track.Model.ToString().Should().NotBeNullOrEmpty("Track model should not be empty");
                 track.Position.Should().NotBeNull("Track position should not be null");
             }
         }
@@ -153,7 +155,8 @@ namespace Andastra.Parsing.Tests.Formats
             // Validate each obstacle entry has required fields
             foreach (var obstacle in lyt.Obstacles)
             {
-                obstacle.Model.Should().NotBeNullOrEmpty("Obstacle model should not be null or empty");
+                obstacle.Model.Should().NotBeNull("Obstacle model should not be null");
+                obstacle.Model.ToString().Should().NotBeNullOrEmpty("Obstacle model should not be empty");
                 obstacle.Position.Should().NotBeNull("Obstacle position should not be null");
             }
         }
@@ -217,9 +220,9 @@ namespace Andastra.Parsing.Tests.Formats
         {
             // Test LYT with multiple rooms
             var lyt = new LYT();
-            lyt.Rooms.Add(new LYTRoom("room1", new Vector3(0.0f, 0.0f, 0.0f)));
-            lyt.Rooms.Add(new LYTRoom("room2", new Vector3(10.0f, 10.0f, 10.0f)));
-            lyt.Rooms.Add(new LYTRoom("room3", new Vector3(20.0f, 20.0f, 20.0f)));
+            lyt.Rooms.Add(new LYTRoom(new ResRef("room1"), new Vector3(0.0f, 0.0f, 0.0f)));
+            lyt.Rooms.Add(new LYTRoom(new ResRef("room2"), new Vector3(10.0f, 10.0f, 10.0f)));
+            lyt.Rooms.Add(new LYTRoom(new ResRef("room3"), new Vector3(20.0f, 20.0f, 20.0f)));
 
             lyt.Rooms.Count.Should().Be(3);
 
@@ -248,8 +251,8 @@ namespace Andastra.Parsing.Tests.Formats
         {
             // Test LYT with multiple tracks
             var lyt = new LYT();
-            lyt.Tracks.Add(new LYTTrack("track1", new Vector3(0.0f, 0.0f, 0.0f)));
-            lyt.Tracks.Add(new LYTTrack("track2", new Vector3(5.0f, 5.0f, 5.0f)));
+            lyt.Tracks.Add(new LYTTrack(new ResRef("track1"), new Vector3(0.0f, 0.0f, 0.0f)));
+            lyt.Tracks.Add(new LYTTrack(new ResRef("track2"), new Vector3(5.0f, 5.0f, 5.0f)));
 
             lyt.Tracks.Count.Should().Be(2);
 
@@ -277,8 +280,8 @@ namespace Andastra.Parsing.Tests.Formats
         {
             // Test LYT with multiple obstacles
             var lyt = new LYT();
-            lyt.Obstacles.Add(new LYTObstacle("obstacle1", new Vector3(0.0f, 0.0f, 0.0f)));
-            lyt.Obstacles.Add(new LYTObstacle("obstacle2", new Vector3(3.0f, 3.0f, 3.0f)));
+            lyt.Obstacles.Add(new LYTObstacle(new ResRef("obstacle1"), new Vector3(0.0f, 0.0f, 0.0f)));
+            lyt.Obstacles.Add(new LYTObstacle(new ResRef("obstacle2"), new Vector3(3.0f, 3.0f, 3.0f)));
 
             lyt.Obstacles.Count.Should().Be(2);
 
@@ -337,9 +340,9 @@ namespace Andastra.Parsing.Tests.Formats
         {
             // Test LYT with all sections populated
             var lyt = new LYT();
-            lyt.Rooms.Add(new LYTRoom("room1", new Vector3(0.0f, 0.0f, 0.0f)));
-            lyt.Tracks.Add(new LYTTrack("track1", new Vector3(1.0f, 1.0f, 1.0f)));
-            lyt.Obstacles.Add(new LYTObstacle("obstacle1", new Vector3(2.0f, 2.0f, 2.0f)));
+            lyt.Rooms.Add(new LYTRoom(new ResRef("room1"), new Vector3(0.0f, 0.0f, 0.0f)));
+            lyt.Tracks.Add(new LYTTrack(new ResRef("track1"), new Vector3(1.0f, 1.0f, 1.0f)));
+            lyt.Obstacles.Add(new LYTObstacle(new ResRef("obstacle1"), new Vector3(2.0f, 2.0f, 2.0f)));
             lyt.Doorhooks.Add(new LYTDoorHook("room1", "door1", new Vector3(3.0f, 3.0f, 3.0f), new Vector4(0.0f, 0.0f, 0.0f, 1.0f)));
 
             string tempFile = Path.GetTempFileName();
@@ -367,7 +370,7 @@ namespace Andastra.Parsing.Tests.Formats
         {
             // Test that room positions are preserved correctly
             var lyt = new LYT();
-            lyt.Rooms.Add(new LYTRoom("testroom", new Vector3(123.456f, -789.012f, 345.678f)));
+            lyt.Rooms.Add(new LYTRoom(new ResRef("testroom"), new Vector3(123.456f, -789.012f, 345.678f)));
 
             string tempFile = Path.GetTempFileName();
             try
@@ -441,10 +444,10 @@ namespace Andastra.Parsing.Tests.Formats
         {
             // Test complete round-trip: create, write, read, validate
             var originalLyt = new LYT();
-            originalLyt.Rooms.Add(new LYTRoom("room1", new Vector3(1.0f, 2.0f, 3.0f)));
-            originalLyt.Rooms.Add(new LYTRoom("room2", new Vector3(4.0f, 5.0f, 6.0f)));
-            originalLyt.Tracks.Add(new LYTTrack("track1", new Vector3(7.0f, 8.0f, 9.0f)));
-            originalLyt.Obstacles.Add(new LYTObstacle("obstacle1", new Vector3(10.0f, 11.0f, 12.0f)));
+            originalLyt.Rooms.Add(new LYTRoom(new ResRef("room1"), new Vector3(1.0f, 2.0f, 3.0f)));
+            originalLyt.Rooms.Add(new LYTRoom(new ResRef("room2"), new Vector3(4.0f, 5.0f, 6.0f)));
+            originalLyt.Tracks.Add(new LYTTrack(new ResRef("track1"), new Vector3(7.0f, 8.0f, 9.0f)));
+            originalLyt.Obstacles.Add(new LYTObstacle(new ResRef("obstacle1"), new Vector3(10.0f, 11.0f, 12.0f)));
             originalLyt.Doorhooks.Add(new LYTDoorHook("room1", "door1", new Vector3(13.0f, 14.0f, 15.0f), new Vector4(0.0f, 0.0f, 0.0f, 1.0f)));
 
             string tempFile = Path.GetTempFileName();
@@ -482,7 +485,7 @@ namespace Andastra.Parsing.Tests.Formats
         {
             // Test that LYT files are encoded as ASCII
             var lyt = new LYT();
-            lyt.Rooms.Add(new LYTRoom("testroom", new Vector3(0.0f, 0.0f, 0.0f)));
+            lyt.Rooms.Add(new LYTRoom(new ResRef("testroom"), new Vector3(0.0f, 0.0f, 0.0f)));
 
             string tempFile = Path.GetTempFileName();
             try
@@ -534,13 +537,13 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Read file as raw content (as defined in LYT.ksy)
             string rawContent = File.ReadAllText(TestFile, Encoding.ASCII);
-            
+
             // Validate header (beginlayout) - matches LYT.ksy definition
             rawContent.Should().StartWith("beginlayout", "LYT file should start with 'beginlayout' as defined in LYT.ksy");
-            
+
             // Validate footer (donelayout) - matches LYT.ksy definition
             rawContent.Should().Contain("donelayout", "LYT file should contain 'donelayout' as defined in LYT.ksy");
-            
+
             // Validate sections (optional, but should be parseable)
             // The format allows all sections to be optional
         }
@@ -556,13 +559,13 @@ namespace Andastra.Parsing.Tests.Formats
 
             byte[] rawBytes = File.ReadAllBytes(TestFile);
             string rawContent = Encoding.ASCII.GetString(rawBytes);
-            
+
             // All bytes should be valid ASCII
             foreach (byte b in rawBytes)
             {
                 b.Should().BeLessThan(128, "All bytes should be valid ASCII (0-127)");
             }
-            
+
             rawContent.Should().Contain("beginlayout");
             rawContent.Should().Contain("donelayout");
         }
@@ -578,13 +581,13 @@ namespace Andastra.Parsing.Tests.Formats
 
             string content = File.ReadAllText(TestFile, Encoding.ASCII);
             string[] lines = content.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
-            
+
             // Find section keyword positions
             int roomcountIndex = -1;
             int trackcountIndex = -1;
             int obstaclecountIndex = -1;
             int doorhookcountIndex = -1;
-            
+
             for (int i = 0; i < lines.Length; i++)
             {
                 string trimmed = lines[i].Trim().ToLowerInvariant();
@@ -605,7 +608,7 @@ namespace Andastra.Parsing.Tests.Formats
                     doorhookcountIndex = i;
                 }
             }
-            
+
             // If sections exist, they should be in order
             if (roomcountIndex >= 0 && trackcountIndex >= 0)
             {
@@ -626,14 +629,14 @@ namespace Andastra.Parsing.Tests.Formats
         {
             // Test that room entries match LYT.ksy room_entry type definition
             var lyt = new LYT();
-            lyt.Rooms.Add(new LYTRoom("roommodel", new Vector3(1.5f, 2.5f, 3.5f)));
+            lyt.Rooms.Add(new LYTRoom(new ResRef("roommodel"), new Vector3(1.5f, 2.5f, 3.5f)));
 
             string tempFile = Path.GetTempFileName();
             try
             {
                 new LYTAsciiWriter(lyt, tempFile).Write();
                 string content = File.ReadAllText(tempFile, Encoding.ASCII);
-                
+
                 // Room entry format: <room_model> <x> <y> <z>
                 // Should contain model name and three float coordinates
                 content.Should().Contain("roommodel", "Room entry should contain model name");
@@ -655,14 +658,14 @@ namespace Andastra.Parsing.Tests.Formats
         {
             // Test that track entries match LYT.ksy track_entry type definition
             var lyt = new LYT();
-            lyt.Tracks.Add(new LYTTrack("trackmodel", new Vector3(10.0f, 20.0f, 30.0f)));
+            lyt.Tracks.Add(new LYTTrack(new ResRef("trackmodel"), new Vector3(10.0f, 20.0f, 30.0f)));
 
             string tempFile = Path.GetTempFileName();
             try
             {
                 new LYTAsciiWriter(lyt, tempFile).Write();
                 string content = File.ReadAllText(tempFile, Encoding.ASCII);
-                
+
                 // Track entry format: <track_model> <x> <y> <z>
                 content.Should().Contain("trackmodel", "Track entry should contain model name");
                 content.Should().Contain("10", "Track entry should contain X coordinate");
@@ -683,14 +686,14 @@ namespace Andastra.Parsing.Tests.Formats
         {
             // Test that obstacle entries match LYT.ksy obstacle_entry type definition
             var lyt = new LYT();
-            lyt.Obstacles.Add(new LYTObstacle("obstaclemodel", new Vector3(100.0f, 200.0f, 300.0f)));
+            lyt.Obstacles.Add(new LYTObstacle(new ResRef("obstaclemodel"), new Vector3(100.0f, 200.0f, 300.0f)));
 
             string tempFile = Path.GetTempFileName();
             try
             {
                 new LYTAsciiWriter(lyt, tempFile).Write();
                 string content = File.ReadAllText(tempFile, Encoding.ASCII);
-                
+
                 // Obstacle entry format: <obstacle_model> <x> <y> <z>
                 content.Should().Contain("obstaclemodel", "Obstacle entry should contain model name");
                 content.Should().Contain("100", "Obstacle entry should contain X coordinate");
@@ -718,7 +721,7 @@ namespace Andastra.Parsing.Tests.Formats
             {
                 new LYTAsciiWriter(lyt, tempFile).Write();
                 string content = File.ReadAllText(tempFile, Encoding.ASCII);
-                
+
                 // Doorhook entry format: <room_name> <door_name> 0 <x> <y> <z> <qx> <qy> <qz> <qw>
                 content.Should().Contain("room1", "Doorhook entry should contain room name");
                 content.Should().Contain("door1", "Doorhook entry should contain door name");
@@ -744,7 +747,7 @@ namespace Andastra.Parsing.Tests.Formats
         {
             // Test that negative coordinates are handled correctly
             var lyt = new LYT();
-            lyt.Rooms.Add(new LYTRoom("room1", new Vector3(-123.456f, -789.012f, -345.678f)));
+            lyt.Rooms.Add(new LYTRoom(new ResRef("room1"), new Vector3(-123.456f, -789.012f, -345.678f)));
 
             string tempFile = Path.GetTempFileName();
             try
@@ -770,7 +773,7 @@ namespace Andastra.Parsing.Tests.Formats
         {
             // Test that large coordinate values are handled correctly
             var lyt = new LYT();
-            lyt.Rooms.Add(new LYTRoom("room1", new Vector3(999999.0f, -999999.0f, 12345.678f)));
+            lyt.Rooms.Add(new LYTRoom(new ResRef("room1"), new Vector3(999999.0f, -999999.0f, 12345.678f)));
 
             string tempFile = Path.GetTempFileName();
             try
@@ -830,7 +833,7 @@ namespace Andastra.Parsing.Tests.Formats
             lyt2.Rooms.Add(new LYTRoom("testroom", new Vector3(0.0f, 0.0f, 0.0f)));
 
             // Room names should be compared case-insensitively
-            lyt1.Rooms[0].Model.ToLowerInvariant().Should().Be(lyt2.Rooms[0].Model.ToLowerInvariant());
+            lyt1.Rooms[0].Model.ToString().ToLowerInvariant().Should().Be(lyt2.Rooms[0].Model.ToString().ToLowerInvariant());
         }
 
         [Fact(Timeout = 120000)]
@@ -845,7 +848,7 @@ namespace Andastra.Parsing.Tests.Formats
             {
                 new LYTAsciiWriter(lyt, tempFile).Write();
                 string content = File.ReadAllText(tempFile, Encoding.ASCII);
-                
+
                 // Should still have valid structure
                 content.Should().StartWith("beginlayout");
                 content.Should().Contain("donelayout");
@@ -853,7 +856,7 @@ namespace Andastra.Parsing.Tests.Formats
                 content.Should().Contain("trackcount 0");
                 content.Should().Contain("obstaclecount 0");
                 content.Should().Contain("doorhookcount 0");
-                
+
                 // Read it back
                 LYT loaded = new LYTAsciiReader(tempFile).Load();
                 loaded.Rooms.Count.Should().Be(0);
@@ -875,8 +878,8 @@ namespace Andastra.Parsing.Tests.Formats
         {
             // Test LYT file with only rooms section (other sections omitted)
             var lyt = new LYT();
-            lyt.Rooms.Add(new LYTRoom("room1", new Vector3(1.0f, 2.0f, 3.0f)));
-            lyt.Rooms.Add(new LYTRoom("room2", new Vector3(4.0f, 5.0f, 6.0f)));
+            lyt.Rooms.Add(new LYTRoom(new ResRef("room1"), new Vector3(1.0f, 2.0f, 3.0f)));
+            lyt.Rooms.Add(new LYTRoom(new ResRef("room2"), new Vector3(4.0f, 5.0f, 6.0f)));
 
             string tempFile = Path.GetTempFileName();
             try
@@ -903,7 +906,7 @@ namespace Andastra.Parsing.Tests.Formats
         {
             // Test LYT file with only tracks section
             var lyt = new LYT();
-            lyt.Tracks.Add(new LYTTrack("track1", new Vector3(1.0f, 2.0f, 3.0f)));
+            lyt.Tracks.Add(new LYTTrack(new ResRef("track1"), new Vector3(1.0f, 2.0f, 3.0f)));
 
             string tempFile = Path.GetTempFileName();
             try
@@ -930,7 +933,7 @@ namespace Andastra.Parsing.Tests.Formats
         {
             // Test LYT file with only obstacles section
             var lyt = new LYT();
-            lyt.Obstacles.Add(new LYTObstacle("obstacle1", new Vector3(1.0f, 2.0f, 3.0f)));
+            lyt.Obstacles.Add(new LYTObstacle(new ResRef("obstacle1"), new Vector3(1.0f, 2.0f, 3.0f)));
 
             string tempFile = Path.GetTempFileName();
             try
@@ -991,7 +994,7 @@ namespace Andastra.Parsing.Tests.Formats
             {
                 new LYTAsciiWriter(lyt, tempFile).Write();
                 string content = File.ReadAllText(tempFile, Encoding.ASCII);
-                
+
                 // Doorhook format: <room_name> <door_name> 0 <x> <y> <z> <qx> <qy> <qz> <qw>
                 // Should contain the reserved "0" field between door_name and position
                 string[] lines = content.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
@@ -1024,7 +1027,7 @@ namespace Andastra.Parsing.Tests.Formats
         {
             // Test that coordinate precision is preserved through round-trip
             var lyt = new LYT();
-            lyt.Rooms.Add(new LYTRoom("room1", new Vector3(0.123456789f, -0.987654321f, 123.456789f)));
+            lyt.Rooms.Add(new LYTRoom(new ResRef("room1"), new Vector3(0.123456789f, -0.987654321f, 123.456789f)));
 
             string tempFile = Path.GetTempFileName();
             try
@@ -1063,9 +1066,9 @@ namespace Andastra.Parsing.Tests.Formats
         private static void CreateTestLytFile(string path)
         {
             var lyt = new LYT();
-            lyt.Rooms.Add(new LYTRoom("testroom", new Vector3(0.0f, 0.0f, 0.0f)));
-            lyt.Tracks.Add(new LYTTrack("testtrack", new Vector3(1.0f, 1.0f, 1.0f)));
-            lyt.Obstacles.Add(new LYTObstacle("testobstacle", new Vector3(2.0f, 2.0f, 2.0f)));
+            lyt.Rooms.Add(new LYTRoom(new ResRef("testroom"), new Vector3(0.0f, 0.0f, 0.0f)));
+            lyt.Tracks.Add(new LYTTrack(new ResRef("testtrack"), new Vector3(1.0f, 1.0f, 1.0f)));
+            lyt.Obstacles.Add(new LYTObstacle(new ResRef("testobstacle"), new Vector3(2.0f, 2.0f, 2.0f)));
             lyt.Doorhooks.Add(new LYTDoorHook("testroom", "testdoor", new Vector3(3.0f, 3.0f, 3.0f), new Vector4(0.0f, 0.0f, 0.0f, 1.0f)));
 
             Directory.CreateDirectory(Path.GetDirectoryName(path));
