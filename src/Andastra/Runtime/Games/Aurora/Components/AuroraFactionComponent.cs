@@ -1,6 +1,7 @@
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Games.Common.Components;
+using Andastra.Runtime.Games.Aurora.Systems;
 
 namespace Andastra.Runtime.Games.Aurora.Components
 {
@@ -34,12 +35,23 @@ namespace Andastra.Runtime.Games.Aurora.Components
     /// </remarks>
     public class AuroraFactionComponent : BaseFactionComponent
     {
+        private AuroraFactionManager _factionManager;
+
         /// <summary>
         /// Initializes a new instance of the Aurora faction component.
         /// </summary>
         public AuroraFactionComponent()
         {
             FactionId = 0; // Default to neutral/unassigned faction
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the Aurora faction component with a faction manager.
+        /// </summary>
+        /// <param name="factionManager">The faction manager to use for reputation lookups.</param>
+        public AuroraFactionComponent(AuroraFactionManager factionManager) : this()
+        {
+            _factionManager = factionManager;
         }
 
         /// <summary>
@@ -90,15 +102,21 @@ namespace Andastra.Runtime.Games.Aurora.Components
             // Based on nwmain.exe: GetStandardFactionReputation @ 0x1403d5700
             // Original implementation: Gets reputation from CFactionManager::GetNPCFactionReputation
             // Reputation values: 0-10 = hostile, 11-89 = neutral, 90-100 = friendly
-            // TODO: SIMPLIFIED - Full implementation requires AuroraFactionManager integration
-            // For now, use simple faction comparison: different factions are neutral by default
-            // Full implementation should:
-            // 1. Get faction reputation from AuroraFactionManager::GetFactionReputation(FactionId, otherFaction.FactionId)
-            // 2. Check personal reputation overrides (stored in creature's personal reputation list)
-            // 3. Apply temporary reputation modifiers
-            // 4. Return true if reputation <= 10 (hostile)
+            if (_factionManager != null)
+            {
+                // Get effective reputation between this entity and the other entity
+                // AuroraFactionManager::GetReputation handles:
+                // 1. Temporary hostility checks (returns 0 if temporarily hostile)
+                // 2. Personal reputation overrides (stored in creature's personal reputation list)
+                // 3. Faction reputation fallback (from CFactionManager::GetNPCFactionReputation)
+                int reputation = _factionManager.GetReputation(Owner, other);
+                
+                // Return true if reputation <= 10 (hostile)
+                // Based on nwmain.exe: GetStandardFactionReputation returns true if reputation <= 10
+                return reputation <= AuroraFactionManager.HostileThreshold;
+            }
 
-            // Default: different factions are neutral (Aurora-specific logic would check reputation table)
+            // Default: different factions are neutral (fallback if faction manager not available)
             return false;
         }
 
@@ -150,16 +168,31 @@ namespace Andastra.Runtime.Games.Aurora.Components
             // Based on nwmain.exe: GetStandardFactionReputation @ 0x1403d5700
             // Original implementation: Gets reputation from CFactionManager::GetNPCFactionReputation
             // Reputation values: 0-10 = hostile, 11-89 = neutral, 90-100 = friendly
-            // TODO: SIMPLIFIED - Full implementation requires AuroraFactionManager integration
-            // For now, use simple faction comparison: different factions are neutral by default
-            // Full implementation should:
-            // 1. Get faction reputation from AuroraFactionManager::GetFactionReputation(FactionId, otherFaction.FactionId)
-            // 2. Check personal reputation overrides (stored in creature's personal reputation list)
-            // 3. Apply temporary reputation modifiers
-            // 4. Return true if reputation >= 90 (friendly)
+            if (_factionManager != null)
+            {
+                // Get effective reputation between this entity and the other entity
+                // AuroraFactionManager::GetReputation handles:
+                // 1. Temporary hostility checks (returns 0 if temporarily hostile)
+                // 2. Personal reputation overrides (stored in creature's personal reputation list)
+                // 3. Faction reputation fallback (from CFactionManager::GetNPCFactionReputation)
+                int reputation = _factionManager.GetReputation(Owner, other);
+                
+                // Return true if reputation >= 90 (friendly)
+                // Based on nwmain.exe: GetStandardFactionReputation returns true if reputation >= 90
+                return reputation >= AuroraFactionManager.FriendlyThreshold;
+            }
 
-            // Default: different factions are neutral (Aurora-specific logic would check reputation table)
+            // Default: different factions are neutral (fallback if faction manager not available)
             return false;
+        }
+
+        /// <summary>
+        /// Sets the faction manager reference.
+        /// </summary>
+        /// <param name="manager">The faction manager to use for reputation lookups.</param>
+        public void SetFactionManager(AuroraFactionManager manager)
+        {
+            _factionManager = manager;
         }
     }
 }
