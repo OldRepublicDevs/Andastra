@@ -122,11 +122,67 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
 
             // Get character inventory to find and remove upgrade item
             // Based on swkotor.exe: FUN_006c59a0 @ 0x006c59a0 line 24 - gets character from DAT_007a39fc
+            // DAT_007a39fc is a global variable that stores the current character entity pointer
+            // In the original implementation, this is the character whose inventory is being accessed
+            // If null, defaults to player character (party leader)
             IEntity character = _character;
             if (character == null)
             {
-                // TODO: Get player character from world
-                return false;
+                // Get player character from world using multiple fallback strategies
+                // Strategy 1: Try to find entity by tag "Player" (Odyssey engine pattern)
+                // Based on swkotor.exe: Player entity is tagged "Player" and stored in module player list
+                // Located via string references: "Player" @ 0x007be628 (swkotor2.exe), similar pattern in swkotor.exe
+                // Original implementation: Player entity is stored in module player list and tagged "Player"
+                character = _world.GetEntityByTag("Player", 0);
+
+                if (character == null)
+                {
+                    // Strategy 2: Try to find entity by tag "PlayerCharacter" (Eclipse engine pattern, fallback)
+                    // Based on cross-engine compatibility: Some engines use "PlayerCharacter" tag
+                    character = _world.GetEntityByTag("PlayerCharacter", 0);
+                }
+
+                if (character == null)
+                {
+                    // Strategy 3: Search through all entities for one marked as player
+                    // Based on swkotor.exe: Player entity has IsPlayer data flag set to true
+                    // Original implementation: Player entity is marked with IsPlayer flag during creation
+                    // Located via GameSession.SpawnPlayer() which sets entity.Tag = "Player" and SetData("IsPlayer", true)
+                    foreach (IEntity entity in _world.GetAllEntities())
+                    {
+                        if (entity == null)
+                        {
+                            continue;
+                        }
+
+                        // Check tag for player character patterns
+                        string tag = entity.Tag;
+                        if (!string.IsNullOrEmpty(tag))
+                        {
+                            if (string.Equals(tag, "Player", StringComparison.OrdinalIgnoreCase) ||
+                                string.Equals(tag, "PlayerCharacter", StringComparison.OrdinalIgnoreCase) ||
+                                string.Equals(tag, "player", StringComparison.OrdinalIgnoreCase))
+                            {
+                                character = entity;
+                                break;
+                            }
+                        }
+
+                        // Check IsPlayer data flag
+                        object isPlayerData = entity.GetData("IsPlayer");
+                        if (isPlayerData is bool && (bool)isPlayerData)
+                        {
+                            character = entity;
+                            break;
+                        }
+                    }
+                }
+
+                // If still null, cannot proceed - player character not found
+                if (character == null)
+                {
+                    return false;
+                }
             }
 
             IInventoryComponent characterInventory = character.GetComponent<IInventoryComponent>();
