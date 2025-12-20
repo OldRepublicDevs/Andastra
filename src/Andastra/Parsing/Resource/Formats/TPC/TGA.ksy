@@ -192,10 +192,7 @@ types:
       - id: data
         type: u1
         repeat: until
-        repeat-until: |
-          _root.header.is_uncompressed ?
-            _io.pos >= (_io.size - (_root.footer != null ? 26 : 0)) :
-            _io.pos >= (_io.size - (_root.footer != null ? 26 : 0))
+        repeat-until: _io.pos >= (_io.size - (_root.footer != null ? 26 : 0))
         doc: |
           Pixel data bytes.
           For uncompressed: raw pixel data (width * height * bytes_per_pixel bytes).
