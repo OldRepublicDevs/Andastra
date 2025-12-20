@@ -17,12 +17,7 @@ namespace Andastra.Runtime.Games.Common.Components
     /// - Common functionality: Item slots, Ability slots, Slot type checking, Get/Set operations
     /// - Engine-specific: Number of slots, GFF field names, Serialization format, Function addresses, Ability ID format
     ///
-    /// Based on reverse engineering of:
-    /// - swkotor.exe: Quick slot system with 12 slots (QuickSlot_0 through QuickSlot_11 in UTC GFF)
-    /// - swkotor2.exe: Enhanced quick slot system with 12 slots (FUN_005226d0 @ 0x005226d0 saves, FUN_005223a0 @ 0x005223a0 loads)
-    /// - nwmain.exe: Aurora quick bar system with QBObjectType, QBItemInvSlot, QBINTParam1 fields in GFF
-    /// - daorigins.exe: Eclipse quick slot system with quickslots in save game GFF
-    /// - DragonAge2.exe: Enhanced Eclipse quick slot system
+    /// Based on reverse engineering of quick slot systems across multiple BioWare engines.
     ///
     /// Common structure across engines:
     /// - Item slots: Dictionary mapping slot index to item entity

@@ -16,8 +16,6 @@ namespace Andastra.Runtime.Engines.Common
     ///
     /// Common Profile Patterns (Reverse Engineered):
     /// - Resource Path Initialization: All engines initialize resource paths in constructor
-    ///   - swkotor.exe: FUN_005e7a90 @ 0x005e7a90 sets up modules, override, saves directories
-    ///   - swkotor2.exe: FUN_00633270 @ 0x00633270 sets up modules, override, saves directories
     ///   - Pattern: All engines use similar resource path setup functions that register directory aliases
     ///   - Common directories: modules, override, saves (present in all engines)
     /// - Profile Initialization Pattern: All engines follow same initialization sequence
@@ -28,9 +26,6 @@ namespace Andastra.Runtime.Engines.Common
     ///   - Pattern: HashSet-based feature lookup with null/empty string validation
     ///   - Used to determine game-specific capabilities (e.g., Influence system in K2, Pazaak in K1)
     /// - Game Type Identification: All engines identify themselves via GameType property
-    ///   - swkotor.exe: "swkotor" @ 0x0073d75c, ".\\swkotor.ini" @ 0x0073d648
-    ///   - swkotor2.exe: "swkotor2" @ 0x007b575c, ".\\swkotor2.ini" @ 0x007b5644
-    ///   - nwmain.exe: "game_type" @ 0x140db7190, "nwn" references throughout
     ///   - Pattern: Game identification via executable name, INI file names, or registry keys
     ///
     /// Inheritance Structure:
@@ -53,8 +48,6 @@ namespace Andastra.Runtime.Engines.Common
         /// </summary>
         /// <remarks>
         /// Initialization Pattern (Common across all engines):
-        /// - swkotor.exe: FUN_005e7a90 @ 0x005e7a90 initializes resource paths
-        /// - swkotor2.exe: FUN_00633270 @ 0x00633270 initializes resource paths
         /// - Pattern: All engines follow this initialization sequence:
         ///   1. Create resource configuration (game-specific file names, paths)
         ///   2. Create table configuration (2DA table schemas)

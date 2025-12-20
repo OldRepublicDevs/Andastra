@@ -14,11 +14,7 @@ namespace Andastra.Runtime.Games.Common.Journal
     /// - Base classes MUST only contain functionality that is identical across ALL engines
     /// - Engine-specific details MUST be in subclasses (OdysseyJRLLoader, AuroraJRLLoader, EclipseJRLLoader)
     /// 
-    /// Based on reverse engineering of:
-    /// - swkotor.exe: JRL file loading (needs reverse engineering)
-    /// - swkotor2.exe: JRL file loading (GFF with "JRL " signature)
-    /// - nwmain.exe: JRL file loading (CNWSJournal::ReloadJournalEntries @ 0x14039ddb0, different format)
-    /// - daorigins.exe: Quest system (may use different file format, needs reverse engineering)
+    /// Based on reverse engineering of JRL file loading systems across multiple BioWare engines.
     /// 
     /// Common functionality across engines:
     /// - JRL file loading from installation
