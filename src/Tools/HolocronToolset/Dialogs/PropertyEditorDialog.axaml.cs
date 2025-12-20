@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing.Formats.TwoDA;
@@ -119,12 +121,18 @@ namespace HolocronToolset.Dialogs
                         // Update property before closing
                         GetUtiProperty();
                         DialogResult = true;
-                        Close(); 
+                        // Close with true result for ShowDialogAsync<bool> support
+                        Close(true); 
                     };
                 }
                 if (_cancelButton != null)
                 {
-                    _cancelButton.Click += (s, e) => { DialogResult = false; Close(); };
+                    _cancelButton.Click += (s, e) => 
+                    { 
+                        DialogResult = false; 
+                        // Close with false result for ShowDialogAsync<bool> support
+                        Close(false); 
+                    };
                 }
             }
         }
@@ -365,22 +373,82 @@ namespace HolocronToolset.Dialogs
             return _utiProperty;
         }
 
-        // For Avalonia compatibility, provide ShowDialog method
-        public bool ShowDialog()
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:238-244
+        // Original: if not dialog.exec(): return
+        // PyKotor's QDialog.exec() is a blocking modal dialog that returns QDialog.DialogCode.Accepted (true) or Rejected (false)
+        // This synchronous method provides the same behavior for compatibility with existing code
+        
+        /// <summary>
+        /// Shows the dialog modally and returns true if the user clicked OK, false if Cancel was clicked or the dialog was closed.
+        /// This is a blocking synchronous method that matches PyKotor's QDialog.exec() behavior.
+        /// </summary>
+        /// <param name="parent">The parent window for the dialog. If null, the dialog will be shown without a parent.</param>
+        /// <returns>True if OK was clicked, false if Cancel was clicked or the dialog was closed.</returns>
+        public bool ShowDialog(Window parent = null)
         {
-            // Show dialog and return result
-            // TODO: SIMPLIFIED - This is a simplified implementation - in a full implementation, we'd use ShowDialogAsync
-            // For now, we'll track if OK was clicked
-            bool result = false;
-            if (_okButton != null)
+            // Use ShowDialogAsync and block synchronously to match Qt's exec() behavior
+            // This provides proper modal dialog behavior while maintaining compatibility with synchronous code
+            Task<bool> dialogTask = ShowDialogAsync(parent);
+            return dialogTask.GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Shows the dialog modally asynchronously and returns a Task that completes with true if the user clicked OK, false if Cancel was clicked or the dialog was closed.
+        /// This is the recommended method for async/await code.
+        /// </summary>
+        /// <param name="parent">The parent window for the dialog. If null, the dialog will be shown without a parent.</param>
+        /// <returns>A Task that completes with true if OK was clicked, false if Cancel was clicked or the dialog was closed.</returns>
+        public async Task<bool> ShowDialogAsync(Window parent = null)
+        {
+            // Set parent if provided for proper modal behavior
+            if (parent != null)
             {
-                // Temporarily store result
-                _okButton.Click += (s, e) => { result = true; };
+                // ShowDialogAsync will handle setting the parent relationship
+                // The result will be the value passed to Close() when the dialog closes
+                bool result = await ShowDialogAsync<bool>(parent);
+                DialogResult = result;
+                return result;
             }
-            // In a full implementation, we'd use ShowDialogAsync and await the result
-            // TODO: SIMPLIFIED - For now, return true if dialog was shown (simplified)
-            return result;
+            else
+            {
+                // No parent - show as top-level window
+                // In Avalonia, we still need a parent for ShowDialogAsync, so we'll find the main window
+                Window mainWindow = null;
+                if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                {
+                    mainWindow = desktop.MainWindow;
+                }
+                
+                if (mainWindow != null)
+                {
+                    bool result = await ShowDialogAsync<bool>(mainWindow);
+                    DialogResult = result;
+                    return result;
+                }
+                else
+                {
+                    // Fallback: show non-modally and track result via Closed event
+                    // This should rarely happen, but provides a fallback
+                    bool result = false;
+                    EventHandler<WindowEventArgs> closedHandler = null;
+                    closedHandler = (s, e) =>
+                    {
+                        this.Closed -= closedHandler;
+                        result = DialogResult;
+                    };
+                    this.Closed += closedHandler;
+                    Show();
+                    // Wait for dialog to close
+                    // Note: This is not ideal but provides fallback behavior
+                    while (this.IsVisible)
+                    {
+                        await Task.Delay(10);
+                    }
+                    return result;
+                }
+            }
         }
     }
 }
+
 
