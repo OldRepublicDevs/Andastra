@@ -620,12 +620,19 @@ namespace Andastra.Runtime.Content.ResourceProviders
             //   - Hardcoded resources are typically engine fallbacks when resources cannot be found
             //   - These are usually simple placeholder resources (default textures, models, etc.)
             //   - Implementation would require reverse engineering specific hardcoded resource data
+            //   - Resource Manager strings found:
+            //     * "Initialize - Resource Manager" @ 0x00ad947c
+            //     * "Shutdown - Resource Manager" @ 0x00ad87d8
+            //     * "Failed to initialize ResourceManager" @ 0x00ad9430
+            //   - Note: Hardcoded resources are typically embedded in the engine executable
+            //     and would require disassembly of resource loading failure paths to identify
             
             // TODO: Reverse engineer specific hardcoded resources from daorigins.exe/DragonAge2.exe
-            //   - Default texture resources
-            //   - Default model resources
-            //   - Engine fallback resources
+            //   - Default texture resources (would be embedded binary data in executable)
+            //   - Default model resources (would be embedded binary data in executable)
+            //   - Engine fallback resources (would be embedded binary data in executable)
             //   - These would be identified by analyzing resource loading failure paths in the engine
+            //   - Approach: Trace resource loading failure code paths to find fallback resource data
             
             // For now, return null as hardcoded resources require specific reverse engineering
             // of the engine's fallback resource data structures
