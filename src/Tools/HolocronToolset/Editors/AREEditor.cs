@@ -6,6 +6,7 @@ using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
@@ -118,13 +119,52 @@ namespace HolocronToolset.Editors
             // Matching Python: for label in cameras.get_column("name"): self.ui.cameraStyleSelect.addItem(label.title())
             var cameraStyleLabel = new Avalonia.Controls.TextBlock { Text = "Camera Style:" };
             _cameraStyleSelect = new ComboBox();
-            // Add default camera style options (matching common camera styles from cameras.2da)
-            // TODO: SIMPLIFIED - In full implementation, this would load from cameras.2da via installation
-            _cameraStyleSelect.Items.Add("Standard");
-            _cameraStyleSelect.Items.Add("Close");
-            _cameraStyleSelect.Items.Add("Far");
-            _cameraStyleSelect.Items.Add("Top Down");
-            _cameraStyleSelect.Items.Add("Free Look");
+            // Load camera styles from cameras.2da via installation
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:111-117
+            // Original: cameras: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_CAMERAS)
+            // Original: for label in cameras.get_column("name"): self.ui.cameraStyleSelect.addItem(label.title())
+            if (_installation != null)
+            {
+                try
+                {
+                    TwoDA cameras = _installation.HtGetCache2DA(HTInstallation.TwoDACameras);
+                    if (cameras != null)
+                    {
+                        List<string> cameraNames = cameras.GetColumn("name");
+                        if (cameraNames != null && cameraNames.Count > 0)
+                        {
+                            var textInfo = System.Globalization.CultureInfo.CurrentCulture.TextInfo;
+                            foreach (string label in cameraNames)
+                            {
+                                // Skip empty labels
+                                if (string.IsNullOrWhiteSpace(label))
+                                {
+                                    continue;
+                                }
+                                // Python's .title() converts "hello world" to "Hello World"
+                                // C# ToTitleCase requires lowercase input, so lowercase first then title-case
+                                string titleCased = textInfo.ToTitleCase(label.ToLowerInvariant());
+                                _cameraStyleSelect.Items.Add(titleCased);
+                            }
+                        }
+                    }
+                }
+                catch (KeyNotFoundException)
+                {
+                    // Column "name" doesn't exist in cameras.2da - fallback to defaults
+                }
+                catch
+                {
+                    // Any other error loading cameras.2da - fallback to defaults
+                }
+            }
+            
+            // Fallback to default camera styles if no items were loaded or installation is not available
+            if (_cameraStyleSelect.ItemCount == 0)
+            {
+                LoadDefaultCameraStyles();
+            }
+            
             _cameraStyleSelect.SelectedIndex = 0;
             panel.Children.Add(cameraStyleLabel);
             panel.Children.Add(_cameraStyleSelect);
@@ -1159,6 +1199,21 @@ namespace HolocronToolset.Editors
             if (_tagEdit != null)
             {
                 _tagEdit.Text = string.IsNullOrEmpty(_resname) ? "newarea" : _resname;
+            }
+        }
+
+        // Helper method to load default camera styles as fallback
+        // Used when cameras.2da cannot be loaded from installation
+        private void LoadDefaultCameraStyles()
+        {
+            if (_cameraStyleSelect != null)
+            {
+                _cameraStyleSelect.Items.Clear();
+                _cameraStyleSelect.Items.Add("Standard");
+                _cameraStyleSelect.Items.Add("Close");
+                _cameraStyleSelect.Items.Add("Far");
+                _cameraStyleSelect.Items.Add("Top Down");
+                _cameraStyleSelect.Items.Add("Free Look");
             }
         }
     }
