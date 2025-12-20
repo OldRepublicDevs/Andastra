@@ -996,12 +996,34 @@ namespace HolocronToolset.Editors
 
         /// <summary>
         /// Adds a root node to the dialog.
-        /// Matching PyKotor implementation: self.model.add_root_node()
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2041-2043
+        /// Original: if key == Qt.Key.Key_Insert: self.model.add_root_node()
+        /// Creates a new DLGEntry node, wraps it in a DLGLink, adds it as a starter, and selects it in the tree view.
+        /// The operation is recorded in the action history for undo/redo support.
         /// </summary>
         private void AddRootNode()
         {
-            // TODO: PLACEHOLDER - Implement add_root_node when DLGModel is fully implemented
-            // This would create a new DLGNode and add it as a starter
+            // Create and apply the action (this performs the operation and records it for undo/redo)
+            var action = new AddRootNodeAction();
+            _actionHistory.Apply(action);
+
+            // Get the newly created item from the action
+            DLGStandardItem newItem = action.Item;
+
+            if (newItem != null)
+            {
+                // Select the newly added root node in the tree view
+                // Matching PyKotor: After adding root node, it would be selected in the tree
+                SelectTreeViewItem(newItem);
+
+                // Update the model's selected index to track the new selection
+                var rootItems = _model.GetRootItems();
+                int newIndex = rootItems.IndexOf(newItem);
+                if (newIndex >= 0)
+                {
+                    _model.SelectedIndex = newIndex;
+                }
+            }
         }
 
         /// <summary>
