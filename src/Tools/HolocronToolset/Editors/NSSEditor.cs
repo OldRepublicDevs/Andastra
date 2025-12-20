@@ -58,6 +58,12 @@ namespace HolocronToolset.Editors
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:156
         // Original: self._highlighter: SyntaxHighlighter = SyntaxHighlighter(document, self._installation)
         private NWScriptSyntaxHighlighter _highlighter;
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:469-473
+        // Original: self.completer: QCompleter = QCompleter(self)
+        private Completer _completer;
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:1576
+        // Original: self._completion_map: dict[str, Any] = {}
+        private Dictionary<string, object> _completionMap;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:119-199
         // Original: def __init__(self, parent: QWidget | None = None, installation: HTInstallation | None = None):
@@ -73,6 +79,7 @@ namespace HolocronToolset.Editors
             _functions = new List<ScriptFunction>();
             _constants = new List<ScriptConstant>();
             _globalSettings = new GlobalSettings();
+            _completionMap = new Dictionary<string, object>();
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:164-167
             // Original: self.owner: str = "KOTORCommunityPatches"
@@ -92,6 +99,11 @@ namespace HolocronToolset.Editors
             SetupOutline();
             SetupFileExplorer();
             AddHelpAction();
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:469-514
+            // Original: Setup completer for autocompletion
+            SetupCompleter();
+            SetupEnhancedCompleter();
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:145-148
             // Original: Setup scrollbar event filter to prevent scrollbar interaction with controls
@@ -1016,6 +1028,13 @@ namespace HolocronToolset.Editors
         /// </summary>
         public NWScriptSyntaxHighlighter Highlighter => _highlighter;
 
+        // Matching PyKotor implementation: completer is accessible for testing
+        // Original: editor.completer in test_nss_editor_autocompletion_setup
+        /// <summary>
+        /// Gets the completer instance for testing purposes.
+        /// </summary>
+        public Completer Completer => _completer;
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:905-950
         // Original: def _update_game_specific_data(self):
         /// <summary>
@@ -1091,6 +1110,156 @@ namespace HolocronToolset.Editors
             if (_highlighter != null)
             {
                 _highlighter.UpdateRules(_isTsl);
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:954
+            // Original: self._update_completer_model(self.constants, self.functions)
+            // Update completer model with new functions and constants
+            UpdateCompleterModel(_constants, _functions);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:469-473
+        // Original: def _setup_completer (implicit in __init__)
+        /// <summary>
+        /// Sets up the completer for autocompletion functionality.
+        /// </summary>
+        private void SetupCompleter()
+        {
+            if (_codeEdit == null)
+            {
+                return;
+            }
+
+            // Matching PyKotor: self.completer: QCompleter = QCompleter(self)
+            _completer = new Completer();
+            _completer.SetWidget(_codeEdit);
+            _completer.SetCompletionMode(Completer.CompletionMode.PopupCompletion);
+            _completer.SetCaseSensitivity(false);  // Case-insensitive matching
+            _completer.SetWrapAround(false);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:1584-1595
+        // Original: def _setup_enhanced_completer(self):
+        /// <summary>
+        /// Sets up enhanced auto-completion with better presentation.
+        /// </summary>
+        private void SetupEnhancedCompleter()
+        {
+            if (_completer == null)
+            {
+                return;
+            }
+
+            // Matching PyKotor: popup.setMaximumHeight(300)
+            // Matching PyKotor: popup.setAlternatingRowColors(True)
+            // These are handled in the Completer class initialization
+            // The popup is configured when it's first created
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:1529-1583
+        // Original: def _update_completer_model(self, constants: list[ScriptConstant], functions: list[ScriptFunction]):
+        /// <summary>
+        /// Updates completer model with enhanced information for IntelliSense-style hints.
+        /// </summary>
+        /// <param name="constants">List of script constants to include in completions.</param>
+        /// <param name="functions">List of script functions to include in completions.</param>
+        public void UpdateCompleterModel(List<ScriptConstant> constants, List<ScriptFunction> functions)
+        {
+            if (_completer == null)
+            {
+                return;
+            }
+
+            // Create enriched completion strings with type hints
+            var completerList = new List<string>();
+
+            // Add functions with return type hints and parameter info
+            if (functions != null)
+            {
+                foreach (var func in functions)
+                {
+                    string returnType = func.ReturnType?.ToScriptString() ?? "void";
+                    
+                    // Try to get parameter info
+                    if (func.Params != null && func.Params.Count > 0)
+                    {
+                        var paramStrings = func.Params.Take(3).Select(p =>
+                        {
+                            string paramType = p.DataType?.ToScriptString() ?? "";
+                            string paramName = p.Name ?? "";
+                            return $"{paramType} {paramName}";
+                        }).ToList();
+                        
+                        string paramStr = string.Join(", ", paramStrings);
+                        if (func.Params.Count > 3)
+                        {
+                            paramStr += "...";
+                        }
+                        completerList.Add($"{func.Name}({paramStr}) → {returnType}");
+                    }
+                    else
+                    {
+                        completerList.Add($"{func.Name}(...) → {returnType}");
+                    }
+                }
+            }
+
+            // Add constants with type hints
+            if (constants != null)
+            {
+                foreach (var constItem in constants)
+                {
+                    string constType = constItem.DataType?.ToScriptString() ?? "";
+                    string constValue = constItem.Value?.ToString() ?? "";
+                    
+                    if (!string.IsNullOrEmpty(constType) && !string.IsNullOrEmpty(constValue))
+                    {
+                        completerList.Add($"{constItem.Name} ({constType} = {constValue})");
+                    }
+                    else if (!string.IsNullOrEmpty(constType))
+                    {
+                        completerList.Add($"{constItem.Name} ({constType})");
+                    }
+                    else if (!string.IsNullOrEmpty(constValue))
+                    {
+                        completerList.Add($"{constItem.Name} = {constValue}");
+                    }
+                    else
+                    {
+                        completerList.Add(constItem.Name);
+                    }
+                }
+            }
+
+            // Also add keywords
+            var keywords = new List<string>
+            {
+                "void", "int", "float", "string", "object", "vector", "location", "effect", "event",
+                "if", "else", "for", "while", "do", "switch", "case", "default", "break", "continue",
+                "return", "struct", "const", "include", "define"
+            };
+            completerList.AddRange(keywords);
+
+            // Set the model
+            _completer.SetModel(completerList);
+
+            // Store mapping for quick lookup
+            _completionMap.Clear();
+            if (functions != null)
+            {
+                foreach (var func in functions)
+                {
+                    _completionMap[func.Name] = func;
+                    // Also map with parentheses for function calls
+                    _completionMap[$"{func.Name}("] = func;
+                }
+            }
+            if (constants != null)
+            {
+                foreach (var constItem in constants)
+                {
+                    _completionMap[constItem.Name] = constItem;
+                }
             }
         }
 
