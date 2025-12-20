@@ -1104,7 +1104,7 @@ namespace HolocronToolset.Windows
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1489-1505
         // Original: def open_active_journal(self):
-        private void OpenActiveJournal()
+        private async void OpenActiveJournal()
         {
             if (_active == null)
             {
@@ -1119,8 +1119,14 @@ namespace HolocronToolset.Windows
 
             if (journalResources == null || !journalResources.ContainsKey(jrlIdent) || journalResources[jrlIdent].Count == 0)
             {
-                // TODO: Show MessageBox when MessageBox.Avalonia is available
-                System.Console.WriteLine("Could not open the journal editor: 'global.jrl' not found.");
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1497
+                // Original: QMessageBox(QMessageBox.Icon.Critical, "global.jrl not found", "Could not open the journal editor: 'global.jrl' not found.").exec()
+                var messageBox = MessageBoxManager.GetMessageBoxStandard(
+                    "global.jrl not found",
+                    "Could not open the journal editor: 'global.jrl' not found.",
+                    ButtonEnum.Ok,
+                    Icon.Error);
+                await messageBox.ShowAsync();
                 return;
             }
 
