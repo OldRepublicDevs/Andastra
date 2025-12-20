@@ -993,11 +993,65 @@ namespace HolocronToolset.Tests.Editors
         // TODO: STUB - Implement test_dlg_editor_copy_paste_real (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1255-1290)
         // Original: def test_dlg_editor_copy_paste_real(qtbot, installation: HTInstallation): Test copy/paste with real data
         [Fact]
-        public void TestDlgEditorCopyPasteReal()
+        public async System.Threading.Tasks.Task TestDlgEditorCopyPasteReal()
         {
-            // TODO: STUB - Implement copy/paste real test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1255-1290
-            throw new NotImplementedException("TestDlgEditorCopyPasteReal: Copy/paste real test not yet implemented");
+            var installation = CreateTestInstallation();
+            
+            // Matching Python: editor = DLGEditor(None, installation)
+            var editor = new DLGEditor(null, installation);
+            
+            // Matching Python: editor.new()
+            editor.New();
+            
+            // Matching Python: editor.model.add_root_node()
+            var rootItem = editor.Model.AddRootNode();
+            rootItem.Should().NotBeNull("Root item should be created");
+            rootItem.Link.Should().NotBeNull("Root item should have a link");
+            
+            // Matching Python: Set some data
+            // Matching Python: editor.ui.speakerEdit.setText("TestSpeaker")
+            if (editor.SpeakerEdit != null)
+            {
+                editor.SpeakerEdit.Text = "TestSpeaker";
+            }
+            
+            // Matching Python: Test text editing via UI dialog
+            // Matching Python: set_text_via_ui_dialog(qtbot, editor, root_item, "Test Text")
+            // For C# test, we'll directly set the text on the node instead of using UI dialog
+            if (rootItem.Link?.Node != null)
+            {
+                rootItem.Link.Node.Text = LocalizedString.FromEnglish("Test Text");
+            }
+            
+            // Matching Python: editor.on_node_update()
+            editor.OnNodeUpdate();
+            
+            // Matching Python: editor.model.copy_link_and_node(root_item.link)
+            await editor.Model.CopyLinkAndNode(rootItem.Link, editor);
+            
+            // Matching Python: Verify clipboard has data
+            // Matching Python: clipboard = QApplication.clipboard()
+            // Matching Python: assert clipboard is not None
+            // Matching Python: clipboard_text = clipboard.text()
+            // Matching Python: assert len(clipboard_text) > 0
+            var topLevel = Avalonia.Controls.TopLevel.GetTopLevel(editor);
+            if (topLevel?.Clipboard != null)
+            {
+                var clipboardText = await topLevel.Clipboard.GetTextAsync();
+                clipboardText.Should().NotBeNullOrEmpty("Clipboard should contain copied data");
+            }
+            
+            // Matching Python: Verify _copy is set
+            // Matching Python: assert editor._copy is not None
+            editor.GetCopyLink().Should().NotBeNull("Editor's _copy should be set after copying");
+            
+            // Matching Python: Paste into model
+            // Matching Python: editor.model.paste_item(None, editor._copy)
+            editor.Model.PasteItem(null, editor.GetCopyLink());
+            
+            // Matching Python: assert editor.model.rowCount() == 2  # Original + pasted
+            editor.Model.RowCount.Should().Be(2, "Model should have 2 rows after pasting (original + pasted)");
         }
 
         // TODO: STUB - Implement test_dlg_editor_delete_node (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1292-1310)

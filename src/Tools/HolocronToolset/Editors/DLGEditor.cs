@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Media;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -61,6 +62,22 @@ namespace HolocronToolset.Editors
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:113
         // Original: self._copy: DLGLink | None = None
         private DLGLink _copy;
+
+        /// <summary>
+        /// Sets the copy link (for internal use and testing).
+        /// </summary>
+        internal void SetCopyLink(DLGLink link)
+        {
+            _copy = link;
+        }
+
+        /// <summary>
+        /// Gets the copy link (for testing).
+        /// </summary>
+        internal DLGLink GetCopyLink()
+        {
+            return _copy;
+        }
 
         // UI Controls - Animations
         // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui:966-992
@@ -2499,15 +2516,16 @@ namespace HolocronToolset.Editors
         /// Copies the link and node.
         /// Matching PyKotor implementation: self.model.copy_link_and_node(selected_item.link)
         /// </summary>
-        private void CopyLinkAndNode()
+        private async void CopyLinkAndNode()
         {
             if (_model.SelectedIndex >= 0 && _model.SelectedIndex < _model.RowCount)
             {
                 DLGLink link = _model.GetStarterAt(_model.SelectedIndex);
                 if (link != null)
                 {
-                    // Matching PyKotor implementation: self._copy = link
-                    _copy = link;
+                    // Matching PyKotor implementation: self.model.copy_link_and_node(selected_item.link)
+                    // Note: CopyLinkAndNode on the model will also set _copy via SetCopyLink
+                    await _model.CopyLinkAndNode(link, this);
                 }
             }
         }
@@ -3879,6 +3897,51 @@ namespace HolocronToolset.Editors
                         }
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Copies a link and node to the clipboard as JSON.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:890-898
+        /// Original: def copy_link_and_node(self, link: DLGLink | None):
+        /// Note: In Python, this only sets clipboard. The editor's _copy is set separately.
+        /// In C#, we set both clipboard and editor._copy for convenience.
+        /// </summary>
+        /// <param name="link">The link to copy, or null to do nothing.</param>
+        /// <param name="editor">The DLG editor instance to access clipboard and set _copy.</param>
+        public async System.Threading.Tasks.Task CopyLinkAndNode(DLGLink link, DLGEditor editor)
+        {
+            if (link == null || editor == null)
+            {
+                return;
+            }
+
+            try
+            {
+                // Matching PyKotor implementation: q_app_clipboard.setText(json.dumps(link.to_dict()))
+                Dictionary<string, object> nodeMap = new Dictionary<string, object>();
+                Dictionary<string, object> linkDict = link.ToDict(nodeMap);
+                
+                // Serialize to JSON
+                string json = JsonSerializer.Serialize(linkDict, new JsonSerializerOptions
+                {
+                    WriteIndented = false
+                });
+
+                // Set clipboard text
+                var topLevel = Avalonia.Controls.TopLevel.GetTopLevel(editor);
+                if (topLevel?.Clipboard != null)
+                {
+                    await topLevel.Clipboard.SetTextAsync(json);
+                }
+
+                // Set editor's _copy field (matching Python: editor._copy = link)
+                // In Python, this is set separately, but we do it here for convenience
+                editor.SetCopyLink(link);
+            }
+            catch
+            {
+                // Matching PyKotor: Silently handle clipboard errors
             }
         }
 

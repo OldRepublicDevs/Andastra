@@ -682,6 +682,66 @@ namespace Andastra.Runtime.Games.Odyssey
         }
 
         /// <summary>
+        /// Helper method to safely set string field in GFF struct.
+        /// </summary>
+        private void SetStringField(GFFStruct gffStruct, string fieldName, string value)
+        {
+            if (gffStruct == null || string.IsNullOrEmpty(fieldName))
+            {
+                return;
+            }
+
+            try
+            {
+                gffStruct.SetString(fieldName, value ?? "");
+            }
+            catch
+            {
+                // Ignore errors when setting field
+            }
+        }
+
+        /// <summary>
+        /// Helper method to safely set integer field in GFF struct.
+        /// </summary>
+        private void SetIntField(GFFStruct gffStruct, string fieldName, int value)
+        {
+            if (gffStruct == null || string.IsNullOrEmpty(fieldName))
+            {
+                return;
+            }
+
+            try
+            {
+                gffStruct.SetInt32(fieldName, value);
+            }
+            catch
+            {
+                // Ignore errors when setting field
+            }
+        }
+
+        /// <summary>
+        /// Helper method to safely set float field in GFF struct.
+        /// </summary>
+        private void SetFloatField(GFFStruct gffStruct, string fieldName, float value)
+        {
+            if (gffStruct == null || string.IsNullOrEmpty(fieldName))
+            {
+                return;
+            }
+
+            try
+            {
+                gffStruct.SetSingle(fieldName, value);
+            }
+            catch
+            {
+                // Ignore errors when setting field
+            }
+        }
+
+        /// <summary>
         /// Serializes party information.
         /// </summary>
         /// <remarks>
@@ -1117,16 +1177,627 @@ namespace Andastra.Runtime.Games.Odyssey
         /// - Active area effects
         /// - Door and transition states
         /// - Dynamic lighting changes
+        ///
+        /// Based on reverse engineering of:
+        /// - swkotor2.exe: FUN_005226d0 @ 0x005226d0 saves entity states to GFF format
+        /// - swkotor2.exe: Area state stored in [module]_s.rim ERF archive as ARE resources
+        /// - Located via string references: "Creature List" @ 0x007c0c80, "DoorList" @ 0x007c0c90
+        /// - Original implementation: Saves entity positions, door/placeable states, HP, local variables, etc.
+        /// - Each area state GFF contains:
+        ///   - AreaResRef: Area resource reference
+        ///   - CreatureList: List of creature entity states
+        ///   - DoorList: List of door entity states
+        ///   - PlaceableList: List of placeable entity states
+        ///   - TriggerList: List of trigger entity states
+        ///   - StoreList: List of store entity states
+        ///   - SoundList: List of sound entity states
+        ///   - WaypointList: List of waypoint entity states
+        ///   - EncounterList: List of encounter entity states
+        ///   - CameraList: List of camera entity states
+        ///   - DestroyedList: List of destroyed entity ObjectIds
+        ///   - SpawnedList: List of dynamically spawned entities
+        ///   - LocalVariables: Area-level local variables
         /// </remarks>
         public override byte[] SerializeArea(IArea area)
         {
-            // TODO: Implement area serialization
-            // Create AREA struct for the specific area
-            // Serialize dynamic objects
-            // Save modified container states
-            // Include area effect states
+            if (area == null)
+            {
+                // Return empty GFF for null area
+                var emptyGff = new GFF(GFFContent.GFF);
+                return emptyGff.ToBytes();
+            }
 
-            throw new NotImplementedException("Odyssey area serialization not yet implemented");
+            // Extract AreaState from IArea
+            // Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 extracts entity states from area
+            AreaState areaState = ExtractAreaStateFromArea(area);
+
+            // Serialize AreaState to GFF format
+            // Based on swkotor2.exe: Area state GFF creation matches SaveGameManager.CreateAreaStateGFF pattern
+            GFF areaGff = SerializeAreaStateToGFF(areaState);
+
+            // Convert GFF to byte array
+            return areaGff.ToBytes();
+        }
+
+        /// <summary>
+        /// Extracts AreaState from IArea by collecting all entity states.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 extracts entity states from area
+        /// Collects all entities of each type and extracts their state information.
+        /// </remarks>
+        private AreaState ExtractAreaStateFromArea(IArea area)
+        {
+            var areaState = new AreaState();
+            areaState.AreaResRef = area.ResRef ?? "";
+
+            // Extract entity states for each entity type
+            // Based on swkotor2.exe: Entity states are extracted by iterating through area's entity collections
+            foreach (IEntity creature in area.Creatures)
+            {
+                if (creature != null && creature.IsValid)
+                {
+                    EntityState entityState = ExtractEntityState(creature);
+                    if (entityState != null)
+                    {
+                        areaState.CreatureStates.Add(entityState);
+                    }
+                }
+            }
+
+            foreach (IEntity door in area.Doors)
+            {
+                if (door != null && door.IsValid)
+                {
+                    EntityState entityState = ExtractEntityState(door);
+                    if (entityState != null)
+                    {
+                        areaState.DoorStates.Add(entityState);
+                    }
+                }
+            }
+
+            foreach (IEntity placeable in area.Placeables)
+            {
+                if (placeable != null && placeable.IsValid)
+                {
+                    EntityState entityState = ExtractEntityState(placeable);
+                    if (entityState != null)
+                    {
+                        areaState.PlaceableStates.Add(entityState);
+                    }
+                }
+            }
+
+            foreach (IEntity trigger in area.Triggers)
+            {
+                if (trigger != null && trigger.IsValid)
+                {
+                    EntityState entityState = ExtractEntityState(trigger);
+                    if (entityState != null)
+                    {
+                        areaState.TriggerStates.Add(entityState);
+                    }
+                }
+            }
+
+            // Note: Stores, Encounters, and Cameras are not directly accessible via IArea interface
+            // They would need to be added to AreaState separately if available from the area implementation
+            // For now, StoreStates, EncounterStates, and CameraStates remain empty
+
+            foreach (IEntity sound in area.Sounds)
+            {
+                if (sound != null && sound.IsValid)
+                {
+                    EntityState entityState = ExtractEntityState(sound);
+                    if (entityState != null)
+                    {
+                        areaState.SoundStates.Add(entityState);
+                    }
+                }
+            }
+
+            foreach (IEntity waypoint in area.Waypoints)
+            {
+                if (waypoint != null && waypoint.IsValid)
+                {
+                    EntityState entityState = ExtractEntityState(waypoint);
+                    if (entityState != null)
+                    {
+                        areaState.WaypointStates.Add(entityState);
+                    }
+                }
+            }
+
+            // Extract encounters (if area supports them)
+            // Based on swkotor2.exe: Encounter entities are stored in area's encounter collection
+            var odysseyArea = area as OdysseyArea;
+            if (odysseyArea != null)
+            {
+                // OdysseyArea doesn't expose Encounters directly, but we can check for encounter entities
+                // For now, we'll skip encounters as they're not directly accessible via IArea interface
+                // Full implementation would require access to OdysseyArea's internal encounter collection
+            }
+
+            // Extract cameras (KOTOR-specific, if area supports them)
+            // Based on swkotor2.exe: Camera entities are stored in area's camera collection
+            // For now, we'll skip cameras as they're not directly accessible via IArea interface
+
+            // Note: Destroyed entities and spawned entities are typically tracked separately
+            // by the save system and would be added to areaState.DestroyedEntityIds and
+            // areaState.SpawnedEntities by the calling code if needed
+
+            return areaState;
+        }
+
+        /// <summary>
+        /// Extracts EntityState from IEntity by collecting all component data.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 extracts entity state from entity
+        /// Collects position, HP, door/placeable states, local variables, effects, etc.
+        /// </remarks>
+        private EntityState ExtractEntityState(IEntity entity)
+        {
+            if (entity == null || !entity.IsValid)
+            {
+                return null;
+            }
+
+            var entityState = new EntityState();
+            entityState.ObjectId = entity.ObjectId;
+            entityState.Tag = entity.Tag ?? "";
+            entityState.ObjectType = entity.ObjectType;
+
+            // Extract transform component (position and facing)
+            var transformComponent = entity.GetComponent<ITransformComponent>();
+            if (transformComponent != null)
+            {
+                entityState.Position = transformComponent.Position;
+                entityState.Facing = transformComponent.Facing;
+            }
+
+            // Extract stats component (HP, FP, etc.)
+            var statsComponent = entity.GetComponent<IStatsComponent>();
+            if (statsComponent != null)
+            {
+                entityState.CurrentHP = statsComponent.CurrentHP;
+                entityState.MaxHP = statsComponent.MaxHP;
+            }
+
+            // Extract door component state
+            var doorComponent = entity.GetComponent<IDoorComponent>();
+            if (doorComponent != null)
+            {
+                entityState.IsOpen = doorComponent.IsOpen;
+                entityState.IsLocked = doorComponent.IsLocked;
+            }
+
+            // Extract placeable component state
+            var placeableComponent = entity.GetComponent<IPlaceableComponent>();
+            if (placeableComponent != null)
+            {
+                entityState.IsOpen = placeableComponent.IsOpen;
+                entityState.IsLocked = placeableComponent.IsLocked;
+                
+                // Check for IsDestroyed property using reflection (placeables can be destroyed)
+                var isDestroyedProperty = placeableComponent.GetType().GetProperty("IsDestroyed");
+                if (isDestroyedProperty != null && isDestroyedProperty.CanRead)
+                {
+                    try
+                    {
+                        object isDestroyedValue = isDestroyedProperty.GetValue(placeableComponent);
+                        if (isDestroyedValue is bool)
+                        {
+                            entityState.IsDestroyed = (bool)isDestroyedValue;
+                        }
+                    }
+                    catch
+                    {
+                        // Ignore errors when reading IsDestroyed property
+                    }
+                }
+            }
+
+            // Extract script hooks component (local variables)
+            var scriptHooksComponent = entity.GetComponent<IScriptHooksComponent>();
+            if (scriptHooksComponent != null)
+            {
+                // Extract local variables using reflection (local variables are stored in private fields)
+                // Based on BaseScriptHooksComponent implementation which stores _localInts, _localFloats, _localStrings
+                Type componentType = scriptHooksComponent.GetType();
+                System.Reflection.FieldInfo localIntsField = componentType.GetField("_localInts", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                System.Reflection.FieldInfo localFloatsField = componentType.GetField("_localFloats", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                System.Reflection.FieldInfo localStringsField = componentType.GetField("_localStrings", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                System.Reflection.FieldInfo localObjectsField = componentType.GetField("_localObjects", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                System.Reflection.FieldInfo localLocationsField = componentType.GetField("_localLocations", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+                if (localIntsField != null)
+                {
+                    var localInts = localIntsField.GetValue(scriptHooksComponent) as Dictionary<string, int>;
+                    if (localInts != null)
+                    {
+                        foreach (var kvp in localInts)
+                        {
+                            entityState.LocalVariables.Ints[kvp.Key] = kvp.Value;
+                        }
+                    }
+                }
+
+                if (localFloatsField != null)
+                {
+                    var localFloats = localFloatsField.GetValue(scriptHooksComponent) as Dictionary<string, float>;
+                    if (localFloats != null)
+                    {
+                        foreach (var kvp in localFloats)
+                        {
+                            entityState.LocalVariables.Floats[kvp.Key] = kvp.Value;
+                        }
+                    }
+                }
+
+                if (localStringsField != null)
+                {
+                    var localStrings = localStringsField.GetValue(scriptHooksComponent) as Dictionary<string, string>;
+                    if (localStrings != null)
+                    {
+                        foreach (var kvp in localStrings)
+                        {
+                            entityState.LocalVariables.Strings[kvp.Key] = kvp.Value ?? "";
+                        }
+                    }
+                }
+
+                if (localObjectsField != null)
+                {
+                    var localObjects = localObjectsField.GetValue(scriptHooksComponent) as Dictionary<string, uint>;
+                    if (localObjects != null)
+                    {
+                        foreach (var kvp in localObjects)
+                        {
+                            entityState.LocalVariables.Objects[kvp.Key] = kvp.Value;
+                        }
+                    }
+                }
+
+                if (localLocationsField != null)
+                {
+                    var localLocations = localLocationsField.GetValue(scriptHooksComponent) as Dictionary<string, SavedLocation>;
+                    if (localLocations != null)
+                    {
+                        foreach (var kvp in localLocations)
+                        {
+                            entityState.LocalVariables.Locations[kvp.Key] = kvp.Value;
+                        }
+                    }
+                }
+            }
+
+            // Extract effects component (active effects/buffs/debuffs)
+            // Based on swkotor2.exe: FUN_005226d0 saves active effects on entities
+            // Note: Full implementation would require IEffectsComponent interface
+            // For now, we'll skip effects as they're not directly accessible via standard interfaces
+
+            // Extract template ResRef if available
+            // Based on swkotor2.exe: TemplateResRef is stored in entity's template data
+            // For now, we'll leave TemplateResRef empty as it's not directly accessible via IEntity interface
+
+            return entityState;
+        }
+
+        /// <summary>
+        /// Serializes AreaState to GFF format.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Area state GFF creation matches SaveGameManager.CreateAreaStateGFF pattern
+        /// Creates GFF with all entity lists, destroyed entities, spawned entities, and local variables.
+        /// </remarks>
+        private GFF SerializeAreaStateToGFF(AreaState areaState)
+        {
+            var gff = new GFF(GFFContent.GFF);
+            var root = gff.Root;
+
+            if (areaState == null)
+            {
+                return gff;
+            }
+
+            // Area ResRef
+            SetStringField(root, "AreaResRef", areaState.AreaResRef ?? "");
+
+            // Visited flag
+            root.SetUInt8("Visited", areaState.Visited ? (byte)1 : (byte)0);
+
+            // Serialize entity state lists
+            // Based on swkotor2.exe: Entity lists are stored as GFF lists
+            SerializeEntityStateList(root, "CreatureList", areaState.CreatureStates);
+            SerializeEntityStateList(root, "DoorList", areaState.DoorStates);
+            SerializeEntityStateList(root, "PlaceableList", areaState.PlaceableStates);
+            SerializeEntityStateList(root, "TriggerList", areaState.TriggerStates);
+            SerializeEntityStateList(root, "StoreList", areaState.StoreStates);
+            SerializeEntityStateList(root, "SoundList", areaState.SoundStates);
+            SerializeEntityStateList(root, "WaypointList", areaState.WaypointStates);
+            SerializeEntityStateList(root, "EncounterList", areaState.EncounterStates);
+            SerializeEntityStateList(root, "CameraList", areaState.CameraStates);
+
+            // Destroyed entity IDs
+            // Based on swkotor2.exe: Destroyed entities stored as list of ObjectIds
+            if (areaState.DestroyedEntityIds != null && areaState.DestroyedEntityIds.Count > 0)
+            {
+                var destroyedList = new GFFList();
+                root.SetList("DestroyedList", destroyedList);
+                foreach (uint objectId in areaState.DestroyedEntityIds)
+                {
+                    var destroyedStruct = destroyedList.Add();
+                    SetIntField(destroyedStruct, "ObjectId", (int)objectId);
+                }
+            }
+
+            // Spawned entities (dynamically created, not in original GIT)
+            // Based on swkotor2.exe: Spawned entities stored with BlueprintResRef
+            if (areaState.SpawnedEntities != null && areaState.SpawnedEntities.Count > 0)
+            {
+                var spawnedList = new GFFList();
+                root.SetList("SpawnedList", spawnedList);
+                foreach (SpawnedEntityState spawnedState in areaState.SpawnedEntities)
+                {
+                    var entityStruct = spawnedList.Add();
+                    SerializeEntityStateToGFF(entityStruct, spawnedState);
+                    SetStringField(entityStruct, "BlueprintResRef", spawnedState.BlueprintResRef ?? "");
+                    SetStringField(entityStruct, "SpawnedBy", spawnedState.SpawnedBy ?? "");
+                }
+            }
+
+            // Area-level local variables
+            // Based on swkotor2.exe: Area local variables are stored in area's variable system
+            if (areaState.LocalVariables != null && areaState.LocalVariables.Count > 0)
+            {
+                var localVarStruct = new GFFStruct();
+                root.SetStruct("LocalVariables", localVarStruct);
+                SerializeLocalVariableSet(localVarStruct, areaState.LocalVariables);
+            }
+
+            return gff;
+        }
+
+        /// <summary>
+        /// Serializes a list of EntityState objects to a GFF list.
+        /// </summary>
+        private void SerializeEntityStateList(GFFStruct root, string listName, List<EntityState> entityStates)
+        {
+            if (entityStates == null || entityStates.Count == 0)
+            {
+                return;
+            }
+
+            var entityList = new GFFList();
+            root.SetList(listName, entityList);
+            foreach (EntityState entityState in entityStates)
+            {
+                if (entityState != null)
+                {
+                    var entityStruct = entityList.Add();
+                    SerializeEntityStateToGFF(entityStruct, entityState);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Serializes EntityState to GFF struct.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 saves entity state to GFF struct
+        /// Matches SaveGameManager.SaveEntityStateToGFF pattern.
+        /// </remarks>
+        private void SerializeEntityStateToGFF(GFFStruct entityStruct, EntityState entityState)
+        {
+            if (entityStruct == null || entityState == null)
+            {
+                return;
+            }
+
+            // Basic entity data
+            SetIntField(entityStruct, "ObjectId", (int)entityState.ObjectId);
+            SetStringField(entityStruct, "Tag", entityState.Tag ?? "");
+            SetStringField(entityStruct, "TemplateResRef", entityState.TemplateResRef ?? "");
+            SetIntField(entityStruct, "ObjectType", (int)entityState.ObjectType);
+
+            // Position and orientation
+            SetFloatField(entityStruct, "X", entityState.Position.X);
+            SetFloatField(entityStruct, "Y", entityState.Position.Y);
+            SetFloatField(entityStruct, "Z", entityState.Position.Z);
+            SetFloatField(entityStruct, "Facing", entityState.Facing);
+
+            // Stats (for creatures)
+            SetIntField(entityStruct, "CurrentHP", entityState.CurrentHP);
+            SetIntField(entityStruct, "MaxHP", entityState.MaxHP);
+
+            // Door/placeable states
+            SetIntField(entityStruct, "IsOpen", entityState.IsOpen ? 1 : 0);
+            SetIntField(entityStruct, "IsLocked", entityState.IsLocked ? 1 : 0);
+            SetIntField(entityStruct, "IsDestroyed", entityState.IsDestroyed ? 1 : 0);
+            SetIntField(entityStruct, "IsPlot", entityState.IsPlot ? 1 : 0);
+            SetIntField(entityStruct, "AnimationState", entityState.AnimationState);
+
+            // Local variables (if present)
+            if (entityState.LocalVariables != null && !entityState.LocalVariables.IsEmpty)
+            {
+                var localVarStruct = new GFFStruct();
+                entityStruct.SetStruct("LocalVariables", localVarStruct);
+                SerializeLocalVariableSet(localVarStruct, entityState.LocalVariables);
+            }
+
+            // Active effects (if present)
+            // Based on swkotor2.exe: Active effects are stored as list of effect structs
+            if (entityState.ActiveEffects != null && entityState.ActiveEffects.Count > 0)
+            {
+                var effectsList = new GFFList();
+                entityStruct.SetList("ActiveEffects", effectsList);
+                foreach (SavedEffect effect in entityState.ActiveEffects)
+                {
+                    if (effect != null)
+                    {
+                        var effectStruct = effectsList.Add();
+                        SerializeEffectToGFF(effectStruct, effect);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Serializes LocalVariableSet to GFF struct.
+        /// </summary>
+        private void SerializeLocalVariableSet(GFFStruct localVarStruct, LocalVariableSet localVariables)
+        {
+            if (localVarStruct == null || localVariables == null)
+            {
+                return;
+            }
+
+            // Save integer variables
+            if (localVariables.Ints != null && localVariables.Ints.Count > 0)
+            {
+                var intList = new GFFList();
+                localVarStruct.SetList("IntList", intList);
+                foreach (var kvp in localVariables.Ints)
+                {
+                    var varStruct = intList.Add();
+                    SetStringField(varStruct, "Name", kvp.Key);
+                    SetIntField(varStruct, "Value", kvp.Value);
+                }
+            }
+
+            // Save float variables
+            if (localVariables.Floats != null && localVariables.Floats.Count > 0)
+            {
+                var floatList = new GFFList();
+                localVarStruct.SetList("FloatList", floatList);
+                foreach (var kvp in localVariables.Floats)
+                {
+                    var varStruct = floatList.Add();
+                    SetStringField(varStruct, "Name", kvp.Key);
+                    SetFloatField(varStruct, "Value", kvp.Value);
+                }
+            }
+
+            // Save string variables
+            if (localVariables.Strings != null && localVariables.Strings.Count > 0)
+            {
+                var stringList = new GFFList();
+                localVarStruct.SetList("StringList", stringList);
+                foreach (var kvp in localVariables.Strings)
+                {
+                    var varStruct = stringList.Add();
+                    SetStringField(varStruct, "Name", kvp.Key);
+                    SetStringField(varStruct, "Value", kvp.Value ?? "");
+                }
+            }
+
+            // Save object reference variables
+            if (localVariables.Objects != null && localVariables.Objects.Count > 0)
+            {
+                var objectList = new GFFList();
+                localVarStruct.SetList("ObjectList", objectList);
+                foreach (var kvp in localVariables.Objects)
+                {
+                    var varStruct = objectList.Add();
+                    SetStringField(varStruct, "Name", kvp.Key);
+                    SetIntField(varStruct, "Value", (int)kvp.Value);
+                }
+            }
+
+            // Save location variables
+            if (localVariables.Locations != null && localVariables.Locations.Count > 0)
+            {
+                var locationList = new GFFList();
+                localVarStruct.SetList("LocationList", locationList);
+                foreach (var kvp in localVariables.Locations)
+                {
+                    var varStruct = locationList.Add();
+                    SetStringField(varStruct, "Name", kvp.Key);
+                    SerializeLocationToGFF(varStruct, kvp.Value);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Serializes SavedEffect to GFF struct.
+        /// </summary>
+        private void SerializeEffectToGFF(GFFStruct effectStruct, SavedEffect effect)
+        {
+            if (effectStruct == null || effect == null)
+            {
+                return;
+            }
+
+            SetIntField(effectStruct, "EffectType", effect.EffectType);
+            SetIntField(effectStruct, "SubType", effect.SubType);
+            SetIntField(effectStruct, "DurationType", effect.DurationType);
+            SetFloatField(effectStruct, "RemainingDuration", effect.RemainingDuration);
+            SetIntField(effectStruct, "CreatorId", (int)effect.CreatorId);
+            SetIntField(effectStruct, "SpellId", effect.SpellId);
+
+            // Serialize effect parameters
+            if (effect.IntParams != null && effect.IntParams.Count > 0)
+            {
+                var intList = new GFFList();
+                effectStruct.SetList("IntParams", intList);
+                foreach (int param in effect.IntParams)
+                {
+                    var paramStruct = intList.Add();
+                    SetIntField(paramStruct, "Value", param);
+                }
+            }
+
+            if (effect.FloatParams != null && effect.FloatParams.Count > 0)
+            {
+                var floatList = new GFFList();
+                effectStruct.SetList("FloatParams", floatList);
+                foreach (float param in effect.FloatParams)
+                {
+                    var paramStruct = floatList.Add();
+                    SetFloatField(paramStruct, "Value", param);
+                }
+            }
+
+            if (effect.StringParams != null && effect.StringParams.Count > 0)
+            {
+                var stringList = new GFFList();
+                effectStruct.SetList("StringParams", stringList);
+                foreach (string param in effect.StringParams)
+                {
+                    var paramStruct = stringList.Add();
+                    SetStringField(paramStruct, "Value", param ?? "");
+                }
+            }
+
+            if (effect.ObjectParams != null && effect.ObjectParams.Count > 0)
+            {
+                var objectList = new GFFList();
+                effectStruct.SetList("ObjectParams", objectList);
+                foreach (uint param in effect.ObjectParams)
+                {
+                    var paramStruct = objectList.Add();
+                    SetIntField(paramStruct, "Value", (int)param);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Serializes SavedLocation to GFF struct.
+        /// </summary>
+        private void SerializeLocationToGFF(GFFStruct locationStruct, SavedLocation location)
+        {
+            if (locationStruct == null || location == null)
+            {
+                return;
+            }
+
+            SetFloatField(locationStruct, "X", location.Position.X);
+            SetFloatField(locationStruct, "Y", location.Position.Y);
+            SetFloatField(locationStruct, "Z", location.Position.Z);
+            SetFloatField(locationStruct, "Facing", location.Facing);
+            SetStringField(locationStruct, "AreaResRef", location.AreaResRef ?? "");
         }
 
         /// <summary>
