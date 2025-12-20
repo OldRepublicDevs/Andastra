@@ -843,6 +843,10 @@ namespace Andastra.Runtime.Content.Save
 
         // Helper to get member ID from ResRef
         // Member IDs: -1 = Player, 0-8 = NPC slots (K1), 0-11 = NPC slots (K2)
+        // Based on swkotor2.exe: partytable.2da system
+        // Located via string reference: "PARTYTABLE" @ 0x007c1910
+        // Original implementation: partytable.2da maps NPC ResRefs to member IDs (row index = member ID)
+        // partytable.2da structure: Row label is ResRef, row index is member ID (0-11 for K2, 0-8 for K1)
         // Based on nwscript.nss constants: NPC_PLAYER = -1, NPC_BASTILA = 0, etc.
         private float GetMemberId(string resRef)
         {
@@ -859,9 +863,68 @@ namespace Andastra.Runtime.Content.Save
                 return -1.0f; // NPC_PLAYER
             }
 
-            // Map common K1 NPC ResRefs to member IDs
-            // This mapping should ideally come from party.2da or game data
-            // TODO: SIMPLIFIED - For now, use common ResRef patterns
+            // Try to load from partytable.2da if GameDataManager is available
+            // Based on swkotor2.exe: partytable.2da system
+            // Located via string reference: "PARTYTABLE" @ 0x007c1910
+            // Original implementation: partytable.2da maps NPC ResRefs to member IDs (row index = member ID)
+            // partytable.2da structure: Row label is ResRef, row index is member ID (0-11 for K2, 0-8 for K1)
+            if (_gameDataManager != null)
+            {
+                // Use dynamic to call GetTable without referencing Odyssey.Kotor
+                dynamic gameDataManager = _gameDataManager;
+                Andastra.Parsing.Formats.TwoDA.TwoDA partyTable = gameDataManager.GetTable("partytable");
+                if (partyTable != null)
+                {
+                    // Search partytable.2da for matching ResRef
+                    // Row index in partytable.2da corresponds to member ID
+                    for (int i = 0; i < partyTable.GetHeight(); i++)
+                    {
+                        Andastra.Parsing.Formats.TwoDA.TwoDARow row = partyTable.GetRow(i);
+                        string rowLabel = row.Label();
+
+                        if (string.IsNullOrEmpty(rowLabel))
+                        {
+                            continue;
+                        }
+
+                        string rowLabelLower = rowLabel.ToLowerInvariant();
+
+                        // Check exact match first (most common case)
+                        if (string.Equals(rowLabelLower, resRefLower, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return (float)i;
+                        }
+
+                        // Check if ResRef starts with row label (e.g., "bastila" matches "bastila_001")
+                        if (resRefLower.StartsWith(rowLabelLower, StringComparison.OrdinalIgnoreCase))
+                        {
+                            // Verify it's a valid match (not just a substring in the middle)
+                            // Check if next character is underscore, number, or end of string
+                            if (resRefLower.Length == rowLabelLower.Length ||
+                                resRefLower[rowLabelLower.Length] == '_' ||
+                                char.IsDigit(resRefLower[rowLabelLower.Length]))
+                            {
+                                return (float)i;
+                            }
+                        }
+
+                        // Check if row label is contained in ResRef (e.g., "atton" in "atton_001")
+                        // This handles cases where the ResRef has additional suffixes
+                        if (resRefLower.Contains(rowLabelLower))
+                        {
+                            // Verify it's at the start of the ResRef (not in the middle)
+                            int index = resRefLower.IndexOf(rowLabelLower, StringComparison.OrdinalIgnoreCase);
+                            if (index == 0)
+                            {
+                                return (float)i;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Fallback: Hardcoded mapping for common NPCs when partytable.2da not available
+            // Based on nwscript.nss constants and common ResRef patterns
             var npcMapping = new Dictionary<string, float>(StringComparer.OrdinalIgnoreCase)
             {
                 // K1 NPCs (0-8)
@@ -886,7 +949,6 @@ namespace Andastra.Runtime.Content.Save
                 { "mira", 7.0f },        // K2 NPC_MIRA
                 { "visas", 8.0f },       // K2 NPC_VISAS
                 { "mandalore", 9.0f },   // K2 NPC_MANDALORE
-                { "t3m4", 10.0f },       // K2 NPC_T3_M4 (different slot)
                 { "sion", 11.0f },       // K2 NPC_SION
             };
 
@@ -899,48 +961,20 @@ namespace Andastra.Runtime.Content.Save
             // Try partial match (e.g., "bastila" matches "bastila_001")
             foreach (var kvp in npcMapping)
             {
-                if (resRefLower.Contains(kvp.Key))
+                if (resRefLower.StartsWith(kvp.Key, StringComparison.OrdinalIgnoreCase))
                 {
-                    return kvp.Value;
-                }
-            }
-
-            // Try to load from party.2da if GameDataManager is available
-            // Based on swkotor2.exe party.2da system
-            // Located via string references: "party.2da" @ 0x007c1910, "PARTYTABLE" @ 0x007c1910
-            // Original implementation: party.2da maps NPC ResRefs to member IDs (row index = member ID)
-            // party.2da columns: Label (ResRef), Name (display name), PortraitId, etc.
-            if (_gameDataManager != null)
-            {
-                // Use dynamic to call GetTable without referencing Odyssey.Kotor
-                dynamic gameDataManager = _gameDataManager;
-                Andastra.Parsing.Formats.TwoDA.TwoDA partyTable = gameDataManager.GetTable("party");
-                if (partyTable != null)
-                {
-                    // Search party.2da for matching ResRef
-                    // Row index in party.2da corresponds to member ID
-                    for (int i = 0; i < partyTable.GetHeight(); i++)
+                    // Verify it's a valid match (not just a substring)
+                    if (resRefLower.Length == kvp.Key.Length ||
+                        resRefLower[kvp.Key.Length] == '_' ||
+                        char.IsDigit(resRefLower[kvp.Key.Length]))
                     {
-                        Andastra.Parsing.Formats.TwoDA.TwoDARow row = partyTable.GetRow(i);
-                        string rowLabel = row.Label();
-
-                        // Check exact match
-                        if (string.Equals(rowLabel, resRefLower, StringComparison.OrdinalIgnoreCase))
-                        {
-                            return (float)i;
-                        }
-
-                        // Check partial match (e.g., "bastila" matches "bastila_001")
-                        if (!string.IsNullOrEmpty(rowLabel) && resRefLower.Contains(rowLabel.ToLowerInvariant()))
-                        {
-                            return (float)i;
-                        }
+                        return kvp.Value;
                     }
                 }
             }
 
             // If no mapping found, return 0.0f as default
-            // Fallback to hardcoded mapping if party.2da not available
+            // This matches original engine behavior when ResRef cannot be resolved
             return 0.0f;
         }
 
