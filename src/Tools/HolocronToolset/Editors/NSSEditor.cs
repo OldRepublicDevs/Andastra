@@ -4239,6 +4239,9 @@ namespace HolocronToolset.Editors
                 // Note: In a full implementation, we would select and scroll to the current file
                 // For now, we just ensure the model is set up correctly
             }
+
+            // Integrate file explorer dock into main UI layout
+            IntegrateFileExplorerDock();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:1399-1410
