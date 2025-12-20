@@ -667,12 +667,38 @@ namespace Andastra.Parsing.Tests.Formats
                 var result = RunCommand("java", $"-jar \"{jarPath}\" --version");
                 if (result.ExitCode == 0)
                 {
-                    // Return special marker for JAR - caller needs to use java -jar
+                    // Return JAR path - callers will use RunKaitaiCompiler helper
                     return jarPath;
                 }
             }
 
             return null;
+        }
+
+        private static (int ExitCode, string Output, string Error) RunKaitaiCompiler(string ksyPath, string arguments, string outputDir)
+        {
+            string compilerPath = FindKaitaiCompiler();
+            if (string.IsNullOrEmpty(compilerPath))
+            {
+                return (-1, "", "Kaitai Struct compiler not found");
+            }
+
+            // Check if compiler path is a JAR file
+            bool isJar = compilerPath.EndsWith(".jar", StringComparison.OrdinalIgnoreCase) || 
+                        File.Exists(compilerPath) && Path.GetExtension(compilerPath).Equals(".jar", StringComparison.OrdinalIgnoreCase);
+
+            if (isJar)
+            {
+                // Use java -jar for JAR files
+                string fullArgs = $"-jar \"{compilerPath}\" {arguments} -d \"{outputDir}\" \"{ksyPath}\"";
+                return RunCommand("java", fullArgs);
+            }
+            else
+            {
+                // Use compiler directly
+                string fullArgs = $"{arguments} -d \"{outputDir}\" \"{ksyPath}\"";
+                return RunCommand(compilerPath, fullArgs);
+            }
         }
 
         private static string FindKaitaiCompilerJar()
