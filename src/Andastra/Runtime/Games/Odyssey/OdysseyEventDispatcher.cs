@@ -56,8 +56,11 @@ namespace Andastra.Runtime.Games.Odyssey
             var eventName = GetEventName(eventType);
             var subtypeName = GetEventSubtypeName(eventSubtype);
 
-            // TODO: Add logging
-            // System.Diagnostics.Debug.WriteLine($"Dispatching event: {eventName} ({eventType}) -> {subtypeName} ({eventSubtype})");
+            // Log event dispatch with entity information
+            // Based on swkotor2.exe: DispatchEvent @ 0x004dcfb0 debug format "DRF Event Added: %s(%s) %s(%s) %s %s\n"
+            string sourceInfo = sourceEntity != null ? $"{sourceEntity.Tag ?? "null"} ({sourceEntity.ObjectId})" : "null";
+            string targetInfo = targetEntity != null ? $"{targetEntity.Tag ?? "null"} ({targetEntity.ObjectId})" : "null";
+            Console.WriteLine($"[OdysseyEventDispatcher] Dispatching event: {eventName} ({eventType}) from {sourceInfo} to {targetInfo}, subtype: {subtypeName} ({eventSubtype})");
 
             // Route to appropriate handler based on event type
             switch (eventType)
@@ -201,36 +204,43 @@ namespace Andastra.Runtime.Games.Odyssey
         {
             if (entity == null)
             {
+                Console.WriteLine("[OdysseyEventDispatcher] HandleAreaTransition: Entity is null, aborting area transition");
                 return;
             }
 
             IWorld world = entity.World;
             if (world == null)
             {
+                Console.WriteLine($"[OdysseyEventDispatcher] HandleAreaTransition: Entity {entity.Tag ?? "null"} ({entity.ObjectId}) has no world, aborting area transition");
                 return;
             }
 
             // Get current area from entity's AreaId or world's CurrentArea
             IArea currentArea = GetCurrentAreaForEntity(entity, world);
+            string currentAreaName = currentArea != null ? currentArea.ResRef : "null";
 
             // If targetArea is null, this is an area removal event (EVENT_REMOVE_FROM_AREA)
             if (string.IsNullOrEmpty(targetArea))
             {
                 // Remove entity from current area only
+                Console.WriteLine($"[OdysseyEventDispatcher] HandleAreaTransition: Removing entity {entity.Tag ?? "null"} ({entity.ObjectId}) from area {currentAreaName}");
                 if (currentArea != null)
                 {
                     RemoveEntityFromArea(currentArea, entity);
+                    Console.WriteLine($"[OdysseyEventDispatcher] HandleAreaTransition: Successfully removed entity {entity.Tag ?? "null"} ({entity.ObjectId}) from area {currentAreaName}");
                 }
                 return;
             }
 
             // Full area transition (EVENT_AREA_TRANSITION)
+            Console.WriteLine($"[OdysseyEventDispatcher] HandleAreaTransition: Transitioning entity {entity.Tag ?? "null"} ({entity.ObjectId}) from area {currentAreaName} to area {targetArea}");
             // Load target area if not already loaded (area streaming)
             IArea targetAreaInstance = LoadOrGetTargetArea(world, targetArea);
             if (targetAreaInstance == null)
             {
                 // Failed to load target area - transition failed
                 // Entity remains in current area
+                Console.WriteLine($"[OdysseyEventDispatcher] HandleAreaTransition: Failed to load target area {targetArea}, entity {entity.Tag ?? "null"} ({entity.ObjectId}) remains in area {currentAreaName}");
                 return;
             }
 
@@ -262,6 +272,11 @@ namespace Andastra.Runtime.Games.Odyssey
 
                 // Fire transition events (OnEnter script for target area)
                 FireAreaTransitionEvents(world, entity, targetAreaInstance);
+                Console.WriteLine($"[OdysseyEventDispatcher] HandleAreaTransition: Successfully transitioned entity {entity.Tag ?? "null"} ({entity.ObjectId}) to area {targetAreaInstance.ResRef}");
+            }
+            else
+            {
+                Console.WriteLine($"[OdysseyEventDispatcher] HandleAreaTransition: Entity {entity.Tag ?? "null"} ({entity.ObjectId}) is already in target area {targetArea}, no transition needed");
             }
         }
 
@@ -280,12 +295,14 @@ namespace Andastra.Runtime.Games.Odyssey
         {
             if (sourceEntity == null || targetEntity == null)
             {
+                Console.WriteLine("[OdysseyEventDispatcher] ExtractTargetAreaFromTransitionSource: Source or target entity is null");
                 return null;
             }
 
             IWorld world = targetEntity.World;
             if (world == null)
             {
+                Console.WriteLine($"[OdysseyEventDispatcher] ExtractTargetAreaFromTransitionSource: Target entity {targetEntity.Tag ?? "null"} ({targetEntity.ObjectId}) has no world");
                 return null;
             }
 
@@ -295,6 +312,7 @@ namespace Andastra.Runtime.Games.Odyssey
             {
                 // Area transition: LinkedTo contains waypoint tag
                 string linkedToTag = doorComponent.LinkedTo;
+                Console.WriteLine($"[OdysseyEventDispatcher] ExtractTargetAreaFromTransitionSource: Door {sourceEntity.Tag ?? "null"} ({sourceEntity.ObjectId}) has area transition, LinkedTo: {linkedToTag ?? "null"}");
                 if (!string.IsNullOrEmpty(linkedToTag))
                 {
                     // Find waypoint entity by tag
@@ -305,8 +323,17 @@ namespace Andastra.Runtime.Games.Odyssey
                         IArea targetArea = world.GetArea(waypointEntity.AreaId);
                         if (targetArea != null)
                         {
+                            Console.WriteLine($"[OdysseyEventDispatcher] ExtractTargetAreaFromTransitionSource: Found target area {targetArea.ResRef} from door {sourceEntity.Tag ?? "null"} via waypoint {linkedToTag}");
                             return targetArea.ResRef;
                         }
+                        else
+                        {
+                            Console.WriteLine($"[OdysseyEventDispatcher] ExtractTargetAreaFromTransitionSource: Waypoint {linkedToTag} has AreaId {waypointEntity.AreaId} but area not found in world");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[OdysseyEventDispatcher] ExtractTargetAreaFromTransitionSource: Waypoint {linkedToTag} not found or has invalid AreaId");
                     }
                 }
             }
@@ -317,6 +344,7 @@ namespace Andastra.Runtime.Games.Odyssey
             {
                 // Area transition: LinkedTo contains waypoint tag
                 string linkedToTag = triggerComponent.LinkedTo;
+                Console.WriteLine($"[OdysseyEventDispatcher] ExtractTargetAreaFromTransitionSource: Trigger {sourceEntity.Tag ?? "null"} ({sourceEntity.ObjectId}) has area transition, LinkedTo: {linkedToTag ?? "null"}");
                 if (!string.IsNullOrEmpty(linkedToTag))
                 {
                     // Find waypoint entity by tag
@@ -327,13 +355,23 @@ namespace Andastra.Runtime.Games.Odyssey
                         IArea targetArea = world.GetArea(waypointEntity.AreaId);
                         if (targetArea != null)
                         {
+                            Console.WriteLine($"[OdysseyEventDispatcher] ExtractTargetAreaFromTransitionSource: Found target area {targetArea.ResRef} from trigger {sourceEntity.Tag ?? "null"} via waypoint {linkedToTag}");
                             return targetArea.ResRef;
                         }
+                        else
+                        {
+                            Console.WriteLine($"[OdysseyEventDispatcher] ExtractTargetAreaFromTransitionSource: Waypoint {linkedToTag} has AreaId {waypointEntity.AreaId} but area not found in world");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[OdysseyEventDispatcher] ExtractTargetAreaFromTransitionSource: Waypoint {linkedToTag} not found or has invalid AreaId");
                     }
                 }
             }
 
             // No valid transition source found
+            Console.WriteLine($"[OdysseyEventDispatcher] ExtractTargetAreaFromTransitionSource: No valid area transition found for source entity {sourceEntity.Tag ?? "null"} ({sourceEntity.ObjectId})");
             return null;
         }
 
@@ -377,6 +415,7 @@ namespace Andastra.Runtime.Games.Odyssey
         {
             if (world == null || string.IsNullOrEmpty(targetAreaResRef))
             {
+                Console.WriteLine($"[OdysseyEventDispatcher] LoadOrGetTargetArea: World is null or target area ResRef is empty");
                 return null;
             }
 
@@ -386,6 +425,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 // Check if target area is the current area
                 if (world.CurrentArea != null && string.Equals(world.CurrentArea.ResRef, targetAreaResRef, StringComparison.OrdinalIgnoreCase))
                 {
+                    Console.WriteLine($"[OdysseyEventDispatcher] LoadOrGetTargetArea: Target area {targetAreaResRef} is already the current area");
                     return world.CurrentArea;
                 }
 
@@ -398,6 +438,7 @@ namespace Andastra.Runtime.Games.Odyssey
             // Full implementation would integrate with module loading system
             if (world.CurrentArea != null && string.Equals(world.CurrentArea.ResRef, targetAreaResRef, StringComparison.OrdinalIgnoreCase))
             {
+                Console.WriteLine($"[OdysseyEventDispatcher] LoadOrGetTargetArea: Target area {targetAreaResRef} matches current area");
                 return world.CurrentArea;
             }
 
@@ -405,6 +446,7 @@ namespace Andastra.Runtime.Games.Odyssey
             // This requires IModuleLoader which may not be available in this context
             // For now, return null to indicate area not found/not loaded
             // Full implementation would integrate with module loading system
+            Console.WriteLine($"[OdysseyEventDispatcher] LoadOrGetTargetArea: Target area {targetAreaResRef} is not loaded (area streaming not yet implemented)");
             return null;
         }
 
@@ -448,29 +490,35 @@ namespace Andastra.Runtime.Games.Odyssey
         {
             if (entity == null || targetArea == null)
             {
+                Console.WriteLine("[OdysseyEventDispatcher] ProjectEntityToTargetArea: Entity or target area is null");
                 return;
             }
 
             ITransformComponent transform = entity.GetComponent<ITransformComponent>();
             if (transform == null)
             {
+                Console.WriteLine($"[OdysseyEventDispatcher] ProjectEntityToTargetArea: Entity {entity.Tag ?? "null"} ({entity.ObjectId}) has no transform component");
                 return;
             }
 
             // Project position to target area walkmesh
             Vector3 currentPosition = transform.Position;
+            Console.WriteLine($"[OdysseyEventDispatcher] ProjectEntityToTargetArea: Projecting entity {entity.Tag ?? "null"} ({entity.ObjectId}) position ({currentPosition.X:F2}, {currentPosition.Y:F2}, {currentPosition.Z:F2}) to walkmesh of area {targetArea.ResRef}");
             Vector3 projectedPosition;
             float height;
 
             if (targetArea.ProjectToWalkmesh(currentPosition, out projectedPosition, out height))
             {
                 transform.Position = projectedPosition;
+                Console.WriteLine($"[OdysseyEventDispatcher] ProjectEntityToTargetArea: Successfully projected entity {entity.Tag ?? "null"} ({entity.ObjectId}) to position ({projectedPosition.X:F2}, {projectedPosition.Y:F2}, {projectedPosition.Z:F2}), height: {height:F2}");
             }
             else
             {
                 // If projection fails, try to find a valid position near the transition point
+                Console.WriteLine($"[OdysseyEventDispatcher] ProjectEntityToTargetArea: Direct projection failed, searching for nearest walkable point");
                 Vector3 nearestWalkable = FindNearestWalkablePoint(targetArea, currentPosition);
                 transform.Position = nearestWalkable;
+                Console.WriteLine($"[OdysseyEventDispatcher] ProjectEntityToTargetArea: Using nearest walkable point ({nearestWalkable.X:F2}, {nearestWalkable.Y:F2}, {nearestWalkable.Z:F2}) for entity {entity.Tag ?? "null"} ({entity.ObjectId})");
             }
         }
 
@@ -485,14 +533,17 @@ namespace Andastra.Runtime.Games.Odyssey
         {
             if (area == null || area.NavigationMesh == null)
             {
+                Console.WriteLine($"[OdysseyEventDispatcher] FindNearestWalkablePoint: Area is null or has no navigation mesh, returning original point");
                 return searchPoint;
             }
 
+            Console.WriteLine($"[OdysseyEventDispatcher] FindNearestWalkablePoint: Searching for walkable point near ({searchPoint.X:F2}, {searchPoint.Y:F2}, {searchPoint.Z:F2}) in area {area.ResRef}");
             // Try to project the point first
             Vector3 projected;
             float height;
             if (area.ProjectToWalkmesh(searchPoint, out projected, out height))
             {
+                Console.WriteLine($"[OdysseyEventDispatcher] FindNearestWalkablePoint: Found walkable point at search location ({projected.X:F2}, {projected.Y:F2}, {projected.Z:F2})");
                 return projected;
             }
 
@@ -500,6 +551,7 @@ namespace Andastra.Runtime.Games.Odyssey
             const float searchRadius = 5.0f;
             const float stepSize = 1.0f;
             const int maxSteps = 10;
+            Console.WriteLine($"[OdysseyEventDispatcher] FindNearestWalkablePoint: Initial projection failed, searching in expanding radius (max {maxSteps * stepSize:F1} units)");
 
             for (int step = 1; step <= maxSteps; step++)
             {
@@ -515,12 +567,14 @@ namespace Andastra.Runtime.Games.Odyssey
 
                     if (area.ProjectToWalkmesh(testPoint, out projected, out height))
                     {
+                        Console.WriteLine($"[OdysseyEventDispatcher] FindNearestWalkablePoint: Found walkable point at radius {radius:F1}, angle {angle}° ({projected.X:F2}, {projected.Y:F2}, {projected.Z:F2})");
                         return projected;
                     }
                 }
             }
 
             // Fallback: return original point
+            Console.WriteLine($"[OdysseyEventDispatcher] FindNearestWalkablePoint: No walkable point found within search radius, returning original point ({searchPoint.X:F2}, {searchPoint.Y:F2}, {searchPoint.Z:F2})");
             return searchPoint;
         }
 
@@ -535,14 +589,21 @@ namespace Andastra.Runtime.Games.Odyssey
         {
             if (area == null || entity == null)
             {
+                Console.WriteLine("[OdysseyEventDispatcher] RemoveEntityFromArea: Area or entity is null");
                 return;
             }
 
+            Console.WriteLine($"[OdysseyEventDispatcher] RemoveEntityFromArea: Removing entity {entity.Tag ?? "null"} ({entity.ObjectId}) from area {area.ResRef}");
             // Call area's RemoveEntityFromArea method
             // This is implemented in BaseArea and engine-specific subclasses
             if (area is BaseArea baseArea)
             {
                 baseArea.RemoveEntityFromArea(entity);
+                Console.WriteLine($"[OdysseyEventDispatcher] RemoveEntityFromArea: Successfully removed entity {entity.Tag ?? "null"} ({entity.ObjectId}) from area {area.ResRef}");
+            }
+            else
+            {
+                Console.WriteLine($"[OdysseyEventDispatcher] RemoveEntityFromArea: Area {area.ResRef} is not a BaseArea, cannot remove entity");
             }
         }
 
@@ -557,14 +618,21 @@ namespace Andastra.Runtime.Games.Odyssey
         {
             if (targetArea == null || entity == null)
             {
+                Console.WriteLine("[OdysseyEventDispatcher] AddEntityToTargetArea: Target area or entity is null");
                 return;
             }
 
+            Console.WriteLine($"[OdysseyEventDispatcher] AddEntityToTargetArea: Adding entity {entity.Tag ?? "null"} ({entity.ObjectId}) to area {targetArea.ResRef}");
             // Call area's AddEntityToArea method
             // This is implemented in BaseArea and engine-specific subclasses
             if (targetArea is BaseArea baseArea)
             {
                 baseArea.AddEntityToArea(entity);
+                Console.WriteLine($"[OdysseyEventDispatcher] AddEntityToTargetArea: Successfully added entity {entity.Tag ?? "null"} ({entity.ObjectId}) to area {targetArea.ResRef}");
+            }
+            else
+            {
+                Console.WriteLine($"[OdysseyEventDispatcher] AddEntityToTargetArea: Target area {targetArea.ResRef} is not a BaseArea, cannot add entity");
             }
         }
 
@@ -579,9 +647,11 @@ namespace Andastra.Runtime.Games.Odyssey
         {
             if (world == null || world.EventBus == null || entity == null || targetArea == null)
             {
+                Console.WriteLine("[OdysseyEventDispatcher] FireAreaTransitionEvents: World, EventBus, entity, or target area is null");
                 return;
             }
 
+            Console.WriteLine($"[OdysseyEventDispatcher] FireAreaTransitionEvents: Firing OnEnter script for entity {entity.Tag ?? "null"} ({entity.ObjectId}) entering area {targetArea.ResRef}");
             // Fire OnEnter script for target area
             // Based on swkotor2.exe: Area enter script execution
             // Located via string references: "OnEnter" @ 0x007bee60 (area enter script)
@@ -591,6 +661,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 string enterScript = targetRuntimeArea.GetScript(Core.Enums.ScriptEvent.OnEnter);
                 if (!string.IsNullOrEmpty(enterScript))
                 {
+                    Console.WriteLine($"[OdysseyEventDispatcher] FireAreaTransitionEvents: Area {targetArea.ResRef} has OnEnter script: {enterScript}");
                     IEntity areaEntity = world.GetEntityByTag(targetArea.ResRef, 0);
                     if (areaEntity == null)
                     {
@@ -598,9 +669,22 @@ namespace Andastra.Runtime.Games.Odyssey
                     }
                     if (areaEntity != null)
                     {
+                        Console.WriteLine($"[OdysseyEventDispatcher] FireAreaTransitionEvents: Firing OnEnter script {enterScript} on area entity {areaEntity.Tag ?? "null"} ({areaEntity.ObjectId})");
                         world.EventBus.FireScriptEvent(areaEntity, Core.Enums.ScriptEvent.OnEnter, entity);
                     }
+                    else
+                    {
+                        Console.WriteLine($"[OdysseyEventDispatcher] FireAreaTransitionEvents: Could not find area entity for {targetArea.ResRef} or {targetArea.Tag}");
+                    }
                 }
+                else
+                {
+                    Console.WriteLine($"[OdysseyEventDispatcher] FireAreaTransitionEvents: Area {targetArea.ResRef} has no OnEnter script");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"[OdysseyEventDispatcher] FireAreaTransitionEvents: Target area {targetArea.ResRef} is not a RuntimeArea, cannot fire OnEnter script");
             }
         }
 
@@ -614,6 +698,9 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </remarks>
         protected override void HandleObjectEvent(IEntity entity, int eventType)
         {
+            string eventName = GetEventName(eventType);
+            string entityInfo = entity != null ? $"{entity.Tag ?? "null"} ({entity.ObjectId})" : "null";
+            Console.WriteLine($"[OdysseyEventDispatcher] HandleObjectEvent: Handling {eventName} ({eventType}) for entity {entityInfo}");
             // TODO: Implement object event handling
             // Update door/placeable state based on event type
             // Trigger associated scripts and effects
@@ -630,6 +717,9 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </remarks>
         protected override void HandleCombatEvent(IEntity entity, int eventType)
         {
+            string eventName = GetEventName(eventType);
+            string entityInfo = entity != null ? $"{entity.Tag ?? "null"} ({entity.ObjectId})" : "null";
+            Console.WriteLine($"[OdysseyEventDispatcher] HandleCombatEvent: Handling {eventName} ({eventType}) for entity {entityInfo}");
             // TODO: Implement combat event handling
             // Update combat state
             // Trigger AI behaviors and scripts
@@ -705,6 +795,7 @@ namespace Andastra.Runtime.Games.Odyssey
         {
             if (entity == null)
             {
+                Console.WriteLine("[OdysseyEventDispatcher] HandleScriptEvent: Entity is null, aborting script event handling");
                 return;
             }
 
@@ -712,6 +803,7 @@ namespace Andastra.Runtime.Games.Odyssey
             IWorld world = entity.World;
             if (world == null || world.EventBus == null)
             {
+                Console.WriteLine($"[OdysseyEventDispatcher] HandleScriptEvent: Entity {entity.Tag ?? "null"} ({entity.ObjectId}) has no world or EventBus");
                 return;
             }
 
@@ -719,12 +811,17 @@ namespace Andastra.Runtime.Games.Odyssey
             // Based on swkotor2.exe: DispatchEvent @ 0x004dcfb0 lines 132-246
             // Maps CSWSSCRIPTEVENT_EVENTTYPE_ON_* constants to ScriptEvent enum values
             Core.Enums.ScriptEvent scriptEvent = MapEventSubtypeToScriptEvent(eventSubtype);
+            string subtypeName = GetEventSubtypeName(eventSubtype);
+            string entityInfo = $"{entity.Tag ?? "null"} ({entity.ObjectId})";
+            string sourceInfo = sourceEntity != null ? $"{sourceEntity.Tag ?? "null"} ({sourceEntity.ObjectId})" : "null";
+            Console.WriteLine($"[OdysseyEventDispatcher] HandleScriptEvent: Firing script event {scriptEvent} ({subtypeName}, subtype {eventSubtype}) on entity {entityInfo}, triggered by {sourceInfo}");
 
             // Fire script event via EventBus
             // EventBus will queue the event and process it during frame update
             // Script executor will execute the script ResRef from entity's IScriptHooksComponent
             // Source entity is passed as triggerer to script execution context
             world.EventBus.FireScriptEvent(entity, scriptEvent, sourceEntity);
+            Console.WriteLine($"[OdysseyEventDispatcher] HandleScriptEvent: Script event {scriptEvent} queued for entity {entityInfo}");
         }
 
         /// <summary>
@@ -793,6 +890,11 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </remarks>
         public override void QueueEvent(IEntity sourceEntity, IEntity targetEntity, int eventType, int eventSubtype)
         {
+            string eventName = GetEventName(eventType);
+            string subtypeName = GetEventSubtypeName(eventSubtype);
+            string sourceInfo = sourceEntity != null ? $"{sourceEntity.Tag ?? "null"} ({sourceEntity.ObjectId})" : "null";
+            string targetInfo = targetEntity != null ? $"{targetEntity.Tag ?? "null"} ({targetEntity.ObjectId})" : "null";
+            Console.WriteLine($"[OdysseyEventDispatcher] QueueEvent: Queuing event {eventName} ({eventType}) from {sourceInfo} to {targetInfo}, subtype: {subtypeName} ({eventSubtype}), queue size: {_eventQueue.Count}");
             _eventQueue.Enqueue(new PendingEvent
             {
                 SourceEntity = sourceEntity,
@@ -800,6 +902,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 EventType = eventType,
                 EventSubtype = eventSubtype
             });
+            Console.WriteLine($"[OdysseyEventDispatcher] QueueEvent: Event queued, new queue size: {_eventQueue.Count}");
         }
 
         /// <summary>
@@ -812,12 +915,22 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </remarks>
         public override void ProcessQueuedEvents()
         {
+            int queueSize = _eventQueue.Count;
+            if (queueSize == 0)
+            {
+                return;
+            }
+
+            Console.WriteLine($"[OdysseyEventDispatcher] ProcessQueuedEvents: Processing {queueSize} queued event(s)");
+            int processedCount = 0;
             while (_eventQueue.Count > 0)
             {
                 var pendingEvent = _eventQueue.Dequeue();
                 DispatchEvent(pendingEvent.SourceEntity, pendingEvent.TargetEntity,
                             pendingEvent.EventType, pendingEvent.EventSubtype);
+                processedCount++;
             }
+            Console.WriteLine($"[OdysseyEventDispatcher] ProcessQueuedEvents: Processed {processedCount} event(s), queue is now empty");
         }
     }
 }
