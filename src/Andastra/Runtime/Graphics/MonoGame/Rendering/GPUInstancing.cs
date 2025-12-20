@@ -34,10 +34,11 @@ namespace Andastra.Runtime.MonoGame.Rendering
         /// Instance data structure for GPU instancing.
         /// </summary>
         [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
-        public struct InstanceData
+        public struct InstanceData : IVertexType
         {
             /// <summary>
             /// World transformation matrix (row-major).
+            /// Matrix is stored as 4 Vector4 rows (16 floats = 64 bytes).
             /// </summary>
             public Matrix WorldMatrix;
 
@@ -50,6 +51,33 @@ namespace Andastra.Runtime.MonoGame.Rendering
             /// Additional instance-specific parameters.
             /// </summary>
             public Vector4 Parameters;
+
+            /// <summary>
+            /// Vertex declaration for instance data.
+            /// Matrix is split into 4 Vector4 elements for vertex shader input.
+            /// </summary>
+            public static readonly VertexDeclaration VertexDeclaration = new VertexDeclaration(
+                // Matrix row 0 (offset 0, 16 bytes)
+                new VertexElement(0, VertexElementFormat.Vector4, VertexElementUsage.TextureCoordinate, 1),
+                // Matrix row 1 (offset 16, 16 bytes)
+                new VertexElement(16, VertexElementFormat.Vector4, VertexElementUsage.TextureCoordinate, 2),
+                // Matrix row 2 (offset 32, 16 bytes)
+                new VertexElement(32, VertexElementFormat.Vector4, VertexElementUsage.TextureCoordinate, 3),
+                // Matrix row 3 (offset 48, 16 bytes)
+                new VertexElement(48, VertexElementFormat.Vector4, VertexElementUsage.TextureCoordinate, 4),
+                // Color (offset 64, 16 bytes)
+                new VertexElement(64, VertexElementFormat.Vector4, VertexElementUsage.Color, 1),
+                // Parameters (offset 80, 16 bytes)
+                new VertexElement(80, VertexElementFormat.Vector4, VertexElementUsage.TextureCoordinate, 5)
+            );
+
+            /// <summary>
+            /// Gets the vertex declaration for instance data.
+            /// </summary>
+            VertexDeclaration IVertexType.VertexDeclaration
+            {
+                get { return VertexDeclaration; }
+            }
         }
 
         private readonly GraphicsDevice _graphicsDevice;
@@ -197,19 +225,27 @@ namespace Andastra.Runtime.MonoGame.Rendering
                 return;
             }
 
-            // Set vertex buffer
+            // Set vertex buffers with instancing support
+            // Slot 0: Per-vertex data (instanceFrequency = 0 means per-vertex)
+            // Slot 1: Per-instance data (instanceFrequency = 1 means per-instance)
             _graphicsDevice.SetVertexBuffers(
                 new VertexBufferBinding(vertexBuffer, 0, 0),
-                new VertexBufferBinding(buffer.Buffer, 0, 1) // Instance buffer at slot 1
+                new VertexBufferBinding(buffer.Buffer, 0, 1) // Instance buffer at slot 1, instanceFrequency = 1
             );
             _graphicsDevice.Indices = indexBuffer;
 
             // Draw instanced primitives
-            // Note: MonoGame doesn't have DrawInstancedPrimitives directly,
-            // would need custom shader with instancing support
-            // TODO: PLACEHOLDER - For now, this is a placeholder structure
-            // In actual implementation, would use:
-            // _graphicsDevice.DrawInstancedPrimitives(primitiveType, 0, 0, primitiveCount, 0, buffer.InstanceCount);
+            // baseVertex: 0 (no vertex offset)
+            // startIndex: 0 (start from beginning of index buffer)
+            // primitiveCount: number of primitives per instance
+            // instanceCount: number of instances to render
+            _graphicsDevice.DrawInstancedPrimitives(
+                primitiveType,
+                0,                    // baseVertex
+                0,                    // startIndex
+                primitiveCount,       // primitiveCount per instance
+                buffer.InstanceCount  // instanceCount
+            );
         }
 
         /// <summary>
