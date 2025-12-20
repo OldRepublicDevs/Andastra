@@ -13,35 +13,60 @@ namespace Andastra.Parsing.Resource.Generics
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utc.py
     // Original: construct_utc and dismantle_utc functions
+    // Engine references: swkotor2.exe:0x005fb0f0, swkotor.exe:0x005afce0
+    // These functions load UTC template data from GFF files. Most fields use existing object values as defaults
+    // (for new objects, these would be 0, empty string, or blank ResRef).
     public static class UTCHelpers
     {
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utc.py:500-794
         // Original: def construct_utc(gff: GFF) -> UTC:
+        // Engine references: swkotor2.exe:0x005fb0f0, swkotor.exe:0x005afce0
         public static UTC ConstructUtc(GFF gff)
         {
             var utc = new UTC();
             var root = gff.Root;
 
             // Extract basic fields
+            // Engine behavior: TemplateResRef is read by the caller (FUN_005261b0 swkotor2.exe, FUN_005026d0 swkotor.exe)
+            // and used to load the UTC file. The field itself is not read in the loading function.
             utc.ResRef = root.Acquire<ResRef>("TemplateResRef", ResRef.FromBlank());
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 122-125, swkotor.exe:0x005afce0 line 117-120)
             utc.Tag = root.Acquire<string>("Tag", "");
+            // Engine default: existing value (not explicitly read in loading function, but Comment field exists)
             utc.Comment = root.Acquire<string>("Comment", "");
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 132, swkotor.exe:0x005afce0 line 127-128)
             utc.Conversation = root.Acquire<ResRef>("Conversation", ResRef.FromBlank());
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 94-101, swkotor.exe:0x005afce0 line 91-98)
             utc.FirstName = root.Acquire<LocalizedString>("FirstName", LocalizedString.FromInvalid());
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 105-112, swkotor.exe:0x005afce0 line 101-108)
             utc.LastName = root.Acquire<LocalizedString>("LastName", LocalizedString.FromInvalid());
 
             // Extract appearance and identity fields
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 166, swkotor.exe:0x005afce0 line 158)
             utc.SubraceId = root.Acquire<int>("SubraceIndex", 0);
+            // Engine default: 0xb (11) for non-PC creatures, existing value for PC (swkotor2.exe:0x005fb0f0 line 402, swkotor.exe:0x005afce0 line 346)
+            // Note: Engine uses 0xb as default when IsPC is false, but for new objects (IsPC=0), 0 is correct
             utc.PerceptionId = root.Acquire<int>("PerceptionRange", 0);
+            // Engine default: existing value, validated against max (swkotor2.exe:0x005fb0f0 line 149-158, swkotor.exe:0x005afce0 line 143-150)
             utc.RaceId = root.Acquire<int>("Race", 0);
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 366-368, swkotor.exe:0x005afce0 line 313-314)
             utc.AppearanceId = root.Acquire<int>("Appearance_Type", 0);
+            // Engine default: existing value, clamped to max 4 (swkotor2.exe:0x005fb0f0 line 141-146, swkotor.exe:0x005afce0 line 135-140)
             utc.GenderId = root.Acquire<int>("Gender", 0);
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 385-388, swkotor.exe:0x005afce0 line 332-335)
             utc.FactionId = root.Acquire<int>("FactionID", 0);
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 1028-1033, swkotor.exe:0x005afce0 line 951-956)
             utc.WalkrateId = root.Acquire<int>("WalkRate", 0);
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 247, swkotor.exe:0x005afce0 line 239)
             utc.SoundsetId = root.Acquire<int>("SoundSetFile", 0);
+            // Engine default: 0xffff (65535) - if >= 0xfffe, reads Portrait ResRef instead (swkotor2.exe:0x005fb0f0 line 305-327, swkotor.exe:0x005afce0 line 269-291)
+            // Note: For new objects, 0 is correct (engine will use Portrait ResRef if PortraitId is 0xffff)
             utc.PortraitId = root.Acquire<int>("PortraitId", 0);
+            // Engine default: existing value (not explicitly read in loading function, but PaletteID field exists)
             utc.PaletteId = root.Acquire<int>("PaletteID", 0);
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 399, swkotor.exe:0x005afce0 line 343)
             utc.BodybagId = root.Acquire<int>("BodyBag", 0);
+            // Engine default: existing value, read if PortraitId >= 0xfffe (swkotor2.exe:0x005fb0f0 line 316, swkotor.exe:0x005afce0 line 280)
             utc.PortraitResRef = root.Acquire<ResRef>("Portrait", ResRef.FromBlank());
             utc.SaveWill = root.Acquire<int>("SaveWill", 0);
             utc.SaveFortitude = root.Acquire<int>("SaveFortitude", 0);
@@ -52,44 +77,77 @@ namespace Andastra.Parsing.Resource.Generics
             utc.TextureVariation = root.Acquire<int>("TextureVar", 0);
 
             // Extract boolean flags - stored as UInt8, use GetUInt8() != 0 (matching UTW fix)
+            // Engine default: existing value, inverted (!existing) (swkotor2.exe:0x005fb0f0 line 276-278, swkotor.exe:0x005afce0 line 260-262)
+            // Note: Engine reads as bool, stores as !bool (if existing is 0, stores 1; if existing is 1, stores 0)
             utc.NotReorienting = root.GetUInt8("NotReorienting") != 0;
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 273-275, swkotor.exe:0x005afce0 line 257-259)
             utc.PartyInteract = root.GetUInt8("PartyInteract") != 0;
+            // Engine default: existing value (not explicitly read in loading function, but NoPermDeath field exists)
             utc.NoPermDeath = root.GetUInt8("NoPermDeath") != 0;
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 270-272, swkotor.exe:0x005afce0 line 254-256)
             utc.Min1Hp = root.GetUInt8("Min1HP") != 0;
+            // Engine default: existing value, fallback from Invulnerable if Plot missing (swkotor2.exe:0x005fb0f0 line 263-269, swkotor.exe:0x005afce0 line 247-253)
             utc.Plot = root.GetUInt8("Plot") != 0;
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 134-136, swkotor.exe:0x005afce0 line 129-131)
             utc.Interruptable = root.GetUInt8("Interruptable") != 0;
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 120, swkotor.exe:0x005afce0 line 115-116)
             utc.IsPc = root.GetUInt8("IsPC") != 0;
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 299-301, swkotor.exe:0x005afce0 line 263-265)
             utc.Disarmable = root.GetUInt8("Disarmable") != 0;
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 284-285, K2 only)
             utc.IgnoreCrePath = root.GetUInt8("IgnoreCrePath") != 0;
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 279-281, K2 only)
             utc.Hologram = root.GetUInt8("Hologram") != 0;
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 293-295, K2 only)
             utc.WillNotRender = root.GetUInt8("WillNotRender") != 0;
 
             // Extract stats
+            // Engine default: existing value, clamped to max 100 (swkotor2.exe:0x005fb0f0 line 328-334, swkotor.exe:0x005afce0 line 292-298)
             utc.Alignment = root.Acquire<int>("GoodEvil", 0);
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 392, swkotor.exe:0x005afce0 line 336-337)
             utc.ChallengeRating = root.Acquire<float>("ChallengeRating", 0.0f);
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 389, K2 only)
             utc.Blindspot = root.Acquire<float>("BlindSpot", 0.0f);
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 286-288, K2 only)
             utc.MultiplierSet = root.Acquire<int>("MultiplierSet", 0);
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 244, swkotor.exe:0x005afce0 line 236-238)
             utc.NaturalAc = root.Acquire<int>("NaturalAC", 0);
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 616, swkotor.exe:0x005afce0 line 550)
             utc.ReflexBonus = root.Acquire<int>("refbonus", 0);
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 612, swkotor.exe:0x005afce0 line 546)
             utc.WillpowerBonus = root.Acquire<int>("willbonus", 0);
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 614, swkotor.exe:0x005afce0 line 548)
             utc.FortitudeBonus = root.Acquire<int>("fortbonus", 0);
 
             // Extract ability scores
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 175, swkotor.exe:0x005afce0 line 167)
             utc.Strength = root.Acquire<int>("Str", 0);
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 186, swkotor.exe:0x005afce0 line 178)
             utc.Dexterity = root.Acquire<int>("Dex", 0);
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 221, swkotor.exe:0x005afce0 line 213)
             utc.Constitution = root.Acquire<int>("Con", 0);
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 197, swkotor.exe:0x005afce0 line 189)
             utc.Intelligence = root.Acquire<int>("Int", 0);
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 209, swkotor.exe:0x005afce0 line 201)
             utc.Wisdom = root.Acquire<int>("Wis", 0);
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 232, swkotor.exe:0x005afce0 line 224)
             utc.Charisma = root.Acquire<int>("Cha", 0);
 
             // Extract hit points and force points
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 801-802, swkotor.exe:0x005afce0 line 734-735)
             utc.CurrentHp = root.Acquire<int>("CurrentHitPoints", 0);
+            // Engine default: existing value (not explicitly read in loading function, but MaxHitPoints field exists)
             utc.MaxHp = root.Acquire<int>("MaxHitPoints", 0);
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 792-796, swkotor.exe:0x005afce0 line 725-729)
             utc.Hp = root.Acquire<int>("HitPoints", 0);
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 797-800, swkotor.exe:0x005afce0 line 730-733)
             utc.MaxFp = root.Acquire<int>("ForcePoints", 0);
+            // Engine default: existing value (swkotor2.exe:0x005fb0f0 line 804-806, swkotor.exe:0x005afce0 line 737-738)
             utc.Fp = root.Acquire<int>("CurrentForce", 0);
 
             // Extract script hooks
+            // Engine default: existing value (read by FUN_004ebf20 swkotor.exe, FUN_0050c510 swkotor2.exe)
+            // Script hooks are read in a separate function, but all default to existing value (blank ResRef for new objects)
             utc.OnEndDialog = root.Acquire<ResRef>("ScriptEndDialogu", ResRef.FromBlank());
             utc.OnBlocked = root.Acquire<ResRef>("ScriptOnBlocked", ResRef.FromBlank());
             utc.OnHeartbeat = root.Acquire<ResRef>("ScriptHeartbeat", ResRef.FromBlank());
