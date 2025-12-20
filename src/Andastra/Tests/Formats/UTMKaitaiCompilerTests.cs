@@ -783,9 +783,12 @@ namespace Andastra.Parsing.Tests.Formats
             // Try common locations and PATH
             string[] possiblePaths = new[]
             {
+                @"C:\Program Files (x86)\kaitai-struct-compiler\bin\kaitai-struct-compiler.bat",
                 "kaitai-struct-compiler",
                 "ksc",
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "kaitai-struct-compiler", "bin", "kaitai-struct-compiler.bat"),
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "kaitai-struct-compiler", "kaitai-struct-compiler.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "kaitai-struct-compiler", "bin", "kaitai-struct-compiler.bat"),
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "kaitai-struct-compiler", "kaitai-struct-compiler.exe"),
                 "/usr/bin/kaitai-struct-compiler",
                 "/usr/local/bin/kaitai-struct-compiler",

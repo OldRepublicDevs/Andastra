@@ -1,6 +1,6 @@
 meta:
   id: utm
-  title: "BioWare UTM (Merchant Template) File Format"
+  title: BioWare UTM (Merchant Template) File Format
   license: MIT
   endian: le
   file-extension: utm
@@ -234,7 +234,6 @@ types:
     seq:
       - id: field_type
         type: u4
-
         doc: |
           Field data type (see gff_field_type enum):
           0 = Byte (UInt8) - Used for: BuySellFlag, ID, Infinite, Dropable
@@ -275,11 +274,11 @@ types:
             Byte offset into list_indices array (relative to list_indices_offset)
     instances:
       is_simple_type:
-        value: (field_type >= 0 and field_type <= 5) or field_type == 8
-        doc: "True if field stores data inline (simple types: Byte, Char, UInt16, Int16, UInt32, Int32, Float)"
+        value: field_type >= 0 and field_type <= 5 or field_type == 8
+        doc: True if field stores data inline (simple types)
       is_complex_type:
-        value: (field_type >= 6 and field_type <= 13) or (field_type >= 16 and field_type <= 17)
-        doc: "True if field stores data in field_data section (complex types: UInt64, Int64, Double, String, ResRef, LocalizedString, Binary, Vector3, Vector4)"
+        value: field_type >= 6 and field_type <= 13 or field_type >= 16 and field_type <= 17
+        doc: True if field stores data in field_data section
       is_struct_type:
         value: field_type == 14
         doc: True if field is a nested struct
@@ -401,16 +400,16 @@ types:
 
   list_entry:
     seq:
-      - id: count
+      - id: num_struct_indices
         type: u4
         doc: |
           Number of struct indices in this list.
           For ItemList, this is the number of items in the merchant inventory.
-
+      
       - id: struct_indices
         type: u4
         repeat: expr
-        repeat-expr: count
+        repeat-expr: num_struct_indices
         doc: |
           Array of struct indices (indices into struct_array).
           For ItemList, each struct index points to an ItemList entry struct containing
@@ -425,7 +424,7 @@ types:
         doc: |
           Total size of this LocalizedString structure in bytes (not including this count).
           Used for skipping over the structure, but can be calculated from the data.
-          Format: total_size = 4 (string_ref) + 4 (string_count) + sum(substring sizes)
+          Format: total_size = 4 (string_ref) + 4 (num_substrings) + sum(substring sizes)
           Each substring: 4 (string_id) + 4 (string_length) + string_length (string_data)
 
       - id: string_ref
@@ -437,16 +436,16 @@ types:
           Language-specific substrings override this for specific languages/genders.
           For UTM, LocName uses this to reference dialog.tlk entries for merchant names.
 
-      - id: string_count
+      - id: num_substrings
         type: u4
         doc: |
           Number of language-specific string substrings.
           Typically 0 if only using string_ref, or 1-10+ for multi-language support.
-
+      
       - id: substrings
         type: localized_substring
         repeat: expr
-        repeat-expr: string_count
+        repeat-expr: num_substrings
         doc: |
           Array of language-specific string substrings.
           Each substring provides text for a specific language and gender combination.

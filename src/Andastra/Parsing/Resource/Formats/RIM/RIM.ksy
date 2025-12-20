@@ -43,12 +43,8 @@ seq:
   
   - id: resource_entry_table
     type: resource_entry_table
-    pos: header.offset_to_resource_table
+    if: header.resource_count > 0
     doc: Array of resource entries mapping ResRefs to resource data
-  
-  - id: resource_data_section
-    type: resource_data_section
-    doc: Raw binary data for all resources
 
 types:
   rim_header:
@@ -60,7 +56,6 @@ types:
         doc: |
           File type signature. Must be "RIM " (0x52 0x49 0x4D 0x20).
           This identifies the file as a RIM archive.
-        valid: "RIM "
       
       - id: file_version
         type: str
@@ -69,7 +64,6 @@ types:
         doc: |
           File format version. Always "V1.0" for KotOR RIM files.
           Other versions may exist in Neverwinter Nights but are not supported in KotOR.
-        valid: "V1.0"
       
       - id: reserved
         type: u4
@@ -99,8 +93,9 @@ types:
   rim_extended_header:
     seq:
       - id: reserved_padding
-        type: str
         size: 100
+        type: str
+        encoding: ASCII
         doc: |
           Reserved padding bytes (typically all zeros).
           Total header size is 120 bytes:
@@ -109,13 +104,6 @@ types:
           In extension RIMs (files ending in 'x'), byte 0x14 (offset 20 in extended header)
           may contain an IsExtension flag, but this is not consistently used.
     
-    instances:
-      is_extension:
-        value: reserved_padding[0] != 0
-        doc: |
-          Heuristic to detect extension RIMs.
-          Extension RIMs typically have filenames ending in 'x' (e.g., module001x.rim).
-          This flag is not consistently set in practice.
   
   resource_entry_table:
     seq:
@@ -163,19 +151,11 @@ types:
           Uncompressed size of the resource.
     
     instances:
-      resref_trimmed:
-        value: resref.rstrip("\0")
-        doc: ResRef with trailing null bytes removed
-      
       data:
         pos: offset_to_data
-        type: str
         size: resource_size
+        type: str
+        encoding: ASCII
         doc: Raw binary data for this resource (read at specified offset)
   
-  resource_data_section:
-    doc: |
-      Resource data section containing all resource data.
-      Resources are accessed via the resource_entry_table entries,
-      which contain offsets and sizes pointing to this section.
 
