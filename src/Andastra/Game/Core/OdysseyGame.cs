@@ -1091,7 +1091,10 @@ namespace Andastra.Runtime.Game.Core
 
                 // Start the game session with created character (if provided)
                 // Character creation data is passed to GameSession.StartNewGame() which creates the player entity
-                _session.StartNewGame(characterData);
+                // Based on swkotor.exe (K1) and swkotor2.exe (K2): Character generation completes, then module loads, then player entity is created
+                // Located via string references: Character generation finish() -> module load -> player entity creation
+                // Original implementation: Character data stored, module loaded, then player entity created from character data at module entry point
+                _session.StartNewGame(_characterData);
 
                 // Initialize camera after player is created
                 UpdateCamera(0.016f); // Approximate frame time for initialization
