@@ -553,6 +553,47 @@ namespace HolocronToolset.Tests.Formats
         }
 
         [Fact]
+        public void TestDlgEntryWithMultipleLevels()
+        {
+            // Matching PyKotor test_dlg_entry_with_multiple_levels
+            var entry1 = new DLGEntry { Comment = "E248" };
+            var entry2 = new DLGEntry { Comment = "E221" };
+            var entry3 = new DLGEntry { Comment = "E250" };
+
+            var reply1 = new DLGReply { Text = LocalizedString.FromEnglish("R222") };
+            var reply2 = new DLGReply { Text = LocalizedString.FromEnglish("R223") };
+            var reply3 = new DLGReply { Text = LocalizedString.FromEnglish("R249") };
+            var reply4 = new DLGReply { Text = LocalizedString.FromEnglish("R225") };
+            var reply5 = new DLGReply { Text = LocalizedString.FromEnglish("R224") };
+
+            entry1.Links.Add(new DLGLink(reply1));
+            reply1.Links.Add(new DLGLink(entry2));
+            reply1.Links.Add(new DLGLink(reply2));
+            reply2.Links.Add(new DLGLink(entry3));
+            entry3.Links.Add(new DLGLink(reply4));
+            reply4.Links.Add(new DLGLink(reply5));
+            entry2.Links.Add(new DLGLink(reply3)); // Reuse R249
+
+            var serialized = entry1.ToDict();
+            var deserializedNode = DLGNode.FromDict(serialized);
+            var deserialized = deserializedNode as DLGEntry;
+            deserialized.Should().NotBeNull();
+
+            deserialized.Comment.Should().Be(entry1.Comment);
+            deserialized.Links.Count.Should().Be(1);
+            deserialized.Links[0].Node.Text.GetString(Language.English, Gender.Male).Should().Be("R222");
+            deserialized.Links[0].Node.Links.Count.Should().Be(2);
+            deserialized.Links[0].Node.Links[0].Node.Comment.Should().Be("E221");
+            deserialized.Links[0].Node.Links[1].Node.Text.GetString(Language.English, Gender.Male).Should().Be("R223");
+            deserialized.Links[0].Node.Links[1].Node.Links.Count.Should().Be(1);
+            deserialized.Links[0].Node.Links[1].Node.Links[0].Node.Comment.Should().Be("E250");
+            deserialized.Links[0].Node.Links[1].Node.Links[0].Node.Links.Count.Should().Be(1);
+            deserialized.Links[0].Node.Links[1].Node.Links[0].Node.Links[0].Node.Text.GetString(Language.English, Gender.Male).Should().Be("R225");
+            deserialized.Links[0].Node.Links[1].Node.Links[0].Node.Links[0].Node.Links.Count.Should().Be(1);
+            deserialized.Links[0].Node.Links[1].Node.Links[0].Node.Links[0].Node.Links[0].Node.Text.GetString(Language.English, Gender.Male).Should().Be("R224");
+        }
+
+        [Fact]
         public void TestDlgReplySerializationBasic()
         {
             var reply = new DLGReply();
