@@ -12,7 +12,7 @@ namespace Andastra.Parsing.Tests.Formats
     /// <summary>
     /// Comprehensive tests for Kaitai Struct compiler functionality with PTH.ksy.
     /// Tests compilation to multiple target languages and verifies compiler output.
-    /// 
+    ///
     /// Supported languages tested (at least 12 as required):
     /// - Python, Java, JavaScript, C#, C++, Ruby, PHP, Go, Rust, Perl, Lua, Nim, Swift, VisualBasic
     /// </summary>
@@ -208,10 +208,10 @@ namespace Andastra.Parsing.Tests.Formats
             var successful = results.Where(r => r.Value.Success).ToList();
             var failed = results.Where(r => !r.Value.Success).ToList();
 
-            // At least some languages should compile successfully
+            // At least 12 languages should compile successfully (as required)
             // (We allow some failures as not all languages may be fully supported in all environments)
-            successful.Count.Should().BeGreaterThan(0,
-                $"At least one language should compile successfully. Failed: {string.Join(", ", failed.Select(f => $"{f.Key}: {f.Value.ErrorMessage}"))}");
+            successful.Count.Should().BeGreaterThanOrEqualTo(12,
+                $"At least 12 languages should compile successfully (got {successful.Count}). Failed: {string.Join(", ", failed.Select(f => $"{f.Key}: {f.Value.ErrorMessage}"))}");
 
             // Log successful compilations
             foreach (var success in successful)
