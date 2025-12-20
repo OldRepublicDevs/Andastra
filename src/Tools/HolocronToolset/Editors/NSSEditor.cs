@@ -708,15 +708,35 @@ namespace HolocronToolset.Editors
         /// <summary>
         /// Shows a dialog to go to a specific line number.
         /// </summary>
-        private void ShowGotoLine()
+        private async void ShowGotoLine()
         {
-            // TODO: Implement go to line dialog
-            // For now, use the existing GotoLine method with a default line
-            // In a full implementation, this would show an input dialog
-            if (_codeEdit != null)
+            if (_codeEdit == null)
             {
-                int currentLine = GetCurrentLineNumber();
-                GotoLine(currentLine);
+                return;
+            }
+
+            int currentLine = GetCurrentLineNumber();
+            int totalLines = GetTotalLineCount();
+
+            var dialog = new GoToLineDialog(currentLine, totalLines);
+            dialog.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            
+            // Set parent window if available
+            var parentWindow = TopLevel.GetTopLevel(this) as Window;
+            if (parentWindow != null)
+            {
+                dialog.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                await dialog.ShowDialog(parentWindow);
+            }
+            else
+            {
+                await dialog.ShowDialog(null);
+            }
+
+            int? selectedLine = dialog.GetLineNumber();
+            if (selectedLine.HasValue)
+            {
+                GotoLine(selectedLine.Value);
             }
         }
 
@@ -1639,7 +1659,7 @@ namespace HolocronToolset.Editors
 
             // Go to Line (Ctrl+G)
             var goToLineItem = new MenuItem { Header = "Go to Line...", HotKey = new KeyGesture(Key.G, KeyModifiers.Control) };
-            goToLineItem.Click += (s, e) => { /* TODO: Implement go to line dialog */ };
+            goToLineItem.Click += (s, e) => ShowGotoLine();
             contextMenu.Items.Add(goToLineItem);
 
             contextMenu.Items.Add(new Separator());

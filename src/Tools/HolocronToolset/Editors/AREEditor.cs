@@ -424,7 +424,9 @@ namespace HolocronToolset.Editors
             _dirtColor2Edit = new ColorEdit(null);
             _dirtColor3Edit = new ColorEdit(null);
             // Allow alpha in dirt colors (matching Python: self.ui.dirtColor1Edit.allow_alpha = True)
-            // Note: ColorEdit may need to support alpha - for now, just create them
+            _dirtColor1Edit.AllowAlpha = true;
+            _dirtColor2Edit.AllowAlpha = true;
+            _dirtColor3Edit.AllowAlpha = true;
             dirtColorPanel.Children.Add(_dirtColor1Edit);
             dirtColorPanel.Children.Add(_dirtColor2Edit);
             dirtColorPanel.Children.Add(_dirtColor3Edit);
@@ -2036,4 +2038,16 @@ namespace HolocronToolset.Editors
                         var msgBox = MessageBoxManager.GetMessageBoxStandard(
                             "Resource Not Found",
                             $"Script '{scriptName}' not found in installation.\n\nSearched for:\n- {scriptName}.nss\n- {scriptName}.ncs",
-                        
+                            ButtonEnum.Ok,
+                            MsBox.Avalonia.Enums.Icon.Info);
+                        msgBox.ShowAsync();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Error viewing script location '{scriptName}': {ex.Message}");
+            }
+        }
+    }
+}

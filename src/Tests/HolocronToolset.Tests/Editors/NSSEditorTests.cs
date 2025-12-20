@@ -592,10 +592,10 @@ void helper() {
                     // Update description in BookmarkData (matching Python: item.setText(1, ...))
                     string customDescription = $"Custom Description {i}";
                     bookmarkData.Description = customDescription;
-                    
+
                     // Update Header to reflect new description (matching Python behavior where column 1 is updated)
                     item.Header = $"{bookmarkData.LineNumber} - {customDescription}";
-                    
+
                     // Verify description was updated
                     bookmarkData.Description.Should().Be(customDescription, $"Bookmark {i} description should be updated");
                 }
@@ -3016,7 +3016,7 @@ int g_var = 10;
 
 void main() {
     int local = 5;
-    
+
     if (local > 0) {
         int nested = 10;
         if (nested > 5) {
@@ -3024,7 +3024,7 @@ void main() {
             local += nested;
         }
     }
-    
+
     for (int i = 0; i < 10; i++) {
         local += i;
     }
@@ -4228,14 +4228,65 @@ void helper() {
             throw new NotImplementedException("TestNssEditorFoldNestedBlocks: Fold nested blocks test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_nss_editor_breadcrumbs_no_context (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:2040-2056)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:2040-2056
         // Original: def test_nss_editor_breadcrumbs_no_context(qtbot, installation: HTInstallation): Test breadcrumbs no context
         [Fact]
         public void TestNssEditorBreadcrumbsNoContext()
         {
-            // TODO: STUB - Implement breadcrumbs no context test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:2040-2056
-            throw new NotImplementedException("TestNssEditorBreadcrumbsNoContext: Breadcrumbs no context test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            // Matching Python: editor = NSSEditor(None, installation)
+            var editor = new NSSEditor(null, installation);
+
+            // Matching Python: editor.new()
+            editor.New();
+
+            // Matching Python: script = "// Just a comment\nint global = 5;"
+            string script = "// Just a comment\nint global = 5;";
+
+            // Matching Python: editor.ui.codeEdit.setPlainText(script)
+            if (editor.CodeEdit != null)
+            {
+                editor.CodeEdit.SetPlainText(script);
+            }
+
+            // Matching Python: editor._update_breadcrumbs()
+            editor.UpdateBreadcrumbs();
+
+            // Matching Python: assert editor._breadcrumbs is not None
+            editor.Breadcrumbs.Should().NotBeNull();
+
+            // Matching Python: path = editor._breadcrumbs._path
+            // Matching Python: assert len(path) >= 0  # At least empty or filename
+            var path = editor.Breadcrumbs.Path;
+            path.Should().NotBeNull();
+            // The path should have at least 0 items (empty or filename)
+            path.Count.Should().BeGreaterThanOrEqualTo(0);
         }
 
         // TODO: STUB - Implement test_nss_editor_word_selection_no_match (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:2058-2083)

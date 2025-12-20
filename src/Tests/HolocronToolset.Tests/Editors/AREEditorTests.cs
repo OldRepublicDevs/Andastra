@@ -2159,14 +2159,99 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestAreEditorManipulateGrassProbabilitySpins: Grass probability spin boxes manipulation test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_are_editor_manipulate_dirt_colors (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:826-855)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:826-855
         // Original: def test_are_editor_manipulate_dirt_colors(qtbot: QtBot, tsl_installation: HTInstallation, test_files_dir: Path): Test manipulating dirt color fields (TSL only).
         [Fact]
         public void TestAreEditorManipulateDirtColors()
         {
-            // TODO: STUB - Implement dirt color fields manipulation test (TSL only - dirtColor1Edit, dirtColor2Edit, dirtColor3Edit)
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:826-855
-            throw new NotImplementedException("TestAreEditorManipulateDirtColors: Dirt color manipulation test not yet implemented (TSL-only features)");
+            // Get TSL installation path
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor2";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no TSL installation available
+            }
+
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            if (!System.IO.File.Exists(areFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            }
+
+            if (!System.IO.File.Exists(areFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            // Matching Python: editor = AREEditor(None, tsl_installation)
+            var editor = new AREEditor(null, installation);
+
+            // Matching Python: original_data = are_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(areFile);
+
+            // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, original_data)
+            editor.Load(areFile, "tat001", ResourceType.ARE, originalData);
+
+            // Test all three dirt colors
+            // Matching Python: dirt1_color = Color(0.5, 0.3, 0.2, 1.0)  # With alpha
+            var dirt1Color = new Color(0.5f, 0.3f, 0.2f, 1.0f);
+            // Matching Python: editor.ui.dirtColor1Edit.set_color(dirt1_color)
+            if (editor.DirtColor1Edit != null)
+            {
+                editor.DirtColor1Edit.SetColor(dirt1Color);
+            }
+            // Matching Python: data, _ = editor.build()
+            var (data, _) = editor.Build();
+            // Matching Python: modified_are = read_are(data)
+            var modifiedAre = AREHelpers.ReadAre(data);
+            // Matching Python: assert abs(modified_are.dirty_argb_1.r - dirt1_color.r) < 0.01
+            System.Math.Abs(modifiedAre.DirtyArgb1.R - dirt1Color.R).Should().BeLessThan(0.01f);
+
+            // Matching Python: dirt2_color = Color(0.4, 0.4, 0.4, 1.0)
+            var dirt2Color = new Color(0.4f, 0.4f, 0.4f, 1.0f);
+            // Matching Python: editor.ui.dirtColor2Edit.set_color(dirt2_color)
+            if (editor.DirtColor2Edit != null)
+            {
+                editor.DirtColor2Edit.SetColor(dirt2Color);
+            }
+            // Matching Python: data, _ = editor.build()
+            (data, _) = editor.Build();
+            // Matching Python: modified_are = read_are(data)
+            modifiedAre = AREHelpers.ReadAre(data);
+            // Matching Python: assert abs(modified_are.dirty_argb_2.r - dirt2_color.r) < 0.01
+            System.Math.Abs(modifiedAre.DirtyArgb2.R - dirt2Color.R).Should().BeLessThan(0.01f);
+
+            // Matching Python: dirt3_color = Color(0.2, 0.2, 0.2, 1.0)
+            var dirt3Color = new Color(0.2f, 0.2f, 0.2f, 1.0f);
+            // Matching Python: editor.ui.dirtColor3Edit.set_color(dirt3_color)
+            if (editor.DirtColor3Edit != null)
+            {
+                editor.DirtColor3Edit.SetColor(dirt3Color);
+            }
+            // Matching Python: data, _ = editor.build()
+            (data, _) = editor.Build();
+            // Matching Python: modified_are = read_are(data)
+            modifiedAre = AREHelpers.ReadAre(data);
+            // Matching Python: assert abs(modified_are.dirty_argb_3.r - dirt3_color.r) < 0.01
+            System.Math.Abs(modifiedAre.DirtyArgb3.R - dirt3Color.R).Should().BeLessThan(0.01f);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:857-885
