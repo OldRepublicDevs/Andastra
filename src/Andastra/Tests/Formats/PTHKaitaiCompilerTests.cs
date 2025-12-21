@@ -60,12 +60,45 @@ namespace Andastra.Parsing.Tests.Formats
             }
 
             // Try to find Kaitai Struct compiler
-            var kscCheck = RunCommand("kaitai-struct-compiler", "--version");
+            // Based on CI/CD requirements: Kaitai Struct compiler should be installed in CI/CD environments
+            // Check multiple locations and methods to find the compiler
+            string compilerPath = FindKaitaiCompiler();
+            if (string.IsNullOrEmpty(compilerPath))
+            {
+                // In CI/CD environments, the compiler should be installed
+                // Check for CI/CD environment variables that indicate this is a CI/CD run
+                bool isCiCd = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CI")) ||
+                              !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CONTINUOUS_INTEGRATION")) ||
+                              !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GITHUB_ACTIONS")) ||
+                              !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("JENKINS_URL")) ||
+                              !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("TRAVIS")) ||
+                              !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CIRCLECI")) ||
+                              !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("APPVEYOR")) ||
+                              !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("TEAMCITY_VERSION"));
+
+                if (isCiCd)
+                {
+                    // In CI/CD, the compiler should be available - fail the test with informative message
+                    throw new InvalidOperationException(
+                        "Kaitai Struct compiler not found in CI/CD environment. " +
+                        "Please install kaitai-struct-compiler in the CI/CD pipeline. " +
+                        "Installation instructions: https://kaitai.io/#download " +
+                        "Or set KAITAI_COMPILER_JAR environment variable to the compiler JAR path.");
+                }
+
+                // In local development, skip the test if compiler is not found
+                // This allows developers to run tests without installing the compiler
+                return;
+            }
+
+            // Verify compiler works by checking version
+            var kscCheck = RunCommand(compilerPath, "--version");
             if (kscCheck.ExitCode != 0)
             {
-                // Try with .jar extension or check if it's in PATH
-                // TODO: STUB - For now, we'll skip if not found - in CI/CD this should be installed
-                return;
+                // Compiler found but doesn't work - this is an error
+                throw new InvalidOperationException(
+                    $"Kaitai Struct compiler found at '{compilerPath}' but failed to execute. " +
+                    $"Error: {kscCheck.Error}, Output: {kscCheck.Output}");
             }
 
             kscCheck.ExitCode.Should().Be(0, "Kaitai Struct compiler should be available");
