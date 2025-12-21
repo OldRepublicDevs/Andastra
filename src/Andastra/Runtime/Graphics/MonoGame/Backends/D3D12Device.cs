@@ -192,18 +192,129 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ArgumentException("Buffer size must be greater than zero", nameof(desc));
             }
 
-            // TODO: IMPLEMENT - Create D3D12 buffer resource
-            // - Convert BufferDesc to D3D12_RESOURCE_DESC
-            // - Determine D3D12_HEAP_TYPE based on usage (DEFAULT, UPLOAD, READBACK)
-            // - Call ID3D12Device::CreateCommittedResource
-            // - Create D3D12_CPU_DESCRIPTOR_HANDLE for SRV/UAV/CBV as needed
-            // - Wrap in D3D12Buffer and return
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                // On non-Windows platforms, return a buffer with zero handle
+                // The application should use VulkanDevice for cross-platform support
+                IntPtr handle = new IntPtr(_nextResourceHandle++);
+                var buffer = new D3D12Buffer(handle, desc, IntPtr.Zero, _device);
+                _resources[handle] = buffer;
+                return buffer;
+            }
 
-            IntPtr handle = new IntPtr(_nextResourceHandle++);
-            var buffer = new D3D12Buffer(handle, desc, IntPtr.Zero, _device);
-            _resources[handle] = buffer;
+            // Determine heap type based on usage
+            // DEFAULT: GPU-accessible, best performance for GPU-only resources
+            // UPLOAD: CPU-writable, GPU-readable (for dynamic/staging buffers)
+            // READBACK: CPU-readable, GPU-writable (for reading back GPU results)
+            uint heapType = D3D12_HEAP_TYPE_DEFAULT; // Default to GPU-only heap for best performance
 
-            return buffer;
+            // Check if buffer needs CPU access for upload/staging
+            // Note: In practice, upload heaps are typically used for dynamic buffers that are updated every frame
+            // For now, we default to DEFAULT heap unless explicitly needed for staging
+            // TODO: Consider adding explicit staging flags to BufferDesc if needed
+
+            // Create heap properties
+            D3D12_HEAP_PROPERTIES heapProperties = new D3D12_HEAP_PROPERTIES
+            {
+                Type = heapType,
+                CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN,
+                MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN,
+                CreationNodeMask = 0,
+                VisibleNodeMask = 0
+            };
+
+            // Convert BufferDesc to D3D12_RESOURCE_DESC
+            D3D12_RESOURCE_DESC resourceDesc = new D3D12_RESOURCE_DESC
+            {
+                Dimension = D3D12_RESOURCE_DIMENSION_BUFFER,
+                Alignment = 0, // D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT (0 means default alignment)
+                Width = (ulong)desc.ByteSize, // Buffer size in bytes
+                Height = 1,
+                DepthOrArraySize = 1,
+                MipLevels = 1,
+                Format = 0, // DXGI_FORMAT_UNKNOWN - buffers don't use formats
+                SampleDesc = new D3D12_SAMPLE_DESC { Count = 1, Quality = 0 },
+                Layout = 0, // D3D12_TEXTURE_LAYOUT_ROW_MAJOR - not used for buffers (0 = undefined)
+                Flags = D3D12_RESOURCE_FLAG_NONE
+            };
+
+            // Add unordered access flag if buffer can be used as UAV
+            if ((desc.Usage & BufferUsageFlags.UnorderedAccess) != 0)
+            {
+                resourceDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+            }
+
+            // Determine initial resource state
+            uint initialResourceState = MapResourceStateToD3D12(desc.InitialState);
+            if (initialResourceState == 0)
+            {
+                // Default to COMMON state if no initial state specified
+                initialResourceState = D3D12_RESOURCE_STATE_COMMON;
+            }
+
+            // Allocate memory for structures
+            int heapPropertiesSize = Marshal.SizeOf(typeof(D3D12_HEAP_PROPERTIES));
+            IntPtr heapPropertiesPtr = Marshal.AllocHGlobal(heapPropertiesSize);
+            int resourceDescSize = Marshal.SizeOf(typeof(D3D12_RESOURCE_DESC));
+            IntPtr resourceDescPtr = Marshal.AllocHGlobal(resourceDescSize);
+            IntPtr resourcePtr = Marshal.AllocHGlobal(IntPtr.Size);
+
+            try
+            {
+                // Marshal structures to unmanaged memory
+                Marshal.StructureToPtr(heapProperties, heapPropertiesPtr, false);
+                Marshal.StructureToPtr(resourceDesc, resourceDescPtr, false);
+
+                // IID_ID3D12Resource
+                Guid iidResource = new Guid("696442be-a72e-4059-bc79-5b5c98040fad");
+
+                // Call CreateCommittedResource
+                int hr = CallCreateCommittedResource(
+                    _device,
+                    heapPropertiesPtr,
+                    D3D12_HEAP_FLAG_NONE,
+                    resourceDescPtr,
+                    initialResourceState,
+                    IntPtr.Zero, // pOptimizedClearValue - not needed for buffers
+                    ref iidResource,
+                    resourcePtr);
+
+                if (hr < 0)
+                {
+                    throw new InvalidOperationException($"CreateCommittedResource failed with HRESULT 0x{hr:X8}");
+                }
+
+                // Get the created resource pointer
+                IntPtr d3d12Resource = Marshal.ReadIntPtr(resourcePtr);
+                if (d3d12Resource == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("CreateCommittedResource returned null resource pointer");
+                }
+
+                // Create buffer wrapper
+                IntPtr handle = new IntPtr(_nextResourceHandle++);
+                var buffer = new D3D12Buffer(handle, desc, d3d12Resource, _device);
+                _resources[handle] = buffer;
+
+                return buffer;
+            }
+            finally
+            {
+                // Free allocated memory
+                if (heapPropertiesPtr != IntPtr.Zero)
+                {
+                    Marshal.FreeHGlobal(heapPropertiesPtr);
+                }
+                if (resourceDescPtr != IntPtr.Zero)
+                {
+                    Marshal.FreeHGlobal(resourceDescPtr);
+                }
+                if (resourcePtr != IntPtr.Zero)
+                {
+                    Marshal.FreeHGlobal(resourcePtr);
+                }
+            }
         }
 
         public ISampler CreateSampler(SamplerDesc desc)
@@ -1472,6 +1583,44 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void CreateSamplerDelegate(IntPtr device, IntPtr pDesc, IntPtr DestDescriptor);
+
+        /// <summary>
+        /// Calls ID3D12Device::CreateCommittedResource through COM vtable.
+        /// VTable index 25 for ID3D12Device.
+        /// Based on DirectX 12 Resource Creation: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createcommittedresource
+        /// </summary>
+        private unsafe int CallCreateCommittedResource(IntPtr device, IntPtr pHeapProperties, uint HeapFlags, IntPtr pDesc, uint InitialResourceState, IntPtr pOptimizedClearValue, ref Guid riidResource, IntPtr ppvResource)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return unchecked((int)0x80004001); // E_NOTIMPL - Not implemented on this platform
+            }
+
+            if (device == IntPtr.Zero || pHeapProperties == IntPtr.Zero || pDesc == IntPtr.Zero || ppvResource == IntPtr.Zero)
+            {
+                return unchecked((int)0x80070057); // E_INVALIDARG
+            }
+
+            // Get vtable pointer from device
+            IntPtr* vtable = *(IntPtr**)device;
+            if (vtable == null)
+            {
+                return unchecked((int)0x80004003); // E_POINTER
+            }
+
+            // CreateCommittedResource is at index 25 in ID3D12Device vtable
+            IntPtr methodPtr = vtable[25];
+            if (methodPtr == IntPtr.Zero)
+            {
+                return unchecked((int)0x80004002); // E_NOINTERFACE
+            }
+
+            CreateCommittedResourceDelegate createCommittedResource =
+                (CreateCommittedResourceDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CreateCommittedResourceDelegate));
+
+            return createCommittedResource(device, pHeapProperties, HeapFlags, pDesc, InitialResourceState, pOptimizedClearValue, ref riidResource, ppvResource);
+        }
 
         /// <summary>
         /// Calls ID3D12Device::CreateDescriptorHeap through COM vtable.
