@@ -154,7 +154,7 @@ namespace Andastra.Runtime.Games.Aurora
                 GFFList classList = root.GetList("ClassList");
                 if (classList != null)
                 {
-                    var classes = new List<BaseCreatureClass>();
+                    var classes = new List<Components.AuroraCreatureClass>();
                     for (int i = 0; i < classList.Count; i++)
                     {
                         GFFStruct classStruct = classList[i];
@@ -162,7 +162,7 @@ namespace Andastra.Runtime.Games.Aurora
                         {
                             int classId = GetIntField(classStruct, "Class", 0);
                             int classLevel = GetIntField(classStruct, "ClassLevel", 1);
-                            classes.Add(new BaseCreatureClass { ClassId = classId, Level = classLevel });
+                            classes.Add(new Components.AuroraCreatureClass { ClassId = classId, Level = classLevel });
                         }
                     }
                     entity.SetData("ClassList", classes);
@@ -248,7 +248,7 @@ namespace Andastra.Runtime.Games.Aurora
                 }
 
                 // Load class list
-                if (entity.GetData("ClassList") is List<BaseCreatureClass> classes)
+                if (entity.GetData("ClassList") is List<Components.AuroraCreatureClass> classes)
                 {
                     creatureComponent.ClassList = classes;
                 }
