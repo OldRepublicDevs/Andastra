@@ -3299,7 +3299,7 @@ namespace HolocronToolset.Tests.Editors
             // Matching Python: editor.ui.delaySpin.setValue(editor.ui.delaySpin.maximum())
             if (editor.DelaySpin != null)
             {
-                decimal maxDelay = editor.DelaySpin.Maximum ?? (decimal)int.MaxValue;
+                decimal maxDelay = editor.DelaySpin.Maximum;
                 editor.DelaySpin.Value = maxDelay;
 
                 // Matching Python: editor.on_node_update()
@@ -3836,14 +3836,95 @@ namespace HolocronToolset.Tests.Editors
             }
         }
 
-        // TODO: STUB - Implement test_dlg_editor_manipulate_condition1_not_roundtrip (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2530-2563)
+        // Matching PyKotor implementation: test_dlg_editor_manipulate_condition1_not_roundtrip (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2530-2563)
         // Original: def test_dlg_editor_manipulate_condition1_not_roundtrip(qtbot, installation: HTInstallation, test_files_dir: Path): Test condition1 not roundtrip
         [Fact]
         public void TestDlgEditorManipulateCondition1NotRoundtrip()
         {
-            // TODO: STUB - Implement condition1 not roundtrip test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2530-2563
-            throw new NotImplementedException("TestDlgEditorManipulateCondition1NotRoundtrip: Condition1 not roundtrip test not yet implemented");
+            // Get test files directory
+            // Matching PyKotor implementation: dlg_file = test_files_dir / "ORIHA.dlg"
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Try to find ORIHA.dlg
+            string dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            }
+
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Skip if test file not available (matching Python pytest.skip behavior)
+                // Matching PyKotor implementation: if not dlg_file.exists(): pytest.skip("ORIHA.dlg not found")
+                return;
+            }
+
+            // Matching Python: editor = DLGEditor(None, installation)
+            var installation = CreateTestInstallation();
+            var editor = new DLGEditor(null, installation);
+            editor.Show();
+
+            // Matching Python: original_data = dlg_file.read_bytes()
+            // Matching Python: editor.load(dlg_file, "ORIHA", ResourceType.DLG, original_data)
+            byte[] originalData = System.IO.File.ReadAllBytes(dlgFile);
+            editor.Load(dlgFile, "ORIHA", ResourceType.DLG, originalData);
+
+            // Matching Python: if editor.model.rowCount() > 0:
+            if (editor.Model.RowCount > 0)
+            {
+                // Matching Python: first_item = editor.model.item(0, 0)
+                var firstItem = editor.Model.Item(0, 0);
+                // Matching Python: if isinstance(first_item, DLGStandardItem):
+                if (firstItem != null && firstItem is DLGStandardItem)
+                {
+                    // Matching Python: editor.ui.dialogTree.setCurrentIndex(first_item.index())
+                    var treeItem = new Avalonia.Controls.TreeViewItem { Tag = firstItem };
+                    editor.DialogTree.SelectedItem = treeItem;
+
+                    // Matching Python: editor.ui.condition1NotCheckbox.setChecked(True)
+                    if (editor.Condition1NotCheckbox != null)
+                    {
+                        editor.Condition1NotCheckbox.IsChecked = true;
+                    }
+                    // Matching Python: editor.on_node_update()
+                    editor.OnNodeUpdate();
+
+                    // Matching Python: data, _ = editor.build()
+                    var (data, _) = editor.Build();
+                    // Matching Python: modified_dlg = read_dlg(data)
+                    var modifiedDlg = DLGHelper.ReadDlg(data);
+                    // Matching Python: if modified_dlg.starters:
+                    if (modifiedDlg.Starters != null && modifiedDlg.Starters.Count > 0)
+                    {
+                        // Matching Python: assert modified_dlg.starters[0].active1_not
+                        modifiedDlg.Starters[0].Active1Not.Should().BeTrue("Active1Not should be true when checkbox is checked");
+
+                        // Matching Python: editor.ui.condition1NotCheckbox.setChecked(False)
+                        if (editor.Condition1NotCheckbox != null)
+                        {
+                            editor.Condition1NotCheckbox.IsChecked = false;
+                        }
+                        // Matching Python: editor.on_node_update()
+                        editor.OnNodeUpdate();
+                        // Matching Python: data, _ = editor.build()
+                        var (data2, _) = editor.Build();
+                        // Matching Python: modified_dlg = read_dlg(data)
+                        var modifiedDlg2 = DLGHelper.ReadDlg(data2);
+                        // Matching Python: if modified_dlg.starters:
+                        if (modifiedDlg2.Starters != null && modifiedDlg2.Starters.Count > 0)
+                        {
+                            // Matching Python: assert not modified_dlg.starters[0].active1_not
+                            modifiedDlg2.Starters[0].Active1Not.Should().BeFalse("Active1Not should be false when checkbox is unchecked");
+                        }
+                    }
+                }
+            }
         }
 
         // TODO: STUB - Implement test_dlg_editor_manipulate_emotion_roundtrip (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2565-2592)
