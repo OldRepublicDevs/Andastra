@@ -568,47 +568,272 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
         /// <summary>
         /// Reads texture data to CPU memory.
+        /// Implements proper texture readback using Stride's GetData API.
+        /// This is expensive and should only be used as CPU fallback when GPU shaders are not available.
         /// </summary>
         private Vector4[] ReadTextureData(Texture texture)
         {
-            if (texture == null) return null;
+            if (texture == null || _graphicsDevice == null)
+            {
+                return null;
+            }
 
-            int size = texture.Width * texture.Height;
-            var data = new Vector4[size];
+            try
+            {
+                int width = texture.Width;
+                int height = texture.Height;
+                int size = width * height;
+                var data = new Vector4[size];
 
-            // In Stride, texture readback requires CommandList
-            // For CPU fallback, we would need to:
-            // 1. Create a staging texture
-            // 2. Copy from GPU texture to staging
-            // 3. Map staging texture and read data
-            // 
-            // This is expensive and should only be used as fallback.
-            // The proper implementation should use GPU shaders.
-            //
-            // TODO: Implement proper texture readback if CPU fallback is needed
-            // For now, return zero-initialized data as placeholder
+                // Get ImmediateContext (CommandList) from GraphicsDevice
+                var commandList = _graphicsDevice.ImmediateContext;
+                if (commandList == null)
+                {
+                    Console.WriteLine("[StrideSSR] ReadTextureData: ImmediateContext not available");
+                    return data; // Return zero-initialized data
+                }
 
-            return data;
+                // Handle different texture formats
+                PixelFormat format = texture.Format;
+                
+                // For color textures (RGBA formats), use Color array
+                if (format == PixelFormat.R8G8B8A8_UNorm || 
+                    format == PixelFormat.R8G8B8A8_UNorm_SRgb ||
+                    format == PixelFormat.R32G32B32A32_Float ||
+                    format == PixelFormat.R16G16B16A16_Float ||
+                    format == PixelFormat.B8G8R8A8_UNorm ||
+                    format == PixelFormat.B8G8R8A8_UNorm_SRgb)
+                {
+                    // Read as Color array (Stride's standard format)
+                    var colorData = new Stride.Core.Mathematics.Color[size];
+                    texture.GetData(commandList, colorData);
+
+                    // Convert Color[] to Vector4[]
+                    for (int i = 0; i < size; i++)
+                    {
+                        var color = colorData[i];
+                        data[i] = new Vector4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
+                    }
+                }
+                // For depth textures, read as float array
+                else if (format == PixelFormat.D32_Float || 
+                         format == PixelFormat.D24_UNorm_S8_UInt ||
+                         format == PixelFormat.D16_UNorm ||
+                         format == PixelFormat.R32_Float)
+                {
+                    // For depth textures, read as float array
+                    var floatData = new float[size];
+                    texture.GetData(commandList, floatData);
+
+                    // Convert float[] to Vector4[] (depth in X, others zero)
+                    for (int i = 0; i < size; i++)
+                    {
+                        data[i] = new Vector4(floatData[i], 0.0f, 0.0f, 1.0f);
+                    }
+                }
+                // For single-channel formats, read as byte array and convert
+                else if (format == PixelFormat.R8_UNorm || format == PixelFormat.A8_UNorm)
+                {
+                    var byteData = new byte[size];
+                    texture.GetData(commandList, byteData);
+
+                    // Convert byte[] to Vector4[] (single channel in X, others zero)
+                    for (int i = 0; i < size; i++)
+                    {
+                        float value = byteData[i] / 255.0f;
+                        data[i] = new Vector4(value, 0.0f, 0.0f, 1.0f);
+                    }
+                }
+                // For HDR formats (R32G32B32A32_Float), read directly as Vector4
+                else if (format == PixelFormat.R32G32B32A32_Float)
+                {
+                    // Try to read as Vector4 array directly
+                    var vectorData = new Stride.Core.Mathematics.Vector4[size];
+                    texture.GetData(commandList, vectorData);
+
+                    // Convert Stride Vector4 to System.Numerics Vector4
+                    for (int i = 0; i < size; i++)
+                    {
+                        var v = vectorData[i];
+                        data[i] = new Vector4(v.X, v.Y, v.Z, v.W);
+                    }
+                }
+                else
+                {
+                    // Fallback: Try to read as Color array for unknown formats
+                    Console.WriteLine($"[StrideSSR] ReadTextureData: Unsupported format {format}, attempting Color readback");
+                    try
+                    {
+                        var colorData = new Stride.Core.Mathematics.Color[size];
+                        texture.GetData(commandList, colorData);
+
+                        for (int i = 0; i < size; i++)
+                        {
+                            var color = colorData[i];
+                            data[i] = new Vector4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[StrideSSR] ReadTextureData: Failed to read texture data: {ex.Message}");
+                        // Return zero-initialized data on failure
+                    }
+                }
+
+                return data;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StrideSSR] ReadTextureData: Exception during texture readback: {ex.Message}");
+                // Return zero-initialized data on failure
+                return new Vector4[texture.Width * texture.Height];
+            }
         }
 
         /// <summary>
         /// Writes texture data from CPU memory to GPU texture.
+        /// Implements proper texture upload using Stride's SetData API.
+        /// This is expensive and should only be used as CPU fallback when GPU shaders are not available.
         /// </summary>
         private void WriteTextureData(Texture texture, Vector4[] data, int width, int height)
         {
-            if (texture == null || data == null) return;
+            if (texture == null || data == null || _graphicsDevice == null)
+            {
+                return;
+            }
 
-            // In Stride, texture upload requires CommandList
-            // For CPU fallback, we would need to:
-            // 1. Map the texture for writing
-            // 2. Write the data
-            // 3. Unmap the texture
-            //
-            // This is expensive and should only be used as fallback.
-            // The proper implementation should use GPU shaders.
-            //
-            // TODO: Implement proper texture upload if CPU fallback is needed
-            // For now, this is a no-op placeholder
+            try
+            {
+                // Validate dimensions
+                if (texture.Width != width || texture.Height != height)
+                {
+                    Console.WriteLine($"[StrideSSR] WriteTextureData: Texture dimensions mismatch. Texture: {texture.Width}x{texture.Height}, Data: {width}x{height}");
+                    return;
+                }
+
+                int size = width * height;
+                if (data.Length < size)
+                {
+                    Console.WriteLine($"[StrideSSR] WriteTextureData: Data array too small. Expected: {size}, Got: {data.Length}");
+                    return;
+                }
+
+                // Get ImmediateContext (CommandList) from GraphicsDevice
+                var commandList = _graphicsDevice.ImmediateContext;
+                if (commandList == null)
+                {
+                    Console.WriteLine("[StrideSSR] WriteTextureData: ImmediateContext not available");
+                    return;
+                }
+
+                // Handle different texture formats
+                PixelFormat format = texture.Format;
+
+                // For color textures (RGBA formats), convert Vector4[] to Color[]
+                if (format == PixelFormat.R8G8B8A8_UNorm || 
+                    format == PixelFormat.R8G8B8A8_UNorm_SRgb ||
+                    format == PixelFormat.B8G8R8A8_UNorm ||
+                    format == PixelFormat.B8G8R8A8_UNorm_SRgb)
+                {
+                    var colorData = new Stride.Core.Mathematics.Color[size];
+                    
+                    // Convert Vector4[] to Color[] (clamp to [0,1] and convert to [0,255])
+                    for (int i = 0; i < size; i++)
+                    {
+                        var v = data[i];
+                        // Clamp values to [0,1] range
+                        float r = Math.Max(0.0f, Math.Min(1.0f, v.X));
+                        float g = Math.Max(0.0f, Math.Min(1.0f, v.Y));
+                        float b = Math.Max(0.0f, Math.Min(1.0f, v.Z));
+                        float a = Math.Max(0.0f, Math.Min(1.0f, v.W));
+                        
+                        colorData[i] = new Stride.Core.Mathematics.Color(
+                            (byte)(r * 255.0f),
+                            (byte)(g * 255.0f),
+                            (byte)(b * 255.0f),
+                            (byte)(a * 255.0f));
+                    }
+                    
+                    texture.SetData(commandList, colorData);
+                }
+                // For HDR formats (R32G32B32A32_Float), write directly as Vector4
+                else if (format == PixelFormat.R32G32B32A32_Float ||
+                         format == PixelFormat.R16G16B16A16_Float)
+                {
+                    var vectorData = new Stride.Core.Mathematics.Vector4[size];
+                    
+                    // Convert System.Numerics.Vector4[] to Stride.Core.Mathematics.Vector4[]
+                    for (int i = 0; i < size; i++)
+                    {
+                        var v = data[i];
+                        vectorData[i] = new Stride.Core.Mathematics.Vector4(v.X, v.Y, v.Z, v.W);
+                    }
+                    
+                    texture.SetData(commandList, vectorData);
+                }
+                // For depth textures, extract depth channel
+                else if (format == PixelFormat.D32_Float || 
+                         format == PixelFormat.R32_Float)
+                {
+                    var floatData = new float[size];
+                    
+                    // Extract X component (depth) from Vector4
+                    for (int i = 0; i < size; i++)
+                    {
+                        floatData[i] = data[i].X;
+                    }
+                    
+                    texture.SetData(commandList, floatData);
+                }
+                // For single-channel formats, extract single channel
+                else if (format == PixelFormat.R8_UNorm || format == PixelFormat.A8_UNorm)
+                {
+                    var byteData = new byte[size];
+                    
+                    // Extract X component and convert to byte
+                    for (int i = 0; i < size; i++)
+                    {
+                        float value = Math.Max(0.0f, Math.Min(1.0f, data[i].X));
+                        byteData[i] = (byte)(value * 255.0f);
+                    }
+                    
+                    texture.SetData(commandList, byteData);
+                }
+                else
+                {
+                    // Fallback: Try to write as Color array for unknown formats
+                    Console.WriteLine($"[StrideSSR] WriteTextureData: Unsupported format {format}, attempting Color upload");
+                    try
+                    {
+                        var colorData = new Stride.Core.Mathematics.Color[size];
+                        
+                        for (int i = 0; i < size; i++)
+                        {
+                            var v = data[i];
+                            float r = Math.Max(0.0f, Math.Min(1.0f, v.X));
+                            float g = Math.Max(0.0f, Math.Min(1.0f, v.Y));
+                            float b = Math.Max(0.0f, Math.Min(1.0f, v.Z));
+                            float a = Math.Max(0.0f, Math.Min(1.0f, v.W));
+                            
+                            colorData[i] = new Stride.Core.Mathematics.Color(
+                                (byte)(r * 255.0f),
+                                (byte)(g * 255.0f),
+                                (byte)(b * 255.0f),
+                                (byte)(a * 255.0f));
+                        }
+                        
+                        texture.SetData(commandList, colorData);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[StrideSSR] WriteTextureData: Failed to write texture data: {ex.Message}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StrideSSR] WriteTextureData: Exception during texture upload: {ex.Message}");
+            }
         }
 
         /// <summary>
