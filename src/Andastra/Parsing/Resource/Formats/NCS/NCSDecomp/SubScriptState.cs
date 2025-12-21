@@ -711,16 +711,36 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                 Node dest = this.nodedata.GetDestination(node);
                 // For JZ instructions, try to get conditional expression (matching non-JZ case behavior)
                 // Use forceOneOnly=true to match non-JZ conditional jump handling at line 595
-                // Try to get AConditionalExp first, similar to non-JZ case
                 ScriptNode.AExpression condExp = this.RemoveLastExp(true);
-                // If we got a conditional expression, use it; if not, try to extract from expression statement
-                // This matches the pattern used for non-JZ conditional jumps
-                if (!(condExp is AConditionalExp) && condExp != null)
+                
+                // If we didn't get a conditional expression, try to find one in the children
+                // This handles cases where stack operations (CPDOWNSP/CPTOPSP) might have interfered
+                if (!(condExp is AConditionalExp) && this.current.HasChildren())
                 {
-                    // If we didn't get a conditional expression, it might be wrapped or the wrong expression
-                    // Try removing one more time with different parameters, or use what we have
-                    // TODO: Investigate why conditional expression is not found for JZ instructions
+                    // Search backwards through children to find a conditional expression
+                    List<ScriptNode.ScriptNode> children = this.current.GetChildren();
+                    for (int i = children.Count - 1; i >= 0; i--)
+                    {
+                        ScriptNode.ScriptNode child = children[i];
+                        if (child is AConditionalExp conditionalExp)
+                        {
+                            // Found a conditional expression - remove it and use it
+                            this.current.RemoveChild(i);
+                            condExp = conditionalExp;
+                            break;
+                        }
+                        else if (child is ScriptNode.AExpressionStatement expStmt && expStmt.GetExp() is AConditionalExp conditionalExpFromStmt)
+                        {
+                            // Found conditional expression in an expression statement
+                            this.current.RemoveChild(i);
+                            conditionalExpFromStmt.Parent(null);
+                            condExp = conditionalExpFromStmt;
+                            break;
+                        }
+                    }
                 }
+                
+                // If still no conditional expression found, use what we have (might be a placeholder)
                 AIf aif = new AIf(this.SafeGetPos(node), this.SafeGetPos(dest) - 6, condExp);
                 this.current.AddChild(aif);
                 this.current = aif;
