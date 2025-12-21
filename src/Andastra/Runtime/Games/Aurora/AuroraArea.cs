@@ -1553,7 +1553,8 @@ namespace Andastra.Runtime.Games.Aurora
                 {
                     // No tiles - create empty navigation mesh with correct dimensions
                     AuroraTile[,] emptyTiles = new AuroraTile[height, width];
-                    _navigationMesh = new AuroraNavigationMesh(emptyTiles, width, height);
+                    string tilesetResRef = _tileset != null && !_tileset.IsBlank ? _tileset.ToString() : null;
+                    _navigationMesh = new AuroraNavigationMesh(emptyTiles, width, height, _tilesetLoader, tilesetResRef);
                     return;
                 }
 
@@ -1701,7 +1702,9 @@ namespace Andastra.Runtime.Games.Aurora
 
                 // Create AuroraNavigationMesh from parsed tile data
                 // Based on nwmain.exe: CNWSArea tile storage structure
-                _navigationMesh = new AuroraNavigationMesh(tiles, width, height);
+                // Pass tileset loader and tileset resref for walkmesh-based height sampling
+                string tilesetResRef = _tileset != null && !_tileset.IsBlank ? _tileset.ToString() : null;
+                _navigationMesh = new AuroraNavigationMesh(tiles, width, height, _tilesetLoader, tilesetResRef);
             }
             catch (Exception)
             {
