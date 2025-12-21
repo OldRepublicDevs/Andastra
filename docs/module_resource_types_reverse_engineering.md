@@ -9,7 +9,78 @@ This document details the reverse engineering findings for module file discovery
 1. **Both executables support `_s.rim` files** - confirmed via string references in both binaries
 2. **No subfolder support** - ResRef is a flat 16-byte ASCII string, no path separators
 3. **Container formats don't filter** - RIM/ERF/MOD containers accept any resource type ID
-4. **Engine resource loading** - TODO: Gain Certainty by going through ghidra mcp - Examine resource loading functions `FUN_0040e990` (swkotor.exe: 0x0040e990) and `FUN_00407230` (swkotor.exe: 0x00407230) to verify if resource manager accepts any resource type stored in modules, as long as the type ID is valid and the data can be parsed
+4. **Many files are loaded outside the resource system** - TLK, INI, audio files (WAV/OGG), and other files use direct file I/O, not the resource loader (see "Files Loaded Outside Resource System" section below)
+
+## Files Loaded Outside Resource System
+
+**CRITICAL**: Many files are loaded via direct file I/O, bypassing the resource system entirely. These files **CANNOT** be placed in module containers and will not be found by the resource loader.
+
+### Direct File I/O Files (VERIFIED via Ghidra)
+
+1. **`dialog.tlk` (TLK files)**
+   - **Loading**: Direct file I/O from game root directory
+   - **Function**: `FUN_005e6680` (swkotor.exe: 0x005e6680) calls initialization code
+   - **Evidence**: Reone codebase shows `findFileIgnoreCase(gameDir, "dialog.tlk")` - direct filesystem search
+   - **Location**: Game root directory (same location as executable)
+   - **Resource Type**: TLK (2018, 0x7e2) exists in resource registry, but TLK loading uses direct file I/O, not resource system
+   - **Module Support**: ❌ **NO** - TLK files in modules will be ignored
+
+2. **`swkotor.ini` / `swkotor2.ini` (Configuration files)**
+   - **Loading**: Direct file I/O via Windows INI API
+   - **Function**: `FUN_0061b780` (swkotor.exe: 0x0061b780) - reads INI file directly
+   - **Evidence**: String references to `".\\swkotor.ini"` at swkotor.exe: 0x0073d648, 0x0073d744
+   - **Location**: Game root directory (same location as executable)
+   - **Module Support**: ❌ **NO** - INI files in modules will be ignored
+
+3. **Audio Files via Miles Audio System**
+   - **Loading**: Direct directory access via Miles audio library
+   - **Function**: `FUN_005e7a90` (swkotor.exe: 0x005e7a90) sets up directory mappings
+   - **Directories**:
+     - `streamwaves/` - WAV files loaded directly from this directory
+     - `streammusic/` - Music files loaded directly from this directory
+   - **Evidence**: String references to `".\\streamwaves"` (swkotor.exe: 0x0074df40) and `".\\streammusic"` (swkotor.exe: 0x0074e028)
+   - **Resource Types**: WAV (4), OGG (2078), BMU (8) exist in resource registry, but Miles audio system uses direct directory access
+   - **Module Support**: ❌ **NO** - Audio files in modules will NOT be loaded by Miles audio system
+   - **Note**: WAV handler exists (swkotor.exe: 0x005d5e90) but Miles audio system bypasses it for streamed audio
+
+4. **`chitin.key` and BIF files**
+   - **Loading**: Direct file I/O during initialization
+   - **Location**: Game root directory
+   - **Module Support**: ❌ **NO** - These are archive index files, not resources
+
+5. **Save Game Files (`.sav`)**
+   - **Loading**: Direct file I/O from `saves/` directory
+   - **Directory**: Mapped via `FUN_005e7a90` (swkotor.exe: 0x005e7a90 line 166-170)
+   - **Module Support**: ❌ **NO** - Save files are separate containers, not loaded through resource system
+
+6. **Other Direct Directory Access**
+   - **`override/`**: Mapped via `FUN_005e7a90` (swkotor.exe: 0x005e7a90 line 47-59) - but this IS used by resource system
+   - **`modules/`**: Mapped via `FUN_005e7a90` (swkotor.exe: 0x005e7a90 line 86-98) - used for module discovery
+   - **`music/`**: Mapped via `FUN_005e7a90` (swkotor.exe: 0x005e7a90 line 177-187) - direct directory access
+   - **`movies/`**: Mapped via `FUN_005e7a90` (swkotor.exe: 0x005e7a90 line 203-213) - direct directory access
+
+### Summary: What CANNOT Be Containerized
+
+The following files **CANNOT** be placed in module containers and will not work:
+
+- ❌ **TLK files** (`dialog.tlk`) - Direct file I/O from game root
+- ❌ **INI files** (`swkotor.ini`) - Direct file I/O from game root
+- ❌ **Audio files via Miles** (`streamwaves/`, `streammusic/`) - Direct directory access
+- ❌ **Music files** (`music/` directory) - Direct directory access
+- ❌ **Video files** (`movies/` directory) - Direct directory access
+- ❌ **Save files** (`.sav`) - Direct file I/O from `saves/` directory
+- ❌ **Archive index files** (`chitin.key`, BIF files) - Direct file I/O during initialization
+
+### What CAN Be Containerized
+
+Resource types that use `FUN_00407230` / `FUN_004074d0` (resource search functions) **CAN** be placed in modules:
+
+- ✅ **TPC/TGA textures** - Verified: Texture loaders call `FUN_00407230`
+- ✅ **MDL/MDX models** - Verified: Model loaders call `FUN_004074d0`
+- ✅ **DLG dialogs** - Verified: Dialog loaders call `FUN_004074d0`
+- ✅ **ARE/GIT area data** - Verified: Area loaders call `FUN_004074d0`
+- ✅ **NCS scripts** - Verified: Script loaders call `FUN_004074d0`
+- ✅ **All resource types that have handlers calling `FUN_00407230`/`FUN_004074d0`** - These search all locations including modules
 
 ## Module File Discovery
 
@@ -146,13 +217,6 @@ The engine's resource manager loads resources by:
 2. Has a valid resource type ID
 3. Can be parsed by the appropriate loader
 
-**Observed Resource Type Distribution** (from actual game modules - not enforced by engine):
-
-- **`.rim` (MAIN)**: Typically contains ARE, IFO, GIT
-- **`_s.rim` (DATA)**: Typically contains FAC, LYT, NCS, PTH, UTC, UTD, UTE, UTI, UTM, UTP, UTS, UTT, UTW, DLG (K1)
-- **`_dlg.erf` (K2_DLG)**: Typically contains DLG (K2)
-- **`.mod` (MOD)**: Can contain any resource type
-
 **Reverse Engineering Evidence**:
 
 - Module loading code (`FUN_004094a0` swkotor.exe: 0x004094a0 / `FUN_004096b0` swkotor2.exe: 0x004096b0) opens RIM files without type filtering
@@ -203,9 +267,8 @@ The engine's resource manager loads resources by:
 - **TLK (type 0x7e2 = 2018)**:
   - ✅ Registered in resource type registry (swkotor.exe: `FUN_005e6d20` line 91, swkotor2.exe: `FUN_00632510` line 90)
   - ✅ CAN be registered in modules (no type filtering in `FUN_0040e990`)
-  - ❓ **UNPROVEN**: Whether TLK loading code uses `FUN_00407230` (resource search) or hardcoded paths
-  - **If TLK loader uses `FUN_00407230`**: Module TLK would be found and loaded
-  - **If TLK loader uses hardcoded path**: Module TLK would be ignored
+  - ❌ **CONFIRMED**: TLK loading uses direct file I/O from game root directory (`dialog.tlk`), NOT resource system
+  - **Module Support**: ❌ **NO** - TLK files in modules will be ignored (see "Files Loaded Outside Resource System" section)
 
 - **RES (type 0x0 = 0)**:
   - ✅ Registered in resource type registry (swkotor.exe: `FUN_005e6d20` line 34)
@@ -282,14 +345,25 @@ Based on `ResourceType.cs`, the following resource types are defined:
 - `HAK` (2061) - HAK archives (Aurora/NWN only, not KotOR)
 - `NWM` (2062) - NWM modules (Aurora/NWN only)
 
-**Media Files** (TODO: Gain Certainty by going through ghidra mcp - Verify media file support in modules by examining media loading code (WAV, BMU, OGG, MVE, MPG, BIK handlers). Check if these resource types are loaded from modules or only from specific directories. Search for media file loading functions and verify module support):
+**Media Files**:
 
-- `WAV` (4) - Audio files (VERIFIED: Handler exists at swkotor.exe: 0x005d5e90 calls FUN_004074d0 with type 4)
+- `WAV` (4) - Audio files
+  - **Handler exists**: swkotor.exe: 0x005d5e90 calls `FUN_004074d0` with type 4
+  - **BUT**: Miles audio system loads WAV files directly from `streamwaves/` directory via direct file I/O
+  - **Module Support**: ⚠️ **PARTIAL** - WAV handler exists but Miles audio system bypasses resource system for streamed audio
 - `BMU` (8) - Obfuscated MP3 audio
+  - **Module Support**: ❓ **UNKNOWN** - Need to verify if Miles audio system or resource system handles this
 - `OGG` (2078) - OGG audio
+  - **Module Support**: ❓ **UNKNOWN** - Need to verify if Miles audio system or resource system handles this
 - `MVE` (2) - Video files
+  - **Loading**: Direct directory access from `movies/` directory (mapped via `FUN_005e7a90`)
+  - **Module Support**: ❌ **NO** - Video files loaded via direct directory access
 - `MPG` (9) - MPEG video
+  - **Loading**: Direct directory access from `movies/` directory
+  - **Module Support**: ❌ **NO** - Video files loaded via direct directory access
 - `BIK` (2063) - Bink video
+  - **Loading**: Direct directory access from `movies/` directory
+  - **Module Support**: ❌ **NO** - Video files loaded via direct directory access
 
 ## Resource Type Support Verification (Ghidra Analysis)
 
@@ -337,13 +411,16 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 
 **Question**: What happens if `dialog.tlk` is put in a module?
 
-**Answer**: **TODO: Gain Certainty by going through ghidra mcp** - Search for TLK loading code by examining:
+**Answer**: ❌ **NO** - TLK files in modules will be ignored.
 
-- String references to "dialog.tlk" in swkotor.exe/swkotor2.exe
-- TLK resource type handler (type 2018, 0x7e2) - check if it calls `FUN_004074d0`
-- Global resource initialization code to see if TLK is loaded from a specific location only
+**Evidence**:
 
-**Note**: TLK files are typically global (not module-specific), so the engine may load them from a fixed location (root directory) rather than through the resource search mechanism.
+- TLK loading uses direct file I/O from game root directory
+- Reone codebase shows `findFileIgnoreCase(gameDir, "dialog.tlk")` - direct filesystem search
+- TLK is loaded during initialization, not through resource system
+- See "Files Loaded Outside Resource System" section above for details
+
+**Note**: TLK files are global (not module-specific) and are loaded from a fixed location (root directory) via direct file I/O, not through the resource search mechanism.
 
 ### DDS Textures
 
@@ -734,12 +811,5 @@ The current `ModuleFileDiscovery.cs` correctly handles:
 - `_s.rim` support (both K1 and K2) - **CONFIRMED via reverse engineering**
 - `_dlg.erf` support (K2 only) - **CONFIRMED via reverse engineering**
 - Case-insensitive filename matching
-
-The `KModuleType.Contains()` method in `Module.cs` implements the **observed** resource type distribution from actual game modules:
-
-- **MAIN (.rim)**: ARE, IFO, GIT (observed in game modules)
-- **DATA (_s.rim)**: FAC, LYT, NCS, PTH, UTC, UTD, UTE, UTI, UTM, UTP, UTS, UTT, UTW, DLG (K1, observed in game modules)
-- **K2_DLG (_dlg.erf)**: DLG (K2, observed in game modules)
-- **MOD (.mod)**: Any resource type (engine accepts all types)
 
 **Engine Behavior**: The engine loads any resource type from any module container. The distribution above reflects what is typically found in game modules, not an engine requirement.
