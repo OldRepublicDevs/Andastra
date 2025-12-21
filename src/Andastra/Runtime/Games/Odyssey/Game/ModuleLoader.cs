@@ -7,6 +7,7 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Module;
 using Andastra.Runtime.Core.Navigation;
+using Andastra.Runtime.Core.Save;
 using Andastra.Parsing;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
@@ -909,6 +910,27 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             {
                 SpawnEncounter(encounter, area);
                 count++;
+            }
+
+            // Store camera states (cameras are not runtime entities, stored for save system)
+            // Based on swkotor2.exe: Cameras are stored in GIT CameraList but not as runtime entities
+            // Camera states are stored in RuntimeArea for save system compatibility
+            RuntimeArea runtimeArea = area as RuntimeArea;
+            if (runtimeArea != null && git.Cameras != null)
+            {
+                foreach (GITCamera gitCamera in git.Cameras)
+                {
+                    // Convert GITCamera to EntityState for save system
+                    // Based on swkotor2.exe: Camera states are stored with position and FOV
+                    var cameraState = new Andastra.Runtime.Core.Save.EntityState
+                    {
+                        Position = new SysVector3(gitCamera.Position.X, gitCamera.Position.Y, gitCamera.Position.Z),
+                        ObjectType = ObjectType.Invalid, // Cameras don't have standard ObjectType
+                        TemplateResRef = string.Empty, // Cameras don't have template ResRef
+                        Tag = string.Empty // Cameras don't have tags
+                    };
+                    runtimeArea.AddCameraState(cameraState);
+                }
             }
 
             Console.WriteLine("[ModuleLoader] Spawned " + count + " entities");

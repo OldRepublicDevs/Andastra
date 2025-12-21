@@ -2370,9 +2370,9 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // Note: Stores and Cameras are not directly accessible via IArea interface
-            // They would need to be added to AreaState separately if available from the area implementation
-            // Encounters are now extracted via world entity iteration (see encounter extraction below)
-            // TODO: STUB - For now, StoreStates and CameraStates remain empty
+            // They are extracted via world entity iteration (similar to encounters)
+            // Store extraction is done below after we get the world reference
+            // Camera extraction is handled separately as cameras may not be runtime entities
 
             foreach (IEntity sound in area.Sounds)
             {
@@ -2446,6 +2446,40 @@ namespace Andastra.Runtime.Games.Odyssey
                 areaId = world.GetAreaId(area);
             }
             
+            // Extract store entities from world by filtering for entities with StoreComponent in this area
+            // Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 extracts store entity states from area
+            // Original implementation: Stores are stored in area's store collection and extracted during save
+            // Stores have StoreComponent and ObjectType.Store, similar to how encounters have EncounterComponent
+            if (world != null && areaId != 0)
+            {
+                foreach (IEntity entity in world.GetAllEntities())
+                {
+                    if (entity == null || !entity.IsValid)
+                    {
+                        continue;
+                    }
+                    
+                    // Filter entities that belong to this area and have StoreComponent
+                    if (entity.AreaId == areaId)
+                    {
+                        StoreComponent storeComp = entity.GetComponent<StoreComponent>();
+                        if (storeComp != null)
+                        {
+                            // Verify entity has correct ObjectType for stores
+                            if (entity.ObjectType == ObjectType.Store)
+                            {
+                                // Extract entity state for this store
+                                EntityState entityState = ExtractEntityState(entity);
+                                if (entityState != null)
+                                {
+                                    areaState.StoreStates.Add(entityState);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             // Extract encounter entities from world by filtering for entities with EncounterComponent in this area
             // Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 extracts encounter entity states from area
             // Original implementation: Encounters are stored in area's encounter collection and extracted during save
@@ -2477,7 +2511,25 @@ namespace Andastra.Runtime.Games.Odyssey
 
             // Extract cameras (KOTOR-specific, if area supports them)
             // Based on swkotor2.exe: Camera entities are stored in area's camera collection
-            // TODO: STUB - For now, we'll skip cameras as they're not directly accessible via IArea interface
+            // Original implementation: Cameras are stored in GIT CameraList but are NOT runtime entities
+            // Cameras in GIT have position and FOV but don't have standard ObjectType or ObjectId
+            // Since cameras are not runtime entities, they're stored in RuntimeArea when loading from GIT
+            // Camera states are extracted from RuntimeArea.GetCameraStates() which was populated during area loading
+            RuntimeArea runtimeArea = area as RuntimeArea;
+            if (runtimeArea != null)
+            {
+                IReadOnlyList<EntityState> cameraStates = runtimeArea.GetCameraStates();
+                if (cameraStates != null)
+                {
+                    foreach (EntityState cameraState in cameraStates)
+                    {
+                        if (cameraState != null)
+                        {
+                            areaState.CameraStates.Add(cameraState);
+                        }
+                    }
+                }
+            }
 
             // Note: Destroyed entities and spawned entities are typically tracked separately
             // by the save system and would be added to areaState.DestroyedEntityIds and

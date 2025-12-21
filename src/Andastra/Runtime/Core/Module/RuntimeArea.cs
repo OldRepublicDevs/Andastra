@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Core.Save;
 
 namespace Andastra.Runtime.Core.Module
 {
@@ -58,6 +59,11 @@ namespace Andastra.Runtime.Core.Module
         private readonly List<IEntity> _encounters;
         private readonly Dictionary<string, List<IEntity>> _entitiesByTag;
         private readonly Dictionary<ScriptEvent, string> _scripts;
+        
+        // Camera states storage (cameras are not runtime entities, stored separately for save system)
+        // Based on swkotor2.exe: Cameras are stored in GIT CameraList but not as runtime entities
+        // Camera states are stored here when area is loaded from GIT for save system compatibility
+        private readonly List<Save.EntityState> _cameraStates;
 
         public RuntimeArea()
         {
@@ -71,6 +77,7 @@ namespace Andastra.Runtime.Core.Module
             _encounters = new List<IEntity>();
             _entitiesByTag = new Dictionary<string, List<IEntity>>(StringComparer.OrdinalIgnoreCase);
             _scripts = new Dictionary<ScriptEvent, string>();
+            _cameraStates = new List<Save.EntityState>();
 
             // Defaults
             ResRef = string.Empty;
@@ -454,6 +461,37 @@ namespace Andastra.Runtime.Core.Module
             // Basic implementation - area effects, lighting, weather updates would go here
             // Engine-specific implementations should override this method
             // Based on swkotor2.exe: FUN_00404cf0 @ 0x00404cf0 updates area state
+        }
+
+        /// <summary>
+        /// Gets camera states stored in this area.
+        /// Cameras are not runtime entities, so they're stored separately for save system compatibility.
+        /// Based on swkotor2.exe: Cameras are stored in GIT CameraList but not as runtime entities.
+        /// </summary>
+        public IReadOnlyList<EntityState> GetCameraStates()
+        {
+            return _cameraStates;
+        }
+
+        /// <summary>
+        /// Adds a camera state to this area.
+        /// Called when loading area from GIT to store camera data for save system.
+        /// Based on swkotor2.exe: Camera states are stored when area is loaded from GIT.
+        /// </summary>
+        public void AddCameraState(EntityState cameraState)
+        {
+            if (cameraState != null)
+            {
+                _cameraStates.Add(cameraState);
+            }
+        }
+
+        /// <summary>
+        /// Clears all camera states from this area.
+        /// </summary>
+        public void ClearCameraStates()
+        {
+            _cameraStates.Clear();
         }
 
         #region Script Management
