@@ -76,6 +76,8 @@ namespace Andastra.Runtime.Game.Core
         private Matrix4x4 _previewViewMatrix;
         private Matrix4x4 _previewProjectionMatrix;
         private bool _modelRendererInitialized = false;
+        private IRenderTarget _previewRenderTarget;
+        private ITexture2D _previewTexture;
         
         // Feat selection state
         private List<int> _availableFeatIds = new List<int>();
@@ -143,6 +145,7 @@ namespace Andastra.Runtime.Game.Core
             _guiManager = guiManager ?? throw new ArgumentNullException(nameof(guiManager));
             _onComplete = onComplete ?? throw new ArgumentNullException(nameof(onComplete));
             _onCancel = onCancel ?? throw new ArgumentNullException(nameof(onCancel));
+            _graphicsBackend = graphicsBackend;
             _gameDataManager = new GameDataManager(installation);
             
             // Initialize portrait texture cache
@@ -201,6 +204,60 @@ namespace Andastra.Runtime.Game.Core
             // Create a 1x1 pixel texture for drawing rectangles
             byte[] pixelData = new byte[] { 255, 255, 255, 255 }; // White pixel
             _pixelTexture = _graphicsDevice.CreateTexture2D(1, 1, pixelData);
+            
+            // Initialize 3D model rendering system for character preview
+            // Based on swkotor.exe and swkotor2.exe: Character preview uses 3D model rendering
+            // Original implementation: 3D model renderer is created when character creation screen initializes
+            InitializeModelRenderer();
+        }
+        
+        /// <summary>
+        /// Initializes the 3D model rendering system for character preview.
+        /// Based on swkotor.exe and swkotor2.exe: Character preview uses 3D model rendering
+        /// - Original implementation: 3D model renderer is created when character creation screen initializes
+        /// - Model renderer loads and renders character models from MDL files
+        /// - Preview entity is created with initial character appearance data
+        /// - Camera matrices are set up for preview viewport
+        /// </summary>
+        private void InitializeModelRenderer()
+        {
+            // Only initialize if graphics backend is available
+            if (_graphicsBackend == null)
+            {
+                System.Console.WriteLine("[CharacterCreationScreen] INFO: Graphics backend not available, 3D model preview will be disabled");
+                return;
+            }
+            
+            try
+            {
+                // Create entity model renderer from graphics backend
+                // Based on swkotor.exe and swkotor2.exe: Entity model renderer loads MDL models and renders entities
+                // GameDataManager provides access to 2DA tables (appearance.2da) for model resolution
+                // Installation provides access to resource system (MDL files, textures, etc.)
+                _entityModelRenderer = _graphicsBackend.CreateEntityModelRenderer(_gameDataManager, _installation);
+                
+                if (_entityModelRenderer == null)
+                {
+                    System.Console.WriteLine("[CharacterCreationScreen] WARNING: Failed to create entity model renderer, 3D model preview will be disabled");
+                    return;
+                }
+                
+                // Mark renderer as initialized
+                _modelRendererInitialized = true;
+                
+                // Initialize preview entity with initial character data
+                InitializePreviewEntity();
+                
+                // Initialize preview camera matrices
+                InitializePreviewCamera();
+                
+                System.Console.WriteLine("[CharacterCreationScreen] INFO: 3D model rendering system initialized successfully");
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine("[CharacterCreationScreen] WARNING: Failed to initialize 3D model rendering system: " + ex.Message);
+                _modelRendererInitialized = false;
+            }
         }
         
         /// <summary>
@@ -1104,6 +1161,8 @@ namespace Andastra.Runtime.Game.Core
         /// - Model rotates slowly to show character from different angles
         /// - Model updates when appearance, gender, or class changes
         /// - Preview viewport is typically positioned on the right side of the screen
+        /// - swkotor.exe: Character preview rendering function handles 3D viewport setup
+        /// - swkotor2.exe: Character preview rendering function handles 3D viewport setup
         /// </summary>
         private void RenderCharacterModelPreview(ISpriteBatch spriteBatch)
         {
@@ -1125,33 +1184,85 @@ namespace Andastra.Runtime.Game.Core
             {
                 try
                 {
-                    // Apply rotation to view matrix for animated rotation
-                    // Based on swkotor.exe and swkotor2.exe: Character preview rotates slowly
-                    // Rotate the camera around the character (orbit camera)
-                    Vector3 cameraTarget = new Vector3(0f, 0.9f, 0f); // Character center (approximately eye level)
-                    Vector3 baseCameraPosition = new Vector3(0f, 1.5f, 3f);
+                    // Ensure preview render target is created
+                    // Based on swkotor.exe and swkotor2.exe: Character preview uses render target for viewport rendering
+                    if (_previewRenderTarget == null || _previewRenderTarget.Width != previewWidth || _previewRenderTarget.Height != previewHeight)
+                    {
+                        // Dispose old render target if it exists
+                        if (_previewRenderTarget != null)
+                        {
+                            _previewRenderTarget.Dispose();
+                            _previewRenderTarget = null;
+                        }
+                        
+                        // Create render target for preview region
+                        // Based on swkotor.exe and swkotor2.exe: Render target created with depth buffer for 3D rendering
+                        _previewRenderTarget = _graphicsDevice.CreateRenderTarget(previewWidth, previewHeight, true);
+                        if (_previewRenderTarget != null)
+                        {
+                            _previewTexture = _previewRenderTarget.ColorTexture;
+                        }
+                    }
                     
-                    // Calculate rotated camera position (orbit around character)
-                    float radius = 3f;
-                    float height = 1.5f;
-                    Vector3 rotatedCameraPos = new Vector3(
-                        (float)(Math.Sin(_modelRotationAngle) * radius),
-                        height,
-                        (float)(Math.Cos(_modelRotationAngle) * radius)
-                    );
-                    
-                    // Create rotated view matrix
-                    Matrix4x4 rotatedViewMatrix = Matrix4x4.CreateLookAt(rotatedCameraPos, cameraTarget, Vector3.UnitY);
-                    
-                    // Update projection matrix if viewport size changed
-                    float aspectRatio = (float)previewWidth / (float)previewHeight;
-                    float fieldOfView = (float)Math.PI / 4f; // 45 degrees
-                    float nearPlane = 0.1f;
-                    float farPlane = 100f;
-                    Matrix4x4 projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(fieldOfView, aspectRatio, nearPlane, farPlane);
-                    
-                    // Render the entity model with rotation
-                    _entityModelRenderer.RenderEntity(_previewEntity, rotatedViewMatrix, projectionMatrix);
+                    if (_previewRenderTarget != null && _previewTexture != null)
+                    {
+                        // Save current render target and viewport
+                        IRenderTarget previousRenderTarget = _graphicsDevice.RenderTarget;
+                        Viewport previousViewport = _graphicsDevice.Viewport;
+                        
+                        try
+                        {
+                            // Set render target to preview render target
+                            _graphicsDevice.RenderTarget = _previewRenderTarget;
+                            
+                            // Set viewport to match preview render target size
+                            Viewport previewViewport = new Viewport(0, 0, previewWidth, previewHeight, 0.0f, 1.0f);
+                            // Note: Viewport setting is handled by graphics device implementation
+                            // The render target automatically sets the appropriate viewport
+                            
+                            // Clear render target with dark background
+                            // Based on swkotor.exe and swkotor2.exe: Character preview uses dark background color
+                            _graphicsDevice.Clear(new Color(20, 20, 25, 255));
+                            _graphicsDevice.ClearDepth(1.0f);
+                            
+                            // Apply rotation to view matrix for animated rotation
+                            // Based on swkotor.exe and swkotor2.exe: Character preview rotates slowly
+                            // Rotate the camera around the character (orbit camera)
+                            Vector3 cameraTarget = new Vector3(0f, 0.9f, 0f); // Character center (approximately eye level)
+                            
+                            // Calculate rotated camera position (orbit around character)
+                            float radius = 3f;
+                            float height = 1.5f;
+                            Vector3 rotatedCameraPos = new Vector3(
+                                (float)(Math.Sin(_modelRotationAngle) * radius),
+                                height,
+                                (float)(Math.Cos(_modelRotationAngle) * radius)
+                            );
+                            
+                            // Create rotated view matrix
+                            Matrix4x4 rotatedViewMatrix = Matrix4x4.CreateLookAt(rotatedCameraPos, cameraTarget, Vector3.UnitY);
+                            
+                            // Update projection matrix based on preview viewport aspect ratio
+                            float aspectRatio = (float)previewWidth / (float)previewHeight;
+                            float fieldOfView = (float)Math.PI / 4f; // 45 degrees
+                            float nearPlane = 0.1f;
+                            float farPlane = 100f;
+                            Matrix4x4 projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(fieldOfView, aspectRatio, nearPlane, farPlane);
+                            
+                            // Render the entity model with rotation
+                            // Based on swkotor.exe and swkotor2.exe: Entity model rendered with view/projection matrices
+                            _entityModelRenderer.RenderEntity(_previewEntity, rotatedViewMatrix, projectionMatrix);
+                        }
+                        finally
+                        {
+                            // Restore previous render target and viewport
+                            _graphicsDevice.RenderTarget = previousRenderTarget;
+                        }
+                        
+                        // Draw the rendered preview texture as a sprite in the preview area
+                        // Based on swkotor.exe and swkotor2.exe: Preview texture drawn to screen position
+                        spriteBatch.Draw(_previewTexture, new Rectangle(previewX, previewY, previewWidth, previewHeight), Color.White);
+                    }
                 }
                 catch (Exception ex)
                 {

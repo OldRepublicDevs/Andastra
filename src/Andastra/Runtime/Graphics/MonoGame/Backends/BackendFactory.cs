@@ -350,8 +350,8 @@ namespace Andastra.Runtime.MonoGame.Backends
                 case GraphicsBackend.OpenGL:
                     return new OpenGLBackend();
 
-                case GraphicsBackend.Metal:
-                    return new MetalBackend();
+                // case GraphicsBackend.Metal:
+                //     return new MetalBackend();
 
                 default:
                     Console.WriteLine("[BackendFactory] Unknown backend type: " + backendType);

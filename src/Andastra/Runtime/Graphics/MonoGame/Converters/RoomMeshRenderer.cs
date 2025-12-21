@@ -5,6 +5,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Andastra.Parsing.Formats.MDL;
 using Andastra.Parsing.Formats.MDLData;
+using Andastra.Parsing.Installation;
+using Andastra.Parsing.Resource;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.MonoGame.Converters
@@ -61,8 +63,9 @@ namespace Andastra.Runtime.MonoGame.Converters
 
         private readonly GraphicsDevice _graphicsDevice;
         private readonly Dictionary<string, RoomMeshData> _loadedMeshes;
+        private readonly Installation _installation;
 
-        public RoomMeshRenderer([NotNull] GraphicsDevice device)
+        public RoomMeshRenderer([NotNull] GraphicsDevice device, [CanBeNull] Installation installation = null)
         {
             if (device == null)
             {
@@ -71,6 +74,7 @@ namespace Andastra.Runtime.MonoGame.Converters
 
             _graphicsDevice = device;
             _loadedMeshes = new Dictionary<string, RoomMeshData>(StringComparer.OrdinalIgnoreCase);
+            _installation = installation;
         }
 
         /// <summary>
@@ -135,7 +139,7 @@ namespace Andastra.Runtime.MonoGame.Converters
             }
 
             // Extract geometry from all nodes recursively
-            ExtractNodeGeometry(mdl.Root, Matrix.Identity, vertices, indices, materials);
+            ExtractNodeGeometry(mdl.Root, Matrix.Identity, vertices, indices, materials, new HashSet<string>(StringComparer.OrdinalIgnoreCase));
 
             // If no geometry found, create placeholder box
             if (vertices.Count == 0 || indices.Count == 0)
@@ -147,7 +151,7 @@ namespace Andastra.Runtime.MonoGame.Converters
         /// <summary>
         /// Recursively extracts geometry from MDL nodes, handling all node types (mesh, skin, dangly, saber, light, emitter, reference, walkmesh).
         /// </summary>
-        private void ExtractNodeGeometry(MDLNode node, Matrix parentTransform, List<RoomVertex> vertices, List<int> indices, List<RoomMeshMaterial> materials)
+        private void ExtractNodeGeometry(MDLNode node, Matrix parentTransform, List<RoomVertex> vertices, List<int> indices, List<RoomMeshMaterial> materials, HashSet<string> visitedModels)
         {
             if (node == null)
             {
@@ -221,8 +225,7 @@ namespace Andastra.Runtime.MonoGame.Converters
             // Process reference nodes (external model references)
             if (node.Reference != null)
             {
-                // Reference nodes link to external models - would need to load referenced model
-                // TODO: STUB - For now, we skip them as they require additional model loading
+                ExtractReferenceGeometry(node.Reference, finalTransform, vertices, indices, materials, visitedModels);
             }
 
             // Process children recursively
@@ -230,7 +233,7 @@ namespace Andastra.Runtime.MonoGame.Converters
             {
                 foreach (MDLNode child in node.Children)
                 {
-                    ExtractNodeGeometry(child, finalTransform, vertices, indices, materials);
+                    ExtractNodeGeometry(child, finalTransform, vertices, indices, materials, visitedModels);
                 }
             }
         }
@@ -444,6 +447,117 @@ namespace Andastra.Runtime.MonoGame.Converters
                     indices.Add(baseVertexIndex + v2);
                     indices.Add(baseVertexIndex + v3);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Extracts geometry from a referenced external MDL model.
+        /// Based on swkotor2.exe reference node handling (swkotor2.exe: 0x004e3ff0)
+        /// Reference: vendor/reone/src/libs/scene/node/model.cpp:84-94 - Reference model loading
+        /// Reference: vendor/KotOR.js/src/three/odyssey/OdysseyModel3D.ts:1012-1026 - Child model loading
+        /// </summary>
+        private void ExtractReferenceGeometry(MDLReference reference, Matrix transform, List<RoomVertex> vertices, List<int> indices, List<RoomMeshMaterial> materials, HashSet<string> visitedModels)
+        {
+            if (reference == null)
+            {
+                return;
+            }
+
+            // Get model name from reference (check both ModelName and Model properties for compatibility)
+            string modelName = null;
+            if (!string.IsNullOrEmpty(reference.ModelName))
+            {
+                modelName = reference.ModelName;
+            }
+            else if (!string.IsNullOrEmpty(reference.Model))
+            {
+                modelName = reference.Model;
+            }
+
+            if (string.IsNullOrEmpty(modelName))
+            {
+                return;
+            }
+
+            // Normalize model name to lowercase for comparison
+            string normalizedModelName = modelName.ToLowerInvariant();
+
+            // Check for circular references to prevent infinite loops
+            if (visitedModels.Contains(normalizedModelName))
+            {
+                // Circular reference detected - skip to prevent infinite recursion
+                Console.WriteLine("[RoomMeshRenderer] Circular reference detected for model: " + modelName);
+                return;
+            }
+
+            // Add to visited set
+            visitedModels.Add(normalizedModelName);
+
+            try
+            {
+                // Load referenced MDL model
+                MDL referencedMdl = LoadReferencedMDL(modelName);
+                if (referencedMdl == null)
+                {
+                    // Model not found - remove from visited set and return
+                    visitedModels.Remove(normalizedModelName);
+                    return;
+                }
+
+                // Extract geometry from referenced model recursively
+                // The referenced model's root node should be transformed by the reference node's transform
+                if (referencedMdl.Root != null)
+                {
+                    ExtractNodeGeometry(referencedMdl.Root, transform, vertices, indices, materials, visitedModels);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[RoomMeshRenderer] Error loading referenced model " + modelName + ": " + ex.Message);
+            }
+            finally
+            {
+                // Remove from visited set after processing (allows same model to be referenced multiple times in different branches)
+                visitedModels.Remove(normalizedModelName);
+            }
+        }
+
+        /// <summary>
+        /// Loads a referenced MDL model from the installation.
+        /// Based on swkotor2.exe model loading (swkotor2.exe: FUN_005261b0 @ 0x005261b0)
+        /// Reference: vendor/reone/src/libs/resource/provider/models.cpp:38-76 - Model loading
+        /// </summary>
+        private MDL LoadReferencedMDL(string modelResRef)
+        {
+            if (string.IsNullOrEmpty(modelResRef))
+            {
+                return null;
+            }
+
+            // If no installation is available, cannot load referenced models
+            if (_installation == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                // Lookup MDL resource from installation
+                // Reference: EntityModelRenderer.LoadMDLModel for consistent implementation
+                ResourceResult result = _installation.Resources.LookupResource(modelResRef, ResourceType.MDL);
+                if (result == null || result.Data == null)
+                {
+                    return null;
+                }
+
+                // Parse MDL using Andastra.Parsing MDL parser
+                // Reference: EntityModelRenderer.LoadMDLModel for consistent implementation
+                return Andastra.Parsing.Formats.MDL.MDLAuto.ReadMdl(result.Data);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[RoomMeshRenderer] Error loading referenced MDL " + modelResRef + ": " + ex.Message);
+                return null;
             }
         }
 
