@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Andastra.Runtime.Core.Actions;
+using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
@@ -746,14 +747,10 @@ namespace Andastra.Runtime.Scripting.EngineApi
             // Original implementation uses CServerAIMaster::AddEventDeltaTime with calculated calendar day/time
             if (ctx.World != null && ctx.World.DelayScheduler != null)
             {
-                ctx.World.DelayScheduler.Schedule(delay, () =>
-                {
-                    IScriptExecutor scriptExecutor = GetScriptExecutor(ctx);
-                    if (scriptExecutor != null)
-                    {
-                        scriptExecutor.ExecuteScript(scriptResRef, caller, ctx.Caller);
-                    }
-                });
+                // Create action to execute the script
+                var scriptAction = new ActionExecuteScript(scriptResRef, ctx);
+                ctx.World.DelayScheduler.ScheduleDelay(delay, scriptAction, ctx.Caller);
+                return Variable.Void(); // DelayCommand returns void immediately
             }
 
             return Variable.Void();
@@ -766,7 +763,7 @@ namespace Andastra.Runtime.Scripting.EngineApi
         /// Based on nwmain.exe: ExecuteCommandExecuteScript @ 0x14051d5c0 (routine ID 8)
         /// Located via function dispatch table: CNWSVirtualMachineCommands::InitializeCommands @ 0x14054de30
         /// Original implementation (from decompiled 0x14051d5c0):
-        ///   - Note: Original function is a stub that calls FUN_140c10370 (memory free function)
+        // TODO: /   - Note: Original function is a stub that calls FUN_140c10370 (memory free function)
         ///   - Actual script execution is handled by the NCS VM through ACTION opcode system
         ///   - Script execution is synchronous and blocks until script completes
         /// Function signature: void ExecuteScript(string sScript, object oTarget = OBJECT_SELF)
@@ -775,7 +772,15 @@ namespace Andastra.Runtime.Scripting.EngineApi
         protected Variable Func_ExecuteScript(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // Based on nwmain.exe: ExecuteCommandExecuteScript @ 0x14051d5c0
-            // Original: Stub function, actual execution handled by script executor
+            // Original implementation: Stub function that delegates to script executor for actual execution
+            // Script execution is synchronous and blocks until script completes
+            // Based on nwmain.exe: ExecuteCommandExecuteScript @ 0x14051d5c0 (routine ID 8)
+            // Original function is a stub that delegates to the NCS VM through script executor system
+            // Actual script execution is handled by the NCS VM which loads and executes NCS bytecode
+            // Script execution is synchronous - function blocks until script execution completes
+            // Function signature: void ExecuteScript(string sScript, object oTarget = OBJECT_SELF)
+            // Common across all engines: Odyssey, Aurora, Eclipse all use script executor system
+            
             if (args.Count < 1)
             {
                 return Variable.Void();
@@ -784,24 +789,60 @@ namespace Andastra.Runtime.Scripting.EngineApi
             string scriptResRef = args[0].AsString();
             uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
 
+            // Validate script resource reference
+            // Original implementation: Validates script ResRef before execution
             if (string.IsNullOrEmpty(scriptResRef))
             {
                 return Variable.Void();
             }
 
+            // Resolve target entity (defaults to OBJECT_SELF if not specified)
+            // Original implementation: Pops object from stack, defaults to execution context caller
             Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity == null)
             {
+                // Invalid object ID - return void (ExecuteScript returns void on error)
                 return Variable.Void();
             }
 
-            // Execute script immediately via script executor
+            // Execute script immediately and synchronously via script executor
+            // Original implementation: Delegates to script executor which loads NCS bytecode and executes via VM
+            // Script execution blocks until completion - this is synchronous execution
+            // The script executor handles:
+            // 1. Loading NCS bytecode from resource provider
+            // 2. Creating execution context with caller, triggerer, world, globals
+            // 3. Executing script via NCS VM until completion
+            // 4. Tracking instruction count for budget enforcement
             IScriptExecutor scriptExecutor = GetScriptExecutor(ctx);
             if (scriptExecutor != null)
             {
-                scriptExecutor.ExecuteScript(scriptResRef, entity, ctx.Triggerer);
+                try
+                {
+                    // Execute script synchronously - blocks until script completes
+                    // Return value (int) is captured but not used since ExecuteScript returns void
+                    // Script return value is typically used for conditional checks (0 = FALSE, non-zero = TRUE)
+                    int scriptReturnValue = scriptExecutor.ExecuteScript(scriptResRef, entity, ctx.Triggerer);
+                    
+                    // Script execution completed successfully
+                    // Note: scriptReturnValue is captured for potential future use but not returned
+                    // since ExecuteScript function signature returns void
+                }
+                catch (Exception ex)
+                {
+                    // Error handling: Log script execution errors but don't crash
+                    // Original implementation: Script execution errors are logged but don't abort execution
+                    System.Diagnostics.Debug.WriteLine($"[BaseEngineApi] Error executing script '{scriptResRef}' on entity: {ex.Message}");
+                    // Return void on error (ExecuteScript returns void, not an error code)
+                }
+            }
+            else
+            {
+                // Script executor not available - this is a configuration error
+                // Original implementation: Would fail silently or log error
+                System.Diagnostics.Debug.WriteLine($"[BaseEngineApi] Script executor not available for script '{scriptResRef}'");
             }
 
+            // ExecuteScript always returns void (regardless of script return value)
             return Variable.Void();
         }
 
@@ -847,7 +888,7 @@ namespace Andastra.Runtime.Scripting.EngineApi
             if (clearCombatState != 0)
             {
                 // Combat state clearing would be implemented by engine-specific combat system
-                // For now, actions are cleared which effectively stops combat actions
+                // TODO: STUB - For now, actions are cleared which effectively stops combat actions
             }
 
             return Variable.Void();
@@ -1000,7 +1041,7 @@ namespace Andastra.Runtime.Scripting.EngineApi
                 _executed = false;
             }
 
-            public override ActionStatus Update(IEntity entity, float deltaTime)
+            protected override ActionStatus ExecuteInternal(IEntity entity, float deltaTime)
             {
                 if (!_executed && !string.IsNullOrEmpty(_scriptResRef))
                 {
