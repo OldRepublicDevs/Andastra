@@ -269,6 +269,66 @@ namespace Andastra.Parsing.Formats.MDL
 
         private void WriteLight(int indent, MDLLight light)
         {
+            // Write flare data arrays if present (vendor/mdlops/MDLOpsM.pm:3235-3256)
+            bool hasFlares = light.Flare && (
+                (light.FlareTextures != null && light.FlareTextures.Count > 0) ||
+                (light.FlarePositions != null && light.FlarePositions.Count > 0) ||
+                (light.FlareSizes != null && light.FlareSizes.Count > 0) ||
+                (light.FlareColorShifts != null && light.FlareColorShifts.Count > 0)
+            );
+
+            if (hasFlares)
+            {
+                // Write lensflares count (vendor/mdlops/MDLOpsM.pm:3233)
+                if (light.FlarePositions != null && light.FlarePositions.Count > 0)
+                {
+                    WriteLine(indent, $"lensflares {light.FlarePositions.Count}");
+                }
+
+                // Write texturenames (vendor/mdlops/MDLOpsM.pm:3235-3239)
+                if (light.FlareTextures != null && light.FlareTextures.Count > 0)
+                {
+                    WriteLine(indent, $"texturenames {light.FlareTextures.Count}");
+                    foreach (var texture in light.FlareTextures)
+                    {
+                        WriteLine(indent + 1, texture);
+                    }
+                }
+
+                // Write flarepositions (vendor/mdlops/MDLOpsM.pm:3240-3244)
+                if (light.FlarePositions != null && light.FlarePositions.Count > 0)
+                {
+                    WriteLine(indent, $"flarepositions {light.FlarePositions.Count}");
+                    foreach (var pos in light.FlarePositions)
+                    {
+                        WriteLine(indent + 1, pos.ToString("G7", System.Globalization.CultureInfo.InvariantCulture));
+                    }
+                }
+
+                // Write flaresizes (vendor/mdlops/MDLOpsM.pm:3245-3249)
+                if (light.FlareSizes != null && light.FlareSizes.Count > 0)
+                {
+                    WriteLine(indent, $"flaresizes {light.FlareSizes.Count}");
+                    foreach (var size in light.FlareSizes)
+                    {
+                        WriteLine(indent + 1, size.ToString("G7", System.Globalization.CultureInfo.InvariantCulture));
+                    }
+                }
+
+                // Write flarecolorshifts (vendor/mdlops/MDLOpsM.pm:3250-3256)
+                // FlareColorShifts is stored as a flat list of floats (3 floats per color: R, G, B)
+                if (light.FlareColorShifts != null && light.FlareColorShifts.Count >= 3)
+                {
+                    int colorCount = light.FlareColorShifts.Count / 3;
+                    WriteLine(indent, $"flarecolorshifts {colorCount}");
+                    for (int i = 0; i < colorCount; i++)
+                    {
+                        int idx = i * 3;
+                        WriteLine(indent + 1, $"{light.FlareColorShifts[idx].ToString("G7", System.Globalization.CultureInfo.InvariantCulture)} {light.FlareColorShifts[idx + 1].ToString("G7", System.Globalization.CultureInfo.InvariantCulture)} {light.FlareColorShifts[idx + 2].ToString("G7", System.Globalization.CultureInfo.InvariantCulture)}");
+                    }
+                }
+            }
+
             WriteLine(indent, $"flareradius {light.FlareRadius.ToString("G7", System.Globalization.CultureInfo.InvariantCulture)}");
             WriteLine(indent, $"priority {light.LightPriority}");
             if (light.AmbientOnly)
@@ -291,31 +351,51 @@ namespace Andastra.Parsing.Formats.MDL
 
         private void WriteEmitter(int indent, MDLEmitter emitter)
         {
+            // Reference: vendor/mdlops/MDLOpsM.pm:3268-3307
             WriteLine(indent, $"deadspace {emitter.DeadSpace.ToString("G7", System.Globalization.CultureInfo.InvariantCulture)}");
-            WriteLine(indent, $"blastradius {emitter.BlastRadius.ToString("G7", System.Globalization.CultureInfo.InvariantCulture)}");
-            WriteLine(indent, $"blastlength {emitter.BlastLength.ToString("G7", System.Globalization.CultureInfo.InvariantCulture)}");
-            WriteLine(indent, $"branchcount {emitter.BranchCount}");
-            WriteLine(indent, $"controlpointsmoothing {emitter.ControlPointSmoothing.ToString("G7", System.Globalization.CultureInfo.InvariantCulture)}");
+            WriteLine(indent, $"blastRadius {emitter.BlastRadius.ToString("G7", System.Globalization.CultureInfo.InvariantCulture)}");
+            WriteLine(indent, $"blastLength {emitter.BlastLength.ToString("G7", System.Globalization.CultureInfo.InvariantCulture)}");
+            WriteLine(indent, $"numBranches {emitter.BranchCount}");
+            WriteLine(indent, $"controlptsmoothing {emitter.ControlPointSmoothing.ToString("G7", System.Globalization.CultureInfo.InvariantCulture)}");
             WriteLine(indent, $"xgrid {emitter.XGrid}");
             WriteLine(indent, $"ygrid {emitter.YGrid}");
-            // mdlops writes render/update/blend as strings
-            WriteLine(indent, $"render {emitter.RenderType.ToString().ToLowerInvariant()}");
+            // mdlops writes spawntype (vendor/mdlops/MDLOpsM.pm:3278)
+            // TODO: Add SpawnType property to MDLEmitter if needed
+            WriteLine(indent, "spawntype 0");
+            // mdlops writes render/update/blend as strings (vendor/mdlops/MDLOpsM.pm:3279-3281)
             WriteLine(indent, $"update {emitter.UpdateType.ToString().ToLowerInvariant()}");
+            WriteLine(indent, $"render {emitter.RenderType.ToString().ToLowerInvariant()}");
             WriteLine(indent, $"blend {emitter.BlendType.ToString().ToLowerInvariant()}");
             WriteLine(indent, $"texture {emitter.Texture}");
-            WriteLine(indent, $"chunkname {emitter.ChunkName}");
-            // mdlops writes twosidedtex as integer
+            if (!string.IsNullOrEmpty(emitter.ChunkName))
+            {
+                WriteLine(indent, $"chunkname {emitter.ChunkName}");
+            }
+            // mdlops writes twosidedtex as integer (vendor/mdlops/MDLOpsM.pm:3286)
             WriteLine(indent, $"twosidedtex {(emitter.Twosided ? 1 : 0)}");
-            // mdlops writes loop as integer
+            // mdlops writes loop as integer (vendor/mdlops/MDLOpsM.pm:3287)
             WriteLine(indent, $"loop {(emitter.Loop ? 1 : 0)}");
             WriteLine(indent, $"renderorder {emitter.RenderOrder}");
-            // mdlops writes m_bFrameBlending as integer
+            // mdlops writes m_bFrameBlending as integer (vendor/mdlops/MDLOpsM.pm:3289)
             WriteLine(indent, $"m_bFrameBlending {(emitter.FrameBlend ? 1 : 0)}");
-            // mdlops writes m_sDepthTextureName as string
-            if (!string.IsNullOrEmpty(emitter.DepthTexture))
-            {
-                WriteLine(indent, $"m_sDepthTextureName {emitter.DepthTexture}");
-            }
+            // mdlops writes m_sDepthTextureName as string (vendor/mdlops/MDLOpsM.pm:3290)
+            WriteLine(indent, $"m_sDepthTextureName {emitter.DepthTexture ?? ""}");
+
+            // Write emitter flags (vendor/mdlops/MDLOpsM.pm:3295-3307)
+            var flags = (MDLEmitterFlags)emitter.Flags;
+            WriteLine(indent, $"p2p {((flags & MDLEmitterFlags.P2P) != 0 ? 1 : 0)}");
+            WriteLine(indent, $"p2p_sel {((flags & MDLEmitterFlags.P2P_SEL) != 0 ? 1 : 0)}");
+            WriteLine(indent, $"affectedByWind {((flags & MDLEmitterFlags.AFFECTED_WIND) != 0 ? 1 : 0)}");
+            WriteLine(indent, $"m_isTinted {((flags & MDLEmitterFlags.TINTED) != 0 ? 1 : 0)}");
+            WriteLine(indent, $"bounce {((flags & MDLEmitterFlags.BOUNCE) != 0 ? 1 : 0)}");
+            WriteLine(indent, $"random {((flags & MDLEmitterFlags.RANDOM) != 0 ? 1 : 0)}");
+            WriteLine(indent, $"inherit {((flags & MDLEmitterFlags.INHERIT) != 0 ? 1 : 0)}");
+            WriteLine(indent, $"inheritvel {((flags & MDLEmitterFlags.INHERIT_VEL) != 0 ? 1 : 0)}");
+            WriteLine(indent, $"inherit_local {((flags & MDLEmitterFlags.INHERIT_LOCAL) != 0 ? 1 : 0)}");
+            WriteLine(indent, $"splat {((flags & MDLEmitterFlags.SPLAT) != 0 ? 1 : 0)}");
+            WriteLine(indent, $"inherit_part {((flags & MDLEmitterFlags.INHERIT_PART) != 0 ? 1 : 0)}");
+            WriteLine(indent, $"depth_texture {((flags & MDLEmitterFlags.DEPTH_TEXTURE) != 0 ? 1 : 0)}");
+            WriteLine(indent, $"emitterflag13 {((flags & MDLEmitterFlags.FLAG_13) != 0 ? 1 : 0)}");
         }
 
         private void WriteReference(int indent, MDLReference reference)

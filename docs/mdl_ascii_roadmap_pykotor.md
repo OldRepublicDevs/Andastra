@@ -102,9 +102,9 @@ This document tracks the implementation of ASCII MDL format support in PyKotor, 
 
 - ✅ Animation writing (newanim blocks) - COMPLETE
 - ✅ Animation node parent writing - COMPLETE (uses animation hierarchy)
-- ⏳ Some controller formatting edge cases - Most common cases are handled
-- ⏳ Complete emitter flag writing - Basic flags are supported
-- ⏳ Some light flare data writing - Basic flare data is supported
+- ✅ Complete emitter flag writing - COMPLETE (all flags: p2p, p2p_sel, affectedByWind, m_isTinted, bounce, random, inherit, inheritvel, inherit_local, splat, inherit_part, depth_texture, emitterflag13)
+- ✅ Complete light flare data writing - COMPLETE (texturenames, flarepositions, flaresizes, flarecolorshifts)
+- ⏳ Some controller formatting edge cases - Most common cases are handled (bezier controllers, key formatting)
 
 ## MDLOps Reference Mapping
 
