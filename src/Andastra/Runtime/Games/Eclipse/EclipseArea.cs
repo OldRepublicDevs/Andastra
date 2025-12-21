@@ -33,6 +33,8 @@ using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.MonoGame.Converters;
 using Andastra.Runtime.Core.Collision;
 using XnaVertexPositionColor = Microsoft.Xna.Framework.Graphics.VertexPositionColor;
+using Andastra.Runtime.MonoGame.Rendering;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Andastra.Runtime.Games.Eclipse
 {
@@ -107,6 +109,9 @@ namespace Andastra.Runtime.Games.Eclipse
         private float _whitePoint;
         private float _contrast;
         private float _saturation;
+        
+        // Shader cache for post-processing effects (lazy-initialized)
+        private ShaderCache _shaderCache;
 
         // Module reference for loading WOK walkmesh files (optional)
         private Andastra.Parsing.Common.Module _module;
@@ -5793,37 +5798,222 @@ namespace Andastra.Runtime.Games.Eclipse
                 graphicsDevice.RenderTarget = output;
                 graphicsDevice.Clear(new Color(0, 0, 0, 0));
 
-                // Composite bloom with HDR scene using sprite batch
-                // In a full shader-based implementation, this would use additive blending:
-                // Pixel shader:
-                // float3 scene = sample(hdrScene, uv);
-                // float3 bloom = sample(bloom, uv);
-                // output = scene + bloom * intensity;
+                // Composite bloom with HDR scene using shader-based compositing
+                // Full shader implementation for proper bloom compositing with intensity control
+                // Pixel shader composites: output = scene + bloom * intensity
                 //
                 // daorigins.exe: Additive bloom compositing for glow effect
                 // Based on daorigins.exe/DragonAge2.exe: Bloom compositing with intensity control
                 //
-                // TODO: STUB - For now, use sprite batch to composite textures (full shader implementation requires shader files)
-                // The structure is complete and ready for shader integration
+                // Use shader-based compositing for accurate intensity application
                 ISpriteBatch spriteBatch = graphicsDevice.CreateSpriteBatch();
                 if (spriteBatch != null && hdrScene.ColorTexture != null && bloom.ColorTexture != null)
                 {
                     Rectangle destinationRect = new Rectangle(0, 0, output.Width, output.Height);
                     
-                    // First, draw HDR scene
+                    // Try to use shader-based compositing for accurate intensity control
+                    // Get or compile bloom compositing shader
+                    Effect bloomCompositingEffect = GetOrCreateBloomCompositingShader(graphicsDevice);
+                    
+                    if (bloomCompositingEffect != null)
+                    {
+                        // Use shader-based compositing with intensity parameter
+                        // Access MonoGame SpriteBatch directly to use Effect parameter
+                        if (spriteBatch is Andastra.Runtime.MonoGame.Graphics.MonoGameSpriteBatch mgSpriteBatch)
+                        {
+                            // Get MonoGame textures
+                            if (hdrScene.ColorTexture is Andastra.Runtime.MonoGame.Graphics.MonoGameTexture2D mgSceneTexture &&
+                                bloom.ColorTexture is Andastra.Runtime.MonoGame.Graphics.MonoGameTexture2D mgBloomTexture)
+                            {
+                                // Set shader parameter for bloom intensity
+                                EffectParameter bloomIntensityParam = bloomCompositingEffect.Parameters["BloomIntensity"];
+                                if (bloomIntensityParam != null)
+                                {
+                                    bloomIntensityParam.SetValue(intensity);
+                                }
+                                
+                                // First pass: Draw HDR scene (opaque)
+                                mgSpriteBatch.SpriteBatch.Begin(
+                                    Microsoft.Xna.Framework.Graphics.SpriteSortMode.Immediate,
+                                    Microsoft.Xna.Framework.Graphics.BlendState.Opaque,
+                                    Microsoft.Xna.Framework.Graphics.SamplerState.LinearClamp,
+                                    Microsoft.Xna.Framework.Graphics.DepthStencilState.None,
+                                    Microsoft.Xna.Framework.Graphics.RasterizerState.CullNone);
+                                
+                                mgSpriteBatch.SpriteBatch.Draw(
+                                    mgSceneTexture.Texture,
+                                    new Microsoft.Xna.Framework.Rectangle(0, 0, output.Width, output.Height),
+                                    Microsoft.Xna.Framework.Color.White);
+                                
+                                mgSpriteBatch.SpriteBatch.End();
+                                
+                                // Second pass: Additively blend bloom with intensity applied via shader
+                                mgSpriteBatch.SpriteBatch.Begin(
+                                    Microsoft.Xna.Framework.Graphics.SpriteSortMode.Immediate,
+                                    Microsoft.Xna.Framework.Graphics.BlendState.Additive,
+                                    Microsoft.Xna.Framework.Graphics.SamplerState.LinearClamp,
+                                    Microsoft.Xna.Framework.Graphics.DepthStencilState.None,
+                                    Microsoft.Xna.Framework.Graphics.RasterizerState.CullNone,
+                                    bloomCompositingEffect);
+                                
+                                mgSpriteBatch.SpriteBatch.Draw(
+                                    mgBloomTexture.Texture,
+                                    new Microsoft.Xna.Framework.Rectangle(0, 0, output.Width, output.Height),
+                                    Microsoft.Xna.Framework.Color.White);
+                                
+                                mgSpriteBatch.SpriteBatch.End();
+                            }
+                            else
+                            {
+                                // Fallback: Use sprite batch without shader
                     spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
                     spriteBatch.Draw(hdrScene.ColorTexture, destinationRect, Color.White);
                     spriteBatch.End();
                     
-                    // Then, additively blend bloom (intensity would be applied in shader)
                     spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AdditiveBlend);
-                    spriteBatch.Draw(bloom.ColorTexture, destinationRect, Color.White);
+                                byte intensityByte = (byte)(Math.Min(255, intensity * 255));
+                                Color bloomColor = new Color(intensityByte, intensityByte, intensityByte, intensityByte);
+                                spriteBatch.Draw(bloom.ColorTexture, destinationRect, bloomColor);
                     spriteBatch.End();
+                            }
+                        }
+                        else
+                        {
+                            // Fallback: Use sprite batch without shader (less accurate intensity)
+                            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
+                            spriteBatch.Draw(hdrScene.ColorTexture, destinationRect, Color.White);
+                            spriteBatch.End();
+                            
+                            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AdditiveBlend);
+                            // Approximate intensity by scaling color (not as accurate as shader)
+                            byte intensityByte = (byte)(Math.Min(255, intensity * 255));
+                            Color bloomColor = new Color(intensityByte, intensityByte, intensityByte, intensityByte);
+                            spriteBatch.Draw(bloom.ColorTexture, destinationRect, bloomColor);
+                            spriteBatch.End();
+                        }
+                    }
+                    else
+                    {
+                        // Fallback: Use sprite batch without shader
+                        spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
+                        spriteBatch.Draw(hdrScene.ColorTexture, destinationRect, Color.White);
+                        spriteBatch.End();
+                        
+                        spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AdditiveBlend);
+                        // Approximate intensity by scaling color (not as accurate as shader)
+                        byte intensityByte = (byte)(Math.Min(255, intensity * 255));
+                        Color bloomColor = new Color(intensityByte, intensityByte, intensityByte, intensityByte);
+                        spriteBatch.Draw(bloom.ColorTexture, destinationRect, bloomColor);
+                        spriteBatch.End();
+                    }
                 }
             }
             finally
             {
                 graphicsDevice.RenderTarget = previousTarget;
+            }
+        }
+
+        /// <summary>
+        /// Gets or creates the bloom compositing shader for texture compositing.
+        /// </summary>
+        /// <param name="graphicsDevice">Graphics device.</param>
+        /// <returns>Compiled bloom compositing effect, or null if compilation fails.</returns>
+        /// <remarks>
+        /// Creates and caches a shader for compositing HDR scene and bloom textures with intensity control.
+        /// Shader performs: output = scene + bloom * intensity
+        /// Based on daorigins.exe/DragonAge2.exe: Bloom compositing shader for post-processing pipeline
+        /// </remarks>
+        private Effect GetOrCreateBloomCompositingShader(IGraphicsDevice graphicsDevice)
+        {
+            if (graphicsDevice == null)
+            {
+                return null;
+            }
+            
+            // Get MonoGame GraphicsDevice for ShaderCache
+            GraphicsDevice mgDevice = null;
+            if (graphicsDevice is Andastra.Runtime.MonoGame.Graphics.MonoGameGraphicsDevice mgGraphicsDevice)
+            {
+                mgDevice = mgGraphicsDevice.Device;
+            }
+            
+            if (mgDevice == null)
+            {
+                return null; // Cannot use shader cache without MonoGame GraphicsDevice
+            }
+            
+            // Initialize shader cache if needed
+            if (_shaderCache == null)
+            {
+                _shaderCache = new ShaderCache(mgDevice);
+            }
+            
+            // HLSL shader source for bloom compositing with intensity control
+            // This shader applies intensity to the bloom texture when rendering
+            // Used with SpriteBatch in additive blend mode to composite: scene + bloom * intensity
+            // Pixel shader: Samples bloom texture and multiplies by intensity parameter
+            // MonoGame Effect format: Uses technique/pass structure for effect files
+            // Based on daorigins.exe/DragonAge2.exe: Bloom compositing shader for post-processing pipeline
+            // Note: MonoGame SpriteBatch Effect uses a specific format with Texture and TextureSampler
+            const string bloomCompositingShaderSource = @"
+// Bloom Compositing Shader
+// Applies intensity to bloom texture for proper compositing
+// Based on daorigins.exe/DragonAge2.exe: Bloom compositing for post-processing pipeline
+// Uses MonoGame Effect format for SpriteBatch rendering
+
+// Texture and sampler (SpriteBatch binds the texture being drawn to this)
+texture Texture;
+sampler TextureSampler : register(s0) = sampler_state
+{
+    Texture = <Texture>;
+    AddressU = Clamp;
+    AddressV = Clamp;
+    MinFilter = Linear;
+    MagFilter = Linear;
+    MipFilter = Linear;
+};
+
+// Shader parameter for bloom intensity (applied per-pixel in shader)
+float BloomIntensity = 1.0;
+
+// Pixel shader: Apply intensity to bloom texture
+// MonoGame SpriteBatch provides: texCoord (TEXCOORD0) and color (COLOR0)
+float4 BloomCompositingPS(float2 texCoord : TEXCOORD0, 
+                          float4 color : COLOR0) : COLOR0
+{
+    // Sample the bloom texture (SpriteBatch binds the texture to TextureSampler)
+    float4 bloom = tex2D(TextureSampler, texCoord);
+    
+    // Apply intensity parameter to bloom color
+    // Multiply RGB by intensity (alpha stays as-is for proper blending)
+    float3 bloomColor = bloom.rgb * BloomIntensity;
+    
+    // Return bloom color with intensity applied (used with additive blending)
+    return float4(bloomColor, bloom.a);
+}
+
+// Technique definition
+technique BloomCompositing
+{
+    pass Pass0
+    {
+        // SpriteBatch handles vertex shader, we only need pixel shader
+        PixelShader = compile ps_2_0 BloomCompositingPS();
+    }
+}
+";
+            
+            // Get or compile shader from cache
+            try
+            {
+                Effect effect = _shaderCache.GetShader("BloomCompositing", bloomCompositingShaderSource);
+                return effect;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[EclipseArea] Failed to get/compile bloom compositing shader: {ex.Message}");
+                return null;
             }
         }
 
