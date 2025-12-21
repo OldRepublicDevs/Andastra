@@ -42,6 +42,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private bool _raytracingEnabled;
         private RaytracingLevel _raytracingLevel;
         private IntPtr _raytracingDevice;
+        private D3D12Device _deviceInterface;
 
         // Frame statistics
         private FrameStatistics _lastFrameStats;
@@ -153,6 +154,13 @@ namespace Andastra.Runtime.MonoGame.Backends
             if (!_initialized)
             {
                 return;
+            }
+
+            // Dispose device interface if created
+            if (_deviceInterface != null)
+            {
+                _deviceInterface.Dispose();
+                _deviceInterface = null;
             }
 
             // Wait for GPU to finish
@@ -355,19 +363,23 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         public IDevice GetDevice()
         {
-            // TODO: STUB - Implement IDevice creation for DirectX 12 raytracing
-            // When raytracing is enabled, this should create and return a D3D12Device instance
-            // that implements IDevice and provides access to DXR functionality
-            // For now, return null as the device creation is not yet implemented
+            // Return cached device interface if already created
+            if (_deviceInterface != null && _deviceInterface.IsValid)
+            {
+                return _deviceInterface;
+            }
+
+            // Check if raytracing is available
             if (!_initialized || !_capabilities.SupportsRaytracing || !_raytracingEnabled || _raytracingDevice == IntPtr.Zero)
             {
                 return null;
             }
 
-            // TODO: STUB - Create and return actual IDevice implementation
-            // This will require implementing a D3D12Device class that wraps ID3D12Device5
-            // and provides the IDevice interface for raytracing operations
-            return null;
+            // Create D3D12Device instance that wraps ID3D12Device5 and provides IDevice interface
+            // Based on DirectX 12 raytracing device creation pattern
+            // The _device handle is ID3D12Device, _raytracingDevice is ID3D12Device5 (same object, different interface)
+            _deviceInterface = new D3D12Device(_device, _raytracingDevice, _commandQueue, _capabilities);
+            return _deviceInterface;
         }
 
         #region DXR Raytracing
