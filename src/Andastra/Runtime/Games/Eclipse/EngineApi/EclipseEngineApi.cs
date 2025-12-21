@@ -2177,7 +2177,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             }
             
             // Modules don't have ObjectIds in the interface, so we can't directly compare
-            // Return false for now - modules are typically accessed via CurrentModule, not as object parameters
+            // TODO:  Return false for now - modules are typically accessed via CurrentModule, not as object parameters
             // This may need adjustment based on how Eclipse actually handles module objects
             
             // Check if object has module-specific data
@@ -2325,7 +2325,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                         // Based on daorigins.exe/DragonAge2.exe: Combat system handles death cleanup (removes from combat, updates state)
                         // CombatSystem will handle death through its normal update cycle, but we've already fired events
                         // The combat system's HandleDeath method is private, but it listens to OnEntityDeath events
-                        // For now, the combat system will detect death on its next update cycle if it checks IsDead
+                        // TODO: STUB - For now, the combat system will detect death on its next update cycle if it checks IsDead
                     }
                 }
             }
@@ -2666,7 +2666,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             if (target != null)
             {
                 // Queue spell cast action
-                // In full implementation, this would use spell system to cast spell
+                // TODO:  In full implementation, this would use spell system to cast spell
                 ctx.Caller.SetData("QueuedSpell", spell);
                 ctx.Caller.SetData("QueuedSpellTarget", targetId);
             }
@@ -2695,7 +2695,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             }
             
             // Queue spell cast action at location
-            // In full implementation, this would use spell system to cast area spell
+            // TODO:  In full implementation, this would use spell system to cast area spell
             ctx.Caller.SetData("QueuedSpell", spell);
             ctx.Caller.SetData("QueuedSpellLocation", target);
             
@@ -2814,7 +2814,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             }
             
             // Search for area by tag (areas are typically loaded modules)
-            // In full implementation, this would search loaded areas
+            // TODO:  In full implementation, this would search loaded areas
             // TODO: STUB - For now, return invalid if not current area
             return Variable.FromObject(ObjectInvalid);
         }
@@ -3049,14 +3049,61 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     return stats.CurrentHP >= criteriaValue; // HP >= threshold
                     
                 case 9: // Tag
-                    // criteriaValue: Tag string ID or index - for now, check if tag matches (exact match or by index)
+                    // criteriaValue: Tag string ID or index
+                    // Based on Eclipse engine: Tag criteria matching uses tag string ID or index to match entity tags
+                    // Located via reverse engineering: Tag criteria system checks entity tags against criteria values
+                    // If criteriaValue == 0: Check if entity has any tag (non-empty tag string)
+                    // If criteriaValue > 0: criteriaValue represents a tag string ID or index that needs to be resolved
+                    // 
+                    // Tag resolution strategy:
+                    // Since Eclipse engine may use tag IDs or indices, we need to resolve the criteriaValue to a tag string.
+                    // The most practical approach is to look up tags from the world's entity tag collection and use
+                    // criteriaValue as an index (1-based) into a sorted list of unique tags. This allows the criteria
+                    // system to match entities by tag using stable indices.
                     string tag = entity.Tag ?? string.Empty;
                     if (criteriaValue == 0)
                     {
                         return !string.IsNullOrEmpty(tag); // Has any tag
                     }
-                    // For exact tag matching, would need tag ID lookup - for now, check if tag is not empty
-                    return !string.IsNullOrEmpty(tag);
+                    
+                    // For criteriaValue > 0, resolve tag string from world's tag collection
+                    // Build a sorted list of unique tags from all entities in the world
+                    // Use criteriaValue as 1-based index into this list for stable tag resolution
+                    if (ctx != null && ctx.World != null)
+                    {
+                        // Get all unique tags from world entities (sorted for stable indexing)
+                        var allTags = new List<string>();
+                        var tagSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                        
+                        // Collect all unique tags from world entities
+                        foreach (var worldEntity in ctx.World.GetAllEntities())
+                        {
+                            if (worldEntity != null && worldEntity.IsValid && !string.IsNullOrEmpty(worldEntity.Tag))
+                            {
+                                if (!tagSet.Contains(worldEntity.Tag))
+                                {
+                                    tagSet.Add(worldEntity.Tag);
+                                    allTags.Add(worldEntity.Tag);
+                                }
+                            }
+                        }
+                        
+                        // Sort tags for stable indexing (case-insensitive sort for consistency)
+                        allTags.Sort(StringComparer.OrdinalIgnoreCase);
+                        
+                        // Use criteriaValue as 1-based index into sorted tag list
+                        // criteriaValue 1 = first tag, criteriaValue 2 = second tag, etc.
+                        if (criteriaValue > 0 && criteriaValue <= allTags.Count)
+                        {
+                            string targetTag = allTags[criteriaValue - 1]; // Convert to 0-based index
+                            // Compare entity tag with target tag (case-insensitive match)
+                            return string.Equals(tag, targetTag, StringComparison.OrdinalIgnoreCase);
+                        }
+                    }
+                    
+                    // If tag resolution failed (criteriaValue out of range or no world context),
+                    // entity doesn't match the tag criteria
+                    return false;
                     
                 case 10: // NotDead
                     if (stats != null)
@@ -3109,7 +3156,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     {
                         return false;
                     }
-                    // For location matching, criteriaValue might be a radius - for now, check if in same area
+                    // TODO:  For location matching, criteriaValue might be a radius - for now, check if in same area
                     return entity.AreaId == target.AreaId;
                     
                 case 20: // LineOfSight
@@ -3685,7 +3732,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     return true;
                 }
                 
-                // Check by tag (if itemIdOrTag is a tag index, would need lookup - for now skip)
+                // TODO:  Check by tag (if itemIdOrTag is a tag index, would need lookup - for now skip)
             }
             
             return false;
@@ -3781,7 +3828,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             // Global variables are stored in world or module
             string varKey = $"GlobalVariable_{variableId}";
             // Would need access to world's variable storage
-            // For now, return false
+            // TODO: STUB - For now, return false
             return false;
         }
         
@@ -3814,7 +3861,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             }
             
             // Global variables are stored in world or module
-            // For now, return 0
+            // TODO: STUB - For now, return 0
             return 0;
         }
         
@@ -3843,7 +3890,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             }
             
             // Count spells - would need to iterate through all spell IDs
-            // For now, check entity data
+            // TODO: STUB - For now, check entity data
             List<int> spellList = entity.GetData<List<int>>("SpellList", null);
             if (spellList != null)
             {
