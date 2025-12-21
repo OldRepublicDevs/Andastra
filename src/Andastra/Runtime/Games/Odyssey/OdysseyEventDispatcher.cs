@@ -89,7 +89,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     // Source entity is the door/trigger that triggered the transition
                     // Target entity is the entity being transitioned (usually player/party)
                     string targetAreaResRef = ExtractTargetAreaFromTransitionSource(sourceEntity, targetEntity);
-                    HandleAreaTransition(targetEntity, targetAreaResRef);
+                    HandleAreaTransition(targetEntity, targetAreaResRef, sourceEntity);
                     break;
 
                 case 4: // EVENT_REMOVE_FROM_AREA (swkotor2.exe: 0x004dcfb0 line 48)
@@ -200,6 +200,9 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <summary>
         /// Handles area transition events.
         /// </summary>
+        /// <param name="entity">The entity being transitioned.</param>
+        /// <param name="targetArea">The target area ResRef.</param>
+        /// <param name="sourceEntity">Optional source entity (door/trigger) that triggered the transition. Used to resolve LinkedTo waypoint positioning.</param>
         /// <remarks>
         /// Based on EVENT_AREA_TRANSITION (0x1a) and EVENT_REMOVE_FROM_AREA (4) handling in swkotor2.exe: DispatchEvent @ 0x004dcfb0.
         /// Manages entity movement between areas.
@@ -218,7 +221,7 @@ namespace Andastra.Runtime.Games.Odyssey
         ///    f. Update entity's AreaId
         ///    g. Fire OnEnter events for target area
         /// </remarks>
-        protected override void HandleAreaTransition(IEntity entity, string targetArea)
+        protected override void HandleAreaTransition(IEntity entity, string targetArea, IEntity sourceEntity = null)
         {
             if (entity == null)
             {
@@ -285,7 +288,7 @@ namespace Andastra.Runtime.Games.Odyssey
 
                 // Resolve target waypoint position if source entity has LinkedTo field
                 // This positions the entity at the waypoint specified by the door/trigger
-                ResolveAndSetTransitionPosition(entity, world, targetAreaInstance);
+                ResolveAndSetTransitionPosition(entity, world, targetAreaInstance, sourceEntity);
 
                 // Project entity position to target area walkmesh
                 ProjectEntityToTargetArea(entity, targetAreaInstance);
@@ -602,30 +605,115 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <summary>
         /// Resolves and sets the transition position from source entity's LinkedTo field.
         /// </summary>
+        /// <param name="entity">The entity being transitioned.</param>
+        /// <param name="world">The world containing the areas.</param>
+        /// <param name="targetArea">The target area for the transition.</param>
+        /// <param name="sourceEntity">Optional source entity (door/trigger) that triggered the transition.</param>
         /// <remarks>
-        /// Based on swkotor2.exe: Transition positioning system
-        /// If source entity (door/trigger) has LinkedTo field, positions entity at that waypoint.
-        /// Otherwise, entity position is preserved and projected to target area walkmesh.
+        /// Based on swkotor2.exe: Transition positioning system (FUN_004e26d0 @ 0x004e26d0)
+        /// Located via string references: "LinkedTo" @ 0x007bd7a4 (waypoint tag for positioning after transition)
+        /// Original implementation: If source entity (door/trigger) has LinkedTo field, positions entity at that waypoint.
+        /// Otherwise, entity position is preserved and projected to target area walkmesh in ProjectEntityToTargetArea.
+        /// 
+        /// Transition positioning logic:
+        /// 1. If sourceEntity is null, preserve current position (will be projected to walkmesh later)
+        /// 2. Check if sourceEntity is a door with LinkedTo field
+        /// 3. Check if sourceEntity is a trigger with LinkedTo field
+        /// 4. If LinkedTo is specified, find waypoint with that tag in target area
+        /// 5. If waypoint found, position entity at waypoint's position and facing
+        /// 6. If waypoint not found or LinkedTo is empty, preserve current position
         /// </remarks>
-        private void ResolveAndSetTransitionPosition(IEntity entity, IWorld world, IArea targetArea)
+        private void ResolveAndSetTransitionPosition(IEntity entity, IWorld world, IArea targetArea, IEntity sourceEntity)
         {
             if (entity == null || world == null || targetArea == null)
             {
+                Console.WriteLine("[OdysseyEventDispatcher] ResolveAndSetTransitionPosition: Entity, world, or target area is null");
                 return;
             }
 
             ITransformComponent transform = entity.GetComponent<ITransformComponent>();
             if (transform == null)
             {
+                Console.WriteLine($"[OdysseyEventDispatcher] ResolveAndSetTransitionPosition: Entity {entity.Tag ?? "null"} ({entity.ObjectId}) has no transform component");
                 return;
             }
 
-            // Try to find transition source (door/trigger) that triggered this transition
-            // This would typically be stored in event data, but for now we'll use current position
-            // In a full implementation, the source entity would be passed through event data
-            // and we'd check its LinkedTo field to position at waypoint
+            // If no source entity provided, preserve current position (will be projected to walkmesh later)
+            if (sourceEntity == null)
+            {
+                Console.WriteLine($"[OdysseyEventDispatcher] ResolveAndSetTransitionPosition: No source entity provided, preserving current position for entity {entity.Tag ?? "null"} ({entity.ObjectId})");
+                return;
+            }
 
-            // TODO: STUB - For now, position is preserved and will be projected to walkmesh in ProjectEntityToTargetArea
+            string linkedToTag = null;
+
+            // Check if source entity is a door with LinkedTo field
+            IDoorComponent doorComponent = sourceEntity.GetComponent<IDoorComponent>();
+            if (doorComponent != null)
+            {
+                linkedToTag = doorComponent.LinkedTo;
+                if (!string.IsNullOrEmpty(linkedToTag))
+                {
+                    Console.WriteLine($"[OdysseyEventDispatcher] ResolveAndSetTransitionPosition: Door {sourceEntity.Tag ?? "null"} ({sourceEntity.ObjectId}) has LinkedTo: {linkedToTag}");
+                }
+            }
+
+            // Check if source entity is a trigger with LinkedTo field (if door didn't have it)
+            if (string.IsNullOrEmpty(linkedToTag))
+            {
+                ITriggerComponent triggerComponent = sourceEntity.GetComponent<ITriggerComponent>();
+                if (triggerComponent != null)
+                {
+                    linkedToTag = triggerComponent.LinkedTo;
+                    if (!string.IsNullOrEmpty(linkedToTag))
+                    {
+                        Console.WriteLine($"[OdysseyEventDispatcher] ResolveAndSetTransitionPosition: Trigger {sourceEntity.Tag ?? "null"} ({sourceEntity.ObjectId}) has LinkedTo: {linkedToTag}");
+                    }
+                }
+            }
+
+            // If no LinkedTo field, preserve current position (will be projected to walkmesh later)
+            if (string.IsNullOrEmpty(linkedToTag))
+            {
+                Console.WriteLine($"[OdysseyEventDispatcher] ResolveAndSetTransitionPosition: Source entity {sourceEntity.Tag ?? "null"} ({sourceEntity.ObjectId}) has no LinkedTo field, preserving current position for entity {entity.Tag ?? "null"} ({entity.ObjectId})");
+                return;
+            }
+
+            // Find waypoint with LinkedTo tag in target area
+            // Based on swkotor2.exe: GetWaypointByTag searches for waypoint by tag in area
+            // Located via string references: "GetWaypointByTag" function searches waypoints by tag
+            IEntity waypoint = targetArea.GetObjectByTag(linkedToTag, 0);
+            if (waypoint == null)
+            {
+                Console.WriteLine($"[OdysseyEventDispatcher] ResolveAndSetTransitionPosition: Waypoint with tag '{linkedToTag}' not found in target area {targetArea.ResRef}, preserving current position for entity {entity.Tag ?? "null"} ({entity.ObjectId})");
+                return;
+            }
+
+            // Verify it's actually a waypoint
+            if (waypoint.ObjectType != Core.Enums.ObjectType.Waypoint)
+            {
+                Console.WriteLine($"[OdysseyEventDispatcher] ResolveAndSetTransitionPosition: Entity with tag '{linkedToTag}' in target area {targetArea.ResRef} is not a waypoint (type: {waypoint.ObjectType}), preserving current position for entity {entity.Tag ?? "null"} ({entity.ObjectId})");
+                return;
+            }
+
+            // Get waypoint's transform component
+            ITransformComponent waypointTransform = waypoint.GetComponent<ITransformComponent>();
+            if (waypointTransform == null)
+            {
+                Console.WriteLine($"[OdysseyEventDispatcher] ResolveAndSetTransitionPosition: Waypoint {linkedToTag} has no transform component, preserving current position for entity {entity.Tag ?? "null"} ({entity.ObjectId})");
+                return;
+            }
+
+            // Position entity at waypoint's position and facing
+            // Based on swkotor2.exe: Transition positioning sets entity position to waypoint position
+            // Original implementation: FUN_004e26d0 @ 0x004e26d0 positions entity at waypoint after transition
+            Vector3 waypointPosition = waypointTransform.Position;
+            float waypointFacing = waypointTransform.Facing;
+
+            transform.Position = waypointPosition;
+            transform.Facing = waypointFacing;
+
+            Console.WriteLine($"[OdysseyEventDispatcher] ResolveAndSetTransitionPosition: Positioned entity {entity.Tag ?? "null"} ({entity.ObjectId}) at waypoint '{linkedToTag}' position ({waypointPosition.X:F2}, {waypointPosition.Y:F2}, {waypointPosition.Z:F2}), facing: {waypointFacing:F2} radians");
         }
 
         /// <summary>
