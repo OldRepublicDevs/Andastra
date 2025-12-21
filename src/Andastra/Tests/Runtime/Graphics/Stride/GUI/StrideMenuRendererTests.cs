@@ -209,115 +209,69 @@ namespace Andastra.Tests.Runtime.Stride.GUI
         [Fact]
         public void Draw_WhenNotVisible_ShouldNotThrow()
         {
-            // Arrange
-            var graphicsDevice = CreateTestGraphicsDeviceOrSkip();
-            if (graphicsDevice == null)
+            // Arrange - Create Stride GraphicsDevice for testing using helper method
+            var game = GraphicsTestHelper.CreateTestStrideGame();
+            if (game == null)
             {
-                // Skip test if GraphicsDevice creation fails
+                // Skip test if GraphicsDevice creation fails (e.g., no GPU in headless CI environment)
                 return;
             }
 
             try
             {
-                var renderer = new StrideMenuRenderer(graphicsDevice);
-                renderer.IsVisible.Should().BeFalse("Renderer should not be visible initially");
+                var graphicsDevice = game.GraphicsDevice;
+                if (graphicsDevice == null)
+                {
+                    return;
+                }
 
-                // Act & Assert
-                var drawAction = new Action(() => renderer.Draw());
-                drawAction.Should().NotThrow("Draw should not throw when renderer is not visible");
+                var renderer = new StrideMenuRenderer(graphicsDevice);
+                renderer.IsVisible.Should().BeFalse("Menu should not be visible initially");
+
+                // Act & Assert - Draw should not throw when menu is not visible
+                // Draw() should return early when IsVisible is false, so it should not throw
+                renderer.Invoking(r => r.Draw()).Should().NotThrow("Draw should not throw when menu is not visible (should return early)");
             }
             finally
             {
-                // Cleanup
-                try
-                {
-                    if (graphicsDevice != null && graphicsDevice.Game != null)
-                    {
-                        graphicsDevice.Game.Dispose();
-                    }
-                }
-                catch
-                {
-                    // Ignore cleanup errors
-                }
+                // Cleanup - Dispose of Game instance (which will clean up GraphicsDevice)
+                GraphicsTestHelper.CleanupTestStrideGame(game);
             }
         }
 
         [Fact]
         public void Dispose_ShouldNotThrow()
         {
-            // Arrange
-            var graphicsDevice = CreateTestGraphicsDeviceOrSkip();
-            if (graphicsDevice == null)
+            // Arrange - Create Stride GraphicsDevice for testing using helper method
+            var game = GraphicsTestHelper.CreateTestStrideGame();
+            if (game == null)
             {
-                // Skip test if GraphicsDevice creation fails
+                // Skip test if GraphicsDevice creation fails (e.g., no GPU in headless CI environment)
                 return;
             }
 
             try
             {
+                var graphicsDevice = game.GraphicsDevice;
+                if (graphicsDevice == null)
+                {
+                    return;
+                }
+
                 var renderer = new StrideMenuRenderer(graphicsDevice);
+                renderer.IsInitialized.Should().BeTrue("Renderer should be initialized before disposal");
 
-                // Act & Assert
-                var disposeAction = new Action(() => renderer.Dispose());
-                disposeAction.Should().NotThrow("Dispose should not throw");
+                // Act & Assert - Dispose should not throw
+                renderer.Invoking(r => r.Dispose()).Should().NotThrow("Dispose should not throw when called on initialized renderer");
 
-                // Verify disposed state
-                renderer.IsInitialized.Should().BeFalse("IsInitialized should be false after disposal");
+                // Assert - After disposal, renderer should no longer be initialized
+                renderer.IsInitialized.Should().BeFalse("Renderer should not be initialized after disposal");
             }
             finally
             {
-                // Cleanup
-                try
-                {
-                    if (graphicsDevice != null && graphicsDevice.Game != null)
-                    {
-                        graphicsDevice.Game.Dispose();
-                    }
-                }
-                catch
-                {
-                    // Ignore cleanup errors
-                }
+                // Cleanup - Dispose of Game instance (which will clean up GraphicsDevice)
+                GraphicsTestHelper.CleanupTestStrideGame(game);
             }
-        }
-
-        /// <summary>
-        /// Creates a Stride GraphicsDevice for testing using GraphicsTestHelper, or skips the test if creation fails.
-        /// </summary>
-        /// <param name="game">Output parameter that receives the Game instance for proper cleanup.</param>
-        /// <returns>GraphicsDevice instance, or null if creation fails (test should be skipped).</returns>
-        /// <remarks>
-        /// Stride GraphicsDevice Creation for Tests:
-        /// - Uses GraphicsTestHelper.CreateTestStrideGame() to create a minimal Game instance
-        /// - Returns null if device creation fails (e.g., no GPU in headless CI environments)
-        /// - Sets the out parameter to the Game instance so tests can properly dispose it
-        /// - Tests should check for null and return early if device creation fails
-        /// - Tests should dispose the Game instance in a finally block for proper resource cleanup
-        /// </remarks>
-        private GraphicsDevice CreateTestGraphicsDeviceOrSkip(out Game game)
-        {
-            game = GraphicsTestHelper.CreateTestStrideGame();
-            if (game != null && game.GraphicsDevice != null)
-            {
-                return game.GraphicsDevice;
-            }
-            
-            // If creation failed, ensure game is null and return null
-            if (game != null)
-            {
-                try
-                {
-                    game.Dispose();
-                }
-                catch
-                {
-                    // Ignore disposal errors during cleanup
-                }
-                game = null;
-            }
-            
-            return null;
         }
     }
 }

@@ -170,6 +170,32 @@ namespace Andastra.Runtime.Games.Eclipse
         }
 
         /// <summary>
+        /// Sets the display name of this area.
+        /// </summary>
+        /// <param name="displayName">The new display name, or null to clear it (will fall back to ResRef).</param>
+        /// <remarks>
+        /// Based on dragonage.exe: Area display names can be changed dynamically via area modifications.
+        /// This allows scripts and area modifications to update the area's display name during gameplay.
+        /// </remarks>
+        public void SetDisplayName(string displayName)
+        {
+            _displayName = displayName;
+        }
+
+        /// <summary>
+        /// Sets the tag of this area.
+        /// </summary>
+        /// <param name="tag">The new tag, or null to clear it (will fall back to ResRef).</param>
+        /// <remarks>
+        /// Based on dragonage.exe: Area tags can be changed dynamically via area modifications.
+        /// This allows scripts and area modifications to update the area's tag during gameplay.
+        /// </remarks>
+        public void SetTag(string tag)
+        {
+            _tag = tag;
+        }
+
+        /// <summary>
         /// The resource reference name of this area.
         /// </summary>
         public override string ResRef => _resRef;
@@ -3725,18 +3751,18 @@ namespace Andastra.Runtime.Games.Eclipse
                 case "DisplayName":
                     if (_propertyValue is string displayName)
                     {
-                        // In a full implementation, EclipseArea would have a DisplayName setter
-                        // TODO: STUB - For now, we'll need to add a method or use reflection
-                        // Since DisplayName is read-only, we'd need to add a SetDisplayName method
+                        // Based on dragonage.exe: Area display names can be changed dynamically
+                        // Original implementation: Sets area display name through area modification system
+                        area.SetDisplayName(displayName);
                     }
                     break;
 
                 case "Tag":
                     if (_propertyValue is string tag)
                     {
-                        // In a full implementation, EclipseArea would have a Tag setter
-                        // TODO: STUB - For now, we'll need to add a method or use reflection
-                        // Since Tag is read-only, we'd need to add a SetTag method
+                        // Based on dragonage.exe: Area tags can be changed dynamically
+                        // Original implementation: Sets area tag through area modification system
+                        area.SetTag(tag);
                     }
                     break;
 

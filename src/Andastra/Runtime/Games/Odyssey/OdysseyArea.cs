@@ -2456,20 +2456,6 @@ namespace Andastra.Runtime.Games.Odyssey
                     {
                         continue;
                     }
-                            // Cache the loaded mesh
-                            _roomMeshes[room.ModelName] = meshData;
-                        }
-                        else
-                        {
-                            // Failed to load - skip this room
-                            continue;
-                        }
-                    }
-
-                    if (meshData == null || meshData.VertexBuffer == null || meshData.IndexBuffer == null)
-                    {
-                        continue;
-                    }
 
                     // Validate mesh data
                     if (meshData.IndexCount < 3)
@@ -2550,31 +2536,69 @@ namespace Andastra.Runtime.Games.Odyssey
 
             try
             {
-                // Load MDL file from Module
-                // Based on swkotor2.exe: Room models are loaded from module archives
-                // Original implementation: Uses Module.Resource() to load MDL files
-                ModuleResource mdlResource = _module.Model(modelResRef);
-                if (mdlResource == null)
+                // Load MDL file from Module or Installation
+                // Based on swkotor2.exe: Room models are loaded from module archives or installation (chitin/override)
+                // Original implementation: Uses Module.Resource() first, then falls back to Installation.Resource()
+                // swkotor2.exe: Resource search order is Module -> Override -> Chitin
+                byte[] mdlData = null;
+                byte[] mdxData = null;
+
+                // Try loading from Module first
+                if (_module != null)
                 {
-                    // MDL not found in module
-                    return null;
+                    ModuleResource mdlResource = _module.Model(modelResRef);
+                    if (mdlResource != null)
+                    {
+                        mdlData = mdlResource.Data();
+                    }
+
+                    if (mdlData == null || mdlData.Length == 0)
+                    {
+                        // Try ModelExt as fallback (some modules may store MDL in ModelExt)
+                        ModuleResource mdlExtResource = _module.ModelExt(modelResRef);
+                        if (mdlExtResource != null)
+                        {
+                            mdlData = mdlExtResource.Data();
+                        }
+                    }
+
+                    // Load MDX file from Module (contains vertex data)
+                    // Based on swkotor2.exe: MDX files are companion files to MDL files
+                    ModuleResource mdxResource = _module.ModelExt(modelResRef);
+                    if (mdxResource != null)
+                    {
+                        mdxData = mdxResource.Data();
+                    }
                 }
 
-                byte[] mdlData = mdlResource.Data();
+                // If not found in Module, try Installation (chitin/override)
+                // Based on swkotor2.exe: Resources can be in override directory or chitin.key
+                if ((mdlData == null || mdlData.Length == 0) && _module != null && _module.Installation != null)
+                {
+                    Installation.Installation installation = _module.Installation;
+                    SearchLocation[] searchOrder = { SearchLocation.OVERRIDE, SearchLocation.CHITIN };
+                    
+                    Installation.ResourceResult mdlResult = installation.Resource(modelResRef, ResourceType.MDL, searchOrder);
+                    if (mdlResult != null && mdlResult.Data != null && mdlResult.Data.Length > 0)
+                    {
+                        mdlData = mdlResult.Data;
+                    }
+
+                    // Load MDX from Installation if not already loaded
+                    if (mdxData == null)
+                    {
+                        Installation.ResourceResult mdxResult = installation.Resource(modelResRef, ResourceType.MDX, searchOrder);
+                        if (mdxResult != null && mdxResult.Data != null && mdxResult.Data.Length > 0)
+                        {
+                            mdxData = mdxResult.Data;
+                        }
+                    }
+                }
+
                 if (mdlData == null || mdlData.Length == 0)
                 {
-                    // Empty or invalid MDL data
+                    // MDL not found in module or installation
                     return null;
-                }
-
-                // Load MDX file from Module (contains vertex data)
-                // Based on swkotor2.exe: MDX files are companion files to MDL files
-                // Original implementation: Loads MDX data to provide vertex geometry for MDL
-                byte[] mdxData = null;
-                ModuleResource mdxResource = _module.ModelExt(modelResRef);
-                if (mdxResource != null)
-                {
-                    mdxData = mdxResource.Data();
                 }
 
                 // Parse MDL file
