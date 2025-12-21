@@ -47,8 +47,23 @@ namespace Andastra.Runtime.Content.ResourceProviders
             }
 
             // NWN-specific hardcoded resources
-            // Add NWN-specific hardcoded resource lookups here if needed
-            // TODO: STUB - For now, NWN uses the common hardcoded resources from base class
+            // Based on analysis of nwmain.exe: NWN uses the same hardcoded resource system as other Aurora Engine games
+            // No NWN-specific hardcoded resources have been identified that differ from the common ones
+            // All hardcoded resources (DefaultModel, DefaultIcon, DefaultACSounds, fnt_default) are shared
+            // across all Aurora Engine games and are provided by the base class implementation
+            // 
+            // The base class LookupHardcoded() method handles:
+            // - DefaultModel (MDL): Fallback model when model resource cannot be found
+            //   Based on nwmain.exe: DefaultModel string @ 0x140dc3a68, referenced @ 0x14029e7f7
+            // - DefaultIcon (TGA/DDS): Fallback icon when icon resource cannot be found
+            //   Based on nwmain.exe: DefaultIcon string @ 0x140dc3a78
+            // - DefaultACSounds (2DA): Default action/combat sounds table
+            //   Based on nwmain.exe: DefaultACSounds string @ 0x140dc6db8, referenced in Load2DArrays function
+            // - fnt_default (FNT): Default font when font resource cannot be found
+            //   Based on nwmain.exe: "fnt_default" and "fnt_default_hr" string references in font loading code
+            //
+            // If NWN-specific hardcoded resources are discovered in the future that differ from the base class
+            // implementations, they should be added here before the return null statement
 
             return null;
         }
