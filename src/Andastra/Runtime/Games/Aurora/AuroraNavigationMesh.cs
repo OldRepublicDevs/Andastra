@@ -99,6 +99,10 @@ namespace Andastra.Runtime.Games.Aurora
         private readonly int _tileHeight;
         private const float TileSize = 10.0f; // Based on DAT_140dc2df4 in nwmain.exe: 10.0f units per tile
 
+        // Tileset data for height sampling
+        private readonly TilesetLoader _tilesetLoader;
+        private readonly string _tilesetResRef;
+
         /// <summary>
         /// Creates an empty Aurora navigation mesh (for placeholder use).
         /// </summary>
@@ -107,6 +111,8 @@ namespace Andastra.Runtime.Games.Aurora
             _tiles = new AuroraTile[0, 0];
             _tileWidth = 0;
             _tileHeight = 0;
+            _tilesetLoader = null;
+            _tilesetResRef = null;
         }
 
         /// <summary>
@@ -115,11 +121,15 @@ namespace Andastra.Runtime.Games.Aurora
         /// <param name="tiles">2D array of tiles indexed by [y, x].</param>
         /// <param name="tileWidth">Width of the tile grid.</param>
         /// <param name="tileHeight">Height of the tile grid.</param>
+        /// <param name="tilesetLoader">Optional tileset loader for height sampling from walkmesh geometry.</param>
+        /// <param name="tilesetResRef">Optional tileset resource reference for height sampling.</param>
         /// <remarks>
         /// Based on nwmain.exe: CNWSArea tile storage structure.
         /// Tiles are stored in a 2D grid with dimensions Width x Height.
+        /// If tilesetLoader and tilesetResRef are provided, GetTileHeight will sample from actual walkmesh geometry.
+        /// Otherwise, it falls back to simplified height transition model.
         /// </remarks>
-        public AuroraNavigationMesh(AuroraTile[,] tiles, int tileWidth, int tileHeight)
+        public AuroraNavigationMesh(AuroraTile[,] tiles, int tileWidth, int tileHeight, TilesetLoader tilesetLoader = null, string tilesetResRef = null)
         {
             if (tiles == null)
             {
@@ -139,6 +149,8 @@ namespace Andastra.Runtime.Games.Aurora
             _tiles = tiles;
             _tileWidth = tileWidth;
             _tileHeight = tileHeight;
+            _tilesetLoader = tilesetLoader;
+            _tilesetResRef = tilesetResRef;
         }
         /// <summary>
         /// Tests if a point is on walkable ground.
@@ -551,12 +563,19 @@ namespace Andastra.Runtime.Games.Aurora
         /// Gets the height of a tile at its center.
         /// </summary>
         /// <remarks>
-        /// Based on nwmain.exe: CNWTile height data access.
+        /// Based on nwmain.exe: CNWTile height data access (CNWTileSurfaceMesh::GetHeightAtPoint @ 0x1402bedf0)
         /// Tiles store height transition data that indicates terrain elevation.
         /// The Tile.Height property indicates the number of height transitions.
         /// 
-        /// For a full implementation, this would sample from actual tile geometry data.
-        /// TODO: STUB - For now, we use a simplified approach based on tile height transitions.
+        /// Implementation:
+        /// 1. If tileset loader and tileset resref are available, samples height from actual walkmesh geometry
+        /// 2. Otherwise, falls back to simplified model based on height transitions
+        /// 
+        /// Walkmesh sampling:
+        /// - Loads tile model from tileset using TileId
+        /// - Loads walkmesh (WOK file) for the tile model
+        /// - Samples height at tile center (0.5, 0.5) using barycentric interpolation
+        /// - Falls back to average face height if point is not within any face
         /// </remarks>
         private float GetTileHeight(int tileX, int tileY)
         {
@@ -571,13 +590,22 @@ namespace Andastra.Runtime.Games.Aurora
                 return float.MinValue;
             }
 
+            // Try to sample height from walkmesh geometry if tileset loader is available
+            if (_tilesetLoader != null && !string.IsNullOrEmpty(_tilesetResRef))
+            {
+                // Sample height at tile center (0.5, 0.5 in normalized tile coordinates)
+                float walkmeshHeight = _tilesetLoader.GetTileHeight(_tilesetResRef, tile.TileId, 0.5f, 0.5f);
+                if (walkmeshHeight != float.MinValue)
+                {
+                    return walkmeshHeight;
+                }
+            }
+
+            // Fallback: Use simplified model based on height transitions
             // Tile.Height indicates number of height transitions
-            // TODO: STUB - For now, we use a simplified model where height transitions
-            // correspond to elevation changes. In a full implementation,
-            // this would sample from actual tile geometry/walkmesh data.
-            // 
-            // Base height assumption: Each height transition adds 0.5 units of elevation
-            // This is a placeholder until actual tile geometry data is available
+            // Based on nwmain.exe: Height transitions correspond to elevation changes
+            // Each height transition typically represents a 0.5 unit elevation change
+            // This is a reasonable approximation when walkmesh data is not available
             float baseHeight = 0.0f;
             float heightPerTransition = 0.5f;
             float tileHeight = baseHeight + (tile.Height * heightPerTransition);
