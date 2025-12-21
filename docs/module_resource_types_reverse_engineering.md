@@ -19,18 +19,22 @@
 ### Core Functions
 
 **Primary Resource Search Functions:**
+
 - **swkotor.exe**: `FUN_00407230` (0x00407230) - Core resource search
 - **swkotor2.exe**: `FUN_00407300` (0x00407300) - Core resource search (equivalent)
 
 **Resource Lookup Wrappers:**
+
 - **swkotor.exe**: `FUN_004074d0` (0x004074d0) - Calls `FUN_00407230`
 - **swkotor2.exe**: `FUN_004075a0` (0x004075a0) - Calls `FUN_00407300`
 
 **Module Loading Functions:**
+
 - **swkotor.exe**: `FUN_004094a0` (0x004094a0) - Module file discovery and loading
 - **swkotor2.exe**: `FUN_004096b0` (0x004096b0) - Module file discovery and loading
 
 **Resource Registration:**
+
 - **swkotor.exe**: `FUN_0040e990` (0x0040e990) - Registers resources in resource table
   - **Duplicate Handling**: Line 36 checks for existing ResRef+Type combination
   - **Behavior**: If duplicate found AND resource already loaded, returns 0 (ignores duplicate)
@@ -63,9 +67,10 @@ The game uses two loading modes controlled by a flag at offset 0x54 in the resou
   - **Behavior**: Checks for `_a.rim` first, then `_adx.rim`, then `.mod`, then `_s.rim`/`_dlg.erf`
   - **Evidence**: swkotor.exe: `FUN_004094a0` line 49-216 (else branch when flag != 0)
 
-**Flag Control**: The flag at offset 0x54 is part of the resource manager structure (`param_1`). It's initialized in `FUN_00409bf0` (resource manager creation, swkotor.exe: 0x00409bf0), but the exact condition that sets it to 0 vs non-zero is not clear from the decompilation. 
+**Flag Control**: The flag at offset 0x54 is part of the resource manager structure (`param_1`). It's initialized in `FUN_00409bf0` (resource manager creation, swkotor.exe: 0x00409bf0), but the exact condition that sets it to 0 vs non-zero is not clear from the decompilation.
 
 **Full Function Decompilation** (swkotor.exe: `FUN_004094a0`):
+
 - **Total Size**: 1621 bytes (0x655 bytes)
 - **Total Lines**: 227 lines of decompiled code
 - **Entry Point**: 0x004094a0
@@ -73,6 +78,7 @@ The game uses two loading modes controlled by a flag at offset 0x54 in the resou
 - **Complete Decompilation**: Available via Ghidra MCP - all 227 lines analyzed
 
 **When Each Mode Is Used**:
+
 - **Simple Mode**: When flag at offset 0x54 == 0 (explicitly set to 0)
 - **Complex Mode**: When flag at offset 0x54 != 0 (default/non-zero value)
 
@@ -85,6 +91,7 @@ In practice, **complex mode appears to be the default** - simple mode is only us
 #### Simple Mode (Flag == 0)
 
 **Loading Sequence:**
+
 1. **`.rim`** (line 42) - Loaded directly, function returns
 
 **Evidence**: swkotor.exe: `FUN_004094a0` lines 32-42
@@ -175,6 +182,7 @@ if (iVar6 != 0) {
 ```
 
 **Loading Order:**
+
 1. Check `_a.rim` → **FOUND** → Load `_a.rim` (line 159)
 2. Check `_adx.rim` → **FOUND** → Load `_adx.rim` (line 85)
 3. Check `.mod` → **FOUND** → Load `.mod` (line 136) → **SKIPS** `_s.rim`
@@ -183,6 +191,7 @@ if (iVar6 != 0) {
 **Result**: Only `_a.rim`, `_adx.rim`, and `.mod` are loaded. `.rim` and `_s.rim` are ignored.
 
 **Resource Resolution** (if same ResRef+Type exists in multiple files):
+
 - `_a.rim` resources registered first → **WIN** (for resources not in `.mod`)
 - `_adx.rim` resources registered second → **IGNORED** if duplicate of `_a.rim`
 - `.mod` resources registered third → **WIN** (overrides `_a.rim` and `_adx.rim` for all duplicates)
@@ -200,6 +209,7 @@ if (iVar6 != 0) {
 ```
 
 **Loading Order:**
+
 1. `_a.rim` → Loaded (line 159)
 2. `_adx.rim` → Loaded (line 85)
 3. `_s.rim` → Loaded (line 118) - because `.mod` NOT found
@@ -208,6 +218,7 @@ if (iVar6 != 0) {
 **Result**: `_a.rim`, `_adx.rim`, and `_s.rim` are loaded. `.rim` is ignored.
 
 **Resource Resolution**:
+
 - `_a.rim` resources registered first → **WIN**
 - `_adx.rim` resources registered second → **IGNORED** if duplicate of `_a.rim`
 - `_s.rim` resources registered third → **IGNORED** if duplicate of `_a.rim` or `_adx.rim`
@@ -217,6 +228,7 @@ if (iVar6 != 0) {
 #### Simple Mode (Flag == 0)
 
 **Loading Sequence:**
+
 1. **`.rim`** (line 46) - Loaded directly, function returns
 
 **Evidence**: swkotor2.exe: `FUN_004096b0` lines 36-46
@@ -455,6 +467,7 @@ Resources that use `FUN_004074d0`/`FUN_004075a0` (which calls `FUN_00407230`/`FU
 **Priority**: ❌ **Module/Override/Patch.erf RES files are IGNORED**
 
 **Evidence**:
+
 - swkotor.exe: `FUN_004b8300` line 136-155 loads "savenfo.res" directly via `FUN_00411260` (GFF loader)
 - `FUN_00411260` does not call `FUN_00407230` (resource system)
 - RES files are accessed directly from save file path, bypassing resource system entirely
@@ -466,12 +479,14 @@ Resources that use `FUN_004074d0`/`FUN_004075a0` (which calls `FUN_00407230`/`FU
 **Priority**: ✅ **Module/Override/Patch.erf PT files WILL override save file PT files**
 
 **Evidence**:
+
 - swkotor.exe: `FUN_00565d20` (0x00565d20) loads PARTYTABLE
 - swkotor.exe: `FUN_00565d20` line 51: Calls `FUN_00410630` with "PARTYTABLE" and "PT  " signature
 - swkotor.exe: `FUN_00410630` line 48: Calls `FUN_00407680` with resource type
 - swkotor.exe: `FUN_00407680` line 12: Calls `FUN_00407230` (resource system search function)
 
 **Complete Priority Order** (from `FUN_00407230`):
+
 1. **Override Directory** (Location 3, Source Type 2) - Highest priority
 2. **Module Containers** (Location 2, Source Type 3) - `.mod` files
 3. **Module RIM Files** (Location 1, Source Type 4) - `.rim`, `_s.rim`, `_a.rim`, `_adx.rim`
@@ -485,6 +500,7 @@ Resources that use `FUN_004074d0`/`FUN_004075a0` (which calls `FUN_00407230`/`FU
 **Priority**: ❌ **Module/Override/Patch.erf NFO files are IGNORED**
 
 **Evidence**:
+
 - swkotor.exe: `FUN_004b8300` line 136-155 loads "savenfo.res" directly via `FUN_00411260` (GFF loader)
 - `FUN_00411260` does not call `FUN_00407230` (resource system)
 - NFO files are accessed directly from save file path, bypassing resource system entirely
@@ -503,6 +519,7 @@ Resources that use `FUN_004074d0`/`FUN_004075a0` (which calls `FUN_00407230`/`FU
   - **Standard WAV**: No obfuscation header - file starts directly with standard RIFF/WAVE format (bytes 0-3 = "RIFF", bytes 8-11 = "WAVE")
 
 **Module Support**: ✅ **YES** - WAV handler uses resource system that searches modules
+
 - **Handler**: swkotor.exe: `FUN_005d5e90` (0x005d5e90) line 43: `FUN_004074d0(..., 4)`
 
 ### DDS Textures

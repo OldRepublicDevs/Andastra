@@ -116,6 +116,14 @@ namespace Andastra.Runtime.Games.Aurora
         private float _dayNightTimer;
         private const float DayNightCycleDuration = 1440.0f; // 24 minutes of real time = 24 hours game time (1 minute = 1 hour)
 
+        // Current interpolated lighting colors (updated by UpdateDayNightCycle when cycle is enabled)
+        // Based on nwmain.exe: CNWSArea::UpdateLighting interpolates sun/moon colors based on time of day
+        // These are computed from sun/moon colors and current time of day for smooth transitions
+        private uint _currentAmbientColor;
+        private uint _currentDiffuseColor;
+        private uint _currentFogColor;
+        private byte _currentFogAmount;
+
         // Cached temporary area entity for script execution
         // Based on nwmain.exe: Area scripts execute with area ResRef as context entity
         // This entity is created on-demand and cached for reuse across heartbeat calls
@@ -826,6 +834,14 @@ namespace Andastra.Runtime.Games.Aurora
             _moonFogAmount = 0;
             _sunFogColor = 0;
             _moonFogColor = 0;
+            
+            // Initialize current interpolated colors to sun colors (default day lighting)
+            // These will be updated by UpdateDayNightCycle if day/night cycle is enabled
+            _currentAmbientColor = _sunAmbientColor;
+            _currentDiffuseColor = _sunDiffuseColor;
+            _currentFogColor = _sunFogColor;
+            _currentFogAmount = _sunFogAmount;
+            
             _onEnter = ResRef.FromBlank();
             _onExit = ResRef.FromBlank();
             _onHeartbeat = ResRef.FromBlank();
@@ -2182,9 +2198,132 @@ namespace Andastra.Runtime.Games.Aurora
             }
 
             // Update lighting colors based on time of day
-            // This would typically blend between sun and moon colors
-            // TODO: STUB - For now, we update the IsNight flag which is used by rendering system
-            // Full lighting color interpolation would be handled by graphics backend
+            // Based on nwmain.exe: CNWSArea::UpdateLighting interpolates sun/moon colors
+            // - Full sun colors during day (06:00-18:00, timeOfDay 0.25-0.75)
+            // - Full moon colors during night (18:00-06:00, timeOfDay 0.75-1.0 and 0.0-0.25)
+            // - Smooth interpolation during dawn (04:00-06:00, timeOfDay 0.167-0.25) and dusk (18:00-20:00, timeOfDay 0.75-0.833)
+            // Dawn: transitions from moon to sun over 2 hours (0.0833 of cycle)
+            // Dusk: transitions from sun to moon over 2 hours (0.0833 of cycle)
+            
+            // Calculate interpolation factor (0.0 = full moon, 1.0 = full sun)
+            float sunFactor = CalculateSunLightFactor(timeOfDay);
+            
+            // Interpolate ambient color between moon and sun
+            _currentAmbientColor = InterpolateColor(_moonAmbientColor, _sunAmbientColor, sunFactor);
+            
+            // Interpolate diffuse color between moon and sun
+            _currentDiffuseColor = InterpolateColor(_moonDiffuseColor, _sunDiffuseColor, sunFactor);
+            
+            // Interpolate fog color between moon and sun
+            _currentFogColor = InterpolateColor(_moonFogColor, _sunFogColor, sunFactor);
+            
+            // Interpolate fog amount between moon and sun (linear interpolation)
+            float moonFogFloat = _moonFogAmount;
+            float sunFogFloat = _sunFogAmount;
+            float interpolatedFogFloat = moonFogFloat + (sunFogFloat - moonFogFloat) * sunFactor;
+            // Clamp to valid byte range (0-255)
+            if (interpolatedFogFloat < 0.0f)
+            {
+                _currentFogAmount = 0;
+            }
+            else if (interpolatedFogFloat > 255.0f)
+            {
+                _currentFogAmount = 255;
+            }
+            else
+            {
+                _currentFogAmount = (byte)interpolatedFogFloat;
+            }
+        }
+        
+        /// <summary>
+        /// Calculates the sun light factor (0.0 = full moon, 1.0 = full sun) based on time of day.
+        /// </summary>
+        /// <param name="timeOfDay">Time of day as a fraction of the cycle (0.0 = midnight, 0.5 = noon, 1.0 = next midnight).</param>
+        /// <returns>Sun light factor for interpolation (0.0 to 1.0).</returns>
+        /// <remarks>
+        /// Based on nwmain.exe: Day/night cycle lighting interpolation
+        /// - Full sun: 06:00-18:00 (timeOfDay 0.25-0.75) -> sunFactor = 1.0
+        /// - Full moon: 20:00-04:00 (timeOfDay 0.833-1.0 and 0.0-0.167) -> sunFactor = 0.0
+        /// - Dawn transition: 04:00-06:00 (timeOfDay 0.167-0.25) -> smooth interpolation 0.0 to 1.0
+        /// - Dusk transition: 18:00-20:00 (timeOfDay 0.75-0.833) -> smooth interpolation 1.0 to 0.0
+        /// </remarks>
+        private float CalculateSunLightFactor(float timeOfDay)
+        {
+            // Normalize time of day to [0, 1)
+            if (timeOfDay < 0.0f) timeOfDay = 0.0f;
+            if (timeOfDay >= 1.0f) timeOfDay = 0.0f; // Wrap to start of cycle
+            
+            // Full day period: 06:00-18:00 (0.25-0.75 of cycle)
+            if (timeOfDay >= 0.25f && timeOfDay < 0.75f)
+            {
+                return 1.0f; // Full sun
+            }
+            
+            // Full night period: 20:00-04:00 (0.833-1.0 and 0.0-0.167 of cycle)
+            if (timeOfDay >= 0.833f || timeOfDay < 0.167f)
+            {
+                return 0.0f; // Full moon
+            }
+            
+            // Dawn transition: 04:00-06:00 (0.167-0.25 of cycle)
+            // Linear interpolation from 0.0 (moon) to 1.0 (sun) over 0.0833 of cycle
+            if (timeOfDay >= 0.167f && timeOfDay < 0.25f)
+            {
+                float dawnProgress = (timeOfDay - 0.167f) / 0.0833f; // 0.0 to 1.0
+                return dawnProgress; // 0.0 -> 1.0
+            }
+            
+            // Dusk transition: 18:00-20:00 (0.75-0.833 of cycle)
+            // Linear interpolation from 1.0 (sun) to 0.0 (moon) over 0.0833 of cycle
+            // timeOfDay >= 0.75f && timeOfDay < 0.833f
+            float duskProgress = (timeOfDay - 0.75f) / 0.0833f; // 0.0 to 1.0
+            return 1.0f - duskProgress; // 1.0 -> 0.0
+        }
+        
+        /// <summary>
+        /// Interpolates between two BGR color values.
+        /// </summary>
+        /// <param name="color1">First color in BGR format (0BGR).</param>
+        /// <param name="color2">Second color in BGR format (0BGR).</param>
+        /// <param name="factor">Interpolation factor (0.0 = color1, 1.0 = color2).</param>
+        /// <returns>Interpolated color in BGR format.</returns>
+        /// <remarks>
+        /// Based on nwmain.exe: Color interpolation for day/night transitions
+        /// Colors are stored as DWORD in BGR format: bits 0-7 = Red, 8-15 = Green, 16-23 = Blue
+        /// Interpolates each channel (R, G, B) separately and combines into result
+        /// </remarks>
+        private uint InterpolateColor(uint color1, uint color2, float factor)
+        {
+            // Clamp factor to [0, 1]
+            if (factor < 0.0f) factor = 0.0f;
+            if (factor > 1.0f) factor = 1.0f;
+            
+            // Extract BGR components from color1
+            int r1 = (int)(color1 & 0xFF);
+            int g1 = (int)((color1 >> 8) & 0xFF);
+            int b1 = (int)((color1 >> 16) & 0xFF);
+            
+            // Extract BGR components from color2
+            int r2 = (int)(color2 & 0xFF);
+            int g2 = (int)((color2 >> 8) & 0xFF);
+            int b2 = (int)((color2 >> 16) & 0xFF);
+            
+            // Interpolate each channel
+            int r = (int)(r1 + (r2 - r1) * factor);
+            int g = (int)(g1 + (g2 - g1) * factor);
+            int b = (int)(b1 + (b2 - b1) * factor);
+            
+            // Clamp to valid byte range
+            if (r < 0) r = 0;
+            if (r > 255) r = 255;
+            if (g < 0) g = 0;
+            if (g > 255) g = 255;
+            if (b < 0) b = 0;
+            if (b > 255) b = 255;
+            
+            // Combine back into BGR format
+            return (uint)(r | (g << 8) | (b << 16));
         }
 
         /// <summary>
@@ -2529,29 +2668,33 @@ namespace Andastra.Runtime.Games.Aurora
                 return;
             }
 
-            // Determine if it's night based on day/night cycle or IsNight flag
-            // Based on nwmain.exe: CNWSArea::UpdateLighting determines day/night state
-            bool isNight = false;
+            // Determine lighting colors based on day/night cycle or static IsNight flag
+            // Based on nwmain.exe: CNWSArea::UpdateLighting applies sun/moon colors
+            uint ambientColor;
+            uint diffuseColor;
+            byte fogAmount;
+            uint fogColor;
+            
             if (_dayNightCycle != 0)
             {
-                // Day/night cycle is enabled - calculate from timer
-                // Based on nwmain.exe: DayNightCycleDuration = 1440.0f (24 minutes = 24 hours)
-                // Night is from 18:00 to 6:00 (6 hours = 360 minutes)
-                float timeOfDay = (_dayNightTimer % DayNightCycleDuration) / 60.0f; // Convert to hours
-                isNight = (timeOfDay >= 18.0f || timeOfDay < 6.0f);
+                // Day/night cycle is enabled - use interpolated colors computed by UpdateDayNightCycle
+                // Based on nwmain.exe: CNWSArea::UpdateLighting uses interpolated colors when cycle is active
+                // The interpolated colors are updated each frame by UpdateDayNightCycle to provide smooth transitions
+                ambientColor = _currentAmbientColor;
+                diffuseColor = _currentDiffuseColor;
+                fogAmount = _currentFogAmount;
+                fogColor = _currentFogColor;
             }
             else
             {
-                // Static lighting - use IsNight flag
-                isNight = (_isNight != 0);
+                // Static lighting - use IsNight flag to choose sun or moon colors
+                // Based on nwmain.exe: CNWSArea::UpdateLighting applies sun/moon colors based on IsNight flag
+                bool isNight = (_isNight != 0);
+                ambientColor = isNight ? _moonAmbientColor : _sunAmbientColor;
+                diffuseColor = isNight ? _moonDiffuseColor : _sunDiffuseColor;
+                fogAmount = isNight ? _moonFogAmount : _sunFogAmount;
+                fogColor = isNight ? _moonFogColor : _sunFogColor;
             }
-
-            // Apply sun or moon lighting
-            // Based on nwmain.exe: CNWSArea::UpdateLighting applies sun/moon colors
-            uint ambientColor = isNight ? _moonAmbientColor : _sunAmbientColor;
-            uint diffuseColor = isNight ? _moonDiffuseColor : _sunDiffuseColor;
-            byte fogAmount = isNight ? _moonFogAmount : _sunFogAmount;
-            uint fogColor = isNight ? _moonFogColor : _sunFogColor;
 
             // Convert colors from BGR format to Vector3
             // Based on ARE format: Colors are DWORD in BGR format (0BGR)
