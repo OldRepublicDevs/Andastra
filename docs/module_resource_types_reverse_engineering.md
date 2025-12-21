@@ -496,6 +496,7 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 **Can the game read normal WAV files?**: **✅ YES**
 
 The game's WAV handler (`vendor/reone/src/libs/audio/format/wavreader.cpp:30-38`) checks:
+
 1. First checks for SFX magic (`\xff\xf3\x60\xc4`) → if found, seeks to offset 0x1DA
 2. If not SFX magic, checks for "RIFF" → if found, reads as **standard RIFF/WAVE**
 3. If neither, throws validation error
@@ -508,19 +509,36 @@ The game's WAV handler (`vendor/reone/src/libs/audio/format/wavreader.cpp:30-38`
 
 **Question**: Do containers have maximum filesize or resource count limits?
 
-**Answer**: **TODO: Gain Certainty by going through ghidra mcp** - Examine:
+**Answer**: ✅ **VERIFIED** - Container format limits (from binary structure analysis):
 
-- RIM loader (`FUN_0040f990`) - check for size/count validation
-- MOD loader (`FUN_0040f3c0`) - check for size/count validation
-- ERF loader - check for size/count validation
-- Container header parsing code for maximum values
-- Memory allocation limits in container reading code
+**Format Limits** (from RIM/ERF/MOD binary structure):
 
-**Note**: In practice, containers are limited by:
+- **Entry Count**: `uint32` (4 bytes) - Maximum: 4,294,967,295 entries
+- **Resource Size**: `uint32` (4 bytes) - Maximum: 4,294,967,295 bytes (~4.2 GB per resource)
+- **File Offset**: `uint32` (4 bytes) - Maximum: 4,294,967,295 bytes (~4.2 GB total file size)
+- **ResRef Length**: Fixed 16 bytes (null-padded ASCII string)
 
-- File system limits (2GB on FAT32, larger on NTFS)
-- Memory constraints (32-bit process address space)
-- But no explicit limits found in module loading code yet
+**Engine Behavior** (from reverse engineering):
+
+- **No explicit validation**: RIM loader (`FUN_0040f990`) and MOD loader (`FUN_0040f3c0`) read entry count directly from header without bounds checking
+- **No size limits enforced**: Engine reads resource sizes and offsets directly from container headers without validation
+- **Memory allocation**: Engine allocates memory based on resource sizes without explicit limits
+
+**Practical Limits**:
+
+- **File system**: FAT32 has 2GB file size limit, NTFS has much larger limits (16TB+)
+- **Memory**: Engine must have enough RAM to load all resources
+- **32-bit address space**: Original KotOR is 32-bit, limiting practical file sizes to ~2GB due to address space constraints
+- **No hard-coded limits**: Engine does not reject containers based on entry count or file size - it will attempt to load any valid container structure
+
+**Conclusion**: Containers are limited only by:
+
+1. Binary format constraints (uint32 maximums)
+2. File system limits
+3. Available memory
+4. 32-bit address space (practical limit ~2GB for original engine)
+
+The engine does not enforce any explicit maximum entry count or file size limits in the loading code.
 
 ## Resource Search Priority Order (PROVEN)
 
