@@ -137,6 +137,13 @@ namespace Andastra.Runtime.MonoGame.Backends
                 return;
             }
 
+            // Dispose cached device wrapper
+            if (_cachedDevice != null)
+            {
+                _cachedDevice.Dispose();
+                _cachedDevice = null;
+            }
+
             // Destroy all resources
             foreach (ResourceInfo resource in _resources.Values)
             {
@@ -338,34 +345,31 @@ namespace Andastra.Runtime.MonoGame.Backends
             return _lastFrameStats;
         }
 
+        // Cached device instance (singleton pattern for the lifetime of the backend)
+        private VulkanDevice _cachedDevice;
+
         public IDevice GetDevice()
         {
-            // TODO: STUB - Implement IDevice creation for Vulkan raytracing
-            // When raytracing is enabled with VK_KHR_ray_tracing_pipeline, this should create
-            // and return a VulkanDevice instance that implements IDevice and provides access
-            // to Vulkan raytracing functionality
-            // For now, return null as the device creation is not yet implemented
+            // Only return device if raytracing is enabled and device is initialized
             if (!_initialized || !_capabilities.SupportsRaytracing || !_raytracingEnabled || _device == IntPtr.Zero)
             {
                 return null;
             }
 
-            // TODO: STUB - Create and return actual IDevice implementation
-            // This will require implementing a VulkanDevice class that wraps VkDevice
-            // and provides the IDevice interface for raytracing operations
-            return null;
-        }
+            // Create and cache device instance on first access
+            if (_cachedDevice == null)
+            {
+                _cachedDevice = new VulkanDevice(
+                    _device,
+                    _instance,
+                    _physicalDevice,
+                    _graphicsQueue,
+                    _computeQueue,
+                    _transferQueue,
+                    _capabilities);
+            }
 
-            // TODO: IMPLEMENT - Create and return IDevice wrapper around native Vulkan device
-            // For now, Device implementations need to be created. The IDevice interface provides
-            // NVRHI-style abstractions for raytracing resources (acceleration structures, raytracing pipelines, etc.).
-            // This would wrap the native VkDevice with VK_KHR_ray_tracing_pipeline extension and provide IDevice interface.
-            // 
-            // Implementation would be:
-            // - Create VulkanDevice class implementing IDevice
-            // - Wrap native _device handle and provide IDevice methods
-            // - Cache device instance and return it here
-            return null;
+            return _cachedDevice;
         }
 
         private bool CreateInstance()
