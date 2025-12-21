@@ -2684,11 +2684,8 @@ namespace Andastra.Runtime.MonoGame.Backends
             //     output.write(clearValue, gid);
             // }
             // 
-            // Note: This shader must be compiled into a Metal library and the function
-            // "clearUAVUint" must be available. Shader compilation from source requires
-            // Objective-C interop (objc_msgSend) which is complex in C#. In practice, shaders
-            // are typically compiled at build time into .metallib files or embedded in the app bundle.
-            // For runtime compilation, additional infrastructure would be needed.
+            // Note: This shader is compiled at runtime from source if not found in the default library.
+            // Runtime shader compilation uses Metal's newLibraryWithSource:options:error: API.
             if (_clearUAVUintComputePipelineState == IntPtr.Zero)
             {
                 // Get the compute function from the default library
@@ -4325,11 +4322,9 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // which contains the instance buffer reference and instance count
                 AccelStructDesc tlasDesc = metalAccelStruct.Desc;
                 
-                // Note: CreateAccelerationStructureDescriptor may need to be extended to support
-                // TODO:  instance buffer references for TLAS. For now, we create the descriptor and assume
-                // it will be properly configured with instance buffer reference via native interop
-                // TODO:  In a full implementation, we would set the instance buffer on the descriptor using
-                // Metal API: MTLAccelerationStructureGeometryInstanceDescriptor::setInstanceBuffer:offset:stridedBytesPerInstance:
+                // Create the TLAS descriptor - it will be configured with instance buffer reference below
+                // Based on Metal API: MTLAccelerationStructureGeometryInstanceDescriptor
+                // Metal API Reference: https://developer.apple.com/documentation/metal/mtlaccelerationstructuregeometryinstancedescriptor
                 IntPtr tlasDescriptor = MetalNative.CreateAccelerationStructureDescriptor(device, tlasDesc);
                 if (tlasDescriptor == IntPtr.Zero)
                 {
