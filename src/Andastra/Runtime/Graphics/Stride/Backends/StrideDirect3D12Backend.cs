@@ -722,7 +722,8 @@ namespace Andastra.Runtime.Stride.Backends
                             Capacity = capacity,
                             DescriptorIncrementSize = descriptorIncrementSize,
                             NextIndex = 0,
-                            FreeIndices = new HashSet<int>()
+                            FreeIndices = new HashSet<int>(),
+                            HeapType = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER // Sampler heap type
                         };
                         _bindlessHeaps[handle] = heapInfo;
 
