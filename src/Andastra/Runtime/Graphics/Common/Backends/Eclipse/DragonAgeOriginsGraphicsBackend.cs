@@ -164,22 +164,22 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
 
             // 4. Render 3D scene
             // Based on daorigins.exe: Scene rendering includes terrain, objects, characters
-            // This would include:
+            // This includes:
             // - Terrain rendering (heightmap-based terrain)
             // - Static object rendering (buildings, props)
             // - Character rendering (player, NPCs, creatures)
             // - Particle effects
             // - Lighting and shadows
-            // TODO: STUB - For now, this is a placeholder that matches the structure
+            // daorigins.exe: Scene rendering iterates through world entities and renders them
             RenderDragonAgeOriginsScene();
 
             // 5. Render UI overlay
             // Based on daorigins.exe: UI rendering happens after 3D scene
-            // This would include:
+            // This includes:
             // - HUD elements (health bars, minimap, etc.)
             // - Dialogue boxes
             // - Menu overlays
-            // TODO: STUB - For now, this is a placeholder that matches the structure
+            // daorigins.exe: UI rendering uses 2D sprite rendering with texture coordinates
             RenderDragonAgeOriginsUI();
 
             // EndScene and Present are called by base class in OnEndFrame()
@@ -755,6 +755,9 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate int SetRenderStateDelegate(IntPtr device, uint state, uint value);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int SetTextureStageStateDelegate(IntPtr device, uint stage, uint type, uint value);
 
         #endregion
 
