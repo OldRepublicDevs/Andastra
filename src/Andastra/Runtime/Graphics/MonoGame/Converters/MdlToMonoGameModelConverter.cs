@@ -38,6 +38,8 @@ namespace Andastra.Runtime.MonoGame.Converters
     ///   - "Cannot load door model '%s'." @ 0x007d2488
     ///   - "CSWCAnimBase::LoadModel(): The headconjure dummy has an orientation....It shouldn't!!  The %s model needs to be fixed or else the spell visuals will not be correct." @ 0x007ce278
     ///   - "CSWCAnimBase::LoadModel(): The handconjure dummy has an orientation....It shouldn't!!  The %s model needs to be fixed or else the spell visuals will not be correct." @ 0x007ce320
+    /// - Fixed: headconjure and handconjure dummy nodes are forced to identity orientation (0,0,0,1) to ensure spell visuals work correctly
+    /// - Based on swkotor2.exe: FUN_006f8590 @ 0x006f8590 checks for headconjure/handconjure nodes and validates orientation
     /// - Original implementation: KOTOR loads MDL/MDX files and renders with DirectX 8/9 APIs
     /// - MDL format: Binary model format containing trimesh nodes, bones, animations
     /// - MDX format: Binary geometry format containing vertex positions, normals, UVs, indices
@@ -220,13 +222,44 @@ namespace Andastra.Runtime.MonoGame.Converters
 
         private Matrix CreateNodeTransform(MDLNode node)
         {
-            // Create rotation from quaternion
-            Quaternion rotation = new Quaternion(
-                node.Orientation.X,
-                node.Orientation.Y,
-                node.Orientation.Z,
-                node.Orientation.W
-            );
+            // Based on swkotor2.exe: FUN_006f8590 @ 0x006f8590
+            // The headconjure and handconjure dummy nodes must have identity orientation (0,0,0,1)
+            // Otherwise spell visuals will not be correct
+            // Original engine checks: if (node->GetNode("headconjure") && orientation != identity) -> error
+            // Original engine checks: if (node->GetNode("handconjure") && orientation != identity) -> error
+            // Fix: Force identity orientation for these nodes to match original engine behavior
+            Quaternion rotation;
+            if (!string.IsNullOrEmpty(node.Name))
+            {
+                string nodeNameLower = node.Name.ToLowerInvariant();
+                if (nodeNameLower == "headconjure" || nodeNameLower == "handconjure")
+                {
+                    // Force identity orientation for spell visual attachment points
+                    // These dummy nodes should not have any rotation - they're just attachment points
+                    // swkotor2.exe: FUN_006f8590 validates that these nodes have identity quaternion (0,0,0,1)
+                    rotation = Quaternion.Identity;
+                }
+                else
+                {
+                    // Use node's orientation for all other nodes
+                    rotation = new Quaternion(
+                        node.Orientation.X,
+                        node.Orientation.Y,
+                        node.Orientation.Z,
+                        node.Orientation.W
+                    );
+                }
+            }
+            else
+            {
+                // Use node's orientation if name is empty
+                rotation = new Quaternion(
+                    node.Orientation.X,
+                    node.Orientation.Y,
+                    node.Orientation.Z,
+                    node.Orientation.W
+                );
+            }
 
             // Create translation
             Vector3 translation = new Vector3(
