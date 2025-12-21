@@ -2702,13 +2702,10 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 if (stats != null)
                 {
                     // Check if creature has ability (spell/talent/feat ID)
-                    // In full implementation, this would check ability list from stats component
-                    // TODO: STUB - For now, check if ability ID is stored in entity data
-                    string abilityKey = "HasAbility_" + ability;
-                    if (creature.HasData(abilityKey))
-                    {
-                        return Variable.FromInt(creature.GetData<bool>(abilityKey) ? 1 : 0);
-                    }
+                    // In Eclipse engine, abilities/talents are stored in the stats component's known spells/abilities list
+                    // HasSpell checks the _knownSpells HashSet which contains all known abilities/talents/spells
+                    bool hasAbility = stats.HasSpell(ability);
+                    return Variable.FromInt(hasAbility ? 1 : 0);
                 }
             }
             
