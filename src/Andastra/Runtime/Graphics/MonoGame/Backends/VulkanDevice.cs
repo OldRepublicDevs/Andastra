@@ -886,7 +886,102 @@ namespace Andastra.Runtime.MonoGame.Backends
             public void DrawIndexed(DrawArguments args) { /* TODO: vkCmdDrawIndexed */ }
             public void DrawIndirect(IBuffer argumentBuffer, int offset, int drawCount, int stride) { /* TODO: vkCmdDrawIndirect */ }
             public void DrawIndexedIndirect(IBuffer argumentBuffer, int offset, int drawCount, int stride) { /* TODO: vkCmdDrawIndexedIndirect */ }
-            public void SetComputeState(ComputeState state) { /* TODO: Set compute state */ }
+            public void SetComputeState(ComputeState state)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before setting compute state");
+                }
+
+                if (state.Pipeline == null)
+                {
+                    throw new ArgumentException("Compute state must have a valid pipeline", nameof(state));
+                }
+
+                // Cast to Vulkan implementation to access native handle
+                VulkanComputePipeline vulkanPipeline = state.Pipeline as VulkanComputePipeline;
+                if (vulkanPipeline == null)
+                {
+                    throw new ArgumentException("Pipeline must be a VulkanComputePipeline", nameof(state));
+                }
+
+                // Extract VkPipeline handle from VulkanComputePipeline
+                // The _handle field in VulkanComputePipeline is the VkPipeline handle
+                // This would be done via native interop when Vulkan bindings are available
+                // For now, we structure the code to work with the handle when interop is added
+
+                // Step 1: Bind compute pipeline
+                // vkCmdBindPipeline(_handle, VK_PIPELINE_BIND_POINT_COMPUTE, vulkanPipeline.GetNativeHandle())
+                // Where:
+                // - _handle is the VkCommandBuffer (this command list's handle)
+                // - VK_PIPELINE_BIND_POINT_COMPUTE is the pipeline bind point for compute
+                // - vulkanPipeline.GetNativeHandle() would return the VkPipeline handle
+                // 
+                // In Vulkan:
+                // void vkCmdBindPipeline(
+                //     VkCommandBuffer commandBuffer,
+                //     VkPipelineBindPoint pipelineBindPoint,
+                //     VkPipeline pipeline);
+
+                // Step 2: Bind descriptor sets if provided
+                if (state.BindingSets != null && state.BindingSets.Length > 0)
+                {
+                    // Extract VkPipelineLayout from the compute pipeline's descriptor
+                    // The pipeline layout is created during pipeline creation and stored with the pipeline
+                    // We need access to it to bind descriptor sets correctly
+                    // 
+                    // For descriptor sets, we need to:
+                    // 1. Extract VkDescriptorSet handles from IBindingSet[] (cast to VulkanBindingSet)
+                    // 2. Extract VkPipelineLayout from the compute pipeline
+                    // 3. Call vkCmdBindDescriptorSets
+                    //
+                    // In Vulkan:
+                    // void vkCmdBindDescriptorSets(
+                    //     VkCommandBuffer commandBuffer,
+                    //     VkPipelineBindPoint pipelineBindPoint,
+                    //     VkPipelineLayout layout,
+                    //     uint firstSet,
+                    //     uint descriptorSetCount,
+                    //     const VkDescriptorSet* pDescriptorSets,
+                    //     uint dynamicOffsetCount,
+                    //     const uint32_t* pDynamicOffsets);
+
+                    // Build arrays of descriptor set handles and dynamic offsets
+                    // Note: Dynamic offsets would come from the binding set if it has dynamic uniform buffers
+                    int descriptorSetCount = state.BindingSets.Length;
+                    
+                    for (int i = 0; i < descriptorSetCount; i++)
+                    {
+                        VulkanBindingSet vulkanBindingSet = state.BindingSets[i] as VulkanBindingSet;
+                        if (vulkanBindingSet == null)
+                        {
+                            throw new ArgumentException($"Binding set at index {i} must be a VulkanBindingSet", nameof(state));
+                        }
+
+                        // Extract VkDescriptorSet handle from VulkanBindingSet
+                        // The _handle field in VulkanBindingSet is the VkDescriptorSet handle
+                        // vulkanBindingSet.GetNativeHandle() would return the VkDescriptorSet handle
+                    }
+
+                    // Bind all descriptor sets in a single call for efficiency
+                    // vkCmdBindDescriptorSets(
+                    //     _handle,
+                    //     VK_PIPELINE_BIND_POINT_COMPUTE,
+                    //     pipelineLayout,  // From compute pipeline
+                    //     0,  // firstSet - starting set index
+                    //     (uint)descriptorSetCount,
+                    //     descriptorSetHandles,  // Array of VkDescriptorSet handles
+                    //     0,  // dynamicOffsetCount
+                    //     null  // pDynamicOffsets - would be populated if dynamic buffers present
+                    // );
+                }
+
+                // Note: In a full implementation with Vulkan interop, this method would:
+                // 1. Call native vkCmdBindPipeline to bind the compute pipeline
+                // 2. If binding sets are provided, call native vkCmdBindDescriptorSets to bind them
+                // 3. The native handles would be extracted via P/Invoke or similar interop mechanism
+                // 4. All validation would be done before making native calls to avoid crashes
+            }
             public void Dispatch(int groupCountX, int groupCountY = 1, int groupCountZ = 1) { /* TODO: vkCmdDispatch */ }
             public void DispatchIndirect(IBuffer argumentBuffer, int offset) { /* TODO: vkCmdDispatchIndirect */ }
             public void SetRaytracingState(RaytracingState state) { /* TODO: Set raytracing state */ }
