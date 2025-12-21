@@ -3733,13 +3733,82 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new InvalidOperationException($"Failed to set raytracing pipeline state: {ex.Message}", ex);
             }
 
+            // Validate shader binding table regions
+            // Ray generation shader table is required and must have valid size
+            if (shaderTable.RayGenSize == 0UL)
+            {
+                throw new InvalidOperationException("Ray generation shader table size cannot be zero");
+            }
+
+            // Validate that ray generation offset doesn't exceed buffer bounds
+            // Note: In Metal 3.0, the shader binding table is a single buffer with offsets for different regions
+            // The buffer contains shader records for ray generation, miss, hit group, and callable shaders
+            // Each region has an offset and size, and they may overlap or be separate regions in the buffer
+            ulong bufferSize = unchecked((ulong)shaderTableBuffer.Desc.ByteSize);
+            if (shaderTable.RayGenOffset >= bufferSize)
+            {
+                throw new InvalidOperationException($"Ray generation shader table offset ({shaderTable.RayGenOffset}) exceeds buffer size ({bufferSize})");
+            }
+
+            if (shaderTable.RayGenOffset + shaderTable.RayGenSize > bufferSize)
+            {
+                throw new InvalidOperationException($"Ray generation shader table extends beyond buffer bounds (offset: {shaderTable.RayGenOffset}, size: {shaderTable.RayGenSize}, buffer size: {bufferSize})");
+            }
+
+            // Validate miss shader table if present
+            if (shaderTable.MissSize > 0UL)
+            {
+                if (shaderTable.MissOffset >= bufferSize)
+                {
+                    throw new InvalidOperationException($"Miss shader table offset ({shaderTable.MissOffset}) exceeds buffer size ({bufferSize})");
+                }
+
+                ulong missStride = shaderTable.MissStride > 0UL ? shaderTable.MissStride : shaderTable.MissSize;
+                if (shaderTable.MissOffset + shaderTable.MissSize > bufferSize)
+                {
+                    throw new InvalidOperationException($"Miss shader table extends beyond buffer bounds (offset: {shaderTable.MissOffset}, size: {shaderTable.MissSize}, buffer size: {bufferSize})");
+                }
+            }
+
+            // Validate hit group shader table if present
+            if (shaderTable.HitGroupSize > 0UL)
+            {
+                if (shaderTable.HitGroupOffset >= bufferSize)
+                {
+                    throw new InvalidOperationException($"Hit group shader table offset ({shaderTable.HitGroupOffset}) exceeds buffer size ({bufferSize})");
+                }
+
+                ulong hitGroupStride = shaderTable.HitGroupStride > 0UL ? shaderTable.HitGroupStride : shaderTable.HitGroupSize;
+                if (shaderTable.HitGroupOffset + shaderTable.HitGroupSize > bufferSize)
+                {
+                    throw new InvalidOperationException($"Hit group shader table extends beyond buffer bounds (offset: {shaderTable.HitGroupOffset}, size: {shaderTable.HitGroupSize}, buffer size: {bufferSize})");
+                }
+            }
+
+            // Validate callable shader table if present
+            if (shaderTable.CallableSize > 0UL)
+            {
+                if (shaderTable.CallableOffset >= bufferSize)
+                {
+                    throw new InvalidOperationException($"Callable shader table offset ({shaderTable.CallableOffset}) exceeds buffer size ({bufferSize})");
+                }
+
+                ulong callableStride = shaderTable.CallableStride > 0UL ? shaderTable.CallableStride : shaderTable.CallableSize;
+                if (shaderTable.CallableOffset + shaderTable.CallableSize > bufferSize)
+                {
+                    throw new InvalidOperationException($"Callable shader table extends beyond buffer bounds (offset: {shaderTable.CallableOffset}, size: {shaderTable.CallableSize}, buffer size: {bufferSize})");
+                }
+            }
+
             // Set shader binding table buffer
-            // In Metal 3.0, the shader binding table is provided as a buffer
-            // The buffer contains shader records for ray generation, miss, and hit group shaders
-            // Metal API: [computeEncoder setBuffer:shaderTableBuffer offset:0 atIndex:shaderBindingTableIndex]
-            // The shader binding table is typically bound at a specific buffer index (e.g., index 0 or 1)
-            // For Metal raytracing, the shader binding table buffer is bound as a regular buffer
-            // The shader records in the buffer are accessed by the raytracing pipeline
+            // In Metal 3.0, the shader binding table is provided as a single buffer
+            // The buffer contains shader records for ray generation, miss, hit group, and callable shaders
+            // Metal API: [computeEncoder setBuffer:shaderTableBuffer offset:rayGenOffset atIndex:shaderBindingTableIndex]
+            // The shader binding table is bound at a specific buffer index (typically index 0)
+            // The raytracing pipeline accesses shader records using the offsets specified in ShaderBindingTable
+            // Note: Metal 3.0 uses a unified buffer approach where all shader records are in one buffer
+            // The pipeline uses the offsets to locate ray generation, miss, hit group, and callable shader records
+            // This differs from D3D12/Vulkan which use separate GPU virtual addresses, but the concept is similar
             const uint shaderBindingTableBufferIndex = 0; // Standard index for shader binding table in Metal raytracing
             MetalNative.SetBuffer(_currentComputeCommandEncoder, shaderTableBufferHandle, shaderTable.RayGenOffset, shaderBindingTableBufferIndex);
 
