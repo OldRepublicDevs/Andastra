@@ -348,20 +348,6 @@ namespace Andastra.Runtime.MonoGame.Backends
             public IntPtr pTexelBufferView;
         }
 
-        /// <summary>
-        /// VkWriteDescriptorSetAccelerationStructureKHR structure for acceleration structure descriptor writes.
-        /// Based on Vulkan specification: VK_KHR_acceleration_structure extension
-        /// https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkWriteDescriptorSetAccelerationStructureKHR.html
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
-        private struct VkWriteDescriptorSetAccelerationStructureKHR
-        {
-            public VkStructureType sType;
-            public IntPtr pNext;
-            public uint accelerationStructureCount;
-            public IntPtr pAccelerationStructures; // VkAccelerationStructureKHR*
-        }
-
         [StructLayout(LayoutKind.Sequential)]
         private struct VkPipelineLayoutCreateInfo
         {
@@ -774,8 +760,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO = 47,
             VK_STRUCTURE_TYPE_LOADER_DEVICE_CREATE_INFO = 48,
             VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR = 1000165000,
-            VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR = 1000165001,
-            VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR = 1000150001
+            VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR = 1000165001
         }
 
         // Additional Vulkan enums
@@ -923,7 +908,6 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate VkResult vkCreateCommandPoolDelegate(IntPtr device, IntPtr pCreateInfo, IntPtr pAllocator, out IntPtr pCommandPool);
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate VkResult vkDestroyCommandPoolDelegate(IntPtr device, IntPtr commandPool, IntPtr pAllocator);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
@@ -1741,12 +1725,27 @@ namespace Andastra.Runtime.MonoGame.Backends
             // Create pipeline layout from binding layouts
             IntPtr pipelineLayout = CreatePipelineLayout(desc.BindingLayouts);
 
-            // For now, we'll create a basic pipeline without render pass (assuming VK_KHR_dynamic_rendering)
-            // TODO: Full implementation would create VkRenderPass from framebuffer
+            // Create VkRenderPass from framebuffer if provided
+            // Based on Vulkan Render Pass Creation: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateRenderPass.html
+            IntPtr vkRenderPass = IntPtr.Zero;
+            if (framebuffer != null)
+            {
+                FramebufferDesc framebufferDesc = framebuffer.Desc;
+                vkRenderPass = CreateRenderPassFromFramebufferDesc(framebufferDesc);
+                
+                // Note: The render pass is not owned by the pipeline - it may be shared with the framebuffer
+                // In a full implementation, the pipeline would need to store the render pass for pipeline creation
+                // For now, we create it but don't use it in pipeline creation (pipeline creation is not fully implemented)
+            }
 
             IntPtr handle = new IntPtr(_nextResourceHandle++);
             var pipeline = new VulkanGraphicsPipeline(handle, desc, IntPtr.Zero, pipelineLayout, _device);
             _resources[handle] = pipeline;
+
+            // Note: vkRenderPass is created but not currently used in pipeline creation
+            // In a full implementation, VkGraphicsPipelineCreateInfo would include the render pass
+            // The render pass is stored in the framebuffer, so pipelines should reference it from there
+            // For now, we create it to match the framebuffer's render pass structure
 
             return pipeline;
         }
@@ -2723,8 +2722,6 @@ namespace Andastra.Runtime.MonoGame.Backends
             List<VkWriteDescriptorSet> writeDescriptorSets = new List<VkWriteDescriptorSet>();
             List<IntPtr> imageInfoPtrs = new List<IntPtr>();
             List<IntPtr> bufferInfoPtrs = new List<IntPtr>();
-            List<IntPtr> accelStructExtensionPtrs = new List<IntPtr>(); // Track acceleration structure extension structures
-            List<IntPtr> accelStructHandleArrays = new List<IntPtr>(); // Track acceleration structure handle arrays
 
             try
             {
@@ -2824,60 +2821,28 @@ namespace Andastra.Runtime.MonoGame.Backends
                         case BindingType.AccelStruct:
                             // Acceleration structures require special handling with VkWriteDescriptorSetAccelerationStructureKHR
                             // This uses the VK_KHR_acceleration_structure extension
-                            // Based on Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkWriteDescriptorSetAccelerationStructureKHR.html
                             if (item.AccelStruct != null)
                             {
                                 // Get acceleration structure handle
                                 IntPtr accelStructHandle = GetAccelStructHandle(item.AccelStruct);
                                 if (accelStructHandle != IntPtr.Zero)
                                 {
-                                    // Set descriptor type to acceleration structure
+                                    // Acceleration structures are written using a chained structure
+                                    // VkWriteDescriptorSetAccelerationStructureKHR
+                                    // For now, we'll set up the write descriptor set with the acceleration structure type
+                                    // The actual acceleration structure handle would be set via pNext chain
+                                    // This requires VK_KHR_acceleration_structure extension structures
+                                    
+                                    // Note: Full implementation would require:
+                                    // 1. VkWriteDescriptorSetAccelerationStructureKHR structure
+                                    // 2. Chain it via pNext in VkWriteDescriptorSet
+                                    // 3. Set descriptorType to VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR
+                                    
                                     writeDescriptorSet.descriptorType = VkDescriptorType.VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
                                     
-                                    // Create VkWriteDescriptorSetAccelerationStructureKHR structure
-                                    // This structure is chained via pNext in VkWriteDescriptorSet
-                                    // The acceleration structure handles are provided as an array
-                                    // For single descriptor writes, descriptorCount is typically 1
-                                    
-                                    // Allocate memory for acceleration structure handles array
-                                    // VkAccelerationStructureKHR is a handle (uint64_t), so we need IntPtr.Size bytes per handle
-                                    int handleArraySize = (int)writeDescriptorSet.descriptorCount * IntPtr.Size;
-                                    IntPtr accelStructHandlesPtr = Marshal.AllocHGlobal(handleArraySize);
-                                    accelStructHandleArrays.Add(accelStructHandlesPtr);
-                                    
-                                    // Write acceleration structure handle to array
-                                    // For descriptorCount == 1, we write a single handle
-                                    // For arrays, we would write multiple handles
-                                    Marshal.WriteIntPtr(accelStructHandlesPtr, accelStructHandle);
-                                    
-                                    // Create the extension structure
-                                    VkWriteDescriptorSetAccelerationStructureKHR accelStructExtension = new VkWriteDescriptorSetAccelerationStructureKHR
-                                    {
-                                        sType = VkStructureType.VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR,
-                                        pNext = IntPtr.Zero, // No further chaining
-                                        accelerationStructureCount = writeDescriptorSet.descriptorCount,
-                                        pAccelerationStructures = accelStructHandlesPtr
-                                    };
-                                    
-                                    // Marshal the extension structure
-                                    int extensionSize = Marshal.SizeOf(typeof(VkWriteDescriptorSetAccelerationStructureKHR));
-                                    IntPtr accelStructExtensionPtr = Marshal.AllocHGlobal(extensionSize);
-                                    accelStructExtensionPtrs.Add(accelStructExtensionPtr);
-                                    Marshal.StructureToPtr(accelStructExtension, accelStructExtensionPtr, false);
-                                    
-                                    // Chain the extension structure via pNext
-                                    // Note: pNext will be set after marshalling, so we'll update it later
-                                    // For now, we store the pointer to set it when marshalling the write descriptor set
-                                    // We'll use a temporary marker to identify this write descriptor set
-                                    // Actually, we need to set pNext before adding to the list, but we need the marshalled pointer
-                                    // Solution: We'll marshal the extension structure now and set pNext immediately
-                                    writeDescriptorSet.pNext = accelStructExtensionPtr;
-                                    
-                                    Console.WriteLine($"[VulkanDevice] Acceleration structure binding for slot {item.Slot} - using VK_KHR_acceleration_structure extension");
-                                }
-                                else
-                                {
-                                    Console.WriteLine($"[VulkanDevice] Warning: Acceleration structure handle is invalid for slot {item.Slot}");
+                                    // TODO: Add VkWriteDescriptorSetAccelerationStructureKHR support when extension is available
+                                    // For now, we log that acceleration structure binding is partially implemented
+                                    Console.WriteLine($"[VulkanDevice] Acceleration structure binding for slot {item.Slot} - requires VK_KHR_acceleration_structure extension structures");
                                 }
                             }
                             break;
@@ -2921,6 +2886,22 @@ namespace Andastra.Runtime.MonoGame.Backends
                     }
                 }
                 foreach (IntPtr ptr in bufferInfoPtrs)
+                {
+                    if (ptr != IntPtr.Zero)
+                    {
+                        Marshal.FreeHGlobal(ptr);
+                    }
+                }
+                // Free all allocated acceleration structure extension structures
+                foreach (IntPtr ptr in accelStructExtensionPtrs)
+                {
+                    if (ptr != IntPtr.Zero)
+                    {
+                        Marshal.FreeHGlobal(ptr);
+                    }
+                }
+                // Free all allocated acceleration structure handle arrays
+                foreach (IntPtr ptr in accelStructHandleArrays)
                 {
                     if (ptr != IntPtr.Zero)
                     {
