@@ -1945,10 +1945,81 @@ namespace Andastra.Runtime.Content.Save
         // Located via string reference: "INVENTORY" @ (needs verification)
         private byte[] SerializeInventory(PartyState partyState)
         {
-            // TODO: STUB - Implement inventory serialization
-            // Inventory is stored as a GFF file with item data
-            // Need to serialize player inventory items from PartyState
-            return null;
+            if (partyState == null || partyState.PlayerCharacter == null)
+            {
+                return null;
+            }
+
+            // Create GFF with INV content type
+            GFF gff = new GFF(GFFContent.INV);
+            GFFStruct root = gff.Root;
+
+            // ItemList - List of inventory items
+            GFFList itemList = root.Acquire<GFFList>("ItemList", new GFFList());
+
+            // Serialize each inventory item
+            if (partyState.PlayerCharacter.Inventory != null)
+            {
+                ushort gridX = 0;
+                ushort gridY = 0;
+                const ushort gridWidth = 10; // Standard inventory grid width
+
+                foreach (ItemState item in partyState.PlayerCharacter.Inventory)
+                {
+                    if (item == null || string.IsNullOrEmpty(item.TemplateResRef))
+                    {
+                        continue;
+                    }
+
+                    // Create item struct
+                    GFFStruct itemStruct = itemList.Add();
+
+                    // Repos_PosX - X position in inventory grid (WORD)
+                    itemStruct.SetUInt16("Repos_PosX", gridX);
+
+                    // Repos_PosY - Y position in inventory grid (WORD)
+                    itemStruct.SetUInt16("Repos_PosY", gridY);
+
+                    // InventoryRes - Item template ResRef (ResRef)
+                    itemStruct.SetResRef("InventoryRes", ResRef.FromString(item.TemplateResRef));
+
+                    // StackSize - Item stack count (DWORD)
+                    itemStruct.SetUInt32("StackSize", (uint)item.StackSize);
+
+                    // Charges - Current charges/uses (DWORD)
+                    itemStruct.SetUInt32("Charges", (uint)item.Charges);
+
+                    // Identified - Whether item is identified (BYTE)
+                    itemStruct.SetUInt8("Identified", item.Identified ? (byte)1 : (byte)0);
+
+                    // Upgrades - Item upgrade modifications (List)
+                    if (item.Upgrades != null && item.Upgrades.Count > 0)
+                    {
+                        GFFList upgradesList = itemStruct.Acquire<GFFList>("Upgrades", new GFFList());
+                        foreach (ItemUpgrade upgrade in item.Upgrades)
+                        {
+                            if (upgrade == null || string.IsNullOrEmpty(upgrade.UpgradeResRef))
+                            {
+                                continue;
+                            }
+
+                            GFFStruct upgradeStruct = upgradesList.Add();
+                            upgradeStruct.SetInt32("UpgradeSlot", upgrade.UpgradeSlot);
+                            upgradeStruct.SetResRef("UpgradeResRef", ResRef.FromString(upgrade.UpgradeResRef));
+                        }
+                    }
+
+                    // Update grid position for next item (simple sequential layout)
+                    gridX++;
+                    if (gridX >= gridWidth)
+                    {
+                        gridX = 0;
+                        gridY++;
+                    }
+                }
+            }
+
+            return gff.ToBytes();
         }
 
         // Serialize repute (REPUTE.fac) - faction reputation
