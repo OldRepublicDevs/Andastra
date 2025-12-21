@@ -1135,6 +1135,10 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // - Call ID3D12CommandAllocator::Reset
                 // - Call ID3D12GraphicsCommandList::Reset with allocator and PSO (if any)
 
+                // Clear barrier tracking for new recording session
+                _pendingBarriers.Clear();
+                _resourceStates.Clear();
+
                 _isOpen = true;
             }
 
@@ -1164,9 +1168,196 @@ namespace Andastra.Runtime.MonoGame.Backends
             public void ClearDepthStencilAttachment(IFramebuffer framebuffer, float depth, byte stencil, bool clearDepth = true, bool clearStencil = true) { /* TODO: ClearDepthStencilView */ }
             public void ClearUAVFloat(ITexture texture, Vector4 value) { /* TODO: ClearUnorderedAccessViewFloat */ }
             public void ClearUAVUint(ITexture texture, uint value) { /* TODO: ClearUnorderedAccessViewUint */ }
-            public void SetTextureState(ITexture texture, ResourceState state) { /* TODO: ResourceBarrier */ }
-            public void SetBufferState(IBuffer buffer, ResourceState state) { /* TODO: ResourceBarrier */ }
-            public void CommitBarriers() { /* TODO: Flush pending barriers */ }
+            public void SetTextureState(ITexture texture, ResourceState state)
+            {
+                if (texture == null)
+                {
+                    return;
+                }
+
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                // Get native resource handle from texture
+                IntPtr resourceHandle = texture.NativeHandle;
+                if (resourceHandle == IntPtr.Zero)
+                {
+                    return; // Invalid texture
+                }
+
+                // Determine current state
+                ResourceState currentState;
+                if (!_resourceStates.TryGetValue(texture, out currentState))
+                {
+                    // First time we see this texture - assume it starts in Common state
+                    currentState = ResourceState.Common;
+                }
+
+                // Check if transition is needed
+                if (currentState == state)
+                {
+                    return; // Already in target state, no barrier needed
+                }
+
+                // Map states to D3D12 resource states
+                uint d3d12StateBefore = MapResourceStateToD3D12(currentState);
+                uint d3d12StateAfter = MapResourceStateToD3D12(state);
+
+                // Queue barrier (will be flushed on CommitBarriers)
+                _pendingBarriers.Add(new PendingBarrier
+                {
+                    Resource = resourceHandle,
+                    Subresource = unchecked((uint)-1), // D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES
+                    StateBefore = d3d12StateBefore,
+                    StateAfter = d3d12StateAfter
+                });
+
+                // Update tracked state
+                _resourceStates[texture] = state;
+            }
+
+            public void SetBufferState(IBuffer buffer, ResourceState state)
+            {
+                if (buffer == null)
+                {
+                    return;
+                }
+
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                // Get native resource handle from buffer
+                IntPtr resourceHandle = buffer.NativeHandle;
+                if (resourceHandle == IntPtr.Zero)
+                {
+                    return; // Invalid buffer
+                }
+
+                // Determine current state
+                ResourceState currentState;
+                if (!_resourceStates.TryGetValue(buffer, out currentState))
+                {
+                    // First time we see this buffer - assume it starts in Common state
+                    currentState = ResourceState.Common;
+                }
+
+                // Check if transition is needed
+                if (currentState == state)
+                {
+                    return; // Already in target state, no barrier needed
+                }
+
+                // Map states to D3D12 resource states
+                uint d3d12StateBefore = MapResourceStateToD3D12(currentState);
+                uint d3d12StateAfter = MapResourceStateToD3D12(state);
+
+                // Queue barrier (will be flushed on CommitBarriers)
+                _pendingBarriers.Add(new PendingBarrier
+                {
+                    Resource = resourceHandle,
+                    Subresource = 0, // Buffers don't have subresources
+                    StateBefore = d3d12StateBefore,
+                    StateAfter = d3d12StateAfter
+                });
+
+                // Update tracked state
+                _resourceStates[buffer] = state;
+            }
+
+            public void CommitBarriers()
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (_pendingBarriers.Count == 0)
+                {
+                    return; // No barriers to commit
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    // Command list not initialized - clear barriers and return
+                    _pendingBarriers.Clear();
+                    return;
+                }
+
+                // Allocate memory for barrier array
+                int barrierSize = Marshal.SizeOf(typeof(D3D12_RESOURCE_BARRIER));
+                IntPtr barriersPtr = Marshal.AllocHGlobal(barrierSize * _pendingBarriers.Count);
+
+                try
+                {
+                    // Convert pending barriers to D3D12_RESOURCE_BARRIER structures
+                    IntPtr currentBarrierPtr = barriersPtr;
+                    for (int i = 0; i < _pendingBarriers.Count; i++)
+                    {
+                        var pendingBarrier = _pendingBarriers[i];
+
+                        var barrier = new D3D12_RESOURCE_BARRIER
+                        {
+                            Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,
+                            Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE,
+                            Transition = new D3D12_RESOURCE_TRANSITION_BARRIER
+                            {
+                                pResource = pendingBarrier.Resource,
+                                Subresource = pendingBarrier.Subresource,
+                                StateBefore = pendingBarrier.StateBefore,
+                                StateAfter = pendingBarrier.StateAfter
+                            }
+                        };
+
+                        Marshal.StructureToPtr(barrier, currentBarrierPtr, false);
+                        currentBarrierPtr = new IntPtr(currentBarrierPtr.ToInt64() + barrierSize);
+                    }
+
+                    // Call ID3D12GraphicsCommandList::ResourceBarrier
+                    CallResourceBarrier(_d3d12CommandList, unchecked((uint)_pendingBarriers.Count), barriersPtr);
+                }
+                finally
+                {
+                    // Free allocated memory
+                    Marshal.FreeHGlobal(barriersPtr);
+                }
+
+                // Clear pending barriers after committing
+                _pendingBarriers.Clear();
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::ResourceBarrier through COM vtable.
+            /// VTable index 44 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Resource Barriers: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-resourcebarrier
+            /// </summary>
+            private unsafe void CallResourceBarrier(IntPtr commandList, uint numBarriers, IntPtr pBarriers)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero || pBarriers == IntPtr.Zero || numBarriers == 0)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // ResourceBarrier is at index 44 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[44];
+
+                // Create delegate from function pointer
+                ResourceBarrierDelegate resourceBarrier =
+                    (ResourceBarrierDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(ResourceBarrierDelegate));
+
+                resourceBarrier(commandList, numBarriers, pBarriers);
+            }
             public void UAVBarrier(ITexture texture) { /* TODO: UAVBarrier */ }
             public void UAVBarrier(IBuffer buffer) { /* TODO: UAVBarrier */ }
             public void SetGraphicsState(GraphicsState state) { /* TODO: Set all graphics state */ }
