@@ -316,6 +316,16 @@ namespace Andastra.Runtime.MonoGame.Backends
             public uint memoryTypeBits;
         }
 
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkDebugUtilsLabelEXT
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public IntPtr pLabelName;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            public float[] color;
+        }
+
         // Vulkan enums
         private enum VkStructureType
         {
@@ -471,6 +481,15 @@ namespace Andastra.Runtime.MonoGame.Backends
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkCmdDispatchDelegate(IntPtr commandBuffer, uint groupCountX, uint groupCountY, uint groupCountZ);
 
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdBeginDebugUtilsLabelEXTDelegate(IntPtr commandBuffer, ref VkDebugUtilsLabelEXT pLabelInfo);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdEndDebugUtilsLabelEXTDelegate(IntPtr commandBuffer);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdInsertDebugUtilsLabelEXTDelegate(IntPtr commandBuffer, ref VkDebugUtilsLabelEXT pLabelInfo);
+
         // Function pointers storage
         private static vkCreateImageDelegate vkCreateImage;
         private static vkDestroyImageDelegate vkDestroyImage;
@@ -515,6 +534,10 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static vkCmdBindPipelineDelegate vkCmdBindPipeline;
         private static vkCmdBindDescriptorSetsDelegate vkCmdBindDescriptorSets;
         private static vkCmdDispatchDelegate vkCmdDispatch;
+
+        private static vkCmdBeginDebugUtilsLabelEXTDelegate vkCmdBeginDebugUtilsLabelEXT;
+        private static vkCmdEndDebugUtilsLabelEXTDelegate vkCmdEndDebugUtilsLabelEXT;
+        private static vkCmdInsertDebugUtilsLabelEXTDelegate vkCmdInsertDebugUtilsLabelEXT;
 
         // Helper methods for Vulkan interop
         private static void InitializeVulkanFunctions(IntPtr device)
@@ -873,7 +896,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 mipLodBias = desc.MipLODBias,
                 anisotropyEnable = desc.MaxAnisotropy > 1.0f ? VkBool32.VK_TRUE : VkBool32.VK_FALSE,
                 maxAnisotropy = desc.MaxAnisotropy,
-                compareEnable = desc.CompareFunc != CompareFunction.Never ? VkBool32.VK_TRUE : VkBool32.VK_FALSE,
+                compareEnable = desc.CompareFunc != CompareFunc.Never ? VkBool32.VK_TRUE : VkBool32.VK_FALSE,
                 compareOp = vkCompareOp,
                 minLod = desc.MinLOD,
                 maxLod = desc.MaxLOD,
@@ -891,22 +914,24 @@ namespace Andastra.Runtime.MonoGame.Backends
             return sampler;
         }
 
-        private VkFilter ConvertToVkFilter(FilterMode filter)
+        private VkFilter ConvertToVkFilter(SamplerFilter filter)
         {
             switch (filter)
             {
-                case FilterMode.Point: return VkFilter.VK_FILTER_NEAREST;
-                case FilterMode.Linear: return VkFilter.VK_FILTER_LINEAR;
+                case SamplerFilter.Point: return VkFilter.VK_FILTER_NEAREST;
+                case SamplerFilter.Linear: return VkFilter.VK_FILTER_LINEAR;
+                case SamplerFilter.Anisotropic: return VkFilter.VK_FILTER_LINEAR;
                 default: return VkFilter.VK_FILTER_LINEAR;
             }
         }
 
-        private VkSamplerMipmapMode ConvertToVkSamplerMipmapMode(FilterMode filter)
+        private VkSamplerMipmapMode ConvertToVkSamplerMipmapMode(SamplerFilter filter)
         {
             switch (filter)
             {
-                case FilterMode.Point: return VkSamplerMipmapMode.VK_SAMPLER_MIPMAP_MODE_NEAREST;
-                case FilterMode.Linear: return VkSamplerMipmapMode.VK_SAMPLER_MIPMAP_MODE_LINEAR;
+                case SamplerFilter.Point: return VkSamplerMipmapMode.VK_SAMPLER_MIPMAP_MODE_NEAREST;
+                case SamplerFilter.Linear: return VkSamplerMipmapMode.VK_SAMPLER_MIPMAP_MODE_LINEAR;
+                case SamplerFilter.Anisotropic: return VkSamplerMipmapMode.VK_SAMPLER_MIPMAP_MODE_LINEAR;
                 default: return VkSamplerMipmapMode.VK_SAMPLER_MIPMAP_MODE_LINEAR;
             }
         }
@@ -923,18 +948,18 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
         }
 
-        private VkCompareOp ConvertToVkCompareOp(CompareFunction compareFunc)
+        private VkCompareOp ConvertToVkCompareOp(CompareFunc compareFunc)
         {
             switch (compareFunc)
             {
-                case CompareFunction.Never: return VkCompareOp.VK_COMPARE_OP_NEVER;
-                case CompareFunction.Less: return VkCompareOp.VK_COMPARE_OP_LESS;
-                case CompareFunction.Equal: return VkCompareOp.VK_COMPARE_OP_EQUAL;
-                case CompareFunction.LessEqual: return VkCompareOp.VK_COMPARE_OP_LESS_OR_EQUAL;
-                case CompareFunction.Greater: return VkCompareOp.VK_COMPARE_OP_GREATER;
-                case CompareFunction.NotEqual: return VkCompareOp.VK_COMPARE_OP_NOT_EQUAL;
-                case CompareFunction.GreaterEqual: return VkCompareOp.VK_COMPARE_OP_GREATER_OR_EQUAL;
-                case CompareFunction.Always: return VkCompareOp.VK_COMPARE_OP_ALWAYS;
+                case CompareFunc.Never: return VkCompareOp.VK_COMPARE_OP_NEVER;
+                case CompareFunc.Less: return VkCompareOp.VK_COMPARE_OP_LESS;
+                case CompareFunc.Equal: return VkCompareOp.VK_COMPARE_OP_EQUAL;
+                case CompareFunc.LessEqual: return VkCompareOp.VK_COMPARE_OP_LESS_OR_EQUAL;
+                case CompareFunc.Greater: return VkCompareOp.VK_COMPARE_OP_GREATER;
+                case CompareFunc.NotEqual: return VkCompareOp.VK_COMPARE_OP_NOT_EQUAL;
+                case CompareFunc.GreaterEqual: return VkCompareOp.VK_COMPARE_OP_GREATER_OR_EQUAL;
+                case CompareFunc.Always: return VkCompareOp.VK_COMPARE_OP_ALWAYS;
                 default: return VkCompareOp.VK_COMPARE_OP_NEVER;
             }
         }
@@ -1291,7 +1316,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             return accelStruct;
         }
 
-        public IRaytracingPipeline CreateRaytracingPipeline(RaytracingPipelineDesc desc)
+        public IRaytracingPipeline CreateRaytracingPipeline(Interfaces.RaytracingPipelineDesc desc)
         {
             if (!IsValid)
             {
@@ -1978,7 +2003,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         private class VulkanRaytracingPipeline : IRaytracingPipeline, IResource
         {
-            public RaytracingPipelineDesc Desc { get; }
+            public Interfaces.RaytracingPipelineDesc Desc { get; }
             private readonly IntPtr _handle;
             private readonly IntPtr _vkPipeline;
             private readonly IntPtr _vkPipelineLayout;
@@ -2199,9 +2224,97 @@ namespace Andastra.Runtime.MonoGame.Backends
             public void BuildBottomLevelAccelStruct(IAccelStruct accelStruct, GeometryDesc[] geometries) { /* TODO: vkCmdBuildAccelerationStructuresKHR */ }
             public void BuildTopLevelAccelStruct(IAccelStruct accelStruct, AccelStructInstance[] instances) { /* TODO: vkCmdBuildAccelerationStructuresKHR */ }
             public void CompactBottomLevelAccelStruct(IAccelStruct dest, IAccelStruct src) { /* TODO: vkCmdCopyAccelerationStructureKHR */ }
-            public void BeginDebugEvent(string name, Vector4 color) { /* TODO: vkCmdBeginDebugUtilsLabelEXT */ }
-            public void EndDebugEvent() { /* TODO: vkCmdEndDebugUtilsLabelEXT */ }
-            public void InsertDebugMarker(string name, Vector4 color) { /* TODO: vkCmdInsertDebugUtilsLabelEXT */ }
+            public void BeginDebugEvent(string name, Vector4 color)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before beginning debug event");
+                }
+
+                if (string.IsNullOrEmpty(name))
+                {
+                    throw new ArgumentException("Debug event name cannot be null or empty", nameof(name));
+                }
+
+                // Pin the string for native interop
+                byte[] nameBytes = System.Text.Encoding.UTF8.GetBytes(name + "\0");
+                GCHandle nameHandle = GCHandle.Alloc(nameBytes, GCHandleType.Pinned);
+                try
+                {
+                    // Create debug label structure
+                    float[] colorArray = new float[4] { color.X, color.Y, color.Z, color.W };
+                    VkDebugUtilsLabelEXT labelInfo = new VkDebugUtilsLabelEXT
+                    {
+                        sType = VkStructureType.VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT,
+                        pNext = IntPtr.Zero,
+                        pLabelName = nameHandle.AddrOfPinnedObject(),
+                        color = colorArray
+                    };
+
+                    // Call Vulkan function if available
+                    if (vkCmdBeginDebugUtilsLabelEXT != null)
+                    {
+                        vkCmdBeginDebugUtilsLabelEXT(_vkCommandBuffer, ref labelInfo);
+                    }
+                }
+                finally
+                {
+                    nameHandle.Free();
+                }
+            }
+
+            public void EndDebugEvent()
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before ending debug event");
+                }
+
+                // Call Vulkan function if available
+                if (vkCmdEndDebugUtilsLabelEXT != null)
+                {
+                    vkCmdEndDebugUtilsLabelEXT(_vkCommandBuffer);
+                }
+            }
+
+            public void InsertDebugMarker(string name, Vector4 color)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before inserting debug marker");
+                }
+
+                if (string.IsNullOrEmpty(name))
+                {
+                    throw new ArgumentException("Debug marker name cannot be null or empty", nameof(name));
+                }
+
+                // Pin the string for native interop
+                byte[] nameBytes = System.Text.Encoding.UTF8.GetBytes(name + "\0");
+                GCHandle nameHandle = GCHandle.Alloc(nameBytes, GCHandleType.Pinned);
+                try
+                {
+                    // Create debug label structure
+                    float[] colorArray = new float[4] { color.X, color.Y, color.Z, color.W };
+                    VkDebugUtilsLabelEXT labelInfo = new VkDebugUtilsLabelEXT
+                    {
+                        sType = VkStructureType.VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT,
+                        pNext = IntPtr.Zero,
+                        pLabelName = nameHandle.AddrOfPinnedObject(),
+                        color = colorArray
+                    };
+
+                    // Call Vulkan function if available
+                    if (vkCmdInsertDebugUtilsLabelEXT != null)
+                    {
+                        vkCmdInsertDebugUtilsLabelEXT(_vkCommandBuffer, ref labelInfo);
+                    }
+                }
+                finally
+                {
+                    nameHandle.Free();
+                }
+            }
 
             public void Dispose()
             {
