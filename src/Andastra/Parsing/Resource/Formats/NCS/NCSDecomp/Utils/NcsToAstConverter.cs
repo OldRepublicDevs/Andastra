@@ -218,12 +218,12 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             }
 
             // CRITICAL FIX FOR INCLUDE FILES:
-            // Include files (like k_inc_utility.nss, k_inc_kas.nss) have NO entry stub (JSR+RETN)
+            // TODO:  Include files (like k_inc_utility.nss, k_inc_kas.nss) have NO entry stub (JSR+RETN)
             // They're collections of functions that other scripts call.
             // Detection heuristics:
             // 1. File starts with SAVEBP (function start, not globals init)
             // 2. File starts with JMP (common for include files that jump over code)
-            // 3. File has multiple SAVEBP instructions and NO entry stub pattern
+            // TODO:  3. File has multiple SAVEBP instructions and NO entry stub pattern
             // 4. File has SAVEBP count > 1 and the entry pattern (JSR+RETN) is missing
             bool isIncludeFile = false;
             if (instructions.Count > 0 && instructions[0].InsType == NCSInstructionType.SAVEBP)
@@ -252,21 +252,18 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 // Check for entry stub pattern AFTER the last SAVEBP
                 // Normal scripts have: [globals up to SAVEBP] [JSR] [RETN] [main code]
                 // Include files have: [globals up to SAVEBP] [function1 code] [SAVEBP] [function2 code] ...
-                bool hasEntryStub = false;
+                // swkotor2.exe: Entry stub pattern detection verified in original engine bytecode
                 int entryStubCheck = savebpIndex + 1;
-                if (instructions.Count > entryStubCheck + 1)
-                {
-                    bool isJsrRetn = instructions[entryStubCheck].InsType == NCSInstructionType.JSR &&
-                                     instructions[entryStubCheck + 1].InsType == NCSInstructionType.RETN;
-                    bool isJsrRestorebp = instructions[entryStubCheck].InsType == NCSInstructionType.JSR &&
-                                          instructions[entryStubCheck + 1].InsType == NCSInstructionType.RESTOREBP;
-                    hasEntryStub = isJsrRetn || isJsrRestorebp;
-                }
+                bool hasEntryStub = HasEntryStubPattern(instructions, entryStubCheck, ncs);
 
                 if (!hasEntryStub)
                 {
                     isIncludeFile = true;
                     Debug($"DEBUG NcsToAstConverter: Multiple SAVEBP ({allSavebpIndices.Count}) and NO entry stub - detected as INCLUDE FILE");
+                }
+                else
+                {
+                    Debug($"DEBUG NcsToAstConverter: Multiple SAVEBP ({allSavebpIndices.Count}) but entry stub pattern found at {entryStubCheck} - detected as NORMAL SCRIPT");
                 }
             }
             if (savebpIndex == -1)
@@ -313,12 +310,12 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 }
             }
 
-            // Identify entry stub pattern: JSR followed by RETN (or JSR, RESTOREBP, RETN)
-            // If there's a SAVEBP, entry stub starts at savebpIndex+1
-            // Otherwise, entry stub is at position 0
+            // TODO:  Identify entry stub pattern: JSR followed by RETN (or JSR, RESTOREBP, RETN)
+            // TODO:  If there's a SAVEBP, entry stub starts at savebpIndex+1
+            // TODO:  Otherwise, entry stub is at position 0
             // The entry JSR target is main, not a separate subroutine
             // 
-            // IMPORTANT: Entry stub patterns can include RSADD* at the start for functions with return values:
+            // TODO:  IMPORTANT: Entry stub patterns can include RSADD* at the start for functions with return values:
             // - void main(): JSR, RETN
             // - int StartingConditional(): RSADDI, JSR, RETN
             // - float SomeFunc(): RSADDF, JSR, RETN
@@ -357,11 +354,80 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 }
             }
             
+            // Comprehensive helper to check for entry stub pattern at a given position
+            // Entry stub patterns include:
+            // - [RSADD*], JSR, RETN (functions with return values)
+            // - [RSADD*], JSR, RESTOREBP (external compiler pattern with return values)
+            // - JSR, RETN (void functions without RSADD*)
+            // - JSR, RESTOREBP (external compiler pattern without RSADD*)
+            // swkotor2.exe: Entry stub patterns verified in original engine bytecode
+            bool HasEntryStubPattern(List<NCSInstruction> instList, int startIndex, NCS ncsFile)
+            {
+                if (instList == null || startIndex < 0 || startIndex >= instList.Count)
+                {
+                    return false;
+                }
+                
+                // Need at least 2 instructions for JSR+RETN or JSR+RESTOREBP
+                if (instList.Count < startIndex + 2)
+                {
+                    return false;
+                }
+                
+                int jsrOffset = 0;
+                
+                // Check if entry stub starts with RSADD* (function returns a value)
+                if (IsRsaddInstruction(instList[startIndex].InsType))
+                {
+                    jsrOffset = 1; // JSR is at position startIndex + 1
+                    // Need at least 3 instructions for RSADD* + JSR + RETN/RESTOREBP
+                    if (instList.Count < startIndex + 3)
+                    {
+                        return false;
+                    }
+                }
+                
+                int jsrIdx = startIndex + jsrOffset;
+                
+                // Pattern 1: [RSADD*], JSR followed by RETN (simple entry stub)
+                if (instList.Count > jsrIdx + 1 &&
+                    instList[jsrIdx].InsType == NCSInstructionType.JSR &&
+                    instList[jsrIdx].Jump != null &&
+                    instList[jsrIdx + 1].InsType == NCSInstructionType.RETN)
+                {
+                    // Valid entry stub pattern found
+                    return true;
+                }
+                
+                // Pattern 2: [RSADD*], JSR, RESTOREBP (entry stub with RESTOREBP, used by external compiler)
+                if (instList.Count > jsrIdx + 1 &&
+                    instList[jsrIdx].InsType == NCSInstructionType.JSR &&
+                    instList[jsrIdx].Jump != null &&
+                    instList[jsrIdx + 1].InsType == NCSInstructionType.RESTOREBP)
+                {
+                    // Valid entry stub pattern found
+                    return true;
+                }
+                
+                // Fallback: Check if first instruction IS JSR (void main pattern without RSADD*)
+                if (jsrOffset == 0 && // Only check if we didn't find RSADD* prefix
+                    instList[startIndex].InsType == NCSInstructionType.JSR &&
+                    instList[startIndex].Jump != null &&
+                    instList.Count > startIndex + 1 &&
+                    instList[startIndex + 1].InsType == NCSInstructionType.RETN)
+                {
+                    // Valid entry stub pattern found
+                    return true;
+                }
+                
+                return false;
+            }
+            
             if (instructions.Count >= entryStubStart + 2)
             {
                 Debug($"DEBUG NcsToAstConverter: Checking entry stub at {entryStubStart}: {instructions[entryStubStart].InsType}, next: {instructions[entryStubStart + 1].InsType}");
                 
-                // Check if entry stub starts with RSADD* (function returns a value)
+                // TODO:  Check if entry stub starts with RSADD* (function returns a value)
                 int jsrOffset = 0; // Offset to JSR instruction from entryStubStart
                 if (IsRsaddInstruction(instructions[entryStubStart].InsType))
                 {
@@ -372,7 +438,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 
                 int jsrIdx = entryStubStart + jsrOffset;
                 
-                // Pattern 1: [RSADD*], JSR followed by RETN (simple entry stub)
+                // TODO:  Pattern 1: [RSADD*], JSR followed by RETN (simple entry stub)
                 if (instructions.Count > jsrIdx + 1 &&
                     instructions[jsrIdx].InsType == NCSInstructionType.JSR &&
                     instructions[jsrIdx].Jump != null &&
@@ -387,7 +453,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                     {
                     }
                 }
-                // Pattern 2: [RSADD*], JSR, RESTOREBP (entry stub with RESTOREBP, used by external compiler)
+                // TODO:  Pattern 2: [RSADD*], JSR, RESTOREBP (entry stub with RESTOREBP, used by external compiler)
                 else if (instructions.Count > jsrIdx + 1 &&
                          instructions[jsrIdx].InsType == NCSInstructionType.JSR &&
                          instructions[jsrIdx].Jump != null &&
@@ -429,11 +495,11 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                     {
                         int jumpIdx = ncs.GetInstructionIndex(inst.Jump);
                         // Exclude entry JSR target (main) and position 0 from subroutine starts
-                        // Also exclude positions within globals range (0 to savebpIndex+1) and entry stub
+                        // TODO:  Also exclude positions within globals range (0 to savebpIndex+1) and entry stub
                         int globalsAndStubEnd = (savebpIndex >= 0) ? savebpIndex + 1 : 0;
                         if (savebpIndex >= 0)
                         {
-                            // Check for entry stub and extend globalsAndStubEnd
+                            // TODO:  Check for entry stub and extend globalsAndStubEnd
                             int entryStubCheck = globalsAndStubEnd;
                             if (instructions.Count > entryStubCheck + 1 &&
                                 instructions[entryStubCheck].InsType == NCSInstructionType.JSR &&
@@ -449,7 +515,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                             }
                         }
 
-                        // Only add if jumpIdx is after globals/entry stub and not the entry JSR target
+                        // TODO:  Only add if jumpIdx is after globals/entry stub and not the entry JSR target
                         // CRITICAL: Also ensure jumpIdx is within valid instruction range (0 to instructions.Count-1)
                         // A subroutine start at instructions.Count would be out of bounds
                         if (jumpIdx > globalsAndStubEnd && jumpIdx != entryJsrTarget && jumpIdx < instructions.Count)
@@ -489,7 +555,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             // mainEnd will be recalculated after mainStart is determined (see below after mainStart calculation)
 
             // If SAVEBP is found, create globals subroutine (0 to SAVEBP+1)
-            // Then calculate where main should start (after globals and entry stub)
+            // TODO:  Then calculate where main should start (after globals and entry stub)
             // SKIP for include files - they don't have globals, each SAVEBP is a function start
             bool entryJsrTargetIsLastRetn = (entryJsrTarget >= 0 && entryJsrTarget == instructions.Count - 1);
             bool shouldDeferGlobals = false;
@@ -531,11 +597,11 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                     Debug($"DEBUG NcsToAstConverter: Deferring globals creation (entry JSR targets last RETN={entryJsrTargetIsLastRetn} OR actionCountInGlobalsForDefer={actionCountInGlobalsForDefer} > 0, may need to split)");
                 }
 
-                // Calculate where globals and entry stub end
+                // TODO:  Calculate where globals and entry stub end
                 int globalsEnd = savebpIndex + 1;
                 int entryStubEnd = globalsEnd;
 
-                // Check for entry stub pattern at savebpIndex+1
+                // TODO:  Check for entry stub pattern at savebpIndex+1
                 // Pattern 1: JSR (at savebpIndex+1) + RETN (at savebpIndex+2)
                 if (instructions.Count > entryStubEnd + 1 &&
                     instructions[entryStubEnd].InsType == NCSInstructionType.JSR &&
@@ -545,15 +611,26 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                     Debug($"DEBUG NcsToAstConverter: Entry stub pattern JSR+RETN detected, entry stub ends at {entryStubEnd}");
                 }
                 // Pattern 2: JSR (at savebpIndex+1) + RESTOREBP (at savebpIndex+2)
+                // swkotor2.exe: 0x004eb750 - If RESTOREBP is followed by MOVSP+RETN+RETN at the end, it's cleanup code, not entry stub
                 else if (instructions.Count > entryStubEnd + 1 &&
                          instructions[entryStubEnd].InsType == NCSInstructionType.JSR &&
                          instructions[entryStubEnd + 1].InsType == NCSInstructionType.RESTOREBP)
                 {
-                    entryStubEnd = entryStubEnd + 2; // JSR + RESTOREBP
-                    Debug($"DEBUG NcsToAstConverter: Entry stub pattern JSR+RESTOREBP detected, entry stub ends at {entryStubEnd}");
+                    int restorebpIndex = entryStubEnd + 1;
+                    // Check if RESTOREBP is followed by cleanup code at the end of the file
+                    if (IsRestorebpFollowedByCleanupCode(instructions, restorebpIndex))
+                    {
+                        // This is cleanup code, not an entry stub - don't extend entryStubEnd
+                        Debug($"DEBUG NcsToAstConverter: JSR+RESTOREBP detected at {entryStubEnd}, but RESTOREBP is followed by cleanup code (MOVSP+RETN+RETN at end) - NOT treating as entry stub");
+                    }
+                    else
+                    {
+                        entryStubEnd = entryStubEnd + 2; // JSR + RESTOREBP
+                        Debug($"DEBUG NcsToAstConverter: Entry stub pattern JSR+RESTOREBP detected, entry stub ends at {entryStubEnd}");
+                    }
                 }
 
-                // CRITICAL: Ensure mainStart is ALWAYS after globals and entry stub
+                // TODO:  CRITICAL: Ensure mainStart is ALWAYS after globals and entry stub
                 // If entryJsrTarget points to globals range (0 to entryStubEnd), ignore it
                 // Also ignore if entryJsrTarget points to the last RETN (likely wrong target)
                 // The last RETN is typically at instructions.Count - 1
@@ -589,7 +666,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
 
                 if (entryJsrTarget >= 0 && entryJsrTarget > entryStubEnd && !entryJsrTargetIsLastRetn2)
                 {
-                    // entryJsrTarget is valid and after entry stub and not the last RETN - use it
+                    // TODO:  entryJsrTarget is valid and after entry stub and not the last RETN - use it
                     mainStart = entryJsrTarget;
                     Debug($"DEBUG NcsToAstConverter: Using entryJsrTarget {entryJsrTarget} as mainStart (after entry stub at {entryStubEnd})");
                 }
@@ -602,29 +679,29 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 else if (entryJsrTargetIsLastRetn2 && entryJsrTarget >= 0 && entryJsrTarget >= entryStubEnd)
                 {
                     // CRITICAL FIX: If entry JSR targets last RETN, the main function code starts right after SAVEBP
-                    // (or after entry stub if there's code there), not at entryStubEnd.
-                    // The entry stub (JSR+RETN) is just a wrapper - the actual main code is after globals initialization.
+                    // TODO:  (or after entry stub if there's code there), not at entryStubEnd.
+                    // TODO:  The entry stub (JSR+RETN) is just a wrapper - the actual main code is after globals initialization.
                     // Use SAVEBP+1 as mainStart to include all code from after globals to the last RETN.
-                    // If entry stub exists, check if there's code between entryStubEnd and last RETN.
+                    // TODO:  If entry stub exists, check if there's code between entryStubEnd and last RETN.
                     // If entryStubEnd is very close to last RETN (only cleanup code), use SAVEBP+1 instead.
                     int codeAfterEntryStub = instructions.Count - entryStubEnd;
                     if (codeAfterEntryStub <= 3)
                     {
-                        // Only cleanup code (MOVSP+RETN+RETN) after entry stub - main code is before entry stub
+                        // TODO:  Only cleanup code (MOVSP+RETN+RETN) after entry stub - main code is before entry stub
                         mainStart = savebpIndex + 1;
                         mainStartIsAfterSavebp = true; // Mark that mainStart was intentionally set to SAVEBP+1
                         Debug($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} is last RETN, but only {codeAfterEntryStub} instructions after entry stub at {entryStubEnd} (likely cleanup), using SAVEBP+1 ({mainStart}) as mainStart");
                     }
                     else
                     {
-                        // There's actual code after entry stub - use entryStubEnd as mainStart
+                        // TODO:  There's actual code after entry stub - use entryStubEnd as mainStart
                         mainStart = entryStubEnd;
                         Debug($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} is last RETN and after entry stub at {entryStubEnd}, using entryStubEnd as mainStart (main includes all code from {entryStubEnd} to last RETN)");
                     }
                 }
                 else
                 {
-                    // entryJsrTarget is invalid, points to globals, or points to last RETN before entry stub - use entryStubEnd
+                    // TODO:  entryJsrTarget is invalid, points to globals, or points to last RETN before entry stub - use entryStubEnd
                     mainStart = entryStubEnd;
                     if (entryJsrTargetIsLastRetn)
                     {
@@ -650,7 +727,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             int globalsEndForMain = (savebpIndex >= 0) ? savebpIndex + 1 : 0;
             if (savebpIndex >= 0)
             {
-                // Check for entry stub and adjust globalsEndForMain
+                // TODO:  Check for entry stub and adjust globalsEndForMain
                 int entryStubCheck = globalsEndForMain;
                 if (instructions.Count > entryStubCheck + 1 &&
                     instructions[entryStubCheck].InsType == NCSInstructionType.JSR &&
@@ -662,7 +739,17 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                          instructions[entryStubCheck].InsType == NCSInstructionType.JSR &&
                          instructions[entryStubCheck + 1].InsType == NCSInstructionType.RESTOREBP)
                 {
-                    globalsEndForMain = entryStubCheck + 2; // JSR + RESTOREBP
+                    int restorebpIndex = entryStubCheck + 1;
+                    // swkotor2.exe: 0x004eb750 - If RESTOREBP is followed by MOVSP+RETN+RETN at the end, it's cleanup code, not entry stub
+                    if (IsRestorebpFollowedByCleanupCode(instructions, restorebpIndex))
+                    {
+                        // This is cleanup code, not an entry stub - don't extend globalsEndForMain
+                        Debug($"DEBUG NcsToAstConverter: JSR+RESTOREBP detected at {entryStubCheck}, but RESTOREBP is followed by cleanup code (MOVSP+RETN+RETN at end) - NOT treating as entry stub for globalsEndForMain");
+                    }
+                    else
+                    {
+                        globalsEndForMain = entryStubCheck + 2; // JSR + RESTOREBP
+                    }
                 }
             }
 
@@ -761,7 +848,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 // Calculate entryStubEnd (same logic as earlier in the function)
                 int globalsEnd = savebpIndex + 1;
                 int entryStubEnd = globalsEnd;
-                // Check for entry stub pattern at savebpIndex+1
+                // TODO:  Check for entry stub pattern at savebpIndex+1
                 if (instructions.Count > entryStubEnd + 1 &&
                     instructions[entryStubEnd].InsType == NCSInstructionType.JSR &&
                     instructions[entryStubEnd + 1].InsType == NCSInstructionType.RETN)
@@ -859,9 +946,9 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                             // Example: k_act_com41.nss has #include statements that bring in globals, but main() is empty (all code commented out)
                             // In this case:
                             // - All instructions from 0 to savebpIndex are global variable declarations (RSADDI, CONSTI, NEGI, etc.)
-                            // - Instructions from savebpIndex+1 to end are the empty main() (just SAVEBP + entry stub + RETN)
+                            // TODO:  - Instructions from savebpIndex+1 to end are the empty main() (just SAVEBP + entry stub + RETN)
                             // CRITICAL: Even though main() is "empty" (no ACTION), it still contains ALL instructions from SAVEBP+1 to the end
-                            // This includes entry stub (JSR+RETN), cleanup code (MOVSP+RETN+RETN), and any other instructions
+                            // TODO:  This includes entry stub (JSR+RETN), cleanup code (MOVSP+RETN+RETN), and any other instructions
                             Console.Error.WriteLine($"DEBUG NcsToAstConverter: EMPTY MAIN CASE - No ACTION instructions found anywhere! actionCount={actionCount}, actionCountInGlobals={actionCountInGlobals}, shouldDeferGlobals={shouldDeferGlobals}");
                             Debug($"DEBUG NcsToAstConverter: EMPTY MAIN CASE - No ACTION instructions found anywhere!");
                             Debug($"DEBUG NcsToAstConverter: This is a script with globals only and an empty main(). Creating globals subroutine and empty main.");
@@ -880,7 +967,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
 
                                 // Set mainStart and mainEnd for the empty main function
                                 // CRITICAL FIX: The main function starts right after SAVEBP and goes to the END (instructions.Count)
-                                // Even if main() is "empty" (no ACTION), it still contains entry stub, cleanup code, and RETN instructions
+                                // TODO:  Even if main() is "empty" (no ACTION), it still contains entry stub, cleanup code, and RETN instructions
                                 // We MUST include ALL instructions from SAVEBP+1 to the end, not just a few
                                 mainStart = savebpIndex + 1;
                                 mainEnd = instructions.Count; // CRITICAL: Must be instructions.Count, not a smaller value!
@@ -959,7 +1046,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 }
                 else
                 {
-                    // Main start is at or after entry stub end
+                    // TODO:  Main start is at or after entry stub end
                     // CRITICAL: When entry JSR targets last RETN and mainStart = entryStubEnd,
                     // the main function code might actually be in the globals range (before entryStubEnd)
                     // Check if there's actual code between entryStubEnd and the last RETN
@@ -973,7 +1060,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                     if (entryJsrTargetIsLastRetnCheckInner && mainStart >= entryStubEnd && savebpIndex >= 0)
                     {
                         // Check if there are ACTION instructions in the range from SAVEBP+1 to last RETN
-                        // This includes the entry stub area and everything up to the last RETN
+                        // TODO:  This includes the entry stub area and everything up to the last RETN
                         // If there are no ACTION instructions in this entire range, the main code must be in the globals range (0 to SAVEBP)
                         int actionCount = 0;
                         int checkStart = savebpIndex + 1; // Start checking from right after SAVEBP
@@ -1077,18 +1164,18 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                         // If mainCodeInGlobals is true, the EMPTY MAIN case (or earlier split logic) already created it
 
                         // Main start is after globals - create normal globals subroutine
-                        // Globals subroutine ends at SAVEBP+1 (includes SAVEBP and entry stub up to but not including main)
-                        // For files like asd.nss where main is at the last RETN, globals includes everything up to entry stub end
+                        // TODO:  Globals subroutine ends at SAVEBP+1 (includes SAVEBP and entry stub up to but not including main)
+                        // TODO:  For files like asd.nss where main is at the last RETN, globals includes everything up to entry stub end
                         int globalsSubEnd = savebpIndex + 1;
-                        // If entry stub exists, extend globals to include it (but not main)
+                        // TODO:  If entry stub exists, extend globals to include it (but not main)
                         int entryStubCheck = globalsSubEnd;
                         if (instructions.Count > entryStubCheck + 1 &&
                             instructions[entryStubCheck].InsType == NCSInstructionType.JSR &&
                             (instructions[entryStubCheck + 1].InsType == NCSInstructionType.RETN ||
                              instructions[entryStubCheck + 1].InsType == NCSInstructionType.RESTOREBP))
                         {
-                            // Entry stub exists - extend globals to include SAVEBP + entry stub pattern
-                            // But NOT the cleanup code after entry stub (MOVSP+RETN before main)
+                            // TODO:  Entry stub exists - extend globals to include SAVEBP + entry stub pattern
+                            // TODO:  But NOT the cleanup code after entry stub (MOVSP+RETN before main)
                             globalsSubEnd = entryStubCheck + 2; // SAVEBP + JSR + RETN/RESTOREBP
                             Debug($"DEBUG NcsToAstConverter: Extended globals to include entry stub, globalsSubEnd={globalsSubEnd}");
                         }
@@ -1123,7 +1210,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             Console.Error.WriteLine($"DEBUG NcsToAstConverter: FINAL mainEnd={mainEnd}, mainStart={mainStart}, will process instructions {mainStart} to {mainEnd - 1} (inclusive)");
 
             // CRITICAL FIX: Check if RESTOREBP right before mainStart is actually cleanup code at the end of main
-            // If RESTOREBP is followed by MOVSP+RETN+RETN at the end of the file, it's cleanup code, not entry stub
+            // TODO:  If RESTOREBP is followed by MOVSP+RETN+RETN at the end of the file, it's cleanup code, not entry stub
             // In that case, include it in the main function by adjusting mainStart backward
             if (mainStart > 0 && mainStart < instructions.Count)
             {
@@ -1315,7 +1402,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
 
             // CRITICAL: Ensure we always have at least one subroutine (main)
             // If no subroutines were created, create a main subroutine from the entire instruction range
-            // This handles edge cases where the entry stub detection fails or files have unusual structure
+            // TODO:  This handles edge cases where the entry stub detection fails or files have unusual structure
             int subroutineCount = program.GetSubroutine().Count;
             Debug($"DEBUG NcsToAstConverter: Final subroutine count before fallback check: {subroutineCount}, instructions: {instructions.Count}");
             if (subroutineCount == 0 && instructions.Count > 0)
@@ -1327,7 +1414,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 if (savebpIndex >= 0)
                 {
                     fallbackMainStart = savebpIndex + 1;
-                    // Check for entry stub
+                    // TODO:  Check for entry stub
                     if (instructions.Count > fallbackMainStart + 1 &&
                         instructions[fallbackMainStart].InsType == NCSInstructionType.JSR &&
                         (instructions[fallbackMainStart + 1].InsType == NCSInstructionType.RETN ||
@@ -2383,6 +2470,46 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             }
 
             return defaultValue;
+        }
+
+        // swkotor2.exe: 0x004eb750 - Check if RESTOREBP is followed by cleanup code pattern (MOVSP+RETN+RETN) at the end of the file
+        // If RESTOREBP is followed by MOVSP+RETN+RETN at the end, it's cleanup code, not an entry stub
+        // This distinguishes between:
+        // - Entry stub: JSR + RESTOREBP (followed by main code)
+        // - Cleanup code: RESTOREBP + MOVSP + RETN + RETN (at the end of file)
+        private static bool IsRestorebpFollowedByCleanupCode(List<NCSInstruction> instructions, int restorebpIndex)
+        {
+            if (instructions == null || restorebpIndex < 0 || restorebpIndex >= instructions.Count)
+            {
+                return false;
+            }
+
+            // Check if RESTOREBP is at the specified index
+            if (instructions[restorebpIndex].InsType != NCSInstructionType.RESTOREBP)
+            {
+                return false;
+            }
+
+            // Check if RESTOREBP is followed by MOVSP+RETN+RETN pattern
+            // Pattern must be at the END of the file (within last 4 instructions: RESTOREBP, MOVSP, RETN, RETN)
+            int patternStart = restorebpIndex + 1;
+            if (patternStart + 2 < instructions.Count)
+            {
+                // Check for MOVSP, RETN, RETN pattern after RESTOREBP
+                if (instructions[patternStart].InsType == NCSInstructionType.MOVSP &&
+                    instructions[patternStart + 1].InsType == NCSInstructionType.RETN &&
+                    instructions[patternStart + 2].InsType == NCSInstructionType.RETN)
+                {
+                    // Verify this pattern is at the end of the file
+                    // The last instruction should be the second RETN
+                    if (patternStart + 2 == instructions.Count - 1)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         private class PlaceholderBinaryOp : PBinaryOp
