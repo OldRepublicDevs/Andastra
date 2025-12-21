@@ -2481,7 +2481,25 @@ namespace Andastra.Runtime.Games.Odyssey
 
             // Extract template ResRef if available
             // Based on swkotor2.exe: TemplateResRef is stored in entity's template data
-            // TODO: STUB - For now, we'll leave TemplateResRef empty as it's not directly accessible via IEntity interface
+            // TemplateResRef is stored using entity.SetData("TemplateResRef", ...) when entities are created
+            // Based on EclipseArea.cs: TemplateResRef is accessed via entity.GetData<string>("TemplateResRef")
+            // Located via string references: "TemplateResRef" @ 0x007bd00c in swkotor2.exe
+            try
+            {
+                // Try to get TemplateResRef from entity data
+                // IEntity interface provides GetData<T> method for accessing stored data
+                string templateResRef = entity.GetData<string>("TemplateResRef");
+                if (!string.IsNullOrEmpty(templateResRef))
+                {
+                    entityState.TemplateResRef = templateResRef;
+                }
+            }
+            catch
+            {
+                // If GetData fails or TemplateResRef is not set, leave it empty
+                // This is expected for dynamically spawned entities or entities without templates
+                entityState.TemplateResRef = null;
+            }
 
             return entityState;
         }
