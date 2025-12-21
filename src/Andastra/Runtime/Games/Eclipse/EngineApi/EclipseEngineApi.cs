@@ -2156,6 +2156,10 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         /// Located via string reference: Module object type checking (Eclipse uses module objects)
         /// Original implementation: Checks if object is a module (special object type)
         /// Cross-engine: Common implementation for both daorigins.exe and DragonAge2.exe
+        /// Module ObjectId: Fixed value 0x7F000002 (special object ID for module)
+        /// Based on swkotor2.exe: Module object ID constant (common across all engines)
+        /// Located via string references: "GetModule" NWScript function, module object references
+        /// Common across all engines: Odyssey, Aurora, Eclipse, Infinity all use fixed module object ID (0x7F000002)
         /// </remarks>
         private Variable Func_GetIsModule(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -2166,21 +2170,41 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 return Variable.FromInt(0);
             }
             
-            // Check if object is the current module
-            // Since IModule doesn't have ObjectId, we check by comparing ResRef
-            // For Eclipse, modules are special objects, so we check if the objectId matches a special module ID
-            // In practice, modules are accessed via CurrentModule, not as entities with ObjectIds
-            // This function returns true if the object is conceptually a module
-            if (objectId == ObjectInvalid)
+            // Module ObjectId is fixed at 0x7F000002 (common across all engines)
+            // Based on World.ModuleObjectId constant and GetModuleId implementation
+            // GetModule() returns this ObjectId when a module is loaded
+            const uint ModuleObjectId = 0x7F000002;
+            
+            // Primary check: Compare objectId directly with module ObjectId
+            if (objectId == ModuleObjectId)
             {
-                return Variable.FromInt(0);
+                // Verify that a module is actually loaded (objectId matches current module)
+                if (ctx != null && ctx.World != null && ctx.World.CurrentModule != null)
+                {
+                    uint currentModuleId = ctx.World.GetModuleId(ctx.World.CurrentModule);
+                    if (currentModuleId == ModuleObjectId)
+                    {
+                        return Variable.FromInt(1);
+                    }
+                }
+                // If objectId matches ModuleObjectId but no module is loaded, still return true
+                // This matches the behavior where GetModule() can return ModuleObjectId even if module is unloading
+                return Variable.FromInt(1);
             }
             
-            // Modules don't have ObjectIds in the interface, so we can't directly compare
-            // TODO:  Return false for now - modules are typically accessed via CurrentModule, not as object parameters
-            // This may need adjustment based on how Eclipse actually handles module objects
+            // Secondary check: Verify if the objectId matches the current module's ID
+            // This handles cases where the module ObjectId might be retrieved via GetModule()
+            if (ctx != null && ctx.World != null && ctx.World.CurrentModule != null)
+            {
+                uint currentModuleId = ctx.World.GetModuleId(ctx.World.CurrentModule);
+                if (currentModuleId != 0 && objectId == currentModuleId)
+                {
+                    return Variable.FromInt(1);
+                }
+            }
             
-            // Check if object has module-specific data
+            // Fallback check: Check if entity has module-specific data
+            // This is a safety measure for edge cases where modules might be represented as entities
             Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null && entity.HasData("IsModule"))
             {
