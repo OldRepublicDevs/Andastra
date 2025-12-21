@@ -57,7 +57,7 @@ namespace Andastra.Parsing.Tools
                 string text1 = GffToText(gff1);
                 string text2 = GffToText(gff2);
 
-                // Simple unified diff (simplified version)
+                // TODO:  Simple unified diff (simplified version)
                 string result = GenerateUnifiedDiff(text1, text2, file1Path, file2Path, contextLines);
 
                 if (!string.IsNullOrEmpty(outputPath))
@@ -425,13 +425,15 @@ namespace Andastra.Parsing.Tools
                     return (false, "File is empty (0 bytes)");
                 }
 
-                // Attempt to read first few bytes to verify file is readable
+                // Read header bytes for format-specific validation
+                byte[] header;
                 try
                 {
                     using (FileStream stream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
                     {
-                        byte[] header = new byte[Math.Min(16, (int)fileInfo.Length)];
-                        int bytesRead = stream.Read(header, 0, header.Length);
+                        int headerSize = Math.Min(64, (int)fileInfo.Length); // Read up to 64 bytes for format detection
+                        header = new byte[headerSize];
+                        int bytesRead = stream.Read(header, 0, headerSize);
                         if (bytesRead == 0)
                         {
                             return (false, "File is not readable or corrupted");
@@ -447,12 +449,284 @@ namespace Andastra.Parsing.Tools
                     return (false, "File is not readable (access denied)");
                 }
 
-                // File exists, is readable, and has content, but format-specific validation is not implemented
-                return (true, $"File exists and is readable ({fileInfo.Length} bytes, format validation not implemented for {suffix})");
+                // Perform format-specific validation based on file extension
+                (bool isValid, string message) formatResult = ValidateFormatByHeader(suffix, header, fileInfo.Length);
+                if (!formatResult.isValid)
+                {
+                    return formatResult;
+                }
+
+                return (true, formatResult.message);
             }
             catch (Exception e)
             {
                 return (false, $"Validation failed: {e.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Validates file format by checking header bytes/magic numbers.
+        /// Implements format-specific validation for common game file formats.
+        /// </summary>
+        /// <param name="suffix">File extension (lowercase, including dot).</param>
+        /// <param name="header">File header bytes (at least 16 bytes, up to 64 bytes if available).</param>
+        /// <param name="fileSize">Total file size in bytes.</param>
+        /// <returns>Tuple of (isValid, message) indicating validation result.</returns>
+        /// <remarks>
+        /// Format-specific validation based on file format specifications:
+        /// - NCS: "NCS V1.0" header + 0x42 magic byte
+        /// - MDL: Binary MDL starts with 0x00000000
+        /// - WAV: "RIFF" header
+        /// - KEY: "KEY " + "V1  "/"V1.1" header
+        /// - BWM: "BWM V1.0" header
+        /// - TEX: May contain DDS magic or TPC format
+        /// - MDX: Binary format (extension-based, validated via MDL reader)
+        /// </remarks>
+        private static (bool isValid, string message) ValidateFormatByHeader(string suffix, byte[] header, long fileSize)
+        {
+            if (header == null || header.Length < 4)
+            {
+                return (true, $"File exists and is readable ({fileSize} bytes, insufficient header for validation)");
+            }
+
+            // Validate based on file extension
+            switch (suffix)
+            {
+                case ".ncs":
+                    // NCS format: "NCS V1.0" (8 bytes) + 0x42 magic byte at offset 8
+                    if (header.Length < 13)
+                    {
+                        return (false, "NCS file too small (requires at least 13 bytes for header)");
+                    }
+
+                    // Check "NCS " signature (4 bytes)
+                    if (header[0] != (byte)'N' || header[1] != (byte)'C' || header[2] != (byte)'S' || header[3] != (byte)' ')
+                    {
+                        return (false, "Invalid NCS file signature (expected 'NCS ')");
+                    }
+
+                    // Check "V1.0" version (4 bytes at offset 4)
+                    if (header.Length >= 8)
+                    {
+                        if (header[4] != (byte)'V' || header[5] != (byte)'1' || header[6] != (byte)'.' || header[7] != (byte)'0')
+                        {
+                            return (false, "Invalid NCS version (expected 'V1.0')");
+                        }
+                    }
+
+                    // Check magic byte 0x42 at offset 8
+                    if (header.Length >= 9 && header[8] != 0x42)
+                    {
+                        return (false, "Invalid NCS header magic byte (expected 0x42 at offset 8)");
+                    }
+
+                    return (true, "Valid NCS file");
+
+                case ".mdl":
+                    // Binary MDL starts with 0x00000000 (4 bytes)
+                    // ASCII MDL starts with text content
+                    if (header[0] == 0 && header[1] == 0 && header[2] == 0 && header[3] == 0)
+                    {
+                        // Binary MDL - validate minimum header size
+                        if (fileSize < 12)
+                        {
+                            return (false, "MDL file too small (binary MDL requires at least 12 bytes for header)");
+                        }
+                        return (true, "Valid binary MDL file");
+                    }
+                    else
+                    {
+                        // ASCII MDL - check if it starts with readable text
+                        // ASCII MDL files typically start with "beginmodel" or similar keywords
+                        string headerText = System.Text.Encoding.ASCII.GetString(header, 0, Math.Min(header.Length, 64)).Trim();
+                        if (string.IsNullOrWhiteSpace(headerText))
+                        {
+                            return (false, "Invalid MDL file (neither binary nor ASCII format detected)");
+                        }
+                        // Allow ASCII MDL (may start with various keywords)
+                        return (true, "Valid ASCII MDL file");
+                    }
+
+                case ".mdx":
+                    // MDX files are paired with MDL files and have binary format
+                    // MDX files don't have a standard header signature, so we validate they're not empty
+                    if (fileSize == 0)
+                    {
+                        return (false, "MDX file is empty");
+                    }
+                    return (true, "Valid MDX file (format validation limited without paired MDL)");
+
+                case ".wav":
+                    // WAV files use RIFF format: "RIFF" (4 bytes) + file size + "WAVE" (4 bytes)
+                    if (header.Length < 12)
+                    {
+                        return (false, "WAV file too small (requires at least 12 bytes for header)");
+                    }
+
+                    // Check "RIFF" signature
+                    if (header[0] != (byte)'R' || header[1] != (byte)'I' || header[2] != (byte)'F' || header[3] != (byte)'F')
+                    {
+                        return (false, "Invalid WAV file signature (expected 'RIFF')");
+                    }
+
+                    // Check "WAVE" at offset 8 (after RIFF + size)
+                    if (header.Length >= 12)
+                    {
+                        if (header[8] != (byte)'W' || header[9] != (byte)'A' || header[10] != (byte)'V' || header[11] != (byte)'E')
+                        {
+                            return (false, "Invalid WAV file format (expected 'WAVE' chunk at offset 8)");
+                        }
+                    }
+
+                    return (true, "Valid WAV file");
+
+                case ".key":
+                    // KEY format: "KEY " (4 bytes) + "V1  " or "V1.1" (4 bytes)
+                    if (header.Length < 8)
+                    {
+                        return (false, "KEY file too small (requires at least 8 bytes for header)");
+                    }
+
+                    // Check "KEY " signature
+                    if (header[0] != (byte)'K' || header[1] != (byte)'E' || header[2] != (byte)'Y' || header[3] != (byte)' ')
+                    {
+                        return (false, "Invalid KEY file signature (expected 'KEY ')");
+                    }
+
+                    // Check version "V1  " or "V1.1"
+                    if (header.Length >= 8)
+                    {
+                        bool validVersion = false;
+                        // Check for "V1  " (V1 followed by 3 spaces)
+                        if (header[4] == (byte)'V' && header[5] == (byte)'1' && header[6] == (byte)' ' && header[7] == (byte)' ')
+                        {
+                            validVersion = true;
+                        }
+                        // Check for "V1.1"
+                        else if (header.Length >= 8 && header[4] == (byte)'V' && header[5] == (byte)'1' && header[6] == (byte)'.' && header[7] == (byte)'1')
+                        {
+                            validVersion = true;
+                        }
+
+                        if (!validVersion)
+                        {
+                            return (false, "Invalid KEY file version (expected 'V1  ' or 'V1.1')");
+                        }
+                    }
+
+                    return (true, "Valid KEY file");
+
+                case ".bwm":
+                case ".wok":
+                    // BWM/WOK format: "BWM V1.0" (8 bytes)
+                    if (header.Length < 8)
+                    {
+                        return (false, "BWM/WOK file too small (requires at least 8 bytes for header)");
+                    }
+
+                    // Check "BWM " signature (4 bytes)
+                    if (header[0] != (byte)'B' || header[1] != (byte)'W' || header[2] != (byte)'M' || header[3] != (byte)' ')
+                    {
+                        return (false, "Invalid BWM/WOK file signature (expected 'BWM ')");
+                    }
+
+                    // Check "V1.0" version (4 bytes at offset 4)
+                    if (header[4] != (byte)'V' || header[5] != (byte)'1' || header[6] != (byte)'.' || header[7] != (byte)'0')
+                    {
+                        return (false, "Invalid BWM/WOK version (expected 'V1.0')");
+                    }
+
+                    return (true, "Valid BWM/WOK file");
+
+                case ".tex":
+                    // TEX files may contain DDS format or be TPC-based
+                    // Check for DDS magic "DDS " (4 bytes)
+                    if (header.Length >= 4)
+                    {
+                        if (header[0] == (byte)'D' && header[1] == (byte)'D' && header[2] == (byte)'S' && header[3] == (byte)' ')
+                        {
+                            return (true, "Valid TEX file (DDS format detected)");
+                        }
+                    }
+
+                    // TPC-based TEX files don't have a standard header at the start
+                    // If we have sufficient size, it might be a valid TEX file
+                    if (fileSize >= 128)
+                    {
+                        // TPC header is 128 bytes, so files smaller than this might be invalid
+                        // For files >= 128 bytes, we can't definitively validate without full parsing
+                        return (true, "Valid TEX file (format validation limited without full parsing)");
+                    }
+
+                    return (false, "TEX file too small (minimum 128 bytes for TPC-based format)");
+
+                case ".lyt":
+                case ".vis":
+                    // LYT and VIS files are text-based formats without standard headers
+                    // Validate they contain readable text content
+                    if (fileSize == 0)
+                    {
+                        return (false, $"{suffix.ToUpperInvariant()} file is empty");
+                    }
+
+                    // Check if file starts with printable ASCII characters
+                    bool hasTextContent = false;
+                    for (int i = 0; i < Math.Min(header.Length, 32); i++)
+                    {
+                        byte b = header[i];
+                        if ((b >= 32 && b <= 126) || b == 9 || b == 10 || b == 13) // Printable ASCII or whitespace
+                        {
+                            hasTextContent = true;
+                            break;
+                        }
+                    }
+
+                    if (!hasTextContent)
+                    {
+                        return (false, $"{suffix.ToUpperInvariant()} file does not appear to contain valid text content");
+                    }
+
+                    return (true, $"Valid {suffix.ToUpperInvariant()} file");
+
+                case ".bif":
+                    // BIF format: "BIFFV1  " or "BIFFV1.1" (8 bytes)
+                    if (header.Length < 8)
+                    {
+                        return (false, "BIF file too small (requires at least 8 bytes for header)");
+                    }
+
+                    // Check "BIFF" signature (4 bytes)
+                    if (header[0] != (byte)'B' || header[1] != (byte)'I' || header[2] != (byte)'F' || header[3] != (byte)'F')
+                    {
+                        return (false, "Invalid BIF file signature (expected 'BIFF')");
+                    }
+
+                    // Check version "V1  " or "V1.1"
+                    if (header.Length >= 8)
+                    {
+                        bool validVersion = false;
+                        // Check for "V1  " (V1 followed by 3 spaces)
+                        if (header[4] == (byte)'V' && header[5] == (byte)'1' && header[6] == (byte)' ' && header[7] == (byte)' ')
+                        {
+                            validVersion = true;
+                        }
+                        // Check for "V1.1"
+                        else if (header.Length >= 8 && header[4] == (byte)'V' && header[5] == (byte)'1' && header[6] == (byte)'.' && header[7] == (byte)'1')
+                        {
+                            validVersion = true;
+                        }
+
+                        if (!validVersion)
+                        {
+                            return (false, "Invalid BIF file version (expected 'V1  ' or 'V1.1')");
+                        }
+                    }
+
+                    return (true, "Valid BIF file");
+
+                default:
+                    // For unknown formats, return generic validation
+                    return (true, $"File exists and is readable ({fileSize} bytes, format '{suffix}' validation not implemented)");
             }
         }
 
@@ -535,7 +809,7 @@ namespace Andastra.Parsing.Tools
             return string.Join("\n", lines);
         }
 
-        // Simple unified diff generator (simplified version)
+        // TODO:  Simple unified diff generator (simplified version)
         private static string GenerateUnifiedDiff(string text1, string text2, string file1Path, string file2Path, int contextLines)
         {
             string[] lines1 = text1.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
