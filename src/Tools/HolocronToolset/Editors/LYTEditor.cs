@@ -11,7 +11,6 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia;
 using Andastra.Parsing;
-using Andastra.Parsing.Formats.MDLData;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Tools;
 using HolocronToolset.Data;
@@ -19,6 +18,7 @@ using Andastra.Parsing.Resource.Formats.LYT;
 using Andastra.Parsing.Formats.MDLData;
 using MDLAuto = Andastra.Parsing.Formats.MDL.MDLAuto;
 using ResRef = Andastra.Parsing.Common.ResRef;
+using Quaternion = Andastra.Utility.Geometry.Quaternion;
 using TPCAuto = Andastra.Parsing.Formats.TPC.TPCAuto;
 using TPC = Andastra.Parsing.Formats.TPC.TPC;
 using TPCMipmap = Andastra.Parsing.Formats.TPC.TPCMipmap;
@@ -221,8 +221,514 @@ namespace HolocronToolset.Editors
         // Original: def update_scene(self):
         public void UpdateScene()
         {
+            if (_lyt == null)
+            {
+                return;
+            }
+
+            // Validate and ensure LYT data consistency
+            ValidateAndFixLYTData();
+
+            // Update room connections based on door hooks
+            UpdateRoomConnections();
+
             // Scene update - will be implemented when graphics scene is available
-            // TODO: STUB - For now, just ensure LYT data is consistent
+            // For now, we ensure LYT data is consistent and valid
+        }
+
+        /// <summary>
+        /// Validates and fixes LYT data to ensure consistency.
+        /// Performs comprehensive validation of all LYT components.
+        /// </summary>
+        private void ValidateAndFixLYTData()
+        {
+            if (_lyt == null)
+            {
+                return;
+            }
+
+            // Validate rooms
+            ValidateRooms();
+
+            // Validate tracks
+            ValidateTracks();
+
+            // Validate obstacles
+            ValidateObstacles();
+
+            // Validate door hooks
+            ValidateDoorHooks();
+        }
+
+        /// <summary>
+        /// Validates room data: ResRefs, positions, and ensures no duplicates.
+        /// </summary>
+        private void ValidateRooms()
+        {
+            if (_lyt.Rooms == null)
+            {
+                _lyt.Rooms = new List<LYTRoom>();
+                return;
+            }
+
+            var validRooms = new List<LYTRoom>();
+            var seenRoomNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var roomIndex = 0;
+
+            foreach (var room in _lyt.Rooms)
+            {
+                if (room == null)
+                {
+                    System.Console.WriteLine($"Warning: Null room at index {roomIndex}, skipping.");
+                    roomIndex++;
+                    continue;
+                }
+
+                // Validate ResRef
+                if (room.Model == null)
+                {
+                    System.Console.WriteLine($"Warning: Room at index {roomIndex} has null Model, setting to default.");
+                    room.Model = new ResRef("default_room");
+                }
+                else
+                {
+                    string modelStr = room.Model.ToString();
+                    if (string.IsNullOrEmpty(modelStr))
+                    {
+                        System.Console.WriteLine($"Warning: Room at index {roomIndex} has empty Model, setting to default.");
+                        room.Model = new ResRef("default_room");
+                    }
+                    else if (!ResRef.IsValid(modelStr))
+                    {
+                        System.Console.WriteLine($"Warning: Room at index {roomIndex} has invalid ResRef '{modelStr}', truncating if needed.");
+                        try
+                        {
+                            room.Model.SetData(modelStr, truncate: true);
+                        }
+                        catch
+                        {
+                            room.Model = new ResRef("default_room");
+                        }
+                    }
+                }
+
+                // Validate position
+                if (float.IsNaN(room.Position.X) || float.IsNaN(room.Position.Y) || float.IsNaN(room.Position.Z) ||
+                    float.IsInfinity(room.Position.X) || float.IsInfinity(room.Position.Y) || float.IsInfinity(room.Position.Z))
+                {
+                    System.Console.WriteLine($"Warning: Room '{room.Model}' at index {roomIndex} has invalid position (NaN/Infinity), resetting to (0, 0, 0).");
+                    room.Position = new Vector3(0, 0, 0);
+                }
+
+                // Check for duplicate room names (case-insensitive)
+                string roomName = room.Model.ToString().ToLowerInvariant();
+                if (seenRoomNames.Contains(roomName))
+                {
+                    System.Console.WriteLine($"Warning: Duplicate room name '{room.Model}' at index {roomIndex}, appending index to make unique.");
+                    room.Model = new ResRef($"{room.Model}_{roomIndex}");
+                    roomName = room.Model.ToString().ToLowerInvariant();
+                }
+
+                seenRoomNames.Add(roomName);
+
+                // Ensure Connections is initialized
+                if (room.Connections == null)
+                {
+                    room.Connections = new HashSet<LYTRoom>();
+                }
+
+                validRooms.Add(room);
+                roomIndex++;
+            }
+
+            _lyt.Rooms = validRooms;
+        }
+
+        /// <summary>
+        /// Validates track data: ResRefs and positions.
+        /// </summary>
+        private void ValidateTracks()
+        {
+            if (_lyt.Tracks == null)
+            {
+                _lyt.Tracks = new List<LYTTrack>();
+                return;
+            }
+
+            var validTracks = new List<LYTTrack>();
+            var trackIndex = 0;
+
+            foreach (var track in _lyt.Tracks)
+            {
+                if (track == null)
+                {
+                    System.Console.WriteLine($"Warning: Null track at index {trackIndex}, skipping.");
+                    trackIndex++;
+                    continue;
+                }
+
+                // Validate ResRef
+                if (track.Model == null)
+                {
+                    System.Console.WriteLine($"Warning: Track at index {trackIndex} has null Model, setting to default.");
+                    track.Model = new ResRef("default_track");
+                }
+                else
+                {
+                    string modelStr = track.Model.ToString();
+                    if (string.IsNullOrEmpty(modelStr))
+                    {
+                        System.Console.WriteLine($"Warning: Track at index {trackIndex} has empty Model, setting to default.");
+                        track.Model = new ResRef("default_track");
+                    }
+                    else if (!ResRef.IsValid(modelStr))
+                    {
+                        System.Console.WriteLine($"Warning: Track at index {trackIndex} has invalid ResRef '{modelStr}', truncating if needed.");
+                        try
+                        {
+                            track.Model.SetData(modelStr, truncate: true);
+                        }
+                        catch
+                        {
+                            track.Model = new ResRef("default_track");
+                        }
+                    }
+                }
+
+                // Validate position
+                if (float.IsNaN(track.Position.X) || float.IsNaN(track.Position.Y) || float.IsNaN(track.Position.Z) ||
+                    float.IsInfinity(track.Position.X) || float.IsInfinity(track.Position.Y) || float.IsInfinity(track.Position.Z))
+                {
+                    System.Console.WriteLine($"Warning: Track '{track.Model}' at index {trackIndex} has invalid position (NaN/Infinity), resetting to (0, 0, 0).");
+                    track.Position = new Vector3(0, 0, 0);
+                }
+
+                validTracks.Add(track);
+                trackIndex++;
+            }
+
+            _lyt.Tracks = validTracks;
+        }
+
+        /// <summary>
+        /// Validates obstacle data: ResRefs and positions.
+        /// </summary>
+        private void ValidateObstacles()
+        {
+            if (_lyt.Obstacles == null)
+            {
+                _lyt.Obstacles = new List<LYTObstacle>();
+                return;
+            }
+
+            var validObstacles = new List<LYTObstacle>();
+            var obstacleIndex = 0;
+
+            foreach (var obstacle in _lyt.Obstacles)
+            {
+                if (obstacle == null)
+                {
+                    System.Console.WriteLine($"Warning: Null obstacle at index {obstacleIndex}, skipping.");
+                    obstacleIndex++;
+                    continue;
+                }
+
+                // Validate ResRef
+                if (obstacle.Model == null)
+                {
+                    System.Console.WriteLine($"Warning: Obstacle at index {obstacleIndex} has null Model, setting to default.");
+                    obstacle.Model = new ResRef("default_obstacle");
+                }
+                else
+                {
+                    string modelStr = obstacle.Model.ToString();
+                    if (string.IsNullOrEmpty(modelStr))
+                    {
+                        System.Console.WriteLine($"Warning: Obstacle at index {obstacleIndex} has empty Model, setting to default.");
+                        obstacle.Model = new ResRef("default_obstacle");
+                    }
+                    else if (!ResRef.IsValid(modelStr))
+                    {
+                        System.Console.WriteLine($"Warning: Obstacle at index {obstacleIndex} has invalid ResRef '{modelStr}', truncating if needed.");
+                        try
+                        {
+                            obstacle.Model.SetData(modelStr, truncate: true);
+                        }
+                        catch
+                        {
+                            obstacle.Model = new ResRef("default_obstacle");
+                        }
+                    }
+                }
+
+                // Validate position
+                if (float.IsNaN(obstacle.Position.X) || float.IsNaN(obstacle.Position.Y) || float.IsNaN(obstacle.Position.Z) ||
+                    float.IsInfinity(obstacle.Position.X) || float.IsInfinity(obstacle.Position.Y) || float.IsInfinity(obstacle.Position.Z))
+                {
+                    System.Console.WriteLine($"Warning: Obstacle '{obstacle.Model}' at index {obstacleIndex} has invalid position (NaN/Infinity), resetting to (0, 0, 0).");
+                    obstacle.Position = new Vector3(0, 0, 0);
+                }
+
+                validObstacles.Add(obstacle);
+                obstacleIndex++;
+            }
+
+            _lyt.Obstacles = validObstacles;
+        }
+
+        /// <summary>
+        /// Validates door hook data: room references, ResRefs, positions, and quaternions.
+        /// </summary>
+        private void ValidateDoorHooks()
+        {
+            if (_lyt.DoorHooks == null)
+            {
+                _lyt.DoorHooks = new List<LYTDoorHook>();
+                return;
+            }
+
+            // Build a map of room names (case-insensitive) for quick lookup
+            var roomNameMap = new Dictionary<string, LYTRoom>(StringComparer.OrdinalIgnoreCase);
+            if (_lyt.Rooms != null)
+            {
+                foreach (var room in _lyt.Rooms)
+                {
+                    if (room != null && room.Model != null)
+                    {
+                        string roomName = room.Model.ToString().ToLowerInvariant();
+                        if (!roomNameMap.ContainsKey(roomName))
+                        {
+                            roomNameMap[roomName] = room;
+                        }
+                    }
+                }
+            }
+
+            var validDoorHooks = new List<LYTDoorHook>();
+            var doorHookIndex = 0;
+
+            foreach (var doorHook in _lyt.DoorHooks)
+            {
+                if (doorHook == null)
+                {
+                    System.Console.WriteLine($"Warning: Null door hook at index {doorHookIndex}, skipping.");
+                    doorHookIndex++;
+                    continue;
+                }
+
+                // Validate room reference (must match an existing room, case-insensitive)
+                if (string.IsNullOrEmpty(doorHook.Room))
+                {
+                    System.Console.WriteLine($"Warning: Door hook at index {doorHookIndex} has empty Room name, setting to first room if available.");
+                    if (_lyt.Rooms != null && _lyt.Rooms.Count > 0 && _lyt.Rooms[0] != null && _lyt.Rooms[0].Model != null)
+                    {
+                        doorHook.Room = _lyt.Rooms[0].Model.ToString();
+                    }
+                    else
+                    {
+                        System.Console.WriteLine($"Warning: No rooms available, skipping door hook at index {doorHookIndex}.");
+                        doorHookIndex++;
+                        continue;
+                    }
+                }
+
+                string roomName = doorHook.Room.ToLowerInvariant();
+                if (!roomNameMap.ContainsKey(roomName))
+                {
+                    System.Console.WriteLine($"Warning: Door hook at index {doorHookIndex} references non-existent room '{doorHook.Room}', setting to first room if available.");
+                    if (_lyt.Rooms != null && _lyt.Rooms.Count > 0 && _lyt.Rooms[0] != null && _lyt.Rooms[0].Model != null)
+                    {
+                        doorHook.Room = _lyt.Rooms[0].Model.ToString();
+                        roomName = doorHook.Room.ToLowerInvariant();
+                    }
+                    else
+                    {
+                        System.Console.WriteLine($"Warning: No rooms available, skipping door hook at index {doorHookIndex}.");
+                        doorHookIndex++;
+                        continue;
+                    }
+                }
+
+                // Validate door name (should not be empty, but can be any string)
+                if (string.IsNullOrEmpty(doorHook.Door))
+                {
+                    System.Console.WriteLine($"Warning: Door hook at index {doorHookIndex} has empty Door name, setting to default.");
+                    doorHook.Door = "default_door";
+                }
+
+                // Validate position
+                if (float.IsNaN(doorHook.Position.X) || float.IsNaN(doorHook.Position.Y) || float.IsNaN(doorHook.Position.Z) ||
+                    float.IsInfinity(doorHook.Position.X) || float.IsInfinity(doorHook.Position.Y) || float.IsInfinity(doorHook.Position.Z))
+                {
+                    System.Console.WriteLine($"Warning: Door hook '{doorHook.Room}/{doorHook.Door}' at index {doorHookIndex} has invalid position (NaN/Infinity), resetting to (0, 0, 0).");
+                    doorHook.Position = new Vector3(0, 0, 0);
+                }
+
+                // Validate and normalize quaternion
+                if (doorHook.Orientation.X == 0 && doorHook.Orientation.Y == 0 && doorHook.Orientation.Z == 0 && doorHook.Orientation.W == 0)
+                {
+                    System.Console.WriteLine($"Warning: Door hook '{doorHook.Room}/{doorHook.Door}' at index {doorHookIndex} has zero quaternion, setting to identity.");
+                    doorHook.Orientation = Quaternion.Identity;
+                }
+                else
+                {
+                    // Normalize quaternion if needed
+                    doorHook.Orientation = NormalizeQuaternion(doorHook.Orientation);
+                }
+
+                validDoorHooks.Add(doorHook);
+                doorHookIndex++;
+            }
+
+            _lyt.DoorHooks = validDoorHooks;
+        }
+
+        /// <summary>
+        /// Normalizes a quaternion to ensure it has unit length.
+        /// Returns identity quaternion if the input is invalid (zero length).
+        /// </summary>
+        /// <param name="q">The quaternion to normalize.</param>
+        /// <returns>A normalized quaternion.</returns>
+        private Quaternion NormalizeQuaternion(Quaternion q)
+        {
+            float lengthSquared = q.X * q.X + q.Y * q.Y + q.Z * q.Z + q.W * q.W;
+            
+            // Check for zero or near-zero length
+            if (lengthSquared < float.Epsilon)
+            {
+                return Quaternion.Identity;
+            }
+
+            // Check for NaN or Infinity
+            if (float.IsNaN(lengthSquared) || float.IsInfinity(lengthSquared) ||
+                float.IsNaN(q.X) || float.IsNaN(q.Y) || float.IsNaN(q.Z) || float.IsNaN(q.W) ||
+                float.IsInfinity(q.X) || float.IsInfinity(q.Y) || float.IsInfinity(q.Z) || float.IsInfinity(q.W))
+            {
+                return Quaternion.Identity;
+            }
+
+            float length = (float)Math.Sqrt(lengthSquared);
+            
+            // Normalize if not already normalized (allow small tolerance)
+            if (Math.Abs(length - 1.0f) > 0.0001f)
+            {
+                float invLength = 1.0f / length;
+                return new Quaternion(q.X * invLength, q.Y * invLength, q.Z * invLength, q.W * invLength);
+            }
+
+            return q;
+        }
+
+        /// <summary>
+        /// Updates room connections based on door hooks.
+        /// Rooms that share door hooks (same position within tolerance) are considered connected.
+        /// </summary>
+        private void UpdateRoomConnections()
+        {
+            if (_lyt == null || _lyt.Rooms == null || _lyt.DoorHooks == null)
+            {
+                return;
+            }
+
+            // Clear all existing connections
+            foreach (var room in _lyt.Rooms)
+            {
+                if (room != null && room.Connections != null)
+                {
+                    room.Connections.Clear();
+                }
+            }
+
+            // Build a map of room names (case-insensitive) for quick lookup
+            var roomNameMap = new Dictionary<string, LYTRoom>(StringComparer.OrdinalIgnoreCase);
+            foreach (var room in _lyt.Rooms)
+            {
+                if (room != null && room.Model != null)
+                {
+                    string roomName = room.Model.ToString().ToLowerInvariant();
+                    if (!roomNameMap.ContainsKey(roomName))
+                    {
+                        roomNameMap[roomName] = room;
+                    }
+                }
+            }
+
+            // Group door hooks by position (within tolerance) to find connections
+            // Door hooks at the same position (within 0.1 units) likely connect rooms
+            const float positionTolerance = 0.1f;
+            var doorHookGroups = new Dictionary<string, List<LYTDoorHook>>();
+
+            foreach (var doorHook in _lyt.DoorHooks)
+            {
+                if (doorHook == null)
+                {
+                    continue;
+                }
+
+                // Create a position key rounded to tolerance
+                int xKey = (int)(doorHook.Position.X / positionTolerance);
+                int yKey = (int)(doorHook.Position.Y / positionTolerance);
+                int zKey = (int)(doorHook.Position.Z / positionTolerance);
+                string positionKey = $"{xKey}_{yKey}_{zKey}";
+
+                if (!doorHookGroups.ContainsKey(positionKey))
+                {
+                    doorHookGroups[positionKey] = new List<LYTDoorHook>();
+                }
+
+                doorHookGroups[positionKey].Add(doorHook);
+            }
+
+            // Connect rooms that share door hook positions
+            foreach (var group in doorHookGroups.Values)
+            {
+                if (group.Count < 2)
+                {
+                    continue; // Need at least 2 door hooks at same position to connect rooms
+                }
+
+                // Get all unique rooms from this group of door hooks
+                var roomsInGroup = new HashSet<LYTRoom>();
+                foreach (var doorHook in group)
+                {
+                    if (doorHook == null || string.IsNullOrEmpty(doorHook.Room))
+                    {
+                        continue;
+                    }
+
+                    string roomName = doorHook.Room.ToLowerInvariant();
+                    if (roomNameMap.TryGetValue(roomName, out LYTRoom room))
+                    {
+                        roomsInGroup.Add(room);
+                    }
+                }
+
+                // Connect all rooms in this group to each other (bidirectional)
+                var roomsList = roomsInGroup.ToList();
+                for (int i = 0; i < roomsList.Count; i++)
+                {
+                    for (int j = i + 1; j < roomsList.Count; j++)
+                    {
+                        var room1 = roomsList[i];
+                        var room2 = roomsList[j];
+
+                        if (room1 != null && room2 != null)
+                        {
+                            if (room1.Connections == null)
+                            {
+                                room1.Connections = new HashSet<LYTRoom>();
+                            }
+                            if (room2.Connections == null)
+                            {
+                                room2.Connections = new HashSet<LYTRoom>();
+                            }
+
+                            room1.Connections.Add(room2);
+                            room2.Connections.Add(room1);
+                        }
+                    }
+                }
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:231-235
