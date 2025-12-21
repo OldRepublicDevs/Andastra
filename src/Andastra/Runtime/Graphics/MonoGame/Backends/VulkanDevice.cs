@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Text;
 using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
 using Andastra.Runtime.MonoGame.Rendering;
@@ -616,18 +617,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         {
         }
 
-        private enum VkPipelineBindPoint
-        {
-            VK_PIPELINE_BIND_POINT_GRAPHICS = 0,
-            VK_PIPELINE_BIND_POINT_COMPUTE = 1,
-            VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR = 1000165000,
-        }
-
-        [Flags]
-        private enum VkDependencyFlags
-        {
-            VK_DEPENDENCY_BY_REGION_BIT = 0x00000001,
-        }
+        // VkPipelineBindPoint and VkDependencyFlags are defined later in the file to avoid duplicates
 
         [Flags]
         private enum VkFramebufferCreateFlags
@@ -759,6 +749,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             VK_STRUCTURE_TYPE_MEMORY_BARRIER = 46,
             VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO = 47,
             VK_STRUCTURE_TYPE_LOADER_DEVICE_CREATE_INFO = 48,
+            VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT = 1000128002,
             VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR = 1000165000,
             VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR = 1000165001
         }
@@ -939,6 +930,12 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkCmdSetScissorDelegate(IntPtr commandBuffer, uint firstScissor, uint scissorCount, IntPtr pScissors);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdDrawDelegate(IntPtr commandBuffer, uint vertexCount, uint instanceCount, uint firstVertex, uint firstInstance);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdDrawIndexedDelegate(IntPtr commandBuffer, uint indexCount, uint instanceCount, uint firstIndex, int vertexOffset, uint firstInstance);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkCmdCopyImageDelegate(IntPtr commandBuffer, IntPtr srcImage, VkImageLayout srcImageLayout, IntPtr dstImage, VkImageLayout dstImageLayout, uint regionCount, IntPtr pRegions);
@@ -1124,11 +1121,11 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static class NativeMethods
         {
             // Windows P/Invoke declarations
-            [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Ansi)]
-            public static extern IntPtr LoadLibrary(string lpFileName);
+            [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Ansi, EntryPoint = "LoadLibraryA")]
+            private static extern IntPtr LoadLibrary_Win32(string lpFileName);
 
-            [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Ansi, ExactSpelling = true)]
-            public static extern IntPtr GetProcAddress(IntPtr hModule, string lpProcName);
+            [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Ansi, ExactSpelling = true, EntryPoint = "GetProcAddress")]
+            private static extern IntPtr GetProcAddress_Win32(IntPtr hModule, string lpProcName);
 
             [DllImport("kernel32.dll", SetLastError = true)]
             [return: MarshalAs(UnmanagedType.Bool)]
@@ -1156,7 +1153,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 if (Environment.OSVersion.Platform == PlatformID.Win32NT)
                 {
-                    return LoadLibrary(libraryName);
+                    return LoadLibrary_Win32(libraryName);
                 }
                 else if (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX)
                 {
@@ -1182,7 +1179,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                 if (Environment.OSVersion.Platform == PlatformID.Win32NT)
                 {
-                    return GetProcAddress(libraryHandle, functionName);
+                    return GetProcAddress_Win32(libraryHandle, functionName);
                 }
                 else if (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX)
                 {
@@ -2886,22 +2883,6 @@ namespace Andastra.Runtime.MonoGame.Backends
                     }
                 }
                 foreach (IntPtr ptr in bufferInfoPtrs)
-                {
-                    if (ptr != IntPtr.Zero)
-                    {
-                        Marshal.FreeHGlobal(ptr);
-                    }
-                }
-                // Free all allocated acceleration structure extension structures
-                foreach (IntPtr ptr in accelStructExtensionPtrs)
-                {
-                    if (ptr != IntPtr.Zero)
-                    {
-                        Marshal.FreeHGlobal(ptr);
-                    }
-                }
-                // Free all allocated acceleration structure handle arrays
-                foreach (IntPtr ptr in accelStructHandleArrays)
                 {
                     if (ptr != IntPtr.Zero)
                     {
@@ -5334,7 +5315,80 @@ namespace Andastra.Runtime.MonoGame.Backends
                     firstVertex,
                     firstInstance);
             }
-            public void DrawIndexed(DrawArguments args) { /* TODO: vkCmdDrawIndexed */ }
+            /// <summary>
+            /// Draws indexed primitives using vkCmdDrawIndexed.
+            /// 
+            /// Performs an indexed draw call, using indices from the currently bound index buffer
+            /// to reference vertices from the vertex buffer. The index buffer must be bound before
+            /// calling this method (via SetIndexBuffer or SetGraphicsState).
+            /// 
+            /// Based on Vulkan API: vkCmdDrawIndexed
+            /// Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdDrawIndexed.html
+            /// Original implementation: Records an indexed draw command into the command buffer
+            /// 
+            /// vkCmdDrawIndexed signature:
+            /// void vkCmdDrawIndexed(
+            ///     VkCommandBuffer commandBuffer,
+            ///     uint32_t indexCount,
+            ///     uint32_t instanceCount,
+            ///     uint32_t firstIndex,
+            ///     int32_t vertexOffset,
+            ///     uint32_t firstInstance);
+            /// 
+            /// Maps from DrawArguments:
+            /// - indexCount: args.VertexCount (for indexed draws, VertexCount represents the number of indices to draw)
+            /// - instanceCount: args.InstanceCount (defaults to 1 if 0 or negative)
+            /// - firstIndex: args.StartIndexLocation (offset into index buffer, in indices)
+            /// - vertexOffset: args.BaseVertexLocation (offset added to each vertex index before indexing into vertex buffer)
+            /// - firstInstance: args.StartInstanceLocation (first instance ID to draw)
+            /// 
+            /// Note: The index buffer format (16-bit or 32-bit) is determined when the index buffer is bound.
+            /// The graphics pipeline and vertex/index buffers must be bound before calling this method.
+            /// </summary>
+            public void DrawIndexed(DrawArguments args)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before drawing");
+                }
+
+                if (args.VertexCount <= 0)
+                {
+                    return; // Nothing to draw
+                }
+
+                // Validate vkCmdDrawIndexed function pointer
+                if (vkCmdDrawIndexed == null)
+                {
+                    throw new InvalidOperationException("vkCmdDrawIndexed function is not available. Vulkan may not be properly initialized.");
+                }
+
+                // Map DrawArguments to vkCmdDrawIndexed parameters
+                // indexCount: Number of indices to draw (args.VertexCount for indexed draws)
+                uint indexCount = unchecked((uint)args.VertexCount);
+                
+                // instanceCount: Number of instances to draw (defaults to 1 if 0 or negative)
+                uint instanceCount = args.InstanceCount > 0 ? unchecked((uint)args.InstanceCount) : 1u;
+                
+                // firstIndex: Offset into index buffer, in indices (args.StartIndexLocation)
+                uint firstIndex = unchecked((uint)System.Math.Max(0, args.StartIndexLocation));
+                
+                // vertexOffset: Offset added to each vertex index before indexing into vertex buffer (args.BaseVertexLocation)
+                // Note: This is an int32_t in Vulkan, so it can be negative (allows negative vertex offsets)
+                int vertexOffset = args.BaseVertexLocation;
+                
+                // firstInstance: First instance ID to draw (args.StartInstanceLocation)
+                uint firstInstance = unchecked((uint)System.Math.Max(0, args.StartInstanceLocation));
+
+                // Call vkCmdDrawIndexed to record the indexed draw command
+                vkCmdDrawIndexed(
+                    _vkCommandBuffer,
+                    indexCount,
+                    instanceCount,
+                    firstIndex,
+                    vertexOffset,
+                    firstInstance);
+            }
             public void DrawIndirect(IBuffer argumentBuffer, int offset, int drawCount, int stride) { /* TODO: vkCmdDrawIndirect */ }
             public void DrawIndexedIndirect(IBuffer argumentBuffer, int offset, int drawCount, int stride) { /* TODO: vkCmdDrawIndexedIndirect */ }
             public void SetComputeState(ComputeState state)
@@ -5498,8 +5552,134 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                 vkCmdDispatchIndirect(_vkCommandBuffer, vkBuffer, (ulong)offset);
             }
+
+            // Raytracing Commands
+            public void SetRaytracingState(RaytracingState state)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before setting raytracing state");
+                }
+                // TODO: STUB - Implement Vulkan raytracing state setup (vkCmdBindPipeline with raytracing pipeline)
+            }
+
+            public void DispatchRays(DispatchRaysArguments args)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before dispatching rays");
+                }
+                // TODO: STUB - Implement vkCmdTraceRaysKHR
+            }
+
+            public void BuildBottomLevelAccelStruct(IAccelStruct accelStruct, GeometryDesc[] geometries)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before building acceleration structure");
+                }
+                // TODO: STUB - Implement vkCmdBuildAccelerationStructuresKHR for BLAS
+            }
+
+            public void BuildTopLevelAccelStruct(IAccelStruct accelStruct, AccelStructInstance[] instances)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before building acceleration structure");
+                }
+                // TODO: STUB - Implement vkCmdBuildAccelerationStructuresKHR for TLAS
+            }
+
+            public void CompactBottomLevelAccelStruct(IAccelStruct dest, IAccelStruct src)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before compacting acceleration structure");
+                }
+                // TODO: STUB - Implement vkCmdCopyAccelerationStructureKHR for compaction
+            }
+
+            // Debug Commands
+            public void BeginDebugEvent(string name, Vector4 color)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before beginning debug event");
+                }
+                if (vkCmdBeginDebugUtilsLabelEXT == null)
+                {
+                    return; // Extension not available
+                }
+                if (string.IsNullOrEmpty(name))
+                {
+                    name = "";
+                }
+                GCHandle nameHandle = GCHandle.Alloc(Encoding.UTF8.GetBytes(name + "\0"), GCHandleType.Pinned);
+                try
+                {
+                    float[] colorArray = new float[4] { color.X, color.Y, color.Z, color.W };
+                    VkDebugUtilsLabelEXT labelInfo = new VkDebugUtilsLabelEXT
+                    {
+                        sType = VkStructureType.VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT,
+                        pNext = IntPtr.Zero,
+                        pLabelName = nameHandle.AddrOfPinnedObject(),
+                        color = colorArray
+                    };
+                    vkCmdBeginDebugUtilsLabelEXT(_vkCommandBuffer, ref labelInfo);
+                }
+                finally
+                {
+                    nameHandle.Free();
+                }
+            }
+
+            public void EndDebugEvent()
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before ending debug event");
+                }
+                if (vkCmdEndDebugUtilsLabelEXT != null)
+                {
+                    vkCmdEndDebugUtilsLabelEXT(_vkCommandBuffer);
+                }
+            }
+
+            public void InsertDebugMarker(string name, Vector4 color)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before inserting debug marker");
+                }
+                if (vkCmdInsertDebugUtilsLabelEXT == null)
+                {
+                    return; // Extension not available
+                }
+                if (string.IsNullOrEmpty(name))
+                {
+                    name = "";
+                }
+                GCHandle nameHandle = GCHandle.Alloc(Encoding.UTF8.GetBytes(name + "\0"), GCHandleType.Pinned);
+                try
+                {
+                    float[] colorArray = new float[4] { color.X, color.Y, color.Z, color.W };
+                    VkDebugUtilsLabelEXT labelInfo = new VkDebugUtilsLabelEXT
+                    {
+                        sType = VkStructureType.VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT,
+                        pNext = IntPtr.Zero,
+                        pLabelName = nameHandle.AddrOfPinnedObject(),
+                        color = colorArray
+                    };
+                    vkCmdInsertDebugUtilsLabelEXT(_vkCommandBuffer, ref labelInfo);
+                }
+                finally
+                {
+                    nameHandle.Free();
+                }
+            }
         }
 
         #endregion
     }
 }
+
