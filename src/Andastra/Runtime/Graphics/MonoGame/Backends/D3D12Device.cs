@@ -1725,6 +1725,175 @@ namespace Andastra.Runtime.MonoGame.Backends
         }
 
         /// <summary>
+        /// D3D12_GRAPHICS_PIPELINE_STATE_DESC structure for graphics pipeline creation.
+        /// Based on DirectX 12 Graphics Pipeline State: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_graphics_pipeline_state_desc
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_GRAPHICS_PIPELINE_STATE_DESC
+        {
+            public IntPtr pRootSignature; // ID3D12RootSignature*
+            public D3D12_SHADER_BYTECODE VS; // Vertex shader bytecode
+            public D3D12_SHADER_BYTECODE PS; // Pixel shader bytecode
+            public D3D12_SHADER_BYTECODE DS; // Domain shader bytecode
+            public D3D12_SHADER_BYTECODE HS; // Hull shader bytecode
+            public D3D12_SHADER_BYTECODE GS; // Geometry shader bytecode
+            public D3D12_STREAM_OUTPUT_DESC StreamOutput;
+            public D3D12_BLEND_DESC BlendState;
+            public uint SampleMask; // UINT
+            public D3D12_RASTERIZER_DESC RasterizerState;
+            public D3D12_DEPTH_STENCIL_DESC DepthStencilState;
+            public IntPtr pInputElementDescs; // D3D12_INPUT_ELEMENT_DESC*
+            public uint InputElementDescsCount; // UINT
+            public uint IBStripCutValue; // D3D12_INDEX_BUFFER_STRIP_CUT_VALUE
+            public uint PrimitiveTopologyType; // D3D12_PRIMITIVE_TOPOLOGY_TYPE
+            public uint NumRenderTargets; // UINT
+            public uint RTVFormats0; // DXGI_FORMAT (first render target format)
+            public uint RTVFormats1; // DXGI_FORMAT
+            public uint RTVFormats2; // DXGI_FORMAT
+            public uint RTVFormats3; // DXGI_FORMAT
+            public uint RTVFormats4; // DXGI_FORMAT
+            public uint RTVFormats5; // DXGI_FORMAT
+            public uint RTVFormats6; // DXGI_FORMAT
+            public uint RTVFormats7; // DXGI_FORMAT
+            public uint DSVFormat; // DXGI_FORMAT
+            public D3D12_SAMPLE_DESC SampleDesc;
+            public uint NodeMask; // UINT
+            public D3D12_CACHED_PIPELINE_STATE CachedPSO;
+            public uint Flags; // D3D12_PIPELINE_STATE_FLAGS
+        }
+
+        /// <summary>
+        /// D3D12_SHADER_BYTECODE structure for shader bytecode.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_SHADER_BYTECODE
+        {
+            public IntPtr pShaderBytecode; // void*
+            public ulong BytecodeLength; // SIZE_T
+        }
+
+        /// <summary>
+        /// D3D12_STREAM_OUTPUT_DESC structure for stream output.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_STREAM_OUTPUT_DESC
+        {
+            public IntPtr pSODeclaration; // D3D12_SO_DECLARATION_ENTRY*
+            public uint NumEntries; // UINT
+            public IntPtr pBufferStrides; // UINT*
+            public uint NumStrides; // UINT
+            public uint RasterizedStream; // UINT
+        }
+
+        /// <summary>
+        /// D3D12_BLEND_DESC structure for blend state.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_BLEND_DESC
+        {
+            public byte AlphaToCoverageEnable; // BOOL
+            public byte IndependentBlendEnable; // BOOL
+            public D3D12_RENDER_TARGET_BLEND_DESC RenderTarget0;
+            public D3D12_RENDER_TARGET_BLEND_DESC RenderTarget1;
+            public D3D12_RENDER_TARGET_BLEND_DESC RenderTarget2;
+            public D3D12_RENDER_TARGET_BLEND_DESC RenderTarget3;
+            public D3D12_RENDER_TARGET_BLEND_DESC RenderTarget4;
+            public D3D12_RENDER_TARGET_BLEND_DESC RenderTarget5;
+            public D3D12_RENDER_TARGET_BLEND_DESC RenderTarget6;
+            public D3D12_RENDER_TARGET_BLEND_DESC RenderTarget7;
+        }
+
+        /// <summary>
+        /// D3D12_RENDER_TARGET_BLEND_DESC structure for render target blend state.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_RENDER_TARGET_BLEND_DESC
+        {
+            public byte BlendEnable; // BOOL
+            public byte LogicOpEnable; // BOOL
+            public uint SrcBlend; // D3D12_BLEND
+            public uint DestBlend; // D3D12_BLEND
+            public uint BlendOp; // D3D12_BLEND_OP
+            public uint SrcBlendAlpha; // D3D12_BLEND
+            public uint DestBlendAlpha; // D3D12_BLEND
+            public uint BlendOpAlpha; // D3D12_BLEND_OP
+            public uint LogicOp; // D3D12_LOGIC_OP
+            public byte RenderTargetWriteMask; // UINT8
+        }
+
+        /// <summary>
+        /// D3D12_RASTERIZER_DESC structure for rasterizer state.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_RASTERIZER_DESC
+        {
+            public uint FillMode; // D3D12_FILL_MODE
+            public uint CullMode; // D3D12_CULL_MODE
+            public byte FrontCounterClockwise; // BOOL
+            public int DepthBias; // INT
+            public float DepthBiasClamp;
+            public float SlopeScaledDepthBias;
+            public byte DepthClipEnable; // BOOL
+            public byte MultisampleEnable; // BOOL
+            public byte AntialiasedLineEnable; // BOOL
+            public uint ForcedSampleCount; // UINT
+            public uint ConservativeRaster; // D3D12_CONSERVATIVE_RASTERIZATION_MODE
+        }
+
+        /// <summary>
+        /// D3D12_DEPTH_STENCIL_DESC structure for depth-stencil state.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_DEPTH_STENCIL_DESC
+        {
+            public byte DepthEnable; // BOOL
+            public byte DepthWriteMask; // D3D12_DEPTH_WRITE_MASK
+            public uint DepthFunc; // D3D12_COMPARISON_FUNC
+            public byte StencilEnable; // BOOL
+            public byte StencilReadMask; // UINT8
+            public byte StencilWriteMask; // UINT8
+            public D3D12_DEPTH_STENCILOP_DESC FrontFace;
+            public D3D12_DEPTH_STENCILOP_DESC BackFace;
+        }
+
+        /// <summary>
+        /// D3D12_DEPTH_STENCILOP_DESC structure for depth-stencil operations.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_DEPTH_STENCILOP_DESC
+        {
+            public uint StencilFailOp; // D3D12_STENCIL_OP
+            public uint StencilDepthFailOp; // D3D12_STENCIL_OP
+            public uint StencilPassOp; // D3D12_STENCIL_OP
+            public uint StencilFunc; // D3D12_COMPARISON_FUNC
+        }
+
+        /// <summary>
+        /// D3D12_INPUT_ELEMENT_DESC structure for input layout.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        private struct D3D12_INPUT_ELEMENT_DESC
+        {
+            public IntPtr SemanticName; // LPCSTR (marshalled as IntPtr)
+            public uint SemanticIndex; // UINT
+            public uint Format; // DXGI_FORMAT
+            public uint InputSlot; // UINT
+            public uint AlignedByteOffset; // UINT
+            public uint InputSlotClass; // D3D12_INPUT_CLASSIFICATION
+            public uint InstanceDataStepRate; // UINT
+        }
+
+        /// <summary>
+        /// D3D12_CACHED_PIPELINE_STATE structure for cached pipeline state.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_CACHED_PIPELINE_STATE
+        {
+            public IntPtr pCachedBlob; // void*
+            public ulong CachedBlobSizeInBytes; // SIZE_T
+        }
+
+        /// <summary>
         /// D3D12_SAMPLER_DESC structure.
         /// Based on DirectX 12 Sampler Descriptors: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_sampler_desc
         /// </summary>
@@ -2592,6 +2761,161 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // They don't need individual release - the descriptor heap itself manages their lifetime
                 // If descriptors were allocated from a heap, releasing the heap will clean them up
                 // Standalone descriptors allocated via CreateXXXDescriptorHandle are managed by the device
+            }
+        }
+
+        /// <summary>
+        /// Converts GraphicsPipelineDesc to D3D12_GRAPHICS_PIPELINE_STATE_DESC.
+        /// Based on DirectX 12 Graphics Pipeline State: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_graphics_pipeline_state_desc
+        /// </summary>
+        private D3D12_GRAPHICS_PIPELINE_STATE_DESC ConvertGraphicsPipelineDescToD3D12(GraphicsPipelineDesc desc, IFramebuffer framebuffer, IntPtr rootSignature)
+        {
+            var d3d12Desc = new D3D12_GRAPHICS_PIPELINE_STATE_DESC();
+
+            // Root signature
+            d3d12Desc.pRootSignature = rootSignature;
+
+            // Shader bytecode
+            d3d12Desc.VS = GetShaderBytecode(desc.VertexShader);
+            d3d12Desc.PS = GetShaderBytecode(desc.PixelShader);
+            d3d12Desc.HS = GetShaderBytecode(desc.HullShader);
+            d3d12Desc.DS = GetShaderBytecode(desc.DomainShader);
+            d3d12Desc.GS = GetShaderBytecode(desc.GeometryShader);
+
+            // Stream output (not used in our abstraction)
+            d3d12Desc.StreamOutput = new D3D12_STREAM_OUTPUT_DESC
+            {
+                pSODeclaration = IntPtr.Zero,
+                NumEntries = 0,
+                pBufferStrides = IntPtr.Zero,
+                NumStrides = 0,
+                RasterizedStream = 0
+            };
+
+            // Blend state
+            d3d12Desc.BlendState = ConvertBlendStateDescToD3D12(desc.BlendState);
+
+            // Sample mask (default to all samples)
+            d3d12Desc.SampleMask = 0xFFFFFFFF;
+
+            // Rasterizer state
+            d3d12Desc.RasterizerState = ConvertRasterStateDescToD3D12(desc.RasterState);
+
+            // Depth-stencil state
+            d3d12Desc.DepthStencilState = ConvertDepthStencilStateDescToD3D12(desc.DepthStencilState);
+
+            // Input layout
+            if (desc.InputLayout.Attributes != null && desc.InputLayout.Attributes.Length > 0)
+            {
+                d3d12Desc.InputElementDescsCount = (uint)desc.InputLayout.Attributes.Length;
+                d3d12Desc.pInputElementDescs = MarshalInputElementDescs(desc.InputLayout.Attributes);
+            }
+            else
+            {
+                d3d12Desc.InputElementDescsCount = 0;
+                d3d12Desc.pInputElementDescs = IntPtr.Zero;
+            }
+
+            // Index buffer strip cut value (not used)
+            d3d12Desc.IBStripCutValue = 0; // D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED
+
+            // Primitive topology type
+            d3d12Desc.PrimitiveTopologyType = ConvertPrimitiveTopologyToD3D12(desc.PrimitiveTopology);
+
+            // Render target formats from framebuffer
+            if (framebuffer != null && framebuffer.Desc.ColorAttachments != null && framebuffer.Desc.ColorAttachments.Length > 0)
+            {
+                d3d12Desc.NumRenderTargets = (uint)Math.Min(framebuffer.Desc.ColorAttachments.Length, 8);
+                for (int i = 0; i < d3d12Desc.NumRenderTargets && i < 8; i++)
+                {
+                    var attachment = framebuffer.Desc.ColorAttachments[i];
+                    if (attachment.Texture != null)
+                    {
+                        uint format = ConvertTextureFormatToDxgiFormat(attachment.Texture.Desc.Format);
+                        switch (i)
+                        {
+                            case 0: d3d12Desc.RTVFormats0 = format; break;
+                            case 1: d3d12Desc.RTVFormats1 = format; break;
+                            case 2: d3d12Desc.RTVFormats2 = format; break;
+                            case 3: d3d12Desc.RTVFormats3 = format; break;
+                            case 4: d3d12Desc.RTVFormats4 = format; break;
+                            case 5: d3d12Desc.RTVFormats5 = format; break;
+                            case 6: d3d12Desc.RTVFormats6 = format; break;
+                            case 7: d3d12Desc.RTVFormats7 = format; break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                d3d12Desc.NumRenderTargets = 1;
+                d3d12Desc.RTVFormats0 = 87; // DXGI_FORMAT_R8G8B8A8_UNORM (default)
+                d3d12Desc.RTVFormats1 = 0; // DXGI_FORMAT_UNKNOWN
+                d3d12Desc.RTVFormats2 = 0;
+                d3d12Desc.RTVFormats3 = 0;
+                d3d12Desc.RTVFormats4 = 0;
+                d3d12Desc.RTVFormats5 = 0;
+                d3d12Desc.RTVFormats6 = 0;
+                d3d12Desc.RTVFormats7 = 0;
+            }
+
+            // Depth-stencil format
+            if (framebuffer != null && framebuffer.Desc.DepthAttachment.Texture != null)
+            {
+                d3d12Desc.DSVFormat = ConvertTextureFormatToDxgiFormat(framebuffer.Desc.DepthAttachment.Texture.Desc.Format);
+            }
+            else
+            {
+                d3d12Desc.DSVFormat = 0; // DXGI_FORMAT_UNKNOWN
+            }
+
+            // Sample description
+            if (framebuffer != null && framebuffer.Desc.ColorAttachments != null && framebuffer.Desc.ColorAttachments.Length > 0 && framebuffer.Desc.ColorAttachments[0].Texture != null)
+            {
+                d3d12Desc.SampleDesc = new D3D12_SAMPLE_DESC
+                {
+                    Count = (uint)framebuffer.Desc.ColorAttachments[0].Texture.Desc.SampleCount,
+                    Quality = 0 // Standard quality
+                };
+            }
+            else
+            {
+                d3d12Desc.SampleDesc = new D3D12_SAMPLE_DESC { Count = 1, Quality = 0 };
+            }
+
+            // Node mask (default to node 0)
+            d3d12Desc.NodeMask = 0;
+
+            // Cached PSO (not used)
+            d3d12Desc.CachedPSO = new D3D12_CACHED_PIPELINE_STATE { pCachedBlob = IntPtr.Zero, CachedBlobSizeInBytes = 0 };
+
+            // Pipeline state flags (default)
+            d3d12Desc.Flags = 0; // D3D12_PIPELINE_STATE_FLAG_NONE
+
+            return d3d12Desc;
+        }
+
+        /// <summary>
+        /// Frees allocated memory from D3D12_GRAPHICS_PIPELINE_STATE_DESC structure.
+        /// Note: This structure contains pointers to marshalled data that must be freed.
+        /// </summary>
+        private void FreeGraphicsPipelineStateDesc(ref D3D12_GRAPHICS_PIPELINE_STATE_DESC desc)
+        {
+            // Free input element descriptors and their semantic name strings
+            if (desc.pInputElementDescs != IntPtr.Zero && desc.InputElementDescsCount > 0)
+            {
+                int elementSize = Marshal.SizeOf(typeof(D3D12_INPUT_ELEMENT_DESC));
+                for (uint i = 0; i < desc.InputElementDescsCount; i++)
+                {
+                    IntPtr elementPtr = new IntPtr(desc.pInputElementDescs.ToInt64() + i * elementSize);
+                    var element = (D3D12_INPUT_ELEMENT_DESC)Marshal.PtrToStructure(elementPtr, typeof(D3D12_INPUT_ELEMENT_DESC));
+                    if (element.SemanticName != IntPtr.Zero)
+                    {
+                        Marshal.FreeHGlobal(element.SemanticName);
+                    }
+                }
+                Marshal.FreeHGlobal(desc.pInputElementDescs);
+                desc.pInputElementDescs = IntPtr.Zero;
             }
         }
 
