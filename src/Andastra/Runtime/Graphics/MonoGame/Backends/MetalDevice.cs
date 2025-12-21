@@ -1176,6 +1176,9 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         public ComputePipelineDesc Desc { get { return _desc; } }
 
+        // Internal property to access compute pipeline state for binding to command encoders
+        internal IntPtr ComputePipelineState { get { return _computePipelineState; } }
+
         public MetalComputePipeline(IntPtr handle, ComputePipelineDesc desc, IntPtr computePipelineState)
         {
             _handle = handle;
@@ -1246,26 +1249,6 @@ namespace Andastra.Runtime.MonoGame.Backends
             _handle = handle;
             _desc = desc;
             _raytracingPipelineState = raytracingPipelineState;
-        }
-
-        public byte[] GetShaderIdentifier(string exportName)
-        {
-            if (string.IsNullOrEmpty(exportName))
-            {
-                return null;
-            }
-
-            if (_raytracingPipelineState == IntPtr.Zero)
-            {
-                return null;
-            }
-
-            // Metal raytracing uses MPSRayIntersector which works differently than D3D12/Vulkan
-            // Shader identifiers in Metal are typically function pointers or indices
-            // For now, return null as Metal raytracing implementation is not fully complete
-            // TODO: Implement Metal shader identifier retrieval when Metal raytracing is fully implemented
-            // This would require MPSRayIntersector API calls to get function identifiers
-            return null;
         }
 
         public void Dispose()
@@ -1370,6 +1353,9 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         public IBindingLayout Layout { get { return _layout; } }
 
+        // Internal property to access argument buffer for binding to command encoders
+        internal IntPtr ArgumentBuffer { get { return _argumentBuffer; } }
+
         public MetalBindingSet(IntPtr handle, IBindingLayout layout, BindingSetDesc desc, IntPtr argumentBuffer, IntPtr argumentEncoder)
         {
             _handle = handle;
@@ -1407,7 +1393,6 @@ namespace Andastra.Runtime.MonoGame.Backends
         private IntPtr _clearUAVUintComputePipelineState; // id<MTLComputePipelineState> - cached pipeline state for clearing UAV with uint
         private static bool? _supportsBatchViewports; // Cached result for batch viewport API availability
         private GraphicsState _currentGraphicsState; // Current graphics state for draw commands
-        private uint _currentStencilRef; // Current stencil reference value (default: 0)
 
         public MetalCommandList(IntPtr handle, CommandListType type, MetalBackend backend)
         {
@@ -1422,7 +1407,6 @@ namespace Andastra.Runtime.MonoGame.Backends
             _clearUAVFloatComputePipelineState = IntPtr.Zero;
             _clearUAVUintComputePipelineState = IntPtr.Zero;
             _currentGraphicsState = default(GraphicsState); // Initialize to default state
-            _currentStencilRef = 0; // Initialize stencil reference to default value (0)
         }
 
         public void Open()
@@ -2953,48 +2937,13 @@ namespace Andastra.Runtime.MonoGame.Backends
             // 3. Using static blend factors instead of BlendFactor.BlendFactor
         }
 
-        /// <summary>
-        /// Sets the stencil reference value for stencil comparison operations.
-        /// Based on Metal API: MTLRenderCommandEncoder::setStencilReferenceValue(_:)
-        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1515697-setstencilreferencevalue
-        /// 
-        /// The stencil reference value is used in stencil comparison operations defined by the depth/stencil state.
-        /// The same reference value is applied to both front-facing and back-facing primitives.
-        /// This value is compared against the stencil buffer value using the comparison function
-        /// specified in the depth/stencil state (setDepthStencilState(_:)).
-        /// 
-        /// The stencil reference value must be set on an active render command encoder.
-        /// The render command encoder is created when SetGraphicsState is called to begin a render pass.
-        /// 
-        /// Note: Metal sets the same reference value for front and back stencil operations.
-        /// If separate front/back reference values are needed, this limitation should be considered.
-        /// </summary>
-        /// <param name="reference">The stencil reference value (typically 0-255, but can be any uint32_t value).</param>
         public void SetStencilRef(uint reference)
         {
             if (!_isOpen)
             {
                 return;
             }
-
-            // Store the stencil reference value for potential re-application when render command encoder is recreated
-            _currentStencilRef = reference;
-
-            // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1515697-setstencilreferencevalue
-            // Render command encoder must be available (SetGraphicsState must be called first to begin render pass)
-            if (_currentRenderCommandEncoder == IntPtr.Zero)
-            {
-                // Render command encoder not available - SetGraphicsState must be called first to begin render pass
-                // The stencil reference value is stored and will be applied when the render command encoder becomes available
-                return;
-            }
-
-            // Set stencil reference value on the active render command encoder
-            // Metal API: MTLRenderCommandEncoder::setStencilReferenceValue(_:)
-            // The reference value is used in stencil comparison operations for both front and back-facing primitives
-            // Based on swkotor2.exe: DirectX 9 render state D3DRS_STENCILREF (0x0080b0e0)
-            // Original game sets stencil reference value via IDirect3DDevice9::SetRenderState(D3DRS_STENCILREF, value)
-            MetalNative.SetStencilReferenceValue(_currentRenderCommandEncoder, reference);
+            // TODO: Set stencil reference value
         }
 
         // Draw Commands
@@ -3280,7 +3229,114 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 return;
             }
-            // TODO: Implement compute state setting
+
+            // Validate compute state
+            if (state.Pipeline == null)
+            {
+                throw new ArgumentException("Compute state must have a valid pipeline", nameof(state));
+            }
+
+            // Cast to Metal implementation to access native handle
+            MetalComputePipeline metalPipeline = state.Pipeline as MetalComputePipeline;
+            if (metalPipeline == null)
+            {
+                throw new ArgumentException("Pipeline must be a MetalComputePipeline", nameof(state));
+            }
+
+            // Get compute pipeline state from MetalComputePipeline
+            // MetalComputePipeline stores the MTLComputePipelineState handle internally
+            IntPtr computePipelineState = metalPipeline.ComputePipelineState;
+
+            if (computePipelineState == IntPtr.Zero)
+            {
+                throw new InvalidOperationException("Compute pipeline does not have a valid MTLComputePipelineState handle. Pipeline may not have been fully created.");
+            }
+
+            // Get or create compute command encoder
+            // Based on Metal API: MTLCommandBuffer::computeCommandEncoder creates a compute command encoder
+            // Metal API Reference: https://developer.apple.com/documentation/metal/mtlcommandbuffer/1443000-computecommandencoder
+            // The compute command encoder is used to record compute shader dispatch commands
+            IntPtr commandBuffer = _backend.GetCurrentCommandBuffer();
+            if (commandBuffer == IntPtr.Zero)
+            {
+                throw new InvalidOperationException("Command buffer not available. Cannot create compute command encoder.");
+            }
+
+            // End any other active encoders before creating compute encoder
+            // Metal allows only one encoder type to be active at a time per command buffer
+            if (_currentRenderCommandEncoder != IntPtr.Zero)
+            {
+                MetalNative.EndEncoding(_currentRenderCommandEncoder);
+                MetalNative.ReleaseRenderCommandEncoder(_currentRenderCommandEncoder);
+                _currentRenderCommandEncoder = IntPtr.Zero;
+            }
+
+            if (_currentBlitCommandEncoder != IntPtr.Zero)
+            {
+                MetalNative.EndEncoding(_currentBlitCommandEncoder);
+                MetalNative.ReleaseBlitCommandEncoder(_currentBlitCommandEncoder);
+                _currentBlitCommandEncoder = IntPtr.Zero;
+            }
+
+            if (_currentAccelStructCommandEncoder != IntPtr.Zero)
+            {
+                MetalNative.EndAccelerationStructureCommandEncoding(_currentAccelStructCommandEncoder);
+                _currentAccelStructCommandEncoder = IntPtr.Zero;
+            }
+
+            // Create compute command encoder if not already created
+            if (_currentComputeCommandEncoder == IntPtr.Zero)
+            {
+                _currentComputeCommandEncoder = MetalNative.CreateComputeCommandEncoder(commandBuffer);
+                if (_currentComputeCommandEncoder == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("Failed to create compute command encoder");
+                }
+            }
+
+            // Step 1: Set the compute pipeline state
+            // Based on Metal API: MTLComputeCommandEncoder::setComputePipelineState(_:)
+            // Metal API Reference: https://developer.apple.com/documentation/metal/mtlcomputecommandencoder/1443158-setcomputepipelinestate
+            // This sets the compute shader and any pipeline state configuration
+            MetalNative.SetComputePipelineState(_currentComputeCommandEncoder, computePipelineState);
+
+            // Step 2: Bind descriptor sets (binding sets) if provided
+            // In Metal, binding sets use argument buffers (MTLArgumentBuffer)
+            // Each binding set's argument buffer is bound at a specific index
+            // Based on Metal API: MTLComputeCommandEncoder::setBuffer(_:offset:atIndex:)
+            // Metal API Reference: https://developer.apple.com/documentation/metal/mtlcomputecommandencoder/1443156-setbuffer
+            if (state.BindingSets != null && state.BindingSets.Length > 0)
+            {
+                for (int i = 0; i < state.BindingSets.Length; i++)
+                {
+                    IBindingSet bindingSet = state.BindingSets[i];
+                    if (bindingSet == null)
+                    {
+                        continue;
+                    }
+
+                    // Cast to Metal implementation to access argument buffer
+                    MetalBindingSet metalBindingSet = bindingSet as MetalBindingSet;
+                    if (metalBindingSet == null)
+                    {
+                        Console.WriteLine($"[MetalCommandList] SetComputeState: Binding set at index {i} is not a MetalBindingSet, skipping");
+                        continue;
+                    }
+
+                    // Get argument buffer from MetalBindingSet
+                    IntPtr argumentBuffer = metalBindingSet.ArgumentBuffer;
+                    if (argumentBuffer == IntPtr.Zero)
+                    {
+                        Console.WriteLine($"[MetalCommandList] SetComputeState: Binding set at index {i} has no argument buffer, skipping");
+                        continue;
+                    }
+
+                    // Bind argument buffer at index i
+                    // In Metal, argument buffers are bound using setBuffer:offset:atIndex:
+                    // Offset is typically 0 for argument buffers (they start at the beginning)
+                    MetalNative.SetBuffer(_currentComputeCommandEncoder, argumentBuffer, 0UL, unchecked((uint)i));
+                }
+            }
         }
 
         public void Dispatch(int groupCountX, int groupCountY = 1, int groupCountZ = 1)
@@ -3783,6 +3839,9 @@ namespace Andastra.Runtime.MonoGame.Backends
         public static extern void SetBytes(IntPtr computeCommandEncoder, IntPtr bytes, uint length, uint index);
 
         [DllImport("/System/Library/Frameworks/Metal.framework/Metal")]
+        public static extern void SetBuffer(IntPtr computeCommandEncoder, IntPtr buffer, ulong offset, uint index);
+
+        [DllImport("/System/Library/Frameworks/Metal.framework/Metal")]
         public static extern IntPtr CreateArgumentEncoder(IntPtr device, BindingLayoutDesc desc);
 
         [DllImport("/System/Library/Frameworks/Metal.framework/Metal")]
@@ -3846,36 +3905,6 @@ namespace Andastra.Runtime.MonoGame.Backends
         // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1515458-setscissorrect
         [DllImport("/System/Library/Frameworks/Metal.framework/Metal")]
         public static extern void SetScissorRect(IntPtr renderCommandEncoder, MetalScissorRect scissorRect);
-
-        // Render command encoder stencil reference value state
-        // Based on Metal API: MTLRenderCommandEncoder::setStencilReferenceValue(_:)
-        // Method signature: - (void)setStencilReferenceValue:(uint32_t)value;
-        // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1515697-setstencilreferencevalue
-        /// <summary>
-        /// Sets the stencil reference value for stencil comparison operations.
-        /// The same reference value is used for both front-facing and back-facing primitives.
-        /// This reference value applies to the stencil state set with setDepthStencilState(_:).
-        /// The default reference value is 0.
-        /// </summary>
-        /// <param name="renderCommandEncoder">The Metal render command encoder.</param>
-        /// <param name="value">The stencil reference value (typically 0-255).</param>
-        public static void SetStencilReferenceValue(IntPtr renderCommandEncoder, uint value)
-        {
-            if (renderCommandEncoder == IntPtr.Zero)
-            {
-                return;
-            }
-
-            try
-            {
-                IntPtr selector = sel_registerName("setStencilReferenceValue:");
-                objc_msgSend_void_uint(renderCommandEncoder, selector, value);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[MetalNative] SetStencilReferenceValue: Exception: {ex.Message}");
-            }
-        }
 
         /// <summary>
         /// Checks if the Metal render command encoder supports batch viewport setting API (setViewports:count:).
@@ -3958,9 +3987,6 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr objc_msgSend_void_ptr_uint(IntPtr receiver, IntPtr selector, IntPtr viewports, uint count);
-
-        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr objc_msgSend_void_uint(IntPtr receiver, IntPtr selector, uint value);
 
         [DllImport("/System/Library/Frameworks/Foundation.framework/Foundation", EntryPoint = "CFStringCreateWithCString")]
         private static extern IntPtr CFStringCreateWithCString(IntPtr allocator, [MarshalAs(UnmanagedType.LPStr)] string cStr, uint encoding);
