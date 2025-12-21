@@ -12,8 +12,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
     /// </summary>
     /// <remarks>
     /// Lazy Entity Template Factory (Odyssey Engine Family):
-    /// - Created to solve the chicken-and-egg problem: GameSession needs PartySystem, PartySystem needs template factory,
-    ///   but template factory needs module, which isn't loaded until later. TODO: STUB - This is a workaround to allow the factory to be created before the module is loaded.
+    /// - Lazy-loading design pattern to solve initialization order: GameSession needs PartySystem, PartySystem needs template factory,
+    ///   but template factory needs module, which isn't loaded until later. This factory retrieves the module on-demand from ModuleLoader.
     /// - Based on swkotor.exe and swkotor2.exe entity creation systems
     /// - Located via string references: "TemplateResRef" @ 0x00747494 (swkotor.exe), "TemplateResRef" @ 0x007bd00c (swkotor2.exe)
     /// - Template loading: FUN_005fb0f0 @ 0x005fb0f0 (swkotor2.exe) loads creature templates from GFF
@@ -22,7 +22,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
     /// - Original implementation: Creates runtime entities from UTC GFF templates
     /// - This implementation wraps EntityFactory to provide Core-compatible interface
     /// - Module is retrieved lazily from ModuleLoader when CreateCreatureFromTemplate is called
-    /// - Returns null if module is not loaded when template creation is attempted
+    /// - Returns null if module is not loaded when template creation is attempted (PartySystem handles this gracefully with fallback)
+    /// - After module loads, GameSession should update PartySystem with OdysseyEntityTemplateFactory for optimal performance
     /// - Both games use identical template loading mechanism with different function addresses
     /// </remarks>
     public class LazyOdysseyEntityTemplateFactory : BaseEntityTemplateFactory
