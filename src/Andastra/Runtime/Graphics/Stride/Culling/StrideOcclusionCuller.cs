@@ -303,23 +303,13 @@ namespace Andastra.Runtime.Stride.Culling
 
             try
             {
-                float[] mip0Data = new float[_width * _height];
-                var context = _graphicsDevice.ImmediateContext;
-                
-                // Read texture data as Color4 and extract red channel (assuming R32_Float stored in red)
-                var colorData = new Color4[_width * _height];
-                _hiZBuffer.GetData(context, colorData);
-                
-                // Convert Color4 to float (assuming depth is stored in red channel)
-                for (int i = 0; i < mip0Data.Length && i < colorData.Length; i++)
-                {
-                    mip0Data[i] = colorData[i].R;
-                }
-                
+                // Use format-aware depth reading to properly extract depth values
+                float[] mip0Data = ReadDepthTextureData(_hiZBuffer, _width, _height);
                 return mip0Data;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"[StrideOcclusionCuller] ReadMipLevel0: Exception reading depth data: {ex.Message}");
                 return null;
             }
         }
@@ -392,6 +382,122 @@ namespace Andastra.Runtime.Stride.Culling
                 StrideGraphics.PixelFormat.R32_Float,
                 StrideGraphics.TextureFlags.ShaderResource | StrideGraphics.TextureFlags.RenderTarget
             );
+        }
+
+        /// <summary>
+        /// Reads depth texture data with format-aware extraction.
+        /// Handles multiple depth formats: R32_Float, D32_Float, D24_UNorm_S8_UInt, D16_UNorm, etc.
+        /// </summary>
+        /// <param name="texture">Texture to read from. Must not be null.</param>
+        /// <param name="width">Expected texture width.</param>
+        /// <param name="height">Expected texture height.</param>
+        /// <returns>Array of depth values as floats, or null if reading fails.</returns>
+        private float[] ReadDepthTextureData(global::Stride.Graphics.Texture texture, int width, int height)
+        {
+            if (texture == null)
+            {
+                Console.WriteLine("[StrideOcclusionCuller] ReadDepthTextureData: Texture is null");
+                return null;
+            }
+
+            if (width <= 0 || height <= 0)
+            {
+                Console.WriteLine($"[StrideOcclusionCuller] ReadDepthTextureData: Invalid dimensions {width}x{height}");
+                return null;
+            }
+
+            try
+            {
+                var context = _graphicsDevice.ImmediateContext;
+                int pixelCount = width * height;
+                float[] depthData = new float[pixelCount];
+
+                // Get texture format to determine how to read the data
+                StrideGraphics.PixelFormat format = texture.Format;
+                
+                // Read texture data based on format
+                // Stride's GetData typically reads as Color4[], but we need to extract depth based on format
+                var colorData = new Color4[pixelCount];
+                texture.GetData(context, colorData);
+
+                // Extract depth values based on pixel format
+                // R32_Float: Single-channel float stored in red channel
+                // D32_Float: Depth stored as float, typically in red channel when read as Color4
+                // D24_UNorm_S8_UInt: 24-bit depth + 8-bit stencil, depth in red/green/blue channels
+                // D16_UNorm: 16-bit depth, stored in red channel as normalized value
+                if (format == StrideGraphics.PixelFormat.R32_Float || format == StrideGraphics.PixelFormat.D32_Float)
+                {
+                    // R32_Float and D32_Float: Depth is stored directly as float in red channel
+                    // Color4.R is already a float, so we can use it directly
+                    for (int i = 0; i < pixelCount; i++)
+                    {
+                        depthData[i] = colorData[i].R;
+                    }
+                }
+                else if (format == StrideGraphics.PixelFormat.D24_UNorm_S8_UInt)
+                {
+                    // D24_UNorm_S8_UInt: 24-bit depth + 8-bit stencil
+                    // Depth is stored in the first 24 bits, stencil in the last 8 bits
+                    // When read as Color4, depth is typically in RGB channels (packed)
+                    // We need to reconstruct the 24-bit depth value
+                    // Format: D24 = 24 bits depth (0.0-1.0 range), S8 = 8 bits stencil
+                    // Reconstruction: depth = (R * 255.0f * 256.0f + G * 255.0f) / (256.0f * 256.0f - 1.0f)
+                    // Simplified: Use red channel as primary depth, green as secondary
+                    for (int i = 0; i < pixelCount; i++)
+                    {
+                        // D24 format: depth is stored across RGB channels
+                        // Red channel contains most significant bits, green contains middle bits, blue contains least significant bits
+                        // Reconstruct 24-bit depth: (R * 65536 + G * 256 + B) / 16777215.0f
+                        float r = colorData[i].R;
+                        float g = colorData[i].G;
+                        float b = colorData[i].B;
+                        
+                        // Reconstruct 24-bit depth value
+                        // Each channel is normalized (0.0-1.0), so we need to denormalize
+                        float depth24 = (r * 65536.0f + g * 256.0f + b) / 16777215.0f; // 2^24 - 1 = 16777215
+                        depthData[i] = depth24;
+                    }
+                }
+                else if (format == StrideGraphics.PixelFormat.D16_UNorm)
+                {
+                    // D16_UNorm: 16-bit depth stored as normalized value
+                    // Red channel contains the normalized depth value (0.0-1.0)
+                    // We can use it directly, or denormalize if needed
+                    for (int i = 0; i < pixelCount; i++)
+                    {
+                        // D16 is already normalized, use red channel directly
+                        depthData[i] = colorData[i].R;
+                    }
+                }
+                else if (format == StrideGraphics.PixelFormat.R16_Float)
+                {
+                    // R16_Float: Half-precision float stored in red channel
+                    // Color4.R is already a float, but may need conversion from half precision
+                    // Stride should handle the conversion automatically
+                    for (int i = 0; i < pixelCount; i++)
+                    {
+                        depthData[i] = colorData[i].R;
+                    }
+                }
+                else
+                {
+                    // Unknown or unsupported format - try to extract from red channel as fallback
+                    // This handles cases where the format is not explicitly depth but contains depth data
+                    Console.WriteLine($"[StrideOcclusionCuller] ReadDepthTextureData: Unsupported format {format}, using red channel as fallback");
+                    for (int i = 0; i < pixelCount; i++)
+                    {
+                        depthData[i] = colorData[i].R;
+                    }
+                }
+
+                return depthData;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StrideOcclusionCuller] ReadDepthTextureData: Exception reading texture data: {ex.Message}");
+                Console.WriteLine($"[StrideOcclusionCuller] ReadDepthTextureData: Stack trace: {ex.StackTrace}");
+                return null;
+            }
         }
 
         public override void Dispose()
