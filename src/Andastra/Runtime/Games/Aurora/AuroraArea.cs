@@ -1834,6 +1834,23 @@ namespace Andastra.Runtime.Games.Aurora
                 // Day/night timer is not used in static mode
                 _dayNightTimer = 0.0f;
                 // IsNight is already set from ARE file, no need to change it
+                
+                // Initialize current interpolated colors based on static IsNight flag
+                // Based on nwmain.exe: Static lighting uses sun or moon colors directly
+                if (_isNight != 0)
+                {
+                    _currentAmbientColor = _moonAmbientColor;
+                    _currentDiffuseColor = _moonDiffuseColor;
+                    _currentFogColor = _moonFogColor;
+                    _currentFogAmount = _moonFogAmount;
+                }
+                else
+                {
+                    _currentAmbientColor = _sunAmbientColor;
+                    _currentDiffuseColor = _sunDiffuseColor;
+                    _currentFogColor = _sunFogColor;
+                    _currentFogAmount = _sunFogAmount;
+                }
             }
             else if (_dayNightCycle == 1)
             {
@@ -1849,6 +1866,30 @@ namespace Andastra.Runtime.Games.Aurora
                 {
                     // Start at noon (0.5 = noon, middle of day period)
                     _dayNightTimer = DayNightCycleDuration * 0.5f;
+                }
+                
+                // Initialize current interpolated colors based on initial time of day
+                // Based on nwmain.exe: Dynamic cycle computes initial lighting from timer
+                // This ensures lighting matches the initial cycle position
+                float initialTimeOfDay = _dayNightTimer / DayNightCycleDuration;
+                float initialSunFactor = CalculateSunLightFactor(initialTimeOfDay);
+                _currentAmbientColor = InterpolateColor(_moonAmbientColor, _sunAmbientColor, initialSunFactor);
+                _currentDiffuseColor = InterpolateColor(_moonDiffuseColor, _sunDiffuseColor, initialSunFactor);
+                _currentFogColor = InterpolateColor(_moonFogColor, _sunFogColor, initialSunFactor);
+                float moonFogFloat = _moonFogAmount;
+                float sunFogFloat = _sunFogAmount;
+                float interpolatedFogFloat = moonFogFloat + (sunFogFloat - moonFogFloat) * initialSunFactor;
+                if (interpolatedFogFloat < 0.0f)
+                {
+                    _currentFogAmount = 0;
+                }
+                else if (interpolatedFogFloat > 255.0f)
+                {
+                    _currentFogAmount = 255;
+                }
+                else
+                {
+                    _currentFogAmount = (byte)interpolatedFogFloat;
                 }
             }
 
