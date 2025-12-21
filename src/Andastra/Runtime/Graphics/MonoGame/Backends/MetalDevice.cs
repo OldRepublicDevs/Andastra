@@ -1495,16 +1495,66 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 return;
             }
-            // TODO: Set viewport on render command encoder
+
+            // Viewport can only be set on an active render command encoder
+            // The render command encoder is created by SetGraphicsState when a render pass begins
+            // Based on Metal API: MTLRenderCommandEncoder::setViewport(MTLViewport)
+            // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1516251-setviewport
+            if (_currentRenderCommandEncoder == IntPtr.Zero)
+            {
+                // Render command encoder not available - SetGraphicsState must be called first to begin render pass
+                return;
+            }
+
+            // Set viewport on render command encoder
+            // Convert Viewport struct to MetalViewport struct
+            // Metal viewport uses double precision for coordinates
+            MetalViewport metalViewport = new MetalViewport
+            {
+                OriginX = viewport.X,
+                OriginY = viewport.Y,
+                Width = viewport.Width,
+                Height = viewport.Height,
+                Znear = viewport.MinDepth,
+                Zfar = viewport.MaxDepth
+            };
+            MetalNative.SetViewport(_currentRenderCommandEncoder, metalViewport);
         }
 
         public void SetViewports(Viewport[] viewports)
         {
-            if (!_isOpen || viewports == null)
+            if (!_isOpen || viewports == null || viewports.Length == 0)
             {
                 return;
             }
-            // TODO: Set multiple viewports
+
+            // Multiple viewports can only be set on an active render command encoder
+            // Based on Metal API: MTLRenderCommandEncoder::setViewport(MTLViewport)
+            // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1516251-setviewport
+            // Note: Metal sets one viewport at a time. For viewport arrays, use geometry shader viewport arrays.
+            if (_currentRenderCommandEncoder == IntPtr.Zero)
+            {
+                // Render command encoder not available - SetGraphicsState must be called first to begin render pass
+                return;
+            }
+
+            // Set multiple viewports on render command encoder
+            // Metal supports multiple viewports (viewport arrays) for multi-view rendering
+            // Metal API: setViewport: - sets a single viewport. For multiple viewports, set each one individually.
+            // TODO: Optimize to use native array marshalling if Metal adds setViewports:count: API in future
+            for (int i = 0; i < viewports.Length; i++)
+            {
+                MetalViewport metalViewport = new MetalViewport
+                {
+                    OriginX = viewports[i].X,
+                    OriginY = viewports[i].Y,
+                    Width = viewports[i].Width,
+                    Height = viewports[i].Height,
+                    Znear = viewports[i].MinDepth,
+                    Zfar = viewports[i].MaxDepth
+                };
+                MetalNative.SetViewport(_currentRenderCommandEncoder, metalViewport);
+            }
         }
 
         public void SetScissor(Rectangle scissor)
@@ -1819,11 +1869,34 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         [DllImport("/System/Library/Frameworks/Metal.framework/Metal")]
         public static extern void WaitUntilCommandQueueCompleted(IntPtr commandQueue);
+
+        // Render command encoder state
+        // Based on Metal API: MTLRenderCommandEncoder::setViewport(MTLViewport)
+        // MTLViewport structure: { double originX, originY, width, height, znear, zfar }
+        // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1516251-setviewport
+        [DllImport("/System/Library/Frameworks/Metal.framework/Metal")]
+        public static extern void SetViewport(IntPtr renderCommandEncoder, MetalViewport viewport);
     }
 
     #endregion
 
     #region Supporting Structures
+
+    /// <summary>
+    /// Metal viewport structure matching MTLViewport.
+    /// Based on Metal API: MTLViewport structure definition
+    /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlviewport
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct MetalViewport
+    {
+        public double OriginX;
+        public double OriginY;
+        public double Width;
+        public double Height;
+        public double Znear;
+        public double Zfar;
+    }
 
     [StructLayout(LayoutKind.Sequential)]
     internal struct MetalSamplerDescriptor
