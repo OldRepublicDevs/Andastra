@@ -2393,16 +2393,45 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // Apply fog settings if enabled
+            // Based on swkotor2.exe: Fog parameters are applied to graphics device/effect during rendering
+            // Original engine behavior: DirectX fixed-function fog states (D3DRS_FOGENABLE, D3DRS_FOGCOLOR, etc.)
+            // Modern implementation: Shader-based fog via BasicEffect parameters
             if (_fogEnabled)
             {
-                // Convert fog color from RGBA uint to Vector3
+                // Select effective fog color (prefer SunFogColor, fallback to FogColor, default to gray)
+                // Based on swkotor2.exe: SunFogColor takes precedence over FogColor when available
+                uint effectiveFogColor = _sunFogColor;
+                if (effectiveFogColor == 0)
+                {
+                    effectiveFogColor = _fogColor;
+                }
+                if (effectiveFogColor == 0)
+                {
+                    effectiveFogColor = 0xFF808080; // Default gray fog
+                }
+
+                // Convert fog color from RGBA uint to Vector3 (RGB channels)
+                // Original engine: Fog color is stored as BGR (Blue-Green-Red) in ARE file
+                // Conversion: Extract R, G, B from uint and normalize to [0.0, 1.0] range
                 Vector3 fogColorVec = new Vector3(
-                    ((_fogColor >> 16) & 0xFF) / 255.0f,
-                    ((_fogColor >> 8) & 0xFF) / 255.0f,
-                    (_fogColor & 0xFF) / 255.0f
+                    ((effectiveFogColor >> 16) & 0xFF) / 255.0f,  // Red channel
+                    ((effectiveFogColor >> 8) & 0xFF) / 255.0f,   // Green channel
+                    (effectiveFogColor & 0xFF) / 255.0f           // Blue channel
                 );
-                // Note: BasicEffect fog support depends on implementation
-                // TODO: STUB - For now, we'll set fog parameters if the effect supports it
+
+                // Apply fog parameters to BasicEffect
+                // Based on swkotor2.exe: D3DRS_FOGENABLE = TRUE, D3DRS_FOGCOLOR, D3DRS_FOGSTART, D3DRS_FOGEND
+                // Modern implementation: BasicEffect fog parameters for shader-based fog
+                basicEffect.FogEnabled = true;
+                basicEffect.FogColor = fogColorVec;
+                basicEffect.FogStart = _fogNear;  // Fog begins at this distance
+                basicEffect.FogEnd = _fogFar;     // Fog fully obscures objects at this distance
+            }
+            else
+            {
+                // Disable fog when fog is not enabled
+                // Based on swkotor2.exe: D3DRS_FOGENABLE = FALSE when SunFogOn is 0
+                basicEffect.FogEnabled = false;
             }
 
             // Apply ambient lighting
