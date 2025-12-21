@@ -2800,7 +2800,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 return Variable.FromObject(ObjectInvalid);
             }
             
-            // Check if current area matches tag
+            // Check if current area matches tag (optimization: check current area first)
             if (ctx.World.CurrentArea != null && string.Equals(ctx.World.CurrentArea.Tag, tag, StringComparison.OrdinalIgnoreCase))
             {
                 // Get the AreaId for the current area
@@ -2813,9 +2813,26 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 }
             }
             
-            // Search for area by tag (areas are typically loaded modules)
-            // In full implementation, this would search loaded areas
-            // TODO: STUB - For now, return invalid if not current area
+            // Search for area by tag through all registered areas
+            // Based on Eclipse engine: GetAreaByTag searches through all loaded/registered areas
+            // Located via string reference: Area registration system (daorigins.exe, DragonAge2.exe)
+            // Original implementation: Iterates through all registered areas, compares tag case-insensitively
+            // Areas are registered when loaded or set as current area via RegisterArea
+            // Tag comparison is case-insensitive (matches GetObjectByTag behavior)
+            foreach (IArea area in ctx.World.GetAllAreas())
+            {
+                if (area != null && string.Equals(area.Tag, tag, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Get the AreaId for the matching area
+                    uint areaObjectId = ctx.World.GetAreaId(area);
+                    if (areaObjectId != 0)
+                    {
+                        return Variable.FromObject(areaObjectId);
+                    }
+                }
+            }
+            
+            // No area found with matching tag
             return Variable.FromObject(ObjectInvalid);
         }
 
