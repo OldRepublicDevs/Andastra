@@ -667,15 +667,98 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <summary>
         /// Projects to a navigation level surface.
         /// </summary>
+        /// <remarks>
+        /// Based on daorigins.exe, DragonAge2.exe: Multi-level navigation surface projection
+        /// Original implementation: Finds static faces within the level's height range and projects to the closest one
+        /// Level surfaces represent elevated platforms, walkable surfaces at different heights
+        /// </remarks>
         private bool ProjectToLevelSurface(Vector3 point, NavigationLevel level, out Vector3 result, out float height)
         {
             result = point;
             height = point.Y;
 
-            // TODO: STUB - For now, project to base height of level
-            // In full implementation, this would check level-specific geometry
-            height = level.BaseHeight;
-            result = new Vector3(point.X, point.Y, level.BaseHeight);
+            // Find nearby static faces within search radius
+            var candidates = new List<ProjectionCandidate>();
+            FindNearbyStaticFaces(point, MultiLevelSearchRadius, candidates);
+
+            // Filter candidates to only include faces within the level's height range
+            // A face belongs to a level if any of its vertices are within the level's height range
+            var levelCandidates = new List<ProjectionCandidate>();
+            foreach (ProjectionCandidate candidate in candidates)
+            {
+                if (candidate.FaceIndex < 0 || candidate.FaceIndex >= _staticFaceCount)
+                {
+                    continue;
+                }
+
+                // Get face vertices to check if face is within level height range
+                int baseIdx = candidate.FaceIndex * 3;
+                if (baseIdx + 2 >= _staticFaceIndices.Length)
+                {
+                    continue;
+                }
+
+                Vector3 v1 = _staticVertices[_staticFaceIndices[baseIdx]];
+                Vector3 v2 = _staticVertices[_staticFaceIndices[baseIdx + 1]];
+                Vector3 v3 = _staticVertices[_staticFaceIndices[baseIdx + 2]];
+
+                // Check if any vertex is within the level's height range
+                // HeightRange.X is minimum height, HeightRange.Y is maximum height
+                bool faceInLevel = false;
+                if (v1.Z >= level.HeightRange.X && v1.Z <= level.HeightRange.Y)
+                {
+                    faceInLevel = true;
+                }
+                else if (v2.Z >= level.HeightRange.X && v2.Z <= level.HeightRange.Y)
+                {
+                    faceInLevel = true;
+                }
+                else if (v3.Z >= level.HeightRange.X && v3.Z <= level.HeightRange.Y)
+                {
+                    faceInLevel = true;
+                }
+
+                // Also check if the projected point itself is within the height range
+                // This handles cases where the face spans the level but vertices are outside
+                if (!faceInLevel && candidate.Height >= level.HeightRange.X && candidate.Height <= level.HeightRange.Y)
+                {
+                    faceInLevel = true;
+                }
+
+                if (faceInLevel)
+                {
+                    levelCandidates.Add(candidate);
+                }
+            }
+
+            // If no faces found in level, fall back to base height
+            if (levelCandidates.Count == 0)
+            {
+                height = level.BaseHeight;
+                result = new Vector3(point.X, point.Y, level.BaseHeight);
+                return true;
+            }
+
+            // Find the closest projection candidate
+            // Sort by distance (2D distance in X/Y plane, then by height difference)
+            levelCandidates.Sort((a, b) =>
+            {
+                float distA = Vector3Extensions.Distance2D(point, a.ProjectedPoint);
+                float distB = Vector3Extensions.Distance2D(point, b.ProjectedPoint);
+                int distCompare = distA.CompareTo(distB);
+                if (distCompare != 0)
+                {
+                    return distCompare;
+                }
+                // If 2D distance is equal, prefer the one closer to the level's base height
+                float heightDiffA = Math.Abs(a.Height - level.BaseHeight);
+                float heightDiffB = Math.Abs(b.Height - level.BaseHeight);
+                return heightDiffA.CompareTo(heightDiffB);
+            });
+
+            ProjectionCandidate best = levelCandidates[0];
+            result = best.ProjectedPoint;
+            height = best.Height;
             return true;
         }
 
