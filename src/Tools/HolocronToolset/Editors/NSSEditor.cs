@@ -1689,7 +1689,7 @@ namespace HolocronToolset.Editors
                             else if (codeText[i] == '\r')
                             {
                                 // Handle \r\n or \r
-                                if (i + 1 < text.Length && text[i + 1] == '\n')
+                                if (i + 1 < codeText.Length && codeText[i + 1] == '\n')
                                 {
                                     currentLine++;
                                     lineStart = i + 2;
