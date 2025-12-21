@@ -1975,13 +1975,112 @@ namespace Andastra.Runtime.MonoGame.Backends
             // TODO: Implement depth/stencil clear
         }
 
+        /// <summary>
+        /// Clears an unordered access view (UAV) texture to a float vector value.
+        /// 
+        /// Implementation: Uses a compute shader to fill the texture with the clear value.
+        /// Metal doesn't have a direct "clear UAV" operation like D3D12 or Vulkan, so we use
+        /// a compute shader that writes the clear value to each texel.
+        /// 
+        /// Based on Metal API: MTLComputeCommandEncoder with compute shader
+        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlcomputecommandencoder
+        /// 
+        /// Note: This requires a compute shader to be available. The compute shader should:
+        /// - Take the clear value as a constant buffer parameter
+        /// - Write the clear value to each texel in the texture
+        /// - Use threadgroup size appropriate for the texture dimensions
+        /// 
+        /// TODO: COMPUTE_SHADER - Create a Metal compute shader for clearing UAV textures
+        /// The shader should be similar to:
+        /// ```
+        /// kernel void clearUAVFloat(texture2d<float, access::write> output [[texture(0)]],
+        ///                            constant float4& clearValue [[buffer(0)]],
+        ///                            uint2 gid [[thread_position_in_grid]])
+        /// {
+        ///     output.write(clearValue, gid);
+        /// }
+        /// ```
+        /// </summary>
         public void ClearUAVFloat(ITexture texture, Vector4 value)
         {
             if (!_isOpen || texture == null)
             {
                 return;
             }
-            // TODO: Implement UAV clear for float
+
+            // Validate texture
+            MetalTexture metalTexture = texture as MetalTexture;
+            if (metalTexture == null)
+            {
+                Console.WriteLine("[MetalCommandList] ClearUAVFloat: Texture must be a MetalTexture instance");
+                return;
+            }
+
+            IntPtr textureHandle = metalTexture.NativeHandle;
+            if (textureHandle == IntPtr.Zero)
+            {
+                Console.WriteLine("[MetalCommandList] ClearUAVFloat: Invalid texture native handle");
+                return;
+            }
+
+            // Get texture dimensions for compute shader dispatch
+            TextureDescription desc = texture.Desc;
+            if (desc.Width == 0 || desc.Height == 0)
+            {
+                Console.WriteLine("[MetalCommandList] ClearUAVFloat: Invalid texture dimensions");
+                return;
+            }
+
+            // Get the current command buffer from the backend
+            IntPtr commandBuffer = _backend.GetCurrentCommandBuffer();
+            if (commandBuffer == IntPtr.Zero)
+            {
+                Console.WriteLine("[MetalCommandList] ClearUAVFloat: No active command buffer");
+                return;
+            }
+
+            // End any active encoders before creating compute encoder
+            // Metal allows only one encoder type to be active at a time per command buffer
+            if (_currentRenderCommandEncoder != IntPtr.Zero)
+            {
+                MetalNative.EndEncoding(_currentRenderCommandEncoder);
+                _currentRenderCommandEncoder = IntPtr.Zero;
+            }
+
+            if (_currentBlitCommandEncoder != IntPtr.Zero)
+            {
+                MetalNative.EndEncoding(_currentBlitCommandEncoder);
+                MetalNative.ReleaseBlitCommandEncoder(_currentBlitCommandEncoder);
+                _currentBlitCommandEncoder = IntPtr.Zero;
+            }
+
+            if (_currentAccelStructCommandEncoder != IntPtr.Zero)
+            {
+                MetalNative.EndAccelerationStructureCommandEncoding(_currentAccelStructCommandEncoder);
+                _currentAccelStructCommandEncoder = IntPtr.Zero;
+            }
+
+            // TODO: COMPUTE_SHADER - Create and use compute shader to clear texture
+            // For now, we'll use a workaround: create a small buffer with the clear value
+            // and use a blit encoder to copy it (though this won't work for all texture formats)
+            // The proper solution requires a compute shader as documented above.
+            
+            // Workaround: For now, log that this operation requires a compute shader
+            // In a full implementation, we would:
+            // 1. Get or create compute command encoder
+            // 2. Set compute pipeline state (with clearUAVFloat shader)
+            // 3. Set texture as write-only resource
+            // 4. Set clear value in constant buffer
+            // 5. Dispatch compute threads (threadgroups covering entire texture)
+            // 6. End compute encoding
+            
+            Console.WriteLine($"[MetalCommandList] ClearUAVFloat: UAV clear requires compute shader (not yet implemented). Texture: {desc.Width}x{desc.Height}, Clear value: ({value.X}, {value.Y}, {value.Z}, {value.W})");
+            
+            // Note: This is a placeholder. Full implementation requires:
+            // - Compute shader creation and compilation
+            // - Compute pipeline state creation
+            // - Compute command encoder creation and dispatch
+            // See TODO comment above for compute shader source code
         }
 
         public void ClearUAVUint(ITexture texture, uint value)
