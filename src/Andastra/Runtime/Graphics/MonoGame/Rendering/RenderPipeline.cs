@@ -282,7 +282,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             // Calculate lighting from G-buffer data
             // This comes after geometry has been rendered to G-buffer
             // Modern enhancement - original KOTOR used forward rendering
-            bool useDeferredRendering = false; // TODO: Check if deferred rendering is enabled
+            bool useDeferredRendering = IsDeferredRenderingEnabled();
             if (useDeferredRendering && passNames.Contains("OpaquePass"))
             {
                 FrameGraph.FrameGraphNode lightingPassNode = new FrameGraph.FrameGraphNode("LightingPass");
@@ -508,6 +508,66 @@ namespace Andastra.Runtime.MonoGame.Rendering
                 // Frame time would be measured externally and passed in
                 // This is where it would be recorded if available
             }
+        }
+
+        /// <summary>
+        /// <summary>
+        /// Checks if deferred rendering is enabled based on render settings.
+        /// 
+        /// Deferred rendering is enabled when one or more of the following conditions are met:
+        /// - MaxDynamicLights exceeds threshold (typically > 8, as forward rendering handles up to 8 lights efficiently)
+        /// - Global illumination mode requires deferred rendering (e.g., certain raytraced GI modes benefit from deferred)
+        /// - Quality preset indicates deferred rendering should be used (High/Ultra presets)
+        /// 
+        /// Deferred rendering benefits:
+        /// - Efficiently handles many lights (decouples geometry complexity from light count)
+        /// - Enables advanced lighting techniques (SSAO, SSR, etc.)
+        /// - Better performance for complex scenes with many dynamic lights
+        /// 
+        /// Based on RenderSettings configuration.
+        /// If RenderSettings is not provided, returns false (forward rendering).
+        /// </summary>
+        /// <returns>True if deferred rendering should be enabled, false for forward rendering.</returns>
+        private bool IsDeferredRenderingEnabled()
+        {
+            // If settings are not available, use forward rendering (default)
+            if (_settings == null)
+            {
+                return false;
+            }
+
+            // Check if many dynamic lights are configured (deferred rendering is beneficial for many lights)
+            // Forward rendering typically handles up to 8 lights efficiently
+            // Deferred rendering becomes beneficial when there are more than 8 lights
+            const int deferredLightThreshold = 8;
+            if (_settings.MaxDynamicLights > deferredLightThreshold)
+            {
+                return true;
+            }
+
+            // Check if global illumination mode benefits from deferred rendering
+            // Certain GI modes (like raytraced GI) work better with deferred rendering
+            // ScreenSpace GI can work with either, but deferred provides better quality
+            if (_settings.GlobalIllumination == GlobalIlluminationMode.Raytraced)
+            {
+                return true;
+            }
+
+            // Check quality preset - High and Ultra presets typically use deferred rendering
+            // for better visual quality with many lights and advanced effects
+            if (_settings.Quality == RenderQuality.High || _settings.Quality == RenderQuality.Ultra)
+            {
+                // For High/Ultra quality, enable deferred if dynamic lighting is enabled
+                // Forward rendering is still acceptable for High quality, but deferred provides better scalability
+                // Only enable deferred for Ultra quality by default, High can use either
+                if (_settings.Quality == RenderQuality.Ultra && _settings.DynamicLighting)
+                {
+                    return true;
+                }
+            }
+
+            // Default to forward rendering
+            return false;
         }
 
         /// <summary>
