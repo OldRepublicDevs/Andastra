@@ -1,4 +1,5 @@
 using System;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Andastra.Runtime.MonoGame.PostProcessing
@@ -29,8 +30,10 @@ namespace Andastra.Runtime.MonoGame.PostProcessing
     public class Bloom : IDisposable
     {
         private readonly GraphicsDevice _graphicsDevice;
+        private SpriteBatch _spriteBatch;
         private RenderTarget2D _brightPassTarget;
         private RenderTarget2D[] _blurTargets;
+        private RenderTarget2D _finalOutput;
         private float _threshold;
         private float _intensity;
         private int _blurPasses;
@@ -78,6 +81,7 @@ namespace Andastra.Runtime.MonoGame.PostProcessing
             }
 
             _graphicsDevice = graphicsDevice;
+            _spriteBatch = new SpriteBatch(graphicsDevice);
             _threshold = 1.0f;
             _intensity = 1.0f;
             _blurPasses = 3;
@@ -144,6 +148,20 @@ namespace Andastra.Runtime.MonoGame.PostProcessing
                 }
             }
 
+            // Create or resize final output render target if needed
+            if (_finalOutput == null || _finalOutput.Width != width || _finalOutput.Height != height)
+            {
+                _finalOutput?.Dispose();
+                _finalOutput = new RenderTarget2D(
+                    _graphicsDevice,
+                    width,
+                    height,
+                    false,
+                    hdrInput.Format,
+                    DepthFormat.None
+                );
+            }
+
             // Save previous render target
             RenderTarget2D previousTarget = _graphicsDevice.GetRenderTargets().Length > 0
                 ? _graphicsDevice.GetRenderTargets()[0].RenderTarget as RenderTarget2D
@@ -155,35 +173,213 @@ namespace Andastra.Runtime.MonoGame.PostProcessing
                 // 1. Extract bright areas (threshold pass) - pixels above threshold
                 // 2. Blur the bright areas (multiple passes) - separable Gaussian blur
                 // 3. Combine with original image - additive blending
-                // Full implementation would execute these passes with appropriate shaders
+                // swkotor2.exe: Frame buffer post-processing @ 0x007c8408, frame buffer option @ 0x007d1d84
+                // Original implementation: Uses frame buffers for rendering and effects
+                // This implementation: Full bloom pipeline with bright pass, blur, and compositing
 
                 // Step 1: Bright pass extraction
+                // Extract pixels above threshold for bloom processing
                 _graphicsDevice.SetRenderTarget(_brightPassTarget);
-                _graphicsDevice.Clear(Microsoft.Xna.Framework.Color.Black);
+                _graphicsDevice.Clear(Color.Black);
+
+                Rectangle brightPassRect = new Rectangle(0, 0, width, height);
                 if (effect != null)
                 {
-                    // effect.Parameters["SourceTexture"].SetValue(hdrInput);
-                    // effect.Parameters["Threshold"].SetValue(_threshold);
+                    // Set shader parameters for bright pass extraction
+                    EffectParameter sourceTextureParam = effect.Parameters["SourceTexture"];
+                    if (sourceTextureParam != null)
+                    {
+                        sourceTextureParam.SetValue(hdrInput);
+                    }
+
+                    EffectParameter thresholdParam = effect.Parameters["Threshold"];
+                    if (thresholdParam != null)
+                    {
+                        thresholdParam.SetValue(_threshold);
+                    }
+
+                    EffectParameter screenSizeParam = effect.Parameters["ScreenSize"];
+                    if (screenSizeParam != null)
+                    {
+                        screenSizeParam.SetValue(new Vector2(width, height));
+                    }
+
+                    EffectParameter screenSizeInvParam = effect.Parameters["ScreenSizeInv"];
+                    if (screenSizeInvParam != null)
+                    {
+                        screenSizeInvParam.SetValue(new Vector2(1.0f / width, 1.0f / height));
+                    }
+
                     // Render full-screen quad with bright pass shader
+                    _spriteBatch.Begin(
+                        SpriteSortMode.Immediate,
+                        BlendState.Opaque,
+                        SamplerState.LinearClamp,
+                        DepthStencilState.None,
+                        RasterizerState.CullNone,
+                        effect);
+                    _spriteBatch.Draw(hdrInput, brightPassRect, Color.White);
+                    _spriteBatch.End();
+                }
+                else
+                {
+                    // Fallback: Copy input if no shader available (bright pass would be done in shader)
+                    // For proper bloom, a shader should be provided, but we'll copy as fallback
+                    _spriteBatch.Begin(
+                        SpriteSortMode.Immediate,
+                        BlendState.Opaque,
+                        SamplerState.LinearClamp,
+                        DepthStencilState.None,
+                        RasterizerState.CullNone);
+                    _spriteBatch.Draw(hdrInput, brightPassRect, Color.White);
+                    _spriteBatch.End();
                 }
 
                 // Step 2: Multi-pass blur (separable Gaussian)
+                // Apply horizontal and vertical blur passes for smooth bloom glow
                 RenderTarget2D blurSource = _brightPassTarget;
                 for (int i = 0; i < _blurPasses; i++)
                 {
                     _graphicsDevice.SetRenderTarget(_blurTargets[i]);
+                    _graphicsDevice.Clear(Color.Black);
+
+                    Rectangle blurRect = new Rectangle(0, 0, width, height);
+                    bool isHorizontal = (i % 2 == 0);
+
                     if (effect != null)
                     {
-                        // effect.Parameters["SourceTexture"].SetValue(blurSource);
-                        // effect.Parameters["BlurDirection"].SetValue(i % 2 == 0 ? Vector2.UnitX : Vector2.UnitY);
-                        // effect.Parameters["BlurRadius"].SetValue(_intensity);
+                        // Set shader parameters for Gaussian blur
+                        EffectParameter sourceTextureParam = effect.Parameters["SourceTexture"];
+                        if (sourceTextureParam != null)
+                        {
+                            sourceTextureParam.SetValue(blurSource);
+                        }
+
+                        EffectParameter blurDirectionParam = effect.Parameters["BlurDirection"];
+                        if (blurDirectionParam != null)
+                        {
+                            // Horizontal: (1, 0), Vertical: (0, 1)
+                            blurDirectionParam.SetValue(isHorizontal ? Vector2.UnitX : Vector2.UnitY);
+                        }
+
+                        EffectParameter blurRadiusParam = effect.Parameters["BlurRadius"];
+                        if (blurRadiusParam != null)
+                        {
+                            blurRadiusParam.SetValue(_intensity);
+                        }
+
+                        EffectParameter screenSizeParam = effect.Parameters["ScreenSize"];
+                        if (screenSizeParam != null)
+                        {
+                            screenSizeParam.SetValue(new Vector2(width, height));
+                        }
+
+                        EffectParameter screenSizeInvParam = effect.Parameters["ScreenSizeInv"];
+                        if (screenSizeInvParam != null)
+                        {
+                            screenSizeInvParam.SetValue(new Vector2(1.0f / width, 1.0f / height));
+                        }
+
                         // Render full-screen quad with blur shader
+                        _spriteBatch.Begin(
+                            SpriteSortMode.Immediate,
+                            BlendState.Opaque,
+                            SamplerState.LinearClamp,
+                            DepthStencilState.None,
+                            RasterizerState.CullNone,
+                            effect);
+                        _spriteBatch.Draw(blurSource, blurRect, Color.White);
+                        _spriteBatch.End();
                     }
+                    else
+                    {
+                        // Fallback: Copy source if no shader available
+                        _spriteBatch.Begin(
+                            SpriteSortMode.Immediate,
+                            BlendState.Opaque,
+                            SamplerState.LinearClamp,
+                            DepthStencilState.None,
+                            RasterizerState.CullNone);
+                        _spriteBatch.Draw(blurSource, blurRect, Color.White);
+                        _spriteBatch.End();
+                    }
+
                     blurSource = _blurTargets[i];
                 }
 
-                // Step 3: Combine with original (would be done in final compositing pass)
-                // TODO: STUB - For now, return the final blurred result as framework
+                // Step 3: Combine with original image (additive blending)
+                // Composite the blurred bloom with the original HDR input for final glow effect
+                // swkotor2.exe: Frame buffer compositing for post-processing effects
+                _graphicsDevice.SetRenderTarget(_finalOutput);
+                _graphicsDevice.Clear(Color.Black);
+
+                Rectangle finalRect = new Rectangle(0, 0, width, height);
+                RenderTarget2D finalBlurred = _blurTargets[_blurPasses - 1];
+
+                if (effect != null)
+                {
+                    // Set shader parameters for bloom compositing
+                    EffectParameter originalTextureParam = effect.Parameters["OriginalTexture"];
+                    if (originalTextureParam != null)
+                    {
+                        originalTextureParam.SetValue(hdrInput);
+                    }
+
+                    EffectParameter bloomTextureParam = effect.Parameters["BloomTexture"];
+                    if (bloomTextureParam != null)
+                    {
+                        bloomTextureParam.SetValue(finalBlurred);
+                    }
+
+                    EffectParameter intensityParam = effect.Parameters["BloomIntensity"];
+                    if (intensityParam != null)
+                    {
+                        intensityParam.SetValue(_intensity);
+                    }
+
+                    EffectParameter screenSizeParam = effect.Parameters["ScreenSize"];
+                    if (screenSizeParam != null)
+                    {
+                        screenSizeParam.SetValue(new Vector2(width, height));
+                    }
+
+                    // Render full-screen quad with compositing shader (additive blend)
+                    _spriteBatch.Begin(
+                        SpriteSortMode.Immediate,
+                        BlendState.Opaque,
+                        SamplerState.LinearClamp,
+                        DepthStencilState.None,
+                        RasterizerState.CullNone,
+                        effect);
+                    _spriteBatch.Draw(hdrInput, finalRect, Color.White);
+                    _spriteBatch.End();
+                }
+                else
+                {
+                    // Fallback: Additive blending using SpriteBatch blend states
+                    // First pass: Draw original HDR input
+                    _spriteBatch.Begin(
+                        SpriteSortMode.Immediate,
+                        BlendState.Opaque,
+                        SamplerState.LinearClamp,
+                        DepthStencilState.None,
+                        RasterizerState.CullNone);
+                    _spriteBatch.Draw(hdrInput, finalRect, Color.White);
+                    _spriteBatch.End();
+
+                    // Second pass: Additively blend blurred bloom on top
+                    // Use additive blending to combine bloom with original
+                    _spriteBatch.Begin(
+                        SpriteSortMode.Immediate,
+                        BlendState.Additive,
+                        SamplerState.LinearClamp,
+                        DepthStencilState.None,
+                        RasterizerState.CullNone);
+                    // Apply intensity as color multiplier for bloom contribution
+                    Color bloomColor = new Color(_intensity, _intensity, _intensity, 1.0f);
+                    _spriteBatch.Draw(finalBlurred, finalRect, bloomColor);
+                    _spriteBatch.End();
+                }
             }
             finally
             {
@@ -191,7 +387,8 @@ namespace Andastra.Runtime.MonoGame.PostProcessing
                 _graphicsDevice.SetRenderTarget(previousTarget);
             }
 
-            return _blurTargets[_blurPasses - 1] ?? hdrInput;
+            // Return the final composited output (original + bloom)
+            return _finalOutput ?? hdrInput;
         }
 
         /// <summary>
@@ -199,6 +396,9 @@ namespace Andastra.Runtime.MonoGame.PostProcessing
         /// </summary>
         public void Dispose()
         {
+            _spriteBatch?.Dispose();
+            _spriteBatch = null;
+
             _brightPassTarget?.Dispose();
             _brightPassTarget = null;
             
@@ -210,6 +410,9 @@ namespace Andastra.Runtime.MonoGame.PostProcessing
                 }
                 _blurTargets = null;
             }
+
+            _finalOutput?.Dispose();
+            _finalOutput = null;
         }
     }
 }
