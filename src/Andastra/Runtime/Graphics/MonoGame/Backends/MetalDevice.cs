@@ -2931,13 +2931,42 @@ namespace Andastra.Runtime.MonoGame.Backends
             // 3. Using static blend factors instead of BlendFactor.BlendFactor
         }
 
+        /// <summary>
+        /// Sets the stencil reference value for stencil comparison operations.
+        /// Based on Metal API: MTLRenderCommandEncoder::setStencilReferenceValue(_:)
+        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1515697-setstencilreferencevalue
+        /// 
+        /// The stencil reference value is used in stencil comparison operations defined by the depth/stencil state.
+        /// The same reference value is applied to both front-facing and back-facing primitives.
+        /// This value is compared against the stencil buffer value using the comparison function
+        /// specified in the depth/stencil state (setDepthStencilState(_:)).
+        /// 
+        /// The stencil reference value must be set on an active render command encoder.
+        /// The render command encoder is created when SetGraphicsState is called to begin a render pass.
+        /// 
+        /// Note: Metal sets the same reference value for front and back stencil operations.
+        /// If separate front/back reference values are needed, this limitation should be considered.
+        /// </summary>
+        /// <param name="reference">The stencil reference value (typically 0-255, but can be any uint32_t value).</param>
         public void SetStencilRef(uint reference)
         {
             if (!_isOpen)
             {
                 return;
             }
-            // TODO: Set stencil reference value
+
+            // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1515697-setstencilreferencevalue
+            // Render command encoder must be available (SetGraphicsState must be called first to begin render pass)
+            if (_currentRenderCommandEncoder == IntPtr.Zero)
+            {
+                // Render command encoder not available - SetGraphicsState must be called first to begin render pass
+                return;
+            }
+
+            // Set stencil reference value on the active render command encoder
+            // Metal API: MTLRenderCommandEncoder::setStencilReferenceValue(_:)
+            // The reference value is used in stencil comparison operations for both front and back-facing primitives
+            MetalNative.SetStencilReferenceValue(_currentRenderCommandEncoder, reference);
         }
 
         // Draw Commands
@@ -3790,6 +3819,36 @@ namespace Andastra.Runtime.MonoGame.Backends
         [DllImport("/System/Library/Frameworks/Metal.framework/Metal")]
         public static extern void SetScissorRect(IntPtr renderCommandEncoder, MetalScissorRect scissorRect);
 
+        // Render command encoder stencil reference value state
+        // Based on Metal API: MTLRenderCommandEncoder::setStencilReferenceValue(_:)
+        // Method signature: - (void)setStencilReferenceValue:(uint32_t)value;
+        // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1515697-setstencilreferencevalue
+        /// <summary>
+        /// Sets the stencil reference value for stencil comparison operations.
+        /// The same reference value is used for both front-facing and back-facing primitives.
+        /// This reference value applies to the stencil state set with setDepthStencilState(_:).
+        /// The default reference value is 0.
+        /// </summary>
+        /// <param name="renderCommandEncoder">The Metal render command encoder.</param>
+        /// <param name="value">The stencil reference value (typically 0-255).</param>
+        public static void SetStencilReferenceValue(IntPtr renderCommandEncoder, uint value)
+        {
+            if (renderCommandEncoder == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                IntPtr selector = sel_registerName("setStencilReferenceValue:");
+                objc_msgSend_void_uint(renderCommandEncoder, selector, value);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalNative] SetStencilReferenceValue: Exception: {ex.Message}");
+            }
+        }
+
         /// <summary>
         /// Checks if the Metal render command encoder supports batch viewport setting API (setViewports:count:).
         /// This API does not exist in current Metal versions but is checked for future compatibility.
@@ -3871,6 +3930,9 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr objc_msgSend_void_ptr_uint(IntPtr receiver, IntPtr selector, IntPtr viewports, uint count);
+
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr objc_msgSend_void_uint(IntPtr receiver, IntPtr selector, uint value);
 
         [DllImport("/System/Library/Frameworks/Foundation.framework/Foundation", EntryPoint = "CFStringCreateWithCString")]
         private static extern IntPtr CFStringCreateWithCString(IntPtr allocator, [MarshalAs(UnmanagedType.LPStr)] string cStr, uint encoding);
