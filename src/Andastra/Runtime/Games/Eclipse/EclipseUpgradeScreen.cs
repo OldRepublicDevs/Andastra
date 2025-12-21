@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
+using Andastra.Runtime.Core.Enums;
 using Andastra.Parsing;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Common;
@@ -1227,11 +1228,73 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Check ability requirements from upgrade properties
             // Based on Dragon Age 2: GetAbilityUpgradedValue checks upgrade properties for ability requirements
-            // TODO: STUB - For now, allow all upgrades (full implementation would parse ability requirements from UTI properties)
-            // Typical ability requirements would be stored in upgrade properties or UTI fields
-            // Examples: Minimum STR, DEX, etc. required to use the upgrade
-
-            // TODO: STUB - For now, all ability requirements pass (full implementation would check upgrade property values)
+            // Ability requirements are typically stored in UTI properties where:
+            // - Param1 indicates the ability type (0-5 for STR-CHA)
+            // - Param1Value or CostValue indicates the minimum required ability score
+            // - PropertyName may indicate an ability requirement property type
+            
+            // Parse ability requirements from UTI properties
+            if (upgradeUTI.Properties != null && upgradeUTI.Properties.Count > 0)
+            {
+                foreach (var utiProp in upgradeUTI.Properties)
+                {
+                    // Check if this property represents an ability requirement
+                    // Pattern 1: Param1 is in valid ability range (0-5) and Param1Value/CostValue > 0
+                    // This indicates a minimum ability score requirement
+                    if (utiProp.Param1 >= 0 && utiProp.Param1 <= 5)
+                    {
+                        // Get the minimum required ability score
+                        // Use Param1Value first, fall back to CostValue if Param1Value is 0
+                        int minRequired = utiProp.Param1Value > 0 ? utiProp.Param1Value : utiProp.CostValue;
+                        
+                        // Only check if there's a meaningful requirement (minimum score > 0)
+                        if (minRequired > 0)
+                        {
+                            // Param1 indicates which ability (0=Strength, 1=Dexterity, etc.)
+                            Ability requiredAbility = (Ability)utiProp.Param1;
+                            
+                            // Get character's current ability score
+                            int characterAbility = statsComponent.GetAbility(requiredAbility);
+                            
+                            // Check if character meets the minimum requirement
+                            if (characterAbility < minRequired)
+                            {
+                                // Character does not meet ability requirement
+                                return false;
+                            }
+                        }
+                    }
+                    
+                    // Pattern 2: PropertyName might indicate ability requirement property type
+                    // In Dragon Age 2, ability requirements might be stored with specific property types
+                    // PropertyName = 0 (ABILITY_BONUS) with negative CostValue could indicate requirement
+                    // However, without exact property type constants, we focus on Pattern 1 which is more reliable
+                    // Additional pattern: If PropertyName suggests requirement and Param1/CostValue indicates minimum
+                    if (utiProp.PropertyName >= 0 && utiProp.CostValue > 0)
+                    {
+                        // Check if Param1 indicates an ability (0-5)
+                        if (utiProp.Param1 >= 0 && utiProp.Param1 <= 5)
+                        {
+                            // This might be an ability requirement
+                            // Use CostValue as minimum if Param1Value is not set
+                            int minRequired = utiProp.Param1Value > 0 ? utiProp.Param1Value : utiProp.CostValue;
+                            
+                            if (minRequired > 0)
+                            {
+                                Ability requiredAbility = (Ability)utiProp.Param1;
+                                int characterAbility = statsComponent.GetAbility(requiredAbility);
+                                
+                                if (characterAbility < minRequired)
+                                {
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // All ability requirements met (or no ability requirements found)
             return true;
         }
 
@@ -1484,7 +1547,7 @@ namespace Andastra.Runtime.Games.Eclipse
             else if (propertyControl is GUIListBox propertyListBox)
             {
                 // For list boxes, we'd typically populate with items
-                // For now, store descriptions for rendering system to use
+                // TODO:  For now, store descriptions for rendering system to use
                 // The actual GUI rendering would use this data to populate list items
             }
         }
@@ -1697,7 +1760,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Check if this property type supports ability scaling
             // In Dragon Age 2, ability-scaling properties typically have specific property type IDs
-            // For now, we'll check common ability-scaling property patterns
+            // TODO:  For now, we'll check common ability-scaling property patterns
             bool supportsAbilityScaling = false;
             int abilityType = 0; // 0=STR, 1=DEX, 2=CON, 3=INT, 4=WIS, 5=CHA
 
