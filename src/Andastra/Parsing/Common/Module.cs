@@ -89,6 +89,28 @@ namespace Andastra.Parsing.Common
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:136-183
         // Original: def contains(self, restype: ResourceType, *, game: Game | None = None) -> bool:
+        // 
+        // REVERSE ENGINEERING NOTES (swkotor.exe / swkotor2.exe):
+        // This method implements the CONVENTIONAL resource type distribution for module files.
+        // IMPORTANT: This is a CONVENTION, not a hard engine requirement.
+        // 
+        // Engine Behavior (reverse engineered):
+        // - The engine's resource manager (CExoResMan equivalent) does NOT filter resource types when loading from modules
+        // - Module loading code (swkotor.exe: FUN_004094a0, swkotor2.exe: FUN_004096b0) opens RIM files without type filtering
+        // - Container formats (RIM/ERF/MOD) accept ANY resource type ID - no validation at container level
+        // - The engine will attempt to load ANY resource type stored in a module container, as long as:
+        //   1. The resource type ID is valid
+        //   2. The resource data can be parsed by the appropriate loader
+        //
+        // However, following this convention ensures:
+        // - Compatibility with modding tools (TSLPatcher, PyKotor, etc.)
+        // - Proper resource organization matching original game modules
+        // - TwoDA files remain in override/chitin (convention enforced by tooling)
+        //
+        // Subfolder Support: NOT SUPPORTED
+        // - ResRef is a flat 16-byte ASCII string (no path separators)
+        // - Container format has no subfolder/hierarchy support
+        // - Module loading code only handles filename-based discovery
         public static bool Contains(this KModuleType type, ResourceType restype, Game? game = null)
         {
             if (restype.TargetType() != restype)

@@ -140,6 +140,24 @@ namespace Andastra.Parsing.Formats.Capsule
             }
         }
 
+        // REVERSE ENGINEERING NOTES (swkotor.exe / swkotor2.exe):
+        // RIM container format structure (matches engine behavior):
+        // - Header: "RIM V1.0" (8 bytes)
+        // - Reserved: uint32 (4 bytes)
+        // - Entry count: uint32 (4 bytes)
+        // - Offset to keys: uint32 (4 bytes)
+        // - Key entries: Each entry contains:
+        //   * ResRef: 16-byte ASCII string (null-padded, NO path separators - subfolders NOT supported)
+        //   * Resource Type: uint32 (4 bytes) - NO filtering, any type ID is accepted
+        //   * Resource ID: uint32 (4 bytes)
+        //   * Offset: uint32 (4 bytes)
+        //   * Size: uint32 (4 bytes)
+        // - Resource data: Raw bytes at specified offset
+        //
+        // Key Finding: Container format does NOT filter resource types.
+        // The engine will load ANY resource type stored in a RIM file, as long as:
+        // 1. The resource type ID is valid
+        // 2. The resource data can be parsed by the appropriate loader
         private void LoadRIM(System.IO.BinaryReader reader)
         {
             reader.BaseStream.Seek(8, SeekOrigin.Begin); // Skip header
@@ -152,8 +170,9 @@ namespace Andastra.Parsing.Formats.Capsule
             reader.BaseStream.Seek(offsetToKeys, SeekOrigin.Begin);
             for (uint i = 0; i < entryCount; i++)
             {
+                // ResRef: 16-byte ASCII, null-padded, flat (no path separators)
                 string resref = System.Text.Encoding.ASCII.GetString(reader.ReadBytes(16)).TrimEnd('\0');
-                uint restype = reader.ReadUInt32();
+                uint restype = reader.ReadUInt32(); // Resource type ID - NO filtering at container level
                 uint resid = reader.ReadUInt32();
                 uint offset = reader.ReadUInt32();
                 uint size = reader.ReadUInt32();
@@ -169,6 +188,29 @@ namespace Andastra.Parsing.Formats.Capsule
             }
         }
 
+        // REVERSE ENGINEERING NOTES (swkotor.exe / swkotor2.exe):
+        // ERF/MOD container format structure (matches engine behavior):
+        // - Header: "ERF V1.0" or "MOD V1.0" (8 bytes)
+        // - Language count: uint32 (4 bytes)
+        // - Localized string size: uint32 (4 bytes)
+        // - Entry count: uint32 (4 bytes)
+        // - Offset to localized strings: uint32 (4 bytes)
+        // - Offset to keys: uint32 (4 bytes)
+        // - Offset to resources: uint32 (4 bytes)
+        // - Key entries: Each entry contains:
+        //   * ResRef: 16-byte ASCII string (null-padded, NO path separators - subfolders NOT supported)
+        //   * Resource ID: uint32 (4 bytes)
+        //   * Resource Type: uint16 (2 bytes) - NO filtering, any type ID is accepted
+        //   * Unused: uint16 (2 bytes)
+        // - Resource entries: Offset and size for each resource
+        // - Resource data: Raw bytes at specified offset
+        //
+        // Key Finding: Container format does NOT filter resource types.
+        // The engine will load ANY resource type stored in an ERF/MOD file, as long as:
+        // 1. The resource type ID is valid
+        // 2. The resource data can be parsed by the appropriate loader
+        //
+        // Note: MOD files are ERF containers with "MOD V1.0" header. They follow the same format.
         private void LoadERF(System.IO.BinaryReader reader)
         {
             reader.BaseStream.Seek(8, SeekOrigin.Begin); // Skip header already read
@@ -186,9 +228,10 @@ namespace Andastra.Parsing.Formats.Capsule
             reader.BaseStream.Seek(offsetToKeys, SeekOrigin.Begin);
             for (uint i = 0; i < entryCount; i++)
             {
+                // ResRef: 16-byte ASCII, null-padded, flat (no path separators)
                 string resref = System.Text.Encoding.ASCII.GetString(reader.ReadBytes(16)).TrimEnd('\0');
                 uint resid = reader.ReadUInt32();
-                ushort restype = reader.ReadUInt16();
+                ushort restype = reader.ReadUInt16(); // Resource type ID - NO filtering at container level
                 reader.ReadUInt16(); // unused
                 resrefs.Add(resref);
                 resids.Add(resid);
