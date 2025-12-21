@@ -561,7 +561,7 @@ if (iVar7 == 0) {
 
 **Priority**: TGA (type 3) → TPC (type 0xbbf = 3007)
 
-**DDS Support**: NOT found in texture loading code - TODO: Gain Certainty by going through ghidra mcp - Search for DDS texture loading by examining `FUN_004b8300` (swkotor.exe: 0x004b8300) and `FUN_00408bc0` (swkotor.exe: 0x00408bc0), search for string references to "DDS" or DDS-related texture loading code. Verify if DDS is not supported or uses different path
+**DDS Support**: ✅ **VERIFIED** - See detailed DDS documentation in "Special Loading Behaviors" section above. DDS (type 2033, 0x7f1) is fully supported and can be loaded from modules via explicit DDS-specific loading functions.
 
 **Module Support**: `FUN_00408bc0` calls `FUN_00407230` which searches all locations including modules, so TPC/TGA CAN be loaded from modules.
 
