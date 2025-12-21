@@ -11,7 +11,6 @@ namespace Andastra.Runtime.Stride.Graphics
     public class StrideSpriteBatch : ISpriteBatch
     {
         private readonly SpriteBatch _spriteBatch;
-        private readonly GraphicsDevice _graphicsDevice;
         private bool _isBegun;
 
         internal SpriteBatch SpriteBatch => _spriteBatch;
@@ -19,10 +18,8 @@ namespace Andastra.Runtime.Stride.Graphics
         public StrideSpriteBatch(SpriteBatch spriteBatch)
         {
             _spriteBatch = spriteBatch ?? throw new System.ArgumentNullException(nameof(spriteBatch));
-            // Store GraphicsDevice reference for accessing ImmediateContext
-            // SpriteBatch is created with GraphicsDevice, so we need to get it from the constructor
-            // TODO: STUB - For now, we'll get it from the GraphicsContext when needed
-            _graphicsDevice = spriteBatch.GraphicsDevice;
+            // GraphicsDevice is obtained from SpriteBatch when Begin() is called
+            // This ensures we always get the current GraphicsDevice, allowing for dynamic changes
         }
 
         public void Begin(Andastra.Runtime.Graphics.SpriteSortMode sortMode = Andastra.Runtime.Graphics.SpriteSortMode.Deferred, Andastra.Runtime.Graphics.BlendState blendState = null)
@@ -32,10 +29,18 @@ namespace Andastra.Runtime.Stride.Graphics
                 throw new System.InvalidOperationException("SpriteBatch.Begin() called while already begun. Call End() first.");
             }
 
+            // Get GraphicsDevice from SpriteBatch when needed (lazy evaluation)
+            // This ensures we always use the current GraphicsDevice and its ImmediateContext
+            var graphicsDevice = _spriteBatch.GraphicsDevice;
+            if (graphicsDevice == null)
+            {
+                throw new System.InvalidOperationException("SpriteBatch.GraphicsDevice is null. SpriteBatch must be created with a valid GraphicsDevice.");
+            }
+
             var strideSortMode = ConvertSortMode(sortMode);
             var strideBlendState = ConvertBlendState(blendState);
 
-            _spriteBatch.Begin(_graphicsDevice.ImmediateContext, strideSortMode, strideBlendState);
+            _spriteBatch.Begin(graphicsDevice.ImmediateContext, strideSortMode, strideBlendState);
             _isBegun = true;
         }
 
