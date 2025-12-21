@@ -6,6 +6,7 @@ using System.Text;
 using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
 using Andastra.Runtime.MonoGame.Materials;
+using Andastra.Utility;
 
 namespace Andastra.Runtime.MonoGame.Remix
 {
@@ -156,23 +157,23 @@ namespace Andastra.Runtime.MonoGame.Remix
 
         /// <summary>
         /// Generates a Remix-compatible material hash from texture path.
+        /// 
+        /// RTX Remix uses XXHash64 for material identification. The hash is computed
+        /// from the texture path (case-insensitive) and returned as a 16-character
+        /// hexadecimal string representing the 64-bit hash value.
         /// </summary>
         private string GenerateMaterialHash(string texturePath)
         {
             if (string.IsNullOrEmpty(texturePath))
             {
+                // Generate a random hash for materials without texture paths
                 return Guid.NewGuid().ToString("N").Substring(0, 16);
             }
 
             // Remix uses XXHash64 for material identification
-            // TODO: STUB - For now, use a simple hash
-            uint hash = 0;
-            foreach (char c in texturePath.ToLowerInvariant())
-            {
-                hash = hash * 31 + c;
-            }
-
-            return hash.ToString("X8");
+            // Normalize the path to lowercase for consistent hashing
+            string normalizedPath = texturePath.ToLowerInvariant();
+            return XXHash64.ComputeHashString(normalizedPath);
         }
 
         private string ExportTexturePath(string name)
