@@ -518,6 +518,20 @@ namespace Andastra.Runtime.MonoGame.Backends
             public VkExtent2D extent;
         }
 
+        // Vulkan viewport structure
+        // VkViewport is used by vkCmdSetViewport to define viewport rectangles
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkViewport.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkViewport
+        {
+            public float x;        // X coordinate of the viewport's upper left corner
+            public float y;        // Y coordinate of the viewport's upper left corner
+            public float width;    // Width of the viewport
+            public float height;   // Height of the viewport
+            public float minDepth; // Minimum depth value for the viewport (typically 0.0)
+            public float maxDepth; // Maximum depth value for the viewport (typically 1.0)
+        }
+
         // Vulkan image memory barrier structure (for image layout transitions)
         [StructLayout(LayoutKind.Sequential)]
         private struct VkImageMemoryBarrier
@@ -1008,6 +1022,11 @@ namespace Andastra.Runtime.MonoGame.Backends
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkCmdSetScissorDelegate(IntPtr commandBuffer, uint firstScissor, uint scissorCount, IntPtr pScissors);
 
+        // Delegate for vkCmdSetViewport
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetViewport.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdSetViewportDelegate(IntPtr commandBuffer, uint firstViewport, uint viewportCount, IntPtr pViewports);
+
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkCmdDrawDelegate(IntPtr commandBuffer, uint vertexCount, uint instanceCount, uint firstVertex, uint firstInstance);
 
@@ -1134,6 +1153,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static vkCmdDrawDelegate vkCmdDraw;
         private static vkCmdDrawIndexedDelegate vkCmdDrawIndexed;
         private static vkCmdSetScissorDelegate vkCmdSetScissor;
+        private static vkCmdSetViewportDelegate vkCmdSetViewport;
         private static vkCmdSetBlendConstantsDelegate vkCmdSetBlendConstants;
         private static vkCmdClearDepthStencilImageDelegate vkCmdClearDepthStencilImage;
         private static vkCmdClearColorImageDelegate vkCmdClearColorImage;
@@ -5983,8 +6003,154 @@ namespace Andastra.Runtime.MonoGame.Backends
             public void UAVBarrier(ITexture texture) { /* TODO: vkCmdMemoryBarrier */ }
             public void UAVBarrier(IBuffer buffer) { /* TODO: vkCmdMemoryBarrier */ }
             public void SetGraphicsState(GraphicsState state) { /* TODO: Set all graphics state */ }
-            public void SetViewport(Viewport viewport) { /* TODO: vkCmdSetViewport */ }
-            public void SetViewports(Viewport[] viewports) { /* TODO: vkCmdSetViewport */ }
+            /// <summary>
+            /// Sets a single viewport using vkCmdSetViewport.
+            /// 
+            /// Defines the viewport rectangle that transforms normalized device coordinates to framebuffer coordinates.
+            /// The viewport rectangle defines the region of the framebuffer that will be rendered to, as well as the
+            /// depth range for the viewport.
+            /// 
+            /// Based on Vulkan API: vkCmdSetViewport
+            /// Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetViewport.html
+            /// </summary>
+            /// <param name="viewport">Viewport definition with position, size, and depth range.</param>
+            public void SetViewport(Viewport viewport)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before setting viewport");
+                }
+
+                if (_vkCommandBuffer == IntPtr.Zero)
+                {
+                    return; // Command buffer not initialized
+                }
+
+                if (vkCmdSetViewport == null)
+                {
+                    return; // Function not loaded
+                }
+
+                // vkCmdSetViewport signature:
+                // void vkCmdSetViewport(
+                //     VkCommandBuffer commandBuffer,
+                //     uint32_t firstViewport,
+                //     uint32_t viewportCount,
+                //     const VkViewport* pViewports);
+                //
+                // Convert Viewport (X, Y, Width, Height, MinDepth, MaxDepth) to VkViewport:
+                // - x = X
+                // - y = Y
+                // - width = Width
+                // - height = Height
+                // - minDepth = MinDepth
+                // - maxDepth = MaxDepth
+
+                VkViewport vkViewport = new VkViewport
+                {
+                    x = viewport.X,
+                    y = viewport.Y,
+                    width = viewport.Width,
+                    height = viewport.Height,
+                    minDepth = viewport.MinDepth,
+                    maxDepth = viewport.MaxDepth
+                };
+
+                // Marshal VkViewport to unmanaged memory
+                int viewportSize = Marshal.SizeOf(typeof(VkViewport));
+                IntPtr viewportPtr = Marshal.AllocHGlobal(viewportSize);
+                try
+                {
+                    Marshal.StructureToPtr(vkViewport, viewportPtr, false);
+
+                    // Call vkCmdSetViewport with firstViewport=0, viewportCount=1
+                    vkCmdSetViewport(_vkCommandBuffer, 0, 1, viewportPtr);
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(viewportPtr);
+                }
+            }
+
+            /// <summary>
+            /// Sets multiple viewports using vkCmdSetViewport.
+            /// 
+            /// Defines an array of viewport rectangles that transform normalized device coordinates to framebuffer coordinates.
+            /// Multiple viewports can be used for multi-viewport rendering (requires VK_KHR_multiview extension).
+            /// Each viewport defines the region of the framebuffer that will be rendered to, as well as the depth range.
+            /// 
+            /// Based on Vulkan API: vkCmdSetViewport
+            /// Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetViewport.html
+            /// </summary>
+            /// <param name="viewports">Array of viewport definitions with position, size, and depth range.</param>
+            public void SetViewports(Viewport[] viewports)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before setting viewports");
+                }
+
+                if (_vkCommandBuffer == IntPtr.Zero)
+                {
+                    return; // Command buffer not initialized
+                }
+
+                if (vkCmdSetViewport == null)
+                {
+                    return; // Function not loaded
+                }
+
+                if (viewports == null || viewports.Length == 0)
+                {
+                    return; // No viewports to set
+                }
+
+                // vkCmdSetViewport signature:
+                // void vkCmdSetViewport(
+                //     VkCommandBuffer commandBuffer,
+                //     uint32_t firstViewport,
+                //     uint32_t viewportCount,
+                //     const VkViewport* pViewports);
+                //
+                // Convert Viewport[] (X, Y, Width, Height, MinDepth, MaxDepth) to VkViewport[]:
+                // - x = X
+                // - y = Y
+                // - width = Width
+                // - height = Height
+                // - minDepth = MinDepth
+                // - maxDepth = MaxDepth
+
+                // Convert Viewport[] to VkViewport[]
+                int viewportSize = Marshal.SizeOf(typeof(VkViewport));
+                IntPtr viewportsPtr = Marshal.AllocHGlobal(viewportSize * viewports.Length);
+                try
+                {
+                    // Marshal each viewport to unmanaged memory
+                    IntPtr currentViewportPtr = viewportsPtr;
+                    for (int i = 0; i < viewports.Length; i++)
+                    {
+                        VkViewport vkViewport = new VkViewport
+                        {
+                            x = viewports[i].X,
+                            y = viewports[i].Y,
+                            width = viewports[i].Width,
+                            height = viewports[i].Height,
+                            minDepth = viewports[i].MinDepth,
+                            maxDepth = viewports[i].MaxDepth
+                        };
+
+                        Marshal.StructureToPtr(vkViewport, currentViewportPtr, false);
+                        currentViewportPtr = new IntPtr(currentViewportPtr.ToInt64() + viewportSize);
+                    }
+
+                    // Call vkCmdSetViewport with firstViewport=0, viewportCount=viewports.Length
+                    vkCmdSetViewport(_vkCommandBuffer, 0, unchecked((uint)viewports.Length), viewportsPtr);
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(viewportsPtr);
+                }
+            }
             /// <summary>
             /// Sets a single scissor rectangle using vkCmdSetScissor.
             /// 
