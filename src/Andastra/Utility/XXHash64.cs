@@ -106,8 +106,8 @@ namespace Andastra.Utility
 
             if (remaining >= 4)
             {
-                ulong k1 = ReadUInt32(input, offset);
-                k1 *= Prime1;
+                uint k1 = ReadUInt32(input, offset);
+                k1 = unchecked(k1 * (uint)Prime1);
                 hash ^= k1;
                 hash = RotateLeft(hash, 23) * Prime2 + Prime3;
                 offset += 4;
