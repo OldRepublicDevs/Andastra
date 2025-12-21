@@ -381,6 +381,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             _finalOutput?.Dispose();
             _spriteBatch?.Dispose();
             _bloom?.Dispose();
+            _toneMapping?.Dispose();
             
             // Reset references
             _hdrTarget = null;
