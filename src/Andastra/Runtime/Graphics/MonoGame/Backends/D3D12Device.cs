@@ -3714,6 +3714,43 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _device5 = device5;
             }
 
+            public byte[] GetShaderIdentifier(string exportName)
+            {
+                if (string.IsNullOrEmpty(exportName))
+                {
+                    return null;
+                }
+
+                if (_properties == IntPtr.Zero)
+                {
+                    // Properties interface not available (pipeline not fully created)
+                    return null;
+                }
+
+                // Cast the properties pointer to ID3D12StateObjectProperties interface
+                ID3D12StateObjectProperties props = (ID3D12StateObjectProperties)Marshal.GetObjectForIUnknown(_properties);
+                if (props == null)
+                {
+                    return null;
+                }
+
+                // GetShaderIdentifier returns a pointer to 32 bytes of shader identifier data
+                // D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES = 32
+                IntPtr shaderIdPtr = props.GetShaderIdentifier(exportName);
+                if (shaderIdPtr == IntPtr.Zero)
+                {
+                    // Export name not found in pipeline
+                    return null;
+                }
+
+                // Copy the 32 bytes of shader identifier data
+                const int D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES = 32;
+                byte[] shaderId = new byte[D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES];
+                Marshal.Copy(shaderIdPtr, shaderId, 0, D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
+
+                return shaderId;
+            }
+
             public void Dispose()
             {
                 // TODO: Release D3D12 state object

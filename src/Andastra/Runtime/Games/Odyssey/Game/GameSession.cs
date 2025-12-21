@@ -930,17 +930,48 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
 
                 // Calculate and set skills
                 // KOTOR has 8 skills: COMPUTER_USE=0, DEMOLITIONS=1, STEALTH=2, AWARENESS=3, PERSUADE=4, REPAIR=5, SECURITY=6, TREAT_INJURY=7
-                // Skill ranks = base (from class) + INT modifier + allocated skill points
-                // For character creation, skill points are allocated during creation
-                // Default: Set all skills to class base + INT modifier (character creation UI handles allocation)
+                // Based on swkotor.exe and swkotor2.exe: Skill calculation during character creation
+                // Located via string references: Skill allocation system in character creation
+                // Original implementation: FUN_005261b0 @ 0x005261b0 (load creature from UTC template)
+                // Skill ranks = INT modifier + allocated skill points from character creation
+                // - Level 1 characters start with 0 base skill ranks (no class levels yet)
+                // - INT modifier applies to all skills (keyability from skills.2da)
+                // - Skill points allocated during character creation are added to INT modifier
+                // - Class skills vs cross-class skills affect point cost but not the final rank calculation
+                // - Final skill rank = INT modifier + allocated skill points (from characterData.SkillRanks)
                 int intModifier = (characterData.Intelligence - 10) / 2;
-                int skillPointsPerLevel = classData?.SkillsPerLevel ?? 2;
-                // Starting skills: Class base + INT modifier
-                // Full implementation would track skill point allocation from character creation
-                // TODO: STUB - For now, set skills to INT modifier (will be overridden by proper skill allocation)
-                for (int i = 0; i < 8; i++)
+                
+                // Get skill ranks allocated during character creation
+                System.Collections.Generic.Dictionary<int, int> skillRanks = characterData.SkillRanks;
+                if (skillRanks == null)
                 {
-                    statsComp.SetSkillRank(i, intModifier);
+                    // If no skill ranks provided, initialize empty dictionary
+                    skillRanks = new System.Collections.Generic.Dictionary<int, int>();
+                }
+                
+                // Set skills for all 8 KOTOR skills
+                for (int skillId = 0; skillId < 8; skillId++)
+                {
+                    // Get allocated skill points for this skill (0 if not allocated)
+                    int allocatedPoints = 0;
+                    if (skillRanks.ContainsKey(skillId))
+                    {
+                        allocatedPoints = skillRanks[skillId];
+                    }
+                    
+                    // Final skill rank = INT modifier + allocated skill points
+                    // Based on swkotor.exe and swkotor2.exe: Skill rank calculation
+                    // Original implementation: Skill rank = ability modifier + skill ranks
+                    // Level 1 characters have no class-based skill ranks yet, only INT modifier and allocated points
+                    int finalSkillRank = intModifier + allocatedPoints;
+                    
+                    // Ensure skill rank is non-negative (can't go below 0)
+                    if (finalSkillRank < 0)
+                    {
+                        finalSkillRank = 0;
+                    }
+                    
+                    statsComp.SetSkillRank(skillId, finalSkillRank);
                 }
 
                 // Calculate BAB, saves from class
