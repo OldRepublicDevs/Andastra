@@ -2396,8 +2396,27 @@ namespace Andastra.Runtime.MonoGame.Backends
                     return;
                 }
 
-                // TODO: Close command list
-                // - Call ID3D12GraphicsCommandList::Close
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    // Command list not initialized - just mark as closed
+                    _isOpen = false;
+                    return;
+                }
+
+                // Close the command list
+                // This indicates that recording to the command list has finished
+                // The command list must be closed before it can be executed
+                int hr = CallClose(_d3d12CommandList);
+                if (hr < 0)
+                {
+                    // HRESULT indicates failure
+                    // According to D3D12 documentation, Close can fail if:
+                    // - The command list is already closed
+                    // - There are invalid commands in the list
+                    // - Device was removed
+                    // We still mark as closed to prevent further recording attempts
+                    // The error will be caught when executing the command list
+                }
 
                 _isOpen = false;
             }
