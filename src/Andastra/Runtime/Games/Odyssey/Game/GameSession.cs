@@ -496,16 +496,97 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             // Based on swkotor.exe: "END_M01AA" (K1 Endar Spire)
             string defaultModule = _settings.Game == KotorGame.K1 ? "end_m01aa" : "001ebo";
 
-            // TODO: Check for alternative modules with codes 0x7db and 0xbba (K2 only)
+            // Check for alternative modules with codes 0x7db (MOD) and 0xbba (RIM) (K2 only)
             // Based on swkotor2.exe FUN_006d0b00 lines 43-50:
-            // - FUN_00408df0(DAT_008283c0,local_30,0x7db,(undefined4 *)0x0) - Check module code 0x7db
-            // - If 0x7db fails: FUN_00408df0(DAT_008283c0,local_30,0xbba,(undefined4 *)0x0) - Check module code 0xbba
+            // - FUN_00408df0(DAT_008283c0,local_30,0x7db,(undefined4 *)0x0) - Check module code 0x7db (MOD resource type)
+            // - If 0x7db fails: FUN_00408df0(DAT_008283c0,local_30,0xbba,(undefined4 *)0x0) - Check module code 0xbba (RIM resource type)
             // - If both fail: FUN_00630d10(local_38,"001ebo") - Fallback to "001ebo"
-            // These codes appear to be module IDs or flags, exact meaning needs further reverse engineering
-            // For now, we use the default module
+            // Resource type codes: 0x7db = 2011 = MOD (.mod file), 0xbba = 3002 = RIM (.rim file)
+            // The engine checks if a resource with the module name and specified type exists in the resource manager
+            // This effectively checks if a .mod or .rim file exists for the module name
+            if (_settings.Game == KotorGame.K2 && _installation != null)
+            {
+                string moduleName = defaultModule;
+                bool moduleExists = CheckModuleResourceExists(moduleName, ResourceType.MOD);
+                if (!moduleExists)
+                {
+                    moduleExists = CheckModuleResourceExists(moduleName, ResourceType.RIM);
+                }
+
+                if (!moduleExists)
+                {
+                    // Module doesn't exist, use default
+                    Console.WriteLine("[GameSession] Module '" + moduleName + "' not found, using default: " + defaultModule);
+                    return defaultModule;
+                }
+
+                Console.WriteLine("[GameSession] Found alternative module: " + moduleName);
+                return moduleName;
+            }
 
             Console.WriteLine("[GameSession] Using default starting module: " + defaultModule);
             return defaultModule;
+        }
+
+        /// <summary>
+        /// Checks if a module resource exists with the specified resource type.
+        /// Based on swkotor2.exe FUN_00408df0 @ 0x00408df0: Resource existence check
+        /// </summary>
+        /// <param name="moduleName">The module name to check.</param>
+        /// <param name="resourceType">The resource type to check (MOD = 0x7db, RIM = 0xbba).</param>
+        /// <returns>True if the module resource exists, false otherwise.</returns>
+        /// <remarks>
+        /// Based on swkotor2.exe FUN_00408df0 @ 0x00408df0:
+        /// - Calls FUN_00407300 to search for resources with the specified name and type
+        /// - Returns non-zero if resource exists, zero if not found
+        /// - Resource type 0x7db (MOD) checks for .mod files
+        /// - Resource type 0xbba (RIM) checks for .rim files
+        /// - This is used to verify if a module file exists before attempting to load it
+        /// </remarks>
+        private bool CheckModuleResourceExists(string moduleName, ResourceType resourceType)
+        {
+            if (string.IsNullOrEmpty(moduleName) || _installation == null)
+            {
+                return false;
+            }
+
+            try
+            {
+                // Check if a module file exists with the specified resource type
+                // For MOD type (0x7db), check if {moduleName}.mod exists
+                // For RIM type (0xbba), check if {moduleName}.rim exists
+                string modulesPath = Installation.GetModulesPath(_installation.Path);
+                if (!System.IO.Directory.Exists(modulesPath))
+                {
+                    return false;
+                }
+
+                if (resourceType == ResourceType.MOD)
+                {
+                    // Check for .mod file
+                    string modPath = System.IO.Path.Combine(modulesPath, moduleName + ".mod");
+                    if (System.IO.File.Exists(modPath))
+                    {
+                        return true;
+                    }
+                }
+                else if (resourceType == ResourceType.RIM)
+                {
+                    // Check for .rim file (main rim, not _s.rim)
+                    string rimPath = System.IO.Path.Combine(modulesPath, moduleName + ".rim");
+                    if (System.IO.File.Exists(rimPath))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[GameSession] Error checking module resource existence: " + ex.Message);
+                return false;
+            }
         }
 
         /// <summary>
