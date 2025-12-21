@@ -709,13 +709,10 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             else
             {
                 Node dest = this.nodedata.GetDestination(node);
-                // For JZ instructions, try to get conditional expression (matching non-JZ case behavior)
-                // Use forceOneOnly=true to match non-JZ conditional jump handling at line 595
-                ScriptNode.AExpression condExp = this.RemoveLastExp(true);
-                
-                // If we didn't get a conditional expression, try to find one in the children
-                // This handles cases where stack operations (CPDOWNSP/CPTOPSP) might have interfered
-                if (!(condExp is AConditionalExp) && this.current.HasChildren())
+                // For JZ instructions, first search backwards through children to find a conditional expression
+                // This is more reliable than RemoveLastExp which might find the wrong expression
+                ScriptNode.AExpression condExp = null;
+                if (this.current.HasChildren())
                 {
                     // Search backwards through children to find a conditional expression
                     List<ScriptNode.ScriptNode> children = this.current.GetChildren();
@@ -737,7 +734,18 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                             condExp = conditionalExpFromStmt;
                             break;
                         }
+                        // Stop searching if we hit a non-expression node (don't search past control structures)
+                        if (!(child is AExpression) && !(child is ScriptNode.AExpressionStatement) && !(child is ScriptNode.AVarDecl))
+                        {
+                            break;
+                        }
                     }
+                }
+                
+                // If we didn't find a conditional expression by searching, try RemoveLastExp as fallback
+                if (!(condExp is AConditionalExp))
+                {
+                    condExp = this.RemoveLastExp(true);
                 }
                 
                 // If still no conditional expression found, use what we have (might be a placeholder)
