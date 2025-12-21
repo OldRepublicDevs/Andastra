@@ -88,7 +88,19 @@ namespace Andastra.Parsing.Formats.LIP
             }
             if (fileFormat == ResourceType.LIP_JSON)
             {
-                throw new NotImplementedException("LIP JSON format not yet implemented");
+                if (source is string filepath)
+                {
+                    return new LIPJSONReader(filepath, offset, sizeValue).Load();
+                }
+                if (source is byte[] bytes)
+                {
+                    return new LIPJSONReader(bytes, offset, sizeValue).Load();
+                }
+                if (source is Stream stream)
+                {
+                    return new LIPJSONReader(stream, offset, sizeValue).Load();
+                }
+                throw new ArgumentException("Source must be string, byte[], or Stream for JSON LIP");
             }
             throw new ArgumentException("Failed to determine the format of the LIP file.");
         }
@@ -119,7 +131,18 @@ namespace Andastra.Parsing.Formats.LIP
             }
             else if (format == ResourceType.LIP_JSON)
             {
-                throw new NotImplementedException("LIP JSON format not yet implemented");
+                if (target is string filepath)
+                {
+                    new LIPJSONWriter(lip, filepath).Write();
+                }
+                else if (target is Stream stream)
+                {
+                    new LIPJSONWriter(lip, stream).Write();
+                }
+                else
+                {
+                    throw new ArgumentException("Target must be string or Stream for JSON LIP");
+                }
             }
             else
             {
@@ -147,7 +170,11 @@ namespace Andastra.Parsing.Formats.LIP
             }
             else if (format == ResourceType.LIP_JSON)
             {
-                throw new NotImplementedException("LIP JSON format not yet implemented");
+                using (var writer = new LIPJSONWriter(lip))
+                {
+                    writer.Write();
+                    return writer.Data();
+                }
             }
             else
             {
