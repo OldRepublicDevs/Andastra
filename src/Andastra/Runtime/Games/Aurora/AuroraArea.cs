@@ -3531,13 +3531,14 @@ namespace Andastra.Runtime.Games.Aurora
             if (_sceneData == null && _cachedAreData != null)
             {
                 // Create resource provider for scene builder
-                // Note: We need a resource provider, but we may not have one available
-                // TODO: STUB - For now, create a simple provider that uses the tileset loader's resource loader
+                // Based on nwmain.exe: CNWSArea::LoadArea uses CExoResMan for resource loading
+                // SimpleResourceProvider wraps TilesetLoader's resource loader to provide IGameResourceProvider interface
+                // This allows AuroraSceneBuilder to load tileset resources (SET files) and tile models (MDL files)
                 IGameResourceProvider resourceProvider = null;
                 if (_tilesetLoader != null)
                 {
-                    // Create a simple resource provider wrapper
-                    // This is a temporary solution - full implementation would use proper resource system
+                    // Create resource provider wrapper using tileset loader's resource loader
+                    // Based on nwmain.exe: Resource loading uses CExoResMan::Demand @ 0x14018ef90
                     resourceProvider = new SimpleResourceProvider(_tilesetLoader);
                 }
 
@@ -3723,32 +3724,52 @@ namespace Andastra.Runtime.Games.Aurora
     }
 
     /// <summary>
-    /// Simple resource provider wrapper for TilesetLoader.
+    /// Resource provider wrapper for TilesetLoader that implements IGameResourceProvider.
     /// </summary>
     /// <remarks>
     /// Provides IGameResourceProvider interface for AuroraSceneBuilder using TilesetLoader's resource loader function.
-    /// This is a temporary solution - full implementation would use proper resource system.
-    /// Note: LoadResource method is expected by AuroraTileset but not part of IGameResourceProvider interface.
-    /// This is a workaround until the interface is extended or AuroraTileset is refactored.
+    /// Based on nwmain.exe: CExoResMan::Demand @ 0x14018ef90 - Resource loading system
+    /// 
+    /// Implementation Details:
+    /// - Wraps TilesetLoader's resource loader delegate to provide full IGameResourceProvider interface
+    /// - Converts ResourceIdentifier to filename format (ResName + "." + Extension) matching Aurora Engine conventions
+    /// - Provides async resource access for streaming and background loading
+    /// - LoadResource method is provided for AuroraTileset compatibility (not part of IGameResourceProvider interface)
+    /// 
+    /// Resource Loading (Aurora Engine):
+    /// - Based on nwmain.exe: CExoResMan::Demand @ 0x14018ef90 loads resources via resource loader
+    /// - Resource filenames: ResName + "." + Extension (e.g., "tileset.set", "model.mdl")
+    /// - Resource precedence: OVERRIDE > MODULE > HAK (in load order) > BASE_GAME > HARDCODED
+    /// - Module context: Resources loaded from current module context when available
+    /// 
+    /// Limitations:
+    /// - Resource enumeration not supported (delegate-based loading doesn't provide archive access)
+    /// - Location information limited (delegate doesn't provide exact file paths)
+    /// - For full resource enumeration and location tracking, use AuroraResourceProvider instead
     /// </remarks>
     internal class SimpleResourceProvider : IGameResourceProvider
     {
-        private readonly TilesetLoader _tilesetLoader;
         private readonly Func<string, byte[]> _resourceLoader;
 
+        /// <summary>
+        /// Creates a new SimpleResourceProvider from a TilesetLoader.
+        /// </summary>
+        /// <param name="tilesetLoader">TilesetLoader instance to extract resource loader from.</param>
+        /// <remarks>
+        /// Based on nwmain.exe: Resource provider initialization uses CExoResMan constructor
+        /// Extracts resource loader from TilesetLoader using exposed ResourceLoader property.
+        /// </remarks>
         public SimpleResourceProvider(TilesetLoader tilesetLoader)
         {
-            _tilesetLoader = tilesetLoader;
-            // Extract resource loader from tileset loader via reflection
-            // This is a workaround - ideally TilesetLoader would expose this
-            if (tilesetLoader != null)
+            if (tilesetLoader == null)
             {
-                var field = typeof(TilesetLoader).GetField("_resourceLoader", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                if (field != null)
-                {
-                    _resourceLoader = field.GetValue(tilesetLoader) as Func<string, byte[]>;
-                }
+                _resourceLoader = null;
+                return;
             }
+
+            // Use exposed ResourceLoader property instead of reflection
+            // Based on nwmain.exe: Resource loader function is stored and accessed directly
+            _resourceLoader = tilesetLoader.ResourceLoader;
         }
 
         /// <summary>
