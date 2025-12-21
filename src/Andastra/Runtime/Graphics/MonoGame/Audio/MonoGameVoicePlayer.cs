@@ -89,17 +89,30 @@ namespace Andastra.Runtime.MonoGame.Audio
                 // Apply to currently playing instance if any
                 if (_currentInstance != null)
                 {
-                    // If spatial audio is active, preserve the spatial volume calculation
+                    // If spatial audio is active, calculate 3D parameters and apply volume immediately
                     // Otherwise, apply the voice volume directly
-                    if (_spatialAudio == null || _currentSpeaker == null)
+                    if (_spatialAudio == null || _currentSpeaker == null || _currentEmitterId == 0)
                     {
                         _currentInstance.Volume = _volume;
                     }
                     else
                     {
-                        // Spatial audio will recalculate volume in Update, but we need to ensure
-                        // the base volume is applied. The spatial audio system should multiply by _volume.
-                        // TODO: STUB - For now, we'll let Update handle it, but we could also apply it here.
+                        // Calculate current 3D audio parameters and apply volume immediately
+                        // This ensures volume changes take effect immediately, not just on next Update()
+                        ITransformComponent transform = _currentSpeaker.GetComponent<ITransformComponent>();
+                        if (transform != null)
+                        {
+                            Audio3DParameters audioParams = _spatialAudio.Calculate3DParameters(_currentEmitterId);
+                            // Apply voice volume setting multiplied by spatial audio volume
+                            _currentInstance.Volume = audioParams.Volume * _volume;
+                            _currentInstance.Pan = audioParams.Pan;
+                            _currentInstance.Pitch = audioParams.DopplerShift - 1.0f; // Convert to pitch range
+                        }
+                        else
+                        {
+                            // Fallback if transform is not available
+                            _currentInstance.Volume = _volume;
+                        }
                     }
                 }
             }
