@@ -944,6 +944,11 @@ namespace Andastra.Runtime.MonoGame.Backends
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkCmdCopyBufferToImageDelegate(IntPtr commandBuffer, IntPtr srcBuffer, IntPtr dstImage, VkImageLayout dstImageLayout, uint regionCount, IntPtr pRegions);
 
+        // Delegate for vkCmdClearDepthStencilImage
+        // Based on Vulkan API: https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdClearDepthStencilImage.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdClearDepthStencilImageDelegate(IntPtr commandBuffer, IntPtr image, VkImageLayout imageLayout, IntPtr pDepthStencil, uint rangeCount, IntPtr pRanges);
+
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate VkResult vkMapMemoryDelegate(IntPtr device, IntPtr memory, ulong offset, ulong size, uint flags, out IntPtr ppData);
 
@@ -1033,6 +1038,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static vkCmdDrawIndexedDelegate vkCmdDrawIndexed;
         private static vkCmdSetScissorDelegate vkCmdSetScissor;
         private static vkCmdSetBlendConstantsDelegate vkCmdSetBlendConstants;
+        private static vkCmdClearDepthStencilImageDelegate vkCmdClearDepthStencilImage;
 
         // VK_KHR_ray_tracing_pipeline extension function delegates
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
@@ -1369,7 +1375,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 },
                 mipLevels = (uint)desc.MipLevels,
                 arrayLayers = (uint)desc.ArraySize,
-                samples = VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT, // TODO: Convert from desc.SampleCount
+                samples = ConvertToVkSampleCount(desc.SampleCount),
                 tiling = VkImageTiling.VK_IMAGE_TILING_OPTIMAL,
                 usage = usageFlags,
                 sharingMode = VkSharingMode.VK_SHARING_MODE_EXCLUSIVE,
@@ -4654,7 +4660,121 @@ namespace Andastra.Runtime.MonoGame.Backends
                 }
             }
             public void ClearColorAttachment(IFramebuffer framebuffer, int attachmentIndex, Vector4 color) { /* TODO: vkCmdClearColorImage */ }
-            public void ClearDepthStencilAttachment(IFramebuffer framebuffer, float depth, byte stencil, bool clearDepth = true, bool clearStencil = true) { /* TODO: vkCmdClearDepthStencilImage */ }
+            /// <summary>
+            /// Clears the depth/stencil attachment of a framebuffer.
+            /// Based on Vulkan API: https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdClearDepthStencilImage.html
+            /// Transitions the image to TRANSFER_DST_OPTIMAL layout, clears it, then transitions back to DEPTH_STENCIL_ATTACHMENT_OPTIMAL.
+            /// </summary>
+            public void ClearDepthStencilAttachment(IFramebuffer framebuffer, float depth, byte stencil, bool clearDepth = true, bool clearStencil = true)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before clearing depth/stencil attachment");
+                }
+
+                if (framebuffer == null)
+                {
+                    throw new ArgumentNullException(nameof(framebuffer));
+                }
+
+                // Get framebuffer description to access depth attachment
+                FramebufferDesc desc = framebuffer.Desc;
+                if (desc.DepthAttachment.Texture == null)
+                {
+                    throw new ArgumentException("Framebuffer does not have a depth attachment", nameof(framebuffer));
+                }
+
+                ITexture depthTexture = desc.DepthAttachment.Texture;
+                IntPtr image = depthTexture.NativeHandle;
+                if (image == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("Depth texture does not have a valid native handle");
+                }
+
+                // Get texture description to determine format and aspect flags
+                TextureDesc textureDesc = depthTexture.Desc;
+
+                // Determine aspect mask based on format and clear flags
+                VkImageAspectFlags aspectMask = 0;
+                if (clearDepth)
+                {
+                    aspectMask |= VkImageAspectFlags.VK_IMAGE_ASPECT_DEPTH_BIT;
+                }
+                if (clearStencil)
+                {
+                    // Only include stencil aspect if format supports it
+                    switch (textureDesc.Format)
+                    {
+                        case TextureFormat.D24_UNORM_S8_UINT:
+                        case TextureFormat.D32_FLOAT_S8X24_UINT:
+                            aspectMask |= VkImageAspectFlags.VK_IMAGE_ASPECT_STENCIL_BIT;
+                            break;
+                    }
+                }
+
+                if (aspectMask == 0)
+                {
+                    return; // Nothing to clear
+                }
+
+                // Check if vkCmdClearDepthStencilImage is available
+                if (vkCmdClearDepthStencilImage == null)
+                {
+                    throw new NotSupportedException("vkCmdClearDepthStencilImage is not available");
+                }
+
+                // Transition image to TRANSFER_DST_OPTIMAL layout for clearing
+                // Note: For clearing operations, we assume the image might be in UNDEFINED layout (newly created)
+                // or DEPTH_STENCIL_ATTACHMENT_OPTIMAL (already used as attachment)
+                // Transitioning from UNDEFINED is safe for initialization/clearing operations
+                TransitionImageLayout(image, VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED, VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, textureDesc, desc.DepthAttachment.MipLevel, desc.DepthAttachment.ArraySlice);
+
+                // Create clear value structure
+                VkClearDepthStencilValue clearValue = new VkClearDepthStencilValue
+                {
+                    depth = depth,
+                    stencil = stencil
+                };
+
+                // Create subresource range for the specific mip level and array slice
+                VkImageSubresourceRange subresourceRange = new VkImageSubresourceRange
+                {
+                    aspectMask = aspectMask,
+                    baseMipLevel = unchecked((uint)desc.DepthAttachment.MipLevel),
+                    levelCount = 1, // Single mip level
+                    baseArrayLayer = unchecked((uint)desc.DepthAttachment.ArraySlice),
+                    layerCount = 1 // Single array layer
+                };
+
+                // Allocate memory for structures and marshal them
+                int clearValueSize = Marshal.SizeOf<VkClearDepthStencilValue>();
+                IntPtr clearValuePtr = Marshal.AllocHGlobal(clearValueSize);
+                int rangeSize = Marshal.SizeOf<VkImageSubresourceRange>();
+                IntPtr rangePtr = Marshal.AllocHGlobal(rangeSize);
+
+                try
+                {
+                    Marshal.StructureToPtr(clearValue, clearValuePtr, false);
+                    Marshal.StructureToPtr(subresourceRange, rangePtr, false);
+
+                    // Call vkCmdClearDepthStencilImage
+                    vkCmdClearDepthStencilImage(
+                        _vkCommandBuffer,
+                        image,
+                        VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                        clearValuePtr,
+                        1, // Single range
+                        rangePtr);
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(clearValuePtr);
+                    Marshal.FreeHGlobal(rangePtr);
+                }
+
+                // Transition image back to DEPTH_STENCIL_ATTACHMENT_OPTIMAL for use as attachment
+                TransitionImageLayout(image, VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VkImageLayout.VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, textureDesc, desc.DepthAttachment.MipLevel, desc.DepthAttachment.ArraySlice);
+            }
             public void ClearUAVFloat(ITexture texture, Vector4 value) { /* TODO: vkCmdFillBuffer or compute shader */ }
             public void ClearUAVUint(ITexture texture, uint value) { /* TODO: vkCmdFillBuffer or compute shader */ }
             public void SetTextureState(ITexture texture, ResourceState state)
