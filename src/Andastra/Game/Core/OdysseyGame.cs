@@ -319,14 +319,19 @@ namespace Andastra.Runtime.Game.Core
                     // Based on swkotor2.exe FUN_006d2350: Loads "MAINMENU" GUI and "RIMS:MAINMENU" RIM
                     if (_graphicsDevice is Andastra.Runtime.Graphics.MonoGame.Graphics.MonoGameGraphicsDevice mgDevice)
                     {
-                        _guiManager = new Andastra.Runtime.Graphics.MonoGame.GUI.KotorGuiManager(installation, mgDevice.Device);
-
+                        // Create sound player for GUI button sounds (hover and click)
+                        // Based on swkotor.exe FUN_0067ace0: Button sounds ("gui_actscroll", "gui_actclick")
+                        // Based on swkotor2.exe FUN_006d0790: Button sounds ("gui_actscroll", "gui_actclick")
+                        var guiSoundPlayer = _graphicsBackend.CreateSoundPlayer(resourceProvider);
+                        
+                        _guiManager = new Andastra.Runtime.Graphics.MonoGame.GUI.KotorGuiManager(installation, mgDevice.Device, guiSoundPlayer);
+                        
                         // Subscribe to button click events
                         // Based on swkotor.exe FUN_0067c4c0: Button event handlers (0x27 hover, 0x2d leave, 0 click, 1 release)
                         // Based on swkotor2.exe FUN_006d2350: Button event handlers
                         _guiManager.OnButtonClicked += HandleGuiButtonClick;
-
-                        Console.WriteLine("[Odyssey] GUI manager initialized successfully");
+                        
+                        Console.WriteLine("[Odyssey] GUI manager initialized successfully with sound support");
                     }
                     else
                     {

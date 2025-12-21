@@ -20,6 +20,8 @@ using Andastra.Parsing.Common;
 using Andastra.Parsing.Resource.Generics.UTC;
 using Andastra.Runtime.Games.Odyssey.Components;
 using Andastra.Runtime.Games.Aurora.Components;
+using Andastra.Parsing.Installation;
+using Andastra.Runtime.Games.Aurora.Data;
 
 namespace Andastra.Runtime.Games.Aurora
 {
@@ -97,6 +99,10 @@ namespace Andastra.Runtime.Games.Aurora
         private GFFStruct _currentModuleInfo;
         private AuroraArea _currentAuroraArea;
         private List<string> _loadedHakFiles;
+        
+        // Lazy-initialized 2DA table manager for game data lookups (e.g., environment.2da for lighting schemes)
+        // Created from Installation path if available
+        private AuroraTwoDATableManager _twoDATableManager;
 
         /// <summary>
         /// Initializes a new instance of the AuroraModuleLoader class.
@@ -206,7 +212,12 @@ namespace Andastra.Runtime.Games.Aurora
 
                 // Create Aurora area from ARE and GIT data
                 progressCallback?.Invoke(0.6f);
-                _currentAuroraArea = new AuroraArea(entryAreaResRef, areData, gitData);
+                
+                // Get or create 2DA table manager for lighting scheme validation
+                // Based on nwmain.exe: C2DA::Load2DArray loads environment.2da for lighting scheme lookup
+                AuroraTwoDATableManager twoDATableManager = GetOrCreateTwoDATableManager();
+                
+                _currentAuroraArea = new AuroraArea(entryAreaResRef, areData, gitData, null, twoDATableManager);
 
                 // Set navigation mesh from area
                 if (_currentAuroraArea.NavigationMesh != null)

@@ -139,7 +139,7 @@ namespace HolocronToolset.Editors
                 _plotCheckbox = this.FindControl<CheckBox>("plotCheckbox");
                 _staticCheckbox = this.FindControl<CheckBox>("staticCheckbox");
                 _notBlastableCheckbox = this.FindControl<CheckBox>("notBlastableCheckbox");
-                _factionSelect = this.FindControl<ComboBox>("factionSelect");
+                _factionSelect = this.FindControl<ComboBox2DA>("factionSelect");
                 _animationStateSpin = this.FindControl<NumericUpDown>("animationStateSpin");
                 _currentHpSpin = this.FindControl<NumericUpDown>("currentHpSpin");
                 _maxHpSpin = this.FindControl<NumericUpDown>("maxHpSpin");
@@ -233,7 +233,7 @@ namespace HolocronToolset.Editors
 
             // Appearance
             var appearanceLabel = new TextBlock { Text = "Appearance:" };
-            _appearanceSelect = new ComboBox();
+            _appearanceSelect = new ComboBox2DA();
             basicPanel.Children.Add(appearanceLabel);
             basicPanel.Children.Add(_appearanceSelect);
 
@@ -258,7 +258,7 @@ namespace HolocronToolset.Editors
             _staticCheckbox = new CheckBox { Content = "Static" };
             _notBlastableCheckbox = new CheckBox { Content = "Not Blastable" };
             var factionLabel = new TextBlock { Text = "Faction:" };
-            _factionSelect = new ComboBox();
+            _factionSelect = new ComboBox2DA();
             var animationStateLabel = new TextBlock { Text = "Animation State:" };
             _animationStateSpin = new NumericUpDown { Minimum = 0, Maximum = 255 };
             var currentHpLabel = new TextBlock { Text = "Current HP:" };
@@ -393,7 +393,7 @@ namespace HolocronToolset.Editors
             // Matching PyKotor implementation: required: list[str] = [HTInstallation.TwoDA_DOORS, HTInstallation.TwoDA_FACTIONS]
             // Load required 2da files if they have not been loaded already
             string[] required = { HTInstallation.TwoDADoors, HTInstallation.TwoDAFactions };
-            installation.HtBatchCache2DA(required);
+            installation.HtBatchCache2DA(new List<string>(required));
 
             // Matching PyKotor implementation: appearances: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_DOORS)
             TwoDA appearances = installation.HtGetCache2DA(HTInstallation.TwoDADoors);
@@ -583,7 +583,7 @@ namespace HolocronToolset.Editors
             }
             if (_appearanceSelect != null)
             {
-                _appearanceSelect.SelectedIndex = utd.AppearanceId;
+                _appearanceSelect.SetSelectedIndex(utd.AppearanceId);
             }
             if (_conversationEdit != null)
             {
@@ -595,7 +595,7 @@ namespace HolocronToolset.Editors
             if (_plotCheckbox != null) _plotCheckbox.IsChecked = utd.Plot;
             if (_staticCheckbox != null) _staticCheckbox.IsChecked = utd.Static;
             if (_notBlastableCheckbox != null) _notBlastableCheckbox.IsChecked = utd.NotBlastable;
-            if (_factionSelect != null) _factionSelect.SelectedIndex = utd.FactionId;
+            if (_factionSelect != null) _factionSelect.SetSelectedIndex(utd.FactionId);
             if (_animationStateSpin != null) _animationStateSpin.Value = utd.AnimationState;
             if (_currentHpSpin != null) _currentHpSpin.Value = utd.CurrentHp;
             if (_maxHpSpin != null) _maxHpSpin.Value = utd.MaximumHp;

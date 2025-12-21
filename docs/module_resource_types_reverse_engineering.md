@@ -550,8 +550,6 @@ Resources that use `FUN_004074d0`/`FUN_004075a0` (which calls `FUN_00407230`/`FU
 
 **Key Principle**:
 
-
-- **Registration order** determines which file wins when same resource exists in multiple files at the same location
 - **Search order** determines which location wins when same resource exists in different locations
 - **First registered wins** for duplicates at the same location
 - **Higher search priority wins** for duplicates at different locations

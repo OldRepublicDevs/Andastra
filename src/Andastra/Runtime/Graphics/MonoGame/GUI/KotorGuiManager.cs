@@ -79,8 +79,10 @@ namespace Andastra.Runtime.MonoGame.GUI
         private MouseState _previousMouseState;
         private KeyboardState _previousKeyboardState;
         private string _highlightedButtonTag;
+        private string _previousHighlightedButtonTag; // Track previous hover state for sound effects
         private int _selectedButtonIndex = -1; // For keyboard navigation
         private List<GUIButton> _buttonList; // Ordered list of buttons for keyboard navigation
+        private readonly Andastra.Runtime.Core.Audio.ISoundPlayer _soundPlayer; // For button click/hover sounds
 
         /// <summary>
         /// Event fired when a GUI button is clicked.
@@ -125,7 +127,8 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// </summary>
         /// <param name="device">Graphics device for rendering.</param>
         /// <param name="installation">Game installation for loading GUI resources.</param>
-        public KotorGuiManager([NotNull] GraphicsDevice device, [NotNull] Installation installation)
+        /// <param name="soundPlayer">Sound player for button click/hover sounds (optional).</param>
+        public KotorGuiManager([NotNull] GraphicsDevice device, [NotNull] Installation installation, [CanBeNull] Andastra.Runtime.Core.Audio.ISoundPlayer soundPlayer = null)
         {
             if (device == null)
             {
@@ -138,12 +141,14 @@ namespace Andastra.Runtime.MonoGame.GUI
 
             _graphicsDevice = device;
             _installation = installation;
+            _soundPlayer = soundPlayer;
             _spriteBatch = new SpriteBatch(device);
             _loadedGuis = new Dictionary<string, LoadedGui>(StringComparer.OrdinalIgnoreCase);
             _textureCache = new Dictionary<string, Texture2D>(StringComparer.OrdinalIgnoreCase);
             _fontCache = new Dictionary<string, BaseBitmapFont>(StringComparer.OrdinalIgnoreCase);
             _previousMouseState = Mouse.GetState();
             _previousKeyboardState = Keyboard.GetState();
+            _previousHighlightedButtonTag = null;
         }
 
         /// <summary>
@@ -466,6 +471,16 @@ namespace Andastra.Runtime.MonoGame.GUI
 
             // Update highlighted button based on mouse position (mouse takes priority)
             UpdateHighlightedButton(currentMouseState.X, currentMouseState.Y);
+
+            // Play hover sound when button highlight changes
+            // Based on swkotor.exe FUN_0067ace0: Plays "gui_actscroll" or "gui_actscroll1" on button hover
+            // Based on swkotor2.exe FUN_006d0790: Plays "gui_actscroll" or "gui_actscroll1" on button hover
+            if (_highlightedButtonTag != _previousHighlightedButtonTag && !string.IsNullOrEmpty(_highlightedButtonTag))
+            {
+                // Button hover sound - play when entering a button
+                PlayButtonHoverSound();
+            }
+            _previousHighlightedButtonTag = _highlightedButtonTag;
 
             // If mouse moved, reset keyboard selection
             if (currentMouseState.X != _previousMouseState.X || currentMouseState.Y != _previousMouseState.Y)
