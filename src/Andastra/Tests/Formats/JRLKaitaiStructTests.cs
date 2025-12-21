@@ -608,38 +608,34 @@ namespace Andastra.Parsing.Tests.Formats
         {
             // Test that generated parsers produce consistent results
             // This requires actual test files and parser execution
-            if (!File.Exists(TestJrlFile))
-            {
-                // Create test file if needed
-                var testJrl = new JRL();
-                var testQuest = new JRLQuest();
-                testQuest.Tag = "test_quest";
-                testQuest.Name = LocalizedString.FromInvalid();
-                testQuest.Name.SetData(Language.English, Gender.Male, "Test Quest");
-                testQuest.Priority = JRLQuestPriority.Medium;
+            // Create original test JRL data for validation
+            var originalJrl = new JRL();
+            var originalQuest = new JRLQuest();
+            originalQuest.Tag = "test_quest";
+            originalQuest.Name = LocalizedString.FromInvalid();
+            originalQuest.Name.SetData(Language.English, Gender.Male, "Test Quest");
+            originalQuest.Priority = JRLQuestPriority.Medium;
+            originalQuest.PlanetId = 0;
+            originalQuest.PlotIndex = 0;
+            originalQuest.Comment = "Test comment";
 
-                var testEntry = new JRLQuestEntry();
-                testEntry.EntryId = 1;
-                testEntry.Text = LocalizedString.FromInvalid();
-                testEntry.Text.SetData(Language.English, Gender.Male, "Test entry text");
-                testEntry.End = false;
-                testEntry.XpPercentage = 1.0f;
-                testQuest.Entries.Add(testEntry);
+            var originalEntry = new JRLQuestEntry();
+            originalEntry.EntryId = 1;
+            originalEntry.Text = LocalizedString.FromInvalid();
+            originalEntry.Text.SetData(Language.English, Gender.Male, "Test entry text");
+            originalEntry.End = false;
+            originalEntry.XpPercentage = 1.0f;
+            originalQuest.Entries.Add(originalEntry);
 
-                testJrl.Quests.Add(testQuest);
+            originalJrl.Quests.Add(originalQuest);
 
-                GFF testGff = JRLHelpers.DismantleJrl(testJrl);
-                byte[] data = GFFAuto.BytesGff(testGff);
-                Directory.CreateDirectory(Path.GetDirectoryName(TestJrlFile));
-                File.WriteAllBytes(TestJrlFile, data);
-            }
+            // Create test file
+            GFF testGff = JRLHelpers.DismantleJrl(originalJrl);
+            byte[] data = GFFAuto.BytesGff(testGff);
+            Directory.CreateDirectory(Path.GetDirectoryName(TestJrlFile));
+            File.WriteAllBytes(TestJrlFile, data);
 
-            // This test would require:
-            // 1. Compiling JRL.ksy to multiple languages
-            // 2. Running the generated parsers on the test file
-            // 3. Comparing results across languages
-            // TODO: STUB - For now, we validate the structure matches expectations
-
+            // Parse the file back
             GFF parsedGff = GFFAuto.ReadGff(TestJrlFile, 0, null, ResourceType.JRL);
             JRL parsedJrl = JRLHelpers.ConstructJrl(parsedGff);
 
@@ -650,6 +646,59 @@ namespace Andastra.Parsing.Tests.Formats
             // Validate that we can read the JRL structure
             parsedJrl.Should().NotBeNull("JRL should be constructed from GFF");
             parsedJrl.Quests.Should().NotBeNull("JRL should have quests list");
+            parsedJrl.Quests.Count.Should().Be(1, "Parsed JRL should have exactly one quest");
+
+            // Validate quest structure matches original
+            JRLQuest parsedQuest = parsedJrl.Quests[0];
+            parsedQuest.Should().NotBeNull("Parsed quest should not be null");
+            parsedQuest.Tag.Should().Be(originalQuest.Tag, "Quest tag should match");
+            parsedQuest.Priority.Should().Be(originalQuest.Priority, "Quest priority should match");
+            parsedQuest.PlanetId.Should().Be(originalQuest.PlanetId, "Quest PlanetId should match");
+            parsedQuest.PlotIndex.Should().Be(originalQuest.PlotIndex, "Quest PlotIndex should match");
+            parsedQuest.Comment.Should().Be(originalQuest.Comment, "Quest comment should match");
+
+            // Validate quest name LocalizedString
+            parsedQuest.Name.Should().NotBeNull("Quest name should not be null");
+            string originalQuestName = originalQuest.Name.GetData(Language.English, Gender.Male);
+            string parsedQuestName = parsedQuest.Name.GetData(Language.English, Gender.Male);
+            parsedQuestName.Should().Be(originalQuestName, "Quest name should match");
+
+            // Validate quest entries
+            parsedQuest.Entries.Should().NotBeNull("Quest entries list should not be null");
+            parsedQuest.Entries.Count.Should().Be(1, "Quest should have exactly one entry");
+
+            JRLQuestEntry parsedEntry = parsedQuest.Entries[0];
+            parsedEntry.Should().NotBeNull("Parsed entry should not be null");
+            parsedEntry.EntryId.Should().Be(originalEntry.EntryId, "Entry ID should match");
+            parsedEntry.End.Should().Be(originalEntry.End, "Entry End flag should match");
+            parsedEntry.XpPercentage.Should().BeApproximately(originalEntry.XpPercentage, 0.001f, "Entry XP percentage should match");
+
+            // Validate entry text LocalizedString
+            parsedEntry.Text.Should().NotBeNull("Entry text should not be null");
+            string originalEntryText = originalEntry.Text.GetData(Language.English, Gender.Male);
+            string parsedEntryText = parsedEntry.Text.GetData(Language.English, Gender.Male);
+            parsedEntryText.Should().Be(originalEntryText, "Entry text should match");
+
+            // Test roundtrip consistency: write -> read -> write -> read
+            GFF roundtripGff = JRLHelpers.DismantleJrl(parsedJrl);
+            byte[] roundtripData = GFFAuto.BytesGff(roundtripGff);
+            GFF roundtripParsedGff = GFFAuto.ReadGff(roundtripData, 0, null, ResourceType.JRL);
+            JRL roundtripParsedJrl = JRLHelpers.ConstructJrl(roundtripParsedGff);
+
+            // Validate roundtrip structure
+            roundtripParsedJrl.Should().NotBeNull("Roundtrip parsed JRL should not be null");
+            roundtripParsedJrl.Quests.Should().NotBeNull("Roundtrip parsed JRL should have quests list");
+            roundtripParsedJrl.Quests.Count.Should().Be(1, "Roundtrip parsed JRL should have exactly one quest");
+
+            JRLQuest roundtripQuest = roundtripParsedJrl.Quests[0];
+            roundtripQuest.Tag.Should().Be(originalQuest.Tag, "Roundtrip quest tag should match");
+            roundtripQuest.Priority.Should().Be(originalQuest.Priority, "Roundtrip quest priority should match");
+            roundtripQuest.Entries.Count.Should().Be(1, "Roundtrip quest should have exactly one entry");
+
+            JRLQuestEntry roundtripEntry = roundtripQuest.Entries[0];
+            roundtripEntry.EntryId.Should().Be(originalEntry.EntryId, "Roundtrip entry ID should match");
+            roundtripEntry.End.Should().Be(originalEntry.End, "Roundtrip entry End flag should match");
+            roundtripEntry.XpPercentage.Should().BeApproximately(originalEntry.XpPercentage, 0.001f, "Roundtrip entry XP percentage should match");
         }
 
         [Fact(Timeout = 300000)]
