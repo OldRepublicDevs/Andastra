@@ -906,6 +906,37 @@ namespace Andastra.Runtime.MonoGame.Backends
         }
 
         /// <summary>
+        /// D3D11_BOX structure for defining a 3D box region.
+        /// Based on D3D11 API: https://docs.microsoft.com/en-us/windows/win32/api/d3d11/ns-d3d11-d3d11_box
+        /// Used for partial texture updates in UpdateSubresource.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D11_BOX
+        {
+            public uint Left;    // Left coordinate of the box
+            public uint Top;     // Top coordinate of the box
+            public uint Front;   // Front coordinate of the box
+            public uint Right;   // Right coordinate of the box (exclusive)
+            public uint Bottom;  // Bottom coordinate of the box (exclusive)
+            public uint Back;    // Back coordinate of the box (exclusive)
+        }
+
+        /// <summary>
+        /// Delegate for ID3D11DeviceContext::UpdateSubresource COM method.
+        /// Based on D3D11 API: https://docs.microsoft.com/en-us/windows/win32/api/d3d11/nf-d3d11-id3d11devicecontext-updatesubresource
+        /// </summary>
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int UpdateSubresourceDelegate(
+            IntPtr pDeviceContext,     // ID3D11DeviceContext* (this pointer)
+            IntPtr pDstResource,       // ID3D11Resource* (the texture)
+            uint DstSubresource,       // UINT (mipmap level index)
+            IntPtr pDstBox,            // const D3D11_BOX* (NULL for entire subresource, or box for partial update)
+            IntPtr pSrcData,           // const void* (mipmap pixel data)
+            uint SrcRowPitch,          // UINT (bytes per row in source data)
+            uint SrcDepthPitch         // UINT (bytes per slice in source data)
+        );
+
+        /// <summary>
         /// Updates a subresource (mipmap level) in a D3D11 texture using UpdateSubresource.
         /// This is the DirectX 11 equivalent of DirectX 8/9's LockRect/UnlockRect pattern.
         /// Based on D3D11 API: ID3D11DeviceContext::UpdateSubresource
@@ -923,7 +954,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// <param name="rowPitch">Row pitch in bytes (bytes per row)</param>
         /// <param name="depthPitch">Depth pitch in bytes (rowPitch * height for 2D textures)</param>
         /// <returns>True if update succeeded, false otherwise</returns>
-        private bool UpdateSubresource(IntPtr texture, int mipLevel, int boxLeft, int boxTop, int boxFront, int boxRight, int boxBottom, int boxBack, byte[] data, int rowPitch, int depthPitch)
+        private unsafe bool UpdateSubresource(IntPtr texture, int mipLevel, int boxLeft, int boxTop, int boxFront, int boxRight, int boxBottom, int boxBack, byte[] data, int rowPitch, int depthPitch)
         {
             if (texture == IntPtr.Zero)
             {
@@ -964,22 +995,74 @@ namespace Andastra.Runtime.MonoGame.Backends
             // - Finally, they call UnlockRect to commit the changes
             // - DirectX 11's UpdateSubresource is the equivalent operation, but copies data directly without locking
 
-            // TODO: STUB - For now, this is a placeholder implementation
-            // When the DirectX 11 implementation is complete, this will call the actual UpdateSubresource API
-            // The actual implementation will use P/Invoke or a DirectX 11 interop library (e.g., SharpDX, Vortice.Windows)
-            // to call ID3D11DeviceContext::UpdateSubresource
-
-            // Placeholder: Validate that we have a valid device context
+            // Validate that we have a valid device context
             if (_immediateContext == IntPtr.Zero)
             {
                 Console.WriteLine("[Direct3D11Backend] UpdateSubresource: Device context not initialized");
                 return false;
             }
 
-            // Placeholder: In the actual implementation, this would be:
-            // _immediateContext->UpdateSubresource(texture, mipLevel, &box, data, rowPitch, depthPitch);
-            // TODO: STUB - For now, we'll just validate the parameters and return success
-            // The actual texture upload will happen when the DirectX 11 implementation is complete
+            // Check if we're on Windows (required for DirectX 11)
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                Console.WriteLine("[Direct3D11Backend] UpdateSubresource: DirectX 11 is only supported on Windows");
+                return false;
+            }
+
+            // Create D3D11_BOX structure for the update region
+            // For full mipmap update, we can pass NULL, but we'll create the box for consistency
+            D3D11_BOX box;
+            box.Left = (uint)boxLeft;
+            box.Top = (uint)boxTop;
+            box.Front = (uint)boxFront;
+            box.Right = (uint)boxRight;
+            box.Bottom = (uint)boxBottom;
+            box.Back = (uint)boxBack;
+
+            // Pin the data array for P/Invoke
+            GCHandle dataHandle = GCHandle.Alloc(data, GCHandleType.Pinned);
+            try
+            {
+                IntPtr pSrcData = dataHandle.AddrOfPinnedObject();
+
+                // Call UpdateSubresource through COM vtable
+                // ID3D11DeviceContext::UpdateSubresource is at vtable index 33
+                // Based on D3D11 COM interface: ID3D11DeviceContext vtable layout
+                IntPtr* vtable = *(IntPtr**)_immediateContext;
+                IntPtr methodPtr = vtable[33]; // UpdateSubresource method pointer
+                var updateSubresource = Marshal.GetDelegateForFunctionPointer<UpdateSubresourceDelegate>(methodPtr);
+
+                // Call UpdateSubresource
+                // Note: pDstBox can be NULL for full subresource update, but we pass the box structure
+                int result = updateSubresource(
+                    _immediateContext,
+                    texture,
+                    (uint)mipLevel,
+                    new IntPtr(&box), // pDstBox pointer (or IntPtr.Zero for full update)
+                    pSrcData,         // pSrcData
+                    (uint)rowPitch,   // SrcRowPitch
+                    (uint)depthPitch  // SrcDepthPitch
+                );
+
+                // HRESULT: S_OK (0) indicates success, failure codes are negative
+                if (result < 0)
+                {
+                    Console.WriteLine($"[Direct3D11Backend] UpdateSubresource: Failed with HRESULT 0x{result:X8}");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Direct3D11Backend] UpdateSubresource: Exception calling UpdateSubresource: {ex.Message}");
+                return false;
+            }
+            finally
+            {
+                if (dataHandle.IsAllocated)
+                {
+                    dataHandle.Free();
+                }
+            }
 
             return true;
         }
