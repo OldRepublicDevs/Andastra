@@ -131,7 +131,10 @@ namespace Andastra.Parsing.Extract.SaveData
         /// <summary>
         /// Converts Parsing PartyTable to Runtime PartyState format.
         /// </summary>
-        public static object ToRuntimePartyState(PartyTable partyTable, Type runtimeType)
+        /// <param name="partyTable">The party table to convert.</param>
+        /// <param name="runtimeType">The runtime type to create an instance of.</param>
+        /// <param name="memberIdToResRef">Optional function to convert member ID (float) to ResRef (string). If null, uses fallback mapping.</param>
+        public static object ToRuntimePartyState(PartyTable partyTable, Type runtimeType, Func<float, string> memberIdToResRef = null)
         {
             if (partyTable == null || runtimeType == null) return null;
 
@@ -155,20 +158,28 @@ namespace Andastra.Parsing.Extract.SaveData
                 playTimeProp.SetValue(runtimeState, TimeSpan.FromSeconds(partyTable.TimePlayed));
             }
 
-            // Set selected party (simplified - just create list of ResRefs)
+            // Set selected party - convert member indices to ResRefs
+            // Based on swkotor2.exe: FUN_0057dcd0 @ 0x0057dcd0 (LoadPartyTable function) reads PT_MEMBER_ID and converts to ResRef
+            // Original implementation: partytable.2da row index = member ID (0-11 for K2, 0-8 for K1)
+            // Row label in partytable.2da is the NPC ResRef (e.g., "bastila" for K1, "atton" for K2)
             var selectedPartyProp = runtimeType.GetProperty("SelectedParty");
             if (selectedPartyProp != null)
             {
                 var selectedParty = new List<string>();
                 foreach (var member in partyTable.Members)
                 {
-                    // Convert member index back to ResRef (simplified mapping)
-                    selectedParty.Add($"npc_{member.Index:D2}");
+                    // Convert member index back to ResRef using lookup function or fallback
+                    string memberResRef = GetResRefFromMemberId((float)member.Index, memberIdToResRef);
+                    if (!string.IsNullOrEmpty(memberResRef))
+                    {
+                        selectedParty.Add(memberResRef);
+                    }
                 }
                 selectedPartyProp.SetValue(runtimeState, selectedParty);
             }
 
-            // Set available members (simplified)
+            // Set available members - convert indices to ResRefs
+            // Based on swkotor2.exe: PT_AVAIL_NPCS list index corresponds to member ID (0-11 for K2, 0-8 for K1)
             var availableMembersProp = runtimeType.GetProperty("AvailableMembers");
             if (availableMembersProp != null)
             {
@@ -186,7 +197,12 @@ namespace Andastra.Parsing.Extract.SaveData
                         if (isAvailableProp != null) isAvailableProp.SetValue(memberState, npcEntry.NpcAvailable);
                         if (isSelectableProp != null) isSelectableProp.SetValue(memberState, npcEntry.NpcSelected);
 
-                        availableMembers[$"npc_{i:D2}"] = memberState;
+                        // Convert member index to ResRef using lookup function or fallback
+                        string memberResRef = GetResRefFromMemberId((float)i, memberIdToResRef);
+                        if (!string.IsNullOrEmpty(memberResRef))
+                        {
+                            availableMembers[memberResRef] = memberState;
+                        }
                     }
                 }
                 availableMembersProp.SetValue(runtimeState, availableMembers);
@@ -230,6 +246,99 @@ namespace Andastra.Parsing.Extract.SaveData
                     targetPropInfo.SetValue(target, value);
                 }
             }
+        }
+
+        /// <summary>
+        /// Converts a member ID to a ResRef using the provided lookup function or fallback mapping.
+        /// </summary>
+        /// <remarks>
+        /// Member IDs: -1 = Player, 0-8 = NPC slots (K1), 0-11 = NPC slots (K2)
+        /// Based on swkotor2.exe: FUN_0057dcd0 @ 0x0057dcd0 (LoadPartyTable function) reads PT_MEMBER_ID and converts to ResRef
+        /// Original implementation: partytable.2da row index = member ID (0-11 for K2, 0-8 for K1)
+        /// Row label in partytable.2da is the NPC ResRef (e.g., "bastila" for K1, "atton" for K2)
+        /// Located via string reference: "PARTYTABLE" @ 0x007c1910
+        /// 
+        /// CRITICAL: K1 and K2 have different NPCs for the same member IDs (e.g., member ID 0 = "bastila" in K1, "atton" in K2).
+        /// Without partytable.2da or a lookup function, we cannot determine the correct ResRef.
+        /// </remarks>
+        /// <param name="memberId">The member ID to convert (float, -1 = player, 0-11 = NPC slots).</param>
+        /// <param name="memberIdToResRef">Optional lookup function. If provided, uses this function. Otherwise uses fallback.</param>
+        /// <returns>The ResRef string, or empty string if conversion fails.</returns>
+        private static string GetResRefFromMemberId(float memberId, Func<float, string> memberIdToResRef)
+        {
+            // Use provided lookup function if available
+            if (memberIdToResRef != null)
+            {
+                string resRef = memberIdToResRef(memberId);
+                if (!string.IsNullOrEmpty(resRef))
+                {
+                    return resRef;
+                }
+            }
+
+            // Player character (member ID = -1)
+            // Based on nwscript.nss constants: NPC_PLAYER = -1
+            // Player ResRefs are typically "player", "pc", or start with "pc_"
+            if (memberId < 0.0f || System.Math.Abs(memberId - (-1.0f)) < 0.001f)
+            {
+                return "player"; // Default player ResRef
+            }
+
+            int memberIdInt = (int)memberId;
+
+            // Fallback: Hardcoded mapping for common NPCs when lookup function not available
+            // WARNING: This is game-specific and may be incorrect for K1 vs K2
+            // K1 NPCs (0-8)
+            if (memberIdInt >= 0 && memberIdInt <= 8)
+            {
+                var k1Mapping = new Dictionary<int, string>
+                {
+                    { 0, "bastila" },      // NPC_BASTILA
+                    { 1, "canderous" },   // NPC_CANDEROUS
+                    { 2, "carth" },        // NPC_CARTH
+                    { 3, "hk47" },         // NPC_HK_47
+                    { 4, "jolee" },        // NPC_JOLEE
+                    { 5, "juhani" },      // NPC_JUHANI
+                    { 6, "mission" },     // NPC_MISSION
+                    { 7, "t3m4" },        // NPC_T3_M4
+                    { 8, "zaalbar" }      // NPC_ZAALBAR
+                };
+
+                if (k1Mapping.ContainsKey(memberIdInt))
+                {
+                    return k1Mapping[memberIdInt];
+                }
+            }
+
+            // K2 NPCs (0-11) - some overlap with K1 but different ResRefs for same IDs
+            if (memberIdInt >= 0 && memberIdInt <= 11)
+            {
+                var k2Mapping = new Dictionary<int, string>
+                {
+                    { 0, "atton" },       // NPC_ATTON
+                    { 1, "bao" },         // NPC_BAO_DUR
+                    { 2, "carth" },       // NPC_CARTH (same as K1)
+                    { 3, "handmaiden" },  // NPC_HANDMAIDEN
+                    { 4, "hk47" },        // NPC_HK_47 (same as K1)
+                    { 5, "kreia" },       // NPC_KREIA
+                    { 6, "mira" },        // NPC_MIRA
+                    { 7, "t3m4" },        // NPC_T3_M4 (same as K1)
+                    { 8, "visas" },       // NPC_VISAS
+                    { 9, "disciple" },    // NPC_DISCIPLE
+                    { 10, "g0t0" },       // NPC_G0T0
+                    { 11, "hanharr" }     // NPC_HANHARR
+                };
+
+                if (k2Mapping.ContainsKey(memberIdInt))
+                {
+                    return k2Mapping[memberIdInt];
+                }
+            }
+
+            // If member ID is out of range or not found in mappings, return empty string
+            // This matches original engine behavior when member ID cannot be resolved
+            // Original engine always has partytable.2da available, so this fallback should rarely be hit
+            return "";
         }
 
         public List<PartyMemberEntry> Members { get; } = new List<PartyMemberEntry>();
@@ -669,7 +778,10 @@ namespace Andastra.Parsing.Extract.SaveData
         /// <summary>
         /// Deserializes GFF bytes directly to Runtime PartyState.
         /// </summary>
-        public static object DeserializeRuntimePartyState(byte[] data, Type runtimeType)
+        /// <param name="data">The GFF bytes to deserialize.</param>
+        /// <param name="runtimeType">The runtime type to create an instance of.</param>
+        /// <param name="memberIdToResRef">Optional function to convert member ID (float) to ResRef (string). If null, uses fallback mapping.</param>
+        public static object DeserializeRuntimePartyState(byte[] data, Type runtimeType, Func<float, string> memberIdToResRef = null)
         {
             if (data == null || data.Length == 0 || runtimeType == null) return null;
 
@@ -683,70 +795,8 @@ namespace Andastra.Parsing.Extract.SaveData
                 var partyTable = new PartyTable(tempPath);
                 partyTable.Load();
 
-                // Convert to Runtime format
-                var runtimeState = Activator.CreateInstance(runtimeType);
-
-                // Set basic properties
-                SetRuntimePropertyIfExists(runtimeState, runtimeType, partyTable, "Gold", "Gold");
-                SetRuntimePropertyIfExists(runtimeState, runtimeType, partyTable, "XpPool", "ExperiencePoints");
-                SetRuntimePropertyIfExists(runtimeState, runtimeType, partyTable, "ControlledNpc", "ControlledNPC");
-                SetRuntimePropertyIfExists(runtimeState, runtimeType, partyTable, "SoloMode", "SoloMode");
-                SetRuntimePropertyIfExists(runtimeState, runtimeType, partyTable, "CheatUsed", "CheatUsed");
-                SetRuntimePropertyIfExists(runtimeState, runtimeType, partyTable, "AiState", "AIState");
-                SetRuntimePropertyIfExists(runtimeState, runtimeType, partyTable, "FollowState", "FollowState");
-                SetRuntimePropertyIfExists(runtimeState, runtimeType, partyTable, "ItemComponents", "ItemComponent");
-                SetRuntimePropertyIfExists(runtimeState, runtimeType, partyTable, "ItemChemicals", "ItemChemical");
-
-                // Set play time
-                var playTimeProp = runtimeType.GetProperty("PlayTime");
-                if (playTimeProp != null)
-                {
-                    playTimeProp.SetValue(runtimeState, TimeSpan.FromSeconds(partyTable.TimePlayed));
-                }
-
-                // Set selected party (simplified - just create list of ResRefs)
-                var selectedPartyProp = runtimeType.GetProperty("SelectedParty");
-                if (selectedPartyProp != null)
-                {
-                    var selectedParty = new List<string>();
-                    foreach (var member in partyTable.Members)
-                    {
-                        // Convert member index back to ResRef (simplified mapping)
-                        selectedParty.Add($"npc_{member.Index:D2}");
-                    }
-                    selectedPartyProp.SetValue(runtimeState, selectedParty);
-                }
-
-                // Set available members (simplified)
-                var availableMembersProp = runtimeType.GetProperty("AvailableMembers");
-                if (availableMembersProp != null)
-                {
-                    var availableMembers = new Dictionary<string, object>();
-                    var partyMemberStateType = runtimeType.Assembly.GetType("Andastra.Runtime.Core.Save.PartyMemberState");
-                    if (partyMemberStateType != null)
-                    {
-                        for (int i = 0; i < partyTable.AvailableNpcs.Count; i++)
-                        {
-                            var npcEntry = partyTable.AvailableNpcs[i];
-                            var memberState = Activator.CreateInstance(partyMemberStateType);
-                            var isAvailableProp = partyMemberStateType.GetProperty("IsAvailable");
-                            var isSelectableProp = partyMemberStateType.GetProperty("IsSelectable");
-
-                            if (isAvailableProp != null) isAvailableProp.SetValue(memberState, npcEntry.NpcAvailable);
-                            if (isSelectableProp != null) isSelectableProp.SetValue(memberState, npcEntry.NpcSelected);
-
-                            availableMembers[$"npc_{i:D2}"] = memberState;
-                        }
-                    }
-                    availableMembersProp.SetValue(runtimeState, availableMembers);
-                }
-
-                // Set influence
-                var influenceProp = runtimeType.GetProperty("Influence");
-                if (influenceProp != null)
-                {
-                    influenceProp.SetValue(runtimeState, partyTable.Influence);
-                }
+                // Convert to Runtime format using ToRuntimePartyState helper
+                var runtimeState = ToRuntimePartyState(partyTable, runtimeType, memberIdToResRef);
 
                 // Clean up temp file
                 try { System.IO.File.Delete(tempPath); } catch { }
