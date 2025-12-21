@@ -3451,6 +3451,65 @@ namespace Andastra.Runtime.MonoGame.Backends
         private const uint D3D12_ELEMENTS_LAYOUT_ARRAY = 0;
         private const uint D3D12_ELEMENTS_LAYOUT_ARRAY_OF_POINTERS = 1;
 
+        #endregion
+
+        #region D3D12 ExecuteIndirect Structures and Constants
+
+        // D3D12 Indirect Argument Types
+        // Based on D3D12 API: D3D12_INDIRECT_ARGUMENT_TYPE
+        private const uint D3D12_INDIRECT_ARGUMENT_TYPE_DRAW = 0;
+        private const uint D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED = 1;
+        private const uint D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH = 2;
+        private const uint D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW = 3;
+        private const uint D3D12_INDIRECT_ARGUMENT_TYPE_INDEX_BUFFER_VIEW = 4;
+        private const uint D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT = 5;
+        private const uint D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW = 6;
+        private const uint D3D12_INDIRECT_ARGUMENT_TYPE_SHADER_RESOURCE_VIEW = 7;
+        private const uint D3D12_INDIRECT_ARGUMENT_TYPE_UNORDERED_ACCESS_VIEW = 8;
+        private const uint D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH_RAYS = 9;
+        private const uint D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH_MESH = 10;
+
+        /// <summary>
+        /// Indirect argument description.
+        /// Based on D3D12 API: D3D12_INDIRECT_ARGUMENT_DESC
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_INDIRECT_ARGUMENT_DESC
+        {
+            public uint Type;
+            // Union: Constant, VertexBuffer, IndexBuffer, or Dispatch
+            // For Dispatch: uses union field as padding (no additional data needed)
+            public uint ConstantRootParameterIndex;
+            public uint ConstantNum32BitValuesToSet;
+            public IntPtr VertexBufferSlot;
+        }
+
+        /// <summary>
+        /// Command signature description.
+        /// Based on D3D12 API: D3D12_COMMAND_SIGNATURE_DESC
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_COMMAND_SIGNATURE_DESC
+        {
+            public uint ByteStride;
+            public uint NumArgumentDescs;
+            public IntPtr pArgumentDescs;
+            public uint NodeMask;
+        }
+
+        /// <summary>
+        /// Dispatch arguments structure (matches GPU buffer layout).
+        /// Based on D3D12 API: D3D12_DISPATCH_ARGUMENTS
+        /// This structure must match the layout in the GPU buffer exactly.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_DISPATCH_ARGUMENTS
+        {
+            public uint ThreadGroupCountX;
+            public uint ThreadGroupCountY;
+            public uint ThreadGroupCountZ;
+        }
+
         /// <summary>
         /// GPU virtual address and stride structure.
         /// Based on D3D12 API: D3D12_GPU_VIRTUAL_ADDRESS_AND_STRIDE
