@@ -513,35 +513,44 @@ namespace Andastra.Runtime.Stride.Upscaling
             try
             {
                 // Check if NGX DLL is available
-                if (!System.IO.File.Exists("nvngx_dlss.dll"))
+                string ngxDllPath = FindNgxDll();
+                if (string.IsNullOrEmpty(ngxDllPath))
                 {
-                    // Also check in system paths
-                    string system32Path = Environment.GetFolderPath(Environment.SpecialFolder.System);
-                    string ngxPath = System.IO.Path.Combine(system32Path, "nvngx_dlss.dll");
-                    if (!System.IO.File.Exists(ngxPath))
-                    {
-                        Console.WriteLine("[StrideDLSS] NGX DLL not found in application or system directory");
-                        return false;
-                    }
+                    Console.WriteLine("[StrideDLSS] NGX DLL not found in application or system directory");
+                    return false;
                 }
+
+                // Check RTX GPU generation (DLSS requires RTX 20-series or newer)
+                // RTX 20-series: Device ID range 0x1E00-0x1FFF (Turing)
+                // RTX 30-series: Device ID range 0x2480-0x24FF, 0x2500-0x25FF (Ampere)
+                // RTX 40-series: Device ID range 0x2680-0x26FF (Ada Lovelace)
+                // We can't easily get device ID from Stride adapter description, so we'll rely on NGX query
+                // However, we know DLSS requires RTX, so older NVIDIA GPUs (GTX series) won't support it
 
                 // Try to get D3D12 device to query NGX
                 IntPtr device = GetD3D12Device(_graphicsDevice);
-                if (device != IntPtr.Zero)
+                if (device == IntPtr.Zero)
                 {
-                    // NGX capability query would be done during initialization
-                    // TODO: STUB - For now, if we have an NVIDIA GPU and NGX DLL exists, assume DLSS is available
-                    return true;
+                    Console.WriteLine("[StrideDLSS] Cannot query DLSS availability - D3D12 device not available");
+                    return false;
                 }
+
+                // Query NGX for DLSS capability by attempting a lightweight initialization
+                // We initialize NGX temporarily to query DLSS support, then shut it down
+                bool dlssSupported = QueryNgxDlssCapability(device);
+                return dlssSupported;
+            }
+            catch (DllNotFoundException)
+            {
+                Console.WriteLine("[StrideDLSS] NGX DLL not available for capability check");
+                return false;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[StrideDLSS] Exception checking DLSS availability: {ex.Message}");
+                Console.WriteLine($"[StrideDLSS] Stack trace: {ex.StackTrace}");
+                return false;
             }
-
-            // Fallback: If NVIDIA GPU detected, assume DLSS might be available
-            // Actual availability will be confirmed during NGX initialization
-            return true;
         }
 
         private bool CheckRayReconstructionSupport()
@@ -811,6 +820,299 @@ namespace Andastra.Runtime.Stride.Upscaling
             return IntPtr.Zero;
         }
 
+        /// <summary>
+        /// Finds the NGX DLL path by checking application directory and system paths.
+        /// </summary>
+        private string FindNgxDll()
+        {
+            // Check application directory first
+            string appDirDll = "nvngx_dlss.dll";
+            if (System.IO.File.Exists(appDirDll))
+            {
+                return appDirDll;
+            }
+
+            // Check system directory
+            string system32Path = Environment.GetFolderPath(Environment.SpecialFolder.System);
+            string systemDll = System.IO.Path.Combine(system32Path, "nvngx_dlss.dll");
+            if (System.IO.File.Exists(systemDll))
+            {
+                return systemDll;
+            }
+
+            // Check SysWOW64 for 32-bit apps on 64-bit systems
+            string sysWow64Path = Environment.GetFolderPath(Environment.SpecialFolder.SystemX86);
+            if (!string.IsNullOrEmpty(sysWow64Path))
+            {
+                string sysWow64Dll = System.IO.Path.Combine(sysWow64Path, "nvngx_dlss.dll");
+                if (System.IO.File.Exists(sysWow64Dll))
+                {
+                    return sysWow64Dll;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Queries NGX for DLSS capability by performing a lightweight initialization and capability check.
+        /// This initializes NGX temporarily, queries DLSS support, and then shuts it down.
+        /// </summary>
+        private bool QueryNgxDlssCapability(IntPtr d3d12Device)
+        {
+            IntPtr tempNgxParameters = IntPtr.Zero;
+            bool ngxInitialized = false;
+
+            try
+            {
+                // Attempt to initialize NGX SDK for capability query
+                // Use a temporary application ID for capability checking
+                const ulong TempApplicationId = 0xDEADBEEF;
+                string applicationDataPath = GetApplicationDataPath();
+
+                Console.WriteLine("[StrideDLSS] Querying NGX for DLSS capability...");
+
+                // Initialize NGX - this will fail if DLSS is not supported
+                NVSDK_NGX_Result initResult = NVSDK_NGX_D3D12_Init(
+                    TempApplicationId,
+                    applicationDataPath,
+                    d3d12Device,
+                    IntPtr.Zero, // pInFeatureInfo (null for capability query)
+                    NVSDK_NGX_Version_API);
+
+                if (initResult != NVSDK_NGX_Result.NVSDK_NGX_Result_Success)
+                {
+                    // Check specific failure reasons
+                    if (initResult == NVSDK_NGX_Result.NVSDK_NGX_Result_FAIL_FeatureNotSupported)
+                    {
+                        Console.WriteLine("[StrideDLSS] NGX initialization failed - DLSS feature not supported on this hardware");
+                        return false;
+                    }
+                    else if (initResult == NVSDK_NGX_Result.NVSDK_NGX_Result_FAIL_OutOfDate)
+                    {
+                        Console.WriteLine("[StrideDLSS] NGX initialization failed - NGX driver or DLL is out of date");
+                        return false;
+                    }
+                    else if (initResult == NVSDK_NGX_Result.NVSDK_NGX_Result_FAIL_PlatformError)
+                    {
+                        Console.WriteLine("[StrideDLSS] NGX initialization failed - platform error (likely unsupported GPU or driver)");
+                        return false;
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[StrideDLSS] NGX initialization failed with result: {initResult} (0x{((uint)initResult):X8})");
+                        return false;
+                    }
+                }
+
+                ngxInitialized = true;
+
+                // Get NGX parameters to query DLSS capability
+                NVSDK_NGX_Result paramResult = NVSDK_NGX_D3D12_GetParameters(out tempNgxParameters);
+                if (paramResult != NVSDK_NGX_Result.NVSDK_NGX_Result_Success)
+                {
+                    Console.WriteLine($"[StrideDLSS] Failed to get NGX parameters for capability query: {paramResult}");
+                    return false;
+                }
+
+                // Query DLSS support through NGX parameters
+                // NGX provides capability information through the parameter interface
+                // We can check if DLSS feature is available by attempting to query scratch buffer size
+                // This is a lightweight operation that doesn't require creating the feature
+
+                // Set up minimal parameters for DLSS capability query
+                // Use a standard resolution for capability checking (doesn't need to match actual resolution)
+                const int TestWidth = 1920;
+                const int TestHeight = 1080;
+                const int TestOutputWidth = 2560;
+                const int TestOutputHeight = 1440;
+
+                SetParameterUlong(tempNgxParameters, NVSDK_NGX_Parameter_Width, (ulong)TestWidth);
+                SetParameterUlong(tempNgxParameters, NVSDK_NGX_Parameter_Height, (ulong)TestHeight);
+                SetParameterUlong(tempNgxParameters, NVSDK_NGX_Parameter_OutWidth, (ulong)TestOutputWidth);
+                SetParameterUlong(tempNgxParameters, NVSDK_NGX_Parameter_OutHeight, (ulong)TestOutputHeight);
+                SetParameterUlong(tempNgxParameters, NVSDK_NGX_Parameter_PerfQualityValue, (ulong)NVSDK_NGX_PerfQuality_Value.NVSDK_NGX_PerfQuality_Value_Balanced);
+
+                // Query scratch buffer size - this will fail if DLSS is not supported
+                UIntPtr scratchSize;
+                NVSDK_NGX_Result scratchResult = NVSDK_NGX_D3D12_GetScratchBufferSize(
+                    NVSDK_NGX_Feature.NVSDK_NGX_Feature_SuperSampling,
+                    tempNgxParameters,
+                    out scratchSize);
+
+                if (scratchResult != NVSDK_NGX_Result.NVSDK_NGX_Result_Success)
+                {
+                    if (scratchResult == NVSDK_NGX_Result.NVSDK_NGX_Result_FAIL_FeatureNotSupported)
+                    {
+                        Console.WriteLine("[StrideDLSS] DLSS feature not supported - scratch buffer query failed");
+                        return false;
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[StrideDLSS] Scratch buffer size query failed: {scratchResult}");
+                        // This is not necessarily a fatal error - DLSS might still be available
+                        // Continue with capability check
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"[StrideDLSS] DLSS capability confirmed - scratch buffer size: {scratchSize} bytes");
+                }
+
+                // If we got here, NGX initialized successfully and DLSS appears to be available
+                Console.WriteLine("[StrideDLSS] DLSS capability check passed - DLSS is available on this system");
+                return true;
+            }
+            catch (DllNotFoundException ex)
+            {
+                Console.WriteLine($"[StrideDLSS] NGX DLL not found during capability check: {ex.Message}");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StrideDLSS] Exception during DLSS capability query: {ex.Message}");
+                Console.WriteLine($"[StrideDLSS] Stack trace: {ex.StackTrace}");
+                return false;
+            }
+            finally
+            {
+                // Clean up: shutdown NGX if we initialized it
+                if (ngxInitialized && d3d12Device != IntPtr.Zero)
+                {
+                    try
+                    {
+                        NVSDK_NGX_Result shutdownResult = NVSDK_NGX_D3D12_Shutdown1(d3d12Device);
+                        if (shutdownResult != NVSDK_NGX_Result.NVSDK_NGX_Result_Success)
+                        {
+                            Console.WriteLine($"[StrideDLSS] Warning: NGX shutdown during capability check returned: {shutdownResult}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[StrideDLSS] Exception shutting down NGX during capability check: {ex.Message}");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the native D3D12 texture resource pointer from a Stride Texture.
+        /// Stride Texture objects wrap D3D12 resources, and we need the native pointer for NGX.
+        /// </summary>
+        private IntPtr GetTextureResourcePtr(Texture texture)
+        {
+            if (texture == null)
+                return IntPtr.Zero;
+
+            try
+            {
+                // Stride Texture.NativePointer provides access to the underlying D3D12 resource
+                // For D3D12, this should return the ID3D12Resource* pointer
+                IntPtr nativePointer = texture.NativePointer;
+                if (nativePointer != IntPtr.Zero)
+                {
+                    return nativePointer;
+                }
+
+                // Fallback: Try to get through reflection if NativePointer is not available
+                var textureType = texture.GetType();
+                var nativePointerProperty = textureType.GetProperty("NativePointer");
+                if (nativePointerProperty != null)
+                {
+                    var value = nativePointerProperty.GetValue(texture);
+                    if (value is IntPtr ptr)
+                    {
+                        return ptr;
+                    }
+                }
+
+                // Alternative: Check for D3D12-specific properties
+                var nativeResourceProperty = textureType.GetProperty("NativeResource");
+                if (nativeResourceProperty != null)
+                {
+                    var value = nativeResourceProperty.GetValue(texture);
+                    if (value is IntPtr ptr)
+                    {
+                        return ptr;
+                    }
+                }
+
+                // Alternative: Check for Resource property (Stride internal)
+                var resourceProperty = textureType.GetProperty("Resource");
+                if (resourceProperty != null)
+                {
+                    var resource = resourceProperty.GetValue(texture);
+                    if (resource != null)
+                    {
+                        var resourceType = resource.GetType();
+                        var nativePtrProperty = resourceType.GetProperty("NativePointer");
+                        if (nativePtrProperty != null)
+                        {
+                            var value = nativePtrProperty.GetValue(resource);
+                            if (value is IntPtr ptr)
+                            {
+                                return ptr;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StrideDLSS] Exception getting texture resource pointer: {ex.Message}");
+            }
+
+            Console.WriteLine("[StrideDLSS] Failed to get D3D12 texture resource pointer from Stride Texture");
+            return IntPtr.Zero;
+        }
+
+        /// <summary>
+        /// Sets a ulong parameter in the NGX parameter interface.
+        /// Wrapper around SetParameter for type safety and clarity.
+        /// </summary>
+        private void SetParameterUlong(IntPtr parameters, string name, ulong value)
+        {
+            SetParameter(parameters, name, value);
+        }
+
+        /// <summary>
+        /// Converts a DlssMode enum value to the corresponding NGX performance quality value.
+        /// Maps user-facing DLSS modes to NGX internal quality settings.
+        /// </summary>
+        private NVSDK_NGX_PerfQuality_Value ConvertDlssModeToQuality(DlssMode mode)
+        {
+            switch (mode)
+            {
+                case DlssMode.Off:
+                    // Should not be called with Off mode, but return Balanced as safe default
+                    return NVSDK_NGX_PerfQuality_Value.NVSDK_NGX_PerfQuality_Value_Balanced;
+
+                case DlssMode.DLAA:
+                    // DLAA uses native resolution, so use MaxQuality
+                    return NVSDK_NGX_PerfQuality_Value.NVSDK_NGX_PerfQuality_Value_DLAA;
+
+                case DlssMode.Quality:
+                    // Quality mode - highest quality upscaling
+                    return NVSDK_NGX_PerfQuality_Value.NVSDK_NGX_PerfQuality_Value_MaxQuality;
+
+                case DlssMode.Balanced:
+                    // Balanced mode - good balance between quality and performance
+                    return NVSDK_NGX_PerfQuality_Value.NVSDK_NGX_PerfQuality_Value_Balanced;
+
+                case DlssMode.Performance:
+                    // Performance mode - higher performance, lower quality
+                    return NVSDK_NGX_PerfQuality_Value.NVSDK_NGX_PerfQuality_Value_MaxPerf;
+
+                case DlssMode.UltraPerformance:
+                    // Ultra Performance mode - maximum performance
+                    return NVSDK_NGX_PerfQuality_Value.NVSDK_NGX_PerfQuality_Value_UltraPerformance;
+
+                default:
+                    // Default to Balanced for unknown modes
+                    Console.WriteLine($"[StrideDLSS] Unknown DLSS mode: {mode}, defaulting to Balanced");
+                    return NVSDK_NGX_PerfQuality_Value.NVSDK_NGX_PerfQuality_Value_Balanced;
+            }
+        }
 
         #endregion
     }
