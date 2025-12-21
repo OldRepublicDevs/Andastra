@@ -84,6 +84,50 @@ Resource types that use `FUN_00407230` / `FUN_004074d0` (resource search functio
 - ✅ **NCS scripts** - Verified: Script loaders call `FUN_004074d0`
 - ✅ **All resource types that have handlers calling `FUN_00407230`/`FUN_004074d0`** - These search all locations including modules
 
+**Complete List of Resource Types Using Resource System (PROVEN via Ghidra):**
+
+The following resource types have handlers that call `FUN_004074d0` (which internally calls `FUN_00407230`), meaning they **CAN** be placed in modules and will be found by the resource system:
+
+| Resource Type | ID (Hex) | ID (Dec) | Handler Function | Executable | Evidence |
+|--------------|----------|----------|------------------|------------|----------|
+| TGA | 3 | 3 | `FUN_0070ee30` | swkotor.exe: 0x0070ee30 | Line 43: `FUN_004074d0(..., 3)` |
+| WAV | 4 | 4 | `FUN_005d5e90` | swkotor.exe: 0x005d5e90 | Line 43: `FUN_004074d0(..., 4)` |
+| PLT | 6 | 6 | `FUN_0070dbf0` | swkotor.exe: 0x0070dbf0 | Line 43: `FUN_004074d0(..., 6)` |
+| TPC | 0xbbf | 3007 | `FUN_0070f800` | swkotor.exe: 0x0070f800 | Line 43: `FUN_004074d0(..., 0xbbf)` |
+| FourPC | 0x80b | 2059 | `FUN_00710910` | swkotor.exe: 0x00710910 | Line 43: `FUN_004074d0(..., 0x80b)` |
+| DDS | 0x7f1 | 2033 | `FUN_00710530` | swkotor.exe: 0x00710530 | Line 43: `FUN_004074d0(..., 0x7f1)` |
+| IFO | 0x7de | 2014 | `FUN_004c4cc0` | swkotor.exe: 0x004c4cc0 | Line 43: `FUN_004074d0(..., 0x7de)` |
+| UTI | 0x7e9 | 2025 | `FUN_006bdea0` | swkotor.exe: 0x006bdea0 | Line 96: `FUN_004074d0(..., 0x7e9)` |
+| LIP | 0xbbc | 3004 | `FUN_0070c350` | swkotor.exe: 0x0070c350 | Line 43: `FUN_004074d0(..., 0xbbc)` |
+| Unknown | 0x7d2 | 2002 | `FUN_00710180` | swkotor.exe: 0x00710180 | Line 43: `FUN_004074d0(..., 0x7d2)` |
+| Unknown | 0x7e6 | 2022 | `FUN_0070fb90` | swkotor.exe: 0x0070fb90 | Line 43: `FUN_004074d0(..., 0x7e6)` |
+| Unknown | 0x7f4 | 2036 | `FUN_00711110` | swkotor.exe: 0x00711110 | Line 43: `FUN_004074d0(..., 0x7f4)` |
+| Unknown | 0x80c | 2060 | `FUN_006789a0` | swkotor.exe: 0x006789a0 | Line 43: `FUN_004074d0(..., 0x80c)` |
+| Unknown | 0xbc0 | 3008 | `FUN_0070fe60` | swkotor.exe: 0x0070fe60 | Line 43: `FUN_004074d0(..., 0xbc0)` |
+| Unknown | 0x7da | 2010 | `FUN_005d1ac0` | swkotor.exe: 0x005d1ac0 | Line 43: `FUN_004074d0(..., 0x7da)` |
+| Unknown | 0x7dc | 2012 | `FUN_00506c30` | swkotor.exe: 0x00506c30 | Line 43: `FUN_004074d0(..., 0x7dc)` |
+| Unknown | 0x7e1 | 2017 | `FUN_00413b40` | swkotor.exe: 0x00413b40 | Line 43: `FUN_004074d0(..., 0x7e1)` |
+| Unknown | 0xbb9 | 3001 | `FUN_0070f0f0` | swkotor.exe: 0x0070f0f0 | Line 43: `FUN_004074d0(..., 0xbb9)` |
+| Unknown | 3000 | 3000 | `FUN_005de5f0` | swkotor.exe: 0x005de5f0 | Line 43: `FUN_004074d0(..., 3000)` |
+
+**Note**: This list was compiled by analyzing all callers of `FUN_004074d0` in swkotor.exe using Ghidra MCP. Each handler function calls `FUN_004074d0` with a specific resource type ID, proving that these resource types use the resource system and can be placed in modules.
+
+**Resource Types That Do NOT Use Resource System:**
+
+| Resource Type | ID (Hex) | ID (Dec) | Loading Method | Evidence |
+|--------------|----------|----------|----------------|----------|
+| TLK | 0x7e2 | 2018 | Direct file I/O | swkotor.exe: `FUN_0041d810` (0x0041d810) opens file with "rb" mode, calls `FUN_005e68d0` which uses directory alias system, NOT resource system |
+| RES | 0x0 | 0 | Direct file I/O | swkotor.exe: `FUN_004b8300` loads "savenfo.res" directly via `FUN_00411260` (GFF loader), bypasses `FUN_00407230` |
+| NFO | N/A | N/A | Direct file I/O | Same as RES - loaded as "savenfo.res" via direct file I/O |
+| MVE | 2 | 2 | Direct file I/O | swkotor.exe: `FUN_005e7a90` sets up "MOVIES:" directory alias, not resource system |
+| MPG | 9 | 9 | Direct file I/O | Same as MVE - uses "MOVIES:" directory alias |
+| BIK | 0x80f | 2063 | Direct file I/O | swkotor.exe: `FUN_005fbbf0` uses "MOVIES:" directory alias, also direct file I/O at `FUN_00602d40` |
+| OGG | 0x81e | 2078 | ❌ Not supported | Not registered in resource type registry, no handler found |
+| MP3 | 8 | 8 | ❌ Registered but not loaded | Registered in resource type registry but no handler calls `FUN_004074d0` |
+| WMV | 12 | 12 | ❌ Unknown | Resource type exists but no handler found |
+| MP4 | N/A | N/A | ❌ Not supported | No resource type ID exists |
+| NSS | 0x7d9 | 2009 | ❓ Unknown | Registered in resource type registry (swkotor.exe: `FUN_005e6d20` line 42) but no handler found that calls `FUN_004074d0` |
+
 ## Module File Discovery
 
 ### Exact Functions Handling Module Discovery
@@ -262,6 +306,11 @@ The engine's resource manager loads resources by:
   - ✅ Registered in resource type registry (swkotor.exe: `FUN_005e6d20` line 91, swkotor2.exe: `FUN_00632510` line 90)
   - ✅ CAN be registered in modules (no type filtering in `FUN_0040e990`)
   - ❌ **CONFIRMED**: TLK loading uses direct file I/O from game root directory (`dialog.tlk`), NOT resource system
+  - **Loading Function**: swkotor.exe: `FUN_0041d810` (address `0x0041d810`)
+    - **Evidence**: Line 14: `FUN_005e5a90(local_14,"rb");` - opens file with "rb" mode
+    - Line 16: `FUN_005e68d0(this,param_1,0x7e2,local_14);` - passes file handle
+    - `FUN_005e68d0` calls `FUN_005eb840` which calls `FUN_005e68a0` which calls `FUN_005eb6b0`
+    - `FUN_005eb6b0` (swkotor.exe: 0x005eb6b0) uses directory alias system (`FUN_005e6660`), NOT resource system (`FUN_00407230`)
   - **Module Support**: ❌ **NO** - TLK files in modules will be ignored (see "Files Loaded Outside Resource System" section)
 
 - **RES (type 0x0 = 0)**:
@@ -1169,6 +1218,106 @@ if (iVar7 == 0) {
 **Module Support**: `FUN_00408bc0` calls `FUN_00407230` which searches all locations including modules, so TPC/TGA CAN be loaded from modules.
 
 ## Module File Priority Order (PROVEN)
+
+**Question**: If a resource with the same name and type is duplicated across multiple module files (`.rim`, `_s.rim`, `_dlg.erf`, `_adx.rim`), which takes priority?
+
+**Answer**: The priority order is determined by the **order in which files are loaded and registered** in the resource table. Resources registered first take priority over resources registered later with the same ResRef and type.
+
+### K1 Module File Priority Order (swkotor.exe: `FUN_004094a0`)
+
+**Complete Priority Order** (from decompiled code analysis):
+
+1. **`_a.rim`** (Highest priority when loaded)
+   - **Evidence**: swkotor.exe: `FUN_004094a0` lines 50-62
+   - **Loading**: Line 61: `FUN_00407230(param_1,aiStack_28,0xbba,aiStack_48,aiStack_50);` - searches for ARE in `_a.rim`
+   - **If found**: Line 159: `FUN_00406e20(param_1,aiStack_38,4,0);` - loads `_a.rim` and sets flag bit 0x10
+   - **Note**: Only loaded if flag != 0 (complex mode)
+
+2. **`_adx.rim`** (Second priority when loaded)
+   - **Evidence**: swkotor.exe: `FUN_004094a0` lines 64-88
+   - **Loading**: Line 74: `FUN_00407230(param_1,aiStack_28,0xbba,aiStack_50,aiStack_48);` - searches for ARE in `_adx.rim`
+   - **If found**: Line 85: `FUN_00406e20(param_1,aiStack_38,4,0);` - loads `_adx.rim` and sets flag bit 0x20
+   - **Note**: Only loaded if flag != 0 and `_a.rim` not found
+
+3. **`.mod`** (Third priority, but **REPLACES** `.rim` and `_s.rim` if exists)
+   - **Evidence**: swkotor.exe: `FUN_004094a0` lines 89-95
+   - **Loading**: Line 95: `FUN_00407230(param_1,aiStack_28,0x7db,aiStack_50,aiStack_48);` - searches for `.mod` file
+   - **If found**: Line 136: `FUN_00406e20(param_1,aiStack_38,3,2);` - loads `.mod` and sets flag bit 0x2
+   - **CRITICAL**: If `.mod` exists, `.rim` and `_s.rim` are **NOT loaded** (see line 96: `if (iVar6 == 0)` - if `.mod` not found, continues to `_s.rim`)
+
+4. **`.rim`** (Fourth priority, main module file)
+   - **Evidence**: swkotor.exe: `FUN_004094a0` lines 32-42 (flag == 0 path) or loaded before `_s.rim` check
+   - **Loading**: Line 42: `FUN_00406e20(param_1,aiStack_38,4,0);` - loads `.rim` file
+   - **Note**: Loaded first in simple mode (flag == 0), or loaded before `_s.rim` in complex mode
+
+5. **`_s.rim`** (Lowest priority, supplements `.rim`)
+   - **Evidence**: swkotor.exe: `FUN_004094a0` lines 97-124
+   - **Loading**: Line 107: `FUN_00407230(param_1,aiStack_28,0xbba,aiStack_50,aiStack_48);` - searches for ARE in `_s.rim`
+   - **If found**: Line 118: `FUN_00406e20(param_1,aiStack_38,4,0);` - loads `_s.rim` and sets flag bit 0x8
+   - **Note**: Only loaded if `.mod` doesn't exist (line 96: `if (iVar6 == 0)`)
+
+**K1 Priority Summary**:
+- **If `.mod` exists**: Only `.mod` is loaded (plus `_a.rim`/`_adx.rim` if they exist and flag != 0)
+- **If `.mod` doesn't exist**: `.rim` loads first, then `_s.rim` supplements it (plus `_a.rim`/`_adx.rim` if they exist and flag != 0)
+- **For duplicate resources**: First registered resource wins (`.rim` before `_s.rim`, `_a.rim` before `_adx.rim`)
+
+### K2 Module File Priority Order (swkotor2.exe: `FUN_004096b0`)
+
+**Complete Priority Order** (from decompiled code analysis):
+
+1. **`_a.rim`** (Highest priority when loaded)
+   - **Evidence**: swkotor2.exe: `FUN_004096b0` lines 54-66
+   - **Loading**: Line 65: `FUN_00407300(param_1,aiStack_30,0xbba,aiStack_60,apuStack_6c);` - searches for ARE in `_a.rim`
+   - **If found**: Line 182: `FUN_00406ef0(param_1,aiStack_58,4,0);` - loads `_a.rim` and sets flag bit 0x10
+   - **Note**: Only loaded if flag != 0 (complex mode)
+
+2. **`_adx.rim`** (Second priority when loaded)
+   - **Evidence**: swkotor2.exe: `FUN_004096b0` lines 68-92
+   - **Loading**: Line 78: `FUN_00407300(param_1,aiStack_30,0xbba,apuStack_6c,aiStack_60);` - searches for ARE in `_adx.rim`
+   - **If found**: Line 89: `FUN_00406ef0(param_1,aiStack_58,4,0);` - loads `_adx.rim` and sets flag bit 0x20
+   - **Note**: Only loaded if flag != 0 and `_a.rim` not found
+
+3. **`.mod`** (Third priority, but **REPLACES** `.rim`, `_s.rim`, and `_dlg.erf` if exists)
+   - **Evidence**: swkotor2.exe: `FUN_004096b0` lines 93-99
+   - **Loading**: Line 99: `FUN_00407300(param_1,aiStack_30,0x7db,apuStack_6c,aiStack_60);` - searches for `.mod` file
+   - **If found**: Line 161: `FUN_00406ef0(param_1,aiStack_58,3,2);` - loads `.mod` and sets flag bit 0x2
+   - **CRITICAL**: If `.mod` exists, `.rim`, `_s.rim`, and `_dlg.erf` are **NOT loaded** (see line 100: `if (iVar5 == 0)` - if `.mod` not found, continues to `_s.rim`)
+
+4. **`.rim`** (Fourth priority, main module file)
+   - **Evidence**: swkotor2.exe: `FUN_004096b0` lines 36-46 (flag == 0 path) or loaded before `_s.rim` check
+   - **Loading**: Line 46: `FUN_00406ef0(param_1,aiStack_58,4,0);` - loads `.rim` file
+   - **Note**: Loaded first in simple mode (flag == 0), or loaded before `_s.rim` in complex mode
+
+5. **`_s.rim`** (Fifth priority, supplements `.rim`)
+   - **Evidence**: swkotor2.exe: `FUN_004096b0` lines 101-127
+   - **Loading**: Line 111: `FUN_00407300(param_1,aiStack_30,0xbba,apuStack_6c,aiStack_60);` - searches for ARE in `_s.rim`
+   - **If found**: Line 122: `FUN_00406ef0(param_1,aiStack_58,4,0);` - loads `_s.rim` and sets flag bit 0x8
+   - **Note**: Only loaded if `.mod` doesn't exist (line 100: `if (iVar5 == 0)`)
+
+6. **`_dlg.erf`** (Lowest priority, supplements `.rim` and `_s.rim`, K2 only)
+   - **Evidence**: swkotor2.exe: `FUN_004096b0` lines 128-149
+   - **Loading**: Line 128: `FUN_00630a90(aiStack_30,"_dlg");` - constructs `_dlg.erf` filename
+   - Line 147: `FUN_00406ef0(param_1,piVar3,3,2);` - loads `_dlg.erf` (container type 3 = ERF)
+   - **Note**: Only loaded if `.mod` doesn't exist (inside the `if (iVar5 == 0)` block starting at line 100)
+
+**K2 Priority Summary**:
+- **If `.mod` exists**: Only `.mod` is loaded (plus `_a.rim`/`_adx.rim` if they exist and flag != 0)
+- **If `.mod` doesn't exist**: `.rim` loads first, then `_s.rim` supplements it, then `_dlg.erf` supplements both (plus `_a.rim`/`_adx.rim` if they exist and flag != 0)
+- **For duplicate resources**: First registered resource wins (`.rim` before `_s.rim` before `_dlg.erf`, `_a.rim` before `_adx.rim`)
+
+### Example Scenarios
+
+**K1 Example**: Module "mymod" with all files existing:
+- Priority: `_a.rim` > `_adx.rim` > `.mod` (if exists, replaces `.rim` and `_s.rim`) > `.rim` > `_s.rim`
+- If `.mod` exists: Only `.mod`, `_a.rim`, and `_adx.rim` are loaded
+- If `.mod` doesn't exist: `.rim` loads first, then `_s.rim` supplements it, then `_a.rim` and `_adx.rim` supplement both
+
+**K2 Example**: Module "mymod" with all files existing:
+- Priority: `_a.rim` > `_adx.rim` > `.mod` (if exists, replaces `.rim`, `_s.rim`, and `_dlg.erf`) > `.rim` > `_s.rim` > `_dlg.erf`
+- If `.mod` exists: Only `.mod`, `_a.rim`, and `_adx.rim` are loaded
+- If `.mod` doesn't exist: `.rim` loads first, then `_s.rim` supplements it, then `_dlg.erf` supplements both, then `_a.rim` and `_adx.rim` supplement all
+
+## Module File Priority Order (PROVEN - OLD SECTION)
 
 ### K1 (swkotor.exe) - `FUN_004094a0`
 

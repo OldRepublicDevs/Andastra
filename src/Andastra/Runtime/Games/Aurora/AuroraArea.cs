@@ -17,6 +17,7 @@ using Andastra.Runtime.Graphics.Common;
 using Andastra.Runtime.Games.Aurora.Scene;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Parsing.Resource;
+using Andastra.Parsing.Formats.MDLData;
 
 namespace Andastra.Runtime.Games.Aurora
 {
@@ -93,6 +94,9 @@ namespace Andastra.Runtime.Games.Aurora
 
         // Tileset loader for querying tile surface materials
         private TilesetLoader _tilesetLoader;
+        
+        // Resource loader function for loading MDL/MDX files on demand
+        private readonly Func<string, byte[]> _resourceLoader;
 
         // Weather simulation state
         private readonly System.Random _weatherRandom;

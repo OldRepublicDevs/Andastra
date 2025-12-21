@@ -9,6 +9,7 @@ using Andastra.Parsing;
 using Andastra.Parsing.Formats.MDL;
 using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Resource.Formats.TwoDA;
+using TwoDAAuto = Andastra.Parsing.Resource.Formats.TwoDA.TwoDAAuto;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Runtime.Graphics.MonoGame.Converters;

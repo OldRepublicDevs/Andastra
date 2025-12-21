@@ -367,9 +367,9 @@ namespace Andastra.Runtime.MonoGame.Backends
             //   VK_KHR_xlib_surface (Linux)
             //   VK_EXT_debug_utils (debug)
 
-            // vkCreateInstance(...)
+            // TODO: STUB - vkCreateInstance(...)
 
-            _instance = new IntPtr(1); // Placeholder
+            _instance = new IntPtr(1); // TODO: STUB - Placeholder
             return true;
         }
 
@@ -384,7 +384,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             // - Memory size
             // - Raytracing support
 
-            _physicalDevice = new IntPtr(1); // Placeholder
+            _physicalDevice = new IntPtr(1); // TODO: STUB - Placeholder
 
             // Query capabilities
             _capabilities = new GraphicsCapabilities
