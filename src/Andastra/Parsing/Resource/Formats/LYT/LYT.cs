@@ -364,10 +364,23 @@ namespace Andastra.Parsing.Resource.Formats.LYT
         public Vector3 Position { get; set; }
 
         /// <summary>
+        /// Set of other rooms this room connects to.
+        /// PyKotor-specific field for tracking room connectivity.
+        /// Used for pathfinding and area transition logic.
+        /// Not present in binary/ASCII format (derived from door hooks).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lyt/lyt_data.py:269-270
+        /// Original: self.connections: set[LYTRoom] = set()
+        /// </remarks>
+        public HashSet<LYTRoom> Connections { get; set; } = new HashSet<LYTRoom>();
+
+        /// <summary>
         /// Default constructor.
         /// </summary>
         public LYTRoom()
         {
+            Connections = new HashSet<LYTRoom>();
         }
 
         /// <summary>
@@ -379,6 +392,7 @@ namespace Andastra.Parsing.Resource.Formats.LYT
         {
             Model = model;
             Position = position;
+            Connections = new HashSet<LYTRoom>();
         }
     }
 
