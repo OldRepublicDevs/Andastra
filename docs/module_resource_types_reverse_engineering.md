@@ -254,7 +254,202 @@ The engine's resource manager loads resources by:
 2. Available for loading by type-specific loaders
 3. Loaded regardless of type (TPC, TGA, etc.)
 
-**CRITICAL**: The following sections list ONLY resource types that the game **ACTUALLY LOADS AND USES** from modules. Resource types that can be "stored" or "registered" but are not loaded by the game are listed in "Resource Types NOT Loaded from Modules" section below.
+**CAN be packed into modules** (PROVEN by code analysis):
+
+- **TPC/TGA textures**: ✅ **YES** - No type filtering in RIM/MOD loaders
+- **All GFF-based types**: ✅ **YES** - No type filtering
+- **All binary formats**: ✅ **YES** - No type filtering
+- **Media files**: ✅ **YES** - No type filtering
+- **Any resource type**: ✅ **YES** - Engine accepts any type ID stored in containers
+
+**Edge Cases - What Actually Works** (based on code structure):
+
+- **TLK (type 0x7e2 = 2018)**:
+  - ✅ Registered in resource type registry (swkotor.exe: `FUN_005e6d20` line 91, swkotor2.exe: `FUN_00632510` line 90)
+  - ✅ CAN be registered in modules (no type filtering in `FUN_0040e990`)
+  - ❌ **CONFIRMED**: TLK loading uses direct file I/O from game root directory (`dialog.tlk`), NOT resource system
+  - **Module Support**: ❌ **NO** - TLK files in modules will be ignored (see "Files Loaded Outside Resource System" section)
+
+- **RES (type 0x0 = 0)**:
+  - ✅ Registered in resource type registry (swkotor.exe: `FUN_005e6d20` line 34)
+  - ✅ CAN be registered in modules (no type filtering in `FUN_0040e990`)
+  - ❓ **UNPROVEN**: Whether RES loading code uses `FUN_00407230` or hardcoded paths
+  - **If RES loader uses `FUN_00407230`**: Module RES would override SAV RES (if same ResRef)
+  - **If RES loader uses hardcoded SAV path**: Module RES would be ignored
+
+- **KEY/BIF**: Not registered in resource type registry - cannot be packed as resources
+
+- **MOD/RIM/ERF/SAV**: Registered as container types (0x7db, 0xbba, 0x7d5, 0x7df) but engine doesn't recursively load nested containers
+
+- **HAK/NWM**: Not registered in resource type registry - cannot be packed as resources
+
+- **DDS**: Not registered in resource type registry - cannot be packed as resources
+
+**Note on TPC/TGA**: **YES, these CAN be containerized** in modules. The proof:
+
+- RIM/MOD loaders (`FUN_0040f990` / `FUN_0040f3c0`) iterate through ALL entries
+- No type filtering - every entry is registered in the resource table
+- Texture loaders (`FUN_004b8300` line 187-190) search through resource table:
+  - First tries TGA (type 3) via `FUN_00408bc0`
+  - Then tries TPC (type 0xbbf = 3007) via `FUN_00408bc0`
+  - `FUN_00408bc0` calls `FUN_00407230` which searches all locations including modules
+- **Texture Priority**: TGA → TPC (no DDS support in this code path)
+
+### Known Resource Types from Andastra
+
+Based on `ResourceType.cs`, the following resource types are defined:
+
+**Core Game Resources** (VERIFIED via Ghidra - Resource type handlers call `FUN_004074d0` which searches all locations including modules):
+
+- `ARE` (2012) - Area data
+- `IFO` (2014) - Module info
+- `GIT` (2023) - Area instance data
+- `DLG` (2029) - Dialog trees
+- `UTI` (2025) - Item templates
+- `UTC` (2027) - Creature templates
+- `UTD` (2042) - Door templates
+- `UTP` (2044) - Placeable templates
+- `UTS` (2035) - Sound templates
+- `UTT` (2032) - Trigger templates
+- `UTW` (2058) - Waypoint templates
+- `UTM` (2051) - Merchant templates
+- `JRL` (2056) - Journal entries
+- `PTH` (3003) - Pathfinding data
+- `WOK` (2016) - Walkmesh data
+- `DWK` (2052) - Door walkmesh
+- `PWK` (2053) - Placeable walkmesh
+- `MDL` (2002) - 3D models
+- `MDX` (3008) - Model animations
+- `TPC` (3007) - Textures
+- `TGA` (3) - Texture images
+- `TXI` (2022) - Texture info
+- `NCS` (2010) - Compiled scripts
+- `NSS` (2009) - Script source (TODO: Gain Certainty by going through ghidra mcp - Verify if NSS can be loaded from modules by examining NSS resource type handlers and checking if NSS loading code searches modules. Check string references to ".nss" files. Note: NSS is typically compiled to NCS before use, so runtime loading may not be needed)
+- `SSF` (2060) - Soundset files
+- `LIP` (3004) - Lip sync data
+- `VIS` (3001) - Visibility data
+- `LYT` (3000) - Layout data
+- `FAC` (2038) - Faction data
+- `GUI` (2047) - GUI definitions
+- `CUT` (2074) - Cutscene data
+
+**TODO: Gain Certainty by going through ghidra mcp - Verify which of these are truly unsupported by examining resource type handlers and module loading code. Check for string references to these file types and verify if they're filtered or rejected. Unlikely/Unsupported in Modules**:
+
+- `RES` (0) - Save data (SAV containers only)
+- `SAV` (2057) - Save game containers
+- `KEY` (9999) - Chitin key files
+- `BIF` (9998) - BIF archives
+- `MOD` (2011) - Module containers (nested modules not supported)
+- `RIM` (3002) - RIM containers (nested RIMs not supported)
+- `ERF` (9997) - ERF containers (nested ERFs not supported)
+- `HAK` (2061) - HAK archives (Aurora/NWN only, not KotOR)
+- `NWM` (2062) - NWM modules (Aurora/NWN only)
+
+**Media Files**:
+
+### Audio Formats
+
+- `WAV` (4) - Audio files
+  - **Handler exists**: swkotor.exe: 0x005d5e90 calls `FUN_004074d0` with type 4
+  - **Obfuscation**: ✅ **Supports BOTH obfuscated and unobfuscated**
+    - **Obfuscated SFX**: 470-byte header (magic: `0xFF 0xF3 0x60 0xC4`)
+    - **Obfuscated VO**: 20-byte header (magic: `"RIFF"` at 0, `"RIFF"` at 20)
+    - **MP3-in-WAV**: 58-byte header (RIFF size = 50)
+    - **Standard WAV**: No header (standard RIFF/WAVE)
+    - Game auto-detects and skips headers - both formats work
+  - **Module Support**: ✅ **YES** - WAV handler uses resource system that searches modules
+  - **Override Support**: ✅ **YES** - Can be placed in Override directory
+  - **Stream Directory Priority**: ⚠️ **COMPLEX** - See "Media File Priority" section below
+- `BMU` (8) - Obfuscated MP3 audio
+  - **Handler**: ❌ **NOT FOUND** in swkotor.exe or swkotor2.exe
+  - **Obfuscation**: ❓ **UNKNOWN** - No handler to verify obfuscation requirements
+  - **Module Support**: ❌ **NO** - No handler exists, cannot be loaded from modules
+  - **Override Support**: ❌ **NO** - No handler exists
+- `OGG` (2078) - OGG audio
+  - **VERIFIED**: OGG is **NOT registered** in resource type registry and **NO handler exists**
+  - **Module Support**: ❌ **NO** - OGG files in modules will be ignored
+  - **Override Support**: ❌ **NO** - No handler exists
+- `MP3` (25014) - MP3 audio
+  - **Status**: ❌ **NOT A GAME RESOURCE TYPE** - Toolset-only, not loaded by game
+  - **Module Support**: ❌ **NO** - Not a game resource type
+  - **Override Support**: ❌ **NO** - Not a game resource type
+  - **Note**: MP3 audio can appear in WAV files via "MP3-in-WAV" format (see WAV section)
+
+### Video Formats
+
+- `MVE` (2) - Video files
+  - **Handler**: ❌ **NOT FOUND** - No handler in resource system
+  - **Loading**: Likely direct directory access from `movies/` directory
+  - **Module Support**: ❌ **NO** - No resource system handler
+  - **Override Support**: ❓ **UNKNOWN** - May work if placed in `movies/` directory
+- `MPG` (9) - MPEG video
+  - **Handler**: ❌ **NOT FOUND** - No handler in resource system
+  - **Loading**: Likely direct directory access from `movies/` directory
+  - **Module Support**: ❌ **NO** - No resource system handler
+  - **Override Support**: ❓ **UNKNOWN** - May work if placed in `movies/` directory
+- `BIK` (2063) - Bink video
+  - **Handler**: ❌ **NOT FOUND** - No handler in resource system
+  - **Loading**: Likely direct directory access from `movies/` directory
+  - **Module Support**: ❌ **NO** - No resource system handler
+  - **Override Support**: ❓ **UNKNOWN** - May work if placed in `movies/` directory
+- `WMV` (12) - Windows Media Video
+  - **Handler**: ❌ **NOT FOUND** - No handler in resource system
+  - **Module Support**: ❌ **NO** - No handler exists
+  - **Override Support**: ❌ **NO** - No handler exists
+- `MP4` - MPEG-4 video
+  - **Status**: ❌ **NOT SUPPORTED** - No resource type ID exists
+  - **Module Support**: ❌ **NO** - Not a supported format
+  - **Override Support**: ❌ **NO** - Not a supported format
+
+### Media File Priority: Resource System vs Stream Directories
+
+**Question**: If a file exists in both Override/Module AND streamwaves/streamvoice/streammusic, which takes priority?
+
+**Answer**: **Override/Modules take priority over stream directories**
+
+**Evidence from Codebase** (`InstallationResourceManager.cs` default search order):
+1. **OVERRIDE** - Highest priority
+2. **MODULES** - Second priority
+3. **CHITIN** - Third priority
+4. **TEXTURES_TPA/TPB/TPC/GUI** - Texture packs
+5. **MUSIC** (StreamMusic directory) - Searched AFTER modules
+6. **SOUND** (StreamSounds directory) - Searched AFTER modules
+7. **VOICE** (StreamVoice/StreamWaves) - Searched AFTER modules
+8. **LIPS** - Lip sync files
+9. **RIMS** - Module RIM files
+
+**Conclusion**: 
+- ✅ Files in **Override** will be found before stream directories
+- ✅ Files in **Modules** will be found before stream directories
+- ⚠️ Stream directories are searched **AFTER** modules, so they act as fallback locations
+
+**However**: Some code paths may use direct file I/O to stream directories, bypassing the resource system. The resource system priority applies when using the standard resource loading mechanism.
+
+**Placement Summary**:
+
+| Format | Override Support | Module Support | Stream Directory Support | Priority Order |
+|--------|------------------|----------------|--------------------------|----------------|
+| **WAV** | ✅ YES | ✅ YES | ✅ YES | Override → Modules → StreamWaves/StreamVoice |
+| **BMU** | ❌ NO | ❌ NO | ❓ UNKNOWN | No handler exists |
+| **OGG** | ❌ NO | ❌ NO | ❓ UNKNOWN | No handler exists |
+| **MP3** | ❌ NO | ❌ NO | ❓ UNKNOWN | Not a game resource type |
+| **MVE** | ❓ UNKNOWN | ❌ NO | ✅ YES (movies/) | Direct file I/O, not resource system |
+| **MPG** | ❓ UNKNOWN | ❌ NO | ✅ YES (movies/) | Direct file I/O, not resource system |
+| **BIK** | ❓ UNKNOWN | ❌ NO | ✅ YES (movies/) | Direct file I/O, not resource system |
+| **WMV** | ❌ NO | ❌ NO | ❓ UNKNOWN | No handler exists |
+| **MP4** | ❌ NO | ❌ NO | ❌ NO | Not supported |
+
+**Obfuscation Requirements**:
+
+| Format | Obfuscation Support | Obfuscation Required? | Notes |
+|--------|---------------------|----------------------|-------|
+| **WAV** | ✅ YES | ❌ NO | Supports both obfuscated (SFX: 470 bytes, VO: 20 bytes, MP3-in-WAV: 58 bytes) and unobfuscated (standard RIFF/WAVE) |
+| **BMU** | ❓ UNKNOWN | ❓ UNKNOWN | Per codebase comment: "mp3 with obfuscated extra header" - but no handler found to verify |
+| **OGG** | ❌ NO | ❌ NO | Not supported - no handler exists |
+| **MP3** | ❌ NO | ❌ NO | Not a game resource type |
+| **MVE/MPG/BIK** | ❌ NO | ❌ NO | Video formats - no obfuscation support |
+| **WMV** | ❌ NO | ❌ NO | No handler exists |
+| **MP4** | ❌ NO | ❌ NO | Not supported |
 
 ## Resource Type Support Verification (Ghidra Analysis)
 
@@ -317,7 +512,7 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 
 **Question**: Are DDS textures supported? What priority do they have? Can they be in modules?
 
-**Answer**:
+**Answer**: 
 
 **✅ YES - DDS is fully supported** with the following characteristics:
 
@@ -343,7 +538,6 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
   - All standard resource locations
 
 **Usage**: DDS textures work when:
-
 - Explicitly loaded via DDS-specific loading functions
 - Used in specific contexts that call DDS loader directly
 - **NOT** automatically loaded as fallback when TGA/TPC are missing
@@ -352,149 +546,32 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 
 ### WAV/OGG Audio
 
-**Question**: Can WAV/OGG be loaded from modules? Are all WAV files obfuscated? Can the game read normal WAV files?
+**Question**: Can WAV/OGG be loaded from modules?
 
 **Answer**:
 
 - **WAV (4)**: **YES** - VERIFIED: Handler at swkotor.exe: 0x005d5e90 calls `FUN_004074d0` with type 4
-- **OGG (2078)**: ❌ **NO** - VERIFIED: OGG (type 2078, 0x81e) is **NOT registered** in resource type registry (swkotor.exe: `FUN_005e6d20`, swkotor2.exe: `FUN_00632510`). No handler calls `FUN_004074d0` with type 0x81e. OGG files in modules will be ignored. OGG is loaded via direct file I/O (Miles audio system or similar), not through resource system.
+- **OGG (2078)**: **TODO: Gain Certainty by going through ghidra mcp** - Search for OGG handler (type 2078, 0x81e) and verify it calls `FUN_004074d0`
 
-**WAV Obfuscation**:
-
-**NOT all WAV files are obfuscated** - Only SFX (sound effect) files have obfuscation headers:
-
-1. **SFX Files** (sound effects, combat, UI, ambience):
-   - **470-byte obfuscation header** starting with magic bytes `0xFF 0xF3 0x60 0xC4`
-   - Header is followed by standard RIFF/WAVE data
-   - Game detects SFX magic and seeks to offset 0x1DA (470 bytes) before reading RIFF/WAVE
-   - Reference: `vendor/reone/src/libs/audio/format/wavreader.cpp:34-35`
-
-2. **VO Files** (voice-over, dialogue):
-   - **Standard RIFF/WAVE format** - no obfuscation
-   - Plain RIFF/WAVE PCM files readable by any media player
-   - Game reads directly as standard WAV (no header skipping)
-   - Reference: `vendor/PyKotor/wiki/WAV-File-Format.md` - "VO (Voice-over): Plain RIFF/WAVE PCM files"
-
-3. **MP3-in-WAV Format** (some music):
-   - RIFF header with `riffSize == 50`
-   - 58-byte header, then raw MP3 data follows
-   - Game skips 58 bytes and treats remaining data as MP3
-
-**Can the game read normal WAV files?**: **✅ YES**
-
-The game's WAV handler (`vendor/reone/src/libs/audio/format/wavreader.cpp:30-38`) checks:
-
-1. First checks for SFX magic (`\xff\xf3\x60\xc4`) → if found, seeks to offset 0x1DA
-2. If not SFX magic, checks for "RIFF" → if found, reads as **standard RIFF/WAVE**
-3. If neither, throws validation error
-
-**Conclusion**: The game **can read normal, un-obfuscated WAV files**. Standard RIFF/WAVE files work without any obfuscation header. Only SFX files require the 470-byte header. VO files in the game are already standard WAV format.
-
-### Audio File Loading Priority
-
-**Question**: What is the priority order for audio files? Which takes priority: WAV in Override, MP3 in Override, OGG in Module, or MP3 in streamwaves/streamvoice/streammusic? Does streammusic have different priority than streamwaves/streamvoice?
-
-**Answer**: **CRITICAL - Two Separate Audio Systems**
-
-The game uses **TWO SEPARATE audio loading systems** that operate independently:
-
-1. **Resource System** (for WAV files):
-   - Uses standard resource search mechanism (`FUN_004074d0` → `FUN_00407230`)
-   - **Priority**: Override → Modules → Chitin (standard resource priority)
-   - **Supported formats**: WAV (type 4) only
-   - **Used for**: Sound effects and voice-over loaded via resource system
-   - **Handler**: swkotor.exe: 0x005d5e90
-
-2. **Miles Audio System** (for streaming audio):
-   - Uses direct file I/O via Miles audio library
-   - **Directories**: `streamwaves/`, `streammusic/`, `streamvoice/`
-   - **Supported formats**: WAV, MP3, OGG (via direct file access)
-   - **Used for**: Streaming audio (music, ambient sounds, voice streaming)
-   - **Bypasses resource system**: Miles audio system does NOT use resource search mechanism
-
-**Key Finding**: These are **SEPARATE systems** - Miles audio system **bypasses** the resource system entirely for streamed audio.
-
-**Priority Order** (when both systems could load the same file):
-
-**TODO: Gain Certainty by going through ghidra mcp** - Need to verify:
-
-1. Does the game check resource system first, then Miles directories?
-2. Or does it check Miles directories first, then resource system?
-3. Or are they used for completely different audio types (resource system for sound effects, Miles for music)?
-
-**Current Understanding** (needs verification):
-
-- **WAV files**: Can be loaded via BOTH systems
-  - Resource system: WAV in Override/Module (via handler at 0x005d5e90)
-  - Miles system: WAV in streamwaves/streamvoice/ (via direct file I/O)
-  - **Unknown**: Which is checked first when both exist
-
-- **MP3 files**:
-  - **NOT registered** in resource system (no handler calls `FUN_004074d0` with MP3 type)
-  - **Only loaded via Miles audio system** from streamwaves/streammusic/streamvoice/
-  - MP3 in Override/Module: ❌ **NOT SUPPORTED** - MP3 is not a resource type
-
-- **OGG files**:
-  - **NOT registered** in resource system (verified: not in resource type registry)
-  - **Only loaded via Miles audio system** from streamwaves/streammusic/streamvoice/
-  - OGG in Override/Module: ❌ **NOT SUPPORTED** - OGG is not a resource type
-
-**Streammusic vs Streamwaves/Streamvoice**:
-
-- **streammusic/**: Used for background music (different audio context)
-- **streamwaves/**: Used for sound effects (WAV files)
-- **streamvoice/**: Used for voice-over streaming (WAV files)
-- **Unknown**: Whether streammusic has different priority than streamwaves/streamvoice, or if they're all checked with same priority within Miles system
-
-**Summary Table**:
-
-| Location | Format | System | Supported? | Notes |
-|----------|--------|--------|------------|-------|
-| Override | WAV | Resource System | ✅ YES | Highest resource priority |
-| Module | WAV | Resource System | ✅ YES | After Override |
-| Override | MP3 | Resource System | ❌ NO | MP3 not a resource type |
-| Module | OGG | Resource System | ❌ NO | OGG not a resource type |
-| streamwaves/ | WAV | Miles Audio | ✅ YES | Direct file I/O (separate system) |
-| streamwaves/ | MP3 | Miles Audio | ✅ YES | Direct file I/O (separate system) |
-| streammusic/ | MP3 | Miles Audio | ✅ YES | Direct file I/O (separate system) |
-| streamvoice/ | WAV | Miles Audio | ✅ YES | Direct file I/O (separate system) |
-
-**Critical Unknown**: When both resource system and Miles system could load the same WAV file (e.g., WAV in Override AND WAV in streamwaves/), which is checked first? **TODO: Verify via Ghidra MCP** - Examine audio loading code to determine if resource system or Miles directories are checked first, and whether streammusic has different priority than streamwaves/streamvoice.
+**Note**: Audio files may also be loaded from specific directories (e.g., `streamwaves/`, `streammusic/`) rather than through the resource search mechanism. Verify if module loading works for audio playback.
 
 ## Container Size Limits
 
 **Question**: Do containers have maximum filesize or resource count limits?
 
-**Answer**: ✅ **VERIFIED** - Container format limits (from binary structure analysis):
+**Answer**: **TODO: Gain Certainty by going through ghidra mcp** - Examine:
 
-**Format Limits** (from RIM/ERF/MOD binary structure):
+- RIM loader (`FUN_0040f990`) - check for size/count validation
+- MOD loader (`FUN_0040f3c0`) - check for size/count validation
+- ERF loader - check for size/count validation
+- Container header parsing code for maximum values
+- Memory allocation limits in container reading code
 
-- **Entry Count**: `uint32` (4 bytes) - Maximum: 4,294,967,295 entries
-- **Resource Size**: `uint32` (4 bytes) - Maximum: 4,294,967,295 bytes (~4.2 GB per resource)
-- **File Offset**: `uint32` (4 bytes) - Maximum: 4,294,967,295 bytes (~4.2 GB total file size)
-- **ResRef Length**: Fixed 16 bytes (null-padded ASCII string)
+**Note**: In practice, containers are limited by:
 
-**Engine Behavior** (from reverse engineering):
-
-- **No explicit validation**: RIM loader (`FUN_0040f990`) and MOD loader (`FUN_0040f3c0`) read entry count directly from header without bounds checking
-- **No size limits enforced**: Engine reads resource sizes and offsets directly from container headers without validation
-- **Memory allocation**: Engine allocates memory based on resource sizes without explicit limits
-
-**Practical Limits**:
-
-- **File system**: FAT32 has 2GB file size limit, NTFS has much larger limits (16TB+)
-- **Memory**: Engine must have enough RAM to load all resources
-- **32-bit address space**: Original KotOR is 32-bit, limiting practical file sizes to ~2GB due to address space constraints
-- **No hard-coded limits**: Engine does not reject containers based on entry count or file size - it will attempt to load any valid container structure
-
-**Conclusion**: Containers are limited only by:
-
-1. Binary format constraints (uint32 maximums)
-2. File system limits
-3. Available memory
-4. 32-bit address space (practical limit ~2GB for original engine)
-
-The engine does not enforce any explicit maximum entry count or file size limits in the loading code.
+- File system limits (2GB on FAT32, larger on NTFS)
+- Memory constraints (32-bit process address space)
+- But no explicit limits found in module loading code yet
 
 ## Resource Search Priority Order (PROVEN)
 
@@ -565,7 +642,7 @@ if (iVar7 == 0) {
 
 **Priority**: TGA (type 3) → TPC (type 0xbbf = 3007)
 
-**DDS Support**: ✅ **VERIFIED** - See detailed DDS documentation in "Special Loading Behaviors" section above. DDS (type 2033, 0x7f1) is fully supported and can be loaded from modules via explicit DDS-specific loading functions.
+**DDS Support**: NOT found in texture loading code - TODO: Gain Certainty by going through ghidra mcp - Search for DDS texture loading by examining `FUN_004b8300` (swkotor.exe: 0x004b8300) and `FUN_00408bc0` (swkotor.exe: 0x00408bc0), search for string references to "DDS" or DDS-related texture loading code. Verify if DDS is not supported or uses different path
 
 **Module Support**: `FUN_00408bc0` calls `FUN_00407230` which searches all locations including modules, so TPC/TGA CAN be loaded from modules.
 
@@ -778,24 +855,14 @@ if (iVar7 == 0) {
 
 **Location**: Root installation directory (next to `dialog.tlk`, `chitin.key`, etc.)
 
-**Loading**: ✅ **VERIFIED** - `patch.erf` is loaded as part of global resource initialization, separate from module loading.
-
-**Evidence** (from reone codebase `vendor/reone/src/libs/resource/director.cpp:153-156`):
-
-- Loaded in `loadGlobalResources()` function via `_resources.addERF(*patchPath)`
-- Loaded AFTER chitin.key and texture packs, but BEFORE override directory
-- Loaded as ERF container into resource system (same mechanism as modules)
-- NOT found in module loading code (`FUN_004094a0` / `FUN_004096b0`) - confirmed separate loading path
+**Loading**: `patch.erf` is loaded as part of global resource initialization, separate from module loading. TODO: Gain Certainty by going through ghidra mcp - Find patch.erf loading code by searching for string "patch.erf" in swkotor.exe, then examine the loading function to verify it is loaded into the resource table with the same priority as chitin resources. Check resource priority flags and location assignments.
 
 **Priority Order** (for resources in patch.erf):
 
 1. Override directory (highest priority)
-
 2. Module files (`.mod`, `.rim`, `_s.rim`, `_dlg.erf`)
-3. **patch.erf** (loaded during global initialization, priority between modules and chitin)
+3. **patch.erf** (loaded with chitin resources)
 4. Chitin BIF archives (lowest priority)
-
-**Note**: Based on reone codebase loading order, patch.erf is loaded AFTER chitin.key but BEFORE override directory in `loadGlobalResources()`. However, the actual game's resource search priority may differ. The engine's resource search function (`FUN_00407230`) determines final priority at runtime.
 
 **What Can Be Put in patch.erf**:
 
@@ -810,14 +877,7 @@ if (iVar7 == 0) {
 - Treated as part of core resources (loaded with chitin resources)
 - No type filtering - accepts any resource type stored in ERF container
 
-**Note**: ✅ **VERIFIED** - `patch.erf` is **NOT found in module loading code** (`FUN_004094a0` / `FUN_004096b0`).
-
-**Evidence**:
-
-- Confirmed via codebase analysis: patch.erf is loaded separately in global resource initialization
-- reone codebase shows `loadGlobalResources()` loads patch.erf via `_resources.addERF(*patchPath)` (line 153-156)
-- Loading order in `loadGlobalResources()`: chitin.key → texture packs → music/sounds → LIP files → **patch.erf** → override directory
-- This confirms patch.erf is loaded during global initialization, not module loading
+**Note**: `patch.erf` is **NOT found in module loading code** (`FUN_004094a0` / `FUN_004096b0`) - TODO: Gain Certainty by going through ghidra mcp - Find patch.erf loading code by searching for string "patch.erf" in swkotor.exe, then trace the function that loads it to verify it is loaded separately during global resource initialization in resource manager setup code. Check cross-references from initialization functions.
 
 ## Summary
 
@@ -841,11 +901,11 @@ if (iVar7 == 0) {
      - **K1**: ❌ NOT supported - Only top-level override files are loaded (`FUN_0040f200` calls `FUN_005e6640` with `param_5=0`)
      - **K2**: ✅ Supported - Subfolders ARE searched, but **root override files have priority** (`FUN_00410d20` lines 158-200)
 
-6. **Resource types**: ✅ Engine loads verified resource types from modules (see "Resource Types Loaded from Modules" section)
-   - Container format allows any resource type ID to be stored
-   - Engine resource manager only loads resource types that have verified handlers calling `FUN_004074d0`/`FUN_004075a0`
-   - **TPC/TGA ARE loaded from modules** - Verified handlers exist
-   - **NSS/TLK are NOT loaded from modules** - No handlers or handlers bypass resource system
+6. **Resource types**: ✅ Engine accepts ANY resource type in modules (no filtering)
+   - Container format allows any resource type ID
+   - Engine resource manager loads any type stored in containers
+   - **TPC/TGA CAN be containerized** - Engine loads these from modules
+   - Engine behavior: Accepts any resource type ID stored in containers, regardless of container type
 
 7. **Valid file combinations**:
    - K1: `.mod` (override), `.rim`, `.rim` + `_s.rim`, `.rim` + `_a.rim`, `.rim` + `_adx.rim`, `.rim` + `_a.rim` + `_adx.rim`
