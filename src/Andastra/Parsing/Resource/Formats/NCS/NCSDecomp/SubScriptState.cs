@@ -709,7 +709,11 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             else
             {
                 Node dest = this.nodedata.GetDestination(node);
-                AIf aif = new AIf(this.SafeGetPos(node), this.SafeGetPos(dest) - 6, this.RemoveLastExp(false));
+                // For JZ instructions, try to get conditional expression (matching non-JZ case behavior)
+                // Use forceOneOnly=true to match non-JZ conditional jump handling at line 595
+                ScriptNode.AExpression condExp = this.RemoveLastExp(true);
+                // If we got a conditional expression, use it; otherwise fall back to the expression as-is
+                AIf aif = new AIf(this.SafeGetPos(node), this.SafeGetPos(dest) - 6, condExp);
                 this.current.AddChild(aif);
                 this.current = aif;
             }
