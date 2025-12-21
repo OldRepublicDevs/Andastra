@@ -971,7 +971,7 @@ namespace HolocronToolset.Windows
                             $"Failed to open file ({errorType})",
                             errorMessage,
                             ButtonEnum.Ok,
-                            Icon.Error);
+                            MsBox.Avalonia.Enums.Icon.Error);
                         await errorBox.ShowAsync();
                     }
                 }

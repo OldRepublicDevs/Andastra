@@ -12,12 +12,12 @@ namespace Andastra.Runtime.MonoGame.Rendering
 {
     /// <summary>
     /// Resource preloader for predictive asset loading.
-    /// 
+    ///
     /// Preloads assets likely to be needed soon based on:
     /// - Player position and movement direction
     /// - Scene transitions
     /// - Visibility predictions
-    /// 
+    ///
     /// Features:
     /// - Predictive loading
     /// - Priority-based loading
@@ -131,7 +131,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
                 };
 
                 _preloadQueue.Add(task);
-                
+
                 // Sort by priority (highest first) to ensure high-priority resources are loaded first
                 _preloadQueue.Sort((a, b) => b.Priority.CompareTo(a.Priority));
             }
@@ -147,13 +147,13 @@ namespace Andastra.Runtime.MonoGame.Rendering
         /// - Prioritizes resources in the direction of movement for predictive loading
         /// - Integrates with appearance.2da for creature model/texture resolution
         /// - Handles all entity types (Creatures, Placeables, Doors, etc.)
-        /// 
+        ///
         /// Based on original engine resource loading behavior (reverse engineered via Ghidra):
         /// - swkotor2.exe: CSWCCreature::LoadModel() @ 0x007c82fc loads models on-demand when entities are created/rendered
         /// - swkotor2.exe: Model loading occurs via LoadModel functions (CSWCCreature::LoadModel, CSWCVisualEffect::LoadModel, etc.)
         /// - nwmain.exe: CExoEncapsulatedFile::ReadResource() @ 0x14018ca10 reads resources from encapsulated files on-demand
         /// - Original engines load resources synchronously when needed (no explicit preloading system)
-        /// 
+        ///
         /// This implementation adds predictive preloading as an optimization:
         /// - Preloads resources before they're needed based on camera position and direction
         /// - Reduces frame-time stalls when entities come into view
@@ -375,13 +375,13 @@ namespace Andastra.Runtime.MonoGame.Rendering
             // Try to resolve appearance data using engine-specific GameDataProvider
             // For Odyssey: OdysseyGameDataProvider wraps GameDataManager which has GetAppearance method
             // For other engines: Similar appearance data structures exist but may use different access patterns
-            
+
             // Use reflection to access engine-specific methods if available
             // This allows us to work with engine-specific implementations without hardcoding engine types
-            
+
             // Try Odyssey-specific: OdysseyGameDataProvider has GameDataManager property
             System.Type providerType = _gameDataProvider.GetType();
-            
+
             // Check if it's OdysseyGameDataProvider and has GameDataManager
             if (providerType.Name == "OdysseyGameDataProvider")
             {
@@ -400,7 +400,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
                             {
                                 // Extract ModelA, ModelB, TexA, TexB using reflection
                                 System.Type appearanceDataType = appearanceData.GetType();
-                                
+
                                 // Get ModelA
                                 System.Reflection.PropertyInfo modelAProp = appearanceDataType.GetProperty("ModelA");
                                 if (modelAProp != null)
@@ -416,7 +416,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
                                         });
                                     }
                                 }
-                                
+
                                 // Get ModelB
                                 System.Reflection.PropertyInfo modelBProp = appearanceDataType.GetProperty("ModelB");
                                 if (modelBProp != null)
@@ -432,7 +432,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
                                         });
                                     }
                                 }
-                                
+
                                 // Get TexA
                                 System.Reflection.PropertyInfo texAProp = appearanceDataType.GetProperty("TexA");
                                 if (texAProp != null)
@@ -448,7 +448,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
                                         });
                                     }
                                 }
-                                
+
                                 // Get TexB
                                 System.Reflection.PropertyInfo texBProp = appearanceDataType.GetProperty("TexB");
                                 if (texBProp != null)
@@ -469,7 +469,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
                     }
                 }
             }
-            
+
             // For other engines (Aurora, Eclipse, Infinity), similar reflection-based approach can be used
             // Each engine's GameDataProvider implementation would need to expose appearance data access
             // This framework provides the structure for engine-specific appearance resolution

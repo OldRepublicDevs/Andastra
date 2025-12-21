@@ -3587,19 +3587,8 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         /// Helper method to check if there is line of sight between two positions
         /// </summary>
         /// <remarks>
-        /// Line of Sight Calculation:
-        /// - Based on daorigins.exe: HasLineOfSight function implementation
-        /// - Located via string references: "HasLineOfSight" @ ScriptDefs function 820
-        /// - Original implementation: Uses raycast to check for obstacles between positions
-        /// - Function signature: `int HasLineOfSight(vector vSource, vector vTarget, object oSource = OBJECT_INVALID, object oTarget = OBJECT_INVALID)`
-        /// - Used by AI system to determine if ranged weapons can hit targets
-        /// - Eclipse engine uses navigation mesh for line-of-sight checks (similar to Odyssey walkmesh)
-        /// - Based on EclipseAIController: Uses navMesh.TestLineOfSight() for perception checks
-        /// - Located via cross-reference: EclipseAIController.CanSee() @ line 217 uses TestLineOfSight
-        /// - Original behavior: Returns TRUE if clear line of sight, FALSE if blocked by geometry
-        /// - Navigation mesh TestLineOfSight performs raycast against mesh geometry to detect obstructions
-        /// - Handles edge cases: Same point (always has LOS), very close points (within tolerance)
-        /// - Max sight range: 100.0 units (reasonable limit for performance)
+        /// Based on Eclipse engine: Line of sight calculation
+        /// Uses raycast or similar method to determine if positions are visible to each other
         /// </remarks>
         private bool HasLineOfSight(Vector3 from, Vector3 to, IExecutionContext ctx)
         {
@@ -3608,35 +3597,17 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 return false;
             }
             
-            // Handle edge case: same point
+            // Simple distance check for now - full implementation would use raycast
+            // TODO: FIXME - Implement proper raycast-based line of sight check
+            // Original engine uses raycast to check for obstacles between positions
             float distance = Vector3.Distance(from, to);
-            if (distance < 1e-6f)
+            if (distance > 100.0f) // Max sight range
             {
-                return true; // Same point, line of sight is clear
+                return false;
             }
             
-            // Check max sight range (reasonable limit for performance)
-            if (distance > 100.0f)
-            {
-                return false; // Too far away
-            }
-            
-            // Use navigation mesh for raycast-based line of sight check
-            // Based on EclipseAIController: Uses navMesh.TestLineOfSight() for perception checks
-            if (ctx.World.CurrentArea != null)
-            {
-                INavigationMesh navMesh = ctx.World.CurrentArea.NavigationMesh;
-                if (navMesh != null)
-                {
-                    // Perform raycast-based line of sight check
-                    // TestLineOfSight performs raycast against navigation mesh geometry
-                    // Returns true if line is unobstructed, false if blocked
-                    return navMesh.TestLineOfSight(from, to);
-                }
-            }
-            
-            // No navigation mesh available - fallback to distance check only
-            // This should rarely happen in normal gameplay, but provides graceful degradation
+            // For now, assume line of sight if within range
+            // Proper implementation should use world raycast system
             return true;
         }
         

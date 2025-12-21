@@ -166,15 +166,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
             get
             {
                 // BAB + STR modifier for melee (or DEX for ranged/finesse) + effect bonuses
-                int effectBonus = _effectAttackBonus;
-                
-                // Query EffectSystem for attack bonuses from active effects
-                if (Owner != null && Owner.World != null && Owner.World.EffectSystem != null)
-                {
-                    effectBonus += Owner.World.EffectSystem.GetAttackBonus(Owner);
-                }
-                
-                return _baseAttackBonus + GetAbilityModifier(Ability.Strength) + effectBonus;
+                // Effect bonuses are tracked via AddEffectAttackBonus/RemoveEffectAttackBonus called by EffectSystem
+                return _baseAttackBonus + GetAbilityModifier(Ability.Strength) + _effectAttackBonus;
             }
         }
 
@@ -183,20 +176,13 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
             get
             {
                 // Defense = 10 + DEX mod + Armor + Natural + Deflection + Effect bonuses
-                int effectBonus = _effectACBonus;
-                
-                // Query EffectSystem for AC bonuses from active effects
-                if (Owner != null && Owner.World != null && Owner.World.EffectSystem != null)
-                {
-                    effectBonus += Owner.World.EffectSystem.GetACBonus(Owner);
-                }
-                
+                // Effect bonuses are tracked via AddEffectACBonus/RemoveEffectACBonus called by EffectSystem
                 return 10 
                     + GetAbilityModifier(Ability.Dexterity)
                     + _armorBonus
                     + _naturalArmor
                     + _deflectionBonus
-                    + effectBonus;
+                    + _effectACBonus;
             }
         }
 

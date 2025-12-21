@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Andastra.Runtime.Content.Interfaces;
-using Andastra.Runtime.MonoGame.Interfaces;
 using Andastra.Runtime.MonoGame.Performance;
 
 namespace Andastra.Runtime.MonoGame.Rendering
@@ -32,7 +31,6 @@ namespace Andastra.Runtime.MonoGame.Rendering
         private readonly Telemetry _telemetry;
         private readonly RenderStatistics _statistics;
         private readonly RenderSettings _settings;
-        private readonly ILightingSystem _lightingSystem;
 
         /// <summary>
         /// Initializes a new render pipeline.
@@ -40,13 +38,11 @@ namespace Andastra.Runtime.MonoGame.Rendering
         /// <param name="graphicsDevice">Graphics device for rendering operations.</param>
         /// <param name="resourceProvider">Resource provider for asset loading.</param>
         /// <param name="settings">Optional render settings. If null, post-processing checks will default to false.</param>
-        /// <param name="lightingSystem">Optional lighting system. If provided, enables shadow pass detection for shadow-casting lights.</param>
         /// <exception cref="ArgumentNullException">Thrown if graphicsDevice or resourceProvider is null.</exception>
         public RenderPipeline(
             GraphicsDevice graphicsDevice,
             IGameResourceProvider resourceProvider,
-            RenderSettings settings = null,
-            ILightingSystem lightingSystem = null)
+            RenderSettings settings = null)
         {
             if (graphicsDevice == null)
             {
@@ -67,7 +63,6 @@ namespace Andastra.Runtime.MonoGame.Rendering
             _telemetry = new Telemetry();
             _statistics = new RenderStatistics();
             _settings = settings;
-            _lightingSystem = lightingSystem;
         }
 
         /// <summary>
@@ -172,8 +167,9 @@ namespace Andastra.Runtime.MonoGame.Rendering
             // 2. Shadow Pass (if we have shadow-casting lights)
             // Shadow maps must be rendered before lighting calculations
             // This is a modern enhancement - original KOTOR used simple depth testing
-            // Check if we need shadow rendering by querying the lighting system for active lights that cast shadows
-            bool hasShadowCastingLights = CheckForShadowCastingLights();
+            // Check if we need shadow rendering (this would be determined by light setup)
+            // For now, we create the pass structure - actual shadow rendering logic would go here
+            bool hasShadowCastingLights = false; // TODO: Check light system for shadow-casting lights
             if (hasShadowCastingLights && queueCounts.ContainsKey(RenderQueue.QueueType.Opaque))
             {
                 FrameGraph.FrameGraphNode shadowPassNode = new FrameGraph.FrameGraphNode("ShadowPass");
@@ -644,47 +640,6 @@ namespace Andastra.Runtime.MonoGame.Rendering
             }
 
             // No post-processing effects are enabled
-            return false;
-        }
-
-        /// <summary>
-        /// Checks if there are any shadow-casting lights in the lighting system.
-        /// 
-        /// Queries the lighting system for all active lights and checks if any of them
-        /// have shadow casting enabled. A light casts shadows if:
-        /// - The light is enabled
-        /// - The light has CastShadows set to true
-        /// 
-        /// Based on IDynamicLight.CastShadows property.
-        /// If no lighting system is provided, returns false (no shadow casting).
-        /// </summary>
-        /// <returns>True if at least one active light casts shadows, false otherwise.</returns>
-        private bool CheckForShadowCastingLights()
-        {
-            // If no lighting system is available, there are no shadow-casting lights
-            if (_lightingSystem == null)
-            {
-                return false;
-            }
-
-            // Get all active lights from the lighting system
-            IDynamicLight[] activeLights = _lightingSystem.GetActiveLights();
-            if (activeLights == null || activeLights.Length == 0)
-            {
-                return false;
-            }
-
-            // Check if any active light has shadow casting enabled
-            foreach (IDynamicLight light in activeLights)
-            {
-                // A light casts shadows if it is enabled and has CastShadows set to true
-                if (light != null && light.Enabled && light.CastShadows)
-                {
-                    return true;
-                }
-            }
-
-            // No shadow-casting lights found
             return false;
         }
 

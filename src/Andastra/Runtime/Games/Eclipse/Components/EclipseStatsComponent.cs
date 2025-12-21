@@ -245,25 +245,8 @@ namespace Andastra.Runtime.Games.Eclipse.Components
             get
             {
                 // BAB + STR modifier for melee (or DEX for ranged/finesse) + effect bonuses
-                int effectBonus = _effectAttackBonus;
-                
-                // Query EffectSystem for additional attack bonuses if available
-                if (Owner != null && Owner.World != null && Owner.World.EffectSystem != null)
-                {
-                    foreach (ActiveEffect activeEffect in Owner.World.EffectSystem.GetEffects(Owner))
-                    {
-                        if (activeEffect.Effect.Type == EffectType.AttackIncrease)
-                        {
-                            effectBonus += activeEffect.Effect.Amount;
-                        }
-                        else if (activeEffect.Effect.Type == EffectType.AttackDecrease)
-                        {
-                            effectBonus -= activeEffect.Effect.Amount;
-                        }
-                    }
-                }
-                
-                return _baseAttackBonus + GetAbilityModifier(Ability.Strength) + effectBonus;
+                // Effect bonuses are tracked via AddEffectAttackBonus/RemoveEffectAttackBonus called by EffectSystem
+                return _baseAttackBonus + GetAbilityModifier(Ability.Strength) + _effectAttackBonus;
             }
         }
 
@@ -281,28 +264,12 @@ namespace Andastra.Runtime.Games.Eclipse.Components
             {
                 // Defense = base + DEX mod + Armor + Natural + Deflection + Effect bonuses
                 // Eclipse uses Defense instead of AC, but calculation is similar
-                int effectBonus = _effectACBonus;
-                
-                // Query EffectSystem for additional AC bonuses if available
-                if (Owner != null && Owner.World != null && Owner.World.EffectSystem != null)
-                {
-                    foreach (ActiveEffect activeEffect in Owner.World.EffectSystem.GetEffects(Owner))
-                    {
-                        if (activeEffect.Effect.Type == EffectType.ACIncrease)
-                        {
-                            effectBonus += activeEffect.Effect.Amount;
-                        }
-                        else if (activeEffect.Effect.Type == EffectType.ACDecrease)
-                        {
-                            effectBonus -= activeEffect.Effect.Amount;
-                        }
-                    }
-                }
+                // Effect bonuses are tracked via AddEffectACBonus/RemoveEffectACBonus called by EffectSystem
                 
                 // Use Defense if set, otherwise calculate from components
                 if (_defense > 10)
                 {
-                    return _defense + effectBonus;
+                    return _defense + _effectACBonus;
                 }
                 
                 // Calculate Defense similar to AC
@@ -311,7 +278,7 @@ namespace Andastra.Runtime.Games.Eclipse.Components
                     + _armorBonus
                     + _naturalArmor
                     + _deflectionBonus
-                    + effectBonus;
+                    + _effectACBonus;
             }
         }
 

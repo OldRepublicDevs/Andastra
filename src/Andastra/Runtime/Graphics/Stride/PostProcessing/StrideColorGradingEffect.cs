@@ -1,6 +1,8 @@
 using System;
+using System.Numerics;
 using Stride.Graphics;
 using Stride.Rendering;
+using Stride.Core.Mathematics;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.PostProcessing;
 using Andastra.Runtime.Graphics.Common.Rendering;
@@ -27,10 +29,14 @@ namespace Andastra.Runtime.Stride.PostProcessing
         private EffectInstance _colorGradingEffect;
         private Texture _lutTexture;
         private Texture _temporaryTexture;
+        private int _lutSize; // Size of the 3D LUT (16 or 32)
+        private bool _effectInitialized;
 
         public StrideColorGradingEffect(GraphicsDevice graphicsDevice)
         {
             _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
+            _lutSize = 0;
+            _effectInitialized = false;
         }
 
         #region BaseColorGradingEffect Implementation
@@ -67,6 +73,35 @@ namespace Andastra.Runtime.Stride.PostProcessing
             if (lutTexture.Dimension != TextureDimension.Texture2D)
             {
                 throw new ArgumentException("LUT must be a 2D texture (flattened 3D)", nameof(lutTexture));
+            }
+
+            // Determine LUT size from texture dimensions
+            // 16x16x16 LUT: 256x16 (16 slices of 16x16)
+            // 32x32x32 LUT: 1024x32 (32 slices of 32x32)
+            int width = lutTexture.Width;
+            int height = lutTexture.Height;
+            
+            if (width == 256 && height == 16)
+            {
+                _lutSize = 16;
+            }
+            else if (width == 1024 && height == 32)
+            {
+                _lutSize = 32;
+            }
+            else
+            {
+                // Try to infer from dimensions
+                // For a 3D LUT flattened to 2D: width = size^2, height = size
+                int inferredSize = (int)Math.Sqrt(width);
+                if (inferredSize * inferredSize == width && inferredSize == height)
+                {
+                    _lutSize = inferredSize;
+                }
+                else
+                {
+                    throw new ArgumentException($"Unsupported LUT dimensions: {width}x{height}. Expected 256x16 (16^3) or 1024x32 (32^3)", nameof(lutTexture));
+                }
             }
 
             _lutTexture = lutTexture;
@@ -113,36 +148,4 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 _temporaryTexture.Width == width &&
                 _temporaryTexture.Height == height)
             {
-                return;
-            }
-
-            _temporaryTexture?.Dispose();
-
-            var desc = TextureDescription.New2D(width, height, 1, format,
-                TextureFlags.ShaderResource | TextureFlags.RenderTarget);
-
-            _temporaryTexture = Texture.New(_graphicsDevice, desc);
-        }
-
-        private void ExecuteColorGrading(Texture input, Texture output)
-        {
-            // Color Grading Shader Execution:
-            // - Input: LDR color buffer [0, 1]
-            // - Parameters: contrast, saturation, LUT texture, LUT strength
-            // - Process: Adjust contrast/saturation -> Sample LUT -> Blend
-            // - Output: Color-graded LDR buffer
-
-            // Color grading shader:
-            // 1. Apply contrast: color = (color - 0.5) * contrast + 0.5
-            // 2. Apply saturation: lerp(gray, color, saturation)
-            // 3. Sample LUT: sample3D(lutTexture, color.rgb)
-            // 4. Blend: lerp(adjustedColor, lutColor, strength)
-
-            // Would use Stride's Effect system
-            // TODO: STUB - For now, placeholder implementation
-
-            Console.WriteLine($"[StrideColorGrading] Applying: contrast {_contrast:F2}, saturation {_saturation:F2}, LUT strength {_strength:F2}");
-        }
-    }
-}
-
+   

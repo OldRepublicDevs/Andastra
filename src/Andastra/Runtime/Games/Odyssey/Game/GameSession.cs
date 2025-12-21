@@ -236,7 +236,6 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             // Original implementation: Party members use TemplateResRef to load UTC templates from module archives
             // Use lazy template factory that retrieves module from ModuleLoader on demand
             // This allows factory to be created before module is loaded (required for constructor initialization order)
-            // After module loads, LoadModuleAsync will replace this with OdysseyEntityTemplateFactory for optimal performance
             IEntityTemplateFactory templateFactory = new Loading.LazyOdysseyEntityTemplateFactory(_moduleLoader.EntityFactory, _moduleLoader);
             _partySystem = new PartySystem(_world, templateFactory);
             _combatManager = new CombatManager(_world, _factionManager, _partySystem);
@@ -652,18 +651,9 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 _world.SetCurrentModule(module);
                 _moduleTransitionSystem?.SetCurrentModule(moduleName);
 
-                // Update party system with proper template factory now that module is loaded
-                // Based on swkotor2.exe: Template factory needs module for UTC template loading
-                // Located via string references: "TemplateResRef" @ 0x007bd00c
-                // Original implementation: EntityFactory.CreateCreatureFromTemplate requires module for resource access
-                // Replace lazy factory with direct factory for optimal performance (module is now available)
-                // The lazy factory was used during initialization when module wasn't available yet
-                Andastra.Parsing.Common.Module parsingModule = _moduleLoader.GetCurrentModule();
-                if (parsingModule != null && _partySystem != null)
-                {
-                    IEntityTemplateFactory directFactory = new Loading.OdysseyEntityTemplateFactory(_moduleLoader.EntityFactory, parsingModule);
-                    _partySystem.SetTemplateFactory(directFactory);
-                }
+                // Template factory is already set up in constructor using LazyOdysseyEntityTemplateFactory
+                // The lazy factory will automatically use the current module from ModuleLoader when needed
+                // No need to update it here - it will retrieve the module on-demand during template creation
 
                 // Set world's current area
                 if (!string.IsNullOrEmpty(module.EntryArea))

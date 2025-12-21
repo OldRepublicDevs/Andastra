@@ -1492,114 +1492,35 @@ namespace Andastra.Runtime.Games.Eclipse
 
                 GFFStruct root = gff.Root;
 
-                // Parse static objects from ARE file
+                // TODO: IMPLEMENT - Determine exact data structure location for static objects in ARE file
                 // Based on daorigins.exe/DragonAge2.exe: Static objects are embedded in area data
-                // Static objects are separate from entities (placeables, doors) - they are part of the area layout
+                // Potential locations:
+                // 1. Root-level list field (e.g., "StaticObjectList", "ObjectList", "GeometryList")
+                // 2. Nested struct (e.g., "AreaGeometry" -> "StaticObjects")
+                // 3. Referenced from LYT file (similar to how rooms are loaded)
                 // 
-                // ARE file structure for static objects (requires Ghidra verification):
-                // - Static objects are stored in a root-level GFFList field
-                // - Most likely field name: "StaticObjectList" (pattern similar to "WaypointList", "PlaceableList")
-                // - Alternative field names to verify: "ObjectList", "GeometryList", "StaticObjects"
-                // - Each static object struct contains:
-                //   * ModelName (String or ResRef): Model file reference (MDL format, same as rooms)
-                //   * Position: XPosition/YPosition/ZPosition (Single/float) or X/Y/Z (Single/float)
-                //   * Rotation: Rotation (Single/float, degrees) or Bearing (Single/float, degrees)
+                // Once the exact structure is determined, parse static objects similar to this pattern:
                 // 
-                // Function addresses (require Ghidra verification):
-                // - daorigins.exe: Static object loading from ARE file
-                // - DragonAge2.exe: Enhanced static object loading
-                // 
-                // Implementation attempts to load from most likely field name first,
-                // then falls back to alternative field names if the primary doesn't exist
+                // if (root.Exists("StaticObjectList"))
+                // {
+                //     GFFList staticObjectList = root.GetList("StaticObjectList");
+                //     foreach (GFFStruct staticObjectStruct in staticObjectList)
+                //     {
+                //         StaticObjectInfo staticObject = new StaticObjectInfo();
+                //         staticObject.ModelName = staticObjectStruct.GetString("ModelName") ?? string.Empty;
+                //         staticObject.Position = new Vector3(
+                //             staticObjectStruct.GetFloat("XPosition"),
+                //             staticObjectStruct.GetFloat("YPosition"),
+                //             staticObjectStruct.GetFloat("ZPosition")
+                //         );
+                //         staticObject.Rotation = staticObjectStruct.GetFloat("Rotation");
+                //         _staticObjects.Add(staticObject);
+                //     }
+                // }
+
+                // For now, initialize empty list until exact data structure is determined
+                // This ensures the rendering code can run without errors
                 _staticObjects = new List<StaticObjectInfo>();
-
-                // Try primary field name: "StaticObjectList" (most likely based on pattern from other lists)
-                if (root.Exists("StaticObjectList"))
-                {
-                    GFFList staticObjectList = root.GetList("StaticObjectList");
-                    if (staticObjectList != null)
-                    {
-                        foreach (GFFStruct staticObjectStruct in staticObjectList)
-                        {
-                            if (staticObjectStruct == null)
-                            {
-                                continue; // Skip null structs
-                            }
-
-                            StaticObjectInfo staticObject = ParseStaticObjectStruct(staticObjectStruct);
-                            if (staticObject != null)
-                            {
-                                _staticObjects.Add(staticObject);
-                            }
-                        }
-                    }
-                }
-                // Fallback to alternative field names if primary doesn't exist
-                else if (root.Exists("ObjectList"))
-                {
-                    GFFList objectList = root.GetList("ObjectList");
-                    if (objectList != null)
-                    {
-                        foreach (GFFStruct objectStruct in objectList)
-                        {
-                            if (objectStruct == null)
-                            {
-                                continue;
-                            }
-
-                            StaticObjectInfo staticObject = ParseStaticObjectStruct(objectStruct);
-                            if (staticObject != null)
-                            {
-                                _staticObjects.Add(staticObject);
-                            }
-                        }
-                    }
-                }
-                else if (root.Exists("GeometryList"))
-                {
-                    GFFList geometryList = root.GetList("GeometryList");
-                    if (geometryList != null)
-                    {
-                        foreach (GFFStruct geometryStruct in geometryList)
-                        {
-                            if (geometryStruct == null)
-                            {
-                                continue;
-                            }
-
-                            StaticObjectInfo staticObject = ParseStaticObjectStruct(geometryStruct);
-                            if (staticObject != null)
-                            {
-                                _staticObjects.Add(staticObject);
-                            }
-                        }
-                    }
-                }
-                // Try nested struct: "AreaGeometry" -> "StaticObjects"
-                else if (root.Exists("AreaGeometry"))
-                {
-                    GFFStruct areaGeometry = root.GetStruct("AreaGeometry");
-                    if (areaGeometry != null && areaGeometry.Exists("StaticObjects"))
-                    {
-                        GFFList staticObjectsList = areaGeometry.GetList("StaticObjects");
-                        if (staticObjectsList != null)
-                        {
-                            foreach (GFFStruct staticObjectStruct in staticObjectsList)
-                            {
-                                if (staticObjectStruct == null)
-                                {
-                                    continue;
-                                }
-
-                                StaticObjectInfo staticObject = ParseStaticObjectStruct(staticObjectStruct);
-                                if (staticObject != null)
-                                {
-                                    _staticObjects.Add(staticObject);
-                                }
-                            }
-                        }
-                    }
-                }
             }
             catch (Exception ex)
             {
@@ -1607,113 +1528,6 @@ namespace Andastra.Runtime.Games.Eclipse
                 System.Console.WriteLine($"[EclipseArea] Error loading static objects from area data: {ex.Message}");
                 _staticObjects = new List<StaticObjectInfo>();
             }
-        }
-
-        /// <summary>
-        /// Parses a single static object struct from GFF data.
-        /// </summary>
-        /// <param name="staticObjectStruct">GFF struct containing static object data.</param>
-        /// <returns>StaticObjectInfo instance, or null if parsing fails.</returns>
-        /// <remarks>
-        /// Parses static object fields from GFF struct:
-        /// - ModelName: String or ResRef field (tries "ModelName", "Model", "ResRef")
-        /// - Position: X/Y/Z coordinates (tries "XPosition"/"YPosition"/"ZPosition" or "X"/"Y"/"Z")
-        /// - Rotation: Rotation in degrees (tries "Rotation", "Bearing", or "Orientation")
-        /// 
-        /// Field name variations are attempted to handle different ARE file versions or formats.
-        /// Based on daorigins.exe/DragonAge2.exe: Static object struct field names
-        /// (exact field names require Ghidra verification for 1:1 parity).
-        /// </remarks>
-        private StaticObjectInfo ParseStaticObjectStruct(GFFStruct staticObjectStruct)
-        {
-            if (staticObjectStruct == null)
-            {
-                return null;
-            }
-
-            StaticObjectInfo staticObject = new StaticObjectInfo();
-
-            // Parse model name (tries multiple field name variations)
-            // Based on daorigins.exe/DragonAge2.exe: Model name field
-            if (staticObjectStruct.Exists("ModelName"))
-            {
-                staticObject.ModelName = staticObjectStruct.GetString("ModelName");
-            }
-            else if (staticObjectStruct.Exists("Model"))
-            {
-                staticObject.ModelName = staticObjectStruct.GetString("Model");
-            }
-            else if (staticObjectStruct.Exists("ResRef"))
-            {
-                // Try as ResRef first, fall back to string
-                ResRef resRef = staticObjectStruct.GetResRef("ResRef");
-                staticObject.ModelName = resRef != null && !resRef.IsBlank() ? resRef.ToString() : string.Empty;
-            }
-            else
-            {
-                // Model name is required - skip this static object if missing
-                return null;
-            }
-
-            // Validate model name is not empty
-            if (string.IsNullOrEmpty(staticObject.ModelName))
-            {
-                return null;
-            }
-
-            // Parse position (tries XPosition/YPosition/ZPosition first, then X/Y/Z)
-            // Based on daorigins.exe/DragonAge2.exe: Position fields
-            float xPos = 0.0f;
-            float yPos = 0.0f;
-            float zPos = 0.0f;
-            bool positionFound = false;
-
-            if (staticObjectStruct.Exists("XPosition") && staticObjectStruct.Exists("YPosition") && staticObjectStruct.Exists("ZPosition"))
-            {
-                xPos = staticObjectStruct.GetSingle("XPosition");
-                yPos = staticObjectStruct.GetSingle("YPosition");
-                zPos = staticObjectStruct.GetSingle("ZPosition");
-                positionFound = true;
-            }
-            else if (staticObjectStruct.Exists("X") && staticObjectStruct.Exists("Y") && staticObjectStruct.Exists("Z"))
-            {
-                xPos = staticObjectStruct.GetSingle("X");
-                yPos = staticObjectStruct.GetSingle("Y");
-                zPos = staticObjectStruct.GetSingle("Z");
-                positionFound = true;
-            }
-
-            if (positionFound)
-            {
-                staticObject.Position = new Vector3(xPos, yPos, zPos);
-            }
-            else
-            {
-                // Position defaults to zero if not found
-                staticObject.Position = Vector3.Zero;
-            }
-
-            // Parse rotation (tries Rotation, Bearing, or Orientation field)
-            // Based on daorigins.exe/DragonAge2.exe: Rotation field (degrees)
-            if (staticObjectStruct.Exists("Rotation"))
-            {
-                staticObject.Rotation = staticObjectStruct.GetSingle("Rotation");
-            }
-            else if (staticObjectStruct.Exists("Bearing"))
-            {
-                staticObject.Rotation = staticObjectStruct.GetSingle("Bearing");
-            }
-            else if (staticObjectStruct.Exists("Orientation"))
-            {
-                staticObject.Rotation = staticObjectStruct.GetSingle("Orientation");
-            }
-            else
-            {
-                // Rotation defaults to zero if not found
-                staticObject.Rotation = 0.0f;
-            }
-
-            return staticObject;
         }
 
         /// <summary>

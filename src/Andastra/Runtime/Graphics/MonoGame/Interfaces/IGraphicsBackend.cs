@@ -301,7 +301,6 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         R16_UInt,
         R16_SInt,
         R16G16_Float,
-        R16G16_UNorm,
         R16G16_UInt,
         R16G16_SInt,
         R16G16B16A16_Float,

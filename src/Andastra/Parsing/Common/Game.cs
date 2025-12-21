@@ -2,7 +2,7 @@ namespace Andastra.Parsing.Common
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/misc.py:250-285
     // Original: class Game(IntEnum):
-    // Extended to support all BioWare engine games: Odyssey (KOTOR), Aurora (NWN), Eclipse (DA/ME)
+    // Extended to support all BioWare engine games: Odyssey (KOTOR), Aurora (NWN), Eclipse (DA/ME), Infinity (BG/IWD/PST)
     // This enum is kept in Andastra.Parsing for backward compatibility with patcher tools (HoloPatcher.NET, HolocronToolset, NCSDecomp, KotorDiff)
     /// <summary>
     /// Represents which BioWare engine game / platform variant.
@@ -33,11 +33,15 @@ namespace Andastra.Parsing.Common
         NEVERWINTER_NIGHTS_2 = NWN2,
 
         // Infinity Engine
-        BG = 40,
-        BALDURS_GATE = BG,
-        IWD = 41,
+        BG1 = 40,
+        BALDURS_GATE = BG1,
+        BG2 = 41,
+        BALDURS_GATE_2 = BG2,
+        IWD = 42,
         ICEWIND_DALE = IWD,
-        PST = 42,
+        IWD2 = 43,
+        ICEWIND_DALE_2 = IWD2,
+        PST = 44,
         PLANESCAPE_TORMENT = PST
     }
 
@@ -135,12 +139,34 @@ namespace Andastra.Parsing.Common
         // Infinity Engine
         public static bool IsBaldursGate(this Game game)
         {
-            return game == Game.BG || game == Game.BALDURS_GATE;
+            return game == Game.BG1 || game == Game.BALDURS_GATE ||
+                   game == Game.BG2 || game == Game.BALDURS_GATE_2;
+        }
+
+        public static bool IsBaldursGate1(this Game game)
+        {
+            return game == Game.BG1 || game == Game.BALDURS_GATE;
+        }
+
+        public static bool IsBaldursGate2(this Game game)
+        {
+            return game == Game.BG2 || game == Game.BALDURS_GATE_2;
         }
 
         public static bool IsIcewindDale(this Game game)
         {
+            return game == Game.IWD || game == Game.ICEWIND_DALE ||
+                   game == Game.IWD2 || game == Game.ICEWIND_DALE_2;
+        }
+
+        public static bool IsIcewindDale1(this Game game)
+        {
             return game == Game.IWD || game == Game.ICEWIND_DALE;
+        }
+
+        public static bool IsIcewindDale2(this Game game)
+        {
+            return game == Game.IWD2 || game == Game.ICEWIND_DALE_2;
         }
 
         public static bool IsPlanescapeTorment(this Game game)
@@ -150,7 +176,7 @@ namespace Andastra.Parsing.Common
 
         public static bool IsInfinity(this Game game)
         {
-            return game >= Game.BG && game <= Game.PLANESCAPE_TORMENT;
+            return game >= Game.BG1 && game <= Game.PLANESCAPE_TORMENT;
         }
     }
 }

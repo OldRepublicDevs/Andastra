@@ -392,8 +392,8 @@ namespace HolocronToolset.Editors
 
             // Matching PyKotor implementation: required: list[str] = [HTInstallation.TwoDA_DOORS, HTInstallation.TwoDA_FACTIONS]
             // Load required 2da files if they have not been loaded already
-            string[] required = { HTInstallation.TwoDADoors, HTInstallation.TwoDAFactions };
-            installation.HtBatchCache2DA(new List<string>(required));
+            List<string> required = new List<string> { HTInstallation.TwoDADoors, HTInstallation.TwoDAFactions };
+            installation.HtBatchCache2DA(required);
 
             // Matching PyKotor implementation: appearances: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_DOORS)
             TwoDA appearances = installation.HtGetCache2DA(HTInstallation.TwoDADoors);

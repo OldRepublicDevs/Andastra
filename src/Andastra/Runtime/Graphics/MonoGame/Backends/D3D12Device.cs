@@ -517,18 +517,106 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ObjectDisposedException(nameof(D3D12Device));
             }
 
-            // TODO: IMPLEMENT - Create D3D12 compute pipeline state object
-            // - Convert ComputePipelineDesc to D3D12_COMPUTE_PIPELINE_STATE_DESC
-            // - Set compute shader bytecode
-            // - Convert RootSignature from BindingLayouts
-            // - Call ID3D12Device::CreateComputePipelineState
-            // - Wrap in D3D12ComputePipeline and return
+            // Validate compute shader is provided
+            if (desc.ComputeShader == null)
+            {
+                throw new ArgumentException("Compute shader must be provided", nameof(desc));
+            }
 
-            IntPtr handle = new IntPtr(_nextResourceHandle++);
-            var pipeline = new D3D12ComputePipeline(handle, desc, IntPtr.Zero, IntPtr.Zero, _device);
-            _resources[handle] = pipeline;
+            // Create D3D12 compute pipeline state object
+            // VTable index 44 for ID3D12Device::CreateComputePipelineState
+            // Based on DirectX 12 Compute Pipeline State: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createcomputepipelinestate
 
-            return pipeline;
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                // On non-Windows platforms, return a pipeline with zero handles
+                IntPtr handle = new IntPtr(_nextResourceHandle++);
+                var pipeline = new D3D12ComputePipeline(handle, desc, IntPtr.Zero, IntPtr.Zero, _device);
+                _resources[handle] = pipeline;
+                return pipeline;
+            }
+
+            IntPtr rootSignature = IntPtr.Zero;
+            IntPtr pipelineState = IntPtr.Zero;
+
+            try
+            {
+                // Step 1: Get or create root signature from binding layouts
+                if (desc.BindingLayouts != null && desc.BindingLayouts.Length > 0)
+                {
+                    // Get root signature from first binding layout (compute pipelines typically use one root signature)
+                    // In a full implementation, multiple root signatures would be combined or selected
+                    var firstLayout = desc.BindingLayouts[0] as D3D12BindingLayout;
+                    if (firstLayout != null)
+                    {
+                        // D3D12BindingLayout stores root signature internally, access via GetRootSignature()
+                        rootSignature = firstLayout.GetRootSignature();
+                    }
+                }
+
+                // Step 2: Convert ComputePipelineDesc to D3D12_COMPUTE_PIPELINE_STATE_DESC
+                var pipelineDesc = ConvertComputePipelineDescToD3D12(desc, rootSignature);
+
+                // Step 3: Create the pipeline state object
+                IntPtr pipelineStatePtr = Marshal.AllocHGlobal(IntPtr.Size);
+                try
+                {
+                    Guid iidPipelineState = IID_ID3D12PipelineState;
+                    int hr = CallCreateComputePipelineState(_device, ref pipelineDesc, ref iidPipelineState, pipelineStatePtr);
+                    if (hr < 0)
+                    {
+                        throw new InvalidOperationException($"CreateComputePipelineState failed with HRESULT 0x{hr:X8}");
+                    }
+
+                    pipelineState = Marshal.ReadIntPtr(pipelineStatePtr);
+                    if (pipelineState == IntPtr.Zero)
+                    {
+                        throw new InvalidOperationException("Pipeline state pointer is null");
+                    }
+                }
+                finally
+                {
+                    // Free marshalled structures
+                    FreeComputePipelineStateDesc(ref pipelineDesc);
+                    Marshal.FreeHGlobal(pipelineStatePtr);
+                }
+
+                IntPtr handle = new IntPtr(_nextResourceHandle++);
+                var pipeline = new D3D12ComputePipeline(handle, desc, pipelineState, rootSignature, _device);
+                _resources[handle] = pipeline;
+
+                return pipeline;
+            }
+            catch (Exception ex)
+            {
+                // Clean up on failure - release any successfully created COM objects
+                if (pipelineState != IntPtr.Zero)
+                {
+                    try
+                    {
+                        ReleaseComObject(pipelineState);
+                    }
+                    catch (Exception releaseEx)
+                    {
+                        // Log error but continue cleanup
+                        Console.WriteLine($"[D3D12Device] Error releasing pipeline state in error handler: {releaseEx.Message}");
+                    }
+                }
+
+                // Note: rootSignature is passed to the pipeline constructor, so it will be released by the pipeline's Dispose()
+                // Root signatures are typically shared and managed by the binding layout, not the pipeline
+                // If rootSignature needs to be released here (when not passed to pipeline), it should be released above
+                // Currently rootSignature is typically owned by D3D12BindingLayout and should not be released here
+
+                // Return pipeline with zero handles on failure (allows graceful degradation)
+                IntPtr handle = new IntPtr(_nextResourceHandle++);
+                var pipeline = new D3D12ComputePipeline(handle, desc, IntPtr.Zero, rootSignature, _device);
+                _resources[handle] = pipeline;
+                
+                Console.WriteLine($"[D3D12Device] WARNING: Failed to create compute pipeline state: {ex.Message}");
+                return pipeline;
+            }
         }
 
         public IFramebuffer CreateFramebuffer(FramebufferDesc desc)
@@ -2427,6 +2515,20 @@ namespace Andastra.Runtime.MonoGame.Backends
         }
 
         /// <summary>
+        /// D3D12_COMPUTE_PIPELINE_STATE_DESC structure for compute pipeline creation.
+        /// Based on DirectX 12 Compute Pipeline State: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_compute_pipeline_state_desc
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_COMPUTE_PIPELINE_STATE_DESC
+        {
+            public IntPtr pRootSignature; // ID3D12RootSignature*
+            public D3D12_SHADER_BYTECODE CS; // Compute shader bytecode
+            public uint NodeMask; // UINT
+            public D3D12_CACHED_PIPELINE_STATE CachedPSO; // Cached pipeline state (optional)
+            public uint Flags; // D3D12_PIPELINE_STATE_FLAGS
+        }
+
+        /// <summary>
         /// D3D12_STREAM_OUTPUT_DESC structure for stream output.
         /// </summary>
         [StructLayout(LayoutKind.Sequential)]
@@ -2807,6 +2909,9 @@ namespace Andastra.Runtime.MonoGame.Backends
         private delegate int CreateGraphicsPipelineStateDelegate(IntPtr device, IntPtr pDesc, ref Guid riid, IntPtr ppPipelineState);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int CreateComputePipelineStateDelegate(IntPtr device, IntPtr pDesc, ref Guid riid, IntPtr ppPipelineState);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate int CreateRootSignatureDelegate(IntPtr device, IntPtr pBlobWithRootSignature, IntPtr blobLengthInBytes, ref Guid riid, IntPtr ppvRootSignature);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
@@ -3125,6 +3230,54 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 // Note: We don't free pDescPtr here because the structure contains pointers to other allocated memory
                 // that will be freed by FreeGraphicsPipelineStateDesc
+            }
+        }
+
+        /// <summary>
+        /// Calls ID3D12Device::CreateComputePipelineState through COM vtable.
+        /// VTable index 44 for ID3D12Device.
+        /// Based on DirectX 12 Compute Pipeline State: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createcomputepipelinestate
+        /// </summary>
+        private unsafe int CallCreateComputePipelineState(IntPtr device, ref D3D12_COMPUTE_PIPELINE_STATE_DESC pDesc, ref Guid riid, IntPtr ppPipelineState)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return unchecked((int)0x80004001); // E_NOTIMPL - Not implemented on this platform
+            }
+
+            if (device == IntPtr.Zero || ppPipelineState == IntPtr.Zero)
+            {
+                return unchecked((int)0x80070057); // E_INVALIDARG
+            }
+
+            // Get vtable pointer (first field of COM object)
+            IntPtr* vtable = *(IntPtr**)device;
+            // CreateComputePipelineState is at index 44 in ID3D12Device vtable
+            IntPtr methodPtr = vtable[44];
+
+            if (methodPtr == IntPtr.Zero)
+            {
+                return unchecked((int)0x80004002); // E_NOINTERFACE
+            }
+
+            // Marshal structure to unmanaged memory
+            int descSize = Marshal.SizeOf(typeof(D3D12_COMPUTE_PIPELINE_STATE_DESC));
+            IntPtr pDescPtr = Marshal.AllocHGlobal(descSize);
+            try
+            {
+                Marshal.StructureToPtr(pDesc, pDescPtr, false);
+
+                // Create delegate from function pointer (C# 7.3 compatible)
+                CreateComputePipelineStateDelegate createComputePipelineState =
+                    (CreateComputePipelineStateDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CreateComputePipelineStateDelegate));
+
+                return createComputePipelineState(device, pDescPtr, ref riid, ppPipelineState);
+            }
+            finally
+            {
+                // Note: We don't free pDescPtr here because the structure contains pointers to other allocated memory
+                // that will be freed by FreeComputePipelineStateDesc
             }
         }
 
@@ -4324,6 +4477,73 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
         }
 
+        /// <summary>
+        /// Converts IShader to D3D12_SHADER_BYTECODE structure.
+        /// Allocates unmanaged memory for shader bytecode.
+        /// Based on DirectX 12 Shader Bytecode: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_shader_bytecode
+        /// </summary>
+        private D3D12_SHADER_BYTECODE GetShaderBytecode(IShader shader)
+        {
+            if (shader == null || shader.Desc.Bytecode == null || shader.Desc.Bytecode.Length == 0)
+            {
+                return new D3D12_SHADER_BYTECODE
+                {
+                    pShaderBytecode = IntPtr.Zero,
+                    BytecodeLength = 0
+                };
+            }
+
+            // Allocate unmanaged memory for shader bytecode
+            IntPtr bytecodePtr = Marshal.AllocHGlobal(shader.Desc.Bytecode.Length);
+            Marshal.Copy(shader.Desc.Bytecode, 0, bytecodePtr, shader.Desc.Bytecode.Length);
+
+            return new D3D12_SHADER_BYTECODE
+            {
+                pShaderBytecode = bytecodePtr,
+                BytecodeLength = (ulong)shader.Desc.Bytecode.Length
+            };
+        }
+
+        /// <summary>
+        /// Converts ComputePipelineDesc to D3D12_COMPUTE_PIPELINE_STATE_DESC.
+        /// Based on DirectX 12 Compute Pipeline State: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createcomputepipelinestate
+        /// </summary>
+        private D3D12_COMPUTE_PIPELINE_STATE_DESC ConvertComputePipelineDescToD3D12(ComputePipelineDesc desc, IntPtr rootSignature)
+        {
+            var d3d12Desc = new D3D12_COMPUTE_PIPELINE_STATE_DESC();
+
+            // Root signature
+            d3d12Desc.pRootSignature = rootSignature;
+
+            // Compute shader bytecode
+            d3d12Desc.CS = GetShaderBytecode(desc.ComputeShader);
+
+            // Node mask (default to node 0)
+            d3d12Desc.NodeMask = 0;
+
+            // Cached PSO (not used)
+            d3d12Desc.CachedPSO = new D3D12_CACHED_PIPELINE_STATE { pCachedBlob = IntPtr.Zero, CachedBlobSizeInBytes = 0 };
+
+            // Pipeline state flags (default)
+            d3d12Desc.Flags = 0; // D3D12_PIPELINE_STATE_FLAG_NONE
+
+            return d3d12Desc;
+        }
+
+        /// <summary>
+        /// Frees allocated memory from D3D12_COMPUTE_PIPELINE_STATE_DESC structure.
+        /// </summary>
+        private void FreeComputePipelineStateDesc(ref D3D12_COMPUTE_PIPELINE_STATE_DESC desc)
+        {
+            // Free compute shader bytecode
+            if (desc.CS.pShaderBytecode != IntPtr.Zero && desc.CS.BytecodeLength > 0)
+            {
+                Marshal.FreeHGlobal(desc.CS.pShaderBytecode);
+                desc.CS.pShaderBytecode = IntPtr.Zero;
+                desc.CS.BytecodeLength = 0;
+            }
+        }
+
         private class D3D12Buffer : IBuffer, IResource
         {
             public BufferDesc Desc { get; }
@@ -4542,6 +4762,9 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _device = device;
                 _parentDevice = parentDevice;
             }
+
+            // Accessor for root signature (used by pipeline creation)
+            public IntPtr GetRootSignature() { return _rootSignature; }
 
             public void Dispose()
             {
@@ -6128,6 +6351,37 @@ namespace Andastra.Runtime.MonoGame.Backends
                     (OMSetRenderTargetsDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(OMSetRenderTargetsDelegate));
 
                 omsetRenderTargets(commandList, NumRenderTargetDescriptors, pRenderTargetDescriptors, RTsSingleHandleToDescriptorRange, pDepthStencilDescriptor);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::OMSetStencilRef through COM vtable.
+            /// VTable index 46 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Output Merger Stencil Reference: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-omsetstencilref
+            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+            /// </summary>
+            private unsafe void CallOMSetStencilRef(IntPtr commandList, uint StencilRef)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // OMSetStencilRef is at index 46 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[46];
+
+                // Create delegate from function pointer
+                OMSetStencilRefDelegate omsetStencilRef =
+                    (OMSetStencilRefDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(OMSetStencilRefDelegate));
+
+                omsetStencilRef(commandList, StencilRef);
             }
 
             // COM interface method delegate for ClearDepthStencilView
@@ -9078,42 +9332,4 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         /// <summary>
         /// Converts TextureFormat to D3D12 raytracing index format.
-        /// Based on D3D12 API: D3D12_RAYTRACING_INDEX_FORMAT
-        /// </summary>
-        internal uint ConvertIndexFormatToD3D12(TextureFormat format)
-        {
-            switch (format)
-            {
-                case TextureFormat.R16_UInt:
-                    return D3D12_RAYTRACING_INDEX_FORMAT_UINT16;
-                case TextureFormat.R32_UInt:
-                    return D3D12_RAYTRACING_INDEX_FORMAT_UINT32;
-                default:
-                    // Default to 32-bit if format is unknown
-                    return D3D12_RAYTRACING_INDEX_FORMAT_UINT32;
-            }
-        }
-
-        /// <summary>
-        /// Converts TextureFormat to D3D12 raytracing vertex format.
-        /// Based on D3D12 API: D3D12_RAYTRACING_VERTEX_FORMAT
-        /// </summary>
-        internal uint ConvertVertexFormatToD3D12(TextureFormat format)
-        {
-            // D3D12 raytracing supports Float3 and Float2 vertex formats
-            // Most common vertex formats map to Float3
-            switch (format)
-            {
-                case TextureFormat.R32G32_Float:
-                    return D3D12_RAYTRACING_VERTEX_FORMAT_FLOAT2;
-                case TextureFormat.R32G32B32_Float:
-                case TextureFormat.R32G32B32A32_Float:
-                default:
-                    // Default to Float3 for most formats
-                    return D3D12_RAYTRACING_VERTEX_FORMAT_FLOAT3;
-            }
-        }
-
-        #endregion
-    }
-}
+        /// Based on D3D12 API: 
