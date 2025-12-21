@@ -1468,6 +1468,9 @@ namespace Andastra.Runtime.MonoGame.Backends
             
             // Load VK_KHR_acceleration_structure extension functions if available
             LoadAccelerationStructureExtensionFunctions(device);
+            
+            // Load VK_KHR_ray_tracing_pipeline extension functions if available
+            LoadRayTracingPipelineExtensionFunctions(device);
         }
 
         /// <summary>
@@ -5193,6 +5196,14 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _device = device;
             }
 
+            /// <summary>
+            /// Gets the VkPipeline handle. Used internally for binding the pipeline.
+            /// </summary>
+            internal IntPtr VkPipeline
+            {
+                get { return _vkPipeline; }
+            }
+
             public void Dispose()
             {
                 if (_vkPipeline != IntPtr.Zero && _device != IntPtr.Zero)
@@ -5223,6 +5234,10 @@ namespace Andastra.Runtime.MonoGame.Backends
             
             // Scratch buffer tracking for acceleration structure builds
             private readonly List<IBuffer> _scratchBuffers;
+
+            // Raytracing state tracking
+            private RaytracingState _raytracingState;
+            private bool _hasRaytracingState;
 
             // Pending barrier entry for buffers
             private struct PendingBufferBarrier
@@ -7342,7 +7357,67 @@ namespace Andastra.Runtime.MonoGame.Backends
                     Marshal.FreeHGlobal(rectsPtr);
                 }
             }
-            public void SetBlendConstant(Vector4 color) { /* TODO: vkCmdSetBlendConstants */ }
+            /// <summary>
+            /// Sets blend constants for blend operations.
+            /// 
+            /// Blend constants are used when the blend factor is VK_BLEND_FACTOR_CONSTANT_COLOR,
+            /// VK_BLEND_FACTOR_CONSTANT_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR, or
+            /// VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_ALPHA.
+            /// 
+            /// Based on Vulkan API: vkCmdSetBlendConstants
+            /// Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetBlendConstants.html
+            /// </summary>
+            /// <param name="color">Blend constant color as RGBA (X=R, Y=G, Z=B, W=A).</param>
+            public void SetBlendConstant(Vector4 color)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before setting blend constants");
+                }
+
+                if (_vkCommandBuffer == IntPtr.Zero)
+                {
+                    return; // Command buffer not initialized
+                }
+
+                if (vkCmdSetBlendConstants == null)
+                {
+                    return; // Function not loaded
+                }
+
+                // vkCmdSetBlendConstants signature:
+                // void vkCmdSetBlendConstants(
+                //     VkCommandBuffer commandBuffer,
+                //     const float blendConstants[4]);
+                //
+                // Convert Vector4 (X, Y, Z, W) to float[4] for blend constants:
+                // - blendConstants[0] = color.X (Red)
+                // - blendConstants[1] = color.Y (Green)
+                // - blendConstants[2] = color.Z (Blue)
+                // - blendConstants[3] = color.W (Alpha)
+
+                // Allocate unmanaged memory for 4 floats (16 bytes)
+                IntPtr blendConstantsPtr = Marshal.AllocHGlobal(4 * sizeof(float));
+                try
+                {
+                    // Write float values to unmanaged memory at byte offsets 0, 4, 8, 12
+                    unsafe
+                    {
+                        float* blendConstants = (float*)blendConstantsPtr.ToPointer();
+                        blendConstants[0] = color.X; // Red
+                        blendConstants[1] = color.Y; // Green
+                        blendConstants[2] = color.Z; // Blue
+                        blendConstants[3] = color.W; // Alpha
+                    }
+
+                    // Call vkCmdSetBlendConstants
+                    vkCmdSetBlendConstants(_vkCommandBuffer, blendConstantsPtr);
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(blendConstantsPtr);
+                }
+            }
             public void SetStencilRef(uint reference) { /* TODO: vkCmdSetStencilReference */ }
             public void Draw(DrawArguments args)
             {
@@ -7782,7 +7857,157 @@ namespace Andastra.Runtime.MonoGame.Backends
                 {
                     throw new InvalidOperationException("Command list must be open before dispatching rays");
                 }
-                // TODO: STUB - Implement vkCmdTraceRaysKHR
+
+                if (_vkCommandBuffer == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("Command buffer is not initialized");
+                }
+
+                // Validate dispatch dimensions
+                if (args.Width <= 0 || args.Height <= 0 || args.Depth <= 0)
+                {
+                    throw new ArgumentException($"Invalid dispatch dimensions: Width={args.Width}, Height={args.Height}, Depth={args.Depth}. All dimensions must be greater than zero.", nameof(args));
+                }
+
+                // Check that raytracing state is set
+                if (!_hasRaytracingState)
+                {
+                    throw new InvalidOperationException("Raytracing state must be set before dispatching rays. Call SetRaytracingState first.");
+                }
+
+                // Validate that vkCmdTraceRaysKHR function is available
+                if (vkCmdTraceRaysKHR == null)
+                {
+                    throw new NotSupportedException("vkCmdTraceRaysKHR function pointer not initialized. VK_KHR_ray_tracing_pipeline extension may not be available.");
+                }
+
+                // Validate that vkGetBufferDeviceAddressKHR function is available (needed for shader binding table addresses)
+                if (vkGetBufferDeviceAddressKHR == null)
+                {
+                    throw new NotSupportedException("vkGetBufferDeviceAddressKHR function pointer not initialized. VK_KHR_buffer_device_address extension may not be available.");
+                }
+
+                // Get shader binding table from raytracing state
+                ShaderBindingTable shaderTable = _raytracingState.ShaderTable;
+
+                // Validate that shader binding table buffer is set (required for ray generation shader)
+                if (shaderTable.Buffer == null)
+                {
+                    throw new InvalidOperationException("Shader binding table buffer is required for DispatchRays");
+                }
+
+                // Cast buffer to VulkanBuffer to access VkBuffer handle
+                VulkanBuffer vulkanBuffer = shaderTable.Buffer as VulkanBuffer;
+                if (vulkanBuffer == null)
+                {
+                    throw new ArgumentException("Shader binding table buffer must be a VulkanBuffer", nameof(_raytracingState));
+                }
+
+                IntPtr vkBuffer = vulkanBuffer.VkBuffer;
+                if (vkBuffer == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("Shader binding table buffer has invalid Vulkan handle");
+                }
+
+                // Get base device address for the shader binding table buffer
+                // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetBufferDeviceAddressKHR.html
+                VkBufferDeviceAddressInfo bufferAddressInfo = new VkBufferDeviceAddressInfo
+                {
+                    sType = VkStructureType.VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
+                    pNext = IntPtr.Zero,
+                    buffer = vkBuffer
+                };
+
+                ulong baseBufferAddress = vkGetBufferDeviceAddressKHR(_vkDevice, ref bufferAddressInfo);
+                if (baseBufferAddress == 0UL)
+                {
+                    throw new InvalidOperationException("Failed to get device address for shader binding table buffer");
+                }
+
+                // Build VkStridedDeviceAddressRegionKHR structures for each shader binding table region
+                // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdTraceRaysKHR.html
+                // Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkStridedDeviceAddressRegionKHR.html
+
+                // Ray generation shader binding table (required)
+                VkStridedDeviceAddressRegionKHR raygenRegion = new VkStridedDeviceAddressRegionKHR
+                {
+                    deviceAddress = baseBufferAddress + shaderTable.RayGenOffset,
+                    stride = shaderTable.RayGenSize, // Stride equals size for raygen (single entry)
+                    size = shaderTable.RayGenSize
+                };
+
+                // Validate ray generation shader table size
+                if (raygenRegion.size == 0UL)
+                {
+                    throw new InvalidOperationException("Ray generation shader table size cannot be zero");
+                }
+
+                // Miss shader binding table (optional)
+                VkStridedDeviceAddressRegionKHR missRegion = new VkStridedDeviceAddressRegionKHR
+                {
+                    deviceAddress = 0UL,
+                    stride = 0UL,
+                    size = 0UL
+                };
+
+                if (shaderTable.MissSize > 0UL)
+                {
+                    missRegion.deviceAddress = baseBufferAddress + shaderTable.MissOffset;
+                    missRegion.stride = shaderTable.MissStride > 0UL ? shaderTable.MissStride : shaderTable.MissSize;
+                    missRegion.size = shaderTable.MissSize;
+                }
+
+                // Hit group shader binding table (optional)
+                VkStridedDeviceAddressRegionKHR hitRegion = new VkStridedDeviceAddressRegionKHR
+                {
+                    deviceAddress = 0UL,
+                    stride = 0UL,
+                    size = 0UL
+                };
+
+                if (shaderTable.HitGroupSize > 0UL)
+                {
+                    hitRegion.deviceAddress = baseBufferAddress + shaderTable.HitGroupOffset;
+                    hitRegion.stride = shaderTable.HitGroupStride > 0UL ? shaderTable.HitGroupStride : shaderTable.HitGroupSize;
+                    hitRegion.size = shaderTable.HitGroupSize;
+                }
+
+                // Callable shader binding table (optional)
+                VkStridedDeviceAddressRegionKHR callableRegion = new VkStridedDeviceAddressRegionKHR
+                {
+                    deviceAddress = 0UL,
+                    stride = 0UL,
+                    size = 0UL
+                };
+
+                if (shaderTable.CallableSize > 0UL)
+                {
+                    callableRegion.deviceAddress = baseBufferAddress + shaderTable.CallableOffset;
+                    callableRegion.stride = shaderTable.CallableStride > 0UL ? shaderTable.CallableStride : shaderTable.CallableSize;
+                    callableRegion.size = shaderTable.CallableSize;
+                }
+
+                // Call vkCmdTraceRaysKHR to dispatch raytracing work
+                // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdTraceRaysKHR.html
+                // Signature: void vkCmdTraceRaysKHR(
+                //     VkCommandBuffer commandBuffer,
+                //     const VkStridedDeviceAddressRegionKHR* pRaygenShaderBindingTable,
+                //     const VkStridedDeviceAddressRegionKHR* pMissShaderBindingTable,
+                //     const VkStridedDeviceAddressRegionKHR* pHitShaderBindingTable,
+                //     const VkStridedDeviceAddressRegionKHR* pCallableShaderBindingTable,
+                //     uint32_t width,
+                //     uint32_t height,
+                //     uint32_t depth);
+                vkCmdTraceRaysKHR(
+                    _vkCommandBuffer,
+                    ref raygenRegion,
+                    ref missRegion,
+                    ref hitRegion,
+                    ref callableRegion,
+                    unchecked((uint)args.Width),
+                    unchecked((uint)args.Height),
+                    unchecked((uint)args.Depth)
+                );
             }
 
             public void BuildBottomLevelAccelStruct(IAccelStruct accelStruct, GeometryDesc[] geometries)
