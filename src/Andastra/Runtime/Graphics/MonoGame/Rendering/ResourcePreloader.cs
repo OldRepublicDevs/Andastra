@@ -294,8 +294,41 @@ namespace Andastra.Runtime.MonoGame.Rendering
             // AnimationComponent doesn't store separate resource references, animations are in MDL files
 
             // Extract sound resources from sound component (if exists)
-            // Note: Sound components may not exist in all engines, check if available
-            // TODO: STUB - For now, we'll skip sound extraction as it requires engine-specific components
+            // Based on swkotor.exe, swkotor2.exe, nwmain.exe, daorigins.exe, DragonAge2.exe: Sound components store sound file references
+            // Sound components are engine-agnostic via ISoundComponent interface
+            ISoundComponent soundComponent = entity.GetComponent<ISoundComponent>();
+            if (soundComponent != null)
+            {
+                // Extract sound files from SoundFiles list
+                // Based on UTS file format: SoundFiles contains list of WAV sound file ResRefs
+                if (soundComponent.SoundFiles != null)
+                {
+                    foreach (string soundFile in soundComponent.SoundFiles)
+                    {
+                        if (!string.IsNullOrEmpty(soundFile))
+                        {
+                            resourcePriorities.Add(new ResourcePriority
+                            {
+                                ResourceName = soundFile,
+                                ResourceType = ResourceType.Sound,
+                                Priority = basePriority - 5 // Sounds are lower priority than models/textures
+                            });
+                        }
+                    }
+                }
+
+                // Extract UTS template resource reference if available
+                // UTS templates define sound properties but may also reference additional sound files
+                // Based on swkotor2.exe: UTS templates loaded from TemplateResRef field
+                if (!string.IsNullOrEmpty(soundComponent.TemplateResRef))
+                {
+                    // UTS is a GFF format file, but we can preload it as a resource
+                    // The actual sound files are in SoundFiles, but the template itself may be useful
+                    // Note: UTS templates are typically not preloaded as they're small and loaded on-demand
+                    // However, if the template contains embedded sound references, we might want to preload it
+                    // For now, we skip UTS template preloading as it's a template file, not a sound file
+                }
+            }
 
             // Extract script resources from script hooks component
             IScriptHooksComponent scriptHooks = entity.GetComponent<IScriptHooksComponent>();
