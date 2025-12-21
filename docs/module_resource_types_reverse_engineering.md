@@ -9,7 +9,7 @@ This document details the reverse engineering findings for module file discovery
 1. **Both executables support `_s.rim` files** - confirmed via string references in both binaries
 2. **No subfolder support** - ResRef is a flat 16-byte ASCII string, no path separators
 3. **Container formats don't filter** - RIM/ERF/MOD containers accept any resource type ID
-4. **Engine resource loading** - The engine's resource manager likely accepts any resource type stored in modules, as long as the type ID is valid and the data can be parsed
+4. **Engine resource loading** - TODO: Gain Certainty by going through ghidra mcp - Examine resource loading functions `FUN_0040e990` (swkotor.exe: 0x0040e990) and `FUN_00407230` (swkotor.exe: 0x00407230) to verify if resource manager accepts any resource type stored in modules, as long as the type ID is valid and the data can be parsed
 
 ## Module File Discovery
 
@@ -151,7 +151,7 @@ The engine's resource manager loads resources by:
 - **`.rim` (MAIN)**: ARE, IFO, GIT only
 - **`_s.rim` (DATA)**: FAC, LYT, NCS, PTH, UTC, UTD, UTE, UTI, UTM, UTP, UTS, UTT, UTW, DLG (K1)
 - **`_dlg.erf` (K2_DLG)**: DLG only (K2)
-- **`.mod` (MOD)**: Everything EXCEPT TwoDA (TwoDA files must be in override or chitin)
+- **`.mod` (MOD)**: Everything EXCEPT TwoDA (TODO: Gain Certainty by going through ghidra mcp - Verify TwoDA loading from modules by examining `FUN_00413b40` (swkotor.exe: 0x00413b40) and checking if it filters by source location. TwoDA files must be in override or chitin - verify this is a hard requirement or just convention)
 
 **Reverse Engineering Evidence**:
 
@@ -208,7 +208,7 @@ The engine's resource manager loads resources by:
 **CANNOT or SHOULD NOT be packed** (engine limitations or conventions):
 
 - **TwoDA**: Convention says use override/chitin, but engine WILL load from modules (see proof above)
-- **TLK**: Talk tables are global, not module-specific (but engine would load if stored)
+- **TLK**: Talk tables are global, not module-specific (TODO: Gain Certainty by going through ghidra mcp - Search for TLK loading code and verify if engine would load TLK from modules. Check string references to "dialog.tlk" and TLK resource type handlers)
 - **KEY/BIF**: Chitin key/archive files (not module containers)
 - **MOD/RIM/ERF/SAV**: Nested containers not supported
 - **HAK/NWM**: Aurora/NWN formats, not KotOR
@@ -230,13 +230,14 @@ The engine's resource manager loads resources by:
   - Then tries TPC (type 0xbbf = 3007) via `FUN_00408bc0`
   - `FUN_00408bc0` calls `FUN_00407230` which searches all locations including modules
 - **Texture Priority**: TGA → TPC (no DDS support in this code path)
-- **DDS**: Not found in texture loading code - likely not supported or uses different path
+
+- **DDS**: Not found in texture loading code - TODO: Gain Certainty by going through ghidra mcp - Search for DDS texture loading by examining `FUN_004b8300` (swkotor.exe: 0x004b8300) and `FUN_00408bc0` (swkotor.exe: 0x00408bc0), search for string references to "DDS" or DDS-related texture loading code. Verify if DDS is not supported or uses different path
 
 ### Known Resource Types from Andastra
 
 Based on `ResourceType.cs`, the following resource types are defined:
 
-**Core Game Resources** (likely supported in modules):
+**Core Game Resources** (TODO: Gain Certainty by going through ghidra mcp - Verify support for these resource types in modules by examining `FUN_0040f990` (RIM loader, swkotor.exe: 0x0040f990) and `FUN_0040f3c0` (MOD loader, swkotor.exe: 0x0040f3c0) to confirm all these types can be loaded from modules):
 
 - `ARE` (2012) - Area data
 - `IFO` (2014) - Module info
@@ -262,7 +263,7 @@ Based on `ResourceType.cs`, the following resource types are defined:
 - `TGA` (3) - Texture images
 - `TXI` (2022) - Texture info
 - `NCS` (2010) - Compiled scripts
-- `NSS` (2009) - Script source (unlikely in modules)
+- `NSS` (2009) - Script source (TODO: Gain Certainty by going through ghidra mcp - Verify if NSS can be loaded from modules by examining NSS resource type handlers and checking if NSS loading code searches modules. Check string references to ".nss" files)
 - `SSF` (2060) - Soundset files
 - `LIP` (3004) - Lip sync data
 - `VIS` (3001) - Visibility data
@@ -271,7 +272,7 @@ Based on `ResourceType.cs`, the following resource types are defined:
 - `GUI` (2047) - GUI definitions
 - `CUT` (2074) - Cutscene data
 
-**Unlikely/Unsupported in Modules**:
+**TODO: Gain Certainty by going through ghidra mcp - Verify which of these are truly unsupported by examining resource type handlers and module loading code. Check for string references to these file types and verify if they're filtered or rejected. Unlikely/Unsupported in Modules**:
 
 - `RES` (0) - Save data (SAV containers only)
 - `SAV` (2057) - Save game containers
@@ -283,7 +284,7 @@ Based on `ResourceType.cs`, the following resource types are defined:
 - `HAK` (2061) - HAK archives (Aurora/NWN only, not KotOR)
 - `NWM` (2062) - NWM modules (Aurora/NWN only)
 
-**Media Files** (may be supported):
+**Media Files** (TODO: Gain Certainty by going through ghidra mcp - Verify media file support in modules by examining media loading code (WAV, BMU, OGG, MVE, MPG, BIK handlers). Check if these resource types are loaded from modules or only from specific directories. Search for media file loading functions and verify module support):
 
 - `WAV` (4) - Audio files
 - `BMU` (8) - Obfuscated MP3 audio
@@ -334,7 +335,7 @@ if (iVar7 == 0) {
 
 **Priority**: TGA (type 3) → TPC (type 0xbbf = 3007)
 
-**DDS Support**: NOT found in texture loading code - likely not supported or uses different path
+**DDS Support**: NOT found in texture loading code - TODO: Gain Certainty by going through ghidra mcp - Search for DDS texture loading by examining `FUN_004b8300` (swkotor.exe: 0x004b8300) and `FUN_00408bc0` (swkotor.exe: 0x00408bc0), search for string references to "DDS" or DDS-related texture loading code. Verify if DDS is not supported or uses different path
 
 **Module Support**: `FUN_00408bc0` calls `FUN_00407230` which searches all locations including modules, so TPC/TGA CAN be loaded from modules.
 
@@ -524,7 +525,7 @@ if (iVar7 == 0) {
 
 **Location**: Root installation directory (next to `dialog.tlk`, `chitin.key`, etc.)
 
-**Loading**: `patch.erf` is loaded as part of global resource initialization, separate from module loading. It is loaded into the resource table with the same priority as chitin resources.
+**Loading**: `patch.erf` is loaded as part of global resource initialization, separate from module loading. TODO: Gain Certainty by going through ghidra mcp - Find patch.erf loading code by searching for string "patch.erf" in swkotor.exe, then examine the loading function to verify it is loaded into the resource table with the same priority as chitin resources. Check resource priority flags and location assignments.
 
 **Priority Order** (for resources in patch.erf):
 
@@ -546,7 +547,7 @@ if (iVar7 == 0) {
 - Treated as part of core resources (loaded with chitin resources)
 - No type filtering - accepts any resource type stored in ERF container
 
-**Note**: `patch.erf` is **NOT found in module loading code** (`FUN_004094a0` / `FUN_004096b0`) - it is loaded separately during global resource initialization, likely in resource manager setup code.
+**Note**: `patch.erf` is **NOT found in module loading code** (`FUN_004094a0` / `FUN_004096b0`) - TODO: Gain Certainty by going through ghidra mcp - Find patch.erf loading code by searching for string "patch.erf" in swkotor.exe, then trace the function that loads it to verify it is loaded separately during global resource initialization in resource manager setup code. Check cross-references from initialization functions.
 
 ## Summary
 
