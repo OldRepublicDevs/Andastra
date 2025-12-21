@@ -1327,6 +1327,8 @@ namespace Andastra.Runtime.MonoGame.Backends
         private bool _disposed;
         private bool _isOpen;
         private IntPtr _currentRenderCommandEncoder; // id<MTLRenderCommandEncoder>
+        private IntPtr _currentBlitCommandEncoder; // id<MTLBlitCommandEncoder>
+        private static bool? _supportsBatchViewports; // Cached result for batch viewport API availability
 
         public MetalCommandList(IntPtr handle, CommandListType type, MetalBackend backend)
         {
@@ -1335,6 +1337,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             _backend = backend;
             _isOpen = false;
             _currentRenderCommandEncoder = IntPtr.Zero;
+            _currentBlitCommandEncoder = IntPtr.Zero;
         }
 
         public void Open()
@@ -1353,8 +1356,69 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 return;
             }
+
+            // End any active encoders before closing
+            if (_currentBlitCommandEncoder != IntPtr.Zero)
+            {
+                MetalNative.EndEncoding(_currentBlitCommandEncoder);
+                MetalNative.ReleaseBlitCommandEncoder(_currentBlitCommandEncoder);
+                _currentBlitCommandEncoder = IntPtr.Zero;
+            }
+
+            if (_currentRenderCommandEncoder != IntPtr.Zero)
+            {
+                MetalNative.EndEncoding(_currentRenderCommandEncoder);
+                _currentRenderCommandEncoder = IntPtr.Zero;
+            }
+
             // End recording commands
             _isOpen = false;
+        }
+
+        /// <summary>
+        /// Gets or creates a blit command encoder for the current command buffer.
+        /// Blit command encoders are used for resource copying operations (buffer-to-buffer, texture-to-texture).
+        /// Based on Metal API: MTLCommandBuffer::blitCommandEncoder()
+        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlcommandbuffer/1443003-blitcommandencoder
+        /// </summary>
+        private IntPtr GetOrCreateBlitCommandEncoder()
+        {
+            if (!_isOpen)
+            {
+                return IntPtr.Zero;
+            }
+
+            // If we already have an active blit encoder, return it
+            if (_currentBlitCommandEncoder != IntPtr.Zero)
+            {
+                return _currentBlitCommandEncoder;
+            }
+
+            // Get the current command buffer from the backend
+            IntPtr commandBuffer = _backend.GetCurrentCommandBuffer();
+            if (commandBuffer == IntPtr.Zero)
+            {
+                Console.WriteLine("[MetalCommandList] GetOrCreateBlitCommandEncoder: No active command buffer");
+                return IntPtr.Zero;
+            }
+
+            // End any active render command encoder before creating blit encoder
+            // Metal allows only one encoder type to be active at a time per command buffer
+            if (_currentRenderCommandEncoder != IntPtr.Zero)
+            {
+                MetalNative.EndEncoding(_currentRenderCommandEncoder);
+                _currentRenderCommandEncoder = IntPtr.Zero;
+            }
+
+            // Create blit command encoder
+            _currentBlitCommandEncoder = MetalNative.CreateBlitCommandEncoder(commandBuffer);
+            if (_currentBlitCommandEncoder == IntPtr.Zero)
+            {
+                Console.WriteLine("[MetalCommandList] GetOrCreateBlitCommandEncoder: Failed to create blit command encoder");
+                return IntPtr.Zero;
+            }
+
+            return _currentBlitCommandEncoder;
         }
 
         // Resource Operations - delegate to MetalBackend or implement via Metal command encoder
@@ -1395,13 +1459,187 @@ namespace Andastra.Runtime.MonoGame.Backends
             // TODO: Implement buffer copy via Metal blit command encoder
         }
 
+        /// <summary>
+        /// Copies a texture from source to destination using Metal blit command encoder.
+        /// Based on Metal API: MTLBlitCommandEncoder::copyFromTexture:sourceSlice:sourceLevel:sourceOrigin:sourceSize:toTexture:destinationSlice:destinationLevel:destinationOrigin:
+        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlblitcommandencoder/1400769-copyfromtexture
+        /// 
+        /// This implementation copies the entire texture (all mip levels and array slices if applicable).
+        /// For 2D textures, it copies from mip level 0, array slice 0 to the same in the destination.
+        /// </summary>
         public void CopyTexture(ITexture dest, ITexture src)
         {
             if (!_isOpen || dest == null || src == null)
             {
                 return;
             }
-            // TODO: Implement texture copy via Metal blit command encoder
+
+            // Get Metal texture objects
+            MetalTexture destMetal = dest as MetalTexture;
+            MetalTexture srcMetal = src as MetalTexture;
+
+            if (destMetal == null || srcMetal == null)
+            {
+                Console.WriteLine("[MetalCommandList] CopyTexture: Textures must be MetalTexture instances");
+                return;
+            }
+
+            // Get native Metal texture handles
+            IntPtr destTexture = destMetal.NativeHandle;
+            IntPtr srcTexture = srcMetal.NativeHandle;
+
+            if (destTexture == IntPtr.Zero || srcTexture == IntPtr.Zero)
+            {
+                Console.WriteLine("[MetalCommandList] CopyTexture: Invalid texture handles");
+                return;
+            }
+
+            // Validate texture descriptions
+            TextureDesc destDesc = destMetal.Desc;
+            TextureDesc srcDesc = srcMetal.Desc;
+
+            // Check if textures are compatible for copying
+            // Metal allows copying between textures with compatible formats
+            // For exact format matching, we require the same format
+            // Metal also supports some format conversions (e.g., RGBA8 to BGRA8)
+            if (destDesc.Format != srcDesc.Format)
+            {
+                // Check if formats are compatible for copying
+                // Some format conversions are supported by Metal (e.g., sRGB to linear)
+                bool formatsCompatible = AreTextureFormatsCompatibleForCopy(destDesc.Format, srcDesc.Format);
+                if (!formatsCompatible)
+                {
+                    Console.WriteLine($"[MetalCommandList] CopyTexture: Incompatible texture formats - source: {srcDesc.Format}, destination: {destDesc.Format}");
+                    return;
+                }
+            }
+
+            // Get or create blit command encoder
+            IntPtr blitEncoder = GetOrCreateBlitCommandEncoder();
+            if (blitEncoder == IntPtr.Zero)
+            {
+                Console.WriteLine("[MetalCommandList] CopyTexture: Failed to get blit command encoder");
+                return;
+            }
+
+            try
+            {
+                // Determine texture dimensions and copy strategy
+                // For 2D textures, copy the entire texture from mip level 0
+                // For array textures, copy all slices
+                // For 3D textures, copy the entire volume
+
+                if (destDesc.Dimension == TextureDimension.Texture2D && srcDesc.Dimension == TextureDimension.Texture2D)
+                {
+                    // Copy 2D texture - copy from mip level 0, array slice 0
+                    // Source and destination origins are (0, 0, 0)
+                    // Source and destination sizes are the texture dimensions
+                    MetalOrigin sourceOrigin = new MetalOrigin(0, 0, 0);
+                    MetalSize sourceSize = new MetalSize((uint)srcDesc.Width, (uint)srcDesc.Height, 1);
+                    MetalOrigin destOrigin = new MetalOrigin(0, 0, 0);
+
+                    // Copy from source mip level 0, slice 0 to destination mip level 0, slice 0
+                    MetalNative.CopyFromTexture(blitEncoder, srcTexture, 0, 0, sourceOrigin, sourceSize, destTexture, 0, 0, destOrigin);
+
+                    // If textures have multiple mip levels, copy all of them
+                    int maxMipLevels = Math.Min(srcDesc.MipLevels, destDesc.MipLevels);
+                    for (int mipLevel = 1; mipLevel < maxMipLevels; mipLevel++)
+                    {
+                        // Calculate mip level dimensions
+                        int mipWidth = Math.Max(1, srcDesc.Width >> mipLevel);
+                        int mipHeight = Math.Max(1, srcDesc.Height >> mipLevel);
+
+                        sourceSize = new MetalSize((uint)mipWidth, (uint)mipHeight, 1);
+                        MetalNative.CopyFromTexture(blitEncoder, srcTexture, 0, (uint)mipLevel, sourceOrigin, sourceSize, destTexture, 0, (uint)mipLevel, destOrigin);
+                    }
+                }
+                else if (destDesc.Dimension == TextureDimension.Texture2DArray && srcDesc.Dimension == TextureDimension.Texture2DArray)
+                {
+                    // Copy 2D array texture - copy all array slices
+                    int maxArraySlices = Math.Min(srcDesc.ArraySize, destDesc.ArraySize);
+                    int maxMipLevels = Math.Min(srcDesc.MipLevels, destDesc.MipLevels);
+
+                    for (int arraySlice = 0; arraySlice < maxArraySlices; arraySlice++)
+                    {
+                        for (int mipLevel = 0; mipLevel < maxMipLevels; mipLevel++)
+                        {
+                            // Calculate mip level dimensions
+                            int mipWidth = Math.Max(1, srcDesc.Width >> mipLevel);
+                            int mipHeight = Math.Max(1, srcDesc.Height >> mipLevel);
+
+                            MetalOrigin sourceOrigin = new MetalOrigin(0, 0, 0);
+                            MetalSize sourceSize = new MetalSize((uint)mipWidth, (uint)mipHeight, 1);
+                            MetalOrigin destOrigin = new MetalOrigin(0, 0, 0);
+
+                            MetalNative.CopyFromTexture(blitEncoder, srcTexture, (uint)arraySlice, (uint)mipLevel, sourceOrigin, sourceSize, destTexture, (uint)arraySlice, (uint)mipLevel, destOrigin);
+                        }
+                    }
+                }
+                else if (destDesc.Dimension == TextureDimension.Texture3D && srcDesc.Dimension == TextureDimension.Texture3D)
+                {
+                    // Copy 3D texture - copy entire volume
+                    MetalOrigin sourceOrigin = new MetalOrigin(0, 0, 0);
+                    MetalSize sourceSize = new MetalSize((uint)srcDesc.Width, (uint)srcDesc.Height, (uint)srcDesc.Depth);
+                    MetalOrigin destOrigin = new MetalOrigin(0, 0, 0);
+
+                    // Copy from mip level 0
+                    MetalNative.CopyFromTexture(blitEncoder, srcTexture, 0, 0, sourceOrigin, sourceSize, destTexture, 0, 0, destOrigin);
+
+                    // Copy additional mip levels if present
+                    int maxMipLevels = Math.Min(srcDesc.MipLevels, destDesc.MipLevels);
+                    for (int mipLevel = 1; mipLevel < maxMipLevels; mipLevel++)
+                    {
+                        int mipWidth = Math.Max(1, srcDesc.Width >> mipLevel);
+                        int mipHeight = Math.Max(1, srcDesc.Height >> mipLevel);
+                        int mipDepth = Math.Max(1, srcDesc.Depth >> mipLevel);
+
+                        sourceSize = new MetalSize((uint)mipWidth, (uint)mipHeight, (uint)mipDepth);
+                        MetalNative.CopyFromTexture(blitEncoder, srcTexture, 0, (uint)mipLevel, sourceOrigin, sourceSize, destTexture, 0, (uint)mipLevel, destOrigin);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"[MetalCommandList] CopyTexture: Unsupported texture dimension combination - source: {srcDesc.Dimension}, destination: {destDesc.Dimension}");
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalCommandList] CopyTexture: Exception during texture copy: {ex.Message}");
+                Console.WriteLine($"[MetalCommandList] CopyTexture: Stack trace: {ex.StackTrace}");
+            }
+        }
+
+        /// <summary>
+        /// Checks if two texture formats are compatible for copying via Metal blit command encoder.
+        /// Metal supports copying between some compatible formats (e.g., sRGB to linear variants).
+        /// Based on Metal API: Texture format compatibility for blit operations
+        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlblitcommandencoder
+        /// </summary>
+        private bool AreTextureFormatsCompatibleForCopy(TextureFormat destFormat, TextureFormat srcFormat)
+        {
+            // Exact format match is always compatible
+            if (destFormat == srcFormat)
+            {
+                return true;
+            }
+
+            // Check for sRGB/linear compatibility
+            // Metal allows copying between sRGB and linear variants of the same base format
+            switch (srcFormat)
+            {
+                case TextureFormat.R8G8B8A8_UNorm:
+                    return destFormat == TextureFormat.R8G8B8A8_UNorm_SRGB;
+                case TextureFormat.R8G8B8A8_UNorm_SRGB:
+                    return destFormat == TextureFormat.R8G8B8A8_UNorm;
+                case TextureFormat.B8G8R8A8_UNorm:
+                    return destFormat == TextureFormat.B8G8R8A8_UNorm_SRGB;
+                case TextureFormat.B8G8R8A8_UNorm_SRGB:
+                    return destFormat == TextureFormat.B8G8R8A8_UNorm;
+                default:
+                    // For other formats, require exact match
+                    return false;
+            }
         }
 
         public void ClearColorAttachment(IFramebuffer framebuffer, int attachmentIndex, Vector4 color)
@@ -1548,9 +1786,10 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             // Set multiple viewports on render command encoder
-            // Metal supports multiple viewports (viewport arrays) for multi-view rendering
-            // Metal API: setViewport: - sets a single viewport. For multiple viewports, set each one individually.
-            // TODO: Optimize to use native array marshalling if Metal adds setViewports:count: API in future
+            // Metal API only supports setting one viewport at a time via setViewport:
+            // Metal does not provide a batch setViewports:count: API, so each viewport must be set individually.
+            // The struct is created on the stack for each iteration, which is efficient and avoids heap allocation.
+            // If Metal adds a batch API in the future, this can be optimized to use native array marshalling.
             for (int i = 0; i < viewports.Length; i++)
             {
                 MetalViewport metalViewport = new MetalViewport
@@ -2097,6 +2336,118 @@ namespace Andastra.Runtime.MonoGame.Backends
             IntPtr selector = sel_registerName("popDebugGroup");
             // objc_msgSend returns a value even for void methods, we ignore it
             objc_msgSend_void(commandBufferOrEncoder, selector);
+        }
+
+        // Buffer copying via blit command encoder
+        // Based on Metal API: MTLBlitCommandEncoder::copyFromBuffer:sourceOffset:toBuffer:destinationOffset:size:
+        // Metal API Reference: https://developer.apple.com/documentation/metal/mtlblitcommandencoder/1400774-copyfrombuffer
+        // Method signature: - (void)copyFromBuffer:(id<MTLBuffer>)sourceBuffer sourceOffset:(NSUInteger)sourceOffset toBuffer:(id<MTLBuffer>)destinationBuffer destinationOffset:(NSUInteger)destinationOffset size:(NSUInteger)size;
+        // Note: On 64-bit systems, NSUInteger is 64-bit (ulong), not 32-bit (uint)
+        [DllImport(LibObjC, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void objc_msgSend_copyFromBuffer(IntPtr receiver, IntPtr selector, IntPtr sourceBuffer, ulong sourceOffset, IntPtr destinationBuffer, ulong destinationOffset, ulong size);
+
+        /// <summary>
+        /// Copies data from one buffer to another using a Metal blit command encoder.
+        /// Based on Metal API: MTLBlitCommandEncoder::copyFromBuffer:sourceOffset:toBuffer:destinationOffset:size:
+        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlblitcommandencoder/1400774-copyfrombuffer
+        /// </summary>
+        /// <param name="blitEncoder">Metal blit command encoder handle</param>
+        /// <param name="sourceBuffer">Source buffer handle</param>
+        /// <param name="sourceOffset">Source offset in bytes</param>
+        /// <param name="destinationBuffer">Destination buffer handle</param>
+        /// <param name="destinationOffset">Destination offset in bytes</param>
+        /// <param name="size">Size in bytes to copy</param>
+        public static void CopyFromBuffer(IntPtr blitEncoder, IntPtr sourceBuffer, ulong sourceOffset, IntPtr destinationBuffer, ulong destinationOffset, ulong size)
+        {
+            if (blitEncoder == IntPtr.Zero || sourceBuffer == IntPtr.Zero || destinationBuffer == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                // Register selector for copyFromBuffer:sourceOffset:toBuffer:destinationOffset:size:
+                IntPtr selector = sel_registerName("copyFromBuffer:sourceOffset:toBuffer:destinationOffset:size:");
+                
+                // Call the method
+                // Note: On 64-bit systems, NSUInteger is 64-bit (ulong)
+                objc_msgSend_copyFromBuffer(blitEncoder, selector, sourceBuffer, sourceOffset, destinationBuffer, destinationOffset, size);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalNative] CopyFromBuffer: Exception: {ex.Message}");
+                Console.WriteLine($"[MetalNative] CopyFromBuffer: Stack trace: {ex.StackTrace}");
+            }
+        }
+
+        // Buffer contents access for CPU writes
+        // Based on Metal API: MTLBuffer::contents()
+        // Metal API Reference: https://developer.apple.com/documentation/metal/mtlbuffer/1515376-contents
+        // Method signature: - (void *)contents;
+        [DllImport(LibObjC, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr objc_msgSend_contents(IntPtr receiver, IntPtr selector);
+
+        /// <summary>
+        /// Gets a pointer to the contents of a Metal buffer for CPU access.
+        /// Only valid for buffers with shared or managed storage mode.
+        /// Based on Metal API: MTLBuffer::contents()
+        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlbuffer/1515376-contents
+        /// </summary>
+        /// <param name="buffer">Metal buffer handle</param>
+        /// <returns>Pointer to buffer contents, or IntPtr.Zero if invalid</returns>
+        public static IntPtr GetBufferContents(IntPtr buffer)
+        {
+            if (buffer == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            try
+            {
+                IntPtr selector = sel_registerName("contents");
+                return objc_msgSend_contents(buffer, selector);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalNative] GetBufferContents: Exception: {ex.Message}");
+                return IntPtr.Zero;
+            }
+        }
+
+        // Create buffer with explicit resource options (for staging buffers)
+        // Based on Metal API: MTLDevice::newBufferWithLength:options:
+        // Metal API Reference: https://developer.apple.com/documentation/metal/mtldevice/1433429-newbufferwithlength
+        // Method signature: - (id<MTLBuffer>)newBufferWithLength:(NSUInteger)length options:(MTLResourceOptions)options;
+        [DllImport(LibObjC, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr objc_msgSend_CreateBufferWithOptions(IntPtr receiver, IntPtr selector, ulong length, uint options);
+
+        /// <summary>
+        /// Creates a Metal buffer with explicit resource options.
+        /// Used for creating staging buffers with shared storage mode for CPU writes.
+        /// Based on Metal API: MTLDevice::newBufferWithLength:options:
+        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtldevice/1433429-newbufferwithlength
+        /// </summary>
+        /// <param name="device">Metal device handle</param>
+        /// <param name="length">Buffer length in bytes</param>
+        /// <param name="options">Resource options (e.g., StorageModeShared for CPU access)</param>
+        /// <returns>Metal buffer handle, or IntPtr.Zero if creation failed</returns>
+        public static IntPtr CreateBufferWithOptions(IntPtr device, ulong length, uint options)
+        {
+            if (device == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            try
+            {
+                IntPtr selector = sel_registerName("newBufferWithLength:options:");
+                return objc_msgSend_CreateBufferWithOptions(device, selector, length, options);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalNative] CreateBufferWithOptions: Exception: {ex.Message}");
+                return IntPtr.Zero;
+            }
         }
     }
 
