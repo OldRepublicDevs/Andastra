@@ -710,7 +710,16 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             // mainEnd will be recalculated after mainStart is determined (see below after mainStart calculation)
 
             // If SAVEBP is found, create globals subroutine (0 to SAVEBP+1)
-            // TODO:  Then calculate where main should start (after globals and entry stub)
+            // Then calculate where main should start (after globals and entry stub)
+            // Main start calculation ensures main function always begins after globals initialization
+            // and entry stub (JSR+RETN pattern), which is critical for correct AST generation.
+            // The calculation handles multiple cases:
+            // 1. Normal case: entryJsrTarget points to main function after entry stub
+            // 2. Alternative case: JSR at position 0 targets main (when entry JSR targets last RETN)
+            // 3. Entry stub wrapper case: Entry stub wraps main, main code starts at SAVEBP+1 or after stub
+            // 4. Fallback case: Use entryStubEnd when entryJsrTarget is invalid or in globals range
+            // All cases ensure mainStart >= entryStubEnd to maintain the invariant that main
+            // always starts after globals and entry stub.
             // SKIP for include files - they don't have globals, each SAVEBP is a function start
             bool entryJsrTargetIsLastRetn = (entryJsrTarget >= 0 && entryJsrTarget == instructions.Count - 1);
             bool shouldDeferGlobals = false;
