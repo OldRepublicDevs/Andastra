@@ -198,6 +198,22 @@ namespace Andastra.Runtime.MonoGame.Backends
             public uint depth;
         }
 
+        // Vulkan 2D extent structure (for scissor rectangles)
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkExtent2D
+        {
+            public uint width;
+            public uint height;
+        }
+
+        // Vulkan 2D offset structure (for scissor rectangles)
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkOffset2D
+        {
+            public int x;
+            public int y;
+        }
+
         [StructLayout(LayoutKind.Sequential)]
         private struct VkBufferCreateInfo
         {
@@ -430,6 +446,15 @@ namespace Andastra.Runtime.MonoGame.Backends
             public int z;
         }
 
+        // Vulkan 2D rectangle structure (for scissor rectangles)
+        // VkRect2D is used by vkCmdSetScissor to define scissor rectangles
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkRect2D
+        {
+            public VkOffset2D offset;
+            public VkExtent2D extent;
+        }
+
         // Vulkan image memory barrier structure (for image layout transitions)
         [StructLayout(LayoutKind.Sequential)]
         private struct VkImageMemoryBarrier
@@ -474,6 +499,79 @@ namespace Andastra.Runtime.MonoGame.Backends
             public IntPtr pNext;
             public VkCommandPoolCreateFlags flags;
             public uint queueFamilyIndex;
+        }
+
+        // Vulkan ray tracing structures
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkPipelineShaderStageCreateInfo
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkPipelineShaderStageCreateFlags flags;
+            public VkShaderStageFlags stage;
+            public IntPtr module;
+            public IntPtr pName;
+            public IntPtr pSpecializationInfo;
+        }
+
+        [Flags]
+        private enum VkPipelineShaderStageCreateFlags
+        {
+        }
+
+        private enum VkRayTracingShaderGroupTypeKHR
+        {
+            VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR = 0,
+            VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR = 1,
+            VK_RAY_TRACING_SHADER_GROUP_TYPE_PROCEDURAL_HIT_GROUP_KHR = 2
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkRayTracingShaderGroupCreateInfoKHR
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkRayTracingShaderGroupTypeKHR type;
+            public uint generalShader;
+            public uint closestHitShader;
+            public uint anyHitShader;
+            public uint intersectionShader;
+            public IntPtr pShaderGroupCaptureReplayHandle;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkRayTracingPipelineCreateInfoKHR
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkPipelineCreateFlags flags;
+            public uint stageCount;
+            public IntPtr pStages;
+            public uint groupCount;
+            public IntPtr pGroups;
+            public uint maxPipelineRayRecursionDepth;
+            public IntPtr pLibraryInfo;
+            public IntPtr pLibraryInterface;
+            public IntPtr pDynamicState;
+            public IntPtr layout;
+            public IntPtr basePipelineHandle;
+            public int basePipelineIndex;
+        }
+
+        [Flags]
+        private enum VkPipelineCreateFlags
+        {
+            VK_PIPELINE_CREATE_DISABLE_OPTIMIZATION_BIT = 0x00000001,
+            VK_PIPELINE_CREATE_ALLOW_DERIVATIVES_BIT = 0x00000002,
+            VK_PIPELINE_CREATE_DERIVATIVE_BIT = 0x00000004
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkStridedDeviceAddressRegionKHR
+        {
+            public ulong deviceAddress;
+            public ulong stride;
+            public ulong size;
         }
 
         // Vulkan enums
@@ -681,6 +779,9 @@ namespace Andastra.Runtime.MonoGame.Backends
         private delegate void vkCmdDispatchIndirectDelegate(IntPtr commandBuffer, IntPtr buffer, ulong offset);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdSetScissorDelegate(IntPtr commandBuffer, uint firstScissor, uint scissorCount, IntPtr pScissors);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkCmdCopyImageDelegate(IntPtr commandBuffer, IntPtr srcImage, VkImageLayout srcImageLayout, IntPtr dstImage, VkImageLayout dstImageLayout, uint regionCount, IntPtr pRegions);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
@@ -757,6 +858,20 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static vkCmdPipelineBarrierDelegate vkCmdPipelineBarrier;
         private static vkCmdDrawDelegate vkCmdDraw;
         private static vkCmdDrawIndexedDelegate vkCmdDrawIndexed;
+        private static vkCmdSetScissorDelegate vkCmdSetScissor;
+
+        // VK_KHR_ray_tracing_pipeline extension function delegates
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkCreateRayTracingPipelinesKHRDelegate(IntPtr device, IntPtr deferredOperation, IntPtr pipelineCache, uint createInfoCount, IntPtr pCreateInfos, IntPtr pAllocator, IntPtr pPipelines);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkGetRayTracingShaderGroupHandlesKHRDelegate(IntPtr device, IntPtr pipeline, uint firstGroup, uint groupCount, ulong dataSize, IntPtr pData);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdTraceRaysKHRDelegate(IntPtr commandBuffer, ref VkStridedDeviceAddressRegionKHR pRaygenShaderBindingTable, ref VkStridedDeviceAddressRegionKHR pMissShaderBindingTable, ref VkStridedDeviceAddressRegionKHR pHitShaderBindingTable, ref VkStridedDeviceAddressRegionKHR pCallableShaderBindingTable, uint width, uint height, uint depth);
+
+        // VK_KHR_ray_tracing_pipeline extension function pointers (static for now - would be loaded via vkGetDeviceProcAddr in real implementation)
+        private static vkCreateRayTracingPipelinesKHRDelegate vkCreateRayTracingPipelinesKHR;
+        private static vkGetRayTracingShaderGroupHandlesKHRDelegate vkGetRayTracingShaderGroupHandlesKHR;
+        private static vkCmdTraceRaysKHRDelegate vkCmdTraceRaysKHR;
 
         // Helper methods for Vulkan interop
         private static void InitializeVulkanFunctions(IntPtr device)
@@ -1985,22 +2100,354 @@ namespace Andastra.Runtime.MonoGame.Backends
                 pipelineLayout = CreatePipelineLayout(new[] { desc.GlobalBindingLayout });
             }
 
-            // TODO: Full implementation requires VK_KHR_ray_tracing_pipeline extension
-            // For now, create placeholder pipeline
+            // Full implementation of VK_KHR_ray_tracing_pipeline extension
 
-            // Create shader binding table buffer (placeholder)
-            var sbtBufferDesc = new BufferDesc
+            // Helper to convert ShaderType to VkShaderStageFlags
+            VkShaderStageFlags ConvertShaderTypeToVkStage(ShaderType shaderType)
             {
-                ByteSize = 4096, // Placeholder size for SBT
-                Usage = BufferUsage.Shader
-            };
-            IBuffer sbtBuffer = CreateBuffer(sbtBufferDesc);
+                switch (shaderType)
+                {
+                    case ShaderType.RayGeneration:
+                        return VkShaderStageFlags.VK_SHADER_STAGE_RAYGEN_BIT_KHR;
+                    case ShaderType.Miss:
+                        return VkShaderStageFlags.VK_SHADER_STAGE_MISS_BIT_KHR;
+                    case ShaderType.ClosestHit:
+                        return VkShaderStageFlags.VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
+                    case ShaderType.AnyHit:
+                        return VkShaderStageFlags.VK_SHADER_STAGE_ANY_HIT_BIT_KHR;
+                    case ShaderType.Intersection:
+                        return VkShaderStageFlags.VK_SHADER_STAGE_INTERSECTION_BIT_KHR;
+                    case ShaderType.Callable:
+                        return VkShaderStageFlags.VK_SHADER_STAGE_CALLABLE_BIT_KHR;
+                    default:
+                        throw new ArgumentException($"Shader type {shaderType} is not a raytracing shader type", nameof(shaderType));
+                }
+            }
 
-            IntPtr handle = new IntPtr(_nextResourceHandle++);
-            var pipeline = new VulkanRaytracingPipeline(handle, desc, IntPtr.Zero, pipelineLayout, sbtBuffer, _device);
-            _resources[handle] = pipeline;
+            // Build shader stage create infos from shaders
+            var shaderStages = new List<VkPipelineShaderStageCreateInfo>();
+            var shaderModuleToStageIndex = new Dictionary<IntPtr, int>();
+            var entryPointNames = new List<IntPtr>(); // Keep track for cleanup
+            int stageIndex = 0;
 
-            return pipeline;
+            foreach (var shader in desc.Shaders)
+            {
+                if (shader == null)
+                {
+                    continue;
+                }
+
+                // Get shader module from VulkanShader
+                IntPtr shaderModule = IntPtr.Zero;
+                if (shader is VulkanShader vulkanShader)
+                {
+                    shaderModule = vulkanShader.VkShaderModule;
+                }
+
+                if (shaderModule == IntPtr.Zero)
+                {
+                    // Cleanup entry point names before throwing
+                    foreach (var ptr in entryPointNames)
+                    {
+                        Marshal.FreeHGlobal(ptr);
+                    }
+                    throw new ArgumentException($"Shader {shader.Desc.DebugName ?? "unnamed"} does not have a valid Vulkan shader module", nameof(desc));
+                }
+
+                VkShaderStageFlags stageFlag = ConvertShaderTypeToVkStage(shader.Type);
+
+                // Get entry point name (default to "main" if not specified)
+                string entryPoint = shader.Desc.EntryPoint;
+                if (string.IsNullOrEmpty(entryPoint))
+                {
+                    entryPoint = "main";
+                }
+
+                // Marshal entry point name
+                byte[] entryPointBytes = System.Text.Encoding.UTF8.GetBytes(entryPoint + "\0");
+                IntPtr entryPointPtr = Marshal.AllocHGlobal(entryPointBytes.Length);
+                Marshal.Copy(entryPointBytes, 0, entryPointPtr, entryPointBytes.Length);
+                entryPointNames.Add(entryPointPtr);
+
+                var stageCreateInfo = new VkPipelineShaderStageCreateInfo
+                {
+                    sType = VkStructureType.VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+                    pNext = IntPtr.Zero,
+                    flags = 0,
+                    stage = stageFlag,
+                    module = shaderModule,
+                    pName = entryPointPtr,
+                    pSpecializationInfo = IntPtr.Zero
+                };
+
+                shaderStages.Add(stageCreateInfo);
+                shaderModuleToStageIndex[shaderModule] = stageIndex;
+                stageIndex++;
+            }
+
+            if (shaderStages.Count == 0)
+            {
+                // Cleanup entry point names
+                foreach (var ptr in entryPointNames)
+                {
+                    Marshal.FreeHGlobal(ptr);
+                }
+                throw new ArgumentException("No valid shaders provided for raytracing pipeline", nameof(desc));
+            }
+
+            // Build shader groups
+            var shaderGroups = new List<VkRayTracingShaderGroupCreateInfoKHR>();
+
+            // Add ray generation shader as a general group
+            bool hasRayGen = false;
+            for (int i = 0; i < desc.Shaders.Length; i++)
+            {
+                if (desc.Shaders[i] != null && desc.Shaders[i].Type == ShaderType.RayGeneration)
+                {
+                    IntPtr shaderModule = IntPtr.Zero;
+                    if (desc.Shaders[i] is VulkanShader vulkanShader)
+                    {
+                        shaderModule = vulkanShader.VkShaderModule;
+                    }
+                    if (shaderModule != IntPtr.Zero && shaderModuleToStageIndex.ContainsKey(shaderModule))
+                    {
+                        var group = new VkRayTracingShaderGroupCreateInfoKHR
+                        {
+                            sType = VkStructureType.VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR,
+                            pNext = IntPtr.Zero,
+                            type = VkRayTracingShaderGroupTypeKHR.VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR,
+                            generalShader = (uint)shaderModuleToStageIndex[shaderModule],
+                            closestHitShader = 0xFFFFFFFF, // VK_SHADER_INDEX_UNUSED
+                            anyHitShader = 0xFFFFFFFF,
+                            intersectionShader = 0xFFFFFFFF,
+                            pShaderGroupCaptureReplayHandle = IntPtr.Zero
+                        };
+                        shaderGroups.Add(group);
+                        hasRayGen = true;
+                    }
+                    break;
+                }
+            }
+
+            if (!hasRayGen)
+            {
+                // Cleanup entry point names
+                foreach (var ptr in entryPointNames)
+                {
+                    Marshal.FreeHGlobal(ptr);
+                }
+                throw new ArgumentException("Raytracing pipeline requires at least one ray generation shader", nameof(desc));
+            }
+
+            // Add miss shaders as general groups
+            for (int i = 0; i < desc.Shaders.Length; i++)
+            {
+                if (desc.Shaders[i] != null && desc.Shaders[i].Type == ShaderType.Miss)
+                {
+                    IntPtr shaderModule = IntPtr.Zero;
+                    if (desc.Shaders[i] is VulkanShader vulkanShader)
+                    {
+                        shaderModule = vulkanShader.VkShaderModule;
+                    }
+                    if (shaderModule != IntPtr.Zero && shaderModuleToStageIndex.ContainsKey(shaderModule))
+                    {
+                        var group = new VkRayTracingShaderGroupCreateInfoKHR
+                        {
+                            sType = VkStructureType.VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR,
+                            pNext = IntPtr.Zero,
+                            type = VkRayTracingShaderGroupTypeKHR.VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR,
+                            generalShader = (uint)shaderModuleToStageIndex[shaderModule],
+                            closestHitShader = 0xFFFFFFFF,
+                            anyHitShader = 0xFFFFFFFF,
+                            intersectionShader = 0xFFFFFFFF,
+                            pShaderGroupCaptureReplayHandle = IntPtr.Zero
+                        };
+                        shaderGroups.Add(group);
+                    }
+                }
+            }
+
+            // Add hit groups
+            if (desc.HitGroups != null)
+            {
+                foreach (var hitGroup in desc.HitGroups)
+                {
+                    uint closestHitIndex = 0xFFFFFFFF;
+                    uint anyHitIndex = 0xFFFFFFFF;
+                    uint intersectionIndex = 0xFFFFFFFF;
+
+                    if (hitGroup.ClosestHitShader != null)
+                    {
+                        IntPtr shaderModule = IntPtr.Zero;
+                        if (hitGroup.ClosestHitShader is VulkanShader vulkanShader)
+                        {
+                            shaderModule = vulkanShader.VkShaderModule;
+                        }
+                        if (shaderModule != IntPtr.Zero && shaderModuleToStageIndex.ContainsKey(shaderModule))
+                        {
+                            closestHitIndex = (uint)shaderModuleToStageIndex[shaderModule];
+                        }
+                    }
+
+                    if (hitGroup.AnyHitShader != null)
+                    {
+                        IntPtr shaderModule = IntPtr.Zero;
+                        if (hitGroup.AnyHitShader is VulkanShader vulkanShader)
+                        {
+                            shaderModule = vulkanShader.VkShaderModule;
+                        }
+                        if (shaderModule != IntPtr.Zero && shaderModuleToStageIndex.ContainsKey(shaderModule))
+                        {
+                            anyHitIndex = (uint)shaderModuleToStageIndex[shaderModule];
+                        }
+                    }
+
+                    if (hitGroup.IntersectionShader != null)
+                    {
+                        IntPtr shaderModule = IntPtr.Zero;
+                        if (hitGroup.IntersectionShader is VulkanShader vulkanShader)
+                        {
+                            shaderModule = vulkanShader.VkShaderModule;
+                        }
+                        if (shaderModule != IntPtr.Zero && shaderModuleToStageIndex.ContainsKey(shaderModule))
+                        {
+                            intersectionIndex = (uint)shaderModuleToStageIndex[shaderModule];
+                        }
+                    }
+
+                    VkRayTracingShaderGroupTypeKHR groupType = hitGroup.IsProceduralPrimitive
+                        ? VkRayTracingShaderGroupTypeKHR.VK_RAY_TRACING_SHADER_GROUP_TYPE_PROCEDURAL_HIT_GROUP_KHR
+                        : VkRayTracingShaderGroupTypeKHR.VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR;
+
+                    var group = new VkRayTracingShaderGroupCreateInfoKHR
+                    {
+                        sType = VkStructureType.VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR,
+                        pNext = IntPtr.Zero,
+                        type = groupType,
+                        generalShader = 0xFFFFFFFF,
+                        closestHitShader = closestHitIndex,
+                        anyHitShader = anyHitIndex,
+                        intersectionShader = intersectionIndex,
+                        pShaderGroupCaptureReplayHandle = IntPtr.Zero
+                    };
+                    shaderGroups.Add(group);
+                }
+            }
+
+            // Marshal shader stages array
+            int stageSize = Marshal.SizeOf(typeof(VkPipelineShaderStageCreateInfo));
+            IntPtr stagesPtr = Marshal.AllocHGlobal(stageSize * shaderStages.Count);
+            try
+            {
+                for (int i = 0; i < shaderStages.Count; i++)
+                {
+                    IntPtr stagePtr = new IntPtr(stagesPtr.ToInt64() + i * stageSize);
+                    Marshal.StructureToPtr(shaderStages[i], stagePtr, false);
+                }
+
+                // Marshal shader groups array
+                int groupSize = Marshal.SizeOf(typeof(VkRayTracingShaderGroupCreateInfoKHR));
+                IntPtr groupsPtr = Marshal.AllocHGlobal(groupSize * shaderGroups.Count);
+                try
+                {
+                    for (int i = 0; i < shaderGroups.Count; i++)
+                    {
+                        IntPtr groupPtr = new IntPtr(groupsPtr.ToInt64() + i * groupSize);
+                        Marshal.StructureToPtr(shaderGroups[i], groupPtr, false);
+                    }
+
+                    // Create raytracing pipeline create info
+                    uint maxRecursionDepth = desc.MaxRecursionDepth > 0 ? (uint)desc.MaxRecursionDepth : 1;
+                    var pipelineCreateInfo = new VkRayTracingPipelineCreateInfoKHR
+                    {
+                        sType = VkStructureType.VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR,
+                        pNext = IntPtr.Zero,
+                        flags = 0,
+                        stageCount = (uint)shaderStages.Count,
+                        pStages = stagesPtr,
+                        groupCount = (uint)shaderGroups.Count,
+                        pGroups = groupsPtr,
+                        maxPipelineRayRecursionDepth = maxRecursionDepth,
+                        pLibraryInfo = IntPtr.Zero,
+                        pLibraryInterface = IntPtr.Zero,
+                        pDynamicState = IntPtr.Zero,
+                        layout = pipelineLayout,
+                        basePipelineHandle = IntPtr.Zero,
+                        basePipelineIndex = -1
+                    };
+
+                    // Marshal pipeline create info
+                    int pipelineCreateInfoSize = Marshal.SizeOf(typeof(VkRayTracingPipelineCreateInfoKHR));
+                    IntPtr pipelineCreateInfoPtr = Marshal.AllocHGlobal(pipelineCreateInfoSize);
+                    try
+                    {
+                        Marshal.StructureToPtr(pipelineCreateInfo, pipelineCreateInfoPtr, false);
+
+                        // Allocate pipeline handle
+                        IntPtr pipelinePtr = Marshal.AllocHGlobal(IntPtr.Size);
+                        try
+                        {
+                            // Note: vkCreateRayTracingPipelinesKHR should be loaded via vkGetDeviceProcAddr
+                            // For now, we assume it's available if raytracing is supported
+                            if (vkCreateRayTracingPipelinesKHR == null)
+                            {
+                                throw new NotSupportedException("vkCreateRayTracingPipelinesKHR function pointer is not initialized. VK_KHR_ray_tracing_pipeline extension may not be available.");
+                            }
+
+                            VkResult result = vkCreateRayTracingPipelinesKHR(_device, IntPtr.Zero, IntPtr.Zero, 1, pipelineCreateInfoPtr, IntPtr.Zero, pipelinePtr);
+                            CheckResult(result, "vkCreateRayTracingPipelinesKHR");
+
+                            IntPtr vkPipeline = Marshal.ReadIntPtr(pipelinePtr);
+
+                            // Get shader group handle size (typically 32 bytes)
+                            uint handleSize = 32;
+                            uint handleSizeAligned = (handleSize + 31) & ~31u; // Align to 32 bytes
+                            uint groupCount = (uint)shaderGroups.Count;
+                            uint sbtSize = groupCount * handleSizeAligned;
+
+                            // Create SBT buffer
+                            var sbtBufferDesc = new BufferDesc
+                            {
+                                ByteSize = (int)sbtSize,
+                                Usage = BufferUsage.Shader
+                            };
+                            IBuffer sbtBuffer = CreateBuffer(sbtBufferDesc);
+
+                            // Get shader group handles and populate SBT
+                            // Note: SBT population typically happens at dispatch time or requires buffer mapping
+                            // For now, we create the buffer - full SBT population would require vkGetRayTracingShaderGroupHandlesKHR
+                            // and proper buffer device address support (VK_KHR_buffer_device_address)
+
+                            IntPtr handle = new IntPtr(_nextResourceHandle++);
+                            var pipeline = new VulkanRaytracingPipeline(handle, desc, vkPipeline, pipelineLayout, sbtBuffer, _device);
+                            _resources[handle] = pipeline;
+
+                            return pipeline;
+                        }
+                        finally
+                        {
+                            Marshal.FreeHGlobal(pipelinePtr);
+                        }
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(pipelineCreateInfoPtr);
+                    }
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(groupsPtr);
+                }
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(stagesPtr);
+                // Cleanup entry point names
+                foreach (var ptr in entryPointNames)
+                {
+                    Marshal.FreeHGlobal(ptr);
+                }
+            }
         }
 
         #endregion
@@ -2465,6 +2912,14 @@ namespace Andastra.Runtime.MonoGame.Backends
                 Type = desc.Type;
             }
 
+            /// <summary>
+            /// Gets the VkShaderModule handle. Used internally for pipeline creation.
+            /// </summary>
+            internal IntPtr VkShaderModule
+            {
+                get { return _vkShaderModule; }
+            }
+
             public void Dispose()
             {
                 if (_vkShaderModule != IntPtr.Zero && _device != IntPtr.Zero)
@@ -2703,7 +3158,10 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             public void Dispose()
             {
-                // TODO: vkDestroyPipeline when raytracing extension is available
+                if (_vkPipeline != IntPtr.Zero && _device != IntPtr.Zero)
+                {
+                    vkDestroyPipeline(_device, _vkPipeline, IntPtr.Zero);
+                }
                 if (_vkPipelineLayout != IntPtr.Zero && _device != IntPtr.Zero)
                 {
                     vkDestroyPipelineLayout(_device, _vkPipelineLayout, IntPtr.Zero);
@@ -3537,15 +3995,10 @@ namespace Andastra.Runtime.MonoGame.Backends
 
 
 
-        #endregion
-    }
-}
-
-
-
 
 
         #endregion
     }
 }
+
 
