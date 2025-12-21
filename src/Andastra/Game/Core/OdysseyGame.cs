@@ -917,11 +917,11 @@ namespace Andastra.Runtime.Game.Core
             switch (buttonTag.ToUpperInvariant())
             {
                 case "BTN_NEWGAME":
-                    // New Game button - go to character creation
-                    // Based on swkotor.exe FUN_0067afb0 @ 0x0067afb0: New Game loads module "END_M01AA" (Endar Spire)
-                    // Based on swkotor2.exe FUN_006d0b00 @ 0x006d0b00: New Game loads module "001ebo" (Prologue/Ebon Hawk)
-                    // TODO: StubHowever, original games go to character creation first, then load module
-                    // Original implementation: Character creation completes -> module loads -> player entity created
+                    // New Game button - go to character creation first, then load module
+                    // Based on swkotor.exe FUN_0067afb0 @ 0x0067afb0: New Game goes to character creation, then loads module "END_M01AA" (Endar Spire)
+                    // Based on swkotor2.exe FUN_006d0b00 @ 0x006d0b00: New Game goes to character creation, then loads module "001ebo" (Prologue/Ebon Hawk)
+                    // Original implementation flow: New Game button -> Character creation screen -> Character creation completes -> Module loads -> Player entity created
+                    // This matches the original games: character creation must complete before module loads
                     Console.WriteLine("[Odyssey] New Game button clicked - transitioning to character creation");
                     
                     // Stop main menu music and start character creation music
