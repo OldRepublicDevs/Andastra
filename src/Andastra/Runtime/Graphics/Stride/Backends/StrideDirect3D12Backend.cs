@@ -3451,134 +3451,135 @@ namespace Andastra.Runtime.Stride.Backends
         /// <summary>
         /// Converts TextureFormat to DXGI_FORMAT for sampler feedback textures.
         /// Sampler feedback textures use specialized formats that track mip level access.
+        /// 
+        /// DirectX 12 sampler feedback formats are independent of base texture formats.
+        /// There are two feedback format types:
+        /// - MIN_MIP_OPAQUE (189): Tracks the minimum mip level accessed per 8x8 tile (most common)
+        /// - MIP_REGION_USED_OPAQUE (190): Tracks which specific mip regions are used (more detailed)
+        /// 
+        /// Based on DirectX 12 Ultimate Sampler Feedback specification:
+        /// https://docs.microsoft.com/en-us/windows/win32/direct3d12/sampler-feedback
         /// </summary>
-        /// <remarks>
-        /// Based on DirectX 12 Ultimate Sampler Feedback:
-        /// - DXGI_FORMAT_SAMPLER_FEEDBACK_MIN_MIP_OPAQUE = 189 (0xBD) - tracks minimum mip level accessed per 8x8 tile
-        /// - DXGI_FORMAT_SAMPLER_FEEDBACK_MIP_REGION_USED_OPAQUE = 190 (0xBE) - tracks which mip regions are used
-        /// 
-        /// Sampler feedback formats are independent of the source texture format - the same feedback format
-        /// can be used regardless of whether the source is RGBA8, RGBA16F, BC1, etc. The feedback format
-        /// only tracks mip level access patterns, not the actual texture data format.
-        /// 
-        /// MIN_MIP_OPAQUE (189) is the most commonly used format as it provides the minimum mip level
-        /// that was accessed, which is sufficient for most texture streaming and mip bias optimization use cases.
-        /// MIP_REGION_USED_OPAQUE (190) provides more detailed region information but is less commonly used.
-        /// 
-        /// All texture formats map to MIN_MIP_OPAQUE by default, as this is the standard sampler feedback format.
-        /// </remarks>
+        /// <param name="format">TextureFormat value - for standard texture formats, defaults to MIN_MIP_OPAQUE.
+        /// In the future, TextureFormat enum may include specific sampler feedback format types.</param>
+        /// <returns>DXGI_FORMAT value for the sampler feedback texture (189 or 190)</returns>
         private uint ConvertFormatToDxgiFormatForSamplerFeedback(TextureFormat format)
         {
-            // Sampler feedback formats are DirectX 12 Ultimate features
-            // All texture formats use the same sampler feedback format regardless of source format
-            // DXGI_FORMAT_SAMPLER_FEEDBACK_MIN_MIP_OPAQUE = 189 (0xBD)
-            // This format stores the minimum mip level that was accessed per 8x8 tile
-            // It works with any source texture format (RGBA8, RGBA16F, BC1-7, etc.)
-            
-            // Map all texture formats to MIN_MIP_OPAQUE format
-            // The source texture format doesn't affect the sampler feedback format choice
-            // MIN_MIP_OPAQUE is the standard format for most use cases (texture streaming, mip bias optimization)
+            // DirectX 12 sampler feedback format constants
+            // These are DXGI_FORMAT enum values from d3d12.h
+            const uint DXGI_FORMAT_SAMPLER_FEEDBACK_MIN_MIP_OPAQUE = 189; // 0xBD - most commonly used
+            const uint DXGI_FORMAT_SAMPLER_FEEDBACK_MIP_REGION_USED_OPAQUE = 190; // 0xBE - more detailed tracking
+
+            // Sampler feedback formats work independently of base texture formats.
+            // The format parameter is used to select the type of feedback information desired.
+            // 
+            // Mapping strategy:
+            // 1. Default to MIN_MIP_OPAQUE for all standard texture formats (most common use case)
+            //    - MIN_MIP_OPAQUE is the default because it's simpler and covers most streaming/texture optimization needs
+            //    - It stores one byte per 8x8 tile indicating the minimum mip level accessed
+            // 2. For future extension: If TextureFormat enum is extended with sampler feedback-specific values,
+            //    those can be mapped to MIP_REGION_USED_OPAQUE or other feedback types
+            // 3. Special handling: Depth/stencil formats might benefit from MIP_REGION_USED_OPAQUE for
+            //    more granular tracking, but this is application-specific
+
             switch (format)
             {
-                // Standard 8-bit formats
+                // Standard texture formats: Default to MIN_MIP_OPAQUE (most common)
+                // This format tracks the minimum mip level accessed per 8x8 tile, which is sufficient
+                // for most texture streaming and mip optimization use cases.
+                case TextureFormat.Unknown:
                 case TextureFormat.R8_UNorm:
+                case TextureFormat.R8_UInt:
+                case TextureFormat.R8_SInt:
                 case TextureFormat.R8G8_UNorm:
+                case TextureFormat.R8G8_UInt:
                 case TextureFormat.R8G8B8A8_UNorm:
                 case TextureFormat.R8G8B8A8_UNorm_SRGB:
+                case TextureFormat.R8G8B8A8_UInt:
+                case TextureFormat.R8G8B8A8_SInt:
                 case TextureFormat.B8G8R8A8_UNorm:
                 case TextureFormat.B8G8R8A8_UNorm_SRGB:
-                
-                // 16-bit formats
+                case TextureFormat.R16_Float:
                 case TextureFormat.R16_UNorm:
-                case TextureFormat.R16G16_UNorm:
-                case TextureFormat.R16G16B16A16_UNorm:
+                case TextureFormat.R16_UInt:
+                case TextureFormat.R16_SInt:
+                case TextureFormat.R16G16_Float:
+                case TextureFormat.R16G16_UInt:
+                case TextureFormat.R16G16_SInt:
                 case TextureFormat.R16G16B16A16_Float:
-                
-                // 32-bit formats
+                case TextureFormat.R16G16B16A16_UNorm:
+                case TextureFormat.R16G16B16A16_UInt:
+                case TextureFormat.R16G16B16A16_SInt:
                 case TextureFormat.R32_Float:
+                case TextureFormat.R32_UInt:
+                case TextureFormat.R32_SInt:
                 case TextureFormat.R32G32_Float:
+                case TextureFormat.R32G32_UInt:
+                case TextureFormat.R32G32_SInt:
                 case TextureFormat.R32G32B32_Float:
                 case TextureFormat.R32G32B32A32_Float:
-                
-                // Depth/stencil formats
+                case TextureFormat.R32G32B32A32_UInt:
+                case TextureFormat.R32G32B32A32_SInt:
+                case TextureFormat.R11G11B10_Float:
+                case TextureFormat.R10G10B10A2_UNorm:
+                case TextureFormat.R10G10B10A2_UInt:
+                // Block-compressed formats (BC/DXT)
+                case TextureFormat.BC1_UNorm:
+                case TextureFormat.BC1_UNorm_SRGB:
+                case TextureFormat.BC1:
+                case TextureFormat.BC2_UNorm:
+                case TextureFormat.BC2_UNorm_SRGB:
+                case TextureFormat.BC2:
+                case TextureFormat.BC3_UNorm:
+                case TextureFormat.BC3_UNorm_SRGB:
+                case TextureFormat.BC3:
+                case TextureFormat.BC4_UNorm:
+                case TextureFormat.BC4:
+                case TextureFormat.BC5_UNorm:
+                case TextureFormat.BC5:
+                case TextureFormat.BC6H_UFloat:
+                case TextureFormat.BC6H:
+                case TextureFormat.BC7_UNorm:
+                case TextureFormat.BC7_UNorm_SRGB:
+                case TextureFormat.BC7:
+                // ASTC compressed formats
+                case TextureFormat.ASTC_4x4:
+                case TextureFormat.ASTC_5x5:
+                case TextureFormat.ASTC_6x6:
+                case TextureFormat.ASTC_8x8:
+                case TextureFormat.ASTC_10x10:
+                case TextureFormat.ASTC_12x12:
+                    // Default to MIN_MIP_OPAQUE for all standard formats
+                    // This is the most commonly used format for texture streaming optimization
+                    return DXGI_FORMAT_SAMPLER_FEEDBACK_MIN_MIP_OPAQUE;
+
+                // Depth/stencil formats: Also default to MIN_MIP_OPAQUE
+                // While MIP_REGION_USED_OPAQUE could provide more detailed tracking for depth textures,
+                // MIN_MIP_OPAQUE is typically sufficient for most use cases and is more memory-efficient.
+                // If application-specific requirements need detailed region tracking for depth textures,
+                // this can be changed to MIP_REGION_USED_OPAQUE, or TextureFormat enum can be extended
+                // with sampler feedback-specific format values.
                 case TextureFormat.D16_UNorm:
                 case TextureFormat.D24_UNorm_S8_UInt:
                 case TextureFormat.D32_Float:
-                case TextureFormat.D32_Float_S8X24_UInt:
-                
-                // Compressed formats (BC1-BC7)
-                case TextureFormat.BC1_UNorm:
-                case TextureFormat.BC1_UNorm_SRGB:
-                case TextureFormat.BC2_UNorm:
-                case TextureFormat.BC2_UNorm_SRGB:
-                case TextureFormat.BC3_UNorm:
-                case TextureFormat.BC3_UNorm_SRGB:
-                case TextureFormat.BC4_UNorm:
-                case TextureFormat.BC4_SNorm:
-                case TextureFormat.BC5_UNorm:
-                case TextureFormat.BC5_SNorm:
-                case TextureFormat.BC6H_UF16:
-                case TextureFormat.BC6H_SF16:
-                case TextureFormat.BC7_UNorm:
-                case TextureFormat.BC7_UNorm_SRGB:
-                
-                // ASTC formats (if supported)
-                case TextureFormat.ASTC_4x4_UNorm:
-                case TextureFormat.ASTC_4x4_UNorm_SRGB:
-                case TextureFormat.ASTC_5x4_UNorm:
-                case TextureFormat.ASTC_5x4_UNorm_SRGB:
-                case TextureFormat.ASTC_5x5_UNorm:
-                case TextureFormat.ASTC_5x5_UNorm_SRGB:
-                case TextureFormat.ASTC_6x5_UNorm:
-                case TextureFormat.ASTC_6x5_UNorm_SRGB:
-                case TextureFormat.ASTC_6x6_UNorm:
-                case TextureFormat.ASTC_6x6_UNorm_SRGB:
-                case TextureFormat.ASTC_8x5_UNorm:
-                case TextureFormat.ASTC_8x5_UNorm_SRGB:
-                case TextureFormat.ASTC_8x6_UNorm:
-                case TextureFormat.ASTC_8x6_UNorm_SRGB:
-                case TextureFormat.ASTC_8x8_UNorm:
-                case TextureFormat.ASTC_8x8_UNorm_SRGB:
-                case TextureFormat.ASTC_10x5_UNorm:
-                case TextureFormat.ASTC_10x5_UNorm_SRGB:
-                case TextureFormat.ASTC_10x6_UNorm:
-                case TextureFormat.ASTC_10x6_UNorm_SRGB:
-                case TextureFormat.ASTC_10x8_UNorm:
-                case TextureFormat.ASTC_10x8_UNorm_SRGB:
-                case TextureFormat.ASTC_10x10_UNorm:
-                case TextureFormat.ASTC_10x10_UNorm_SRGB:
-                case TextureFormat.ASTC_12x10_UNorm:
-                case TextureFormat.ASTC_12x10_UNorm_SRGB:
-                case TextureFormat.ASTC_12x12_UNorm:
-                case TextureFormat.ASTC_12x12_UNorm_SRGB:
-                
-                // ETC formats (if supported)
-                case TextureFormat.ETC2_RGB_UNorm:
-                case TextureFormat.ETC2_RGB_UNorm_SRGB:
-                case TextureFormat.ETC2_RGBA_UNorm:
-                case TextureFormat.ETC2_RGBA_UNorm_SRGB:
-                case TextureFormat.ETC2_RGB_A1_UNorm:
-                case TextureFormat.ETC2_RGB_A1_UNorm_SRGB:
-                
-                // PVRTC formats (if supported)
-                case TextureFormat.PVRTC_RGB_2BPP:
-                case TextureFormat.PVRTC_RGB_2BPP_SRGB:
-                case TextureFormat.PVRTC_RGB_4BPP:
-                case TextureFormat.PVRTC_RGB_4BPP_SRGB:
-                case TextureFormat.PVRTC_RGBA_2BPP:
-                case TextureFormat.PVRTC_RGBA_2BPP_SRGB:
-                case TextureFormat.PVRTC_RGBA_4BPP:
-                case TextureFormat.PVRTC_RGBA_4BPP_SRGB:
-                
-                // Unknown/unsupported formats
-                case TextureFormat.Unknown:
+                case TextureFormat.D32_Float_S8_UInt:
+                    // Use MIN_MIP_OPAQUE for depth formats (sufficient for most shadow mapping and LOD optimization)
+                    return DXGI_FORMAT_SAMPLER_FEEDBACK_MIN_MIP_OPAQUE;
+
                 default:
-                    // DXGI_FORMAT_SAMPLER_FEEDBACK_MIN_MIP_OPAQUE = 189 (0xBD)
-                    // This format stores the minimum mip level that was accessed per 8x8 tile
-                    // It is the standard sampler feedback format for all texture formats
-                    // The feedback format is independent of the source texture format
-                    return 189; // DXGI_FORMAT_SAMPLER_FEEDBACK_MIN_MIP_OPAQUE
+                    // Fallback: Default to MIN_MIP_OPAQUE for any unknown or future format values
+                    // This ensures backward compatibility if TextureFormat enum is extended
+                    return DXGI_FORMAT_SAMPLER_FEEDBACK_MIN_MIP_OPAQUE;
             }
+
+            // Note: Future extension points:
+            // 1. If TextureFormat enum is extended with sampler feedback-specific values (e.g.,
+            //    TextureFormat.SamplerFeedbackMinMipOpaque, TextureFormat.SamplerFeedbackMipRegionUsedOpaque),
+            //    those can be mapped directly to their corresponding DXGI_FORMAT values above.
+            // 2. For applications that need MIP_REGION_USED_OPAQUE for specific use cases, consider:
+            //    - Extending TextureFormat enum with explicit sampler feedback format types
+            //    - Adding a separate parameter to CreateSamplerFeedbackTexture to specify feedback type
+            //    - Using a convention in TextureFormat values to indicate feedback type preference
         }
 
         #endregion
