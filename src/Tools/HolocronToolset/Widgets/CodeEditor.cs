@@ -467,6 +467,17 @@ namespace HolocronToolset.Widgets
                 return;
             }
 
+            // Handle Ctrl+/ shortcut for toggle comment
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:1053
+            // Original: action_toggle_comment.setShortcut(QKeySequence("Ctrl+/"))
+            // Original: action_toggle_comment.triggered.connect(self.ui.codeEdit.toggle_comment)
+            if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && (e.Key == Key.OemQuestion || e.Key == Key.Divide))
+            {
+                ToggleComment();
+                e.Handled = true;
+                return;
+            }
+
             // Handle Ctrl+Shift+K shortcut for delete line
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2485-2487
             // Original: delete_line_shortcut = QShortcut(QKeySequence("Ctrl+Shift+K"), self)
