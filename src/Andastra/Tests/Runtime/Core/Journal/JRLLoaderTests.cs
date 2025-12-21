@@ -90,9 +90,8 @@ namespace Andastra.Tests.Runtime.Core.Journal
                 .Returns(resourceResult);
 
             // Create mock TLK for text resolution
-            var mockTlk = new Mock<TLK>();
-            mockTlk.Setup(t => t.GetString(1)).Returns("Test quest entry text");
-            _jrlLoader.SetTalkTables(mockTlk.Object);
+            TLK testTlk = CreateTestTLK("Test quest entry text");
+            _jrlLoader.SetTalkTables(testTlk);
 
             // Act
             string entryText = _jrlLoader.GetQuestEntryText(questTag, entryId, jrlResRef);
@@ -159,9 +158,8 @@ namespace Andastra.Tests.Runtime.Core.Journal
                 .Returns(new ResourceResult { Data = jrlData });
 
             // Create mock TLK for text resolution
-            var mockTlk = new Mock<TLK>();
-            mockTlk.Setup(t => t.GetString(1)).Returns("Global quest entry text");
-            _jrlLoader.SetTalkTables(mockTlk.Object);
+            TLK testTlk = CreateTestTLK("Global quest entry text");
+            _jrlLoader.SetTalkTables(testTlk);
 
             // Act
             string entryText = _jrlLoader.GetQuestEntryTextFromGlobal(questTag, entryId);
@@ -260,6 +258,25 @@ namespace Andastra.Tests.Runtime.Core.Journal
             };
             jrl.Quests.Add(quest);
             return jrl;
+        }
+
+        /// <summary>
+        /// Creates a test TLK with a single entry at index 1 containing the specified text.
+        /// The TLK is resized to have at least 2 entries (indices 0 and 1), with entry 0 being empty
+        /// and entry 1 containing the provided text.
+        /// </summary>
+        /// <param name="text">The text to store at entry index 1.</param>
+        /// <returns>A TLK instance with the specified entry text at index 1.</returns>
+        private TLK CreateTestTLK(string text)
+        {
+            var tlk = new TLK();
+            // Resize to have at least 2 entries (indices 0 and 1)
+            // Entry 0 will be empty, entry 1 will contain our text
+            tlk.Resize(2);
+            // Set entry 1 with the provided text
+            // TLK.Resize creates empty entries, so we replace entry 1
+            tlk.Replace(1, text, "");
+            return tlk;
         }
     }
 }
