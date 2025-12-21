@@ -1,6 +1,7 @@
 using System;
 using Microsoft.Xna.Framework.Graphics;
 using Andastra.Runtime.Graphics;
+using Andastra.Runtime.Graphics.MonoGame.Graphics;
 
 namespace Andastra.Runtime.MonoGame.Graphics
 {
@@ -31,7 +32,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
             }
         }
 
-        public IntPtr NativeHandle => RenderTarget.Handle;
+        public IntPtr NativeHandle => IntPtr.Zero; // MonoGame RenderTarget2D does not expose Handle directly
 
         public void Dispose()
         {
