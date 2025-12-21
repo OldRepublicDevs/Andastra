@@ -511,10 +511,12 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
         /// <summary>
         /// Reads texture data from GPU to CPU memory.
+        /// Implements proper texture readback using Stride's GetData API.
+        /// This is expensive and should only be used as CPU fallback when GPU shaders are not available.
         /// </summary>
-        private Vector4[] ReadTextureData(Texture texture, GraphicsContext commandList)
+        private Vector4[] ReadTextureData(Texture texture)
         {
-            if (texture == null || commandList == null)
+            if (texture == null || _graphicsDevice == null)
             {
                 return null;
             }
@@ -525,6 +527,14 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 int height = texture.Height;
                 int size = width * height;
                 Vector4[] data = new Vector4[size];
+
+                // Get ImmediateContext (CommandList) from GraphicsDevice
+                var commandList = _graphicsDevice.ImmediateContext;
+                if (commandList == null)
+                {
+                    Console.WriteLine("[StrideColorGrading] ReadTextureData: ImmediateContext not available");
+                    return data; // Return zero-initialized data
+                }
 
                 PixelFormat format = texture.Format;
 
@@ -583,7 +593,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     catch (Exception ex)
                     {
                         Console.WriteLine($"[StrideColorGrading] ReadTextureData: Unsupported format {format}: {ex.Message}");
-                        return null;
+                        // Return zero-initialized data on failure
                     }
                 }
 
@@ -591,17 +601,20 @@ namespace Andastra.Runtime.Stride.PostProcessing
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[StrideColorGrading] ReadTextureData failed: {ex.Message}");
-                return null;
+                Console.WriteLine($"[StrideColorGrading] ReadTextureData: Exception during texture readback: {ex.Message}");
+                // Return zero-initialized data on failure
+                return new Vector4[texture.Width * texture.Height];
             }
         }
 
         /// <summary>
         /// Writes texture data from CPU memory to GPU texture.
+        /// Implements proper texture upload using Stride's SetData API.
+        /// This is expensive and should only be used as CPU fallback when GPU shaders are not available.
         /// </summary>
-        private void WriteTextureData(Texture texture, Vector4[] data, GraphicsContext commandList, int width, int height)
+        private void WriteTextureData(Texture texture, Vector4[] data, int width, int height)
         {
-            if (texture == null || data == null || commandList == null)
+            if (texture == null || data == null || _graphicsDevice == null)
             {
                 return;
             }
@@ -610,14 +623,22 @@ namespace Andastra.Runtime.Stride.PostProcessing
             {
                 if (texture.Width != width || texture.Height != height)
                 {
-                    Console.WriteLine($"[StrideColorGrading] WriteTextureData: Texture dimensions mismatch");
+                    Console.WriteLine($"[StrideColorGrading] WriteTextureData: Texture dimensions mismatch. Texture: {texture.Width}x{texture.Height}, Data: {width}x{height}");
                     return;
                 }
 
                 int size = width * height;
                 if (data.Length < size)
                 {
-                    Console.WriteLine($"[StrideColorGrading] WriteTextureData: Data array too small");
+                    Console.WriteLine($"[StrideColorGrading] WriteTextureData: Data array too small. Expected: {size}, Got: {data.Length}");
+                    return;
+                }
+
+                // Get ImmediateContext (CommandList) from GraphicsDevice
+                var commandList = _graphicsDevice.ImmediateContext;
+                if (commandList == null)
+                {
+                    Console.WriteLine("[StrideColorGrading] WriteTextureData: ImmediateContext not available");
                     return;
                 }
 

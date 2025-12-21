@@ -2170,12 +2170,22 @@ namespace Andastra.Runtime.Games.Aurora
             var scriptHooksComponent = moduleEntity.GetComponent<IScriptHooksComponent>();
             if (scriptHooksComponent == null)
             {
-                // Try to add IScriptHooksComponent if entity supports component addition
-                // Note: Entity component system may require component to be added during entity creation
-                // TODO: STUB - For now, if component doesn't exist, we'll skip script execution
-                // In a full implementation, ComponentInitializer should ensure all entities have IScriptHooksComponent
-                System.Diagnostics.Debug.WriteLine($"[AuroraModuleLoader] Module entity missing IScriptHooksComponent - scripts will not execute");
-                return;
+                // Add IScriptHooksComponent to module entity if it doesn't exist
+                // Based on nwmain.exe: All entities support script hooks, including module entities
+                // AuroraEntity.AttachCommonComponents() ensures all entities have IScriptHooksComponent
+                // For entities created with CreateEntity, we need to explicitly add the component
+                // Component can be added at runtime - entity component system supports dynamic component addition
+                scriptHooksComponent = new BaseScriptHooksComponent();
+                moduleEntity.AddComponent<IScriptHooksComponent>(scriptHooksComponent);
+                
+                // Verify component was successfully added
+                scriptHooksComponent = moduleEntity.GetComponent<IScriptHooksComponent>();
+                if (scriptHooksComponent == null)
+                {
+                    // Failed to add component - cannot execute scripts
+                    System.Diagnostics.Debug.WriteLine($"[AuroraModuleLoader] Failed to add IScriptHooksComponent to module entity - scripts will not execute");
+                    return;
+                }
             }
 
             // Set script hooks on module entity component
