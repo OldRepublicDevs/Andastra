@@ -153,7 +153,11 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// Gets the upgrade table name for regular items (not lightsabers).
         /// </summary>
         /// <returns>Table name for regular item upgrades.</returns>
-        protected new abstract string GetRegularUpgradeTableName();
+        protected override string GetRegularUpgradeTableName()
+        {
+            // This should be overridden by derived classes (K1UpgradeScreen, K2UpgradeScreen)
+            throw new NotImplementedException("GetRegularUpgradeTableName must be implemented by derived class");
+        }
 
         /// <summary>
         /// Gets available upgrade items for a given item and upgrade slot.
@@ -372,7 +376,11 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// <param name="upgradeSlot">Upgrade slot index (0-based).</param>
         /// <param name="upgradeResRef">ResRef of upgrade item to apply.</param>
         /// <returns>True if upgrade was successful.</returns>
-        public new abstract bool ApplyUpgrade(IEntity item, int upgradeSlot, string upgradeResRef);
+        public override bool ApplyUpgrade(IEntity item, int upgradeSlot, string upgradeResRef)
+        {
+            // This should be overridden by derived classes (K1UpgradeScreen, K2UpgradeScreen)
+            throw new NotImplementedException("ApplyUpgrade must be implemented by derived class");
+        }
 
         /// <summary>
         /// Removes an upgrade from an item.
@@ -380,7 +388,11 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// <param name="item">Item to modify.</param>
         /// <param name="upgradeSlot">Upgrade slot index (0-based).</param>
         /// <returns>True if upgrade was removed.</returns>
-        public new abstract bool RemoveUpgrade(IEntity item, int upgradeSlot);
+        public override bool RemoveUpgrade(IEntity item, int upgradeSlot)
+        {
+            // This should be overridden by derived classes (K1UpgradeScreen, K2UpgradeScreen)
+            throw new NotImplementedException("RemoveUpgrade must be implemented by derived class");
+        }
 
         /// <summary>
         /// Gets the upgrade GUI name for this game version.

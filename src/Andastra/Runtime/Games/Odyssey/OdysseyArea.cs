@@ -12,6 +12,8 @@ using Andastra.Runtime.Graphics.Common;
 using Andastra.Runtime.Graphics.Common.Effects;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Common;
+using ParsingIModule = Andastra.Parsing.Common.IModule;
+using RuntimeIModule = Andastra.Runtime.Core.Interfaces.IModule;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Runtime.Core.Navigation;
 using Andastra.Runtime.Engines.Odyssey.Loading;
@@ -1612,7 +1614,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
 
                 // Get module from world
-                IModule module = world.CurrentModule;
+                RuntimeIModule module = world.CurrentModule;
                 if (module == null)
                 {
                     Console.WriteLine("[OdysseyArea] ProcessPendingAreaTransitions: Cannot process transitions - no module loaded");
@@ -1672,7 +1674,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// 3. Validate transition ID is within bounds
         /// 4. Return area ResRef at the specified index
         /// </remarks>
-        private string ResolveTransitionTargetArea(IModule module, byte transitionId)
+        private string ResolveTransitionTargetArea(RuntimeIModule module, byte transitionId)
         {
             if (module == null)
             {
@@ -1724,7 +1726,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Each entry in Mod_Area_list contains an Area_Name field with the area ResRef.
         /// This method attempts to access the IFO data if available.
         /// </remarks>
-        private List<string> GetAreaListFromModule(IModule module)
+        private List<string> GetAreaListFromModule(RuntimeIModule module)
         {
             if (module == null)
             {

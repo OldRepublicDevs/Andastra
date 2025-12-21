@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Andastra.Runtime.Graphics.MonoGame.Enums;
-using Andastra.Runtime.Graphics.MonoGame.Interfaces;
-using Andastra.Runtime.Graphics.MonoGame.Lighting;
-using DynamicLight = Andastra.Runtime.Graphics.MonoGame.Lighting.DynamicLight;
+using Andastra.Runtime.MonoGame.Enums;
+using Andastra.Runtime.MonoGame.Interfaces;
+using Andastra.Runtime.MonoGame.Lighting;
+using DynamicLight = Andastra.Runtime.MonoGame.Lighting.DynamicLight;
+using EclipseILightingSystem = Andastra.Runtime.Games.Eclipse.ILightingSystem;
+using EclipseIUpdatable = Andastra.Runtime.Games.Eclipse.IUpdatable;
 
 namespace Andastra.Runtime.Games.Eclipse.Lighting
 {
@@ -31,7 +33,7 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
     /// - daorigins.exe: Lighting system initialization and management
     /// - DragonAge2.exe: Enhanced lighting features and shadow casting
     /// </remarks>
-    public class EclipseLightingSystem : ILightingSystem
+    public class EclipseLightingSystem : EclipseILightingSystem
     {
         // Cluster configuration for light culling (similar to ClusteredLightingSystem)
         private const int ClusterCountX = 16;
@@ -329,6 +331,35 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
             _clustersDirty = true;
 
             return light;
+        }
+
+        /// <summary>
+        /// Adds a light to the system.
+        /// </summary>
+        /// <param name="light">The light to add.</param>
+        public void AddLight(IDynamicLight light)
+        {
+            if (light == null)
+            {
+                return;
+            }
+
+            var dynamicLight = light as DynamicLight;
+            if (dynamicLight != null)
+            {
+                if (!_lights.Contains(dynamicLight))
+                {
+                    if (_lights.Count >= MaxLights)
+                    {
+                        Console.WriteLine("[EclipseLighting] Max lights reached: " + MaxLights);
+                        return;
+                    }
+
+                    _lights.Add(dynamicLight);
+                    _lightMap[dynamicLight.LightId] = dynamicLight;
+                    _clustersDirty = true;
+                }
+            }
         }
 
         /// <summary>

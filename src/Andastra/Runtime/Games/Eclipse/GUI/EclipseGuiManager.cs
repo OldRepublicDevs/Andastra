@@ -19,7 +19,7 @@ using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Games.Eclipse.Fonts;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.MonoGame.Graphics;
-using Andastra.Runtime.Graphics.MonoGame.Converters;
+using Andastra.Runtime.MonoGame.Converters;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Eclipse.GUI

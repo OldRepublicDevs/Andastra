@@ -11,6 +11,7 @@ using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.MonoGame.Graphics;
 using JetBrains.Annotations;
+using XnaRectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace Andastra.Runtime.Games.Odyssey.Fonts
 {
@@ -96,7 +97,7 @@ namespace Andastra.Runtime.Games.Odyssey.Fonts
         /// </summary>
         private class CharacterInfo
         {
-            public Rectangle SourceRect { get; set; }
+            public Microsoft.Xna.Framework.Rectangle SourceRect { get; set; }
             public float Width { get; set; }
             public float Height { get; set; }
         }
@@ -254,7 +255,7 @@ namespace Andastra.Runtime.Games.Odyssey.Fonts
 
                     charMap[i] = new CharacterInfo
                     {
-                        SourceRect = new Rectangle((int)x, (int)y, (int)cellWidth, (int)cellHeight),
+                        SourceRect = new XnaRectangle((int)x, (int)y, (int)cellWidth, (int)cellHeight),
                         Width = cellWidth,
                         Height = cellHeight
                     };
@@ -281,7 +282,7 @@ namespace Andastra.Runtime.Games.Odyssey.Fonts
 
                     charMap[i] = new CharacterInfo
                     {
-                        SourceRect = new Rectangle((int)x1, (int)y1, (int)width, (int)height),
+                        SourceRect = new XnaRectangle((int)x1, (int)y1, (int)width, (int)height),
                         Width = width,
                         Height = height
                     };

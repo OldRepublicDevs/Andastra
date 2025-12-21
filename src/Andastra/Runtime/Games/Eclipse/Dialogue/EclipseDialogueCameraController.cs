@@ -49,29 +49,6 @@ namespace Andastra.Runtime.Games.Eclipse.Dialogue
         }
 
         /// <summary>
-        /// Initializes default camera animations.
-        /// Based on daorigins.exe/DragonAge2.exe: Eclipse does not use predefined camera animations
-        /// </summary>
-        protected override void InitializeDefaultAnimations()
-        {
-            // Eclipse does not have direct equivalents to Odyssey's default animations.
-            // Camera behavior is handled by UnrealScript camera behaviors and conversation mode.
-            // This method remains empty as Eclipse uses a different camera system.
-        }
-
-        /// <summary>
-        /// Registers a camera animation.
-        /// Based on daorigins.exe/DragonAge2.exe: Eclipse does not use dialogue camera animations
-        /// </summary>
-        /// <param name="animation">The camera animation to register.</param>
-        public override void RegisterAnimation(DialogueCameraAnimation animation)
-        {
-            // Eclipse does not use dialogue camera animations like Odyssey.
-            // Camera behavior is handled by UnrealScript camera behaviors.
-            // This is a no-op for Eclipse engine.
-        }
-
-        /// <summary>
         /// Sets the camera to focus on the speaker and listener.
         /// Based on daorigins.exe/DragonAge2.exe: Enter conversation mode and focus camera
         /// Reverse engineered from daorigins.exe/DragonAge2.exe:

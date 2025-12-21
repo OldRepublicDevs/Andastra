@@ -1,5 +1,7 @@
 using JetBrains.Annotations;
 using Andastra.Runtime.Games.Common;
+using GameDataManager = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager;
+using AppearanceData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.AppearanceData;
 
 namespace Andastra.Runtime.Games.Odyssey.Data
 {

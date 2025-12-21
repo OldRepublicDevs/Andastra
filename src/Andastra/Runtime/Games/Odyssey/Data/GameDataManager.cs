@@ -1007,7 +1007,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         /// <summary>
         /// Feat data from feat.2da.
         /// </summary>
-        public class FeatData : Andastra.Runtime.Games.Common.Components.BaseCreatureComponent.IFeatData
+        public class FeatData
         {
             public int RowIndex { get; set; }
             public int FeatId { get { return RowIndex; } set { RowIndex = value; } }
