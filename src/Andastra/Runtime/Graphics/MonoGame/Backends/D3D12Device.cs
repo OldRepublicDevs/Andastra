@@ -567,7 +567,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             // - Wrap in D3D12BindingLayout and return
 
             IntPtr handle = new IntPtr(_nextResourceHandle++);
-            var layout = new D3D12BindingLayout(handle, desc, IntPtr.Zero, _device);
+            var layout = new D3D12BindingLayout(handle, desc, IntPtr.Zero, _device, this);
             _resources[handle] = layout;
 
             return layout;
@@ -1647,6 +1647,171 @@ namespace Andastra.Runtime.MonoGame.Backends
             public IntPtr ptr; // SIZE_T
         }
 
+        // D3D12 Root Signature structures
+        // Based on DirectX 12 Root Signatures: https://docs.microsoft.com/en-us/windows/win32/direct3d12/root-signatures
+
+        /// <summary>
+        /// D3D12_DESCRIPTOR_RANGE structure for root signature descriptor tables.
+        /// Based on DirectX 12 Descriptor Ranges: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_descriptor_range
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_DESCRIPTOR_RANGE
+        {
+            public uint RangeType; // D3D12_DESCRIPTOR_RANGE_TYPE
+            public uint NumDescriptors; // UINT
+            public uint BaseShaderRegister; // UINT
+            public uint RegisterSpace; // UINT
+            public uint OffsetInDescriptorsFromTableStart; // UINT
+        }
+
+        // D3D12_DESCRIPTOR_RANGE_TYPE constants
+        private const uint D3D12_DESCRIPTOR_RANGE_TYPE_SRV = 0; // Shader Resource View
+        private const uint D3D12_DESCRIPTOR_RANGE_TYPE_UAV = 1; // Unordered Access View
+        private const uint D3D12_DESCRIPTOR_RANGE_TYPE_CBV = 2; // Constant Buffer View
+        private const uint D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER = 3; // Sampler
+
+        /// <summary>
+        /// D3D12_ROOT_PARAMETER structure for root signature parameters.
+        /// Based on DirectX 12 Root Parameters: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_root_parameter
+        /// </summary>
+        [StructLayout(LayoutKind.Explicit)]
+        private struct D3D12_ROOT_PARAMETER
+        {
+            [FieldOffset(0)]
+            public uint ParameterType; // D3D12_ROOT_PARAMETER_TYPE
+
+            [FieldOffset(4)]
+            public D3D12_ROOT_DESCRIPTOR_TABLE DescriptorTable; // Used when ParameterType is D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE
+
+            [FieldOffset(4)]
+            public D3D12_ROOT_DESCRIPTOR RootDescriptor; // Used when ParameterType is D3D12_ROOT_PARAMETER_TYPE_CBV, SRV, or UAV
+
+            [FieldOffset(4)]
+            public D3D12_ROOT_CONSTANTS RootConstants; // Used when ParameterType is D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS
+
+            [FieldOffset(20)]
+            public uint ShaderVisibility; // D3D12_SHADER_VISIBILITY
+        }
+
+        // D3D12_ROOT_PARAMETER_TYPE constants
+        private const uint D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE = 0;
+        private const uint D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS = 1;
+        private const uint D3D12_ROOT_PARAMETER_TYPE_CBV = 2;
+        private const uint D3D12_ROOT_PARAMETER_TYPE_SRV = 3;
+        private const uint D3D12_ROOT_PARAMETER_TYPE_UAV = 4;
+
+        // D3D12_SHADER_VISIBILITY constants
+        private const uint D3D12_SHADER_VISIBILITY_ALL = 0;
+        private const uint D3D12_SHADER_VISIBILITY_VERTEX = 1;
+        private const uint D3D12_SHADER_VISIBILITY_HULL = 2;
+        private const uint D3D12_SHADER_VISIBILITY_DOMAIN = 3;
+        private const uint D3D12_SHADER_VISIBILITY_GEOMETRY = 4;
+        private const uint D3D12_SHADER_VISIBILITY_PIXEL = 5;
+        private const uint D3D12_SHADER_VISIBILITY_AMPLIFICATION = 6;
+        private const uint D3D12_SHADER_VISIBILITY_MESH = 7;
+
+        /// <summary>
+        /// D3D12_ROOT_DESCRIPTOR_TABLE structure for descriptor table root parameters.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_ROOT_DESCRIPTOR_TABLE
+        {
+            public uint NumDescriptorRanges; // UINT
+            public IntPtr pDescriptorRanges; // const D3D12_DESCRIPTOR_RANGE*
+        }
+
+        /// <summary>
+        /// D3D12_ROOT_DESCRIPTOR structure for root CBV/SRV/UAV descriptors.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_ROOT_DESCRIPTOR
+        {
+            public uint ShaderRegister; // UINT
+            public uint RegisterSpace; // UINT
+        }
+
+        /// <summary>
+        /// D3D12_ROOT_CONSTANTS structure for root 32-bit constants.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_ROOT_CONSTANTS
+        {
+            public uint ShaderRegister; // UINT
+            public uint RegisterSpace; // UINT
+            public uint Num32BitValues; // UINT
+        }
+
+        /// <summary>
+        /// D3D12_ROOT_SIGNATURE_DESC structure for root signature description.
+        /// Based on DirectX 12 Root Signature Description: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_root_signature_desc
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_ROOT_SIGNATURE_DESC
+        {
+            public uint NumParameters; // UINT
+            public IntPtr pParameters; // const D3D12_ROOT_PARAMETER*
+            public uint NumStaticSamplers; // UINT
+            public IntPtr pStaticSamplers; // const D3D12_STATIC_SAMPLER_DESC*
+            public uint Flags; // D3D12_ROOT_SIGNATURE_FLAGS
+        }
+
+        // D3D12_ROOT_SIGNATURE_FLAGS constants
+        private const uint D3D12_ROOT_SIGNATURE_FLAG_NONE = 0;
+        private const uint D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT = 0x1;
+        private const uint D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS = 0x2;
+        private const uint D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS = 0x4;
+        private const uint D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS = 0x8;
+        private const uint D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS = 0x10;
+        private const uint D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS = 0x20;
+        private const uint D3D12_ROOT_SIGNATURE_FLAG_ALLOW_STREAM_OUTPUT = 0x40;
+
+        /// <summary>
+        /// D3D12_ROOT_SIGNATURE_DESC structure for root signature description.
+        /// Based on DirectX 12 Root Signature Description: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_root_signature_desc
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_STATIC_SAMPLER_DESC
+        {
+            public uint Filter; // D3D12_FILTER
+            public uint AddressU; // D3D12_TEXTURE_ADDRESS_MODE
+            public uint AddressV; // D3D12_TEXTURE_ADDRESS_MODE
+            public uint AddressW; // D3D12_TEXTURE_ADDRESS_MODE
+            public float MipLODBias; // FLOAT
+            public uint MaxAnisotropy; // UINT
+            public uint ComparisonFunc; // D3D12_COMPARISON_FUNC
+            public uint BorderColor; // D3D12_STATIC_BORDER_COLOR
+            public float MinLOD; // FLOAT
+            public float MaxLOD; // FLOAT
+            public uint ShaderRegister; // UINT
+            public uint RegisterSpace; // UINT
+            public uint ShaderVisibility; // D3D12_SHADER_VISIBILITY
+        }
+
+        /// <summary>
+        /// D3D12_ROOT_SIGNATURE_DESC structure for root signature description.
+        /// Based on DirectX 12 Root Signature Description: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_root_signature_desc
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_VERSIONED_ROOT_SIGNATURE_DESC
+        {
+            public uint Version; // D3D_ROOT_SIGNATURE_VERSION
+            public D3D12_ROOT_SIGNATURE_DESC Desc_1_0; // Used when Version is D3D_ROOT_SIGNATURE_VERSION_1_0
+            // Note: Version 1.1 structures would go here, but we'll use 1.0 for compatibility
+        }
+
+        // D3D_ROOT_SIGNATURE_VERSION constants
+        private const uint D3D_ROOT_SIGNATURE_VERSION_1_0 = 0x1;
+        private const uint D3D_ROOT_SIGNATURE_VERSION_1_1 = 0x2;
+
+        // D3D12SerializeRootSignature function signature
+        // Based on DirectX 12 Root Signature Serialization: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-d3d12serializerootsignature
+        [DllImport(D3D12Library, CallingConvention = CallingConvention.StdCall)]
+        private static extern int D3D12SerializeRootSignature(
+            IntPtr pRootSignature, // const D3D12_ROOT_SIGNATURE_DESC*
+            uint Version, // D3D_ROOT_SIGNATURE_VERSION
+            out IntPtr ppBlob, // ID3DBlob**
+            out IntPtr ppErrorBlob); // ID3DBlob**
+
         /// <summary>
         /// D3D12_RECT structure for scissor rectangles.
         /// Based on DirectX 12 Scissor Rects: https://docs.microsoft.com/en-us/windows/win32/api/windef/ns-windef-rect
@@ -2367,6 +2532,9 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate int CreateGraphicsPipelineStateDelegate(IntPtr device, IntPtr pDesc, ref Guid riid, IntPtr ppPipelineState);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int CreateRootSignatureDelegate(IntPtr device, IntPtr pBlobWithRootSignature, IntPtr blobLengthInBytes, ref Guid riid, IntPtr ppvRootSignature);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate IntPtr GetCPUDescriptorHandleForHeapStartDelegate(IntPtr descriptorHeap);
@@ -4019,19 +4187,46 @@ namespace Andastra.Runtime.MonoGame.Backends
             private readonly IntPtr _handle;
             private readonly IntPtr _rootSignature;
             private readonly IntPtr _device;
+            private readonly D3D12Device _parentDevice;
 
-            public D3D12BindingLayout(IntPtr handle, BindingLayoutDesc desc, IntPtr rootSignature, IntPtr device)
+            public D3D12BindingLayout(IntPtr handle, BindingLayoutDesc desc, IntPtr rootSignature, IntPtr device, D3D12Device parentDevice)
             {
                 _handle = handle;
                 Desc = desc;
                 _rootSignature = rootSignature;
                 _device = device;
+                _parentDevice = parentDevice;
             }
 
             public void Dispose()
             {
-                // TODO: Release D3D12 root signature
-                // - Call ID3D12RootSignature::Release()
+                // Release D3D12 root signature COM object
+                // Root signatures are COM objects (ID3D12RootSignature) and must be released via IUnknown::Release()
+                // Based on DirectX 12 Root Signature Management: https://docs.microsoft.com/en-us/windows/win32/direct3d12/root-signatures
+                // Root signatures are created via ID3D12Device::CreateRootSignature and must be released when no longer needed
+                if (_rootSignature != IntPtr.Zero && _parentDevice != null)
+                {
+                    try
+                    {
+                        // Release the COM object through IUnknown::Release() vtable call
+                        // This decrements the reference count and frees the object when count reaches zero
+                        uint refCount = _parentDevice.ReleaseComObject(_rootSignature);
+                        if (refCount > 0)
+                        {
+                            Console.WriteLine($"[D3D12Device] Root signature still has {refCount} references after Release()");
+                        }
+                        else
+                        {
+                            Console.WriteLine("[D3D12Device] Successfully released root signature");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log error but continue cleanup - don't throw from Dispose
+                        Console.WriteLine($"[D3D12Device] Error releasing root signature: {ex.Message}");
+                        Console.WriteLine($"[D3D12Device] Stack trace: {ex.StackTrace}");
+                    }
+                }
             }
         }
 
