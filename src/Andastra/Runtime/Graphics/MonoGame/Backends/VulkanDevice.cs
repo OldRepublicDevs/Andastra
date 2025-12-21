@@ -1467,6 +1467,9 @@ namespace Andastra.Runtime.MonoGame.Backends
         // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetAccelerationStructureDeviceAddressKHR.html
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate ulong vkGetAccelerationStructureDeviceAddressKHRDelegate(IntPtr device, ref VkAccelerationStructureDeviceAddressInfoKHR pInfo);
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdCopyAccelerationStructureKHR.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdCopyAccelerationStructureKHRDelegate(IntPtr commandBuffer, ref VkCopyAccelerationStructureInfoKHR pInfo);
 
         // VK_KHR_ray_tracing_pipeline extension function pointers (static for now - would be loaded via vkGetDeviceProcAddr in real implementation)
         private static vkCreateRayTracingPipelinesKHRDelegate vkCreateRayTracingPipelinesKHR;
