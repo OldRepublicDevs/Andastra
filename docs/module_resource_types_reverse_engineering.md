@@ -67,7 +67,25 @@ The game uses two loading modes controlled by a flag at offset 0x54 in the resou
   - **Behavior**: Checks for `_a.rim` first, then `_adx.rim`, then `.mod`, then `_s.rim`/`_dlg.erf`
   - **Evidence**: swkotor.exe: `FUN_004094a0` line 49-216 (else branch when flag != 0)
 
-**Flag Control**: The flag at offset 0x54 is part of the resource manager structure (`param_1`). It's initialized in `FUN_00409bf0` (resource manager creation, swkotor.exe: 0x00409bf0), but the exact condition that sets it to 0 vs non-zero is not clear from the decompilation.
+**Flag Control**: The flag at offset 0x54 is part of the resource manager structure (`param_1`). 
+
+**Initialization**: In `FUN_00409bf0` (resource manager creation, swkotor.exe: 0x00409bf0), offset 0x54 is NOT explicitly set, so it defaults to 0 (zero-initialized by `operator_new`).
+
+**Setting the Flag**: The flag is set to 1 (enabling Complex Mode) by `FUN_004064f0` (swkotor.exe: 0x004064f0):
+- **Function**: `void __thiscall FUN_004064f0(void *this, int *param_1, undefined4 param_2, undefined4 param_3)`
+- **Line 9**: `*(undefined4 *)((int)this + 0x54) = param_2;`
+- **Called from**: `FUN_004c4150` (swkotor.exe: 0x004c4150) line 90 with `param_2=1`
+- **When**: Called when loading a module/game (specifically during module localization loading)
+- **Evidence**: swkotor.exe: `FUN_004c4150` line 90: `FUN_004064f0(DAT_007a39e8,local_40,1,*(undefined4 *)((int)this + 0x1c8));`
+
+**swkotor2.exe Equivalents**:
+- Setting function: `FUN_004065e0` (swkotor2.exe: 0x004065e0) - identical behavior, line 9 sets offset 0x54
+- Called from: `FUN_004fd2a0` (swkotor2.exe: 0x004fd2a0) line 98 with `param_2=1`
+- Checking function: `FUN_004096b0` (swkotor2.exe: 0x004096b0) line 36: `if (*(int *)((int)param_1 + 0x54) == 0)`
+
+**Condition Summary**:
+- **Simple Mode (flag == 0)**: Default state when resource manager is created. Flag remains 0 if `FUN_004064f0`/`FUN_004065e0` is never called.
+- **Complex Mode (flag != 0)**: Flag becomes 1 when `FUN_004064f0`/`FUN_004065e0` is called with `param_2=1` during module/game loading. This happens when loading localization data for a module.
 
 **Full Function Decompilation** (swkotor.exe: `FUN_004094a0`):
 
@@ -79,10 +97,17 @@ The game uses two loading modes controlled by a flag at offset 0x54 in the resou
 
 **When Each Mode Is Used**:
 
-- **Simple Mode**: When flag at offset 0x54 == 0 (explicitly set to 0)
-- **Complex Mode**: When flag at offset 0x54 != 0 (default/non-zero value)
+- **Simple Mode (flag == 0)**: 
+  - **Default state**: When the resource manager is first created by `FUN_00409bf0`, offset 0x54 is zero-initialized to 0
+  - **Remains 0 if**: `FUN_004064f0`/`FUN_004065e0` is never called (e.g., during main menu or when not loading a module)
+  - **Usage**: Used for simple resource loading scenarios, typically for main menu resources or when only `.rim` files need to be loaded
 
-In practice, **complex mode appears to be the default** - simple mode is only used when the flag is explicitly set to 0. The flag is likely set based on module configuration or resource manager initialization state.
+- **Complex Mode (flag == 1)**:
+  - **Triggered when**: `FUN_004064f0` (swkotor.exe) / `FUN_004065e0` (swkotor2.exe) is called with `param_2=1`
+  - **Called from**: Module loading functions (`FUN_004c4150` in swkotor.exe, `FUN_004fd2a0` in swkotor2.exe) during module/game loading, specifically when loading localization data
+  - **Usage**: Required for full module loading with area files (`_a.rim`, `_adx.rim`), module files (`.mod`), and save state files (`_s.rim`/`_dlg.erf`)
+
+**In practice**: The flag transitions from 0 (Simple Mode) to 1 (Complex Mode) when a module/game is loaded. Simple Mode is the initial state, Complex Mode is activated during gameplay.
 
 **When `.mod` is loaded**: `.mod` files are loaded in **complex mode** (swkotor.exe: `FUN_004094a0` line 95-136). The check for `.mod` happens after checking for `_a.rim` and `_adx.rim`, but if `.mod` exists, it replaces all other files.
 
@@ -303,7 +328,8 @@ if (FUN_00407300(..., MOD type 0x7db) != 0) {
 | `.rim` + `_s.rim` | `.rim` + `_s.rim` | 1. `.rim`<br>2. `_s.rim` | `.rim` wins (registered first) |
 | `.rim` + `_a.rim` | `_a.rim` only | 1. `_a.rim` | `_a.rim` wins (`.rim` not loaded) |
 | `.rim` + `_a.rim` + `_adx.rim` | `_a.rim` + `_adx.rim` | 1. `_a.rim`<br>2. `_adx.rim` | `_a.rim` wins (registered first) |
-| `.rim` + `_a.rim` + `_adx.rim` + `_s.rim` | `_a.rim` + `_adx.rim` + `_s.rim` | 1. `_a.rim`<br>2. `_adx.rim`<br>3. `_s.rim` | `_a.rim` wins (registered first) |
+| `.rim` + `_a.rim` + `_adx.rim` + `_s.rim` | `_a.rim` + `_adx.rim` + `_s.rim` | 1
+. `_a.rim`<br>2. `_adx.rim`<br>3. `_s.rim` | `_a.rim` wins (registered first) |
 | `.rim` + `.mod` | `.mod` only | 1. `.mod` | `.mod` wins (`.rim` not loaded) |
 | `.rim` + `_s.rim` + `.mod` | `.mod` only | 1. `.mod` | `.mod` wins (`.rim` and `_s.rim` not loaded) |
 | `_a.rim` + `_adx.rim` + `_s.rim` + `.rim` + `.mod` | `_a.rim` + `_adx.rim` + `.mod` | 1. `_a.rim`<br>2. `_adx.rim`<br>3. `.mod` | `.mod` wins (registered last, overrides all) |
