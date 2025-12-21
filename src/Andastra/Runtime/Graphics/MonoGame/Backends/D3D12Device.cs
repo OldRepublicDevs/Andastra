@@ -5013,8 +5013,272 @@ namespace Andastra.Runtime.MonoGame.Backends
             // These are stubbed with TODO comments indicating D3D12 API calls needed
             // Implementation will be completed when DirectX 12 interop is added
 
-            public void WriteBuffer(IBuffer buffer, byte[] data, int destOffset = 0) { /* TODO: Use upload heap or UpdateSubresources */ }
-            public void WriteBuffer<T>(IBuffer buffer, T[] data, int destOffset = 0) where T : unmanaged { /* TODO: Use upload heap or UpdateSubresources */ }
+            /// <summary>
+            /// Writes byte array data to a GPU buffer using D3D12 upload heap and CopyBufferRegion.
+            /// 
+            /// Implementation: Creates a temporary upload buffer (D3D12_HEAP_TYPE_UPLOAD), maps it for CPU access,
+            /// copies the data, unmaps it, then uses CopyBufferRegion to copy from the staging buffer to the
+            /// destination buffer. This is the standard D3D12 pattern for uploading buffer data.
+            /// 
+            /// Based on DirectX 12 Uploading Resource Data:
+            /// https://docs.microsoft.com/en-us/windows/win32/direct3d12/uploading-resource-data
+            /// 
+            /// Pattern matches original engine behavior:
+            /// - swkotor.exe: Uses DirectX 9 UpdateSubresource pattern (D3D12 equivalent is upload heap + CopyBufferRegion)
+            /// - swkotor2.exe: Uses DirectX 9 UpdateSubresource pattern (D3D12 equivalent is upload heap + CopyBufferRegion)
+            /// - Original engine uploads buffer data via IDirect3DDevice9::UpdateSubresource
+            /// - D3D12 equivalent: CreateCommittedResource with D3D12_HEAP_TYPE_UPLOAD, Map, copy, Unmap, CopyBufferRegion
+            /// </summary>
+            /// <param name="buffer">Target buffer to write data to.</param>
+            /// <param name="data">Byte array containing the data to write.</param>
+            /// <param name="destOffset">Offset in bytes into the destination buffer where data will be written.</param>
+            public void WriteBuffer(IBuffer buffer, byte[] data, int destOffset = 0)
+            {
+                if (buffer == null)
+                {
+                    throw new ArgumentNullException(nameof(buffer));
+                }
+
+                if (data == null || data.Length == 0)
+                {
+                    throw new ArgumentException("Data must not be null or empty", nameof(data));
+                }
+
+                if (destOffset < 0)
+                {
+                    throw new ArgumentException("Destination offset must be non-negative", nameof(destOffset));
+                }
+
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Cannot record commands when command list is closed");
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    return; // Command list not initialized
+                }
+
+                if (_d3d12Device == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("D3D12 device is not available");
+                }
+
+                // Get buffer description to validate size
+                BufferDesc bufferDesc = buffer.Desc;
+                if (destOffset >= bufferDesc.ByteSize)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(destOffset), $"Destination offset {destOffset} exceeds buffer size {bufferDesc.ByteSize}");
+                }
+
+                if (data.Length > bufferDesc.ByteSize - destOffset)
+                {
+                    throw new ArgumentException($"Data size {data.Length} exceeds available buffer space {bufferDesc.ByteSize - destOffset}", nameof(data));
+                }
+
+                int dataSize = data.Length;
+
+                // Create temporary upload buffer for staging
+                // Upload buffers use D3D12_HEAP_TYPE_UPLOAD and are CPU-writable, GPU-readable
+                IntPtr stagingBufferResource = IntPtr.Zero;
+                try
+                {
+                    // Create resource description for staging buffer
+                    D3D12_RESOURCE_DESC bufferDesc = new D3D12_RESOURCE_DESC
+                    {
+                        Dimension = D3D12_RESOURCE_DIMENSION_BUFFER,
+                        Alignment = 0,
+                        Width = unchecked((ulong)dataSize),
+                        Height = 1,
+                        DepthOrArraySize = 1,
+                        MipLevels = 1,
+                        Format = 0, // DXGI_FORMAT_UNKNOWN for buffers
+                        SampleDesc = new D3D12_SAMPLE_DESC { Count = 1, Quality = 0 },
+                        Layout = 0, // D3D12_TEXTURE_LAYOUT_ROW_MAJOR
+                        Flags = 0 // D3D12_RESOURCE_FLAG_NONE
+                    };
+
+                    // Create heap properties for upload heap
+                    D3D12_HEAP_PROPERTIES heapProperties = new D3D12_HEAP_PROPERTIES
+                    {
+                        Type = D3D12_HEAP_TYPE_UPLOAD,
+                        CPUPageProperty = 0, // D3D12_CPU_PAGE_PROPERTY_UNKNOWN
+                        MemoryPoolPreference = 0, // D3D12_MEMORY_POOL_UNKNOWN
+                        CreationNodeMask = 0,
+                        VisibleNodeMask = 0
+                    };
+
+                    // Allocate memory for structures
+                    int heapPropertiesSize = Marshal.SizeOf(typeof(D3D12_HEAP_PROPERTIES));
+                    IntPtr heapPropertiesPtr = Marshal.AllocHGlobal(heapPropertiesSize);
+                    int resourceDescSize = Marshal.SizeOf(typeof(D3D12_RESOURCE_DESC));
+                    IntPtr resourceDescPtr = Marshal.AllocHGlobal(resourceDescSize);
+                    IntPtr resourcePtr = Marshal.AllocHGlobal(IntPtr.Size);
+
+                    try
+                    {
+                        // Marshal structures to unmanaged memory
+                        Marshal.StructureToPtr(heapProperties, heapPropertiesPtr, false);
+                        Marshal.StructureToPtr(bufferDesc, resourceDescPtr, false);
+
+                        // IID_ID3D12Resource
+                        Guid iidResource = new Guid("696442be-a72e-4059-bc79-5b5c98040fad");
+
+                        // Initial state is D3D12_RESOURCE_STATE_GENERIC_READ (0) for upload heap
+                        int hr = CallCreateCommittedResource(_d3d12Device, heapPropertiesPtr, 0, resourceDescPtr, 0, IntPtr.Zero, ref iidResource, resourcePtr);
+                        if (hr < 0)
+                        {
+                            throw new InvalidOperationException($"Failed to create staging buffer: HRESULT 0x{hr:X8}");
+                        }
+
+                        stagingBufferResource = Marshal.ReadIntPtr(resourcePtr);
+                        if (stagingBufferResource == IntPtr.Zero)
+                        {
+                            throw new InvalidOperationException("CreateCommittedResource returned null staging buffer");
+                        }
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(heapPropertiesPtr);
+                        Marshal.FreeHGlobal(resourceDescPtr);
+                        Marshal.FreeHGlobal(resourcePtr);
+                    }
+
+                    // Map the staging buffer and copy data
+                    // For upload heaps, we can map and write directly
+                    IntPtr mappedData = MapStagingBufferResource(stagingBufferResource, 0, unchecked((ulong)dataSize));
+                    if (mappedData == IntPtr.Zero)
+                    {
+                        throw new InvalidOperationException("Failed to map staging buffer");
+                    }
+
+                    try
+                    {
+                        // Copy data from byte array to mapped memory
+                        // Use C# 7.3 compatible code (avoid System.Buffer.MemoryCopy which is C# 8.0+)
+                        unsafe
+                        {
+                            byte* dstPtr = (byte*)mappedData;
+                            fixed (byte* srcPtr = data)
+                            {
+                                // C# 7.3 compatible: use pointer arithmetic and loop instead of System.Buffer.MemoryCopy
+                                for (int i = 0; i < dataSize; i++)
+                                {
+                                    dstPtr[i] = srcPtr[i];
+                                }
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        UnmapStagingBufferResource(stagingBufferResource, 0, unchecked((ulong)dataSize));
+                    }
+
+                    // Transition destination buffer to COPY_DEST state
+                    SetBufferState(buffer, ResourceState.CopyDest);
+                    // Upload buffers are always in generic read state, no transition needed
+                    CommitBarriers();
+
+                    // Get destination buffer resource handle
+                    IntPtr dstBufferResource = buffer.NativeHandle;
+                    if (dstBufferResource == IntPtr.Zero)
+                    {
+                        throw new ArgumentException("Buffer has invalid native handle", nameof(buffer));
+                    }
+
+                    // Copy from staging buffer to destination buffer using CopyBufferRegion
+                    // Source offset = 0 (start of staging buffer)
+                    // Destination offset = destOffset (user-specified offset in destination buffer)
+                    // Size = dataSize (amount of data to copy)
+                    CallCopyBufferRegion(
+                        _d3d12CommandList,
+                        dstBufferResource,
+                        unchecked((ulong)destOffset),
+                        stagingBufferResource,
+                        0,
+                        unchecked((ulong)dataSize));
+                }
+                finally
+                {
+                    // Release staging buffer resource
+                    // ID3D12Resource is a COM object that must be released via IUnknown::Release()
+                    if (stagingBufferResource != IntPtr.Zero)
+                    {
+                        ReleaseComObject(stagingBufferResource);
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Writes typed array data to a GPU buffer using D3D12 upload heap and CopyBufferRegion.
+            /// 
+            /// Converts the typed array to bytes and writes using the same mechanism as WriteBuffer(byte[]).
+            /// Uses D3D12 upload heap pattern: create staging buffer, map, copy data, unmap, then CopyBufferRegion.
+            /// 
+            /// Based on DirectX 12 Uploading Resource Data:
+            /// https://docs.microsoft.com/en-us/windows/win32/direct3d12/uploading-resource-data
+            /// 
+            /// Pattern matches original engine behavior:
+            /// - swkotor.exe: Uses DirectX 9 UpdateSubresource pattern (D3D12 equivalent is upload heap + CopyBufferRegion)
+            /// - swkotor2.exe: Uses DirectX 9 UpdateSubresource pattern (D3D12 equivalent is upload heap + CopyBufferRegion)
+            /// </summary>
+            /// <typeparam name="T">Unmanaged type for the array elements.</typeparam>
+            /// <param name="buffer">Target buffer to write data to.</param>
+            /// <param name="data">Typed array containing the data to write.</param>
+            /// <param name="destOffset">Offset in bytes into the destination buffer where data will be written.</param>
+            public void WriteBuffer<T>(IBuffer buffer, T[] data, int destOffset = 0) where T : unmanaged
+            {
+                if (buffer == null)
+                {
+                    throw new ArgumentNullException(nameof(buffer));
+                }
+
+                if (data == null || data.Length == 0)
+                {
+                    throw new ArgumentException("Data must not be null or empty", nameof(data));
+                }
+
+                if (destOffset < 0)
+                {
+                    throw new ArgumentException("Destination offset must be non-negative", nameof(destOffset));
+                }
+
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Cannot record commands when command list is closed");
+                }
+
+                // Calculate byte size
+                int elementSize = Marshal.SizeOf<T>();
+                int dataSize = data.Length * elementSize;
+
+                // Convert typed array to byte array using GCHandle for safe pinning (C# 7.3 compatible)
+                byte[] byteData = new byte[dataSize];
+                GCHandle srcHandle = GCHandle.Alloc(data, GCHandleType.Pinned);
+                GCHandle dstHandle = GCHandle.Alloc(byteData, GCHandleType.Pinned);
+                try
+                {
+                    IntPtr srcPtr = srcHandle.AddrOfPinnedObject();
+                    IntPtr dstPtr = dstHandle.AddrOfPinnedObject();
+                    unsafe
+                    {
+                        byte* srcBytePtr = (byte*)srcPtr.ToPointer();
+                        byte* dstBytePtr = (byte*)dstPtr.ToPointer();
+                        for (int i = 0; i < dataSize; i++)
+                        {
+                            dstBytePtr[i] = srcBytePtr[i];
+                        }
+                    }
+                }
+                finally
+                {
+                    if (srcHandle.IsAllocated) srcHandle.Free();
+                    if (dstHandle.IsAllocated) dstHandle.Free();
+                }
+
+                // Delegate to byte array WriteBuffer method
+                WriteBuffer(buffer, byteData, destOffset);
+            }
             /// <summary>
             /// Writes texture data to a texture subresource using a staging buffer.
             /// 

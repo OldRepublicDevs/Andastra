@@ -206,6 +206,19 @@ namespace Andastra.Runtime.Core.Entities
         }
 
         /// <summary>
+        /// Gets all registered areas in the world.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Area registration system
+        /// Returns all areas that have been registered with the world via RegisterArea.
+        /// Used by GetAreaByTag to search through all loaded areas.
+        /// </remarks>
+        public IEnumerable<IArea> GetAllAreas()
+        {
+            return _areasById.Values;
+        }
+
+        /// <summary>
         /// Sets the current module.
         /// </summary>
         /// <remarks>
