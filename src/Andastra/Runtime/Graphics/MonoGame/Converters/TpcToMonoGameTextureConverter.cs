@@ -181,6 +181,9 @@ namespace Andastra.Runtime.MonoGame.Converters
                 CubeMapFace face = faceOrder[faceIndex];
 
                 // Process each mipmap level for this face
+                // Keep previous level RGBA data for progressive downsampling
+                byte[] previousLevelRgba = null;
+                int previousLevelSize = 0;
                 int currentSize = size;
                 for (int mipLevel = 0; mipLevel < mipmapCount; mipLevel++)
                 {
@@ -195,15 +198,25 @@ namespace Andastra.Runtime.MonoGame.Converters
                             throw new ArgumentException($"Cube map face {faceIndex} mipmap {mipLevel} has incorrect dimensions", "tpc");
                         }
                         rgbaData = ConvertMipmapToRgba(mipmap);
+                        // Store for potential use in generating next level
+                        previousLevelRgba = rgbaData;
+                        previousLevelSize = currentSize;
                     }
                     else if (generateMipmaps)
                     {
-                        // Generate mipmap by downsampling base level
-                        // TODO: STUB - For now, use the base mipmap (full implementation would downsample)
-                        TPCMipmap baseMip = layer.Mipmaps[0];
-                        rgbaData = ConvertMipmapToRgba(baseMip);
-                        // Resize to current mipmap size (simplified - full implementation would properly downsample)
-                        rgbaData = ResizeImage(rgbaData, size, size, currentSize, currentSize);
+                        // Generate mipmap by downsampling previous level
+                        // swkotor2.exe: Uses D3DXFilterTexture or similar for mipmap generation (box filter)
+                        // Based on PyKotor downsample_rgb implementation: box filter (2x2 average)
+                        if (previousLevelRgba == null || previousLevelSize == 0)
+                        {
+                            // First mip level should exist, this shouldn't happen
+                            throw new InvalidOperationException($"Cannot generate mipmap {mipLevel} without previous level data");
+                        }
+                        // Downsample using box filter (2x2 average) for proper mipmap generation
+                        rgbaData = DownsampleMipmap(previousLevelRgba, previousLevelSize, previousLevelSize);
+                        // Store for next iteration
+                        previousLevelRgba = rgbaData;
+                        previousLevelSize = currentSize;
                     }
                     else
                     {
@@ -234,46 +247,99 @@ namespace Andastra.Runtime.MonoGame.Converters
         }
 
         /// <summary>
-        /// Resizes an RGBA image to the specified dimensions (simplified implementation).
+        /// Downsamples an RGBA mipmap to half size using box filter (2x2 average).
+        /// Each output pixel is the average of a 2x2 block of input pixels.
+        /// This is the standard method for mipmap generation in texture pipelines.
         /// </summary>
         /// <param name="source">Source RGBA data (width x height x 4 bytes).</param>
-        /// <param name="sourceWidth">Source image width.</param>
-        /// <param name="sourceHeight">Source image height.</param>
-        /// <param name="targetWidth">Target image width.</param>
-        /// <param name="targetHeight">Target image height.</param>
-        /// <returns>Resized RGBA data.</returns>
+        /// <param name="width">Source image width.</param>
+        /// <param name="height">Source image height.</param>
+        /// <returns>Downsampled RGBA data at half size ((width/2) x (height/2) x 4 bytes).</returns>
         /// <remarks>
-        /// This is a simplified implementation for mipmap generation.
-        /// A full implementation would use proper filtering (bilinear, etc.).
+        /// Mipmap Downsampling Algorithm:
+        /// - Based on swkotor2.exe texture mipmap generation (D3DXFilterTexture uses box filter)
+        /// - Based on PyKotor downsample_rgb implementation (vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/tpc/manipulate/downsample.py:104-131)
+        /// - Uses box filter: each output pixel = average of 2x2 input block
+        /// - Standard approach for mipmap generation in graphics pipelines
+        /// - Preserves image quality better than nearest-neighbor resizing
         /// </remarks>
-        private static byte[] ResizeImage(byte[] source, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight)
+        private static byte[] DownsampleMipmap(byte[] source, int width, int height)
         {
-            if (sourceWidth == targetWidth && sourceHeight == targetHeight)
-            {
-                return source;
-            }
+            // Mipmaps are always exactly half size
+            int nextWidth = Math.Max(1, width >> 1);
+            int nextHeight = Math.Max(1, height >> 1);
+            byte[] target = new byte[nextWidth * nextHeight * 4];
 
-            byte[] target = new byte[targetWidth * targetHeight * 4];
-
-            for (int y = 0; y < targetHeight; y++)
+            // Box filter: average 2x2 block of pixels
+            for (int y = 0; y < nextHeight; y++)
             {
-                for (int x = 0; x < targetWidth; x++)
+                for (int x = 0; x < nextWidth; x++)
                 {
-                    // Simple nearest-neighbor sampling
-                    int srcX = (x * sourceWidth) / targetWidth;
-                    int srcY = (y * sourceHeight) / targetHeight;
-                    srcX = Math.Min(srcX, sourceWidth - 1);
-                    srcY = Math.Min(srcY, sourceHeight - 1);
+                    // Source coordinates (2x2 block starting at (x*2, y*2))
+                    int srcX = x << 1;
+                    int srcY = y << 1;
 
-                    int srcIdx = (srcY * sourceWidth + srcX) * 4;
-                    int dstIdx = (y * targetWidth + x) * 4;
+                    // Calculate indices for 2x2 block corners
+                    int srcIdx00 = (srcY * width + srcX) * 4;           // Top-left
+                    int srcIdx10 = (srcY * width + (srcX + 1)) * 4;     // Top-right
+                    int srcIdx01 = ((srcY + 1) * width + srcX) * 4;     // Bottom-left
+                    int srcIdx11 = ((srcY + 1) * width + (srcX + 1)) * 4; // Bottom-right
 
-                    if (srcIdx + 3 < source.Length && dstIdx + 3 < target.Length)
+                    // Destination index
+                    int dstIdx = (y * nextWidth + x) * 4;
+
+                    // Average each RGBA component from 2x2 block
+                    // Handle edge cases where source coordinates might be out of bounds
+                    int pixelCount = 0;
+                    int rSum = 0, gSum = 0, bSum = 0, aSum = 0;
+
+                    // Top-left pixel
+                    if (srcX < width && srcY < height && srcIdx00 + 3 < source.Length)
                     {
-                        target[dstIdx] = source[srcIdx];
-                        target[dstIdx + 1] = source[srcIdx + 1];
-                        target[dstIdx + 2] = source[srcIdx + 2];
-                        target[dstIdx + 3] = source[srcIdx + 3];
+                        rSum += source[srcIdx00];
+                        gSum += source[srcIdx00 + 1];
+                        bSum += source[srcIdx00 + 2];
+                        aSum += source[srcIdx00 + 3];
+                        pixelCount++;
+                    }
+
+                    // Top-right pixel
+                    if ((srcX + 1) < width && srcY < height && srcIdx10 + 3 < source.Length)
+                    {
+                        rSum += source[srcIdx10];
+                        gSum += source[srcIdx10 + 1];
+                        bSum += source[srcIdx10 + 2];
+                        aSum += source[srcIdx10 + 3];
+                        pixelCount++;
+                    }
+
+                    // Bottom-left pixel
+                    if (srcX < width && (srcY + 1) < height && srcIdx01 + 3 < source.Length)
+                    {
+                        rSum += source[srcIdx01];
+                        gSum += source[srcIdx01 + 1];
+                        bSum += source[srcIdx01 + 2];
+                        aSum += source[srcIdx01 + 3];
+                        pixelCount++;
+                    }
+
+                    // Bottom-right pixel
+                    if ((srcX + 1) < width && (srcY + 1) < height && srcIdx11 + 3 < source.Length)
+                    {
+                        rSum += source[srcIdx11];
+                        gSum += source[srcIdx11 + 1];
+                        bSum += source[srcIdx11 + 2];
+                        aSum += source[srcIdx11 + 3];
+                        pixelCount++;
+                    }
+
+                    // Calculate average (box filter)
+                    if (pixelCount > 0 && dstIdx + 3 < target.Length)
+                    {
+                        target[dstIdx] = (byte)(rSum / pixelCount);
+                        target[dstIdx + 1] = (byte)(gSum / pixelCount);
+                        target[dstIdx + 2] = (byte)(bSum / pixelCount);
+                        target[dstIdx + 3] = (byte)(aSum / pixelCount);
                     }
                 }
             }
