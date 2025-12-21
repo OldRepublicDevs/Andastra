@@ -159,6 +159,11 @@ namespace Andastra.Runtime.Games.Eclipse
         // When geometry is modified (destroyed/deformed), collision shapes are rebuilt from this cached data
         private readonly Dictionary<string, CachedMeshGeometry> _cachedMeshGeometry = new Dictionary<string, CachedMeshGeometry>(StringComparer.OrdinalIgnoreCase);
 
+        // Cached debris mesh data (generated from destroyed faces)
+        // Based on daorigins.exe/DragonAge2.exe: Debris meshes are cached to avoid regenerating every frame
+        // Key: Debris piece identifier (meshId + face indices hash), Value: Generated mesh data
+        private readonly Dictionary<string, IRoomMeshData> _cachedDebrisMeshes = new Dictionary<string, IRoomMeshData>(StringComparer.OrdinalIgnoreCase);
+
         // Destructible geometry modification tracking system
         // Based on daorigins.exe/DragonAge2.exe: Eclipse supports destructible environments
         // Tracks modifications to static geometry (rooms, static objects) for rendering and physics
@@ -4576,12 +4581,68 @@ namespace Andastra.Runtime.Games.Eclipse
                         continue; // Debris has expired
                     }
 
-                    // TODO:  Get debris mesh data (would be generated from destroyed faces in full implementation)
-                    // TODO: STUB - For now, debris rendering is a placeholder - full implementation would:
-                    // 1. Generate mesh data from destroyed face indices
-                    // 2. Apply debris transform (position, rotation)
-                    // 3. Render debris geometry with physics-based transform
+                    // Get or generate debris mesh data from destroyed face indices
                     // Based on daorigins.exe: Debris pieces are physics objects with their own transforms
+                    IRoomMeshData debrisMeshData = GetOrGenerateDebrisMesh(debris, graphicsDevice);
+                    if (debrisMeshData == null || debrisMeshData.VertexBuffer == null || debrisMeshData.IndexBuffer == null)
+                    {
+                        continue; // Cannot render without mesh data
+                    }
+
+                    // Build world transform matrix from debris position and rotation
+                    // Based on daorigins.exe: Debris pieces have physics-based transforms (position, rotation)
+                    // Rotation is stored as Euler angles (X, Y, Z) in radians
+                    Matrix4x4 rotationX = Matrix4x4.CreateRotationX(debris.Rotation.X);
+                    Matrix4x4 rotationY = Matrix4x4.CreateRotationY(debris.Rotation.Y);
+                    Matrix4x4 rotationZ = Matrix4x4.CreateRotationZ(debris.Rotation.Z);
+                    Matrix4x4 rotationMatrix = Matrix4x4.Multiply(Matrix4x4.Multiply(rotationZ, rotationY), rotationX);
+                    Matrix4x4 translationMatrix = Matrix4x4.CreateTranslation(debris.Position);
+                    Matrix4x4 worldMatrix = Matrix4x4.Multiply(translationMatrix, rotationMatrix);
+
+                    // Set up basic effect for rendering
+                    basicEffect.World = worldMatrix;
+                    basicEffect.View = viewMatrix;
+                    basicEffect.Projection = projectionMatrix;
+
+                    // Apply lighting from lighting system
+                    if (_lightingSystem != null)
+                    {
+                        // Set ambient color from lighting system
+                        Vector3 ambientColor = _lightingSystem.AmbientColor * _lightingSystem.AmbientIntensity;
+                        basicEffect.AmbientLightColor = ambientColor;
+                    }
+
+                    // Apply fade-out based on remaining lifetime
+                    // Based on daorigins.exe: Debris fades out as it approaches end of lifetime
+                    float fadeAlpha = debris.RemainingLifeTime / debris.LifeTime;
+                    fadeAlpha = Math.Max(0.0f, Math.Min(1.0f, fadeAlpha)); // Clamp to [0, 1]
+                    basicEffect.Alpha = fadeAlpha;
+
+                    // Set rendering states
+                    graphicsDevice.SetDepthStencilState(graphicsDevice.CreateDepthStencilState());
+                    graphicsDevice.SetRasterizerState(graphicsDevice.CreateRasterizerState());
+                    graphicsDevice.SetBlendState(graphicsDevice.CreateBlendState());
+
+                    // Set vertex and index buffers
+                    graphicsDevice.SetVertexBuffer(debrisMeshData.VertexBuffer);
+                    graphicsDevice.SetIndexBuffer(debrisMeshData.IndexBuffer);
+
+                    // Render debris geometry
+                    foreach (IEffectPass pass in basicEffect.CurrentTechnique.Passes)
+                    {
+                        pass.Apply();
+
+                        if (debrisMeshData.IndexCount > 0)
+                        {
+                            graphicsDevice.DrawIndexedPrimitives(
+                                PrimitiveType.TriangleList,
+                                0, // base vertex
+                                0, // min vertex index
+                                debrisMeshData.IndexCount, // index count
+                                0, // start index
+                                debrisMeshData.IndexCount / 3); // primitive count (triangles)
+                        }
+                    }
                 }
             }
         }
@@ -4591,6 +4652,190 @@ namespace Andastra.Runtime.Games.Eclipse
             // Static objects use the same MDL format as rooms, so reuse the room mesh loading logic
             // Based on daorigins.exe/DragonAge2.exe: Static objects and rooms both use MDL/MDX format
             return LoadRoomMesh(modelResRef, roomMeshRenderer);
+        }
+
+        /// <summary>
+        /// Gets or generates debris mesh data from destroyed face indices.
+        /// </summary>
+        /// <param name="debris">Debris piece to generate mesh for.</param>
+        /// <param name="graphicsDevice">Graphics device for creating buffers.</param>
+        /// <returns>Debris mesh data, or null if generation failed.</returns>
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Debris meshes are generated from destroyed face indices.
+        /// 
+        /// Implementation:
+        /// 1. Creates cache key from mesh ID and face indices hash
+        /// 2. Checks if mesh is already cached
+        /// 3. If not cached, extracts vertices/indices from cached geometry for destroyed faces
+        /// 4. Creates vertex/index buffers for debris mesh
+        /// 5. Caches and returns the mesh data
+        /// 
+        /// Original implementation: daorigins.exe debris mesh generation
+        /// - Extracts geometry from destroyed faces
+        /// - Creates separate mesh for each debris piece
+        /// - Caches meshes to avoid regenerating every frame
+        /// </remarks>
+        private IRoomMeshData GetOrGenerateDebrisMesh(DebrisPiece debris, IGraphicsDevice graphicsDevice)
+        {
+            if (debris == null || graphicsDevice == null || string.IsNullOrEmpty(debris.MeshId) || 
+                debris.FaceIndices == null || debris.FaceIndices.Count == 0)
+            {
+                return null;
+            }
+
+            // Create cache key from mesh ID and face indices hash
+            // Based on daorigins.exe: Debris meshes are cached by mesh ID and face indices
+            int faceIndicesHash = 0;
+            foreach (int faceIndex in debris.FaceIndices)
+            {
+                faceIndicesHash = (faceIndicesHash * 31) + faceIndex;
+            }
+            string cacheKey = $"{debris.MeshId}_debris_{faceIndicesHash}";
+
+            // Check if mesh is already cached
+            if (_cachedDebrisMeshes.TryGetValue(cacheKey, out IRoomMeshData cachedMesh))
+            {
+                return cachedMesh;
+            }
+
+            // Get cached geometry for the original mesh
+            if (!_cachedMeshGeometry.TryGetValue(debris.MeshId, out CachedMeshGeometry cachedGeometry))
+            {
+                // Geometry not cached - cannot generate debris mesh
+                return null;
+            }
+
+            if (cachedGeometry.Vertices == null || cachedGeometry.Indices == null || 
+                cachedGeometry.Vertices.Count == 0 || cachedGeometry.Indices.Count == 0)
+            {
+                return null;
+            }
+
+            // Extract vertices and indices for the destroyed faces
+            // Based on daorigins.exe: Debris mesh is created from subset of original mesh geometry
+            HashSet<int> usedVertexIndices = new HashSet<int>();
+            List<int> debrisIndices = new List<int>();
+            Dictionary<int, int> vertexRemap = new Dictionary<int, int>(); // Maps original vertex index to new index
+
+            // Collect all vertex indices used by the destroyed faces
+            foreach (int faceIndex in debris.FaceIndices)
+            {
+                if (faceIndex < 0 || faceIndex * 3 + 2 >= cachedGeometry.Indices.Count)
+                {
+                    continue; // Invalid face index
+                }
+
+                // Get vertex indices for this triangle (3 indices per triangle)
+                int idx0 = cachedGeometry.Indices[faceIndex * 3 + 0];
+                int idx1 = cachedGeometry.Indices[faceIndex * 3 + 1];
+                int idx2 = cachedGeometry.Indices[faceIndex * 3 + 2];
+
+                // Add vertex indices to used set
+                if (idx0 >= 0 && idx0 < cachedGeometry.Vertices.Count)
+                {
+                    usedVertexIndices.Add(idx0);
+                }
+                if (idx1 >= 0 && idx1 < cachedGeometry.Vertices.Count)
+                {
+                    usedVertexIndices.Add(idx1);
+                }
+                if (idx2 >= 0 && idx2 < cachedGeometry.Vertices.Count)
+                {
+                    usedVertexIndices.Add(idx2);
+                }
+            }
+
+            // Create vertex remap (original index -> new index)
+            List<Vector3> debrisVertices = new List<Vector3>();
+            foreach (int originalVertexIndex in usedVertexIndices)
+            {
+                if (originalVertexIndex >= 0 && originalVertexIndex < cachedGeometry.Vertices.Count)
+                {
+                    vertexRemap[originalVertexIndex] = debrisVertices.Count;
+                    debrisVertices.Add(cachedGeometry.Vertices[originalVertexIndex]);
+                }
+            }
+
+            // Create remapped indices for debris faces
+            foreach (int faceIndex in debris.FaceIndices)
+            {
+                if (faceIndex < 0 || faceIndex * 3 + 2 >= cachedGeometry.Indices.Count)
+                {
+                    continue; // Invalid face index
+                }
+
+                int idx0 = cachedGeometry.Indices[faceIndex * 3 + 0];
+                int idx1 = cachedGeometry.Indices[faceIndex * 3 + 1];
+                int idx2 = cachedGeometry.Indices[faceIndex * 3 + 2];
+
+                // Remap indices to new vertex array
+                if (vertexRemap.TryGetValue(idx0, out int newIdx0) &&
+                    vertexRemap.TryGetValue(idx1, out int newIdx1) &&
+                    vertexRemap.TryGetValue(idx2, out int newIdx2))
+                {
+                    debrisIndices.Add(newIdx0);
+                    debrisIndices.Add(newIdx1);
+                    debrisIndices.Add(newIdx2);
+                }
+            }
+
+            if (debrisVertices.Count == 0 || debrisIndices.Count == 0)
+            {
+                return null; // No valid geometry extracted
+            }
+
+            // Create vertex buffer with position and color
+            // Based on daorigins.exe: Debris uses simple vertex format (position + color)
+            // Use XnaVertexPositionColor format for compatibility with existing rendering code
+            XnaVertexPositionColor[] vertexData = new XnaVertexPositionColor[debrisVertices.Count];
+            Microsoft.Xna.Framework.Color debrisColor = Microsoft.Xna.Framework.Color.Gray; // Default debris color
+            for (int i = 0; i < debrisVertices.Count; i++)
+            {
+                Vector3 pos = debrisVertices[i];
+                vertexData[i] = new XnaVertexPositionColor(
+                    new Microsoft.Xna.Framework.Vector3(pos.X, pos.Y, pos.Z),
+                    debrisColor
+                );
+            }
+
+            // Create vertex buffer
+            IVertexBuffer vertexBuffer = graphicsDevice.CreateVertexBuffer(vertexData);
+            if (vertexBuffer == null)
+            {
+                return null;
+            }
+
+            // Create index buffer
+            IIndexBuffer indexBuffer = graphicsDevice.CreateIndexBuffer(debrisIndices.ToArray(), false); // Use 32-bit indices
+            if (indexBuffer == null)
+            {
+                vertexBuffer.Dispose();
+                return null;
+            }
+
+            // Create mesh data object
+            // Based on daorigins.exe: Debris mesh data structure matches room mesh data
+            IRoomMeshData debrisMeshData = new SimpleRoomMeshData
+            {
+                VertexBuffer = vertexBuffer,
+                IndexBuffer = indexBuffer,
+                IndexCount = debrisIndices.Count
+            };
+
+            // Cache the mesh data
+            _cachedDebrisMeshes[cacheKey] = debrisMeshData;
+
+            return debrisMeshData;
+        }
+
+        /// <summary>
+        /// Simple implementation of IRoomMeshData for debris meshes.
+        /// </summary>
+        private class SimpleRoomMeshData : IRoomMeshData
+        {
+            public IVertexBuffer VertexBuffer { get; set; }
+            public IIndexBuffer IndexBuffer { get; set; }
+            public int IndexCount { get; set; }
         }
 
         /// <summary>
