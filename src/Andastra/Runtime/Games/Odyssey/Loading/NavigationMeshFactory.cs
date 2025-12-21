@@ -10,6 +10,7 @@ using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Module;
 using Andastra.Runtime.Core.Navigation;
+using Logger = Andastra.Parsing.Logger;
 using Vector3 = System.Numerics.Vector3;
 
 namespace Andastra.Runtime.Engines.Odyssey.Loading
@@ -188,22 +189,55 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
         /// <summary>
         /// Loads a walkmesh from the module.
         /// </summary>
+        /// <remarks>
+        /// Resource loading priority (matching original engine behavior):
+        /// 1. Module archives (RIM/ERF files) - WOK files packaged with module
+        /// 2. Installation (CHITIN/CUSTOM_MODULES) - Fallback to base game resources
+        /// 
+        /// Based on swkotor2.exe: Module resources are searched first, then installation fallback
+        /// </remarks>
         [CanBeNull]
         private BWM LoadWalkmesh(Module module, string resRef)
         {
-            // Try to find WOK resource (area walkmesh)
-            // WOK files are typically named after the room model
+            if (module == null || string.IsNullOrEmpty(resRef))
+            {
+                return null;
+            }
+
             try
             {
-                // WOK files are usually stored with the module
-                // TODO: STUB - For now, try to load from installation
+                // First, try to load from module archives (RIM/ERF files)
+                // Module.Resource() returns ModuleResource which contains resource locations within module files
+                ModuleResource moduleResource = module.Resource(resRef, ResourceType.WOK);
+                if (moduleResource != null && moduleResource.IsActive())
+                {
+                    // Get raw bytes from module resource and parse as BWM
+                    // ModuleResource.Data() handles loading from module capsules (RIM/ERF) or override files
+                    byte[] data = moduleResource.Data();
+                    if (data != null && data.Length > 0)
+                    {
+                        try
+                        {
+                            return BWMAuto.ReadBwm(data);
+                        }
+                        catch (Exception ex)
+                        {
+                            // Log parsing error but continue to fallback
+                            new Logger.RobustLogger().Warning($"Failed to parse WOK '{resRef}' from module: {ex.Message}");
+                        }
+                    }
+                }
+
+                // Fallback: Load from installation (CHITIN/CUSTOM_MODULES)
+                // This handles resources not packaged with the module
                 Installation installation = module.Installation;
                 if (installation == null)
                 {
                     return null;
                 }
 
-                // Search for WOK resource
+                // Search installation for WOK resource
+                // SearchLocation.CHITIN = base game resources, SearchLocation.CUSTOM_MODULES = module-specific resources
                 Andastra.Parsing.Installation.ResourceResult wokResource = installation.Resource(resRef, ResourceType.WOK,
                     new[] { SearchLocation.CHITIN, SearchLocation.CUSTOM_MODULES });
 
@@ -214,9 +248,10 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
 
                 return BWMAuto.ReadBwm(wokResource.Data);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Failed to load walkmesh
+                // Failed to load walkmesh - log and return null
+                new Logger.RobustLogger().Warning($"Failed to load walkmesh '{resRef}': {ex.Message}");
                 return null;
             }
         }
