@@ -749,6 +749,14 @@ namespace Andastra.Runtime.MonoGame.Backends
             return _defaultLibrary;
         }
 
+        /// <summary>
+        /// Gets the native Metal device handle.
+        /// </summary>
+        internal IntPtr GetNativeDevice()
+        {
+            return _device;
+        }
+
         #region Metal Specific Methods
 
         /// <summary>
