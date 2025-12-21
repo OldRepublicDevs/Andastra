@@ -4,6 +4,7 @@ using System.Numerics;
 using Andastra.Parsing.Common.Script;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
+using Andastra.Runtime.Games.Eclipse.Components;
 using Andastra.Runtime.Scripting.EngineApi;
 using Andastra.Runtime.Scripting.Interfaces;
 
@@ -2735,12 +2736,13 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 if (stats != null)
                 {
                     // Get spell level from stats component
-                    // In full implementation, this would look up spell level from spell list
-                    // TODO: STUB - For now, check if spell level is stored in entity data
-                    string spellKey = "SpellLevel_" + spell;
-                    if (creature.HasData(spellKey))
+                    // Based on Eclipse engine: GetSpellLevel implementation (daorigins.exe, DragonAge2.exe)
+                    // Returns the level/rank at which the creature knows the specified spell/talent/ability
+                    EclipseStatsComponent eclipseStats = stats as EclipseStatsComponent;
+                    if (eclipseStats != null)
                     {
-                        return Variable.FromInt(creature.GetData<int>(spellKey));
+                        int spellLevel = eclipseStats.GetSpellLevel(spell);
+                        return Variable.FromInt(spellLevel);
                     }
                 }
             }

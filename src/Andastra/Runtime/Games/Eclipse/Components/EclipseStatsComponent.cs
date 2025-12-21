@@ -46,6 +46,7 @@ namespace Andastra.Runtime.Games.Eclipse.Components
         private readonly Dictionary<Ability, int> _attributes; // Eclipse uses "Attributes" terminology
         private readonly Dictionary<int, int> _skills; // Skill ID -> Skill Rank (Dragon Age has different skills)
         private readonly HashSet<int> _knownSpells; // Spell/Ability ID -> Known (for talents/abilities)
+        private readonly Dictionary<int, int> _spellLevels; // Spell/Ability ID -> Level/Rank (tracks level at which creature knows each spell)
         private int _currentHealth; // Eclipse uses "Health" instead of "HP"
         private int _maxHealth; // Eclipse uses "MaxHealth" instead of "MaxHP"
         private int _baseLevel;
@@ -67,6 +68,7 @@ namespace Andastra.Runtime.Games.Eclipse.Components
             _attributes = new Dictionary<Ability, int>();
             _skills = new Dictionary<int, int>();
             _knownSpells = new HashSet<int>();
+            _spellLevels = new Dictionary<int, int>();
             
             // Default attribute scores (10 = average human, D&D standard)
             // Eclipse uses "Attributes" terminology but same D20 system
@@ -532,9 +534,12 @@ namespace Andastra.Runtime.Games.Eclipse.Components
         /// <summary>
         /// Adds a spell/talent/ability to the creature's known list.
         /// </summary>
-        public void AddSpell(int spellId)
+        /// <param name="spellId">Spell/talent/ability ID</param>
+        /// <param name="level">Optional spell level/rank (defaults to 1 if not specified)</param>
+        public void AddSpell(int spellId, int level = 1)
         {
             _knownSpells.Add(spellId);
+            _spellLevels[spellId] = Math.Max(1, level);
         }
 
         /// <summary>
@@ -543,6 +548,7 @@ namespace Andastra.Runtime.Games.Eclipse.Components
         public void RemoveSpell(int spellId)
         {
             _knownSpells.Remove(spellId);
+            _spellLevels.Remove(spellId);
         }
 
         /// <summary>
@@ -551,6 +557,56 @@ namespace Andastra.Runtime.Games.Eclipse.Components
         public System.Collections.Generic.IEnumerable<int> GetKnownSpells()
         {
             return _knownSpells;
+        }
+
+        /// <summary>
+        /// Gets the level/rank at which the creature knows a spell/talent/ability.
+        /// </summary>
+        /// <remarks>
+        /// Based on Eclipse engine: GetSpellLevel implementation (daorigins.exe, DragonAge2.exe)
+        /// Returns the level/rank at which the creature knows the specified spell.
+        /// In Dragon Age, talents/abilities can have ranks/levels that determine their effectiveness.
+        /// Returns 0 if the creature doesn't know the spell or if no level is stored.
+        /// </remarks>
+        /// <param name="spellId">Spell/talent/ability ID</param>
+        /// <returns>The spell level/rank, or 0 if the creature doesn't know the spell or level is not set</returns>
+        public int GetSpellLevel(int spellId)
+        {
+            if (!_knownSpells.Contains(spellId))
+            {
+                return 0;
+            }
+
+            int level;
+            if (_spellLevels.TryGetValue(spellId, out level))
+            {
+                return level;
+            }
+
+            // If spell is known but no level is stored, return 1 as default (minimum level)
+            return 1;
+        }
+
+        /// <summary>
+        /// Sets the level/rank at which the creature knows a spell/talent/ability.
+        /// </summary>
+        /// <remarks>
+        /// Based on Eclipse engine: Spell level storage (daorigins.exe, DragonAge2.exe)
+        /// Sets the level/rank for a spell. If the spell is not yet known, it will be added to the known spells list.
+        /// Level must be at least 1.
+        /// </remarks>
+        /// <param name="spellId">Spell/talent/ability ID</param>
+        /// <param name="level">Spell level/rank (must be >= 1)</param>
+        public void SetSpellLevel(int spellId, int level)
+        {
+            if (level < 1)
+            {
+                level = 1;
+            }
+
+            // Ensure spell is in known list
+            _knownSpells.Add(spellId);
+            _spellLevels[spellId] = level;
         }
 
         /// <summary>
@@ -1022,7 +1078,18 @@ namespace Andastra.Runtime.Games.Eclipse.Components
                         {
                             if (spellId >= 0)
                             {
-                                AddSpell(spellId);
+                                // Load spell level if stored, otherwise default to 1
+                                string spellLevelKey = "SpellLevel_" + spellId;
+                                int spellLevel = 1; // Default level
+                                if (Owner.HasData(spellLevelKey))
+                                {
+                                    int storedLevel = Owner.GetData<int>(spellLevelKey, 1);
+                                    if (storedLevel >= 1)
+                                    {
+                                        spellLevel = storedLevel;
+                                    }
+                                }
+                                AddSpell(spellId, spellLevel);
                             }
                         }
                     }
@@ -1037,10 +1104,40 @@ namespace Andastra.Runtime.Games.Eclipse.Components
                                 int spellId = Convert.ToInt32(spellObj);
                                 if (spellId >= 0)
                                 {
-                                    AddSpell(spellId);
+                                    // Load spell level if stored, otherwise default to 1
+                                    string spellLevelKey = "SpellLevel_" + spellId;
+                                    int spellLevel = 1; // Default level
+                                    if (Owner.HasData(spellLevelKey))
+                                    {
+                                        int storedLevel = Owner.GetData<int>(spellLevelKey, 1);
+                                        if (storedLevel >= 1)
+                                        {
+                                            spellLevel = storedLevel;
+                                        }
+                                    }
+                                    AddSpell(spellId, spellLevel);
                                 }
                             }
                         }
+                    }
+                }
+            }
+
+            // Also load spell levels individually (for backward compatibility with existing entity data)
+            // This allows spell levels to be loaded even if KnownSpells/KnownTalents/KnownAbilities isn't set
+            // Scan for keys matching "SpellLevel_<id>" pattern
+            // Note: This is less efficient but provides backward compatibility
+            for (int spellId = 0; spellId < 10000; spellId++) // Reasonable upper limit for spell IDs
+            {
+                string spellLevelKey = "SpellLevel_" + spellId;
+                if (Owner.HasData(spellLevelKey))
+                {
+                    int spellLevel = Owner.GetData<int>(spellLevelKey, 1);
+                    if (spellLevel >= 1)
+                    {
+                        // If spell is already in known list, update its level
+                        // Otherwise, add it with the specified level
+                        SetSpellLevel(spellId, spellLevel);
                     }
                 }
             }
