@@ -386,8 +386,26 @@ namespace Andastra.Runtime.Games.Common
         /// Loads or gets the target area for transition.
         /// </summary>
         /// <remarks>
-        /// Common across all engines: Implements area streaming - loads target area if not already loaded.
-        /// Engine-specific implementations can override for custom area loading logic.
+        /// Common across all engines: Implements area lookup - checks if target area is already loaded.
+        /// Base implementation checks current area and module's loaded areas.
+        /// Engine-specific implementations should override to add area streaming (loading areas on demand).
+        /// 
+        /// Area lookup flow (based on swkotor2.exe area transition system):
+        /// 1. Check if target area is the current area (fast path)
+        /// 2. Check if area is already loaded in module via IModule.GetArea(resRef)
+        /// 3. If not found, return null (area streaming/loading handled by engine-specific overrides)
+        /// 
+        /// Engine-specific overrides (e.g., OdysseyEventDispatcher.LoadOrGetTargetArea):
+        /// - Have access to ModuleLoader for area streaming
+        /// - Load area from module archives if not already loaded
+        /// - Register loaded area with world and module
+        /// - Return loaded area
+        /// 
+        /// Based on reverse engineering of:
+        /// - swkotor2.exe: Area loading during transitions (FUN_004e26d0 @ 0x004e26d0)
+        /// - swkotor.exe: Similar area loading system (KOTOR 1)
+        /// - Area resources: ARE (properties), GIT (instances), LYT (layout), VIS (visibility)
+        /// - Module resource lookup: Areas are loaded from module archives using area ResRef
         /// </remarks>
         protected virtual IArea LoadOrGetTargetArea(IWorld world, string targetAreaResRef)
         {
@@ -396,37 +414,32 @@ namespace Andastra.Runtime.Games.Common
                 return null;
             }
 
-            // First, check if area is already loaded in current module
-            if (world.CurrentModule != null)
-            {
-                // Check if target area is the current area
-                if (world.CurrentArea != null && string.Equals(world.CurrentArea.ResRef, targetAreaResRef, StringComparison.OrdinalIgnoreCase))
-                {
-                    return world.CurrentArea;
-                }
-
-                // In a full implementation, this would query IModule.GetAreas() to find the area
-                // TODO: STUB - For now, we check if it's the current area or return null if not found
-            }
-
-            // Area streaming: Load target area if not already loaded
-            // In a full implementation, this would:
-            // 1. Check if area is in module's area list
-            // 2. If not, load area via IModuleLoader
-            // 3. Register area with world
-            // 4. Return loaded area
-
-            // TODO: STUB - For now, return current area if target matches, or null if not found
-            // TODO: STUB - This is a simplified implementation - full area streaming would require IModuleLoader integration
+            // Fast path: Check if target area is the current area
             if (world.CurrentArea != null && string.Equals(world.CurrentArea.ResRef, targetAreaResRef, StringComparison.OrdinalIgnoreCase))
             {
                 return world.CurrentArea;
             }
 
-            // If target area is not current area and not loaded, we would need to load it
-            // This requires IModuleLoader which may not be available in this context
-            // TODO: STUB - For now, return null to indicate area not found/not loaded
-            // Full implementation would integrate with module loading system
+            // Check if area is already loaded in current module
+            // Based on swkotor2.exe: Areas are stored in module's area list for lookup
+            // IModule.GetArea(resRef) provides O(1) lookup by ResRef
+            if (world.CurrentModule != null)
+            {
+                IArea loadedArea = world.CurrentModule.GetArea(targetAreaResRef);
+                if (loadedArea != null)
+                {
+                    return loadedArea;
+                }
+            }
+
+            // Area is not currently loaded
+            // Base implementation returns null - engine-specific overrides should handle area streaming
+            // Area streaming requires:
+            // 1. ModuleLoader access (engine-specific)
+            // 2. Module resource access (ARE/GIT/LYT/VIS files)
+            // 3. Area creation and initialization
+            // 4. Registration with world (AreaId assignment) and module (AddArea)
+            // See OdysseyEventDispatcher.LoadOrGetTargetArea for example implementation
             return null;
         }
 
