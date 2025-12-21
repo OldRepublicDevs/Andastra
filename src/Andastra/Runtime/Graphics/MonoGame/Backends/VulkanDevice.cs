@@ -904,6 +904,9 @@ namespace Andastra.Runtime.MonoGame.Backends
         private delegate VkResult vkDeviceWaitIdleDelegate(IntPtr device);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkWaitForFencesDelegate(IntPtr device, uint fenceCount, IntPtr pFences, VkBool32 waitAll, ulong timeout);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate VkResult vkCreateCommandPoolDelegate(IntPtr device, IntPtr pCreateInfo, IntPtr pAllocator, out IntPtr pCommandPool);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]

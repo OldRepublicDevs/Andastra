@@ -1077,6 +1077,9 @@ namespace Andastra.Runtime.MonoGame.Backends
         private delegate void IASetIndexBufferDelegate(IntPtr commandList, IntPtr pView);
 
         // COM interface method delegate for OMSetRenderTargets
+        // Note: pRenderTargetDescriptors can point to a single handle or an array of handles
+        // When RTsSingleHandleToDescriptorRange is TRUE, it's a single handle for the range
+        // When FALSE, it's an array of handles (one per render target)
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void OMSetRenderTargetsDelegate(IntPtr commandList, uint NumRenderTargetDescriptors, IntPtr pRenderTargetDescriptors, byte RTsSingleHandleToDescriptorRange, IntPtr pDepthStencilDescriptor);
 
@@ -1093,6 +1096,13 @@ namespace Andastra.Runtime.MonoGame.Backends
         private struct D3D12_GPU_DESCRIPTOR_HANDLE
         {
             public ulong ptr;
+        }
+
+        // D3D12 CPU descriptor handle structure
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_CPU_DESCRIPTOR_HANDLE
+        {
+            public IntPtr ptr; // SIZE_T
         }
 
         /// <summary>
@@ -3162,6 +3172,186 @@ namespace Andastra.Runtime.MonoGame.Backends
                     (SetDescriptorHeapsDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(SetDescriptorHeapsDelegate));
 
                 setDescriptorHeaps(commandList, NumDescriptorHeaps, ppDescriptorHeaps);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::SetGraphicsRootSignature through COM vtable.
+            /// VTable index 43 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Root Signature: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-setgraphicsrootsignature
+            /// </summary>
+            private unsafe void CallSetGraphicsRootSignature(IntPtr commandList, IntPtr pRootSignature)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero || pRootSignature == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // SetGraphicsRootSignature is at index 43 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[43];
+
+                // Create delegate from function pointer
+                SetGraphicsRootSignatureDelegate setRootSignature =
+                    (SetGraphicsRootSignatureDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(SetGraphicsRootSignatureDelegate));
+
+                setRootSignature(commandList, pRootSignature);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::SetGraphicsRootDescriptorTable through COM vtable.
+            /// VTable index 44 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Root Parameters: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-setgraphicsrootdescriptortable
+            /// </summary>
+            private unsafe void CallSetGraphicsRootDescriptorTable(IntPtr commandList, uint RootParameterIndex, D3D12_GPU_DESCRIPTOR_HANDLE BaseDescriptor)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // SetGraphicsRootDescriptorTable is at index 44 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[44];
+
+                // Create delegate from function pointer
+                SetGraphicsRootDescriptorTableDelegate setRootDescriptorTable =
+                    (SetGraphicsRootDescriptorTableDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(SetGraphicsRootDescriptorTableDelegate));
+
+                setRootDescriptorTable(commandList, RootParameterIndex, BaseDescriptor);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::RSSetViewports through COM vtable.
+            /// VTable index 42 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Viewports: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-rssetviewports
+            /// </summary>
+            private unsafe void CallRSSetViewports(IntPtr commandList, uint NumViewports, IntPtr pViewports)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero || pViewports == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // RSSetViewports is at index 42 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[42];
+
+                // Create delegate from function pointer
+                RSSetViewportsDelegate rssetViewports =
+                    (RSSetViewportsDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(RSSetViewportsDelegate));
+
+                rssetViewports(commandList, NumViewports, pViewports);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::IASetVertexBuffers through COM vtable.
+            /// VTable index 36 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Vertex Buffers: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-iasetvertexbuffers
+            /// </summary>
+            private unsafe void CallIASetVertexBuffers(IntPtr commandList, uint StartSlot, uint NumViews, IntPtr pViews)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero || pViews == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // IASetVertexBuffers is at index 36 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[36];
+
+                // Create delegate from function pointer
+                IASetVertexBuffersDelegate iasetVertexBuffers =
+                    (IASetVertexBuffersDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(IASetVertexBuffersDelegate));
+
+                iasetVertexBuffers(commandList, StartSlot, NumViews, pViews);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::IASetIndexBuffer through COM vtable.
+            /// VTable index 37 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Index Buffers: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-iasetindexbuffer
+            /// </summary>
+            private unsafe void CallIASetIndexBuffer(IntPtr commandList, IntPtr pView)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // IASetIndexBuffer is at index 37 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[37];
+
+                // Create delegate from function pointer
+                IASetIndexBufferDelegate iasetIndexBuffer =
+                    (IASetIndexBufferDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(IASetIndexBufferDelegate));
+
+                iasetIndexBuffer(commandList, pView);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::OMSetRenderTargets through COM vtable.
+            /// VTable index 45 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Render Targets: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-omsetrendertargets
+            /// </summary>
+            private unsafe void CallOMSetRenderTargets(IntPtr commandList, uint NumRenderTargetDescriptors, IntPtr pRenderTargetDescriptors, byte RTsSingleHandleToDescriptorRange, IntPtr pDepthStencilDescriptor)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // OMSetRenderTargets is at index 45 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[45];
+
+                // Create delegate from function pointer
+                OMSetRenderTargetsDelegate omsetRenderTargets =
+                    (OMSetRenderTargetsDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(OMSetRenderTargetsDelegate));
+
+                omsetRenderTargets(commandList, NumRenderTargetDescriptors, pRenderTargetDescriptors, RTsSingleHandleToDescriptorRange, pDepthStencilDescriptor);
             }
 
             // COM interface method delegate for ClearDepthStencilView
