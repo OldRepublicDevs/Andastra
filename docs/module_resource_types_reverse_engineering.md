@@ -115,21 +115,20 @@ The following resource types have handlers that call `FUN_004074d0` (which inter
 **Answer to "Which resource types placed inside a module are actually recognized and loaded by the game engine?"**
 
 ✅ **YES - These resource types ARE recognized and loaded from modules:**
+
 - All resource types listed in the table above (TGA, WAV, TPC, FourPC, DDS, IFO, UTI, LIP, etc.)
 - Any resource type that has a handler calling `FUN_004074d0`/`FUN_00407230`
 
 ❌ **NO - These resource types are NOT recognized/loaded from modules:**
+
 - TLK (uses direct file I/O)
 - RES (uses direct file I/O from save files)
 - NSS (source files, must be compiled to NCS first)
 - OGG, MP3, WMV, MP4 (no handlers exist)
 - MVE, MPG, BIK (use direct file I/O from movies/ directory)
 
-**Answer to "Does the engine ever load or use `.nss` files from modules, or are they ignored entirely?"**
-
-❌ **NSS files are IGNORED entirely** - The game engine does NOT load `.nss` files from modules.
-
 **Evidence**:
+
 - NSS (0x7d9) is registered in resource type registry (swkotor.exe: `FUN_005e6d20` line 42)
 - **NO handler found** that calls `FUN_004074d0` with resource type 0x7d9
 - **NSS files are source files** - they must be compiled to NCS (compiled scripts) using the toolset compiler before the game can use them
@@ -149,7 +148,6 @@ The following resource types have handlers that call `FUN_004074d0` (which inter
 | OGG | 0x81e | 2078 | ❌ Not supported | Not registered in resource type registry, no handler found |
 | MP3 | 8 | 8 | ❌ Registered but not loaded | Registered in resource type registry but no handler calls `FUN_004074d0` |
 | WMV | 12 | 12 | ❌ Unknown | Resource type exists but no handler found |
-| MP4 | N/A | N/A | ❌ Not supported | No resource type ID exists |
 | NSS | 0x7d9 | 2009 | ❌ **NOT LOADED** | Registered in resource type registry (swkotor.exe: `FUN_005e6d20` line 42) but **NO handler found** that calls `FUN_004074d0`. **NSS files are source files** - they must be compiled to NCS (compiled scripts) before the game can use them. The game engine does NOT load NSS files directly from modules. |
 
 ## Module File Discovery
@@ -446,7 +444,7 @@ Based on `ResourceType.cs`, the following resource types are defined:
 - `MP3` (8) - MP3 audio
   - **VERIFIED**: MP3 is **registered** in resource type registry (type 8) but **NO handler exists** that calls `FUN_004074d0` with type 8
   - **Status**: ❌ **REGISTERED BUT NOT LOADED** - Registered in resource type registry but no loader uses it
-  - **Evidence**: 
+  - **Evidence**:
     - swkotor.exe: `FUN_005e6d20` (0x005e6d20, line 92-93) registers type 8 as "mp3"
     - swkotor2.exe: `FUN_00632510` (0x00632510, line 91-92) registers type 8 as "mp3"
     - No handler found that calls `FUN_004074d0`/`FUN_004075a0` with resource type 8
@@ -605,6 +603,7 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 **Priority**: ❌ **Module/Override/Patch.erf RES files are IGNORED**
 
 **Evidence**:
+
 - swkotor.exe: `FUN_004b8300` line 136-155 loads "savenfo.res" directly via `FUN_00411260` (GFF loader)
 - `FUN_00411260` does not call `FUN_00407230` (resource system)
 - RES files are accessed directly from save file path, bypassing resource system entirely
@@ -616,12 +615,14 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 **Priority**: ✅ **Module/Override/Patch.erf PT files WILL override save file PT files**
 
 **Evidence**:
+
 - swkotor.exe: `FUN_00565d20` (0x00565d20) loads PARTYTABLE
 - swkotor.exe: `FUN_00565d20` line 51: Calls `FUN_00410630` with "PARTYTABLE" and "PT  " signature
 - swkotor.exe: `FUN_00410630` line 48: Calls `FUN_00407680` with resource type
 - swkotor.exe: `FUN_00407680` line 12: Calls `FUN_00407230` (resource system search function)
 
 **Complete Priority Order** (from `FUN_00407230`):
+
 1. **Override Directory** (Location 3, Source Type 2) - Highest priority
 2. **Module Containers** (Location 2, Source Type 3) - `.mod` files
 3. **Module RIM Files** (Location 1, Source Type 4) - `.rim`, `_s.rim`, `_a.rim`, `_adx.rim`
@@ -635,6 +636,7 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 **Priority**: ❌ **Module/Override/Patch.erf NFO files are IGNORED**
 
 **Evidence**:
+
 - swkotor.exe: `FUN_004b8300` line 136-155 loads "savenfo.res" directly via `FUN_00411260` (GFF loader)
 - `FUN_00411260` does not call `FUN_00407230` (resource system)
 - NFO files are accessed directly from save file path, bypassing resource system entirely

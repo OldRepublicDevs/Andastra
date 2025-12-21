@@ -23,6 +23,9 @@ using TPCAuto = Andastra.Parsing.Formats.TPC.TPCAuto;
 using TPC = Andastra.Parsing.Formats.TPC.TPC;
 using TPCMipmap = Andastra.Parsing.Formats.TPC.TPCMipmap;
 using TPCBinaryWriter = Andastra.Parsing.Formats.TPC.TPCBinaryWriter;
+using TPCLayer = Andastra.Parsing.Formats.TPC.TPCLayer;
+using TPCTextureFormat = Andastra.Parsing.Formats.TPC.TPCTextureFormat;
+using Vector = Avalonia.Vector;
 
 namespace HolocronToolset.Editors
 {
@@ -468,15 +471,13 @@ namespace HolocronToolset.Editors
 
                 // Create TPC object
                 TPC tpc = new TPC();
-                tpc.Layers = new List<TPCLayer>();
                 tpc.IsAnimated = false;
                 tpc.IsCubeMap = false;
 
                 // Check if image has alpha channel
                 bool hasAlpha = HasAlphaChannel(rgbaData);
 
-                // Create a single layer with the image data
-                TPCLayer layer = new TPCLayer();
+                // Determine format
                 TPCTextureFormat format = hasAlpha ? TPCTextureFormat.RGBA : TPCTextureFormat.RGB;
 
                 // Set the mipmap data
@@ -498,9 +499,8 @@ namespace HolocronToolset.Editors
                     }
                 }
 
-                layer.SetSingle(width, height, formatData, format);
-                tpc.Layers.Add(layer);
-                tpc._format = format;
+                // Use TPC.SetSingle to properly set the format and data
+                tpc.SetSingle(formatData, format, width, height);
 
                 return tpc;
             }
@@ -532,16 +532,22 @@ namespace HolocronToolset.Editors
                 }
                 else
                 {
-                    // Create a WriteableBitmap by rendering the original bitmap
-                    writeableBitmap = new WriteableBitmap(
-                        new PixelSize(width, height),
-                        new Vector(96, 96),
-                        PixelFormat.Rgba8888,
-                        AlphaFormat.Premul);
-                    using (var context = writeableBitmap.CreateDrawingContext())
+                    // Create a RenderTargetBitmap and render the original bitmap to it
+                    // In Avalonia 11, RenderTargetBitmap doesn't have Lock(), so we save to stream and reload
+                    var renderTarget = new RenderTargetBitmap(new PixelSize(width, height));
+                    using (var context = renderTarget.CreateDrawingContext())
                     {
                         context.DrawImage(bitmap, new Rect(0, 0, width, height));
                     }
+
+                    // Save RenderTargetBitmap to memory stream and decode as WriteableBitmap
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        renderTarget.Save(memoryStream);
+                        memoryStream.Position = 0;
+                        writeableBitmap = WriteableBitmap.Decode(memoryStream);
+                    }
+                    renderTarget.Dispose();
                 }
 
                 // Extract pixel data using Lock()

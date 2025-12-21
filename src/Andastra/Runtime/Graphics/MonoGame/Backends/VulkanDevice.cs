@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
 using Andastra.Runtime.MonoGame.Rendering;
@@ -9,16 +10,535 @@ namespace Andastra.Runtime.MonoGame.Backends
 {
     /// <summary>
     /// Vulkan device wrapper implementing IDevice interface for raytracing operations.
-    /// 
+    ///
     /// Provides NVRHI-style abstractions for Vulkan raytracing resources:
     /// - Acceleration structures (BLAS/TLAS)
     /// - Raytracing pipelines
     /// - Resource creation and management
-    /// 
+    ///
     /// Wraps native VkDevice with VK_KHR_ray_tracing_pipeline extension support.
     /// </summary>
     public class VulkanDevice : IDevice
     {
+        #region Vulkan API Interop
+
+        private const string VulkanLibrary = "vulkan-1";
+
+        // Vulkan result codes
+        private enum VkResult
+        {
+            VK_SUCCESS = 0,
+            VK_NOT_READY = 1,
+            VK_TIMEOUT = 2,
+            VK_EVENT_SET = 3,
+            VK_EVENT_RESET = 4,
+            VK_INCOMPLETE = 5,
+            VK_ERROR_OUT_OF_HOST_MEMORY = -1,
+            VK_ERROR_OUT_OF_DEVICE_MEMORY = -2,
+            VK_ERROR_INITIALIZATION_FAILED = -3,
+            VK_ERROR_DEVICE_LOST = -4,
+            VK_ERROR_MEMORY_MAP_FAILED = -5,
+            VK_ERROR_LAYER_NOT_PRESENT = -6,
+            VK_ERROR_EXTENSION_NOT_PRESENT = -7,
+            VK_ERROR_FEATURE_NOT_PRESENT = -8,
+            VK_ERROR_INCOMPATIBLE_DRIVER = -9,
+            VK_ERROR_TOO_MANY_OBJECTS = -10,
+            VK_ERROR_FORMAT_NOT_SUPPORTED = -11,
+            VK_ERROR_FRAGMENTED_POOL = -12,
+            VK_ERROR_UNKNOWN = -13,
+        }
+
+        // Vulkan format mapping
+        private enum VkFormat
+        {
+            VK_FORMAT_UNDEFINED = 0,
+            VK_FORMAT_R8G8B8A8_UNORM = 37,
+            VK_FORMAT_R8G8B8A8_SRGB = 43,
+            VK_FORMAT_R16G16B16A16_SFLOAT = 91,
+            VK_FORMAT_R32G32B32A32_SFLOAT = 109,
+            VK_FORMAT_D24_UNORM_S8_UINT = 129,
+            VK_FORMAT_D32_SFLOAT = 126,
+            VK_FORMAT_D32_SFLOAT_S8_UINT = 130,
+        }
+
+        // Vulkan image usage flags
+        [Flags]
+        private enum VkImageUsageFlags
+        {
+            VK_IMAGE_USAGE_TRANSFER_SRC_BIT = 0x00000001,
+            VK_IMAGE_USAGE_TRANSFER_DST_BIT = 0x00000002,
+            VK_IMAGE_USAGE_SAMPLED_BIT = 0x00000004,
+            VK_IMAGE_USAGE_STORAGE_BIT = 0x00000008,
+            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT = 0x00000010,
+            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT = 0x00000020,
+            VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT = 0x00000040,
+            VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT = 0x00000080,
+        }
+
+        // Vulkan buffer usage flags
+        [Flags]
+        private enum VkBufferUsageFlags
+        {
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT = 0x00000001,
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT = 0x00000002,
+            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT = 0x00000010,
+            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT = 0x00000020,
+            VK_BUFFER_USAGE_INDEX_BUFFER_BIT = 0x00000040,
+            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT = 0x00000080,
+            VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT = 0x00000100,
+            VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT = 0x00020000,
+            VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR = 0x00080000,
+            VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR = 0x00100000,
+        }
+
+        // Vulkan memory property flags
+        [Flags]
+        private enum VkMemoryPropertyFlags
+        {
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT = 0x00000001,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT = 0x00000002,
+            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT = 0x00000004,
+            VK_MEMORY_PROPERTY_HOST_CACHED_BIT = 0x00000008,
+            VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT = 0x00000010,
+            VK_MEMORY_PROPERTY_PROTECTED_BIT = 0x00000020,
+        }
+
+        // Vulkan pipeline stage flags
+        [Flags]
+        private enum VkPipelineStageFlags
+        {
+            VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT = 0x00000001,
+            VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT = 0x00000002,
+            VK_PIPELINE_STAGE_VERTEX_INPUT_BIT = 0x00000004,
+            VK_PIPELINE_STAGE_VERTEX_SHADER_BIT = 0x00000008,
+            VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT = 0x00000080,
+            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT = 0x00000400,
+            VK_PIPELINE_STAGE_TRANSFER_BIT = 0x00001000,
+            VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT = 0x00002000,
+            VK_PIPELINE_STAGE_HOST_BIT = 0x00004000,
+            VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT = 0x00008000,
+            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT = 0x00010000,
+            VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR = 0x00200000,
+        }
+
+        // Vulkan access flags
+        [Flags]
+        private enum VkAccessFlags
+        {
+            VK_ACCESS_INDIRECT_COMMAND_READ_BIT = 0x00000001,
+            VK_ACCESS_INDEX_READ_BIT = 0x00000002,
+            VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT = 0x00000004,
+            VK_ACCESS_UNIFORM_READ_BIT = 0x00000008,
+            VK_ACCESS_INPUT_ATTACHMENT_READ_BIT = 0x00000010,
+            VK_ACCESS_SHADER_READ_BIT = 0x00000020,
+            VK_ACCESS_SHADER_WRITE_BIT = 0x00000040,
+            VK_ACCESS_COLOR_ATTACHMENT_READ_BIT = 0x00000080,
+            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT = 0x00000100,
+            VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT = 0x00000200,
+            VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT = 0x00000400,
+            VK_ACCESS_TRANSFER_READ_BIT = 0x00000800,
+            VK_ACCESS_TRANSFER_WRITE_BIT = 0x00001000,
+            VK_ACCESS_HOST_READ_BIT = 0x00002000,
+            VK_ACCESS_HOST_WRITE_BIT = 0x00004000,
+            VK_ACCESS_MEMORY_READ_BIT = 0x00008000,
+            VK_ACCESS_MEMORY_WRITE_BIT = 0x00010000,
+            VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_KHR = 0x00200000,
+            VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_KHR = 0x00400000,
+        }
+
+        // Vulkan image layout
+        private enum VkImageLayout
+        {
+            VK_IMAGE_LAYOUT_UNDEFINED = 0,
+            VK_IMAGE_LAYOUT_GENERAL = 1,
+            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL = 2,
+            VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL = 3,
+            VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL = 4,
+            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL = 5,
+            VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL = 6,
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL = 7,
+            VK_IMAGE_LAYOUT_PREINITIALIZED = 8,
+        }
+
+        // Vulkan command buffer usage flags
+        [Flags]
+        private enum VkCommandBufferUsageFlags
+        {
+            VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT = 0x00000001,
+            VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT = 0x00000002,
+            VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT = 0x00000004,
+        }
+
+        // Vulkan structures
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkImageCreateInfo
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkImageCreateFlags flags;
+            public VkImageType imageType;
+            public VkFormat format;
+            public VkExtent3D extent;
+            public uint mipLevels;
+            public uint arrayLayers;
+            public VkSampleCountFlagBits samples;
+            public VkImageTiling tiling;
+            public VkImageUsageFlags usage;
+            public VkSharingMode sharingMode;
+            public uint queueFamilyIndexCount;
+            public IntPtr pQueueFamilyIndices;
+            public VkImageLayout initialLayout;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkExtent3D
+        {
+            public uint width;
+            public uint height;
+            public uint depth;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkBufferCreateInfo
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkBufferCreateFlags flags;
+            public ulong size;
+            public VkBufferUsageFlags usage;
+            public VkSharingMode sharingMode;
+            public uint queueFamilyIndexCount;
+            public IntPtr pQueueFamilyIndices;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkMemoryAllocateInfo
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public ulong allocationSize;
+            public uint memoryTypeIndex;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkSamplerCreateInfo
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkSamplerCreateFlags flags;
+            public VkFilter magFilter;
+            public VkFilter minFilter;
+            public VkSamplerMipmapMode mipmapMode;
+            public VkSamplerAddressMode addressModeU;
+            public VkSamplerAddressMode addressModeV;
+            public VkSamplerAddressMode addressModeW;
+            public float mipLodBias;
+            public VkBool32 anisotropyEnable;
+            public float maxAnisotropy;
+            public VkBool32 compareEnable;
+            public VkCompareOp compareOp;
+            public float minLod;
+            public float maxLod;
+            public VkBorderColor borderColor;
+            public VkBool32 unnormalizedCoordinates;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkShaderModuleCreateInfo
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkShaderModuleCreateFlags flags;
+            public IntPtr codeSize;
+            public IntPtr pCode;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkDescriptorSetLayoutCreateInfo
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkDescriptorSetLayoutCreateFlags flags;
+            public uint bindingCount;
+            public IntPtr pBindings;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkDescriptorSetLayoutBinding
+        {
+            public uint binding;
+            public VkDescriptorType descriptorType;
+            public uint descriptorCount;
+            public VkShaderStageFlags stageFlags;
+            public IntPtr pImmutableSamplers;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkPipelineLayoutCreateInfo
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkPipelineLayoutCreateFlags flags;
+            public uint setLayoutCount;
+            public IntPtr pSetLayouts;
+            public uint pushConstantRangeCount;
+            public IntPtr pPushConstantRanges;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkSubmitInfo
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public uint waitSemaphoreCount;
+            public IntPtr pWaitSemaphores;
+            public IntPtr pWaitDstStageMask;
+            public uint commandBufferCount;
+            public IntPtr pCommandBuffers;
+            public uint signalSemaphoreCount;
+            public IntPtr pSignalSemaphores;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkCommandBufferBeginInfo
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkCommandBufferUsageFlags flags;
+            public IntPtr pInheritanceInfo;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkMemoryRequirements
+        {
+            public ulong size;
+            public ulong alignment;
+            public uint memoryTypeBits;
+        }
+
+        // Vulkan enums
+        private enum VkStructureType
+        {
+            VK_STRUCTURE_TYPE_APPLICATION_INFO = 0,
+            VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO = 1,
+            VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO = 2,
+            VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO = 3,
+            VK_STRUCTURE_TYPE_SUBMIT_INFO = 4,
+            VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO = 5,
+            VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE = 6,
+            VK_STRUCTURE_TYPE_BIND_SPARSE_INFO = 7,
+            VK_STRUCTURE_TYPE_FENCE_CREATE_INFO = 8,
+            VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO = 9,
+            VK_STRUCTURE_TYPE_EVENT_CREATE_INFO = 10,
+            VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO = 11,
+            VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO = 12,
+            VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO = 13,
+            VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO = 14,
+            VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO = 15,
+            VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO = 16,
+            VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO = 17,
+            VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO = 18,
+            VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO = 19,
+            VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO = 20,
+            VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO = 21,
+            VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO = 22,
+            VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO = 23,
+            VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO = 24,
+            VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO = 25,
+            VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO = 26,
+            VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO = 27,
+            VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO = 28,
+            VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO = 29,
+            VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO = 30,
+            VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO = 31,
+            VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO = 32,
+            VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO = 33,
+            VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO = 34,
+            VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET = 35,
+            VK_STRUCTURE_TYPE_COPY_DESCRIPTOR_SET = 36,
+            VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO = 37,
+            VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO = 38,
+            VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO = 39,
+            VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO = 40,
+            VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO = 41,
+            VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO = 42,
+            VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO = 43,
+            VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER = 44,
+            VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER = 45,
+            VK_STRUCTURE_TYPE_MEMORY_BARRIER = 46,
+            VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO = 47,
+            VK_STRUCTURE_TYPE_LOADER_DEVICE_CREATE_INFO = 48,
+        }
+
+        // Additional Vulkan enums
+        private enum VkImageCreateFlags { }
+        private enum VkImageType { VK_IMAGE_TYPE_2D = 1 }
+        private enum VkSampleCountFlagBits { VK_SAMPLE_COUNT_1_BIT = 1 }
+        private enum VkImageTiling { VK_IMAGE_TILING_OPTIMAL = 0 }
+        private enum VkSharingMode { VK_SHARING_MODE_EXCLUSIVE = 0 }
+        private enum VkBufferCreateFlags { }
+        private enum VkSamplerCreateFlags { }
+        private enum VkFilter { VK_FILTER_NEAREST = 0, VK_FILTER_LINEAR = 1 }
+        private enum VkSamplerMipmapMode { VK_SAMPLER_MIPMAP_MODE_NEAREST = 0, VK_SAMPLER_MIPMAP_MODE_LINEAR = 1 }
+        private enum VkSamplerAddressMode { VK_SAMPLER_ADDRESS_MODE_REPEAT = 0, VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT = 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE = 2, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER = 3 }
+        private enum VkBool32 { VK_FALSE = 0, VK_TRUE = 1 }
+        private enum VkCompareOp { VK_COMPARE_OP_NEVER = 0, VK_COMPARE_OP_LESS = 1, VK_COMPARE_OP_EQUAL = 2, VK_COMPARE_OP_LESS_OR_EQUAL = 3, VK_COMPARE_OP_GREATER = 4, VK_COMPARE_OP_NOT_EQUAL = 5, VK_COMPARE_OP_GREATER_OR_EQUAL = 6, VK_COMPARE_OP_ALWAYS = 7 }
+        private enum VkBorderColor { VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK = 0 }
+        private enum VkShaderModuleCreateFlags { }
+        private enum VkDescriptorSetLayoutCreateFlags { }
+        private enum VkDescriptorType { VK_DESCRIPTOR_TYPE_SAMPLER = 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER = 1, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE = 2, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE = 3, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER = 6, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER = 7 }
+        private enum VkShaderStageFlags { VK_SHADER_STAGE_VERTEX_BIT = 0x00000001, VK_SHADER_STAGE_FRAGMENT_BIT = 0x00000010, VK_SHADER_STAGE_COMPUTE_BIT = 0x00000020, VK_SHADER_STAGE_RAYGEN_BIT_KHR = 0x00000100, VK_SHADER_STAGE_MISS_BIT_KHR = 0x00000200, VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR = 0x00000400 }
+        private enum VkPipelineLayoutCreateFlags { }
+        private enum VkCommandBufferLevel { VK_COMMAND_BUFFER_LEVEL_PRIMARY = 0 }
+        private enum VkPipelineBindPoint { VK_PIPELINE_BIND_POINT_GRAPHICS = 0, VK_PIPELINE_BIND_POINT_COMPUTE = 1, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR = 1000165000 }
+
+        // Vulkan function pointers
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkCreateImageDelegate(IntPtr device, ref VkImageCreateInfo pCreateInfo, IntPtr pAllocator, out IntPtr pImage);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkDestroyImageDelegate(IntPtr device, IntPtr image, IntPtr pAllocator);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkGetImageMemoryRequirementsDelegate(IntPtr device, IntPtr image, out VkMemoryRequirements pMemoryRequirements);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkAllocateMemoryDelegate(IntPtr device, ref VkMemoryAllocateInfo pAllocateInfo, IntPtr pAllocator, out IntPtr pMemory);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkFreeMemoryDelegate(IntPtr device, IntPtr memory, IntPtr pAllocator);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkBindImageMemoryDelegate(IntPtr device, IntPtr image, IntPtr memory, ulong memoryOffset);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkCreateImageViewDelegate(IntPtr device, IntPtr pCreateInfo, IntPtr pAllocator, out IntPtr pView);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkDestroyImageViewDelegate(IntPtr device, IntPtr imageView, IntPtr pAllocator);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkCreateBufferDelegate(IntPtr device, ref VkBufferCreateInfo pCreateInfo, IntPtr pAllocator, out IntPtr pBuffer);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkDestroyBufferDelegate(IntPtr device, IntPtr buffer, IntPtr pAllocator);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkGetBufferMemoryRequirementsDelegate(IntPtr device, IntPtr buffer, out VkMemoryRequirements pMemoryRequirements);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkBindBufferMemoryDelegate(IntPtr device, IntPtr buffer, IntPtr memory, ulong memoryOffset);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkCreateSamplerDelegate(IntPtr device, ref VkSamplerCreateInfo pCreateInfo, IntPtr pAllocator, out IntPtr pSampler);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkDestroySamplerDelegate(IntPtr device, IntPtr sampler, IntPtr pAllocator);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkCreateShaderModuleDelegate(IntPtr device, ref VkShaderModuleCreateInfo pCreateInfo, IntPtr pAllocator, out IntPtr pShaderModule);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkDestroyShaderModuleDelegate(IntPtr device, IntPtr shaderModule, IntPtr pAllocator);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkCreateDescriptorSetLayoutDelegate(IntPtr device, ref VkDescriptorSetLayoutCreateInfo pCreateInfo, IntPtr pAllocator, out IntPtr pSetLayout);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkDestroyDescriptorSetLayoutDelegate(IntPtr device, IntPtr descriptorSetLayout, IntPtr pAllocator);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkCreatePipelineLayoutDelegate(IntPtr device, ref VkPipelineLayoutCreateInfo pCreateInfo, IntPtr pAllocator, out IntPtr pPipelineLayout);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkDestroyPipelineLayoutDelegate(IntPtr device, IntPtr pipelineLayout, IntPtr pAllocator);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkCreateGraphicsPipelinesDelegate(IntPtr device, IntPtr pipelineCache, uint createInfoCount, IntPtr pCreateInfos, IntPtr pAllocator, IntPtr pPipelines);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkCreateComputePipelinesDelegate(IntPtr device, IntPtr pipelineCache, uint createInfoCount, IntPtr pCreateInfos, IntPtr pAllocator, IntPtr pPipelines);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkDestroyPipelineDelegate(IntPtr device, IntPtr pipeline, IntPtr pAllocator);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkQueueSubmitDelegate(IntPtr queue, uint submitCount, IntPtr pSubmits, IntPtr fence);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkDeviceWaitIdleDelegate(IntPtr device);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkCreateCommandPoolDelegate(IntPtr device, IntPtr pCreateInfo, IntPtr pAllocator, out IntPtr pCommandPool);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkDestroyCommandPoolDelegate(IntPtr device, IntPtr commandPool, IntPtr pAllocator);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkAllocateCommandBuffersDelegate(IntPtr device, IntPtr pAllocateInfo, IntPtr pCommandBuffers);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkFreeCommandBuffersDelegate(IntPtr device, IntPtr commandPool, uint commandBufferCount, IntPtr pCommandBuffers);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkBeginCommandBufferDelegate(IntPtr commandBuffer, ref VkCommandBufferBeginInfo pBeginInfo);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkEndCommandBufferDelegate(IntPtr commandBuffer);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkCmdBindPipelineDelegate(IntPtr commandBuffer, VkPipelineBindPoint pipelineBindPoint, IntPtr pipeline);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdBindDescriptorSetsDelegate(IntPtr commandBuffer, VkPipelineBindPoint pipelineBindPoint, IntPtr layout, uint firstSet, uint descriptorSetCount, IntPtr pDescriptorSets, uint dynamicOffsetCount, IntPtr pDynamicOffsets);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdDispatchDelegate(IntPtr commandBuffer, uint groupCountX, uint groupCountY, uint groupCountZ);
+
+        // Function pointers storage
+        private static vkCreateImageDelegate vkCreateImage;
+        private static vkDestroyImageDelegate vkDestroyImage;
+        private static vkGetImageMemoryRequirementsDelegate vkGetImageMemoryRequirements;
+        private static vkAllocateMemoryDelegate vkAllocateMemory;
+        private static vkFreeMemoryDelegate vkFreeMemory;
+        private static vkBindImageMemoryDelegate vkBindImageMemory;
+        private static vkCreateImageViewDelegate vkCreateImageView;
+        private static vkDestroyImageViewDelegate vkDestroyImageView;
+
+        private static vkCreateBufferDelegate vkCreateBuffer;
+        private static vkDestroyBufferDelegate vkDestroyBuffer;
+        private static vkGetBufferMemoryRequirementsDelegate vkGetBufferMemoryRequirements;
+        private static vkBindBufferMemoryDelegate vkBindBufferMemory;
+
+        private static vkCreateSamplerDelegate vkCreateSampler;
+        private static vkDestroySamplerDelegate vkDestroySampler;
+
+        private static vkCreateShaderModuleDelegate vkCreateShaderModule;
+        private static vkDestroyShaderModuleDelegate vkDestroyShaderModule;
+
+        private static vkCreateDescriptorSetLayoutDelegate vkCreateDescriptorSetLayout;
+        private static vkDestroyDescriptorSetLayoutDelegate vkDestroyDescriptorSetLayout;
+
+        private static vkCreatePipelineLayoutDelegate vkCreatePipelineLayout;
+        private static vkDestroyPipelineLayoutDelegate vkDestroyPipelineLayout;
+
+        private static vkCreateGraphicsPipelinesDelegate vkCreateGraphicsPipelines;
+        private static vkCreateComputePipelinesDelegate vkCreateComputePipelines;
+        private static vkDestroyPipelineDelegate vkDestroyPipeline;
+
+        private static vkQueueSubmitDelegate vkQueueSubmit;
+        private static vkDeviceWaitIdleDelegate vkDeviceWaitIdle;
+
+        private static vkCreateCommandPoolDelegate vkCreateCommandPool;
+        private static vkDestroyCommandPoolDelegate vkDestroyCommandPool;
+        private static vkAllocateCommandBuffersDelegate vkAllocateCommandBuffers;
+        private static vkFreeCommandBuffersDelegate vkFreeCommandBuffers;
+        private static vkBeginCommandBufferDelegate vkBeginCommandBuffer;
+        private static vkEndCommandBufferDelegate vkEndCommandBuffer;
+
+        private static vkCmdBindPipelineDelegate vkCmdBindPipeline;
+        private static vkCmdBindDescriptorSetsDelegate vkCmdBindDescriptorSets;
+        private static vkCmdDispatchDelegate vkCmdDispatch;
+
+        // Helper methods for Vulkan interop
+        private static void InitializeVulkanFunctions(IntPtr device)
+        {
+            // Load Vulkan functions - in a real implementation, these would be loaded via vkGetDeviceProcAddr
+            // For this example, we'll assume they're available through P/Invoke
+            // This is a simplified version - real implementation would need proper function loading
+        }
+
+        private static void CheckResult(VkResult result, string operation)
+        {
+            if (result != VkResult.VK_SUCCESS)
+            {
+                throw new VulkanException($"Vulkan operation '{operation}' failed with result: {result}");
+            }
+        }
+
+        private class VulkanException : Exception
+        {
+            public VulkanException(string message) : base(message) { }
+        }
+
+        #endregion
+
         private readonly IntPtr _device;
         private readonly IntPtr _instance;
         private readonly IntPtr _physicalDevice;
@@ -34,6 +554,11 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         // Frame tracking for multi-buffering
         private int _currentFrameIndex;
+
+        // Command pool for command buffer allocation
+        private readonly IntPtr _graphicsCommandPool;
+        private readonly IntPtr _computeCommandPool;
+        private readonly IntPtr _transferCommandPool;
 
         public GraphicsCapabilities Capabilities
         {
@@ -74,6 +599,24 @@ namespace Andastra.Runtime.MonoGame.Backends
             _resources = new Dictionary<IntPtr, IResource>();
             _nextResourceHandle = 1;
             _currentFrameIndex = 0;
+
+            // Initialize Vulkan function pointers
+            InitializeVulkanFunctions(device);
+
+            // Create command pools
+            _graphicsCommandPool = CreateCommandPool(0); // graphics queue family
+            _computeCommandPool = CreateCommandPool(1);  // compute queue family
+            _transferCommandPool = CreateCommandPool(2); // transfer queue family
+        }
+
+        private IntPtr CreateCommandPool(uint queueFamilyIndex)
+        {
+            // TODO: IMPLEMENT - Create VkCommandPool for the specified queue family
+            // - vkCreateCommandPool with queue family index
+            // - Return command pool handle
+
+            // For now, return a placeholder - real implementation would create actual command pools
+            return new IntPtr(_nextResourceHandle++);
         }
 
         #region Resource Creation
@@ -85,17 +628,132 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ObjectDisposedException(nameof(VulkanDevice));
             }
 
-            // TODO: IMPLEMENT - Create VkImage, VkImageView, and allocate VkDeviceMemory
-            // - vkCreateImage with descriptor from TextureDesc
-            // - Allocate and bind VkDeviceMemory
-            // - Create VkImageView for shader access
-            // - Track resource for cleanup
+            if (desc.Width == 0 || desc.Height == 0)
+            {
+                throw new ArgumentException("Texture dimensions must be greater than zero", nameof(desc));
+            }
+
+            // Convert TextureFormat to VkFormat
+            VkFormat vkFormat = ConvertToVkFormat(desc.Format);
+            if (vkFormat == VkFormat.VK_FORMAT_UNDEFINED)
+            {
+                throw new ArgumentException($"Unsupported texture format: {desc.Format}", nameof(desc));
+            }
+
+            // Convert TextureUsage to VkImageUsageFlags
+            VkImageUsageFlags usageFlags = VkImageUsageFlags.VK_IMAGE_USAGE_SAMPLED_BIT; // Default to sampled
+
+            if ((desc.Usage & TextureUsage.RenderTarget) != 0)
+            {
+                usageFlags |= VkImageUsageFlags.VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+            }
+            if ((desc.Usage & TextureUsage.DepthStencil) != 0)
+            {
+                usageFlags |= VkImageUsageFlags.VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+            }
+            if ((desc.Usage & TextureUsage.UnorderedAccess) != 0)
+            {
+                usageFlags |= VkImageUsageFlags.VK_IMAGE_USAGE_STORAGE_BIT;
+            }
+            if ((desc.Usage & TextureUsage.ShaderResource) != 0)
+            {
+                usageFlags |= VkImageUsageFlags.VK_IMAGE_USAGE_SAMPLED_BIT;
+            }
+
+            // Create VkImage
+            VkImageCreateInfo imageCreateInfo = new VkImageCreateInfo
+            {
+                sType = VkStructureType.VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+                pNext = IntPtr.Zero,
+                flags = 0,
+                imageType = VkImageType.VK_IMAGE_TYPE_2D,
+                format = vkFormat,
+                extent = new VkExtent3D
+                {
+                    width = (uint)desc.Width,
+                    height = (uint)desc.Height,
+                    depth = (uint)desc.Depth
+                },
+                mipLevels = (uint)desc.MipLevels,
+                arrayLayers = (uint)desc.ArraySize,
+                samples = VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT, // TODO: Convert from desc.SampleCount
+                tiling = VkImageTiling.VK_IMAGE_TILING_OPTIMAL,
+                usage = usageFlags,
+                sharingMode = VkSharingMode.VK_SHARING_MODE_EXCLUSIVE,
+                queueFamilyIndexCount = 0,
+                pQueueFamilyIndices = IntPtr.Zero,
+                initialLayout = VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED
+            };
+
+            IntPtr vkImage;
+            CheckResult(vkCreateImage(_device, ref imageCreateInfo, IntPtr.Zero, out vkImage), "vkCreateImage");
+
+            // Get memory requirements
+            VkMemoryRequirements memoryRequirements;
+            vkGetImageMemoryRequirements(_device, vkImage, out memoryRequirements);
+
+            // Allocate memory
+            IntPtr vkMemory = AllocateDeviceMemory(memoryRequirements, VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+            // Bind memory
+            CheckResult(vkBindImageMemory(_device, vkImage, vkMemory, 0), "vkBindImageMemory");
+
+            // Create image view if needed
+            IntPtr vkImageView = IntPtr.Zero;
+            if ((desc.Usage & TextureUsage.ShaderResource) != 0 ||
+                (desc.Usage & TextureUsage.RenderTarget) != 0 ||
+                (desc.Usage & TextureUsage.UnorderedAccess) != 0)
+            {
+                // TODO: Create VkImageView - this requires VkImageViewCreateInfo structure
+                // For now, we'll skip this and just use the image handle
+            }
 
             IntPtr handle = new IntPtr(_nextResourceHandle++);
-            var texture = new VulkanTexture(handle, desc);
+            var texture = new VulkanTexture(handle, desc, vkImage, vkMemory, vkImageView, _device);
             _resources[handle] = texture;
 
             return texture;
+        }
+
+        private VkFormat ConvertToVkFormat(TextureFormat format)
+        {
+            switch (format)
+            {
+                case TextureFormat.RGBA8_UNORM: return VkFormat.VK_FORMAT_R8G8B8A8_UNORM;
+                case TextureFormat.RGBA8_SRGB: return VkFormat.VK_FORMAT_R8G8B8A8_SRGB;
+                case TextureFormat.RGBA16_FLOAT: return VkFormat.VK_FORMAT_R16G16B16A16_SFLOAT;
+                case TextureFormat.RGBA32_FLOAT: return VkFormat.VK_FORMAT_R32G32B32A32_SFLOAT;
+                case TextureFormat.D24_UNORM_S8_UINT: return VkFormat.VK_FORMAT_D24_UNORM_S8_UINT;
+                case TextureFormat.D32_FLOAT: return VkFormat.VK_FORMAT_D32_SFLOAT;
+                case TextureFormat.D32_FLOAT_S8_UINT: return VkFormat.VK_FORMAT_D32_SFLOAT_S8_UINT;
+                default: return VkFormat.VK_FORMAT_UNDEFINED;
+            }
+        }
+
+        private IntPtr AllocateDeviceMemory(VkMemoryRequirements requirements, VkMemoryPropertyFlags properties)
+        {
+            // Find suitable memory type
+            uint memoryTypeIndex = FindMemoryType(requirements.memoryTypeBits, properties);
+
+            VkMemoryAllocateInfo allocateInfo = new VkMemoryAllocateInfo
+            {
+                sType = VkStructureType.VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+                pNext = IntPtr.Zero,
+                allocationSize = requirements.size,
+                memoryTypeIndex = memoryTypeIndex
+            };
+
+            IntPtr memory;
+            CheckResult(vkAllocateMemory(_device, ref allocateInfo, IntPtr.Zero, out memory), "vkAllocateMemory");
+
+            return memory;
+        }
+
+        private uint FindMemoryType(uint typeFilter, VkMemoryPropertyFlags properties)
+        {
+            // TODO: Query physical device memory properties and find suitable type
+            // For now, return a default - real implementation would query VkPhysicalDeviceMemoryProperties
+            return 0; // Assume type 0 is suitable
         }
 
         public IBuffer CreateBuffer(BufferDesc desc)
@@ -105,15 +763,77 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ObjectDisposedException(nameof(VulkanDevice));
             }
 
-            // TODO: IMPLEMENT - Create VkBuffer and allocate VkDeviceMemory
-            // - vkCreateBuffer with size and usage flags from BufferDesc
-            // - Query memory requirements with vkGetBufferMemoryRequirements
-            // - Allocate VkDeviceMemory from appropriate memory type
-            // - Bind memory with vkBindBufferMemory
-            // - Track resource for cleanup
+            if (desc.ByteSize == 0)
+            {
+                throw new ArgumentException("Buffer size must be greater than zero", nameof(desc));
+            }
+
+            // Convert BufferUsage to VkBufferUsageFlags
+            VkBufferUsageFlags usageFlags = 0;
+
+            if ((desc.Usage & BufferUsage.Vertex) != 0)
+            {
+                usageFlags |= VkBufferUsageFlags.VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+            }
+            if ((desc.Usage & BufferUsage.Index) != 0)
+            {
+                usageFlags |= VkBufferUsageFlags.VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+            }
+            if ((desc.Usage & BufferUsage.Constant) != 0)
+            {
+                usageFlags |= VkBufferUsageFlags.VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+            }
+            if ((desc.Usage & BufferUsage.Shader) != 0)
+            {
+                usageFlags |= VkBufferUsageFlags.VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+            }
+            if ((desc.Usage & BufferUsage.Indirect) != 0)
+            {
+                usageFlags |= VkBufferUsageFlags.VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
+            }
+
+            // Add transfer flags for staging if needed
+            if ((desc.Usage & (BufferUsage.Vertex | BufferUsage.Index | BufferUsage.Constant | BufferUsage.Shader)) != 0)
+            {
+                usageFlags |= VkBufferUsageFlags.VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+            }
+
+            // Create VkBuffer
+            VkBufferCreateInfo bufferCreateInfo = new VkBufferCreateInfo
+            {
+                sType = VkStructureType.VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+                pNext = IntPtr.Zero,
+                flags = 0,
+                size = (ulong)desc.ByteSize,
+                usage = usageFlags,
+                sharingMode = VkSharingMode.VK_SHARING_MODE_EXCLUSIVE,
+                queueFamilyIndexCount = 0,
+                pQueueFamilyIndices = IntPtr.Zero
+            };
+
+            IntPtr vkBuffer;
+            CheckResult(vkCreateBuffer(_device, ref bufferCreateInfo, IntPtr.Zero, out vkBuffer), "vkCreateBuffer");
+
+            // Get memory requirements
+            VkMemoryRequirements memoryRequirements;
+            vkGetBufferMemoryRequirements(_device, vkBuffer, out memoryRequirements);
+
+            // Determine memory properties based on usage
+            VkMemoryPropertyFlags memoryProperties = VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+            if ((desc.Usage & BufferUsage.Staging) != 0)
+            {
+                memoryProperties = VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                                  VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+            }
+
+            // Allocate memory
+            IntPtr vkMemory = AllocateDeviceMemory(memoryRequirements, memoryProperties);
+
+            // Bind memory
+            CheckResult(vkBindBufferMemory(_device, vkBuffer, vkMemory, 0), "vkBindBufferMemory");
 
             IntPtr handle = new IntPtr(_nextResourceHandle++);
-            var buffer = new VulkanBuffer(handle, desc);
+            var buffer = new VulkanBuffer(handle, desc, vkBuffer, vkMemory, _device);
             _resources[handle] = buffer;
 
             return buffer;
@@ -126,16 +846,97 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ObjectDisposedException(nameof(VulkanDevice));
             }
 
-            // TODO: IMPLEMENT - Create VkSampler
-            // - vkCreateSampler with descriptor from SamplerDesc
-            // - Map filter modes, address modes, compare func to Vulkan equivalents
-            // - Track resource for cleanup
+            // Convert filter mode
+            VkFilter vkMinFilter = ConvertToVkFilter(desc.MinFilter);
+            VkFilter vkMagFilter = ConvertToVkFilter(desc.MagFilter);
+            VkSamplerMipmapMode vkMipmapMode = ConvertToVkSamplerMipmapMode(desc.MipFilter);
+
+            // Convert address modes
+            VkSamplerAddressMode vkAddressModeU = ConvertToVkSamplerAddressMode(desc.AddressU);
+            VkSamplerAddressMode vkAddressModeV = ConvertToVkSamplerAddressMode(desc.AddressV);
+            VkSamplerAddressMode vkAddressModeW = ConvertToVkSamplerAddressMode(desc.AddressW);
+
+            // Convert compare function
+            VkCompareOp vkCompareOp = ConvertToVkCompareOp(desc.CompareFunc);
+
+            VkSamplerCreateInfo samplerCreateInfo = new VkSamplerCreateInfo
+            {
+                sType = VkStructureType.VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+                pNext = IntPtr.Zero,
+                flags = 0,
+                magFilter = vkMagFilter,
+                minFilter = vkMinFilter,
+                mipmapMode = vkMipmapMode,
+                addressModeU = vkAddressModeU,
+                addressModeV = vkAddressModeV,
+                addressModeW = vkAddressModeW,
+                mipLodBias = desc.MipLODBias,
+                anisotropyEnable = desc.MaxAnisotropy > 1.0f ? VkBool32.VK_TRUE : VkBool32.VK_FALSE,
+                maxAnisotropy = desc.MaxAnisotropy,
+                compareEnable = desc.CompareFunc != CompareFunction.Never ? VkBool32.VK_TRUE : VkBool32.VK_FALSE,
+                compareOp = vkCompareOp,
+                minLod = desc.MinLOD,
+                maxLod = desc.MaxLOD,
+                borderColor = VkBorderColor.VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK,
+                unnormalizedCoordinates = VkBool32.VK_FALSE
+            };
+
+            IntPtr vkSampler;
+            CheckResult(vkCreateSampler(_device, ref samplerCreateInfo, IntPtr.Zero, out vkSampler), "vkCreateSampler");
 
             IntPtr handle = new IntPtr(_nextResourceHandle++);
-            var sampler = new VulkanSampler(handle, desc);
+            var sampler = new VulkanSampler(handle, desc, vkSampler, _device);
             _resources[handle] = sampler;
 
             return sampler;
+        }
+
+        private VkFilter ConvertToVkFilter(FilterMode filter)
+        {
+            switch (filter)
+            {
+                case FilterMode.Point: return VkFilter.VK_FILTER_NEAREST;
+                case FilterMode.Linear: return VkFilter.VK_FILTER_LINEAR;
+                default: return VkFilter.VK_FILTER_LINEAR;
+            }
+        }
+
+        private VkSamplerMipmapMode ConvertToVkSamplerMipmapMode(FilterMode filter)
+        {
+            switch (filter)
+            {
+                case FilterMode.Point: return VkSamplerMipmapMode.VK_SAMPLER_MIPMAP_MODE_NEAREST;
+                case FilterMode.Linear: return VkSamplerMipmapMode.VK_SAMPLER_MIPMAP_MODE_LINEAR;
+                default: return VkSamplerMipmapMode.VK_SAMPLER_MIPMAP_MODE_LINEAR;
+            }
+        }
+
+        private VkSamplerAddressMode ConvertToVkSamplerAddressMode(SamplerAddressMode addressMode)
+        {
+            switch (addressMode)
+            {
+                case SamplerAddressMode.Wrap: return VkSamplerAddressMode.VK_SAMPLER_ADDRESS_MODE_REPEAT;
+                case SamplerAddressMode.Mirror: return VkSamplerAddressMode.VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+                case SamplerAddressMode.Clamp: return VkSamplerAddressMode.VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+                case SamplerAddressMode.Border: return VkSamplerAddressMode.VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+                default: return VkSamplerAddressMode.VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+            }
+        }
+
+        private VkCompareOp ConvertToVkCompareOp(CompareFunction compareFunc)
+        {
+            switch (compareFunc)
+            {
+                case CompareFunction.Never: return VkCompareOp.VK_COMPARE_OP_NEVER;
+                case CompareFunction.Less: return VkCompareOp.VK_COMPARE_OP_LESS;
+                case CompareFunction.Equal: return VkCompareOp.VK_COMPARE_OP_EQUAL;
+                case CompareFunction.LessEqual: return VkCompareOp.VK_COMPARE_OP_LESS_OR_EQUAL;
+                case CompareFunction.Greater: return VkCompareOp.VK_COMPARE_OP_GREATER;
+                case CompareFunction.NotEqual: return VkCompareOp.VK_COMPARE_OP_NOT_EQUAL;
+                case CompareFunction.GreaterEqual: return VkCompareOp.VK_COMPARE_OP_GREATER_OR_EQUAL;
+                case CompareFunction.Always: return VkCompareOp.VK_COMPARE_OP_ALWAYS;
+                default: return VkCompareOp.VK_COMPARE_OP_NEVER;
+            }
         }
 
         public IShader CreateShader(ShaderDesc desc)
@@ -150,16 +951,39 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ArgumentException("Shader bytecode must be provided", nameof(desc));
             }
 
-            // TODO: IMPLEMENT - Create VkShaderModule
-            // - vkCreateShaderModule with SPIR-V bytecode from desc.Bytecode
-            // - Validate SPIR-V format
-            // - Track resource for cleanup
+            // Validate bytecode alignment (SPIR-V requires 32-bit alignment)
+            if (desc.Bytecode.Length % 4 != 0)
+            {
+                throw new ArgumentException("Shader bytecode must be 32-bit aligned", nameof(desc));
+            }
 
-            IntPtr handle = new IntPtr(_nextResourceHandle++);
-            var shader = new VulkanShader(handle, desc);
-            _resources[handle] = shader;
+            // Pin the bytecode array for native interop
+            System.Runtime.InteropServices.GCHandle bytecodeHandle = System.Runtime.InteropServices.GCHandle.Alloc(desc.Bytecode, System.Runtime.InteropServices.GCHandleType.Pinned);
 
-            return shader;
+            try
+            {
+                VkShaderModuleCreateInfo shaderModuleCreateInfo = new VkShaderModuleCreateInfo
+                {
+                    sType = VkStructureType.VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+                    pNext = IntPtr.Zero,
+                    flags = 0,
+                    codeSize = new IntPtr(desc.Bytecode.Length),
+                    pCode = bytecodeHandle.AddrOfPinnedObject()
+                };
+
+                IntPtr vkShaderModule;
+                CheckResult(vkCreateShaderModule(_device, ref shaderModuleCreateInfo, IntPtr.Zero, out vkShaderModule), "vkCreateShaderModule");
+
+                IntPtr handle = new IntPtr(_nextResourceHandle++);
+                var shader = new VulkanShader(handle, desc, vkShaderModule, _device);
+                _resources[handle] = shader;
+
+                return shader;
+            }
+            finally
+            {
+                bytecodeHandle.Free();
+            }
         }
 
         public IGraphicsPipeline CreateGraphicsPipeline(GraphicsPipelineDesc desc, IFramebuffer framebuffer)
@@ -169,19 +993,73 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ObjectDisposedException(nameof(VulkanDevice));
             }
 
-            // TODO: IMPLEMENT - Create VkPipeline (graphics)
-            // - Create VkPipelineLayout from BindingLayouts
-            // - Create VkRenderPass from framebuffer (or use VK_KHR_dynamic_rendering)
-            // - Create VkGraphicsPipelineCreateInfo with shader stages, vertex input, rasterization, etc.
-            // - Map all state (blend, depth/stencil, raster) to Vulkan equivalents
-            // - vkCreateGraphicsPipelines
-            // - Track resource for cleanup
+            if (desc == null)
+            {
+                throw new ArgumentNullException(nameof(desc));
+            }
+
+            // Create pipeline layout from binding layouts
+            IntPtr pipelineLayout = CreatePipelineLayout(desc.BindingLayouts);
+
+            // For now, we'll create a basic pipeline without render pass (assuming VK_KHR_dynamic_rendering)
+            // TODO: Full implementation would create VkRenderPass from framebuffer
 
             IntPtr handle = new IntPtr(_nextResourceHandle++);
-            var pipeline = new VulkanGraphicsPipeline(handle, desc);
+            var pipeline = new VulkanGraphicsPipeline(handle, desc, IntPtr.Zero, pipelineLayout, _device);
             _resources[handle] = pipeline;
 
             return pipeline;
+        }
+
+        private IntPtr CreatePipelineLayout(IBindingLayout[] bindingLayouts)
+        {
+            // Create descriptor set layouts from binding layouts
+            IntPtr[] descriptorSetLayouts = null;
+            if (bindingLayouts != null && bindingLayouts.Length > 0)
+            {
+                descriptorSetLayouts = new IntPtr[bindingLayouts.Length];
+                for (int i = 0; i < bindingLayouts.Length; i++)
+                {
+                    var vulkanLayout = bindingLayouts[i] as VulkanBindingLayout;
+                    if (vulkanLayout != null)
+                    {
+                        // TODO: Extract VkDescriptorSetLayout from VulkanBindingLayout
+                        descriptorSetLayouts[i] = IntPtr.Zero; // Placeholder
+                    }
+                }
+            }
+
+            VkPipelineLayoutCreateInfo layoutCreateInfo = new VkPipelineLayoutCreateInfo
+            {
+                sType = VkStructureType.VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+                pNext = IntPtr.Zero,
+                flags = 0,
+                setLayoutCount = (uint)(descriptorSetLayouts?.Length ?? 0),
+                pSetLayouts = descriptorSetLayouts != null ? MarshalArray(descriptorSetLayouts) : IntPtr.Zero,
+                pushConstantRangeCount = 0,
+                pPushConstantRanges = IntPtr.Zero
+            };
+
+            IntPtr pipelineLayout;
+            CheckResult(vkCreatePipelineLayout(_device, ref layoutCreateInfo, IntPtr.Zero, out pipelineLayout), "vkCreatePipelineLayout");
+
+            return pipelineLayout;
+        }
+
+        private static IntPtr MarshalArray(IntPtr[] array)
+        {
+            if (array == null || array.Length == 0)
+                return IntPtr.Zero;
+
+            int size = Marshal.SizeOf(typeof(IntPtr)) * array.Length;
+            IntPtr ptr = Marshal.AllocHGlobal(size);
+
+            for (int i = 0; i < array.Length; i++)
+            {
+                Marshal.WriteIntPtr(ptr, i * Marshal.SizeOf(typeof(IntPtr)), array[i]);
+            }
+
+            return ptr;
         }
 
         public IComputePipeline CreateComputePipeline(ComputePipelineDesc desc)
@@ -191,14 +1069,16 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ObjectDisposedException(nameof(VulkanDevice));
             }
 
-            // TODO: IMPLEMENT - Create VkPipeline (compute)
-            // - Create VkPipelineLayout from BindingLayouts
-            // - Create VkComputePipelineCreateInfo with compute shader
-            // - vkCreateComputePipelines
-            // - Track resource for cleanup
+            if (desc == null)
+            {
+                throw new ArgumentNullException(nameof(desc));
+            }
+
+            // Create pipeline layout from binding layouts
+            IntPtr pipelineLayout = CreatePipelineLayout(desc.BindingLayouts);
 
             IntPtr handle = new IntPtr(_nextResourceHandle++);
-            var pipeline = new VulkanComputePipeline(handle, desc);
+            var pipeline = new VulkanComputePipeline(handle, desc, IntPtr.Zero, pipelineLayout, _device);
             _resources[handle] = pipeline;
 
             return pipeline;
@@ -231,16 +1111,65 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ObjectDisposedException(nameof(VulkanDevice));
             }
 
-            // TODO: IMPLEMENT - Create VkDescriptorSetLayout
-            // - Map BindingLayoutItems to VkDescriptorSetLayoutBinding
-            // - vkCreateDescriptorSetLayout
-            // - Track resource for cleanup
+            if (desc.Items == null || desc.Items.Length == 0)
+            {
+                throw new ArgumentException("Binding layout must have at least one item", nameof(desc));
+            }
+
+            // Convert BindingLayoutItems to VkDescriptorSetLayoutBinding
+            VkDescriptorSetLayoutBinding[] bindings = new VkDescriptorSetLayoutBinding[desc.Items.Length];
+
+            for (int i = 0; i < desc.Items.Length; i++)
+            {
+                var item = desc.Items[i];
+                VkDescriptorType descriptorType = ConvertToVkDescriptorType(item.Type);
+
+                bindings[i] = new VkDescriptorSetLayoutBinding
+                {
+                    binding = (uint)item.Slot,
+                    descriptorType = descriptorType,
+                    descriptorCount = (uint)item.Count,
+                    stageFlags = VkShaderStageFlags.VK_SHADER_STAGE_ALL, // TODO: Convert from item.ShaderStages
+                    pImmutableSamplers = IntPtr.Zero
+                };
+            }
+
+            VkDescriptorSetLayoutCreateInfo layoutCreateInfo = new VkDescriptorSetLayoutCreateInfo
+            {
+                sType = VkStructureType.VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+                pNext = IntPtr.Zero,
+                flags = 0,
+                bindingCount = (uint)bindings.Length,
+                pBindings = MarshalArray(bindings)
+            };
+
+            IntPtr vkDescriptorSetLayout;
+            CheckResult(vkCreateDescriptorSetLayout(_device, ref layoutCreateInfo, IntPtr.Zero, out vkDescriptorSetLayout), "vkCreateDescriptorSetLayout");
+
+            // Free the marshalled array
+            if (layoutCreateInfo.pBindings != IntPtr.Zero)
+            {
+                Marshal.FreeHGlobal(layoutCreateInfo.pBindings);
+            }
 
             IntPtr handle = new IntPtr(_nextResourceHandle++);
-            var layout = new VulkanBindingLayout(handle, desc);
+            var layout = new VulkanBindingLayout(handle, desc, vkDescriptorSetLayout, _device);
             _resources[handle] = layout;
 
             return layout;
+        }
+
+        private VkDescriptorType ConvertToVkDescriptorType(BindingType type)
+        {
+            switch (type)
+            {
+                case BindingType.ConstantBuffer: return VkDescriptorType.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                case BindingType.Texture: return VkDescriptorType.VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+                case BindingType.Sampler: return VkDescriptorType.VK_DESCRIPTOR_TYPE_SAMPLER;
+                case BindingType.UnorderedAccess: return VkDescriptorType.VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+                case BindingType.StructuredBuffer: return VkDescriptorType.VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+                default: return VkDescriptorType.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            }
         }
 
         public IBindingSet CreateBindingSet(IBindingLayout layout, BindingSetDesc desc)
@@ -275,13 +1204,27 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ObjectDisposedException(nameof(VulkanDevice));
             }
 
-            // TODO: IMPLEMENT - Allocate VkCommandBuffer
-            // - Allocate from appropriate VkCommandPool (graphics/compute/transfer)
-            // - vkAllocateCommandBuffers
-            // - Track resource for cleanup
+            // Select appropriate command pool based on type
+            IntPtr commandPool = _graphicsCommandPool;
+            switch (type)
+            {
+                case CommandListType.Graphics:
+                    commandPool = _graphicsCommandPool;
+                    break;
+                case CommandListType.Compute:
+                    commandPool = _computeCommandPool;
+                    break;
+                case CommandListType.Copy:
+                    commandPool = _transferCommandPool;
+                    break;
+            }
+
+            // TODO: Allocate VkCommandBuffer from command pool
+            // For now, we'll create a placeholder command buffer handle
+            IntPtr vkCommandBuffer = new IntPtr(_nextResourceHandle++); // Placeholder
 
             IntPtr handle = new IntPtr(_nextResourceHandle++);
-            var commandList = new VulkanCommandList(handle, type, this);
+            var commandList = new VulkanCommandList(handle, type, this, vkCommandBuffer, commandPool, _device);
             _resources[handle] = commandList;
 
             return commandList;
@@ -323,18 +1266,26 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new NotSupportedException("Raytracing is not supported on this device");
             }
 
-            // TODO: IMPLEMENT - Create acceleration structure
-            // For BLAS:
-            //   - vkGetAccelerationStructureBuildSizesKHR to get required sizes
-            //   - Allocate buffer for acceleration structure storage
-            //   - Create VkAccelerationStructureKHR with vkCreateAccelerationStructureKHR
-            //   - Build acceleration structure with vkCmdBuildAccelerationStructuresKHR
-            // For TLAS:
-            //   - Similar process but with instance data
-            // - Track resource for cleanup
+            if (desc == null)
+            {
+                throw new ArgumentNullException(nameof(desc));
+            }
+
+            // TODO: Full implementation requires VK_KHR_acceleration_structure extension
+            // For now, create placeholder with basic structure
+
+            // Allocate buffer for acceleration structure storage
+            ulong bufferSize = desc.IsTopLevel ? 1024UL : 4096UL; // Placeholder sizes
+            var bufferDesc = new BufferDesc
+            {
+                ByteSize = (int)bufferSize,
+                Usage = BufferUsage.Shader // Acceleration structures need shader access
+            };
+
+            IBuffer accelBuffer = CreateBuffer(bufferDesc);
 
             IntPtr handle = new IntPtr(_nextResourceHandle++);
-            var accelStruct = new VulkanAccelStruct(handle, desc);
+            var accelStruct = new VulkanAccelStruct(handle, desc, IntPtr.Zero, accelBuffer, 0UL, _device);
             _resources[handle] = accelStruct;
 
             return accelStruct;
@@ -357,16 +1308,26 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ArgumentException("Raytracing pipeline requires at least one shader", nameof(desc));
             }
 
-            // TODO: IMPLEMENT - Create raytracing pipeline
-            // - Create VkPipelineLayout from GlobalBindingLayout
-            // - Create VkRayTracingShaderGroupCreateInfoKHR for each shader group
-            // - Create VkRayTracingPipelineCreateInfoKHR with shaders and groups
-            // - vkCreateRayTracingPipelinesKHR
-            // - Create shader binding table buffer
-            // - Track resource for cleanup
+            // Create pipeline layout from global binding layout
+            IntPtr pipelineLayout = IntPtr.Zero;
+            if (desc.GlobalBindingLayout != null)
+            {
+                pipelineLayout = CreatePipelineLayout(new[] { desc.GlobalBindingLayout });
+            }
+
+            // TODO: Full implementation requires VK_KHR_ray_tracing_pipeline extension
+            // For now, create placeholder pipeline
+
+            // Create shader binding table buffer (placeholder)
+            var sbtBufferDesc = new BufferDesc
+            {
+                ByteSize = 4096, // Placeholder size for SBT
+                Usage = BufferUsage.Shader
+            };
+            IBuffer sbtBuffer = CreateBuffer(sbtBufferDesc);
 
             IntPtr handle = new IntPtr(_nextResourceHandle++);
-            var pipeline = new VulkanRaytracingPipeline(handle, desc);
+            var pipeline = new VulkanRaytracingPipeline(handle, desc, IntPtr.Zero, pipelineLayout, sbtBuffer, _device);
             _resources[handle] = pipeline;
 
             return pipeline;
@@ -403,11 +1364,85 @@ namespace Andastra.Runtime.MonoGame.Backends
                 return;
             }
 
-            // TODO: IMPLEMENT - Submit command buffers to queue
-            // - Extract VkCommandBuffer handles from ICommandList implementations
-            // - Create VkSubmitInfo with command buffers
-            // - vkQueueSubmit to appropriate queue (graphics/compute/transfer)
-            // - Optionally signal fence for synchronization
+            // Group command lists by type for efficient submission
+            var graphicsLists = new List<VulkanCommandList>();
+            var computeLists = new List<VulkanCommandList>();
+            var copyLists = new List<VulkanCommandList>();
+
+            foreach (var cmdList in commandLists)
+            {
+                var vulkanCmdList = cmdList as VulkanCommandList;
+                if (vulkanCmdList == null)
+                {
+                    throw new ArgumentException("Command list must be a VulkanCommandList", nameof(commandLists));
+                }
+
+                if (!vulkanCmdList._isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be closed before execution");
+                }
+
+                switch (vulkanCmdList._type)
+                {
+                    case CommandListType.Graphics:
+                        graphicsLists.Add(vulkanCmdList);
+                        break;
+                    case CommandListType.Compute:
+                        computeLists.Add(vulkanCmdList);
+                        break;
+                    case CommandListType.Copy:
+                        copyLists.Add(vulkanCmdList);
+                        break;
+                }
+            }
+
+            // Submit graphics command lists
+            if (graphicsLists.Count > 0)
+            {
+                SubmitCommandLists(graphicsLists, _graphicsQueue);
+            }
+
+            // Submit compute command lists
+            if (computeLists.Count > 0)
+            {
+                SubmitCommandLists(computeLists, _computeQueue);
+            }
+
+            // Submit copy command lists
+            if (copyLists.Count > 0)
+            {
+                SubmitCommandLists(copyLists, _transferQueue);
+            }
+        }
+
+        private void SubmitCommandLists(List<VulkanCommandList> commandLists, IntPtr queue)
+        {
+            IntPtr[] commandBuffers = new IntPtr[commandLists.Count];
+            for (int i = 0; i < commandLists.Count; i++)
+            {
+                commandBuffers[i] = commandLists[i]._vkCommandBuffer;
+            }
+
+            VkSubmitInfo submitInfo = new VkSubmitInfo
+            {
+                sType = VkStructureType.VK_STRUCTURE_TYPE_SUBMIT_INFO,
+                pNext = IntPtr.Zero,
+                waitSemaphoreCount = 0,
+                pWaitSemaphores = IntPtr.Zero,
+                pWaitDstStageMask = IntPtr.Zero,
+                commandBufferCount = (uint)commandBuffers.Length,
+                pCommandBuffers = MarshalArray(commandBuffers),
+                signalSemaphoreCount = 0,
+                pSignalSemaphores = IntPtr.Zero
+            };
+
+            CheckResult(vkQueueSubmit(queue, 1, ref submitInfo, IntPtr.Zero), "vkQueueSubmit");
+
+            // Free the marshalled array
+            if (submitInfo.pCommandBuffers != IntPtr.Zero)
+            {
+                Marshal.FreeHGlobal(submitInfo.pCommandBuffers);
+            }
         }
 
         public void WaitIdle()
@@ -417,8 +1452,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ObjectDisposedException(nameof(VulkanDevice));
             }
 
-            // TODO: IMPLEMENT - Wait for device to become idle
-            // - vkDeviceWaitIdle
+            CheckResult(vkDeviceWaitIdle(_device), "vkDeviceWaitIdle");
         }
 
         public void Signal(IFence fence, ulong value)
@@ -490,13 +1524,32 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ObjectDisposedException(nameof(VulkanDevice));
             }
 
-            // TODO: IMPLEMENT - Query format support
-            // - vkGetPhysicalDeviceFormatProperties
-            // - Check VkFormatProperties for required usage flags
-            // - Return true if format supports the requested usage
+            VkFormat vkFormat = ConvertToVkFormat(format);
+            if (vkFormat == VkFormat.VK_FORMAT_UNDEFINED)
+            {
+                return false;
+            }
 
-            // For now, assume common formats are supported
-            return true;
+            // TODO: Query physical device format properties
+            // For now, assume common formats are supported for common usages
+            switch (format)
+            {
+                case TextureFormat.RGBA8_UNORM:
+                case TextureFormat.RGBA8_SRGB:
+                    return (usage & (TextureUsage.ShaderResource | TextureUsage.RenderTarget)) != 0;
+
+                case TextureFormat.RGBA16_FLOAT:
+                case TextureFormat.RGBA32_FLOAT:
+                    return (usage & (TextureUsage.ShaderResource | TextureUsage.RenderTarget | TextureUsage.UnorderedAccess)) != 0;
+
+                case TextureFormat.D24_UNORM_S8_UINT:
+                case TextureFormat.D32_FLOAT:
+                case TextureFormat.D32_FLOAT_S8_UINT:
+                    return (usage & TextureUsage.DepthStencil) != 0;
+
+                default:
+                    return false;
+            }
         }
 
         public int GetCurrentFrameIndex()
@@ -531,6 +1584,20 @@ namespace Andastra.Runtime.MonoGame.Backends
                 resource?.Dispose();
             }
             _resources.Clear();
+
+            // Destroy command pools
+            if (_graphicsCommandPool != IntPtr.Zero)
+            {
+                vkDestroyCommandPool(_device, _graphicsCommandPool, IntPtr.Zero);
+            }
+            if (_computeCommandPool != IntPtr.Zero)
+            {
+                vkDestroyCommandPool(_device, _computeCommandPool, IntPtr.Zero);
+            }
+            if (_transferCommandPool != IntPtr.Zero)
+            {
+                vkDestroyCommandPool(_device, _transferCommandPool, IntPtr.Zero);
+            }
 
             // Note: We don't destroy _device here as it's owned by VulkanBackend
             // The backend will handle device cleanup in its Shutdown method
@@ -579,20 +1646,41 @@ namespace Andastra.Runtime.MonoGame.Backends
             public TextureDesc Desc { get; }
             public IntPtr NativeHandle { get; private set; }
             private readonly IntPtr _internalHandle;
+            private readonly IntPtr _vkImage;
+            private readonly IntPtr _vkMemory;
+            private readonly IntPtr _vkImageView;
+            private readonly IntPtr _device;
 
             public VulkanTexture(IntPtr handle, TextureDesc desc, IntPtr nativeHandle = default(IntPtr))
+                : this(handle, desc, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, nativeHandle)
+            {
+            }
+
+            public VulkanTexture(IntPtr handle, TextureDesc desc, IntPtr vkImage, IntPtr vkMemory, IntPtr vkImageView, IntPtr device, IntPtr nativeHandle = default(IntPtr))
             {
                 _internalHandle = handle;
                 Desc = desc;
-                NativeHandle = nativeHandle != IntPtr.Zero ? nativeHandle : handle;
+                _vkImage = vkImage;
+                _vkMemory = vkMemory;
+                _vkImageView = vkImageView;
+                _device = device;
+                NativeHandle = nativeHandle != IntPtr.Zero ? nativeHandle : (_vkImage != IntPtr.Zero ? _vkImage : handle);
             }
 
             public void Dispose()
             {
-                // TODO: IMPLEMENT - Destroy VkImageView and VkImage
-                // - vkDestroyImageView
-                // - vkDestroyImage
-                // - Free VkDeviceMemory
+                if (_vkImageView != IntPtr.Zero && _device != IntPtr.Zero)
+                {
+                    vkDestroyImageView(_device, _vkImageView, IntPtr.Zero);
+                }
+                if (_vkImage != IntPtr.Zero && _device != IntPtr.Zero)
+                {
+                    vkDestroyImage(_device, _vkImage, IntPtr.Zero);
+                }
+                if (_vkMemory != IntPtr.Zero && _device != IntPtr.Zero)
+                {
+                    vkFreeMemory(_device, _vkMemory, IntPtr.Zero);
+                }
             }
         }
 
@@ -601,19 +1689,35 @@ namespace Andastra.Runtime.MonoGame.Backends
             public BufferDesc Desc { get; }
             public IntPtr NativeHandle { get; private set; }
             private readonly IntPtr _internalHandle;
+            private readonly IntPtr _vkBuffer;
+            private readonly IntPtr _vkMemory;
+            private readonly IntPtr _device;
 
             public VulkanBuffer(IntPtr handle, BufferDesc desc)
+                : this(handle, desc, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero)
+            {
+            }
+
+            public VulkanBuffer(IntPtr handle, BufferDesc desc, IntPtr vkBuffer, IntPtr vkMemory, IntPtr device)
             {
                 _internalHandle = handle;
                 Desc = desc;
-                NativeHandle = handle;
+                _vkBuffer = vkBuffer;
+                _vkMemory = vkMemory;
+                _device = device;
+                NativeHandle = _vkBuffer != IntPtr.Zero ? _vkBuffer : handle;
             }
 
             public void Dispose()
             {
-                // TODO: IMPLEMENT - Destroy VkBuffer and free memory
-                // - vkDestroyBuffer
-                // - Free VkDeviceMemory
+                if (_vkBuffer != IntPtr.Zero && _device != IntPtr.Zero)
+                {
+                    vkDestroyBuffer(_device, _vkBuffer, IntPtr.Zero);
+                }
+                if (_vkMemory != IntPtr.Zero && _device != IntPtr.Zero)
+                {
+                    vkFreeMemory(_device, _vkMemory, IntPtr.Zero);
+                }
             }
         }
 
@@ -621,17 +1725,28 @@ namespace Andastra.Runtime.MonoGame.Backends
         {
             public SamplerDesc Desc { get; }
             private readonly IntPtr _handle;
+            private readonly IntPtr _vkSampler;
+            private readonly IntPtr _device;
 
             public VulkanSampler(IntPtr handle, SamplerDesc desc)
+                : this(handle, desc, IntPtr.Zero, IntPtr.Zero)
+            {
+            }
+
+            public VulkanSampler(IntPtr handle, SamplerDesc desc, IntPtr vkSampler, IntPtr device)
             {
                 _handle = handle;
                 Desc = desc;
+                _vkSampler = vkSampler;
+                _device = device;
             }
 
             public void Dispose()
             {
-                // TODO: IMPLEMENT - Destroy VkSampler
-                // - vkDestroySampler
+                if (_vkSampler != IntPtr.Zero && _device != IntPtr.Zero)
+                {
+                    vkDestroySampler(_device, _vkSampler, IntPtr.Zero);
+                }
             }
         }
 
@@ -640,18 +1755,29 @@ namespace Andastra.Runtime.MonoGame.Backends
             public ShaderDesc Desc { get; }
             public ShaderType Type { get; }
             private readonly IntPtr _handle;
+            private readonly IntPtr _vkShaderModule;
+            private readonly IntPtr _device;
 
             public VulkanShader(IntPtr handle, ShaderDesc desc)
+                : this(handle, desc, IntPtr.Zero, IntPtr.Zero)
+            {
+            }
+
+            public VulkanShader(IntPtr handle, ShaderDesc desc, IntPtr vkShaderModule, IntPtr device)
             {
                 _handle = handle;
                 Desc = desc;
+                _vkShaderModule = vkShaderModule;
+                _device = device;
                 Type = desc.Type;
             }
 
             public void Dispose()
             {
-                // TODO: IMPLEMENT - Destroy VkShaderModule
-                // - vkDestroyShaderModule
+                if (_vkShaderModule != IntPtr.Zero && _device != IntPtr.Zero)
+                {
+                    vkDestroyShaderModule(_device, _vkShaderModule, IntPtr.Zero);
+                }
             }
         }
 
@@ -659,18 +1785,34 @@ namespace Andastra.Runtime.MonoGame.Backends
         {
             public GraphicsPipelineDesc Desc { get; }
             private readonly IntPtr _handle;
+            private readonly IntPtr _vkPipeline;
+            private readonly IntPtr _vkPipelineLayout;
+            private readonly IntPtr _device;
 
             public VulkanGraphicsPipeline(IntPtr handle, GraphicsPipelineDesc desc)
+                : this(handle, desc, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero)
+            {
+            }
+
+            public VulkanGraphicsPipeline(IntPtr handle, GraphicsPipelineDesc desc, IntPtr vkPipeline, IntPtr vkPipelineLayout, IntPtr device)
             {
                 _handle = handle;
                 Desc = desc;
+                _vkPipeline = vkPipeline;
+                _vkPipelineLayout = vkPipelineLayout;
+                _device = device;
             }
 
             public void Dispose()
             {
-                // TODO: IMPLEMENT - Destroy VkPipeline and VkPipelineLayout
-                // - vkDestroyPipeline
-                // - vkDestroyPipelineLayout (if not shared)
+                if (_vkPipeline != IntPtr.Zero && _device != IntPtr.Zero)
+                {
+                    vkDestroyPipeline(_device, _vkPipeline, IntPtr.Zero);
+                }
+                if (_vkPipelineLayout != IntPtr.Zero && _device != IntPtr.Zero)
+                {
+                    vkDestroyPipelineLayout(_device, _vkPipelineLayout, IntPtr.Zero);
+                }
             }
         }
 
@@ -678,18 +1820,34 @@ namespace Andastra.Runtime.MonoGame.Backends
         {
             public ComputePipelineDesc Desc { get; }
             private readonly IntPtr _handle;
+            private readonly IntPtr _vkPipeline;
+            private readonly IntPtr _vkPipelineLayout;
+            private readonly IntPtr _device;
 
             public VulkanComputePipeline(IntPtr handle, ComputePipelineDesc desc)
+                : this(handle, desc, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero)
+            {
+            }
+
+            public VulkanComputePipeline(IntPtr handle, ComputePipelineDesc desc, IntPtr vkPipeline, IntPtr vkPipelineLayout, IntPtr device)
             {
                 _handle = handle;
                 Desc = desc;
+                _vkPipeline = vkPipeline;
+                _vkPipelineLayout = vkPipelineLayout;
+                _device = device;
             }
 
             public void Dispose()
             {
-                // TODO: IMPLEMENT - Destroy VkPipeline and VkPipelineLayout
-                // - vkDestroyPipeline
-                // - vkDestroyPipelineLayout (if not shared)
+                if (_vkPipeline != IntPtr.Zero && _device != IntPtr.Zero)
+                {
+                    vkDestroyPipeline(_device, _vkPipeline, IntPtr.Zero);
+                }
+                if (_vkPipelineLayout != IntPtr.Zero && _device != IntPtr.Zero)
+                {
+                    vkDestroyPipelineLayout(_device, _vkPipelineLayout, IntPtr.Zero);
+                }
             }
         }
 
@@ -743,17 +1901,28 @@ namespace Andastra.Runtime.MonoGame.Backends
         {
             public BindingLayoutDesc Desc { get; }
             private readonly IntPtr _handle;
+            private readonly IntPtr _vkDescriptorSetLayout;
+            private readonly IntPtr _device;
 
             public VulkanBindingLayout(IntPtr handle, BindingLayoutDesc desc)
+                : this(handle, desc, IntPtr.Zero, IntPtr.Zero)
+            {
+            }
+
+            public VulkanBindingLayout(IntPtr handle, BindingLayoutDesc desc, IntPtr vkDescriptorSetLayout, IntPtr device)
             {
                 _handle = handle;
                 Desc = desc;
+                _vkDescriptorSetLayout = vkDescriptorSetLayout;
+                _device = device;
             }
 
             public void Dispose()
             {
-                // TODO: IMPLEMENT - Destroy VkDescriptorSetLayout
-                // - vkDestroyDescriptorSetLayout
+                if (_vkDescriptorSetLayout != IntPtr.Zero && _device != IntPtr.Zero)
+                {
+                    vkDestroyDescriptorSetLayout(_device, _vkDescriptorSetLayout, IntPtr.Zero);
+                }
             }
         }
 
@@ -780,19 +1949,30 @@ namespace Andastra.Runtime.MonoGame.Backends
             public bool IsTopLevel { get; }
             public ulong DeviceAddress { get; private set; }
             private readonly IntPtr _handle;
+            private readonly IntPtr _vkAccelStruct;
+            private readonly IBuffer _backingBuffer;
+            private readonly IntPtr _device;
 
             public VulkanAccelStruct(IntPtr handle, AccelStructDesc desc)
+                : this(handle, desc, IntPtr.Zero, null, 0UL, IntPtr.Zero)
+            {
+            }
+
+            public VulkanAccelStruct(IntPtr handle, AccelStructDesc desc, IntPtr vkAccelStruct, IBuffer backingBuffer, ulong deviceAddress, IntPtr device)
             {
                 _handle = handle;
                 Desc = desc;
+                _vkAccelStruct = vkAccelStruct;
+                _backingBuffer = backingBuffer;
+                DeviceAddress = deviceAddress;
+                _device = device;
                 IsTopLevel = desc.IsTopLevel;
             }
 
             public void Dispose()
             {
-                // TODO: IMPLEMENT - Destroy acceleration structure and buffer
-                // - vkDestroyAccelerationStructureKHR
-                // - Destroy backing buffer
+                // TODO: vkDestroyAccelerationStructureKHR when extension is available
+                _backingBuffer?.Dispose();
             }
         }
 
@@ -800,19 +1980,34 @@ namespace Andastra.Runtime.MonoGame.Backends
         {
             public RaytracingPipelineDesc Desc { get; }
             private readonly IntPtr _handle;
+            private readonly IntPtr _vkPipeline;
+            private readonly IntPtr _vkPipelineLayout;
+            private readonly IBuffer _sbtBuffer;
+            private readonly IntPtr _device;
 
             public VulkanRaytracingPipeline(IntPtr handle, RaytracingPipelineDesc desc)
+                : this(handle, desc, IntPtr.Zero, IntPtr.Zero, null, IntPtr.Zero)
+            {
+            }
+
+            public VulkanRaytracingPipeline(IntPtr handle, RaytracingPipelineDesc desc, IntPtr vkPipeline, IntPtr vkPipelineLayout, IBuffer sbtBuffer, IntPtr device)
             {
                 _handle = handle;
                 Desc = desc;
+                _vkPipeline = vkPipeline;
+                _vkPipelineLayout = vkPipelineLayout;
+                _sbtBuffer = sbtBuffer;
+                _device = device;
             }
 
             public void Dispose()
             {
-                // TODO: IMPLEMENT - Destroy raytracing pipeline and layout
-                // - vkDestroyPipeline (raytracing)
-                // - vkDestroyPipelineLayout (if not shared)
-                // - Destroy shader binding table buffer
+                // TODO: vkDestroyPipeline when raytracing extension is available
+                if (_vkPipelineLayout != IntPtr.Zero && _device != IntPtr.Zero)
+                {
+                    vkDestroyPipelineLayout(_device, _vkPipelineLayout, IntPtr.Zero);
+                }
+                _sbtBuffer?.Dispose();
             }
         }
 
@@ -821,13 +2016,24 @@ namespace Andastra.Runtime.MonoGame.Backends
             private readonly IntPtr _handle;
             private readonly CommandListType _type;
             private readonly VulkanDevice _device;
+            private readonly IntPtr _vkCommandBuffer;
+            private readonly IntPtr _vkCommandPool;
+            private readonly IntPtr _vkDevice;
             private bool _isOpen;
 
             public VulkanCommandList(IntPtr handle, CommandListType type, VulkanDevice device)
+                : this(handle, type, device, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero)
+            {
+            }
+
+            public VulkanCommandList(IntPtr handle, CommandListType type, VulkanDevice device, IntPtr vkCommandBuffer, IntPtr vkCommandPool, IntPtr vkDevice)
             {
                 _handle = handle;
                 _type = type;
                 _device = device;
+                _vkCommandBuffer = vkCommandBuffer;
+                _vkCommandPool = vkCommandPool;
+                _vkDevice = vkDevice;
                 _isOpen = false;
             }
 
@@ -838,8 +2044,15 @@ namespace Andastra.Runtime.MonoGame.Backends
                     return;
                 }
 
-                // TODO: IMPLEMENT - Begin command buffer recording
-                // - vkBeginCommandBuffer with VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT or similar
+                VkCommandBufferBeginInfo beginInfo = new VkCommandBufferBeginInfo
+                {
+                    sType = VkStructureType.VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+                    pNext = IntPtr.Zero,
+                    flags = VkCommandBufferUsageFlags.VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+                    pInheritanceInfo = IntPtr.Zero
+                };
+
+                CheckResult(vkBeginCommandBuffer(_vkCommandBuffer, ref beginInfo), "vkBeginCommandBuffer");
 
                 _isOpen = true;
             }
@@ -851,8 +2064,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     return;
                 }
 
-                // TODO: IMPLEMENT - End command buffer recording
-                // - vkEndCommandBuffer
+                CheckResult(vkEndCommandBuffer(_vkCommandBuffer), "vkEndCommandBuffer");
 
                 _isOpen = false;
             }
@@ -910,18 +2122,8 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // This would be done via native interop when Vulkan bindings are available
                 // For now, we structure the code to work with the handle when interop is added
 
-                // Step 1: Bind compute pipeline
-                // vkCmdBindPipeline(_handle, VK_PIPELINE_BIND_POINT_COMPUTE, vulkanPipeline.GetNativeHandle())
-                // Where:
-                // - _handle is the VkCommandBuffer (this command list's handle)
-                // - VK_PIPELINE_BIND_POINT_COMPUTE is the pipeline bind point for compute
-                // - vulkanPipeline.GetNativeHandle() would return the VkPipeline handle
-                // 
-                // In Vulkan:
-                // void vkCmdBindPipeline(
-                //     VkCommandBuffer commandBuffer,
-                //     VkPipelineBindPoint pipelineBindPoint,
-                //     VkPipeline pipeline);
+                // Bind compute pipeline
+                vkCmdBindPipeline(_vkCommandBuffer, VkPipelineBindPoint.VK_PIPELINE_BIND_POINT_COMPUTE, IntPtr.Zero); // TODO: Get actual pipeline handle
 
                 // Step 2: Bind descriptor sets if provided
                 if (state.BindingSets != null && state.BindingSets.Length > 0)
@@ -982,7 +2184,15 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // 3. The native handles would be extracted via P/Invoke or similar interop mechanism
                 // 4. All validation would be done before making native calls to avoid crashes
             }
-            public void Dispatch(int groupCountX, int groupCountY = 1, int groupCountZ = 1) { /* TODO: vkCmdDispatch */ }
+            public void Dispatch(int groupCountX, int groupCountY = 1, int groupCountZ = 1)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open");
+                }
+
+                vkCmdDispatch(_vkCommandBuffer, (uint)groupCountX, (uint)groupCountY, (uint)groupCountZ);
+            }
             public void DispatchIndirect(IBuffer argumentBuffer, int offset) { /* TODO: vkCmdDispatchIndirect */ }
             public void SetRaytracingState(RaytracingState state) { /* TODO: Set raytracing state */ }
             public void DispatchRays(DispatchRaysArguments args) { /* TODO: vkCmdTraceRaysKHR */ }
@@ -995,8 +2205,10 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             public void Dispose()
             {
-                // TODO: IMPLEMENT - Free command buffer
-                // - vkFreeCommandBuffers
+                if (_vkCommandBuffer != IntPtr.Zero && _vkCommandPool != IntPtr.Zero && _vkDevice != IntPtr.Zero)
+                {
+                    vkFreeCommandBuffers(_vkDevice, _vkCommandPool, 1, ref _vkCommandBuffer);
+                }
             }
         }
 
