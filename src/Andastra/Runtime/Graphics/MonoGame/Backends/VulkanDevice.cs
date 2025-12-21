@@ -976,6 +976,17 @@ namespace Andastra.Runtime.MonoGame.Backends
             public IntPtr accelerationStructure; // VkAccelerationStructureKHR
         }
 
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkCopyAccelerationStructureInfoKHR.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkCopyAccelerationStructureInfoKHR
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public IntPtr src; // VkAccelerationStructureKHR
+            public IntPtr dst; // VkAccelerationStructureKHR
+            public VkCopyAccelerationStructureModeKHR mode;
+        }
+
         // Vulkan enums
         private enum VkStructureType
         {
@@ -1040,7 +1051,8 @@ namespace Andastra.Runtime.MonoGame.Backends
             VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR = 1000150017,
             VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR = 1000150020,
             VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO = 1000244001,
-            VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR = 1000150002
+            VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR = 1000150002,
+            VK_STRUCTURE_TYPE_COPY_ACCELERATION_STRUCTURE_INFO_KHR = 1000150001
         }
 
         // Additional Vulkan enums
