@@ -162,7 +162,7 @@ The engine's resource manager loads resources by:
 
 ### Resource Types: What CAN and CANNOT Be Packed
 
-**PROOF: Engine loads ANY resource type from modules - NO filtering**
+#### PROOF: Engine loads ANY resource type from modules - NO filtering
 
 **Exact instructions proving no type filtering:**
 
