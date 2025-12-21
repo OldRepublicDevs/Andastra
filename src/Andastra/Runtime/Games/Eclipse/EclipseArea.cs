@@ -6884,7 +6884,35 @@ namespace Andastra.Runtime.Games.Eclipse
             if (_destructibleEntity.HasData("DebrisCount") && area.PhysicsSystem != null)
             {
                 int debrisCount = _destructibleEntity.GetData<int>("DebrisCount", 0);
-                // TODO:  In a full implementation, would create debris entities with physics
+                
+                // Get destructible entity position and bounding box for debris generation
+                Vector3 destructiblePosition = Vector3.Zero;
+                Vector3 destructibleHalfExtents = new Vector3(0.5f, 0.5f, 0.5f);
+                
+                var transformComponent = _destructibleEntity.GetComponent<ITransformComponent>();
+                if (transformComponent != null)
+                {
+                    destructiblePosition = transformComponent.Position;
+                }
+                
+                // Get original bounding box if available
+                if (_destructibleEntity.HasData("PhysicsHalfExtents"))
+                {
+                    destructibleHalfExtents = _destructibleEntity.GetData<Vector3>("PhysicsHalfExtents");
+                }
+                else if (_destructibleEntity.HasData("BoundingBox"))
+                {
+                    // Extract half extents from bounding box if available
+                    // Note: BoundingBox may be stored as different types depending on implementation
+                    // Try to extract half extents directly if stored, otherwise calculate from min/max
+                    if (_destructibleEntity.HasData("BoundingBoxHalfExtents"))
+                    {
+                        destructibleHalfExtents = _destructibleEntity.GetData<Vector3>("BoundingBoxHalfExtents");
+                    }
+                }
+                
+                // Generate debris pieces and create physics entities for each
+                CreateDebrisEntities(area, debrisCount, destructiblePosition, destructibleHalfExtents);
             }
 
             // Create walkmesh hole at destruction location
@@ -6916,6 +6944,159 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Destroying destructible objects may require lighting updates (explosions create light).
         /// </summary>
         public bool RequiresLightingUpdate => true;
+
+        /// <summary>
+        /// Creates debris entities with physics from destroyed destructible objects.
+        /// </summary>
+        /// <param name="area">The area to create debris entities in.</param>
+        /// <param name="debrisCount">Number of debris pieces to create.</param>
+        /// <param name="destructiblePosition">Position of the destructible entity.</param>
+        /// <param name="destructibleHalfExtents">Half extents of the destructible entity bounding box.</param>
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Debris physics objects are created from destroyed placeables.
+        /// 
+        /// Debris creation process:
+        /// 1. Calculate debris positions (scattered around destruction center with random offsets)
+        /// 2. Calculate debris velocities (explosion force based on distance from explosion center)
+        /// 3. Calculate debris mass (proportional to original object size, divided by debris count)
+        /// 4. Calculate debris half extents (smaller than original, varies per piece)
+        /// 5. Create debris entities with ObjectType.Placeable
+        /// 6. Add entities to area and physics system
+        /// 
+        /// Physics properties:
+        /// - Position: Scattered from destructible position with random offset (based on explosion radius)
+        /// - Velocity: Calculated from explosion force and direction away from explosion center
+        /// - Angular velocity: Random rotation for tumbling effect
+        /// - Mass: Proportional to original object mass divided by debris count
+        /// - Half extents: Scaled down from original object size with random variation
+        /// </remarks>
+        private void CreateDebrisEntities(EclipseArea area, int debrisCount, Vector3 destructiblePosition, Vector3 destructibleHalfExtents)
+        {
+            if (area == null || area.PhysicsSystem == null || debrisCount <= 0)
+            {
+                return;
+            }
+
+            // Get world for entity creation
+            IWorld world = area.World;
+            if (world == null)
+            {
+                return;
+            }
+
+            // Calculate base mass (original entity mass divided by debris count)
+            float baseMass = 1.0f;
+            if (_destructibleEntity.HasData("PhysicsMass"))
+            {
+                baseMass = _destructibleEntity.GetData<float>("PhysicsMass", 1.0f);
+            }
+            float debrisMass = baseMass / debrisCount;
+            
+            // Ensure minimum mass for physics simulation
+            debrisMass = Math.Max(0.1f, debrisMass);
+
+            // Calculate debris size (scaled down from original with variation)
+            float baseSizeFactor = 0.4f; // Debris pieces are about 40% of original size
+            Vector3 baseDebrisHalfExtents = destructibleHalfExtents * baseSizeFactor;
+            
+            // Minimum half extents to ensure valid physics shape
+            float minHalfExtent = 0.05f;
+            baseDebrisHalfExtents.X = Math.Max(minHalfExtent, baseDebrisHalfExtents.X);
+            baseDebrisHalfExtents.Y = Math.Max(minHalfExtent, baseDebrisHalfExtents.Y);
+            baseDebrisHalfExtents.Z = Math.Max(minHalfExtent, baseDebrisHalfExtents.Z);
+
+            // Random number generator for debris properties
+            System.Random random = new System.Random();
+
+            // Create debris entities
+            for (int i = 0; i < debrisCount; i++)
+            {
+                // Calculate debris position (scattered around destruction center)
+                // Based on daorigins.exe: Debris spawns with random offset within explosion radius
+                float angle = (float)(random.NextDouble() * 2.0 * Math.PI); // Random angle around destruction point
+                float distance = (float)(random.NextDouble() * _explosionRadius * 0.5f); // Within half of explosion radius
+                float height = (float)(random.NextDouble() * _explosionRadius * 0.3f); // Slight upward bias
+                
+                Vector3 debrisPosition = destructiblePosition + new Vector3(
+                    (float)(Math.Cos(angle) * distance),
+                    height,
+                    (float)(Math.Sin(angle) * distance)
+                );
+
+                // Calculate debris velocity (explosion force based on distance from explosion center)
+                // Based on daorigins.exe: Debris velocity decreases with distance from explosion
+                Vector3 directionFromExplosion = Vector3.Normalize(debrisPosition - _explosionCenter);
+                float distanceFromExplosion = Vector3.Distance(debrisPosition, _explosionCenter);
+                float explosionForce = _explosionRadius / (distanceFromExplosion + 1.0f); // Force decreases with distance
+                explosionForce = Math.Min(explosionForce, 10.0f); // Cap maximum force
+                
+                Vector3 debrisVelocity = directionFromExplosion * explosionForce;
+                
+                // Add random horizontal component for more realistic scatter
+                float randomHorizontal = (float)(random.NextDouble() - 0.5) * 2.0f;
+                debrisVelocity += new Vector3(
+                    (float)(random.NextDouble() - 0.5) * 2.0f * explosionForce * 0.3f,
+                    0.0f, // Vertical component already handled
+                    (float)(random.NextDouble() - 0.5) * 2.0f * explosionForce * 0.3f
+                );
+
+                // Calculate angular velocity for tumbling effect
+                // Based on daorigins.exe: Debris tumbles as it flies
+                Vector3 debrisAngularVelocity = new Vector3(
+                    (float)(random.NextDouble() - 0.5) * 4.0f,
+                    (float)(random.NextDouble() - 0.5) * 4.0f,
+                    (float)(random.NextDouble() - 0.5) * 4.0f
+                );
+
+                // Calculate debris half extents with random variation
+                float sizeVariation = 0.7f + (float)(random.NextDouble() * 0.6f); // 0.7 to 1.3 multiplier
+                Vector3 debrisHalfExtents = baseDebrisHalfExtents * sizeVariation;
+
+                // Create debris entity
+                // Use high ObjectId range to avoid conflicts (debris entities start from 2000000)
+                uint debrisObjectId = 2000000 + (uint)i;
+                string debrisTag = $"Debris_{i}_{_destructibleEntity.Tag}";
+                
+                // Create entity with ObjectType.Placeable (debris behaves like small placeables)
+                var debrisEntity = new EclipseEntity(debrisObjectId, ObjectType.Placeable, debrisTag);
+                
+                // Set entity properties
+                debrisEntity.SetData("IsDebris", true);
+                debrisEntity.SetData("DebrisLifetime", 30.0f); // Debris lifetime in seconds
+                debrisEntity.SetData("PhysicsMass", debrisMass);
+                debrisEntity.SetData("PhysicsHalfExtents", debrisHalfExtents);
+                
+                // Set transform component for position
+                var transformComponent = debrisEntity.GetComponent<ITransformComponent>();
+                if (transformComponent != null)
+                {
+                    transformComponent.Position = debrisPosition;
+                }
+                else
+                {
+                    // If transform component doesn't exist, set position via data
+                    debrisEntity.SetData("Position", debrisPosition);
+                }
+
+                // Add entity to area
+                area.AddEntityInternal(debrisEntity);
+
+                // Add rigid body to physics system with initial velocity
+                EclipsePhysicsSystem eclipsePhysics = area.PhysicsSystem as EclipsePhysicsSystem;
+                if (eclipsePhysics != null)
+                {
+                    // Create rigid body (dynamic, with mass)
+                    eclipsePhysics.AddRigidBody(debrisEntity, debrisPosition, debrisMass, debrisHalfExtents, isDynamic: true);
+                    
+                    // Set initial velocity and angular velocity using physics system
+                    // Based on daorigins.exe: Debris is created with initial velocity from explosion
+                    eclipsePhysics.SetRigidBodyState(debrisEntity, debrisVelocity, debrisAngularVelocity, debrisMass, null);
+                    
+                    // Mark entity as having physics
+                    debrisEntity.SetData("HasPhysics", true);
+                }
+            }
+        }
     }
 
     /// <summary>
