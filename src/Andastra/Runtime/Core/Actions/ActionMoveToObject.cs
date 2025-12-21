@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Reflection;
 using Andastra.Runtime.Core.Collision;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Core.Enums;
@@ -30,7 +31,7 @@ namespace Andastra.Runtime.Core.Actions
         private readonly bool _run;
         private readonly float _range;
         private const float ArrivalThreshold = 0.1f;
-        private readonly BaseCreatureCollisionDetector _collisionDetector;
+        private BaseCreatureCollisionDetector _collisionDetector;
 
         // Bump counter tracking (matches offset 0x268 in swkotor2.exe entity structure)
         // Based on swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 tracks bump count at param_1[0xe0] + 0x268
@@ -46,19 +47,109 @@ namespace Andastra.Runtime.Core.Actions
             _targetObjectId = targetObjectId;
             _run = run;
             _range = range;
-            _collisionDetector = CreateCollisionDetector();
+            // Collision detector is created lazily on first use when we have access to the world
         }
 
         /// <summary>
-        /// Creates the appropriate collision detector for the current engine.
+        /// Gets or creates the appropriate collision detector for the current engine.
+        /// Uses reflection to create engine-specific detectors without Core depending on Games namespace.
         /// </summary>
-        private BaseCreatureCollisionDetector CreateCollisionDetector()
+        /// <param name="world">The world instance to determine engine type from.</param>
+        /// <returns>The collision detector for the current engine.</returns>
+        /// <remarks>
+        /// Engine Detection:
+        /// - Checks world's type namespace to determine engine (Odyssey, Aurora, Eclipse)
+        /// - Uses reflection to instantiate engine-specific collision detector classes
+        /// - Falls back to DefaultCreatureCollisionDetector if engine type cannot be determined
+        /// - Based on swkotor.exe, swkotor2.exe, nwmain.exe, daorigins.exe collision systems
+        /// - Original implementation: FUN_005479f0 @ 0x005479f0 (swkotor2.exe) uses creature bounding box
+        /// </remarks>
+        private BaseCreatureCollisionDetector GetOrCreateCollisionDetector(IWorld world)
         {
-            // Factory method: Create engine-specific collision detector
-            // TODO: STUB - For now, default to Odyssey detector (can be made engine-agnostic via world type checking)
-            // Core cannot depend on Games, so use default implementation
-            // Engine-specific implementations should override this method
-            return new DefaultCreatureCollisionDetector();
+            if (_collisionDetector != null)
+            {
+                return _collisionDetector;
+            }
+
+            if (world == null)
+            {
+                // No world available, use default detector
+                _collisionDetector = new DefaultCreatureCollisionDetector();
+                return _collisionDetector;
+            }
+
+            // Determine engine type from world's namespace
+            Type worldType = world.GetType();
+            string worldNamespace = worldType.Namespace ?? string.Empty;
+            string detectorTypeName = null;
+            string detectorNamespace = null;
+
+            // Check for Odyssey engine (KOTOR games)
+            if (worldNamespace.Contains("Odyssey"))
+            {
+                detectorNamespace = "Andastra.Runtime.Games.Odyssey.Collision";
+                detectorTypeName = "OdysseyCreatureCollisionDetector";
+            }
+            // Check for Aurora engine (NWN games)
+            else if (worldNamespace.Contains("Aurora"))
+            {
+                detectorNamespace = "Andastra.Runtime.Games.Aurora.Collision";
+                detectorTypeName = "AuroraCreatureCollisionDetector";
+            }
+            // Check for Eclipse engine (Dragon Age games)
+            else if (worldNamespace.Contains("Eclipse"))
+            {
+                detectorNamespace = "Andastra.Runtime.Games.Eclipse.Collision";
+                detectorTypeName = "EclipseCreatureCollisionDetector";
+            }
+
+            // Try to create engine-specific detector using reflection
+            if (detectorTypeName != null && detectorNamespace != null)
+            {
+                try
+                {
+                    // Construct full type name
+                    string fullTypeName = detectorNamespace + "." + detectorTypeName;
+                    
+                    // Search all loaded assemblies for the detector type
+                    // The detector may be in a different assembly than the world type
+                    Type detectorType = null;
+                    foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+                    {
+                        try
+                        {
+                            detectorType = assembly.GetType(fullTypeName);
+                            if (detectorType != null)
+                            {
+                                break; // Found the type
+                            }
+                        }
+                        catch
+                        {
+                            // Continue searching other assemblies
+                        }
+                    }
+                    
+                    if (detectorType != null)
+                    {
+                        // Create instance using parameterless constructor
+                        object detectorInstance = Activator.CreateInstance(detectorType);
+                        if (detectorInstance is BaseCreatureCollisionDetector detector)
+                        {
+                            _collisionDetector = detector;
+                            return _collisionDetector;
+                        }
+                    }
+                }
+                catch
+                {
+                    // Reflection failed, fall through to default detector
+                }
+            }
+
+            // Fall back to default detector if engine type cannot be determined or reflection fails
+            _collisionDetector = new DefaultCreatureCollisionDetector();
+            return _collisionDetector;
         }
 
         protected override ActionStatus ExecuteInternal(IEntity actor, float deltaTime)
@@ -160,6 +251,9 @@ namespace Andastra.Runtime.Core.Actions
                 }
             }
 
+            // Get or create collision detector (lazy initialization with world access)
+            BaseCreatureCollisionDetector collisionDetector = GetOrCreateCollisionDetector(actor.World);
+
             // Check for creature collisions along movement path
             // Based on swkotor2.exe: FUN_005479f0 @ 0x005479f0 checks for creature collisions
             // Located via string references:
@@ -178,7 +272,7 @@ namespace Andastra.Runtime.Core.Actions
             // Exclude target object from collision checking (we're moving towards it)
             uint blockingCreatureId;
             Vector3 collisionNormal;
-            bool hasCollision = _collisionDetector.CheckCreatureCollision(actor, currentPosition, newPosition, out blockingCreatureId, out collisionNormal, _targetObjectId);
+            bool hasCollision = collisionDetector.CheckCreatureCollision(actor, currentPosition, newPosition, out blockingCreatureId, out collisionNormal, _targetObjectId);
 
             if (hasCollision)
             {
@@ -235,7 +329,7 @@ namespace Andastra.Runtime.Core.Actions
                             Vector3 obstaclePosition = blockingTransform.Position;
 
                             // Get creature bounding box to determine avoidance radius
-                            CreatureBoundingBox blockingBoundingBox = _collisionDetector.GetCreatureBoundingBoxPublic(blockingCreature);
+                            CreatureBoundingBox blockingBoundingBox = collisionDetector.GetCreatureBoundingBoxPublic(blockingCreature);
                             // Use the larger of width/depth as avoidance radius, with safety margin
                             float avoidanceRadius = Math.Max(blockingBoundingBox.Width, blockingBoundingBox.Depth) * 0.5f + 0.5f;
 
@@ -275,7 +369,7 @@ namespace Andastra.Runtime.Core.Actions
                                     // Check if adjusted path is clear
                                     uint adjustedBlockingId;
                                     Vector3 adjustedNormal;
-                                    bool adjustedHasCollision = _collisionDetector.CheckCreatureCollision(
+                                    bool adjustedHasCollision = collisionDetector.CheckCreatureCollision(
                                         actor, currentPosition, adjustedNewPosition, out adjustedBlockingId, out adjustedNormal, _targetObjectId);
 
                                     if (!adjustedHasCollision)
@@ -324,17 +418,20 @@ namespace Andastra.Runtime.Core.Actions
         ///   - Falls back to default 0.6f if bounding box cannot be determined
         /// - This ensures 1:1 parity with original engine behavior through proper collision detector abstraction
         /// </remarks>
-        private float GetEntityCollisionRadius(IEntity entity)
+        private float GetEntityCollisionRadius(IEntity entity, IWorld world)
         {
             if (entity == null)
             {
                 return 0.6f; // Default radius matching K1/K2 default (0x3f19999a = 0.6f)
             }
 
+            // Get or create collision detector (lazy initialization with world access)
+            BaseCreatureCollisionDetector collisionDetector = GetOrCreateCollisionDetector(world);
+
             // Use collision detector to get bounding box (handles engine-specific logic)
             // Based on swkotor.exe: FUN_004f1310 gets radius from bounding box at offset +8
             // Based on swkotor2.exe: FUN_005479f0 uses width at +0x14 for collision
-            CreatureBoundingBox boundingBox = _collisionDetector.GetCreatureBoundingBoxPublic(entity);
+            CreatureBoundingBox boundingBox = collisionDetector.GetCreatureBoundingBoxPublic(entity);
 
             // Derive radius from bounding box
             // For horizontal collision (2D movement), use maximum of width and depth
