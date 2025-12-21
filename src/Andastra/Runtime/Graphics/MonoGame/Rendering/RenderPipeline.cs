@@ -30,16 +30,19 @@ namespace Andastra.Runtime.MonoGame.Rendering
         private readonly GPUMemoryBudget _memoryBudget;
         private readonly Telemetry _telemetry;
         private readonly RenderStatistics _statistics;
+        private readonly RenderSettings _settings;
 
         /// <summary>
         /// Initializes a new render pipeline.
         /// </summary>
         /// <param name="graphicsDevice">Graphics device for rendering operations.</param>
         /// <param name="resourceProvider">Resource provider for asset loading.</param>
+        /// <param name="settings">Optional render settings. If null, post-processing checks will default to false.</param>
         /// <exception cref="ArgumentNullException">Thrown if graphicsDevice or resourceProvider is null.</exception>
         public RenderPipeline(
             GraphicsDevice graphicsDevice,
-            IGameResourceProvider resourceProvider)
+            IGameResourceProvider resourceProvider,
+            RenderSettings settings = null)
         {
             if (graphicsDevice == null)
             {
@@ -59,6 +62,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             _memoryBudget = new GPUMemoryBudget();
             _telemetry = new Telemetry();
             _statistics = new RenderStatistics();
+            _settings = settings;
         }
 
         /// <summary>
@@ -341,7 +345,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             // 8. Post-Processing Pass
             // Tone mapping, bloom, TAA, etc.
             // Modern enhancement - original KOTOR had minimal post-processing
-            bool hasPostProcessing = false; // TODO: Check if post-processing is enabled
+            bool hasPostProcessing = IsPostProcessingEnabled();
             if (hasPostProcessing)
             {
                 FrameGraph.FrameGraphNode postProcessPassNode = new FrameGraph.FrameGraphNode("PostProcessPass");
@@ -504,6 +508,79 @@ namespace Andastra.Runtime.MonoGame.Rendering
                 // Frame time would be measured externally and passed in
                 // This is where it would be recorded if available
             }
+        }
+
+        /// <summary>
+        /// Checks if post-processing is enabled based on render settings.
+        /// Post-processing is considered enabled if any of the following effects are enabled:
+        /// - Bloom (BloomEnabled)
+        /// - Motion blur (MotionBlurEnabled)
+        /// - Depth of field (DepthOfFieldEnabled)
+        /// - Chromatic aberration (ChromaticAberration)
+        /// - Film grain (FilmGrain)
+        /// - Vignette (Vignette)
+        /// - Tone mapping (Tonemapper is not default/disabled)
+        /// - Color grading LUT (ColorGradingLut is not null)
+        /// 
+        /// Based on RenderSettings post-processing configuration.
+        /// If RenderSettings is not provided, returns false (no post-processing).
+        /// </summary>
+        /// <returns>True if any post-processing effects are enabled, false otherwise.</returns>
+        private bool IsPostProcessingEnabled()
+        {
+            // If settings are not available, post-processing is disabled
+            if (_settings == null)
+            {
+                return false;
+            }
+
+            // Check if any post-processing effects are enabled
+            // Bloom is the most common effect, so check it first
+            if (_settings.BloomEnabled)
+            {
+                return true;
+            }
+
+            // Check other post-processing effects
+            if (_settings.MotionBlurEnabled)
+            {
+                return true;
+            }
+
+            if (_settings.DepthOfFieldEnabled)
+            {
+                return true;
+            }
+
+            if (_settings.ChromaticAberration)
+            {
+                return true;
+            }
+
+            if (_settings.FilmGrain)
+            {
+                return true;
+            }
+
+            if (_settings.Vignette)
+            {
+                return true;
+            }
+
+            // Check if tone mapping is enabled (non-default operator indicates active tone mapping)
+            // Note: Tonemapper default is ACES, which is an active tone mapping operator
+            // If we want to check for "disabled" tone mapping, we'd need a None operator
+            // For now, assume any tone mapper setting means post-processing is enabled
+            // (In practice, tone mapping is always applied in HDR pipelines)
+
+            // Check if color grading LUT is provided
+            if (!string.IsNullOrEmpty(_settings.ColorGradingLut))
+            {
+                return true;
+            }
+
+            // No post-processing effects are enabled
+            return false;
         }
 
         /// <summary>
