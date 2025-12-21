@@ -1599,6 +1599,10 @@ namespace Andastra.Runtime.MonoGame.Backends
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate int SetEventOnCompletionDelegate(IntPtr fence, ulong value, IntPtr hEvent);
 
+        // COM interface method delegate for Map (ID3D12Resource::Map)
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int MapResourceDelegateInternal(IntPtr resource, uint subresource, IntPtr pReadRange, out IntPtr ppData);
+
         /// <summary>
         /// Maps ResourceState enum to D3D12_RESOURCE_STATES flags.
         /// Based on DirectX 12 Resource States: https://docs.microsoft.com/en-us/windows/win32/direct3d12/using-resource-barriers-to-synchronize-resource-states-in-directx-12
@@ -5746,9 +5750,9 @@ namespace Andastra.Runtime.MonoGame.Backends
                 IntPtr methodPtr = vtable[8];
 
                 // Create delegate from function pointer
-                [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-                delegate int MapResourceDelegate(IntPtr resource, uint subresource, IntPtr pReadRange, out IntPtr ppData);
-                MapResourceDelegate mapResource = (MapResourceDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(MapResourceDelegate));
+                // Note: Using Marshal.GetDelegateForFunctionPointer with a type defined elsewhere
+                // For now, use a simpler approach with a local delegate type
+                MapResourceDelegateInternal mapResource = (MapResourceDelegateInternal)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(MapResourceDelegateInternal));
 
                 IntPtr mappedData;
                 int hr = mapResource(resource, unchecked((uint)subresource), IntPtr.Zero, out mappedData);
