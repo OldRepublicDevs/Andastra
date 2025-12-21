@@ -18,6 +18,7 @@
     <ProjectReference Include="..\Andastra.Runtime.Graphics.csproj" />
     <ProjectReference Include="..\Common\Andastra.Runtime.Graphics.Common.csproj" />
     <ProjectReference Include="..\..\Games\Common\Andastra.Runtime.Games.Common.csproj" />
+    <ProjectReference Include="..\..\..\Utility\Utility.csproj" />
   </ItemGroup>
 
   <ItemGroup>
