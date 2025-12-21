@@ -1340,6 +1340,260 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         #endregion
 
+        #region D3D12 DSV Descriptor Heap Management
+
+        /// <summary>
+        /// Ensures the DSV descriptor heap is created and initialized.
+        /// Creates a DSV descriptor heap with the default capacity if one doesn't exist.
+        /// Based on DirectX 12 Descriptor Heaps: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_descriptor_heap_desc
+        /// </summary>
+        private void EnsureDsvDescriptorHeap()
+        {
+            if (_dsvDescriptorHeap != IntPtr.Zero)
+            {
+                return; // Heap already exists
+            }
+
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (_device == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                // Create D3D12_DESCRIPTOR_HEAP_DESC structure for DSV heap
+                var heapDesc = new D3D12_DESCRIPTOR_HEAP_DESC
+                {
+                    Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
+                    NumDescriptors = (uint)DefaultDsvHeapCapacity,
+                    Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE, // DSV heaps are not shader-visible
+                    NodeMask = 0
+                };
+
+                // Allocate memory for the descriptor heap descriptor structure
+                int heapDescSize = Marshal.SizeOf(typeof(D3D12_DESCRIPTOR_HEAP_DESC));
+                IntPtr heapDescPtr = Marshal.AllocHGlobal(heapDescSize);
+                try
+                {
+                    Marshal.StructureToPtr(heapDesc, heapDescPtr, false);
+
+                    // Allocate memory for the output descriptor heap pointer
+                    IntPtr heapPtr = Marshal.AllocHGlobal(IntPtr.Size);
+                    try
+                    {
+                        // Call ID3D12Device::CreateDescriptorHeap
+                        Guid iidDescriptorHeap = IID_ID3D12DescriptorHeap;
+                        int hr = CallCreateDescriptorHeap(_device, heapDescPtr, ref iidDescriptorHeap, heapPtr);
+                        if (hr < 0)
+                        {
+                            throw new InvalidOperationException($"CreateDescriptorHeap failed with HRESULT 0x{hr:X8}");
+                        }
+
+                        // Get the descriptor heap pointer
+                        IntPtr descriptorHeap = Marshal.ReadIntPtr(heapPtr);
+                        if (descriptorHeap == IntPtr.Zero)
+                        {
+                            throw new InvalidOperationException("Descriptor heap pointer is null");
+                        }
+
+                        // Get descriptor heap start handle (CPU handle for descriptor heap)
+                        IntPtr cpuHandle = CallGetCPUDescriptorHandleForHeapStart(descriptorHeap);
+                        if (cpuHandle == IntPtr.Zero)
+                        {
+                            throw new InvalidOperationException("Failed to get CPU descriptor handle for heap start");
+                        }
+
+                        // Get descriptor increment size
+                        uint descriptorIncrementSize = CallGetDescriptorHandleIncrementSize(_device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+                        if (descriptorIncrementSize == 0)
+                        {
+                            throw new InvalidOperationException("Failed to get descriptor handle increment size");
+                        }
+
+                        // Store heap information
+                        _dsvDescriptorHeap = descriptorHeap;
+                        _dsvHeapCpuStartHandle = cpuHandle;
+                        _dsvHeapDescriptorIncrementSize = descriptorIncrementSize;
+                        _dsvHeapCapacity = DefaultDsvHeapCapacity;
+                        _dsvHeapNextIndex = 0;
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(heapPtr);
+                    }
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(heapDescPtr);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to create DSV descriptor heap: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Allocates a descriptor handle from the DSV descriptor heap.
+        /// Returns IntPtr.Zero if allocation fails.
+        /// </summary>
+        private IntPtr AllocateDsvDescriptor()
+        {
+            EnsureDsvDescriptorHeap();
+
+            if (_dsvDescriptorHeap == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            if (_dsvHeapNextIndex >= _dsvHeapCapacity)
+            {
+                // Heap is full - in a production implementation, we might want to create a larger heap or handle this differently
+                throw new InvalidOperationException($"DSV descriptor heap is full (capacity: {_dsvHeapCapacity})");
+            }
+
+            // Calculate CPU descriptor handle for this index
+            IntPtr cpuDescriptorHandle = OffsetDescriptorHandle(_dsvHeapCpuStartHandle, _dsvHeapNextIndex, _dsvHeapDescriptorIncrementSize);
+            int allocatedIndex = _dsvHeapNextIndex;
+            _dsvHeapNextIndex++;
+
+            return cpuDescriptorHandle;
+        }
+
+        /// <summary>
+        /// Converts TextureFormat to DXGI_FORMAT for depth-stencil views.
+        /// Based on DirectX 12 Texture Formats: https://docs.microsoft.com/en-us/windows/win32/api/dxgiformat/ne-dxgiformat-dxgi_format
+        /// </summary>
+        private uint ConvertTextureFormatToDxgiFormat(TextureFormat format)
+        {
+            switch (format)
+            {
+                case TextureFormat.D24_UNORM_S8_UINT:
+                    return 45; // DXGI_FORMAT_D24_UNORM_S8_UINT
+                case TextureFormat.D32_FLOAT:
+                    return 40; // DXGI_FORMAT_D32_FLOAT
+                case TextureFormat.D32_FLOAT_S8_UINT:
+                    return 20; // DXGI_FORMAT_D32_FLOAT_S8X24_UINT (closest match, though not exact)
+                default:
+                    return 0; // DXGI_FORMAT_UNKNOWN
+            }
+        }
+
+        /// <summary>
+        /// COM interface method delegate for CreateDepthStencilView.
+        /// </summary>
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void CreateDepthStencilViewDelegate(IntPtr device, IntPtr pResource, IntPtr pDesc, IntPtr DestDescriptor);
+
+        /// <summary>
+        /// Calls ID3D12Device::CreateDepthStencilView through COM vtable.
+        /// VTable index 35 for ID3D12Device.
+        /// Based on DirectX 12 Depth Stencil Views: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createdepthstencilview
+        /// </summary>
+        private unsafe void CallCreateDepthStencilView(IntPtr device, IntPtr pResource, IntPtr pDesc, IntPtr DestDescriptor)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (device == IntPtr.Zero || pResource == IntPtr.Zero || DestDescriptor == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)device;
+            // CreateDepthStencilView is at index 35 in ID3D12Device vtable
+            IntPtr methodPtr = vtable[35];
+
+            // Create delegate from function pointer
+            CreateDepthStencilViewDelegate createDsv = (CreateDepthStencilViewDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CreateDepthStencilViewDelegate));
+
+            createDsv(device, pResource, pDesc, DestDescriptor);
+        }
+
+        /// <summary>
+        /// Gets or creates a DSV descriptor handle for a texture.
+        /// Caches the handle to avoid recreating descriptors for the same texture.
+        /// </summary>
+        internal IntPtr GetOrCreateDsvHandle(ITexture texture, int mipLevel, int arraySlice)
+        {
+            if (texture == null || texture.NativeHandle == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            // Create a unique key for this texture/mip/array combination
+            // For simplicity, we'll use the texture handle as the key (assuming one DSV per texture)
+            // In a more complete implementation, we could include mipLevel and arraySlice in the key
+            IntPtr textureHandle = texture.NativeHandle;
+
+            // Check cache first
+            IntPtr cachedHandle;
+            if (_textureDsvHandles.TryGetValue(textureHandle, out cachedHandle))
+            {
+                return cachedHandle;
+            }
+
+            // Allocate new DSV descriptor
+            IntPtr dsvHandle = AllocateDsvDescriptor();
+            if (dsvHandle == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            // Get texture format and convert to DXGI_FORMAT
+            TextureFormat format = texture.Desc.Format;
+            uint dxgiFormat = ConvertTextureFormatToDxgiFormat(format);
+            if (dxgiFormat == 0)
+            {
+                // Format not supported for DSV, return zero handle
+                return IntPtr.Zero;
+            }
+
+            // Create D3D12_DEPTH_STENCIL_VIEW_DESC structure
+            var dsvDesc = new D3D12_DEPTH_STENCIL_VIEW_DESC
+            {
+                Format = dxgiFormat,
+                ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D, // Default to 2D texture
+                Flags = 0, // D3D12_DSV_FLAG_NONE
+                Texture2D = new D3D12_TEX2D_DSV
+                {
+                    MipSlice = unchecked((uint)mipLevel)
+                }
+            };
+
+            // Allocate memory for the DSV descriptor structure
+            int dsvDescSize = Marshal.SizeOf(typeof(D3D12_DEPTH_STENCIL_VIEW_DESC));
+            IntPtr dsvDescPtr = Marshal.AllocHGlobal(dsvDescSize);
+            try
+            {
+                Marshal.StructureToPtr(dsvDesc, dsvDescPtr, false);
+
+                // Call ID3D12Device::CreateDepthStencilView
+                CallCreateDepthStencilView(_device, texture.NativeHandle, dsvDescPtr, dsvHandle);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(dsvDescPtr);
+            }
+
+            // Cache the handle
+            _textureDsvHandles[textureHandle] = dsvHandle;
+
+            return dsvHandle;
+        }
+
+        #endregion
+
         #region Resource Interface
 
         private interface IResource : IDisposable
@@ -1720,7 +1974,67 @@ namespace Andastra.Runtime.MonoGame.Backends
             public void CopyBuffer(IBuffer dest, int destOffset, IBuffer src, int srcOffset, int size) { /* TODO: CopyBufferRegion */ }
             public void CopyTexture(ITexture dest, ITexture src) { /* TODO: CopyResource or CopyTextureRegion */ }
             public void ClearColorAttachment(IFramebuffer framebuffer, int attachmentIndex, Vector4 color) { /* TODO: ClearRenderTargetView */ }
-            public void ClearDepthStencilAttachment(IFramebuffer framebuffer, float depth, byte stencil, bool clearDepth = true, bool clearStencil = true) { /* TODO: ClearDepthStencilView */ }
+            public void ClearDepthStencilAttachment(IFramebuffer framebuffer, float depth, byte stencil, bool clearDepth = true, bool clearStencil = true)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (framebuffer == null)
+                {
+                    return;
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    return; // Command list not initialized
+                }
+
+                // Get depth attachment from framebuffer
+                FramebufferDesc desc = framebuffer.Desc;
+                if (desc.DepthAttachment.Texture == null)
+                {
+                    return; // No depth attachment
+                }
+
+                ITexture depthTexture = desc.DepthAttachment.Texture;
+                int mipLevel = desc.DepthAttachment.MipLevel;
+                int arraySlice = desc.DepthAttachment.ArraySlice;
+
+                // Ensure texture is in DEPTH_WRITE state for clearing
+                SetTextureState(depthTexture, ResourceState.DepthWrite);
+                CommitBarriers();
+
+                // Get or create DSV descriptor handle for the depth texture
+                IntPtr dsvHandle = _device.GetOrCreateDsvHandle(depthTexture, mipLevel, arraySlice);
+                if (dsvHandle == IntPtr.Zero)
+                {
+                    return; // Failed to create/get DSV handle
+                }
+
+                // Build clear flags
+                uint clearFlags = 0;
+                if (clearDepth)
+                {
+                    clearFlags |= D3D12_CLEAR_FLAG_DEPTH;
+                }
+                if (clearStencil)
+                {
+                    clearFlags |= D3D12_CLEAR_FLAG_STENCIL;
+                }
+
+                if (clearFlags == 0)
+                {
+                    return; // Nothing to clear
+                }
+
+                // Clamp depth value between 0.0 and 1.0 as per D3D12 specification
+                float clampedDepth = Math.Max(0.0f, Math.Min(1.0f, depth));
+
+                // Call ClearDepthStencilView (NumRects = 0, pRects = null clears entire view)
+                CallClearDepthStencilView(_d3d12CommandList, dsvHandle, clearFlags, clampedDepth, stencil, 0, IntPtr.Zero);
+            }
             public void ClearUAVFloat(ITexture texture, Vector4 value) { /* TODO: ClearUnorderedAccessViewFloat */ }
             public void ClearUAVUint(ITexture texture, uint value) { /* TODO: ClearUnorderedAccessViewUint */ }
             public void SetTextureState(ITexture texture, ResourceState state)
@@ -1944,6 +2258,40 @@ namespace Andastra.Runtime.MonoGame.Backends
                 dispatch(commandList, threadGroupCountX, threadGroupCountY, threadGroupCountZ);
             }
 
+            // COM interface method delegate for ClearDepthStencilView
+            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+            private delegate void ClearDepthStencilViewDelegate(IntPtr commandList, IntPtr DepthStencilView, uint ClearFlags, float Depth, byte Stencil, uint NumRects, IntPtr pRects);
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::ClearDepthStencilView through COM vtable.
+            /// VTable index 48 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Clear Operations: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-cleardepthstencilview
+            /// </summary>
+            private unsafe void CallClearDepthStencilView(IntPtr commandList, IntPtr DepthStencilView, uint ClearFlags, float Depth, byte Stencil, uint NumRects, IntPtr pRects)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero || DepthStencilView == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // ClearDepthStencilView is at index 48 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[48];
+
+                // Create delegate from function pointer
+                ClearDepthStencilViewDelegate clearDsv =
+                    (ClearDepthStencilViewDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(ClearDepthStencilViewDelegate));
+
+                clearDsv(commandList, DepthStencilView, ClearFlags, Depth, Stencil, NumRects, pRects);
+            }
+
             public void UAVBarrier(ITexture texture) { /* TODO: UAVBarrier */ }
             public void UAVBarrier(IBuffer buffer) { /* TODO: UAVBarrier */ }
             public void SetGraphicsState(GraphicsState state) { /* TODO: Set all graphics state */ }
@@ -1991,6 +2339,247 @@ namespace Andastra.Runtime.MonoGame.Backends
             public void Dispose()
             {
                 // Command lists are returned to allocator, not destroyed individually
+            }
+        }
+
+        #endregion
+
+        #region D3D12 Raytracing Structures and Constants
+
+        // D3D12 Raytracing Acceleration Structure Types
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL = 0;
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL = 1;
+
+        // D3D12 Raytracing Acceleration Structure Build Flags
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_NONE = 0;
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE = 0x1;
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_COMPACTION = 0x2;
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE = 0x4;
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_BUILD = 0x8;
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_MINIMIZE_MEMORY = 0x10;
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PERFORM_UPDATE = 0x20;
+
+        // D3D12 Raytracing Geometry Types
+        private const uint D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES = 0;
+        private const uint D3D12_RAYTRACING_GEOMETRY_TYPE_PROCEDURAL_PRIMITIVE_AABBS = 1;
+
+        // D3D12 Raytracing Geometry Flags
+        private const uint D3D12_RAYTRACING_GEOMETRY_FLAG_NONE = 0;
+        private const uint D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE = 0x1;
+        private const uint D3D12_RAYTRACING_GEOMETRY_FLAG_NO_DUPLICATE_ANYHIT_INVOCATION = 0x2;
+
+        // D3D12 Raytracing Index Formats
+        private const uint D3D12_RAYTRACING_INDEX_FORMAT_UINT16 = 0;
+        private const uint D3D12_RAYTRACING_INDEX_FORMAT_UINT32 = 1;
+
+        // D3D12 Raytracing Vertex Formats
+        private const uint D3D12_RAYTRACING_VERTEX_FORMAT_FLOAT3 = 0;
+        private const uint D3D12_RAYTRACING_VERTEX_FORMAT_FLOAT2 = 1;
+
+        // D3D12 Elements Layout
+        private const uint D3D12_ELEMENTS_LAYOUT_ARRAY = 0;
+        private const uint D3D12_ELEMENTS_LAYOUT_ARRAY_OF_POINTERS = 1;
+
+        /// <summary>
+        /// GPU virtual address and stride structure.
+        /// Based on D3D12 API: D3D12_GPU_VIRTUAL_ADDRESS_AND_STRIDE
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_GPU_VIRTUAL_ADDRESS_AND_STRIDE
+        {
+            public IntPtr StartAddress;
+            public uint StrideInBytes;
+        }
+
+        /// <summary>
+        /// Raytracing geometry triangles description.
+        /// Based on D3D12 API: D3D12_RAYTRACING_GEOMETRY_TRIANGLES_DESC
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_RAYTRACING_GEOMETRY_TRIANGLES_DESC
+        {
+            public IntPtr Transform3x4;
+            public uint IndexFormat;
+            public uint VertexFormat;
+            public uint IndexCount;
+            public uint VertexCount;
+            public IntPtr IndexBuffer;
+            public D3D12_GPU_VIRTUAL_ADDRESS_AND_STRIDE VertexBuffer;
+        }
+
+        /// <summary>
+        /// Raytracing geometry description.
+        /// Based on D3D12 API: D3D12_RAYTRACING_GEOMETRY_DESC
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_RAYTRACING_GEOMETRY_DESC
+        {
+            public uint Type;
+            public uint Flags;
+            public D3D12_RAYTRACING_GEOMETRY_TRIANGLES_DESC Triangles;
+        }
+
+        /// <summary>
+        /// Build raytracing acceleration structure inputs.
+        /// Based on D3D12 API: D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS
+        {
+            public uint Type;
+            public uint Flags;
+            public uint NumDescs;
+            public uint DescsLayout;
+            public IntPtr pGeometryDescs;
+        }
+
+        /// <summary>
+        /// Build raytracing acceleration structure description.
+        /// Based on D3D12 API: D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC
+        {
+            public IntPtr DestAccelerationStructureData;
+            public D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS Inputs;
+            public IntPtr SourceAccelerationStructureData;
+            public IntPtr ScratchAccelerationStructureData;
+        }
+
+        // COM interface method delegate for BuildRaytracingAccelerationStructure
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void BuildRaytracingAccelerationStructureDelegate(
+            IntPtr commandList,
+            IntPtr pDesc,
+            int numPostbuildInfoDescs,
+            IntPtr pPostbuildInfoDescs);
+
+        // COM interface method delegate for GetGPUVirtualAddress
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate ulong GetGPUVirtualAddressDelegate(IntPtr resource);
+
+        /// <summary>
+        /// Gets the GPU virtual address of a resource.
+        /// Based on D3D12 API: ID3D12Resource::GetGPUVirtualAddress
+        /// VTable index 8 for ID3D12Resource.
+        /// </summary>
+        private unsafe ulong GetGpuVirtualAddress(IntPtr resource)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return 0UL;
+            }
+
+            if (resource == IntPtr.Zero)
+            {
+                return 0UL;
+            }
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)resource;
+            // GetGPUVirtualAddress is at index 8 in ID3D12Resource vtable
+            IntPtr methodPtr = vtable[8];
+
+            // Create delegate from function pointer
+            GetGPUVirtualAddressDelegate getGpuVa =
+                (GetGPUVirtualAddressDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(GetGPUVirtualAddressDelegate));
+
+            return getGpuVa(resource);
+        }
+
+        /// <summary>
+        /// Converts AccelStructBuildFlags to D3D12 raytracing acceleration structure build flags.
+        /// Based on D3D12 API: D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS
+        /// </summary>
+        private uint ConvertAccelStructBuildFlagsToD3D12(AccelStructBuildFlags flags)
+        {
+            uint d3d12Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_NONE;
+
+            if ((flags & AccelStructBuildFlags.AllowUpdate) != 0)
+            {
+                d3d12Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE;
+            }
+
+            if ((flags & AccelStructBuildFlags.AllowCompaction) != 0)
+            {
+                d3d12Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_COMPACTION;
+            }
+
+            if ((flags & AccelStructBuildFlags.PreferFastTrace) != 0)
+            {
+                d3d12Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
+            }
+
+            if ((flags & AccelStructBuildFlags.PreferFastBuild) != 0)
+            {
+                d3d12Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_BUILD;
+            }
+
+            if ((flags & AccelStructBuildFlags.MinimizeMemory) != 0)
+            {
+                d3d12Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_MINIMIZE_MEMORY;
+            }
+
+            return d3d12Flags;
+        }
+
+        /// <summary>
+        /// Converts GeometryFlags to D3D12 raytracing geometry flags.
+        /// Based on D3D12 API: D3D12_RAYTRACING_GEOMETRY_FLAGS
+        /// </summary>
+        private uint ConvertGeometryFlagsToD3D12(GeometryFlags flags)
+        {
+            uint d3d12Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_NONE;
+
+            if ((flags & GeometryFlags.Opaque) != 0)
+            {
+                d3d12Flags |= D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
+            }
+
+            if ((flags & GeometryFlags.NoDuplicateAnyHit) != 0)
+            {
+                d3d12Flags |= D3D12_RAYTRACING_GEOMETRY_FLAG_NO_DUPLICATE_ANYHIT_INVOCATION;
+            }
+
+            return d3d12Flags;
+        }
+
+        /// <summary>
+        /// Converts TextureFormat to D3D12 raytracing index format.
+        /// Based on D3D12 API: D3D12_RAYTRACING_INDEX_FORMAT
+        /// </summary>
+        private uint ConvertIndexFormatToD3D12(TextureFormat format)
+        {
+            switch (format)
+            {
+                case TextureFormat.R16_UInt:
+                    return D3D12_RAYTRACING_INDEX_FORMAT_UINT16;
+                case TextureFormat.R32_UInt:
+                    return D3D12_RAYTRACING_INDEX_FORMAT_UINT32;
+                default:
+                    // Default to 32-bit if format is unknown
+                    return D3D12_RAYTRACING_INDEX_FORMAT_UINT32;
+            }
+        }
+
+        /// <summary>
+        /// Converts TextureFormat to D3D12 raytracing vertex format.
+        /// Based on D3D12 API: D3D12_RAYTRACING_VERTEX_FORMAT
+        /// </summary>
+        private uint ConvertVertexFormatToD3D12(TextureFormat format)
+        {
+            // D3D12 raytracing supports Float3 and Float2 vertex formats
+            // Most common vertex formats map to Float3
+            switch (format)
+            {
+                case TextureFormat.R32G32_Float:
+                    return D3D12_RAYTRACING_VERTEX_FORMAT_FLOAT2;
+                case TextureFormat.R32G32B32_Float:
+                case TextureFormat.R32G32B32A32_Float:
+                default:
+                    // Default to Float3 for most formats
+                    return D3D12_RAYTRACING_VERTEX_FORMAT_FLOAT3;
             }
         }
 
