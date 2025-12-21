@@ -90,6 +90,13 @@ namespace Andastra.Runtime.Games.Eclipse.Environmental
             foreach (var emitter in _emitters.Where(e => e.IsActive))
             {
                 emitter.Update(deltaTime);
+                
+                // Apply wind effects to Eclipse particle emitters
+                // Based on daorigins.exe, DragonAge2.exe: Wind affects particle movement
+                if (emitter is EclipseParticleEmitter eclipseEmitter)
+                {
+                    eclipseEmitter.UpdateWithWind(deltaTime, windDirection, windSpeed);
+                }
             }
 
             // Remove inactive emitters
@@ -125,14 +132,51 @@ namespace Andastra.Runtime.Games.Eclipse.Environmental
     /// - Based on particle emitter in daorigins.exe, DragonAge2.exe
     /// - Manages individual particle emitter state and particles
     /// - Supports different emitter types with different behaviors
+    /// - Particles are affected by gravity, wind, and physics
     /// </remarks>
     [PublicAPI]
     public class EclipseParticleEmitter : IParticleEmitter
     {
+        /// <summary>
+        /// Represents a single particle in the emitter.
+        /// </summary>
+        /// <remarks>
+        /// Based on particle structure in daorigins.exe, DragonAge2.exe.
+        /// Particles have position, velocity, lifetime, and other properties.
+        /// </remarks>
+        private struct Particle
+        {
+            public Vector3 Position;
+            public Vector3 Velocity;
+            public float Lifetime;
+            public float MaxLifetime;
+            public float Size;
+            public bool IsActive;
+
+            public Particle(Vector3 position, Vector3 velocity, float lifetime, float size)
+            {
+                Position = position;
+                Velocity = velocity;
+                Lifetime = lifetime;
+                MaxLifetime = lifetime;
+                Size = size;
+                IsActive = true;
+            }
+        }
+
         private Vector3 _position;
         private readonly ParticleEmitterType _emitterType;
         private bool _isActive;
-        private int _particleCount;
+        private readonly List<Particle> _particles;
+        private readonly Random _random;
+        private float _emissionAccumulator; // Accumulated time for particle emission
+        
+        // Particle system parameters based on emitter type
+        private float _emissionRate; // Particles per second
+        private float _particleLifetime; // Particle lifetime in seconds
+        private float _particleSpeed; // Initial particle speed
+        private float _gravity; // Gravity acceleration
+        private int _maxParticles; // Maximum number of particles
 
         /// <summary>
         /// Creates a new Eclipse particle emitter.
@@ -142,13 +186,70 @@ namespace Andastra.Runtime.Games.Eclipse.Environmental
         /// <remarks>
         /// Based on particle emitter creation in daorigins.exe, DragonAge2.exe.
         /// Initializes emitter with specified position and type.
+        /// Different emitter types have different emission rates, particle properties, and behaviors.
         /// </remarks>
         public EclipseParticleEmitter(Vector3 position, ParticleEmitterType emitterType)
         {
             _position = position;
             _emitterType = emitterType;
             _isActive = false;
-            _particleCount = 0;
+            _particles = new List<Particle>();
+            _random = new Random();
+            _emissionAccumulator = 0.0f;
+
+            // Initialize emitter parameters based on type
+            // Based on daorigins.exe, DragonAge2.exe: Different emitter types have different properties
+            switch (_emitterType)
+            {
+                case ParticleEmitterType.Fire:
+                    _emissionRate = 50.0f; // 50 particles per second
+                    _particleLifetime = 2.0f; // 2 seconds lifetime
+                    _particleSpeed = 5.0f; // 5 units per second
+                    _gravity = -2.0f; // Slight upward force (fire rises)
+                    _maxParticles = 200;
+                    break;
+
+                case ParticleEmitterType.Smoke:
+                    _emissionRate = 30.0f; // 30 particles per second
+                    _particleLifetime = 5.0f; // 5 seconds lifetime
+                    _particleSpeed = 3.0f; // 3 units per second
+                    _gravity = -1.0f; // Smoke rises slowly
+                    _maxParticles = 150;
+                    break;
+
+                case ParticleEmitterType.Magic:
+                    _emissionRate = 40.0f; // 40 particles per second
+                    _particleLifetime = 3.0f; // 3 seconds lifetime
+                    _particleSpeed = 8.0f; // 8 units per second
+                    _gravity = 0.0f; // Magic particles float
+                    _maxParticles = 180;
+                    break;
+
+                case ParticleEmitterType.Environmental:
+                    _emissionRate = 20.0f; // 20 particles per second
+                    _particleLifetime = 4.0f; // 4 seconds lifetime
+                    _particleSpeed = 2.0f; // 2 units per second
+                    _gravity = -9.8f; // Standard gravity
+                    _maxParticles = 100;
+                    break;
+
+                case ParticleEmitterType.Explosion:
+                    _emissionRate = 200.0f; // 200 particles per second (burst)
+                    _particleLifetime = 1.5f; // 1.5 seconds lifetime
+                    _particleSpeed = 15.0f; // 15 units per second (fast)
+                    _gravity = -9.8f; // Standard gravity
+                    _maxParticles = 300;
+                    break;
+
+                case ParticleEmitterType.Custom:
+                default:
+                    _emissionRate = 30.0f; // Default: 30 particles per second
+                    _particleLifetime = 3.0f; // Default: 3 seconds lifetime
+                    _particleSpeed = 5.0f; // Default: 5 units per second
+                    _gravity = -9.8f; // Default: standard gravity
+                    _maxParticles = 150;
+                    break;
+            }
         }
 
         /// <summary>
@@ -173,7 +274,26 @@ namespace Andastra.Runtime.Games.Eclipse.Environmental
         /// <summary>
         /// Gets the current particle count.
         /// </summary>
-        public int ParticleCount => _particleCount;
+        /// <remarks>
+        /// Returns the actual number of active particles in the emitter.
+        /// Based on daorigins.exe, DragonAge2.exe: Particle count tracking.
+        /// </remarks>
+        public int ParticleCount
+        {
+            get
+            {
+                // Count active particles
+                int count = 0;
+                for (int i = 0; i < _particles.Count; i++)
+                {
+                    if (_particles[i].IsActive)
+                    {
+                        count++;
+                    }
+                }
+                return count;
+            }
+        }
 
         /// <summary>
         /// Activates the emitter.
@@ -206,29 +326,250 @@ namespace Andastra.Runtime.Games.Eclipse.Environmental
         /// <remarks>
         /// Based on emitter update in daorigins.exe, DragonAge2.exe.
         /// Updates particle emission, particle lifetimes, and particle positions.
+        /// Emits new particles based on emission rate, updates existing particles with physics,
+        /// and removes expired particles.
         /// </remarks>
         public void Update(float deltaTime)
         {
-            if (!_isActive)
+            if (deltaTime <= 0.0f)
             {
                 return;
             }
 
-            // Update particle emitter:
-            // - Emit new particles based on emission rate
-            // - Update existing particles (position, velocity, lifetime)
-            // - Remove expired particles
-            // - Update particle count
+            if (!_isActive)
+            {
+                // When inactive, particles continue to update and fade out
+                // Don't emit new particles, but update existing ones
+            }
+            else
+            {
+                // Emit new particles based on emission rate
+                // Based on daorigins.exe, DragonAge2.exe: Particle emission timing
+                _emissionAccumulator += deltaTime;
+                float particlesPerSecond = _emissionRate;
+                float timePerParticle = 1.0f / particlesPerSecond;
 
-            // In a full implementation, this would:
-            // - Emit particles based on emitter type and emission rate
-            // - Update particle positions based on velocity and physics
-            // - Apply gravity, wind, and other forces to particles
-            // - Update particle lifetimes and remove expired particles
-            // - Update particle rendering data
+                while (_emissionAccumulator >= timePerParticle && ParticleCount < _maxParticles)
+                {
+                    EmitParticle();
+                    _emissionAccumulator -= timePerParticle;
+                }
+            }
 
-            // TODO: STUB - For now, simulate particle count (would be actual particle count in full implementation)
-            _particleCount = _isActive ? 100 : 0;
+            // Update existing particles
+            for (int i = 0; i < _particles.Count; i++)
+            {
+                Particle particle = _particles[i];
+                if (!particle.IsActive)
+                {
+                    continue;
+                }
+
+                // Update particle lifetime
+                particle.Lifetime -= deltaTime;
+                if (particle.Lifetime <= 0.0f)
+                {
+                    // Particle expired - mark as inactive
+                    particle.IsActive = false;
+                    _particles[i] = particle;
+                    continue;
+                }
+
+                // Apply gravity to velocity
+                // Based on daorigins.exe, DragonAge2.exe: Gravity affects particle velocity
+                particle.Velocity = new Vector3(
+                    particle.Velocity.X,
+                    particle.Velocity.Y + _gravity * deltaTime,
+                    particle.Velocity.Z
+                );
+
+                // Update particle position based on velocity
+                particle.Position += particle.Velocity * deltaTime;
+
+                _particles[i] = particle;
+            }
+
+            // Remove inactive particles periodically to keep list size manageable
+            // Based on daorigins.exe, DragonAge2.exe: Particle cleanup
+            if (_particles.Count > _maxParticles * 2)
+            {
+                _particles.RemoveAll(p => !p.IsActive);
+            }
+        }
+
+        /// <summary>
+        /// Updates particles with wind effects.
+        /// </summary>
+        /// <param name="deltaTime">Time since last update.</param>
+        /// <param name="windDirection">Wind direction vector (normalized).</param>
+        /// <param name="windSpeed">Wind speed (affects particle movement).</param>
+        /// <remarks>
+        /// Based on daorigins.exe, DragonAge2.exe: Wind affects particle movement.
+        /// Wind is applied to particle velocities to simulate environmental effects.
+        /// </remarks>
+        public void UpdateWithWind(float deltaTime, Vector3 windDirection, float windSpeed)
+        {
+            if (deltaTime <= 0.0f || windSpeed <= 0.0f)
+            {
+                return;
+            }
+
+            // Apply wind to active particles
+            // Based on daorigins.exe, DragonAge2.exe: Wind influence on particles
+            Vector3 windForce = windDirection * windSpeed;
+            
+            for (int i = 0; i < _particles.Count; i++)
+            {
+                Particle particle = _particles[i];
+                if (!particle.IsActive)
+                {
+                    continue;
+                }
+
+                // Apply wind force to particle velocity
+                // Wind affects horizontal movement more than vertical
+                particle.Velocity = new Vector3(
+                    particle.Velocity.X + windForce.X * deltaTime,
+                    particle.Velocity.Y + windForce.Y * deltaTime * 0.5f, // Vertical wind is weaker
+                    particle.Velocity.Z + windForce.Z * deltaTime
+                );
+
+                _particles[i] = particle;
+            }
+        }
+
+        /// <summary>
+        /// Emits a new particle from the emitter.
+        /// </summary>
+        /// <remarks>
+        /// Based on daorigins.exe, DragonAge2.exe: Particle emission.
+        /// Creates a new particle with random position, velocity, and properties based on emitter type.
+        /// </remarks>
+        private void EmitParticle()
+        {
+            // Calculate spawn position with random offset
+            // Based on daorigins.exe, DragonAge2.exe: Particle spawn area
+            float spawnRadius = 0.5f; // Spawn within 0.5 units of emitter position
+            float offsetX = ((float)_random.NextDouble() - 0.5f) * spawnRadius * 2.0f;
+            float offsetY = ((float)_random.NextDouble() - 0.5f) * spawnRadius * 2.0f;
+            float offsetZ = ((float)_random.NextDouble() - 0.5f) * spawnRadius * 2.0f;
+            Vector3 spawnPosition = _position + new Vector3(offsetX, offsetY, offsetZ);
+
+            // Calculate initial velocity based on emitter type
+            // Based on daorigins.exe, DragonAge2.exe: Particle velocity initialization
+            Vector3 velocity = CalculateInitialVelocity();
+
+            // Calculate particle lifetime with slight variation
+            float lifetime = _particleLifetime * (0.8f + (float)(_random.NextDouble() * 0.4f)); // 80-120% of base lifetime
+
+            // Calculate particle size with slight variation
+            float size = 0.1f + (float)(_random.NextDouble() * 0.1f); // 0.1 to 0.2 units
+
+            // Create new particle
+            Particle newParticle = new Particle(spawnPosition, velocity, lifetime, size);
+
+            // Add particle to list (reuse inactive particles if available)
+            bool added = false;
+            for (int i = 0; i < _particles.Count; i++)
+            {
+                if (!_particles[i].IsActive)
+                {
+                    _particles[i] = newParticle;
+                    added = true;
+                    break;
+                }
+            }
+
+            if (!added && _particles.Count < _maxParticles)
+            {
+                _particles.Add(newParticle);
+            }
+        }
+
+        /// <summary>
+        /// Calculates initial velocity for a new particle based on emitter type.
+        /// </summary>
+        /// <returns>Initial velocity vector for the particle.</returns>
+        /// <remarks>
+        /// Based on daorigins.exe, DragonAge2.exe: Particle velocity initialization.
+        /// Different emitter types produce particles with different velocity patterns.
+        /// </remarks>
+        private Vector3 CalculateInitialVelocity()
+        {
+            // Base velocity direction and speed
+            Vector3 baseDirection;
+            float speedVariation = _particleSpeed * 0.3f; // 30% speed variation
+
+            switch (_emitterType)
+            {
+                case ParticleEmitterType.Fire:
+                    // Fire particles rise upward with slight random spread
+                    baseDirection = new Vector3(
+                        ((float)_random.NextDouble() - 0.5f) * 0.5f, // Slight horizontal spread
+                        1.0f + (float)(_random.NextDouble() * 0.3f), // Upward with variation
+                        ((float)_random.NextDouble() - 0.5f) * 0.5f // Slight horizontal spread
+                    );
+                    break;
+
+                case ParticleEmitterType.Smoke:
+                    // Smoke particles rise slowly with more horizontal spread
+                    baseDirection = new Vector3(
+                        ((float)_random.NextDouble() - 0.5f) * 1.0f, // More horizontal spread
+                        0.5f + (float)(_random.NextDouble() * 0.3f), // Slow upward
+                        ((float)_random.NextDouble() - 0.5f) * 1.0f // More horizontal spread
+                    );
+                    break;
+
+                case ParticleEmitterType.Magic:
+                    // Magic particles move in random directions
+                    baseDirection = new Vector3(
+                        ((float)_random.NextDouble() - 0.5f) * 2.0f,
+                        ((float)_random.NextDouble() - 0.5f) * 2.0f,
+                        ((float)_random.NextDouble() - 0.5f) * 2.0f
+                    );
+                    break;
+
+                case ParticleEmitterType.Environmental:
+                    // Environmental particles fall downward with slight drift
+                    baseDirection = new Vector3(
+                        ((float)_random.NextDouble() - 0.5f) * 0.3f, // Slight horizontal drift
+                        -0.5f - (float)(_random.NextDouble() * 0.5f), // Downward
+                        ((float)_random.NextDouble() - 0.5f) * 0.3f // Slight horizontal drift
+                    );
+                    break;
+
+                case ParticleEmitterType.Explosion:
+                    // Explosion particles burst outward in all directions
+                    baseDirection = new Vector3(
+                        ((float)_random.NextDouble() - 0.5f) * 2.0f,
+                        ((float)_random.NextDouble() - 0.5f) * 2.0f,
+                        ((float)_random.NextDouble() - 0.5f) * 2.0f
+                    );
+                    break;
+
+                case ParticleEmitterType.Custom:
+                default:
+                    // Default: slight upward movement with random spread
+                    baseDirection = new Vector3(
+                        ((float)_random.NextDouble() - 0.5f) * 0.5f,
+                        0.5f + (float)(_random.NextDouble() * 0.5f),
+                        ((float)_random.NextDouble() - 0.5f) * 0.5f
+                    );
+                    break;
+            }
+
+            // Normalize direction and apply speed with variation
+            if (baseDirection.LengthSquared() > 0.0f)
+            {
+                baseDirection = Vector3.Normalize(baseDirection);
+            }
+            else
+            {
+                baseDirection = new Vector3(0.0f, 1.0f, 0.0f); // Default upward
+            }
+
+            float speed = _particleSpeed + ((float)_random.NextDouble() - 0.5f) * speedVariation;
+            return baseDirection * speed;
         }
     }
 }
