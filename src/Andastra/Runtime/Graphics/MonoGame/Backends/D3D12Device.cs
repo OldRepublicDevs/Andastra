@@ -366,7 +366,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             // - Wrap in D3D12BindingSet and return
 
             IntPtr handle = new IntPtr(_nextResourceHandle++);
-            var bindingSet = new D3D12BindingSet(handle, layout, desc, IntPtr.Zero, _device);
+            var bindingSet = new D3D12BindingSet(handle, layout, desc, IntPtr.Zero, _device, this);
             _resources[handle] = bindingSet;
 
             return bindingSet;
@@ -1991,12 +1991,13 @@ namespace Andastra.Runtime.MonoGame.Backends
                 }
             }
 
-            public D3D12BindingSet(IntPtr handle, IBindingLayout layout, BindingSetDesc desc, IntPtr descriptorHeap, IntPtr device, D3D12_GPU_DESCRIPTOR_HANDLE gpuDescriptorHandle)
+            public D3D12BindingSet(IntPtr handle, IBindingLayout layout, BindingSetDesc desc, IntPtr descriptorHeap, IntPtr device, D3D12Device parentDevice, D3D12_GPU_DESCRIPTOR_HANDLE gpuDescriptorHandle)
             {
                 _handle = handle;
                 Layout = layout;
                 _descriptorHeap = descriptorHeap;
                 _device = device;
+                _parentDevice = parentDevice;
                 _gpuDescriptorHandle = gpuDescriptorHandle;
             }
 
@@ -2960,13 +2961,14 @@ namespace Andastra.Runtime.MonoGame.Backends
                         }
 
                         // Get GPU descriptor handle from binding set
-                        // TODO: Add GetGpuDescriptorHandle() method to D3D12BindingSet
                         // The GPU descriptor handle points to the start of the descriptor table in the heap
-                        // D3D12_GPU_DESCRIPTOR_HANDLE handle = d3d12BindingSet.GetGpuDescriptorHandle();
-                        // if (handle.ptr != 0)
-                        // {
-                        //     CallSetComputeRootDescriptorTable(_d3d12CommandList, i, handle);
-                        // }
+                        // Based on DirectX 12 Root Parameters: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-setcomputerootdescriptortable
+                        // swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+                        D3D12_GPU_DESCRIPTOR_HANDLE handle = d3d12BindingSet.GetGpuDescriptorHandle();
+                        if (handle.ptr != 0)
+                        {
+                            CallSetComputeRootDescriptorTable(_d3d12CommandList, i, handle);
+                        }
                     }
                 }
             }
