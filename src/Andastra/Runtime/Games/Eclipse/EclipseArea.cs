@@ -3886,24 +3886,75 @@ namespace Andastra.Runtime.Games.Eclipse
                 byte[] mdlData = null;
                 byte[] mdxData = null;
 
-                // Try to get MDL resource from module
-                // Module uses resource wrapper system - we need to access resources through the module's resource collection
-                // For Eclipse, we attempt to load MDL using the module's resource lookup system
+                // Load MDL and MDX resources from module using Module.Resource() method
+                // Based on daorigins.exe/DragonAge2.exe: MDL files are stored in module archives
+                // Eclipse uses similar module structure to Odyssey for MDL resources
+                // Module.Resource() uses the Installation's resource provider (EclipseResourceProvider for Eclipse games)
                 try
                 {
-                    // Eclipse areas may store MDL files differently than Odyssey
-                    // Attempt to access resource through module's installation if available
-                    // This is a simplified approach - full implementation would use proper Eclipse resource system
-                    // Note: Module resource access requires proper integration with Eclipse resource provider
-                    // TODO: IMPLEMENT - Integrate Eclipse resource provider for MDL/MDX loading
-                    // When resource provider is available, load MDL and MDX data similar to OdysseyArea implementation
-                    // For now, return null to indicate resource loading is not yet fully implemented
-                    return null;
+                    // Get MDL resource from module
+                    // Module.Resource() returns ModuleResource<T> which provides Data() method for raw bytes
+                    ModuleResource mdlResource = _module.Resource(modelResRef, ResourceType.MDL);
+                    if (mdlResource != null)
+                    {
+                        // Get raw MDL data using Data() method
+                        // Data() handles all resource location resolution (override, module, chitin, etc.)
+                        byte[] mdlBytes = mdlResource.Data();
+                        if (mdlBytes != null && mdlBytes.Length > 0)
+                        {
+                            mdlData = mdlBytes;
+                            System.Console.WriteLine($"[EclipseArea] Successfully loaded MDL resource '{modelResRef}', size: {mdlBytes.Length} bytes");
+                        }
+                        else
+                        {
+                            System.Console.WriteLine($"[EclipseArea] MDL resource '{modelResRef}' returned empty data");
+                        }
+                    }
+                    else
+                    {
+                        System.Console.WriteLine($"[EclipseArea] MDL resource '{modelResRef}' not found in module");
+                    }
+
+                    // Get MDX resource from module (same resref, different type)
+                    // MDX files contain the geometry data for MDL models
+                    ModuleResource mdxResource = _module.Resource(modelResRef, ResourceType.MDX);
+                    if (mdxResource != null)
+                    {
+                        // Get raw MDX data using Data() method
+                        byte[] mdxBytes = mdxResource.Data();
+                        if (mdxBytes != null && mdxBytes.Length > 0)
+                        {
+                            mdxData = mdxBytes;
+                            System.Console.WriteLine($"[EclipseArea] Successfully loaded MDX resource '{modelResRef}', size: {mdxBytes.Length} bytes");
+                        }
+                        else
+                        {
+                            System.Console.WriteLine($"[EclipseArea] MDX resource '{modelResRef}' returned empty data");
+                        }
+                    }
+                    else
+                    {
+                        System.Console.WriteLine($"[EclipseArea] MDX resource '{modelResRef}' not found in module");
+                    }
+
+                    // If either MDL or MDX is missing, we cannot proceed
+                    if (mdlData == null || mdlData.Length == 0)
+                    {
+                        System.Console.WriteLine($"[EclipseArea] Cannot load room mesh '{modelResRef}': MDL data is missing");
+                        return null;
+                    }
+
+                    if (mdxData == null || mdxData.Length == 0)
+                    {
+                        System.Console.WriteLine($"[EclipseArea] Cannot load room mesh '{modelResRef}': MDX data is missing");
+                        return null;
+                    }
                 }
                 catch (Exception ex)
                 {
                     // Resource loading failed - log and return null
-                    System.Console.WriteLine($"[EclipseArea] Error loading MDL resource '{modelResRef}': {ex.Message}");
+                    System.Console.WriteLine($"[EclipseArea] Error loading MDL/MDX resources '{modelResRef}': {ex.Message}");
+                    System.Console.WriteLine($"[EclipseArea] Stack trace: {ex.StackTrace}");
                     return null;
                 }
 
@@ -4050,15 +4101,61 @@ namespace Andastra.Runtime.Games.Eclipse
             basicEffect.LightingEnabled = true;
 
             // Apply lighting from lighting system
-            // Eclipse entities receive dynamic lighting
+            // Eclipse entities receive dynamic lighting from the area's lighting system
+            // Based on daorigins.exe/DragonAge2.exe: Entity lighting uses area lighting system
+            // Original implementation: Applies ambient light, directional sun/moon light, and nearby point lights
             if (_lightingSystem != null)
             {
-                // In a full implementation, lighting system would provide:
-                // - Directional lights (sun, moon)
-                // - Point lights (torches, fires, etc.)
-                // - Spot lights (lanterns, etc.)
-                // - Shadow maps for each light
-                // TODO: STUB - For now, use default lighting
+                // Cast to EclipseLightingSystem to access full lighting API
+                EclipseLightingSystem eclipseLighting = _lightingSystem as EclipseLightingSystem;
+                if (eclipseLighting != null)
+                {
+                    // Apply ambient light from lighting system
+                    // Ambient light provides base illumination for all entities
+                    Vector3 ambientColor = eclipseLighting.AmbientColor;
+                    float ambientIntensity = eclipseLighting.AmbientIntensity;
+                    basicEffect.AmbientLightColor = new Vector3(
+                        ambientColor.X * ambientIntensity,
+                        ambientColor.Y * ambientIntensity,
+                        ambientColor.Z * ambientIntensity
+                    );
+
+                    // Get primary directional light (sun/moon) for enhanced diffuse lighting
+                    // Directional lights provide main illumination direction
+                    // Since IBasicEffect doesn't support directional lights directly, we enhance diffuse color
+                    IDynamicLight primaryDirectional = eclipseLighting.PrimaryDirectionalLight;
+                    if (primaryDirectional != null && primaryDirectional.Enabled)
+                    {
+                        // Enhance diffuse color based on directional light
+                        // This approximates directional lighting by brightening the diffuse color
+                        Vector3 lightColor = primaryDirectional.Color;
+                        float lightIntensity = primaryDirectional.Intensity;
+                        
+                        // Multiply diffuse color by light color and intensity to approximate directional lighting
+                        // This is an approximation since IBasicEffect doesn't support directional lights directly
+                        Vector3 currentDiffuse = basicEffect.DiffuseColor;
+                        basicEffect.DiffuseColor = new Vector3(
+                            currentDiffuse.X * (1.0f + lightColor.X * lightIntensity * 0.5f),
+                            currentDiffuse.Y * (1.0f + lightColor.Y * lightIntensity * 0.5f),
+                            currentDiffuse.Z * (1.0f + lightColor.Z * lightIntensity * 0.5f)
+                        );
+                    }
+
+                    // Get point lights affecting this entity's position
+                    // Point lights (torches, fires, etc.) provide local illumination
+                    // Note: IBasicEffect doesn't support point lights directly, so this is for future enhancement
+                    // In a full implementation with custom shaders, we would apply up to 3-4 point lights
+                    IDynamicLight[] affectingLights = eclipseLighting.GetLightsAffectingPoint(position, 10.0f);
+                    
+                    // For now, we've applied ambient and directional lighting
+                    // Point lights would require a custom shader that supports multiple lights
+                    // Shadow maps would also require shadow mapping support in the rendering pipeline
+                }
+            }
+            else
+            {
+                // No lighting system available - use default ambient lighting
+                basicEffect.AmbientLightColor = new Vector3(0.2f, 0.2f, 0.2f);
             }
 
             // Render entity model
