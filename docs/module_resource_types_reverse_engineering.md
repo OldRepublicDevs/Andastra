@@ -259,9 +259,14 @@ The engine's resource manager loads resources by:
 **Edge Cases - What Actually Works** (based on code structure):
 
 - **TLK (type 0x7e2 = 2018)**:
-  - ✅ Registered in resource type registry (swkotor.exe: `FUN_005e6d20` line 91, swkotor2.exe: `FUN_00632510` line 90)
-  - ✅ CAN be registered in modules (no type filtering in `FUN_0040e990`)
-  - ❌ **CONFIRMED**: TLK loading uses direct file I/O from game root directory (`dialog.tlk`), NOT resource system
+  - ✅ Registered in resource type registry (swkotor.exe: `FUN_005e6d20` at 0x005e6d20 line 91, swkotor2.exe: `FUN_00632510` at 0x00632510 line 90)
+  - ✅ CAN be registered in modules (no type filtering in `FUN_0040e990` at swkotor.exe: 0x0040e990)
+  - ❌ **CONFIRMED**: TLK loading uses directory alias system, NOT resource system
+  - **Loading Mechanism**: 
+    - swkotor.exe: `FUN_0041d810` at 0x0041d810 line 16 calls `FUN_005e68d0` with type 0x7e2 (TLK)
+    - swkotor.exe: `FUN_005e68d0` at 0x005e68d0 calls `FUN_005eb840` which uses directory alias system (`FUN_005e6660`), NOT `FUN_00407230` (resource system)
+    - swkotor.exe: `FUN_005f4180` at 0x005f4180 line 38 calls `FUN_00408bc0` with type 0x7e2, but this is for LIVE directory loading, not main dialog.tlk
+  - **Evidence**: `FUN_005e68d0` → `FUN_005eb840` → `FUN_005e6660` (directory alias resolver), NOT `FUN_004074d0`/`FUN_00407230` (resource system)
   - **Module Support**: ❌ **NO** - TLK files in modules will be ignored (see "Files Loaded Outside Resource System" section)
 
 - **RES (type 0x0 = 0)**:
