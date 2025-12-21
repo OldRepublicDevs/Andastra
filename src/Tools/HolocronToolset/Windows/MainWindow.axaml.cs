@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Avalonia.Platform.Storage;
 using Andastra.Parsing.Extract;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
@@ -882,10 +884,115 @@ namespace HolocronToolset.Windows
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:2166-2177
         // Original: def open_from_file(self):
-        private void OpenFromFile()
+        //          filepaths: list[str] = QFileDialog.getOpenFileNames(self, "Select files to open")[:-1][0]
+        //          for filepath in filepaths:
+        //              r_filepath = Path(filepath)
+        //              try:
+        //                  file_res = FileResource(r_filepath.stem, ResourceType.from_extension(r_filepath.suffix), r_filepath.stat().st_size, 0x0, r_filepath)
+        //                  open_resource_editor(file_res, self.active, self)
+        //              except (ValueError, OSError) as e:
+        //                  etype, msg = universal_simplify_exception(e)
+        //                  QMessageBox(QMessageBox.Icon.Critical, f"Failed to open file ({etype})", msg).exec()
+        private async void OpenFromFile()
         {
-            // TODO: STUB - Open from file dialog will be implemented when available
-            System.Console.WriteLine("TODO: STUB - Open from file not yet implemented");
+            // Get the top-level window for file dialog
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel == null)
+            {
+                return;
+            }
+
+            // Create file picker options for multiple file selection
+            var options = new FilePickerOpenOptions
+            {
+                Title = "Select files to open",
+                AllowMultiple = true
+            };
+
+            try
+            {
+                // Show file dialog
+                var files = await topLevel.StorageProvider.OpenFilePickerAsync(options);
+                if (files == null || files.Count == 0)
+                {
+                    return;
+                }
+
+                // Process each selected file
+                foreach (var file in files)
+                {
+                    string filepath = file.Path.LocalPath;
+                    if (string.IsNullOrWhiteSpace(filepath))
+                    {
+                        continue;
+                    }
+
+                    try
+                    {
+                        // Get file info
+                        var fileInfo = new FileInfo(filepath);
+                        if (!fileInfo.Exists)
+                        {
+                            continue;
+                        }
+
+                        // Get resource name (stem - filename without extension)
+                        string resname = Path.GetFileNameWithoutExtension(filepath);
+
+                        // Get resource type from file extension
+                        string extension = Path.GetExtension(filepath);
+                        ResourceType restype = ResourceType.FromExtension(extension);
+
+                        // Read file data
+                        byte[] data = File.ReadAllBytes(filepath);
+
+                        // Create FileResource
+                        var fileResource = new FileResource(
+                            resname,
+                            restype,
+                            (int)fileInfo.Length,
+                            0x0,
+                            filepath);
+
+                        // Open resource editor
+                        WindowUtils.OpenResourceEditor(fileResource, _active, this);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Matching PyKotor implementation: QMessageBox(QMessageBox.Icon.Critical, f"Failed to open file ({etype})", msg).exec()
+                        string errorType = ex.GetType().Name;
+                        string errorMessage = ex.Message;
+                        if (string.IsNullOrEmpty(errorMessage))
+                        {
+                            errorMessage = ex.ToString();
+                        }
+
+                        var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                            $"Failed to open file ({errorType})",
+                            errorMessage,
+                            ButtonEnum.Ok,
+                            Icon.Error);
+                        await errorBox.ShowAsync();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle file dialog errors
+                string errorType = ex.GetType().Name;
+                string errorMessage = ex.Message;
+                if (string.IsNullOrEmpty(errorMessage))
+                {
+                    errorMessage = ex.ToString();
+                }
+
+                var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    $"Failed to open file dialog ({errorType})",
+                    errorMessage,
+                    ButtonEnum.Ok,
+                    Icon.Error);
+                await errorBox.ShowAsync();
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:873-875
