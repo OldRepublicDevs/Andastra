@@ -1393,6 +1393,8 @@ namespace Andastra.Runtime.MonoGame.Backends
         private IntPtr _clearUAVUintComputePipelineState; // id<MTLComputePipelineState> - cached pipeline state for clearing UAV with uint
         private static bool? _supportsBatchViewports; // Cached result for batch viewport API availability
         private GraphicsState _currentGraphicsState; // Current graphics state for draw commands
+        private RaytracingState _currentRaytracingState; // Current raytracing state for dispatch rays commands
+        private bool _hasRaytracingState; // Whether raytracing state has been set
 
         public MetalCommandList(IntPtr handle, CommandListType type, MetalBackend backend)
         {
@@ -1407,6 +1409,8 @@ namespace Andastra.Runtime.MonoGame.Backends
             _clearUAVFloatComputePipelineState = IntPtr.Zero;
             _clearUAVUintComputePipelineState = IntPtr.Zero;
             _currentGraphicsState = default(GraphicsState); // Initialize to default state
+            _currentRaytracingState = default(RaytracingState); // Initialize to default state
+            _hasRaytracingState = false;
         }
 
         public void Open()
@@ -3245,7 +3249,27 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             // Get compute pipeline state from MetalComputePipeline
             // MetalComputePipeline stores the MTLComputePipelineState handle internally
-            IntPtr computePipelineState = metalPipeline.ComputePipelineState;
+            // We need to access it via reflection or add a public property
+            // For now, we'll use reflection to get the _computePipelineState field
+            IntPtr computePipelineState = IntPtr.Zero;
+            try
+            {
+                var pipelineType = metalPipeline.GetType();
+                var pipelineStateField = pipelineType.GetField("_computePipelineState", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (pipelineStateField != null)
+                {
+                    object pipelineStateObj = pipelineStateField.GetValue(metalPipeline);
+                    if (pipelineStateObj != null)
+                    {
+                        computePipelineState = (IntPtr)pipelineStateObj;
+                    }
+                }
+            }
+            catch
+            {
+                // Reflection failed - pipeline state not accessible
+                throw new InvalidOperationException("Failed to access compute pipeline state from MetalComputePipeline");
+            }
 
             if (computePipelineState == IntPtr.Zero)
             {
@@ -3359,13 +3383,64 @@ namespace Andastra.Runtime.MonoGame.Backends
         }
 
         // Raytracing Commands
+        /// <summary>
+        /// Sets the raytracing state for dispatch rays commands.
+        /// Stores the raytracing pipeline, binding sets, and shader binding table for use in DispatchRays.
+        /// </summary>
+        /// <param name="state">Raytracing state containing pipeline, binding sets, and shader binding table.</param>
+        /// <remarks>
+        /// Based on Metal 3.0 raytracing API:
+        /// - Metal 3.0 raytracing uses compute shaders with MTLRaytracingPipelineState
+        /// - Shader binding is done via MTLIntersectionFunctionTable and MTLVisibleFunctionTable
+        /// - The pipeline state is stored and bound when DispatchRays is called
+        /// - Binding sets are stored and applied during ray dispatch
+        /// 
+        /// Metal API Reference:
+        /// https://developer.apple.com/documentation/metal/metal_ray_tracing
+        /// https://developer.apple.com/documentation/metal/mtlraytracingpipelinestate
+        /// https://developer.apple.com/documentation/metal/mtlintersectionfunctiontable
+        /// https://developer.apple.com/documentation/metal/mtlvisiblefunctiontable
+        /// 
+        /// Implementation Notes:
+        /// - State is stored for later use in DispatchRays (similar to D3D12Device pattern)
+        /// - Pipeline validation ensures it's a MetalRaytracingPipeline
+        /// - Shader binding table buffer must be valid for ray generation shader
+        /// - Binding sets are stored and will be bound via compute command encoder in DispatchRays
+        /// </remarks>
         public void SetRaytracingState(RaytracingState state)
         {
             if (!_isOpen)
             {
-                return;
+                throw new InvalidOperationException("Command list must be open to set raytracing state");
             }
-            // TODO: Implement raytracing state setting for Metal 3.0
+
+            // Validate raytracing pipeline
+            if (state.Pipeline == null)
+            {
+                throw new ArgumentException("Raytracing state must have a valid pipeline", nameof(state));
+            }
+
+            // Cast to Metal implementation to access native handle
+            MetalRaytracingPipeline metalPipeline = state.Pipeline as MetalRaytracingPipeline;
+            if (metalPipeline == null)
+            {
+                throw new ArgumentException("Pipeline must be a MetalRaytracingPipeline", nameof(state));
+            }
+
+            // Validate shader binding table buffer (required for ray generation shader)
+            if (state.ShaderTable.Buffer == null)
+            {
+                throw new ArgumentException("Shader binding table buffer is required for raytracing state", nameof(state));
+            }
+
+            // Store the raytracing state (contains pipeline, binding sets, and shader binding table)
+            // The actual binding will happen in DispatchRays when the compute command encoder is created
+            _currentRaytracingState = state;
+            _hasRaytracingState = true;
+
+            // Note: In Metal 3.0, raytracing is done through compute shaders
+            // The pipeline state and binding sets will be bound when DispatchRays is called
+            // This matches the pattern used in D3D12Device where state is stored and applied during dispatch
         }
 
         public void DispatchRays(DispatchRaysArguments args)
