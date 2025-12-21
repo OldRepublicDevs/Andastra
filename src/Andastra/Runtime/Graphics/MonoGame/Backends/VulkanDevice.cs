@@ -512,6 +512,19 @@ namespace Andastra.Runtime.MonoGame.Backends
             public uint stencil; // Clear value for stencil aspect
         }
 
+        // Vulkan clear color value structure
+        // Based on Vulkan API: https://docs.vulkan.org/spec/latest/chapters/clears.html#VkClearColorValue
+        // Can represent float, int32, or uint32 clear values depending on format
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkClearColorValue
+        {
+            // Union of float, int32, and uint32 arrays - using float array for most common case
+            // In C: union { float float32[4]; int32_t int32[4]; uint32_t uint32[4]; }
+            // We use float array as it's the most common case for color attachments
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            public float[] float32; // float[4] - clear values as floats (0.0 to 1.0)
+        }
+
         [StructLayout(LayoutKind.Sequential)]
         private struct VkCommandPoolCreateInfo
         {
@@ -1447,8 +1460,8 @@ namespace Andastra.Runtime.MonoGame.Backends
                 case TextureFormat.R16G16B16A16_Float: return VkFormat.VK_FORMAT_R16G16B16A16_SFLOAT;
                 case TextureFormat.R32G32B32A32_Float: return VkFormat.VK_FORMAT_R32G32B32A32_SFLOAT;
                 case TextureFormat.D24_UNorm_S8_UInt: return VkFormat.VK_FORMAT_D24_UNORM_S8_UINT;
-                case TextureFormat.D32_FLOAT: return VkFormat.VK_FORMAT_D32_SFLOAT;
-                case TextureFormat.D32_FLOAT_S8_UINT: return VkFormat.VK_FORMAT_D32_SFLOAT_S8_UINT;
+                case TextureFormat.D32_Float: return VkFormat.VK_FORMAT_D32_SFLOAT;
+                case TextureFormat.D32_Float_S8_UInt: return VkFormat.VK_FORMAT_D32_SFLOAT_S8_UINT;
                 default: return VkFormat.VK_FORMAT_UNDEFINED;
             }
         }
@@ -1511,32 +1524,32 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ArgumentException("Buffer size must be greater than zero", nameof(desc));
             }
 
-            // Convert BufferUsage to VkBufferUsageFlags
+            // Convert BufferUsageFlags to VkBufferUsageFlags
             VkBufferUsageFlags usageFlags = 0;
 
-            if ((desc.Usage & BufferUsage.Vertex) != 0)
+            if ((desc.Usage & BufferUsageFlags.VertexBuffer) != 0)
             {
                 usageFlags |= VkBufferUsageFlags.VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
             }
-            if ((desc.Usage & BufferUsage.Index) != 0)
+            if ((desc.Usage & BufferUsageFlags.IndexBuffer) != 0)
             {
                 usageFlags |= VkBufferUsageFlags.VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
             }
-            if ((desc.Usage & BufferUsage.Constant) != 0)
+            if ((desc.Usage & BufferUsageFlags.ConstantBuffer) != 0)
             {
                 usageFlags |= VkBufferUsageFlags.VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
             }
-            if ((desc.Usage & BufferUsage.Shader) != 0)
+            if ((desc.Usage & BufferUsageFlags.ShaderResource) != 0)
             {
                 usageFlags |= VkBufferUsageFlags.VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
             }
-            if ((desc.Usage & BufferUsage.Indirect) != 0)
+            if ((desc.Usage & BufferUsageFlags.IndirectArgument) != 0)
             {
                 usageFlags |= VkBufferUsageFlags.VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
             }
 
             // Add transfer flags for staging if needed
-            if ((desc.Usage & (BufferUsage.Vertex | BufferUsage.Index | BufferUsage.Constant | BufferUsage.Shader)) != 0)
+            if ((desc.Usage & (BufferUsageFlags.VertexBuffer | BufferUsageFlags.IndexBuffer | BufferUsageFlags.ConstantBuffer | BufferUsageFlags.ShaderResource)) != 0)
             {
                 usageFlags |= VkBufferUsageFlags.VK_BUFFER_USAGE_TRANSFER_DST_BIT;
             }
@@ -1562,12 +1575,9 @@ namespace Andastra.Runtime.MonoGame.Backends
             vkGetBufferMemoryRequirements(_device, vkBuffer, out memoryRequirements);
 
             // Determine memory properties based on usage
+            // Note: Staging buffers would use host-visible memory, but BufferUsageFlags doesn't have a Staging flag
+            // For now, use device-local memory for all buffers
             VkMemoryPropertyFlags memoryProperties = VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-            if ((desc.Usage & BufferUsage.Staging) != 0)
-            {
-                memoryProperties = VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                                  VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-            }
 
             // Allocate memory
             IntPtr vkMemory = AllocateDeviceMemory(memoryRequirements, memoryProperties);
@@ -1613,7 +1623,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 addressModeU = vkAddressModeU,
                 addressModeV = vkAddressModeV,
                 addressModeW = vkAddressModeW,
-                mipLodBias = desc.MipLODBias,
+                mipLodBias = desc.MipLodBias,
                 anisotropyEnable = desc.MaxAnisotropy > 1.0f ? VkBool32.VK_TRUE : VkBool32.VK_FALSE,
                 maxAnisotropy = desc.MaxAnisotropy,
                 compareEnable = desc.CompareFunc != CompareFunc.Never ? VkBool32.VK_TRUE : VkBool32.VK_FALSE,
@@ -3095,7 +3105,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             var bufferDesc = new BufferDesc
             {
                 ByteSize = (int)bufferSize,
-                Usage = BufferUsage.Shader // Acceleration structures need shader access
+                Usage = BufferUsageFlags.ShaderResource // Acceleration structures need shader access
             };
 
             IBuffer accelBuffer = CreateBuffer(bufferDesc);
@@ -3451,7 +3461,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                 var sbtBufferDesc = new BufferDesc
                                 {
                                     ByteSize = (int)sbtSize,
-                                    Usage = BufferUsage.Shader
+                                    Usage = BufferUsageFlags.ShaderResource
                                 };
                                 IBuffer sbtBuffer = CreateBuffer(sbtBufferDesc);
 

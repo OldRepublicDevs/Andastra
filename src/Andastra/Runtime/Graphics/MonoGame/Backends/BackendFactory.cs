@@ -333,7 +333,8 @@ namespace Andastra.Runtime.MonoGame.Backends
             switch (backendType)
             {
                 case GraphicsBackend.Vulkan:
-                    return new VulkanBackend();
+                    // TODO: STUB - VulkanBackend class not yet implemented, use VulkanDevice via IDevice interface instead
+                    throw new NotSupportedException("VulkanBackend is not yet implemented. Use VulkanDevice via IDevice interface for Vulkan support.");
 
                 case GraphicsBackend.Direct3D12:
                     return new Direct3D12Backend();
@@ -345,7 +346,8 @@ namespace Andastra.Runtime.MonoGame.Backends
                     return new Direct3D10Backend();
 
                 case GraphicsBackend.Direct3D9Remix:
-                    return new Direct3D9Wrapper();
+                    // TODO: STUB - Direct3D9Wrapper class not yet implemented
+                    throw new NotSupportedException("Direct3D9Wrapper is not yet implemented.");
 
                 case GraphicsBackend.OpenGL:
                     return new OpenGLBackend();
