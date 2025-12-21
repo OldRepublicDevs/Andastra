@@ -4112,6 +4112,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 {
                     // Apply ambient light from lighting system
                     // Ambient light provides base illumination for all entities
+                    // Based on Eclipse engine: Ambient light comes from dynamic ambient color and sky light
                     Vector3 ambientColor = eclipseLighting.AmbientColor;
                     float ambientIntensity = eclipseLighting.AmbientIntensity;
                     basicEffect.AmbientLightColor = new Vector3(
@@ -4120,36 +4121,28 @@ namespace Andastra.Runtime.Games.Eclipse
                         ambientColor.Z * ambientIntensity
                     );
 
-                    // Get primary directional light (sun/moon) for enhanced diffuse lighting
-                    // Directional lights provide main illumination direction
-                    // Since IBasicEffect doesn't support directional lights directly, we enhance diffuse color
+                    // Note: IBasicEffect interface doesn't support directional lights directly
+                    // The primary directional light (sun/moon) and point lights would require:
+                    // - Custom shader with DirectionalLight0/1/2 support
+                    // - Point light array in shader (typically 3-4 lights)
+                    // - Shadow map textures for shadow casting lights
+                    // 
+                    // For now, ambient lighting is applied from the lighting system
+                    // Directional and point lights would need to be applied through a custom effect/shader
+                    // that supports multiple lights and shadow mapping
+                    //
+                    // Get primary directional light (for reference, not applied directly)
                     IDynamicLight primaryDirectional = eclipseLighting.PrimaryDirectionalLight;
-                    if (primaryDirectional != null && primaryDirectional.Enabled)
-                    {
-                        // Enhance diffuse color based on directional light
-                        // This approximates directional lighting by brightening the diffuse color
-                        Vector3 lightColor = primaryDirectional.Color;
-                        float lightIntensity = primaryDirectional.Intensity;
-                        
-                        // Multiply diffuse color by light color and intensity to approximate directional lighting
-                        // This is an approximation since IBasicEffect doesn't support directional lights directly
-                        Vector3 currentDiffuse = basicEffect.DiffuseColor;
-                        basicEffect.DiffuseColor = new Vector3(
-                            currentDiffuse.X * (1.0f + lightColor.X * lightIntensity * 0.5f),
-                            currentDiffuse.Y * (1.0f + lightColor.Y * lightIntensity * 0.5f),
-                            currentDiffuse.Z * (1.0f + lightColor.Z * lightIntensity * 0.5f)
-                        );
-                    }
-
-                    // Get point lights affecting this entity's position
+                    
+                    // Get point lights affecting this entity's position (for reference, not applied directly)
                     // Point lights (torches, fires, etc.) provide local illumination
-                    // Note: IBasicEffect doesn't support point lights directly, so this is for future enhancement
-                    // In a full implementation with custom shaders, we would apply up to 3-4 point lights
                     IDynamicLight[] affectingLights = eclipseLighting.GetLightsAffectingPoint(position, 10.0f);
                     
-                    // For now, we've applied ambient and directional lighting
-                    // Point lights would require a custom shader that supports multiple lights
-                    // Shadow maps would also require shadow mapping support in the rendering pipeline
+                    // In a full implementation with custom shaders:
+                    // - Primary directional light would be applied as DirectionalLight0
+                    // - Up to 3-4 closest point/spot lights would be applied as PointLight array
+                    // - Shadow maps from shadow-casting lights would be applied as shadow textures
+                    // - Global illumination probes would contribute to ambient lighting
                 }
             }
             else
