@@ -1317,7 +1317,7 @@ namespace HolocronToolset.Editors
         /// <summary>
         /// Loads snippets from QSettings into the list widget.
         /// </summary>
-        internal void LoadSnippets()
+        public void LoadSnippets()
         {
             if (_snippetList == null)
             {
@@ -1403,7 +1403,7 @@ namespace HolocronToolset.Editors
         /// <summary>
         /// Saves snippets to QSettings.
         /// </summary>
-        internal void SaveSnippets()
+        public void SaveSnippets()
         {
             if (_snippetList == null)
             {
@@ -2130,6 +2130,17 @@ namespace HolocronToolset.Editors
 
             contextMenu.Items.Add(new Separator());
 
+            // Code actions
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:1050-1054
+            // Original: action_toggle_comment: QAction | None = menu.addAction("Toggle Line Comment")
+            // Original: action_toggle_comment.setShortcut(QKeySequence("Ctrl+/"))
+            // Original: action_toggle_comment.triggered.connect(self.ui.codeEdit.toggle_comment)
+            var toggleCommentItem = new MenuItem { Header = "Toggle Line Comment", HotKey = new KeyGesture(Key.OemQuestion, KeyModifiers.Control) };
+            toggleCommentItem.Click += (s, e) => { if (_codeEdit != null) _codeEdit.ToggleComment(); };
+            contextMenu.Items.Add(toggleCommentItem);
+
+            contextMenu.Items.Add(new Separator());
+
             // Navigation section (if word under cursor exists)
             if (!string.IsNullOrEmpty(wordUnderCursor))
             {
@@ -2721,9 +2732,8 @@ namespace HolocronToolset.Editors
             }
             _commandPalette.RegisterCommand("edit.find", "Find", () => ShowFind(), "Edit");
             _commandPalette.RegisterCommand("edit.replace", "Replace", () => ShowReplace(), "Edit");
-            // Note: Code editor operations like toggle comment, duplicate line, etc. would need to be implemented in CodeEditor
-            // For now, we register them but they may not work until CodeEditor implements these methods
-            _commandPalette.RegisterCommand("edit.toggleComment", "Toggle Line Comment", () => { /* TODO: Implement in CodeEditor */ }, "Edit");
+            // Code editor operations
+            _commandPalette.RegisterCommand("edit.toggleComment", "Toggle Line Comment", () => { if (_codeEdit != null) _codeEdit.ToggleComment(); }, "Edit");
             _commandPalette.RegisterCommand("edit.duplicateLine", "Duplicate Line", () => { if (_codeEdit != null) _codeEdit.DuplicateLine(); }, "Edit");
             _commandPalette.RegisterCommand("edit.deleteLine", "Delete Line", () => { if (_codeEdit != null) _codeEdit.DeleteLine(); }, "Edit");
             _commandPalette.RegisterCommand("edit.moveLineUp", "Move Line Up", () => { if (_codeEdit != null) _codeEdit.MoveLineUp(); }, "Edit");
@@ -3902,10 +3912,10 @@ namespace HolocronToolset.Editors
             await resultBox.ShowAsync();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2865-2892
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2865-2943
         // Original: def _format_code(self):
         /// <summary>
-        /// Formats the code with proper indentation and spacing.
+        /// Formats the code with proper indentation and spacing (VS Code style).
         /// </summary>
         private async void FormatDocument()
         {
@@ -3914,7 +3924,7 @@ namespace HolocronToolset.Editors
                 return;
             }
 
-            string text = _codeEdit.Text;
+            string text = _codeEdit.ToPlainText();
             if (string.IsNullOrWhiteSpace(text))
             {
                 var infoBox = MessageBoxManager.GetMessageBoxStandard(
@@ -3926,14 +3936,113 @@ namespace HolocronToolset.Editors
                 return;
             }
 
-            // TODO: PLACEHOLDER - Implement full code formatting with proper indentation
-            // For now, show a message that formatting is not yet implemented
-            var messageBox = MessageBoxManager.GetMessageBoxStandard(
-                "Format Document",
-                "Code formatting is not yet implemented. This feature will format the code with proper indentation and spacing.",
-                ButtonEnum.Ok,
-                MsBox.Avalonia.Enums.Icon.Info);
-            await messageBox.ShowAsync();
+            // Confirm before formatting
+            var confirmBox = MessageBoxManager.GetMessageBoxStandard(
+                "Format Code",
+                "Format the entire document?",
+                ButtonEnum.Yes | ButtonEnum.No,
+                MsBox.Avalonia.Enums.Icon.Question,
+                ButtonEnum.Yes);
+            var result = await confirmBox.ShowAsync();
+            if (result != ButtonResult.Yes)
+            {
+                return;
+            }
+
+            // Split text into lines
+            string[] lines = text.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+            List<string> formattedLines = new List<string>();
+            int indentLevel = 0;
+            string indentStr = TAB_AS_SPACE ? new string(' ', TAB_SIZE) : "\t";
+
+            // Save cursor position
+            int oldCaretIndex = _codeEdit.CaretIndex;
+            _codeEdit.GetLineAndColumn(oldCaretIndex, out int oldLine, out int oldColumn);
+
+            // Process each line
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string line = lines[i];
+                string stripped = line.Trim();
+
+                // Handle comments - preserve them but adjust indentation
+                if (stripped.StartsWith("//"))
+                {
+                    if (!string.IsNullOrEmpty(stripped))
+                    {
+                        formattedLines.Add(indentStr + stripped);
+                    }
+                    else
+                    {
+                        formattedLines.Add("");
+                    }
+                    continue;
+                }
+
+                // Handle preprocessor directives - no indentation
+                if (stripped.StartsWith("#"))
+                {
+                    formattedLines.Add(stripped);
+                    continue;
+                }
+
+                // Handle empty lines - preserve them
+                if (string.IsNullOrEmpty(stripped))
+                {
+                    formattedLines.Add("");
+                    continue;
+                }
+
+                // Decrease indent for closing braces (before the line)
+                if (stripped.StartsWith("}"))
+                {
+                    indentLevel = Math.Max(0, indentLevel - 1);
+                }
+
+                // Add line with proper indentation
+                formattedLines.Add(new string(' ', indentLevel * (TAB_AS_SPACE ? TAB_SIZE : 1)).Replace(" ", indentStr) + stripped);
+
+                // Increase indent for opening braces (after the line)
+                // Count braces in the line
+                int openBraces = stripped.Count(c => c == '{');
+                int closeBraces = stripped.Count(c => c == '}');
+                indentLevel += openBraces - closeBraces;
+                indentLevel = Math.Max(0, indentLevel);
+            }
+
+            string formattedText = string.Join("\n", formattedLines);
+
+            // Apply formatting
+            _codeEdit.SetPlainText(formattedText);
+
+            // Restore cursor position
+            if (oldLine < formattedLines.Count)
+            {
+                // Calculate new character index from line and column
+                int newCharIndex = 0;
+                for (int i = 0; i < oldLine && i < formattedLines.Count; i++)
+                {
+                    newCharIndex += formattedLines[i].Length;
+                    if (i < formattedLines.Count - 1)
+                    {
+                        newCharIndex += 1; // newline character
+                    }
+                }
+                // Try to restore column position
+                string lineText = formattedLines[oldLine];
+                int newColumn = Math.Min(oldColumn, lineText.Length);
+                newCharIndex += newColumn;
+
+                // Set cursor position
+                if (newCharIndex <= _codeEdit.Text.Length)
+                {
+                    _codeEdit.CaretIndex = newCharIndex;
+                    _codeEdit.SelectionStart = newCharIndex;
+                    _codeEdit.SelectionEnd = newCharIndex;
+                }
+            }
+
+            LogToOutput("Code formatted successfully");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2349-2354
