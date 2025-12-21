@@ -885,6 +885,261 @@ namespace Andastra.Runtime.MonoGame.Backends
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void CreateSamplerDelegate(IntPtr device, IntPtr pDesc, IntPtr DestDescriptor);
 
+        /// <summary>
+        /// Calls ID3D12Device::CreateDescriptorHeap through COM vtable.
+        /// VTable index 27 for ID3D12Device.
+        /// Based on DirectX 12 Descriptor Heaps: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createdescriptorheap
+        /// </summary>
+        private unsafe int CallCreateDescriptorHeap(IntPtr device, IntPtr pDescriptorHeapDesc, ref Guid riid, IntPtr ppvHeap)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return unchecked((int)0x80004001); // E_NOTIMPL - Not implemented on this platform
+            }
+
+            if (device == IntPtr.Zero || pDescriptorHeapDesc == IntPtr.Zero || ppvHeap == IntPtr.Zero)
+            {
+                return unchecked((int)0x80070057); // E_INVALIDARG
+            }
+
+            // Get vtable pointer (first field of COM object)
+            IntPtr* vtable = *(IntPtr**)device;
+            // CreateDescriptorHeap is at index 27 in ID3D12Device vtable
+            IntPtr methodPtr = vtable[27];
+
+            // Create delegate from function pointer (C# 7.3 compatible)
+            CreateDescriptorHeapDelegate createDescriptorHeap =
+                (CreateDescriptorHeapDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CreateDescriptorHeapDelegate));
+
+            return createDescriptorHeap(device, pDescriptorHeapDesc, ref riid, ppvHeap);
+        }
+
+        /// <summary>
+        /// Calls ID3D12DescriptorHeap::GetCPUDescriptorHandleForHeapStart through COM vtable.
+        /// VTable index 9 for ID3D12DescriptorHeap.
+        /// Based on DirectX 12 Descriptor Heaps: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12descriptorheap-getcpudescriptorhandleforheapstart
+        /// </summary>
+        private unsafe IntPtr CallGetCPUDescriptorHandleForHeapStart(IntPtr descriptorHeap)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return IntPtr.Zero;
+            }
+
+            if (descriptorHeap == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)descriptorHeap;
+            // GetCPUDescriptorHandleForHeapStart is at index 9 in ID3D12DescriptorHeap vtable
+            IntPtr methodPtr = vtable[9];
+
+            // Create delegate from function pointer
+            GetCPUDescriptorHandleForHeapStartDelegate getCpuHandle =
+                (GetCPUDescriptorHandleForHeapStartDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(GetCPUDescriptorHandleForHeapStartDelegate));
+
+            return getCpuHandle(descriptorHeap);
+        }
+
+        /// <summary>
+        /// Calls ID3D12Device::GetDescriptorHandleIncrementSize through COM vtable.
+        /// VTable index 28 for ID3D12Device.
+        /// Based on DirectX 12 Descriptor Heaps: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-getdescriptorhandleincrementsize
+        /// </summary>
+        private unsafe uint CallGetDescriptorHandleIncrementSize(IntPtr device, uint DescriptorHeapType)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return 0;
+            }
+
+            if (device == IntPtr.Zero)
+            {
+                return 0;
+            }
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)device;
+            // GetDescriptorHandleIncrementSize is at index 28 in ID3D12Device vtable
+            IntPtr methodPtr = vtable[28];
+
+            // Create delegate from function pointer
+            GetDescriptorHandleIncrementSizeDelegate getIncrementSize =
+                (GetDescriptorHandleIncrementSizeDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(GetDescriptorHandleIncrementSizeDelegate));
+
+            return getIncrementSize(device, DescriptorHeapType);
+        }
+
+        /// <summary>
+        /// Calls ID3D12Device::CreateSampler through COM vtable.
+        /// VTable index 34 for ID3D12Device.
+        /// Based on DirectX 12 Samplers: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createsampler
+        /// </summary>
+        private unsafe void CallCreateSampler(IntPtr device, IntPtr pDesc, IntPtr DestDescriptor)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (device == IntPtr.Zero || pDesc == IntPtr.Zero || DestDescriptor == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)device;
+            // CreateSampler is at index 34 in ID3D12Device vtable
+            IntPtr methodPtr = vtable[34];
+
+            // Create delegate from function pointer
+            CreateSamplerDelegate createSampler =
+                (CreateSamplerDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CreateSamplerDelegate));
+
+            createSampler(device, pDesc, DestDescriptor);
+        }
+
+        /// <summary>
+        /// Offsets a descriptor handle by a given number of descriptors.
+        /// D3D12_CPU_DESCRIPTOR_HANDLE is a 64-bit value (ULONG_PTR).
+        /// </summary>
+        private IntPtr OffsetDescriptorHandle(IntPtr handle, int offset, uint incrementSize)
+        {
+            // Offset = handle.ptr + (offset * incrementSize)
+            ulong handleValue = (ulong)handle.ToInt64();
+            ulong offsetValue = (ulong)offset * incrementSize;
+            return new IntPtr((long)(handleValue + offsetValue));
+        }
+
+        /// <summary>
+        /// Ensures the sampler descriptor heap is created and initialized.
+        /// Creates a sampler descriptor heap with the default capacity if one doesn't exist.
+        /// </summary>
+        private void EnsureSamplerDescriptorHeap()
+        {
+            if (_samplerDescriptorHeap != IntPtr.Zero)
+            {
+                return; // Heap already exists
+            }
+
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (_device == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                // Create D3D12_DESCRIPTOR_HEAP_DESC structure for sampler heap
+                var heapDesc = new D3D12_DESCRIPTOR_HEAP_DESC
+                {
+                    Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
+                    NumDescriptors = (uint)DefaultSamplerHeapCapacity,
+                    Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
+                    NodeMask = 0
+                };
+
+                // Allocate memory for the descriptor heap descriptor structure
+                int heapDescSize = Marshal.SizeOf(typeof(D3D12_DESCRIPTOR_HEAP_DESC));
+                IntPtr heapDescPtr = Marshal.AllocHGlobal(heapDescSize);
+                try
+                {
+                    Marshal.StructureToPtr(heapDesc, heapDescPtr, false);
+
+                    // Allocate memory for the output descriptor heap pointer
+                    IntPtr heapPtr = Marshal.AllocHGlobal(IntPtr.Size);
+                    try
+                    {
+                        // Call ID3D12Device::CreateDescriptorHeap
+                        Guid iidDescriptorHeap = IID_ID3D12DescriptorHeap;
+                        int hr = CallCreateDescriptorHeap(_device, heapDescPtr, ref iidDescriptorHeap, heapPtr);
+                        if (hr < 0)
+                        {
+                            throw new InvalidOperationException($"CreateDescriptorHeap failed with HRESULT 0x{hr:X8}");
+                        }
+
+                        // Get the descriptor heap pointer
+                        IntPtr descriptorHeap = Marshal.ReadIntPtr(heapPtr);
+                        if (descriptorHeap == IntPtr.Zero)
+                        {
+                            throw new InvalidOperationException("Descriptor heap pointer is null");
+                        }
+
+                        // Get descriptor heap start handle (CPU handle for descriptor heap)
+                        IntPtr cpuHandle = CallGetCPUDescriptorHandleForHeapStart(descriptorHeap);
+                        if (cpuHandle == IntPtr.Zero)
+                        {
+                            throw new InvalidOperationException("Failed to get CPU descriptor handle for heap start");
+                        }
+
+                        // Get descriptor increment size
+                        uint descriptorIncrementSize = CallGetDescriptorHandleIncrementSize(_device, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+                        if (descriptorIncrementSize == 0)
+                        {
+                            throw new InvalidOperationException("Failed to get descriptor handle increment size");
+                        }
+
+                        // Store heap information
+                        _samplerDescriptorHeap = descriptorHeap;
+                        _samplerHeapCpuStartHandle = cpuHandle;
+                        _samplerHeapDescriptorIncrementSize = descriptorIncrementSize;
+                        _samplerHeapCapacity = DefaultSamplerHeapCapacity;
+                        _samplerHeapNextIndex = 0;
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(heapPtr);
+                    }
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(heapDescPtr);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to create sampler descriptor heap: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Allocates a descriptor handle from the sampler descriptor heap.
+        /// Returns IntPtr.Zero if allocation fails.
+        /// </summary>
+        private IntPtr AllocateSamplerDescriptor()
+        {
+            EnsureSamplerDescriptorHeap();
+
+            if (_samplerDescriptorHeap == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            if (_samplerHeapNextIndex >= _samplerHeapCapacity)
+            {
+                // Heap is full - in a production implementation, we might want to create a larger heap or handle this differently
+                throw new InvalidOperationException($"Sampler descriptor heap is full (capacity: {_samplerHeapCapacity})");
+            }
+
+            // Calculate CPU descriptor handle for this index
+            IntPtr cpuDescriptorHandle = OffsetDescriptorHandle(_samplerHeapCpuStartHandle, _samplerHeapNextIndex, _samplerHeapDescriptorIncrementSize);
+            int allocatedIndex = _samplerHeapNextIndex;
+            _samplerHeapNextIndex++;
+
+            return cpuDescriptorHandle;
+        }
+
         #endregion
 
         #region Resource Interface

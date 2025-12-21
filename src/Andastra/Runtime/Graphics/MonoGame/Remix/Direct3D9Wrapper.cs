@@ -655,12 +655,7 @@ namespace Andastra.Runtime.MonoGame.Remix
             // D3D9 samplers are set via IDirect3DDevice9::SetSamplerState
             // No separate sampler objects in D3D9 - state is set directly on device
             // Return a stub sampler that stores the state for later use
-            
-            // TODO: IMPLEMENT - Create RemixSampler that stores sampler state
-            // - Convert SamplerDesc to D3D9 sampler state values
-            // - Wrap in RemixSampler and return
-            
-            throw new NotImplementedException("D3D9 sampler creation not yet implemented");
+            return new RemixSampler(desc);
         }
 
         public IShader CreateShader(ShaderDesc desc)
@@ -692,12 +687,8 @@ namespace Andastra.Runtime.MonoGame.Remix
             // D3D9 doesn't have PSOs - state is set directly on device
             // Remix captures state changes for path tracing
             // Return a stub pipeline that stores state for later application
-            
-            // TODO: IMPLEMENT - Create RemixGraphicsPipeline that stores pipeline state
-            // - Store shaders, blend state, raster state, depth/stencil state
-            // - Apply state via IDirect3DDevice9::Set* methods when pipeline is bound
-            
-            throw new NotImplementedException("D3D9 graphics pipeline creation not yet implemented");
+            // TODO: IMPLEMENT - Apply pipeline state via IDirect3DDevice9::Set* methods when pipeline is bound
+            return new RemixGraphicsPipeline(desc);
         }
 
         public IComputePipeline CreateComputePipeline(ComputePipelineDesc desc)
@@ -721,12 +712,8 @@ namespace Andastra.Runtime.MonoGame.Remix
             // D3D9 render targets are set via IDirect3DDevice9::SetRenderTarget
             // No separate framebuffer objects - state is set directly on device
             // Return a stub framebuffer that stores render target configuration
-            
-            // TODO: IMPLEMENT - Create RemixFramebuffer that stores render target configuration
-            // - Store color attachments and depth attachment
-            // - Apply via IDirect3DDevice9::SetRenderTarget when framebuffer is bound
-            
-            throw new NotImplementedException("D3D9 framebuffer creation not yet implemented");
+            // TODO: IMPLEMENT - Apply via IDirect3DDevice9::SetRenderTarget when framebuffer is bound
+            return new RemixFramebuffer(desc);
         }
 
         public IBindingLayout CreateBindingLayout(BindingLayoutDesc desc)
@@ -738,11 +725,7 @@ namespace Andastra.Runtime.MonoGame.Remix
 
             // D3D9 doesn't have binding layouts - resources are bound directly
             // Return a stub layout for compatibility
-            
-            // TODO: IMPLEMENT - Create RemixBindingLayout that stores binding slots
-            // - Store binding information for later use in binding sets
-            
-            throw new NotImplementedException("D3D9 binding layout creation not yet implemented");
+            return new RemixBindingLayout(desc);
         }
 
         public IBindingSet CreateBindingSet(IBindingLayout layout, BindingSetDesc desc)
@@ -754,11 +737,8 @@ namespace Andastra.Runtime.MonoGame.Remix
 
             // D3D9 doesn't have binding sets - resources are bound directly
             // Return a stub binding set for compatibility
-            
-            // TODO: IMPLEMENT - Create RemixBindingSet that stores resource bindings
-            // - Store textures, buffers, samplers for later binding
-            
-            throw new NotImplementedException("D3D9 binding set creation not yet implemented");
+            // TODO: IMPLEMENT - Store textures, buffers, samplers for later binding via IDirect3DDevice9::SetTexture/SetStreamSource
+            return new RemixBindingSet(layout);
         }
 
         public ICommandList CreateCommandList(CommandListType type = CommandListType.Graphics)
@@ -771,12 +751,8 @@ namespace Andastra.Runtime.MonoGame.Remix
             // D3D9 doesn't have command lists - commands execute immediately
             // Return a stub command list that records commands for later execution
             // In practice, Remix intercepts D3D9 calls directly
-            
-            // TODO: IMPLEMENT - Create RemixCommandList that records D3D9 commands
-            // - Record commands for deferred execution
-            // - Execute via IDirect3DDevice9 methods when command list is executed
-            
-            throw new NotImplementedException("D3D9 command list creation not yet implemented");
+            // TODO: IMPLEMENT - Record commands for deferred execution via IDirect3DDevice9 methods
+            return new RemixCommandList();
         }
 
         public ITexture CreateHandleForNativeTexture(IntPtr nativeHandle, TextureDesc desc)
