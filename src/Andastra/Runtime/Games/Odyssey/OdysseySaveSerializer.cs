@@ -2298,12 +2298,79 @@ namespace Andastra.Runtime.Games.Odyssey
 
             // Extract encounters (if area supports them)
             // Based on swkotor2.exe: Encounter entities are stored in area's encounter collection
-            var odysseyArea = area as OdysseyArea;
-            if (odysseyArea != null)
+            // Encounter entities have EncounterComponent and are in the world but not directly exposed via IArea interface
+            // We find them by iterating through all entities in the world and filtering by AreaId and EncounterComponent
+            IWorld world = null;
+            
+            // Get world reference from any entity in the area (creatures, doors, placeables, etc.)
+            // This allows us to access GetAllEntities() to find encounter entities
+            foreach (IEntity entity in area.Creatures)
             {
-                // OdysseyArea doesn't expose Encounters directly, but we can check for encounter entities
-                // TODO: STUB - For now, we'll skip encounters as they're not directly accessible via IArea interface
-                // TODO: STUB - Full implementation would require access to OdysseyArea's internal encounter collection
+                if (entity != null && entity.World != null)
+                {
+                    world = entity.World;
+                    break;
+                }
+            }
+            
+            if (world == null)
+            {
+                foreach (IEntity entity in area.Doors)
+                {
+                    if (entity != null && entity.World != null)
+                    {
+                        world = entity.World;
+                        break;
+                    }
+                }
+            }
+            
+            if (world == null)
+            {
+                foreach (IEntity entity in area.Placeables)
+                {
+                    if (entity != null && entity.World != null)
+                    {
+                        world = entity.World;
+                        break;
+                    }
+                }
+            }
+            
+            // Get area ID for filtering entities
+            uint areaId = 0;
+            if (world != null)
+            {
+                areaId = world.GetAreaId(area);
+            }
+            
+            // Extract encounter entities from world by filtering for entities with EncounterComponent in this area
+            // Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 extracts encounter entity states from area
+            // Original implementation: Encounters are stored in area's encounter collection and extracted during save
+            if (world != null && areaId != 0)
+            {
+                foreach (IEntity entity in world.GetAllEntities())
+                {
+                    if (entity == null || !entity.IsValid)
+                    {
+                        continue;
+                    }
+                    
+                    // Filter entities that belong to this area and have EncounterComponent
+                    if (entity.AreaId == areaId)
+                    {
+                        EncounterComponent encounterComp = entity.GetComponent<EncounterComponent>();
+                        if (encounterComp != null)
+                        {
+                            // Extract entity state for this encounter
+                            EntityState entityState = ExtractEntityState(entity);
+                            if (entityState != null)
+                            {
+                                areaState.EncounterStates.Add(entityState);
+                            }
+                        }
+                    }
+                }
             }
 
             // Extract cameras (KOTOR-specific, if area supports them)
