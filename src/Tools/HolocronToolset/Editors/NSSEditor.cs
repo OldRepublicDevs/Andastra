@@ -9,7 +9,9 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
+using Avalonia.Platform.Storage;
 using Andastra.Parsing.Resource;
+using Andastra.Parsing.Tools;
 using Andastra.Parsing.Common.Script;
 using HolocronToolset.Common;
 using HolocronToolset.Common.Widgets;
@@ -1224,6 +1226,189 @@ namespace HolocronToolset.Editors
                     notFoundMessageBox.ShowAsync();
                 }
             }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor/file.py:30-41
+        // Original: def open(self): Opens a file dialog to select a file to open
+        /// <summary>
+        /// Opens a file dialog to select a file to open in the editor.
+        /// Handles both regular files and capsule files (MOD/RIM/ERF/SAV).
+        /// </summary>
+        private async void OpenFile()
+        {
+            // Get the top-level window for the file picker
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel == null)
+            {
+                return;
+            }
+
+            // Build file filters based on supported types
+            // Matching PyKotor: builds filter from _readSupported types
+            var fileFilters = new List<FilePickerFileType>();
+            
+            // Add filter for all supported file types
+            var allExtensions = new List<string>();
+            foreach (var restype in _readSupported)
+            {
+                if (restype != null && !string.IsNullOrEmpty(restype.Extension))
+                {
+                    allExtensions.Add($"*.{restype.Extension}");
+                }
+            }
+            // Add capsule file extensions
+            allExtensions.Add("*.mod");
+            allExtensions.Add("*.erf");
+            allExtensions.Add("*.rim");
+            allExtensions.Add("*.sav");
+
+            if (allExtensions.Count > 0)
+            {
+                fileFilters.Add(new FilePickerFileType("All valid files")
+                {
+                    Patterns = allExtensions
+                });
+            }
+
+            // Add individual filters for each supported type
+            foreach (var restype in _readSupported)
+            {
+                if (restype != null && !string.IsNullOrEmpty(restype.Extension) && !string.IsNullOrEmpty(restype.Category))
+                {
+                    fileFilters.Add(new FilePickerFileType($"{restype.Category} File (*.{restype.Extension})")
+                    {
+                        Patterns = new[] { $"*.{restype.Extension}" }
+                    });
+                }
+            }
+
+            // Add capsule file filter
+            fileFilters.Add(new FilePickerFileType($"Load from module ({CapsuleFilter})")
+            {
+                Patterns = new[] { "*.mod", "*.erf", "*.rim", "*.sav" }
+            });
+
+            // Show file picker dialog
+            var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                Title = "Open file",
+                AllowMultiple = false,
+                FileTypeFilter = fileFilters
+            });
+
+            if (files == null || files.Count == 0)
+            {
+                // User cancelled
+                return;
+            }
+
+            var selectedFile = files[0];
+            string filePath = selectedFile.Path.LocalPath;
+
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+            {
+                var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Error",
+                    "Selected file does not exist.",
+                    ButtonEnum.Ok,
+                    Icon.Error);
+                errorBox.ShowAsync();
+                return;
+            }
+
+            // Check if it's a capsule file (MOD/RIM/ERF/SAV)
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor/file.py:36-38
+            // Original: if is_capsule_file(r_filepath) and f"Load from module ({self.editor.CAPSULE_FILTER})" in self.editor._open_filter:
+            if (Andastra.Parsing.Tools.MiscUtils.IsCapsuleFile(filePath))
+            {
+                // For capsule files, we would normally show LoadFromModuleDialog
+                // Since that dialog doesn't exist in C# yet, show a helpful message
+                // TODO: Implement LoadFromModuleDialog for capsule file support
+                var infoBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Capsule File",
+                    "Opening files from capsule archives (MOD/RIM/ERF/SAV) is not yet fully supported.\n\n" +
+                    "Please use the module browser or extract the file first.",
+                    ButtonEnum.Ok,
+                    Icon.Info);
+                infoBox.ShowAsync();
+                return;
+            }
+
+            // Read file data
+            byte[] data;
+            try
+            {
+                data = File.ReadAllBytes(filePath);
+            }
+            catch (Exception ex)
+            {
+                var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Error",
+                    $"Failed to read file:\n{ex.Message}",
+                    ButtonEnum.Ok,
+                    Icon.Error);
+                errorBox.ShowAsync();
+                return;
+            }
+
+            // Determine resource type from file extension
+            // Matching PyKotor implementation: ResourceIdentifier.from_path(r_filepath).validate()
+            string extension = Path.GetExtension(filePath);
+            if (string.IsNullOrEmpty(extension))
+            {
+                var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Error",
+                    "File has no extension. Cannot determine resource type.",
+                    ButtonEnum.Ok,
+                    Icon.Error);
+                errorBox.ShowAsync();
+                return;
+            }
+
+            // Remove leading dot from extension
+            extension = extension.TrimStart('.').ToLowerInvariant();
+            ResourceType restype = ResourceType.FromExtension(extension);
+            
+            if (restype == null || restype.IsInvalid)
+            {
+                var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Error",
+                    $"Unknown or unsupported file extension: .{extension}",
+                    ButtonEnum.Ok,
+                    Icon.Error);
+                errorBox.ShowAsync();
+                return;
+            }
+
+            // Check if this resource type is supported by this editor
+            bool isSupported = false;
+            foreach (var supportedType in _readSupported)
+            {
+                if (supportedType != null && supportedType.Equals(restype))
+                {
+                    isSupported = true;
+                    break;
+                }
+            }
+
+            if (!isSupported)
+            {
+                var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Error",
+                    $"Resource type '{restype.Extension}' is not supported by this editor.",
+                    ButtonEnum.Ok,
+                    Icon.Error);
+                errorBox.ShowAsync();
+                return;
+            }
+
+            // Extract resname from file path (filename without extension)
+            // Matching PyKotor: ResourceIdentifier.from_path gets resname
+            string fileName = Path.GetFileNameWithoutExtension(filePath);
+
+            // Load the file into the current editor
+            // Matching PyKotor implementation: self.load(r_filepath, res_ident.resname, res_ident.restype, data)
+            Load(filePath, fileName, restype, data);
         }
 
         /// <summary>
@@ -3033,9 +3218,9 @@ namespace HolocronToolset.Editors
 
             // File operations
             _commandPalette.RegisterCommand("file.new", "New File", () => New(), "File");
-            // Note: Open is handled by the application, not individual editors
-            // But we register it for completeness (would need to be implemented at application level)
-            _commandPalette.RegisterCommand("file.open", "Open File...", () => { /* TODO: Implement at application level */ }, "File");
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor/file.py:30-41
+            // Original: def open(self): Opens a file dialog to select a file to open
+            _commandPalette.RegisterCommand("file.open", "Open File...", () => OpenFile(), "File");
             _commandPalette.RegisterCommand("file.save", "Save", () => Save(), "File");
             _commandPalette.RegisterCommand("file.save_as", "Save As...", () => SaveAs(), "File");
             // Note: Save All, Close, Close All are typically handled by the application, not individual editors
