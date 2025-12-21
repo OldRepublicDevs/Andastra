@@ -3953,11 +3953,33 @@ namespace HolocronToolset.Editors
             string[] lines = text.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
             List<string> formattedLines = new List<string>();
             int indentLevel = 0;
-            string indentStr = TAB_AS_SPACE ? new string(' ', TAB_SIZE) : "\t";
 
-            // Save cursor position
+            // Save cursor position - calculate line and column from caret index
             int oldCaretIndex = _codeEdit.CaretIndex;
-            _codeEdit.GetLineAndColumn(oldCaretIndex, out int oldLine, out int oldColumn);
+            int oldLine = 0;
+            int oldColumn = 0;
+            if (oldCaretIndex > 0 && !string.IsNullOrEmpty(text))
+            {
+                int currentPos = 0;
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    int lineLength = lines[i].Length;
+                    int newlineLength = (i < lines.Length - 1) ? (text.Contains("\r\n") ? 2 : 1) : 0;
+                    
+                    if (oldCaretIndex >= currentPos && oldCaretIndex <= currentPos + lineLength)
+                    {
+                        oldLine = i;
+                        oldColumn = oldCaretIndex - currentPos;
+                        break;
+                    }
+                    currentPos += lineLength + newlineLength;
+                }
+                if (oldCaretIndex >= currentPos)
+                {
+                    oldLine = lines.Length - 1;
+                    oldColumn = lines[oldLine].Length;
+                }
+            }
 
             // Process each line
             for (int i = 0; i < lines.Length; i++)
@@ -3970,7 +3992,8 @@ namespace HolocronToolset.Editors
                 {
                     if (!string.IsNullOrEmpty(stripped))
                     {
-                        formattedLines.Add(indentStr + stripped);
+                        string indent = TAB_AS_SPACE ? new string(' ', indentLevel * TAB_SIZE) : new string('\t', indentLevel);
+                        formattedLines.Add(indent + stripped);
                     }
                     else
                     {
@@ -4000,7 +4023,8 @@ namespace HolocronToolset.Editors
                 }
 
                 // Add line with proper indentation
-                formattedLines.Add(new string(' ', indentLevel * (TAB_AS_SPACE ? TAB_SIZE : 1)).Replace(" ", indentStr) + stripped);
+                string indent = TAB_AS_SPACE ? new string(' ', indentLevel * TAB_SIZE) : new string('\t', indentLevel);
+                formattedLines.Add(indent + stripped);
 
                 // Increase indent for opening braces (after the line)
                 // Count braces in the line
