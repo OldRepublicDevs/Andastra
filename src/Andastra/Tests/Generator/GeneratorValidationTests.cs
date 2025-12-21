@@ -179,18 +179,30 @@ namespace Andastra.Parsing.Tests.Generator
         [Fact]
         public void ValidateTslpatchdataArguments_ShouldNormalizeTslpatchdataPath()
         {
-            // Arrange
+            // Arrange - Create a valid KOTOR installation to satisfy validation requirement
+            var installationPath = Path.Combine(_tempDir, "kotor_install");
+            Directory.CreateDirectory(installationPath);
+            // Create swkotor.exe to make it a valid KOTOR installation
+            File.WriteAllText(Path.Combine(installationPath, "swkotor.exe"), "");
+            
+            // Create a base path that is NOT named "tslpatchdata" - this should be normalized
             var basePath = Path.Combine(_tempDir, "base");
             Directory.CreateDirectory(basePath);
-            var tslpatchdata = basePath; // Not named "tslpatchdata"
-            // Note: Validation requires at least one path to be a valid KOTOR Installation
-            // This test would need a mock Installation or should test a different scenario
-            var paths = new List<object> { tslpatchdata };
+            var tslpatchdata = basePath; // Not named "tslpatchdata", should be normalized to basePath/tslpatchdata
+            
+            // Include both the installation path and the tslpatchdata path in the paths list
+            // The installation path satisfies the validation requirement
+            var paths = new List<object> { installationPath, tslpatchdata };
 
-            // Act & Assert
-            Action act = () => GeneratorValidation.ValidateTslpatchdataArguments("test.ini", tslpatchdata, paths);
-            act.Should().Throw<ArgumentException>()
-                .WithMessage("*requires at least one provided path to be a valid KOTOR Installation*");
+            // Act
+            var result = GeneratorValidation.ValidateTslpatchdataArguments("test.ini", tslpatchdata, paths);
+
+            // Assert - The tslpatchdata path should be normalized to include "tslpatchdata" directory
+            result.validatedIni.Should().Be("test.ini");
+            result.tslpatchdataPath.Should().NotBeNull();
+            // The normalized path should be basePath/tslpatchdata
+            result.tslpatchdataPath.FullName.Should().Be(Path.GetFullPath(Path.Combine(basePath, "tslpatchdata")));
+            result.tslpatchdataPath.Name.Should().Be("tslpatchdata");
         }
 
         [Fact]
