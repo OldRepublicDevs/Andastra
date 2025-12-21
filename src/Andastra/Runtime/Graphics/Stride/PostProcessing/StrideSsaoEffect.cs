@@ -64,7 +64,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
             // Try to load SSAO effect shaders
             // TODO: In a full implementation, this would load compiled .sdsl shader files
-            // For now, we'll use SpriteBatch's built-in rendering which works without custom shaders
+            // TODO:  For now, we'll use SpriteBatch's built-in rendering which works without custom shaders
             try
             {
                 // Attempt to load effects - would need actual shader files
@@ -249,21 +249,37 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 }
 
                 // Set projection matrix parameters for depth reconstruction
-                // These would typically come from the camera/render context
-                // Note: In a full implementation, projection matrix would be passed via context
-                // or set as a property on the effect. For now, shader can use default values.
+                // Extract projection matrix from camera via RenderContext
+                // SSAO shader needs projection matrix to reconstruct view-space positions from depth
+                // Based on GTAO/SSAO implementation: Projection matrix is essential for accurate depth reconstruction
+                Matrix projectionMatrix = Matrix.Identity;
+                Matrix projectionMatrixInv = Matrix.Identity;
+                
+                // Get projection matrix from RenderContext's RenderView (camera projection)
+                // Stride RenderContext provides camera matrices through RenderView property
+                if (context != null && context.RenderView != null)
+                {
+                    // RenderView.Projection contains the camera's projection matrix
+                    projectionMatrix = context.RenderView.Projection;
+                    
+                    // Calculate inverse projection matrix for depth reconstruction
+                    // Inverse projection is used to convert from clip space back to view space
+                    // This is needed by SSAO shader to reconstruct view-space positions from depth buffer
+                    projectionMatrixInv = Matrix.Invert(projectionMatrix);
+                }
+                
                 var projMatrixParam = _gtaoEffect.Parameters.Get("ProjectionMatrix");
                 if (projMatrixParam != null)
                 {
-                    // Default identity matrix - would be set from camera in full implementation
-                    projMatrixParam.SetValue(Matrix.Identity);
+                    // Set projection matrix from camera (used for depth reconstruction in SSAO shader)
+                    projMatrixParam.SetValue(projectionMatrix);
                 }
 
                 var projMatrixInvParam = _gtaoEffect.Parameters.Get("ProjectionMatrixInv");
                 if (projMatrixInvParam != null)
                 {
-                    // Default identity matrix inverse
-                    projMatrixInvParam.SetValue(Matrix.Identity);
+                    // Set inverse projection matrix (used for converting clip space to view space)
+                    projMatrixInvParam.SetValue(projectionMatrixInv);
                 }
             }
 
