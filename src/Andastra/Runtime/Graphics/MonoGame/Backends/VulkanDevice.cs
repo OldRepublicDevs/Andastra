@@ -528,6 +528,9 @@ namespace Andastra.Runtime.MonoGame.Backends
             VK_STRUCTURE_TYPE_MEMORY_BARRIER = 46,
             VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO = 47,
             VK_STRUCTURE_TYPE_LOADER_DEVICE_CREATE_INFO = 48,
+            VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR = 1000165000,
+            VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR = 1000165001,
+            VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO_EXTENSION = 1000165002
         }
 
         // Additional Vulkan enums
@@ -559,7 +562,19 @@ namespace Andastra.Runtime.MonoGame.Backends
             VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT = 0x00000002
         }
         private enum VkDescriptorType { VK_DESCRIPTOR_TYPE_SAMPLER = 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER = 1, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE = 2, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE = 3, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER = 6, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER = 7, VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR = 1000150000 }
-        private enum VkShaderStageFlags { VK_SHADER_STAGE_VERTEX_BIT = 0x00000001, VK_SHADER_STAGE_FRAGMENT_BIT = 0x00000010, VK_SHADER_STAGE_COMPUTE_BIT = 0x00000020, VK_SHADER_STAGE_RAYGEN_BIT_KHR = 0x00000100, VK_SHADER_STAGE_MISS_BIT_KHR = 0x00000200, VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR = 0x00000400 }
+        [Flags]
+        private enum VkShaderStageFlags
+        {
+            VK_SHADER_STAGE_VERTEX_BIT = 0x00000001,
+            VK_SHADER_STAGE_FRAGMENT_BIT = 0x00000010,
+            VK_SHADER_STAGE_COMPUTE_BIT = 0x00000020,
+            VK_SHADER_STAGE_RAYGEN_BIT_KHR = 0x00000100,
+            VK_SHADER_STAGE_MISS_BIT_KHR = 0x00000200,
+            VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR = 0x00000400,
+            VK_SHADER_STAGE_ANY_HIT_BIT_KHR = 0x00000800,
+            VK_SHADER_STAGE_INTERSECTION_BIT_KHR = 0x00001000,
+            VK_SHADER_STAGE_CALLABLE_BIT_KHR = 0x00002000
+        }
         private enum VkPipelineLayoutCreateFlags { }
         private enum VkCommandBufferLevel { VK_COMMAND_BUFFER_LEVEL_PRIMARY = 0 }
         private enum VkPipelineBindPoint { VK_PIPELINE_BIND_POINT_GRAPHICS = 0, VK_PIPELINE_BIND_POINT_COMPUTE = 1, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR = 1000165000 }
@@ -2782,7 +2797,190 @@ namespace Andastra.Runtime.MonoGame.Backends
             public void WriteBuffer<T>(IBuffer buffer, T[] data, int destOffset = 0) where T : unmanaged { /* TODO: vkCmdUpdateBuffer or staging buffer */ }
             public void WriteTexture(ITexture texture, int mipLevel, int arraySlice, byte[] data) { /* TODO: vkCmdCopyBufferToImage */ }
             public void CopyBuffer(IBuffer dest, int destOffset, IBuffer src, int srcOffset, int size) { /* TODO: vkCmdCopyBuffer */ }
-            public void CopyTexture(ITexture dest, ITexture src) { /* TODO: vkCmdCopyImage */ }
+            public void CopyTexture(ITexture dest, ITexture src)
+            {
+                if (dest == null || src == null)
+                {
+                    throw new ArgumentNullException(dest == null ? nameof(dest) : nameof(src));
+                }
+
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Cannot record commands when command list is closed");
+                }
+
+                if (vkCmdCopyImage == null)
+                {
+                    throw new NotSupportedException("vkCmdCopyImage is not available");
+                }
+
+                // Get Vulkan image handles
+                // NativeHandle should contain the VkImage handle for VulkanTexture instances
+                IntPtr srcImage = src.NativeHandle;
+                IntPtr dstImage = dest.NativeHandle;
+
+                if (srcImage == IntPtr.Zero || dstImage == IntPtr.Zero)
+                {
+                    throw new ArgumentException("Source or destination texture has invalid native handle");
+                }
+
+                // Validate texture dimensions match (for full copy)
+                if (src.Desc.Width != dest.Desc.Width || src.Desc.Height != dest.Desc.Height)
+                {
+                    throw new ArgumentException("Source and destination textures must have matching dimensions for copy operation");
+                }
+
+                // Transition source image to TRANSFER_SRC_OPTIMAL layout
+                TransitionImageLayout(srcImage, VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED, VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, src.Desc);
+
+                // Transition destination image to TRANSFER_DST_OPTIMAL layout
+                TransitionImageLayout(dstImage, VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED, VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, dest.Desc);
+
+                // Determine image aspect based on format
+                VkImageAspectFlags aspectMask = GetImageAspectFlags(src.Desc.Format);
+
+                // Create image copy region
+                VkImageCopy copyRegion = new VkImageCopy
+                {
+                    srcSubresource = new VkImageSubresourceLayers
+                    {
+                        aspectMask = aspectMask,
+                        mipLevel = 0,
+                        baseArrayLayer = 0,
+                        layerCount = (uint)Math.Max(1, src.Desc.ArraySize)
+                    },
+                    srcOffset = new VkOffset3D { x = 0, y = 0, z = 0 },
+                    dstSubresource = new VkImageSubresourceLayers
+                    {
+                        aspectMask = aspectMask,
+                        mipLevel = 0,
+                        baseArrayLayer = 0,
+                        layerCount = (uint)Math.Max(1, dest.Desc.ArraySize)
+                    },
+                    dstOffset = new VkOffset3D { x = 0, y = 0, z = 0 },
+                    extent = new VkExtent3D
+                    {
+                        width = (uint)src.Desc.Width,
+                        height = (uint)src.Desc.Height,
+                        depth = (uint)Math.Max(1, src.Desc.Depth)
+                    }
+                };
+
+                // Allocate memory for copy region and marshal structure
+                int regionSize = Marshal.SizeOf<VkImageCopy>();
+                IntPtr regionPtr = Marshal.AllocHGlobal(regionSize);
+                try
+                {
+                    Marshal.StructureToPtr(copyRegion, regionPtr, false);
+
+                    // Execute copy command
+                    vkCmdCopyImage(
+                        _vkCommandBuffer,
+                        srcImage,
+                        VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                        dstImage,
+                        VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                        1,
+                        regionPtr);
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(regionPtr);
+                }
+            }
+
+            // Helper method to transition image layout using pipeline barrier
+            private void TransitionImageLayout(IntPtr image, VkImageLayout oldLayout, VkImageLayout newLayout, TextureDesc desc)
+            {
+                if (vkCmdPipelineBarrier == null)
+                {
+                    return; // Cannot transition without pipeline barrier
+                }
+
+                VkImageAspectFlags aspectMask = GetImageAspectFlags(desc.Format);
+
+                VkImageSubresourceRange subresourceRange = new VkImageSubresourceRange
+                {
+                    aspectMask = aspectMask,
+                    baseMipLevel = 0,
+                    levelCount = (uint)Math.Max(1, desc.MipLevels),
+                    baseArrayLayer = 0,
+                    layerCount = (uint)Math.Max(1, desc.ArraySize)
+                };
+
+                VkImageMemoryBarrier barrier = new VkImageMemoryBarrier
+                {
+                    sType = VkStructureType.VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+                    pNext = IntPtr.Zero,
+                    srcAccessMask = GetAccessFlagsForLayout(oldLayout),
+                    dstAccessMask = GetAccessFlagsForLayout(newLayout),
+                    oldLayout = oldLayout,
+                    newLayout = newLayout,
+                    srcQueueFamilyIndex = 0xFFFFFFFF, // VK_QUEUE_FAMILY_IGNORED
+                    dstQueueFamilyIndex = 0xFFFFFFFF, // VK_QUEUE_FAMILY_IGNORED
+                    image = image,
+                    subresourceRange = subresourceRange
+                };
+
+                int barrierSize = Marshal.SizeOf<VkImageMemoryBarrier>();
+                IntPtr barrierPtr = Marshal.AllocHGlobal(barrierSize);
+                try
+                {
+                    Marshal.StructureToPtr(barrier, barrierPtr, false);
+
+                    vkCmdPipelineBarrier(
+                        _vkCommandBuffer,
+                        VkPipelineStageFlags.VK_PIPELINE_STAGE_TRANSFER_BIT,
+                        VkPipelineStageFlags.VK_PIPELINE_STAGE_TRANSFER_BIT,
+                        0,
+                        0,
+                        IntPtr.Zero,
+                        0,
+                        IntPtr.Zero,
+                        1,
+                        barrierPtr);
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(barrierPtr);
+                }
+            }
+
+            // Helper to determine image aspect flags from texture format
+            private VkImageAspectFlags GetImageAspectFlags(TextureFormat format)
+            {
+                // Determine if format is depth/stencil or color
+                // This is a simplified version - full implementation would check all format types
+                switch (format)
+                {
+                    case TextureFormat.D24_UNORM_S8_UINT:
+                    case TextureFormat.D32_FLOAT:
+                    case TextureFormat.D32_FLOAT_S8X24_UINT:
+                        return VkImageAspectFlags.VK_IMAGE_ASPECT_DEPTH_BIT | VkImageAspectFlags.VK_IMAGE_ASPECT_STENCIL_BIT;
+                    default:
+                        return VkImageAspectFlags.VK_IMAGE_ASPECT_COLOR_BIT;
+                }
+            }
+
+            // Helper to get access flags for image layout
+            private VkAccessFlags GetAccessFlagsForLayout(VkImageLayout layout)
+            {
+                switch (layout)
+                {
+                    case VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
+                        return VkAccessFlags.VK_ACCESS_TRANSFER_READ_BIT;
+                    case VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+                        return VkAccessFlags.VK_ACCESS_TRANSFER_WRITE_BIT;
+                    case VkImageLayout.VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+                        return VkAccessFlags.VK_ACCESS_SHADER_READ_BIT;
+                    case VkImageLayout.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
+                        return VkAccessFlags.VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+                    case VkImageLayout.VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
+                        return VkAccessFlags.VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+                    default:
+                        return 0;
+                }
+            }
             public void ClearColorAttachment(IFramebuffer framebuffer, int attachmentIndex, Vector4 color) { /* TODO: vkCmdClearColorImage */ }
             public void ClearDepthStencilAttachment(IFramebuffer framebuffer, float depth, byte stencil, bool clearDepth = true, bool clearStencil = true) { /* TODO: vkCmdClearDepthStencilImage */ }
             public void ClearUAVFloat(ITexture texture, Vector4 value) { /* TODO: vkCmdFillBuffer or compute shader */ }

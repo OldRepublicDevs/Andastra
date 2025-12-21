@@ -4,6 +4,12 @@ using System.Runtime.InteropServices;
 using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
 using Andastra.Runtime.MonoGame.Rendering;
+using BlendFactor = Andastra.Runtime.MonoGame.Interfaces.BlendFactor;
+using BlendOp = Andastra.Runtime.MonoGame.Interfaces.BlendOp;
+using CullMode = Andastra.Runtime.MonoGame.Interfaces.CullMode;
+using FillMode = Andastra.Runtime.MonoGame.Interfaces.FillMode;
+using CompareFunc = Andastra.Runtime.MonoGame.Interfaces.CompareFunc;
+using StencilOp = Andastra.Runtime.MonoGame.Interfaces.StencilOp;
 
 namespace Andastra.Runtime.MonoGame.Remix
 {
