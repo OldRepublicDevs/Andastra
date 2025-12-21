@@ -82,14 +82,93 @@ The following files **CANNOT** be placed in module containers and will not work:
 
 ### What CAN Be Containerized
 
-Resource types that use `FUN_00407230` / `FUN_004074d0` (resource search functions) **CAN** be placed in modules:
+**Resource types with verified handlers** that call `FUN_00407230` / `FUN_004074d0` (resource search functions) **CAN** be placed in modules:
 
-- ✅ **TPC/TGA textures** - Verified: Texture loaders call `FUN_00407230`
-- ✅ **MDL/MDX models** - Verified: Model loaders call `FUN_004074d0`
-- ✅ **DLG dialogs** - Verified: Dialog loaders call `FUN_004074d0`
-- ✅ **ARE/GIT area data** - Verified: Area loaders call `FUN_004074d0`
-- ✅ **NCS scripts** - Verified: Script loaders call `FUN_004074d0`
-- ✅ **All resource types that have handlers calling `FUN_00407230`/`FUN_004074d0`** - These search all locations including modules
+**✅ Resource Types WITH Handlers (CAN be containerized in modules):**
+
+**3D Models & Animations:**
+- **MDL** (2002, 0x7d2) - 3D models - Handler: swkotor.exe: 0x0070fb90, swkotor2.exe: 0x007837b0
+- **MDX** (3008, 0xbc0) - Model animations - Handler: swkotor.exe: 0x0070fe60, swkotor2.exe: 0x007834e0
+
+**Textures:**
+- **TGA** (3) - Texture images - Handler: swkotor.exe: 0x00596670, swkotor2.exe: 0x005571b0
+- **TPC** (3007, 0xbbf) - Textures - Handler: swkotor.exe: 0x0070f800, swkotor2.exe: 0x00782760
+- **DDS** (2033, 0x7f1) - DirectDraw Surface textures - Handler: swkotor.exe: 0x00710530, swkotor2.exe: 0x00783b60
+- **FourPC** (2059, 0x80b) - RGBA 16-bit textures - Handler: swkotor.exe: 0x00710910, swkotor2.exe: 0x00783f10
+- **TXI** (2022, 0x7e6) - Texture info - Handler: swkotor.exe: 0x0070fb90, swkotor2.exe: 0x00783190
+
+**Area & Module Data:**
+- **IFO** (2014, 0x7de) - Module info - Handler: swkotor.exe: 0x004c4cc0, swkotor2.exe: 0x004fdfe0
+- **ARE** (2012, 0x7dc) - Area data - Handler: swkotor.exe: 0x00506c30, swkotor2.exe: 0x004e1ea0
+- **GIT** (2023, 0x7e7) - Area instance data - Handler: swkotor.exe: 0x00506c30, swkotor2.exe: 0x004e1ea0
+
+**Templates (GFF-based):**
+- **UTI** (2025, 0x7e9) - Item templates - Handler: swkotor.exe: 0x006bdea0, swkotor2.exe: 0x00713340
+- **UTC** (2027, 0x7eb) - Creature templates - Handler: swkotor.exe: 0x006bdea0, swkotor2.exe: 0x00713340
+- **UTD** (2042, 0x7fa) - Door templates - Handler: swkotor.exe: 0x006bdea0, swkotor2.exe: 0x00713340
+- **UTP** (2044, 0x7fc) - Placeable templates - Handler: swkotor.exe: 0x006bdea0, swkotor2.exe: 0x00713340
+- **UTS** (2035, 0x7f3) - Sound templates - Handler: swkotor.exe: 0x006bdea0, swkotor2.exe: 0x00713340
+- **UTT** (2032, 0x7f0) - Trigger templates - Handler: swkotor.exe: 0x006bdea0, swkotor2.exe: 0x00713340
+- **UTW** (2058, 0x80a) - Waypoint templates - Handler: swkotor.exe: 0x006bdea0, swkotor2.exe: 0x00713340
+- **UTM** (2051, 0x803) - Merchant templates - Handler: swkotor.exe: 0x006bdea0, swkotor2.exe: 0x00713340
+
+**Dialogs & Journals:**
+- **DLG** (2029, 0x7ed) - Dialog trees - Handler: swkotor.exe: 0x006bdea0, swkotor2.exe: 0x00713340
+- **JRL** (2056, 0x808) - Journal entries - Handler: swkotor.exe: 0x006bdea0, swkotor2.exe: 0x00713340
+
+**Scripts:**
+- **NCS** (2010, 0x7da) - Compiled scripts - Handler: swkotor.exe: 0x005d1ac0, swkotor2.exe: 0x0061d6e0
+
+**Audio:**
+- **WAV** (4) - Audio files - Handler: swkotor.exe: 0x005d5e90, swkotor2.exe: 0x00621ac0
+
+**Other:**
+- **LIP** (3004, 0xbbc) - Lip sync data - Handler: swkotor.exe: 0x0070f0f0, swkotor2.exe: 0x0077f8f0
+- **VIS** (3001, 0xbb9) - Visibility data - Handler: swkotor.exe: 0x0070ee30, swkotor2.exe: 0x00782460
+- **LYT** (3000) - Layout data - Handler: swkotor.exe: 0x0070dbf0, swkotor2.exe: 0x00781220
+- **SSF** (2060, 0x80c) - Soundset files - Handler: swkotor.exe: 0x006789a0, swkotor2.exe: 0x006cde50
+- **LTR** (2036, 0x7f4) - Letter files - Handler: swkotor.exe: 0x00711110, swkotor2.exe: 0x00784710
+- **PLT** (6) - Palette files (used for LIP) - Handler: swkotor.exe: 0x0070c350, swkotor2.exe: 0x0077f8f0
+- **GUI** (2047, 0x7ff) - GUI definitions - Handler: swkotor.exe: 0x006bdea0, swkotor2.exe: 0x00713340
+- **FAC** (2038, 0x7f6) - Faction data - Handler: swkotor.exe: 0x006bdea0, swkotor2.exe: 0x00713340
+- **PTH** (3003, 0xbbb) - Pathfinding data - Handler: swkotor.exe: 0x00506c30, swkotor2.exe: 0x004e1ea0
+- **WOK** (2016, 0x7e0) - Walkmesh data - Handler: swkotor.exe: 0x00506c30, swkotor2.exe: 0x004e1ea0
+- **DWK** (2052, 0x804) - Door walkmesh - Handler: swkotor.exe: 0x00506c30, swkotor2.exe: 0x004e1ea0
+- **PWK** (2053, 0x805) - Placeable walkmesh - Handler: swkotor.exe: 0x00506c30, swkotor2.exe: 0x004e1ea0
+
+**Total: 28+ resource types with verified handlers that CAN be containerized in modules.**
+
+**❌ Resource Types WITHOUT Handlers (CANNOT be containerized in modules):**
+
+**Registered but No Handler:**
+- **NSS** (2009, 0x7d9) - Source scripts - ❌ **NO HANDLER** (toolset-only, compiled to NCS)
+- **MP3/BMU** (8) - MP3 audio - ❌ **NO HANDLER** (registered in registry but no loader uses it)
+- **WMV** (12, 0xc) - Windows Media Video - ❌ **NO HANDLER** (registered in registry but no loader uses it)
+
+**Not Registered:**
+- **OGG** (2078, 0x81e) - OGG audio - ❌ **NOT REGISTERED** (no resource type ID, no handler)
+- **MP4** - MP4 video - ❌ **NOT REGISTERED** (no resource type ID, no handler)
+
+**Direct File I/O (Bypass Resource System):**
+- **TLK** (2018, 0x7e2) - Talk tables - ❌ **DIRECT FILE I/O** (loaded from game root, not resource system)
+- **RES** (0) - Resource files - ❌ **DIRECT FILE I/O** (loaded from save files, not resource system)
+- **MVE** (2) - Video files - ❌ **DIRECT FILE I/O** (loaded from movies/ directory, not resource system)
+- **MPG** (9) - MPEG video - ❌ **DIRECT FILE I/O** (loaded from movies/ directory, not resource system)
+- **BIK** (2063, 0x80f) - Bink video - ❌ **DIRECT FILE I/O** (uses directory alias system, not resource system)
+
+**Container Types (No Recursive Loading):**
+- **MOD** (2011, 0x7db) - Module containers - ❌ **NO RECURSION** (engine doesn't recursively load nested modules)
+- **RIM** (3002, 0xbba) - RIM containers - ❌ **NO RECURSION** (engine doesn't recursively load nested RIMs)
+- **ERF** (9997) - ERF containers - ❌ **NO RECURSION** (engine doesn't recursively load nested ERFs)
+- **SAV** (2057, 0x809) - Save game containers - ❌ **NO RECURSION** (save files are separate containers)
+
+**Not Resource Types:**
+- **KEY** (9999) - Chitin key files - ❌ **NOT A RESOURCE TYPE** (archive index, not a resource)
+- **BIF** (9998) - BIF archives - ❌ **NOT A RESOURCE TYPE** (archive format, not a resource)
+- **HAK** (2061, 0x80d) - HAK archives - ❌ **NOT A RESOURCE TYPE** (Aurora/NWN only, not KotOR)
+- **NWM** (2062, 0x80e) - NWM modules - ❌ **NOT A RESOURCE TYPE** (Aurora/NWN only, not KotOR)
+
+**Summary**: Only resource types with verified handlers (28+ types listed above) can be containerized and loaded from modules. All other resource types are either not registered, have no handlers, use direct file I/O, or are container types that don't support recursion.
 
 ## Module File Discovery
 
@@ -399,7 +478,7 @@ Based on `ResourceType.cs`, the following resource types are defined:
 - `MP3` (8) / `BMU` (8) - MP3 audio / BMU (MP3 with obfuscated header)
   - **VERIFIED**: MP3/BMU is **registered** in resource type registry (type 8) but **NO handler exists** that calls `FUN_004074d0` with type 8
   - **Status**: ❌ **REGISTERED BUT NOT LOADED** - Registered in resource type registry but no loader uses it
-  - **Evidence**: 
+  - **Evidence**:
     - **Resource Type Registration**:
       - swkotor.exe: `FUN_005e6d20` (0x005e6d20, line 92-93) registers type 8 as "mp3"
       - swkotor2.exe: `FUN_00632510` (0x00632510, line 91-92) registers type 8 as "mp3"
@@ -637,6 +716,7 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 **Priority**: ❌ **Module/Override/Patch.erf RES files are IGNORED**
 
 **Evidence**:
+
 - swkotor.exe: `FUN_004b8300` line 136-155 loads "savenfo.res" directly via `FUN_00411260` (GFF loader)
 - `FUN_00411260` does not call `FUN_00407230` (resource system)
 - RES files are accessed directly from save file path, bypassing resource system entirely
@@ -648,12 +728,14 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 **Priority**: ✅ **Module/Override/Patch.erf PT files WILL override save file PT files**
 
 **Evidence**:
+
 - swkotor.exe: `FUN_00565d20` (0x00565d20) loads PARTYTABLE
 - swkotor.exe: `FUN_00565d20` line 51: Calls `FUN_00410630` with "PARTYTABLE" and "PT  " signature
 - swkotor.exe: `FUN_00410630` line 48: Calls `FUN_00407680` with resource type
 - swkotor.exe: `FUN_00407680` line 12: Calls `FUN_00407230` (resource system search function)
 
 **Complete Priority Order** (from `FUN_00407230`):
+
 1. **Override Directory** (Location 3, Source Type 2) - Highest priority
 2. **Module Containers** (Location 2, Source Type 3) - `.mod` files
 3. **Module RIM Files** (Location 1, Source Type 4) - `.rim`, `_s.rim`, `_a.rim`, `_adx.rim`
@@ -667,6 +749,7 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 **Priority**: ❌ **Module/Override/Patch.erf NFO files are IGNORED**
 
 **Evidence**:
+
 - swkotor.exe: `FUN_004b8300` line 136-155 loads "savenfo.res" directly via `FUN_00411260` (GFF loader)
 - `FUN_00411260` does not call `FUN_00407230` (resource system)
 - NFO files are accessed directly from save file path, bypassing resource system entirely
@@ -726,7 +809,8 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 4. **Game Engine Executes Bytecode**: The game engine executes NCS (compiled bytecode), not NSS (source code)
 5. **NSS is Toolset-Only**: NSS files are used by the toolset/compiler to generate NCS files, not by the game engine
 
-**Conclusion**: 
+**Conclusion**:
+
 - ✅ **NSS files CAN be stored** in modules (no type filtering prevents this)
 - ❌ **NSS files are NOT loaded** by the game engine (no handler exists)
 - ❌ **NSS files are NOT used** by the game engine (engine only executes NCS bytecode)
@@ -1388,12 +1472,14 @@ if (iVar7 == 0) {
 **When is `.rim` Loaded in Complex Mode?**
 
 **VERIFIED** (swkotor.exe: `FUN_004094a0` at 0x004094a0):
+
 - **`.rim` is loaded FIRST** in complex mode, before any checks
 - **Decompiled Code Evidence**: The function loads `.rim` at the beginning of complex mode (before line 50), then checks for `_a.rim`/`_adx.rim` to supplement it
 - **If `.mod` exists**: `.rim` is loaded but then **replaced** by `.mod` (`.mod` overrides all `.rim` entries via duplicate handling)
 - **If `.mod` doesn't exist**: `.rim` remains loaded and `_s.rim` supplements it
 
 **Complete Loading Order** (swkotor.exe: `FUN_004094a0` at 0x004094a0, complex mode):
+
 1. **Load `.rim`** (base module file) - Loaded FIRST
 2. **Check and load `_a.rim`** (if ARE found) - Supplements `.rim`
 3. **Check and load `_adx.rim`** (if ARE found) - Supplements `.rim`
@@ -1502,12 +1588,14 @@ if (iVar7 == 0) {
 **When is `.rim` Loaded in Complex Mode?**
 
 **VERIFIED** (swkotor2.exe: `FUN_004096b0` at 0x004096b0):
+
 - **`.rim` is loaded FIRST** in complex mode, before any checks
 - **Decompiled Code Evidence**: The function loads `.rim` at the beginning of complex mode (before line 54), then checks for `_a.rim`/`_adx.rim` to supplement it
 - **If `.mod` exists**: `.rim` is loaded but then **replaced** by `.mod` (`.mod` overrides all `.rim` entries via duplicate handling)
 - **If `.mod` doesn't exist**: `.rim` remains loaded and `_s.rim` + `_dlg.erf` supplement it
 
 **Complete Loading Order** (swkotor2.exe: `FUN_004096b0` at 0x004096b0, complex mode):
+
 1. **Load `.rim`** (base module file) - Loaded FIRST
 2. **Check and load `_a.rim`** (if ARE found) - Supplements `.rim`
 3. **Check and load `_adx.rim`** (if ARE found) - Supplements `.rim`
@@ -1574,6 +1662,7 @@ if (iVar7 == 0) {
 **Answer**: **FIRST registered wins** - Resources are registered in the order files are opened, and duplicates are ignored.
 
 **Duplicate Handling** (swkotor.exe: `FUN_0040e990` at 0x0040e990, swkotor2.exe: `FUN_0040e990` at 0x0040e990):
+
 - Line 36: Checks if resource with same ResRef+Type already exists
 - Line 39-91: If duplicate found AND resource is already loaded (`*(int *)((int)this_00 + 0x14) != -1`), returns 0 (ignores duplicate)
 - Line 94-101: If no duplicate OR resource not loaded, registers new resource
