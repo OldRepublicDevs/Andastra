@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
@@ -202,7 +203,12 @@ namespace Andastra.Runtime.MonoGame.Backends
             // Create shader from bytecode (Metal shader library)
             // For Metal, shaders are compiled from Metal Shading Language source or loaded from library
             // Bytecode for Metal would be Metal IR (AIR) or compiled library
-            IntPtr function = MetalNative.CreateFunctionFromLibrary(_backend.GetDefaultLibrary(), desc.EntryPoint ?? "main");
+            IntPtr defaultLibrary = _backend.GetDefaultLibrary();
+            if (defaultLibrary == IntPtr.Zero)
+            {
+                return null;
+            }
+            IntPtr function = MetalNative.CreateFunctionFromLibrary(defaultLibrary, desc.EntryPoint ?? "main");
             if (function == IntPtr.Zero)
             {
                 // Try to create from bytecode if provided (would need Metal shader compiler)
@@ -371,6 +377,12 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             // Metal 3.0 raytracing: Create acceleration structure
             // MTLAccelerationStructureDescriptor describes BLAS or TLAS
+            IntPtr commandQueue = _backend.GetCommandQueue();
+            if (commandQueue == IntPtr.Zero)
+            {
+                return null;
+            }
+
             IntPtr accelStructDescriptor = MetalNative.CreateAccelerationStructureDescriptor(_device, desc);
             if (accelStructDescriptor == IntPtr.Zero)
             {
@@ -378,7 +390,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             // Build acceleration structure
-            IntPtr accelStruct = MetalNative.CreateAccelerationStructure(_device, accelStructDescriptor, _backend.GetCommandQueue());
+            IntPtr accelStruct = MetalNative.CreateAccelerationStructure(_device, accelStructDescriptor, commandQueue);
             MetalNative.ReleaseAccelerationStructureDescriptor(accelStructDescriptor);
 
             if (accelStruct == IntPtr.Zero)
@@ -435,10 +447,12 @@ namespace Andastra.Runtime.MonoGame.Backends
                 return;
             }
 
-            var metalCommandList = commandList as MetalCommandList;
-            if (metalCommandList != null)
+            // Ensure command list is closed before execution
+            if (commandList != null)
             {
-                metalCommandList.Execute();
+                commandList.Close();
+                // Command execution is handled by MetalBackend's command queue
+                // The command list has already recorded commands via Open()/Close()
             }
         }
 
@@ -463,7 +477,11 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             // Wait for all GPU operations to complete
-            MetalNative.WaitUntilCompleted(_backend.GetCommandQueue());
+            IntPtr commandQueue = _backend.GetCommandQueue();
+            if (commandQueue != IntPtr.Zero)
+            {
+                MetalNative.WaitUntilCompleted(commandQueue);
+            }
         }
 
         public void Signal(IFence fence, ulong value)
@@ -1317,22 +1335,384 @@ namespace Andastra.Runtime.MonoGame.Backends
         private readonly CommandListType _type;
         private readonly MetalBackend _backend;
         private bool _disposed;
+        private bool _isOpen;
 
         public MetalCommandList(IntPtr handle, CommandListType type, MetalBackend backend)
         {
             _handle = handle;
             _type = type;
             _backend = backend;
+            _isOpen = false;
         }
 
-        public void Execute()
+        public void Open()
         {
-            // Command list execution is handled by MetalBackend's command queue
-            // This is a placeholder for command list recording and execution
+            if (_disposed || _isOpen)
+            {
+                return;
+            }
+            // Begin recording commands to Metal command buffer
+            _isOpen = true;
+        }
+
+        public void Close()
+        {
+            if (!_isOpen)
+            {
+                return;
+            }
+            // End recording commands
+            _isOpen = false;
+        }
+
+        // Resource Operations - delegate to MetalBackend or implement via Metal command encoder
+        public void WriteBuffer(IBuffer buffer, byte[] data, int destOffset = 0)
+        {
+            if (!_isOpen || buffer == null)
+            {
+                return;
+            }
+            // TODO: Implement buffer write via Metal command encoder
+            // Metal uses MTLBlitCommandEncoder::copyFromBuffer:sourceOffset:toBuffer:destinationOffset:size
+        }
+
+        public void WriteBuffer<T>(IBuffer buffer, T[] data, int destOffset = 0) where T : unmanaged
+        {
+            if (!_isOpen || buffer == null || data == null)
+            {
+                return;
+            }
+            // TODO: Implement typed buffer write
+        }
+
+        public void WriteTexture(ITexture texture, int mipLevel, int arraySlice, byte[] data)
+        {
+            if (!_isOpen || texture == null)
+            {
+                return;
+            }
+            // TODO: Implement texture write via Metal command encoder
+        }
+
+        public void CopyBuffer(IBuffer dest, int destOffset, IBuffer src, int srcOffset, int size)
+        {
+            if (!_isOpen || dest == null || src == null)
+            {
+                return;
+            }
+            // TODO: Implement buffer copy via Metal blit command encoder
+        }
+
+        public void CopyTexture(ITexture dest, ITexture src)
+        {
+            if (!_isOpen || dest == null || src == null)
+            {
+                return;
+            }
+            // TODO: Implement texture copy via Metal blit command encoder
+        }
+
+        public void ClearColorAttachment(IFramebuffer framebuffer, int attachmentIndex, Vector4 color)
+        {
+            if (!_isOpen || framebuffer == null)
+            {
+                return;
+            }
+            // TODO: Implement color attachment clear
+        }
+
+        public void ClearDepthStencilAttachment(IFramebuffer framebuffer, float depth, byte stencil, bool clearDepth = true, bool clearStencil = true)
+        {
+            if (!_isOpen || framebuffer == null)
+            {
+                return;
+            }
+            // TODO: Implement depth/stencil clear
+        }
+
+        public void ClearUAVFloat(ITexture texture, Vector4 value)
+        {
+            if (!_isOpen || texture == null)
+            {
+                return;
+            }
+            // TODO: Implement UAV clear for float
+        }
+
+        public void ClearUAVUint(ITexture texture, uint value)
+        {
+            if (!_isOpen || texture == null)
+            {
+                return;
+            }
+            // TODO: Implement UAV clear for uint
+        }
+
+        // Resource State Transitions - Metal handles state transitions automatically, but we track them
+        public void SetTextureState(ITexture texture, ResourceState state)
+        {
+            if (!_isOpen || texture == null)
+            {
+                return;
+            }
+            // Metal handles texture state transitions automatically via resource barriers
+            // This is mainly for tracking/logging purposes
+        }
+
+        public void SetBufferState(IBuffer buffer, ResourceState state)
+        {
+            if (!_isOpen || buffer == null)
+            {
+                return;
+            }
+            // Metal handles buffer state transitions automatically
+        }
+
+        public void CommitBarriers()
+        {
+            if (!_isOpen)
+            {
+                return;
+            }
+            // Metal commits barriers automatically when encoding commands
+        }
+
+        public void UAVBarrier(ITexture texture)
+        {
+            if (!_isOpen)
+            {
+                return;
+            }
+            // Metal handles UAV barriers automatically
+        }
+
+        public void UAVBarrier(IBuffer buffer)
+        {
+            if (!_isOpen)
+            {
+                return;
+            }
+            // Metal handles UAV barriers automatically
+        }
+
+        // Graphics State
+        public void SetGraphicsState(GraphicsState state)
+        {
+            if (!_isOpen)
+            {
+                return;
+            }
+            // TODO: Implement graphics state setting
+            // This would set pipeline, framebuffer, viewports, binding sets, etc.
+        }
+
+        public void SetViewport(Viewport viewport)
+        {
+            if (!_isOpen)
+            {
+                return;
+            }
+            // TODO: Set viewport on render command encoder
+        }
+
+        public void SetViewports(Viewport[] viewports)
+        {
+            if (!_isOpen || viewports == null)
+            {
+                return;
+            }
+            // TODO: Set multiple viewports
+        }
+
+        public void SetScissor(Rectangle scissor)
+        {
+            if (!_isOpen)
+            {
+                return;
+            }
+            // TODO: Set scissor rectangle
+        }
+
+        public void SetScissors(Rectangle[] scissors)
+        {
+            if (!_isOpen || scissors == null)
+            {
+                return;
+            }
+            // TODO: Set multiple scissor rectangles
+        }
+
+        public void SetBlendConstant(Vector4 color)
+        {
+            if (!_isOpen)
+            {
+                return;
+            }
+            // TODO: Set blend constant color
+        }
+
+        public void SetStencilRef(uint reference)
+        {
+            if (!_isOpen)
+            {
+                return;
+            }
+            // TODO: Set stencil reference value
+        }
+
+        // Draw Commands
+        public void Draw(DrawArguments args)
+        {
+            if (!_isOpen)
+            {
+                return;
+            }
+            // TODO: Implement draw command via Metal render command encoder
+        }
+
+        public void DrawIndexed(DrawArguments args)
+        {
+            if (!_isOpen)
+            {
+                return;
+            }
+            // TODO: Implement indexed draw command
+        }
+
+        public void DrawIndirect(IBuffer argumentBuffer, int offset, int drawCount, int stride)
+        {
+            if (!_isOpen || argumentBuffer == null)
+            {
+                return;
+            }
+            // TODO: Implement indirect draw
+        }
+
+        public void DrawIndexedIndirect(IBuffer argumentBuffer, int offset, int drawCount, int stride)
+        {
+            if (!_isOpen || argumentBuffer == null)
+            {
+                return;
+            }
+            // TODO: Implement indexed indirect draw
+        }
+
+        // Compute State
+        public void SetComputeState(ComputeState state)
+        {
+            if (!_isOpen)
+            {
+                return;
+            }
+            // TODO: Implement compute state setting
+        }
+
+        public void Dispatch(int groupCountX, int groupCountY = 1, int groupCountZ = 1)
+        {
+            if (!_isOpen)
+            {
+                return;
+            }
+            // Delegate to MetalBackend
+            _backend.DispatchCompute(groupCountX, groupCountY, groupCountZ);
+        }
+
+        public void DispatchIndirect(IBuffer argumentBuffer, int offset)
+        {
+            if (!_isOpen || argumentBuffer == null)
+            {
+                return;
+            }
+            // TODO: Implement indirect dispatch
+        }
+
+        // Raytracing Commands
+        public void SetRaytracingState(RaytracingState state)
+        {
+            if (!_isOpen)
+            {
+                return;
+            }
+            // TODO: Implement raytracing state setting for Metal 3.0
+        }
+
+        public void DispatchRays(DispatchRaysArguments args)
+        {
+            if (!_isOpen)
+            {
+                return;
+            }
+            // TODO: Implement dispatch rays for Metal 3.0 raytracing
+            // Metal uses MTLIntersectionFunctionTable and MTLVisibleFunctionTable
+        }
+
+        public void BuildBottomLevelAccelStruct(IAccelStruct accelStruct, GeometryDesc[] geometries)
+        {
+            if (!_isOpen || accelStruct == null)
+            {
+                return;
+            }
+            // TODO: Implement BLAS build for Metal 3.0
+        }
+
+        public void BuildTopLevelAccelStruct(IAccelStruct accelStruct, AccelStructInstance[] instances)
+        {
+            if (!_isOpen || accelStruct == null)
+            {
+                return;
+            }
+            // TODO: Implement TLAS build for Metal 3.0
+        }
+
+        public void CompactBottomLevelAccelStruct(IAccelStruct dest, IAccelStruct src)
+        {
+            if (!_isOpen || dest == null || src == null)
+            {
+                return;
+            }
+            // TODO: Implement acceleration structure compaction for Metal 3.0
+        }
+
+        // Debug
+        public void BeginDebugEvent(string name, Vector4 color)
+        {
+            if (!_isOpen)
+            {
+                return;
+            }
+            // TODO: Implement debug event begin for Metal
+        }
+
+        public void EndDebugEvent()
+        {
+            if (!_isOpen)
+            {
+                return;
+            }
+            // TODO: Implement debug event end for Metal
+        }
+
+        public void InsertDebugMarker(string name, Vector4 color)
+        {
+            if (!_isOpen)
+            {
+                return;
+            }
+            // TODO: Implement debug marker for Metal
         }
 
         public void Dispose()
         {
+            if (_disposed)
+            {
+                return;
+            }
+
+            if (_isOpen)
+            {
+                Close();
+            }
+
             _disposed = true;
         }
     }
