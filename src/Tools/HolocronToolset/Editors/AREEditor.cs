@@ -676,7 +676,7 @@ namespace HolocronToolset.Editors
             // Matching Python: self.ui.alphaTestSpin.setValue(are.alpha_test) (line 183)
             if (_alphaTestSpin != null)
             {
-                _alphaTestSpin.Value = are.AlphaTest;
+                _alphaTestSpin.Value = (decimal)are.AlphaTest;
             }
             // Matching Python: self.ui.stealthCheck.setChecked(are.stealth_xp) (line 184)
             if (_stealthCheck != null)
