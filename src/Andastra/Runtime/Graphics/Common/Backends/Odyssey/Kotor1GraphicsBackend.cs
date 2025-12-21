@@ -1978,13 +1978,32 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                                     IntPtr textureArrayPtr = Marshal.AllocHGlobal(arraySize);
                                     *textureArrayPtrPtr = textureArrayPtr.ToInt32();
                                     
-                                    // Initialize array with texture IDs
-                                    // TODO: STUB - For now, use the same texture ID for all mip levels
-                                    // In a full implementation, each mip level would have its own texture ID
+                                    // Create separate OpenGL texture for each mip level
+                                    // Matching swkotor.exe: FUN_0041fa30 @ 0x0041fa30 - each mip level has its own texture ID
                                     uint* textureArray = (uint*)textureArrayPtr;
+                                    bool isCubeMap = tpc.IsCubeMap;
+                                    
                                     for (int i = 0; i < mipCount; i++)
                                     {
-                                        textureArray[i] = textureId;
+                                        // Get mipmap data for this level
+                                        var mipmap = tpc.Layers[0].Mipmaps[i];
+                                        
+                                        // Create separate texture for this mip level
+                                        // For cube maps, we use the first face (positive X) as the representative
+                                        // The original game may handle cube maps differently, but this matches the structure
+                                        uint mipTextureId = CreateMipLevelTexture(mipmap, tpcFormat, isCubeMap, 0);
+                                        
+                                        if (mipTextureId != 0)
+                                        {
+                                            textureArray[i] = mipTextureId;
+                                        }
+                                        else
+                                        {
+                                            // If creation failed, use the main texture ID as fallback
+                                            // This should not happen in normal operation, but provides safety
+                                            Console.WriteLine($"[Kotor1GraphicsBackend] InitializeKotor1TextureInitialization: Failed to create texture for mip level {i} of '{textureName}', using fallback");
+                                            textureArray[i] = textureId;
+                                        }
                                     }
                                     
                                     // Set texture array dimension (matching swkotor.exe line 26)
@@ -3517,6 +3536,94 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             {
                 handle.Free();
             }
+        }
+        
+        /// <summary>
+        /// Creates a separate OpenGL texture for a single mip level.
+        /// Matches swkotor.exe pattern where each mip level has its own texture ID.
+        /// Based on reverse engineering of FUN_0041fa30 @ 0x0041fa30.
+        /// </summary>
+        /// <param name="mipmap">The mipmap data to upload</param>
+        /// <param name="tpcFormat">The TPC texture format</param>
+        /// <param name="isCubeMap">Whether this is a cube map texture</param>
+        /// <param name="cubeMapFace">Cube map face index (0-5), ignored if not cube map</param>
+        /// <returns>OpenGL texture ID, or 0 if creation failed</returns>
+        private uint CreateMipLevelTexture(TPC.Mipmap mipmap, TPCTextureFormat tpcFormat, bool isCubeMap, int cubeMapFace)
+        {
+            if (mipmap == null || mipmap.Data == null || mipmap.Data.Length == 0)
+            {
+                return 0;
+            }
+            
+            // Convert TPC format to OpenGL format
+            uint glFormat = ConvertTPCFormatToOpenGLFormat(tpcFormat);
+            uint glInternalFormat = ConvertTPCFormatToOpenGLInternalFormat(tpcFormat);
+            uint glType = GL_UNSIGNED_BYTE;
+            
+            // Check if format is compressed (DXT1, DXT3, DXT5)
+            bool isCompressed = tpcFormat == TPCTextureFormat.DXT1 || 
+                                tpcFormat == TPCTextureFormat.DXT3 || 
+                                tpcFormat == TPCTextureFormat.DXT5;
+            
+            // Determine texture target
+            uint textureTarget = GL_TEXTURE_2D;
+            if (isCubeMap)
+            {
+                uint[] cubeMapTargets = new uint[]
+                {
+                    GL_TEXTURE_CUBE_MAP_POSITIVE_X,
+                    GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
+                    GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
+                    GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
+                    GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
+                    GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
+                };
+                if (cubeMapFace >= 0 && cubeMapFace < 6)
+                {
+                    textureTarget = cubeMapTargets[cubeMapFace];
+                }
+                else
+                {
+                    textureTarget = GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+                }
+            }
+            
+            // Generate texture ID
+            uint textureId = 0;
+            glGenTextures(1, ref textureId);
+            
+            if (textureId == 0)
+            {
+                return 0;
+            }
+            
+            // Bind texture
+            glBindTexture(isCubeMap ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D, textureId);
+            
+            // Set texture parameters (matching swkotor.exe texture setup)
+            // For single mip level textures, use nearest or linear filtering without mipmaps
+            glTexParameteri(isCubeMap ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_REPEAT);
+            glTexParameteri(isCubeMap ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_REPEAT);
+            glTexParameteri(isCubeMap ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+            glTexParameteri(isCubeMap ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
+            
+            // Upload mipmap data (always at level 0 since this is a separate texture)
+            int mipWidth = Math.Max(1, mipmap.Width);
+            int mipHeight = Math.Max(1, mipmap.Height);
+            
+            if (isCompressed)
+            {
+                UploadCompressedTextureData(textureTarget, 0, glInternalFormat, mipWidth, mipHeight, mipmap.Data);
+            }
+            else
+            {
+                UploadUncompressedTextureData(textureTarget, 0, glInternalFormat, mipWidth, mipHeight, glFormat, glType, mipmap.Data);
+            }
+            
+            // Unbind texture
+            glBindTexture(isCubeMap ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D, 0);
+            
+            return textureId;
         }
         
         /// <summary>
