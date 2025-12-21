@@ -106,10 +106,23 @@ namespace Andastra.Runtime.Games.Eclipse
                 if (body.AngularVelocity.LengthSquared() > 0.0001f)
                 {
                     Vector3 angularVel = body.AngularVelocity;
+                    // Angular velocity quaternion (pure quaternion, w=0)
                     Quaternion angularQuat = new Quaternion(angularVel.X, angularVel.Y, angularVel.Z, 0.0f);
+                    // dq/dt = 0.5 * angularVelQuat * rotation
                     Quaternion deltaRotation = Quaternion.Multiply(angularQuat, body.Rotation);
-                    deltaRotation = Quaternion.Multiply(deltaRotation, 0.5f * clampedDeltaTime);
-                    body.Rotation = Quaternion.Add(body.Rotation, deltaRotation);
+                    deltaRotation = new Quaternion(
+                        deltaRotation.X * 0.5f * clampedDeltaTime,
+                        deltaRotation.Y * 0.5f * clampedDeltaTime,
+                        deltaRotation.Z * 0.5f * clampedDeltaTime,
+                        deltaRotation.W * 0.5f * clampedDeltaTime
+                    );
+                    // Add delta rotation: q_new = q_old + dq
+                    body.Rotation = new Quaternion(
+                        body.Rotation.X + deltaRotation.X,
+                        body.Rotation.Y + deltaRotation.Y,
+                        body.Rotation.Z + deltaRotation.Z,
+                        body.Rotation.W + deltaRotation.W
+                    );
                     body.Rotation = Quaternion.Normalize(body.Rotation);
                 }
             }
@@ -315,6 +328,7 @@ namespace Andastra.Runtime.Games.Eclipse
             var body = new RigidBodyData
             {
                 Position = position,
+                Rotation = Quaternion.Identity,
                 Velocity = Vector3.Zero,
                 AngularVelocity = Vector3.Zero,
                 Mass = mass,
@@ -457,6 +471,454 @@ namespace Andastra.Runtime.Games.Eclipse
             {
                 Rotation = Quaternion.Identity;
             }
+        }
+
+        /// <summary>
+        /// Solves a constraint by applying corrective impulses.
+        /// </summary>
+        /// <param name="constraint">The constraint to solve.</param>
+        /// <param name="deltaTime">Time step for constraint solving.</param>
+        /// <remarks>
+        /// Based on reverse engineering of:
+        /// - daorigins.exe: Constraint solving in physics simulation
+        /// - DragonAge2.exe: Enhanced constraint solving with iterative methods
+        /// 
+        /// Implements PhysX-style iterative impulse-based constraint solver.
+        /// </remarks>
+        private void SolveConstraint(PhysicsConstraint constraint, float deltaTime)
+        {
+            if (constraint == null || constraint.EntityA == null)
+            {
+                return;
+            }
+
+            if (!_rigidBodies.TryGetValue(constraint.EntityA, out RigidBodyData bodyA))
+            {
+                return;
+            }
+
+            RigidBodyData bodyB = null;
+            bool hasBodyB = constraint.EntityB != null && _rigidBodies.TryGetValue(constraint.EntityB, out bodyB);
+
+            // Convert local anchor points to world space
+            Vector3 worldAnchorA = TransformLocalToWorld(bodyA, constraint.AnchorA);
+            Vector3 worldAnchorB;
+            if (hasBodyB)
+            {
+                worldAnchorB = TransformLocalToWorld(bodyB, constraint.AnchorB);
+            }
+            else
+            {
+                // World constraint - AnchorB is in world space
+                worldAnchorB = constraint.AnchorB;
+            }
+
+            // Solve constraint based on type
+            switch (constraint.Type)
+            {
+                case ConstraintType.Fixed:
+                    SolveFixedConstraint(constraint, bodyA, bodyB, worldAnchorA, worldAnchorB, deltaTime);
+                    break;
+
+                case ConstraintType.Hinge:
+                    SolveHingeConstraint(constraint, bodyA, bodyB, worldAnchorA, worldAnchorB, deltaTime);
+                    break;
+
+                case ConstraintType.BallAndSocket:
+                    SolveBallAndSocketConstraint(constraint, bodyA, bodyB, worldAnchorA, worldAnchorB, deltaTime);
+                    break;
+
+                case ConstraintType.Slider:
+                    SolveSliderConstraint(constraint, bodyA, bodyB, worldAnchorA, worldAnchorB, deltaTime);
+                    break;
+
+                case ConstraintType.Spring:
+                    SolveSpringConstraint(constraint, bodyA, bodyB, worldAnchorA, worldAnchorB, deltaTime);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Solves a fixed constraint (no relative movement or rotation).
+        /// </summary>
+        /// <param name="constraint">The fixed constraint.</param>
+        /// <param name="bodyA">First rigid body.</param>
+        /// <param name="bodyB">Second rigid body (null for world constraints).</param>
+        /// <param name="worldAnchorA">World space anchor on body A.</param>
+        /// <param name="worldAnchorB">World space anchor on body B (or world position).</param>
+        /// <param name="deltaTime">Time step.</param>
+        /// <remarks>
+        /// daorigins.exe: Fixed constraint implementation
+        /// Enforces both position and orientation constraints.
+        /// </remarks>
+        private void SolveFixedConstraint(PhysicsConstraint constraint, RigidBodyData bodyA, RigidBodyData bodyB, Vector3 worldAnchorA, Vector3 worldAnchorB, float deltaTime)
+        {
+            if (!bodyA.IsDynamic)
+            {
+                return;
+            }
+
+            // Position constraint: Keep anchors aligned
+            Vector3 positionError = worldAnchorB - worldAnchorA;
+            float positionErrorLength = positionError.Length();
+            
+            if (positionErrorLength > 0.0001f)
+            {
+                Vector3 correctionDirection = positionError / positionErrorLength;
+                float invMassA = 1.0f / bodyA.Mass;
+                float invMassB = bodyB != null && bodyB.IsDynamic ? (1.0f / bodyB.Mass) : 0.0f;
+                float totalInvMass = invMassA + invMassB;
+                
+                if (totalInvMass > 0.0001f)
+                {
+                    float constraintBias = constraint.Stiffness > 0.0f ? constraint.Stiffness : 1000.0f;
+                    float correction = (positionErrorLength * constraintBias) / (totalInvMass * deltaTime);
+                    
+                    Vector3 impulse = correctionDirection * correction;
+                    bodyA.Velocity += impulse * invMassA;
+                    bodyA.Position += impulse * invMassA * deltaTime;
+                    
+                    if (bodyB != null && bodyB.IsDynamic)
+                    {
+                        bodyB.Velocity -= impulse * invMassB;
+                        bodyB.Position -= impulse * invMassB * deltaTime;
+                    }
+                }
+            }
+
+            // Orientation constraint: Align rotation
+            if (bodyB != null && bodyB.IsDynamic)
+            {
+                Quaternion targetRotation = bodyB.Rotation;
+                Quaternion currentRotation = bodyA.Rotation;
+                Quaternion rotationError = Quaternion.Multiply(Quaternion.Inverse(currentRotation), targetRotation);
+                
+                // Convert quaternion error to axis-angle
+                if (rotationError.W < 0.9999f)
+                {
+                    float angle = 2.0f * (float)Math.Acos(Math.Abs(rotationError.W));
+                    if (angle > 0.0001f)
+                    {
+                        float s = (float)Math.Sqrt(1.0f - rotationError.W * rotationError.W);
+                        if (s > 0.0001f)
+                        {
+                            Vector3 axis = new Vector3(rotationError.X / s, rotationError.Y / s, rotationError.Z / s);
+                            float invMassA = 1.0f / bodyA.Mass;
+                            float invMassB = 1.0f / bodyB.Mass;
+                            float totalInvMass = invMassA + invMassB;
+                            
+                            if (totalInvMass > 0.0001f)
+                            {
+                                float constraintBias = constraint.Stiffness > 0.0f ? constraint.Stiffness : 1000.0f;
+                                Vector3 angularImpulse = axis * (angle * constraintBias / (totalInvMass * deltaTime));
+                                bodyA.AngularVelocity += angularImpulse * invMassA;
+                                bodyB.AngularVelocity -= angularImpulse * invMassB;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Solves a hinge constraint (rotation around axis only).
+        /// </summary>
+        /// <param name="constraint">The hinge constraint.</param>
+        /// <param name="bodyA">First rigid body.</param>
+        /// <param name="bodyB">Second rigid body (null for world constraints).</param>
+        /// <param name="worldAnchorA">World space anchor on body A.</param>
+        /// <param name="worldAnchorB">World space anchor on body B (or world position).</param>
+        /// <param name="deltaTime">Time step.</param>
+        /// <remarks>
+        /// daorigins.exe: Hinge constraint implementation
+        /// Allows rotation around constraint direction axis only.
+        /// </remarks>
+        private void SolveHingeConstraint(PhysicsConstraint constraint, RigidBodyData bodyA, RigidBodyData bodyB, Vector3 worldAnchorA, Vector3 worldAnchorB, float deltaTime)
+        {
+            if (!bodyA.IsDynamic)
+            {
+                return;
+            }
+
+            // Position constraint: Keep anchors aligned (same as ball-and-socket)
+            Vector3 positionError = worldAnchorB - worldAnchorA;
+            float positionErrorLength = positionError.Length();
+            
+            if (positionErrorLength > 0.0001f)
+            {
+                Vector3 correctionDirection = positionError / positionErrorLength;
+                float invMassA = 1.0f / bodyA.Mass;
+                float invMassB = bodyB != null && bodyB.IsDynamic ? (1.0f / bodyB.Mass) : 0.0f;
+                float totalInvMass = invMassA + invMassB;
+                
+                if (totalInvMass > 0.0001f)
+                {
+                    float constraintBias = constraint.Stiffness > 0.0f ? constraint.Stiffness : 1000.0f;
+                    float correction = (positionErrorLength * constraintBias) / (totalInvMass * deltaTime);
+                    
+                    Vector3 impulse = correctionDirection * correction;
+                    bodyA.Velocity += impulse * invMassA;
+                    
+                    if (bodyB != null && bodyB.IsDynamic)
+                    {
+                        bodyB.Velocity -= impulse * invMassB;
+                    }
+                }
+            }
+
+            // Angular constraint: Restrict rotation to hinge axis only
+            Vector3 hingeAxis = constraint.Direction;
+            if (hingeAxis.LengthSquared() < 0.0001f)
+            {
+                hingeAxis = Vector3.UnitX; // Default axis
+            }
+            hingeAxis = Vector3.Normalize(hingeAxis);
+
+            // Project angular velocity onto hinge axis and remove perpendicular components
+            float angularVelAlongAxis = Vector3.Dot(bodyA.AngularVelocity, hingeAxis);
+            Vector3 constrainedAngularVel = hingeAxis * angularVelAlongAxis;
+            Vector3 angularError = bodyA.AngularVelocity - constrainedAngularVel;
+            
+            if (angularError.LengthSquared() > 0.0001f)
+            {
+                float constraintBias = constraint.Stiffness > 0.0f ? constraint.Stiffness : 1000.0f;
+                Vector3 correction = angularError * (constraintBias / (deltaTime * bodyA.Mass));
+                bodyA.AngularVelocity -= correction * deltaTime;
+            }
+
+            // Apply angular limits if specified
+            if (constraint.Limits.X != 0.0f || constraint.Limits.Y != 0.0f)
+            {
+                // Calculate current angle (simplified - would need reference frame in full implementation)
+                // For now, just clamp angular velocity magnitude
+                float maxAngularVel = constraint.Limits.Y > 0.0f ? constraint.Limits.Y : float.MaxValue;
+                if (Math.Abs(angularVelAlongAxis) > maxAngularVel)
+                {
+                    float clampedVel = Math.Sign(angularVelAlongAxis) * maxAngularVel;
+                    bodyA.AngularVelocity = hingeAxis * clampedVel;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Solves a ball-and-socket constraint (allows rotation, constrains translation).
+        /// </summary>
+        /// <param name="constraint">The ball-and-socket constraint.</param>
+        /// <param name="bodyA">First rigid body.</param>
+        /// <param name="bodyB">Second rigid body (null for world constraints).</param>
+        /// <param name="worldAnchorA">World space anchor on body A.</param>
+        /// <param name="worldAnchorB">World space anchor on body B (or world position).</param>
+        /// <param name="deltaTime">Time step.</param>
+        /// <remarks>
+        /// daorigins.exe: Ball-and-socket constraint implementation
+        /// Keeps anchors together but allows free rotation.
+        /// </remarks>
+        private void SolveBallAndSocketConstraint(PhysicsConstraint constraint, RigidBodyData bodyA, RigidBodyData bodyB, Vector3 worldAnchorA, Vector3 worldAnchorB, float deltaTime)
+        {
+            if (!bodyA.IsDynamic)
+            {
+                return;
+            }
+
+            // Position constraint: Keep anchors aligned
+            Vector3 positionError = worldAnchorB - worldAnchorA;
+            float positionErrorLength = positionError.Length();
+            
+            if (positionErrorLength > 0.0001f)
+            {
+                Vector3 correctionDirection = positionError / positionErrorLength;
+                float invMassA = 1.0f / bodyA.Mass;
+                float invMassB = bodyB != null && bodyB.IsDynamic ? (1.0f / bodyB.Mass) : 0.0f;
+                float totalInvMass = invMassA + invMassB;
+                
+                if (totalInvMass > 0.0001f)
+                {
+                    float constraintBias = constraint.Stiffness > 0.0f ? constraint.Stiffness : 1000.0f;
+                    float correction = (positionErrorLength * constraintBias) / (totalInvMass * deltaTime);
+                    
+                    Vector3 impulse = correctionDirection * correction;
+                    bodyA.Velocity += impulse * invMassA;
+                    bodyA.Position += impulse * invMassA * deltaTime;
+                    
+                    if (bodyB != null && bodyB.IsDynamic)
+                    {
+                        bodyB.Velocity -= impulse * invMassB;
+                        bodyB.Position -= impulse * invMassB * deltaTime;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Solves a slider constraint (translation along axis only).
+        /// </summary>
+        /// <param name="constraint">The slider constraint.</param>
+        /// <param name="bodyA">First rigid body.</param>
+        /// <param name="bodyB">Second rigid body (null for world constraints).</param>
+        /// <param name="worldAnchorA">World space anchor on body A.</param>
+        /// <param name="worldAnchorB">World space anchor on body B (or world position).</param>
+        /// <param name="deltaTime">Time step.</param>
+        /// <remarks>
+        /// daorigins.exe: Slider constraint implementation
+        /// Allows translation along constraint direction only.
+        /// </remarks>
+        private void SolveSliderConstraint(PhysicsConstraint constraint, RigidBodyData bodyA, RigidBodyData bodyB, Vector3 worldAnchorA, Vector3 worldAnchorB, float deltaTime)
+        {
+            if (!bodyA.IsDynamic)
+            {
+                return;
+            }
+
+            Vector3 slideAxis = constraint.Direction;
+            if (slideAxis.LengthSquared() < 0.0001f)
+            {
+                slideAxis = Vector3.UnitX; // Default axis
+            }
+            slideAxis = Vector3.Normalize(slideAxis);
+
+            // Constrain position to slide along axis
+            Vector3 positionError = worldAnchorB - worldAnchorA;
+            float projectionLength = Vector3.Dot(positionError, slideAxis);
+            Vector3 constrainedPosition = slideAxis * projectionLength;
+            Vector3 perpendicularError = positionError - constrainedPosition;
+            
+            if (perpendicularError.LengthSquared() > 0.0001f)
+            {
+                float invMassA = 1.0f / bodyA.Mass;
+                float invMassB = bodyB != null && bodyB.IsDynamic ? (1.0f / bodyB.Mass) : 0.0f;
+                float totalInvMass = invMassA + invMassB;
+                
+                if (totalInvMass > 0.0001f)
+                {
+                    float constraintBias = constraint.Stiffness > 0.0f ? constraint.Stiffness : 1000.0f;
+                    float errorLength = perpendicularError.Length();
+                    Vector3 correctionDirection = perpendicularError / errorLength;
+                    float correction = (errorLength * constraintBias) / (totalInvMass * deltaTime);
+                    
+                    Vector3 impulse = correctionDirection * correction;
+                    bodyA.Velocity += impulse * invMassA;
+                    
+                    if (bodyB != null && bodyB.IsDynamic)
+                    {
+                        bodyB.Velocity -= impulse * invMassB;
+                    }
+                }
+            }
+
+            // Constrain velocity to slide along axis only
+            Vector3 velocityA = bodyA.Velocity;
+            float velocityAlongAxis = Vector3.Dot(velocityA, slideAxis);
+            Vector3 constrainedVelocity = slideAxis * velocityAlongAxis;
+            Vector3 perpendicularVelocity = velocityA - constrainedVelocity;
+            
+            if (perpendicularVelocity.LengthSquared() > 0.0001f)
+            {
+                float constraintBias = constraint.Stiffness > 0.0f ? constraint.Stiffness : 1000.0f;
+                Vector3 correction = perpendicularVelocity * (constraintBias / (deltaTime * bodyA.Mass));
+                bodyA.Velocity -= correction * deltaTime;
+            }
+
+            // Apply linear limits if specified
+            if (constraint.Limits.X != 0.0f || constraint.Limits.Y != 0.0f)
+            {
+                float currentDistance = projectionLength;
+                float minDistance = constraint.Limits.X;
+                float maxDistance = constraint.Limits.Y;
+                
+                if (currentDistance < minDistance)
+                {
+                    float correction = (minDistance - currentDistance) * constraint.Stiffness / (deltaTime * bodyA.Mass);
+                    bodyA.Velocity += slideAxis * correction;
+                }
+                else if (currentDistance > maxDistance)
+                {
+                    float correction = (currentDistance - maxDistance) * constraint.Stiffness / (deltaTime * bodyA.Mass);
+                    bodyA.Velocity -= slideAxis * correction;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Solves a spring constraint (elastic connection).
+        /// </summary>
+        /// <param name="constraint">The spring constraint.</param>
+        /// <param name="bodyA">First rigid body.</param>
+        /// <param name="bodyB">Second rigid body (null for world constraints).</param>
+        /// <param name="worldAnchorA">World space anchor on body A.</param>
+        /// <param name="worldAnchorB">World space anchor on body B (or world position).</param>
+        /// <param name="deltaTime">Time step.</param>
+        /// <remarks>
+        /// daorigins.exe: Spring constraint implementation
+        /// Applies elastic forces based on displacement.
+        /// </remarks>
+        private void SolveSpringConstraint(PhysicsConstraint constraint, RigidBodyData bodyA, RigidBodyData bodyB, Vector3 worldAnchorA, Vector3 worldAnchorB, float deltaTime)
+        {
+            if (!bodyA.IsDynamic)
+            {
+                return;
+            }
+
+            Vector3 displacement = worldAnchorB - worldAnchorA;
+            float distance = displacement.Length();
+            
+            if (distance > 0.0001f)
+            {
+                Vector3 direction = displacement / distance;
+                
+                // Get spring parameters
+                float springConstant = constraint.Stiffness > 0.0f ? constraint.Stiffness : 100.0f;
+                float damping = constraint.Parameters != null && constraint.Parameters.ContainsKey("damping") 
+                    ? constraint.Parameters["damping"] 
+                    : 0.1f;
+                float restLength = constraint.Parameters != null && constraint.Parameters.ContainsKey("restLength")
+                    ? constraint.Parameters["restLength"]
+                    : 0.0f;
+                
+                float extension = distance - restLength;
+                
+                // Calculate spring force (Hooke's law)
+                float springForce = extension * springConstant;
+                
+                // Calculate damping force (proportional to relative velocity)
+                Vector3 relativeVelocity = bodyA.Velocity;
+                if (bodyB != null && bodyB.IsDynamic)
+                {
+                    relativeVelocity -= bodyB.Velocity;
+                }
+                float relativeSpeed = Vector3.Dot(relativeVelocity, direction);
+                float dampingForce = relativeSpeed * damping;
+                
+                // Total force along spring direction
+                float totalForce = springForce + dampingForce;
+                Vector3 force = direction * totalForce;
+                
+                // Apply forces
+                float invMassA = 1.0f / bodyA.Mass;
+                bodyA.Velocity += force * invMassA * deltaTime;
+                
+                if (bodyB != null && bodyB.IsDynamic)
+                {
+                    float invMassB = 1.0f / bodyB.Mass;
+                    bodyB.Velocity -= force * invMassB * deltaTime;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Transforms a local point to world space using rigid body transform.
+        /// </summary>
+        /// <param name="body">The rigid body.</param>
+        /// <param name="localPoint">Point in local space.</param>
+        /// <returns>Point in world space.</returns>
+        /// <remarks>
+        /// daorigins.exe: Transform operations for constraint anchor points
+        /// </remarks>
+        private Vector3 TransformLocalToWorld(RigidBodyData body, Vector3 localPoint)
+        {
+            // Rotate local point by body rotation
+            Vector3 rotatedPoint = Vector3.Transform(localPoint, body.Rotation);
+            // Translate by body position
+            return body.Position + rotatedPoint;
         }
 
         /// <summary>

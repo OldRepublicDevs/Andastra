@@ -46,8 +46,8 @@ namespace Andastra.Parsing.Resource.Generics.GUI
                 var controlsList = new GFFList();
                 foreach (var control in _gui.Controls)
                 {
-                    var controlStruct = WriteControl(control);
-                    controlsList.Add(controlStruct);
+                    var controlStruct = controlsList.Add(0);
+                    WriteControlToStruct(control, controlStruct);
                 }
                 gff.Root.SetList("CONTROLS", controlsList);
             }
@@ -82,6 +82,12 @@ namespace Andastra.Parsing.Resource.Generics.GUI
         private GFFStruct WriteControl(GUIControl control)
         {
             var gffStruct = new GFFStruct(0);
+            WriteControlToStruct(control, gffStruct);
+            return gffStruct;
+        }
+
+        private void WriteControlToStruct(GUIControl control, GFFStruct gffStruct)
+        {
 
             // Basic properties
             gffStruct.SetInt32("CONTROLTYPE", (int)control.GuiType);
@@ -124,11 +130,11 @@ namespace Andastra.Parsing.Resource.Generics.GUI
             }
             if (control.Looping.HasValue)
             {
-                gffStruct.SetUInt8("LOOPING", (byte)(control.Looping.Value ? 1 : 0));
+                gffStruct.SetUInt8("LOOPING", (byte)(control.Looping.Value != 0 ? 1 : 0));
             }
             if (control.LeftScrollbar.HasValue)
             {
-                gffStruct.SetUInt8("LEFTSCROLLBAR", (byte)(control.LeftScrollbar.Value ? 1 : 0));
+                gffStruct.SetUInt8("LEFTSCROLLBAR", (byte)(control.LeftScrollbar.Value != 0 ? 1 : 0));
             }
 
             // Extent (position and size)
@@ -225,13 +231,11 @@ namespace Andastra.Parsing.Resource.Generics.GUI
                 var childControlsList = new GFFList();
                 foreach (var child in control.Children)
                 {
-                    var childStruct = WriteControl(child);
-                    childControlsList.Add(childStruct);
+                    var childStruct = childControlsList.Add(0);
+                    WriteControl(child, childStruct);
                 }
                 gffStruct.SetList("CONTROLS", childControlsList);
             }
-
-            return gffStruct;
         }
 
         /// <summary>
@@ -240,12 +244,11 @@ namespace Andastra.Parsing.Resource.Generics.GUI
         /// </summary>
         private void WriteExtent(GFFStruct gffStruct, GUIControl control)
         {
-            var extentStruct = new GFFStruct(0);
+            var extentStruct = gffStruct.Acquire<GFFStruct>("EXTENT", new GFFStruct(0));
             extentStruct.SetInt32("LEFT", (int)control.Extent.X);
             extentStruct.SetInt32("TOP", (int)control.Extent.Y);
             extentStruct.SetInt32("WIDTH", (int)control.Extent.Z);
             extentStruct.SetInt32("HEIGHT", (int)control.Extent.W);
-            gffStruct.SetStruct("EXTENT", extentStruct);
         }
 
         /// <summary>
@@ -254,7 +257,7 @@ namespace Andastra.Parsing.Resource.Generics.GUI
         /// </summary>
         private void WriteBorder(GFFStruct gffStruct, GUIBorder border)
         {
-            var borderStruct = new GFFStruct(0);
+            var borderStruct = gffStruct.Acquire<GFFStruct>("BORDER", new GFFStruct(0));
             if (border.Color != null)
             {
                 borderStruct.SetVector3("COLOR", new Vector3(border.Color.R, border.Color.G, border.Color.B));
@@ -280,7 +283,6 @@ namespace Andastra.Parsing.Resource.Generics.GUI
             {
                 borderStruct.SetUInt8("PULSING", (byte)border.Pulsing.Value);
             }
-            gffStruct.SetStruct("BORDER", borderStruct);
         }
 
         /// <summary>
@@ -294,7 +296,7 @@ namespace Andastra.Parsing.Resource.Generics.GUI
             {
                 textStruct.SetString("TEXT", text.Text);
             }
-            textStruct.SetUInt32("STRREF", (uint)(text.StrRef == -1 ? 0xFFFFFFFF : text.StrRef));
+            textStruct.SetUInt32("STRREF", (uint)(text.StrRef == -1 ? 0xFFFFFFFFU : (uint)text.StrRef));
             if (text.Pulsing.HasValue)
             {
                 textStruct.SetUInt8("PULSING", (byte)text.Pulsing.Value);
