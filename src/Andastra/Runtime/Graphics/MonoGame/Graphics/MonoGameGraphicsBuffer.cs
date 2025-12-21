@@ -46,8 +46,9 @@ namespace Andastra.Runtime.MonoGame.Graphics
 
         /// <summary>
         /// Gets the native handle of the buffer.
+        /// Note: MonoGame's VertexBuffer does not expose a Handle property directly.
         /// </summary>
-        public IntPtr NativeHandle => _buffer != null ? _buffer.Handle : IntPtr.Zero;
+        public IntPtr NativeHandle => IntPtr.Zero;
 
         /// <summary>
         /// Initializes a new GraphicsBuffer for structured data.
@@ -82,7 +83,8 @@ namespace Andastra.Runtime.MonoGame.Graphics
             VertexDeclaration declaration = CreateStructuredVertexDeclaration(elementStride);
 
             // Create vertex buffer with appropriate usage
-            BufferUsage usage = isDynamic ? BufferUsage.Dynamic : BufferUsage.None;
+            // Note: MonoGame's BufferUsage only has None and WriteOnly options
+            BufferUsage usage = isDynamic ? BufferUsage.WriteOnly : BufferUsage.None;
             _buffer = new VertexBuffer(graphicsDevice, declaration, elementCount, usage);
         }
 
@@ -167,7 +169,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
                 throw new ArgumentOutOfRangeException(nameof(offset));
             }
 
-            _buffer.SetData(offset * _elementStride, data, startIndex, elementCount);
+            _buffer.SetData(offset * _elementStride, data, startIndex, elementCount, _elementStride);
         }
 
         /// <summary>

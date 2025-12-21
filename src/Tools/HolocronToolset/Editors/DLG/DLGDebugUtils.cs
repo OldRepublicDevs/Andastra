@@ -149,42 +149,22 @@ namespace HolocronToolset.Editors.DLG
                             refInfo.Append($", Module={refTypeObj.Namespace}");
                         }
 
-                        // Source file and line number
+                        // Method information
                         // Matching PyKotor: if inspect.isfunction(ref) or inspect.ismethod(ref): ...
-                        // In .NET, we can get source location for methods using StackTrace or attributes
+                        // In .NET, we can get method information from MethodBase
                         if (refObj is MethodBase methodBase)
                         {
                             try
                             {
-                                // Try to get source file information from method
-                                StackTrace stackTrace = new StackTrace(methodBase, false);
-                                if (stackTrace.FrameCount > 0)
-                                {
-                                    StackFrame frame = stackTrace.GetFrame(0);
-                                    string fileName = frame.GetFileName();
-                                    int lineNumber = frame.GetFileLineNumber();
-                                    if (!string.IsNullOrEmpty(fileName))
-                                    {
-                                        refInfo.Append($", Defined at {fileName}:{lineNumber}");
-                                    }
-                                    else
-                                    {
-                                        refInfo.Append(", Source not available");
-                                    }
-                                }
-                                else
-                                {
-                                    refInfo.Append(", Source info not applicable");
-                                }
+                                // Get method name and declaring type
+                                string methodName = methodBase.Name;
+                                string declaringType = methodBase.DeclaringType?.FullName ?? "Unknown";
+                                refInfo.Append($", Method={declaringType}.{methodName}");
                             }
                             catch (Exception)
                             {
-                                refInfo.Append(", Source info not applicable");
+                                refInfo.Append(", Method info not available");
                             }
-                        }
-                        else
-                        {
-                            refInfo.Append(", Source info not applicable");
                         }
                     }
                     catch (Exception ex)

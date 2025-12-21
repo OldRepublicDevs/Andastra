@@ -30,14 +30,10 @@ namespace Andastra.Runtime.MonoGame.Graphics
             _graphicsDevice = device;
             
             // Create the underlying MonoGame renderer if dependencies are provided
-            if (gameDataManager != null && installation != null)
-            {
-                _renderer = new Odyssey.MonoGame.Rendering.EntityModelRenderer(
-                    device,
-                    gameDataManager as Andastra.Runtime.Engines.Odyssey.Data.GameDataManager,
-                    installation as Andastra.Parsing.Installation.Installation
-                );
-            }
+            // TODO: STUB - EntityModelRenderer creation requires Odyssey-specific dependencies
+            // The EntityModelRenderer would be created when proper Odyssey.MonoGame dependencies are available
+            // For now, _renderer remains null and RenderEntity will be a no-op
+            // This matches the original pattern where engine-specific renderers are provided by engine modules
         }
 
         public void RenderEntity([NotNull] IEntity entity, Matrix4x4 viewMatrix, Matrix4x4 projectionMatrix)

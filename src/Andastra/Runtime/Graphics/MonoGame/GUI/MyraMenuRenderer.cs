@@ -111,7 +111,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                 _rootPanel = new Panel();
                 _rootPanel.Width = _graphicsDevice.Viewport.Width;
                 _rootPanel.Height = _graphicsDevice.Viewport.Height;
-                _rootPanel.Background = new SolidColorBrush(Microsoft.Xna.Framework.Color.Transparent);
+                // Note: Myra uses a different approach for backgrounds, set to null for transparent
 
                 // Add root panel to desktop as the root widget
                 // All UI elements will be children of this panel
