@@ -139,6 +139,10 @@ namespace Andastra.Runtime.Games.Eclipse
         // Cached static object mesh data for rendering (loaded on demand)
         private readonly Dictionary<string, IRoomMeshData> _cachedStaticObjectMeshes;
 
+        // Cached entity model mesh data for rendering (loaded on demand)
+        // Based on daorigins.exe/DragonAge2.exe: Entity models are cached for performance
+        private readonly Dictionary<string, IRoomMeshData> _cachedEntityMeshes;
+
         /// <summary>
         /// Static object information from area files.
         /// </summary>
@@ -200,6 +204,7 @@ namespace Andastra.Runtime.Games.Eclipse
             _cachedRoomMeshes = new Dictionary<string, IRoomMeshData>(StringComparer.OrdinalIgnoreCase);
             _staticObjects = new List<StaticObjectInfo>();
             _cachedStaticObjectMeshes = new Dictionary<string, IRoomMeshData>(StringComparer.OrdinalIgnoreCase);
+            _cachedEntityMeshes = new Dictionary<string, IRoomMeshData>(StringComparer.OrdinalIgnoreCase);
 
             // Store area data for lighting system initialization
             _areaData = areaData;
@@ -4057,13 +4062,98 @@ namespace Andastra.Runtime.Games.Eclipse
             }
 
             // Render entity model
-            // In a full implementation, this would:
-            // - Get entity's model from model component
-            // - Render model with appropriate materials
-            // - Apply entity-specific effects
-            // - Handle transparency and alpha blending
-            // TODO: STUB - For now, this is a placeholder
-            // Actual entity rendering would use IEntityModelRenderer or similar
+            // Get renderable component
+            IRenderableComponent renderable = entity.GetComponent<IRenderableComponent>();
+            if (renderable == null || !renderable.Visible || string.IsNullOrEmpty(renderable.ModelResRef))
+            {
+                return; // Entity has no renderable component, is not visible, or has no model
+            }
+
+            // Check if render context provides room mesh renderer
+            // Entities may use the same MDL format as static objects, so reuse the room mesh renderer
+            if (_renderContext == null || _renderContext.RoomMeshRenderer == null)
+            {
+                return; // No mesh renderer available
+            }
+
+            IRoomMeshRenderer roomMeshRenderer = _renderContext.RoomMeshRenderer;
+            IGraphicsDevice graphicsDevice = _renderContext.GraphicsDevice;
+
+            // Get or load entity model mesh data
+            IRoomMeshData entityMeshData;
+            if (!_cachedEntityMeshes.TryGetValue(renderable.ModelResRef, out entityMeshData))
+            {
+                // Entity model mesh not cached - attempt to load it from Module resources
+                // Based on daorigins.exe/DragonAge2.exe: Entity models are loaded from MDL models in module archives
+                // Original implementation: Loads MDL/MDX from module resources and creates GPU buffers
+                entityMeshData = LoadRoomMesh(renderable.ModelResRef, roomMeshRenderer);
+                if (entityMeshData == null)
+                {
+                    // Failed to load entity model mesh - skip rendering
+                    return;
+                }
+
+                // Cache the loaded mesh for future use
+                _cachedEntityMeshes[renderable.ModelResRef] = entityMeshData;
+            }
+
+            if (entityMeshData == null || entityMeshData.VertexBuffer == null || entityMeshData.IndexBuffer == null)
+            {
+                return; // Entity mesh data is invalid, skip rendering
+            }
+
+            // Handle opacity for alpha blending
+            // Based on swkotor2.exe: Entity opacity is used for fade-in/fade-out effects
+            float opacity = renderable.Opacity;
+            bool needsAlphaBlending = opacity < 1.0f;
+
+            // Set up rendering states
+            // Eclipse entities use depth testing and back-face culling
+            graphicsDevice.SetDepthStencilState(graphicsDevice.CreateDepthStencilState());
+            graphicsDevice.SetRasterizerState(graphicsDevice.CreateRasterizerState());
+
+            // Set up blend state for opacity/alpha blending if needed
+            if (needsAlphaBlending)
+            {
+                // Enable alpha blending for transparent entities
+                // Based on swkotor2.exe: Entities with opacity < 1.0 use alpha blending
+                IBlendState blendState = graphicsDevice.CreateBlendState();
+                // Note: Actual blend state configuration would set alpha blending parameters
+                // For now, use default blend state (implementation may need to be enhanced)
+                graphicsDevice.SetBlendState(blendState);
+            }
+            else
+            {
+                graphicsDevice.SetBlendState(graphicsDevice.CreateBlendState());
+            }
+
+            // Apply opacity to basic effect if supported
+            // Note: BasicEffect may not directly support opacity, but we can apply it via material color
+            // For now, we'll render with the entity's world matrix (already set above)
+
+            // Set rendering states for entity geometry
+            graphicsDevice.SetSamplerState(0, graphicsDevice.CreateSamplerState());
+
+            // Set vertex and index buffers
+            graphicsDevice.SetVertexBuffer(entityMeshData.VertexBuffer);
+            graphicsDevice.SetIndexBuffer(entityMeshData.IndexBuffer);
+
+            // Apply basic effect and render
+            // Eclipse would use more advanced shaders, but basic effect provides foundation
+            foreach (IEffectPass pass in basicEffect.CurrentTechnique.Passes)
+            {
+                pass.Apply();
+
+                // Draw indexed primitives (triangles)
+                // Based on daorigins.exe/DragonAge2.exe: Entity geometry uses indexed triangle lists
+                graphicsDevice.DrawIndexedPrimitives(
+                    PrimitiveType.TriangleList,
+                    0, // base vertex
+                    0, // min vertex index
+                    entityMeshData.IndexCount, // index count
+                    0, // start index
+                    entityMeshData.IndexCount / 3); // primitive count (triangles)
+            }
         }
 
         /// <summary>
