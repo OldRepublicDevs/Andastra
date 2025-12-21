@@ -2017,5 +2017,45 @@ namespace HolocronToolset.Widgets
 
             return position;
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2778-2788
+        // Original: def _toggle_word_wrap(self):
+        /// <summary>
+        /// Toggles word wrap mode for the code editor.
+        /// Switches between NoWrap and Wrap modes.
+        /// Matching PyKotor behavior: toggles line wrap mode and logs the state change.
+        /// </summary>
+        /// <returns>True if word wrap is now enabled, false if disabled.</returns>
+        public bool ToggleWordWrap()
+        {
+            // Matching PyKotor implementation: check current mode and toggle
+            // Original: current_mode: QPlainTextEdit.LineWrapMode = self.ui.codeEdit.lineWrapMode()
+            // Original: if current_mode == QPlainTextEdit.LineWrapMode.NoWrap:
+            if (TextWrapping == Avalonia.Media.TextWrapping.NoWrap)
+            {
+                // Original: self.ui.codeEdit.setLineWrapMode(QPlainTextEdit.LineWrapMode.WidgetWidth)
+                TextWrapping = Avalonia.Media.TextWrapping.Wrap;
+                // Original: self._log_to_output("Word wrap: ON")
+                // Note: Logging would be handled by NSSEditor if needed
+                return true;
+            }
+            else
+            {
+                // Original: self.ui.codeEdit.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
+                TextWrapping = Avalonia.Media.TextWrapping.NoWrap;
+                // Original: self._log_to_output("Word wrap: OFF")
+                // Note: Logging would be handled by NSSEditor if needed
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Gets whether word wrap is currently enabled.
+        /// </summary>
+        /// <returns>True if word wrap is enabled, false otherwise.</returns>
+        public bool IsWordWrapEnabled()
+        {
+            return TextWrapping == Avalonia.Media.TextWrapping.Wrap;
+        }
     }
 }

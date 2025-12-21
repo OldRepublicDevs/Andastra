@@ -2756,7 +2756,18 @@ namespace HolocronToolset.Editors
             _commandPalette.RegisterCommand("view.zoomIn", "Zoom In", () => { if (_codeEdit != null) _codeEdit.ZoomIn(); }, "View");
             _commandPalette.RegisterCommand("view.zoomOut", "Zoom Out", () => { if (_codeEdit != null) _codeEdit.ZoomOut(); }, "View");
             _commandPalette.RegisterCommand("view.resetZoom", "Reset Zoom", () => { if (_codeEdit != null) _codeEdit.ResetZoom(); }, "View");
-            _commandPalette.RegisterCommand("view.toggleWordWrap", "Toggle Word Wrap", () => { /* TODO: Implement */ }, "View");
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2778-2788
+            // Original: def _toggle_word_wrap(self):
+            _commandPalette.RegisterCommand("view.toggleWordWrap", "Toggle Word Wrap", () => 
+            { 
+                if (_codeEdit != null) 
+                { 
+                    bool isEnabled = _codeEdit.ToggleWordWrap();
+                    // Matching PyKotor: log to output
+                    // Original: self._log_to_output("Word wrap: ON") or "Word wrap: OFF"
+                    LogToOutput($"Word wrap: {(isEnabled ? "ON" : "OFF")}");
+                } 
+            }, "View");
 
             // Navigation
             _commandPalette.RegisterCommand("navigate.gotoLine", "Go to Line...", () => ShowGotoLine(), "Navigation");
