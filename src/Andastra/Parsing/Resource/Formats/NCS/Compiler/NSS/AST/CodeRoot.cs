@@ -106,6 +106,8 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
             // The external compiler (nwnnsscomp) always places the entry stub at the BEGINNING (index 0)
             // When there are globals: JSR jumps to first global, RETN, then globals, SAVEBP, then RESTOREBP, MOVSP, RETN after SAVEBP
             // When there are no globals: JSR jumps to main, RETN
+            // Note: We compile globals and functions first, then insert the entry stub at index 0, which pushes
+            // everything forward. This achieves the same final layout as nwnnsscomp where entry stub is at index 0.
             bool hasGlobals = scriptGlobals.Any();
             NCSInstruction firstGlobalInstruction = null;
 
@@ -162,6 +164,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
 
                 // The external compiler (nwnnsscomp) always places entry stub at BEGINNING (index 0)
                 // Insert RETN first, then JSR at the same index, so JSR comes first in final order
+                // Both instructions are inserted at index 0, which pushes all previously compiled instructions forward
                 NCSInstruction entryJsrTarget = hasGlobals ? (firstGlobalInstruction ?? mainStart) : mainStart;
                 ncs.Add(NCSInstructionType.RETN, new List<object>(), null, 0);
                 NCSInstruction entryJsr = ncs.Add(NCSInstructionType.JSR, new List<object>(), entryJsrTarget, 0);
@@ -214,6 +217,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
                 // Original: ncs.add(NCSInstructionType.RETN, args=[], index=entry_index) then JSR then RSADDI, all at entry_index
                 // Adding RETN first, then JSR, then RSADDI at the same index, so final order is RSADDI, JSR, RETN
                 // The external compiler places entry stub at BEGINNING (index 0) for StartingConditional too
+                // Insert RETN first, then JSR, then RSADDI, all at index 0, so final order is RSADDI, JSR, RETN
                 ncs.Add(NCSInstructionType.RETN, new List<object>(), null, 0);
                 NCSInstruction entryJsr = ncs.Add(NCSInstructionType.JSR, new List<object>(), scStart, 0);
                 entryJsr.Jump = scStart;
@@ -736,7 +740,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
                 throw new NSS.CompileError(msg);
             }
 
-            // Function has forward declaration, insert the compiled definition after the stub
+            // TODO:  Function has forward declaration, insert the compiled definition after the stub
             NCS temp = new NCS();
             NCSInstruction retn = new NCSInstruction(NCSInstructionType.RETN);
             Body.Compile(temp, root, null, retn, null, null);
@@ -748,6 +752,10 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
             {
                 System.Console.WriteLine($"CompileFunctionWithPrototype for {name}: stubIndex={stubIndex} countBefore={ncs.Instructions.Count}");
             }
+            
+            // Store reference to stub before removal - needed for jump redirection
+            NCSInstruction removedStub = stubInstruction;
+            
             NCSInstruction newStart;
             if (stubIndex >= 0)
             {
@@ -762,19 +770,37 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
             }
 
             // Redirect any existing jumps that pointed to the prototype stub to the new function start
+            // This must happen after the stub is removed but before we update FunctionMap
+            // Matching PyKotor behavior: when prototype stub is replaced, all JSR/JMP/JZ/JNZ that
+            // targeted the stub must be redirected to the new function start instruction
             int updated = 0;
             foreach (NCSInstruction inst in ncs.Instructions)
             {
-                if (ReferenceEquals(inst.Jump, root.FunctionMap[name].Instruction))
+                // Check if this instruction's jump target was the removed stub
+                // Use ReferenceEquals for precise object identity matching
+                if (inst.Jump != null && ReferenceEquals(inst.Jump, removedStub))
                 {
                     inst.Jump = newStart;
                     updated++;
+                    if (debug)
+                    {
+                        System.Console.WriteLine($"CompileFunctionWithPrototype: redirected {inst.InsType} jump from stub to newStart");
+                    }
                 }
-                else if (inst.Jump != null && !ncs.Instructions.Contains(inst.Jump))
+            }
+            
+            // Also check instructions in the newly inserted function body for any jumps that might
+            // have been compiled with references to the stub (shouldn't happen, but be safe)
+            foreach (NCSInstruction inst in temp.Instructions)
+            {
+                if (inst.Jump != null && ReferenceEquals(inst.Jump, removedStub))
                 {
-                    // Jump target no longer exists (prototype stub removed) – redirect to new function start.
                     inst.Jump = newStart;
                     updated++;
+                    if (debug)
+                    {
+                        System.Console.WriteLine($"CompileFunctionWithPrototype: redirected jump in new function body from stub to newStart");
+                    }
                 }
             }
 
