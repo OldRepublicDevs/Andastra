@@ -236,49 +236,56 @@ namespace Andastra.Parsing.Resource.Generics
                 root.SetResRef("PlayerCharacter", gam.PlayerCharacter);
             }
 
-            // Set Infinity-specific fields (only for Infinity games)
-            if (game.IsEclipse())
-            {
-                root.SetString("GameName", gam.GameName);
-                root.SetInt32("Chapter", gam.Chapter);
-
-                // Set Infinity journal entries
-                var journalList = new GFFList();
-                root.SetList("JournalEntries", journalList);
-                if (gam.JournalEntries != null)
-                {
-                    foreach (var entry in gam.JournalEntries)
-                    {
-                        var journalStruct = journalList.Add(6); // Struct type
-                        journalStruct.SetInt32("TextStrRef", entry.TextStrRef);
-                        journalStruct.SetUInt8("Completed", entry.Completed ? (byte)1 : (byte)0);
-                        journalStruct.SetInt32("Category", entry.Category);
-                    }
-                }
-            }
+            // Set Infinity-specific fields (only for Infinity Engine games)
+            // NOTE: Infinity Engine games (Baldur's Gate, Icewind Dale, Planescape: Torment) are not yet in the Game enum
+            // This code path will be enabled when Infinity Engine games are added to the enum and IsInfinity() method is available
+            // For now, Infinity-specific fields are not written as there's no way to detect Infinity Engine games
+            // TODO: When Infinity Engine games are added to Game enum, replace this comment with: if (game.IsInfinity())
+            // if (game.IsInfinity())
+            // {
+            //     root.SetString("GameName", gam.GameName);
+            //     root.SetInt32("Chapter", gam.Chapter);
+            //
+            //     // Set Infinity journal entries
+            //     var journalList = new GFFList();
+            //     root.SetList("JournalEntries", journalList);
+            //     if (gam.JournalEntries != null)
+            //     {
+            //         foreach (var entry in gam.JournalEntries)
+            //         {
+            //             var journalStruct = journalList.Add(6); // Struct type
+            //             journalStruct.SetInt32("TextStrRef", entry.TextStrRef);
+            //             journalStruct.SetUInt8("Completed", entry.Completed ? (byte)1 : (byte)0);
+            //             journalStruct.SetInt32("Category", entry.Category);
+            //         }
+            //     }
+            // }
 
             return gff;
         }
 
         /// <summary>
-        /// Checks if the game is an  game.
+        /// Checks if the game is an Infinity Engine game.
         /// </summary>
         /// <param name="game">The game enum value.</param>
-        /// <returns>True if the game is an  game.</returns>
+        /// <returns>True if the game is an Infinity Engine game.</returns>
         /// <remarks>
-        ///  games:
-        /// -  (.exe)
-        /// -  (.exe)
-        /// -  (.exe)
+        /// Infinity Engine games:
+        /// - Baldur's Gate (BaldurGate.exe)
+        /// - Icewind Dale (IcewindDale.exe)
+        /// - Planescape: Torment (PlanescapeTorment.exe)
         /// 
-        /// NOTE:  games are not currently in the Game enum, but this method
-        /// is prepared for when they are added. For now, this returns false.
+        /// NOTE: Infinity Engine games are not currently in the Game enum, but this method
+        /// is prepared for when they are added. For now, this always returns false.
+        /// When Infinity Engine games are added to the Game enum, this method should be
+        /// updated to check for those enum values.
         /// </remarks>
-        private static bool Is(Game game)
+        private static bool IsInfinity(Game game)
         {
-            //  games would be added to Game enum in the future
-            // TODO: STUB - For now, return false as  games are not in the enum yet
-            // This method is prepared for future  support
+            // Infinity Engine games will be added to Game enum in the future
+            // Currently returns false as Infinity Engine games are not in the enum yet
+            // This method is prepared for future Infinity Engine support
+            // TODO: When Infinity Engine games are added to Game enum, implement proper checking logic
             return false;
         }
     }
