@@ -354,6 +354,162 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 }
             }
             
+            // Structure containing information about an empty main() function's components.
+            // Based on nwnnsscomp.exe: Empty main() structure analysis.
+            class EmptyMainStructure
+            {
+                public int SavebpIndex { get; set; }
+                public int MainStart { get; set; }
+                public int MainEnd { get; set; }
+                public bool HasEntryStub { get; set; }
+                public int EntryStubStart { get; set; }
+                public int EntryStubEnd { get; set; }
+                public bool HasCleanupCode { get; set; }
+                public int CleanupCodeStart { get; set; }
+                public int CleanupCodeEnd { get; set; }
+                public int FinalRetnIndex { get; set; }
+            }
+            
+            // Identifies if the instructions from savebpIndex+1 to end represent an empty main() function.
+            // Empty main() functions contain only the entry stub (JSR+RETN or RSADD*+JSR+RETN), 
+            // possibly cleanup code (MOVSP+RETN+RETN), and a final RETN.
+            // Based on nwnnsscomp.exe: Empty main() functions have no ACTION instructions after SAVEBP.
+            bool IsEmptyMainFunction(List<NCSInstruction> instList, int savebpIdx, NCS ncsFile)
+            {
+                if (instList == null || instList.Count == 0)
+                {
+                    return false;
+                }
+                
+                // Empty main() requires a SAVEBP to separate globals from main
+                if (savebpIdx < 0 || savebpIdx >= instList.Count - 1)
+                {
+                    return false;
+                }
+                
+                int mainStart = savebpIdx + 1;
+                int mainEnd = instList.Count;
+                
+                // Check if there are any ACTION instructions in the main range
+                // Empty main() has no ACTION instructions (no function calls)
+                bool hasActionInstructions = false;
+                for (int i = mainStart; i < mainEnd; i++)
+                {
+                    if (instList[i] != null && instList[i].InsType == NCSInstructionType.ACTION)
+                    {
+                        hasActionInstructions = true;
+                        break;
+                    }
+                }
+                
+                // If there are ACTION instructions, it's not an empty main()
+                if (hasActionInstructions)
+                {
+                    return false;
+                }
+                
+                // Empty main() should have an entry stub pattern starting at mainStart
+                // Entry stub patterns: [RSADD*], JSR, RETN or [RSADD*], JSR, RESTOREBP
+                bool hasEntryStub = HasEntryStubPattern(instList, mainStart, ncsFile);
+                
+                // Empty main() should end with RETN (the final return instruction)
+                bool endsWithRetn = (instList.Count > 0 && 
+                                    instList[instList.Count - 1] != null &&
+                                    instList[instList.Count - 1].InsType == NCSInstructionType.RETN);
+                
+                // Empty main() is identified by: no ACTION instructions + entry stub + ends with RETN
+                return hasEntryStub && endsWithRetn;
+            }
+            
+            // Analyzes the structure of an empty main() function and returns information about its components.
+            // Based on nwnnsscomp.exe: Empty main() contains entry stub, possibly cleanup code, and final RETN.
+            EmptyMainStructure AnalyzeEmptyMainStructure(List<NCSInstruction> instList, int savebpIdx, NCS ncsFile)
+            {
+                var structure = new EmptyMainStructure
+                {
+                    SavebpIndex = savebpIdx,
+                    MainStart = savebpIdx + 1,
+                    MainEnd = instList.Count,
+                    HasEntryStub = false,
+                    EntryStubStart = -1,
+                    EntryStubEnd = -1,
+                    HasCleanupCode = false,
+                    CleanupCodeStart = -1,
+                    CleanupCodeEnd = -1,
+                    FinalRetnIndex = -1
+                };
+                
+                if (instList == null || instList.Count == 0 || savebpIdx < 0)
+                {
+                    return structure;
+                }
+                
+                int mainStart = savebpIdx + 1;
+                
+                // Identify entry stub pattern
+                if (HasEntryStubPattern(instList, mainStart, ncsFile))
+                {
+                    structure.HasEntryStub = true;
+                    structure.EntryStubStart = mainStart;
+                    
+                    // Entry stub ends after JSR+RETN or RSADD*+JSR+RETN
+                    int jsrOffset = 0;
+                    if (mainStart < instList.Count && IsRsaddInstruction(instList[mainStart].InsType))
+                    {
+                        jsrOffset = 1;
+                    }
+                    
+                    int jsrIndex = mainStart + jsrOffset;
+                    if (jsrIndex + 1 < instList.Count && 
+                        instList[jsrIndex].InsType == NCSInstructionType.JSR &&
+                        instList[jsrIndex + 1].InsType == NCSInstructionType.RETN)
+                    {
+                        structure.EntryStubEnd = jsrIndex + 2; // After RETN
+                    }
+                    else if (jsrIndex + 1 < instList.Count &&
+                             instList[jsrIndex].InsType == NCSInstructionType.JSR &&
+                             instList[jsrIndex + 1].InsType == NCSInstructionType.RESTOREBP)
+                    {
+                        structure.EntryStubEnd = jsrIndex + 2; // After RESTOREBP
+                    }
+                }
+                
+                // Identify cleanup code pattern: MOVSP, RETN, RETN (or just MOVSP, RETN)
+                int cleanupStart = structure.EntryStubEnd >= 0 ? structure.EntryStubEnd : mainStart;
+                if (cleanupStart < instList.Count - 2)
+                {
+                    // Pattern 1: MOVSP, RETN, RETN (standard cleanup)
+                    if (instList[cleanupStart].InsType == NCSInstructionType.MOVSP &&
+                        instList[cleanupStart + 1].InsType == NCSInstructionType.RETN &&
+                        instList[cleanupStart + 2].InsType == NCSInstructionType.RETN)
+                    {
+                        structure.HasCleanupCode = true;
+                        structure.CleanupCodeStart = cleanupStart;
+                        structure.CleanupCodeEnd = cleanupStart + 3;
+                    }
+                    // Pattern 2: MOVSP, RETN (alternative cleanup, no second RETN)
+                    else if (cleanupStart < instList.Count - 1 &&
+                             instList[cleanupStart].InsType == NCSInstructionType.MOVSP &&
+                             instList[cleanupStart + 1].InsType == NCSInstructionType.RETN &&
+                             cleanupStart + 1 == instList.Count - 1)
+                    {
+                        structure.HasCleanupCode = true;
+                        structure.CleanupCodeStart = cleanupStart;
+                        structure.CleanupCodeEnd = cleanupStart + 2;
+                    }
+                }
+                
+                // Identify final RETN
+                if (instList.Count > 0 &&
+                    instList[instList.Count - 1] != null &&
+                    instList[instList.Count - 1].InsType == NCSInstructionType.RETN)
+                {
+                    structure.FinalRetnIndex = instList.Count - 1;
+                }
+                
+                return structure;
+            }
+            
             // Comprehensive helper to check for entry stub pattern at a given position
             // Entry stub patterns include:
             // - [RSADD*], JSR, RETN (functions with return values)
@@ -898,13 +1054,27 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                             // Example: k_act_com41.nss has #include statements that bring in globals, but main() is empty (all code commented out)
                             // In this case:
                             // - All instructions from 0 to savebpIndex are global variable declarations (RSADDI, CONSTI, NEGI, etc.)
-                            // TODO:  - Instructions from savebpIndex+1 to end are the empty main() (just SAVEBP + entry stub + RETN)
+                            // - Instructions from savebpIndex+1 to end are the empty main() (SAVEBP at savebpIndex + entry stub + RETN)
+                            // Based on nwnnsscomp.exe: Empty main() contains entry stub (JSR+RETN or RSADD*+JSR+RETN), 
+                            // possibly cleanup code (MOVSP+RETN+RETN), and final RETN
                             // CRITICAL: Even though main() is "empty" (no ACTION), it still contains ALL instructions from SAVEBP+1 to the end
-                            // TODO:  This includes entry stub (JSR+RETN), cleanup code (MOVSP+RETN+RETN), and any other instructions
-                            Console.Error.WriteLine($"DEBUG NcsToAstConverter: EMPTY MAIN CASE - No ACTION instructions found anywhere! actionCount={actionCount}, actionCountInGlobals={actionCountInGlobals}, shouldDeferGlobals={shouldDeferGlobals}");
+                            
+                            // Identify empty main() structure using helper function
+                            bool isEmptyMain = IsEmptyMainFunction(instructions, savebpIndex, ncs);
+                            EmptyMainStructure emptyMainStruct = AnalyzeEmptyMainStructure(instructions, savebpIndex, ncs);
+                            
+                            Console.Error.WriteLine($"DEBUG NcsToAstConverter: EMPTY MAIN CASE - No ACTION instructions found anywhere! actionCount={actionCount}, actionCountInGlobals={actionCountInGlobals}, shouldDeferGlobals={shouldDeferGlobals}, isEmptyMain={isEmptyMain}");
                             Debug($"DEBUG NcsToAstConverter: EMPTY MAIN CASE - No ACTION instructions found anywhere!");
                             Debug($"DEBUG NcsToAstConverter: This is a script with globals only and an empty main(). Creating globals subroutine and empty main.");
                             Debug($"DEBUG NcsToAstConverter: EMPTY MAIN CASE - instructions.Count={instructions.Count}, savebpIndex={savebpIndex}, will create main from {savebpIndex + 1} to {instructions.Count}");
+                            
+                            if (isEmptyMain)
+                            {
+                                Debug($"DEBUG NcsToAstConverter: Empty main() structure identified:");
+                                Debug($"  - Entry stub: {emptyMainStruct.HasEntryStub} (start={emptyMainStruct.EntryStubStart}, end={emptyMainStruct.EntryStubEnd})");
+                                Debug($"  - Cleanup code: {emptyMainStruct.HasCleanupCode} (start={emptyMainStruct.CleanupCodeStart}, end={emptyMainStruct.CleanupCodeEnd})");
+                                Debug($"  - Final RETN: index={emptyMainStruct.FinalRetnIndex}");
+                            }
 
                             // Create globals subroutine with all instructions up to SAVEBP
                             if (savebpIndex >= 0)
@@ -919,7 +1089,10 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
 
                                 // Set mainStart and mainEnd for the empty main function
                                 // CRITICAL FIX: The main function starts right after SAVEBP and goes to the END (instructions.Count)
-                                // TODO:  Even if main() is "empty" (no ACTION), it still contains entry stub, cleanup code, and RETN instructions
+                                // Based on nwnnsscomp.exe: Empty main() contains ALL instructions from SAVEBP+1 to the end:
+                                // - Entry stub (JSR+RETN or RSADD*+JSR+RETN) at savebpIndex+1
+                                // - Possibly cleanup code (MOVSP+RETN+RETN) after entry stub
+                                // - Final RETN at the end
                                 // We MUST include ALL instructions from SAVEBP+1 to the end, not just a few
                                 mainStart = savebpIndex + 1;
                                 mainEnd = instructions.Count; // CRITICAL: Must be instructions.Count, not a smaller value!
