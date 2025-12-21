@@ -5136,38 +5136,67 @@ namespace Andastra.Runtime.Games.Odyssey
             if (saveData.CurrentAreaInstance != null)
             {
                 // Try to get module name from CurrentAreaInstance or CurrentArea
+                // Based on swkotor2.exe: Module state lookup priority
+                // Original implementation: Uses CurrentModule if available, then tries area instance, then infers from area name
+                // Located via string reference: "Mod_Area_list" @ 0x007be748 (swkotor2.exe)
                 string moduleName = null;
-                try
+
+                // Priority 1: Use CurrentModule if available (most direct)
+                if (!string.IsNullOrEmpty(saveData.CurrentModule))
                 {
-                    // Try to get module name from area instance
-                    var moduleProperty = saveData.CurrentAreaInstance.GetType().GetProperty("Module");
-                    if (moduleProperty != null)
+                    moduleName = saveData.CurrentModule;
+                }
+                // Priority 2: Try to get module name from area instance via reflection
+                else
+                {
+                    try
                     {
-                        object moduleObj = moduleProperty.GetValue(saveData.CurrentAreaInstance);
-                        if (moduleObj != null)
+                        // Try to get module name from area instance
+                        var moduleProperty = saveData.CurrentAreaInstance.GetType().GetProperty("Module");
+                        if (moduleProperty != null)
                         {
-                            var resRefProperty = moduleObj.GetType().GetProperty("ResRef");
-                            if (resRefProperty != null)
+                            object moduleObj = moduleProperty.GetValue(saveData.CurrentAreaInstance);
+                            if (moduleObj != null)
                             {
-                                object resRefObj = resRefProperty.GetValue(moduleObj);
-                                if (resRefObj != null)
+                                var resRefProperty = moduleObj.GetType().GetProperty("ResRef");
+                                if (resRefProperty != null)
                                 {
-                                    moduleName = resRefObj.ToString();
+                                    object resRefObj = resRefProperty.GetValue(moduleObj);
+                                    if (resRefObj != null)
+                                    {
+                                        moduleName = resRefObj.ToString();
+                                    }
                                 }
                             }
                         }
                     }
-                }
-                catch
-                {
-                    // Property access failed - try alternative methods
+                    catch
+                    {
+                        // Property access failed - try alternative methods
+                    }
                 }
 
-                // If module name not found, try to infer from CurrentArea
+                // Priority 3: If module name not found, try to infer from CurrentArea
                 if (string.IsNullOrEmpty(moduleName) && !string.IsNullOrEmpty(saveData.CurrentArea))
                 {
                     // Module name might be derivable from area name
-                    // TODO: STUB - For now, use a default or skip module state
+                    // Based on swkotor2.exe: Module state lookup by area name
+                    // Original implementation: Searches ModuleAreaMappings to find which module contains the current area
+                    // Located via string reference: "Mod_Area_list" @ 0x007be748 (swkotor2.exe)
+                    // If CurrentArea matches an area in ModuleAreaMappings, use that module
+                    if (saveData.ModuleAreaMappings != null && saveData.ModuleAreaMappings.Count > 0)
+                    {
+                        foreach (var kvp in saveData.ModuleAreaMappings)
+                        {
+                            string moduleResRef = kvp.Key;
+                            List<string> areaList = kvp.Value;
+                            if (areaList != null && areaList.Contains(saveData.CurrentArea, StringComparer.OrdinalIgnoreCase))
+                            {
+                                moduleName = moduleResRef;
+                                break;
+                            }
+                        }
+                    }
                 }
 
                 // Serialize area state if we have module name
