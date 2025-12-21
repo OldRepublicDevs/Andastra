@@ -430,7 +430,7 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 
 **Question**: Are DDS textures supported? What priority do they have? Can they be in modules?
 
-**Answer**: 
+**Answer**:
 
 **✅ YES - DDS is fully supported** with the following characteristics:
 
@@ -456,6 +456,7 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
   - All standard resource locations
 
 **Usage**: DDS textures work when:
+
 - Explicitly loaded via DDS-specific loading functions
 - Used in specific contexts that call DDS loader directly
 - **NOT** automatically loaded as fallback when TGA/TPC are missing
