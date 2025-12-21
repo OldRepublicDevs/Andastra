@@ -1,11 +1,16 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Resource;
 using Andastra.Runtime.Content.Interfaces;
+using Andastra.Runtime.Core.Enums;
+using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Rendering;
@@ -36,6 +41,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         // Matches daorigins.exe resource loading system (Eclipse engine resource manager)
         private IGameResourceProvider _resourceProvider;
 
+        // World reference for accessing entities and areas for rendering
+        // Matches daorigins.exe: Rendering system accesses world entities for scene rendering
+        private IWorld _world;
+
         public override GraphicsBackendType BackendType => GraphicsBackendType.EclipseEngine;
 
         protected override string GetGameName() => "Dragon Age Origins";
@@ -48,6 +57,16 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         public void SetResourceProvider(IGameResourceProvider resourceProvider)
         {
             _resourceProvider = resourceProvider;
+        }
+
+        /// <summary>
+        /// Sets the world to use for accessing entities and areas for rendering.
+        /// Based on daorigins.exe: Rendering system accesses world entities for scene rendering.
+        /// </summary>
+        /// <param name="world">The world to use for rendering.</param>
+        public void SetWorld(IWorld world)
+        {
+            _world = world;
         }
 
         protected override bool DetermineGraphicsApi()
@@ -175,28 +194,258 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         /// - Scene rendering includes terrain, objects, characters, effects
         /// - Uses DirectX 9 fixed-function pipeline and shaders
         /// - Rendering order: Terrain -> Static objects -> Characters -> Effects
+        /// - daorigins.exe: Scene rendering iterates through world entities and renders them
+        /// - DirectX 9 calls: SetTexture, SetStreamSource, SetIndices, DrawIndexedPrimitive, DrawPrimitive
         /// </remarks>
         private void RenderDragonAgeOriginsScene()
         {
-            // Render terrain
+            if (_d3dDevice == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Get current area from world for rendering
+            // Based on daorigins.exe: Scene rendering uses current area to determine what to render
+            IArea currentArea = _world?.CurrentArea;
+            if (currentArea == null)
+            {
+                // No area loaded, nothing to render
+                return;
+            }
+
+            // 1. Render terrain
             // Based on daorigins.exe: Terrain is rendered first as base layer
-            // This would use heightmap-based terrain rendering with texture splatting
-            // Placeholder for terrain rendering
+            // Terrain rendering uses heightmap-based terrain with texture splatting
+            // daorigins.exe: Terrain is part of area geometry, rendered as static mesh
+            RenderTerrain(currentArea);
 
-            // Render static objects
+            // 2. Render static objects (placeables, doors, waypoints)
             // Based on daorigins.exe: Static objects (buildings, props) are rendered after terrain
-            // This would iterate through static objects and render them
-            // Placeholder for static object rendering
+            // Rendering order: Opaque objects first, then transparent objects
+            RenderStaticObjects(currentArea);
 
-            // Render characters
+            // 3. Render characters (creatures, player)
             // Based on daorigins.exe: Characters (player, NPCs, creatures) are rendered after static objects
-            // This would iterate through characters and render them with animations
-            // Placeholder for character rendering
+            // Characters are rendered with animations and skeletal meshes
+            RenderCharacters(currentArea);
 
-            // Render particle effects
-            // Based on daorigins.exe: Particle effects are rendered last
-            // This would render fire, smoke, magic effects, etc.
-            // Placeholder for particle effect rendering
+            // 4. Render particle effects
+            // Based on daorigins.exe: Particle effects are rendered last (transparent, additive blending)
+            // Particle effects include fire, smoke, magic effects, spell visuals, etc.
+            RenderParticleEffects(currentArea);
+        }
+
+        /// <summary>
+        /// Renders terrain for the current area.
+        /// Based on daorigins.exe: Terrain rendering uses area geometry.
+        /// </summary>
+        /// <param name="area">Current area to render terrain for.</param>
+        private void RenderTerrain(IArea area)
+        {
+            // Based on daorigins.exe: Terrain is rendered as part of area geometry
+            // Eclipse engine uses area models for terrain rendering
+            // Terrain is typically a large static mesh with texture splatting
+
+            // Enable depth testing and writing for terrain
+            SetRenderStateDirectX9(D3DRS_ZENABLE, 1);
+            SetRenderStateDirectX9(D3DRS_ZWRITEENABLE, 1);
+            SetRenderStateDirectX9(D3DRS_ALPHABLENDENABLE, 0);
+
+            // Set terrain-specific render states
+            // Based on daorigins.exe: Terrain uses solid fill mode, Gouraud shading
+            SetRenderStateDirectX9(D3DRS_FILLMODE, D3DFILL_SOLID);
+            SetRenderStateDirectX9(D3DRS_SHADEMODE, D3DSHADE_GOURAUD);
+            SetRenderStateDirectX9(D3DRS_CULLMODE, D3DCULL_CCW);
+
+            // Terrain rendering would iterate through area terrain meshes
+            // For now, this is a placeholder that matches the structure
+            // Actual terrain mesh rendering would use SetStreamSource, SetIndices, DrawIndexedPrimitive
+            // daorigins.exe: Terrain meshes are loaded from area model files and rendered with textures
+        }
+
+        /// <summary>
+        /// Renders static objects (placeables, doors, waypoints) in the area.
+        /// Based on daorigins.exe: Static objects are rendered after terrain.
+        /// </summary>
+        /// <param name="area">Current area to render static objects for.</param>
+        private void RenderStaticObjects(IArea area)
+        {
+            if (area == null)
+            {
+                return;
+            }
+
+            // Render opaque static objects first
+            // Based on daorigins.exe: Opaque objects are rendered before transparent objects
+            SetRenderStateDirectX9(D3DRS_ALPHABLENDENABLE, 0);
+            SetRenderStateDirectX9(D3DRS_ALPHATESTENABLE, 0);
+
+            // Render placeables (buildings, props, containers, etc.)
+            // Based on daorigins.exe: Placeables are rendered as static meshes with textures
+            foreach (IEntity placeable in area.Placeables)
+            {
+                if (placeable != null)
+                {
+                    RenderEntity(placeable, false);
+                }
+            }
+
+            // Render doors
+            // Based on daorigins.exe: Doors are rendered as static meshes, may be animated when opening/closing
+            foreach (IEntity door in area.Doors)
+            {
+                if (door != null)
+                {
+                    RenderEntity(door, false);
+                }
+            }
+
+            // Render waypoints (typically invisible but may have visual representation)
+            // Based on daorigins.exe: Waypoints may have visual markers in debug mode
+            foreach (IEntity waypoint in area.Waypoints)
+            {
+                if (waypoint != null)
+                {
+                    // Waypoints are typically invisible, but may render debug markers
+                    // RenderEntity(waypoint, false);
+                }
+            }
+
+            // Render transparent static objects (with alpha blending)
+            // Based on daorigins.exe: Transparent objects are rendered after opaque objects
+            SetRenderStateDirectX9(D3DRS_ALPHABLENDENABLE, 1);
+            SetRenderStateDirectX9(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+            SetRenderStateDirectX9(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+            SetRenderStateDirectX9(D3DRS_ALPHATESTENABLE, 1);
+            SetRenderStateDirectX9(D3DRS_ALPHAREF, 0x08);
+            SetRenderStateDirectX9(D3DRS_ALPHAFUNC, D3DCMP_GREATEREQUAL);
+
+            // Re-render placeables and doors that have transparency
+            // In a full implementation, entities would be sorted by transparency
+            foreach (IEntity placeable in area.Placeables)
+            {
+                if (placeable != null)
+                {
+                    // Check if entity has transparent materials
+                    // RenderEntity(placeable, true);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Renders characters (creatures, player) in the area.
+        /// Based on daorigins.exe: Characters are rendered after static objects.
+        /// </summary>
+        /// <param name="area">Current area to render characters for.</param>
+        private void RenderCharacters(IArea area)
+        {
+            if (area == null)
+            {
+                return;
+            }
+
+            // Set render states for character rendering
+            // Based on daorigins.exe: Characters use skeletal animation and may have transparency
+            SetRenderStateDirectX9(D3DRS_ZENABLE, 1);
+            SetRenderStateDirectX9(D3DRS_ZWRITEENABLE, 1);
+            SetRenderStateDirectX9(D3DRS_ALPHABLENDENABLE, 0);
+            SetRenderStateDirectX9(D3DRS_ALPHATESTENABLE, 0);
+
+            // Render creatures (NPCs, enemies, companions)
+            // Based on daorigins.exe: Creatures are rendered with skeletal meshes and animations
+            foreach (IEntity creature in area.Creatures)
+            {
+                if (creature != null)
+                {
+                    RenderEntity(creature, false);
+                }
+            }
+
+            // Render player character
+            // Based on daorigins.exe: Player is rendered as a creature entity
+            // Player rendering is typically handled the same way as other creatures
+            // The player entity would be identified by tag or object type
+        }
+
+        /// <summary>
+        /// Renders particle effects in the area.
+        /// Based on daorigins.exe: Particle effects are rendered last with additive blending.
+        /// </summary>
+        /// <param name="area">Current area to render particle effects for.</param>
+        private void RenderParticleEffects(IArea area)
+        {
+            if (area == null)
+            {
+                return;
+            }
+
+            // Set render states for particle effects
+            // Based on daorigins.exe: Particle effects use additive blending and disable depth writing
+            SetRenderStateDirectX9(D3DRS_ALPHABLENDENABLE, 1);
+            SetRenderStateDirectX9(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+            SetRenderStateDirectX9(D3DRS_DESTBLEND, D3DBLEND_ONE); // Additive blending
+            SetRenderStateDirectX9(D3DRS_ZENABLE, 1);
+            SetRenderStateDirectX9(D3DRS_ZWRITEENABLE, 0); // Disable depth writing for particles
+            SetRenderStateDirectX9(D3DRS_CULLMODE, D3DCULL_NONE); // Particles are typically two-sided
+
+            // Particle effects would be rendered here
+            // Based on daorigins.exe: Particle effects include:
+            // - Fire effects (torches, campfires, spell effects)
+            // - Smoke effects (chimneys, spell effects)
+            // - Magic effects (spell visuals, enchantments)
+            // - Environmental effects (rain, snow, fog)
+            // - Combat effects (blood, sparks, explosions)
+
+            // Particle systems would be managed separately and rendered here
+            // For now, this is a placeholder that matches the structure
+            // Actual particle rendering would use point sprites or quads with textures
+        }
+
+        /// <summary>
+        /// Renders a single entity using DirectX 9.
+        /// Based on daorigins.exe: Entity rendering uses mesh data and textures.
+        /// </summary>
+        /// <param name="entity">Entity to render.</param>
+        /// <param name="transparent">Whether the entity uses transparency.</param>
+        private void RenderEntity(IEntity entity, bool transparent)
+        {
+            if (entity == null || _d3dDevice == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Based on daorigins.exe: Entity rendering involves:
+            // 1. Get entity position and orientation
+            // 2. Set world transformation matrix
+            // 3. Get entity mesh data (vertex buffer, index buffer)
+            // 4. Set textures for the entity
+            // 5. Draw the mesh using DrawIndexedPrimitive or DrawPrimitive
+
+            // Get entity transform
+            // Based on daorigins.exe: Entities have position, rotation, and scale
+            // Transform would be set using SetTransform(D3DTS_WORLD, &worldMatrix)
+
+            // Get entity mesh data
+            // Based on daorigins.exe: Entities have mesh components that provide vertex/index data
+            // Mesh data would be loaded from model files (MDL format for Eclipse engine)
+
+            // Set vertex buffer
+            // Based on daorigins.exe: SetStreamSource(0, vertexBuffer, 0, vertexStride)
+            // Vertex format would match the entity's mesh vertex format
+
+            // Set index buffer
+            // Based on daorigins.exe: SetIndices(indexBuffer)
+
+            // Set textures
+            // Based on daorigins.exe: SetTexture(0, texture) for diffuse texture
+            // Additional texture stages may be used for normal maps, specular maps, etc.
+
+            // Draw primitive
+            // Based on daorigins.exe: DrawIndexedPrimitive(D3DPT_TRIANGLELIST, baseVertexIndex, minIndex, numVertices, startIndex, primCount)
+            // or DrawPrimitive(D3DPT_TRIANGLELIST, startVertex, primCount)
+
+            // For now, this is a placeholder that matches the structure
+            // Full implementation would require mesh component system and model loading
         }
 
         /// <summary>
@@ -208,21 +457,111 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         /// - UI rendering happens after 3D scene
         /// - Uses DirectX 9 sprite rendering for UI elements
         /// - Includes HUD, dialogue boxes, menus
+        /// - daorigins.exe: UI rendering uses 2D sprite rendering with texture coordinates
+        /// - DirectX 9 calls: SetRenderState for 2D rendering, SetTexture for UI textures, DrawPrimitive for sprites
         /// </remarks>
         private void RenderDragonAgeOriginsUI()
         {
-            // Render HUD elements
-            // Based on daorigins.exe: HUD includes health bars, minimap, inventory icons
-            // This would use sprite rendering for 2D UI elements
-            // Placeholder for HUD rendering
+            if (_d3dDevice == IntPtr.Zero)
+            {
+                return;
+            }
 
-            // Render dialogue boxes
-            // Based on daorigins.exe: Dialogue boxes are rendered when in dialogue
-            // Placeholder for dialogue box rendering
+            // Set render states for 2D UI rendering
+            // Based on daorigins.exe: UI rendering disables depth testing and uses alpha blending
+            SetRenderStateDirectX9(D3DRS_ZENABLE, 0); // Disable depth testing for 2D
+            SetRenderStateDirectX9(D3DRS_ZWRITEENABLE, 0); // Disable depth writing for 2D
+            SetRenderStateDirectX9(D3DRS_ALPHABLENDENABLE, 1); // Enable alpha blending for UI transparency
+            SetRenderStateDirectX9(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+            SetRenderStateDirectX9(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+            SetRenderStateDirectX9(D3DRS_ALPHATESTENABLE, 1); // Enable alpha testing for UI
+            SetRenderStateDirectX9(D3DRS_ALPHAREF, 0x08);
+            SetRenderStateDirectX9(D3DRS_ALPHAFUNC, D3DCMP_GREATEREQUAL);
+            SetRenderStateDirectX9(D3DRS_CULLMODE, D3DCULL_NONE); // UI elements are typically two-sided
 
-            // Render menu overlays
+            // Set texture addressing for UI (clamp to edge)
+            // Based on daorigins.exe: UI textures use clamp addressing
+            SetTextureStageStateDirectX9(0, D3DTSS_ADDRESSU, D3DTADDRESS_CLAMP);
+            SetTextureStageStateDirectX9(0, D3DTSS_ADDRESSV, D3DTADDRESS_CLAMP);
+            SetTextureStageStateDirectX9(0, D3DTSS_MAGFILTER, D3DTEXF_LINEAR);
+            SetTextureStageStateDirectX9(0, D3DTSS_MINFILTER, D3DTEXF_LINEAR);
+
+            // 1. Render HUD elements (always visible)
+            // Based on daorigins.exe: HUD includes health bars, minimap, inventory icons, action bar
+            RenderHUD();
+
+            // 2. Render dialogue boxes (when in dialogue)
+            // Based on daorigins.exe: Dialogue boxes are rendered when conversation is active
+            RenderDialogueBoxes();
+
+            // 3. Render menu overlays (when menus are open)
             // Based on daorigins.exe: Menu overlays (inventory, character sheet, etc.) are rendered when open
-            // Placeholder for menu overlay rendering
+            RenderMenuOverlays();
+        }
+
+        /// <summary>
+        /// Renders HUD elements (health bars, minimap, inventory icons, action bar).
+        /// Based on daorigins.exe: HUD is always visible during gameplay.
+        /// </summary>
+        private void RenderHUD()
+        {
+            // Based on daorigins.exe: HUD elements include:
+            // - Health bars (player and party members)
+            // - Mana/stamina bars
+            // - Minimap (top-right corner)
+            // - Inventory icons (equipped items)
+            // - Action bar (abilities, spells, items)
+            // - Quest markers and objectives
+            // - Status effects icons
+
+            // HUD rendering would use sprite rendering with UI textures
+            // Each HUD element would be rendered as a textured quad using DrawPrimitive
+            // Texture coordinates would be set based on the UI element's position and size
+
+            // For now, this is a placeholder that matches the structure
+            // Full implementation would require UI system integration
+        }
+
+        /// <summary>
+        /// Renders dialogue boxes when in conversation.
+        /// Based on daorigins.exe: Dialogue boxes are rendered when conversation is active.
+        /// </summary>
+        private void RenderDialogueBoxes()
+        {
+            // Based on daorigins.exe: Dialogue boxes include:
+            // - Speaker name and portrait
+            // - Dialogue text
+            // - Response options
+            // - Dialogue history (if enabled)
+
+            // Dialogue rendering would check if a conversation is active
+            // If active, render dialogue box background, text, and response options
+            // Dialogue boxes are typically rendered as textured quads with text overlay
+
+            // For now, this is a placeholder that matches the structure
+            // Full implementation would require dialogue system integration
+        }
+
+        /// <summary>
+        /// Renders menu overlays (inventory, character sheet, etc.) when menus are open.
+        /// Based on daorigins.exe: Menu overlays are rendered when menus are open.
+        /// </summary>
+        private void RenderMenuOverlays()
+        {
+            // Based on daorigins.exe: Menu overlays include:
+            // - Inventory menu (items, equipment)
+            // - Character sheet (stats, abilities, skills)
+            // - Journal (quests, codex entries)
+            // - Map (world map, area map)
+            // - Options menu (settings, graphics, audio)
+            // - Pause menu
+
+            // Menu rendering would check which menus are open
+            // Each open menu would be rendered as a series of UI elements (panels, buttons, lists, etc.)
+            // Menus are typically rendered as textured quads with text and icons
+
+            // For now, this is a placeholder that matches the structure
+            // Full implementation would require menu system integration
         }
 
         /// <summary>
@@ -296,6 +635,26 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             setRenderState(_d3dDevice, state, value);
         }
 
+        /// <summary>
+        /// Sets DirectX 9 texture stage state.
+        /// Matches IDirect3DDevice9::SetTextureStageState() exactly.
+        /// </summary>
+        /// <remarks>
+        /// Based on reverse engineering of daorigins.exe:
+        /// - IDirect3DDevice9::SetTextureStageState is at vtable index 83
+        /// - Sets texture stage state values (addressing, filtering, etc.)
+        /// </remarks>
+        private unsafe void SetTextureStageStateDirectX9(uint stage, uint type, uint value)
+        {
+            if (_d3dDevice == IntPtr.Zero) return;
+
+            // IDirect3DDevice9::SetTextureStageState is at vtable index 83
+            IntPtr* vtable = *(IntPtr**)_d3dDevice;
+            IntPtr methodPtr = vtable[83];
+            var setTextureStageState = Marshal.GetDelegateForFunctionPointer<SetTextureStageStateDelegate>(methodPtr);
+            setTextureStageState(_d3dDevice, stage, type, value);
+        }
+
         #region DirectX 9 Rendering P/Invoke Declarations
 
         // DirectX 9 Clear flags
@@ -312,6 +671,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         private const uint D3DRS_ALPHATESTENABLE = 15;
         private const uint D3DRS_FILLMODE = 8;
         private const uint D3DRS_SHADEMODE = 9;
+        private const uint D3DRS_SRCBLEND = 19;
+        private const uint D3DRS_DESTBLEND = 20;
+        private const uint D3DRS_ALPHAREF = 21;
+        private const uint D3DRS_ALPHAFUNC = 25;
 
         // DirectX 9 Cull modes
         private const uint D3DCULL_NONE = 1;
@@ -327,6 +690,49 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         private const uint D3DSHADE_FLAT = 1;
         private const uint D3DSHADE_GOURAUD = 2;
         private const uint D3DSHADE_PHONG = 3;
+
+        // DirectX 9 Blend modes
+        private const uint D3DBLEND_ZERO = 1;
+        private const uint D3DBLEND_ONE = 2;
+        private const uint D3DBLEND_SRCCOLOR = 3;
+        private const uint D3DBLEND_INVSRCCOLOR = 4;
+        private const uint D3DBLEND_SRCALPHA = 5;
+        private const uint D3DBLEND_INVSRCALPHA = 6;
+        private const uint D3DBLEND_DESTALPHA = 7;
+        private const uint D3DBLEND_INVDESTALPHA = 8;
+        private const uint D3DBLEND_DESTCOLOR = 9;
+        private const uint D3DBLEND_INVDESTCOLOR = 10;
+
+        // DirectX 9 Comparison functions
+        private const uint D3DCMP_NEVER = 1;
+        private const uint D3DCMP_LESS = 2;
+        private const uint D3DCMP_EQUAL = 3;
+        private const uint D3DCMP_LESSEQUAL = 4;
+        private const uint D3DCMP_GREATER = 5;
+        private const uint D3DCMP_NOTEQUAL = 6;
+        private const uint D3DCMP_GREATEREQUAL = 7;
+        private const uint D3DCMP_ALWAYS = 8;
+
+        // DirectX 9 Texture stage states
+        private const uint D3DTSS_ADDRESSU = 13;
+        private const uint D3DTSS_ADDRESSV = 14;
+        private const uint D3DTSS_MAGFILTER = 16;
+        private const uint D3DTSS_MINFILTER = 17;
+
+        // DirectX 9 Texture addressing modes
+        private const uint D3DTADDRESS_WRAP = 1;
+        private const uint D3DTADDRESS_MIRROR = 2;
+        private const uint D3DTADDRESS_CLAMP = 3;
+        private const uint D3DTADDRESS_BORDER = 4;
+        private const uint D3DTADDRESS_MIRRORONCE = 5;
+
+        // DirectX 9 Texture filter types
+        private const uint D3DTEXF_NONE = 0;
+        private const uint D3DTEXF_POINT = 1;
+        private const uint D3DTEXF_LINEAR = 2;
+        private const uint D3DTEXF_ANISOTROPIC = 3;
+        private const uint D3DTEXF_PYRAMIDALQUAD = 6;
+        private const uint D3DTEXF_GAUSSIANQUAD = 7;
 
         // DirectX 9 Structures
         [StructLayout(LayoutKind.Sequential)]

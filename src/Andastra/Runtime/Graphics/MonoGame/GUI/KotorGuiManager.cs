@@ -16,6 +16,7 @@ using Andastra.Parsing.Resource.Generics.GUI;
 using GuiResource = Andastra.Parsing.Resource.Generics.GUI.GUI;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.TPC;
+using Andastra.Runtime.Core.Audio;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.MonoGame.Converters;
 using Andastra.Runtime.MonoGame.Graphics;
@@ -2131,6 +2132,68 @@ namespace Andastra.Runtime.MonoGame.GUI
             // Note: Fonts don't need disposal as they reference textures that are already disposed
             _fontCache.Clear();
             _loadedGuis.Clear();
+        }
+
+        /// <summary>
+        /// Plays button hover sound effect.
+        /// Based on swkotor.exe FUN_0067ace0 @ 0x0067ace0: Plays "gui_actscroll" or "gui_actscroll1" on button hover
+        /// Based on swkotor2.exe FUN_006d0790 @ 0x006d0790: Plays "gui_actscroll" or "gui_actscroll1" on button hover
+        /// </summary>
+        private void PlayButtonHoverSound()
+        {
+            if (_soundPlayer == null)
+            {
+                return; // No sound player available
+            }
+
+            try
+            {
+                // Try "gui_actscroll" first, fallback to "gui_actscroll1"
+                // Based on Ghidra analysis: Original games use "gui_actscroll" or "gui_actscroll1" for button hover
+                string soundResRef = "gui_actscroll";
+                if (!_soundPlayer.Play(soundResRef, 1.0f))
+                {
+                    // Fallback to alternative sound name
+                    soundResRef = "gui_actscroll1";
+                    _soundPlayer.Play(soundResRef, 1.0f);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Silently fail - sound is not critical for functionality
+                Console.WriteLine($"[KotorGuiManager] Failed to play button hover sound: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Plays button click sound effect.
+        /// Based on swkotor.exe FUN_0067ace0 @ 0x0067ace0: Plays "gui_actclick" or "gui_actclick1" on button click
+        /// Based on swkotor2.exe FUN_006d0790 @ 0x006d0790: Plays "gui_actclick" or "gui_actclick1" on button click
+        /// </summary>
+        private void PlayButtonClickSound()
+        {
+            if (_soundPlayer == null)
+            {
+                return; // No sound player available
+            }
+
+            try
+            {
+                // Try "gui_actclick" first, fallback to "gui_actclick1"
+                // Based on Ghidra analysis: Original games use "gui_actclick" or "gui_actclick1" for button clicks
+                string soundResRef = "gui_actclick";
+                if (!_soundPlayer.Play(soundResRef, 1.0f))
+                {
+                    // Fallback to alternative sound name
+                    soundResRef = "gui_actclick1";
+                    _soundPlayer.Play(soundResRef, 1.0f);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Silently fail - sound is not critical for functionality
+                Console.WriteLine($"[KotorGuiManager] Failed to play button click sound: {ex.Message}");
+            }
         }
     }
 
