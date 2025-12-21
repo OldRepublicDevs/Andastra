@@ -2968,6 +2968,42 @@ namespace Andastra.Runtime.Games.Eclipse
         }
 
         /// <summary>
+        /// Gets the creature bounding box from the collision detector.
+        /// </summary>
+        /// <param name="entity">The creature entity.</param>
+        /// <returns>The creature's bounding box with proper dimensions from appearance.2da hitradius.</returns>
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Physics system queries collision detector for creature bounding box.
+        /// Original implementation: Uses EclipseCreatureCollisionDetector to get bounding box from appearance.2da hitradius.
+        /// Eclipse engine uses PhysX collision shapes, but creature size comes from appearance.2da hitradius.
+        /// 
+        /// This method:
+        /// 1. Gets or creates the collision detector for the entity's world
+        /// 2. Queries the collision detector for the creature's bounding box
+        /// 3. Returns the bounding box with proper width, height, and depth from appearance.2da hitradius
+        /// 4. Falls back to default bounding box if collision detector is unavailable
+        /// </remarks>
+        private CreatureBoundingBox GetCreatureBoundingBoxFromCollisionDetector(IEntity entity)
+        {
+            if (entity == null)
+            {
+                // Based on daorigins.exe/DragonAge2.exe: Default bounding box for null entity (medium creature size)
+                return CreatureBoundingBox.FromRadius(0.5f);
+            }
+
+            // Get or create collision detector for the entity's world
+            IWorld world = entity.World;
+            BaseCreatureCollisionDetector detector = GetOrCreateCollisionDetector(world);
+
+            // Query collision detector for creature bounding box
+            // Based on daorigins.exe/DragonAge2.exe: Collision detector uses appearance.2da hitradius for bounding box
+            // EclipseCreatureCollisionDetector.GetCreatureBoundingBox queries appearance.2da hitradius via GameDataProvider
+            CreatureBoundingBox boundingBox = detector.GetCreatureBoundingBoxPublic(entity);
+
+            return boundingBox;
+        }
+
+        /// <summary>
         /// Adds an entity to the physics system.
         /// </summary>
         /// <remarks>
