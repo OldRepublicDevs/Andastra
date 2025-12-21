@@ -2162,7 +2162,39 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 return;
             }
-            // TODO: Implement draw command via Metal render command encoder
+
+            // Validate arguments
+            if (args.VertexCount <= 0)
+            {
+                Console.WriteLine("[MetalCommandList] Draw: Invalid vertex count");
+                return;
+            }
+
+            // Render command encoder must be active for draw commands
+            if (_currentRenderCommandEncoder == IntPtr.Zero)
+            {
+                Console.WriteLine("[MetalCommandList] Draw: Render command encoder not available - SetGraphicsState must be called first to begin render pass");
+                return;
+            }
+
+            // Get current primitive type from graphics state
+            // Default to Triangle if not set (most common case)
+            MetalPrimitiveType primitiveType = MetalPrimitiveType.Triangle;
+
+            // TODO: Get actual primitive type from current graphics state
+            // When SetGraphicsState is implemented, this should be retrieved from the state.
+
+            // Extract draw parameters from DrawArguments
+            int vertexStart = args.StartVertexLocation;
+            int vertexCount = args.VertexCount;
+            int instanceCount = args.InstanceCount > 0 ? args.InstanceCount : 1; // Default to 1 if not specified
+            int baseInstance = args.StartInstanceLocation;
+
+            // Metal API: MTLRenderCommandEncoder::drawPrimitives:vertexStart:vertexCount:instanceCount:baseInstance:
+            // Method signature: - (void)drawPrimitives:(MTLPrimitiveType)primitiveType vertexStart:(NSUInteger)vertexStart vertexCount:(NSUInteger)vertexCount instanceCount:(NSUInteger)instanceCount baseInstance:(NSUInteger)baseInstance;
+            // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1516321-drawprimitives
+            // swkotor2.exe: N/A - Original game used DirectX 9, not Metal
+            MetalNative.DrawPrimitives(_currentRenderCommandEncoder, primitiveType, vertexStart, vertexCount, instanceCount, baseInstance);
         }
 
         public void DrawIndexed(DrawArguments args)
@@ -2171,7 +2203,50 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 return;
             }
-            // TODO: Implement indexed draw command
+
+            // Validate arguments
+            if (args.VertexCount <= 0)
+            {
+                Console.WriteLine("[MetalCommandList] DrawIndexed: Invalid vertex count");
+                return;
+            }
+
+            // Render command encoder must be active for draw commands
+            if (_currentRenderCommandEncoder == IntPtr.Zero)
+            {
+                Console.WriteLine("[MetalCommandList] DrawIndexed: Render command encoder not available - SetGraphicsState must be called first to begin render pass");
+                return;
+            }
+
+            // Get current primitive type, index type, and index buffer from graphics state
+            // Default to Triangle and UInt16 if not set (most common case)
+            MetalPrimitiveType primitiveType = MetalPrimitiveType.Triangle;
+            MetalIndexType indexType = MetalIndexType.UInt16;
+            IntPtr indexBuffer = IntPtr.Zero;
+            int indexBufferOffset = 0;
+
+            // TODO: Get actual primitive type, index type, and index buffer from current graphics state
+            // For now, using defaults. When SetGraphicsState is implemented, these should be retrieved from the state.
+            // Note: Index buffer is typically set via SetVertexBuffers or similar method in graphics state
+
+            if (indexBuffer == IntPtr.Zero)
+            {
+                Console.WriteLine("[MetalCommandList] DrawIndexed: Index buffer not available - SetGraphicsState must configure index buffer");
+                return;
+            }
+
+            // Extract draw parameters from DrawArguments
+            // For indexed draws, VertexCount represents the index count
+            int indexCount = args.VertexCount;
+            int baseVertex = args.BaseVertexLocation;
+            int instanceCount = args.InstanceCount > 0 ? args.InstanceCount : 1; // Default to 1 if not specified
+            int baseInstance = args.StartInstanceLocation;
+
+            // Metal API: MTLRenderCommandEncoder::drawIndexedPrimitives:indexCount:indexType:indexBuffer:indexBufferOffset:instanceCount:baseVertex:baseInstance:
+            // Method signature: - (void)drawIndexedPrimitives:(MTLPrimitiveType)primitiveType indexCount:(NSUInteger)indexCount indexType:(MTLIndexType)indexType indexBuffer:(id<MTLBuffer>)indexBuffer indexBufferOffset:(NSUInteger)indexBufferOffset instanceCount:(NSUInteger)instanceCount baseVertex:(NSInteger)baseVertex baseInstance:(NSUInteger)baseInstance;
+            // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1515527-drawindexedprimitives
+            // swkotor2.exe: N/A - Original game used DirectX 9, not Metal
+            MetalNative.DrawIndexedPrimitives(_currentRenderCommandEncoder, primitiveType, indexCount, indexType, indexBuffer, indexBufferOffset, instanceCount, baseVertex, baseInstance);
         }
 
         public void DrawIndirect(IBuffer argumentBuffer, int offset, int drawCount, int stride)
@@ -2933,22 +3008,17 @@ namespace Andastra.Runtime.MonoGame.Backends
         // Metal debug methods (pushDebugGroup:, popDebugGroup) are Objective-C instance methods
         // These require using objc_msgSend to call them from C#
         // On 64-bit systems, objc_msgSend returns a value even for void methods, so we declare it as IntPtr
-        private const string LibObjC = "/usr/lib/libobjc.A.dylib";
+        // Note: LibObjC, objc_msgSend_void, and sel_registerName are already defined in MetalBackend.cs (partial class)
+        private const string LibObjCForDevice = "/usr/lib/libobjc.A.dylib";
 
-        [DllImport(LibObjC, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr objc_msgSend_void(IntPtr receiver, IntPtr selector);
-
-        [DllImport(LibObjC, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr objc_msgSend_void_string(IntPtr receiver, IntPtr selector, IntPtr nsString);
 
-        [DllImport(LibObjC, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr objc_msgSend_selector(IntPtr receiver, IntPtr selector, IntPtr aSelector);
 
-        [DllImport(LibObjC, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr objc_msgSend_void_ptr_uint(IntPtr receiver, IntPtr selector, IntPtr viewports, uint count);
-
-        [DllImport(LibObjC, EntryPoint = "sel_registerName")]
-        private static extern IntPtr sel_registerName([MarshalAs(UnmanagedType.LPStr)] string str);
 
         [DllImport("/System/Library/Frameworks/Foundation.framework/Foundation", EntryPoint = "CFStringCreateWithCString")]
         private static extern IntPtr CFStringCreateWithCString(IntPtr allocator, [MarshalAs(UnmanagedType.LPStr)] string cStr, uint encoding);
@@ -2973,6 +3043,122 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// </summary>
         [DllImport("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation", EntryPoint = "CFRelease")]
         private static extern void CFRelease(IntPtr cf);
+
+        // Draw Commands
+        // Based on Metal API: MTLRenderCommandEncoder::drawPrimitives:vertexStart:vertexCount:instanceCount:baseInstance:
+        // Method signature: - (void)drawPrimitives:(MTLPrimitiveType)primitiveType vertexStart:(NSUInteger)vertexStart vertexCount:(NSUInteger)vertexCount instanceCount:(NSUInteger)instanceCount baseInstance:(NSUInteger)baseInstance;
+        // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1516321-drawprimitives
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr objc_msgSend_drawPrimitives(IntPtr receiver, IntPtr selector, MetalPrimitiveType primitiveType, ulong vertexStart, ulong vertexCount, ulong instanceCount, ulong baseInstance);
+
+        /// <summary>
+        /// Draws primitives using the specified parameters.
+        /// Based on Metal API: MTLRenderCommandEncoder::drawPrimitives:vertexStart:vertexCount:instanceCount:baseInstance:
+        /// </summary>
+        public static void DrawPrimitives(IntPtr renderCommandEncoder, MetalPrimitiveType primitiveType, int vertexStart, int vertexCount, int instanceCount, int baseInstance)
+        {
+            if (renderCommandEncoder == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                IntPtr selector = sel_registerName("drawPrimitives:vertexStart:vertexCount:instanceCount:baseInstance:");
+                objc_msgSend_drawPrimitives(renderCommandEncoder, selector, primitiveType, unchecked((ulong)vertexStart), unchecked((ulong)vertexCount), unchecked((ulong)instanceCount), unchecked((ulong)baseInstance));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalNative] DrawPrimitives: Exception: {ex.Message}");
+            }
+        }
+
+        // Draw Indexed Commands
+        // Based on Metal API: MTLRenderCommandEncoder::drawIndexedPrimitives:indexCount:indexType:indexBuffer:indexBufferOffset:instanceCount:baseVertex:baseInstance:
+        // Method signature: - (void)drawIndexedPrimitives:(MTLPrimitiveType)primitiveType indexCount:(NSUInteger)indexCount indexType:(MTLIndexType)indexType indexBuffer:(id<MTLBuffer>)indexBuffer indexBufferOffset:(NSUInteger)indexBufferOffset instanceCount:(NSUInteger)instanceCount baseVertex:(NSInteger)baseVertex baseInstance:(NSUInteger)baseInstance;
+        // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1515527-drawindexedprimitives
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr objc_msgSend_drawIndexedPrimitives(IntPtr receiver, IntPtr selector, MetalPrimitiveType primitiveType, ulong indexCount, MetalIndexType indexType, IntPtr indexBuffer, ulong indexBufferOffset, ulong instanceCount, long baseVertex, ulong baseInstance);
+
+        /// <summary>
+        /// Draws indexed primitives using the specified parameters.
+        /// Based on Metal API: MTLRenderCommandEncoder::drawIndexedPrimitives:indexCount:indexType:indexBuffer:indexBufferOffset:instanceCount:baseVertex:baseInstance:
+        /// </summary>
+        public static void DrawIndexedPrimitives(IntPtr renderCommandEncoder, MetalPrimitiveType primitiveType, int indexCount, MetalIndexType indexType, IntPtr indexBuffer, int indexBufferOffset, int instanceCount, int baseVertex, int baseInstance)
+        {
+            if (renderCommandEncoder == IntPtr.Zero || indexBuffer == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                IntPtr selector = sel_registerName("drawIndexedPrimitives:indexCount:indexType:indexBuffer:indexBufferOffset:instanceCount:baseVertex:baseInstance:");
+                objc_msgSend_drawIndexedPrimitives(renderCommandEncoder, selector, primitiveType, unchecked((ulong)indexCount), indexType, indexBuffer, unchecked((ulong)indexBufferOffset), unchecked((ulong)instanceCount), unchecked((long)baseVertex), unchecked((ulong)baseInstance));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalNative] DrawIndexedPrimitives: Exception: {ex.Message}");
+            }
+        }
+
+        // Draw Indirect Commands (if not already defined)
+        // Based on Metal API: MTLRenderCommandEncoder::drawPrimitives:indirectBuffer:indirectBufferOffset:
+        // Method signature: - (void)drawPrimitives:(MTLPrimitiveType)primitiveType indirectBuffer:(id<MTLBuffer>)indirectBuffer indirectBufferOffset:(NSUInteger)indirectBufferOffset;
+        // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1515526-drawprimitives
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr objc_msgSend_drawPrimitivesIndirect(IntPtr receiver, IntPtr selector, MetalPrimitiveType primitiveType, IntPtr indirectBuffer, ulong indirectBufferOffset);
+
+        /// <summary>
+        /// Draws primitives using indirect arguments from a buffer.
+        /// Based on Metal API: MTLRenderCommandEncoder::drawPrimitives:indirectBuffer:indirectBufferOffset:
+        /// </summary>
+        public static void DrawPrimitivesIndirect(IntPtr renderCommandEncoder, MetalPrimitiveType primitiveType, IntPtr indirectBuffer, ulong indirectBufferOffset)
+        {
+            if (renderCommandEncoder == IntPtr.Zero || indirectBuffer == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                IntPtr selector = sel_registerName("drawPrimitives:indirectBuffer:indirectBufferOffset:");
+                objc_msgSend_drawPrimitivesIndirect(renderCommandEncoder, selector, primitiveType, indirectBuffer, indirectBufferOffset);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalNative] DrawPrimitivesIndirect: Exception: {ex.Message}");
+            }
+        }
+
+        // Draw Indexed Indirect Commands (if not already defined)
+        // Based on Metal API: MTLRenderCommandEncoder::drawIndexedPrimitives:indexType:indexBuffer:indexBufferOffset:indirectBuffer:indirectBufferOffset:
+        // Method signature: - (void)drawIndexedPrimitives:(MTLPrimitiveType)primitiveType indexType:(MTLIndexType)indexType indexBuffer:(id<MTLBuffer>)indexBuffer indexBufferOffset:(NSUInteger)indexBufferOffset indirectBuffer:(id<MTLBuffer>)indirectBuffer indirectBufferOffset:(NSUInteger)indirectBufferOffset;
+        // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1515544-drawindexedprimitives
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr objc_msgSend_drawIndexedPrimitivesIndirect(IntPtr receiver, IntPtr selector, MetalPrimitiveType primitiveType, MetalIndexType indexType, IntPtr indexBuffer, ulong indexBufferOffset, IntPtr indirectBuffer, ulong indirectBufferOffset);
+
+        /// <summary>
+        /// Draws indexed primitives using indirect arguments from a buffer.
+        /// Based on Metal API: MTLRenderCommandEncoder::drawIndexedPrimitives:indexType:indexBuffer:indexBufferOffset:indirectBuffer:indirectBufferOffset:
+        /// </summary>
+        public static void DrawIndexedPrimitivesIndirect(IntPtr renderCommandEncoder, MetalPrimitiveType primitiveType, MetalIndexType indexType, IntPtr indexBuffer, ulong indexBufferOffset, IntPtr indirectBuffer, ulong indirectBufferOffset)
+        {
+            if (renderCommandEncoder == IntPtr.Zero || indexBuffer == IntPtr.Zero || indirectBuffer == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                IntPtr selector = sel_registerName("drawIndexedPrimitives:indexType:indexBuffer:indexBufferOffset:indirectBuffer:indirectBufferOffset:");
+                objc_msgSend_drawIndexedPrimitivesIndirect(renderCommandEncoder, selector, primitiveType, indexType, indexBuffer, indexBufferOffset, indirectBuffer, indirectBufferOffset);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalNative] DrawIndexedPrimitivesIndirect: Exception: {ex.Message}");
+            }
+        }
 
         /// <summary>
         /// Pushes a debug group onto a Metal command buffer or command encoder.
@@ -3026,7 +3212,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         // Metal API Reference: https://developer.apple.com/documentation/metal/mtlblitcommandencoder/1400774-copyfrombuffer
         // Method signature: - (void)copyFromBuffer:(id<MTLBuffer>)sourceBuffer sourceOffset:(NSUInteger)sourceOffset toBuffer:(id<MTLBuffer>)destinationBuffer destinationOffset:(NSUInteger)destinationOffset size:(NSUInteger)size;
         // Note: On 64-bit systems, NSUInteger is 64-bit (ulong), not 32-bit (uint)
-        [DllImport(LibObjC, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
         private static extern void objc_msgSend_copyFromBuffer(IntPtr receiver, IntPtr selector, IntPtr sourceBuffer, ulong sourceOffset, IntPtr destinationBuffer, ulong destinationOffset, ulong size);
 
         /// <summary>
@@ -3067,7 +3253,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         // Based on Metal API: MTLBuffer::contents()
         // Metal API Reference: https://developer.apple.com/documentation/metal/mtlbuffer/1515376-contents
         // Method signature: - (void *)contents;
-        [DllImport(LibObjC, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr objc_msgSend_contents(IntPtr receiver, IntPtr selector);
 
         /// <summary>
@@ -3101,7 +3287,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         // Based on Metal API: MTLDevice::newBufferWithLength:options:
         // Metal API Reference: https://developer.apple.com/documentation/metal/mtldevice/1433429-newbufferwithlength
         // Method signature: - (id<MTLBuffer>)newBufferWithLength:(NSUInteger)length options:(MTLResourceOptions)options;
-        [DllImport(LibObjC, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr objc_msgSend_CreateBufferWithOptions(IntPtr receiver, IntPtr selector, ulong length, uint options);
 
         /// <summary>
@@ -3168,7 +3354,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         // Based on Metal API: MTLAccelerationStructureCommandEncoder::buildAccelerationStructure:descriptor:scratchBuffer:scratchBufferOffset:
         // Metal API Reference: https://developer.apple.com/documentation/metal/mtlaccelerationstructurecommandencoder/3553898-buildaccelerationstructure
         // Method signature: - (void)buildAccelerationStructure:(id<MTLAccelerationStructure>)accelerationStructure descriptor:(MTLAccelerationStructureDescriptor*)descriptor scratchBuffer:(id<MTLBuffer>)scratchBuffer scratchBufferOffset:(NSUInteger)scratchBufferOffset;
-        [DllImport(LibObjC, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
         private static extern void objc_msgSend_buildAccelerationStructure(IntPtr receiver, IntPtr selector, IntPtr accelerationStructure, IntPtr descriptor, IntPtr scratchBuffer, ulong scratchBufferOffset);
 
         /// <summary>
@@ -3204,7 +3390,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         // Based on Metal API: MTLAccelerationStructureCommandEncoder::copyAccelerationStructure:toAccelerationStructure:
         // Metal API Reference: https://developer.apple.com/documentation/metal/mtlaccelerationstructurecommandencoder/3553902-copyaccelerationstructure
         // Method signature: - (void)copyAccelerationStructure:(id<MTLAccelerationStructure>)sourceAccelerationStructure toAccelerationStructure:(id<MTLAccelerationStructure>)destinationAccelerationStructure;
-        [DllImport(LibObjC, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
         private static extern void objc_msgSend_copyAccelerationStructure(IntPtr receiver, IntPtr selector, IntPtr sourceAccelerationStructure, IntPtr destinationAccelerationStructure);
 
         /// <summary>
