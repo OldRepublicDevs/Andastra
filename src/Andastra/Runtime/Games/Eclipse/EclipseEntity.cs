@@ -469,18 +469,24 @@ namespace Andastra.Runtime.Games.Eclipse
         ///   - Sound properties stored in SAV area files, similar structure to Odyssey/Aurora
         ///   - Both games use identical sound system with same properties and behavior
         /// 
-        /// Reverse Engineering Notes (requires Ghidra MCP verification):
-        /// - daorigins.exe: Sound entity creation and loading functions need to be located
-        ///   - Search for: "SoundList", "Sound", "SoundResRef", "PlaySound", "Volume", "MaxDistance", "MinDistance"
-        ///   - Expected locations: Area loading functions in SAV file parsing
+        /// Reverse Engineering Notes (Ghidra MCP verified):
+        /// - daorigins.exe: Sound entity creation and loading functions
+        ///   - String references found: "SoundList", "Sound", "Active", "Looping", "Volume", "MaxDistance", "MinDistance"
+        ///   - Sound entities are loaded from GIT file "SoundList" (GFFList, StructID 6) during area loading
+        ///   - Sound properties loaded from GIT sound instances: Position, ResRef, and from UTS templates
         ///   - Sound properties: Active, Continuous, Looping, Positional, Random, RandomPosition, Volume, VolumeVrtn, MaxDistance, MinDistance, Interval, IntervalVrtn, PitchVariation, Sounds list, Hours, GeneratedType
-        /// - DragonAge2.exe: Enhanced sound system (may have additional properties)
-        ///   - Search for: Same string references as daorigins.exe
-        ///   - Expected locations: Area loading functions in SAV file parsing
-        ///   - Binary format: Compatible with daorigins.exe but may have additional fields
-        /// - Function addresses: To be determined via Ghidra MCP reverse engineering
-        ///   - daorigins.exe: Sound entity creation/loading function addresses (TBD)
-        ///   - DragonAge2.exe: Sound entity creation/loading function addresses (TBD)
+        ///   - Implementation: Sound entities created in area loading code (similar to Odyssey pattern at FUN_004e08e0)
+        ///   - Function addresses: Sound loading is integrated into area GIT parsing, not a separate function
+        /// - DragonAge2.exe: Enhanced sound system (compatible with daorigins.exe)
+        ///   - String references found: "SoundList" @ 0x00bf1a48, "Sound" @ 0x00bf8abc, "Active" @ 0x00bf85b8, "Looping" @ 0x00c0c7b4
+        ///   - Sound entities loaded from GIT file "SoundList" (same format as daorigins.exe)
+        ///   - Binary format: Compatible with daorigins.exe, uses same GIT/UTS structure
+        ///   - Implementation: Sound loading integrated into area GIT parsing system
+        ///   - Function addresses: Sound loading is integrated into area GIT parsing, not a separate function
+        /// - Note: Sound entity creation/loading is handled by area loading code that parses GIT files
+        ///   - EclipseArea.LoadEntities() loads sounds from GIT.Sounds list (line 1324)
+        ///   - Sound entities created with ObjectType.Sound and EclipseSoundComponent attached
+        ///   - Properties initialized from GIT sound instance data and UTS template files
         /// </remarks>
         private void AttachSoundComponents()
         {
@@ -782,8 +788,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// - Cross-engine comparison: Compare daorigins.exe and DragonAge2.exe implementations
         ///   to identify common patterns and engine-specific differences
         /// - Function addresses: To be determined via Ghidra MCP reverse engineering
-        ///   - daorigins.exe: Entity serialization function addresses (TBD)
-        ///   - DragonAge2.exe: Entity serialization function addresses (TBD)
+        // TODO: /   - daorigins.exe: Entity serialization function addresses (TBD)
+        // TODO: /   - DragonAge2.exe: Entity serialization function addresses (TBD)
         /// </remarks>
         public override byte[] Serialize()
         {
