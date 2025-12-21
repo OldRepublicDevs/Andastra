@@ -3565,6 +3565,88 @@ namespace Andastra.Runtime.Games.Odyssey
         }
 
         /// <summary>
+        /// Converts an ActiveEffect to a SavedEffect for serialization.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Effect serialization format
+        /// Maps Effect properties and ActiveEffect metadata to SavedEffect structure
+        /// </remarks>
+        private SavedEffect ConvertActiveEffectToSavedEffect(ActiveEffect activeEffect)
+        {
+            if (activeEffect == null || activeEffect.Effect == null)
+            {
+                return null;
+            }
+
+            var savedEffect = new SavedEffect
+            {
+                EffectType = (int)activeEffect.Effect.Type,
+                SubType = activeEffect.Effect.SubType,
+                DurationType = (int)activeEffect.Effect.DurationType,
+                RemainingDuration = activeEffect.RemainingRounds, // Store remaining rounds as duration
+                CreatorId = activeEffect.Creator != null ? activeEffect.Creator.ObjectId : 0,
+                SpellId = 0, // SpellId would need to be stored in ActiveEffect if needed
+                IntParams = new List<int>(),
+                FloatParams = new List<float>(),
+                StringParams = new List<string>(),
+                ObjectParams = new List<uint>()
+            };
+
+            // Store effect-specific parameters in IntParams
+            // Amount, VisualEffectId, and other integer properties
+            savedEffect.IntParams.Add(activeEffect.Effect.Amount);
+            savedEffect.IntParams.Add(activeEffect.Effect.VisualEffectId);
+            savedEffect.IntParams.Add(activeEffect.Effect.IsSupernatural ? 1 : 0);
+            savedEffect.IntParams.Add(activeEffect.Effect.DurationRounds); // Original duration
+
+            // Store AppliedAt timestamp as float if needed
+            savedEffect.FloatParams.Add(activeEffect.AppliedAt);
+
+            return savedEffect;
+        }
+
+        /// <summary>
+        /// Converts a SavedEffect back to an Effect for application.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Effect deserialization
+        /// Reconstructs Effect object from SavedEffect data
+        /// </remarks>
+        private Effect ConvertSavedEffectToEffect(SavedEffect savedEffect)
+        {
+            if (savedEffect == null)
+            {
+                return null;
+            }
+
+            // Create effect with the stored type
+            EffectType effectType = (EffectType)savedEffect.EffectType;
+            var effect = new Effect(effectType);
+
+            // Restore effect properties
+            effect.SubType = savedEffect.SubType;
+            effect.DurationType = (EffectDurationType)savedEffect.DurationType;
+            
+            // Restore parameters from IntParams list
+            if (savedEffect.IntParams != null && savedEffect.IntParams.Count >= 4)
+            {
+                effect.Amount = savedEffect.IntParams[0];
+                effect.VisualEffectId = savedEffect.IntParams[1];
+                effect.IsSupernatural = savedEffect.IntParams[2] != 0;
+                // Use RemainingDuration for DurationRounds to restore the actual remaining time
+                // This ensures effects expire at the correct time after loading
+                effect.DurationRounds = (int)savedEffect.RemainingDuration;
+            }
+            else
+            {
+                // Fallback: use RemainingDuration if IntParams not available
+                effect.DurationRounds = (int)savedEffect.RemainingDuration;
+            }
+
+            return effect;
+        }
+
+        /// <summary>
         /// Applies active effects to an entity.
         /// </summary>
         /// <remarks>
@@ -3578,10 +3660,50 @@ namespace Andastra.Runtime.Games.Odyssey
                 return;
             }
 
-            // Use entity's effect system to apply effects
-            // TODO: STUB - Note: Full implementation would require access to entity's effect storage
-            // This is a placeholder that would need to be completed when effect system is fully implemented
-            // Effects would be applied via IEffectComponent or similar interface
+            // Get world and effect system from entity
+            if (entity.World == null || entity.World.EffectSystem == null)
+            {
+                return;
+            }
+
+            EffectSystem effectSystem = entity.World.EffectSystem;
+
+            // Convert each SavedEffect to Effect and apply it
+            foreach (SavedEffect savedEffect in activeEffects)
+            {
+                if (savedEffect == null)
+                {
+                    continue;
+                }
+
+                // Convert SavedEffect to Effect
+                Effect effect = ConvertSavedEffectToEffect(savedEffect);
+                if (effect == null)
+                {
+                    continue;
+                }
+
+                // Find creator entity by ObjectId if available
+                IEntity creator = null;
+                if (savedEffect.CreatorId != 0)
+                {
+                    creator = entity.World.GetEntity(savedEffect.CreatorId);
+                }
+
+                // Apply effect via EffectSystem
+                // Note: The remaining duration will be set by the EffectSystem when creating ActiveEffect
+                // We restore the original duration, and EffectSystem will handle remaining rounds
+                effectSystem.ApplyEffect(entity, effect, creator);
+
+                // After applying, we may need to update the remaining rounds on the ActiveEffect
+                // This requires getting the ActiveEffect back from EffectSystem and updating RemainingRounds
+                // However, since EffectSystem doesn't expose a way to get a specific ActiveEffect,
+                // we rely on the EffectSystem's internal duration management
+                // The RemainingDuration in SavedEffect represents remaining rounds, but EffectSystem
+                // uses DurationRounds for initial application
+                // For accurate restoration, we would need to store RemainingRounds separately or
+                // modify EffectSystem to support setting remaining rounds on application
+            }
         }
 
         /// <summary>
