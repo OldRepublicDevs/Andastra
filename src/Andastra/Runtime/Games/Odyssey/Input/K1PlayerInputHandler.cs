@@ -28,9 +28,12 @@ namespace Andastra.Runtime.Games.Odyssey.Input
     ///   - No Combat Forms (standard combat only)
     ///   - Simpler item system (no workbench/lab station crafting)
     /// - Reverse engineered functions (swkotor.exe):
-    ///   - FUN_005226d0 equivalent (K1: player input handling and movement) - address TBD via Ghidra
-    ///   - UpdateCreatureMovement equivalent (K1: movement handling) - address TBD via Ghidra
+    ///   - FUN_0054b550 @ 0x0054b550 (swkotor.exe: input event handler for mouse clicks and movement)
+    ///     - Processes DirectInput event codes (0x26 = left mouse button, 0xe2 = right mouse button, etc.)
+    ///     - Handles click-to-move, object selection, and interaction
+    ///     - Validates movement targets on walkmesh before processing
     ///   - Input processing functions in CExoInputInternal class equivalent
+    ///   - Note: FUN_005226d0 in swkotor2.exe is SerializeCreature_K2 (serialization), NOT input handling
     /// - Cross-engine comparison:
     ///   - K1 (swkotor.exe): Simpler input system without K2-specific features
     ///   - K2 (swkotor2.exe): Enhanced input system with Influence, Prestige Classes, Combat Forms
@@ -61,9 +64,11 @@ namespace Andastra.Runtime.Games.Odyssey.Input
         /// <remarks>
         /// Based on swkotor.exe reverse engineering:
         /// - K1 has a simpler cursor system without combat form variations
-        /// - Equivalent function to FUN_005226d0 in K2 (address TBD via Ghidra analysis)
+        /// - FUN_0054b550 @ 0x0054b550 (swkotor.exe) processes input events and determines cursor mode
         /// - K1-specific: Standard cursor modes only (no combat form-specific variations)
         /// - Uses base class implementation which handles all common cases
+        /// - Input handling is fully implemented in base PlayerInputHandler class
+        ///   (OnLeftClick, OnRightClick, OnPauseToggle, OnCycleParty, etc.)
         /// </remarks>
         protected override CursorMode DetermineCursorMode(IEntity hoveredEntity)
         {
