@@ -1391,7 +1391,7 @@ namespace HolocronToolset.Editors
                     "Invalid Dialog Reference",
                     "Conversation field cannot be blank.",
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 messageBox.ShowAsync();
                 return;
             }
@@ -1409,7 +1409,7 @@ namespace HolocronToolset.Editors
                     "DLG file not found",
                     "Do you wish to create a new dialog in the 'Override' folder?",
                     ButtonEnum.YesNo,
-                    Icon.Question);
+                    MsBox.Avalonia.Enums.Icon.Question);
                 var result = createDialog.ShowAsync().GetAwaiter().GetResult();
                 
                 if (result == ButtonResult.Yes)

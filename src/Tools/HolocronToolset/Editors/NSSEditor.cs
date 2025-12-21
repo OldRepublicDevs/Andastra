@@ -3932,7 +3932,7 @@ namespace HolocronToolset.Editors
                 "Format Document",
                 "Code formatting is not yet implemented. This feature will format the code with proper indentation and spacing.",
                 ButtonEnum.Ok,
-                Icon.Info);
+                MsBox.Avalonia.Enums.Icon.Info);
             await messageBox.ShowAsync();
         }
 
