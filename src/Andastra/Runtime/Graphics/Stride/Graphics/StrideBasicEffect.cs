@@ -146,6 +146,30 @@ namespace Andastra.Runtime.Stride.Graphics
             UpdateShaderParameters();
         }
 
+        protected override void OnFogEnabledChanged(bool enabled)
+        {
+            _parametersDirty = true;
+            UpdateShaderParameters();
+        }
+
+        protected override void OnFogColorChanged(Vector3 color)
+        {
+            _parametersDirty = true;
+            UpdateShaderParameters();
+        }
+
+        protected override void OnFogStartChanged(float start)
+        {
+            _parametersDirty = true;
+            UpdateShaderParameters();
+        }
+
+        protected override void OnFogEndChanged(float end)
+        {
+            _parametersDirty = true;
+            UpdateShaderParameters();
+        }
+
         /// <summary>
         /// Updates all shader parameters based on current effect state.
         /// This is called whenever a parameter changes or when Apply() is called.
@@ -179,6 +203,12 @@ namespace Andastra.Runtime.Stride.Graphics
                 SetBoolParameter("VertexColorEnabled", _vertexColorEnabled);
                 SetBoolParameter("LightingEnabled", _lightingEnabled);
                 SetBoolParameter("TextureEnabled", _textureEnabled);
+
+                // Set fog parameters
+                SetBoolParameter("FogEnabled", _fogEnabled);
+                SetVector3Parameter("FogColor", _fogColor);
+                SetFloatParameter("FogStart", _fogStart);
+                SetFloatParameter("FogEnd", _fogEnd);
 
                 // Set texture if enabled and provided
                 if (_textureEnabled && _texture != null)
