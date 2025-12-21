@@ -1898,6 +1898,7 @@ namespace Andastra.Runtime.Games.Eclipse
             {
                 // Check if ARE file contains audio zone definitions
                 // Based on ARE format: Audio zone definitions may be in a list (AudioZone_List)
+                // TODO: STUB - For now, check if we can parse audio zones from _areaData
                 // If not available, create default zone from area bounds
                 bool audioZonesCreated = false;
 
@@ -2853,6 +2854,120 @@ namespace Andastra.Runtime.Games.Eclipse
 
 
         /// <summary>
+        /// Gets or creates the creature collision detector for this area.
+        /// Based on daorigins.exe/DragonAge2.exe: Eclipse engine uses EclipseCreatureCollisionDetector.
+        /// </summary>
+        /// <param name="world">The world to determine the engine type from.</param>
+        /// <returns>The creature collision detector instance.</returns>
+        /// <remarks>
+        /// Based on ActionMoveToObject.GetOrCreateCollisionDetector pattern:
+        /// - Determines engine type from world namespace
+        /// - Creates engine-specific collision detector using reflection
+        /// - Falls back to DefaultCreatureCollisionDetector if engine type cannot be determined
+        /// - Based on daorigins.exe, DragonAge2.exe collision systems
+        /// </remarks>
+        private BaseCreatureCollisionDetector GetOrCreateCollisionDetector(IWorld world)
+        {
+            if (_collisionDetector != null)
+            {
+                return _collisionDetector;
+            }
+
+            if (world == null)
+            {
+                // No world available, use default detector
+                _collisionDetector = new DefaultCreatureCollisionDetector();
+                return _collisionDetector;
+            }
+
+            // Determine engine type from world's namespace
+            Type worldType = world.GetType();
+            string worldNamespace = worldType.Namespace ?? string.Empty;
+            string detectorTypeName = null;
+            string detectorNamespace = null;
+
+            // Check for Eclipse engine (Dragon Age games)
+            if (worldNamespace.Contains("Eclipse"))
+            {
+                detectorNamespace = "Andastra.Runtime.Games.Eclipse.Collision";
+                detectorTypeName = "EclipseCreatureCollisionDetector";
+            }
+
+            // Try to create engine-specific detector using reflection
+            if (detectorTypeName != null && detectorNamespace != null)
+            {
+                try
+                {
+                    // Construct full type name
+                    string fullTypeName = detectorNamespace + "." + detectorTypeName;
+                    
+                    // Search all loaded assemblies for the detector type
+                    Type detectorType = null;
+                    foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+                    {
+                        try
+                        {
+                            detectorType = assembly.GetType(fullTypeName);
+                            if (detectorType != null)
+                            {
+                                break; // Found the type
+                            }
+                        }
+                        catch (ReflectionTypeLoadException)
+                        {
+                            // Assembly has types that couldn't be loaded - continue searching other assemblies
+                            continue;
+                        }
+                        catch (TypeLoadException)
+                        {
+                            // Specific type couldn't be loaded from this assembly - continue searching
+                            continue;
+                        }
+                        catch (BadImageFormatException)
+                        {
+                            // Assembly is corrupted or has invalid format - skip this assembly and continue
+                            continue;
+                        }
+                        catch (FileNotFoundException)
+                        {
+                            // Assembly file or dependency is missing - continue searching other assemblies
+                            continue;
+                        }
+                        catch (FileLoadException)
+                        {
+                            // Assembly failed to load - continue searching other assemblies
+                            continue;
+                        }
+                        catch (System.ArgumentException)
+                        {
+                            // Invalid type name format - continue searching other assemblies
+                            continue;
+                        }
+                    }
+                    
+                    if (detectorType != null)
+                    {
+                        // Create instance using parameterless constructor
+                        object detectorInstance = Activator.CreateInstance(detectorType);
+                        if (detectorInstance is BaseCreatureCollisionDetector detector)
+                        {
+                            _collisionDetector = detector;
+                            return _collisionDetector;
+                        }
+                    }
+                }
+                catch
+                {
+                    // Reflection failed, fall through to default detector
+                }
+            }
+
+            // Fall back to default detector if engine type cannot be determined or reflection fails
+            _collisionDetector = new DefaultCreatureCollisionDetector();
+            return _collisionDetector;
+        }
+
+        /// <summary>
         /// Adds an entity to the physics system.
         /// </summary>
         /// <remarks>
@@ -2933,29 +3048,15 @@ namespace Andastra.Runtime.Games.Eclipse
                     switch (entity.ObjectType)
                     {
                         case ObjectType.Creature:
-                            // Creatures: Default radius 0.5f (medium creature size)
-                            // Based on EclipseCreatureCollisionDetector: Default radius 0.5f from appearance.2da hitradius
-                            // TODO:  In a full implementation, would query collision detector for actual creature bounding box
-                            // TODO: STUB - For now, use default creature size (spherical approximation)
-                            float creatureRadius = 0.5f;
+                            // Creatures: Query collision detector for actual creature bounding box
+                            // Based on daorigins.exe/DragonAge2.exe: Physics system queries collision detector for creature bounds
+                            // Original implementation: Uses EclipseCreatureCollisionDetector to get bounding box from appearance.2da hitradius
+                            // Eclipse engine uses PhysX collision shapes, but creature size comes from appearance.2da hitradius
+                            CreatureBoundingBox creatureBoundingBox = GetCreatureBoundingBoxFromCollisionDetector(entity);
                             
-                            // Try to get creature radius from appearance data if available
-                            if (entity.World != null && entity.World.GameDataProvider != null)
-                            {
-                                // Get appearance type from entity
-                                int appearanceType = -1;
-                                if (renderable != null && entity.HasData("AppearanceType"))
-                                {
-                                    appearanceType = entity.GetData<int>("AppearanceType", -1);
-                                }
-                                
-                                if (appearanceType >= 0)
-                                {
-                                    creatureRadius = entity.World.GameDataProvider.GetCreatureRadius(appearanceType, 0.5f);
-                                }
-                            }
-                            
-                            halfExtents = new Vector3(creatureRadius, creatureRadius, creatureRadius);
+                            // Convert bounding box (half-extents) to physics half extents
+                            // CreatureBoundingBox already contains half-extents (Width, Height, Depth)
+                            halfExtents = new Vector3(creatureBoundingBox.Width, creatureBoundingBox.Height, creatureBoundingBox.Depth);
                             break;
                             
                         case ObjectType.Door:
@@ -7297,6 +7398,73 @@ namespace Andastra.Runtime.Games.Eclipse
             AffectedFaceIndices = new List<int>();
             ModifiedVertices = new List<ModifiedVertex>();
             ExplosionCenter = Vector3.Zero;
+            ExplosionRadius = 0.0f;
+            ModificationTime = 0.0f;
+        }
+    }
+
+    /// <summary>
+    /// Represents a debris piece generated from destroyed geometry.
+    /// </summary>
+    /// <remarks>
+    /// Based on daorigins.exe/DragonAge2.exe: Debris physics objects.
+    /// </remarks>
+    public class DebrisPiece
+    {
+        /// <summary>
+        /// Mesh identifier that this debris came from.
+        /// </summary>
+        public string MeshId { get; set; }
+
+        /// <summary>
+        /// Face indices that form this debris piece.
+        /// </summary>
+        public List<int> FaceIndices { get; set; }
+
+        /// <summary>
+        /// Position of debris piece in world space.
+        /// </summary>
+        public Vector3 Position { get; set; }
+
+        /// <summary>
+        /// Linear velocity of debris piece.
+        /// </summary>
+        public Vector3 Velocity { get; set; }
+
+        /// <summary>
+        /// Rotation of debris piece (Euler angles).
+        /// </summary>
+        public Vector3 Rotation { get; set; }
+
+        /// <summary>
+        /// Angular velocity of debris piece.
+        /// </summary>
+        public Vector3 AngularVelocity { get; set; }
+
+        /// <summary>
+        /// Total lifetime of debris piece (seconds).
+        /// </summary>
+        public float LifeTime { get; set; }
+
+        /// <summary>
+        /// Remaining lifetime of debris piece (seconds).
+        /// </summary>
+        public float RemainingLifeTime { get; set; }
+
+        public DebrisPiece()
+        {
+            MeshId = string.Empty;
+            FaceIndices = new List<int>();
+            Position = Vector3.Zero;
+            Velocity = Vector3.Zero;
+            Rotation = Vector3.Zero;
+            AngularVelocity = Vector3.Zero;
+            LifeTime = 30.0f;
+            RemainingLifeTime = 30.0f;
+        }
+    }
+}
+
             ExplosionRadius = 0.0f;
             ModificationTime = 0.0f;
         }
