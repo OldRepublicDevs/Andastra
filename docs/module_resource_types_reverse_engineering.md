@@ -326,7 +326,6 @@ Based on `ResourceType.cs`, the following resource types are defined:
 - `TGA` (3) - Texture images
 - `TXI` (2022) - Texture info
 - `NCS` (2010) - Compiled scripts
-- `NSS` (2009) - Script source (TODO: Gain Certainty by going through ghidra mcp - Verify if NSS can be loaded from modules by examining NSS resource type handlers and checking if NSS loading code searches modules. Check string references to ".nss" files. Note: NSS is typically compiled to NCS before use, so runtime loading may not be needed)
 - `SSF` (2060) - Soundset files
 - `LIP` (3004) - Lip sync data
 - `VIS` (3001) - Visibility data
@@ -353,11 +352,20 @@ Based on `ResourceType.cs`, the following resource types are defined:
 - `WAV` (4) - Audio files
   - **Handler exists**: swkotor.exe: 0x005d5e90 calls `FUN_004074d0` with type 4
   - **Obfuscation**: ✅ **Supports BOTH obfuscated and unobfuscated**
-    - **Obfuscated SFX**: 470-byte header (magic: `0xFF 0xF3 0x60 0xC4`)
-    - **Obfuscated VO**: 20-byte header (magic: `"RIFF"` at 0, `"RIFF"` at 20)
-    - **MP3-in-WAV**: 58-byte header (RIFF size = 50)
-    - **Standard WAV**: No header (standard RIFF/WAVE)
-    - Game auto-detects and skips headers - both formats work
+    - **Can the game load standard, non-obfuscated `.wav` files?** ✅ **YES** - Standard RIFF/WAVE files work without any obfuscation layer
+    - **Obfuscation is OPTIONAL, not required** - The game auto-detects format and handles both:
+      - **Obfuscated SFX**: 470-byte header (magic: `0xFF 0xF3 0x60 0xC4`) - skip 470 bytes, then standard RIFF/WAVE follows
+      - **Obfuscated VO**: 20-byte header (magic: `"RIFF"` at 0, `"RIFF"` at 20) - skip 20 bytes, then standard RIFF/WAVE follows
+      - **MP3-in-WAV**: 58-byte header (RIFF size = 50) - skip 58 bytes, then raw MP3 data follows
+      - **Standard WAV**: No obfuscation header - file starts directly with standard RIFF/WAVE format (bytes 0-3 = "RIFF", bytes 8-11 = "WAVE")
+    - **Detection Logic** (swkotor.exe: FUN_005db4d0 0x005db4d0 calls `_AIL_WAV_info@8` from MSS32.DLL):
+      1. Check first 4 bytes for SFX magic (`0xFF 0xF3 0x60 0xC4`) → if found, skip 470 bytes
+      2. Check first 4 bytes for RIFF magic (`"RIFF"`) → if found:
+         - Check if "RIFF" appears again at offset 20 → if yes, skip 20 bytes (VO header)
+         - Check RIFF size field (bytes 4-7) → if size == 50, skip 58 bytes (MP3-in-WAV)
+         - Otherwise, treat as standard RIFF/WAVE (no header to skip)
+      3. If no magic detected, assume standard RIFF/WAVE format
+    - **Conclusion**: Standard, non-obfuscated WAV files work perfectly - obfuscation is only used for some game assets, not required for modding
   - **Module Support**: ✅ **YES** - WAV handler uses resource system that searches modules
   - **Override Support**: ✅ **YES** - Can be placed in Override directory
   - **Stream Directory Priority**: ⚠️ **COMPLEX** - See "Media File Priority" section below
