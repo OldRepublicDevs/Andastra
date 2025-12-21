@@ -3425,9 +3425,41 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ArgumentNullException(nameof(fence));
             }
 
-            // TODO: Extract VkFence from IFence implementation and call vkWaitForFences
-            // For now, this is a placeholder
-            throw new NotImplementedException("Fence waiting not implemented - requires IFence implementation with VkFence access");
+            // Extract VkFence handle from IFence implementation using reflection
+            // The VkFence handle is typically stored as NativeHandle or in a private field
+            IntPtr vkFence = ExtractVkFenceHandle(fence);
+            if (vkFence == IntPtr.Zero)
+            {
+                throw new ArgumentException("Failed to extract VkFence handle from IFence implementation. The fence must be a Vulkan fence with a valid native handle.", nameof(fence));
+            }
+
+            // Load vkWaitForFences function pointer if not already loaded
+            // vkWaitForFences is a core Vulkan function, so we can load it via vkGetDeviceProcAddr
+            if (vkWaitForFences == null)
+            {
+                // Load vkGetDeviceProcAddr first (if not already available)
+                // vkGetDeviceProcAddr signature: PFN_vkGetDeviceProcAddr(device, "functionName")
+                // For core functions like vkWaitForFences, vkGetDeviceProcAddr will return the function pointer
+                IntPtr funcPtr = VulkanLoaderHelper.GetProcAddress(VulkanLoaderHelper.LoadLibrary(VulkanLibrary), "vkWaitForFences");
+                if (funcPtr == IntPtr.Zero)
+                {
+                    // Fallback: Try loading via instance proc address (some implementations require this)
+                    // In practice, vkWaitForFences should be available via vkGetDeviceProcAddr
+                    throw new InvalidOperationException("Failed to load vkWaitForFences function from Vulkan library. Make sure Vulkan is properly initialized.");
+                }
+                vkWaitForFences = (vkWaitForFencesDelegate)Marshal.GetDelegateForFunctionPointer(funcPtr, typeof(vkWaitForFencesDelegate));
+            }
+
+            // Call vkWaitForFences
+            // waitAll = VK_TRUE to wait for all fences (we only have one fence, so this doesn't matter)
+            // timeout = UINT64_MAX (0xFFFFFFFFFFFFFFFF) to wait indefinitely
+            VkResult result = vkWaitForFences(_device, 1, new IntPtr(&vkFence), VkBool32.VK_TRUE, 0xFFFFFFFFFFFFFFFFUL);
+
+            // Check result
+            if (result != VkResult.VK_SUCCESS && result != VkResult.VK_TIMEOUT)
+            {
+                throw new InvalidOperationException($"vkWaitForFences failed with result: {result}");
+            }
         }
 
         #endregion
@@ -5224,3 +5256,13 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                 if (vkCmdDispatchIndirect == null)
                 {
+                    throw new InvalidOperationException("vkCmdDispatchIndirect function pointer not initialized. Call InitializeVulkanFunctions first.");
+                }
+
+                vkCmdDispatchIndirect(_vkCommandBuffer, vkBuffer, (ulong)offset);
+            }
+        }
+
+        #endregion
+    }
+}
