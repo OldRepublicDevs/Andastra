@@ -18,6 +18,7 @@ using Andastra.Parsing.Common;
 using Andastra.Parsing.Extract;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Installation;
+using Andastra.Parsing.Logger;
 using Andastra.Parsing.Resource;
 using DLGType = Andastra.Parsing.Resource.Generics.DLG.DLG;
 using DLGLink = Andastra.Parsing.Resource.Generics.DLG.DLGLink;
@@ -2549,8 +2550,8 @@ namespace HolocronToolset.Editors
             // Matching PyKotor: if self._installation is None: RobustLogger().error("Cannot edit text: installation is not set"); continue
             if (_installation == null)
             {
-                // In a full implementation, we would log an error
-                // TODO: STUB - For now, we'll just return silently
+                // Matching PyKotor: RobustLogger().error("Cannot edit text: installation is not set")
+                new RobustLogger().Error("Cannot edit text: installation is not set");
                 return;
             }
 
@@ -2606,8 +2607,7 @@ namespace HolocronToolset.Editors
                 catch (Exception exc)
                 {
                     // Matching PyKotor: RobustLogger().exception(f"Error executing LocalizedStringDialog: {exc.__class__.__name__}: {exc}")
-                    // In a full implementation, we would log the error
-                    // TODO: STUB - For now, we'll just continue to the next item
+                    new RobustLogger().Exception($"Error executing LocalizedStringDialog: {exc.GetType().Name}: {exc}", exc);
                     return;
                 }
 
@@ -2632,8 +2632,7 @@ namespace HolocronToolset.Editors
             catch (Exception exc)
             {
                 // Matching PyKotor: RobustLogger().exception(f"Error creating LocalizedStringDialog: {exc.__class__.__name__}: {exc}")
-                // In a full implementation, we would log the error
-                // TODO: STUB - For now, we'll just return silently
+                new RobustLogger().Exception($"Error creating LocalizedStringDialog: {exc.GetType().Name}: {exc}", exc);
                 return;
             }
         }
