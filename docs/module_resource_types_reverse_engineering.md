@@ -332,12 +332,22 @@ if (iVar7 == 0) {
 
 **Result**: **FIRST resource registered wins**. Later duplicates are ignored.
 
-**Priority Order**:
-1. **`.rim`** - Registered first (if flag is 0)
-2. **`.mod`** - Registered second (if exists), **OVERRIDES** `.rim` entries
-3. **`_s.rim`** - Registered third (if `.mod` doesn't exist), **ADDS** to `.rim` entries
+**Actual Execution Flow**:
+- **If flag at offset 0x54 is 0**: `.rim` loads first (line 42)
+- **If flag at offset 0x54 is NOT 0**:
+  - Checks for `.mod` (line 95)
+  - **If `.mod` exists**: `.mod` loads (line 136) - **OVERRIDES** `.rim` entries
+  - **If `.mod` doesn't exist**: `_s.rim` loads (line 118) - **ADDS** to `.rim` entries
 
-**Answer**: If same resource exists in `.rim` and `_s.rim`, **`.rim` wins** (registered first). If same resource exists in `.rim` and `.mod`, **`.mod` wins** (registered second, overrides).
+**Duplicate Handling** (`FUN_0040e990` lines 30-91):
+- Line 36: Checks if resource with same ResRef+Type already exists
+- Line 39-91: If duplicate found AND resource is already loaded (`*(int *)((int)this_00 + 0x14) != -1`), returns 0 (ignores duplicate)
+- Line 94-101: If no duplicate OR resource not loaded, registers/updates resource
+
+**Answer**: 
+- If same resource exists in `.rim` and `_s.rim`: **`.rim` wins** (registered first when flag is 0, or loaded before `_s.rim` in other paths)
+- If same resource exists in `.rim` and `.mod`: **`.mod` wins** (registered after `.rim`, overrides it)
+- **CRITICAL**: The exact order depends on the flag at offset 0x54, but in typical module loading, `.rim` loads first, then `.mod` (if exists), then `_s.rim` (if `.mod` doesn't exist)
 
 ### K2 (swkotor2.exe) - `FUN_004096b0`
 
@@ -349,16 +359,22 @@ if (iVar7 == 0) {
 
 **Duplicate Handling**: Same as K1 - first registered wins.
 
-**Priority Order**:
-1. **`.rim`** - Registered first (if flag is 0)
-2. **`.mod`** - Registered second (if exists), **OVERRIDES** `.rim` entries
-3. **`_s.rim`** - Registered third (if `.mod` doesn't exist), **ADDS** to `.rim` entries
-4. **`_dlg.erf`** - Registered fourth (if `.mod` doesn't exist), **ADDS** to `.rim` and `_s.rim` entries
+**Actual Execution Flow**:
+- **If flag at offset 0x54 is 0**: `.rim` loads first (line 46)
+- **If flag at offset 0x54 is NOT 0**:
+  - Checks for `.mod` (line 99)
+  - **If `.mod` exists**: `.mod` loads (line 161) - **OVERRIDES** `.rim` entries
+  - **If `.mod` doesn't exist**: 
+    - `_s.rim` loads (line 122) - **ADDS** to `.rim` entries
+    - `_dlg.erf` loads (line 147) - **ADDS** to `.rim` and `_s.rim` entries
+
+**Duplicate Handling**: Same as K1 - first registered wins.
 
 **Answer**: 
-- If same resource exists in `.rim` and `_s.rim`, **`.rim` wins** (registered first)
-- If same resource exists in `_s.rim` and `_dlg.erf`, **`_s.rim` wins** (registered first)
-- If same resource exists in `.rim` and `.mod`, **`.mod` wins** (registered second, overrides)
+- If same resource exists in `.rim`, `_s.rim`, and `_dlg.erf`: **`.rim` wins** (registered first)
+- If same resource exists in `_s.rim` and `_dlg.erf`: **`_s.rim` wins** (registered before `_dlg.erf`)
+- If same resource exists in `.rim` and `.mod`: **`.mod` wins** (registered after `.rim`, overrides it)
+- **CRITICAL**: In typical module loading, the order is: `.rim` → `.mod` (if exists) → `_s.rim` (if `.mod` doesn't exist) → `_dlg.erf` (if `.mod` doesn't exist)
 
 ## Override Directory Priority (PROVEN)
 
