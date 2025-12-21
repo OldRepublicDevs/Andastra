@@ -333,10 +333,10 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 // On non-Windows platforms, return a sampler with zero handle
                 // The application should use VulkanDevice for cross-platform support
-                IntPtr handle = new IntPtr(_nextResourceHandle++);
-                var sampler = new D3D12Sampler(handle, desc, IntPtr.Zero, _device);
-                _resources[handle] = sampler;
-                return sampler;
+                IntPtr nonWindowsHandle = new IntPtr(_nextResourceHandle++);
+                var nonWindowsSampler = new D3D12Sampler(nonWindowsHandle, desc, IntPtr.Zero, _device);
+                _resources[nonWindowsHandle] = nonWindowsSampler;
+                return nonWindowsSampler;
             }
 
             // Convert SamplerDesc to D3D12_SAMPLER_DESC
@@ -5063,21 +5063,92 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                     // Step 7: Bind descriptor sets as root descriptor tables
                     // In D3D12, each binding set maps to one root parameter index in the root signature
-                    // For now, we assume sequential root parameter indices starting from 0
-                    // TODO: Get actual root parameter indices from binding layout or root signature
-                    for (uint i = 0; i < state.BindingSets.Length; i++)
+                    // Root parameter indices are determined by the order of descriptor tables in the root signature
+                    // Based on DirectX 12 Root Signature: https://docs.microsoft.com/en-us/windows/win32/direct3d12/root-signatures
+                    // Original implementation: Root parameter indices correspond to descriptor table order in root signature
+                    // We determine root parameter indices from binding layout slot information
+                    if (state.BindingSets != null && state.BindingSets.Length > 0)
                     {
-                        D3D12BindingSet d3d12BindingSet = state.BindingSets[i] as D3D12BindingSet;
-                        if (d3d12BindingSet == null)
+                        // Create a list of binding sets with their root parameter indices
+                        // Root parameter index is determined by the minimum slot in the binding layout
+                        // This ensures binding sets are bound in the correct order based on shader register slots
+                        var bindingSetIndices = new List<(D3D12BindingSet bindingSet, uint rootParameterIndex)>();
+                        
+                        for (int i = 0; i < state.BindingSets.Length; i++)
                         {
-                            continue; // Skip non-D3D12 binding sets
+                            D3D12BindingSet d3d12BindingSet = state.BindingSets[i] as D3D12BindingSet;
+                            if (d3d12BindingSet == null)
+                            {
+                                continue; // Skip non-D3D12 binding sets
+                            }
+                            
+                            // Get binding layout from binding set
+                            IBindingLayout layout = d3d12BindingSet.Layout;
+                            if (layout == null)
+                            {
+                                // No layout - use array index as fallback
+                                bindingSetIndices.Add((d3d12BindingSet, unchecked((uint)i)));
+                                continue;
+                            }
+                            
+                            // Get binding layout description to access items
+                            // D3D12BindingLayout has Desc property with Items array
+                            D3D12BindingLayout d3d12Layout = layout as D3D12BindingLayout;
+                            if (d3d12Layout == null)
+                            {
+                                // Not a D3D12 layout - use array index as fallback
+                                bindingSetIndices.Add((d3d12BindingSet, unchecked((uint)i)));
+                                continue;
+                            }
+                            
+                            BindingLayoutDesc layoutDesc = d3d12Layout.Desc;
+                            if (layoutDesc.Items == null || layoutDesc.Items.Length == 0)
+                            {
+                                // No items in layout - use array index as fallback
+                                bindingSetIndices.Add((d3d12BindingSet, unchecked((uint)i)));
+                                continue;
+                            }
+                            
+                            // Find minimum slot in binding layout items
+                            // The slot represents the shader register (t0, t1, s0, b0, etc.)
+                            // Root parameter index should correspond to the order of descriptor tables in root signature
+                            // For now, we use the minimum slot as a hint for root parameter ordering
+                            // In a full implementation, root signature creation would track the actual root parameter index
+                            int minSlot = int.MaxValue;
+                            foreach (BindingLayoutItem item in layoutDesc.Items)
+                            {
+                                if (item.Slot < minSlot)
+                                {
+                                    minSlot = item.Slot;
+                                }
+                            }
+                            
+                            // Use minimum slot as root parameter index (clamped to reasonable range)
+                            // Note: In a full implementation, the root signature would track the actual mapping
+                            // For now, we assume slots map directly to root parameter indices
+                            // This works when root signature is created with descriptor tables in slot order
+                            uint rootParameterIndex = unchecked((uint)Math.Max(0, minSlot));
+                            
+                            bindingSetIndices.Add((d3d12BindingSet, rootParameterIndex));
                         }
-
-                        // Get GPU descriptor handle from binding set
-                        D3D12_GPU_DESCRIPTOR_HANDLE handle = d3d12BindingSet.GetGpuDescriptorHandle();
-                        if (handle.ptr != 0)
+                        
+                        // Sort binding sets by root parameter index to ensure correct binding order
+                        // Based on DirectX 12: Root parameters must be set in the order they appear in root signature
+                        bindingSetIndices.Sort((a, b) => a.rootParameterIndex.CompareTo(b.rootParameterIndex));
+                        
+                        // Bind each descriptor set to its root parameter index
+                        // Based on DirectX 12 API: ID3D12GraphicsCommandList::SetGraphicsRootDescriptorTable
+                        // Documentation: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-setgraphicsrootdescriptortable
+                        foreach (var (bindingSet, rootParameterIndex) in bindingSetIndices)
                         {
-                            CallSetGraphicsRootDescriptorTable(_d3d12CommandList, i, handle);
+                            // Get GPU descriptor handle from binding set
+                            D3D12_GPU_DESCRIPTOR_HANDLE handle = bindingSet.GetGpuDescriptorHandle();
+                            if (handle.ptr != 0)
+                            {
+                                // Set descriptor table at the specified root parameter index
+                                // Root parameter index corresponds to the descriptor table's position in root signature
+                                CallSetGraphicsRootDescriptorTable(_d3d12CommandList, rootParameterIndex, handle);
+                            }
                         }
                     }
                 }
