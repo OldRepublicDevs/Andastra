@@ -212,9 +212,9 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 // On non-Windows platforms, return a buffer with zero handle
                 // The application should use VulkanDevice for cross-platform support
-                IntPtr handle = new IntPtr(_nextResourceHandle++);
-                var buffer = new D3D12Buffer(handle, desc, IntPtr.Zero, _device);
-                _resources[handle] = buffer;
+            IntPtr handle = new IntPtr(_nextResourceHandle++);
+            var buffer = new D3D12Buffer(handle, desc, IntPtr.Zero, _device);
+            _resources[handle] = buffer;
                 return buffer;
             }
 
@@ -312,7 +312,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 var buffer = new D3D12Buffer(handle, desc, d3d12Resource, _device);
                 _resources[handle] = buffer;
 
-                return buffer;
+            return buffer;
             }
             finally
             {
@@ -484,11 +484,11 @@ namespace Andastra.Runtime.MonoGame.Backends
                     Marshal.FreeHGlobal(pipelineStatePtr);
                 }
 
-                IntPtr handle = new IntPtr(_nextResourceHandle++);
+            IntPtr handle = new IntPtr(_nextResourceHandle++);
                 var pipeline = new D3D12GraphicsPipeline(handle, desc, pipelineState, rootSignature, _device, this);
-                _resources[handle] = pipeline;
+            _resources[handle] = pipeline;
 
-                return pipeline;
+            return pipeline;
             }
             catch (Exception ex)
             {
@@ -752,9 +752,9 @@ namespace Andastra.Runtime.MonoGame.Backends
                         ReleaseComObject(blobPtr);
 
                         // Wrap in D3D12BindingLayout and return
-                        IntPtr handle = new IntPtr(_nextResourceHandle++);
+            IntPtr handle = new IntPtr(_nextResourceHandle++);
                         var layout = new D3D12BindingLayout(handle, desc, rootSignature, _device, this);
-                        _resources[handle] = layout;
+            _resources[handle] = layout;
 
                         // Store range pointers for cleanup on disposal (would need to track these in D3D12BindingLayout)
                         // For now, we'll free them immediately after root signature creation
@@ -764,7 +764,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                             Marshal.FreeHGlobal(ptr);
                         }
 
-                        return layout;
+            return layout;
                     }
                     finally
                     {
@@ -937,11 +937,11 @@ namespace Andastra.Runtime.MonoGame.Backends
                     }
 
                     // Wrap in D3D12CommandList and return
-                    IntPtr handle = new IntPtr(_nextResourceHandle++);
+            IntPtr handle = new IntPtr(_nextResourceHandle++);
                     var cmdList = new D3D12CommandList(handle, type, this, commandList, commandAllocator, _device);
-                    _resources[handle] = cmdList;
+            _resources[handle] = cmdList;
 
-                    return cmdList;
+            return cmdList;
                 }
                 finally
                 {
@@ -1520,7 +1520,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 finally
                 {
                     // Always clear the handle even if Release() failed
-                    _samplerDescriptorHeap = IntPtr.Zero;
+            _samplerDescriptorHeap = IntPtr.Zero;
                 }
             }
             
@@ -7867,7 +7867,27 @@ namespace Andastra.Runtime.MonoGame.Backends
                     CallOMSetBlendFactor(_d3d12CommandList, blendFactorIntPtr);
                 }
             }
-            public void SetStencilRef(uint reference) { /* TODO: OMSetStencilRef */ }
+            /// <summary>
+            /// Sets the stencil reference value for the output merger stage.
+            /// In DirectX 12, this calls ID3D12GraphicsCommandList::OMSetStencilRef.
+            /// Based on DirectX 12 Output Merger Stencil Reference: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-omsetstencilref
+            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+            /// </summary>
+            public void SetStencilRef(uint reference)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    return; // Command list not initialized
+                }
+
+                // Call OMSetStencilRef through COM vtable
+                CallOMSetStencilRef(_d3d12CommandList, reference);
+            }
             /// <summary>
             /// Draws non-indexed primitives using instanced drawing.
             /// In DirectX 12, all non-indexed drawing is done through DrawInstanced.
