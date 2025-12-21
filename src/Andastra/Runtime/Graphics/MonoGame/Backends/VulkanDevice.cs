@@ -2532,8 +2532,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     var vulkanLayout = bindingLayouts[i] as VulkanBindingLayout;
                     if (vulkanLayout != null)
                     {
-                        // TODO: Extract VkDescriptorSetLayout from VulkanBindingLayout
-                        descriptorSetLayouts[i] = IntPtr.Zero; // Placeholder
+                        descriptorSetLayouts[i] = vulkanLayout.VkDescriptorSetLayout;
                     }
                 }
             }
@@ -3170,9 +3169,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             // Get the VkDescriptorSetLayout handle from the layout
-            // We need to access the private field, so we'll use reflection or add a property
-            // For now, we'll assume VulkanBindingLayout has a way to get the layout handle
-            IntPtr vkDescriptorSetLayout = GetDescriptorSetLayoutHandle(vulkanLayout);
+            IntPtr vkDescriptorSetLayout = vulkanLayout.VkDescriptorSetLayout;
             if (vkDescriptorSetLayout == IntPtr.Zero)
             {
                 throw new InvalidOperationException("Invalid descriptor set layout");
@@ -3200,26 +3197,6 @@ namespace Andastra.Runtime.MonoGame.Backends
             return bindingSet;
         }
 
-        /// <summary>
-        /// Gets the VkDescriptorSetLayout handle from a VulkanBindingLayout.
-        /// Uses reflection to access the private field since we can't modify the class.
-        /// </summary>
-        private IntPtr GetDescriptorSetLayoutHandle(VulkanBindingLayout layout)
-        {
-            // Use reflection to get the private _vkDescriptorSetLayout field
-            System.Reflection.FieldInfo field = typeof(VulkanBindingLayout).GetField("_vkDescriptorSetLayout", 
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            
-            if (field != null)
-            {
-                return (IntPtr)field.GetValue(layout);
-            }
-
-            // Fallback: try to get it from the layout's Desc if available
-            // This is a workaround - ideally VulkanBindingLayout would expose this
-            Console.WriteLine("[VulkanDevice] Warning: Could not access VkDescriptorSetLayout handle from VulkanBindingLayout");
-            return IntPtr.Zero;
-        }
 
         /// <summary>
         /// Allocates a descriptor set from the descriptor pool.
@@ -5129,6 +5106,14 @@ namespace Andastra.Runtime.MonoGame.Backends
                 Desc = desc;
                 _vkDescriptorSetLayout = vkDescriptorSetLayout;
                 _device = device;
+            }
+
+            /// <summary>
+            /// Gets the VkDescriptorSetLayout handle. Used internally for pipeline layout creation.
+            /// </summary>
+            internal IntPtr VkDescriptorSetLayout
+            {
+                get { return _vkDescriptorSetLayout; }
             }
 
             public void Dispose()
