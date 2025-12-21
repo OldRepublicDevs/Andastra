@@ -2762,6 +2762,10 @@ namespace Andastra.Runtime.Games.Aurora
 
             // Apply fog if enabled
             // Based on nwmain.exe: CNWSArea::UpdateLighting applies fog
+            // nwmain.exe: CNWSArea::UpdateLighting @ 0x140365160 (approximate - needs Ghidra verification)
+            // Original engine applies fog using DirectX fixed-function fog states
+            // Fog amount (0-15) controls fog density/intensity, not explicit distances
+            // We calculate fog distances from fog amount to provide reasonable fog effect
             if (fogAmount > 0)
             {
                 Vector3 fogColorVec = new Vector3(
@@ -2769,8 +2773,35 @@ namespace Andastra.Runtime.Games.Aurora
                     ((fogColor >> 8) & 0xFF) / 255.0f,
                     (fogColor & 0xFF) / 255.0f
                 );
-                // Note: BasicEffect fog support depends on implementation
-                // TODO: STUB - For now, we'll set fog parameters if the effect supports it
+
+                // Calculate fog distances from fog amount
+                // Based on nwmain.exe: Fog amount (0-15) controls fog intensity
+                // Higher fog amount = denser fog = closer end distance
+                // Formula: Fog end distance decreases as fog amount increases
+                // Fog start is always at camera (0.0f) for linear fog
+                float fogStart = 0.0f;
+                // Fog end: Higher fog amount (1-15) = closer end distance
+                // Range: 1000.0f (fog amount 1) to 200.0f (fog amount 15)
+                // This provides reasonable fog visibility ranges
+                float fogEnd = 1000.0f - (fogAmount * 50.0f);
+                // Ensure minimum fog end distance for very high fog amounts
+                if (fogEnd < 100.0f)
+                {
+                    fogEnd = 100.0f;
+                }
+
+                // Apply fog parameters to effect
+                // Based on nwmain.exe: DirectX fixed-function fog states are set
+                // Modern graphics APIs use shader-based fog via effect parameters
+                basicEffect.FogEnabled = true;
+                basicEffect.FogColor = fogColorVec;
+                basicEffect.FogStart = fogStart;
+                basicEffect.FogEnd = fogEnd;
+            }
+            else
+            {
+                // Disable fog when fog amount is 0
+                basicEffect.FogEnabled = false;
             }
         }
 
