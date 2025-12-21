@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Andastra.Runtime.Core.Game
 {
     /// <summary>
@@ -65,6 +67,16 @@ namespace Andastra.Runtime.Core.Game
         /// Charisma attribute.
         /// </summary>
         public int Charisma { get; set; }
+
+        /// <summary>
+        /// Skill ranks allocated during character creation.
+        /// Based on swkotor.exe and swkotor2.exe: Character creation stores skill ranks in character data
+        /// - Original implementation: Skill ranks are stored as dictionary mapping skill ID (0-7) to rank value
+        /// - Skills are set on creature's StatsComponent when character is created
+        /// - Skill ranks: 0 = untrained, 1-4 for class skills, 1-2 for cross-class skills at level 1
+        /// - KOTOR has 8 skills: COMPUTER_USE=0, DEMOLITIONS=1, STEALTH=2, AWARENESS=3, PERSUADE=4, REPAIR=5, SECURITY=6, TREAT_INJURY=7
+        /// </summary>
+        public System.Collections.Generic.Dictionary<int, int> SkillRanks { get; set; }
     }
 
     /// <summary>
