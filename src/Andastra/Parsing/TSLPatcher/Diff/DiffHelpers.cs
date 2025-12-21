@@ -26,11 +26,24 @@ namespace Andastra.Parsing.Diff
         // Original: def _determine_tslpatchdata_source(file1_path: Path, file2_path: Path) -> str:
         /// <summary>
         /// Determine which source file should be copied to tslpatchdata.
+        /// 
+        /// Logic:
+        /// - For 2-way diff: Use file1 (vanilla/base) as it will be patched
+        /// - For 3+ way diff: Use second-to-last version that exists (not yet implemented)
+        /// 
+        /// The returned string is used for logging purposes to indicate which source file
+        /// will be copied to the tslpatchdata directory.
         /// </summary>
+        /// <param name="file1Path">Path to first file (vanilla/base version)</param>
+        /// <param name="file2Path">Path to second file (modded/target version) - reserved for future N-way logic</param>
+        /// <returns>Display string indicating which source to use (e.g., "vanilla (path/to/file)")</returns>
         public static string DetermineTslpatchdataSource(string file1Path, string file2Path)
         {
-            // TODO: STUB - For now, implement 2-way logic (use vanilla/base version)
-            return $"vanilla ({file1Path.Replace('\\', '/')})";
+            // For 2-way diff: use vanilla/base version (file1) as it will be patched
+            // This matches Python's as_posix() behavior by converting backslashes to forward slashes
+            // for cross-platform path representation in the output string
+            string normalizedPath = file1Path?.Replace('\\', '/') ?? string.Empty;
+            return $"vanilla ({normalizedPath})";
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:155-261
