@@ -1051,30 +1051,116 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ObjectDisposedException(nameof(D3D12Device));
             }
 
-            // TODO: IMPLEMENT - Query D3D12 format support
-            // - Call ID3D12Device::CheckFeatureSupport with D3D12_FEATURE_FORMAT_SUPPORT
-            // - Check D3D12_FORMAT_SUPPORT flags against usage requirements
-            // - Return true if format supports the requested usage
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                // On non-Windows platforms, fall back to basic format checks
+                return IsFormatSupportedFallback(format, usage);
+            }
 
-            // Placeholder: assume common formats are supported
+            if (_device == IntPtr.Zero)
+            {
+                return false;
+            }
+
+            // Convert TextureFormat to DXGI_FORMAT
+            uint dxgiFormat = ConvertTextureFormatToDxgiFormatForTexture(format);
+            if (dxgiFormat == 0) // DXGI_FORMAT_UNKNOWN
+            {
+                return false;
+            }
+
+            // Query format support using CheckFeatureSupport
+            D3D12_FEATURE_FORMAT_SUPPORT formatSupport = new D3D12_FEATURE_FORMAT_SUPPORT
+            {
+                Format = dxgiFormat,
+                Support1 = 0,
+                Support2 = 0
+            };
+
+            int hr = CallCheckFeatureSupport(_device, D3D12_FEATURE_FORMAT_SUPPORT_ENUM, ref formatSupport, Marshal.SizeOf(typeof(D3D12_FEATURE_FORMAT_SUPPORT)));
+            if (hr != 0) // S_OK = 0
+            {
+                // If CheckFeatureSupport fails, fall back to basic checks
+                return IsFormatSupportedFallback(format, usage);
+            }
+
+            // Map TextureUsage flags to D3D12_FORMAT_SUPPORT flags
+            uint requiredSupport = MapTextureUsageToFormatSupport(usage);
+
+            // Check if format supports all required usage flags
+            // If no specific usage is required, assume format is supported if query succeeded
+            if (requiredSupport == 0)
+            {
+                return true;
+            }
+
+            return (formatSupport.Support1 & requiredSupport) == requiredSupport;
+        }
+
+        /// <summary>
+        /// Fallback format support check when CheckFeatureSupport is unavailable.
+        /// </summary>
+        private bool IsFormatSupportedFallback(TextureFormat format, TextureUsage usage)
+        {
+            // Basic format support checks for common formats
             switch (format)
             {
-                case TextureFormat.RGBA8_UNORM:
-                case TextureFormat.RGBA8_SRGB:
+                case TextureFormat.R8G8B8A8_UNorm:
+                case TextureFormat.R8G8B8A8_UNorm_SRGB:
+                case TextureFormat.B8G8R8A8_UNorm:
+                case TextureFormat.B8G8R8A8_UNorm_SRGB:
                     return (usage & (TextureUsage.ShaderResource | TextureUsage.RenderTarget)) != 0;
 
-                case TextureFormat.RGBA16_FLOAT:
-                case TextureFormat.RGBA32_FLOAT:
+                case TextureFormat.R16G16B16A16_Float:
+                case TextureFormat.R32G32B32A32_Float:
                     return (usage & (TextureUsage.ShaderResource | TextureUsage.RenderTarget | TextureUsage.UnorderedAccess)) != 0;
 
-                case TextureFormat.D24_UNORM_S8_UINT:
-                case TextureFormat.D32_FLOAT:
-                case TextureFormat.D32_FLOAT_S8_UINT:
+                case TextureFormat.D24_UNorm_S8_UInt:
+                case TextureFormat.D32_Float:
+                case TextureFormat.D32_Float_S8_UInt:
                     return (usage & TextureUsage.DepthStencil) != 0;
 
                 default:
                     return false;
             }
+        }
+
+        /// <summary>
+        /// Maps TextureUsage flags to D3D12_FORMAT_SUPPORT flags.
+        /// </summary>
+        private uint MapTextureUsageToFormatSupport(TextureUsage usage)
+        {
+            uint supportFlags = 0;
+
+            if ((usage & TextureUsage.ShaderResource) != 0)
+            {
+                // Shader resource requires texture support
+                supportFlags |= D3D12_FORMAT_SUPPORT_TEXTURE1D;
+                supportFlags |= D3D12_FORMAT_SUPPORT_TEXTURE2D;
+                supportFlags |= D3D12_FORMAT_SUPPORT_TEXTURE3D;
+                supportFlags |= D3D12_FORMAT_SUPPORT_SHADER_SAMPLE;
+            }
+
+            if ((usage & TextureUsage.RenderTarget) != 0)
+            {
+                // Render target requires render target support
+                supportFlags |= D3D12_FORMAT_SUPPORT_RENDER_TARGET;
+            }
+
+            if ((usage & TextureUsage.DepthStencil) != 0)
+            {
+                // Depth stencil requires depth stencil support
+                supportFlags |= D3D12_FORMAT_SUPPORT_DEPTH_STENCIL;
+            }
+
+            if ((usage & TextureUsage.UnorderedAccess) != 0)
+            {
+                // Unordered access requires UAV support
+                supportFlags |= D3D12_FORMAT_SUPPORT_TYPED_UNORDERED_ACCESS_VIEW;
+            }
+
+            return supportFlags;
         }
 
         public int GetCurrentFrameIndex()
@@ -1415,6 +1501,54 @@ namespace Andastra.Runtime.MonoGame.Backends
         private struct D3D12_RESOURCE_UAV_BARRIER
         {
             public IntPtr pResource; // ID3D12Resource*
+        }
+
+        // DirectX 12 Feature constants (D3D12_FEATURE)
+        private const uint D3D12_FEATURE_FORMAT_SUPPORT_ENUM = 0;
+
+        // DirectX 12 Format Support flags (D3D12_FORMAT_SUPPORT)
+        private const uint D3D12_FORMAT_SUPPORT_BUFFER = 0x1;
+        private const uint D3D12_FORMAT_SUPPORT_IA_VERTEX_BUFFER = 0x2;
+        private const uint D3D12_FORMAT_SUPPORT_IA_INDEX_BUFFER = 0x4;
+        private const uint D3D12_FORMAT_SUPPORT_SO_BUFFER = 0x8;
+        private const uint D3D12_FORMAT_SUPPORT_TEXTURE1D = 0x10;
+        private const uint D3D12_FORMAT_SUPPORT_TEXTURE2D = 0x20;
+        private const uint D3D12_FORMAT_SUPPORT_TEXTURE3D = 0x40;
+        private const uint D3D12_FORMAT_SUPPORT_TEXTURECUBE = 0x80;
+        private const uint D3D12_FORMAT_SUPPORT_SHADER_LOAD = 0x100;
+        private const uint D3D12_FORMAT_SUPPORT_SHADER_SAMPLE = 0x200;
+        private const uint D3D12_FORMAT_SUPPORT_SHADER_SAMPLE_COMPARISON = 0x400;
+        private const uint D3D12_FORMAT_SUPPORT_SHADER_SAMPLE_MONO_TEXT = 0x800;
+        private const uint D3D12_FORMAT_SUPPORT_MIP = 0x1000;
+        private const uint D3D12_FORMAT_SUPPORT_MIP_AUTOGEN = 0x2000;
+        private const uint D3D12_FORMAT_SUPPORT_RENDER_TARGET = 0x4000;
+        private const uint D3D12_FORMAT_SUPPORT_BLENDABLE = 0x8000;
+        private const uint D3D12_FORMAT_SUPPORT_DEPTH_STENCIL = 0x10000;
+        private const uint D3D12_FORMAT_SUPPORT_CPU_LOCKABLE = 0x20000;
+        private const uint D3D12_FORMAT_SUPPORT_MULTISAMPLE_RESOLVE = 0x40000;
+        private const uint D3D12_FORMAT_SUPPORT_DISPLAY = 0x80000;
+        private const uint D3D12_FORMAT_SUPPORT_CAST_WITHIN_BIT_LAYOUT = 0x100000;
+        private const uint D3D12_FORMAT_SUPPORT_MULTISAMPLE_RENDERTARGET = 0x200000;
+        private const uint D3D12_FORMAT_SUPPORT_MULTISAMPLE_LOAD = 0x400000;
+        private const uint D3D12_FORMAT_SUPPORT_SHADER_GATHER = 0x800000;
+        private const uint D3D12_FORMAT_SUPPORT_BACK_BUFFER_CAST = 0x1000000;
+        private const uint D3D12_FORMAT_SUPPORT_TYPED_UNORDERED_ACCESS_VIEW = 0x2000000;
+        private const uint D3D12_FORMAT_SUPPORT_SHADER_GATHER_COMPARISON = 0x4000000;
+        private const uint D3D12_FORMAT_SUPPORT_DECODER_OUTPUT = 0x8000000;
+        private const uint D3D12_FORMAT_SUPPORT_VIDEO_PROCESSOR_OUTPUT = 0x10000000;
+        private const uint D3D12_FORMAT_SUPPORT_VIDEO_PROCESSOR_INPUT = 0x20000000;
+        private const uint D3D12_FORMAT_SUPPORT_VIDEO_ENCODER = 0x40000000;
+
+        /// <summary>
+        /// D3D12_FEATURE_FORMAT_SUPPORT structure for format support queries.
+        /// Based on DirectX 12 Feature Support: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_feature_data_format_support
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_FEATURE_FORMAT_SUPPORT
+        {
+            public uint Format; // DXGI_FORMAT
+            public uint Support1; // D3D12_FORMAT_SUPPORT1
+            public uint Support2; // D3D12_FORMAT_SUPPORT2
         }
 
         // COM interface method delegate for ResourceBarrier
@@ -2004,6 +2138,73 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void CreateSamplerDelegate(IntPtr device, IntPtr pDesc, IntPtr DestDescriptor);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int CheckFeatureSupportDelegate(IntPtr device, uint Feature, IntPtr pFeatureSupportData, uint FeatureSupportDataSize);
+
+        /// <summary>
+        /// Calls ID3D12Device::CheckFeatureSupport through COM vtable.
+        /// VTable index 6 for ID3D12Device.
+        /// Based on DirectX 12 Feature Support: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-checkfeaturesupport
+        /// </summary>
+        private unsafe int CallCheckFeatureSupport(IntPtr device, uint feature, ref D3D12_FEATURE_FORMAT_SUPPORT featureSupportData, int featureSupportDataSize)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return unchecked((int)0x80004001); // E_NOTIMPL - Not implemented on this platform
+            }
+
+            if (device == IntPtr.Zero)
+            {
+                return unchecked((int)0x80070057); // E_INVALIDARG
+            }
+
+            // Get vtable pointer from device
+            IntPtr* vtable = *(IntPtr**)device;
+            if (vtable == null)
+            {
+                return unchecked((int)0x80004003); // E_POINTER
+            }
+
+            // CheckFeatureSupport is at index 6 in ID3D12Device vtable
+            IntPtr methodPtr = vtable[6];
+            if (methodPtr == IntPtr.Zero)
+            {
+                return unchecked((int)0x80004002); // E_NOINTERFACE
+            }
+
+            // Allocate unmanaged memory for feature support data
+            IntPtr pFeatureSupportData = Marshal.AllocHGlobal(featureSupportDataSize);
+            try
+            {
+                // Marshal structure to unmanaged memory
+                Marshal.StructureToPtr(featureSupportData, pFeatureSupportData, false);
+
+                // Create delegate from function pointer
+                CheckFeatureSupportDelegate checkFeatureSupport =
+                    (CheckFeatureSupportDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CheckFeatureSupportDelegate));
+
+                // Call CheckFeatureSupport
+                int hr = checkFeatureSupport(device, feature, pFeatureSupportData, (uint)featureSupportDataSize);
+
+                // If successful, marshal result back
+                if (hr == 0) // S_OK
+                {
+                    featureSupportData = (D3D12_FEATURE_FORMAT_SUPPORT)Marshal.PtrToStructure(pFeatureSupportData, typeof(D3D12_FEATURE_FORMAT_SUPPORT));
+                }
+
+                return hr;
+            }
+            finally
+            {
+                // Always free unmanaged memory
+                if (pFeatureSupportData != IntPtr.Zero)
+                {
+                    Marshal.FreeHGlobal(pFeatureSupportData);
+                }
+            }
+        }
 
         /// <summary>
         /// Calls ID3D12Device::CreateCommittedResource through COM vtable.
