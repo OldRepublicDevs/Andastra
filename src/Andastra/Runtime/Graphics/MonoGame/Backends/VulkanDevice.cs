@@ -76,6 +76,46 @@ namespace Andastra.Runtime.MonoGame.Backends
             VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT = 0x00000080,
         }
 
+        // Vulkan format feature flags
+        // Based on Vulkan API: https://docs.vulkan.org/spec/latest/chapters/formats.html#VkFormatFeatureFlags
+        [Flags]
+        private enum VkFormatFeatureFlags : uint
+        {
+            VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT = 0x00000001,
+            VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT = 0x00000002,
+            VK_FORMAT_FEATURE_STORAGE_IMAGE_ATOMIC_BIT = 0x00000004,
+            VK_FORMAT_FEATURE_UNIFORM_TEXEL_BUFFER_BIT = 0x00000008,
+            VK_FORMAT_FEATURE_STORAGE_TEXEL_BUFFER_BIT = 0x00000010,
+            VK_FORMAT_FEATURE_STORAGE_TEXEL_BUFFER_ATOMIC_BIT = 0x00000020,
+            VK_FORMAT_FEATURE_VERTEX_BUFFER_BIT = 0x00000040,
+            VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT = 0x00000080,
+            VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BLEND_BIT = 0x00000100,
+            VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT = 0x00000200,
+            VK_FORMAT_FEATURE_BLIT_SRC_BIT = 0x00000400,
+            VK_FORMAT_FEATURE_BLIT_DST_BIT = 0x00000800,
+            VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT = 0x00001000,
+            VK_FORMAT_FEATURE_TRANSFER_SRC_BIT = 0x00004000,
+            VK_FORMAT_FEATURE_TRANSFER_DST_BIT = 0x00008000,
+            VK_FORMAT_FEATURE_MIDPOINT_CHROMA_SAMPLES_BIT = 0x00020000,
+            VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_LINEAR_FILTER_BIT = 0x00040000,
+            VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_SEPARATE_RECONSTRUCTION_FILTER_BIT = 0x00080000,
+            VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_BIT = 0x00100000,
+            VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_FORCEABLE_BIT = 0x00200000,
+            VK_FORMAT_FEATURE_DISJOINT_BIT = 0x00400000,
+            VK_FORMAT_FEATURE_COSITED_CHROMA_SAMPLES_BIT = 0x00800000,
+            VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_MINMAX_BIT = 0x00010000,
+        }
+
+        // Vulkan format properties structure
+        // Based on Vulkan API: https://docs.vulkan.org/spec/latest/chapters/formats.html#VkFormatProperties
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkFormatProperties
+        {
+            public VkFormatFeatureFlags linearTilingFeatures;   // Format features supported with linear tiling
+            public VkFormatFeatureFlags optimalTilingFeatures;  // Format features supported with optimal tiling
+            public VkFormatFeatureFlags bufferFeatures;         // Format features supported for buffers
+        }
+
         // Vulkan buffer usage flags
         [Flags]
         private enum VkBufferUsageFlags
@@ -1000,6 +1040,11 @@ namespace Andastra.Runtime.MonoGame.Backends
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkCmdClearColorImageDelegate(IntPtr commandBuffer, IntPtr image, VkImageLayout imageLayout, IntPtr pColor, uint rangeCount, IntPtr pRanges);
 
+        // Delegate for vkGetPhysicalDeviceFormatProperties
+        // Based on Vulkan API: https://docs.vulkan.org/refpages/latest/refpages/source/vkGetPhysicalDeviceFormatProperties.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkGetPhysicalDeviceFormatPropertiesDelegate(IntPtr physicalDevice, VkFormat format, out VkFormatProperties pFormatProperties);
+
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate VkResult vkMapMemoryDelegate(IntPtr device, IntPtr memory, ulong offset, ulong size, uint flags, out IntPtr ppData);
 
@@ -1092,6 +1137,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static vkCmdSetBlendConstantsDelegate vkCmdSetBlendConstants;
         private static vkCmdClearDepthStencilImageDelegate vkCmdClearDepthStencilImage;
         private static vkCmdClearColorImageDelegate vkCmdClearColorImage;
+        private static vkGetPhysicalDeviceFormatPropertiesDelegate vkGetPhysicalDeviceFormatProperties;
         private static vkCmdUpdateBufferDelegate vkCmdUpdateBuffer;
         private static vkCmdCopyBufferDelegate vkCmdCopyBuffer;
         private static vkCmdCopyBufferToImageDelegate vkCmdCopyBufferToImage;
@@ -3831,8 +3877,115 @@ namespace Andastra.Runtime.MonoGame.Backends
                 return false;
             }
 
-            // TODO: Query physical device format properties
-            // For now, assume common formats are supported for common usages
+            // Query physical device format properties to determine actual format support
+            // Based on Vulkan API: https://docs.vulkan.org/refpages/latest/refpages/source/vkGetPhysicalDeviceFormatProperties.html
+            if (_physicalDevice == IntPtr.Zero)
+            {
+                // Physical device not available - fallback to basic format check
+                return IsFormatSupportedFallback(format, usage);
+            }
+
+            // Load vkGetPhysicalDeviceFormatProperties function pointer if not already loaded
+            if (vkGetPhysicalDeviceFormatProperties == null)
+            {
+                // vkGetPhysicalDeviceFormatProperties is an instance-level function, loaded via vkGetInstanceProcAddr
+                // For now, try loading via P/Invoke (in a real implementation, this would use vkGetInstanceProcAddr)
+                string vulkanLib = VulkanLibrary;
+                IntPtr libHandle = NativeMethods.LoadLibrary(vulkanLib);
+                if (libHandle != IntPtr.Zero)
+                {
+                    IntPtr funcPtr = NativeMethods.GetProcAddress(libHandle, "vkGetPhysicalDeviceFormatProperties");
+                    if (funcPtr != IntPtr.Zero)
+                    {
+                        vkGetPhysicalDeviceFormatProperties = (vkGetPhysicalDeviceFormatPropertiesDelegate)Marshal.GetDelegateForFunctionPointer(funcPtr, typeof(vkGetPhysicalDeviceFormatPropertiesDelegate));
+                    }
+                }
+            }
+
+            // If function pointer is still null, fall back to basic format check
+            if (vkGetPhysicalDeviceFormatProperties == null)
+            {
+                return IsFormatSupportedFallback(format, usage);
+            }
+
+            // Query format properties from physical device
+            VkFormatProperties formatProperties;
+            vkGetPhysicalDeviceFormatProperties(_physicalDevice, vkFormat, out formatProperties);
+
+            // Check format features based on usage flags
+            // We use optimalTilingFeatures for textures (most common case)
+            VkFormatFeatureFlags features = formatProperties.optimalTilingFeatures;
+
+            // Map TextureUsage flags to VkFormatFeatureFlags
+            // ShaderResource -> VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT
+            // RenderTarget -> VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT (for color) or VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT (for depth)
+            // UnorderedAccess -> VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT
+            // DepthStencil -> VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
+
+            // Check if format supports shader resource usage (sampled images)
+            if ((usage & TextureUsage.ShaderResource) != 0)
+            {
+                if ((features & VkFormatFeatureFlags.VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT) == 0)
+                {
+                    return false;
+                }
+            }
+
+            // Check if format supports render target usage (color attachment)
+            if ((usage & TextureUsage.RenderTarget) != 0)
+            {
+                // Determine if this is a depth/stencil format or color format
+                bool isDepthStencilFormat = format == TextureFormat.D24_UNORM_S8_UINT ||
+                                           format == TextureFormat.D32_FLOAT ||
+                                           format == TextureFormat.D32_FLOAT_S8_UINT;
+
+                if (isDepthStencilFormat)
+                {
+                    // Depth/stencil formats require DEPTH_STENCIL_ATTACHMENT_BIT
+                    if ((features & VkFormatFeatureFlags.VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT) == 0)
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    // Color formats require COLOR_ATTACHMENT_BIT
+                    if ((features & VkFormatFeatureFlags.VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT) == 0)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            // Check if format supports unordered access usage (storage images)
+            if ((usage & TextureUsage.UnorderedAccess) != 0)
+            {
+                if ((features & VkFormatFeatureFlags.VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT) == 0)
+                {
+                    return false;
+                }
+            }
+
+            // Check if format supports depth stencil usage
+            if ((usage & TextureUsage.DepthStencil) != 0)
+            {
+                if ((features & VkFormatFeatureFlags.VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT) == 0)
+                {
+                    return false;
+                }
+            }
+
+            // All requested usage flags are supported
+            return true;
+        }
+
+        /// <summary>
+        /// Fallback implementation for format support checking when physical device query is unavailable.
+        /// Uses heuristics based on common format support patterns.
+        /// </summary>
+        private bool IsFormatSupportedFallback(TextureFormat format, TextureUsage usage)
+        {
+            // Fallback: assume common formats are supported for common usages
             switch (format)
             {
                 case TextureFormat.RGBA8_UNORM:
