@@ -2673,31 +2673,45 @@ namespace Andastra.Runtime.MonoGame.Backends
                             CheckResult(result, "vkCreateRayTracingPipelinesKHR");
 
                             IntPtr vkPipeline = Marshal.ReadIntPtr(pipelinePtr);
+                            bool pipelineCreated = false;
 
-                            // Get shader group handle size (typically 32 bytes)
-                            uint handleSize = 32;
-                            uint handleSizeAligned = (handleSize + 31) & ~31u; // Align to 32 bytes
-                            uint groupCount = (uint)shaderGroups.Count;
-                            uint sbtSize = groupCount * handleSizeAligned;
-
-                            // Create SBT buffer
-                            var sbtBufferDesc = new BufferDesc
+                            try
                             {
-                                ByteSize = (int)sbtSize,
-                                Usage = BufferUsage.Shader
-                            };
-                            IBuffer sbtBuffer = CreateBuffer(sbtBufferDesc);
+                                // Get shader group handle size (typically 32 bytes)
+                                uint handleSize = 32;
+                                uint handleSizeAligned = (handleSize + 31) & ~31u; // Align to 32 bytes
+                                uint groupCount = (uint)shaderGroups.Count;
+                                uint sbtSize = groupCount * handleSizeAligned;
 
-                            // Get shader group handles and populate SBT
-                            // Note: SBT population typically happens at dispatch time or requires buffer mapping
-                            // For now, we create the buffer - full SBT population would require vkGetRayTracingShaderGroupHandlesKHR
-                            // and proper buffer device address support (VK_KHR_buffer_device_address)
+                                // Create SBT buffer
+                                var sbtBufferDesc = new BufferDesc
+                                {
+                                    ByteSize = (int)sbtSize,
+                                    Usage = BufferUsage.Shader
+                                };
+                                IBuffer sbtBuffer = CreateBuffer(sbtBufferDesc);
 
-                            IntPtr handle = new IntPtr(_nextResourceHandle++);
-                            var pipeline = new VulkanRaytracingPipeline(handle, desc, vkPipeline, pipelineLayout, sbtBuffer, _device);
-                            _resources[handle] = pipeline;
+                                // Get shader group handles and populate SBT
+                                // Note: SBT population typically happens at dispatch time or requires buffer mapping
+                                // For now, we create the buffer - full SBT population would require vkGetRayTracingShaderGroupHandlesKHR
+                                // and proper buffer device address support (VK_KHR_buffer_device_address)
 
-                            return pipeline;
+                                IntPtr handle = new IntPtr(_nextResourceHandle++);
+                                var pipeline = new VulkanRaytracingPipeline(handle, desc, vkPipeline, pipelineLayout, sbtBuffer, _device);
+                                _resources[handle] = pipeline;
+
+                                pipelineCreated = true;
+                                return pipeline;
+                            }
+                            catch
+                            {
+                                // If pipeline creation succeeded but something else failed, destroy the pipeline to prevent resource leak
+                                if (vkPipeline != IntPtr.Zero && _device != IntPtr.Zero)
+                                {
+                                    vkDestroyPipeline(_device, vkPipeline, IntPtr.Zero);
+                                }
+                                throw;
+                            }
                         }
                         finally
                         {
@@ -3414,7 +3428,34 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             public void Dispose()
             {
-                // TODO: vkDestroyAccelerationStructureKHR when extension is available
+                // Destroy acceleration structure if extension is available
+                // Based on Vulkan specification: vkDestroyAccelerationStructureKHR destroys acceleration structure objects
+                // - Must be called before destroying the backing buffer
+                // - Function is part of VK_KHR_acceleration_structure extension
+                // - Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkDestroyAccelerationStructureKHR.html
+                if (_vkAccelStruct != IntPtr.Zero && _device != IntPtr.Zero && vkDestroyAccelerationStructureKHR != null)
+                {
+                    try
+                    {
+                        // vkDestroyAccelerationStructureKHR signature:
+                        // void vkDestroyAccelerationStructureKHR(
+                        //     VkDevice                                    device,
+                        //     VkAccelerationStructureKHR                  accelerationStructure,
+                        //     const VkAllocationCallbacks*                pAllocator);
+                        // pAllocator is null (using default allocator)
+                        vkDestroyAccelerationStructureKHR(_device, _vkAccelStruct, IntPtr.Zero);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log error but continue with cleanup
+                        // This prevents Dispose from throwing if the function call fails
+                        Console.WriteLine($"[VulkanDevice] Error destroying acceleration structure: {ex.Message}");
+                    }
+                }
+
+                // Dispose backing buffer (contains the acceleration structure memory)
+                // Based on Vulkan specification: Backing buffer must be destroyed after acceleration structure
+                // The buffer contains the memory for the acceleration structure data
                 _backingBuffer?.Dispose();
             }
         }
