@@ -1401,6 +1401,107 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
         }
 
         /// <summary>
+        /// Gets the default return value for a given return type in NWScript/NSS.
+        /// Based on NWScript language specification: Default return values for each data type.
+        /// </summary>
+        /// <param name="returnType">Return type string (e.g., "int", "float", "string", "object", etc.)</param>
+        /// <returns>Default return value expression as a string, or empty string if type is void or unknown</returns>
+        /// <remarks>
+        /// Based on NWScript/NSS language specification:
+        /// - int: returns 0
+        /// - float: returns 0.0
+        /// - string: returns "" (empty string)
+        /// - object: returns OBJECT_INVALID (0x7F000000)
+        /// - vector: returns Vector(0.0, 0.0, 0.0) or null
+        /// - location: returns OBJECT_INVALID (invalid location)
+        /// - talent: returns OBJECT_INVALID (invalid talent)
+        /// - effect: returns OBJECT_INVALID (invalid effect)
+        /// - event: returns OBJECT_INVALID (invalid event)
+        /// - itemproperty: returns OBJECT_INVALID (invalid item property)
+        /// - action: returns OBJECT_INVALID (invalid action)
+        /// </remarks>
+        private string GetDefaultReturnValue(string returnType)
+        {
+            if (string.IsNullOrEmpty(returnType))
+            {
+                return string.Empty;
+            }
+
+            // Normalize return type to lowercase for comparison
+            string normalizedType = returnType.ToLowerInvariant().Trim();
+
+            // Map return types to their default values
+            // Based on NWScript/NSS language specification and common decompilation patterns
+            switch (normalizedType)
+            {
+                case "int":
+                case "integer":
+                    // Integer types return 0
+                    return "0";
+
+                case "float":
+                case "real":
+                    // Float types return 0.0
+                    return "0.0";
+
+                case "string":
+                    // String types return empty string
+                    return "\"\"";
+
+                case "object":
+                    // Object types return OBJECT_INVALID (0x7F000000)
+                    // Based on NWScript: OBJECT_INVALID is the default invalid object reference
+                    return "OBJECT_INVALID";
+
+                case "vector":
+                    // Vector types return Vector(0.0, 0.0, 0.0)
+                    // Based on NWScript: Vector constructor with three float parameters
+                    return "Vector(0.0, 0.0, 0.0)";
+
+                case "location":
+                    // Location types return OBJECT_INVALID (invalid location)
+                    // Based on NWScript: Locations are object-like and use OBJECT_INVALID for invalid references
+                    return "OBJECT_INVALID";
+
+                case "talent":
+                    // Talent types return OBJECT_INVALID (invalid talent)
+                    // Based on NWScript: Talents are object-like and use OBJECT_INVALID for invalid references
+                    return "OBJECT_INVALID";
+
+                case "effect":
+                    // Effect types return OBJECT_INVALID (invalid effect)
+                    // Based on NWScript: Effects are object-like and use OBJECT_INVALID for invalid references
+                    return "OBJECT_INVALID";
+
+                case "event":
+                    // Event types return OBJECT_INVALID (invalid event)
+                    // Based on NWScript: Events are object-like and use OBJECT_INVALID for invalid references
+                    return "OBJECT_INVALID";
+
+                case "itemproperty":
+                case "item_property":
+                    // ItemProperty types return OBJECT_INVALID (invalid item property)
+                    // Based on NWScript: ItemProperties are object-like and use OBJECT_INVALID for invalid references
+                    return "OBJECT_INVALID";
+
+                case "action":
+                    // Action types return OBJECT_INVALID (invalid action)
+                    // Based on NWScript: Actions are object-like and use OBJECT_INVALID for invalid references
+                    return "OBJECT_INVALID";
+
+                case "void":
+                    // Void functions don't return values
+                    return string.Empty;
+
+                default:
+                    // Unknown type - use OBJECT_INVALID as fallback for object-like types
+                    // This handles edge cases and custom types that might be object-like
+                    // Based on NWScript: Most complex types are object-like and use OBJECT_INVALID
+                    return "OBJECT_INVALID";
+            }
+        }
+
+        /// <summary>
         /// Extracts subroutine information from decoded commands string.
         /// Parses function signatures, names, and parameter information when available.
         /// This is a heuristic extraction that works even when full parsing fails.
@@ -1697,7 +1798,18 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 if (!string.IsNullOrEmpty(subInfo.ReturnType) && subInfo.ReturnType != "void")
                 {
                     stub.Append("    // Return type: ").Append(subInfo.ReturnType).Append(newline);
-                    stub.Append("    // TODO: Implement return statement with appropriate value").Append(newline);
+                    // Generate appropriate return statement based on return type
+                    // Based on NWScript/NSS language specification: Default return values for each type
+                    string returnValue = GetDefaultReturnValue(subInfo.ReturnType);
+                    if (!string.IsNullOrEmpty(returnValue))
+                    {
+                        stub.Append("    return ").Append(returnValue).Append(";").Append(newline);
+                    }
+                    else
+                    {
+                        // Fallback for unknown types - use OBJECT_INVALID for object-like types
+                        stub.Append("    return OBJECT_INVALID;").Append(newline);
+                    }
                 }
                 
                 stub.Append("}").Append(newline);
