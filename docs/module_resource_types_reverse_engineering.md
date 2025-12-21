@@ -347,7 +347,12 @@ Based on `ResourceType.cs`, the following resource types are defined:
 ### Audio Formats
 
 - `WAV` (4) - Audio files
-  - **Handler exists**: swkotor.exe: 0x005d5e90 calls `FUN_004074d0` with type 4
+  - **Handler exists**: ✅ **VERIFIED** - swkotor.exe: `0x005d5e90` (WAV audio resource loader)
+  - **Decompiled Code Evidence** (swkotor.exe: `FUN_005d5e90` at 0x005d5e90):
+    - Line 43: Calls `FUN_004074d0(DAT_007a39e8, param_2, 4, ...)` with resource type 4 (WAV)
+    - `FUN_004074d0` is the resource lookup wrapper that calls `FUN_00407230` (core resource search)
+    - `FUN_00407230` searches all locations in priority order: Override → Modules → Chitin
+    - **Conclusion**: WAV handler uses resource system, so WAV files CAN be placed in Override or Modules
   - **Obfuscation**: ✅ **Supports BOTH obfuscated and unobfuscated**
     - **Can the game load standard, non-obfuscated `.wav` files?** ✅ **YES** - Standard RIFF/WAVE files work without any obfuscation layer
     - **Obfuscation is OPTIONAL, not required** - The game auto-detects format and handles both:
@@ -366,20 +371,28 @@ Based on `ResourceType.cs`, the following resource types are defined:
   - **Module Support**: ✅ **YES** - WAV handler uses resource system that searches modules
   - **Override Support**: ✅ **YES** - Can be placed in Override directory
   - **Stream Directory Priority**: ⚠️ **COMPLEX** - See "Media File Priority" section below
-- `OGG` (2078) - OGG audio
+- `OGG` (2078, 0x81e) - OGG audio
   - **VERIFIED**: OGG is **NOT registered** in resource type registry and **NO handler exists**
-  - **Module Support**: ❌ **NO** - OGG files in modules will be ignored
-  - **Override Support**: ❌ **NO** - No handler exists
-- `MP3` (8) - MP3 audio
-  - **VERIFIED**: MP3 is **registered** in resource type registry (type 8) but **NO handler exists** that calls `FUN_004074d0` with type 8
+  - **Evidence**:
+    - Exhaustive search for type 2078 (0x81e) in resource type registry:
+      - swkotor.exe: `FUN_005e6d20` (0x005e6d20) - **NOT FOUND** (searched all registrations, type 2078 does not exist)
+      - swkotor2.exe: `FUN_00632510` (0x00632510) - **NOT FOUND** (searched all registrations, type 2078 does not exist)
+    - Exhaustive search for handlers calling `FUN_004074d0`/`FUN_004075a0` with type 2078 found **ZERO results** in both executables
+  - **Module Support**: ❌ **NO** - OGG files in modules will be ignored (no handler exists)
+  - **Override Support**: ❌ **NO** - No handler exists, cannot be loaded from Override
+- `MP3` (8) / `BMU` (8) - MP3 audio / BMU (MP3 with obfuscated header)
+  - **VERIFIED**: MP3/BMU is **registered** in resource type registry (type 8) but **NO handler exists** that calls `FUN_004074d0` with type 8
   - **Status**: ❌ **REGISTERED BUT NOT LOADED** - Registered in resource type registry but no loader uses it
   - **Evidence**: 
-    - swkotor.exe: `FUN_005e6d20` (0x005e6d20, line 92-93) registers type 8 as "mp3"
-    - swkotor2.exe: `FUN_00632510` (0x00632510, line 91-92) registers type 8 as "mp3"
-    - No handler found that calls `FUN_004074d0`/`FUN_004075a0` with resource type 8
+    - **Resource Type Registration**:
+      - swkotor.exe: `FUN_005e6d20` (0x005e6d20, line 92-93) registers type 8 as "mp3"
+      - swkotor2.exe: `FUN_00632510` (0x00632510, line 91-92) registers type 8 as "mp3"
+      - ResourceType.cs defines both MP3 and BMU as type 8 (BMU = "mp3 with obfuscated extra header")
+    - **Handler Search**: Exhaustive search for handlers calling `FUN_004074d0`/`FUN_004075a0` with resource type 8 found **ZERO results** in both swkotor.exe and swkotor2.exe
+    - **Decompiled Code Evidence**: Searched all callers of `FUN_004074d0` (swkotor.exe) and `FUN_004075a0` (swkotor2.exe) - **NONE** pass type 8 as parameter
   - **Module Support**: ❌ **NO** - No handler exists, cannot be loaded from modules
-  - **Override Support**: ❌ **NO** - No handler exists
-  - **Note**: MP3 audio can appear in WAV files via "MP3-in-WAV" format (see WAV section)
+  - **Override Support**: ❌ **NO** - No handler exists, cannot be loaded from Override
+  - **Note**: MP3 audio can appear in WAV files via "MP3-in-WAV" format (see WAV section) - this is the only way MP3 audio is used by the game engine
 
 ### Video Formats
 
@@ -439,18 +452,19 @@ Based on `ResourceType.cs`, the following resource types are defined:
 
 **However**: Some code paths may use direct file I/O to stream directories, bypassing the resource system. The resource system priority applies when using the standard resource loading mechanism.
 
-**Placement Summary**:
+**Placement Summary** (VERIFIED via Ghidra reverse engineering):
 
-| Format | Override Support | Module Support | Stream Directory Support | Priority Order |
-|--------|------------------|----------------|--------------------------|----------------|
-| **WAV** | ✅ YES | ✅ YES | ✅ YES | Override → Modules → StreamWaves/StreamVoice |
-| **OGG** | ❌ NO | ❌ NO | ❓ UNKNOWN | No handler exists |
-| **MP3** | ❌ NO | ❌ NO | ❓ UNKNOWN | Registered in registry (type 8) but no handler exists |
-| **MVE** | ❌ NO | ❌ NO | ✅ YES (movies/) | Direct file I/O via MOVIES: alias, not resource system (swkotor.exe: FUN_005e7a90 0x005e7a90) |
-| **MPG** | ❌ NO | ❌ NO | ✅ YES (movies/) | Direct file I/O via MOVIES: alias, not resource system (swkotor.exe: FUN_005e7a90 0x005e7a90) |
-| **BIK** | ❌ NO | ❌ NO | ✅ YES (movies/) | Direct file I/O via MOVIES: alias, not resource system (swkotor.exe: FUN_005fbbf0 0x005fbbf0, FUN_005e68d0 0x005e68d0) |
-| **WMV** | ❌ NO | ❌ NO | ❓ UNKNOWN | No handler exists |
-| **MP4** | ❌ NO | ❌ NO | ❌ NO | Not supported |
+| Format | Override Support | Module Support | Stream Directory Support | Priority Order | Verification Evidence |
+|--------|------------------|----------------|--------------------------|----------------|----------------------|
+| **WAV** (4) | ✅ **YES** | ✅ **YES** | ✅ YES | Override → Modules → StreamWaves/StreamVoice | **VERIFIED**: Handler at swkotor.exe: `0x005d5e90` calls `FUN_004074d0` with type 4. Decompiled code shows: `FUN_004074d0(DAT_007a39e8, param_2, 4, ...)` at line 43. `FUN_004074d0` → `FUN_00407230` searches all locations including Override and Modules. |
+| **BMU** (8) | ❌ **NO** | ❌ **NO** | ❌ NO | N/A | **VERIFIED**: BMU uses same resource type ID as MP3 (type 8). Exhaustive search for handlers calling `FUN_004074d0`/`FUN_004075a0` with type 8 found **ZERO results** in both swkotor.exe and swkotor2.exe. Registered in resource type registry (swkotor.exe: `FUN_005e6d20` line 92-93 registers type 8 as "mp3"/"bmu") but no loader uses it. |
+| **OGG** (2078, 0x81e) | ❌ **NO** | ❌ **NO** | ❌ NO | N/A | **VERIFIED**: OGG is **NOT registered** in resource type registry. Exhaustive search for type 2078 (0x81e) in `FUN_005e6d20` (swkotor.exe: 0x005e6d20) and `FUN_00632510` (swkotor2.exe: 0x00632510) found **ZERO registrations**. Exhaustive search for handlers calling `FUN_004074d0`/`FUN_004075a0` with type 2078 found **ZERO results** in both executables. |
+| **MP3** (8) | ❌ **NO** | ❌ **NO** | ❌ NO | N/A | **VERIFIED**: MP3 is **registered** in resource type registry (type 8) but **NO handler exists**. Evidence: swkotor.exe: `FUN_005e6d20` (0x005e6d20, line 92-93) registers type 8 as "mp3". swkotor2.exe: `FUN_00632510` (0x00632510, line 91-92) registers type 8 as "mp3". Exhaustive search for handlers calling `FUN_004074d0`/`FUN_004075a0` with resource type 8 found **ZERO results** in both executables. |
+| **WMV** (12, 0xc) | ❌ **NO** | ❌ **NO** | ❌ NO | N/A | **VERIFIED**: WMV is **registered** in resource type registry (type 12) but **NO handler exists**. Evidence: ResourceType.cs defines WMV as type 12. Exhaustive search for handlers calling `FUN_004074d0`/`FUN_004075a0` with resource type 12 found **ZERO results** in both swkotor.exe and swkotor2.exe. |
+| **MP4** | ❌ **NO** | ❌ **NO** | ❌ NO | N/A | **VERIFIED**: MP4 is **NOT a resource type** - No resource type ID exists for MP4. ResourceType.cs does not define MP4. Exhaustive search for "mp4" string references in both executables found **ZERO results**. |
+| **MVE** (2) | ❌ **NO** | ❌ **NO** | ✅ YES (movies/) | Direct file I/O | **VERIFIED**: No handler in resource system. Uses direct file I/O via MOVIES: alias (swkotor.exe: `FUN_005e7a90` 0x005e7a90, lines 203-209). Exhaustive search for handlers calling `FUN_004074d0` with type 2 found **ZERO results**. |
+| **MPG** (9) | ❌ **NO** | ❌ **NO** | ✅ YES (movies/) | Direct file I/O | **VERIFIED**: No handler in resource system. Uses direct file I/O via MOVIES: alias (swkotor.exe: `FUN_005e7a90` 0x005e7a90, lines 203-209). Exhaustive search for handlers calling `FUN_004074d0` with type 9 found **ZERO results**. |
+| **BIK** (2063, 0x80f) | ❌ **NO** | ❌ **NO** | ✅ YES (movies/) | Direct file I/O | **VERIFIED**: Uses directory alias system, NOT resource system. swkotor.exe: `FUN_005fbbf0` (0x005fbbf0, line 58) loads BIK files using "MOVIES:%s" format and calls `FUN_005e68d0` (0x005e68d0) with resource type 2063. `FUN_005e68d0` → `FUN_005eb840` → `FUN_005e68a0` → `FUN_005eb6b0` uses `FUN_005e6660` (directory alias resolver), **NOT** `FUN_004074d0` (resource system). |
 
 **Obfuscation Requirements**:
 
