@@ -873,6 +873,7 @@ if (iVar7 == 0) {
 **Loading**: ✅ **VERIFIED** - `patch.erf` is loaded as part of global resource initialization, separate from module loading.
 
 **Evidence** (from reone codebase `vendor/reone/src/libs/resource/director.cpp:153-156`):
+
 - Loaded in `loadGlobalResources()` function via `_resources.addERF(*patchPath)`
 - Loaded AFTER chitin.key and texture packs, but BEFORE override directory
 - Loaded as ERF container into resource system (same mechanism as modules)
@@ -881,6 +882,7 @@ if (iVar7 == 0) {
 **Priority Order** (for resources in patch.erf):
 
 1. Override directory (highest priority)
+
 2. Module files (`.mod`, `.rim`, `_s.rim`, `_dlg.erf`)
 3. **patch.erf** (loaded during global initialization, priority between modules and chitin)
 4. Chitin BIF archives (lowest priority)
@@ -900,9 +902,10 @@ if (iVar7 == 0) {
 - Treated as part of core resources (loaded with chitin resources)
 - No type filtering - accepts any resource type stored in ERF container
 
-**Note**: ✅ **VERIFIED** - `patch.erf` is **NOT found in module loading code** (`FUN_004094a0` / `FUN_004096b0`). 
+**Note**: ✅ **VERIFIED** - `patch.erf` is **NOT found in module loading code** (`FUN_004094a0` / `FUN_004096b0`).
 
 **Evidence**:
+
 - Confirmed via codebase analysis: patch.erf is loaded separately in global resource initialization
 - reone codebase shows `loadGlobalResources()` loads patch.erf via `_resources.addERF(*patchPath)` (line 153-156)
 - Loading order in `loadGlobalResources()`: chitin.key → texture packs → music/sounds → LIP files → **patch.erf** → override directory
