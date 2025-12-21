@@ -3115,8 +3115,8 @@ namespace Andastra.Runtime.Games.Aurora
 
                 // Render effect based on its type
                 // Based on nwmain.exe: CNWSArea::RenderAreaEffects renders effect geometry
-                // TODO: STUB - For now, this is a placeholder - full implementation would render effect-specific geometry
-                // Effect rendering would depend on effect type (particles, meshes, sprites, etc.)
+                // Each effect renders its own effect-specific geometry (particles, meshes, sprites, etc.)
+                effect.Render(graphicsDevice, basicEffect, viewMatrix, projectionMatrix);
             }
         }
 
@@ -3638,7 +3638,16 @@ namespace Andastra.Runtime.Games.Aurora
         /// <summary>
         /// Renders the area effect.
         /// </summary>
-        void Render();
+        /// <param name="graphicsDevice">Graphics device for rendering.</param>
+        /// <param name="basicEffect">Basic effect for 3D rendering.</param>
+        /// <param name="viewMatrix">View matrix (camera transformation).</param>
+        /// <param name="projectionMatrix">Projection matrix (perspective transformation).</param>
+        /// <remarks>
+        /// Based on nwmain.exe: CNWSArea::RenderAreaEffects renders effect-specific geometry.
+        /// Each effect type (particles, meshes, sprites, etc.) renders its own geometry.
+        /// </remarks>
+        void Render(IGraphicsDevice graphicsDevice, IBasicEffect basicEffect,
+            Matrix4x4 viewMatrix, Matrix4x4 projectionMatrix);
 
         /// <summary>
         /// Gets whether the effect is still active.
