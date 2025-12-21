@@ -716,6 +716,58 @@ namespace Andastra.Runtime.MonoGame.Backends
             return _commandQueue;
         }
 
+        /// <summary>
+        /// Releases a COM object by calling IUnknown::Release through the vtable.
+        /// All COM interfaces inherit from IUnknown, which has Release at vtable index 2.
+        /// Based on COM Reference Counting: https://docs.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-release
+        /// </summary>
+        private static unsafe uint ReleaseComObject(IntPtr comObject)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return 0;
+            }
+
+            if (comObject == IntPtr.Zero)
+            {
+                return 0; // Already released or invalid
+            }
+
+            try
+            {
+                // Get vtable pointer (first pointer in COM object)
+                IntPtr* vtablePtr = *(IntPtr**)comObject;
+                if (vtablePtr == null)
+                {
+                    return 0; // Invalid vtable
+                }
+
+                // IUnknown::Release is at vtable index 2
+                // Index 0 = QueryInterface
+                // Index 1 = AddRef
+                // Index 2 = Release
+                IntPtr releasePtr = vtablePtr[2];
+                if (releasePtr == IntPtr.Zero)
+                {
+                    return 0; // Invalid Release function pointer
+                }
+
+                // Create delegate from function pointer
+                ReleaseDelegate releaseDelegate =
+                    (ReleaseDelegate)Marshal.GetDelegateForFunctionPointer(releasePtr, typeof(ReleaseDelegate));
+
+                // Call Release() and return the new reference count
+                return releaseDelegate(comObject);
+            }
+            catch
+            {
+                // If anything goes wrong (invalid pointer, etc.), just return 0
+                // This prevents crashes during cleanup
+                return 0;
+            }
+        }
+
         #endregion
 
         #region D3D12 Resource Barrier Structures
@@ -878,6 +930,14 @@ namespace Andastra.Runtime.MonoGame.Backends
             public int bottom; // LONG
         }
 
+        /// <summary>
+        /// Delegate for COM IUnknown::Release method.
+        /// All COM interfaces inherit from IUnknown, which has Release at vtable index 2.
+        /// Based on COM Reference Counting: https://docs.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-release
+        /// </summary>
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate uint ReleaseDelegate(IntPtr comObject);
+
         // COM interface method delegate for CopyTextureRegion
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void CopyTextureRegionDelegate(
@@ -898,6 +958,23 @@ namespace Andastra.Runtime.MonoGame.Backends
             IntPtr pSrcBuffer,
             ulong SrcOffset,
             ulong NumBytes);
+
+        // COM interface method delegate for ExecuteCommandLists (ID3D12CommandQueue::ExecuteCommandLists)
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void ExecuteCommandListsDelegate(IntPtr commandQueue, uint NumCommandLists, IntPtr ppCommandLists);
+
+        // COM interface method delegates for fence operations
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int CreateFenceDelegate(IntPtr device, ulong initialValue, uint flags, ref Guid riid, IntPtr ppFence);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate ulong SignalDelegate(IntPtr commandQueue, IntPtr fence, ulong value);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate ulong GetCompletedValueDelegate(IntPtr fence);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int SetEventOnCompletionDelegate(IntPtr fence, ulong value, IntPtr hEvent);
 
         /// <summary>
         /// Maps ResourceState enum to D3D12_RESOURCE_STATES flags.
@@ -1782,9 +1859,18 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             public void Dispose()
             {
-                // TODO: Release D3D12 resource
-                // - Call ID3D12Resource::Release() if _d3d12Resource is valid
-                // - Free descriptor handles if allocated from heap
+                // Release D3D12 resource if valid
+                // ID3D12Resource is a COM object that must be released via IUnknown::Release()
+                // Based on DirectX 12 Resource Management: https://docs.microsoft.com/en-us/windows/win32/direct3d12/managing-resource-lifetime
+                if (_d3d12Resource != IntPtr.Zero)
+                {
+                    ReleaseComObject(_d3d12Resource);
+                }
+
+                // Note: Descriptor handles (_srvHandle) are typically just offsets into a descriptor heap
+                // They don't need individual release - the descriptor heap itself manages their lifetime
+                // If descriptors were allocated from a heap, releasing the heap will clean them up
+                // Standalone descriptors allocated via CreateXXXDescriptorHandle are managed by the device
             }
         }
 
@@ -1807,8 +1893,13 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             public void Dispose()
             {
-                // TODO: Release D3D12 resource
-                // - Call ID3D12Resource::Release() if _d3d12Resource is valid
+                // Release D3D12 resource if valid
+                // ID3D12Resource is a COM object that must be released via IUnknown::Release()
+                // Based on DirectX 12 Resource Management: https://docs.microsoft.com/en-us/windows/win32/direct3d12/managing-resource-lifetime
+                if (_d3d12Resource != IntPtr.Zero)
+                {
+                    ReleaseComObject(_d3d12Resource);
+                }
             }
         }
 
@@ -3466,6 +3557,15 @@ namespace Andastra.Runtime.MonoGame.Backends
             public void EndDebugEvent() { /* TODO: EndEvent */ }
             public void InsertDebugMarker(string name, Vector4 color) { /* TODO: SetMarker */ }
 
+            /// <summary>
+            /// Gets the native ID3D12GraphicsCommandList pointer.
+            /// Internal method for use by D3D12Device to execute command lists.
+            /// </summary>
+            internal IntPtr GetNativeCommandListPointer()
+            {
+                return _d3d12CommandList;
+            }
+
             public void Dispose()
             {
                 // Command lists are returned to allocator, not destroyed individually
@@ -3800,7 +3900,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// VTable index 98 for ID3D12GraphicsCommandList.
         /// Based on DirectX 12 ExecuteIndirect: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-executeindirect
         /// </summary>
-        internal unsafe void CallExecuteIndirect(
+        private unsafe void CallExecuteIndirect(
             IntPtr commandList,
             IntPtr pCommandSignature,
             uint MaxCommandCount,
