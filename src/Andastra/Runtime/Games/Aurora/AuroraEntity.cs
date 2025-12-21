@@ -744,11 +744,49 @@ namespace Andastra.Runtime.Games.Aurora
                 abilityModStruct.SetInt32("WIS", statsComponent.GetAbilityModifier(Ability.Wisdom));
                 abilityModStruct.SetInt32("CHA", statsComponent.GetAbilityModifier(Ability.Charisma));
 
-                // Serialize known spells (if any)
-                // Note: This is a simplified implementation - full version would iterate through all spell IDs
+                // Serialize known spells
+                // Based on nwmain.exe: CNWSCreatureStats::SaveStats saves known spells to GFF
+                // Known spells are stored as a GFFList with each entry containing a SpellId field
+                // Located via string references: "KnownSpells" in nwmain.exe creature save format
                 var spellsList = root.Acquire<GFFList>("KnownSpells", new GFFList());
-                // In a full implementation, we would iterate through all possible spell IDs and check HasSpell
-                // TODO: STUB - For now, we serialize an empty list as a placeholder for the structure
+                
+                // Get all known spells from stats component
+                // Based on nwmain.exe: Spell knowledge is stored per creature and serialized to save games
+                // Use reflection to access GetKnownSpells method if available (AuroraStatsComponent has this method)
+                Type statsType = statsComponent.GetType();
+                System.Reflection.MethodInfo getKnownSpellsMethod = statsType.GetMethod("GetKnownSpells", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                if (getKnownSpellsMethod != null)
+                {
+                    var knownSpells = getKnownSpellsMethod.Invoke(statsComponent, null) as System.Collections.IEnumerable;
+                    if (knownSpells != null)
+                    {
+                        foreach (object spellIdObj in knownSpells)
+                        {
+                            if (spellIdObj is int spellId)
+                            {
+                                // Add spell entry to GFFList
+                                // Based on nwmain.exe: Each spell entry contains SpellId field
+                                var spellStruct = spellsList.Add();
+                                spellStruct.SetInt32("SpellId", spellId);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // Fallback: Check for spells using HasSpell method (iterate through spell IDs)
+                    // This is less efficient but works if GetKnownSpells is not available
+                    // Typical NWN spell ID range: 0-2000 (approximate, but we check up to 5000 for safety)
+                    // Based on nwmain.exe: Spell IDs are row indices in spells.2da table
+                    for (int spellId = 0; spellId < 5000; spellId++)
+                    {
+                        if (statsComponent.HasSpell(spellId))
+                        {
+                            var spellStruct = spellsList.Add();
+                            spellStruct.SetInt32("SpellId", spellId);
+                        }
+                    }
+                }
             }
 
             // Serialize door component
@@ -1213,11 +1251,48 @@ namespace Andastra.Runtime.Games.Aurora
                 }
 
                 // Deserialize known spells
+                // Based on nwmain.exe: CNWSCreatureStats::LoadStats loads known spells from GFF
+                // Known spells are stored as a GFFList with each entry containing a SpellId field
+                // Located via string references: "KnownSpells" in nwmain.exe creature load format
                 if (root.Exists("KnownSpells"))
                 {
                     var spellsList = root.GetList("KnownSpells");
-                    // In a full implementation, we would iterate through spell entries and restore them
-                    // TODO: STUB - For now, we skip the spell data
+                    if (spellsList != null && spellsList.Count > 0)
+                    {
+                        // Get stats component (should already exist for creatures)
+                        var statsComponentForSpells = GetComponent<IStatsComponent>();
+                        if (statsComponentForSpells == null)
+                        {
+                            // Create AuroraStatsComponent if missing (edge case during deserialization)
+                            statsComponentForSpells = new AuroraStatsComponent();
+                            statsComponentForSpells.Owner = this;
+                            AddComponent<IStatsComponent>(statsComponentForSpells);
+                        }
+                        
+                        // Use reflection to access AddSpell method if available (AuroraStatsComponent has this method)
+                        Type statsTypeForSpells = statsComponentForSpells.GetType();
+                        System.Reflection.MethodInfo addSpellMethod = statsTypeForSpells.GetMethod("AddSpell", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                        if (addSpellMethod != null)
+                        {
+                            // Iterate through all spell entries in the GFFList
+                            for (int i = 0; i < spellsList.Count; i++)
+                            {
+                                var spellStruct = spellsList.At(i);
+                                if (spellStruct != null && spellStruct.Exists("SpellId"))
+                                {
+                                    int spellId = spellStruct.GetInt32("SpellId");
+                                    // Add spell to creature's known spells
+                                    // Based on nwmain.exe: Spell knowledge is restored from save game data
+                                    addSpellMethod.Invoke(statsComponentForSpells, new object[] { spellId });
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // Fallback: If AddSpell method is not available, we can't restore spells
+                            // This should not happen with AuroraStatsComponent, but handle gracefully
+                        }
+                    }
                 }
             }
 
