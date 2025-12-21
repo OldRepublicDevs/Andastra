@@ -2036,22 +2036,58 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
         }
 
+        /// <summary>
+        /// Sets the scissor rectangle for clipping fragments.
+        /// Based on Metal API: MTLRenderCommandEncoder::setScissorRect(MTLScissorRect)
+        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1515458-setscissorrect
+        /// </summary>
         public void SetScissor(Rectangle scissor)
         {
             if (!_isOpen)
             {
                 return;
             }
-            // TODO: Set scissor rectangle
+
+            // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1515458-setscissorrect
+            // Render command encoder must be available (SetGraphicsState must be called first)
+            if (_currentRenderCommandEncoder == IntPtr.Zero)
+            {
+                // Render command encoder not available - SetGraphicsState must be called first to begin render pass
+                return;
+            }
+
+            // Convert Rectangle struct to MetalScissorRect struct
+            // Metal scissor rect uses NSUInteger (uint) for coordinates
+            // Rectangle uses int, so we need to clamp to ensure non-negative values
+            MetalScissorRect metalScissorRect = new MetalScissorRect
+            {
+                X = (uint)Math.Max(0, scissor.X),
+                Y = (uint)Math.Max(0, scissor.Y),
+                Width = (uint)Math.Max(0, scissor.Width),
+                Height = (uint)Math.Max(0, scissor.Height)
+            };
+
+            MetalNative.SetScissorRect(_currentRenderCommandEncoder, metalScissorRect);
         }
 
+        /// <summary>
+        /// Sets multiple scissor rectangles.
+        /// Note: Metal only supports one scissor rectangle at a time via setScissorRect.
+        /// This method sets the first scissor rectangle from the array.
+        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1515458-setscissorrect
+        /// </summary>
         public void SetScissors(Rectangle[] scissors)
         {
-            if (!_isOpen || scissors == null)
+            if (!_isOpen || scissors == null || scissors.Length == 0)
             {
                 return;
             }
-            // TODO: Set multiple scissor rectangles
+
+            // Metal only supports setting one scissor rectangle at a time
+            // Set the first scissor rectangle from the array
+            // This matches the behavior of other graphics APIs where multiple scissors are viewport-indexed
+            // and Metal doesn't have viewport-indexed scissor rectangles
+            SetScissor(scissors[0]);
         }
 
         public void SetBlendConstant(Vector4 color)
@@ -2773,6 +2809,13 @@ namespace Andastra.Runtime.MonoGame.Backends
         [DllImport("/System/Library/Frameworks/Metal.framework/Metal")]
         public static extern void SetViewport(IntPtr renderCommandEncoder, MetalViewport viewport);
 
+        // Render command encoder scissor rectangle state
+        // Based on Metal API: MTLRenderCommandEncoder::setScissorRect(MTLScissorRect)
+        // MTLScissorRect structure: { NSUInteger x, y, width, height }
+        // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1515458-setscissorrect
+        [DllImport("/System/Library/Frameworks/Metal.framework/Metal")]
+        public static extern void SetScissorRect(IntPtr renderCommandEncoder, MetalScissorRect scissorRect);
+
         /// <summary>
         /// Checks if the Metal render command encoder supports batch viewport setting API (setViewports:count:).
         /// This API does not exist in current Metal versions but is checked for future compatibility.
@@ -3191,6 +3234,18 @@ namespace Andastra.Runtime.MonoGame.Backends
         public double Height;
         public double Znear;
         public double Zfar;
+    }
+
+    // MTLScissorRect structure matching Metal API
+    // Based on Metal API: MTLScissorRect { NSUInteger x, y, width, height }
+    // Metal API Reference: https://developer.apple.com/documentation/metal/mtlscissorrect
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct MetalScissorRect
+    {
+        public uint X;      // NSUInteger x - left edge of scissor rectangle
+        public uint Y;      // NSUInteger y - top edge of scissor rectangle
+        public uint Width;  // NSUInteger width - width of scissor rectangle
+        public uint Height; // NSUInteger height - height of scissor rectangle
     }
 
     [StructLayout(LayoutKind.Sequential)]
