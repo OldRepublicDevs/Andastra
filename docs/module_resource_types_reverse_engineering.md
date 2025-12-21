@@ -882,6 +882,70 @@ if (iVar7 == 0) {
 
 **Note**: `patch.erf` is **NOT found in module loading code** (`FUN_004094a0` / `FUN_004096b0`) - TODO: Gain Certainty by going through ghidra mcp - Find patch.erf loading code by searching for string "patch.erf" in swkotor.exe, then trace the function that loads it to verify it is loaded separately during global resource initialization in resource manager setup code. Check cross-references from initialization functions.
 
+### Media File Support in patch.erf
+
+**Question**: Same questions as modules - obfuscation support, MP3/MP4/WMV support, placement, and priority vs stream directories.
+
+**Answer**: **patch.erf uses the same resource system as modules** - it's an ERF container loaded into the resource table (Location 0, Source Type 1, same as Chitin BIF files).
+
+**Obfuscation Support** (same as modules):
+
+| Format | Obfuscation Support | Obfuscation Required? | Can Be in patch.erf? |
+|--------|---------------------|----------------------|----------------------|
+| **WAV** | ✅ YES | ❌ NO | ✅ YES - Supports both obfuscated (SFX: 470 bytes, VO: 20 bytes, MP3-in-WAV: 58 bytes) and unobfuscated (standard RIFF/WAVE) |
+| **BMU** | ❓ UNKNOWN | ❓ UNKNOWN | ❌ NO - No handler exists |
+| **OGG** | ❌ NO | ❌ NO | ❌ NO - No handler exists |
+| **MP3** | ❌ NO | ❌ NO | ❌ NO - Not a game resource type |
+| **MVE/MPG/BIK** | ❌ NO | ❌ NO | ❓ UNKNOWN - Video formats likely use direct file I/O, not resource system |
+| **WMV** | ❌ NO | ❌ NO | ❌ NO - No handler exists |
+| **MP4** | ❌ NO | ❌ NO | ❌ NO - Not supported |
+
+**MP3/MP4/WMV Support**:
+
+- **MP3**: ❌ **NOT SUPPORTED** - Not a game resource type (toolset-only)
+- **MP4**: ❌ **NOT SUPPORTED** - No resource type ID exists
+- **WMV**: ❌ **NOT SUPPORTED** - Resource type 12 exists but no handler found
+
+**Placement in patch.erf**:
+
+- **WAV**: ✅ **YES** - Can be placed in patch.erf (uses resource system)
+- **BMU/OGG/MP3/WMV/MP4**: ❌ **NO** - No handlers exist, cannot be loaded
+- **MVE/MPG/BIK**: ❓ **UNKNOWN** - Video formats likely use direct file I/O from `movies/` directory, not resource system
+
+**Priority: patch.erf vs Stream Directories**:
+
+**Answer**: **patch.erf takes priority over stream directories**
+
+**Complete Priority Order** (from `FUN_00407230` resource search and `InstallationResourceManager.cs`):
+
+1. **Override Directory** (Location 3, Source Type 2) - Highest priority
+2. **Module Containers** (Location 2, Source Type 3) - `.mod` files
+3. **Module RIM Files** (Location 1, Source Type 4) - `.rim`, `_s.rim`, `_a.rim`, `_adx.rim`
+4. **Chitin Archives** (Location 0, Source Type 1) - **Includes patch.erf** (K1 only)
+5. **Stream Directories** - MUSIC (StreamMusic), SOUND (StreamSounds), VOICE (StreamVoice/StreamWaves) - Searched AFTER chitin/patch.erf
+
+**Conclusion**:
+
+- ✅ Files in **patch.erf** will be found **BEFORE** stream directories
+- ✅ Files in **Override** and **Modules** will be found **BEFORE** patch.erf
+- ⚠️ Stream directories are searched **AFTER** patch.erf, so they act as fallback locations
+
+**However**: Some code paths may use direct file I/O to stream directories, bypassing the resource system. The resource system priority applies when using the standard resource loading mechanism.
+
+**Placement Summary for patch.erf**:
+
+| Format | patch.erf Support | Priority vs Stream Directories | Notes |
+|--------|-------------------|--------------------------------|-------|
+| **WAV** | ✅ YES | patch.erf → StreamWaves/StreamVoice | Uses resource system, supports both obfuscated and unobfuscated |
+| **BMU** | ❌ NO | N/A | No handler exists |
+| **OGG** | ❌ NO | N/A | No handler exists |
+| **MP3** | ❌ NO | N/A | Not a game resource type |
+| **MVE** | ❓ UNKNOWN | N/A | Likely direct file I/O, not resource system |
+| **MPG** | ❓ UNKNOWN | N/A | Likely direct file I/O, not resource system |
+| **BIK** | ❓ UNKNOWN | N/A | Likely direct file I/O, not resource system |
+| **WMV** | ❌ NO | N/A | No handler exists |
+| **MP4** | ❌ NO | N/A | Not supported |
+
 ## Summary
 
 1. **Exact module discovery functions**:
