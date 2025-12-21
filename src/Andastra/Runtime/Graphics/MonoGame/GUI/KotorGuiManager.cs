@@ -1709,37 +1709,130 @@ namespace Andastra.Runtime.MonoGame.GUI
             bool isHorizontal = slider.Direction == null || slider.Direction == "horizontal" || slider.Direction == "0";
 
             // Calculate thumb position and size
+            // Based on swkotor.exe and swkotor2.exe: Slider thumb size and position calculation
+            // Thumb size should use actual texture dimensions when available
             XnaVector2 thumbPosition;
             XnaVector2 thumbSize;
 
             if (isHorizontal)
             {
                 // Horizontal slider: thumb moves left-right
-                // Thumb width is typically a fixed size or proportional to track
-                // For simplicity, use a fixed thumb width (can be made configurable)
-                float thumbWidth = Math.Min(size.X * 0.1f, 20.0f); // 10% of track width or max 20 pixels
-                float trackLength = size.X - thumbWidth; // Available space for thumb movement
+                // Based on swkotor.exe and swkotor2.exe: Slider thumb size calculation
+                // Use actual texture width if reasonable, otherwise use proportional sizing
+                float thumbWidth = thumbTexture.Width > 0 && thumbTexture.Width <= size.X ? thumbTexture.Width : Math.Min(size.X * 0.1f, 20.0f);
+                float thumbHeight = thumbTexture.Height > 0 && thumbTexture.Height <= size.Y ? thumbTexture.Height : Math.Min(size.Y * 0.8f, size.Y);
+                
+                // Calculate track length: available space for thumb movement
+                // The thumb's left edge can move from position.X to position.X + trackLength
+                float trackLength = size.X - thumbWidth;
+                
+                // Calculate base thumb X position (left edge position)
+                // normalizedPosition (0.0 to 1.0) represents position along track
                 float thumbX = position.X + (normalizedPosition * trackLength);
-                float thumbY = position.Y + (size.Y - thumbTexture.Height) / 2.0f; // Center vertically
+                float thumbY = position.Y + (size.Y - thumbHeight) / 2.0f; // Default: center vertically (will be adjusted by alignment)
 
                 thumbPosition = new XnaVector2(thumbX, thumbY);
-                thumbSize = new XnaVector2(thumbWidth, thumbTexture.Height);
+                thumbSize = new XnaVector2(thumbWidth, thumbHeight);
             }
             else
             {
                 // Vertical slider: thumb moves top-bottom
-                float thumbHeight = Math.Min(size.Y * 0.1f, 20.0f); // 10% of track height or max 20 pixels
-                float trackLength = size.Y - thumbHeight; // Available space for thumb movement
-                float thumbX = position.X + (size.X - thumbTexture.Width) / 2.0f; // Center horizontally
+                // Based on swkotor.exe and swkotor2.exe: Slider thumb size calculation
+                // Use actual texture dimensions if reasonable, otherwise use proportional sizing
+                float thumbWidth = thumbTexture.Width > 0 && thumbTexture.Width <= size.X ? thumbTexture.Width : Math.Min(size.X * 0.8f, size.X);
+                float thumbHeight = thumbTexture.Height > 0 && thumbTexture.Height <= size.Y ? thumbTexture.Height : Math.Min(size.Y * 0.1f, 20.0f);
+                
+                // Calculate track length: available space for thumb movement
+                // The thumb's top edge can move from position.Y to position.Y + trackLength
+                float trackLength = size.Y - thumbHeight;
+                
+                // Calculate base thumb Y position (top edge position)
+                // normalizedPosition (0.0 to 1.0) represents position along track
+                float thumbX = position.X + (size.X - thumbWidth) / 2.0f; // Default: center horizontally (will be adjusted by alignment)
                 float thumbY = position.Y + (normalizedPosition * trackLength);
 
                 thumbPosition = new XnaVector2(thumbX, thumbY);
-                thumbSize = new XnaVector2(thumbTexture.Width, thumbHeight);
+                thumbSize = new XnaVector2(thumbWidth, thumbHeight);
             }
 
             // Apply thumb alignment if specified
-            // ALIGNMENT typically affects how the thumb is positioned relative to its calculated position
-            // TODO: STUB - For now, use the calculated position (can be enhanced with alignment support)
+            // Based on swkotor.exe and swkotor2.exe: Slider thumb alignment positioning
+            // Alignment values: 0=TopLeft, 1=TopCenter, 2=TopRight, 3=MiddleLeft, 4=Center, 5=MiddleRight, 6=BottomLeft, 7=BottomCenter, 8=BottomRight
+            // For horizontal sliders: alignment affects horizontal positioning (left/center/right) and vertical positioning (top/middle/bottom)
+            // For vertical sliders: alignment affects vertical positioning (top/middle/bottom) and horizontal positioning (left/center/right)
+            int thumbAlignment = thumb.Alignment;
+            if (isHorizontal)
+            {
+                // Horizontal slider: alignment affects how thumb is positioned along the track
+                // The calculated thumbPosition.X represents the left edge position for left alignment
+                // For center/right alignment, we need to recalculate based on the alignment mode
+                int hAlign = thumbAlignment % 3;
+                switch (hAlign)
+                {
+                    case 0: // Left: thumb's left edge follows normalizedPosition along track
+                        // thumbPosition.X already represents left edge position - no adjustment needed
+                        break;
+                    case 1: // Center: thumb's center follows normalizedPosition along full track width
+                        // Recalculate: normalizedPosition represents center position from 0.0 (left) to 1.0 (right)
+                        thumbPosition.X = position.X + (normalizedPosition * size.X) - (thumbSize.X / 2.0f);
+                        break;
+                    case 2: // Right: thumb's right edge follows normalizedPosition along full track width
+                        // Recalculate: normalizedPosition represents right edge position from 0.0 (left) to 1.0 (right)
+                        thumbPosition.X = position.X + (normalizedPosition * size.X) - thumbSize.X;
+                        break;
+                }
+
+                // Vertical alignment (0=Top, 1=Middle, 2=Bottom) affects thumb's vertical position within track
+                int vAlign = thumbAlignment / 3;
+                switch (vAlign)
+                {
+                    case 0: // Top: thumb's top edge at track top
+                        thumbPosition.Y = position.Y;
+                        break;
+                    case 1: // Middle: thumb centered vertically in track
+                        thumbPosition.Y = position.Y + (size.Y - thumbSize.Y) / 2.0f;
+                        break;
+                    case 2: // Bottom: thumb's bottom edge at track bottom
+                        thumbPosition.Y = position.Y + size.Y - thumbSize.Y;
+                        break;
+                }
+            }
+            else
+            {
+                // Vertical slider: alignment affects how thumb is positioned along the track
+                // The calculated thumbPosition.Y represents the top edge position for top alignment
+                // For middle/bottom alignment, we need to recalculate based on the alignment mode
+                int vAlign = thumbAlignment / 3;
+                switch (vAlign)
+                {
+                    case 0: // Top: thumb's top edge follows normalizedPosition along track
+                        // thumbPosition.Y already represents top edge position - no adjustment needed
+                        break;
+                    case 1: // Middle: thumb's center follows normalizedPosition along full track height
+                        // Recalculate: normalizedPosition represents center position from 0.0 (top) to 1.0 (bottom)
+                        thumbPosition.Y = position.Y + (normalizedPosition * size.Y) - (thumbSize.Y / 2.0f);
+                        break;
+                    case 2: // Bottom: thumb's bottom edge follows normalizedPosition along full track height
+                        // Recalculate: normalizedPosition represents bottom edge position from 0.0 (top) to 1.0 (bottom)
+                        thumbPosition.Y = position.Y + (normalizedPosition * size.Y) - thumbSize.Y;
+                        break;
+                }
+
+                // Horizontal alignment (0=Left, 1=Center, 2=Right) affects thumb's horizontal position within track
+                int hAlign = thumbAlignment % 3;
+                switch (hAlign)
+                {
+                    case 0: // Left: thumb's left edge at track left
+                        thumbPosition.X = position.X;
+                        break;
+                    case 1: // Center: thumb centered horizontally in track
+                        thumbPosition.X = position.X + (size.X - thumbSize.X) / 2.0f;
+                        break;
+                    case 2: // Right: thumb's right edge at track right
+                        thumbPosition.X = position.X + size.X - thumbSize.X;
+                        break;
+                }
+            }
 
             // Render thumb texture
             XnaColor thumbTint = Microsoft.Xna.Framework.Color.White;
