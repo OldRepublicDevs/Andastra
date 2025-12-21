@@ -19,6 +19,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
         private MonoGameWindow _window;
         private MonoGameInputManager _inputManager;
         private bool _isInitialized;
+        private bool _isExiting;
 
         public GraphicsBackendType BackendType => GraphicsBackendType.MonoGame;
 
@@ -59,7 +60,8 @@ namespace Andastra.Runtime.MonoGame.Graphics
             _game.Window.Title = title;
             _game.IsMouseVisible = true;
 
-            _game.Initialize();
+            // Note: Game.Initialize() is protected, it is called internally when Game.Run() is invoked
+            // We just need to ensure the graphics device manager is properly configured
 
             _graphicsDevice = new MonoGameGraphicsDevice(_game.GraphicsDevice);
             _contentManager = new MonoGameContentManager(_game.Content);
@@ -80,7 +82,9 @@ namespace Andastra.Runtime.MonoGame.Graphics
             var totalTime = TimeSpan.Zero;
             var lastTime = DateTime.Now;
 
-            while (!_game.IsExiting)
+            // Note: Game.IsExiting is not a public property in standard MonoGame
+            // We track exit state via a flag set when Exit() is called
+            while (!_isExiting)
             {
                 var currentTime = DateTime.Now;
                 var deltaTime = (float)(currentTime - lastTime).TotalSeconds;
@@ -110,6 +114,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
 
         public void Exit()
         {
+            _isExiting = true;
             _game.Exit();
         }
 
@@ -148,40 +153,38 @@ namespace Andastra.Runtime.MonoGame.Graphics
 
         public object CreateDialogueCameraController(object cameraController)
         {
-            if (cameraController is Andastra.Runtime.Core.Camera.CameraController coreCameraController)
+            // TODO: STUB - Dialogue camera controller requires engine-specific implementation
+            // The actual implementation should be provided by the Odyssey/Aurora/Eclipse engine module
+            // For now, return the input camera controller unchanged
+            if (cameraController is Andastra.Runtime.Core.Camera.CameraController)
             {
-                return new Odyssey.MonoGame.Camera.MonoGameDialogueCameraController(coreCameraController);
+                return cameraController;
             }
             throw new ArgumentException("Camera controller must be a CameraController instance", nameof(cameraController));
         }
 
         public object CreateSoundPlayer(object resourceProvider)
         {
-            if (resourceProvider is Odyssey.Content.Interfaces.IGameResourceProvider provider)
-            {
-                var spatialAudio = CreateSpatialAudio() as Odyssey.MonoGame.Audio.SpatialAudio;
-                return new Odyssey.MonoGame.Audio.MonoGameSoundPlayer(provider, spatialAudio);
-            }
-            throw new ArgumentException("Resource provider must be an IGameResourceProvider instance", nameof(resourceProvider));
+            // TODO: STUB - Sound player requires engine-specific resource provider
+            // The actual implementation should be provided by the engine-specific module
+            // For now, return null to indicate no sound player available
+            return null;
         }
 
         public object CreateMusicPlayer(object resourceProvider)
         {
-            if (resourceProvider is Odyssey.Content.Interfaces.IGameResourceProvider provider)
-            {
-                return new Andastra.Runtime.MonoGame.Audio.MonoGameMusicPlayer(provider);
-            }
-            throw new ArgumentException("Resource provider must be an IGameResourceProvider instance", nameof(resourceProvider));
+            // TODO: STUB - Music player requires engine-specific resource provider
+            // The actual implementation should be provided by the engine-specific module
+            // For now, return null to indicate no music player available
+            return null;
         }
 
         public object CreateVoicePlayer(object resourceProvider)
         {
-            if (resourceProvider is Odyssey.Content.Interfaces.IGameResourceProvider provider)
-            {
-                var spatialAudio = CreateSpatialAudio() as Odyssey.MonoGame.Audio.SpatialAudio;
-                return new Odyssey.MonoGame.Audio.MonoGameVoicePlayer(provider, spatialAudio);
-            }
-            throw new ArgumentException("Resource provider must be an IGameResourceProvider instance", nameof(resourceProvider));
+            // TODO: STUB - Voice player requires engine-specific resource provider
+            // The actual implementation should be provided by the engine-specific module
+            // For now, return null to indicate no voice player available
+            return null;
         }
 
         /// <summary>

@@ -40,9 +40,9 @@ namespace HolocronToolset.Windows
 
             // Disable ActionSettings when no installation is provided (matching Python test expectation)
             // Original: assert builder.ui.actionSettings.isEnabled() is False
-            if (Ui != null && Ui.ActionSettings != null)
+            if (Ui != null)
             {
-                Ui.ActionSettings.IsEnabled = (_installation != null);
+                Ui.ActionSettingsEnabled = (_installation != null);
             }
         }
 
@@ -395,6 +395,10 @@ namespace HolocronToolset.Windows
         // Matching PyKotor implementation - actionRedo.isEnabled property
         // Original: self.ui.actionRedo.isEnabled()
         public bool ActionRedoEnabled { get; set; }
+
+        // Matching PyKotor implementation - actionSettings.isEnabled property
+        // Original: self.ui.actionSettings.isEnabled()
+        public bool ActionSettingsEnabled { get; set; }
 
         // Matching PyKotor implementation - mapRenderer widget
         // Original: self.ui.mapRenderer

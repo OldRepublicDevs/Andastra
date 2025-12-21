@@ -26,7 +26,12 @@ namespace Andastra.Runtime.MonoGame.Graphics
 
         public int VertexStride => _vertexStride;
 
-        public IntPtr NativeHandle => _buffer.Handle;
+        /// <summary>
+        /// Gets the native handle for the buffer.
+        /// Note: MonoGame's VertexBuffer does not expose a Handle property directly,
+        /// so we return IntPtr.Zero. Use the Buffer property for direct access.
+        /// </summary>
+        public IntPtr NativeHandle => IntPtr.Zero;
 
         public void SetData<T>(T[] data) where T : struct
         {

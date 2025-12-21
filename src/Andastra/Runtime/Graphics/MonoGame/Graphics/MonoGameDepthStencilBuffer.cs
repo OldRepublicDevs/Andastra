@@ -57,9 +57,10 @@ namespace Andastra.Runtime.MonoGame.Graphics
 
         /// <summary>
         /// Gets the native buffer handle for advanced operations.
-        /// Returns the underlying RenderTarget2D handle.
+        /// Note: MonoGame's RenderTarget2D does not expose a Handle property directly,
+        /// so we return IntPtr.Zero. Use the underlying RenderTarget2D for direct access.
         /// </summary>
-        public IntPtr NativeHandle => _depthStencilBuffer.Handle;
+        public IntPtr NativeHandle => IntPtr.Zero;
 
         /// <summary>
         /// Disposes of the depth-stencil buffer resources.
