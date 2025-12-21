@@ -2768,11 +2768,14 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             // Check if current area matches tag
             if (ctx.World.CurrentArea != null && string.Equals(ctx.World.CurrentArea.Tag, tag, StringComparison.OrdinalIgnoreCase))
             {
-                // IArea doesn't have ObjectId, so we return a special area object ID
-                // Areas are special objects in Eclipse - use a special ID based on ResRef
-                // TODO: STUB - For now, return a placeholder ID - this may need adjustment based on actual Eclipse implementation
-                uint areaObjectId = 0x7F000010; // Special area object ID range
-                return Variable.FromObject(areaObjectId);
+                // Get the AreaId for the current area
+                // Areas are registered when SetCurrentArea is called, which assigns them sequential IDs starting from 0x7F000010
+                // Based on World.cs: RegisterArea assigns AreaId from _nextAreaId counter
+                uint areaObjectId = ctx.World.GetAreaId(ctx.World.CurrentArea);
+                if (areaObjectId != 0)
+                {
+                    return Variable.FromObject(areaObjectId);
+                }
             }
             
             // Search for area by tag (areas are typically loaded modules)
@@ -2820,10 +2823,14 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             // Default to current area
             if (ctx.World.CurrentArea != null)
             {
-                // IArea doesn't have ObjectId, so we return a special area object ID
-                // Areas are special objects in Eclipse - use a special ID based on ResRef
-                uint areaObjectId = 0x7F000010; // Special area object ID range
-                return Variable.FromObject(areaObjectId);
+                // Get the AreaId for the current area
+                // Areas are registered when SetCurrentArea is called, which assigns them sequential IDs starting from 0x7F000010
+                // Based on World.cs: RegisterArea assigns AreaId from _nextAreaId counter
+                uint areaObjectId = ctx.World.GetAreaId(ctx.World.CurrentArea);
+                if (areaObjectId != 0)
+                {
+                    return Variable.FromObject(areaObjectId);
+                }
             }
             
             return Variable.FromObject(ObjectInvalid);
