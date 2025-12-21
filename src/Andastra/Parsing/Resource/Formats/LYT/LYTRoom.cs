@@ -28,10 +28,20 @@ namespace Andastra.Parsing.Formats.LYT
         {
             Vector3 newPosition = (left.Position + right.Position) * 0.5f;
             LYTRoom newRoom = new LYTRoom($"{left.Model}_{right.Model}", newPosition);
-            newRoom.Connections = new HashSet<LYTRoom>(left.Connections);
-            foreach (var conn in right.Connections)
+            // Copy connections if left and right are the same type (reference equality or value equality)
+            if (left != null && left is LYTRoom && left.Connections != null)
             {
-                newRoom.Connections.Add(conn);
+                foreach (var conn in left.Connections)
+                {
+                    newRoom.AddConnection(conn);
+                }
+            }
+            if (right != null && right is LYTRoom && right.Connections != null)
+            {
+                foreach (var conn in right.Connections)
+                {
+                    newRoom.AddConnection(conn);
+                }
             }
             return newRoom;
         }

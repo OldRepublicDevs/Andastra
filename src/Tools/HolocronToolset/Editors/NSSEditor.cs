@@ -1518,7 +1518,7 @@ namespace HolocronToolset.Editors
         /// <param name="item">The TreeViewItem representing the bookmark.</param>
         public void GotoBookmark(TreeViewItem item)
         {
-            if (item == null || item.Tag is not BookmarkData bookmarkData)
+            if (item == null || !(item.Tag is BookmarkData bookmarkData))
             {
                 return;
             }
