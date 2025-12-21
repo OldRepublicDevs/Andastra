@@ -879,31 +879,246 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // 4. Set textures for the entity
             // 5. Draw the mesh using DrawIndexedPrimitive or DrawPrimitive
 
-            // Get entity transform
-            // Based on daorigins.exe: Entities have position, rotation, and scale
-            // Transform would be set using SetTransform(D3DTS_WORLD, &worldMatrix)
+            // Step 1: Check if entity has renderable component and is visible
+            // Based on daorigins.exe: Entities must have renderable component and be visible to render
+            IRenderableComponent renderable = entity.GetComponent<IRenderableComponent>();
+            if (renderable == null || !renderable.Visible)
+            {
+                return; // Entity is not renderable or not visible
+            }
 
-            // Get entity mesh data
+            // Step 2: Get entity transform (position and orientation)
+            // Based on daorigins.exe: Entities have position, rotation (facing), and scale
+            ITransformComponent transform = entity.GetComponent<ITransformComponent>();
+            if (transform == null)
+            {
+                return; // Entity has no transform component
+            }
+
+            // Build world transformation matrix from entity transform
+            // Based on daorigins.exe: World matrix combines position and Y-axis rotation (facing)
+            // Y-up coordinate system: facing is rotation around Y axis
+            Matrix4x4 rotationMatrix = Matrix4x4.CreateRotationY(transform.Facing);
+            Matrix4x4 translationMatrix = Matrix4x4.CreateTranslation(
+                transform.Position.X,
+                transform.Position.Y,
+                transform.Position.Z
+            );
+            Matrix4x4 worldMatrix = Matrix4x4.Multiply(rotationMatrix, translationMatrix);
+
+            // Set world transformation matrix
+            // Based on daorigins.exe: SetTransform(D3DTS_WORLD, &worldMatrix)
+            SetTransformDirectX9(D3DTS_WORLD, worldMatrix);
+
+            // Step 3: Get entity mesh data (vertex buffer and index buffer)
             // Based on daorigins.exe: Entities have mesh components that provide vertex/index data
-            // Mesh data would be loaded from model files (MDL format for Eclipse engine)
+            // Mesh data is loaded from model files (MDL format for Eclipse engine)
+            // Try to get vertex and index buffers from entity data (similar to room mesh rendering)
+            IntPtr vertexBufferPtr = IntPtr.Zero;
+            IntPtr indexBufferPtr = IntPtr.Zero;
+            int indexCount = 0;
+            uint vertexStride = 32; // Default stride: position (12 bytes) + normal (12 bytes) + texture coordinates (8 bytes) = 32 bytes
 
-            // Set vertex buffer
-            // Based on daorigins.exe: SetStreamSource(0, vertexBuffer, 0, vertexStride)
-            // Vertex format would match the entity's mesh vertex format
+            try
+            {
+                // Try to get vertex buffer from entity data
+                // Based on daorigins.exe: Vertex buffers are stored as DirectX 9 native buffers
+                object vertexBuffer = entity.GetData("VertexBuffer");
+                if (vertexBuffer != null)
+                {
+                    // Try to get native pointer using reflection (similar to room mesh rendering)
+                    Type vertexBufferType = vertexBuffer.GetType();
+                    PropertyInfo handleProp = vertexBufferType.GetProperty("Handle");
+                    if (handleProp != null)
+                    {
+                        object handleObj = handleProp.GetValue(vertexBuffer);
+                        if (handleObj is IntPtr)
+                        {
+                            vertexBufferPtr = (IntPtr)handleObj;
+                        }
+                    }
 
-            // Set index buffer
-            // Based on daorigins.exe: SetIndices(indexBuffer)
+                    // Try alternative property names
+                    if (vertexBufferPtr == IntPtr.Zero)
+                    {
+                        PropertyInfo nativeProp = vertexBufferType.GetProperty("NativePointer");
+                        if (nativeProp != null)
+                        {
+                            object nativeObj = nativeProp.GetValue(vertexBuffer);
+                            if (nativeObj is IntPtr)
+                            {
+                                vertexBufferPtr = (IntPtr)nativeObj;
+                            }
+                        }
+                    }
 
-            // Set textures
+                    // Try to get vertex stride from entity data
+                    if (entity.HasData("VertexStride"))
+                    {
+                        object strideObj = entity.GetData("VertexStride");
+                        if (strideObj is int strideInt)
+                        {
+                            vertexStride = (uint)strideInt;
+                        }
+                        else if (strideObj is uint strideUint)
+                        {
+                            vertexStride = strideUint;
+                        }
+                    }
+                }
+
+                // Try to get index buffer from entity data
+                object indexBuffer = entity.GetData("IndexBuffer");
+                if (indexBuffer != null)
+                {
+                    Type indexBufferType = indexBuffer.GetType();
+                    PropertyInfo handleProp = indexBufferType.GetProperty("Handle");
+                    if (handleProp != null)
+                    {
+                        object handleObj = handleProp.GetValue(indexBuffer);
+                        if (handleObj is IntPtr)
+                        {
+                            indexBufferPtr = (IntPtr)handleObj;
+                        }
+                    }
+
+                    // Try alternative property names
+                    if (indexBufferPtr == IntPtr.Zero)
+                    {
+                        PropertyInfo nativeProp = indexBufferType.GetProperty("NativePointer");
+                        if (nativeProp != null)
+                        {
+                            object nativeObj = nativeProp.GetValue(indexBuffer);
+                            if (nativeObj is IntPtr)
+                            {
+                                indexBufferPtr = (IntPtr)nativeObj;
+                            }
+                        }
+                    }
+
+                    // Try to get index count from entity data
+                    if (entity.HasData("IndexCount"))
+                    {
+                        object countObj = entity.GetData("IndexCount");
+                        if (countObj is int countInt)
+                        {
+                            indexCount = countInt;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Failed to get mesh data - entity cannot be rendered
+                return;
+            }
+
+            // If vertex or index buffer is not available, entity cannot be rendered
+            if (vertexBufferPtr == IntPtr.Zero || indexBufferPtr == IntPtr.Zero || indexCount == 0)
+            {
+                // Entity mesh data is not available - this is expected for entities that haven't loaded their model yet
+                // In a full implementation, this would trigger model loading if ModelResRef is available
+                return;
+            }
+
+            // Step 4: Set render states for entity rendering
+            // Based on daorigins.exe: Entity rendering uses appropriate render states based on transparency
+            if (transparent)
+            {
+                // Enable alpha blending for transparent entities
+                SetRenderStateDirectX9(D3DRS_ALPHABLENDENABLE, 1);
+                SetRenderStateDirectX9(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+                SetRenderStateDirectX9(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+                SetRenderStateDirectX9(D3DRS_ALPHATESTENABLE, 1);
+                SetRenderStateDirectX9(D3DRS_ALPHAREF, 0x08);
+                SetRenderStateDirectX9(D3DRS_ALPHAFUNC, D3DCMP_GREATEREQUAL);
+            }
+            else
+            {
+                // Opaque entities: disable alpha blending
+                SetRenderStateDirectX9(D3DRS_ALPHABLENDENABLE, 0);
+            }
+
+            // Enable depth testing and writing for 3D entities
+            SetRenderStateDirectX9(D3DRS_ZENABLE, 1);
+            SetRenderStateDirectX9(D3DRS_ZWRITEENABLE, 1);
+
+            // Enable culling (backface culling for performance)
+            SetRenderStateDirectX9(D3DRS_CULLMODE, D3DCULL_CCW);
+
+            // Step 5: Set textures for the entity
             // Based on daorigins.exe: SetTexture(0, texture) for diffuse texture
             // Additional texture stages may be used for normal maps, specular maps, etc.
+            IntPtr texture = IntPtr.Zero;
+            if (!string.IsNullOrEmpty(renderable.ModelResRef) && _resourceProvider != null)
+            {
+                // Try to load texture from model ResRef (in a full implementation, this would load the actual model's texture)
+                // For now, we try to get texture from entity data if available
+                object textureObj = entity.GetData("Texture");
+                if (textureObj != null)
+                {
+                    // Try to get native texture pointer
+                    Type textureType = textureObj.GetType();
+                    PropertyInfo handleProp = textureType.GetProperty("Handle");
+                    if (handleProp != null)
+                    {
+                        object handleObj = handleProp.GetValue(textureObj);
+                        if (handleObj is IntPtr)
+                        {
+                            texture = (IntPtr)handleObj;
+                        }
+                    }
 
-            // Draw primitive
+                    if (texture == IntPtr.Zero)
+                    {
+                        PropertyInfo nativeProp = textureType.GetProperty("NativePointer");
+                        if (nativeProp != null)
+                        {
+                            object nativeObj = nativeProp.GetValue(textureObj);
+                            if (nativeObj is IntPtr)
+                            {
+                                texture = (IntPtr)nativeObj;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Set texture for texture stage 0 (diffuse texture)
+            if (texture != IntPtr.Zero)
+            {
+                SetTextureDirectX9(0, texture);
+            }
+
+            // Step 6: Set vertex buffer (stream source)
+            // Based on daorigins.exe: SetStreamSource(0, vertexBuffer, 0, vertexStride)
+            // Parameters: Stream number (0), vertex buffer pointer, offset (0), stride
+            SetStreamSourceDirectX9(0, vertexBufferPtr, 0, vertexStride);
+
+            // Step 7: Set index buffer
+            // Based on daorigins.exe: SetIndices(indexBuffer)
+            SetIndicesDirectX9(indexBufferPtr);
+
+            // Step 8: Set vertex format (FVF - Flexible Vertex Format)
+            // Based on daorigins.exe: SetFVF sets vertex format flags
+            // D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_TEX1 = position + normal + 1 texture coordinate set
+            uint fvf = D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_TEX1;
+            SetFVFDirectX9(fvf);
+
+            // Step 9: Draw indexed primitives
             // Based on daorigins.exe: DrawIndexedPrimitive(D3DPT_TRIANGLELIST, baseVertexIndex, minIndex, numVertices, startIndex, primCount)
-            // or DrawPrimitive(D3DPT_TRIANGLELIST, startVertex, primCount)
-
-            // TODO: STUB - For now, this is a placeholder that matches the structure
-            // TODO:  Full implementation would require mesh component system and model loading
+            // Parameters:
+            // - Primitive type: D3DPT_TRIANGLELIST (triangle list)
+            // - Base vertex index: 0 (vertices start at index 0)
+            // - Min index: 0 (minimum vertex index used)
+            // - Num vertices: indexCount (number of vertices in the mesh)
+            // - Start index: 0 (start from first index)
+            // - Primitive count: indexCount / 3 (number of triangles)
+            int primitiveCount = indexCount / 3;
+            if (primitiveCount > 0)
+            {
+                DrawIndexedPrimitiveDirectX9(D3DPT_TRIANGLELIST, 0, 0, (uint)indexCount, 0, primitiveCount);
+            }
         }
 
         /// <summary>
@@ -1153,6 +1368,27 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             IntPtr methodPtr = vtable[101];
             var setIndices = Marshal.GetDelegateForFunctionPointer<SetIndicesDelegate>(methodPtr);
             setIndices(_d3dDevice, indexBuffer);
+        }
+
+        /// <summary>
+        /// Sets DirectX 9 texture.
+        /// Matches IDirect3DDevice9::SetTexture() exactly.
+        /// </summary>
+        /// <remarks>
+        /// Based on reverse engineering of daorigins.exe:
+        /// - IDirect3DDevice9::SetTexture is at vtable index 65
+        /// - Sets texture for a texture stage
+        /// - Parameters: Texture stage, texture pointer (IDirect3DBaseTexture9*)
+        /// </remarks>
+        private unsafe void SetTextureDirectX9(uint stage, IntPtr texture)
+        {
+            if (_d3dDevice == IntPtr.Zero) return;
+
+            // IDirect3DDevice9::SetTexture is at vtable index 65
+            IntPtr* vtable = *(IntPtr**)_d3dDevice;
+            IntPtr methodPtr = vtable[65];
+            var setTexture = Marshal.GetDelegateForFunctionPointer<SetTextureDelegate>(methodPtr);
+            setTexture(_d3dDevice, stage, texture);
         }
 
         /// <summary>
@@ -1459,6 +1695,9 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate int SetIndicesDelegate(IntPtr device, IntPtr indexBuffer);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int SetTextureDelegate(IntPtr device, uint stage, IntPtr texture);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate int SetTransformDelegate(IntPtr device, uint transformType, ref D3DMATRIX matrix);
