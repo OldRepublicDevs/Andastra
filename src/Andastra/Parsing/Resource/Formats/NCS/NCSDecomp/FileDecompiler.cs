@@ -369,7 +369,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             catch (DecompilerException e)
             {
                 Debug("Error loading actions data: " + e.Message);
-                // Create comprehensive fallback stub for actions data loading failure
+                // TODO:  Create comprehensive fallback stub for actions data loading failure
                 Utils.FileScriptData errorData = new Utils.FileScriptData();
                 string expectedFile = isK2Selected ? "tsl_nwscript.nss" : "k1_nwscript.nss";
                 string stubCode = this.GenerateComprehensiveFallbackStub(file, "Actions data loading", e,
@@ -397,7 +397,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 }
                 catch (Exception e)
                 {
-                    // Last resort: create comprehensive fallback stub data so we always have something to show
+                    // TODO:  Last resort: create comprehensive fallback stub data so we always have something to show
                     Debug("Critical error during decompilation, creating fallback stub: " + e.Message);
                     e.PrintStackTrace(JavaSystem.@out);
                     data = new Utils.FileScriptData();
@@ -413,7 +413,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 string code = data.GetCode();
                 if (code == null || code.Trim().Length == 0)
                 {
-                    // If code generation failed, provide comprehensive fallback stub
+                    // TODO:  If code generation failed, provide comprehensive fallback stub
                     Debug("Warning: Generated code is empty, creating fallback stub.");
                     string fallback = this.GenerateComprehensiveFallbackStub(file, "Code generation - empty output", null,
                         "The decompilation process completed but generated no source code. This may indicate the file contains no executable code or all code was marked as dead/unreachable.");
@@ -1367,7 +1367,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             stub.Append("//   - Verify the file is a valid KotOR/TSL NCS bytecode file.").Append(newline);
             stub.Append(newline);
 
-            // Minimal valid NSS stub
+            // TODO:  Minimal valid NSS stub
             stub.Append("// Minimal fallback function:").Append(newline);
             stub.Append("void main() {").Append(newline);
             stub.Append("    // Decompilation failed at stage: ").Append(errorStage != null ? errorStage : "Unknown").Append(newline);
@@ -1376,6 +1376,356 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 stub.Append("    // Error: ").Append(exception.Message.Replace("\n", " ").Replace("\r", "")).Append(newline);
             }
             stub.Append("}").Append(newline);
+
+            return stub.ToString();
+        }
+
+        /// <summary>
+        /// Represents extracted subroutine information from decoded commands.
+        /// Used when parsing fails but we can still extract function signatures.
+        /// </summary>
+        private class ExtractedSubroutineInfo
+        {
+            public string Name { get; set; }
+            public string Signature { get; set; }
+            public string ReturnType { get; set; }
+            public int ParameterCount { get; set; }
+            public List<string> ParameterTypes { get; set; }
+            public int LineNumber { get; set; }
+
+            public ExtractedSubroutineInfo()
+            {
+                ParameterTypes = new List<string>();
+                ParameterCount = -1; // -1 means unknown
+            }
+        }
+
+        /// <summary>
+        /// Extracts subroutine information from decoded commands string.
+        /// Parses function signatures, names, and parameter information when available.
+        /// This is a heuristic extraction that works even when full parsing fails.
+        /// </summary>
+        /// <param name="commands">Decoded commands string from NCS bytecode</param>
+        /// <returns>List of extracted subroutine information, or null if extraction fails</returns>
+        private List<ExtractedSubroutineInfo> ExtractSubroutineInformation(string commands)
+        {
+            if (string.IsNullOrEmpty(commands))
+            {
+                return null;
+            }
+
+            List<ExtractedSubroutineInfo> subroutines = new List<ExtractedSubroutineInfo>();
+            string[] lines = commands.Split('\n');
+            
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string line = lines[i].Trim();
+                if (string.IsNullOrEmpty(line))
+                {
+                    continue;
+                }
+
+                // Look for subroutine/function declarations
+                // Patterns: "sub function_name(...)", "function function_name(...)", "void function_name(...)", etc.
+                ExtractedSubroutineInfo subInfo = null;
+                
+                // Pattern 1: "sub function_name(...)" or "sub function_name()"
+                if (line.StartsWith("sub ") && line.Contains("("))
+                {
+                    subInfo = ParseSubroutineLine(line, "sub", i);
+                }
+                // Pattern 2: "function function_name(...)" or "function function_name()"
+                else if (line.StartsWith("function ") && line.Contains("("))
+                {
+                    subInfo = ParseSubroutineLine(line, "function", i);
+                }
+                // Pattern 3: Return type followed by function name: "void function_name(...)", "int function_name(...)", etc.
+                else if (line.Contains("(") && !line.StartsWith("//") && !line.StartsWith("/*"))
+                {
+                    // Check if it looks like a function signature (has return type, name, and parentheses)
+                    string[] commonReturnTypes = { "void", "int", "float", "string", "object", "vector", "location", "talent", "effect", "event" };
+                    foreach (string returnType in commonReturnTypes)
+                    {
+                        if (line.StartsWith(returnType + " ") && line.Contains("("))
+                        {
+                            subInfo = ParseSubroutineLine(line, returnType, i);
+                            if (subInfo != null)
+                            {
+                                subInfo.ReturnType = returnType;
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                if (subInfo != null)
+                {
+                    subroutines.Add(subInfo);
+                }
+            }
+
+            return subroutines.Count > 0 ? subroutines : null;
+        }
+
+        /// <summary>
+        /// Parses a single line containing a subroutine/function declaration.
+        /// Extracts function name, parameters, and return type when possible.
+        /// </summary>
+        /// <param name="line">Line containing the function declaration</param>
+        /// <param name="prefix">Prefix that was matched (e.g., "sub", "function", "void")</param>
+        /// <param name="lineNumber">Line number in the commands string</param>
+        /// <returns>ExtractedSubroutineInfo if parsing succeeds, null otherwise</returns>
+        private ExtractedSubroutineInfo ParseSubroutineLine(string line, string prefix, int lineNumber)
+        {
+            try
+            {
+                ExtractedSubroutineInfo info = new ExtractedSubroutineInfo
+                {
+                    LineNumber = lineNumber,
+                    Signature = line
+                };
+
+                // Remove prefix and whitespace
+                string remaining = line.Substring(prefix.Length).Trim();
+                
+                // Find the opening parenthesis
+                int parenIndex = remaining.IndexOf('(');
+                if (parenIndex < 0)
+                {
+                    return null; // No opening parenthesis found
+                }
+
+                // Extract function name (everything before the opening parenthesis)
+                string namePart = remaining.Substring(0, parenIndex).Trim();
+                if (string.IsNullOrEmpty(namePart))
+                {
+                    return null; // No function name found
+                }
+
+                // Function name might have whitespace or other characters - take the last word
+                string[] nameParts = namePart.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (nameParts.Length > 0)
+                {
+                    info.Name = nameParts[nameParts.Length - 1];
+                }
+                else
+                {
+                    info.Name = namePart;
+                }
+
+                // Extract parameters (everything between parentheses)
+                int closeParenIndex = remaining.IndexOf(')', parenIndex);
+                if (closeParenIndex < 0)
+                {
+                    // No closing parenthesis - might be a multi-line declaration
+                    // For now, assume no parameters
+                    info.ParameterCount = 0;
+                    return info;
+                }
+
+                string paramsStr = remaining.Substring(parenIndex + 1, closeParenIndex - parenIndex - 1).Trim();
+                
+                if (string.IsNullOrEmpty(paramsStr))
+                {
+                    // Empty parameter list
+                    info.ParameterCount = 0;
+                }
+                else
+                {
+                    // Parse parameters - split by comma
+                    string[] paramParts = paramsStr.Split(',');
+                    info.ParameterCount = paramParts.Length;
+                    
+                    // Try to extract parameter types
+                    foreach (string param in paramParts)
+                    {
+                        string trimmedParam = param.Trim();
+                        if (!string.IsNullOrEmpty(trimmedParam))
+                        {
+                            // Try to identify parameter type (first word before parameter name)
+                            string[] paramWords = trimmedParam.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                            if (paramWords.Length >= 2)
+                            {
+                                // Assume first word is type, second is name
+                                info.ParameterTypes.Add(paramWords[0]);
+                            }
+                            else if (paramWords.Length == 1)
+                            {
+                                // Just a type or just a name - assume it's a type
+                                info.ParameterTypes.Add(paramWords[0]);
+                            }
+                        }
+                    }
+                }
+
+                // Build full signature
+                StringBuilder sigBuilder = new StringBuilder();
+                if (!string.IsNullOrEmpty(info.ReturnType))
+                {
+                    sigBuilder.Append(info.ReturnType).Append(" ");
+                }
+                else if (prefix != "sub" && prefix != "function")
+                {
+                    // If prefix was a return type, use it
+                    sigBuilder.Append(prefix).Append(" ");
+                }
+                else
+                {
+                    // Default to void for sub/function
+                    sigBuilder.Append("void ");
+                }
+                
+                sigBuilder.Append(info.Name).Append("(");
+                if (info.ParameterCount > 0 && info.ParameterTypes.Count > 0)
+                {
+                    for (int i = 0; i < info.ParameterTypes.Count; i++)
+                    {
+                        if (i > 0) sigBuilder.Append(", ");
+                        sigBuilder.Append(info.ParameterTypes[i]);
+                        if (i < info.ParameterCount - info.ParameterTypes.Count)
+                        {
+                            sigBuilder.Append(" param").Append(i + 1);
+                        }
+                    }
+                    // Add placeholders for any remaining parameters
+                    for (int i = info.ParameterTypes.Count; i < info.ParameterCount; i++)
+                    {
+                        if (i > 0) sigBuilder.Append(", ");
+                        sigBuilder.Append("int param").Append(i + 1);
+                    }
+                }
+                sigBuilder.Append(")");
+                
+                info.Signature = sigBuilder.ToString();
+                
+                return info;
+            }
+            catch (Exception e)
+            {
+                Debug("Error parsing subroutine line: " + e.Message);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Generates a comprehensive fallback stub with extracted subroutine information.
+        /// Creates function stubs based on detected subroutine signatures when full parsing fails.
+        /// </summary>
+        /// <param name="file">NCS file being decompiled</param>
+        /// <param name="errorStage">Stage where error occurred</param>
+        /// <param name="exception">Exception that caused the failure</param>
+        /// <param name="additionalInfo">Additional context information</param>
+        /// <param name="extractedSubs">List of extracted subroutine information</param>
+        /// <returns>Comprehensive fallback stub with function signatures</returns>
+        private string GenerateComprehensiveFallbackStubWithSubroutines(
+            NcsFile file, 
+            string errorStage, 
+            Exception exception, 
+            string additionalInfo,
+            List<ExtractedSubroutineInfo> extractedSubs)
+        {
+            StringBuilder stub = new StringBuilder();
+            string newline = Environment.NewLine;
+
+            // Start with standard comprehensive stub header
+            string baseStub = this.GenerateComprehensiveFallbackStub(file, errorStage, exception, additionalInfo);
+            
+            // Remove the minimal fallback function from the base stub (we'll replace it with actual stubs)
+            // Find where the minimal function starts
+            int minimalFuncIndex = baseStub.LastIndexOf("// Minimal fallback function:");
+            if (minimalFuncIndex >= 0)
+            {
+                baseStub = baseStub.Substring(0, minimalFuncIndex);
+            }
+
+            stub.Append(baseStub);
+            stub.Append(newline);
+
+            // Add extracted subroutine stubs
+            stub.Append("// ========================================").Append(newline);
+            stub.Append("// EXTRACTED FUNCTION STUBS").Append(newline);
+            stub.Append("// ========================================").Append(newline);
+            stub.Append("// The following function stubs were extracted from the decoded bytecode.").Append(newline);
+            stub.Append("// Full decompilation failed, but function signatures were detected.").Append(newline);
+            stub.Append(newline);
+
+            // Generate function stubs
+            bool hasMain = false;
+            foreach (ExtractedSubroutineInfo subInfo in extractedSubs)
+            {
+                // Check if this is the main function
+                bool isMain = subInfo.Name != null && 
+                             (subInfo.Name.Equals("main", StringComparison.OrdinalIgnoreCase) ||
+                              subInfo.Name.Equals("StartingConditional", StringComparison.OrdinalIgnoreCase));
+                
+                if (isMain)
+                {
+                    hasMain = true;
+                }
+                else
+                {
+                    // Generate prototype for non-main functions
+                    stub.Append(subInfo.Signature).Append(";").Append(newline);
+                }
+            }
+
+            stub.Append(newline);
+
+            // Generate function implementations
+            foreach (ExtractedSubroutineInfo subInfo in extractedSubs)
+            {
+                bool isMain = subInfo.Name != null && 
+                             (subInfo.Name.Equals("main", StringComparison.OrdinalIgnoreCase) ||
+                              subInfo.Name.Equals("StartingConditional", StringComparison.OrdinalIgnoreCase));
+
+                stub.Append(subInfo.Signature).Append(newline);
+                stub.Append("{").Append(newline);
+                stub.Append("    // Function signature extracted from decoded bytecode").Append(newline);
+                stub.Append("    // Line ").Append(subInfo.LineNumber + 1).Append(" in decoded commands").Append(newline);
+                stub.Append("    // Full decompilation failed - function body could not be recovered").Append(newline);
+                
+                if (isMain)
+                {
+                    stub.Append("    // This is the main entry point function").Append(newline);
+                }
+                
+                if (subInfo.ParameterCount > 0)
+                {
+                    stub.Append("    // Parameters: ").Append(subInfo.ParameterCount).Append(" detected").Append(newline);
+                }
+                
+                if (!string.IsNullOrEmpty(subInfo.ReturnType) && subInfo.ReturnType != "void")
+                {
+                    stub.Append("    // Return type: ").Append(subInfo.ReturnType).Append(newline);
+                    stub.Append("    // TODO: Implement return statement with appropriate value").Append(newline);
+                }
+                
+                stub.Append("}").Append(newline);
+                stub.Append(newline);
+            }
+
+            // If no main function was found, add a default one
+            if (!hasMain && extractedSubs.Count > 0)
+            {
+                stub.Append("// Note: No main() or StartingConditional() function was detected.").Append(newline);
+                stub.Append("// Adding default main() stub:").Append(newline);
+                stub.Append("void main()").Append(newline);
+                stub.Append("{").Append(newline);
+                stub.Append("    // Main function stub - no entry point detected in decoded commands").Append(newline);
+                stub.Append("}").Append(newline);
+            }
+            else if (extractedSubs.Count == 0)
+            {
+                stub.Append("// Minimal fallback function:").Append(newline);
+                stub.Append("void main()").Append(newline);
+                stub.Append("{").Append(newline);
+                stub.Append("    // Decompilation failed at stage: ").Append(errorStage != null ? errorStage : "Unknown").Append(newline);
+                if (exception != null && exception.Message != null)
+                {
+                    stub.Append("    // Error: ").Append(exception.Message.Replace("\n", " ").Replace("\r", "")).Append(newline);
+                }
+                stub.Append("}").Append(newline);
+            }
 
             return stub.ToString();
         }
@@ -1708,7 +2058,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 }
                 catch (Exception e2)
                 {
-                    // Last resort: create a minimal stub so we always return something
+                    // TODO:  Last resort: create a minimal stub so we always return something
                     Debug("CRITICAL: Both decompilation paths threw exceptions, creating emergency fallback stub");
                     Debug("  First exception: " + e.GetType().Name + " - " + e.Message);
                     Debug("  Second exception: " + e2.GetType().Name + " - " + e2.Message);
@@ -1740,7 +2090,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             if (this.actions == null)
             {
                 Debug("null action! Creating fallback stub.");
-                // Return comprehensive stub instead of null
+                // TODO:  Return comprehensive stub instead of null
                 Utils.FileScriptData stub = new Utils.FileScriptData();
                 string expectedFile = isK2Selected ? "tsl_nwscript.nss" : "k1_nwscript.nss";
                 string stubCode = this.GenerateComprehensiveFallbackStub(file, "Actions data loading", null,
@@ -1771,7 +2121,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 {
                     Debug("DEBUG decompileNcs: decode FAILED - " + decodeEx.Message);
                     Debug("Error during bytecode decoding: " + decodeEx.Message);
-                    // Create comprehensive fallback stub for decoding errors
+                    // TODO:  Create comprehensive fallback stub for decoding errors
                     long fileSize = file.Exists() ? file.Length : -1;
                     string fileInfo = "File size: " + fileSize + " bytes";
                     if (fileSize > 0)
@@ -1854,7 +2204,56 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                                 if (subCount2 > 0)
                                 {
                                     Debug("Detected " + subCount2 + " potential subroutines in decoded commands, but full parse failed.");
-                                    // We'll fall through to create a stub, but with better information
+                                    
+                                    // Extract detailed subroutine information from decoded commands
+                                    // This allows us to create function stubs with actual signatures
+                                    List<ExtractedSubroutineInfo> extractedSubs = ExtractSubroutineInformation(commands);
+                                    
+                                    if (extractedSubs != null && extractedSubs.Count > 0)
+                                    {
+                                        Debug("Extracted information for " + extractedSubs.Count + " subroutines from decoded commands.");
+                                        
+                                        // Build enhanced additional info with subroutine details
+                                        StringBuilder enhancedInfo = new StringBuilder();
+                                        enhancedInfo.Append("Bytecode was successfully decoded but parsing failed.\n");
+                                        enhancedInfo.Append("Decoded commands length: ").Append(commands != null ? commands.Length : 0).Append(" characters\n");
+                                        enhancedInfo.Append("Detected subroutines: ").Append(extractedSubs.Count).Append("\n\n");
+                                        enhancedInfo.Append("EXTRACTED SUBROUTINE INFORMATION:\n");
+                                        enhancedInfo.Append("The following subroutines were detected in the decoded commands:\n\n");
+                                        
+                                        foreach (ExtractedSubroutineInfo subInfo in extractedSubs)
+                                        {
+                                            enhancedInfo.Append("  - ").Append(subInfo.Signature).Append("\n");
+                                            if (!string.IsNullOrEmpty(subInfo.Name))
+                                            {
+                                                enhancedInfo.Append("    Name: ").Append(subInfo.Name).Append("\n");
+                                            }
+                                            if (subInfo.ParameterCount >= 0)
+                                            {
+                                                enhancedInfo.Append("    Parameters: ").Append(subInfo.ParameterCount).Append("\n");
+                                            }
+                                            if (!string.IsNullOrEmpty(subInfo.ReturnType))
+                                            {
+                                                enhancedInfo.Append("    Return Type: ").Append(subInfo.ReturnType).Append("\n");
+                                            }
+                                            enhancedInfo.Append("\n");
+                                        }
+                                        
+                                        enhancedInfo.Append("RECOVERY NOTE: Function stubs have been generated based on detected subroutine signatures.\n");
+                                        enhancedInfo.Append("The decoded commands are available but could not be parsed into an AST.\n");
+                                        enhancedInfo.Append("This may indicate malformed bytecode or an unsupported format variant.\n\n");
+                                        
+                                        // Generate stub with extracted subroutine information
+                                        string stub = this.GenerateComprehensiveFallbackStubWithSubroutines(
+                                            file, 
+                                            "Parsing decoded bytecode", 
+                                            parseEx, 
+                                            enhancedInfo.ToString(),
+                                            extractedSubs);
+                                        data.SetCode(stub);
+                                        return data;
+                                    }
+                                    // If extraction failed, fall through to standard stub generation
                                 }
                             }
                             catch (Exception e2)
@@ -1864,7 +2263,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                         }
                     }
 
-                    // If we still don't have an AST, create comprehensive stub but preserve commands for potential manual recovery
+                    // TODO:  If we still don't have an AST, create comprehensive stub but preserve commands for potential manual recovery
                     if (ast == null)
                     {
                         string commandsPreview = "none";
@@ -2278,7 +2677,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     catch (Exception e)
                     {
                         Debug("Error generating code for main subroutine: " + e.Message);
-                        // Try to create a minimal main function stub using MainPass
+                        // TODO:  Try to create a minimal main function stub using MainPass
                         try
                         {
                             mainpass = new MainPass(subdata.GetState(mainsub), nodedata, subdata, this.actions);
@@ -2391,7 +2790,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 Debug("Error during decompilation: " + e.Message);
                 e.PrintStackTrace(JavaSystem.@out);
 
-                // Always return a FileScriptData, even if it's just a minimal stub
+                // TODO:  Always return a FileScriptData, even if it's just a minimal stub
                 if (data == null)
                 {
                     data = new Utils.FileScriptData();
@@ -2543,7 +2942,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     Debug("Could not generate partial code: " + genEx.Message);
                 }
 
-                // Last resort: create comprehensive stub with any available partial information
+                // TODO:  Last resort: create comprehensive stub with any available partial information
                 string partialInfo = "Partial decompilation state:\n";
                 try
                 {
@@ -3080,7 +3479,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     catch (Exception e)
                     {
                         Debug("Error generating code for main subroutine: " + e.Message);
-                        // Try to create a minimal main function stub using MainPass
+                        // TODO:  Try to create a minimal main function stub using MainPass
                         try
                         {
                             SubroutineState mainState = subdata.GetState(mainsub);
@@ -3388,7 +3787,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 // Only applies to generic subX names and matches on body patterns.
                 this.HeuristicRenameSubs();
 
-                // If we have no subs, generate comprehensive stub so we always show something
+                // TODO:  If we have no subs, generate comprehensive stub so we always show something
                 if (this.subs.Count == 0)
                 {
                     // Note: We don't have direct file access here, but we can still provide useful info
