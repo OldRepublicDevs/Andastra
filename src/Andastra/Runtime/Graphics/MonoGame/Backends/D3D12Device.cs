@@ -945,19 +945,17 @@ namespace Andastra.Runtime.MonoGame.Backends
                         ReleaseComObject(blobPtr);
 
                         // Wrap in D3D12BindingLayout and return
-            IntPtr handle = new IntPtr(_nextResourceHandle++);
-                        var layout = new D3D12BindingLayout(handle, desc, rootSignature, _device, this);
-            _resources[handle] = layout;
+                        // Store range pointers in the layout for cleanup on disposal
+                        // Based on DirectX 12 Root Signature Management: Descriptor range pointers must remain valid
+                        // until the root signature is destroyed, so we store them in the layout and free them in Dispose()
+                        IntPtr handle = new IntPtr(_nextResourceHandle++);
+                        var layout = new D3D12BindingLayout(handle, desc, rootSignature, _device, this, rangePointers);
+                        _resources[handle] = layout;
 
-                        // Store range pointers for cleanup on disposal (would need to track these in D3D12BindingLayout)
-                        // TODO: STUB - For now, we'll free them immediately after root signature creation
-                        // In a full implementation, these would be stored and freed when the layout is disposed
-                        foreach (var ptr in rangePointers)
-                        {
-                            Marshal.FreeHGlobal(ptr);
-                        }
+                        // Note: rangePointers are now owned by D3D12BindingLayout and will be freed when layout is disposed
+                        // Do not free them here - they must remain valid for the lifetime of the root signature
 
-            return layout;
+                        return layout;
                     }
                     finally
                     {
@@ -5905,14 +5903,16 @@ namespace Andastra.Runtime.MonoGame.Backends
             private readonly IntPtr _rootSignature;
             private readonly IntPtr _device;
             private readonly D3D12Device _parentDevice;
+            private readonly List<IntPtr> _rangePointers; // Descriptor range pointers allocated with Marshal.AllocHGlobal
 
-            public D3D12BindingLayout(IntPtr handle, BindingLayoutDesc desc, IntPtr rootSignature, IntPtr device, D3D12Device parentDevice)
+            public D3D12BindingLayout(IntPtr handle, BindingLayoutDesc desc, IntPtr rootSignature, IntPtr device, D3D12Device parentDevice, List<IntPtr> rangePointers)
             {
                 _handle = handle;
                 Desc = desc;
                 _rootSignature = rootSignature;
                 _device = device;
                 _parentDevice = parentDevice;
+                _rangePointers = rangePointers ?? new List<IntPtr>(); // Store range pointers for cleanup on disposal
             }
 
             // Accessor for root signature (used by pipeline creation)
@@ -5920,6 +5920,30 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             public void Dispose()
             {
+                // Free descriptor range pointers allocated with Marshal.AllocHGlobal
+                // These pointers were allocated during root signature creation and must be freed when the layout is disposed
+                // Based on DirectX 12 Root Signature Management: Root signature is created from serialized blob,
+                // but the original descriptor range structures are still referenced and must remain valid until root signature is destroyed
+                if (_rangePointers != null)
+                {
+                    foreach (var ptr in _rangePointers)
+                    {
+                        if (ptr != IntPtr.Zero)
+                        {
+                            try
+                            {
+                                Marshal.FreeHGlobal(ptr);
+                            }
+                            catch (Exception ex)
+                            {
+                                // Log error but continue cleanup - don't throw from Dispose
+                                Console.WriteLine($"[D3D12Device] Error freeing descriptor range pointer 0x{ptr:X16}: {ex.Message}");
+                            }
+                        }
+                    }
+                    _rangePointers.Clear();
+                }
+
                 // Release D3D12 root signature COM object
                 // Root signatures are COM objects (ID3D12RootSignature) and must be released via IUnknown::Release()
                 // Based on DirectX 12 Root Signature Management: https://docs.microsoft.com/en-us/windows/win32/direct3d12/root-signatures
