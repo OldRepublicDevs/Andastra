@@ -462,6 +462,7 @@ namespace Andastra.Parsing.Tools
         public static MDLMDXTuple Flip(byte[] mdlData, byte[] mdxData, bool flipX, bool flipY)
         {
             // If neither bools are set to True, no transformations need to be done and we can just return the original data
+            // Matching PyKotor implementation: if not flip_x and not flip_y: return MDLMDXTuple(mdl_data, mdx_data)
             if (!flipX && !flipY)
             {
                 return new MDLMDXTuple(mdlData, mdxData);
