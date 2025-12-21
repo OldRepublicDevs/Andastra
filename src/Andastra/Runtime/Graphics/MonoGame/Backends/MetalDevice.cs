@@ -1843,13 +1843,127 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
         }
 
+        /// <summary>
+        /// Clears a color attachment of a framebuffer to a specific color.
+        /// 
+        /// Implementation: Uses Metal render pass with Clear load action to clear the texture.
+        /// Metal doesn't have a direct "fill texture" operation, so we create a minimal render pass
+        /// that clears the attachment and immediately ends it.
+        /// 
+        /// Note: This method will end any active render pass or blit encoder before clearing,
+        /// as Metal allows only one encoder type to be active at a time per command buffer.
+        /// 
+        /// Based on Metal API:
+        /// - MTLRenderPassDescriptor with color attachment loadAction = .clear
+        /// - MTLRenderCommandEncoder::endEncoding() to complete the clear operation
+        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlrenderpassdescriptor
+        /// </summary>
         public void ClearColorAttachment(IFramebuffer framebuffer, int attachmentIndex, Vector4 color)
         {
             if (!_isOpen || framebuffer == null)
             {
                 return;
             }
-            // TODO: Implement color attachment clear
+            
+            // Validate attachment index
+            MetalFramebuffer metalFramebuffer = framebuffer as MetalFramebuffer;
+            if (metalFramebuffer == null)
+            {
+                Console.WriteLine("[MetalCommandList] ClearColorAttachment: Framebuffer must be a MetalFramebuffer instance");
+                return;
+            }
+            
+            FramebufferDesc desc = metalFramebuffer.Desc;
+            if (desc.ColorAttachments == null || attachmentIndex < 0 || attachmentIndex >= desc.ColorAttachments.Length)
+            {
+                Console.WriteLine($"[MetalCommandList] ClearColorAttachment: Invalid attachment index {attachmentIndex}");
+                return;
+            }
+            
+            FramebufferAttachment colorAttachment = desc.ColorAttachments[attachmentIndex];
+            if (colorAttachment.Texture == null)
+            {
+                Console.WriteLine($"[MetalCommandList] ClearColorAttachment: Color attachment {attachmentIndex} has no texture");
+                return;
+            }
+            
+            MetalTexture metalTexture = colorAttachment.Texture as MetalTexture;
+            if (metalTexture == null)
+            {
+                Console.WriteLine("[MetalCommandList] ClearColorAttachment: Texture must be a MetalTexture instance");
+                return;
+            }
+            
+            IntPtr colorTexture = metalTexture.NativeHandle;
+            if (colorTexture == IntPtr.Zero)
+            {
+                Console.WriteLine("[MetalCommandList] ClearColorAttachment: Invalid texture native handle");
+                return;
+            }
+            
+            // Get the current command buffer from the backend
+            IntPtr commandBuffer = _backend.GetCurrentCommandBuffer();
+            if (commandBuffer == IntPtr.Zero)
+            {
+                Console.WriteLine("[MetalCommandList] ClearColorAttachment: No active command buffer");
+                return;
+            }
+            
+            // End any active encoders before creating render pass for clearing
+            // Metal allows only one encoder type to be active at a time per command buffer
+            if (_currentRenderCommandEncoder != IntPtr.Zero)
+            {
+                MetalNative.EndEncoding(_currentRenderCommandEncoder);
+                _currentRenderCommandEncoder = IntPtr.Zero;
+            }
+            
+            if (_currentBlitCommandEncoder != IntPtr.Zero)
+            {
+                MetalNative.EndEncoding(_currentBlitCommandEncoder);
+                MetalNative.ReleaseBlitCommandEncoder(_currentBlitCommandEncoder);
+                _currentBlitCommandEncoder = IntPtr.Zero;
+            }
+            
+            if (_currentAccelStructCommandEncoder != IntPtr.Zero)
+            {
+                MetalNative.EndAccelerationStructureCommandEncoding(_currentAccelStructCommandEncoder);
+                _currentAccelStructCommandEncoder = IntPtr.Zero;
+            }
+            
+            // Create render pass descriptor for clearing
+            IntPtr renderPassDescriptor = MetalNative.CreateRenderPassDescriptor();
+            if (renderPassDescriptor == IntPtr.Zero)
+            {
+                Console.WriteLine("[MetalCommandList] ClearColorAttachment: Failed to create render pass descriptor");
+                return;
+            }
+            
+            try
+            {
+                // Set color attachment with Clear load action
+                // MetalLoadAction.Clear tells Metal to clear the texture to the specified clear color when the render pass begins
+                // MetalStoreAction.Store tells Metal to store the result (though in this case we're just clearing, so it stores the clear color)
+                MetalClearColor clearColor = new MetalClearColor(color.X, color.Y, color.Z, color.W);
+                MetalNative.SetRenderPassColorAttachment(renderPassDescriptor, 0, colorTexture,
+                    MetalLoadAction.Clear, MetalStoreAction.Store, clearColor);
+                
+                // Begin render pass - this will clear the texture to the specified color
+                IntPtr renderCommandEncoder = MetalNative.BeginRenderPass(commandBuffer, renderPassDescriptor);
+                if (renderCommandEncoder == IntPtr.Zero)
+                {
+                    Console.WriteLine("[MetalCommandList] ClearColorAttachment: Failed to begin render pass for clearing");
+                    return;
+                }
+                
+                // Immediately end the render pass to complete the clear operation
+                // The clear happens when the render pass begins, so ending it immediately completes the clear
+                MetalNative.EndEncoding(renderCommandEncoder);
+            }
+            finally
+            {
+                // Release render pass descriptor
+                MetalNative.ReleaseRenderPassDescriptor(renderPassDescriptor);
+            }
         }
 
         public void ClearDepthStencilAttachment(IFramebuffer framebuffer, float depth, byte stencil, bool clearDepth = true, bool clearStencil = true)
