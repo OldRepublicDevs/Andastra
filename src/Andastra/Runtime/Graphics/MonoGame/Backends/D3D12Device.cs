@@ -3320,6 +3320,302 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         #endregion
 
+        #region D3D12 RTV Descriptor Heap Management
+
+        /// <summary>
+        /// Ensures the RTV descriptor heap is created and initialized.
+        /// Creates an RTV descriptor heap with the default capacity if one doesn't exist.
+        /// Based on DirectX 12 Descriptor Heaps: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_descriptor_heap_desc
+        /// </summary>
+        private void EnsureRtvDescriptorHeap()
+        {
+            if (_rtvDescriptorHeap != IntPtr.Zero)
+            {
+                return; // Heap already exists
+            }
+
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (_device == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                // Create D3D12_DESCRIPTOR_HEAP_DESC structure for RTV heap
+                var heapDesc = new D3D12_DESCRIPTOR_HEAP_DESC
+                {
+                    Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
+                    NumDescriptors = (uint)DefaultRtvHeapCapacity,
+                    Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE, // RTV heaps are not shader-visible
+                    NodeMask = 0
+                };
+
+                // Allocate memory for the descriptor heap descriptor structure
+                int heapDescSize = Marshal.SizeOf(typeof(D3D12_DESCRIPTOR_HEAP_DESC));
+                IntPtr heapDescPtr = Marshal.AllocHGlobal(heapDescSize);
+                try
+                {
+                    Marshal.StructureToPtr(heapDesc, heapDescPtr, false);
+
+                    // Allocate memory for the output descriptor heap pointer
+                    IntPtr heapPtr = Marshal.AllocHGlobal(IntPtr.Size);
+                    try
+                    {
+                        // Call ID3D12Device::CreateDescriptorHeap
+                        Guid iidDescriptorHeap = IID_ID3D12DescriptorHeap;
+                        int hr = CallCreateDescriptorHeap(_device, heapDescPtr, ref iidDescriptorHeap, heapPtr);
+                        if (hr < 0)
+                        {
+                            throw new InvalidOperationException($"CreateDescriptorHeap failed with HRESULT 0x{hr:X8}");
+                        }
+
+                        // Get the descriptor heap pointer
+                        IntPtr descriptorHeap = Marshal.ReadIntPtr(heapPtr);
+                        if (descriptorHeap == IntPtr.Zero)
+                        {
+                            throw new InvalidOperationException("Descriptor heap pointer is null");
+                        }
+
+                        // Get descriptor heap start handle (CPU handle for descriptor heap)
+                        IntPtr cpuHandle = CallGetCPUDescriptorHandleForHeapStart(descriptorHeap);
+                        if (cpuHandle == IntPtr.Zero)
+                        {
+                            throw new InvalidOperationException("Failed to get CPU descriptor handle for heap start");
+                        }
+
+                        // Get descriptor increment size
+                        uint descriptorIncrementSize = CallGetDescriptorHandleIncrementSize(_device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+                        if (descriptorIncrementSize == 0)
+                        {
+                            throw new InvalidOperationException("Failed to get descriptor handle increment size");
+                        }
+
+                        // Store heap information
+                        _rtvDescriptorHeap = descriptorHeap;
+                        _rtvHeapCpuStartHandle = cpuHandle;
+                        _rtvHeapDescriptorIncrementSize = descriptorIncrementSize;
+                        _rtvHeapCapacity = DefaultRtvHeapCapacity;
+                        _rtvHeapNextIndex = 0;
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(heapPtr);
+                    }
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(heapDescPtr);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to create RTV descriptor heap: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Allocates a descriptor handle from the RTV descriptor heap.
+        /// Returns IntPtr.Zero if allocation fails.
+        /// </summary>
+        private IntPtr AllocateRtvDescriptor()
+        {
+            EnsureRtvDescriptorHeap();
+
+            if (_rtvDescriptorHeap == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            if (_rtvHeapNextIndex >= _rtvHeapCapacity)
+            {
+                // Heap is full - in a production implementation, we might want to create a larger heap or handle this differently
+                throw new InvalidOperationException($"RTV descriptor heap is full (capacity: {_rtvHeapCapacity})");
+            }
+
+            // Calculate CPU descriptor handle for this index
+            IntPtr cpuDescriptorHandle = OffsetDescriptorHandle(_rtvHeapCpuStartHandle, _rtvHeapNextIndex, _rtvHeapDescriptorIncrementSize);
+            int allocatedIndex = _rtvHeapNextIndex;
+            _rtvHeapNextIndex++;
+
+            return cpuDescriptorHandle;
+        }
+
+        /// <summary>
+        /// COM interface method delegate for CreateRenderTargetView.
+        /// </summary>
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void CreateRenderTargetViewDelegate(IntPtr device, IntPtr pResource, IntPtr pDesc, IntPtr DestDescriptor);
+
+        /// <summary>
+        /// Calls ID3D12Device::CreateRenderTargetView through COM vtable.
+        /// VTable index 34 for ID3D12Device.
+        /// Based on DirectX 12 Render Target Views: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createrendertargetview
+        /// </summary>
+        private unsafe void CallCreateRenderTargetView(IntPtr device, IntPtr pResource, IntPtr pDesc, IntPtr DestDescriptor)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (device == IntPtr.Zero || pResource == IntPtr.Zero || DestDescriptor == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)device;
+            // CreateRenderTargetView is at index 34 in ID3D12Device vtable
+            IntPtr methodPtr = vtable[34];
+
+            // Create delegate from function pointer
+            CreateRenderTargetViewDelegate createRtv = (CreateRenderTargetViewDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CreateRenderTargetViewDelegate));
+
+            createRtv(device, pResource, pDesc, DestDescriptor);
+        }
+
+        /// <summary>
+        /// Gets or creates an RTV descriptor handle for a texture.
+        /// Caches the handle to avoid recreating descriptors for the same texture.
+        /// Based on DirectX 12 Render Target Views: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createrendertargetview
+        /// </summary>
+        internal IntPtr GetOrCreateRtvHandle(ITexture texture, int mipLevel, int arraySlice)
+        {
+            if (texture == null || texture.NativeHandle == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            // Create a unique key for this texture/mip/array combination
+            // For simplicity, we'll use the texture handle as the key (assuming one RTV per texture)
+            // In a more complete implementation, we could include mipLevel and arraySlice in the key
+            IntPtr textureHandle = texture.NativeHandle;
+
+            // Check cache first
+            IntPtr cachedHandle;
+            if (_textureRtvHandles.TryGetValue(textureHandle, out cachedHandle))
+            {
+                return cachedHandle;
+            }
+
+            // Allocate new RTV descriptor
+            IntPtr rtvHandle = AllocateRtvDescriptor();
+            if (rtvHandle == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            // Get texture format and convert to DXGI_FORMAT
+            TextureFormat format = texture.Desc.Format;
+            uint dxgiFormat = ConvertTextureFormatToDxgiFormatForRtv(format);
+            if (dxgiFormat == 0)
+            {
+                // Format not supported for RTV, return zero handle
+                return IntPtr.Zero;
+            }
+
+            // Create D3D12_RENDER_TARGET_VIEW_DESC structure
+            var rtvDesc = new D3D12_RENDER_TARGET_VIEW_DESC
+            {
+                Format = dxgiFormat,
+                ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D, // Default to 2D texture
+                Texture2D = new D3D12_TEX2D_RTV
+                {
+                    MipSlice = unchecked((uint)mipLevel),
+                    PlaneSlice = 0 // Typically 0 for non-planar formats
+                }
+            };
+
+            // Allocate memory for the RTV descriptor structure
+            int rtvDescSize = Marshal.SizeOf(typeof(D3D12_RENDER_TARGET_VIEW_DESC));
+            IntPtr rtvDescPtr = Marshal.AllocHGlobal(rtvDescSize);
+            try
+            {
+                Marshal.StructureToPtr(rtvDesc, rtvDescPtr, false);
+
+                // Call ID3D12Device::CreateRenderTargetView
+                CallCreateRenderTargetView(_device, texture.NativeHandle, rtvDescPtr, rtvHandle);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(rtvDescPtr);
+            }
+
+            // Cache the handle
+            _textureRtvHandles[textureHandle] = rtvHandle;
+
+            return rtvHandle;
+        }
+
+        /// <summary>
+        /// Converts TextureFormat to DXGI_FORMAT for render target views.
+        /// Based on DirectX 12 Texture Formats: https://docs.microsoft.com/en-us/windows/win32/api/dxgiformat/ne-dxgiformat-dxgi_format
+        /// This version supports color formats suitable for render targets (not depth formats).
+        /// </summary>
+        private uint ConvertTextureFormatToDxgiFormatForRtv(TextureFormat format)
+        {
+            switch (format)
+            {
+                case TextureFormat.R8_UNorm:
+                    return 61; // DXGI_FORMAT_R8_UNORM
+                case TextureFormat.R8_UInt:
+                    return 62; // DXGI_FORMAT_R8_UINT
+                case TextureFormat.R8_SInt:
+                    return 63; // DXGI_FORMAT_R8_SINT
+                case TextureFormat.R8G8_UNorm:
+                    return 49; // DXGI_FORMAT_R8G8_UNORM
+                case TextureFormat.R8G8_UInt:
+                    return 50; // DXGI_FORMAT_R8G8_UINT
+                case TextureFormat.R8G8_SInt:
+                    return 51; // DXGI_FORMAT_R8G8_SINT
+                case TextureFormat.R8G8B8A8_UNorm:
+                    return 28; // DXGI_FORMAT_R8G8B8A8_UNORM
+                case TextureFormat.R8G8B8A8_UInt:
+                    return 30; // DXGI_FORMAT_R8G8B8A8_UINT
+                case TextureFormat.R8G8B8A8_SInt:
+                    return 29; // DXGI_FORMAT_R8G8B8A8_SINT
+                case TextureFormat.R16_UNorm:
+                    return 56; // DXGI_FORMAT_R16_UNORM
+                case TextureFormat.R16_UInt:
+                    return 57; // DXGI_FORMAT_R16_UINT
+                case TextureFormat.R16_SInt:
+                    return 58; // DXGI_FORMAT_R16_SINT
+                case TextureFormat.R16_Float:
+                    return 54; // DXGI_FORMAT_R16_FLOAT
+                case TextureFormat.R32_UInt:
+                    return 42; // DXGI_FORMAT_R32_UINT
+                case TextureFormat.R32_SInt:
+                    return 43; // DXGI_FORMAT_R32_SINT
+                case TextureFormat.R32_Float:
+                    return 41; // DXGI_FORMAT_R32_FLOAT
+                case TextureFormat.R32G32_Float:
+                    return 16; // DXGI_FORMAT_R32G32_FLOAT
+                case TextureFormat.R32G32_UInt:
+                    return 52; // DXGI_FORMAT_R32G32_UINT
+                case TextureFormat.R32G32_SInt:
+                    return 53; // DXGI_FORMAT_R32G32_SINT
+                case TextureFormat.R32G32B32_Float:
+                    return 6; // DXGI_FORMAT_R32G32B32_FLOAT
+                case TextureFormat.R32G32B32A32_Float:
+                    return 2; // DXGI_FORMAT_R32G32B32A32_FLOAT
+                case TextureFormat.R32G32B32A32_UInt:
+                    return 1; // DXGI_FORMAT_R32G32B32A32_UINT
+                case TextureFormat.R32G32B32A32_SInt:
+                    return 3; // DXGI_FORMAT_R32G32B32A32_SINT
+                default:
+                    return 0; // DXGI_FORMAT_UNKNOWN
+            }
+        }
+
+        #endregion
+
         #region Resource Interface
 
         private interface IResource : IDisposable
@@ -4453,7 +4749,58 @@ namespace Andastra.Runtime.MonoGame.Backends
                     Marshal.FreeHGlobal(dstLocationPtr);
                 }
             }
-            public void ClearColorAttachment(IFramebuffer framebuffer, int attachmentIndex, Vector4 color) { /* TODO: ClearRenderTargetView */ }
+            public void ClearColorAttachment(IFramebuffer framebuffer, int attachmentIndex, Vector4 color)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (framebuffer == null)
+                {
+                    return;
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    return; // Command list not initialized
+                }
+
+                // Get color attachment from framebuffer
+                FramebufferDesc desc = framebuffer.Desc;
+                if (desc.ColorAttachments == null || attachmentIndex < 0 || attachmentIndex >= desc.ColorAttachments.Length)
+                {
+                    return; // Invalid attachment index
+                }
+
+                FramebufferAttachment colorAttachment = desc.ColorAttachments[attachmentIndex];
+                if (colorAttachment.Texture == null)
+                {
+                    return; // No color attachment at this index
+                }
+
+                ITexture colorTexture = colorAttachment.Texture;
+                int mipLevel = colorAttachment.MipLevel;
+                int arraySlice = colorAttachment.ArraySlice;
+
+                // Ensure texture is in RENDER_TARGET state for clearing
+                SetTextureState(colorTexture, ResourceState.RenderTarget);
+                CommitBarriers();
+
+                // Get or create RTV descriptor handle for the color texture
+                IntPtr rtvHandle = _device.GetOrCreateRtvHandle(colorTexture, mipLevel, arraySlice);
+                if (rtvHandle == IntPtr.Zero)
+                {
+                    return; // Failed to create/get RTV handle
+                }
+
+                // Convert Vector4 color to float array (RGBA format for ClearRenderTargetView)
+                // DirectX 12 ClearRenderTargetView expects float[4] in RGBA order
+                float[] colorRGBA = new float[4] { color.X, color.Y, color.Z, color.W };
+
+                // Call ClearRenderTargetView (NumRects = 0, pRects = null clears entire view)
+                CallClearRenderTargetView(_d3d12CommandList, rtvHandle, colorRGBA, 0, IntPtr.Zero);
+            }
             public void ClearDepthStencilAttachment(IFramebuffer framebuffer, float depth, byte stencil, bool clearDepth = true, bool clearStencil = true)
             {
                 if (!_isOpen)
@@ -5247,6 +5594,13 @@ namespace Andastra.Runtime.MonoGame.Backends
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             private delegate void ClearDepthStencilViewDelegate(IntPtr commandList, IntPtr DepthStencilView, uint ClearFlags, float Depth, byte Stencil, uint NumRects, IntPtr pRects);
 
+            // COM interface method delegate for ClearRenderTargetView
+            // ClearRenderTargetView signature: void ClearRenderTargetView(D3D12_CPU_DESCRIPTOR_HANDLE RenderTargetView, const FLOAT ColorRGBA[4], UINT NumRects, const D3D12_RECT *pRects)
+            // D3D12_CPU_DESCRIPTOR_HANDLE is a pointer-sized value, so we use IntPtr
+            // ColorRGBA[4] is a 4-element float array passed by value (const FLOAT[4])
+            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+            private delegate void ClearRenderTargetViewDelegate(IntPtr commandList, IntPtr RenderTargetView, IntPtr ColorRGBA, uint NumRects, IntPtr pRects);
+
             // COM interface method delegate for RSSetScissorRects
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             private delegate void RSSetScissorRectsDelegate(IntPtr commandList, uint NumRects, IntPtr pRects);
@@ -5289,6 +5643,47 @@ namespace Andastra.Runtime.MonoGame.Backends
                     (ClearDepthStencilViewDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(ClearDepthStencilViewDelegate));
 
                 clearDsv(commandList, DepthStencilView, ClearFlags, Depth, Stencil, NumRects, pRects);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::ClearRenderTargetView through COM vtable.
+            /// VTable index 47 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Clear Operations: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-clearrendertargetview
+            /// </summary>
+            private unsafe void CallClearRenderTargetView(IntPtr commandList, IntPtr RenderTargetView, float[] ColorRGBA, uint NumRects, IntPtr pRects)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero || RenderTargetView == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                if (ColorRGBA == null || ColorRGBA.Length < 4)
+                {
+                    return; // Invalid color array
+                }
+
+                // Pin the color array and pass pointer to native function
+                // DirectX 12 ClearRenderTargetView expects const FLOAT ColorRGBA[4]
+                // We pin the array to get a stable pointer for the native call
+                fixed (float* colorPtr = ColorRGBA)
+                {
+                    // Get vtable pointer
+                    IntPtr* vtable = *(IntPtr**)commandList;
+                    // ClearRenderTargetView is at index 47 in ID3D12GraphicsCommandList vtable
+                    IntPtr methodPtr = vtable[47];
+
+                    // Create delegate from function pointer
+                    ClearRenderTargetViewDelegate clearRtv =
+                        (ClearRenderTargetViewDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(ClearRenderTargetViewDelegate));
+
+                    clearRtv(commandList, RenderTargetView, new IntPtr(colorPtr), NumRects, pRects);
+                }
             }
 
             /// <summary>
