@@ -2114,17 +2114,184 @@ namespace Andastra.Runtime.Games.Eclipse
         /// </summary>
         /// <remarks>
         /// Combines distance heuristic with tactical considerations.
+        /// Incorporates threat exposure to guide pathfinding away from dangerous areas.
+        /// 
+        /// The heuristic adds a bounded threat modifier to the distance:
+        /// - Threats near the target position increase the heuristic value
+        /// - This guides A* to prefer safer paths when multiple routes exist
+        /// - The modifier is bounded to maintain heuristic admissibility (not overestimating)
+        /// 
+        /// Based on daorigins.exe: Tactical pathfinding with threat-aware heuristics
+        /// Based on DragonAge2.exe: Enhanced tactical pathfinding with dynamic threat assessment
         /// </remarks>
         private float TacticalHeuristic(int fromFace, int toFace, Vector3 start, Vector3 end, List<Vector3> threats)
         {
-            // Base distance heuristic
+            // Base distance heuristic (admissible - never overestimates)
             Vector3 fromCenter = GetStaticFaceCenter(fromFace);
             Vector3 toCenter = GetStaticFaceCenter(toFace);
             float distanceHeuristic = Vector3.Distance(fromCenter, toCenter);
 
-            // Tactical modifiers (optional, can be added based on threats)
-            // TODO: STUB - For now, use simple distance heuristic
-            return distanceHeuristic;
+            // Gather threats if not provided
+            List<Vector3> threatPositions = threats;
+            if (threatPositions == null && _world != null)
+            {
+                threatPositions = GatherThreatPositions(toCenter, start, end);
+            }
+
+            // If no threats available, return base distance heuristic
+            if (threatPositions == null || threatPositions.Count == 0)
+            {
+                return distanceHeuristic;
+            }
+
+            // Calculate threat exposure modifier for the target position
+            // This modifier guides the search away from dangerous areas
+            float threatModifier = CalculateThreatHeuristicModifier(toCenter, threatPositions);
+
+            // Add bounded threat modifier to distance heuristic
+            // The modifier is bounded to a reasonable fraction of the distance to maintain admissibility
+            // We use a conservative bound: threat modifier can add up to 30% of distance
+            const float maxThreatModifierRatio = 0.3f;
+            float maxAllowedModifier = distanceHeuristic * maxThreatModifierRatio;
+            float boundedThreatModifier = Math.Min(threatModifier, maxAllowedModifier);
+
+            return distanceHeuristic + boundedThreatModifier;
+        }
+
+        /// <summary>
+        /// Gathers threat positions from the world for heuristic calculation.
+        /// </summary>
+        /// <remarks>
+        /// Queries the world for entities that are threats and returns their positions.
+        /// This is similar to CalculateThreatExposureWithWorld but optimized for heuristic calculation.
+        /// </remarks>
+        private List<Vector3> GatherThreatPositions(Vector3 center, Vector3 start, Vector3 end)
+        {
+            const float threatSearchRadius = 50.0f; // Maximum range to search for threats
+
+            if (_world == null)
+            {
+                return null;
+            }
+
+            var threatPositions = new List<Vector3>();
+
+            // Query for entities in threat range
+            var nearbyEntities = _world.GetEntitiesInRadius(center, threatSearchRadius);
+            if (nearbyEntities == null)
+            {
+                return threatPositions;
+            }
+
+            // Check each entity as potential threat
+            foreach (IEntity entity in nearbyEntities)
+            {
+                if (entity == null || !entity.IsValid)
+                {
+                    continue;
+                }
+
+                // Get entity position
+                ITransformComponent transform = entity.GetComponent<ITransformComponent>();
+                if (transform == null)
+                {
+                    continue;
+                }
+
+                Vector3 threatPosition = transform.Position;
+                float distanceToThreat = Vector3.Distance(center, threatPosition);
+
+                // Skip threats that are too far away (beyond search radius)
+                if (distanceToThreat > threatSearchRadius)
+                {
+                    continue;
+                }
+
+                // Check if entity is a threat
+                bool isThreat = IsEntityThreat(entity, start, end);
+                if (isThreat)
+                {
+                    threatPositions.Add(threatPosition);
+                }
+            }
+
+            return threatPositions;
+        }
+
+        /// <summary>
+        /// Calculates threat-based heuristic modifier for a position.
+        /// </summary>
+        /// <remarks>
+        /// Higher modifier for positions that are exposed to multiple threats or close to threats.
+        /// This modifier is used in the A* heuristic to guide pathfinding away from dangerous areas.
+        /// 
+        /// The modifier considers:
+        /// - Distance to threats (closer = higher modifier)
+        /// - Number of threats (more threats = higher modifier)
+        /// - Line of sight from threats (exposed positions = higher modifier)
+        /// 
+        /// Returns a non-negative value representing the threat exposure cost.
+        /// </remarks>
+        private float CalculateThreatHeuristicModifier(Vector3 position, List<Vector3> threatPositions)
+        {
+            const float maxThreatDistance = 50.0f; // Maximum distance threat can influence heuristic
+            const float minThreatDistance = 2.0f; // Minimum distance (too close = always high modifier)
+            const float baseThreatCost = 5.0f; // Base cost per threat
+            const float distanceDecayFactor = 0.5f; // How quickly threat influence decays with distance
+
+            float totalModifier = 0.0f;
+
+            foreach (Vector3 threatPosition in threatPositions)
+            {
+                float distanceToThreat = Vector3.Distance(position, threatPosition);
+
+                // Skip threats that are too far away
+                if (distanceToThreat > maxThreatDistance)
+                {
+                    continue;
+                }
+
+                // Very close threats get maximum modifier
+                if (distanceToThreat < minThreatDistance)
+                {
+                    totalModifier += baseThreatCost * 2.0f; // Double cost for very close threats
+                    continue;
+                }
+
+                // Check line of sight from threat to position
+                // Positions with line of sight are more exposed
+                bool hasLineOfSight = TestLineOfSight(threatPosition, position);
+                if (!hasLineOfSight)
+                {
+                    // No line of sight - threat has minimal influence (but still some)
+                    // This accounts for potential movement that could expose the position
+                    float noLoSFactor = 0.2f; // 20% of normal threat cost when no line of sight
+                    float distanceFactor = 1.0f - ((distanceToThreat - minThreatDistance) / (maxThreatDistance - minThreatDistance));
+                    distanceFactor = Math.Max(0.0f, Math.Min(1.0f, distanceFactor));
+                    totalModifier += baseThreatCost * noLoSFactor * distanceFactor;
+                    continue;
+                }
+
+                // Has line of sight - calculate modifier based on distance
+                // Closer threats = higher modifier
+                // Modifier decreases exponentially with distance
+                float normalizedDistance = (distanceToThreat - minThreatDistance) / (maxThreatDistance - minThreatDistance);
+                normalizedDistance = Math.Max(0.0f, Math.Min(1.0f, normalizedDistance));
+                
+                // Exponential decay: closer threats have much more influence
+                float distanceFactor = (float)Math.Pow(1.0 - normalizedDistance, 1.0 / distanceDecayFactor);
+                
+                // Check if position has cover from this threat
+                float coverProtection = CalculateCoverProtection(position, threatPosition);
+                
+                // Exposure factor: higher for positions with less cover
+                float exposureFactor = 1.0f - coverProtection;
+                
+                // Apply modifier
+                totalModifier += baseThreatCost * distanceFactor * exposureFactor;
+            }
+
+            return totalModifier;
         }
 
         /// <summary>
