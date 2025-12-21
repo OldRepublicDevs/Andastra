@@ -49,6 +49,13 @@ namespace Andastra.Runtime.Games.Eclipse
         private const int DefaultScreenWidth = 1024;
         private const int DefaultScreenHeight = 768;
 
+        // Upgrade screen state tracking
+        // Based on Eclipse upgrade system: Track selected slot and available upgrades per slot
+        private int _selectedUpgradeSlot = -1; // Currently selected upgrade slot (-1 = none selected)
+        private Dictionary<int, List<string>> _availableUpgradesPerSlot; // Available upgrades indexed by slot number
+        private Dictionary<int, string> _slotUpgradeListBoxTags; // List box tag names indexed by slot number
+        private const int MaxUpgradeSlots = 6; // Maximum number of upgrade slots (typical for Eclipse items)
+
         /// <summary>
         /// Initializes a new instance of the Eclipse upgrade screen.
         /// </summary>
@@ -60,6 +67,9 @@ namespace Andastra.Runtime.Games.Eclipse
             _controlMap = new Dictionary<string, GUIControl>(StringComparer.OrdinalIgnoreCase);
             _buttonMap = new Dictionary<string, GUIButton>(StringComparer.OrdinalIgnoreCase);
             _guiInitialized = false;
+            _availableUpgradesPerSlot = new Dictionary<int, List<string>>();
+            _slotUpgradeListBoxTags = new Dictionary<int, string>();
+            _selectedUpgradeSlot = -1;
         }
 
         /// <summary>
@@ -807,10 +817,43 @@ namespace Andastra.Runtime.Games.Eclipse
                 return;
             }
 
-            // Get available upgrades for all slots
+            IItemComponent itemComponent = _targetItem.GetComponent<IItemComponent>();
+            if (itemComponent == null)
+            {
+                return;
+            }
+
+            // Clear previous upgrade data
+            _availableUpgradesPerSlot.Clear();
+            _slotUpgradeListBoxTags.Clear();
+
+            // Get available upgrades for each slot
             // Based on Eclipse upgrade system: Upgrade lists are populated when item is selected
-            // The actual list population happens when user selects a slot
-            // TODO: STUB - For now, this is a placeholder - full implementation would populate list boxes
+            // Eclipse items typically have multiple upgrade slots (up to MaxUpgradeSlots)
+            for (int slot = 0; slot < MaxUpgradeSlots; slot++)
+            {
+                // Get available upgrades for this slot
+                List<string> availableUpgrades = GetAvailableUpgrades(_targetItem, slot);
+                _availableUpgradesPerSlot[slot] = availableUpgrades;
+
+                // Find the list box control for this slot
+                // Control tags follow patterns like "LB_UPGRADE0", "LB_UPGRADE1", "LB_UPGRADELIST0", etc.
+                string listBoxTag = FindUpgradeListBoxTag(slot);
+                if (!string.IsNullOrEmpty(listBoxTag))
+                {
+                    _slotUpgradeListBoxTags[slot] = listBoxTag;
+                    PopulateUpgradeListBox(listBoxTag, availableUpgrades, slot);
+                }
+
+                // Update slot button/label to show current upgrade status
+                UpdateSlotDisplay(slot, itemComponent);
+            }
+
+            // If a slot is selected, highlight it and populate its upgrade list
+            if (_selectedUpgradeSlot >= 0 && _selectedUpgradeSlot < MaxUpgradeSlots)
+            {
+                SelectUpgradeSlot(_selectedUpgradeSlot);
+            }
         }
 
         /// <summary>
@@ -854,7 +897,24 @@ namespace Andastra.Runtime.Games.Eclipse
                     break;
 
                 default:
-                    // Unknown button - ignore
+                    // Check if this is a slot selection button
+                    // Slot buttons follow patterns like "BTN_UPGRADE0", "BTN_SLOT0", etc.
+                    if (buttonTag.StartsWith("BTN_UPGRADE", StringComparison.OrdinalIgnoreCase) ||
+                        buttonTag.StartsWith("BTN_SLOT", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Extract slot number from button tag
+                        // Patterns: "BTN_UPGRADE0", "BTN_UPGRADE1", "BTN_SLOT0", "BTN_SLOT1", etc.
+                        int slot = ExtractSlotNumberFromButtonTag(buttonTag);
+                        if (slot >= 0 && slot < MaxUpgradeSlots)
+                        {
+                            // Select this upgrade slot
+                            SelectUpgradeSlot(slot);
+                        }
+                    }
+                    else
+                    {
+                        // Unknown button - ignore
+                    }
                     break;
             }
         }
@@ -873,13 +933,32 @@ namespace Andastra.Runtime.Games.Eclipse
                 return;
             }
 
-            // Get selected upgrade from GUI controls
-            // Based on Eclipse upgrade system: Selected upgrade is retrieved from list box or slot selection
-            // TODO: STUB - For now, this is a placeholder - full implementation would:
-            // 1. Get selected upgrade slot from UI
-            // 2. Get selected upgrade ResRef from list box
-            // 3. Call ApplyUpgrade with item, slot, and ResRef
-            // 4. Refresh display
+            // Get selected upgrade slot from UI
+            // Based on Eclipse upgrade system: Selected upgrade slot is tracked in _selectedUpgradeSlot
+            int selectedSlot = GetSelectedUpgradeSlotFromUI();
+            if (selectedSlot < 0 || selectedSlot >= MaxUpgradeSlots)
+            {
+                // No slot selected or invalid slot
+                return;
+            }
+
+            // Get selected upgrade ResRef from list box
+            // Based on Eclipse upgrade system: Selected upgrade is retrieved from list box CurrentValue
+            string selectedUpgradeResRef = GetSelectedUpgradeResRefFromListBox(selectedSlot);
+            if (string.IsNullOrEmpty(selectedUpgradeResRef))
+            {
+                // No upgrade selected in list box
+                return;
+            }
+
+            // Call ApplyUpgrade with item, slot, and ResRef
+            // Based on Eclipse upgrade system: ApplyUpgrade method applies upgrade properties to item
+            bool success = ApplyUpgrade(_targetItem, selectedSlot, selectedUpgradeResRef);
+            if (success)
+            {
+                // Refresh display after successful upgrade
+                RefreshUpgradeDisplay();
+            }
         }
 
         /// <summary>
@@ -896,12 +975,23 @@ namespace Andastra.Runtime.Games.Eclipse
                 return;
             }
 
-            // Get selected upgrade slot from GUI controls
-            // Based on Eclipse upgrade system: Selected upgrade slot is retrieved from UI
-            // TODO: STUB - For now, this is a placeholder - full implementation would:
-            // 1. Get selected upgrade slot from UI
-            // 2. Call RemoveUpgrade with item and slot
-            // 3. Refresh display
+            // Get selected upgrade slot from UI
+            // Based on Eclipse upgrade system: Selected upgrade slot is tracked in _selectedUpgradeSlot
+            int selectedSlot = GetSelectedUpgradeSlotFromUI();
+            if (selectedSlot < 0 || selectedSlot >= MaxUpgradeSlots)
+            {
+                // No slot selected or invalid slot
+                return;
+            }
+
+            // Call RemoveUpgrade with item and slot
+            // Based on Eclipse upgrade system: RemoveUpgrade method removes upgrade properties from item
+            bool success = RemoveUpgrade(_targetItem, selectedSlot);
+            if (success)
+            {
+                // Refresh display after successful removal
+                RefreshUpgradeDisplay();
+            }
         }
 
         /// <summary>
@@ -943,6 +1033,418 @@ namespace Andastra.Runtime.Games.Eclipse
 
             _buttonMap.TryGetValue(tag, out GUIButton button);
             return button;
+        }
+
+        /// <summary>
+        /// Finds the list box control tag for a given upgrade slot.
+        /// </summary>
+        /// <param name="slot">Upgrade slot index (0-based).</param>
+        /// <returns>List box control tag if found, empty string otherwise.</returns>
+        /// <remarks>
+        /// Based on Eclipse upgrade system: List box tags follow patterns like:
+        /// - "LB_UPGRADE0", "LB_UPGRADE1", etc. (slot-specific list boxes)
+        /// - "LB_UPGRADELIST" (single list box that changes based on selected slot)
+        /// This method tries multiple common tag patterns to find the correct list box.
+        /// </remarks>
+        private string FindUpgradeListBoxTag(int slot)
+        {
+            if (_loadedGui == null || _loadedGui.Controls == null)
+            {
+                return string.Empty;
+            }
+
+            // Try slot-specific list box tags first (e.g., "LB_UPGRADE0", "LB_UPGRADE1")
+            string[] tagPatterns = new string[]
+            {
+                $"LB_UPGRADE{slot}",
+                $"LB_UPGRADELIST{slot}",
+                $"LB_UPGRADE_LIST{slot}",
+                $"UPGRADE_LISTBOX{slot}",
+                $"UPGRADE_LB{slot}"
+            };
+
+            foreach (string tag in tagPatterns)
+            {
+                if (_controlMap.ContainsKey(tag))
+                {
+                    GUIControl control = _controlMap[tag];
+                    if (control != null && control.GuiType == GUIControlType.ListBox)
+                    {
+                        return tag;
+                    }
+                }
+            }
+
+            // Try generic list box tag (single list box for all slots)
+            // This is used when the list box content changes based on selected slot
+            string[] genericTags = new string[]
+            {
+                "LB_UPGRADELIST",
+                "LB_UPGRADE_LIST",
+                "UPGRADE_LISTBOX",
+                "UPGRADE_LB"
+            };
+
+            foreach (string tag in genericTags)
+            {
+                if (_controlMap.ContainsKey(tag))
+                {
+                    GUIControl control = _controlMap[tag];
+                    if (control != null && control.GuiType == GUIControlType.ListBox)
+                    {
+                        return tag;
+                    }
+                }
+            }
+
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// Populates a list box with available upgrade items.
+        /// </summary>
+        /// <param name="listBoxTag">Tag of the list box control to populate.</param>
+        /// <param name="availableUpgrades">List of available upgrade ResRefs.</param>
+        /// <param name="slot">Upgrade slot index (0-based).</param>
+        /// <remarks>
+        /// Based on Eclipse upgrade system: List boxes display available upgrades for a slot.
+        /// The list box uses CurrentValue to track the selected index.
+        /// </remarks>
+        private void PopulateUpgradeListBox(string listBoxTag, List<string> availableUpgrades, int slot)
+        {
+            if (string.IsNullOrEmpty(listBoxTag) || availableUpgrades == null)
+            {
+                return;
+            }
+
+            if (!_controlMap.TryGetValue(listBoxTag, out GUIControl control))
+            {
+                return;
+            }
+
+            if (control.GuiType != GUIControlType.ListBox)
+            {
+                return;
+            }
+
+            GUIListBox listBox = control as GUIListBox;
+            if (listBox == null)
+            {
+                return;
+            }
+
+            // Store available upgrades for this slot so we can retrieve ResRef by index
+            _availableUpgradesPerSlot[slot] = availableUpgrades;
+
+            // Note: In the actual GUI format, list box items are typically stored as children (ProtoItem controls)
+            // For now, we store the available upgrades and use CurrentValue to track selection
+            // The actual GUI rendering system would use this data to populate visible list items
+            // CurrentValue represents the selected index in the available upgrades list
+
+            // Reset selection if list box was just populated
+            if (control.CurrentValue.HasValue && control.CurrentValue.Value >= availableUpgrades.Count)
+            {
+                control.CurrentValue = availableUpgrades.Count > 0 ? 0 : -1;
+            }
+            else if (!control.CurrentValue.HasValue && availableUpgrades.Count > 0)
+            {
+                control.CurrentValue = 0;
+            }
+            else if (availableUpgrades.Count == 0)
+            {
+                control.CurrentValue = -1;
+            }
+        }
+
+        /// <summary>
+        /// Updates the display for a specific upgrade slot (button/label).
+        /// </summary>
+        /// <param name="slot">Upgrade slot index (0-based).</param>
+        /// <param name="itemComponent">Item component to check for existing upgrades.</param>
+        /// <remarks>
+        /// Based on Eclipse upgrade system: Slot buttons/labels show current upgrade status.
+        /// Updates slot button text or label to indicate if slot is occupied or empty.
+        /// </remarks>
+        private void UpdateSlotDisplay(int slot, IItemComponent itemComponent)
+        {
+            if (itemComponent == null)
+            {
+                return;
+            }
+
+            // Find slot button/label control
+            // Slot controls follow patterns like "BTN_UPGRADE0", "BTN_SLOT0", "LBL_SLOT0", etc.
+            string[] slotControlPatterns = new string[]
+            {
+                $"BTN_UPGRADE{slot}",
+                $"BTN_SLOT{slot}",
+                $"BTN_UPGRADESLOT{slot}",
+                $"LBL_SLOT{slot}",
+                $"LBL_UPGRADE{slot}"
+            };
+
+            GUIControl slotControl = null;
+            foreach (string tag in slotControlPatterns)
+            {
+                if (_controlMap.TryGetValue(tag, out GUIControl control))
+                {
+                    slotControl = control;
+                    break;
+                }
+            }
+
+            if (slotControl == null)
+            {
+                return;
+            }
+
+            // Check if slot has an existing upgrade
+            var existingUpgrade = itemComponent.Upgrades.FirstOrDefault(u => u.Index == slot);
+            bool hasUpgrade = existingUpgrade != null;
+
+            // Update control to show upgrade status
+            // For buttons: Update text to show upgrade name or "Empty"
+            // For labels: Update text to show upgrade status
+            if (slotControl is GUIButton slotButton)
+            {
+                if (hasUpgrade && !string.IsNullOrEmpty(existingUpgrade.TemplateResRef))
+                {
+                    // Show upgrade name (ResRef) or a placeholder
+                    slotButton.Text = existingUpgrade.TemplateResRef;
+                }
+                else
+                {
+                    // Show "Empty" or slot number
+                    slotButton.Text = $"Slot {slot + 1}";
+                }
+            }
+            else if (slotControl is GUILabel slotLabel)
+            {
+                if (hasUpgrade && !string.IsNullOrEmpty(existingUpgrade.TemplateResRef))
+                {
+                    slotLabel.Text = existingUpgrade.TemplateResRef;
+                }
+                else
+                {
+                    slotLabel.Text = "Empty";
+                }
+            }
+        }
+
+        /// <summary>
+        /// Selects and highlights an upgrade slot.
+        /// </summary>
+        /// <param name="slot">Upgrade slot index (0-based).</param>
+        /// <remarks>
+        /// Based on Eclipse upgrade system: Selecting a slot highlights it and populates its upgrade list.
+        /// Updates selected slot state and refreshes the upgrade list for that slot.
+        /// </remarks>
+        private void SelectUpgradeSlot(int slot)
+        {
+            if (slot < 0 || slot >= MaxUpgradeSlots)
+            {
+                return;
+            }
+
+            _selectedUpgradeSlot = slot;
+
+            // Highlight the selected slot button
+            // Find and update slot button appearance to show selection
+            string[] slotControlPatterns = new string[]
+            {
+                $"BTN_UPGRADE{slot}",
+                $"BTN_SLOT{slot}",
+                $"BTN_UPGRADESLOT{slot}"
+            };
+
+            foreach (string tag in slotControlPatterns)
+            {
+                if (_controlMap.TryGetValue(tag, out GUIControl control) && control is GUIButton button)
+                {
+                    // Highlight selected button (could set IsSelected or update color)
+                    control.IsSelected = 1;
+                }
+            }
+
+            // Unhighlight other slot buttons
+            for (int otherSlot = 0; otherSlot < MaxUpgradeSlots; otherSlot++)
+            {
+                if (otherSlot == slot)
+                {
+                    continue;
+                }
+
+                string[] otherPatterns = new string[]
+                {
+                    $"BTN_UPGRADE{otherSlot}",
+                    $"BTN_SLOT{otherSlot}",
+                    $"BTN_UPGRADESLOT{otherSlot}"
+                };
+
+                foreach (string tag in otherPatterns)
+                {
+                    if (_controlMap.TryGetValue(tag, out GUIControl control))
+                    {
+                        control.IsSelected = 0;
+                    }
+                }
+            }
+
+            // Populate upgrade list for selected slot
+            if (_availableUpgradesPerSlot.TryGetValue(slot, out List<string> upgrades))
+            {
+                // Find list box for this slot (could be slot-specific or generic)
+                string listBoxTag = FindUpgradeListBoxTag(slot);
+                if (!string.IsNullOrEmpty(listBoxTag))
+                {
+                    PopulateUpgradeListBox(listBoxTag, upgrades, slot);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the currently selected upgrade slot from UI controls.
+        /// </summary>
+        /// <returns>Selected upgrade slot index (0-based), or -1 if none selected.</returns>
+        /// <remarks>
+        /// Based on Eclipse upgrade system: Selected slot is tracked via _selectedUpgradeSlot field
+        /// and can be determined by checking which slot button has IsSelected set.
+        /// </remarks>
+        private int GetSelectedUpgradeSlotFromUI()
+        {
+            // Check if a slot button is selected
+            for (int slot = 0; slot < MaxUpgradeSlots; slot++)
+            {
+                string[] slotControlPatterns = new string[]
+                {
+                    $"BTN_UPGRADE{slot}",
+                    $"BTN_SLOT{slot}",
+                    $"BTN_UPGRADESLOT{slot}"
+                };
+
+                foreach (string tag in slotControlPatterns)
+                {
+                    if (_controlMap.TryGetValue(tag, out GUIControl control))
+                    {
+                        if (control.IsSelected.HasValue && control.IsSelected.Value != 0)
+                        {
+                            _selectedUpgradeSlot = slot;
+                            return slot;
+                        }
+                    }
+                }
+            }
+
+            // Return stored selected slot if no button is explicitly selected
+            return _selectedUpgradeSlot;
+        }
+
+        /// <summary>
+        /// Gets the selected upgrade ResRef from the list box for a given slot.
+        /// </summary>
+        /// <param name="slot">Upgrade slot index (0-based).</param>
+        /// <returns>Selected upgrade ResRef, or empty string if none selected.</returns>
+        /// <remarks>
+        /// Based on Eclipse upgrade system: List box CurrentValue represents the selected index.
+        /// The ResRef is retrieved from the available upgrades list using this index.
+        /// </remarks>
+        private string GetSelectedUpgradeResRefFromListBox(int slot)
+        {
+            if (slot < 0 || slot >= MaxUpgradeSlots)
+            {
+                return string.Empty;
+            }
+
+            // Get available upgrades for this slot
+            if (!_availableUpgradesPerSlot.TryGetValue(slot, out List<string> availableUpgrades))
+            {
+                return string.Empty;
+            }
+
+            if (availableUpgrades == null || availableUpgrades.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            // Get list box control for this slot
+            string listBoxTag = string.Empty;
+            if (_slotUpgradeListBoxTags.TryGetValue(slot, out string slotTag))
+            {
+                listBoxTag = slotTag;
+            }
+            else
+            {
+                // Try to find list box (might be generic or slot-specific)
+                listBoxTag = FindUpgradeListBoxTag(slot);
+            }
+
+            if (string.IsNullOrEmpty(listBoxTag) || !_controlMap.TryGetValue(listBoxTag, out GUIControl control))
+            {
+                return string.Empty;
+            }
+
+            if (control.GuiType != GUIControlType.ListBox)
+            {
+                return string.Empty;
+            }
+
+            // Get selected index from CurrentValue
+            if (!control.CurrentValue.HasValue || control.CurrentValue.Value < 0)
+            {
+                return string.Empty;
+            }
+
+            int selectedIndex = control.CurrentValue.Value;
+            if (selectedIndex >= availableUpgrades.Count)
+            {
+                return string.Empty;
+            }
+
+            return availableUpgrades[selectedIndex];
+        }
+
+        /// <summary>
+        /// Extracts the slot number from a button tag.
+        /// </summary>
+        /// <param name="buttonTag">Button tag (e.g., "BTN_UPGRADE0", "BTN_SLOT1").</param>
+        /// <returns>Slot number (0-based), or -1 if not found.</returns>
+        /// <remarks>
+        /// Based on Eclipse upgrade system: Slot button tags typically end with the slot number.
+        /// Examples: "BTN_UPGRADE0" -> 0, "BTN_UPGRADE1" -> 1, "BTN_SLOT2" -> 2
+        /// </remarks>
+        private int ExtractSlotNumberFromButtonTag(string buttonTag)
+        {
+            if (string.IsNullOrEmpty(buttonTag))
+            {
+                return -1;
+            }
+
+            // Try to extract number from end of tag
+            // Patterns: "BTN_UPGRADE0", "BTN_UPGRADE1", "BTN_SLOT0", "BTN_SLOT1", etc.
+            int lastDigitIndex = -1;
+            for (int i = buttonTag.Length - 1; i >= 0; i--)
+            {
+                if (char.IsDigit(buttonTag[i]))
+                {
+                    lastDigitIndex = i;
+                }
+                else if (lastDigitIndex >= 0)
+                {
+                    break;
+                }
+            }
+
+            if (lastDigitIndex >= 0)
+            {
+                // Extract numeric suffix
+                string numberStr = buttonTag.Substring(lastDigitIndex);
+                if (int.TryParse(numberStr, out int slot))
+                {
+                    return slot;
+                }
+            }
+
+            return -1;
         }
     }
 }
