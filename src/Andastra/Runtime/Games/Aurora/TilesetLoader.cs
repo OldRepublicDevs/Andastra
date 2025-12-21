@@ -25,6 +25,15 @@ namespace Andastra.Runtime.Games.Aurora
         private readonly Func<string, byte[]> _resourceLoader;
 
         /// <summary>
+        /// Gets the resource loader function used by this tileset loader.
+        /// </summary>
+        /// <remarks>
+        /// Exposed for use by SimpleResourceProvider to avoid reflection.
+        /// Based on nwmain.exe: Resource loading uses CExoResMan::Demand @ 0x14018ef90
+        /// </remarks>
+        internal Func<string, byte[]> ResourceLoader => _resourceLoader;
+
+        /// <summary>
         /// Creates a new tileset loader.
         /// </summary>
         /// <param name="resourceLoader">Function to load resource files by resref. Can be null, in which case resource loading will fail gracefully.</param>
