@@ -41,33 +41,37 @@ namespace Andastra.Parsing.Formats.PCC
         {
             try
             {
+                // Validate minimum file size (must have at least signature + version info)
+                if (Data.Length < 20)
+                {
+                    throw new InvalidDataException(
+                        $"PCC/UPK file is too small. Expected at least 20 bytes (signature + version info), got {Data.Length} bytes.");
+                }
+
                 Reader.Seek(0);
 
                 // Read package signature (4 bytes)
                 // Unreal Engine 3 packages have different signatures:
-                // - UE3 cooked packages: 0x9E2A83C1 (little-endian)
-                // - UE3 uncooked packages: 0x9E2A83C4 (little-endian)
-                // - Some variants may use different signatures
+                // - UE3 cooked packages: 0x9E2A83C1 (little-endian) - PCC format
+                // - UE3 uncooked packages: 0x9E2A83C4 (little-endian) - UPK format
+                // - Big-endian variants: 0xC1832A9E (cooked), 0xC4832A9E (uncooked)
+                // Based on Unreal Engine 3 package format specification
                 uint signature = Reader.ReadUInt32();
                 
-                bool isValidSignature = signature == 0x9E2A83C1 || signature == 0x9E2A83C4 ||
-                                        signature == 0xC1832A9E || signature == 0xC4832A9E;
+                // Validate signature and determine package type
+                PCCType packageType;
+                bool isValidSignature = ValidateSignature(signature, out packageType);
 
                 if (!isValidSignature)
                 {
-                    // Check if it might be a different UE3 version or format
-                    // Some packages may have headers that start differently
-                    // TODO: STUB - For now, we'll be lenient and try to parse anyway
-                    Reader.Seek(0);
+                    // Perform additional validation checks to provide better diagnostics
+                    string diagnosticInfo = GenerateSignatureDiagnostics(signature);
+                    
+                    throw new InvalidDataException(
+                        $"Invalid PCC/UPK package signature. Expected one of: 0x9E2A83C1 (PCC cooked), " +
+                        $"0x9E2A83C4 (UPK uncooked), 0xC1832A9E (PCC big-endian), or 0xC4832A9E (UPK big-endian). " +
+                        $"Got: 0x{signature:X8}. {diagnosticInfo}");
                 }
-                else
-                {
-                    Reader.Seek(0);
-                }
-
-                // Determine package type from extension or signature
-                // Both PCC and UPK use the same format, just different extensions
-                PCCType packageType = PCCType.PCC; // Default to PCC
 
                 _pcc = new PCC(packageType);
 
@@ -227,6 +231,121 @@ namespace Andastra.Parsing.Formats.PCC
                 return objectName.Substring(lastDot + 1);
             }
             return objectName;
+        }
+
+        /// <summary>
+        /// Validates the package signature and determines the package type.
+        /// </summary>
+        /// <param name="signature">The 4-byte signature read from the file.</param>
+        /// <param name="packageType">Output parameter for the detected package type.</param>
+        /// <returns>True if the signature is valid, false otherwise.</returns>
+        /// <remarks>
+        /// Valid Unreal Engine 3 package signatures:
+        /// - 0x9E2A83C1: UE3 cooked package (little-endian) - PCC format
+        /// - 0x9E2A83C4: UE3 uncooked package (little-endian) - UPK format
+        /// - 0xC1832A9E: UE3 cooked package (big-endian) - PCC format
+        /// - 0xC4832A9E: UE3 uncooked package (big-endian) - UPK format
+        /// Based on Unreal Engine 3 package format specification and Eclipse Engine implementation.
+        /// </remarks>
+        private bool ValidateSignature(uint signature, out PCCType packageType)
+        {
+            // Check for little-endian signatures (most common)
+            if (signature == 0x9E2A83C1)
+            {
+                packageType = PCCType.PCC; // Cooked package
+                return true;
+            }
+            if (signature == 0x9E2A83C4)
+            {
+                packageType = PCCType.UPK; // Uncooked package
+                return true;
+            }
+
+            // Check for big-endian signatures (less common, but valid)
+            if (signature == 0xC1832A9E)
+            {
+                packageType = PCCType.PCC; // Cooked package (big-endian)
+                return true;
+            }
+            if (signature == 0xC4832A9E)
+            {
+                packageType = PCCType.UPK; // Uncooked package (big-endian)
+                return true;
+            }
+
+            // Invalid signature
+            packageType = PCCType.PCC; // Default value (won't be used)
+            return false;
+        }
+
+        /// <summary>
+        /// Generates diagnostic information for invalid signatures to help with debugging.
+        /// </summary>
+        /// <param name="signature">The invalid signature value.</param>
+        /// <returns>Diagnostic string with additional information.</returns>
+        private string GenerateSignatureDiagnostics(uint signature)
+        {
+            var diagnostics = new StringBuilder();
+            diagnostics.Append("Diagnostics: ");
+
+            // Check if file might be too small
+            if (Data.Length < 4)
+            {
+                diagnostics.Append($"File is too small ({Data.Length} bytes). ");
+            }
+
+            // Check if signature might be zero (common corruption pattern)
+            if (signature == 0x00000000)
+            {
+                diagnostics.Append("Signature is all zeros (likely corrupted or empty file). ");
+            }
+            else if (signature == 0xFFFFFFFF)
+            {
+                diagnostics.Append("Signature is all ones (likely corrupted or uninitialized data). ");
+            }
+
+            // Check if signature looks like it might be in wrong byte order
+            // If we swap bytes and it matches a known signature, suggest endianness issue
+            uint swapped = ((signature & 0x000000FF) << 24) |
+                          ((signature & 0x0000FF00) << 8) |
+                          ((signature & 0x00FF0000) >> 8) |
+                          ((signature & 0xFF000000) >> 24);
+            
+            if (swapped == 0x9E2A83C1 || swapped == 0x9E2A83C4 ||
+                swapped == 0xC1832A9E || swapped == 0xC4832A9E)
+            {
+                diagnostics.Append($"Byte-swapped signature (0x{swapped:X8}) matches known format - possible endianness issue. ");
+            }
+
+            // Check if signature might be ASCII text (common mistake)
+            byte[] sigBytes = BitConverter.GetBytes(signature);
+            bool isAscii = true;
+            for (int i = 0; i < 4; i++)
+            {
+                if (sigBytes[i] < 0x20 || sigBytes[i] > 0x7E)
+                {
+                    isAscii = false;
+                    break;
+                }
+            }
+            if (isAscii)
+            {
+                string asciiText = Encoding.ASCII.GetString(sigBytes);
+                diagnostics.Append($"Signature appears to be ASCII text: \"{asciiText}\" (file might not be a PCC/UPK package). ");
+            }
+
+            // Check first few bytes after signature to see if structure looks valid
+            // Read directly from Data array to avoid side effects on Reader position
+            if (Data.Length >= 8)
+            {
+                int version = BitConverter.ToInt32(Data, 4);
+                if (version < 0 || version > 10000)
+                {
+                    diagnostics.Append($"Version field ({version}) appears invalid. ");
+                }
+            }
+
+            return diagnostics.ToString();
         }
 
         private class ExportEntry
