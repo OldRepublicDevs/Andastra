@@ -789,7 +789,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             _currentFrameIndex = 0;
 
             // Initialize Vulkan function pointers
-            InitializeVulkanFunctions(device);
+            InitializeVulkanFunctions(device, instance);
 
             // Create command pools
             _graphicsCommandPool = CreateCommandPool(0); // graphics queue family
