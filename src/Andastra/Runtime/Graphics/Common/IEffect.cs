@@ -100,6 +100,26 @@ namespace Andastra.Runtime.Graphics
         /// Gets or sets the texture.
         /// </summary>
         ITexture2D Texture { get; set; }
+
+        /// <summary>
+        /// Gets or sets whether fog is enabled.
+        /// </summary>
+        bool FogEnabled { get; set; }
+
+        /// <summary>
+        /// Gets or sets the fog color.
+        /// </summary>
+        Vector3 FogColor { get; set; }
+
+        /// <summary>
+        /// Gets or sets the fog start distance (for linear fog).
+        /// </summary>
+        float FogStart { get; set; }
+
+        /// <summary>
+        /// Gets or sets the fog end distance (for linear fog).
+        /// </summary>
+        float FogEnd { get; set; }
     }
 
     /// <summary>

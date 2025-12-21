@@ -725,6 +725,15 @@ namespace Andastra.Runtime.MonoGame.Backends
         }
 
         /// <summary>
+        /// Gets the current Metal command buffer handle. Internal use for MetalCommandList debug operations.
+        /// Returns IntPtr.Zero if no command buffer is currently active.
+        /// </summary>
+        internal IntPtr GetCurrentCommandBuffer()
+        {
+            return _currentCommandBuffer;
+        }
+
+        /// <summary>
         /// Gets the native Metal command queue handle. Internal use for MetalDevice.
         /// </summary>
         internal IntPtr GetCommandQueue()
