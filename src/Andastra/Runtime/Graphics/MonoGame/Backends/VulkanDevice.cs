@@ -862,6 +862,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static vkCmdDrawDelegate vkCmdDraw;
         private static vkCmdDrawIndexedDelegate vkCmdDrawIndexed;
         private static vkCmdSetScissorDelegate vkCmdSetScissor;
+        private static vkCmdSetBlendConstantsDelegate vkCmdSetBlendConstants;
 
         // VK_KHR_ray_tracing_pipeline extension function delegates
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
@@ -3690,7 +3691,52 @@ namespace Andastra.Runtime.MonoGame.Backends
             public void SetViewports(Viewport[] viewports) { /* TODO: vkCmdSetViewport */ }
             public void SetScissor(Rectangle scissor) { /* TODO: vkCmdSetScissor */ }
             public void SetScissors(Rectangle[] scissors) { /* TODO: vkCmdSetScissor */ }
-            public void SetBlendConstant(Vector4 color) { /* TODO: vkCmdSetBlendConstants */ }
+            public void SetBlendConstant(Vector4 color)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (vkCmdSetBlendConstants == null)
+                {
+                    return; // Function not available
+                }
+
+                // vkCmdSetBlendConstants signature:
+                // void vkCmdSetBlendConstants(
+                //     VkCommandBuffer commandBuffer,
+                //     const float blendConstants[4]);
+                //
+                // Maps from Vector4:
+                // - blendConstants[0] = color.X (red)
+                // - blendConstants[1] = color.Y (green)
+                // - blendConstants[2] = color.Z (blue)
+                // - blendConstants[3] = color.W (alpha)
+
+                // Allocate unmanaged memory for the 4 float values (4 bytes per float)
+                IntPtr blendConstantsPtr = Marshal.AllocHGlobal(4 * 4);
+                try
+                {
+                    // Copy Vector4 components to unmanaged memory
+                    float[] blendConstants = new float[4]
+                    {
+                        color.X,
+                        color.Y,
+                        color.Z,
+                        color.W
+                    };
+                    Marshal.Copy(blendConstants, 0, blendConstantsPtr, 4);
+
+                    // Call Vulkan API
+                    vkCmdSetBlendConstants(_vkCommandBuffer, blendConstantsPtr);
+                }
+                finally
+                {
+                    // Free allocated memory
+                    Marshal.FreeHGlobal(blendConstantsPtr);
+                }
+            }
             public void SetStencilRef(uint reference) { /* TODO: vkCmdSetStencilReference */ }
             public void Draw(DrawArguments args)
             {
