@@ -2133,10 +2133,106 @@ namespace Andastra.Runtime.Content.Save
             // Based on vendor/xoreos/src/engines/nwn2/faction.cpp:210-226
             GFFList repList = new GFFList();
 
-            // TODO: PLACEHOLDER - Faction reputation data not yet stored in SaveGameData
-            // When faction reputation data is added to SaveGameData, populate factionList and repList here
-            // For now, create empty lists which is a valid FAC file structure (empty = no custom factions)
-            // The engine will fall back to repute.2da for default faction relationships
+            // Populate FactionList and RepList from SaveGameData.FactionReputation
+            // Based on swkotor2.exe: Faction reputation saved in REPUTE.fac (GFF with "FAC " signature)
+            // Located via string references: "REPUTE" @ (needs verification), "FactionList" @ 0x007be604
+            // Reference: vendor/xoreos/src/engines/nwn2/faction.cpp:179-226 (loadFac method)
+            if (saveData.FactionReputation != null && saveData.FactionReputation.Reputations != null)
+            {
+                // Collect all unique faction IDs from the reputation matrix
+                HashSet<int> allFactionIds = new HashSet<int>();
+                foreach (var sourceKvp in saveData.FactionReputation.Reputations)
+                {
+                    allFactionIds.Add(sourceKvp.Key);
+                    if (sourceKvp.Value != null)
+                    {
+                        foreach (var targetKvp in sourceKvp.Value)
+                        {
+                            allFactionIds.Add(targetKvp.Key);
+                        }
+                    }
+                }
+
+                // Sort faction IDs for consistent ordering (index in FactionList = FactionID)
+                List<int> sortedFactionIds = new List<int>(allFactionIds);
+                sortedFactionIds.Sort();
+
+                // Create FactionList entries
+                // Each Faction struct contains:
+                // - FactionName (string): Name of the faction
+                // - FactionGlobal (uint): Global effect flag (1 if all members of this faction immediately change reputation)
+                foreach (int factionId in sortedFactionIds)
+                {
+                    GFFStruct factionStruct = factionList.Add();
+                    
+                    // Get faction name from FactionReputation.FactionNames if available
+                    string factionName = string.Empty;
+                    if (saveData.FactionReputation.FactionNames != null && 
+                        saveData.FactionReputation.FactionNames.TryGetValue(factionId, out factionName))
+                    {
+                        factionStruct.SetString("FactionName", factionName);
+                    }
+                    else
+                    {
+                        // Use default name if not available (faction ID as string, or empty)
+                        // Empty name is valid - engine will use faction ID for lookup
+                        factionStruct.SetString("FactionName", string.Empty);
+                    }
+
+                    // Get FactionGlobal flag from FactionReputation.FactionGlobal if available
+                    uint factionGlobal = 0;
+                    if (saveData.FactionReputation.FactionGlobal != null && 
+                        saveData.FactionReputation.FactionGlobal.TryGetValue(factionId, out bool globalFlag))
+                    {
+                        factionGlobal = globalFlag ? (uint)1 : (uint)0;
+                    }
+                    factionStruct.SetUint("FactionGlobal", factionGlobal);
+                }
+
+                // Create RepList entries
+                // Each Reputation struct contains:
+                // - FactionID1 (uint): Index into FactionList (source faction)
+                // - FactionID2 (uint): Index into FactionList (target faction)
+                // - FactionRep (uint): How FactionID1 perceives FactionID2 (0-100, where 50 is neutral)
+                foreach (var sourceKvp in saveData.FactionReputation.Reputations)
+                {
+                    int sourceFactionId = sourceKvp.Key;
+                    Dictionary<int, int> targetReps = sourceKvp.Value;
+
+                    if (targetReps == null)
+                    {
+                        continue;
+                    }
+
+                    // Find index of source faction in sorted list
+                    int sourceIndex = sortedFactionIds.IndexOf(sourceFactionId);
+                    if (sourceIndex < 0)
+                    {
+                        continue; // Source faction not in list (should not happen)
+                    }
+
+                    foreach (var targetKvp in targetReps)
+                    {
+                        int targetFactionId = targetKvp.Key;
+                        int reputation = targetKvp.Value;
+
+                        // Find index of target faction in sorted list
+                        int targetIndex = sortedFactionIds.IndexOf(targetFactionId);
+                        if (targetIndex < 0)
+                        {
+                            continue; // Target faction not in list (should not happen)
+                        }
+
+                        // Create Reputation struct
+                        GFFStruct repStruct = repList.Add();
+                        repStruct.SetUint("FactionID1", (uint)sourceIndex);
+                        repStruct.SetUint("FactionID2", (uint)targetIndex);
+                        repStruct.SetUint("FactionRep", (uint)reputation);
+                    }
+                }
+            }
+            // If FactionReputation is null or empty, create empty lists which is a valid FAC file structure
+            // (empty = no custom factions, engine will fall back to repute.2da for default faction relationships)
             
             // Set lists in root struct
             root.SetList("FactionList", factionList);

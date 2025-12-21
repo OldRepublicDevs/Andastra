@@ -59,6 +59,7 @@ namespace Andastra.Runtime.Core.Save
         private object _globals; // IScriptGlobals - stored as object to avoid dependency
         private Party.PartySystem _partySystem; // PartySystem - stored as concrete type since both are in Andastra.Runtime.Core
         private PlotSystem _plotSystem; // PlotSystem - stored as concrete type since both are in Andastra.Runtime.Core
+        private object _factionManager; // FactionManager - stored as object to avoid dependency on engine-specific implementation
 
         /// <summary>
         /// Currently loaded save data.
@@ -105,6 +106,14 @@ namespace Andastra.Runtime.Core.Save
         public void SetPartySystem(Party.PartySystem partySystem)
         {
             _partySystem = partySystem;
+        }
+
+        /// <summary>
+        /// Sets the faction manager instance for saving/loading faction reputation state.
+        /// </summary>
+        public void SetFactionManager(object factionManager)
+        {
+            _factionManager = factionManager;
         }
 
         #region Save Operations
@@ -222,6 +231,9 @@ namespace Andastra.Runtime.Core.Save
 
             // Save plot state
             SavePlotState(saveData);
+
+            // Save faction reputation state
+            SaveFactionReputation(saveData);
 
             return saveData;
         }
@@ -382,6 +394,74 @@ namespace Andastra.Runtime.Core.Save
                     LastTriggered = plotState.LastTriggered
                 };
             }
+        }
+
+        /// <summary>
+        /// Saves faction reputation state to save data.
+        /// </summary>
+        /// <remarks>
+        /// Faction Reputation Saving (swkotor2.exe):
+        /// - Based on swkotor2.exe: Faction reputation is saved as REPUTE.fac file in savegame.sav
+        /// - Located via string reference: "REPUTE" @ (needs verification)
+        /// - Original implementation: Faction relationships stored in GFF structures with FactionID, FactionRep fields
+        /// - Faction reputation matrix: Dictionary&lt;sourceFaction, Dictionary&lt;targetFaction, reputation&gt;&gt;
+        /// - Reputation values: 0-100 range (0-10=hostile, 11-89=neutral, 90-100=friendly)
+        /// </remarks>
+        private void SaveFactionReputation(SaveGameData saveData)
+        {
+            saveData.FactionReputation = new FactionReputationState();
+
+            if (_factionManager == null)
+            {
+                return;
+            }
+
+            // Use reflection to access FactionManager's internal faction reputation dictionary
+            // FactionManager has _factionReputation field: Dictionary&lt;int, Dictionary&lt;int, int&gt;&gt;
+            var factionManagerType = _factionManager.GetType();
+            var factionReputationField = factionManagerType.GetField("_factionReputation", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+            if (factionReputationField == null)
+            {
+                return;
+            }
+
+            var factionReputation = factionReputationField.GetValue(_factionManager) as Dictionary<int, Dictionary<int, int>>;
+            if (factionReputation == null)
+            {
+                return;
+            }
+
+            // Copy faction reputation matrix to save data
+            foreach (var sourceKvp in factionReputation)
+            {
+                int sourceFaction = sourceKvp.Key;
+                Dictionary<int, int> targetReps = sourceKvp.Value;
+
+                if (targetReps == null)
+                {
+                    continue;
+                }
+
+                // Initialize source faction entry if not present
+                if (!saveData.FactionReputation.Reputations.ContainsKey(sourceFaction))
+                {
+                    saveData.FactionReputation.Reputations[sourceFaction] = new Dictionary<int, int>();
+                }
+
+                // Copy reputation values
+                foreach (var targetKvp in targetReps)
+                {
+                    int targetFaction = targetKvp.Key;
+                    int reputation = targetKvp.Value;
+                    saveData.FactionReputation.Reputations[sourceFaction][targetFaction] = reputation;
+                }
+            }
+
+            // Note: Faction names and global flags are not stored in FactionManager
+            // They are typically loaded from repute.2da or module data
+            // We leave FactionNames and FactionGlobal empty, as they can be reconstructed from repute.2da on load
         }
 
         private void SaveAreaStates(SaveGameData saveData)
@@ -907,6 +987,9 @@ namespace Andastra.Runtime.Core.Save
 
             // Restore plot state
             RestorePlotState(saveData);
+
+            // Restore faction reputation state
+            RestoreFactionReputation(saveData);
 
             // Load module (area states are restored when areas are loaded)
             // This would trigger the module loader
@@ -1656,6 +1739,59 @@ namespace Andastra.Runtime.Core.Save
                     restoredState.IsCompleted = plotState.IsCompleted;
                     restoredState.TriggerCount = plotState.TriggerCount;
                     restoredState.LastTriggered = plotState.LastTriggered;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Restores faction reputation state from save data.
+        /// </summary>
+        /// <remarks>
+        /// Faction Reputation Restoration (swkotor2.exe):
+        /// - Based on swkotor2.exe: Faction reputation is restored from REPUTE.fac file in savegame.sav
+        /// - Original implementation: Faction relationships restored from GFF structures with FactionID, FactionRep fields
+        /// - Faction reputation matrix: Dictionary&lt;sourceFaction, Dictionary&lt;targetFaction, reputation&gt;&gt;
+        /// - Reputation values: 0-100 range (0-10=hostile, 11-89=neutral, 90-100=friendly)
+        /// </remarks>
+        private void RestoreFactionReputation(SaveGameData saveData)
+        {
+            if (saveData.FactionReputation == null || _factionManager == null)
+            {
+                return;
+            }
+
+            // Use reflection to access FactionManager's SetFactionReputation method
+            // FactionManager has SetFactionReputation(int sourceFaction, int targetFaction, int reputation) method
+            var factionManagerType = _factionManager.GetType();
+            var setFactionReputationMethod = factionManagerType.GetMethod("SetFactionReputation",
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+
+            if (setFactionReputationMethod == null)
+            {
+                return;
+            }
+
+            // Restore all faction reputation entries
+            if (saveData.FactionReputation.Reputations != null)
+            {
+                foreach (var sourceKvp in saveData.FactionReputation.Reputations)
+                {
+                    int sourceFaction = sourceKvp.Key;
+                    Dictionary<int, int> targetReps = sourceKvp.Value;
+
+                    if (targetReps == null)
+                    {
+                        continue;
+                    }
+
+                    foreach (var targetKvp in targetReps)
+                    {
+                        int targetFaction = targetKvp.Key;
+                        int reputation = targetKvp.Value;
+
+                        // Call SetFactionReputation method via reflection
+                        setFactionReputationMethod.Invoke(_factionManager, new object[] { sourceFaction, targetFaction, reputation });
+                    }
                 }
             }
         }
