@@ -74,8 +74,26 @@ This document details the reverse engineering findings for module file discovery
 - `{module}.hak` - **NOT SUPPORTED** - No `.hak` references found in either executable
 - `{module}_something.erf` - **NOT SUPPORTED** - Only `_dlg` suffix is checked
 - Any other `_*.erf` patterns - **NOT SUPPORTED** - No wildcard matching
+- `{module}_dlg.mod` - **NOT SUPPORTED** - `_dlg` uses container type 3 (ERF), must be `.erf` extension
+- `{module}_s.mod` - **NOT SUPPORTED** - `_s` uses container type 4 (RIM), must be `.rim` extension
+- `{module}_s.erf` - **NOT SUPPORTED** - `_s` uses container type 4 (RIM), must be `.rim` extension
+  - **PROOF**: K1 line 118 and K2 line 122 call `FUN_00406e20`/`FUN_00406ef0` with container type 4 (RIM), not type 3 (ERF)
+- `{module}_dlg.rim` - **NOT SUPPORTED** - `_dlg` uses container type 3 (ERF), must be `.erf` extension
+- `{module}.erf` (no suffix) - **NOT SUPPORTED** - Not a recognized module piece pattern
 
 **Key Finding**: `_dlg.erf` is **HARDCODED** in K2. The engine explicitly checks for the literal string `"_dlg"` (swkotor2.exe: `FUN_004096b0` line 128). There is **NO wildcard support** for `_*.erf` patterns.
+
+**Extension Determination**: Extensions are determined by container type, not hardcoded in filename construction:
+
+- Container type `3` (ERF) → `.erf` extension (swkotor2.exe: `FUN_004112f0` line 23-27, calls `FUN_0040fbb0`)
+- Container type `4` (RIM) → `.rim` extension (swkotor2.exe: `FUN_004112f0` line 28-32, calls `FUN_004101a0`)
+- Resource type `0x7db` (MOD) → `.mod` extension (searched via `FUN_00407300`)
+
+**Proof**:
+
+- K2 line 122: `FUN_00406ef0(param_1,aiStack_58,4,0)` - Container type 4 (RIM) → must be `_s.rim`
+- K2 line 147: `FUN_00406ef0(param_1,piVar3,3,2)` - Container type 3 (ERF) → must be `_dlg.erf`
+- K1 line 118: `FUN_00406e20(param_1,aiStack_38,4,0)` - Container type 4 (RIM) → must be `_s.rim`
 
 ### Subfolder Support
 
@@ -279,6 +297,7 @@ Based on `ResourceType.cs`, the following resource types are defined:
 **Function**: `FUN_00407230` (swkotor.exe: 0x00407230) - Called by `FUN_004074d0` and `FUN_00408bc0`
 
 **Search Order** (lines 8-16):
+
 1. `this+0x14` (Location 3) - Highest priority
 2. `this+0x18` with param_6=1 (Location 2, variant 1)
 3. `this+0x1c` (Location 1)
@@ -286,12 +305,14 @@ Based on `ResourceType.cs`, the following resource types are defined:
 5. `this+0x10` (Location 0) - Lowest priority
 
 **Source Type Identification** (`FUN_004074d0` line 44-60):
+
 - `1` = BIF (Chitin archives)
 - `2` = DIR (Override directory)
 - `3` = ERF (Module containers: MOD/ERF)
 - `4` = RIM (Module RIM files)
 
 **Module Loading Evidence** (`FUN_004094a0`):
+
 - Line 91: `FUN_00406e20(param_1,aiStack_48,2,0);` - Loads MODULES: with type 2 (DIR/Override)
 - Line 136: `FUN_00406e20(param_1,aiStack_38,3,2);` - Loads MODULES: with type 3 (ERF/MOD)
 - Line 42/85/118/159: `FUN_00406e20(param_1,aiStack_38,4,0);` - Loads RIMS: with type 4 (RIM)
@@ -303,6 +324,7 @@ Based on `ResourceType.cs`, the following resource types are defined:
 **Function**: `FUN_004b8300` (swkotor.exe: 0x004b8300) - Area loading function
 
 **Texture Search Order** (lines 187-190):
+
 ```c
 iVar7 = FUN_00408bc0(DAT_007a39e8,(int *)&piStack_100,3,(undefined4 *)0x0);  // Try TGA (type 3)
 if (iVar7 == 0) {
@@ -320,67 +342,140 @@ if (iVar7 == 0) {
 
 ### K1 (swkotor.exe) - `FUN_004094a0`
 
-**Loading Order** (lines 32-142):
-1. **`.rim`** (line 42: `FUN_00406e20(param_1,aiStack_38,4,0)`) - Loaded FIRST if flag is 0
-2. **`.mod`** (line 136: `FUN_00406e20(param_1,aiStack_38,3,2)`) - Loaded if exists (overrides `.rim`)
-3. **`_s.rim`** (line 118: `FUN_00406e20(param_1,aiStack_38,4,0)`) - Loaded if `.mod` doesn't exist (adds to `.rim`)
+**Flag at Offset 0x54**: Controls loading mode
+- **Flag == 0**: Simple mode - loads `.rim` file directly (line 32-42)
+- **Flag != 0**: Complex mode - checks for area files (`_a.rim`, `_adx.rim`), then `.mod`, then `_s.rim` (lines 49-164)
+
+**Complete Loading Flow** (lines 32-211):
+
+**When flag at offset 0x54 == 0 (Simple Mode)**:
+1. **`.rim`** (line 42: `FUN_00406e20(param_1,aiStack_38,4,0)`) - Loaded directly, function returns
+
+**When flag at offset 0x54 != 0 (Complex Mode)**:
+1. **Check for `_a.rim`** (lines 50-62):
+   - Constructs filename: `{module}_a.rim`
+   - Searches for ARE resource type `0xbba` (3002) in `_a.rim`
+   - **If found**: Loads `_a.rim` (line 159: `FUN_00406e20(param_1,aiStack_38,4,0)`) - Sets flag bit 0x10
+   - **If not found**: Continues to check `_adx.rim`
+
+2. **Check for `_adx.rim`** (lines 64-88):
+   - Constructs filename: `{module}_adx.rim`
+   - Searches for ARE resource type `0xbba` (3002) in `_adx.rim`
+   - **If found**: Loads `_adx.rim` (line 85: `FUN_00406e20(param_1,aiStack_38,4,0)`) - Sets flag bit 0x20
+   - **If not found**: Continues to check `.mod`
+
+3. **Load Override Directory** (line 91: `FUN_00406e20(param_1,aiStack_48,2,0)`) - Loads MODULES: directory (type 2 = DIR/Override)
+
+4. **Check for `.mod`** (line 95: `FUN_00407230(param_1,aiStack_28,0x7db,aiStack_50,aiStack_48)`):
+   - Searches for resource type `0x7db` (2011 = MOD) in MODULES: directory
+   - **If `.mod` exists**: Loads `.mod` (line 136: `FUN_00406e20(param_1,aiStack_38,3,2)`) - Sets flag bit 0x2, **OVERRIDES** `.rim` entries
+   - **If `.mod` doesn't exist**: Continues to check `_s.rim`
+
+5. **Check for `_s.rim`** (lines 97-124):
+   - Constructs filename: `{module}_s.rim`
+   - Searches for ARE resource type `0xbba` (3002) in `_s.rim`
+   - **If found**: Loads `_s.rim` (line 118: `FUN_00406e20(param_1,aiStack_38,4,0)`) - Sets flag bit 0x8, **ADDS** to `.rim` entries
+
+6. **Load CURRENTGAME: directory** (lines 166-200):
+   - Only if flag at offset 0x58 == 0 AND previous load succeeded
+   - Loads CURRENTGAME: directory (type 2 = DIR/Override)
+   - Checks for ARE resource type `0xbc1` (3009) or `0xbba` (3002)
+   - **If found**: Loads additional RIM file - Sets flag bit 0x1
+
+**Key Findings**:
+
+- **`.rim` is NOT loaded when `.mod` exists** in complex mode - `.mod` completely replaces `.rim`
+- **`.rim` IS loaded** when:
+  - Flag == 0 (simple mode)
+  - OR when `_a.rim` or `_adx.rim` are found (they supplement the main `.rim`)
+- **`.mod` takes absolute priority** - if it exists, `.rim` and `_s.rim` are NOT loaded for that module
+- **`_a.rim` and `_adx.rim` are CONFIRMED** - Both K1 and K2 check for these files (K1: lines 50-88, K2: lines 54-92)
 
 **Duplicate Handling** (`FUN_0040e990` lines 30-91):
+
 - Line 36: Checks if resource with same ResRef+Type already exists
 - Line 39-91: If duplicate found AND resource is already loaded (`*(int *)((int)this_00 + 0x14) != -1`), returns 0 (ignores duplicate)
 - Line 94-101: If no duplicate OR resource not loaded, registers new resource
 
 **Result**: **FIRST resource registered wins**. Later duplicates are ignored.
 
-**Actual Execution Flow**:
-- **If flag at offset 0x54 is 0**: `.rim` loads first (line 42)
-- **If flag at offset 0x54 is NOT 0**:
-  - Checks for `.mod` (line 95)
-  - **If `.mod` exists**: `.mod` loads (line 136) - **OVERRIDES** `.rim` entries
-  - **If `.mod` doesn't exist**: `_s.rim` loads (line 118) - **ADDS** to `.rim` entries
+**Resource Resolution Priority**:
 
-**Duplicate Handling** (`FUN_0040e990` lines 30-91):
-- Line 36: Checks if resource with same ResRef+Type already exists
-- Line 39-91: If duplicate found AND resource is already loaded (`*(int *)((int)this_00 + 0x14) != -1`), returns 0 (ignores duplicate)
-- Line 94-101: If no duplicate OR resource not loaded, registers/updates resource
-
-**Answer**: 
 - If same resource exists in `.rim` and `_s.rim`: **`.rim` wins** (registered first when flag is 0, or loaded before `_s.rim` in other paths)
 - If same resource exists in `.rim` and `.mod`: **`.mod` wins** (registered after `.rim`, overrides it)
-- **CRITICAL**: The exact order depends on the flag at offset 0x54, but in typical module loading, `.rim` loads first, then `.mod` (if exists), then `_s.rim` (if `.mod` doesn't exist)
+- If same resource exists in `_a.rim`/`_adx.rim` and `.rim`: **`.rim` wins** (main `.rim` loads first, area files supplement it)
+- **CRITICAL**: When `.mod` exists, `.rim` and `_s.rim` are NOT loaded - `.mod` completely replaces them
 
 ### K2 (swkotor2.exe) - `FUN_004096b0`
 
-**Loading Order** (lines 36-165):
-1. **`.rim`** (line 46: `FUN_00406ef0(param_1,aiStack_58,4,0)`) - Loaded FIRST if flag is 0
-2. **`.mod`** (line 161: `FUN_00406ef0(param_1,aiStack_58,3,2)`) - Loaded if exists (overrides `.rim`)
-3. **`_s.rim`** (line 122: `FUN_00406ef0(param_1,aiStack_58,4,0)`) - Loaded if `.mod` doesn't exist (adds to `.rim`)
-4. **`_dlg.erf`** (line 147: `FUN_00406ef0(param_1,piVar3,3,2)`) - Loaded after `_s.rim` if `.mod` doesn't exist
+**Flag at Offset 0x54**: Controls loading mode (same as K1)
+- **Flag == 0**: Simple mode - loads `.rim` file directly (line 36-46)
+- **Flag != 0**: Complex mode - checks for area files (`_a.rim`, `_adx.rim`), then `.mod`, then `_s.rim` + `_dlg.erf` (lines 53-187)
+
+**Complete Loading Flow** (lines 36-250):
+
+**When flag at offset 0x54 == 0 (Simple Mode)**:
+1. **`.rim`** (line 46: `FUN_00406ef0(param_1,aiStack_58,4,0)`) - Loaded directly, function returns
+
+**When flag at offset 0x54 != 0 (Complex Mode)**:
+1. **Check for `_a.rim`** (lines 54-66):
+   - Constructs filename: `{module}_a.rim`
+   - Searches for ARE resource type `0xbba` (3002) in `_a.rim`
+   - **If found**: Loads `_a.rim` (line 182: `FUN_00406ef0(param_1,aiStack_58,4,0)`) - Sets flag bit 0x10
+   - **If not found**: Continues to check `_adx.rim`
+
+2. **Check for `_adx.rim`** (lines 68-92):
+   - Constructs filename: `{module}_adx.rim`
+   - Searches for ARE resource type `0xbba` (3002) in `_adx.rim`
+   - **If found**: Loads `_adx.rim` (line 89: `FUN_00406ef0(param_1,aiStack_58,4,0)`) - Sets flag bit 0x20
+   - **If not found**: Continues to check `.mod`
+
+3. **Load Override Directory** (line 95: `FUN_00406ef0(param_1,aiStack_60,2,0)`) - Loads MODULES: directory (type 2 = DIR/Override)
+
+4. **Check for `.mod`** (line 99: `FUN_00407300(param_1,aiStack_30,0x7db,apuStack_6c,aiStack_60)`):
+   - Searches for resource type `0x7db` (2011 = MOD) in MODULES: directory
+   - **If `.mod` exists**: Loads `.mod` (line 161: `FUN_00406ef0(param_1,aiStack_58,3,2)`) - Sets flag bit 0x2, **OVERRIDES** `.rim` entries
+   - **If `.mod` doesn't exist**: Continues to check `_s.rim`
+
+5. **Check for `_s.rim`** (lines 101-127):
+   - Constructs filename: `{module}_s.rim`
+   - Searches for ARE resource type `0xbba` (3002) in `_s.rim`
+   - **If found**: Loads `_s.rim` (line 122: `FUN_00406ef0(param_1,aiStack_58,4,0)`) - Sets flag bit 0x8, **ADDS** to `.rim` entries
+
+6. **Load `_dlg.erf`** (lines 128-149):
+   - **ONLY if `.mod` doesn't exist** (inside the `if (iVar5 == 0)` block at line 100)
+   - Constructs filename: `{module}_dlg.erf` (line 128: `FUN_00630a90(aiStack_30,"_dlg")`)
+   - Loads `_dlg.erf` (line 147: `FUN_00406ef0(param_1,piVar3,3,2)`) - Container type 3 (ERF), **ADDS** to `.rim` and `_s.rim` entries
+
+7. **Load CURRENTGAME: directory** (lines 189-250):
+   - Only if flag at offset 0x58 == 0 AND previous load succeeded
+   - Similar to K1, loads CURRENTGAME: directory and checks for additional RIM files
+
+**Key Findings**:
+
+- **`.rim` is NOT loaded when `.mod` exists** in complex mode - `.mod` completely replaces `.rim`
+- **`.rim` IS loaded** when:
+  - Flag == 0 (simple mode)
+  - OR when `_a.rim` or `_adx.rim` are found (they supplement the main `.rim`)
+- **`.mod` takes absolute priority** - if it exists, `.rim`, `_s.rim`, and `_dlg.erf` are NOT loaded for that module
+- **`_a.rim` and `_adx.rim` are CONFIRMED** - Both K1 and K2 check for these files
+- **`_s.erf` is NOT supported** - The code checks for `"_s"` suffix but uses container type 4 (RIM), so it must be `_s.rim`, not `_s.erf`
 
 **Duplicate Handling**: Same as K1 - first registered wins.
 
-**Actual Execution Flow**:
-- **If flag at offset 0x54 is 0**: `.rim` loads first (line 46)
-- **If flag at offset 0x54 is NOT 0**:
-  - Checks for `.mod` (line 99)
-  - **If `.mod` exists**: `.mod` loads (line 161) - **OVERRIDES** `.rim` entries
-  - **If `.mod` doesn't exist**: 
-    - `_s.rim` loads (line 122) - **ADDS** to `.rim` entries
-    - `_dlg.erf` loads (line 147) - **ADDS** to `.rim` and `_s.rim` entries
+**Resource Resolution Priority**:
 
-**Duplicate Handling**: Same as K1 - first registered wins.
-
-**Answer**: 
 - If same resource exists in `.rim`, `_s.rim`, and `_dlg.erf`: **`.rim` wins** (registered first)
 - If same resource exists in `_s.rim` and `_dlg.erf`: **`_s.rim` wins** (registered before `_dlg.erf`)
 - If same resource exists in `.rim` and `.mod`: **`.mod` wins** (registered after `.rim`, overrides it)
-- **CRITICAL**: In typical module loading, the order is: `.rim` → `.mod` (if exists) → `_s.rim` (if `.mod` doesn't exist) → `_dlg.erf` (if `.mod` doesn't exist)
+- **CRITICAL**: When `.mod` exists, `.rim`, `_s.rim`, and `_dlg.erf` are NOT loaded - `.mod` completely replaces them
 
 ## Override Directory Priority (PROVEN)
 
 ### K1 (swkotor.exe) - `FUN_0040f200`
 
 **Enumeration** (`FUN_005e8cf0` line 78):
+
 - Uses `FindFirstFileA` with pattern `"%s\\*.%s"` (line 76) - **FLAT enumeration only**
 - Line 102: Checks `dwFileAttributes & 0x10` (directory flag)
 - Line 172-199: If directory found AND `param_5 != 0`, recursively enumerates subdirectories
@@ -391,21 +486,58 @@ if (iVar7 == 0) {
 ### K2 (swkotor2.exe) - `FUN_00410d20`
 
 **Enumeration** (lines 78-200):
-- Line 78: `FUN_00631e60(...,-1,1,0)` - Enumerates **subdirectories** (param_5=1)
-- Line 101: `FUN_00631e60(...,-1,0,0)` - Enumerates **files in each subdirectory** (param_5=0)
-- Line 118: `FUN_00631e60(...,-1,0,0)` - Enumerates **files in root override** (param_5=0)
+
+- Line 78: `FUN_00631e60(...,-1,1,0)` - Enumerates **subdirectories** (param_4=1, param_5=0 = **NO RECURSION**)
+- Line 101: `FUN_00631e60(...,-1,0,0)` - Enumerates **files in each subdirectory** (param_4=0, param_5=0 = **NO RECURSION**)
+- Line 118: `FUN_00631e60(...,-1,0,0)` - Enumerates **files in root override** (param_5=0 = **NO RECURSION**)
 - Lines 158-174: **Process root files FIRST**
 - Lines 176-200: **Process subdirectory files AFTER**
 
-**Registration Order**:
-1. **Root override files** (lines 168: `FUN_0040f270`) - Registered first
-2. **Subdirectory files** (lines 191: `FUN_0040f270`) - Registered second
+**CRITICAL**: `param_5=0` means **NO RECURSION**. The engine only processes:
 
-**Result**: **Root override files win** over subdirectory files. Subfolders ARE searched, but root files have priority.
+1. **Root override files** (lines 168: `FUN_0040f270`) - Registered first, **HIGHEST PRIORITY**
+2. **Files in immediate subdirectories** (1 level deep only, lines 191: `FUN_0040f270`) - Registered second
+
+**Files at 2+ levels deep are IGNORED** (e.g., `Override/folder1/subfolder/test.ncs` is NOT processed).
+
+**Subdirectory Enumeration Order**: Determined by filesystem enumeration (typically alphabetical, but not guaranteed - depends on filesystem order returned by `FindFirstFileA`/`FindNextFileA`).
+
+**Result**:
+
+- **Root override files win** over subdirectory files
+- Only **1 level deep** subdirectories are searched
+- Files at 2+ levels deep are **NOT PROCESSED**
 
 ## Multiple Module Files - Resource Resolution
 
 **See "Module File Priority Order" section above for complete details with exact instruction-level proof.**
+
+## patch.erf (K1 Only)
+
+**Status**: ✅ **SUPPORTED in K1 only** - Loaded during global resource initialization
+
+**Location**: Root installation directory (next to `dialog.tlk`, `chitin.key`, etc.)
+
+**Loading**: `patch.erf` is loaded as part of global resource initialization, separate from module loading. It is loaded into the resource table with the same priority as chitin resources.
+
+**Priority Order** (for resources in patch.erf):
+1. Override directory (highest priority)
+2. Module files (`.mod`, `.rim`, `_s.rim`, `_dlg.erf`)
+3. **patch.erf** (loaded with chitin resources)
+4. Chitin BIF archives (lowest priority)
+
+**What Can Be Put in patch.erf**:
+- **ANY resource type** - Same as modules, patch.erf accepts any resource type ID
+- **Common uses**: Bug fixes, patches, updated textures/models, updated scripts
+- **Typical contents**: Updated 2DA files, fixed NCS scripts, updated textures, updated models
+
+**Reverse Engineering Evidence**:
+- `patch.erf` is referenced in Andastra codebase (`InstallationResourceManager.cs` line 543)
+- Loaded via `GetPatchErfResources()` method for K1 installations only
+- Treated as part of core resources (loaded with chitin resources)
+- No type filtering - accepts any resource type stored in ERF container
+
+**Note**: `patch.erf` is **NOT found in module loading code** (`FUN_004094a0` / `FUN_004096b0`) - it is loaded separately during global resource initialization, likely in resource manager setup code.
 
 ## Summary
 
@@ -425,7 +557,7 @@ if (iVar7 == 0) {
 4. **`.hak` files**: ❌ **NOT SUPPORTED** - No references found in either executable
 
 5. **Subfolders in modules**: ❌ NOT supported - ResRef is a flat 16-byte ASCII string
-   - **Override subfolders**: 
+   - **Override subfolders**:
      - **K1**: ❌ NOT supported - Only top-level override files are loaded (`FUN_0040f200` calls `FUN_005e6640` with `param_5=0`)
      - **K2**: ✅ Supported - Subfolders ARE searched, but **root override files have priority** (`FUN_00410d20` lines 158-200)
 
@@ -437,8 +569,10 @@ if (iVar7 == 0) {
    - Convention: Follow `KModuleType.Contains()` for compatibility, but engine is permissive
 
 7. **Valid file combinations**:
-   - K1: `.mod` (override), `.rim`, `.rim` + `_s.rim`, `.rim` + `_a.rim`, `.rim` + `_adx.rim`
-   - K2: `.mod` (override), `.rim`, `.rim` + `_s.rim`, `.rim` + `_s.rim` + `_dlg.erf`, `.rim` + `_a.rim`, `.rim` + `_adx.rim`
+   - K1: `.mod` (override), `.rim`, `.rim` + `_s.rim`, `.rim` + `_a.rim`, `.rim` + `_adx.rim`, `.rim` + `_a.rim` + `_adx.rim`
+   - K2: `.mod` (override), `.rim`, `.rim` + `_s.rim`, `.rim` + `_s.rim` + `_dlg.erf`, `.rim` + `_a.rim`, `.rim` + `_adx.rim`, `.rim` + `_a.rim` + `_adx.rim`
+   - **Note**: `.mod` completely replaces `.rim` and all extension files - they are NOT loaded together
+   - **Note**: `_a.rim` and `_adx.rim` are CONFIRMED via reverse engineering (K1: lines 50-88, K2: lines 54-92)
 
 ## Implementation Notes for Andastra
 
