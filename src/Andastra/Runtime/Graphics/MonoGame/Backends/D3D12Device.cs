@@ -562,10 +562,91 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ObjectDisposedException(nameof(D3D12Device));
             }
 
-            // TODO: IMPLEMENT - Wait for GPU to idle
-            // - Create or use existing fence
-            // - Signal fence from command queue
-            // - Wait for fence value on CPU using ID3D12Fence::SetEventOnCompletion
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                // On non-Windows platforms, WaitIdle is a no-op
+                // The application should use VulkanDevice for cross-platform support
+                return;
+            }
+
+            // Lazy initialization of fence and event for idle synchronization
+            if (_idleFence == IntPtr.Zero)
+            {
+                // Allocate unmanaged memory for fence pointer
+                IntPtr ppFence = Marshal.AllocHGlobal(IntPtr.Size);
+                try
+                {
+                    // Create fence with initial value 0
+                    // D3D12_FENCE_FLAG_NONE = 0
+                    Guid riid = IID_ID3D12Fence;
+                    int hr = CallCreateFence(_device, 0, 0, ref riid, ppFence);
+                    if (hr < 0)
+                    {
+                        throw new InvalidOperationException($"Failed to create D3D12 fence: HRESULT 0x{hr:X8}");
+                    }
+
+                    // Read the created fence pointer
+                    _idleFence = Marshal.ReadIntPtr(ppFence);
+                    if (_idleFence == IntPtr.Zero)
+                    {
+                        throw new InvalidOperationException("Failed to create D3D12 fence: null pointer returned");
+                    }
+
+                    // Create Windows event for synchronization
+                    _idleFenceEvent = CreateEvent(IntPtr.Zero, false, false, null);
+                    if (_idleFenceEvent == IntPtr.Zero)
+                    {
+                        // Release fence on failure
+                        ReleaseComObject(_idleFence);
+                        _idleFence = IntPtr.Zero;
+                        throw new InvalidOperationException("Failed to create Windows event for fence synchronization");
+                    }
+
+                    _idleFenceValue = 0;
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(ppFence);
+                }
+            }
+
+            // Increment fence value to signal new synchronization point
+            _idleFenceValue++;
+
+            // Signal the fence from the command queue
+            // This tells the GPU to signal the fence when all previous commands have completed
+            ulong signalValue = CallSignalFence(_commandQueue, _idleFence, _idleFenceValue);
+            if (signalValue == 0)
+            {
+                throw new InvalidOperationException("Failed to signal D3D12 fence from command queue");
+            }
+
+            // Check if fence is already completed (common case for idle GPU)
+            ulong completedValue = CallGetFenceCompletedValue(_idleFence);
+            if (completedValue >= _idleFenceValue)
+            {
+                // Fence already completed, no need to wait
+                return;
+            }
+
+            // Set event to be signaled when fence reaches the target value
+            int hrSetEvent = CallSetEventOnCompletion(_idleFence, _idleFenceValue, _idleFenceEvent);
+            if (hrSetEvent < 0)
+            {
+                throw new InvalidOperationException($"Failed to set event on fence completion: HRESULT 0x{hrSetEvent:X8}");
+            }
+
+            // Wait for the event to be signaled (GPU has completed)
+            uint waitResult = WaitForSingleObject(_idleFenceEvent, INFINITE);
+            if (waitResult != WAIT_OBJECT_0)
+            {
+                if (waitResult == WAIT_FAILED)
+                {
+                    throw new InvalidOperationException("WaitForSingleObject failed while waiting for GPU idle");
+                }
+                throw new InvalidOperationException($"Unexpected wait result while waiting for GPU idle: 0x{waitResult:X8}");
+            }
         }
 
         public void Signal(IFence fence, ulong value)
@@ -3472,13 +3553,48 @@ namespace Andastra.Runtime.MonoGame.Backends
                             throw new InvalidOperationException("Acceleration structure does not have a valid device address. Acceleration structure must be created before building.");
                         }
 
-                        // For scratch buffer, we need to use a scratch buffer
-                        // In a full implementation, the scratch buffer should be allocated during CreateAccelStruct
-                        // For now, we'll need to get it from the acceleration structure or allocate it
-                        // TODO: FIXME - Scratch buffer should be properly allocated and tracked in D3D12AccelStruct
-                        // Using device address + a large offset as temporary scratch (this is not ideal but allows compilation)
-                        // In practice, CreateAccelStruct should allocate and store a scratch buffer
-                        ulong scratchGpuVa = destGpuVa + 0x1000000UL; // Temporary - should use actual scratch buffer address
+                        // Calculate estimated scratch buffer size based on geometry data
+                        // D3D12 scratch buffer size is typically similar to or slightly larger than result buffer size
+                        // For BLAS with triangles: conservative estimate is ~32 bytes per triangle for scratch space
+                        // This is a reasonable estimate when GetRaytracingAccelerationStructurePrebuildInfo is not available
+                        ulong totalTriangles = 0UL;
+                        for (int i = 0; i < geometries.Length; i++)
+                        {
+                            if (geometries[i].Triangles.IndexCount > 0)
+                            {
+                                totalTriangles += (ulong)(geometries[i].Triangles.IndexCount / 3);
+                            }
+                            else
+                            {
+                                // If no indices, estimate triangles from vertices (assuming triangle list)
+                                totalTriangles += (ulong)(geometries[i].Triangles.VertexCount / 3);
+                            }
+                        }
+
+                        // Conservative estimate: 32 bytes per triangle for scratch buffer
+                        // Minimum 256KB to ensure we have enough space for small geometries
+                        ulong estimatedScratchSize = (totalTriangles * 32UL);
+                        if (estimatedScratchSize < 256UL * 1024UL)
+                        {
+                            estimatedScratchSize = 256UL * 1024UL; // Minimum 256KB
+                        }
+
+                        // Round up to next 256-byte alignment (D3D12 requirement)
+                        estimatedScratchSize = (estimatedScratchSize + 255UL) & ~255UL;
+
+                        // Get or allocate scratch buffer from acceleration structure
+                        IBuffer scratchBuffer = d3d12AccelStruct.GetOrAllocateScratchBuffer(_device, estimatedScratchSize);
+                        if (scratchBuffer == null || scratchBuffer.NativeHandle == IntPtr.Zero)
+                        {
+                            throw new InvalidOperationException("Failed to allocate scratch buffer for acceleration structure building");
+                        }
+
+                        // Get GPU virtual address for scratch buffer
+                        ulong scratchGpuVa = d3d12AccelStruct.ScratchBufferDeviceAddress;
+                        if (scratchGpuVa == 0UL)
+                        {
+                            throw new InvalidOperationException("Scratch buffer does not have a valid device address");
+                        }
 
                         // Build D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC
                         // Note: The Inputs field is embedded by value in the structure
