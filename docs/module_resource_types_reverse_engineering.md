@@ -13,6 +13,27 @@ This document details the reverse engineering findings for module file discovery
 
 ## Module File Discovery
 
+### Exact Functions Handling Module Discovery
+
+**Primary Module Loading Functions:**
+
+- **swkotor.exe**: `FUN_004094a0` (address `0x004094a0`)
+  - Handles module file discovery and loading
+  - Checks for `"_a"`, `"_adx"`, `"_s"` suffixes
+  - Opens RIM files via `FUN_00406e20`
+  - No `_dlg.erf` support in K1
+
+- **swkotor2.exe**: `FUN_004096b0` (address `0x004096b0`)
+  - Handles module file discovery and loading
+  - Checks for `"_a"`, `"_adx"`, `"_s"`, and **`"_dlg"`** suffixes
+  - Opens RIM/ERF files via `FUN_00406ef0`
+  - **Hardcoded `"_dlg"` check** (line 128): `apuStack_6c[0] = FUN_00630a90(aiStack_30,"_dlg");`
+
+**Supporting Functions:**
+- `FUN_00407230` (K1) / `FUN_00407300` (K2): Resource search through multiple locations
+- `FUN_00406e20` (K1) / `FUN_00406ef0` (K2): Opens and loads RIM/ERF containers
+- `FUN_004071a0` (K1) / `FUN_00407270` (K2): Searches resource lists
+
 ### `_s.rim` Support
 
 **Both executables support `_s.rim` files:**
@@ -26,6 +47,31 @@ This document details the reverse engineering findings for module file discovery
   - `FUN_0073dcb0` (swkotor2.exe: 0x0073dcb0) - Module enumeration/discovery
 
 **Conclusion**: Both K1 and K2 support `_s.rim` files as optional data archives.
+
+### Valid File Combinations
+
+**K1 (swkotor.exe) Valid Combinations:**
+1. `{module}.mod` - **Overrides all** (highest priority)
+2. `{module}.rim` - Main module archive
+3. `{module}.rim` + `{module}_s.rim` - Composite module (main + data)
+4. `{module}.rim` + `{module}_a.rim` - Main + area archive (if exists)
+5. `{module}.rim` + `{module}_adx.rim` - Main + area archive extended (if exists)
+
+**K2 (swkotor2.exe) Valid Combinations:**
+1. `{module}.mod` - **Overrides all** (highest priority)
+2. `{module}.rim` - Main module archive
+3. `{module}.rim` + `{module}_s.rim` - Composite module (main + data)
+4. `{module}.rim` + `{module}_s.rim` + `{module}_dlg.erf` - Composite with dialogs (K2 only)
+5. `{module}.rim` + `{module}_a.rim` - Main + area archive (if exists)
+6. `{module}.rim` + `{module}_adx.rim` - Main + area archive extended (if exists)
+
+**Invalid/Unsupported:**
+- `{module}_*.erf` - **NOT SUPPORTED** - Only `_dlg.erf` is hardcoded in K2
+- `{module}.hak` - **NOT SUPPORTED** - No `.hak` references found in either executable
+- `{module}_something.erf` - **NOT SUPPORTED** - Only `_dlg` suffix is checked
+- Any other `_*.erf` patterns - **NOT SUPPORTED** - No wildcard matching
+
+**Key Finding**: `_dlg.erf` is **HARDCODED** in K2. The engine explicitly checks for the literal string `"_dlg"` (swkotor2.exe: `FUN_004096b0` line 128). There is **NO wildcard support** for `_*.erf` patterns.
 
 ### Subfolder Support
 
@@ -99,10 +145,16 @@ The engine's resource manager loads resources by:
 - **All GFF-based types**: ARE, IFO, GIT, UTC, UTI, UTD, UTE, UTP, UTS, UTT, UTW, DLG, JRL, PTH, FAC, CUT, GUI, GIC, BTI, BTC, BTD, BTE, BTP, BTM, BTT, CNV
 - **All binary formats**: MDL, MDX, TPC, TGA, TXI, WOK, DWK, PWK, NCS, SSF, LIP, VIS, LYT, TwoDA (but see note below)
 - **Media files**: WAV, BMU, OGG, MVE, MPG, BIK
-- **Textures**: TPC, TGA, TXI, DDS, FourPC
+- **Textures**: **TPC, TGA** - **YES, these CAN be packed** (container format accepts any resource type)
+- **2D Arrays**: **TwoDA** - **YES, technically CAN be packed** (but see convention note below)
 - **Models**: MDL, MDX, PLH, MDB, MAT
 - **Scripts**: NCS, NSS (though NSS is typically not in modules)
 - **Other**: FNT, TTF, LTR, ITP, DFT
+
+**Critical Finding**: The engine's resource manager (`FUN_00406e20` / `FUN_00406ef0`) does **NOT filter resource types** when loading from modules. It will attempt to load **ANY** resource type stored in a module container, including:
+- **TPC/TGA textures** - Can be containerized in modules
+- **TwoDA files** - Can be containerized (though convention says otherwise)
+- **Any other resource type** - As long as the type ID is valid and the data can be parsed
 
 **CANNOT or SHOULD NOT be packed** (engine limitations or conventions):
 
@@ -113,7 +165,9 @@ The engine's resource manager loads resources by:
 - **HAK/NWM**: Aurora/NWN formats, not KotOR
 - **RES**: Save data format, not module content
 
-**Note on TwoDA**: While TwoDA CAN technically be stored in modules (container format allows it), the engine convention and tooling (PyKotor, TSLPatcher) enforce that TwoDA files must be in override or chitin directories. Storing TwoDA in modules may work but is not recommended.
+**Note on TwoDA**: While TwoDA CAN technically be stored in modules (container format allows it, engine will load it), the engine convention and tooling (PyKotor, TSLPatcher) enforce that TwoDA files must be in override or chitin directories. Storing TwoDA in modules may work but is not recommended for compatibility.
+
+**Note on TPC/TGA**: These texture formats **CAN be containerized** in modules. The engine will load them from RIM/ERF/MOD containers just like any other resource type. This could be a "game changer" for modding - you can pack textures directly into module files instead of requiring override directory placement.
 
 ### Known Resource Types from Andastra
 
@@ -177,21 +231,33 @@ Based on `ResourceType.cs`, the following resource types are defined:
 
 ## Summary
 
-1. **`_s.rim` support**: ✅ Both swkotor.exe and swkotor2.exe support `_s.rim` files
+1. **Exact module discovery functions**:
+   - **K1**: `FUN_004094a0` (swkotor.exe: 0x004094a0)
+   - **K2**: `FUN_004096b0` (swkotor2.exe: 0x004096b0)
+
+2. **`_s.rim` support**: ✅ Both swkotor.exe and swkotor2.exe support `_s.rim` files
    - swkotor.exe: `FUN_0067bc40` / `FUN_006cfa70` reference `"_s.rim"` string
    - swkotor2.exe: `FUN_006d1a50` / `FUN_0073dcb0` reference `"_s.rim"` string
 
-2. **Subfolders**: ❌ NOT supported - ResRef is a flat 16-byte ASCII string with no path separators
+3. **`_dlg.erf` support**: ✅ **HARDCODED in K2 only**
+   - K2 explicitly checks for literal `"_dlg"` string (swkotor2.exe: `FUN_004096b0` line 128)
+   - **NO wildcard support** - `_*.erf` patterns are NOT supported
+   - Only `_dlg.erf` is recognized, not `_something.erf` or any other pattern
 
-3. **Resource types**: ✅ Engine accepts ANY resource type in modules (no filtering)
+4. **`.hak` files**: ❌ **NOT SUPPORTED** - No references found in either executable
+
+5. **Subfolders**: ❌ NOT supported - ResRef is a flat 16-byte ASCII string
+
+6. **Resource types**: ✅ Engine accepts ANY resource type in modules (no filtering)
    - Container format allows any resource type ID
    - Engine resource manager loads any type stored in containers
-   - Convention (not requirement): Follow `KModuleType.Contains()` for compatibility
+   - **TPC/TGA CAN be containerized** - This is a "game changer" for modding
+   - **TwoDA CAN be containerized** - Though convention says otherwise
+   - Convention: Follow `KModuleType.Contains()` for compatibility, but engine is permissive
 
-4. **TwoDA in modules**: ⚠️ Technically possible but NOT recommended
-   - Container format allows it
-   - Engine will load it
-   - But convention/tooling requires TwoDA in override/chitin
+7. **Valid file combinations**:
+   - K1: `.mod` (override), `.rim`, `.rim` + `_s.rim`, `.rim` + `_a.rim`, `.rim` + `_adx.rim`
+   - K2: `.mod` (override), `.rim`, `.rim` + `_s.rim`, `.rim` + `_s.rim` + `_dlg.erf`, `.rim` + `_a.rim`, `.rim` + `_adx.rim`
 
 ## Implementation Notes for Andastra
 
