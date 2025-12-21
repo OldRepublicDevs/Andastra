@@ -1195,17 +1195,6 @@ namespace Andastra.Runtime.Games.Aurora
         /// <summary>
         /// Parses a store instance from GFF struct.
         /// </summary>
-        /// <remarks>
-        /// Based on nwmain.exe: GIT store struct contains all store properties
-        /// - StoreGold: INT - Maximum gold store can use to buy items (-1 = unlimited)
-        /// - IdentifyPrice: INT - Price to identify items (-1 = won't identify, 0+ = price)
-        /// - MaxBuyPrice: INT - Maximum price for items to buy (-1 = no limit)
-        /// - BlackMarket: BYTE - Whether store is a black market (1 = black market, 0 = normal)
-        /// - BM_MarkDown: INT - Black market markdown percentage
-        /// - WillNotBuy: List - Base item types store won't buy
-        /// - WillOnlyBuy: List - Base item types store will only buy
-        /// Based on vendor/PyKotor/wiki/Bioware-Aurora-Store.md: Table 2.1.1
-        /// </remarks>
         private StoreInstance ParseStoreInstance(GFFStruct s)
         {
             var instance = new StoreInstance();
@@ -1216,74 +1205,6 @@ namespace Andastra.Runtime.Games.Aurora
             instance.ZPosition = GetFloat(s, "ZPosition");
             instance.XOrientation = GetFloat(s, "XOrientation");
             instance.YOrientation = GetFloat(s, "YOrientation");
-            
-            // Parse store properties from GIT struct
-            // Based on nwmain.exe: GIT store struct contains instance-specific overrides
-            // These values override UTM template values if present
-            // StoreGold: INT - Maximum gold store can use to buy items (-1 = unlimited, default -1)
-            if (s.Exists("StoreGold"))
-            {
-                instance.StoreGold = s.GetInt32("StoreGold");
-            }
-            
-            // IdentifyPrice: INT - Price to identify items (-1 = won't identify, 0+ = price, default 100)
-            if (s.Exists("IdentifyPrice"))
-            {
-                instance.IdentifyPrice = s.GetInt32("IdentifyPrice");
-            }
-            
-            // MaxBuyPrice: INT - Maximum price for items to buy (-1 = no limit, default -1)
-            if (s.Exists("MaxBuyPrice"))
-            {
-                instance.MaxBuyPrice = s.GetInt32("MaxBuyPrice");
-            }
-            
-            // BlackMarket: BYTE - Whether store is a black market (1 = black market, 0 = normal, default 0)
-            if (s.Exists("BlackMarket"))
-            {
-                instance.BlackMarket = s.GetUInt8("BlackMarket") != 0;
-            }
-            
-            // BM_MarkDown: INT - Black market markdown percentage (default 0)
-            if (s.Exists("BM_MarkDown"))
-            {
-                instance.BM_MarkDown = s.GetInt32("BM_MarkDown");
-            }
-            
-            // WillNotBuy: List - Base item types store won't buy
-            // Based on nwmain.exe: CNWSStore::LoadStore processes WillNotBuy list
-            if (s.TryGetList("WillNotBuy", out GFFList willNotBuyList))
-            {
-                foreach (GFFStruct itemStruct in willNotBuyList)
-                {
-                    if (itemStruct.Exists("BaseItem"))
-                    {
-                        int baseItem = itemStruct.GetInt32("BaseItem");
-                        if (baseItem >= 0)
-                        {
-                            instance.WillNotBuy.Add(baseItem);
-                        }
-                    }
-                }
-            }
-            
-            // WillOnlyBuy: List - Base item types store will only buy
-            // Based on nwmain.exe: CNWSStore::LoadStore processes WillOnlyBuy list
-            if (s.TryGetList("WillOnlyBuy", out GFFList willOnlyBuyList))
-            {
-                foreach (GFFStruct itemStruct in willOnlyBuyList)
-                {
-                    if (itemStruct.Exists("BaseItem"))
-                    {
-                        int baseItem = itemStruct.GetInt32("BaseItem");
-                        if (baseItem >= 0)
-                        {
-                            instance.WillOnlyBuy.Add(baseItem);
-                        }
-                    }
-                }
-            }
-            
             return instance;
         }
 
@@ -1845,64 +1766,6 @@ namespace Andastra.Runtime.Games.Aurora
             {
                 await LoadStoreTemplateAsync(entity, storeComponent, store.TemplateResRef);
             }
-            
-            // Apply GIT store instance values (override UTM template values if present)
-            // Based on nwmain.exe: GIT store struct values override UTM template values
-            // Precedence: GIT instance values > UTM template values > defaults
-            // ParseStoreInstance only sets values if field exists in GIT struct
-            // If GIT value differs from default, it was explicitly set and overrides UTM
-            // StoreGold: GIT value overrides UTM if GIT has non-default value
-            // Default is -1 (unlimited), so if GIT has -1, keep UTM value (GIT -1 = default = same as UTM default)
-            if (store.StoreGold != -1)
-            {
-                // GIT has a specific value (not unlimited), override UTM
-                storeComponent.Gold = store.StoreGold;
-            }
-            
-            // IdentifyPrice: GIT value overrides UTM if GIT has non-default value
-            // Default is 100, so if GIT has 100, keep UTM value
-            if (store.IdentifyPrice != 100)
-            {
-                // GIT has a specific value, override UTM
-                storeComponent.IdentifyPrice = store.IdentifyPrice;
-                storeComponent.CanIdentify = store.IdentifyPrice >= 0; // -1 means won't identify
-            }
-            
-            // MaxBuyPrice: GIT value overrides UTM if GIT has non-default value
-            // Default is -1 (no limit), so if GIT has -1, keep UTM value
-            if (store.MaxBuyPrice != -1)
-            {
-                // GIT has a specific value (not unlimited), override UTM
-                storeComponent.MaxBuyPrice = store.MaxBuyPrice;
-            }
-            
-            // BlackMarket: GIT value overrides UTM if GIT explicitly set it to true
-            // Default is false, so if GIT has false, keep UTM value
-            if (store.BlackMarket)
-            {
-                // GIT explicitly set BlackMarket to true, override UTM
-                entity.SetData("BlackMarket", true);
-            }
-            
-            // BM_MarkDown: GIT value overrides UTM if GIT has non-default value
-            // Default is 0, so if GIT has 0, keep UTM value
-            if (store.BM_MarkDown != 0)
-            {
-                // GIT has a specific value, override UTM
-                entity.SetData("BM_MarkDown", store.BM_MarkDown);
-            }
-            
-            // WillNotBuy: GIT value overrides UTM if GIT list is not empty
-            if (store.WillNotBuy != null && store.WillNotBuy.Count > 0)
-            {
-                entity.SetData("WillNotBuy", store.WillNotBuy);
-            }
-            
-            // WillOnlyBuy: GIT value overrides UTM if GIT list is not empty
-            if (store.WillOnlyBuy != null && store.WillOnlyBuy.Count > 0)
-            {
-                entity.SetData("WillOnlyBuy", store.WillOnlyBuy);
-            }
 
             // Add entity to area
             area.AddEntity(entity);
@@ -2199,108 +2062,13 @@ namespace Andastra.Runtime.Games.Aurora
                     }
                 }
 
-                // Load additional properties from UTM GFF (Aurora UTM format includes these fields)
-                // Based on nwmain.exe: CNWSStore::LoadStore @ 0x1404fbbf0 reads these from UTM GFF
-                // These values are defaults that can be overridden by GIT store struct values
-                // StoreGold: Line 63 - ReadFieldINT("StoreGold", -1)
-                if (gff.Root.Exists("StoreGold"))
-                {
-                    storeComponent.Gold = gff.Root.GetInt32("StoreGold");
-                }
-                else
-                {
-                    // Default: -1 (unlimited) from nwmain.exe line 63
-                    storeComponent.Gold = -1;
-                }
-                
-                // IdentifyPrice: Line 65 - ReadFieldINT("IdentifyPrice", 100)
-                if (gff.Root.Exists("IdentifyPrice"))
-                {
-                    int identifyPrice = gff.Root.GetInt32("IdentifyPrice");
-                    storeComponent.IdentifyPrice = identifyPrice;
-                    storeComponent.CanIdentify = identifyPrice >= 0; // -1 means won't identify
-                }
-                else
-                {
-                    // Default: 100 from nwmain.exe line 65
-                    storeComponent.IdentifyPrice = 100;
-                    storeComponent.CanIdentify = true;
-                }
-                
-                // MaxBuyPrice: Line 67 - ReadFieldINT("MaxBuyPrice", -1)
-                if (gff.Root.Exists("MaxBuyPrice"))
-                {
-                    storeComponent.MaxBuyPrice = gff.Root.GetInt32("MaxBuyPrice");
-                }
-                else
-                {
-                    // Default: -1 (no limit) from nwmain.exe line 67
-                    storeComponent.MaxBuyPrice = -1;
-                }
-                
-                // BlackMarket: Line 55 - ReadFieldBYTEasBOOL("BlackMarket", 0)
-                // Note: StoreComponent doesn't have BlackMarket property, but we can store it in entity data
-                if (gff.Root.Exists("BlackMarket"))
-                {
-                    bool blackMarket = gff.Root.GetUInt8("BlackMarket") != 0;
-                    entity.SetData("BlackMarket", blackMarket);
-                }
-                else
-                {
-                    // Default: false (0) from nwmain.exe line 55
-                    entity.SetData("BlackMarket", false);
-                }
-                
-                // BM_MarkDown: Line 57 - ReadFieldINT("BM_MarkDown", 0)
-                // Note: StoreComponent doesn't have BM_MarkDown property, but we can store it in entity data
-                if (gff.Root.Exists("BM_MarkDown"))
-                {
-                    int bmMarkDown = gff.Root.GetInt32("BM_MarkDown");
-                    entity.SetData("BM_MarkDown", bmMarkDown);
-                }
-                else
-                {
-                    // Default: 0 from nwmain.exe line 57
-                    entity.SetData("BM_MarkDown", 0);
-                }
-                
-                // WillNotBuy: List - Base item types store won't buy
-                // Based on nwmain.exe: CNWSStore::LoadStore processes WillNotBuy list (lines 69-82)
-                if (gff.Root.TryGetList("WillNotBuy", out GFFList utmWillNotBuyList))
-                {
-                    List<int> willNotBuy = new List<int>();
-                    foreach (GFFStruct itemStruct in utmWillNotBuyList)
-                    {
-                        if (itemStruct.Exists("BaseItem"))
-                        {
-                            int baseItem = itemStruct.GetInt32("BaseItem");
-                            if (baseItem >= 0)
-                            {
-                                willNotBuy.Add(baseItem);
-                            }
-                        }
-                    }
-                    entity.SetData("WillNotBuy", willNotBuy);
-                }
-                
-                // WillOnlyBuy: List - Base item types store will only buy
-                // Based on nwmain.exe: CNWSStore::LoadStore processes WillOnlyBuy list (lines 84-96)
-                if (gff.Root.TryGetList("WillOnlyBuy", out GFFList utmWillOnlyBuyList))
-                {
-                    List<int> willOnlyBuy = new List<int>();
-                    foreach (GFFStruct itemStruct in utmWillOnlyBuyList)
-                    {
-                        if (itemStruct.Exists("BaseItem"))
-                        {
-                            int baseItem = itemStruct.GetInt32("BaseItem");
-                            if (baseItem >= 0)
-                            {
-                                willOnlyBuy.Add(baseItem);
-                            }
-                        }
-                    }
-                    entity.SetData("WillOnlyBuy", willOnlyBuy);
-                }
+                // Note: Additional properties from GIT (StoreGold, IdentifyPrice, MaxBuyPrice, BlackMarket, BM_MarkDown, WillNotBuy, WillOnlyBuy)
+                // are not in the UTM format for Odyssey, but may be in Aurora UTM format or loaded from GIT store struct
+                // TODO: STUB - For now, we set defaults matching nwmain.exe behavior:
+                // - StoreGold: -1 (unlimited, default from nwmain.exe line 63)
+                // - IdentifyPrice: 100 (default from nwmain.exe line 65)
+                // - MaxBuyPrice: -1 (no limit, default from nwmain.exe line 67)
+                // These can be overridden if Aurora UTM format includes them or if loaded from GIT store struct
             }
             catch
             {

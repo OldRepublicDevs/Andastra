@@ -333,8 +333,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             switch (backendType)
             {
                 case GraphicsBackend.Vulkan:
-                    // TODO: STUB - VulkanBackend class not yet implemented, use VulkanDevice via IDevice interface instead
-                    throw new NotSupportedException("VulkanBackend is not yet implemented. Use VulkanDevice via IDevice interface for Vulkan support.");
+                    return new VulkanBackend();
 
                 case GraphicsBackend.Direct3D12:
                     return new Direct3D12Backend();

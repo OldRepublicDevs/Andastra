@@ -68,117 +68,30 @@ namespace Andastra.Runtime.Game
                 
                 app.Dispose();
 
-                // Create game settings based on selected game type
-                // Handle different game engines (Odyssey, Aurora, Eclipse, Infinity)
-                if (selectedGame.IsOdyssey())
+                // Convert Game enum to KotorGame for settings
+                KotorGame kotorGame = KotorGame.K1;
+                if (selectedGame == Game.K2)
                 {
-                    // Odyssey Engine games (KotOR 1 and 2)
-                    KotorGame kotorGame = KotorGame.K1;
-                    if (selectedGame == Game.K2 || selectedGame == Game.TSL || selectedGame.IsK2())
-                    {
-                        kotorGame = KotorGame.K2;
-                    }
-
-                    settings = new GameSettings
-                    {
-                        Game = kotorGame,
-                        GamePath = gamePath
-                    };
+                    kotorGame = KotorGame.K2;
                 }
-                else if (selectedGame.IsAurora())
+                else if (selectedGame != Game.K1)
                 {
-                    // Aurora Engine games (Neverwinter Nights)
-                    // TODO: IMPLEMENT - Aurora game support
-                    // Based on nwmain.exe: Neverwinter Nights game initialization
-                    // Based on nwn2main.exe: Neverwinter Nights 2 game initialization
-                    // When implemented, create AuroraGameSettings and AuroraGame classes
-                    var errorApp = new Application(Eto.Platform.Detect);
-                    string gameName = selectedGame.IsNWN1() ? "Neverwinter Nights" : "Neverwinter Nights 2";
-                    MessageBox.Show(
-                        $"{gameName} support is not yet implemented.\n\n" +
-                        "Aurora Engine games require:\n" +
-                        "- AuroraGameSettings class\n" +
-                        "- AuroraGame class (similar to OdysseyGame)\n" +
-                        "- Aurora-specific module loading and world initialization\n\n" +
-                        "This feature is planned for future implementation.",
-                        "Not Yet Implemented",
-                        MessageBoxType.Information);
-                    errorApp.Dispose();
-                    return 1;
-                }
-                else if (selectedGame.IsEclipse())
-                {
-                    // Eclipse Engine games (Dragon Age)
-                    // TODO: IMPLEMENT - Eclipse game support
-                    // Based on daorigins.exe: Dragon Age: Origins game initialization
-                    // Based on DragonAge2.exe: Dragon Age II game initialization
-                    // When implemented, create EclipseGameSettings and EclipseGame classes
-                    var errorApp = new Application(Eto.Platform.Detect);
-                    string gameName = selectedGame.IsDragonAgeOrigins() ? "Dragon Age: Origins" : "Dragon Age II";
-                    MessageBox.Show(
-                        $"{gameName} support is not yet implemented.\n\n" +
-                        "Eclipse Engine games require:\n" +
-                        "- EclipseGameSettings class\n" +
-                        "- EclipseGame class (similar to OdysseyGame)\n" +
-                        "- Eclipse-specific module loading and world initialization\n" +
-                        "- UnrealScript-based scripting system\n\n" +
-                        "This feature is planned for future implementation.",
-                        "Not Yet Implemented",
-                        MessageBoxType.Information);
-                    errorApp.Dispose();
-                    return 1;
-                }
-                else if (selectedGame.IsInfinity())
-                {
-                    // Infinity Engine games (Baldur's Gate, Icewind Dale, Planescape: Torment)
-                    // TODO: IMPLEMENT - Infinity game support
-                    // Based on bgmain.exe: Baldur's Gate game initialization
-                    // Based on iwdmain.exe: Icewind Dale game initialization
-                    // Based on pstmain.exe: Planescape: Torment game initialization
-                    // When implemented, create InfinityGameSettings and InfinityGame classes
-                    var errorApp = new Application(Eto.Platform.Detect);
-                    string gameName = "Infinity Engine Game";
-                    if (selectedGame.IsBaldursGate())
-                    {
-                        gameName = "Baldur's Gate";
-                    }
-                    else if (selectedGame.IsIcewindDale())
-                    {
-                        gameName = "Icewind Dale";
-                    }
-                    else if (selectedGame.IsPlanescapeTorment())
-                    {
-                        gameName = "Planescape: Torment";
-                    }
-                    MessageBox.Show(
-                        $"{gameName} support is not yet implemented.\n\n" +
-                        "Infinity Engine games require:\n" +
-                        "- InfinityGameSettings class\n" +
-                        "- InfinityGame class (similar to OdysseyGame)\n" +
-                        "- Infinity-specific module loading and world initialization\n" +
-                        "- Infinity Engine scripting system\n\n" +
-                        "This feature is planned for future implementation.",
-                        "Not Yet Implemented",
-                        MessageBoxType.Information);
-                    errorApp.Dispose();
-                    return 1;
-                }
-                else
-                {
-                    // Unknown or unsupported game type
+                    // For non-KOTOR games, we'll need to handle differently
+                    // TODO: STUB - For now, show error
                     var errorApp = new Application(Eto.Platform.Detect);
                     MessageBox.Show(
-                        $"Game type {selectedGame} is not recognized or supported.\n\n" +
-                        "Supported game engines:\n" +
-                        "- Odyssey Engine (KotOR 1, KotOR 2)\n" +
-                        "- Aurora Engine (Neverwinter Nights, Neverwinter Nights 2) - Planned\n" +
-                        "- Eclipse Engine (Dragon Age: Origins, Dragon Age II) - Planned\n" +
-                        "- Infinity Engine (Baldur's Gate, Icewind Dale, Planescape: Torment) - Planned",
+                        $"Game {selectedGame} is not yet fully supported. Only KotOR 1 and KotOR 2 are currently supported.",
                         "Unsupported Game",
                         MessageBoxType.Warning);
                     errorApp.Dispose();
                     return 1;
                 }
+
+                settings = new GameSettings
+                {
+                    Game = kotorGame,
+                    GamePath = gamePath
+                };
             }
             else
             {
@@ -216,30 +129,16 @@ namespace Andastra.Runtime.Game
                 }
             }
 
-            // Launch the game based on game type
-            // Currently only Odyssey Engine (KotOR 1/2) is fully implemented
+            // Launch the game
             try
             {
                 // Create graphics backend
                 IGraphicsBackend graphicsBackend = Core.GraphicsBackendFactory.CreateBackend(backendType);
 
-                // Route to appropriate game implementation based on settings
-                // Odyssey Engine games use OdysseyGame
-                if (settings != null && (settings.Game == KotorGame.K1 || settings.Game == KotorGame.K2))
+                // Create and run the game using abstraction layer
+                using (var game = new OdysseyGame(settings, graphicsBackend))
                 {
-                    // Create and run Odyssey Engine game
-                    using (var game = new OdysseyGame(settings, graphicsBackend))
-                    {
-                        game.Run();
-                    }
-                }
-                else
-                {
-                    // This should not happen if game selection logic above is correct
-                    // But handle it gracefully just in case
-                    throw new InvalidOperationException(
-                        $"Game settings are invalid or game type is not supported. " +
-                        $"Only Odyssey Engine games (KotOR 1/2) are currently implemented.");
+                    game.Run();
                 }
 
                 return 0;

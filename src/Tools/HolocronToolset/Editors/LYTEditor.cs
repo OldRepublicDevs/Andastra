@@ -26,6 +26,7 @@ using TPCBinaryWriter = Andastra.Parsing.Formats.TPC.TPCBinaryWriter;
 using TPCLayer = Andastra.Parsing.Formats.TPC.TPCLayer;
 using TPCTextureFormat = Andastra.Parsing.Formats.TPC.TPCTextureFormat;
 using Vector = Avalonia.Vector;
+using HolocronToolset.Widgets;
 
 namespace HolocronToolset.Editors
 {
@@ -37,6 +38,7 @@ namespace HolocronToolset.Editors
         private LYTEditorSettings _settings;
         private Dictionary<string, string> _importedTextures = new Dictionary<string, string>(); // Maps texture name to file path
         private Dictionary<string, string> _importedModels = new Dictionary<string, string>(); // Maps model name (ResRef) to MDL file path
+        private ModelBrowser _modelBrowser; // Model browser widget for displaying imported models
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:32-73
         // Original: def __init__(self, parent, installation):
@@ -82,6 +84,64 @@ namespace HolocronToolset.Editors
         private void SetupUI()
         {
             // UI setup - will be implemented when XAML is available
+            // Initialize model browser widget
+            InitializeModelBrowser();
+        }
+
+        /// <summary>
+        /// Initializes the model browser widget.
+        /// </summary>
+        private void InitializeModelBrowser()
+        {
+            try
+            {
+                // Try to find model browser from XAML if available
+                _modelBrowser = this.FindControl<ModelBrowser>("modelBrowser");
+            }
+            catch
+            {
+                // Model browser not found in XAML - will create programmatically if needed
+            }
+
+            // Create model browser if not found from XAML
+            if (_modelBrowser == null)
+            {
+                _modelBrowser = new ModelBrowser();
+                _modelBrowser.ModelSelected += OnModelSelected;
+                _modelBrowser.ModelChanged += OnModelChanged;
+            }
+
+            // Initialize with current imported models
+            if (_modelBrowser != null && _importedModels != null)
+            {
+                _modelBrowser.UpdateModels(_importedModels);
+            }
+        }
+
+        /// <summary>
+        /// Handles model selection in the browser.
+        /// </summary>
+        private void OnModelSelected(object sender, string modelName)
+        {
+            if (string.IsNullOrEmpty(modelName))
+            {
+                return;
+            }
+
+            // Model selected - could trigger preview or usage
+            System.Console.WriteLine($"Model selected in browser: {modelName}");
+        }
+
+        /// <summary>
+        /// Handles model change in the browser.
+        /// </summary>
+        private void OnModelChanged(object sender, string modelName)
+        {
+            // Model changed - update any dependent UI
+            if (!string.IsNullOrEmpty(modelName))
+            {
+                System.Console.WriteLine($"Model changed in browser: {modelName}");
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:127-131
@@ -1330,6 +1390,9 @@ namespace HolocronToolset.Editors
 
                         // Store the imported model reference
                         _importedModels[targetResref] = outputMdlPath;
+                        
+                        // Update model browser immediately after import
+                        UpdateModelBrowser();
                     }
                     catch (Exception ex)
                     {
@@ -1396,14 +1459,43 @@ namespace HolocronToolset.Editors
         // Update model browser with imported models (similar to UpdateTextureBrowser)
         public void UpdateModelBrowser()
         {
-            // Update model browser UI with imported models
-            // This method should refresh any model browser widget in the UI
-            // TODO: STUB - For now, we'll ensure the imported models list is maintained
-            
-            // If there's a model browser widget, it should be updated here
-            // The actual UI update will depend on the specific model browser implementation
-            // This is a placeholder for the UI update logic
-            
+            // Ensure imported models list is maintained and valid
+            if (_importedModels == null)
+            {
+                _importedModels = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            }
+
+            // Remove invalid entries (models that no longer exist on disk)
+            var validModels = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var kvp in _importedModels)
+            {
+                if (string.IsNullOrEmpty(kvp.Value) || File.Exists(kvp.Value))
+                {
+                    validModels[kvp.Key] = kvp.Value;
+                }
+                else
+                {
+                    System.Console.WriteLine($"Warning: Imported model file no longer exists: {kvp.Value}, removing from list.");
+                }
+            }
+            _importedModels = validModels;
+
+            // Update model browser widget if available
+            if (_modelBrowser != null)
+            {
+                _modelBrowser.UpdateModels(_importedModels);
+            }
+            else
+            {
+                // Initialize model browser if not already initialized
+                InitializeModelBrowser();
+                if (_modelBrowser != null)
+                {
+                    _modelBrowser.UpdateModels(_importedModels);
+                }
+            }
+
+            // Log current state for debugging
             System.Console.WriteLine($"Model browser updated. {_importedModels.Count} model(s) available.");
             foreach (var kvp in _importedModels)
             {
@@ -1419,6 +1511,14 @@ namespace HolocronToolset.Editors
         public string GetImportedModelPath(string modelName)
         {
             return _importedModels.TryGetValue(modelName, out string path) ? path : null;
+        }
+
+        /// <summary>
+        /// Gets the model browser widget (for UI integration and testing).
+        /// </summary>
+        public ModelBrowser ModelBrowser
+        {
+            get { return _modelBrowser; }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:243-245

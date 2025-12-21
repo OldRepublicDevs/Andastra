@@ -2939,47 +2939,10 @@ namespace HolocronToolset.Editors
             // else:
             //     self.blink_window()
 
-            // Get sound from currently selected node (since we don't have a separate soundComboBox UI control)
-            // Matching PyKotor: sound_resname = self.ui.soundComboBox.currentText().strip()
-            string soundResname = null;
-            if (_dialogTree?.SelectedItem != null)
-            {
-                DLGStandardItem item = null;
-                var selectedItem = _dialogTree.SelectedItem;
-                if (selectedItem is TreeViewItem treeItem && treeItem.Tag is DLGStandardItem dlgItem)
-                {
-                    item = dlgItem;
-                }
-                else if (selectedItem is DLGStandardItem dlgItemDirect)
-                {
-                    item = dlgItemDirect;
-                }
-
-                if (item?.Link?.Node != null)
-                {
-                    soundResname = item.Link.Node.Sound?.ToString()?.Trim();
-                }
-            }
-
-            // Get voice from voice combo box
-            // Matching PyKotor: voice_resname = self.ui.voiceComboBox.currentText().strip()
-            string voiceResname = _voiceComboBox?.Text?.Trim();
-
-            // Matching PyKotor: if sound_resname: self.play_sound(sound_resname, [SearchLocation.SOUND, SearchLocation.VOICE])
-            if (!string.IsNullOrEmpty(soundResname))
-            {
-                PlaySound(soundResname, new[] { SearchLocation.SOUND, SearchLocation.VOICE });
-            }
-            // Matching PyKotor: elif voice_resname: self.play_sound(voice_resname, [SearchLocation.VOICE])
-            else if (!string.IsNullOrEmpty(voiceResname))
-            {
-                PlaySound(voiceResname, new[] { SearchLocation.VOICE });
-            }
-            // Matching PyKotor: else: self.blink_window()
-            else
-            {
-                BlinkWindow();
-            }
+            // Note: Sound and voice combo boxes are not yet implemented in the C# UI
+            // TODO: STUB - For now, we'll just blink the window to match the "else" case
+            // When combo boxes are added, this should check them first
+            BlinkWindow();
         }
 
         /// <summary>

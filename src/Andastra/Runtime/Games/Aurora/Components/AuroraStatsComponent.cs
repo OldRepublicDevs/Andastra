@@ -187,25 +187,8 @@ namespace Andastra.Runtime.Games.Aurora.Components
             get
             {
                 // BAB + STR modifier for melee (or DEX for ranged/finesse) + effect bonuses
-                int effectBonus = _effectAttackBonus;
-                
-                // Query EffectSystem for additional attack bonuses if available
-                if (Owner != null && Owner.World != null && Owner.World.EffectSystem != null)
-                {
-                    foreach (ActiveEffect activeEffect in Owner.World.EffectSystem.GetEffects(Owner))
-                    {
-                        if (activeEffect.Effect.Type == EffectType.AttackIncrease)
-                        {
-                            effectBonus += activeEffect.Effect.Amount;
-                        }
-                        else if (activeEffect.Effect.Type == EffectType.AttackDecrease)
-                        {
-                            effectBonus -= activeEffect.Effect.Amount;
-                        }
-                    }
-                }
-                
-                return _baseAttackBonus + GetAbilityModifier(Ability.Strength) + effectBonus;
+                // Effect bonuses are tracked via AddEffectAttackBonus/RemoveEffectAttackBonus called by EffectSystem
+                return _baseAttackBonus + GetAbilityModifier(Ability.Strength) + _effectAttackBonus;
             }
         }
 
@@ -215,24 +198,7 @@ namespace Andastra.Runtime.Games.Aurora.Components
             {
                 // AC = 10 + DEX mod + Armor + Natural + Deflection + Shield + Size mod + Effect bonuses
                 // Based on nwmain.exe: AC calculation includes size modifiers
-                int effectBonus = _effectACBonus;
-                
-                // Query EffectSystem for additional AC bonuses if available
-                if (Owner != null && Owner.World != null && Owner.World.EffectSystem != null)
-                {
-                    foreach (ActiveEffect activeEffect in Owner.World.EffectSystem.GetEffects(Owner))
-                    {
-                        if (activeEffect.Effect.Type == EffectType.ACIncrease)
-                        {
-                            effectBonus += activeEffect.Effect.Amount;
-                        }
-                        else if (activeEffect.Effect.Type == EffectType.ACDecrease)
-                        {
-                            effectBonus -= activeEffect.Effect.Amount;
-                        }
-                    }
-                }
-                
+                // Effect bonuses are tracked via AddEffectACBonus/RemoveEffectACBonus called by EffectSystem
                 return 10 
                     + GetAbilityModifier(Ability.Dexterity)
                     + _armorBonus
@@ -240,7 +206,7 @@ namespace Andastra.Runtime.Games.Aurora.Components
                     + _deflectionBonus
                     + _shieldBonus
                     + _sizeModifier
-                    + effectBonus;
+                    + _effectACBonus;
             }
         }
 

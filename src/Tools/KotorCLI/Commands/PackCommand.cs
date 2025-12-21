@@ -22,14 +22,14 @@ namespace KotorCLI.Commands
             packCommand.Options.Add(noConvertOption);
             var noCompileOption = new Option<bool>("--noCompile", "Do not recompile updated scripts");
             packCommand.Options.Add(noCompileOption);
-            
+
             packCommand.SetAction(parseResult =>
             {
                 var targets = parseResult.GetValue(targetsArgument) ?? Array.Empty<string>();
                 var clean = parseResult.GetValue(cleanOption);
                 var noConvert = parseResult.GetValue(noConvertOption);
                 var noCompile = parseResult.GetValue(noCompileOption);
-                
+
                 var logger = new StandardLogger();
                 var exitCode = Execute(targets, clean, noConvert, noCompile, logger);
                 Environment.Exit(exitCode);
@@ -42,13 +42,13 @@ namespace KotorCLI.Commands
         {
             // Pack command orchestrates: convert -> compile -> pack
             // TODO: STUB - For now, this is a placeholder that calls the individual commands
-            
+
             logger.Info("Pack command not yet fully implemented");
             logger.Info("Pack command should:");
             logger.Info("  1. Call convert command (unless --noConvert)");
             logger.Info("  2. Call compile command (unless --noCompile)");
             logger.Info("  3. Pack all converted/compiled files into MOD/ERF/HAK");
-            
+
             // TODO: Implement full pack logic
             // This requires:
             // - Calling convert command logic
@@ -56,7 +56,7 @@ namespace KotorCLI.Commands
             // - Reading all files from cache directory
             // - Packing them into ERF/MOD format
             // - Writing output file
-            
+
             return 0;
         }
     }

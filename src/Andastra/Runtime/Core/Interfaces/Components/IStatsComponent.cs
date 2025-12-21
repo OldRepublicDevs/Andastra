@@ -129,6 +129,40 @@ namespace Andastra.Runtime.Core.Interfaces.Components
         /// Character level (total class levels).
         /// </summary>
         int Level { get; }
+
+        /// <summary>
+        /// Adds an AC bonus from an effect.
+        /// </summary>
+        /// <param name="bonus">AC bonus to add</param>
+        /// <remarks>
+        /// Based on swkotor2.exe: AC effects modify total AC calculation
+        /// Located via string references: "ArmorClass" @ 0x007c42a8, "EffectACIncrease" @ routine 115
+        /// Original implementation: AC effects add to total AC (10 + DEX + Armor + Natural + Deflection + Effects)
+        /// </remarks>
+        void AddEffectACBonus(int bonus);
+
+        /// <summary>
+        /// Removes an AC bonus from an effect.
+        /// </summary>
+        /// <param name="bonus">AC bonus to remove</param>
+        void RemoveEffectACBonus(int bonus);
+
+        /// <summary>
+        /// Adds an attack bonus from an effect.
+        /// </summary>
+        /// <param name="bonus">Attack bonus to add</param>
+        /// <remarks>
+        /// Based on swkotor2.exe: Attack effects modify total attack bonus
+        /// Located via string references: "EffectAttackIncrease" @ routine 118
+        /// Original implementation: Attack effects add to total attack (BAB + STR/DEX + Effects)
+        /// </remarks>
+        void AddEffectAttackBonus(int bonus);
+
+        /// <summary>
+        /// Removes an attack bonus from an effect.
+        /// </summary>
+        /// <param name="bonus">Attack bonus to remove</param>
+        void RemoveEffectAttackBonus(int bonus);
     }
 }
 
