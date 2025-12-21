@@ -1084,6 +1084,87 @@ namespace Andastra.Runtime.MonoGame.Backends
             public VulkanException(string message) : base(message) { }
         }
 
+        /// <summary>
+        /// Platform-specific native method interop for loading Vulkan functions.
+        /// </summary>
+        private static class NativeMethods
+        {
+            // Windows P/Invoke declarations
+            [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Ansi)]
+            public static extern IntPtr LoadLibrary(string lpFileName);
+
+            [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Ansi, ExactSpelling = true)]
+            public static extern IntPtr GetProcAddress(IntPtr hModule, string lpProcName);
+
+            [DllImport("kernel32.dll", SetLastError = true)]
+            [return: MarshalAs(UnmanagedType.Bool)]
+            public static extern bool FreeLibrary(IntPtr hModule);
+
+            // Linux/macOS P/Invoke declarations (for cross-platform support)
+            [DllImport("libdl.so.2", CharSet = CharSet.Ansi)]
+            public static extern IntPtr dlopen(string filename, int flags);
+
+            [DllImport("libdl.so.2", CharSet = CharSet.Ansi)]
+            public static extern IntPtr dlsym(IntPtr handle, string symbol);
+
+            [DllImport("libdl.so.2")]
+            public static extern int dlclose(IntPtr handle);
+
+            // macOS P/Invoke declarations
+            [DllImport("libdl.dylib", CharSet = CharSet.Ansi)]
+            public static extern IntPtr dlopen_mac(string filename, int flags);
+
+            [DllImport("libdl.dylib", CharSet = CharSet.Ansi)]
+            public static extern IntPtr dlsym_mac(IntPtr handle, string symbol);
+
+            // Helper method to load library based on platform
+            public static IntPtr LoadLibrary(string libraryName)
+            {
+                if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+                {
+                    return LoadLibrary(libraryName);
+                }
+                else if (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX)
+                {
+                    // Try Linux first
+                    IntPtr handle = dlopen(libraryName, 2); // RTLD_NOW = 2
+                    if (handle != IntPtr.Zero)
+                    {
+                        return handle;
+                    }
+                    // Try macOS
+                    return dlopen_mac(libraryName, 2);
+                }
+                return IntPtr.Zero;
+            }
+
+            // Helper method to get function pointer based on platform
+            public static IntPtr GetProcAddress(IntPtr libraryHandle, string functionName)
+            {
+                if (libraryHandle == IntPtr.Zero)
+                {
+                    return IntPtr.Zero;
+                }
+
+                if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+                {
+                    return GetProcAddress(libraryHandle, functionName);
+                }
+                else if (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX)
+                {
+                    // Try Linux first
+                    IntPtr ptr = dlsym(libraryHandle, functionName);
+                    if (ptr != IntPtr.Zero)
+                    {
+                        return ptr;
+                    }
+                    // Try macOS
+                    return dlsym_mac(libraryHandle, functionName);
+                }
+                return IntPtr.Zero;
+            }
+        }
+
         #endregion
 
         private readonly IntPtr _device;
@@ -1680,17 +1761,402 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ObjectDisposedException(nameof(VulkanDevice));
             }
 
-            // TODO: IMPLEMENT - Create VkFramebuffer (or use VK_KHR_dynamic_rendering)
-            // - Create VkRenderPass from attachments
-            // - Create VkFramebuffer with image views from attachments
-            // - Track resource for cleanup
-            // Note: With VK_KHR_dynamic_rendering, framebuffer may not be needed
+            if (desc == null)
+            {
+                throw new ArgumentNullException(nameof(desc));
+            }
 
+            // Create VkRenderPass from attachments
+            // Based on Vulkan Render Pass Creation: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateRenderPass.html
+            IntPtr vkRenderPass = IntPtr.Zero;
+            bool ownsRenderPass = true; // This framebuffer will own the render pass
+
+            try
+            {
+                // Build attachment descriptions from framebuffer attachments
+                List<VkAttachmentDescription> attachments = new List<VkAttachmentDescription>();
+                List<VkAttachmentReference> colorAttachmentRefs = new List<VkAttachmentReference>();
+                VkAttachmentReference depthAttachmentRef = new VkAttachmentReference
+                {
+                    attachment = unchecked((uint)-1), // VK_ATTACHMENT_UNUSED
+                    layout = VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED
+                };
+                bool hasDepthAttachment = false;
+
+                uint attachmentIndex = 0;
+
+                // Process color attachments
+                if (desc.ColorAttachments != null && desc.ColorAttachments.Length > 0)
+                {
+                    foreach (var colorAttachment in desc.ColorAttachments)
+                    {
+                        if (colorAttachment.Texture != null)
+                        {
+                            // Get texture format and create attachment description
+                            VkFormat format = ConvertTextureFormatToVkFormat(colorAttachment.Texture.Desc.Format);
+                            
+                            attachments.Add(new VkAttachmentDescription
+                            {
+                                flags = 0,
+                                format = format,
+                                samples = VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT, // TODO: Get from texture desc
+                                loadOp = VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_LOAD, // Default: load existing content
+                                storeOp = VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_STORE, // Store for next frame
+                                stencilLoadOp = VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+                                stencilStoreOp = VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_DONT_CARE,
+                                initialLayout = VkImageLayout.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                                finalLayout = VkImageLayout.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+                            });
+
+                            colorAttachmentRefs.Add(new VkAttachmentReference
+                            {
+                                attachment = attachmentIndex,
+                                layout = VkImageLayout.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+                            });
+
+                            attachmentIndex++;
+                        }
+                    }
+                }
+
+                // Process depth attachment
+                if (desc.DepthAttachment.Texture != null)
+                {
+                    VkFormat depthFormat = ConvertTextureFormatToVkFormat(desc.DepthAttachment.Texture.Desc.Format);
+                    
+                    attachments.Add(new VkAttachmentDescription
+                    {
+                        flags = 0,
+                        format = depthFormat,
+                        samples = VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT, // TODO: Get from texture desc
+                        loadOp = VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_LOAD,
+                        storeOp = VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_STORE,
+                        stencilLoadOp = VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+                        stencilStoreOp = VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_DONT_CARE,
+                        initialLayout = VkImageLayout.VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                        finalLayout = VkImageLayout.VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+                    });
+
+                    depthAttachmentRef = new VkAttachmentReference
+                    {
+                        attachment = attachmentIndex,
+                        layout = VkImageLayout.VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+                    };
+                    hasDepthAttachment = true;
+                    attachmentIndex++;
+                }
+
+                // Create subpass description
+                VkSubpassDescription subpass = new VkSubpassDescription
+                {
+                    flags = 0,
+                    pipelineBindPoint = VkPipelineBindPoint.VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    inputAttachmentCount = 0,
+                    pInputAttachments = IntPtr.Zero,
+                    colorAttachmentCount = (uint)colorAttachmentRefs.Count,
+                    pColorAttachments = IntPtr.Zero, // Will be set after marshalling
+                    pResolveAttachments = IntPtr.Zero,
+                    pDepthStencilAttachment = hasDepthAttachment ? IntPtr.Zero : IntPtr.Zero, // Will be set after marshalling
+                    preserveAttachmentCount = 0,
+                    pPreserveAttachments = IntPtr.Zero
+                };
+
+                // Create render pass if we have attachments
+                if (attachments.Count > 0 && vkCreateRenderPass != null)
+                {
+                    // Marshal attachment descriptions
+                    int attachmentDescSize = Marshal.SizeOf(typeof(VkAttachmentDescription));
+                    IntPtr pAttachments = Marshal.AllocHGlobal(attachmentDescSize * attachments.Count);
+                    try
+                    {
+                        for (int i = 0; i < attachments.Count; i++)
+                        {
+                            IntPtr attachmentPtr = new IntPtr(pAttachments.ToInt64() + i * attachmentDescSize);
+                            Marshal.StructureToPtr(attachments[i], attachmentPtr, false);
+                        }
+
+                        // Marshal color attachment references
+                        IntPtr pColorAttachments = IntPtr.Zero;
+                        if (colorAttachmentRefs.Count > 0)
+                        {
+                            int colorRefSize = Marshal.SizeOf(typeof(VkAttachmentReference));
+                            pColorAttachments = Marshal.AllocHGlobal(colorRefSize * colorAttachmentRefs.Count);
+                            for (int i = 0; i < colorAttachmentRefs.Count; i++)
+                            {
+                                IntPtr colorRefPtr = new IntPtr(pColorAttachments.ToInt64() + i * colorRefSize);
+                                Marshal.StructureToPtr(colorAttachmentRefs[i], colorRefPtr, false);
+                            }
+                        }
+
+                        // Marshal depth attachment reference
+                        IntPtr pDepthStencilAttachment = IntPtr.Zero;
+                        if (hasDepthAttachment)
+                        {
+                            int depthRefSize = Marshal.SizeOf(typeof(VkAttachmentReference));
+                            pDepthStencilAttachment = Marshal.AllocHGlobal(depthRefSize);
+                            Marshal.StructureToPtr(depthAttachmentRef, pDepthStencilAttachment, false);
+                        }
+
+                        // Update subpass with marshalled pointers
+                        subpass.pColorAttachments = pColorAttachments;
+                        subpass.pDepthStencilAttachment = pDepthStencilAttachment;
+
+                        // Marshal subpass description
+                        int subpassSize = Marshal.SizeOf(typeof(VkSubpassDescription));
+                        IntPtr pSubpasses = Marshal.AllocHGlobal(subpassSize);
+                        try
+                        {
+                            Marshal.StructureToPtr(subpass, pSubpasses, false);
+
+                            // Create render pass create info
+                            VkRenderPassCreateInfo renderPassCreateInfo = new VkRenderPassCreateInfo
+                            {
+                                sType = VkStructureType.VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
+                                pNext = IntPtr.Zero,
+                                flags = 0,
+                                attachmentCount = (uint)attachments.Count,
+                                pAttachments = pAttachments,
+                                subpassCount = 1,
+                                pSubpasses = pSubpasses,
+                                dependencyCount = 0,
+                                pDependencies = IntPtr.Zero
+                            };
+
+                            // Create render pass
+                            VkResult result = vkCreateRenderPass(_device, ref renderPassCreateInfo, IntPtr.Zero, out vkRenderPass);
+                            if (result != VkResult.VK_SUCCESS)
+                            {
+                                throw new VulkanException($"vkCreateRenderPass failed with result: {result}");
+                            }
+
+                            Console.WriteLine($"[VulkanDevice] Successfully created VkRenderPass with {attachments.Count} attachments");
+                        }
+                        finally
+                        {
+                            if (pSubpasses != IntPtr.Zero)
+                            {
+                                Marshal.FreeHGlobal(pSubpasses);
+                            }
+                            if (pColorAttachments != IntPtr.Zero)
+                            {
+                                Marshal.FreeHGlobal(pColorAttachments);
+                            }
+                            if (pDepthStencilAttachment != IntPtr.Zero)
+                            {
+                                Marshal.FreeHGlobal(pDepthStencilAttachment);
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        if (pAttachments != IntPtr.Zero)
+                        {
+                            Marshal.FreeHGlobal(pAttachments);
+                        }
+                    }
+                }
+                else if (attachments.Count == 0)
+                {
+                    Console.WriteLine("[VulkanDevice] Warning: CreateFramebuffer called with no attachments, creating placeholder framebuffer");
+                }
+                else if (vkCreateRenderPass == null)
+                {
+                    Console.WriteLine("[VulkanDevice] Warning: vkCreateRenderPass function pointer not initialized, creating placeholder framebuffer");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[VulkanDevice] Error creating VkRenderPass: {ex.Message}");
+                Console.WriteLine($"[VulkanDevice] Stack trace: {ex.StackTrace}");
+                // Continue with null render pass - framebuffer creation will handle it
+            }
+
+            // Create VkFramebuffer with image views from attachments
+            // Based on Vulkan Framebuffer Creation: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateFramebuffer.html
+            IntPtr vkFramebuffer = IntPtr.Zero;
+
+            try
+            {
+                if (vkRenderPass != IntPtr.Zero && vkCreateFramebuffer != null)
+                {
+                    // Collect image views from attachments
+                    List<IntPtr> imageViews = new List<IntPtr>();
+                    uint framebufferWidth = 0;
+                    uint framebufferHeight = 0;
+
+                    // Get image views from color attachments
+                    if (desc.ColorAttachments != null && desc.ColorAttachments.Length > 0)
+                    {
+                        foreach (var colorAttachment in desc.ColorAttachments)
+                        {
+                            if (colorAttachment.Texture != null)
+                            {
+                                // Get VkImageView from VulkanTexture
+                                IntPtr imageView = GetImageViewFromTexture(colorAttachment.Texture);
+                                if (imageView != IntPtr.Zero)
+                                {
+                                    imageViews.Add(imageView);
+                                }
+                                else
+                                {
+                                    Console.WriteLine("[VulkanDevice] Warning: Could not get image view from color attachment texture");
+                                }
+
+                                // Get framebuffer dimensions from first color attachment
+                                if (framebufferWidth == 0)
+                                {
+                                    framebufferWidth = (uint)colorAttachment.Texture.Desc.Width;
+                                    framebufferHeight = (uint)colorAttachment.Texture.Desc.Height;
+                                }
+                            }
+                        }
+                    }
+
+                    // Get image view from depth attachment
+                    if (desc.DepthAttachment.Texture != null)
+                    {
+                        IntPtr imageView = GetImageViewFromTexture(desc.DepthAttachment.Texture);
+                        if (imageView != IntPtr.Zero)
+                        {
+                            imageViews.Add(imageView);
+                        }
+                        else
+                        {
+                            Console.WriteLine("[VulkanDevice] Warning: Could not get image view from depth attachment texture");
+                        }
+
+                        // Update framebuffer dimensions if not set
+                        if (framebufferWidth == 0)
+                        {
+                            framebufferWidth = (uint)desc.DepthAttachment.Texture.Desc.Width;
+                            framebufferHeight = (uint)desc.DepthAttachment.Texture.Desc.Height;
+                        }
+                    }
+
+                    if (imageViews.Count > 0 && framebufferWidth > 0 && framebufferHeight > 0)
+                    {
+                        // Marshal image view array
+                        IntPtr pImageViews = Marshal.AllocHGlobal(IntPtr.Size * imageViews.Count);
+                        try
+                        {
+                            for (int i = 0; i < imageViews.Count; i++)
+                            {
+                                Marshal.WriteIntPtr(pImageViews, i * IntPtr.Size, imageViews[i]);
+                            }
+
+                            // Create framebuffer create info
+                            VkFramebufferCreateInfo framebufferCreateInfo = new VkFramebufferCreateInfo
+                            {
+                                sType = VkStructureType.VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+                                pNext = IntPtr.Zero,
+                                flags = 0,
+                                renderPass = vkRenderPass,
+                                attachmentCount = (uint)imageViews.Count,
+                                pAttachments = pImageViews,
+                                width = framebufferWidth,
+                                height = framebufferHeight,
+                                layers = 1 // 2D framebuffer
+                            };
+
+                            // Create framebuffer
+                            VkResult result = vkCreateFramebuffer(_device, ref framebufferCreateInfo, IntPtr.Zero, out vkFramebuffer);
+                            if (result != VkResult.VK_SUCCESS)
+                            {
+                                throw new VulkanException($"vkCreateFramebuffer failed with result: {result}");
+                            }
+
+                            Console.WriteLine($"[VulkanDevice] Successfully created VkFramebuffer {framebufferWidth}x{framebufferHeight} with {imageViews.Count} attachments");
+                        }
+                        finally
+                        {
+                            if (pImageViews != IntPtr.Zero)
+                            {
+                                Marshal.FreeHGlobal(pImageViews);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("[VulkanDevice] Warning: Cannot create VkFramebuffer - no valid image views or invalid dimensions");
+                    }
+                }
+                else if (vkRenderPass == IntPtr.Zero)
+                {
+                    Console.WriteLine("[VulkanDevice] Warning: Cannot create VkFramebuffer - render pass creation failed");
+                }
+                else if (vkCreateFramebuffer == null)
+                {
+                    Console.WriteLine("[VulkanDevice] Warning: vkCreateFramebuffer function pointer not initialized");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[VulkanDevice] Error creating VkFramebuffer: {ex.Message}");
+                Console.WriteLine($"[VulkanDevice] Stack trace: {ex.StackTrace}");
+                
+                // Clean up render pass if framebuffer creation failed
+                if (vkRenderPass != IntPtr.Zero && vkDestroyRenderPass != null)
+                {
+                    try
+                    {
+                        vkDestroyRenderPass(_device, vkRenderPass, IntPtr.Zero);
+                    }
+                    catch
+                    {
+                        // Ignore cleanup errors
+                    }
+                    vkRenderPass = IntPtr.Zero;
+                }
+            }
+
+            // Create framebuffer wrapper with handles
             IntPtr handle = new IntPtr(_nextResourceHandle++);
-            var framebuffer = new VulkanFramebuffer(handle, desc);
+            var framebuffer = new VulkanFramebuffer(handle, desc, vkFramebuffer, vkRenderPass, _device, ownsRenderPass);
             _resources[handle] = framebuffer;
 
             return framebuffer;
+        }
+
+        /// <summary>
+        /// Gets the VkImageView handle from an ITexture.
+        /// For VulkanTexture instances, extracts the internal VkImageView handle.
+        /// </summary>
+        private IntPtr GetImageViewFromTexture(ITexture texture)
+        {
+            if (texture == null)
+            {
+                return IntPtr.Zero;
+            }
+
+            // Try to get VkImageView from VulkanTexture
+            if (texture is VulkanTexture vulkanTexture)
+            {
+                // Use reflection to access private _vkImageView field (C# 7.3 compatible)
+                // In a production implementation, VulkanTexture would expose this via a property or internal method
+                try
+                {
+                    System.Reflection.FieldInfo field = typeof(VulkanTexture).GetField("_vkImageView", 
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (field != null)
+                    {
+                        IntPtr imageView = (IntPtr)field.GetValue(vulkanTexture);
+                        return imageView;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[VulkanDevice] Error getting image view from VulkanTexture via reflection: {ex.Message}");
+                }
+            }
+
+            // Fallback: if texture has a native handle, try to use it
+            // Note: This may not work if NativeHandle is not the image view
+            if (texture.NativeHandle != IntPtr.Zero)
+            {
+                return texture.NativeHandle;
+            }
+
+            return IntPtr.Zero;
         }
 
         public IBindingLayout CreateBindingLayout(BindingLayoutDesc desc)
