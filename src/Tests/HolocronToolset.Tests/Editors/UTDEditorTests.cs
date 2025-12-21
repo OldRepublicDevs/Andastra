@@ -1690,7 +1690,7 @@ namespace HolocronToolset.Tests.Editors
             editor.ResrefEdit.Text = "new_door";
             if (editor.AppearanceSelect.ItemCount > 0)
             {
-                editor.AppearanceSelect.SelectedIndex = 0;
+                editor.AppearanceSelect.SetSelectedIndex(0);
             }
             editor.CurrentHpSpin.Value = 100;
             editor.MaxHpSpin.Value = 100;
@@ -1850,7 +1850,7 @@ namespace HolocronToolset.Tests.Editors
             // Change appearance - should trigger preview update
             if (editor.AppearanceSelect.ItemCount > 1)
             {
-                editor.AppearanceSelect.SelectedIndex = 1;
+                editor.AppearanceSelect.SetSelectedIndex(1);
                 // Verify that the appearance change is reflected
                 editor.AppearanceSelect.SelectedIndex.Should().Be(1);
             }
