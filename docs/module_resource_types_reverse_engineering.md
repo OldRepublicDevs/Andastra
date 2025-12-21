@@ -325,6 +325,7 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 **Question**: What happens if `dialog.tlk` is put in a module?
 
 **Answer**: **TODO: Gain Certainty by going through ghidra mcp** - Search for TLK loading code by examining:
+
 - String references to "dialog.tlk" in swkotor.exe/swkotor2.exe
 - TLK resource type handler (type 2018, 0x7e2) - check if it calls `FUN_004074d0`
 - Global resource initialization code to see if TLK is loaded from a specific location only
@@ -347,7 +348,8 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 
 **Question**: Can WAV/OGG be loaded from modules?
 
-**Answer**: 
+**Answer**:
+
 - **WAV (4)**: **YES** - VERIFIED: Handler at swkotor.exe: 0x005d5e90 calls `FUN_004074d0` with type 4
 - **OGG (2078)**: **TODO: Gain Certainty by going through ghidra mcp** - Search for OGG handler (type 2078, 0x81e) and verify it calls `FUN_004074d0`
 
@@ -358,6 +360,7 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 **Question**: Do containers have maximum filesize or resource count limits?
 
 **Answer**: **TODO: Gain Certainty by going through ghidra mcp** - Examine:
+
 - RIM loader (`FUN_0040f990`) - check for size/count validation
 - MOD loader (`FUN_0040f3c0`) - check for size/count validation
 - ERF loader - check for size/count validation
@@ -365,6 +368,7 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 - Memory allocation limits in container reading code
 
 **Note**: In practice, containers are limited by:
+
 - File system limits (2GB on FAT32, larger on NTFS)
 - Memory constraints (32-bit process address space)
 - But no explicit limits found in module loading code yet
@@ -397,22 +401,26 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 **Complete Priority Order for ALL Resource Types**:
 
 1. **Override Directory** (`this+0x14`, Location 3, Source Type 2) - Highest priority
+
    - Files in `Override/` folder
    - Searched first for all resource types
-   
+
 2. **Module Containers** (`this+0x18`, Location 2, Source Type 3) - High priority
+
    - `.mod` files (MOD containers)
    - `_dlg.erf` files (K2 only, ERF containers)
    - Searched after Override
-   
+
 3. **Module RIM Files** (`this+0x1c`, Location 1, Source Type 4) - Medium priority
+
    - `.rim` files
    - `_s.rim` files
    - `_a.rim` files
    - `_adx.rim` files
    - Searched after Module containers
-   
+
 4. **Chitin Archives** (`this+0x10`, Location 0, Source Type 1) - Lowest priority
+
    - BIF files from `chitin.key`
    - `patch.erf` (K1 only, loaded during global initialization)
    - Searched last
