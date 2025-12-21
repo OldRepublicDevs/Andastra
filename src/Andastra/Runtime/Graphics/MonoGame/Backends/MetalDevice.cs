@@ -843,6 +843,59 @@ namespace Andastra.Runtime.MonoGame.Backends
             return new InputLayout { Elements = elements };
         }
 
+        /// <summary>
+        /// Converts PrimitiveTopology enum to MetalPrimitiveType enum.
+        /// Based on Metal API: MTLPrimitiveType enum values
+        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlprimitivetype
+        /// </summary>
+        private MetalPrimitiveType ConvertPrimitiveTopologyToMetal(PrimitiveTopology topology)
+        {
+            switch (topology)
+            {
+                case PrimitiveTopology.PointList:
+                    return MetalPrimitiveType.Point;
+                case PrimitiveTopology.LineList:
+                    return MetalPrimitiveType.Line;
+                case PrimitiveTopology.LineStrip:
+                    return MetalPrimitiveType.LineStrip;
+                case PrimitiveTopology.TriangleList:
+                    return MetalPrimitiveType.Triangle;
+                case PrimitiveTopology.TriangleStrip:
+                    return MetalPrimitiveType.TriangleStrip;
+                case PrimitiveTopology.PatchList:
+                    // Metal doesn't support patch lists directly - tessellation is handled differently
+                    // Default to Triangle for patch lists (most common tessellation output)
+                    return MetalPrimitiveType.Triangle;
+                default:
+                    // Default to Triangle if topology is unknown (most common case)
+                    return MetalPrimitiveType.Triangle;
+            }
+        }
+
+        /// <summary>
+        /// Gets the primitive type from the current graphics state.
+        /// Retrieves PrimitiveTopology from the pipeline descriptor and converts it to MetalPrimitiveType.
+        /// Returns MetalPrimitiveType.Triangle as default if pipeline is not set.
+        /// </summary>
+        private MetalPrimitiveType GetPrimitiveTypeFromGraphicsState()
+        {
+            // Default to Triangle if pipeline is not set (most common case)
+            MetalPrimitiveType primitiveType = MetalPrimitiveType.Triangle;
+
+            // Get primitive type from current graphics state pipeline
+            if (_currentGraphicsState.Pipeline != null)
+            {
+                var metalPipeline = _currentGraphicsState.Pipeline as MetalPipeline;
+                if (metalPipeline != null)
+                {
+                    PrimitiveTopology topology = metalPipeline.Desc.PrimitiveTopology;
+                    primitiveType = ConvertPrimitiveTopologyToMetal(topology);
+                }
+            }
+
+            return primitiveType;
+        }
+
         private BlendState ConvertBlendState(BlendStateDesc state)
         {
             return new BlendState
@@ -1333,6 +1386,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private IntPtr _clearUAVFloatComputePipelineState; // id<MTLComputePipelineState> - cached pipeline state for clearing UAV with float
         private IntPtr _clearUAVUintComputePipelineState; // id<MTLComputePipelineState> - cached pipeline state for clearing UAV with uint
         private static bool? _supportsBatchViewports; // Cached result for batch viewport API availability
+        private GraphicsState _currentGraphicsState; // Current graphics state for draw commands
 
         public MetalCommandList(IntPtr handle, CommandListType type, MetalBackend backend)
         {
@@ -1346,6 +1400,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             _currentComputeCommandEncoder = IntPtr.Zero;
             _clearUAVFloatComputePipelineState = IntPtr.Zero;
             _clearUAVUintComputePipelineState = IntPtr.Zero;
+            _currentGraphicsState = default(GraphicsState); // Initialize to default state
         }
 
         public void Open()
@@ -2628,14 +2683,43 @@ namespace Andastra.Runtime.MonoGame.Backends
         }
 
         // Graphics State
+        /// <summary>
+        /// Sets the complete graphics pipeline state for rendering.
+        /// 
+        /// This method stores the graphics state which is then used by draw commands
+        /// to retrieve primitive type, index buffer, and other rendering parameters.
+        /// 
+        /// The graphics state includes:
+        /// - Graphics pipeline (contains primitive topology)
+        /// - Framebuffer (render targets)
+        /// - Viewports and scissor rectangles
+        /// - Binding sets (shader resources)
+        /// - Vertex buffers
+        /// - Index buffer and index format
+        /// 
+        /// Based on Metal API: Graphics state is managed through render pipeline state objects
+        /// and command encoder state. Metal API Reference: https://developer.apple.com/documentation/metal
+        /// </summary>
+        /// <param name="state">Complete graphics state configuration</param>
         public void SetGraphicsState(GraphicsState state)
         {
             if (!_isOpen)
             {
                 return;
             }
-            // TODO: Implement graphics state setting
-            // This would set pipeline, framebuffer, viewports, binding sets, etc.
+
+            // Store the current graphics state for use by draw commands
+            // This allows draw commands to retrieve primitive type, index buffer, etc.
+            _currentGraphicsState = state;
+
+            // Note: Full implementation of SetGraphicsState would also:
+            // - Set render pipeline state (MTLRenderPipelineState)
+            // - Begin render pass with framebuffer
+            // - Set viewports and scissors
+            // - Bind vertex buffers
+            // - Bind index buffer
+            // - Bind descriptor sets/binding sets
+            // For now, we store the state so draw commands can access it
         }
 
         public void SetViewport(Viewport viewport)
@@ -2879,11 +2963,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             // Get current primitive type from graphics state
-            // Default to Triangle if not set (most common case)
-            MetalPrimitiveType primitiveType = MetalPrimitiveType.Triangle;
-
-            // TODO: Get actual primitive type from current graphics state
-            // When SetGraphicsState is implemented, this should be retrieved from the state.
+            MetalPrimitiveType primitiveType = GetPrimitiveTypeFromGraphicsState();
 
             // Extract draw parameters from DrawArguments
             int vertexStart = args.StartVertexLocation;
@@ -2920,15 +3000,49 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             // Get current primitive type, index type, and index buffer from graphics state
-            // Default to Triangle and UInt16 if not set (most common case)
-            MetalPrimitiveType primitiveType = MetalPrimitiveType.Triangle;
-            MetalIndexType indexType = MetalIndexType.UInt16;
-            IntPtr indexBuffer = IntPtr.Zero;
+            MetalPrimitiveType primitiveType = GetPrimitiveTypeFromGraphicsState();
+            MetalIndexType indexType;
+            IntPtr indexBuffer;
             int indexBufferOffset = 0;
 
-            // TODO: Get actual primitive type, index type, and index buffer from current graphics state
-            // For now, using defaults. When SetGraphicsState is implemented, these should be retrieved from the state.
-            // Note: Index buffer is typically set via SetVertexBuffers or similar method in graphics state
+            // Get index buffer and index format from graphics state
+            if (_currentGraphicsState.IndexBuffer != null)
+            {
+                MetalBuffer metalIndexBuffer = _currentGraphicsState.IndexBuffer as MetalBuffer;
+                if (metalIndexBuffer != null)
+                {
+                    indexBuffer = metalIndexBuffer.NativeHandle;
+                    if (indexBuffer == IntPtr.Zero)
+                    {
+                        indexBuffer = metalIndexBuffer.NativeHandle; // Try again (shouldn't be needed but defensive)
+                    }
+                }
+                else
+                {
+                    indexBuffer = IntPtr.Zero;
+                }
+
+                // Convert TextureFormat to MetalIndexType
+                // R16_UInt -> UInt16, R32_UInt -> UInt32
+                if (_currentGraphicsState.IndexFormat == TextureFormat.R16_UInt)
+                {
+                    indexType = MetalIndexType.UInt16;
+                }
+                else if (_currentGraphicsState.IndexFormat == TextureFormat.R32_UInt)
+                {
+                    indexType = MetalIndexType.UInt32;
+                }
+                else
+                {
+                    // Default to UInt32 if format is unknown
+                    indexType = MetalIndexType.UInt32;
+                }
+            }
+            else
+            {
+                indexBuffer = IntPtr.Zero;
+                indexType = MetalIndexType.UInt16; // Default, but won't be used if buffer is null
+            }
 
             if (indexBuffer == IntPtr.Zero)
             {
@@ -2994,8 +3108,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             // Get current primitive type from graphics state
-            // Default to Triangle if not set (most common case)
-            MetalPrimitiveType primitiveType = MetalPrimitiveType.Triangle;
+            MetalPrimitiveType primitiveType = GetPrimitiveTypeFromGraphicsState();
 
             // Metal's drawPrimitives:indirectBuffer:indirectBufferOffset: method draws a single indirect command
             // For multi-draw indirect, we need to loop and call the method multiple times with stride-based offsets
@@ -3053,14 +3166,43 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             // Get current primitive type and index buffer from graphics state
-            // Default to Triangle and UInt16 if not set (most common case)
-            MetalPrimitiveType primitiveType = MetalPrimitiveType.Triangle;
-            MetalIndexType indexType = MetalIndexType.UInt16;
-            IntPtr indexBuffer = IntPtr.Zero;
+            MetalPrimitiveType primitiveType = GetPrimitiveTypeFromGraphicsState();
+            MetalIndexType indexType;
+            IntPtr indexBuffer;
             int indexBufferOffset = 0;
 
-            // TODO: Get actual primitive type, index type, and index buffer from current graphics state
-            // For now, using defaults. When SetGraphicsState is implemented, these should be retrieved from the state.
+            // Get index buffer and index format from graphics state
+            if (_currentGraphicsState.IndexBuffer != null)
+            {
+                MetalBuffer metalIndexBuffer = _currentGraphicsState.IndexBuffer as MetalBuffer;
+                if (metalIndexBuffer != null)
+                {
+                    indexBuffer = metalIndexBuffer.NativeHandle;
+                }
+                else
+                {
+                    indexBuffer = IntPtr.Zero;
+                }
+
+                // Convert TextureFormat to MetalIndexType
+                if (_currentGraphicsState.IndexFormat == TextureFormat.R16_UInt)
+                {
+                    indexType = MetalIndexType.UInt16;
+                }
+                else if (_currentGraphicsState.IndexFormat == TextureFormat.R32_UInt)
+                {
+                    indexType = MetalIndexType.UInt32;
+                }
+                else
+                {
+                    indexType = MetalIndexType.UInt32; // Default
+                }
+            }
+            else
+            {
+                indexBuffer = IntPtr.Zero;
+                indexType = MetalIndexType.UInt16; // Default, but won't be used if buffer is null
+            }
 
             // Metal's drawIndexedPrimitives:indexType:indexBuffer:indexBufferOffset:indirectBuffer:indirectBufferOffset: method draws a single indirect command
             // For multi-draw indexed indirect, we need to loop and call the method multiple times with stride-based offsets
