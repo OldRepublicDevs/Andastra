@@ -465,12 +465,42 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 
 ### WAV/OGG Audio
 
-**Question**: Can WAV/OGG be loaded from modules?
+**Question**: Can WAV/OGG be loaded from modules? Are all WAV files obfuscated? Can the game read normal WAV files?
 
 **Answer**:
 
 - **WAV (4)**: **YES** - VERIFIED: Handler at swkotor.exe: 0x005d5e90 calls `FUN_004074d0` with type 4
 - **OGG (2078)**: ❌ **NO** - VERIFIED: OGG (type 2078, 0x81e) is **NOT registered** in resource type registry (swkotor.exe: `FUN_005e6d20`, swkotor2.exe: `FUN_00632510`). No handler calls `FUN_004074d0` with type 0x81e. OGG files in modules will be ignored. OGG is loaded via direct file I/O (Miles audio system or similar), not through resource system.
+
+**WAV Obfuscation**:
+
+**NOT all WAV files are obfuscated** - Only SFX (sound effect) files have obfuscation headers:
+
+1. **SFX Files** (sound effects, combat, UI, ambience):
+   - **470-byte obfuscation header** starting with magic bytes `0xFF 0xF3 0x60 0xC4`
+   - Header is followed by standard RIFF/WAVE data
+   - Game detects SFX magic and seeks to offset 0x1DA (470 bytes) before reading RIFF/WAVE
+   - Reference: `vendor/reone/src/libs/audio/format/wavreader.cpp:34-35`
+
+2. **VO Files** (voice-over, dialogue):
+   - **Standard RIFF/WAVE format** - no obfuscation
+   - Plain RIFF/WAVE PCM files readable by any media player
+   - Game reads directly as standard WAV (no header skipping)
+   - Reference: `vendor/PyKotor/wiki/WAV-File-Format.md` - "VO (Voice-over): Plain RIFF/WAVE PCM files"
+
+3. **MP3-in-WAV Format** (some music):
+   - RIFF header with `riffSize == 50`
+   - 58-byte header, then raw MP3 data follows
+   - Game skips 58 bytes and treats remaining data as MP3
+
+**Can the game read normal WAV files?**: **✅ YES**
+
+The game's WAV handler (`vendor/reone/src/libs/audio/format/wavreader.cpp:30-38`) checks:
+1. First checks for SFX magic (`\xff\xf3\x60\xc4`) → if found, seeks to offset 0x1DA
+2. If not SFX magic, checks for "RIFF" → if found, reads as **standard RIFF/WAVE**
+3. If neither, throws validation error
+
+**Conclusion**: The game **can read normal, un-obfuscated WAV files**. Standard RIFF/WAVE files work without any obfuscation header. Only SFX files require the 470-byte header. VO files in the game are already standard WAV format.
 
 **Note**: Audio files may also be loaded from specific directories (e.g., `streamwaves/`, `streammusic/`) rather than through the resource search mechanism. Verify if module loading works for audio playback.
 
