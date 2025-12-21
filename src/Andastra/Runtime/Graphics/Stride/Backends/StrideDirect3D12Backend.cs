@@ -1842,13 +1842,78 @@ namespace Andastra.Runtime.Stride.Backends
                     return;
                 }
 
-                // Step 1: Get texture resource description to determine readback buffer size
-                // We need to query the texture dimensions and format to create a matching readback buffer
-                // For sampler feedback textures, we'll use the dataSize parameter as the buffer size
-                // In a full implementation, we would query GetResourceAllocationInfo or GetCopyableFootprints
-                // to get the exact layout, but for simplicity, we'll use the provided dataSize
+                // Step 1: Get texture resource description using ID3D12Resource::GetDesc
+                // This gives us the exact dimensions, format, and layout of the texture
+                IntPtr sourceResourceDescPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_RESOURCE_DESC)));
+                D3D12_RESOURCE_DESC sourceResourceDesc;
+                try
+                {
+                    GetResourceDesc(resourceInfo.NativeHandle, sourceResourceDescPtr);
+                    sourceResourceDesc = (D3D12_RESOURCE_DESC)Marshal.PtrToStructure(sourceResourceDescPtr, typeof(D3D12_RESOURCE_DESC));
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[StrideDX12] OnReadSamplerFeedback: Failed to get resource description: {ex.Message}");
+                    Marshal.FreeHGlobal(sourceResourceDescPtr);
+                    return;
+                }
 
-                // Step 2: Create readback buffer using ID3D12Device::CreateCommittedResource
+                // Step 2: Get copyable footprint for the source texture using ID3D12Device::GetCopyableFootprints
+                // This tells us the exact layout, row pitch, and total size needed for copying
+                IntPtr layoutsPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT)));
+                IntPtr numRowsPtr = Marshal.AllocHGlobal(sizeof(uint));
+                IntPtr rowSizeInBytesPtr = Marshal.AllocHGlobal(sizeof(ulong));
+                IntPtr totalBytesPtr = Marshal.AllocHGlobal(sizeof(ulong));
+                
+                D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint;
+                uint numRows;
+                ulong rowSizeInBytes;
+                ulong totalBytes;
+                
+                try
+                {
+                    int footprintsHr = GetCopyableFootprints(
+                        _device,
+                        sourceResourceDescPtr,
+                        0, // firstSubresource
+                        1, // numSubresources (only need the first mip)
+                        0, // baseOffset
+                        layoutsPtr,
+                        numRowsPtr,
+                        rowSizeInBytesPtr,
+                        totalBytesPtr);
+
+                    if (footprintsHr < 0)
+                    {
+                        Console.WriteLine($"[StrideDX12] OnReadSamplerFeedback: GetCopyableFootprints failed, HRESULT 0x{footprintsHr:X8}");
+                        Marshal.FreeHGlobal(sourceResourceDescPtr);
+                        Marshal.FreeHGlobal(layoutsPtr);
+                        Marshal.FreeHGlobal(numRowsPtr);
+                        Marshal.FreeHGlobal(rowSizeInBytesPtr);
+                        Marshal.FreeHGlobal(totalBytesPtr);
+                        return;
+                    }
+
+                    footprint = (D3D12_PLACED_SUBRESOURCE_FOOTPRINT)Marshal.PtrToStructure(layoutsPtr, typeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT));
+                    numRows = (uint)Marshal.ReadInt32(numRowsPtr);
+                    rowSizeInBytes = (ulong)Marshal.ReadInt64(rowSizeInBytesPtr);
+                    totalBytes = (ulong)Marshal.ReadInt64(totalBytesPtr);
+
+                    Console.WriteLine($"[StrideDX12] OnReadSamplerFeedback: Footprint - Width={footprint.Footprint.Width}, Height={footprint.Footprint.Height}, RowPitch={footprint.Footprint.RowPitch}, TotalBytes={totalBytes}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[StrideDX12] OnReadSamplerFeedback: Failed to get copyable footprint: {ex.Message}");
+                    Marshal.FreeHGlobal(sourceResourceDescPtr);
+                    Marshal.FreeHGlobal(layoutsPtr);
+                    Marshal.FreeHGlobal(numRowsPtr);
+                    Marshal.FreeHGlobal(rowSizeInBytesPtr);
+                    Marshal.FreeHGlobal(totalBytesPtr);
+                    return;
+                }
+
+                // Step 3: Create readback buffer using ID3D12Device::CreateCommittedResource
+                // Use the totalBytes from GetCopyableFootprints to size the buffer correctly
                 // Heap type: D3D12_HEAP_TYPE_READBACK for CPU-accessible memory
                 // Resource desc: Buffer with size matching dataSize
                 // Initial state: D3D12_RESOURCE_STATE_COPY_DEST
@@ -1862,11 +1927,15 @@ namespace Andastra.Runtime.Stride.Backends
                     VisibleNodeMask = 0
                 };
 
+                // Use totalBytes from GetCopyableFootprints for accurate buffer size
+                // This ensures the readback buffer can hold all the texture data
+                ulong readbackBufferSize = totalBytes;
+                
                 var readbackResourceDesc = new D3D12_RESOURCE_DESC
                 {
                     Dimension = D3D12_RESOURCE_DIMENSION_BUFFER,
                     Alignment = 0,
-                    Width = (ulong)dataSize,
+                    Width = readbackBufferSize,
                     Height = 1,
                     DepthOrArraySize = 1,
                     MipLevels = 1,
@@ -1911,38 +1980,7 @@ namespace Andastra.Runtime.Stride.Backends
                         return;
                     }
 
-                    // Step 3: Get copyable footprint for the source texture
-                    // This tells us the layout of the texture data for copying
-                    IntPtr sourceResourceDescPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_RESOURCE_DESC)));
-                    IntPtr layoutsPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT)));
-                    IntPtr numRowsPtr = Marshal.AllocHGlobal(sizeof(uint));
-                    IntPtr rowSizeInBytesPtr = Marshal.AllocHGlobal(sizeof(ulong));
-                    IntPtr totalBytesPtr = Marshal.AllocHGlobal(sizeof(ulong));
-
-                    try
-                    {
-                        // Query the texture resource description
-                        // For simplicity, we'll create a minimal footprint structure
-                        // In a full implementation, we would query the actual texture description
-                        var footprint = new D3D12_PLACED_SUBRESOURCE_FOOTPRINT
-                        {
-                            Offset = 0,
-                            Footprint = new D3D12_SUBRESOURCE_FOOTPRINT
-                            {
-                                Format = 189, // DXGI_FORMAT_SAMPLER_FEEDBACK_MIN_MIP_OPAQUE (default for sampler feedback)
-                                Width = (uint)Math.Max(1, (int)Math.Sqrt(dataSize)), // Approximate width
-                                Height = (uint)Math.Max(1, (int)Math.Sqrt(dataSize)), // Approximate height
-                                Depth = 1,
-                                RowPitch = (uint)dataSize // Use dataSize as row pitch for simplicity
-                            }
-                        };
-
-                        Marshal.StructureToPtr(footprint, layoutsPtr, false);
-                        Marshal.WriteInt32(numRowsPtr, 1);
-                        Marshal.WriteInt64(rowSizeInBytesPtr, dataSize);
-                        Marshal.WriteInt64(totalBytesPtr, dataSize);
-
-                        // Step 4: Transition feedback texture to COPY_SOURCE state using ResourceBarrier
+                    // Step 4: Transition feedback texture to COPY_SOURCE state using ResourceBarrier
                         var barrier = new D3D12_RESOURCE_BARRIER
                         {
                             Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,
@@ -2033,7 +2071,7 @@ namespace Andastra.Runtime.Stride.Backends
                         // Step 8: Execute command list and wait for GPU completion
                         // Since we don't have direct access to the command queue through Stride,
                         // we'll use Stride's WaitIdle to ensure GPU completion
-                        // In a full implementation with direct queue access, we would:
+                        // TODO:  In a full implementation with direct queue access, we would:
                         // - ExecuteCommandLists(commandQueue, [nativeCommandList], 1)
                         // - SignalFence(commandQueue, fence, 1)
                         // - Wait for fence completion
@@ -3205,6 +3243,38 @@ namespace Andastra.Runtime.Stride.Backends
         }
 
         /// <summary>
+        /// Gets the description of a resource.
+        /// Calls ID3D12Resource::GetDesc through COM vtable.
+        /// VTable index 8 for ID3D12Resource.
+        /// Platform: Windows only (x64/x86) - DirectX 12 COM is Windows-specific
+        /// Based on DirectX 12 Resource Description: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12resource-getdesc
+        /// </summary>
+        private unsafe void GetResourceDesc(IntPtr resource, IntPtr pDesc)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (resource == IntPtr.Zero || pDesc == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)resource;
+            // GetDesc is at index 8 in ID3D12Resource vtable
+            IntPtr methodPtr = vtable[8];
+
+            // Create delegate from function pointer
+            GetDescDelegate getDesc =
+                (GetDescDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(GetDescDelegate));
+
+            getDesc(resource, pDesc);
+        }
+
+        /// <summary>
         /// Unmaps a resource from CPU access.
         /// Calls ID3D12Resource::Unmap through COM vtable.
         /// VTable index 10 for ID3D12Resource.
@@ -3852,6 +3922,9 @@ namespace Andastra.Runtime.Stride.Backends
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate int SetEventOnCompletionDelegate(IntPtr fence, ulong value, IntPtr hEvent);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void GetDescDelegate(IntPtr resource, IntPtr pDesc);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate int MapDelegate(IntPtr resource, uint subresource, IntPtr pReadRange, IntPtr ppData);
