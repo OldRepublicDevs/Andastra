@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Formats.RIM;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Common;
 
@@ -15,6 +17,7 @@ namespace Andastra.Parsing.Extract.SaveData
         public List<ResourceIdentifier> ResourceOrder { get; } = new List<ResourceIdentifier>();
         public Dictionary<ResourceIdentifier, byte[]> ResourceData { get; } = new Dictionary<ResourceIdentifier, byte[]>();
         public Dictionary<ResourceIdentifier, ERF> CachedModules { get; } = new Dictionary<ResourceIdentifier, ERF>();
+        public Dictionary<ResourceIdentifier, RIM> CachedRimModules { get; } = new Dictionary<ResourceIdentifier, RIM>();
         public Dictionary<ResourceIdentifier, byte[]> CachedCharacters { get; } = new Dictionary<ResourceIdentifier, byte[]>();
         public Dictionary<int, ResourceIdentifier> CachedCharacterIndices { get; } = new Dictionary<int, ResourceIdentifier>();
         public GFF InventoryGff { get; private set; }
@@ -34,6 +37,7 @@ namespace Andastra.Parsing.Extract.SaveData
             ResourceOrder.Clear();
             ResourceData.Clear();
             CachedModules.Clear();
+            CachedRimModules.Clear();
             CachedCharacters.Clear();
             CachedCharacterIndices.Clear();
             InventoryGff = null;
@@ -56,7 +60,27 @@ namespace Andastra.Parsing.Extract.SaveData
 
                 if (ident.ResType == ResourceType.SAV)
                 {
-                    CachedModules[ident] = ERFAuto.ReadErf(res.Data);
+                    // Cached modules can be either ERF or RIM format
+                    // Try ERF first (most common), then RIM
+                    try
+                    {
+                        ERF erf = ERFAuto.ReadErf(res.Data);
+                        CachedModules[ident] = erf;
+                    }
+                    catch
+                    {
+                        // Not ERF format, try RIM
+                        try
+                        {
+                            RIM rim = RIMAuto.ReadRim(res.Data);
+                            CachedRimModules[ident] = rim;
+                        }
+                        catch
+                        {
+                            // Neither ERF nor RIM - store as raw data
+                            // This should not happen in valid save files, but we preserve the data
+                        }
+                    }
                 }
                 else if (ident.ResType == ResourceType.UTC)
                 {
@@ -83,6 +107,18 @@ namespace Andastra.Parsing.Extract.SaveData
         public void Save()
         {
             var erf = new ERF(ERFType.ERF, isSave: true);
+
+            // Update ResourceData from cached modules before saving
+            foreach (var kvp in CachedModules)
+            {
+                byte[] erfData = ERFAuto.BytesErf(kvp.Value, ResourceType.SAV);
+                ResourceData[kvp.Key] = erfData;
+            }
+            foreach (var kvp in CachedRimModules)
+            {
+                byte[] rimData = RIMAuto.BytesRim(kvp.Value);
+                ResourceData[kvp.Key] = rimData;
+            }
 
             // Insert resources in preserved order
             foreach (var ident in ResourceOrder)
@@ -141,6 +177,7 @@ namespace Andastra.Parsing.Extract.SaveData
             ResourceData.Remove(ident);
             ResourceOrder.Remove(ident);
             CachedModules.Remove(ident);
+            CachedRimModules.Remove(ident);
             CachedCharacters.Remove(ident);
             CachedCharacterIndices.Where(kvp => kvp.Value.Equals(ident)).ToList().ForEach(k => CachedCharacterIndices.Remove(k.Key));
             if (InventoryIdentifier != null && ident.Equals(InventoryIdentifier))
@@ -185,6 +222,157 @@ namespace Andastra.Parsing.Extract.SaveData
                 return idx;
             }
             return null;
+        }
+
+        /// <summary>
+        /// Gets a cached module by name (ResRef).
+        /// Cached modules can be either ERF or RIM format.
+        /// </summary>
+        /// <param name="moduleName">Module ResRef (e.g., "danm13", "ebo_m12aa")</param>
+        /// <returns>ERF object if found as ERF, null if not found or is RIM format</returns>
+        /// <remarks>
+        /// Cached modules are stored as ResourceType.SAV (2057) in savegame.sav.
+        /// The actual data inside can be either ERF or RIM format.
+        /// Use GetCachedRimModule to check for RIM format modules.
+        /// </remarks>
+        public ERF GetCachedModule(string moduleName)
+        {
+            if (string.IsNullOrEmpty(moduleName))
+            {
+                return null;
+            }
+
+            string moduleNameLower = moduleName.ToLowerInvariant();
+
+            foreach (var kvp in CachedModules)
+            {
+                if (kvp.Key.ResName.ToLowerInvariant().StartsWith(moduleNameLower))
+                {
+                    return kvp.Value;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Gets a cached RIM module by name (ResRef).
+        /// </summary>
+        /// <param name="moduleName">Module ResRef (e.g., "danm13", "ebo_m12aa")</param>
+        /// <returns>RIM object if found as RIM, null if not found or is ERF format</returns>
+        public RIM GetCachedRimModule(string moduleName)
+        {
+            if (string.IsNullOrEmpty(moduleName))
+            {
+                return null;
+            }
+
+            string moduleNameLower = moduleName.ToLowerInvariant();
+
+            foreach (var kvp in CachedRimModules)
+            {
+                if (kvp.Key.ResName.ToLowerInvariant().StartsWith(moduleNameLower))
+                {
+                    return kvp.Value;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Sets a cached module as ERF format.
+        /// </summary>
+        /// <param name="moduleName">Module ResRef</param>
+        /// <param name="erf">ERF object containing module data</param>
+        public void SetCachedModule(string moduleName, ERF erf)
+        {
+            if (string.IsNullOrEmpty(moduleName) || erf == null)
+            {
+                return;
+            }
+
+            var ident = new ResourceIdentifier(moduleName, ResourceType.SAV);
+            CachedModules[ident] = erf;
+            CachedRimModules.Remove(ident); // Remove from RIM cache if it was there
+
+            // Serialize ERF to bytes and store in ResourceData
+            byte[] erfData = ERFAuto.BytesErf(erf, ResourceType.SAV);
+            SetResource(ident, erfData);
+        }
+
+        /// <summary>
+        /// Sets a cached module as RIM format.
+        /// </summary>
+        /// <param name="moduleName">Module ResRef</param>
+        /// <param name="rim">RIM object containing module data</param>
+        public void SetCachedRimModule(string moduleName, RIM rim)
+        {
+            if (string.IsNullOrEmpty(moduleName) || rim == null)
+            {
+                return;
+            }
+
+            var ident = new ResourceIdentifier(moduleName, ResourceType.SAV);
+            CachedRimModules[ident] = rim;
+            CachedModules.Remove(ident); // Remove from ERF cache if it was there
+
+            // Serialize RIM to bytes and store in ResourceData
+            byte[] rimData = RIMAuto.BytesRim(rim);
+            SetResource(ident, rimData);
+        }
+
+        /// <summary>
+        /// Removes a cached module (both ERF and RIM formats).
+        /// </summary>
+        /// <param name="moduleName">Module ResRef</param>
+        public void RemoveCachedModule(string moduleName)
+        {
+            if (string.IsNullOrEmpty(moduleName))
+            {
+                return;
+            }
+
+            string moduleNameLower = moduleName.ToLowerInvariant();
+
+            var toRemove = new List<ResourceIdentifier>();
+            foreach (var kvp in CachedModules)
+            {
+                if (kvp.Key.ResName.ToLowerInvariant().StartsWith(moduleNameLower))
+                {
+                    toRemove.Add(kvp.Key);
+                }
+            }
+            foreach (var kvp in CachedRimModules)
+            {
+                if (kvp.Key.ResName.ToLowerInvariant().StartsWith(moduleNameLower))
+                {
+                    toRemove.Add(kvp.Key);
+                }
+            }
+
+            foreach (var ident in toRemove)
+            {
+                RemoveResource(ident);
+            }
+        }
+
+        /// <summary>
+        /// Gets all cached module names (ResRefs).
+        /// </summary>
+        /// <returns>List of module ResRefs</returns>
+        public List<string> GetCachedModuleNames()
+        {
+            var names = new HashSet<string>();
+            foreach (var kvp in CachedModules)
+            {
+                names.Add(kvp.Key.ResName);
+            }
+            foreach (var kvp in CachedRimModules)
+            {
+                names.Add(kvp.Key.ResName);
+            }
+            return names.ToList();
         }
     }
 }
