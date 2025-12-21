@@ -795,14 +795,42 @@ namespace Andastra.Runtime.Games.Aurora.Save
             }
 
             // Set player character
+            // Based on nwmain.exe: GAM PlayerCharacter field stores the player character template ResRef
+            // Priority: TemplateResRef (blueprint) > Tag (fallback) > PlayerName (backward compatibility)
             if (saveData.PartyState != null && saveData.PartyState.PlayerCharacter != null)
             {
-                // Player character ResRef would need to be stored in PartyState
-                // TODO: STUB - For now, use PlayerName if available
-                if (!string.IsNullOrEmpty(saveData.PlayerName))
+                ResRef playerCharacterResRef = ResRef.FromBlank();
+                
+                // First, try to use the template ResRef (the character blueprint/template)
+                // This is the proper ResRef that identifies the character's template
+                if (!string.IsNullOrEmpty(saveData.PartyState.PlayerCharacter.TemplateResRef))
                 {
-                    gam.PlayerCharacter = ResRef.FromString(saveData.PlayerName);
+                    playerCharacterResRef = ResRef.FromString(saveData.PartyState.PlayerCharacter.TemplateResRef);
                 }
+                // Fallback to Tag if TemplateResRef is not available
+                // Tag might contain the ResRef in some cases
+                else if (!string.IsNullOrEmpty(saveData.PartyState.PlayerCharacter.Tag))
+                {
+                    playerCharacterResRef = ResRef.FromString(saveData.PartyState.PlayerCharacter.Tag);
+                }
+                // Last resort: use PlayerName for backward compatibility with saves that don't have TemplateResRef
+                // This maintains compatibility with older save formats
+                else if (!string.IsNullOrEmpty(saveData.PlayerName))
+                {
+                    playerCharacterResRef = ResRef.FromString(saveData.PlayerName);
+                }
+                
+                // Only set if we have a valid ResRef
+                if (!playerCharacterResRef.IsBlank())
+                {
+                    gam.PlayerCharacter = playerCharacterResRef;
+                }
+            }
+            // Fallback: if PartyState.PlayerCharacter is null, try PlayerName directly
+            // This handles edge cases where PartyState might not be fully populated
+            else if (!string.IsNullOrEmpty(saveData.PlayerName))
+            {
+                gam.PlayerCharacter = ResRef.FromString(saveData.PlayerName);
             }
 
             // Convert party members
@@ -884,9 +912,24 @@ namespace Andastra.Runtime.Games.Aurora.Save
             }
 
             // Set player character
+            // Based on nwmain.exe: GAM PlayerCharacter field contains the player character template ResRef
+            // Populate both PlayerName (for backward compatibility) and PartyState.PlayerCharacter.TemplateResRef
             if (!gam.PlayerCharacter.IsBlank())
             {
-                saveData.PlayerName = gam.PlayerCharacter.ToString();
+                string playerCharacterResRef = gam.PlayerCharacter.ToString();
+                saveData.PlayerName = playerCharacterResRef;
+                
+                // Also populate PartyState.PlayerCharacter.TemplateResRef for proper data structure
+                // This ensures the ResRef is available when saving again
+                if (saveData.PartyState == null)
+                {
+                    saveData.PartyState = new PartyState();
+                }
+                if (saveData.PartyState.PlayerCharacter == null)
+                {
+                    saveData.PartyState.PlayerCharacter = new CreatureState();
+                }
+                saveData.PartyState.PlayerCharacter.TemplateResRef = playerCharacterResRef;
             }
 
             // Convert party members
