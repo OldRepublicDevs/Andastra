@@ -197,11 +197,40 @@ namespace Andastra.Parsing.Merge
                 new ResourceIdentifier(linkResname.ToString(), ResourceType.VIS)
             };
 
-            // Note: This would need to be implemented based on Module's internal search mechanism
-            // TODO: STUB - For now, we'll add the queries as dependencies
+            // Search for each resource in the module
+            // Based on PyKotor implementation: module._search_resource_locations(module, queries)
+            // Only add resources that actually exist in the module (have locations)
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/merge/module.py:146-149
+            // Original: search_results = module._search_resource_locations(module, queries)
+            //           for query, locations in search_results.items():
+            //               for _location in locations:
+            //                   linked_resources.add(query)
             foreach (var query in queries)
             {
-                linkedResources.Add(query);
+                // Check if the resource exists in the module
+                // Module.Resource() returns the ModuleResource if it exists in the module, null otherwise
+                ModuleResource moduleResource = module.Resource(query.ResName, query.ResType);
+                
+                // Only add the resource if it exists and has locations (is available)
+                // A resource is considered found if it has locations or is active
+                // This matches the PyKotor behavior where resources are only added if they have locations
+                if (moduleResource != null)
+                {
+                    // Check if the resource has locations or is active
+                    // Resources with locations are available in the module
+                    List<string> locations = moduleResource.Locations();
+                    if (locations != null && locations.Count > 0)
+                    {
+                        // Resource exists in module - add it as a linked resource
+                        linkedResources.Add(query);
+                    }
+                    else if (moduleResource.IsActive())
+                    {
+                        // Resource is active even if no explicit locations (may be in override or chitin)
+                        // Add it as a linked resource
+                        linkedResources.Add(query);
+                    }
+                }
             }
 
             return linkedResources;
