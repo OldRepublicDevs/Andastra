@@ -1329,6 +1329,8 @@ namespace Andastra.Runtime.MonoGame.Backends
         private IntPtr _currentRenderCommandEncoder; // id<MTLRenderCommandEncoder>
         private IntPtr _currentBlitCommandEncoder; // id<MTLBlitCommandEncoder>
         private IntPtr _currentAccelStructCommandEncoder; // id<MTLAccelerationStructureCommandEncoder>
+        private IntPtr _currentComputeCommandEncoder; // id<MTLComputeCommandEncoder>
+        private IntPtr _clearUAVFloatComputePipelineState; // id<MTLComputePipelineState> - cached pipeline state for clearing UAV
         private static bool? _supportsBatchViewports; // Cached result for batch viewport API availability
 
         public MetalCommandList(IntPtr handle, CommandListType type, MetalBackend backend)
@@ -1340,6 +1342,8 @@ namespace Andastra.Runtime.MonoGame.Backends
             _currentRenderCommandEncoder = IntPtr.Zero;
             _currentBlitCommandEncoder = IntPtr.Zero;
             _currentAccelStructCommandEncoder = IntPtr.Zero;
+            _currentComputeCommandEncoder = IntPtr.Zero;
+            _clearUAVFloatComputePipelineState = IntPtr.Zero;
         }
 
         public void Open()
@@ -1364,6 +1368,13 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 MetalNative.EndAccelerationStructureCommandEncoding(_currentAccelStructCommandEncoder);
                 _currentAccelStructCommandEncoder = IntPtr.Zero;
+            }
+
+            if (_currentComputeCommandEncoder != IntPtr.Zero)
+            {
+                MetalNative.EndEncoding(_currentComputeCommandEncoder);
+                MetalNative.ReleaseComputeCommandEncoder(_currentComputeCommandEncoder);
+                _currentComputeCommandEncoder = IntPtr.Zero;
             }
 
             if (_currentBlitCommandEncoder != IntPtr.Zero)
@@ -2126,8 +2137,8 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// - Write the clear value to each texel in the texture
         /// - Use threadgroup size appropriate for the texture dimensions
         /// 
-        /// TODO: COMPUTE_SHADER - Create a Metal compute shader for clearing UAV textures
-        /// The shader should be similar to:
+        /// Metal compute shader implementation for clearing UAV textures.
+        /// The compute shader source code (must be compiled into Metal library):
         /// ```
         /// kernel void clearUAVFloat(texture2d<float, access::write> output [[texture(0)]],
         ///                            constant float4& clearValue [[buffer(0)]],
@@ -2136,6 +2147,10 @@ namespace Andastra.Runtime.MonoGame.Backends
         ///     output.write(clearValue, gid);
         /// }
         /// ```
+        /// 
+        /// Shader compilation: This shader must be compiled into a Metal library (e.g., .metallib file)
+        /// and linked into the application. Runtime shader compilation from source would require
+        /// Objective-C interop infrastructure. In practice, shaders are compiled at build time.
         /// </summary>
         public void ClearUAVFloat(ITexture texture, Vector4 value)
         {
@@ -2196,27 +2211,109 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _currentAccelStructCommandEncoder = IntPtr.Zero;
             }
 
-            // TODO: COMPUTE_SHADER - Create and use compute shader to clear texture
-            // For now, we'll use a workaround: create a small buffer with the clear value
-            // and use a blit encoder to copy it (though this won't work for all texture formats)
-            // The proper solution requires a compute shader as documented above.
+            // Get or create compute command encoder
+            if (_currentComputeCommandEncoder == IntPtr.Zero)
+            {
+                _currentComputeCommandEncoder = MetalNative.CreateComputeCommandEncoder(commandBuffer);
+                if (_currentComputeCommandEncoder == IntPtr.Zero)
+                {
+                    Console.WriteLine("[MetalCommandList] ClearUAVFloat: Failed to create compute command encoder");
+                    return;
+                }
+            }
+
+            // Get or create compute pipeline state for clearing UAV
+            // The compute shader source code is:
+            // kernel void clearUAVFloat(texture2d<float, access::write> output [[texture(0)]],
+            //                            constant float4& clearValue [[buffer(0)]],
+            //                            uint2 gid [[thread_position_in_grid]])
+            // {
+            //     output.write(clearValue, gid);
+            // }
+            // 
+            // Note: This shader must be compiled into a Metal library and the function
+            // "clearUAVFloat" must be available. Shader compilation from source requires
+            // Objective-C interop (objc_msgSend) which is complex in C#. In practice, shaders
+            // are typically compiled at build time into .metallib files or embedded in the app bundle.
+            // For runtime compilation, additional infrastructure would be needed.
+            if (_clearUAVFloatComputePipelineState == IntPtr.Zero)
+            {
+                // Get the compute function from the default library
+                // This assumes the shader is already compiled and available in the default library
+                IntPtr defaultLibrary = _backend.GetDefaultLibrary();
+                if (defaultLibrary == IntPtr.Zero)
+                {
+                    Console.WriteLine("[MetalCommandList] ClearUAVFloat: Default library not available");
+                    return;
+                }
+
+                IntPtr computeFunction = MetalNative.CreateFunctionFromLibrary(defaultLibrary, "clearUAVFloat");
+                if (computeFunction == IntPtr.Zero)
+                {
+                    // Shader function not found - log warning and return
+                    // In a full implementation, this would trigger shader compilation or load from library
+                    Console.WriteLine("[MetalCommandList] ClearUAVFloat: Compute shader function 'clearUAVFloat' not found in library. Shader must be compiled and linked into the Metal library.");
+                    return;
+                }
+
+                // Create compute pipeline state
+                IntPtr device = _backend.GetNativeDevice();
+                if (device == IntPtr.Zero)
+                {
+                    MetalNative.ReleaseFunction(computeFunction);
+                    Console.WriteLine("[MetalCommandList] ClearUAVFloat: Device not available");
+                    return;
+                }
+
+                _clearUAVFloatComputePipelineState = MetalNative.CreateComputePipelineState(device, computeFunction);
+                MetalNative.ReleaseFunction(computeFunction);
+
+                if (_clearUAVFloatComputePipelineState == IntPtr.Zero)
+                {
+                    Console.WriteLine("[MetalCommandList] ClearUAVFloat: Failed to create compute pipeline state");
+                    return;
+                }
+            }
+
+            // Set compute pipeline state
+            MetalNative.SetComputePipelineState(_currentComputeCommandEncoder, _clearUAVFloatComputePipelineState);
+
+            // Set texture as write-only resource at index 0
+            MetalNative.SetTexture(_currentComputeCommandEncoder, textureHandle, 0, MetalTextureUsage.ShaderWrite);
+
+            // Set clear value in constant buffer at index 0
+            // Metal expects float4 (16 bytes) for the clear value
+            float[] clearValue = new float[] { value.X, value.Y, value.Z, value.W };
+            IntPtr clearValuePtr = System.Runtime.InteropServices.Marshal.AllocHGlobal(16);
+            try
+            {
+                System.Runtime.InteropServices.Marshal.Copy(clearValue, 0, clearValuePtr, 4);
+                MetalNative.SetBytes(_currentComputeCommandEncoder, clearValuePtr, 16, 0);
+            }
+            finally
+            {
+                System.Runtime.InteropServices.Marshal.FreeHGlobal(clearValuePtr);
+            }
+
+            // Calculate threadgroup size and dispatch
+            // Metal compute shaders use threadgroups - we dispatch enough threadgroups to cover the entire texture
+            // Threadgroup size: 16x16 threads per group (256 threads total per group)
+            const int threadsPerGroupX = 16;
+            const int threadsPerGroupY = 16;
+            const int threadsPerGroupZ = 1;
+
+            // Calculate number of threadgroups needed to cover the entire texture
+            int threadGroupCountX = (desc.Width + threadsPerGroupX - 1) / threadsPerGroupX;
+            int threadGroupCountY = (desc.Height + threadsPerGroupY - 1) / threadsPerGroupY;
+            int threadGroupCountZ = 1;
+
+            // Dispatch compute threads
+            MetalNative.DispatchThreadgroups(_currentComputeCommandEncoder, threadGroupCountX, threadGroupCountY, threadGroupCountZ, threadsPerGroupX, threadsPerGroupY, threadsPerGroupZ);
             
-            // Workaround: For now, log that this operation requires a compute shader
-            // In a full implementation, we would:
-            // 1. Get or create compute command encoder
-            // 2. Set compute pipeline state (with clearUAVFloat shader)
-            // 3. Set texture as write-only resource
-            // 4. Set clear value in constant buffer
-            // 5. Dispatch compute threads (threadgroups covering entire texture)
-            // 6. End compute encoding
-            
-            Console.WriteLine($"[MetalCommandList] ClearUAVFloat: UAV clear requires compute shader (not yet implemented). Texture: {desc.Width}x{desc.Height}, Clear value: ({value.X}, {value.Y}, {value.Z}, {value.W})");
-            
-            // Note: This is a placeholder. Full implementation requires:
-            // - Compute shader creation and compilation
-            // - Compute pipeline state creation
-            // - Compute command encoder creation and dispatch
-            // See TODO comment above for compute shader source code
+            // Note: We do not end the compute encoder here - it may be reused for multiple compute dispatches
+            // The compute encoder will be ended when:
+            // 1. Another encoder type is started (render/blit/accelStruct)
+            // 2. The command list is closed
         }
 
         public void ClearUAVUint(ITexture texture, uint value)
@@ -3221,6 +3318,15 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         [DllImport("/System/Library/Frameworks/Metal.framework/Metal")]
         public static extern void ReleaseComputePipelineState(IntPtr computePipelineState);
+
+        [DllImport("/System/Library/Frameworks/Metal.framework/Metal")]
+        public static extern void SetComputePipelineState(IntPtr computeCommandEncoder, IntPtr computePipelineState);
+
+        [DllImport("/System/Library/Frameworks/Metal.framework/Metal")]
+        public static extern void SetTexture(IntPtr computeCommandEncoder, IntPtr texture, uint index, MetalTextureUsage usage);
+
+        [DllImport("/System/Library/Frameworks/Metal.framework/Metal")]
+        public static extern void SetBytes(IntPtr computeCommandEncoder, IntPtr bytes, uint length, uint index);
 
         [DllImport("/System/Library/Frameworks/Metal.framework/Metal")]
         public static extern IntPtr CreateArgumentEncoder(IntPtr device, BindingLayoutDesc desc);
