@@ -51,10 +51,21 @@ Resources are loaded through a **two-phase system**:
 
 ### Loading Modes
 
-The game uses two loading modes controlled by a flag at offset 0x54 in the resource manager:
+The game uses two loading modes controlled by a flag at offset 0x54 in the resource manager structure:
 
-- **Simple Mode** (flag == 0): Loads `.rim` file directly, returns immediately
-- **Complex Mode** (flag != 0): Checks for area files, `.mod`, and `_s.rim`/`_dlg.erf` files
+- **Simple Mode** (flag at offset 0x54 == 0): Loads `.rim` file directly, returns immediately
+  - **When**: Used when flag is explicitly set to 0
+  - **Behavior**: Only `.rim` file is loaded, function returns immediately after loading
+  - **Evidence**: swkotor.exe: `FUN_004094a0` line 32: `if (*(int *)((int)param_1 + 0x54) == 0)`
+  
+- **Complex Mode** (flag at offset 0x54 != 0): Checks for area files (`_a.rim`, `_adx.rim`), then `.mod`, then `_s.rim`/`_dlg.erf` files
+  - **When**: Used when flag is non-zero (default behavior)
+  - **Behavior**: Checks for `_a.rim` first, then `_adx.rim`, then `.mod`, then `_s.rim`/`_dlg.erf`
+  - **Evidence**: swkotor.exe: `FUN_004094a0` line 49-216 (else branch when flag != 0)
+
+**Flag Control**: The flag at offset 0x54 is part of the resource manager structure (`param_1`). It's initialized in `FUN_00409bf0` (resource manager creation), but the exact condition that sets it to 0 vs non-zero is not clear from the decompilation. In practice, **complex mode appears to be the default** - simple mode is only used when the flag is explicitly set to 0.
+
+**When `.mod` is loaded**: `.mod` files are loaded in **complex mode** (swkotor.exe: `FUN_004094a0` line 95-136). The check for `.mod` happens after checking for `_a.rim` and `_adx.rim`, but if `.mod` exists, it replaces all other files.
 
 ### K1 Module File Loading (swkotor.exe: `FUN_004094a0`)
 
