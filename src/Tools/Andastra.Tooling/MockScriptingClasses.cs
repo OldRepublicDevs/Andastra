@@ -290,6 +290,11 @@ namespace Andastra.Runtime.Tooling
             return 0;
         }
 
+        public IEnumerable<IArea> GetAllAreas()
+        {
+            return _areas.Values;
+        }
+
         public uint GetModuleId(IModule module)
         {
             // Module ID is fixed at 0x7F000002 in original engine
