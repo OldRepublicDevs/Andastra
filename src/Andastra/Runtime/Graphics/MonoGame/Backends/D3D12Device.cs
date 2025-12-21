@@ -943,6 +943,54 @@ namespace Andastra.Runtime.MonoGame.Backends
         private const uint D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY = 0x1;
         private const uint D3D12_RESOURCE_BARRIER_FLAG_END_ONLY = 0x2;
 
+        // DirectX 12 Resource Dimension constants (D3D12_RESOURCE_DIMENSION)
+        private const uint D3D12_RESOURCE_DIMENSION_UNKNOWN = 0;
+        private const uint D3D12_RESOURCE_DIMENSION_BUFFER = 1;
+        private const uint D3D12_RESOURCE_DIMENSION_TEXTURE1D = 2;
+        private const uint D3D12_RESOURCE_DIMENSION_TEXTURE2D = 3;
+        private const uint D3D12_RESOURCE_DIMENSION_TEXTURE3D = 4;
+
+        // DirectX 12 Resource Flags (D3D12_RESOURCE_FLAGS)
+        private const uint D3D12_RESOURCE_FLAG_NONE = 0;
+        private const uint D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET = 0x1;
+        private const uint D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL = 0x2;
+        private const uint D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS = 0x4;
+        private const uint D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE = 0x8;
+        private const uint D3D12_RESOURCE_FLAG_ALLOW_CROSS_ADAPTER = 0x10;
+        private const uint D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS = 0x20;
+        private const uint D3D12_RESOURCE_FLAG_VIDEO_DECODE_REFERENCE_ONLY = 0x40;
+
+        // DirectX 12 Heap Type constants (D3D12_HEAP_TYPE)
+        private const uint D3D12_HEAP_TYPE_DEFAULT = 1;
+        private const uint D3D12_HEAP_TYPE_UPLOAD = 2;
+        private const uint D3D12_HEAP_TYPE_READBACK = 3;
+        private const uint D3D12_HEAP_TYPE_CUSTOM = 4;
+
+        // DirectX 12 CPU Page Property constants (D3D12_CPU_PAGE_PROPERTY)
+        private const uint D3D12_CPU_PAGE_PROPERTY_UNKNOWN = 0;
+        private const uint D3D12_CPU_PAGE_PROPERTY_NOT_AVAILABLE = 1;
+        private const uint D3D12_CPU_PAGE_PROPERTY_WRITE_COMBINE = 2;
+        private const uint D3D12_CPU_PAGE_PROPERTY_WRITE_BACK = 3;
+
+        // DirectX 12 Memory Pool constants (D3D12_MEMORY_POOL)
+        private const uint D3D12_MEMORY_POOL_UNKNOWN = 0;
+        private const uint D3D12_MEMORY_POOL_L0 = 1;
+        private const uint D3D12_MEMORY_POOL_L1 = 2;
+
+        // DirectX 12 Heap Flags (D3D12_HEAP_FLAGS)
+        private const uint D3D12_HEAP_FLAG_NONE = 0;
+        private const uint D3D12_HEAP_FLAG_SHARED = 0x1;
+        private const uint D3D12_HEAP_FLAG_DENY_BUFFERS = 0x4;
+        private const uint D3D12_HEAP_FLAG_ALLOW_DISPLAY = 0x8;
+        private const uint D3D12_HEAP_FLAG_SHARED_CROSS_ADAPTER = 0x20;
+        private const uint D3D12_HEAP_FLAG_DENY_RT_DS_TEXTURES = 0x40;
+        private const uint D3D12_HEAP_FLAG_DENY_NON_RT_DS_TEXTURES = 0x80;
+        private const uint D3D12_HEAP_FLAG_HARDWARE_PROTECTED = 0x100;
+        private const uint D3D12_HEAP_FLAG_ALLOW_WRITE_WATCH = 0x200;
+        private const uint D3D12_HEAP_FLAG_ALLOW_SHADER_ATOMICS = 0x400;
+        private const uint D3D12_HEAP_FLAG_CREATE_NOT_RESIDENT = 0x800;
+        private const uint D3D12_HEAP_FLAG_CREATE_NOT_ZEROED = 0x1000;
+
         // DirectX 12 Resource States (D3D12_RESOURCE_STATES)
         private const uint D3D12_RESOURCE_STATE_COMMON = 0;
         private const uint D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER = 0x1;
@@ -1281,6 +1329,49 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
         }
 
+        /// <summary>
+        /// D3D12_RESOURCE_DESC structure for resource creation.
+        /// Based on DirectX 12 API: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_resource_desc
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_RESOURCE_DESC
+        {
+            public uint Dimension; // D3D12_RESOURCE_DIMENSION
+            public ulong Alignment; // UINT64
+            public ulong Width; // UINT64 (buffer size for buffers)
+            public uint Height; // UINT
+            public ushort DepthOrArraySize; // UINT16
+            public ushort MipLevels; // UINT16
+            public uint Format; // DXGI_FORMAT
+            public D3D12_SAMPLE_DESC SampleDesc; // D3D12_SAMPLE_DESC
+            public uint Layout; // D3D12_TEXTURE_LAYOUT
+            public uint Flags; // D3D12_RESOURCE_FLAGS
+        }
+
+        /// <summary>
+        /// D3D12_SAMPLE_DESC structure for multisampling.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_SAMPLE_DESC
+        {
+            public uint Count; // UINT
+            public uint Quality; // UINT
+        }
+
+        /// <summary>
+        /// D3D12_HEAP_PROPERTIES structure for heap creation.
+        /// Based on DirectX 12 API: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_heap_properties
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_HEAP_PROPERTIES
+        {
+            public uint Type; // D3D12_HEAP_TYPE
+            public uint CPUPageProperty; // D3D12_CPU_PAGE_PROPERTY
+            public uint MemoryPoolPreference; // D3D12_MEMORY_POOL
+            public uint CreationNodeMask; // UINT
+            public uint VisibleNodeMask; // UINT
+        }
+
         #endregion
 
         #region D3D12 Sampler Structures and Constants
@@ -1366,6 +1457,9 @@ namespace Andastra.Runtime.MonoGame.Backends
         // COM interface method delegates for descriptor heap operations
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate int CreateDescriptorHeapDelegate(IntPtr device, IntPtr pDescriptorHeapDesc, ref Guid riid, IntPtr ppvHeap);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int CreateCommittedResourceDelegate(IntPtr device, IntPtr pHeapProperties, uint HeapFlags, IntPtr pDesc, uint InitialResourceState, IntPtr pOptimizedClearValue, ref Guid riidResource, IntPtr ppvResource);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate IntPtr GetCPUDescriptorHandleForHeapStartDelegate(IntPtr descriptorHeap);
@@ -3622,9 +3716,6 @@ namespace Andastra.Runtime.MonoGame.Backends
                                     }
 
                                     // Get or create RTV handle for this texture
-                                    // Note: GetOrCreateRtvHandle may need to be implemented
-                                    // For now, we'll use a placeholder approach
-                                    // TODO: Implement GetOrCreateRtvHandle method on D3D12Device
                                     IntPtr rtvHandle = _device.GetOrCreateRtvHandle(attachment.Texture, attachment.MipLevel, attachment.ArraySlice);
                                     if (rtvHandle == IntPtr.Zero)
                                     {
