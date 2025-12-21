@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Reflection;
 using Andastra.Parsing;
 using Andastra.Parsing.Extract;
+using Andastra.Parsing.Extract.Capsule;
 using Andastra.Parsing.Formats.Capsule;
 using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Formats.GFF;
@@ -14,6 +15,11 @@ using Andastra.Parsing.Formats.RIM;
 using Andastra.Parsing.Formats.TLK;
 using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Resource;
+using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Resource.Generics.ARE;
+using Andastra.Parsing.Resource.Generics.DLG;
+using Andastra.Parsing.Resource.Generics.UTC;
+using Andastra.Parsing.Resource.Generics.UTI;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Common;
 
@@ -224,11 +230,113 @@ namespace Andastra.Parsing.Tools
             }
 
             LogMessage(config, $"Converting {Path.GetDirectoryName(resource.PathIdent())}/{Path.GetFileName(resource.PathIdent())} to {toGame}");
+            byte[] convertedBytes = null;
             try
             {
-                // Generic resource conversion - these functions need to be ported
-                // TODO: STUB - For now, log that conversion is needed
-                LogMessage(config, $"GFF conversion for {resource.ResType.Name} not yet fully implemented - requires generic resource read/write functions");
+                byte[] resourceData = resource.GetData();
+                int dataSize = resourceData.Length;
+
+                // Match PyKotor implementation: read and write each GFF resource type
+                if (resource.ResType == ResourceType.ARE)
+                {
+                    ARE are = AREHelpers.ReadAre(resourceData, 0, dataSize);
+                    convertedBytes = AREHelpers.BytesAre(are, toGame);
+                }
+                else if (resource.ResType == ResourceType.DLG)
+                {
+                    DLG dlg = DLGHelper.ReadDlg(resourceData, 0, dataSize);
+                    convertedBytes = DLGHelper.BytesDlg(dlg, toGame);
+                }
+                else if (resource.ResType == ResourceType.GIT)
+                {
+                    GIT git = ResourceAutoHelpers.ReadGit(resourceData);
+                    convertedBytes = GITHelpers.BytesGit(git, toGame);
+                }
+                else if (resource.ResType == ResourceType.JRL)
+                {
+                    JRL jrl = JRLHelpers.ReadJrl(resourceData, 0, dataSize);
+                    convertedBytes = JRLHelpers.BytesJrl(jrl);
+                }
+                else if (resource.ResType == ResourceType.PTH)
+                {
+                    PTH pth = PTHAuto.ReadPth(resourceData, 0, dataSize);
+                    convertedBytes = PTHAuto.BytesPth(pth, toGame);
+                }
+                else if (resource.ResType == ResourceType.UTC)
+                {
+                    UTC utc = UTCHelpers.ReadUtc(resourceData, 0, dataSize);
+                    convertedBytes = UTCHelpers.BytesUtc(utc, toGame);
+                }
+                else if (resource.ResType == ResourceType.UTD)
+                {
+                    UTD utd = ResourceAutoHelpers.ReadUtd(resourceData);
+                    GFF utdGff = UTDHelpers.DismantleUtd(utd, toGame);
+                    convertedBytes = GFFAuto.BytesGff(utdGff, ResourceType.UTD);
+                }
+                else if (resource.ResType == ResourceType.UTE)
+                {
+                    var reader = new GFFBinaryReader(resourceData);
+                    GFF gff = reader.Load();
+                    UTE ute = UTEHelpers.ConstructUte(gff);
+                    GFF uteGff = UTEHelpers.DismantleUte(ute, toGame);
+                    convertedBytes = GFFAuto.BytesGff(uteGff, ResourceType.UTE);
+                }
+                else if (resource.ResType == ResourceType.UTI)
+                {
+                    UTI uti = ResourceAutoHelpers.ReadUti(resourceData);
+                    convertedBytes = UTIHelpers.BytesUti(uti, toGame);
+                }
+                else if (resource.ResType == ResourceType.UTM)
+                {
+                    Andastra.Parsing.Resource.Generics.UTM.UTM utm = Andastra.Parsing.Resource.Generics.UTM.UTMHelpers.ReadUtm(resourceData, 0, dataSize);
+                    convertedBytes = Andastra.Parsing.Resource.Generics.UTM.UTMHelpers.BytesUtm(utm, toGame);
+                }
+                else if (resource.ResType == ResourceType.UTP)
+                {
+                    UTP utp = ResourceAutoHelpers.ReadUtp(resourceData);
+                    GFF utpGff = UTPHelpers.DismantleUtp(utp, toGame);
+                    convertedBytes = GFFAuto.BytesGff(utpGff, ResourceType.UTP);
+                }
+                else if (resource.ResType == ResourceType.UTS)
+                {
+                    UTS uts = ResourceAutoHelpers.ReadUts(resourceData);
+                    GFF utsGff = UTSHelpers.DismantleUts(uts, toGame);
+                    convertedBytes = GFFAuto.BytesGff(utsGff, ResourceType.UTS);
+                }
+                else if (resource.ResType == ResourceType.UTT)
+                {
+                    UTT utt = UTTAuto.ReadUtt(resourceData, 0, dataSize);
+                    convertedBytes = UTTAuto.BytesUtt(utt, toGame);
+                }
+                else if (resource.ResType == ResourceType.UTW)
+                {
+                    UTW utw = UTWAuto.ReadUtw(resourceData, 0, dataSize);
+                    convertedBytes = UTWAuto.BytesUtw(utw, toGame);
+                }
+                else
+                {
+                    LogMessage(config, $"Unsupported gff: {resource.Identifier}");
+                    return;
+                }
+
+                // Write converted data
+                if (convertedBytes != null)
+                {
+                    if (resource.InsideCapsule)
+                    {
+                        // Match PyKotor: use LazyCapsule to update capsule resource
+                        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/patching.py:352-356
+                        LogMessage(config, $"Saving conversions in ERF/RIM at '{savepath}'");
+                        LazyCapsule lazyCapsule = new LazyCapsule(savepath, createIfNotExist: true);
+                        lazyCapsule.Delete(resource.ResName, resource.ResType);
+                        lazyCapsule.Add(resource.ResName, resource.ResType, convertedBytes);
+                    }
+                    else
+                    {
+                        // Match PyKotor: write directly to file
+                        File.WriteAllBytes(savepath, convertedBytes);
+                    }
+                }
             }
             catch (Exception ex) when (ex is IOException || ex is ArgumentException)
             {

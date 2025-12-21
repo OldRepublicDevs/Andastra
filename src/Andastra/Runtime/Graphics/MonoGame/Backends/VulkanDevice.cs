@@ -274,6 +274,65 @@ namespace Andastra.Runtime.MonoGame.Backends
         }
 
         [StructLayout(LayoutKind.Sequential)]
+        private struct VkDescriptorPoolSize
+        {
+            public VkDescriptorType type;
+            public uint descriptorCount;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkDescriptorPoolCreateInfo
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkDescriptorPoolCreateFlags flags;
+            public uint maxSets;
+            public uint poolSizeCount;
+            public IntPtr pPoolSizes;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkDescriptorSetAllocateInfo
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public IntPtr descriptorPool;
+            public uint descriptorSetCount;
+            public IntPtr pSetLayouts;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkDescriptorBufferInfo
+        {
+            public IntPtr buffer;
+            public ulong offset;
+            public ulong range;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkDescriptorImageInfo
+        {
+            public IntPtr sampler;
+            public IntPtr imageView;
+            public VkImageLayout imageLayout;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkWriteDescriptorSet
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public IntPtr dstSet;
+            public uint dstBinding;
+            public uint dstArrayElement;
+            public uint descriptorCount;
+            public VkDescriptorType descriptorType;
+            public IntPtr pImageInfo;
+            public IntPtr pBufferInfo;
+            public IntPtr pTexelBufferView;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
         private struct VkPipelineLayoutCreateInfo
         {
             public VkStructureType sType;
@@ -324,6 +383,21 @@ namespace Andastra.Runtime.MonoGame.Backends
             public IntPtr pLabelName;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
             public float[] color;
+        }
+
+        // Vulkan buffer memory barrier structure
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkBufferMemoryBarrier
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkAccessFlags srcAccessMask;
+            public VkAccessFlags dstAccessMask;
+            public uint srcQueueFamilyIndex;
+            public uint dstQueueFamilyIndex;
+            public IntPtr buffer;
+            public ulong offset;
+            public ulong size;
         }
 
         // Vulkan enums
@@ -396,11 +470,26 @@ namespace Andastra.Runtime.MonoGame.Backends
         private enum VkBorderColor { VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK = 0 }
         private enum VkShaderModuleCreateFlags { }
         private enum VkDescriptorSetLayoutCreateFlags { }
-        private enum VkDescriptorType { VK_DESCRIPTOR_TYPE_SAMPLER = 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER = 1, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE = 2, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE = 3, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER = 6, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER = 7 }
+        [Flags]
+        private enum VkDescriptorPoolCreateFlags
+        {
+            VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT = 0x00000001,
+            VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT = 0x00000002
+        }
+        private enum VkDescriptorType { VK_DESCRIPTOR_TYPE_SAMPLER = 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER = 1, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE = 2, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE = 3, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER = 6, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER = 7, VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR = 1000150000 }
         private enum VkShaderStageFlags { VK_SHADER_STAGE_VERTEX_BIT = 0x00000001, VK_SHADER_STAGE_FRAGMENT_BIT = 0x00000010, VK_SHADER_STAGE_COMPUTE_BIT = 0x00000020, VK_SHADER_STAGE_RAYGEN_BIT_KHR = 0x00000100, VK_SHADER_STAGE_MISS_BIT_KHR = 0x00000200, VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR = 0x00000400 }
         private enum VkPipelineLayoutCreateFlags { }
         private enum VkCommandBufferLevel { VK_COMMAND_BUFFER_LEVEL_PRIMARY = 0 }
         private enum VkPipelineBindPoint { VK_PIPELINE_BIND_POINT_GRAPHICS = 0, VK_PIPELINE_BIND_POINT_COMPUTE = 1, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR = 1000165000 }
+
+        // Vulkan dependency flags
+        [Flags]
+        private enum VkDependencyFlags
+        {
+            VK_DEPENDENCY_BY_REGION_BIT = 0x00000001,
+            VK_DEPENDENCY_DEVICE_GROUP_BIT = 0x00000004,
+            VK_DEPENDENCY_VIEW_LOCAL_BIT = 0x00000002
+        }
 
         // Vulkan function pointers
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
@@ -443,6 +532,17 @@ namespace Andastra.Runtime.MonoGame.Backends
         private delegate VkResult vkCreateDescriptorSetLayoutDelegate(IntPtr device, ref VkDescriptorSetLayoutCreateInfo pCreateInfo, IntPtr pAllocator, out IntPtr pSetLayout);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate VkResult vkDestroyDescriptorSetLayoutDelegate(IntPtr device, IntPtr descriptorSetLayout, IntPtr pAllocator);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkCreateDescriptorPoolDelegate(IntPtr device, ref VkDescriptorPoolCreateInfo pCreateInfo, IntPtr pAllocator, out IntPtr pDescriptorPool);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkDestroyDescriptorPoolDelegate(IntPtr device, IntPtr descriptorPool, IntPtr pAllocator);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkAllocateDescriptorSetsDelegate(IntPtr device, ref VkDescriptorSetAllocateInfo pAllocateInfo, IntPtr pDescriptorSets);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkFreeDescriptorSetsDelegate(IntPtr device, IntPtr descriptorPool, uint descriptorSetCount, IntPtr pDescriptorSets);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkUpdateDescriptorSetsDelegate(IntPtr device, uint descriptorWriteCount, IntPtr pDescriptorWrites, uint descriptorCopyCount, IntPtr pDescriptorCopies);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate VkResult vkCreatePipelineLayoutDelegate(IntPtr device, ref VkPipelineLayoutCreateInfo pCreateInfo, IntPtr pAllocator, out IntPtr pPipelineLayout);
@@ -489,6 +589,19 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkCmdInsertDebugUtilsLabelEXTDelegate(IntPtr commandBuffer, ref VkDebugUtilsLabelEXT pLabelInfo);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdPipelineBarrierDelegate(
+            IntPtr commandBuffer,
+            VkPipelineStageFlags srcStageMask,
+            VkPipelineStageFlags dstStageMask,
+            uint dependencyFlags,
+            uint memoryBarrierCount,
+            IntPtr pMemoryBarriers,
+            uint bufferMemoryBarrierCount,
+            IntPtr pBufferMemoryBarriers,
+            uint imageMemoryBarrierCount,
+            IntPtr pImageMemoryBarriers);
 
         // Function pointers storage
         private static vkCreateImageDelegate vkCreateImage;
@@ -538,6 +651,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static vkCmdBeginDebugUtilsLabelEXTDelegate vkCmdBeginDebugUtilsLabelEXT;
         private static vkCmdEndDebugUtilsLabelEXTDelegate vkCmdEndDebugUtilsLabelEXT;
         private static vkCmdInsertDebugUtilsLabelEXTDelegate vkCmdInsertDebugUtilsLabelEXT;
+        private static vkCmdPipelineBarrierDelegate vkCmdPipelineBarrier;
 
         // Helper methods for Vulkan interop
         private static void InitializeVulkanFunctions(IntPtr device)
@@ -582,6 +696,16 @@ namespace Andastra.Runtime.MonoGame.Backends
         private readonly IntPtr _graphicsCommandPool;
         private readonly IntPtr _computeCommandPool;
         private readonly IntPtr _transferCommandPool;
+
+        // Descriptor pool for descriptor set allocation
+        private IntPtr _descriptorPool;
+        private const uint DescriptorPoolMaxSets = 1000; // Maximum number of descriptor sets in pool
+        private const uint DescriptorPoolUniformBufferCount = 1000;
+        private const uint DescriptorPoolStorageBufferCount = 1000;
+        private const uint DescriptorPoolSampledImageCount = 1000;
+        private const uint DescriptorPoolStorageImageCount = 1000;
+        private const uint DescriptorPoolSamplerCount = 100;
+        private const uint DescriptorPoolAccelStructCount = 100;
 
         public GraphicsCapabilities Capabilities
         {
@@ -2046,6 +2170,22 @@ namespace Andastra.Runtime.MonoGame.Backends
             private readonly IntPtr _vkDevice;
             private bool _isOpen;
 
+            // Barrier tracking
+            private readonly List<PendingBufferBarrier> _pendingBufferBarriers;
+            private readonly Dictionary<object, ResourceState> _resourceStates;
+
+            // Pending barrier entry for buffers
+            private struct PendingBufferBarrier
+            {
+                public IntPtr Buffer;
+                public ulong Offset;
+                public ulong Size;
+                public VkAccessFlags SrcAccessMask;
+                public VkAccessFlags DstAccessMask;
+                public VkPipelineStageFlags SrcStageMask;
+                public VkPipelineStageFlags DstStageMask;
+            }
+
             public VulkanCommandList(IntPtr handle, CommandListType type, VulkanDevice device)
                 : this(handle, type, device, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero)
             {
@@ -2060,6 +2200,8 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _vkCommandPool = vkCommandPool;
                 _vkDevice = vkDevice;
                 _isOpen = false;
+                _pendingBufferBarriers = new List<PendingBufferBarrier>();
+                _resourceStates = new Dictionary<object, ResourceState>();
             }
 
             public void Open()
@@ -2107,9 +2249,244 @@ namespace Andastra.Runtime.MonoGame.Backends
             public void ClearDepthStencilAttachment(IFramebuffer framebuffer, float depth, byte stencil, bool clearDepth = true, bool clearStencil = true) { /* TODO: vkCmdClearDepthStencilImage */ }
             public void ClearUAVFloat(ITexture texture, Vector4 value) { /* TODO: vkCmdFillBuffer or compute shader */ }
             public void ClearUAVUint(ITexture texture, uint value) { /* TODO: vkCmdFillBuffer or compute shader */ }
-            public void SetTextureState(ITexture texture, ResourceState state) { /* TODO: vkCmdPipelineBarrier */ }
-            public void SetBufferState(IBuffer buffer, ResourceState state) { /* TODO: vkCmdPipelineBarrier */ }
-            public void CommitBarriers() { /* TODO: Flush pending barriers */ }
+            public void SetTextureState(ITexture texture, ResourceState state)
+            {
+                // TODO: STUB - Implement texture state transitions with vkCmdPipelineBarrier (VkImageMemoryBarrier)
+                // Texture barriers require image layout transitions which are more complex than buffer barriers
+                // This is left as a stub for future implementation
+            }
+
+            public void SetBufferState(IBuffer buffer, ResourceState state)
+            {
+                if (buffer == null)
+                {
+                    return;
+                }
+
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                // Get native resource handle from buffer
+                IntPtr bufferHandle = buffer.NativeHandle;
+                if (bufferHandle == IntPtr.Zero)
+                {
+                    return; // Invalid buffer
+                }
+
+                // Determine current state
+                ResourceState currentState;
+                if (!_resourceStates.TryGetValue(buffer, out currentState))
+                {
+                    // First time we see this buffer - assume it starts in Common state
+                    currentState = ResourceState.Common;
+                }
+
+                // Check if transition is needed
+                if (currentState == state)
+                {
+                    return; // Already in target state, no barrier needed
+                }
+
+                // Map states to Vulkan access flags and pipeline stages
+                VkAccessFlags srcAccessMask;
+                VkPipelineStageFlags srcStageMask;
+                MapResourceStateToVulkanAccessAndStage(currentState, out srcAccessMask, out srcStageMask);
+
+                VkAccessFlags dstAccessMask;
+                VkPipelineStageFlags dstStageMask;
+                MapResourceStateToVulkanAccessAndStage(state, out dstAccessMask, out dstStageMask);
+
+                // Get buffer size from buffer description
+                ulong bufferSize = 0;
+                VulkanBuffer vulkanBuffer = buffer as VulkanBuffer;
+                if (vulkanBuffer != null)
+                {
+                    bufferSize = (ulong)vulkanBuffer.Desc.SizeInBytes;
+                }
+
+                // Queue buffer barrier (will be flushed on CommitBarriers)
+                _pendingBufferBarriers.Add(new PendingBufferBarrier
+                {
+                    Buffer = bufferHandle,
+                    Offset = 0,
+                    Size = bufferSize != 0 ? bufferSize : unchecked((ulong)-1), // VK_WHOLE_SIZE if size is 0 or unknown
+                    SrcAccessMask = srcAccessMask,
+                    DstAccessMask = dstAccessMask,
+                    SrcStageMask = srcStageMask,
+                    DstStageMask = dstStageMask
+                });
+
+                // Update tracked state
+                _resourceStates[buffer] = state;
+            }
+
+            public void CommitBarriers()
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (_pendingBufferBarriers.Count == 0)
+                {
+                    return; // No barriers to commit
+                }
+
+                if (_vkCommandBuffer == IntPtr.Zero)
+                {
+                    // Command buffer not initialized - clear barriers and return
+                    _pendingBufferBarriers.Clear();
+                    return;
+                }
+
+                // Allocate memory for buffer barrier array
+                int barrierSize = Marshal.SizeOf(typeof(VkBufferMemoryBarrier));
+                IntPtr barriersPtr = Marshal.AllocHGlobal(barrierSize * _pendingBufferBarriers.Count);
+
+                try
+                {
+                    // Convert pending barriers to VkBufferMemoryBarrier structures
+                    IntPtr currentBarrierPtr = barriersPtr;
+                    for (int i = 0; i < _pendingBufferBarriers.Count; i++)
+                    {
+                        var pendingBarrier = _pendingBufferBarriers[i];
+
+                        var barrier = new VkBufferMemoryBarrier
+                        {
+                            sType = VkStructureType.VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
+                            pNext = IntPtr.Zero,
+                            srcAccessMask = pendingBarrier.SrcAccessMask,
+                            dstAccessMask = pendingBarrier.DstAccessMask,
+                            srcQueueFamilyIndex = unchecked((uint)-1), // VK_QUEUE_FAMILY_IGNORED
+                            dstQueueFamilyIndex = unchecked((uint)-1), // VK_QUEUE_FAMILY_IGNORED
+                            buffer = pendingBarrier.Buffer,
+                            offset = pendingBarrier.Offset,
+                            size = pendingBarrier.Size
+                        };
+
+                        Marshal.StructureToPtr(barrier, currentBarrierPtr, false);
+                        currentBarrierPtr = new IntPtr(currentBarrierPtr.ToInt64() + barrierSize);
+                    }
+
+                    // Compute combined source and destination stage masks from all barriers
+                    VkPipelineStageFlags combinedSrcStageMask = 0;
+                    VkPipelineStageFlags combinedDstStageMask = 0;
+                    for (int i = 0; i < _pendingBufferBarriers.Count; i++)
+                    {
+                        combinedSrcStageMask |= _pendingBufferBarriers[i].SrcStageMask;
+                        combinedDstStageMask |= _pendingBufferBarriers[i].DstStageMask;
+                    }
+
+                    // Call vkCmdPipelineBarrier
+                    vkCmdPipelineBarrier(
+                        _vkCommandBuffer,
+                        combinedSrcStageMask,
+                        combinedDstStageMask,
+                        0, // dependencyFlags
+                        0, // memoryBarrierCount
+                        IntPtr.Zero, // pMemoryBarriers
+                        unchecked((uint)_pendingBufferBarriers.Count), // bufferMemoryBarrierCount
+                        barriersPtr, // pBufferMemoryBarriers
+                        0, // imageMemoryBarrierCount
+                        IntPtr.Zero); // pImageMemoryBarriers
+                }
+                finally
+                {
+                    // Free allocated memory
+                    Marshal.FreeHGlobal(barriersPtr);
+                }
+
+                // Clear pending barriers after committing
+                _pendingBufferBarriers.Clear();
+            }
+            /// <summary>
+            /// Maps ResourceState to Vulkan access flags and pipeline stage flags.
+            /// Based on Vulkan specification: Buffer access patterns and pipeline stages.
+            /// </summary>
+            private static void MapResourceStateToVulkanAccessAndStage(
+                ResourceState state,
+                out VkAccessFlags accessMask,
+                out VkPipelineStageFlags stageMask)
+            {
+                switch (state)
+                {
+                    case ResourceState.Common:
+                        // Common state - no specific access or stage
+                        accessMask = 0;
+                        stageMask = VkPipelineStageFlags.VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+                        break;
+
+                    case ResourceState.VertexBuffer:
+                        accessMask = VkAccessFlags.VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT;
+                        stageMask = VkPipelineStageFlags.VK_PIPELINE_STAGE_VERTEX_INPUT_BIT;
+                        break;
+
+                    case ResourceState.IndexBuffer:
+                        accessMask = VkAccessFlags.VK_ACCESS_INDEX_READ_BIT;
+                        stageMask = VkPipelineStageFlags.VK_PIPELINE_STAGE_VERTEX_INPUT_BIT;
+                        break;
+
+                    case ResourceState.ConstantBuffer:
+                        accessMask = VkAccessFlags.VK_ACCESS_UNIFORM_READ_BIT;
+                        stageMask = VkPipelineStageFlags.VK_PIPELINE_STAGE_VERTEX_SHADER_BIT |
+                                   VkPipelineStageFlags.VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT |
+                                   VkPipelineStageFlags.VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+                        break;
+
+                    case ResourceState.ShaderResource:
+                        accessMask = VkAccessFlags.VK_ACCESS_SHADER_READ_BIT;
+                        stageMask = VkPipelineStageFlags.VK_PIPELINE_STAGE_VERTEX_SHADER_BIT |
+                                   VkPipelineStageFlags.VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT |
+                                   VkPipelineStageFlags.VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+                        break;
+
+                    case ResourceState.UnorderedAccess:
+                        accessMask = VkAccessFlags.VK_ACCESS_SHADER_READ_BIT | VkAccessFlags.VK_ACCESS_SHADER_WRITE_BIT;
+                        stageMask = VkPipelineStageFlags.VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT |
+                                   VkPipelineStageFlags.VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT |
+                                   VkPipelineStageFlags.VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
+                        break;
+
+                    case ResourceState.CopySource:
+                        accessMask = VkAccessFlags.VK_ACCESS_TRANSFER_READ_BIT;
+                        stageMask = VkPipelineStageFlags.VK_PIPELINE_STAGE_TRANSFER_BIT;
+                        break;
+
+                    case ResourceState.CopyDest:
+                        accessMask = VkAccessFlags.VK_ACCESS_TRANSFER_WRITE_BIT;
+                        stageMask = VkPipelineStageFlags.VK_PIPELINE_STAGE_TRANSFER_BIT;
+                        break;
+
+                    case ResourceState.IndirectArgument:
+                        accessMask = VkAccessFlags.VK_ACCESS_INDIRECT_COMMAND_READ_BIT;
+                        stageMask = VkPipelineStageFlags.VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT;
+                        break;
+
+                    case ResourceState.RenderTarget:
+                    case ResourceState.DepthWrite:
+                    case ResourceState.DepthRead:
+                        // These states are for textures/images, not buffers
+                        // Default to no access for buffer resources
+                        accessMask = 0;
+                        stageMask = VkPipelineStageFlags.VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+                        break;
+
+                    case ResourceState.Present:
+                        // Present is typically for swapchain images, not buffers
+                        accessMask = 0;
+                        stageMask = VkPipelineStageFlags.VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+                        break;
+
+                    default:
+                        // Unknown state - default to no access
+                        accessMask = 0;
+                        stageMask = VkPipelineStageFlags.VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+                        break;
+                }
+            }
+
             public void UAVBarrier(ITexture texture) { /* TODO: vkCmdMemoryBarrier */ }
             public void UAVBarrier(IBuffer buffer) { /* TODO: vkCmdMemoryBarrier */ }
             public void SetGraphicsState(GraphicsState state) { /* TODO: Set all graphics state */ }

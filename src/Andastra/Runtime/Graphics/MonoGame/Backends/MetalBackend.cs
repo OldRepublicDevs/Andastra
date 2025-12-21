@@ -1369,7 +1369,7 @@ namespace Andastra.Runtime.MonoGame.Backends
     /// P/Invoke declarations for Metal framework.
     /// Metal is an Objective-C API, so we use Objective-C runtime interop.
     /// </summary>
-    internal static class MetalNative
+    internal static partial class MetalNative
     {
         private const string MetalFramework = "/System/Library/Frameworks/Metal.framework/Metal";
         private const string QuartzCoreFramework = "/System/Library/Frameworks/QuartzCore.framework/QuartzCore";
