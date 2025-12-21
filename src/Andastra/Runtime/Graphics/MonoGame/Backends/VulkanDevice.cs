@@ -1971,6 +1971,108 @@ namespace Andastra.Runtime.MonoGame.Backends
         }
 
         /// <summary>
+        /// Determines the appropriate memory properties for a buffer based on heap type and usage.
+        /// </summary>
+        /// <param name="desc">Buffer descriptor containing heap type and usage flags.</param>
+        /// <param name="usageFlags">Vulkan buffer usage flags.</param>
+        /// <returns>Memory property flags indicating required memory type characteristics.</returns>
+        /// <remarks>
+        /// Based on Vulkan memory management best practices:
+        /// 
+        /// Memory type selection strategy:
+        /// 1. BufferHeapType.Default (device-local):
+        ///    - Use for static buffers that are rarely or never updated from CPU
+        ///    - Best performance: Fast GPU access, no CPU visibility overhead
+        ///    - Examples: Static vertex/index buffers, GPU-only storage buffers
+        /// 
+        /// 2. BufferHeapType.Upload (host-visible + host-coherent):
+        ///    - Use for dynamic buffers that are frequently updated from CPU
+        ///    - Host-visible: Allows CPU to write directly to buffer memory
+        ///    - Host-coherent: CPU writes are immediately visible to GPU (no manual cache flushing)
+        ///    - Examples: Dynamic constant buffers, staging buffers, frequently updated uniform buffers
+        /// 
+        /// 3. BufferHeapType.Readback (host-visible):
+        ///    - Use for buffers that need to be read back by CPU
+        ///    - Host-visible: Allows CPU to read buffer memory
+        ///    - May or may not be coherent depending on usage (coherent preferred for simplicity)
+        ///    - Examples: Query result buffers, GPU compute output buffers, readback targets
+        /// 
+        /// 4. Constant buffers (heuristic):
+        ///    - Constant buffers are typically dynamic (updated every frame)
+        ///    - Default to host-visible + host-coherent if heap type is Default
+        ///    - This ensures optimal performance for per-frame constant buffer updates
+        /// 
+        /// 5. Staging/transfer buffers:
+        ///    - If TRANSFER_SRC_BIT is set, buffer is used for staging (host-visible required)
+        ///    - Staging buffers copy data from CPU to GPU-resident buffers
+        ///    - Always use host-visible + host-coherent for staging buffers
+        /// 
+        /// Reference: Vulkan Memory Management Best Practices
+        /// - https://developer.nvidia.com/vulkan-memory-management
+        /// - https://www.khronos.org/registry/vulkan/specs/1.3-extensions/html/vkspec.html#memory-device
+        /// </remarks>
+        private VkMemoryPropertyFlags DetermineBufferMemoryProperties(BufferDesc desc, VkBufferUsageFlags usageFlags)
+        {
+            // Check if this is a staging buffer (has TRANSFER_SRC usage)
+            // Staging buffers are used to transfer data from CPU to GPU-resident buffers
+            bool isStagingBuffer = (usageFlags & VkBufferUsageFlags.VK_BUFFER_USAGE_TRANSFER_SRC_BIT) != 0;
+            
+            // Check if this is a readback buffer (TRANSFER_SRC but used for reading GPU results)
+            // Readback buffers are used to read data from GPU back to CPU
+            bool isReadbackBuffer = desc.HeapType == BufferHeapType.Readback;
+            
+            // Check if this is a constant buffer (uniform buffer)
+            // Constant buffers are typically updated frequently from CPU
+            bool isConstantBuffer = (desc.Usage & BufferUsageFlags.ConstantBuffer) != 0;
+
+            // Determine memory properties based on heap type (primary decision factor)
+            switch (desc.HeapType)
+            {
+                case BufferHeapType.Upload:
+                    // Upload heap: CPU-writable, GPU-readable
+                    // Requires host-visible for CPU writes, host-coherent for immediate visibility
+                    return VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                           VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
+                case BufferHeapType.Readback:
+                    // Readback heap: CPU-readable, GPU-writable
+                    // Requires host-visible for CPU reads, prefer host-coherent for simplicity
+                    // Host-cached may be beneficial for readback but requires manual cache management
+                    // Prefer coherent for simplicity (no need to invalidate/flush cache)
+                    return VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                           VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
+                case BufferHeapType.Default:
+                default:
+                    // Default heap: GPU-accessible only (best performance for static resources)
+                    // However, handle special cases:
+                    
+                    // Staging buffers always need host-visible memory
+                    if (isStagingBuffer)
+                    {
+                        return VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                               VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+                    }
+                    
+                    // Constant buffers are typically dynamic (updated every frame)
+                    // Use host-visible + host-coherent for optimal CPU update performance
+                    if (isConstantBuffer)
+                    {
+                        // Prefer host-visible + host-coherent for constant buffers
+                        // This allows efficient CPU updates without needing staging buffers
+                        // For high-performance scenarios, could use device-local with staging, but
+                        // host-visible is more efficient for frequently updated small buffers
+                        return VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                               VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+                    }
+                    
+                    // Default case: Static buffers (vertex/index buffers, GPU-only storage)
+                    // Use device-local memory for best GPU performance
+                    return VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+            }
+        }
+
+        /// <summary>
         /// Finds a suitable memory type index that matches the given type filter and property flags.
         /// </summary>
         /// <param name="typeFilter">Bitmask of memory types that are suitable for the resource.</param>
@@ -2122,10 +2224,12 @@ namespace Andastra.Runtime.MonoGame.Backends
             VkMemoryRequirements memoryRequirements;
             vkGetBufferMemoryRequirements(_device, vkBuffer, out memoryRequirements);
 
-            // Determine memory properties based on usage
-            // Note: Staging buffers would use host-visible memory, but BufferUsageFlags doesn't have a Staging flag
-            // TODO: STUB - For now, use device-local memory for all buffers
-            VkMemoryPropertyFlags memoryProperties = VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+            // Determine memory properties based on heap type and usage
+            // Based on Vulkan best practices for memory type selection:
+            // - Device-local: Best performance for GPU-only resources (static vertex/index buffers)
+            // - Host-visible + Host-coherent: Required for CPU-writable buffers (dynamic constant buffers, staging)
+            // - Host-visible: For CPU-readable buffers (readback buffers, queries)
+            VkMemoryPropertyFlags memoryProperties = DetermineBufferMemoryProperties(desc, usageFlags);
 
             // Allocate memory
             IntPtr vkMemory = AllocateDeviceMemory(memoryRequirements, memoryProperties);
