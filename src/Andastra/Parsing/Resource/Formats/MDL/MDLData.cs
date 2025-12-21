@@ -598,6 +598,7 @@ namespace Andastra.Parsing.Formats.MDLData
         public float ControlPointSmoothing { get; set; }
         public int XGrid { get; set; }
         public int YGrid { get; set; }
+        public int SpawnType { get; set; }  // Spawn location mode (0=Normal, 1=Trail) - vendor/mdlops/MDLOpsM.pm:3278
         public MDLRenderType RenderType { get; set; }
         public MDLUpdateType UpdateType { get; set; }
         public MDLBlendType BlendType { get; set; }
@@ -634,6 +635,7 @@ namespace Andastra.Parsing.Formats.MDLData
                    ControlPointSmoothing.Equals(other.ControlPointSmoothing) &&
                    XGrid == other.XGrid &&
                    YGrid == other.YGrid &&
+                   SpawnType == other.SpawnType &&
                    RenderType == other.RenderType &&
                    UpdateType == other.UpdateType &&
                    BlendType == other.BlendType &&
@@ -658,6 +660,7 @@ namespace Andastra.Parsing.Formats.MDLData
             hash.Add(ControlPointSmoothing);
             hash.Add(XGrid);
             hash.Add(YGrid);
+            hash.Add(SpawnType);
             hash.Add(RenderType);
             hash.Add(UpdateType);
             hash.Add(BlendType);
