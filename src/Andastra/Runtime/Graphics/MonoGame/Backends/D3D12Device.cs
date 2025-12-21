@@ -6178,14 +6178,14 @@ namespace Andastra.Runtime.MonoGame.Backends
                         }
 
                         // Get descriptor heap from binding set
-                        // TODO: Add GetDescriptorHeap() method to D3D12BindingSet to access _descriptorHeap
-                        // For now, we'll need to add an accessor method
-                        // IntPtr descriptorHeap = d3d12BindingSet.GetDescriptorHeap();
-                        // if (descriptorHeap != IntPtr.Zero && !seenHeaps.Contains(descriptorHeap))
-                        // {
-                        //     descriptorHeaps.Add(descriptorHeap);
-                        //     seenHeaps.Add(descriptorHeap);
-                        // }
+                        // D3D12BindingSet provides GetDescriptorHeap() method to access the descriptor heap
+                        // We collect unique descriptor heaps to set them on the command list
+                        IntPtr descriptorHeap = d3d12BindingSet.GetDescriptorHeap();
+                        if (descriptorHeap != IntPtr.Zero && !seenHeaps.Contains(descriptorHeap))
+                        {
+                            descriptorHeaps.Add(descriptorHeap);
+                            seenHeaps.Add(descriptorHeap);
+                        }
                     }
 
                     // Set descriptor heaps if we have any
