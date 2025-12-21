@@ -806,6 +806,9 @@ namespace Andastra.Runtime.MonoGame.Backends
             uint imageMemoryBarrierCount,
             IntPtr pImageMemoryBarriers);
 
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdSetBlendConstantsDelegate(IntPtr commandBuffer, IntPtr blendConstants);
+
         // Function pointers storage
         private static vkCreateImageDelegate vkCreateImage;
         private static vkDestroyImageDelegate vkDestroyImage;
@@ -3998,6 +4001,11 @@ namespace Andastra.Runtime.MonoGame.Backends
 
 
         #endregion
+    }
+}
+
+
+
     }
 }
 
