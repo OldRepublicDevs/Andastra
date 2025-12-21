@@ -3017,13 +3017,32 @@ namespace Andastra.Runtime.MonoGame.Backends
             // 3. Using static blend factors instead of BlendFactor.BlendFactor
         }
 
+        /// <summary>
+        /// Sets the stencil reference value for subsequent draw calls.
+        /// Based on Metal API: MTLRenderCommandEncoder::setStencilReferenceValue(uint32_t)
+        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1516252-setstencilreferencevalue
+        /// This method sets the reference value used in stencil testing operations.
+        /// The reference value is compared against the stencil buffer value using the stencil function
+        /// specified in the depth-stencil state descriptor when the render pipeline state was created.
+        /// This matches the behavior of DirectX 12 OMSetStencilRef and Vulkan vkCmdSetStencilReference.
+        /// swkotor2.exe: N/A - Original game used DirectX 9, not Metal
+        /// </summary>
+        /// <param name="reference">The stencil reference value (0-255).</param>
         public void SetStencilRef(uint reference)
         {
             if (!_isOpen)
             {
-                return;
+                return; // Cannot record commands when command list is closed
             }
-            // TODO: Set stencil reference value
+
+            if (_currentRenderCommandEncoder == IntPtr.Zero)
+            {
+                return; // No active render command encoder
+            }
+
+            // Set stencil reference value on the current render command encoder
+            // Metal API: MTLRenderCommandEncoder::setStencilReferenceValue(uint32_t)
+            MetalNative.SetStencilReference(_currentRenderCommandEncoder, reference);
         }
 
         // Draw Commands
@@ -4944,6 +4963,42 @@ namespace Andastra.Runtime.MonoGame.Backends
         // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1515458-setscissorrect
         [DllImport("/System/Library/Frameworks/Metal.framework/Metal")]
         public static extern void SetScissorRect(IntPtr renderCommandEncoder, MetalScissorRect scissorRect);
+
+        /// <summary>
+        /// Sets the stencil reference value for the render command encoder.
+        /// Based on Metal API: MTLRenderCommandEncoder::setStencilReferenceValue(uint32_t)
+        /// Method signature: - (void)setStencilReferenceValue:(uint32_t)value;
+        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1516252-setstencilreferencevalue
+        /// This sets the reference value used in stencil testing operations.
+        /// The reference value is compared against the stencil buffer value using the stencil function
+        /// specified in the depth-stencil state descriptor.
+        /// swkotor2.exe: N/A - Original game used DirectX 9, not Metal
+        /// </summary>
+        /// <param name="renderCommandEncoder">The Metal render command encoder (id&lt;MTLRenderCommandEncoder&gt;).</param>
+        /// <param name="reference">The stencil reference value (0-255).</param>
+        public static void SetStencilReference(IntPtr renderCommandEncoder, uint reference)
+        {
+            if (renderCommandEncoder == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                // Register the Objective-C selector for setStencilReferenceValue:
+                IntPtr selector = sel_registerName("setStencilReferenceValue:");
+                if (selector != IntPtr.Zero)
+                {
+                    // Call setStencilReferenceValue: using Objective-C runtime
+                    // Signature: - (void)setStencilReferenceValue:(uint32_t)value
+                    objc_msgSend_void_uint(renderCommandEncoder, selector, reference);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalNative] SetStencilReference: Exception: {ex.Message}");
+            }
+        }
 
         /// <summary>
         /// Checks if the Metal render command encoder supports batch viewport setting API (setViewports:count:).
