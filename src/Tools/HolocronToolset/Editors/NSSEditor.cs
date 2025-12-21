@@ -626,6 +626,18 @@ namespace HolocronToolset.Editors
                     ToggleTerminalPanel();
                     e.Handled = true;
                 }
+                // F12: Go to Definition
+                else if (e.Key == Key.F12 && e.KeyModifiers == KeyModifiers.None)
+                {
+                    GoToDefinition();
+                    e.Handled = true;
+                }
+                // Shift+F12: Find All References
+                else if (e.Key == Key.F12 && e.KeyModifiers == KeyModifiers.Shift)
+                {
+                    FindAllReferencesAtCursor();
+                    e.Handled = true;
+                }
             };
         }
 
@@ -1200,19 +1212,17 @@ namespace HolocronToolset.Editors
                 }
 
                 // If still not found, search the current file
-                NavigateToSymbol(word);
+                bool foundInFile = NavigateToSymbol(word);
                 
-                // Check if NavigateToSymbol actually found something by checking if cursor moved
-                // (NavigateToSymbol uses GotoLine which moves the cursor)
-                // For now, we'll show a message if it's likely not found
-                // Note: NavigateToSymbol doesn't return a bool, so we can't know for sure
-                // We'll show a message after a short delay or check if we're still at the same position
-                var notFoundMessageBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Go to Definition",
-                    $"Definition for '{word}' not found in current file.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Info);
-                notFoundMessageBox.ShowAsync();
+                if (!foundInFile)
+                {
+                    var notFoundMessageBox = MessageBoxManager.GetMessageBoxStandard(
+                        "Go to Definition",
+                        $"Definition for '{word}' not found in current file.",
+                        ButtonEnum.Ok,
+                        MsBox.Avalonia.Enums.Icon.Info);
+                    notFoundMessageBox.ShowAsync();
+                }
             }
         }
 
@@ -1281,29 +1291,11 @@ namespace HolocronToolset.Editors
                 return "void";
             }
 
-            // Try to get return type from function properties
-            // ScriptFunction may have a ReturnType property or similar
-            var returnTypeProperty = func.GetType().GetProperty("ReturnType");
-            if (returnTypeProperty != null)
+            // ScriptFunction has a ReturnType property of type DataType
+            // DataType has a ToScriptString() method to convert to string
+            if (func.ReturnType != null)
             {
-                var returnType = returnTypeProperty.GetValue(func);
-                return returnType?.ToString() ?? "void";
-            }
-
-            // Fallback: check if there's a signature or other property
-            var signatureProperty = func.GetType().GetProperty("Signature");
-            if (signatureProperty != null)
-            {
-                var signature = signatureProperty.GetValue(func)?.ToString();
-                if (!string.IsNullOrEmpty(signature))
-                {
-                    // Try to extract return type from signature (e.g., "int FunctionName(...)" -> "int")
-                    var match = Regex.Match(signature, @"^\s*(\w+)\s+\w+\s*\(");
-                    if (match.Success)
-                    {
-                        return match.Groups[1].Value;
-                    }
-                }
+                return func.ReturnType.ToScriptString();
             }
 
             return "void";
@@ -2473,9 +2465,9 @@ namespace HolocronToolset.Editors
             // Navigation section (if word under cursor exists)
             if (!string.IsNullOrEmpty(wordUnderCursor))
             {
-                // Go to Definition (F12) - placeholder for now
+                // Go to Definition (F12)
                 var goToDefItem = new MenuItem { Header = "Go to Definition", HotKey = new KeyGesture(Key.F12) };
-                goToDefItem.Click += (s, e) => { /* TODO: Implement go to definition */ };
+                goToDefItem.Click += (s, e) => { GoToDefinition(); };
                 contextMenu.Items.Add(goToDefItem);
 
                 // Find All References (Shift+F12)
@@ -3857,17 +3849,18 @@ namespace HolocronToolset.Editors
         /// Searches through the code editor text to find the symbol definition and moves the cursor to it.
         /// </summary>
         /// <param name="symbolName">The name of the symbol to navigate to</param>
-        private void NavigateToSymbol(string symbolName)
+        /// <returns>True if the symbol was found and navigation occurred, false otherwise</returns>
+        private bool NavigateToSymbol(string symbolName)
         {
             if (_codeEdit == null || string.IsNullOrEmpty(symbolName))
             {
-                return;
+                return false;
             }
 
             string text = _codeEdit.ToPlainText();
             if (string.IsNullOrEmpty(text))
             {
-                return;
+                return false;
             }
 
             string[] lines = text.Split(new[] { '\n', '\r' }, StringSplitOptions.None);
@@ -3879,37 +3872,34 @@ namespace HolocronToolset.Editors
 
                 // Look for function definition
                 // Check for: void symbolName(, int symbolName(, float symbolName(, etc.
-                if (line.Contains($"void {symbolName}(") ||
-                    line.Contains($"int {symbolName}(") ||
-                    line.Contains($"float {symbolName}(") ||
-                    line.Contains($"string {symbolName}(") ||
-                    line.Contains($"object {symbolName}("))
+                // Use word boundary matching to avoid partial matches
+                string escapedSymbol = Regex.Escape(symbolName);
+                string functionPattern = @"\b(void|int|float|string|object)\s+" + escapedSymbol + @"\s*\(";
+                if (Regex.IsMatch(line, functionPattern, RegexOptions.IgnoreCase))
                 {
                     GotoLine(lineNumber);
-                    return;
+                    return true;
                 }
 
                 // Look for struct definition
-                if (line.Contains($"struct {symbolName}"))
+                string structPattern = @"\bstruct\s+" + escapedSymbol + @"\b";
+                if (Regex.IsMatch(line, structPattern, RegexOptions.IgnoreCase))
                 {
                     GotoLine(lineNumber);
-                    return;
+                    return true;
                 }
 
                 // Look for variable declaration
                 // More specific check: symbol name must be followed by = or ; and line must contain a type keyword
-                if (line.Contains(symbolName) && (line.Contains("=") || line.Contains(";")))
+                string varPattern = @"\b(int|float|string|object|void)\s+" + escapedSymbol + @"\s*[=;]";
+                if (Regex.IsMatch(line, varPattern, RegexOptions.IgnoreCase))
                 {
-                    // Check if line contains a type keyword (more specific check)
-                    if (line.Contains("int ") || line.Contains("float ") ||
-                        line.Contains("string ") || line.Contains("object ") ||
-                        line.Contains("void "))
-                    {
-                        GotoLine(lineNumber);
-                        return;
-                    }
+                    GotoLine(lineNumber);
+                    return true;
                 }
             }
+
+            return false;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2164-2168
