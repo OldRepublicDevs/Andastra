@@ -180,16 +180,9 @@ namespace Andastra.Runtime.Core.Party
             Interfaces.Components.IStatsComponent stats = Entity.GetComponent<Interfaces.Components.IStatsComponent>();
             if (stats != null)
             {
-                // Would need class levels tracking
-                // TODO: STUB - For now, estimate from XP
-                int level = 1;
-                int xpNeeded = 2000; // Level 2
-                while (XP >= xpNeeded && level < 20)
-                {
-                    level++;
-                    xpNeeded = (level + 1) * (level + 2) * 500;
-                }
-                return level;
+                // Use the Level property from StatsComponent, which tracks total class levels
+                // This is the authoritative source for character level
+                return stats.Level;
             }
             return 1;
         }
