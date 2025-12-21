@@ -152,6 +152,9 @@ namespace Andastra.Runtime.Games.Aurora
             _resRef = resRef ?? throw new ArgumentNullException(nameof(resRef));
             _tag = resRef; // Default tag to resref
 
+            // Store resource loader for on-demand MDL/MDX loading
+            _resourceLoader = resourceLoader;
+            
             // Initialize tileset loader if resource loader is provided
             // Based on nwmain.exe: CNWTileSetManager::GetTileSet @ 0x1411d4f6a
             if (resourceLoader != null)
@@ -2583,6 +2586,106 @@ namespace Andastra.Runtime.Games.Aurora
         }
 
         /// <summary>
+        /// Loads a tile mesh on demand from an MDL model.
+        /// </summary>
+        /// <param name="modelResRef">Model resource reference (tile model name).</param>
+        /// <param name="roomRenderer">Room mesh renderer for creating mesh data.</param>
+        /// <returns>The loaded room mesh data, or null if loading failed.</returns>
+        /// <remarks>
+        /// Tile Mesh On-Demand Loading (Aurora Engine):
+        /// - Tiles are loaded on demand when they become visible during rendering
+        /// - Based on nwmain.exe: CNWSArea::RenderTiles loads tile mesh on demand
+        /// - Located via string references: "Tile_Model" @ CNWTile data structures
+        /// - Original implementation: Loads MDL/MDX files from resource system and creates renderable mesh data
+        /// - Resource search order: Override -> Module -> HAK -> Base Game (via AuroraResourceProvider)
+        /// - Tiles use MDL models for visual representation (same format as other 3D models)
+        /// - This implements the on-demand loading that was previously stubbed
+        /// </remarks>
+        private IRoomMeshData LoadTileMeshOnDemand(string modelResRef, IRoomMeshRenderer roomRenderer)
+        {
+            // Validate inputs
+            if (string.IsNullOrEmpty(modelResRef))
+            {
+                return null;
+            }
+
+            if (roomRenderer == null)
+            {
+                return null;
+            }
+
+            // Resource loader is required to load MDL/MDX files
+            if (_resourceLoader == null)
+            {
+                // Cannot load without resource loader - this is expected if resource loading is not available
+                return null;
+            }
+
+            try
+            {
+                // Load MDL file from resource system
+                // Based on nwmain.exe: Tile models are loaded from resource system (Override -> Module -> HAK -> Base Game)
+                // Original implementation: Uses resource provider to load MDL files
+                // Resource filename is model ResRef with .mdl extension
+                byte[] mdlData = _resourceLoader(modelResRef + ".mdl");
+                if (mdlData == null || mdlData.Length == 0)
+                {
+                    // MDL not found - tile may not have a visual model
+                    return null;
+                }
+
+                // Load MDX file from resource system (contains vertex data)
+                // Based on nwmain.exe: MDX files are companion files to MDL files
+                // MDX filename is model ResRef with .mdx extension
+                byte[] mdxData = _resourceLoader(modelResRef + ".mdx");
+                // MDX file is optional - some MDL files may be ASCII format or self-contained
+
+                // Parse MDL file
+                // Based on nwmain.exe: MDL files are binary format containing model structure
+                // Original implementation: Parses MDL binary format to extract mesh geometry
+                // MDLAuto.ReadMdl can parse both binary MDL (with MDX data) and ASCII MDL formats
+                MDL mdl = MDLAuto.ReadMdl(mdlData, sourceExt: mdxData);
+                if (mdl == null)
+                {
+                    // Failed to parse MDL
+                    return null;
+                }
+
+                // Create mesh data using room renderer
+                // Based on nwmain.exe: Room renderer extracts geometry from MDL and creates GPU buffers
+                // Original implementation: Converts MDL geometry to vertex/index buffers for rendering
+                IRoomMeshData meshData = roomRenderer.LoadRoomMesh(modelResRef, mdl);
+                if (meshData == null)
+                {
+                    // Failed to create mesh data
+                    return null;
+                }
+
+                // Validate mesh data has valid buffers
+                if (meshData.VertexBuffer == null || meshData.IndexBuffer == null)
+                {
+                    // Invalid mesh data
+                    return null;
+                }
+
+                if (meshData.IndexCount < 3)
+                {
+                    // Need at least one triangle
+                    return null;
+                }
+
+                return meshData;
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't throw - just return null to skip this tile
+                // Based on nwmain.exe: Tile loading failures don't crash the game, tiles are just skipped
+                Console.WriteLine($"[AuroraArea] Failed to load tile mesh '{modelResRef}': {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Renders visible tiles.
         /// </summary>
         /// <param name="graphicsDevice">Graphics device for rendering.</param>
@@ -2627,11 +2730,17 @@ namespace Andastra.Runtime.Games.Aurora
                 IRoomMeshData meshData = tile.MeshData;
                 if (meshData == null)
                 {
-                    // Try to load mesh using room renderer
-                    // Note: This requires MDL model loading, which may not be available
-                    // TODO: STUB - For now, we'll skip tiles that haven't been pre-loaded
-                    // Full implementation would load MDL models from tile model ResRef
-                    continue;
+                    // Load mesh on demand from MDL model
+                    // Based on nwmain.exe: CNWSArea::RenderTiles loads tile mesh on demand when tile becomes visible
+                    meshData = LoadTileMeshOnDemand(tile.ModelResRef, roomRenderer);
+                    if (meshData == null)
+                    {
+                        // Failed to load tile mesh - skip this tile
+                        continue;
+                    }
+                    
+                    // Cache the loaded mesh data in the tile
+                    tile.MeshData = meshData;
                 }
 
                 if (meshData.VertexBuffer == null || meshData.IndexBuffer == null)
