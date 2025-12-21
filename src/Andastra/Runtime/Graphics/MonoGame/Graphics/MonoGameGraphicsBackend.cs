@@ -162,18 +162,23 @@ namespace Andastra.Runtime.MonoGame.Graphics
 
         public object CreateSoundPlayer(object resourceProvider)
         {
-            // TODO: STUB - Sound player requires engine-specific resource provider
-            // The actual implementation should be provided by the engine-specific module
-            // For now, return null to indicate no sound player available
-            return null;
+            if (resourceProvider is Andastra.Runtime.Content.Interfaces.IGameResourceProvider provider)
+            {
+                var spatialAudio = CreateSpatialAudio();
+                var monoGameSpatialAudio = spatialAudio as MonoGameSpatialAudio;
+                var underlyingSpatialAudio = monoGameSpatialAudio?.UnderlyingSpatialAudio;
+                return new Andastra.Runtime.MonoGame.Audio.MonoGameSoundPlayer(provider, underlyingSpatialAudio);
+            }
+            throw new ArgumentException("Resource provider must be an IGameResourceProvider instance", nameof(resourceProvider));
         }
 
         public object CreateMusicPlayer(object resourceProvider)
         {
-            // TODO: STUB - Music player requires engine-specific resource provider
-            // The actual implementation should be provided by the engine-specific module
-            // For now, return null to indicate no music player available
-            return null;
+            if (resourceProvider is Andastra.Runtime.Content.Interfaces.IGameResourceProvider provider)
+            {
+                return new Andastra.Runtime.MonoGame.Audio.MonoGameMusicPlayer(provider);
+            }
+            throw new ArgumentException("Resource provider must be an IGameResourceProvider instance", nameof(resourceProvider));
         }
 
         public object CreateVoicePlayer(object resourceProvider)
