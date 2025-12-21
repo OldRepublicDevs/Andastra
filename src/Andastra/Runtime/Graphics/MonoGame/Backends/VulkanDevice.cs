@@ -757,7 +757,17 @@ namespace Andastra.Runtime.MonoGame.Backends
         // Additional Vulkan enums
         private enum VkImageCreateFlags { }
         private enum VkImageType { VK_IMAGE_TYPE_2D = 1 }
-        private enum VkSampleCountFlagBits { VK_SAMPLE_COUNT_1_BIT = 1 }
+        [Flags]
+        private enum VkSampleCountFlagBits
+        {
+            VK_SAMPLE_COUNT_1_BIT = 0x00000001,
+            VK_SAMPLE_COUNT_2_BIT = 0x00000002,
+            VK_SAMPLE_COUNT_4_BIT = 0x00000004,
+            VK_SAMPLE_COUNT_8_BIT = 0x00000008,
+            VK_SAMPLE_COUNT_16_BIT = 0x00000010,
+            VK_SAMPLE_COUNT_32_BIT = 0x00000020,
+            VK_SAMPLE_COUNT_64_BIT = 0x00000040
+        }
         private enum VkImageTiling { VK_IMAGE_TILING_OPTIMAL = 0 }
         private enum VkSharingMode { VK_SHARING_MODE_EXCLUSIVE = 0 }
         private enum VkBufferCreateFlags { }
