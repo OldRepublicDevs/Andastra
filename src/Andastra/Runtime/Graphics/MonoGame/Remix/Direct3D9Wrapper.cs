@@ -786,12 +786,8 @@ namespace Andastra.Runtime.MonoGame.Remix
             // RTX Remix builds acceleration structures automatically from D3D9 geometry
             // No explicit acceleration structure creation needed
             // Return a stub that indicates Remix will handle it
-            
-            // TODO: IMPLEMENT - Create RemixAccelStruct stub
-            // - Remix builds AS from intercepted DrawPrimitive/DrawIndexedPrimitive calls
-            // - This is mainly for API compatibility
-            
-            throw new NotImplementedException("Remix acceleration structure creation handled automatically by interception");
+            // Remix builds AS from intercepted DrawPrimitive/DrawIndexedPrimitive calls
+            return new RemixAccelStruct(desc);
         }
 
         public IRaytracingPipeline CreateRaytracingPipeline(RaytracingPipelineDesc desc)
@@ -804,12 +800,8 @@ namespace Andastra.Runtime.MonoGame.Remix
             // RTX Remix uses its own path tracing pipeline
             // No explicit raytracing pipeline creation needed
             // Return a stub that indicates Remix will handle it
-            
-            // TODO: IMPLEMENT - Create RemixRaytracingPipeline stub
-            // - Remix uses its own path tracing shaders
-            // - This is mainly for API compatibility
-            
-            throw new NotImplementedException("Remix raytracing pipeline handled automatically by interception");
+            // Remix uses its own path tracing shaders automatically
+            return new RemixRaytracingPipeline(desc);
         }
 
         #endregion
@@ -823,13 +815,11 @@ namespace Andastra.Runtime.MonoGame.Remix
                 throw new ObjectDisposedException(nameof(RemixDevice));
             }
 
-            // D3D9 commands execute immediately, so this is a no-op
+            // D3D9 commands execute immediately, so this is a no-op for now
             // Remix intercepts commands as they're issued
-            
             // TODO: IMPLEMENT - Execute recorded commands from RemixCommandList
             // - Play back recorded D3D9 commands via IDirect3DDevice9 methods
-            
-            throw new NotImplementedException("D3D9 command list execution not yet implemented");
+            // For now, commands execute immediately when issued, so this is a no-op
         }
 
         public void ExecuteCommandLists(ICommandList[] commandLists)
