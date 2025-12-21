@@ -144,6 +144,11 @@ namespace Andastra.Runtime.Games.Aurora
         // Based on nwmain.exe: CNWSArea::RenderWeather renders snow particles as billboard sprites
         private SnowParticleSystem _snowParticleSystem;
 
+        // Cached white texture for lightning flash rendering
+        // Based on nwmain.exe: Lightning flash uses a white full-screen overlay for brightness effect
+        // Lazy-initialized when first needed (requires graphics device)
+        private ITexture2D _lightningFlashTexture;
+
         /// <summary>
         /// Creates a new Aurora area.
         /// </summary>
@@ -3009,8 +3014,73 @@ namespace Andastra.Runtime.Games.Aurora
             if (_isLightning && _lightningFlashTimer > 0.0f)
             {
                 // Lightning flash is a full-screen brightness effect
-                // Based on nwmain.exe: Lightning flash is rendered as screen overlay
-                // TODO: STUB - For now, this is a placeholder - full implementation would render lightning flash
+                // Based on nwmain.exe: Lightning flash is rendered as screen overlay with additive blending
+                RenderLightningFlash(graphicsDevice, _lightningFlashTimer);
+            }
+        }
+
+        /// <summary>
+        /// Renders lightning flash as a full-screen brightness overlay.
+        /// </summary>
+        /// <param name="graphicsDevice">Graphics device for rendering.</param>
+        /// <param name="remainingTime">Remaining time for the lightning flash (0.0 to LightningFlashDuration).</param>
+        /// <remarks>
+        /// Based on nwmain.exe: CNWSArea::RenderWeather renders lightning flash as a screen overlay.
+        /// - Lightning flash is a full-screen white overlay with additive blending
+        /// - Fades from full brightness (alpha = 1.0) to transparent (alpha = 0.0) over LightningFlashDuration
+        /// - Uses additive blending to brighten the entire screen for a realistic lightning effect
+        /// - Rendered after all 3D geometry but before UI elements
+        /// </remarks>
+        private void RenderLightningFlash(IGraphicsDevice graphicsDevice, float remainingTime)
+        {
+            if (graphicsDevice == null)
+            {
+                return;
+            }
+
+            // Initialize white texture if needed (lazy initialization)
+            // Based on nwmain.exe: Lightning flash uses a white texture for full-screen overlay
+            if (_lightningFlashTexture == null)
+            {
+                // Create a 1x1 white texture (RGBA: 255, 255, 255, 255)
+                byte[] whitePixel = new byte[] { 255, 255, 255, 255 };
+                _lightningFlashTexture = graphicsDevice.CreateTexture2D(1, 1, whitePixel);
+            }
+
+            // Calculate alpha based on remaining time (fade from 1.0 to 0.0)
+            // Based on nwmain.exe: Lightning flash fades out linearly over duration
+            float alpha = remainingTime / LightningFlashDuration;
+            alpha = System.Math.Max(0.0f, System.Math.Min(1.0f, alpha)); // Clamp to [0.0, 1.0]
+
+            // Skip rendering if alpha is too low to be visible
+            if (alpha <= 0.0f)
+            {
+                return;
+            }
+
+            // Get viewport dimensions for full-screen rendering
+            Viewport viewport = graphicsDevice.Viewport;
+            int screenWidth = viewport.Width;
+            int screenHeight = viewport.Height;
+
+            // Create sprite batch for 2D rendering
+            // Based on nwmain.exe: Lightning flash is rendered using 2D sprite overlay
+            using (ISpriteBatch spriteBatch = graphicsDevice.CreateSpriteBatch())
+            {
+                // Use additive blending for brightness effect
+                // Based on nwmain.exe: Lightning flash uses additive blending to brighten the scene
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AdditiveBlend);
+
+                // Create white color with calculated alpha for brightness
+                // Based on nwmain.exe: Lightning flash is white with varying alpha for brightness control
+                Color flashColor = new Color(255, 255, 255, (byte)(alpha * 255));
+
+                // Render full-screen white overlay
+                // Based on nwmain.exe: Lightning flash covers entire screen
+                Rectangle fullScreenRect = new Rectangle(0, 0, screenWidth, screenHeight);
+                spriteBatch.Draw(_lightningFlashTexture, fullScreenRect, flashColor);
+
+                spriteBatch.End();
             }
         }
 
@@ -3239,6 +3309,14 @@ namespace Andastra.Runtime.Games.Aurora
                     disposableMesh.Dispose();
                 }
                 _navigationMesh = null;
+            }
+
+            // Dispose lightning flash texture if created
+            // Based on nwmain.exe: Graphics resources are freed during area unload
+            if (_lightningFlashTexture != null)
+            {
+                _lightningFlashTexture.Dispose();
+                _lightningFlashTexture = null;
             }
 
             // Clear all entity lists
