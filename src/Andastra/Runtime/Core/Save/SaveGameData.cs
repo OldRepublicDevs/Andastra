@@ -77,6 +77,17 @@ namespace Andastra.Runtime.Core.Save
         public Dictionary<string, AreaState> AreaStates { get; set; }
 
         /// <summary>
+        /// Module-to-area mapping (keyed by module ResRef, value is list of area ResRefs belonging to that module).
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Mod_Area_list field in module IFO file contains the list of areas belonging to each module.
+        /// This mapping is stored in save data to enable checking if an area belongs to a module even when the module is not loaded.
+        /// Original implementation: Module IFO file contains Mod_Area_list (GFF List) with Area_Name fields for each area.
+        /// Located via string reference: "Mod_Area_list" @ 0x007be748 (swkotor2.exe)
+        /// </remarks>
+        public Dictionary<string, List<string>> ModuleAreaMappings { get; set; }
+
+        /// <summary>
         /// Journal entries.
         /// </summary>
         public List<JournalEntry> JournalEntries { get; set; }
@@ -152,6 +163,18 @@ namespace Andastra.Runtime.Core.Save
         /// </summary>
         public string PlayerName { get; set; }
 
+        /// <summary>
+        /// Module-to-area mapping (module ResRef -> list of area ResRefs).
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Mod_Area_list in module IFO file
+        /// Original implementation: Module IFO contains Mod_Area_list field (GFF List) with area ResRefs
+        /// Located via string references: "Mod_Area_list" @ 0x007be748 (swkotor2.exe)
+        /// This mapping allows verification of area-to-module relationships without loading the module IFO
+        /// Used by DoesAreaBelongToModule to check if an area belongs to a module when the module is not loaded
+        /// </remarks>
+        public Dictionary<string, List<string>> ModuleAreaMapping { get; set; }
+
         public SaveGameData()
         {
             AreaStates = new Dictionary<string, AreaState>();
@@ -163,6 +186,7 @@ namespace Andastra.Runtime.Core.Save
             LiveContent = new List<bool>();
             LiveContentStrings = new List<string>();
             PlotStates = new Dictionary<int, PlotState>();
+            ModuleAreaMapping = new Dictionary<string, List<string>>();
         }
     }
 

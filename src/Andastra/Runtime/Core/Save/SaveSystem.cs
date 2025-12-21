@@ -394,6 +394,52 @@ namespace Andastra.Runtime.Core.Save
                 AreaState areaState = CreateAreaState(_world.CurrentArea);
                 saveData.AreaStates[_world.CurrentArea.ResRef] = areaState;
             }
+
+            // Save module-to-area mapping for the current module
+            // Based on swkotor2.exe: Mod_Area_list in module IFO file
+            // Original implementation: Module IFO contains Mod_Area_list field (GFF List) with area ResRefs
+            // Located via string references: "Mod_Area_list" @ 0x007be748 (swkotor2.exe)
+            // This allows verification of area-to-module relationships without loading the module IFO
+            IModule module = _world.CurrentModule;
+            if (module != null && !string.IsNullOrEmpty(module.ResRef))
+            {
+                // Initialize the mapping for this module if not already present
+                if (!saveData.ModuleAreaMapping.ContainsKey(module.ResRef))
+                {
+                    saveData.ModuleAreaMapping[module.ResRef] = new List<string>();
+                }
+
+                // Get all areas from the module
+                // For RuntimeModule, we can use the AreaList property directly
+                // For other module types, we iterate through the Areas property
+                var runtimeModule = module as Core.Module.RuntimeModule;
+                if (runtimeModule != null && runtimeModule.AreaList != null)
+                {
+                    // Use the AreaList property which contains all area ResRefs from Mod_Area_list
+                    foreach (string areaResRef in runtimeModule.AreaList)
+                    {
+                        if (!string.IsNullOrEmpty(areaResRef) && 
+                            !saveData.ModuleAreaMapping[module.ResRef].Contains(areaResRef))
+                        {
+                            saveData.ModuleAreaMapping[module.ResRef].Add(areaResRef);
+                        }
+                    }
+                }
+                else
+                {
+                    // Fallback: iterate through Areas property to get area ResRefs
+                    foreach (IArea area in module.Areas)
+                    {
+                        if (area != null && !string.IsNullOrEmpty(area.ResRef))
+                        {
+                            if (!saveData.ModuleAreaMapping[module.ResRef].Contains(area.ResRef))
+                            {
+                                saveData.ModuleAreaMapping[module.ResRef].Add(area.ResRef);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         private AreaState CreateAreaState(IArea area)
@@ -1537,16 +1583,31 @@ namespace Andastra.Runtime.Core.Save
             }
             else
             {
-                // Module is not currently loaded - we cannot verify the relationship
-                // In this case, we cannot definitively check if the area belongs to the module
-                // However, for save system purposes, if we have area states saved, we assume
-                // they were valid when saved. This is a limitation when checking module state
-                // for modules that are not currently loaded.
-                // 
-                // TODO: STUB - Note: A more complete implementation would maintain a module-to-area mapping
-                // in the save data or load the module IFO to check Mod_Area_list, but that
-                // would require additional infrastructure (module loader access, IFO parsing).
-                // TODO: STUB - For now, we return false if the module is not loaded, as we cannot verify.
+                // Module is not currently loaded - use saved module-to-area mapping
+                // Based on swkotor2.exe: Mod_Area_list in module IFO file
+                // Original implementation: Module IFO contains Mod_Area_list field (GFF List) with area ResRefs
+                // Located via string references: "Mod_Area_list" @ 0x007be748 (swkotor2.exe)
+                // The mapping is populated when saving by extracting the area list from the module
+                if (CurrentSave != null && CurrentSave.ModuleAreaMapping != null)
+                {
+                    List<string> areaList;
+                    if (CurrentSave.ModuleAreaMapping.TryGetValue(moduleResRef, out areaList))
+                    {
+                        // Check if the area ResRef is in the module's area list
+                        // Use case-insensitive comparison to match original game behavior
+                        foreach (string mappedAreaResRef in areaList)
+                        {
+                            if (string.Equals(mappedAreaResRef, areaResRef, StringComparison.OrdinalIgnoreCase))
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                }
+                
+                // Module is not loaded and we don't have a saved mapping for it
+                // This can happen if the save was created before the mapping was implemented,
+                // or if the module was never visited during the save session
                 return false;
             }
 

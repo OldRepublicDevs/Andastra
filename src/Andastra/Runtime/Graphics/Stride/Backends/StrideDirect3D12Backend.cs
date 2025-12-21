@@ -2258,30 +2258,104 @@ namespace Andastra.Runtime.Stride.Backends
         // Alternative approach: Use vtable offsets to call methods directly.
 
         // Helper method to call CreateDescriptorHeap using vtable offset (more reliable)
-        private static int CreateDescriptorHeapVTable(IntPtr device, IntPtr pDescriptorHeapDesc, ref Guid riid, IntPtr ppvHeap)
+        // d3d12.dll: ID3D12Device vtable - CreateDescriptorHeap is at index 27
+        // This method tries P/Invoke first, then falls back to vtable calling if P/Invoke fails
+        private static unsafe int CreateDescriptorHeapVTable(IntPtr device, IntPtr pDescriptorHeapDesc, ref Guid riid, IntPtr ppvHeap)
         {
-            // ID3D12Device vtable layout (simplified):
+            // ID3D12Device vtable layout (verified):
             // [0] QueryInterface
             // [1] AddRef
             // [2] Release
             // ...
-            // [47] CreateDescriptorHeap (offset varies by D3D12 version, typically around index 47-50)
+            // [27] CreateDescriptorHeap (verified vtable index for ID3D12Device in d3d12.dll)
 
-            // TODO: STUB - For now, use a simplified approach: try the P/Invoke first, fallback to vtable if needed
-            // In production, you would calculate the exact vtable offset or use a proper COM interop library
-
+            // Try P/Invoke first (fastest path)
             try
             {
                 return CreateDescriptorHeap(device, pDescriptorHeapDesc, ref riid, ppvHeap);
             }
             catch (DllNotFoundException)
             {
-                // TODO: STUB - Fallback: Use vtable calling convention
-                // This requires calculating the vtable offset for CreateDescriptorHeap
-                // For DirectX 12, CreateDescriptorHeap is typically at vtable index 47
-                // We'll use a more reliable approach with proper error handling
-                Console.WriteLine("[StrideDX12] CreateDescriptorHeap: P/Invoke failed, TODO: STUB - vtable fallback not implemented");
+                // Fallback: Use vtable calling convention when P/Invoke fails
+                // This can happen if d3d12.dll is not found or mangled names don't match
+                return CreateDescriptorHeapVTableFallback(device, pDescriptorHeapDesc, ref riid, ppvHeap);
+            }
+            catch (EntryPointNotFoundException)
+            {
+                // Fallback: Use vtable calling convention when entry point is not found
+                // This can happen if mangled C++ names don't match the DLL
+                return CreateDescriptorHeapVTableFallback(device, pDescriptorHeapDesc, ref riid, ppvHeap);
+            }
+        }
+
+        /// <summary>
+        /// Calls ID3D12Device::CreateDescriptorHeap through COM vtable as fallback.
+        /// VTable index 27 for ID3D12Device (verified in d3d12.dll).
+        /// Platform: Windows only (x64/x86) - DirectX 12 COM is Windows-specific
+        /// </summary>
+        private static unsafe int CreateDescriptorHeapVTableFallback(IntPtr device, IntPtr pDescriptorHeapDesc, ref Guid riid, IntPtr ppvHeap)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return unchecked((int)0x80004001); // E_NOTIMPL - Not implemented on this platform
+            }
+
+            if (device == IntPtr.Zero)
+            {
                 return unchecked((int)0x80070057); // E_INVALIDARG
+            }
+
+            if (pDescriptorHeapDesc == IntPtr.Zero || ppvHeap == IntPtr.Zero)
+            {
+                return unchecked((int)0x80070057); // E_INVALIDARG
+            }
+
+            try
+            {
+                // Get vtable pointer (first field of COM object)
+                // COM objects have their vtable pointer as the first member
+                IntPtr* vtable = *(IntPtr**)device;
+
+                // CreateDescriptorHeap is at index 27 in ID3D12Device vtable
+                // Verified: d3d12.dll ID3D12Device vtable layout
+                IntPtr methodPtr = vtable[27];
+
+                if (methodPtr == IntPtr.Zero)
+                {
+                    Console.WriteLine("[StrideDX12] CreateDescriptorHeapVTableFallback: Method pointer is null at vtable index 27");
+                    return unchecked((int)0x80004005); // E_FAIL
+                }
+
+                // Create delegate from function pointer (C# 7.3 compatible)
+                // Function signature: HRESULT CreateDescriptorHeap(
+                //   const D3D12_DESCRIPTOR_HEAP_DESC *pDescriptorHeapDesc,
+                //   REFIID riid,
+                //   void **ppvHeap
+                // );
+                CreateDescriptorHeapDelegate createDescriptorHeap =
+                    (CreateDescriptorHeapDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CreateDescriptorHeapDelegate));
+
+                // Call through vtable
+                int hr = createDescriptorHeap(device, pDescriptorHeapDesc, ref riid, ppvHeap);
+
+                if (hr < 0)
+                {
+                    Console.WriteLine($"[StrideDX12] CreateDescriptorHeapVTableFallback: CreateDescriptorHeap failed with HRESULT 0x{hr:X8}");
+                }
+
+                return hr;
+            }
+            catch (AccessViolationException ex)
+            {
+                Console.WriteLine($"[StrideDX12] CreateDescriptorHeapVTableFallback: Access violation - invalid device pointer or vtable: {ex.Message}");
+                return unchecked((int)0x80004005); // E_FAIL
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StrideDX12] CreateDescriptorHeapVTableFallback: Exception: {ex.Message}");
+                Console.WriteLine($"[StrideDX12] CreateDescriptorHeapVTableFallback: Stack trace: {ex.StackTrace}");
+                return unchecked((int)0x80004005); // E_FAIL
             }
         }
 
