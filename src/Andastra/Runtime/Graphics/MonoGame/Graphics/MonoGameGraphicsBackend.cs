@@ -153,12 +153,9 @@ namespace Andastra.Runtime.MonoGame.Graphics
 
         public object CreateDialogueCameraController(object cameraController)
         {
-            // TODO: STUB - Dialogue camera controller requires engine-specific implementation
-            // The actual implementation should be provided by the Odyssey/Aurora/Eclipse engine module
-            // For now, return the input camera controller unchanged
-            if (cameraController is Andastra.Runtime.Core.Camera.CameraController)
+            if (cameraController is Andastra.Runtime.Core.Camera.CameraController coreCameraController)
             {
-                return cameraController;
+                return new Andastra.Runtime.MonoGame.Camera.MonoGameDialogueCameraController(coreCameraController);
             }
             throw new ArgumentException("Camera controller must be a CameraController instance", nameof(cameraController));
         }
