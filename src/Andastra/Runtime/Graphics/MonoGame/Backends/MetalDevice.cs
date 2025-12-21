@@ -1313,6 +1313,12 @@ namespace Andastra.Runtime.MonoGame.Backends
         private bool _disposed;
 
         public Interfaces.RaytracingPipelineDesc Desc { get { return _desc; } }
+        
+        /// <summary>
+        /// Gets the native Metal raytracing pipeline state handle.
+        /// Internal use for MetalCommandList to set pipeline state during dispatch.
+        /// </summary>
+        internal IntPtr RaytracingPipelineState { get { return _raytracingPipelineState; } }
 
         public MetalRaytracingPipeline(IntPtr handle, Interfaces.RaytracingPipelineDesc desc, IntPtr raytracingPipelineState)
         {
@@ -3592,14 +3598,216 @@ namespace Andastra.Runtime.MonoGame.Backends
             // This matches the pattern used in D3D12Device where state is stored and applied during dispatch
         }
 
+        /// <summary>
+        /// Dispatches raytracing work using Metal 3.0 raytracing API.
+        /// </summary>
+        /// <param name="args">Dispatch dimensions (Width, Height, Depth).</param>
+        /// <remarks>
+        /// Based on Metal 3.0 raytracing API:
+        /// - Metal 3.0 raytracing uses compute shaders with MTLRaytracingPipelineState
+        /// - Shader binding table is provided via ShaderBindingTable structure
+        /// - Resources are bound via argument buffers (MTLArgumentEncoder)
+        /// - Ray dispatch is performed via compute shader dispatch
+        /// 
+        /// Metal API Reference:
+        /// https://developer.apple.com/documentation/metal/metal_ray_tracing
+        /// https://developer.apple.com/documentation/metal/mtlraytracingpipelinestate
+        /// https://developer.apple.com/documentation/metal/mtlcomputecommandencoder
+        /// 
+        /// Implementation follows D3D12Device pattern:
+        /// 1. Validate raytracing state is set
+        /// 2. Get or create compute command encoder
+        /// 3. Set raytracing pipeline state
+        /// 4. Set shader binding table (via function tables)
+        /// 5. Bind resources from binding sets
+        /// 6. Dispatch compute work with specified dimensions
+        /// </remarks>
         public void DispatchRays(DispatchRaysArguments args)
         {
             if (!_isOpen)
             {
-                return;
+                throw new InvalidOperationException("Command list must be open to dispatch rays");
             }
-            // TODO: Implement dispatch rays for Metal 3.0 raytracing
-            // Metal uses MTLIntersectionFunctionTable and MTLVisibleFunctionTable
+
+            // Validate dispatch dimensions
+            if (args.Width <= 0 || args.Height <= 0 || args.Depth <= 0)
+            {
+                throw new ArgumentException($"Invalid dispatch dimensions: Width={args.Width}, Height={args.Height}, Depth={args.Depth}. All dimensions must be greater than zero.");
+            }
+
+            // Check that raytracing state is set
+            if (!_hasRaytracingState)
+            {
+                throw new InvalidOperationException("Raytracing state must be set before dispatching rays. Call SetRaytracingState first.");
+            }
+
+            // Get shader binding table from raytracing state
+            ShaderBindingTable shaderTable = _currentRaytracingState.ShaderTable;
+
+            // Validate that shader binding table buffer is set (required for ray generation shader)
+            if (shaderTable.Buffer == null)
+            {
+                throw new InvalidOperationException("Shader binding table buffer is required for DispatchRays");
+            }
+
+            // Get Metal buffer handle from shader binding table
+            MetalBuffer shaderTableBuffer = shaderTable.Buffer as MetalBuffer;
+            if (shaderTableBuffer == null)
+            {
+                throw new InvalidOperationException("Shader binding table buffer must be a MetalBuffer");
+            }
+
+            IntPtr shaderTableBufferHandle = shaderTableBuffer.NativeHandle;
+            if (shaderTableBufferHandle == IntPtr.Zero)
+            {
+                throw new InvalidOperationException("Shader binding table buffer has invalid native handle");
+            }
+
+            // Get Metal raytracing pipeline from state
+            MetalRaytracingPipeline metalPipeline = _currentRaytracingState.Pipeline as MetalRaytracingPipeline;
+            if (metalPipeline == null)
+            {
+                throw new InvalidOperationException("Raytracing pipeline must be a MetalRaytracingPipeline");
+            }
+
+            IntPtr raytracingPipelineState = metalPipeline.RaytracingPipelineState;
+            if (raytracingPipelineState == IntPtr.Zero)
+            {
+                throw new InvalidOperationException("Raytracing pipeline state is invalid");
+            }
+
+            // Get command buffer for creating compute encoder
+            IntPtr commandBuffer = _backend.GetCurrentCommandBuffer();
+            if (commandBuffer == IntPtr.Zero)
+            {
+                throw new InvalidOperationException("Command buffer is not available");
+            }
+
+            // End any active encoders before creating compute encoder
+            // Metal allows only one encoder type to be active at a time per command buffer
+            if (_currentRenderCommandEncoder != IntPtr.Zero)
+            {
+                MetalNative.EndEncoding(_currentRenderCommandEncoder);
+                _currentRenderCommandEncoder = IntPtr.Zero;
+            }
+
+            if (_currentBlitCommandEncoder != IntPtr.Zero)
+            {
+                MetalNative.EndEncoding(_currentBlitCommandEncoder);
+                MetalNative.ReleaseBlitCommandEncoder(_currentBlitCommandEncoder);
+                _currentBlitCommandEncoder = IntPtr.Zero;
+            }
+
+            if (_currentAccelStructCommandEncoder != IntPtr.Zero)
+            {
+                MetalNative.EndAccelerationStructureCommandEncoding(_currentAccelStructCommandEncoder);
+                _currentAccelStructCommandEncoder = IntPtr.Zero;
+            }
+
+            // Get or create compute command encoder
+            if (_currentComputeCommandEncoder == IntPtr.Zero)
+            {
+                _currentComputeCommandEncoder = MetalNative.CreateComputeCommandEncoder(commandBuffer);
+                if (_currentComputeCommandEncoder == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("Failed to create compute command encoder for raytracing dispatch");
+                }
+            }
+
+            // Set raytracing pipeline state on compute encoder
+            // Metal API: [computeEncoder setRaytracingPipelineState:raytracingPipelineState]
+            // Based on Metal 3.0: MTLComputeCommandEncoder::setRaytracingPipelineState:
+            // Metal API Reference: https://developer.apple.com/documentation/metal/mtlcomputecommandencoder/3750526-setraytracingpipelinestate
+            try
+            {
+                IntPtr selector = sel_registerName("setRaytracingPipelineState:");
+                if (selector == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("Failed to register selector for setRaytracingPipelineState");
+                }
+
+                objc_msgSend_void_object(_currentComputeCommandEncoder, selector, raytracingPipelineState);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to set raytracing pipeline state: {ex.Message}", ex);
+            }
+
+            // Set shader binding table buffer
+            // In Metal 3.0, the shader binding table is provided as a buffer
+            // The buffer contains shader records for ray generation, miss, and hit group shaders
+            // Metal API: [computeEncoder setBuffer:shaderTableBuffer offset:0 atIndex:shaderBindingTableIndex]
+            // The shader binding table is typically bound at a specific buffer index (e.g., index 0 or 1)
+            // For Metal raytracing, the shader binding table buffer is bound as a regular buffer
+            // The shader records in the buffer are accessed by the raytracing pipeline
+            const uint shaderBindingTableBufferIndex = 0; // Standard index for shader binding table in Metal raytracing
+            MetalNative.SetBuffer(_currentComputeCommandEncoder, shaderTableBufferHandle, shaderTable.RayGenOffset, shaderBindingTableBufferIndex);
+
+            // Bind resources from binding sets
+            // Metal uses argument buffers (MTLArgumentEncoder) for resource binding
+            // Each binding set contains an argument buffer that is bound to the compute encoder
+            if (_currentRaytracingState.BindingSets != null && _currentRaytracingState.BindingSets.Length > 0)
+            {
+                for (int i = 0; i < _currentRaytracingState.BindingSets.Length; i++)
+                {
+                    IBindingSet bindingSet = _currentRaytracingState.BindingSets[i];
+                    if (bindingSet == null)
+                    {
+                        continue;
+                    }
+
+                    // Cast to Metal implementation to access argument buffer
+                    MetalBindingSet metalBindingSet = bindingSet as MetalBindingSet;
+                    if (metalBindingSet == null)
+                    {
+                        Console.WriteLine($"[MetalCommandList] DispatchRays: Binding set at index {i} is not a MetalBindingSet, skipping");
+                        continue;
+                    }
+
+                    // Get argument buffer from MetalBindingSet
+                    IntPtr argumentBuffer = metalBindingSet.ArgumentBuffer;
+                    if (argumentBuffer == IntPtr.Zero)
+                    {
+                        Console.WriteLine($"[MetalCommandList] DispatchRays: Binding set at index {i} has no argument buffer, skipping");
+                        continue;
+                    }
+
+                    // Bind argument buffer at index (i + 1) to avoid conflict with shader binding table at index 0
+                    // Metal API: [computeEncoder setBuffer:argumentBuffer offset:0 atIndex:bufferIndex]
+                    uint bufferIndex = unchecked((uint)(i + 1)); // Start from index 1
+                    MetalNative.SetBuffer(_currentComputeCommandEncoder, argumentBuffer, 0UL, bufferIndex);
+                }
+            }
+
+            // Calculate threadgroup dimensions for compute dispatch
+            // Metal raytracing compute shaders typically use a threadgroup size of (8, 8, 1) or (16, 16, 1)
+            // The dispatch dimensions (Width, Height, Depth) specify the number of threadgroups
+            // Threadgroup size should match the raytracing pipeline's threadgroup size
+            // For Metal raytracing, a common threadgroup size is 8x8 (64 threads per group)
+            // This allows efficient ray generation and traversal
+            const uint threadsPerThreadgroupX = 8; // Standard threadgroup size for Metal raytracing
+            const uint threadsPerThreadgroupY = 8;
+            const uint threadsPerThreadgroupZ = 1;
+
+            // Calculate threadgroup counts from dispatch dimensions
+            // Threadgroup count = ceil(dispatchDimension / threadsPerThreadgroup)
+            uint threadGroupCountX = unchecked((uint)((args.Width + threadsPerThreadgroupX - 1) / threadsPerThreadgroupX));
+            uint threadGroupCountY = unchecked((uint)((args.Height + threadsPerThreadgroupY - 1) / threadsPerThreadgroupY));
+            uint threadGroupCountZ = unchecked((uint)args.Depth); // Depth is typically 1 for raytracing
+
+            // Dispatch compute work for raytracing
+            // Metal API: MTLComputeCommandEncoder::dispatchThreadgroups:threadsPerThreadgroup:
+            // Metal API Reference: https://developer.apple.com/documentation/metal/mtlcomputecommandencoder/1443133-dispatchthreadgroups
+            // This dispatches the raytracing compute shader which will generate rays and trace them
+            // through the acceleration structures using the shader binding table
+            MetalNative.DispatchThreadgroups(
+                _currentComputeCommandEncoder,
+                threadGroupCountX,
+                threadGroupCountY,
+                threadGroupCountZ,
+                threadsPerThreadgroupX,
+                threadsPerThreadgroupY,
+                threadsPerThreadgroupZ);
         }
 
         public void BuildBottomLevelAccelStruct(IAccelStruct accelStruct, GeometryDesc[] geometries)
@@ -4628,6 +4836,9 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static extern void objc_msgSend_void_bool(IntPtr receiver, IntPtr selector, bool value);
 
         [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void objc_msgSend_void_object(IntPtr receiver, IntPtr selector, IntPtr object);
+
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
         private static extern void objc_msgSend_void_int_object(IntPtr receiver, IntPtr selector, int index, IntPtr object);
 
         [DllImport(LibObjCForDevice, EntryPoint = "objc_getClass", CallingConvention = CallingConvention.Cdecl)]
@@ -4737,6 +4948,13 @@ namespace Andastra.Runtime.MonoGame.Backends
         // On 64-bit systems, objc_msgSend returns a value even for void methods, so we declare it as IntPtr
         // Note: LibObjC, objc_msgSend_void, and sel_registerName are already defined in MetalBackend.cs (partial class)
         private const string LibObjCForDevice = "/usr/lib/libobjc.A.dylib";
+
+        /// <summary>
+        /// Registers an Objective-C selector name.
+        /// Based on Objective-C runtime: sel_registerName
+        /// </summary>
+        [DllImport(LibObjCForDevice, EntryPoint = "sel_registerName", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr sel_registerName([MarshalAs(UnmanagedType.LPStr)] string str);
 
         [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr objc_msgSend_void_string(IntPtr receiver, IntPtr selector, IntPtr nsString);
