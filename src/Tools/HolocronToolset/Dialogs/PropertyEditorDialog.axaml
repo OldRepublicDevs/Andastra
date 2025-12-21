@@ -1,6 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:widgets="clr-namespace:HolocronToolset.Widgets.Edit;assembly=HolocronToolset.NET"
+        xmlns:widgets="clr-namespace:HolocronToolset.Widgets.Edit"
         x:Class="HolocronToolset.Dialogs.PropertyEditorDialog"
         Title="Edit Property"
         Width="536" Height="318"
