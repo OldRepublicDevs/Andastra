@@ -148,6 +148,8 @@ namespace Andastra.Runtime.MonoGame.Backends
             _resources = new Dictionary<IntPtr, IResource>();
             _nextResourceHandle = 1;
             _currentFrameIndex = 0;
+            _textureDsvHandles = new Dictionary<IntPtr, IntPtr>();
+            _textureRtvHandles = new Dictionary<IntPtr, IntPtr>();
         }
 
         #region Resource Creation
@@ -1285,6 +1287,8 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         // DirectX 12 Descriptor Heap Types
         private const uint D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER = 1;
+        private const uint D3D12_DESCRIPTOR_HEAP_TYPE_RTV = 2;
+        private const uint D3D12_DESCRIPTOR_HEAP_TYPE_DSV = 3;
 
         // DirectX 12 Descriptor Heap Flags
         private const uint D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE = 0x1;
