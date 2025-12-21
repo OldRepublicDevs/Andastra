@@ -1847,6 +1847,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         #region D3D12 Sampler Structures and Constants
 
         // DirectX 12 Descriptor Heap Types
+        private const uint D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV = 0;
         private const uint D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER = 1;
         private const uint D3D12_DESCRIPTOR_HEAP_TYPE_RTV = 2;
         private const uint D3D12_DESCRIPTOR_HEAP_TYPE_DSV = 3;
@@ -3721,34 +3722,62 @@ namespace Andastra.Runtime.MonoGame.Backends
                     return null;
                 }
 
-                if (_properties == IntPtr.Zero)
+                // If properties interface is already available, use it directly
+                if (_properties != IntPtr.Zero)
                 {
-                    // Properties interface not available (pipeline not fully created)
-                    return null;
+                    // Cast the properties pointer to ID3D12StateObjectProperties interface
+                    ID3D12StateObjectProperties props = (ID3D12StateObjectProperties)Marshal.GetObjectForIUnknown(_properties);
+                    if (props != null)
+                    {
+                        // GetShaderIdentifier returns a pointer to 32 bytes of shader identifier data
+                        // D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES = 32
+                        IntPtr shaderIdPtr = props.GetShaderIdentifier(exportName);
+                        if (shaderIdPtr != IntPtr.Zero)
+                        {
+                            // Copy the 32 bytes of shader identifier data
+                            const int D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES = 32;
+                            byte[] shaderId = new byte[D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES];
+                            Marshal.Copy(shaderIdPtr, shaderId, 0, D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
+                            return shaderId;
+                        }
+                    }
                 }
 
-                // Cast the properties pointer to ID3D12StateObjectProperties interface
-                ID3D12StateObjectProperties props = (ID3D12StateObjectProperties)Marshal.GetObjectForIUnknown(_properties);
-                if (props == null)
+                // If properties not available, try to query from state object
+                if (_d3d12StateObject != IntPtr.Zero)
                 {
-                    return null;
+                    IntPtr propertiesPtr = IntPtr.Zero;
+                    int hr = Marshal.QueryInterface(_d3d12StateObject, ref IID_ID3D12StateObjectProperties, out propertiesPtr);
+                    if (hr == 0 && propertiesPtr != IntPtr.Zero)
+                    {
+                        try
+                        {
+                            ID3D12StateObjectProperties props = (ID3D12StateObjectProperties)Marshal.GetObjectForIUnknown(propertiesPtr);
+                            if (props != null)
+                            {
+                                IntPtr shaderIdPtr = props.GetShaderIdentifier(exportName);
+                                if (shaderIdPtr != IntPtr.Zero)
+                                {
+                                    const int D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES = 32;
+                                    byte[] shaderId = new byte[D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES];
+                                    Marshal.Copy(shaderIdPtr, shaderId, 0, D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
+                                    return shaderId;
+                                }
+                            }
+                        }
+                        finally
+                        {
+                            // Release the queried interface
+                            if (propertiesPtr != IntPtr.Zero)
+                            {
+                                Marshal.Release(propertiesPtr);
+                            }
+                        }
+                    }
                 }
 
-                // GetShaderIdentifier returns a pointer to 32 bytes of shader identifier data
-                // D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES = 32
-                IntPtr shaderIdPtr = props.GetShaderIdentifier(exportName);
-                if (shaderIdPtr == IntPtr.Zero)
-                {
-                    // Export name not found in pipeline
-                    return null;
-                }
-
-                // Copy the 32 bytes of shader identifier data
-                const int D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES = 32;
-                byte[] shaderId = new byte[D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES];
-                Marshal.Copy(shaderIdPtr, shaderId, 0, D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
-
-                return shaderId;
+                // Export name not found or pipeline not fully initialized
+                return null;
             }
 
             public void Dispose()
@@ -5169,6 +5198,12 @@ namespace Andastra.Runtime.MonoGame.Backends
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             private delegate void EndEventDelegate(IntPtr commandList);
 
+            // COM interface method delegate for SetMarker
+            // Based on DirectX 12 Debug Events: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-setmarker
+            // SetMarker is similar to BeginEvent but doesn't require an EndEvent call - it's a single marker point
+            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+            private delegate void SetMarkerDelegate(IntPtr commandList, uint Metadata, IntPtr pData, uint Size);
+
             /// <summary>
             /// Calls ID3D12GraphicsCommandList::ClearDepthStencilView through COM vtable.
             /// VTable index 48 for ID3D12GraphicsCommandList.
@@ -5289,6 +5324,38 @@ namespace Andastra.Runtime.MonoGame.Backends
                     (EndEventDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(EndEventDelegate));
 
                 endEvent(commandList);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::SetMarker through COM vtable.
+            /// VTable index 59 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Debug Events: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-setmarker
+            /// Note: SetMarker is similar to BeginEvent but doesn't require an EndEvent call - it's a single marker point.
+            /// This is used by PIX and other debuggers to mark specific points in the command list without creating an event region.
+            /// </summary>
+            private unsafe void CallSetMarker(IntPtr commandList, uint metadata, IntPtr pData, uint size)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // SetMarker is at index 59 in ID3D12GraphicsCommandList vtable (after BeginEvent at 57, EndEvent at 58)
+                IntPtr methodPtr = vtable[59];
+
+                // Create delegate from function pointer
+                SetMarkerDelegate setMarker =
+                    (SetMarkerDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(SetMarkerDelegate));
+
+                setMarker(commandList, metadata, pData, size);
             }
 
             /// <summary>
