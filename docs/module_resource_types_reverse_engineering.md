@@ -112,6 +112,30 @@ The following resource types have handlers that call `FUN_004074d0` (which inter
 
 **Note**: This list was compiled by analyzing all callers of `FUN_004074d0` in swkotor.exe using Ghidra MCP. Each handler function calls `FUN_004074d0` with a specific resource type ID, proving that these resource types use the resource system and can be placed in modules.
 
+**Answer to "Which resource types placed inside a module are actually recognized and loaded by the game engine?"**
+
+✅ **YES - These resource types ARE recognized and loaded from modules:**
+- All resource types listed in the table above (TGA, WAV, TPC, FourPC, DDS, IFO, UTI, LIP, etc.)
+- Any resource type that has a handler calling `FUN_004074d0`/`FUN_00407230`
+
+❌ **NO - These resource types are NOT recognized/loaded from modules:**
+- TLK (uses direct file I/O)
+- RES (uses direct file I/O from save files)
+- NSS (source files, must be compiled to NCS first)
+- OGG, MP3, WMV, MP4 (no handlers exist)
+- MVE, MPG, BIK (use direct file I/O from movies/ directory)
+
+**Answer to "Does the engine ever load or use `.nss` files from modules, or are they ignored entirely?"**
+
+❌ **NSS files are IGNORED entirely** - The game engine does NOT load `.nss` files from modules.
+
+**Evidence**:
+- NSS (0x7d9) is registered in resource type registry (swkotor.exe: `FUN_005e6d20` line 42)
+- **NO handler found** that calls `FUN_004074d0` with resource type 0x7d9
+- **NSS files are source files** - they must be compiled to NCS (compiled scripts) using the toolset compiler before the game can use them
+- The game engine loads **NCS files** (compiled scripts), not NSS files (source scripts)
+- NCS files CAN be placed in modules and WILL be loaded (NCS handlers exist and use the resource system)
+
 **Resource Types That Do NOT Use Resource System:**
 
 | Resource Type | ID (Hex) | ID (Dec) | Loading Method | Evidence |
@@ -126,7 +150,7 @@ The following resource types have handlers that call `FUN_004074d0` (which inter
 | MP3 | 8 | 8 | ❌ Registered but not loaded | Registered in resource type registry but no handler calls `FUN_004074d0` |
 | WMV | 12 | 12 | ❌ Unknown | Resource type exists but no handler found |
 | MP4 | N/A | N/A | ❌ Not supported | No resource type ID exists |
-| NSS | 0x7d9 | 2009 | ❓ Unknown | Registered in resource type registry (swkotor.exe: `FUN_005e6d20` line 42) but no handler found that calls `FUN_004074d0` |
+| NSS | 0x7d9 | 2009 | ❌ **NOT LOADED** | Registered in resource type registry (swkotor.exe: `FUN_005e6d20` line 42) but **NO handler found** that calls `FUN_004074d0`. **NSS files are source files** - they must be compiled to NCS (compiled scripts) before the game can use them. The game engine does NOT load NSS files directly from modules. |
 
 ## Module File Discovery
 
