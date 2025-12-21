@@ -13,6 +13,7 @@ using Avalonia.Platform.Storage;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Tools;
 using Andastra.Parsing.Common.Script;
+using Andastra.Parsing.Formats.Capsule;
 using HolocronToolset.Common;
 using HolocronToolset.Common.Widgets;
 using HolocronToolset.Data;
@@ -248,8 +249,17 @@ namespace HolocronToolset.Editors
         /// </summary>
         private void SetupOutputPanel()
         {
-            // Try to find output edit from XAML first
-            _outputEdit = this.FindControl<TextBox>("outputEdit");
+            // Try to find output edit from XAML first (only if we're in a visual tree)
+            _outputEdit = null;
+            try
+            {
+                _outputEdit = this.FindControl<TextBox>("outputEdit");
+            }
+            catch (InvalidOperationException)
+            {
+                // Not in a visual tree (e.g., in unit tests) - will create programmatically
+                _outputEdit = null;
+            }
 
             // If not found in XAML, create programmatically
             if (_outputEdit == null)
@@ -987,6 +997,14 @@ namespace HolocronToolset.Editors
             ShowHelpDialog(wikiFile);
         }
 
+        /// <summary>
+        /// Shows the keyboard shortcuts dialog.
+        /// </summary>
+        private void ShowKeyboardShortcuts()
+        {
+            // TODO: Implement ShowKeyboardShortcuts - show a dialog with keyboard shortcuts
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:1256-1349
         // Original: def go_to_definition(self):
         /// <summary>
@@ -1032,7 +1050,7 @@ namespace HolocronToolset.Editors
                     if (treeItem.Tag is OutlineSymbol symbol)
                     {
                         string identifier = symbol.Name;
-                        if (!string.IsNullOrEmpty(identifier) && 
+                        if (!string.IsNullOrEmpty(identifier) &&
                             string.Equals(identifier, word, StringComparison.OrdinalIgnoreCase))
                         {
                             // Navigate to the symbol's line number
@@ -1053,7 +1071,7 @@ namespace HolocronToolset.Editors
                             if (child?.Tag is OutlineSymbol childSymbol)
                             {
                                 string childIdentifier = childSymbol.Name;
-                                if (!string.IsNullOrEmpty(childIdentifier) && 
+                                if (!string.IsNullOrEmpty(childIdentifier) &&
                                     string.Equals(childIdentifier, word, StringComparison.OrdinalIgnoreCase))
                                 {
                                     // Go to parent definition
@@ -1119,7 +1137,7 @@ namespace HolocronToolset.Editors
                                         _functionList.SelectedIndex = i;
                                         // Scroll to item
                                         _functionList.ScrollIntoView(i);
-                                        
+
                                         var messageBox = MessageBoxManager.GetMessageBoxStandard(
                                             "Go to Definition",
                                             $"Function '{word}' is a built-in function.\n\n" +
@@ -1187,7 +1205,7 @@ namespace HolocronToolset.Editors
                                         _constantList.SelectedIndex = i;
                                         // Scroll to item
                                         _constantList.ScrollIntoView(i);
-                                        
+
                                         var messageBox = MessageBoxManager.GetMessageBoxStandard(
                                             "Go to Definition",
                                             $"Constant '{word}' is a built-in constant.\n" +
@@ -1215,7 +1233,7 @@ namespace HolocronToolset.Editors
 
                 // If still not found, search the current file
                 bool foundInFile = NavigateToSymbol(word);
-                
+
                 if (!foundInFile)
                 {
                     var notFoundMessageBox = MessageBoxManager.GetMessageBoxStandard(
@@ -1246,7 +1264,7 @@ namespace HolocronToolset.Editors
             // Build file filters based on supported types
             // Matching PyKotor: builds filter from _readSupported types
             var fileFilters = new List<FilePickerFileType>();
-            
+
             // Add filter for all supported file types
             var allExtensions = new List<string>();
             foreach (var resType in _readSupported)
@@ -1322,16 +1340,53 @@ namespace HolocronToolset.Editors
             string fileExt = Path.GetExtension(filePath).ToLowerInvariant();
             if (fileExt == ".mod" || fileExt == ".erf" || fileExt == ".rim" || fileExt == ".sav")
             {
-                // For capsule files, we would normally show LoadFromModuleDialog
-                // Since that dialog doesn't exist in C# yet, show a helpful message
-                // TODO: Implement LoadFromModuleDialog for capsule file support
-                var infoBox = MessageBoxManager.GetMessageBoxStandard(
-                    "Capsule File",
-                    "Opening files from capsule archives (MOD/RIM/ERF/SAV) is not yet fully supported.\n\n" +
-                    "Please use the module browser or extract the file first.",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Info);
-                infoBox.ShowAsync();
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor/file.py:43-55
+                // Original: def _load_module_from_dialog_info(self, r_filepath: Path):
+                // Original: dialog = LoadFromModuleDialog(Capsule(r_filepath), self.editor._read_supported)
+                // Original: if dialog.exec():
+                // Original:     resname: str | None = dialog.resname()
+                // Original:     restype: ResourceType | None = dialog.restype()
+                // Original:     data: bytes | None = dialog.data()
+                // Original:     assert resname is not None
+                // Original:     assert restype is not None
+                // Original:     assert data is not None
+                // Original:     self.load(r_filepath, resname, restype, data)
+                try
+                {
+                    // Create capsule from file path
+                    var capsule = new Capsule(filePath);
+
+                    // Create dialog with capsule and supported resource types
+                    var dialog = new LoadFromModuleDialog(capsule, _readSupported);
+                    
+                    // Show dialog asynchronously and wait for result (matching PyKotor's exec() behavior)
+                    // In Avalonia, ShowDialog returns Task<TResult> where TResult is the Close() parameter
+                    bool? dialogResult = await dialog.ShowDialog<bool?>(this);
+                    
+                    if (dialogResult == true)
+                    {
+                        string resname = dialog.ResName();
+                        ResourceType restype = dialog.ResType();
+                        byte[] data = dialog.Data();
+                        
+                        // Matching PyKotor: assert resname is not None, assert restype is not None, assert data is not None
+                        if (resname != null && restype != null && data != null)
+                        {
+                            // Load the selected resource
+                            // Matching PyKotor: self.load(r_filepath, resname, restype, data)
+                            Load(filePath, resname, restype, data);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                        "Error",
+                        $"Failed to open capsule file:\n{ex.Message}",
+                        ButtonEnum.Ok,
+                        MsBox.Avalonia.Enums.Icon.Error);
+                    await errorBox.ShowAsync();
+                }
                 return;
             }
 
@@ -1369,7 +1424,7 @@ namespace HolocronToolset.Editors
             // Remove leading dot from extension
             extension = extension.TrimStart('.').ToLowerInvariant();
             ResourceType restype = ResourceType.FromExtension(extension);
-            
+
             if (restype == null || restype.IsInvalid)
             {
                 var errorBox = MessageBoxManager.GetMessageBoxStandard(
@@ -3265,15 +3320,15 @@ namespace HolocronToolset.Editors
             _commandPalette.RegisterCommand("view.resetZoom", "Reset Zoom", () => { if (_codeEdit != null) _codeEdit.ResetZoom(); }, "View");
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2778-2788
             // Original: def _toggle_word_wrap(self):
-            _commandPalette.RegisterCommand("view.toggleWordWrap", "Toggle Word Wrap", () => 
-            { 
-                if (_codeEdit != null) 
-                { 
+            _commandPalette.RegisterCommand("view.toggleWordWrap", "Toggle Word Wrap", () =>
+            {
+                if (_codeEdit != null)
+                {
                     bool isEnabled = _codeEdit.ToggleWordWrap();
                     // Matching PyKotor: log to output
                     // Original: self._log_to_output("Word wrap: ON") or "Word wrap: OFF"
                     LogToOutput($"Word wrap: {(isEnabled ? "ON" : "OFF")}");
-                } 
+                }
             }, "View");
 
             // Navigation
@@ -4480,7 +4535,7 @@ namespace HolocronToolset.Editors
                 {
                     int lineLength = lines[i].Length;
                     int newlineLength = (i < lines.Length - 1) ? (text.Contains("\r\n") ? 2 : 1) : 0;
-                    
+
                     if (oldCaretIndex >= currentPos && oldCaretIndex <= currentPos + lineLength)
                     {
                         oldLine = i;
