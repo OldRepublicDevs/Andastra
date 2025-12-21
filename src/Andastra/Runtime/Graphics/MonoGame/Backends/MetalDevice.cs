@@ -3445,11 +3445,90 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         public void DispatchIndirect(IBuffer argumentBuffer, int offset)
         {
-            if (!_isOpen || argumentBuffer == null)
+            if (!_isOpen)
             {
                 return;
             }
-            // TODO: Implement indirect dispatch
+
+            if (argumentBuffer == null)
+            {
+                throw new ArgumentNullException(nameof(argumentBuffer));
+            }
+
+            if (offset < 0)
+            {
+                throw new ArgumentException("Offset must be non-negative", nameof(offset));
+            }
+
+            // Ensure compute command encoder exists
+            // Indirect dispatch requires a compute pipeline state to be set first via SetComputeState
+            // The compute command encoder should already be created and have a pipeline state bound
+            if (_currentComputeCommandEncoder == IntPtr.Zero)
+            {
+                throw new InvalidOperationException("Compute command encoder not available. SetComputeState must be called before DispatchIndirect.");
+            }
+
+            // Get Metal buffer handle from IBuffer
+            // Cast to MetalBuffer to access native handle
+            MetalBuffer metalBuffer = argumentBuffer as MetalBuffer;
+            if (metalBuffer == null)
+            {
+                throw new ArgumentException("Argument buffer must be a MetalBuffer", nameof(argumentBuffer));
+            }
+
+            IntPtr metalBufferHandle = metalBuffer.NativeHandle;
+            if (metalBufferHandle == IntPtr.Zero)
+            {
+                throw new ArgumentException("Argument buffer has invalid native handle", nameof(argumentBuffer));
+            }
+
+            // Validate buffer size and offset
+            // Indirect dispatch buffer must contain at least 12 bytes (3 uint32 values: groupCountX, groupCountY, groupCountZ)
+            // The offset must be within the buffer bounds and leave at least 12 bytes for the dispatch arguments
+            BufferDesc bufferDesc = metalBuffer.Desc;
+            if (offset + 12 > bufferDesc.SizeInBytes)
+            {
+                throw new ArgumentException($"Offset {offset} plus 12 bytes (required for indirect dispatch arguments) exceeds buffer size {bufferDesc.SizeInBytes}", nameof(offset));
+            }
+
+            // Get threadgroup size for indirect dispatch
+            // Metal's indirect dispatch requires the threadsPerThreadgroup size to be specified
+            // The threadgroup size should match the compute shader's threadgroup size
+            // For now, we use a default threadgroup size (16, 16, 1) matching the existing Dispatch implementation
+            // This matches the threadgroup size used in ClearUAVFloat and ClearUAVUint methods
+            // Future enhancement: Query the threadgroup size from the current compute pipeline state
+            const uint threadsPerThreadgroupX = 16;
+            const uint threadsPerThreadgroupY = 16;
+            const uint threadsPerThreadgroupZ = 1;
+            MetalSize threadsPerThreadgroup = new MetalSize(threadsPerThreadgroupX, threadsPerThreadgroupY, threadsPerThreadgroupZ);
+
+            // Dispatch compute work with indirect arguments
+            // Based on Metal API: MTLComputeCommandEncoder::dispatchThreadgroupsWithIndirectBuffer:indirectBufferOffset:threadsPerThreadgroup:
+            // Metal API Reference: https://developer.apple.com/documentation/metal/mtlcomputecommandencoder/1443154-dispatchthreadgroupswithindire
+            // 
+            // The indirect buffer contains three uint32 values at the specified offset:
+            // - groupCountX (4 bytes at offset)
+            // - groupCountY (4 bytes at offset + 4)
+            // - groupCountZ (4 bytes at offset + 8)
+            // Total: 12 bytes per indirect dispatch command
+            //
+            // This allows GPU-driven compute dispatch where the number of threadgroups is determined
+            // by data computed on the GPU, enabling advanced techniques like GPU-driven rendering,
+            // dynamic workload distribution, and adaptive compute shader dispatch.
+            try
+            {
+                IntPtr selector = sel_registerName("dispatchThreadgroupsWithIndirectBuffer:indirectBufferOffset:threadsPerThreadgroup:");
+                if (selector == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("Failed to register selector for dispatchThreadgroupsWithIndirectBuffer");
+                }
+
+                objc_msgSend_void_buffer_ulong_size(_currentComputeCommandEncoder, selector, metalBufferHandle, unchecked((ulong)offset), threadsPerThreadgroup);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to execute indirect dispatch: {ex.Message}", ex);
+            }
         }
 
         // Raytracing Commands
@@ -4667,6 +4746,9 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr objc_msgSend_void_ptr_uint(IntPtr receiver, IntPtr selector, IntPtr viewports, uint count);
+
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr objc_msgSend_void_buffer_ulong_size(IntPtr receiver, IntPtr selector, IntPtr indirectBuffer, ulong indirectBufferOffset, MetalSize threadsPerThreadgroup);
 
         [DllImport("/System/Library/Frameworks/Foundation.framework/Foundation", EntryPoint = "CFStringCreateWithCString")]
         private static extern IntPtr CFStringCreateWithCString(IntPtr allocator, [MarshalAs(UnmanagedType.LPStr)] string cStr, uint encoding);
