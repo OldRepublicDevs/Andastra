@@ -1397,6 +1397,75 @@ namespace Andastra.Runtime.Game.Core
         }
 
         /// <summary>
+        /// Loads GUI sound ResRefs from guisounds.2da.
+        /// Based on swkotor.exe and swkotor2.exe: guisounds.2da contains Clicked_Default and Entered_Default
+        /// Original implementation: Loads guisounds.2da and reads soundresref column for Clicked_Default and Entered_Default
+        /// </summary>
+        /// <param name="installation">The game installation to load guisounds.2da from.</param>
+        private void LoadGuiSounds(Installation installation)
+        {
+            if (installation == null)
+            {
+                Console.WriteLine("[Odyssey] WARNING: Cannot load GUI sounds - installation is null");
+                return;
+            }
+
+            try
+            {
+                // Load guisounds.2da from the installation
+                // Based on swkotor.exe and swkotor2.exe: guisounds.2da is in the override or data folder
+                var resourceProvider = new OdysseyResourceProvider(installation);
+                var guisoundsRes = resourceProvider.GetResource("guisounds", ResourceType.TwoDA);
+                if (guisoundsRes != null)
+                {
+                    // Parse the 2DA file
+                    var twoDA = TwoDAAuto.Read2DA(guisoundsRes);
+                    if (twoDA != null)
+                    {
+                        // Find Clicked_Default row and get soundresref
+                        // Based on swkotor.exe and swkotor2.exe: Clicked_Default row contains button click sound
+                        var clickedRow = twoDA.FindRow("Clicked_Default");
+                        if (clickedRow != null)
+                        {
+                            string clickedSound = clickedRow.GetString("soundresref");
+                            if (!string.IsNullOrEmpty(clickedSound))
+                            {
+                                _buttonClickSound = clickedSound;
+                                Console.WriteLine($"[Odyssey] Button click sound loaded: {_buttonClickSound}");
+                            }
+                        }
+
+                        // Find Entered_Default row and get soundresref
+                        // Based on swkotor.exe and swkotor2.exe: Entered_Default row contains button hover sound
+                        var enteredRow = twoDA.FindRow("Entered_Default");
+                        if (enteredRow != null)
+                        {
+                            string enteredSound = enteredRow.GetString("soundresref");
+                            if (!string.IsNullOrEmpty(enteredSound))
+                            {
+                                _buttonHoverSound = enteredSound;
+                                Console.WriteLine($"[Odyssey] Button hover sound loaded: {_buttonHoverSound}");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("[Odyssey] WARNING: Failed to parse guisounds.2da");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("[Odyssey] WARNING: guisounds.2da not found in installation");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Odyssey] WARNING: Failed to load GUI sounds: {ex.Message}");
+                Console.WriteLine($"[Odyssey] Stack trace: {ex.StackTrace}");
+            }
+        }
+
+        /// <summary>
         /// Finds camera hook position in an MDL model.
         /// Based on swkotor.exe and swkotor2.exe: Searches MDL node tree for "camerahook{N}" nodes
         /// Located via string references: "camerahook" @ 0x007c7dac, "camerahook%d" @ 0x007d0448
