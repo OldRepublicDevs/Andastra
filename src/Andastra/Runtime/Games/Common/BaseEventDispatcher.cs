@@ -60,11 +60,15 @@ namespace Andastra.Runtime.Games.Common
         /// <summary>
         /// Handles area transition events.
         /// </summary>
+        /// <param name="entity">The entity being transitioned.</param>
+        /// <param name="targetArea">The target area ResRef.</param>
+        /// <param name="sourceEntity">Optional source entity (door/trigger) that triggered the transition. Used to resolve LinkedTo waypoint positioning.</param>
         /// <remarks>
         /// EVENT_AREA_TRANSITION (0x1a): Entity entering/leaving area.
         /// Updates area membership and triggers transition scripts.
+        /// If sourceEntity is provided and has a LinkedTo field, positions entity at that waypoint.
         /// </remarks>
-        protected abstract void HandleAreaTransition(IEntity entity, string targetArea);
+        protected abstract void HandleAreaTransition(IEntity entity, string targetArea, IEntity sourceEntity = null);
 
         /// <summary>
         /// Handles object manipulation events.
