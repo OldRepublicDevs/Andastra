@@ -309,6 +309,47 @@ namespace Andastra.Runtime.Games.Common.Components
         protected abstract IFeatData GetFeatData(int featId, object gameDataProvider);
 
         /// <summary>
+        /// Gets the level for a specific class ID.
+        /// </summary>
+        /// <param name="classId">The class ID to look up.</param>
+        /// <returns>The level in that class, or 0 if the creature doesn't have that class.</returns>
+        protected int GetClassLevel(int classId)
+        {
+            if (ClassList == null)
+            {
+                return 0;
+            }
+
+            foreach (BaseCreatureClass cls in ClassList)
+            {
+                if (cls != null && cls.ClassId == classId)
+                {
+                    return cls.Level;
+                }
+            }
+
+            return 0;
+        }
+
+        /// <summary>
+        /// Gets the class ID for a feat (engine-specific implementation).
+        /// Some feats are associated with specific classes (e.g., Stunning Fist with Monk).
+        /// </summary>
+        /// <param name="featId">The feat ID to look up.</param>
+        /// <param name="gameDataProvider">GameDataProvider to look up feat data.</param>
+        /// <returns>The class ID associated with the feat, or -1 if not class-specific.</returns>
+        /// <remarks>
+        /// This method should be overridden by engine-specific implementations to provide
+        /// feat-to-class mappings. Base implementation returns -1 (not class-specific).
+        /// </remarks>
+        protected virtual int GetFeatClassId(int featId, object gameDataProvider)
+        {
+            // Base implementation: Not class-specific
+            // Engine-specific implementations should override this to provide feat-to-class mappings
+            return -1;
+        }
+
+        /// <summary>
         /// Checks if a special feat (UsesPerDay = -1) is currently usable.
         /// Some feats have uses based on class levels rather than fixed daily limits.
         /// </summary>
@@ -319,17 +360,51 @@ namespace Andastra.Runtime.Games.Common.Components
         /// Based on swkotor.exe, swkotor2.exe, nwmain.exe: Special feat usage calculation
         /// Located via string references: Class-level-based feat usage in creature data
         /// Original implementation: Some feats (e.g., Stunning Fist) have uses per day = class level
-        /// TODO: STUB - For now, we assume special feats are always usable if the creature has them
-        /// Full implementation would check specific feat types and calculate uses based on class levels
+        /// 
+        /// Special feat usage calculation:
+        /// - Feats with UsesPerDay = -1 have uses based on class levels
+        /// - Stunning Fist: Uses per day = monk level
+        /// - Other special feats may use different class levels or total level
+        /// - Uses are tracked in FeatDailyUses dictionary (max uses = class level)
         /// </remarks>
         protected virtual bool IsSpecialFeatUsable(int featId, object gameDataProvider)
         {
             // Special feats with UsesPerDay = -1 typically have uses based on class levels
-            // TODO: STUB - For now, we assume they're always usable if the creature has the feat
-            // Full implementation would check specific feat types:
-            // - Stunning Fist: Uses per day = monk level
-            // - Other special feats may have different calculations
-            return true;
+            // Check if we have remaining uses for this special feat
+            
+            // Get the class ID associated with this feat (if any)
+            int classId = GetFeatClassId(featId, gameDataProvider);
+            int maxUses = 0;
+
+            if (classId >= 0)
+            {
+                // Feat is associated with a specific class - use that class's level
+                maxUses = GetClassLevel(classId);
+            }
+            else
+            {
+                // Feat is not class-specific - use total level as fallback
+                // This handles general special feats that may use total character level
+                maxUses = GetTotalLevel();
+            }
+
+            // If creature has no levels, feat is not usable
+            if (maxUses <= 0)
+            {
+                return false;
+            }
+
+            // Check remaining uses for this special feat
+            int remainingUses;
+            if (!FeatDailyUses.TryGetValue(featId, out remainingUses))
+            {
+                // First time using this feat today - initialize with max uses (class level)
+                remainingUses = maxUses;
+                FeatDailyUses[featId] = remainingUses;
+            }
+
+            // Feat is usable if we have remaining uses
+            return remainingUses > 0;
         }
 
         /// <summary>
@@ -362,9 +437,10 @@ namespace Andastra.Runtime.Games.Common.Components
                 return true;
             }
 
-            // Only decrement if feat has daily limit
+            // Decrement uses based on feat type
             if (featData.UsesPerDay > 0)
             {
+                // Regular feat with fixed daily limit
                 int remainingUses;
                 if (!FeatDailyUses.TryGetValue(featId, out remainingUses))
                 {
@@ -377,8 +453,19 @@ namespace Andastra.Runtime.Games.Common.Components
                     FeatDailyUses[featId] = remainingUses;
                 }
             }
-            // Special feats (UsesPerDay = -1) don't need tracking here
-            // They may have their own usage tracking elsewhere
+            else if (featData.UsesPerDay == -1)
+            {
+                // Special feat with class-level-based uses
+                // Decrement remaining uses (max uses = class level, tracked in IsSpecialFeatUsable)
+                int remainingUses;
+                if (FeatDailyUses.TryGetValue(featId, out remainingUses) && remainingUses > 0)
+                {
+                    remainingUses--;
+                    FeatDailyUses[featId] = remainingUses;
+                }
+                // If not tracked yet, IsSpecialFeatUsable will initialize it on next check
+            }
+            // Feats with UsesPerDay = 0 are disabled and shouldn't reach here
 
             return true;
         }

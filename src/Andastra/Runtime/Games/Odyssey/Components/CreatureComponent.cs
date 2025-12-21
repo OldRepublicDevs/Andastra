@@ -385,27 +385,28 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
         }
 
         /// <summary>
-        /// Checks if a special feat (UsesPerDay = -1) is currently usable.
-        /// Some feats have uses based on class levels rather than fixed daily limits.
+        /// Gets the class ID for a feat (Odyssey-specific implementation).
+        /// Maps feats to their associated classes for special feat usage calculation.
         /// </summary>
-        /// <param name="featId">The feat ID to check.</param>
-        /// <param name="gameDataManager">GameDataManager to look up feat and class data.</param>
-        /// <returns>True if the feat is usable, false otherwise.</returns>
+        /// <param name="featId">The feat ID to look up.</param>
+        /// <param name="gameDataProvider">GameDataProvider to look up feat data.</param>
+        /// <returns>The class ID associated with the feat, or -1 if not class-specific.</returns>
         /// <remarks>
-        /// Based on swkotor.exe, swkotor2.exe: Special feat usage calculation
-        /// Located via string references: Class-level-based feat usage in creature data
-        /// Original implementation: Some feats (e.g., Stunning Fist) have uses per day = class level
-        /// TODO: STUB - For now, we assume special feats are always usable if the creature has them
-        /// Full implementation would check specific feat types and calculate uses based on class levels
+        /// Odyssey-specific feat-to-class mappings:
+        /// - Most special feats in Odyssey are not class-specific
+        /// - Engine-specific implementations can override this to provide specific mappings
+        /// - Base implementation returns -1 (uses total level)
         /// </remarks>
-        private bool IsSpecialFeatUsable(int featId, Data.GameDataManager gameDataManager)
+        protected override int GetFeatClassId(int featId, object gameDataProvider)
         {
-            // Special feats with UsesPerDay = -1 typically have uses based on class levels
-            // TODO: STUB - For now, we assume they're always usable if the creature has the feat
-            // Full implementation would check specific feat types:
-            // - Stunning Fist: Uses per day = monk level
-            // - Other special feats may have different calculations
-            return true;
+            // Odyssey-specific feat-to-class mappings would go here
+            // For now, return -1 to use total level as fallback
+            // Future enhancement: Add specific feat-to-class mappings if needed
+            
+            // Note: Stunning Fist is an Aurora (Neverwinter Nights) feat, not Odyssey
+            // Odyssey uses different feat system (force powers, etc.)
+            
+            return -1;
         }
 
         /// <summary>
