@@ -3148,14 +3148,26 @@ namespace HolocronToolset.Tests.Editors
             editor.Close();
         }
 
-        // TODO: STUB - Implement test_dlg_editor_pinned_items_list_exists (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2200-2208)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2200-2208
         // Original: def test_dlg_editor_pinned_items_list_exists(qtbot, installation: HTInstallation): Test pinned items list exists
         [Fact]
         public void TestDlgEditorPinnedItemsListExists()
         {
-            // TODO: STUB - Implement pinned items list exists test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2200-2208
-            throw new NotImplementedException("TestDlgEditorPinnedItemsListExists: Pinned items list exists test not yet implemented");
+            // Matching PyKotor: editor = DLGEditor(None, installation)
+            var installation = CreateTestInstallation();
+            var editor = new DLGEditor(null, installation);
+
+            // Matching PyKotor: qtbot.addWidget(editor)
+            // Matching PyKotor: editor.show()
+            // In C#, the editor is created and shown automatically when instantiated
+
+            // Matching PyKotor: assert hasattr(editor, 'pinned_items_list')
+            // In C#, we check that the property exists by accessing it
+            editor.PinnedItemsList.Should().NotBeNull("PinnedItemsList property should exist and not be null");
+
+            // Matching PyKotor: assert editor.pinned_items_list is not None
+            // Verify that the pinned items list is initialized
+            editor.PinnedItemsList.Should().NotBeNull("Pinned items list should be initialized");
         }
 
         // TODO: STUB - Implement test_dlg_editor_left_dock_widget (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2210-2224)

@@ -90,6 +90,9 @@ namespace HolocronToolset.Editors
         private Button _removeAnimButton;
         private Button _editAnimButton;
         private ListBox _stuntList;
+        
+        // Public property for testing
+        public ListBox StuntList => _stuntList;
         private TextBox _commentsEdit;
         private Panel _leftDockWidget;
         private DLGListWidget _orphanedNodesList;
@@ -397,6 +400,15 @@ namespace HolocronToolset.Editors
 
             panel.Children.Add(_dialogTree);
 
+            // Setup left dock widget (orphaned nodes and pinned items lists)
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:694-733
+            // Original: def setup_left_dock_widget(self):
+            SetupLeftDockWidget();
+            if (_leftDockWidget != null)
+            {
+                panel.Children.Add(_leftDockWidget);
+            }
+
             // Initialize link condition widgets
             // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
             _condition1ResrefEdit = new ComboBox { IsEditable = true };
@@ -627,6 +639,53 @@ namespace HolocronToolset.Editors
                 contextMenu.Items.Add(item);
             }
             _dialogTree.ContextMenu = contextMenu;
+        }
+
+        /// <summary>
+        /// Sets up the left dock widget containing orphaned nodes and pinned items lists.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:694-733
+        /// Original: def setup_left_dock_widget(self):
+        /// </summary>
+        private void SetupLeftDockWidget()
+        {
+            // Create the left dock widget container
+            // Matching PyKotor: self.left_dock_widget: QDockWidget = QDockWidget("Orphaned Nodes and Pinned Items", self)
+            // In Avalonia, we use a StackPanel instead of QDockWidget
+            _leftDockWidget = new StackPanel
+            {
+                Orientation = Avalonia.Layout.Orientation.Vertical
+            };
+
+            // Orphaned Nodes List
+            // Matching PyKotor: self.orphaned_nodes_list: DLGListWidget = DLGListWidget(self)
+            _orphanedNodesList = new DLGListWidget(this);
+            // Matching PyKotor: self.orphaned_nodes_list.use_hover_text = False
+            _orphanedNodesList.UseHoverText = false;
+            // Note: Avalonia ListBox doesn't have setWordWrap, setItemDelegate, setDragEnabled, etc.
+            // These are Qt-specific features. In Avalonia, we'll configure what's available.
+            // The drag and drop functionality would need to be implemented using Avalonia's drag and drop API if needed.
+
+            // Pinned Items List
+            // Matching PyKotor: self.pinned_items_list: DLGListWidget = DLGListWidget(self)
+            _pinnedItemsList = new DLGListWidget(this);
+            // Matching PyKotor: self.pinned_items_list.setWordWrap(True)
+            // Matching PyKotor: self.pinned_items_list.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+            // Matching PyKotor: self.pinned_items_list.setAcceptDrops(True)
+            // Matching PyKotor: self.pinned_items_list.setDragEnabled(True)
+            // Matching PyKotor: self.pinned_items_list.setDropIndicatorShown(True)
+            // Matching PyKotor: self.pinned_items_list.setDragDropMode(QAbstractItemView.DragDropMode.DragDrop)
+            // Note: Avalonia ListBox selection mode is controlled via SelectionMode property
+            _pinnedItemsList.SelectionMode = SelectionMode.Multiple;
+
+            // Add labels and lists to the layout
+            // Matching PyKotor: self.left_dock_layout.addWidget(QLabel("Orphaned Nodes"))
+            _leftDockWidget.Children.Add(new TextBlock { Text = "Orphaned Nodes" });
+            // Matching PyKotor: self.left_dock_layout.addWidget(self.orphaned_nodes_list)
+            _leftDockWidget.Children.Add(_orphanedNodesList);
+            // Matching PyKotor: self.left_dock_layout.addWidget(QLabel("Pinned Items"))
+            _leftDockWidget.Children.Add(new TextBlock { Text = "Pinned Items" });
+            // Matching PyKotor: self.left_dock_layout.addWidget(self.pinned_items_list)
+            _leftDockWidget.Children.Add(_pinnedItemsList);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1135-1171
