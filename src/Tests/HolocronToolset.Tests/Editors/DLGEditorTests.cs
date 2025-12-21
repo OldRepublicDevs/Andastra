@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Andastra.Parsing.Common;
@@ -201,6 +202,7 @@ namespace HolocronToolset.Tests.Editors
         public void TestDlgEditorAllWidgetsExist()
         {
             var editor = new DLGEditor(null, null);
+            System.Type editorType = typeof(DLGEditor);
 
             // Main tree - verify via public property
             editor.DialogTree.Should().NotBeNull("dialogTree should exist");
@@ -287,7 +289,6 @@ namespace HolocronToolset.Tests.Editors
             editor.OrphanedNodesList.Should().NotBeNull("orphanedNodesList should exist");
 
             // Search/find widgets - check via reflection since they're private
-            var editorType = typeof(DLGEditor);
             var findBarField = editorType.GetField("_findBar", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             findBarField.Should().NotBeNull("_findBar field should exist");
 
@@ -957,7 +958,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Matching Python lines 1047-1048: Assert that "Help File Not Found" error is NOT shown
             dialogText.Should().NotContain("Help File Not Found",
-                $"Help file 'GFF-DLG.md' should be found, but error was shown. Content: {dialogText.Length > 500 ? dialogText.Substring(0, 500) : dialogText}");
+                $"Help file 'GFF-DLG.md' should be found, but error was shown. Content: {(dialogText.Length > 500 ? dialogText.Substring(0, 500) : dialogText)}");
 
             // Matching Python line 1051: Assert that some content is present (file was loaded successfully)
             dialogText.Length.Should().BeGreaterThan(100, "Help dialog should contain content");
@@ -1395,19 +1396,19 @@ namespace HolocronToolset.Tests.Editors
             rootItem.Link.Node.Text.Should().NotBeNull("root_item.link.node.text should not be None");
 
             // Show find bar (matching Python: editor.show_find_bar())
-            var showFindBarMethod = typeof(DLGEditor).GetMethod("ShowFindBar", BindingFlags.NonPublic | BindingFlags.Instance);
+            var showFindBarMethod = typeof(DLGEditor).GetMethod("ShowFindBar", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             showFindBarMethod.Should().NotBeNull("ShowFindBar method should exist");
             showFindBarMethod.Invoke(editor, null);
 
             // Verify find bar is visible (matching Python: assert editor.find_bar.isVisible())
-            var findBarField = typeof(DLGEditor).GetField("_findBar", BindingFlags.NonPublic | BindingFlags.Instance);
+            var findBarField = typeof(DLGEditor).GetField("_findBar", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             findBarField.Should().NotBeNull("_findBar field should exist");
             var findBar = findBarField.GetValue(editor) as Avalonia.Controls.Panel;
             findBar.Should().NotBeNull("Find bar should be initialized");
             findBar.IsVisible.Should().BeTrue("Find bar should be visible after calling ShowFindBar");
 
             // Get find input field (matching Python: editor.find_input.setText("Hello"))
-            var findInputField = typeof(DLGEditor).GetField("_findInput", BindingFlags.NonPublic | BindingFlags.Instance);
+            var findInputField = typeof(DLGEditor).GetField("_findInput", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             findInputField.Should().NotBeNull("_findInput field should exist");
             var findInput = findInputField.GetValue(editor) as Avalonia.Controls.TextBox;
             findInput.Should().NotBeNull("Find input should be initialized");
@@ -1867,7 +1868,8 @@ namespace HolocronToolset.Tests.Editors
 
             // Matching Python: assert editor.model.rowCount() < initial_count or editor.model.rowCount() == 0
             // Should have fewer items
-            editor.Model.RowCount.Should().BeLessThan(initialCount).Or.Be(0, "Row count should be less than initial count or zero after deleting node everywhere");
+            bool condition = editor.Model.RowCount < initialCount || editor.Model.RowCount == 0;
+            condition.Should().BeTrue("Row count should be less than initial count or zero after deleting node everywhere");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1394-1409
@@ -2581,8 +2583,8 @@ namespace HolocronToolset.Tests.Editors
             var (savedData, _) = editor.Build();
 
             // Compare GFF structures
-            var originalGff = GFFAuto.ReadGff(originalData);
-            var savedGff = GFFAuto.ReadGff(savedData);
+            var originalGff = GFFAuto.ReadGff(originalData, 0, null, null);
+            var savedGff = GFFAuto.ReadGff(savedData, 0, null, null);
 
             // Root should have same number of fields (allowing for minor differences)
             // Note: Some fields may differ due to defaults being added
@@ -3296,7 +3298,7 @@ namespace HolocronToolset.Tests.Editors
             // Matching Python: editor.ui.delaySpin.setValue(editor.ui.delaySpin.maximum())
             if (editor.DelaySpin != null)
             {
-                decimal maxDelay = editor.DelaySpin.Maximum ?? int.MaxValue;
+                decimal maxDelay = editor.DelaySpin.Maximum ?? (decimal)int.MaxValue;
                 editor.DelaySpin.Value = maxDelay;
 
                 // Matching Python: editor.on_node_update()
