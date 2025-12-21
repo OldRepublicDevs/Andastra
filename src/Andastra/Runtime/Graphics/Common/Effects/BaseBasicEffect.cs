@@ -37,8 +37,36 @@ namespace Andastra.Runtime.Graphics.Common.Effects
         protected float _specularPower;
         protected float _alpha;
         protected ITexture2D _texture;
+        protected bool _fogEnabled;
+        protected Vector3 _fogColor;
+        protected float _fogStart;
+        protected float _fogEnd;
         protected IEffectTechnique _currentTechnique;
         protected IEffectTechnique[] _techniques;
+
+        public bool FogEnabled
+        {
+            get { return _fogEnabled; }
+            set { _fogEnabled = value; }
+        }
+
+        public Vector3 FogColor
+        {
+            get { return _fogColor; }
+            set { _fogColor = value; }
+        }
+
+        public float FogStart
+        {
+            get { return _fogStart; }
+            set { _fogStart = value; }
+        }
+
+        public float FogEnd
+        {
+            get { return _fogEnd; }
+            set { _fogEnd = value; }
+        }
 
         protected BaseBasicEffect()
         {
@@ -55,6 +83,10 @@ namespace Andastra.Runtime.Graphics.Common.Effects
             _specularPower = 0.0f;
             _alpha = 1.0f;
             _texture = null;
+            _fogEnabled = false;
+            _fogColor = Vector3.Zero;
+            _fogStart = 0.0f;
+            _fogEnd = 1000.0f;
         }
 
         #region IBasicEffect Implementation
