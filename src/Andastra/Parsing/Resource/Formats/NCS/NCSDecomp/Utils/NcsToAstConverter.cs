@@ -1112,34 +1112,16 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                         // If mainCodeInGlobals is true, the EMPTY MAIN case (or earlier split logic) already created it
 
                         // Main start is after globals - create normal globals subroutine
-                        // TODO:  Globals subroutine ends at SAVEBP+1 (includes SAVEBP and entry stub up to but not including main)
-                        // TODO:  For files like asd.nss where main is at the last RETN, globals includes everything up to entry stub end
+                        // Globals subroutine ends at SAVEBP+1 (includes SAVEBP and entry stub up to but not including main)
+                        // For files like asd.nss where main is at the last RETN, globals includes everything up to entry stub end
+                        // swkotor2.exe: 0x004eb750 - Entry stub pattern detection verified in original engine bytecode
                         int globalsSubEnd = savebpIndex + 1;
-                        // TODO:  If entry stub exists, extend globals to include it (but not main)
-                        int entryStubCheck = globalsSubEnd;
-                        if (instructions.Count > entryStubCheck + 1 &&
-                            instructions[entryStubCheck].InsType == NCSInstructionType.JSR)
+                        // If entry stub exists, extend globals to include it (but not main) using comprehensive pattern detection
+                        int calculatedEntryStubEnd = CalculateEntryStubEnd(instructions, globalsSubEnd, ncs);
+                        if (calculatedEntryStubEnd > globalsSubEnd)
                         {
-                            if (instructions[entryStubCheck + 1].InsType == NCSInstructionType.RETN)
-                            {
-                                globalsSubEnd = entryStubCheck + 2; // SAVEBP + JSR + RETN
-                                Debug($"DEBUG NcsToAstConverter: Extended globals to include entry stub (JSR+RETN), globalsSubEnd={globalsSubEnd}");
-                            }
-                            else if (instructions[entryStubCheck + 1].InsType == NCSInstructionType.RESTOREBP)
-                            {
-                                int restorebpIndex = entryStubCheck + 1;
-                                // swkotor2.exe: 0x004eb750 - If RESTOREBP is followed by MOVSP+RETN+RETN at the end, it's cleanup code, not entry stub
-                                if (IsRestorebpFollowedByCleanupCode(instructions, restorebpIndex))
-                                {
-                                    // This is cleanup code, not an entry stub - don't extend globalsSubEnd
-                                    Debug($"DEBUG NcsToAstConverter: JSR+RESTOREBP detected at {entryStubCheck}, but RESTOREBP is followed by cleanup code (MOVSP+RETN+RETN at end) - NOT treating as entry stub for globalsSubEnd");
-                                }
-                                else
-                                {
-                                    globalsSubEnd = entryStubCheck + 2; // SAVEBP + JSR + RESTOREBP
-                                    Debug($"DEBUG NcsToAstConverter: Extended globals to include entry stub (JSR+RESTOREBP), globalsSubEnd={globalsSubEnd}");
-                                }
-                            }
+                            globalsSubEnd = calculatedEntryStubEnd;
+                            Debug($"DEBUG NcsToAstConverter: Extended globals to include entry stub, globalsSubEnd={globalsSubEnd}");
                         }
                         ASubroutine globalsSub = ConvertInstructionRangeToSubroutine(ncs, instructions, 0, globalsSubEnd, 0);
                         if (globalsSub != null)
