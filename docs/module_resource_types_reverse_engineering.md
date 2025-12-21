@@ -165,9 +165,15 @@ The engine's resource manager loads resources by:
 - **HAK/NWM**: Aurora/NWN formats, not KotOR
 - **RES**: Save data format, not module content
 
-**Note on TwoDA**: While TwoDA CAN technically be stored in modules (container format allows it, engine will load it), the engine convention and tooling (PyKotor, TSLPatcher) enforce that TwoDA files must be in override or chitin directories. Storing TwoDA in modules may work but is not recommended for compatibility.
+**Note on TwoDA**: **YES, you CAN drop a 2DA into a module.** The proof:
+- `FUN_0040f990` (RIM loader) and `FUN_0040f3c0` (MOD loader) register ALL entries with `FUN_0040e990`
+- `FUN_00413b40` (2DA loader) searches the resource table for type `0x7e1` - it doesn't care where it came from
+- Convention says use override/chitin, but the engine will load 2DA from modules
 
-**Note on TPC/TGA**: These texture formats **CAN be containerized** in modules. The engine will load them from RIM/ERF/MOD containers just like any other resource type. This could be a "game changer" for modding - you can pack textures directly into module files instead of requiring override directory placement.
+**Note on TPC/TGA**: **YES, these CAN be containerized** in modules. The proof:
+- RIM/MOD loaders (`FUN_0040f990` / `FUN_0040f3c0`) iterate through ALL entries
+- No type filtering - every entry is registered in the resource table
+- Texture loaders will find them in the resource table regardless of source
 
 ### Known Resource Types from Andastra
 
