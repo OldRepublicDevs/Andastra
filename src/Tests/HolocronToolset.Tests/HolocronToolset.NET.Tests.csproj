@@ -40,7 +40,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Tools\HolocronToolset\HolocronToolset.NET.csproj" />
+    <ProjectReference Include="..\..\Tools\HolocronToolset\HolocronToolset.csproj" />
     <ProjectReference Include="..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
   </ItemGroup>
 </Project>
