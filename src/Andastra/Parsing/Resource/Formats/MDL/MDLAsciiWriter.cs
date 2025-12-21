@@ -360,8 +360,7 @@ namespace Andastra.Parsing.Formats.MDL
             WriteLine(indent, $"xgrid {emitter.XGrid}");
             WriteLine(indent, $"ygrid {emitter.YGrid}");
             // mdlops writes spawntype (vendor/mdlops/MDLOpsM.pm:3278)
-            // TODO: Add SpawnType property to MDLEmitter if needed
-            WriteLine(indent, "spawntype 0");
+            WriteLine(indent, $"spawntype {emitter.SpawnType}");
             // mdlops writes render/update/blend as strings (vendor/mdlops/MDLOpsM.pm:3279-3281)
             WriteLine(indent, $"update {emitter.UpdateType.ToString().ToLowerInvariant()}");
             WriteLine(indent, $"render {emitter.RenderType.ToString().ToLowerInvariant()}");
@@ -482,8 +481,8 @@ namespace Andastra.Parsing.Formats.MDL
                 [MDLControllerType.ALPHA] = "alphakey",
             };
 
-            var controllerName = controllerNameMap.ContainsKey(controller.ControllerType) 
-                ? controllerNameMap[controller.ControllerType] 
+            var controllerName = controllerNameMap.ContainsKey(controller.ControllerType)
+                ? controllerNameMap[controller.ControllerType]
                 : "unknownkey";
             if (controller.IsBezier)
             {
