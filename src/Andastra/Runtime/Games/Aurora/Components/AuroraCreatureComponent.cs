@@ -25,13 +25,25 @@ namespace Andastra.Runtime.Games.Aurora.Components
     /// </remarks>
     public class AuroraCreatureComponent : BaseCreatureComponent
     {
+        /// <summary>
+        /// Aurora-specific class list (overrides base class ClassList with Aurora-specific type).
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: CNWSCreatureStats::ClassList - CExoArrayList containing class entries
+        /// Original implementation: Class list stored in CNWSCreatureStats structure
+        /// nwmain.exe: Each entry contains ClassId and Level
+        /// This property shadows the base class ClassList to use AuroraCreatureClass instead of BaseCreatureClass
+        /// </remarks>
+        public new List<AuroraCreatureClass> ClassList { get; set; }
+
         public AuroraCreatureComponent()
             : base()
         {
             FeatList = new List<int>();
             BonusFeatList = new List<int>();
-            // ClassList is initialized in base class, but we need to ensure it's the right type
-            // TODO: STUB - For now, base class uses BaseCreatureClass which is compatible
+            // Initialize Aurora-specific ClassList (shadows base class ClassList)
+            // Based on nwmain.exe: CNWSCreatureStats class list initialization
+            ClassList = new List<AuroraCreatureClass>();
         }
 
 
@@ -294,7 +306,7 @@ namespace Andastra.Runtime.Games.Aurora.Components
 
             // Iterate through all classes the creature has
             // Based on nwmain.exe: ClassList iteration in HasFeat function
-            foreach (BaseCreatureClass creatureClass in ClassList)
+            foreach (AuroraCreatureClass creatureClass in ClassList)
             {
                 if (creatureClass != null && creatureClass.ClassId == classId)
                 {
@@ -464,6 +476,37 @@ namespace Andastra.Runtime.Games.Aurora.Components
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Aurora-specific creature class information (nwmain.exe - Neverwinter Nights).
+    /// </summary>
+    /// <remarks>
+    /// Based on nwmain.exe: CNWSCreatureStats class list structure
+    /// Original implementation: Class data stored in CNWSCreatureStats structure
+    /// Each class entry contains ClassId and Level
+    /// nwmain.exe: ClassList is CExoArrayList containing class entries
+    /// Currently matches BaseCreatureClass fields for compatibility, but allows for future Aurora-specific extensions
+    /// </remarks>
+    public class AuroraCreatureClass
+    {
+        /// <summary>
+        /// Class ID (index into classes.2da).
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: Class ID stored in class list entry
+        /// Original implementation: Index into classes.2da table
+        /// </remarks>
+        public int ClassId { get; set; }
+
+        /// <summary>
+        /// Level in this class.
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: Class level stored in class list entry
+        /// Original implementation: Level in this specific class (for multiclass characters)
+        /// </remarks>
+        public int Level { get; set; }
     }
 }
 
