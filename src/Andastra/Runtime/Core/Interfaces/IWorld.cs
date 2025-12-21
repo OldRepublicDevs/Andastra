@@ -201,6 +201,16 @@ namespace Andastra.Runtime.Core.Interfaces
         uint GetAreaId(IArea area);
 
         /// <summary>
+        /// Gets all registered areas in the world.
+        /// </summary>
+        /// <remarks>
+        /// Returns all areas that have been registered with the world via RegisterArea.
+        /// Common across all engines: Areas are registered when loaded or set as current area.
+        /// Used by GetAreaByTag to search through all loaded areas.
+        /// </remarks>
+        IEnumerable<IArea> GetAllAreas();
+
+        /// <summary>
         /// Gets the ModuleId for a module.
         /// </summary>
         /// <remarks>

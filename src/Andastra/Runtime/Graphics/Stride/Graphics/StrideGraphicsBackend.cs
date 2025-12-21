@@ -155,6 +155,15 @@ namespace Andastra.Runtime.Stride.Graphics
             throw new ArgumentException("Resource provider must be an IGameResourceProvider instance", nameof(resourceProvider));
         }
 
+        public object CreateMusicPlayer(object resourceProvider)
+        {
+            if (resourceProvider is Andastra.Runtime.Content.Interfaces.IGameResourceProvider provider)
+            {
+                return new Andastra.Runtime.Stride.Audio.StrideMusicPlayer(provider);
+            }
+            throw new ArgumentException("Resource provider must be an IGameResourceProvider instance", nameof(resourceProvider));
+        }
+
         public object CreateVoicePlayer(object resourceProvider)
         {
             if (resourceProvider is Odyssey.Content.Interfaces.IGameResourceProvider provider)
