@@ -490,6 +490,76 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 
 **Conclusion**: All verified resource types use the same search mechanism (`FUN_004074d0`/`FUN_004075a0` → `FUN_00407230`/`FUN_00407300`) which searches all locations including modules. **If a resource type has a handler, it can be loaded from modules.**
 
+## Module Resource Validity: Which Resource Types Are Actually Loaded?
+
+**Critical Distinction**: The engine can **STORE** any resource type in modules (no filtering), but only resource types with **HANDLERS** are actually **LOADED and USED** by the game engine.
+
+### Resource Types That Are Loaded and Used
+
+**All resource types with verified handlers** (listed above) are loaded and used by the game engine when placed in modules:
+
+- **MDL, MDX** - 3D models and animations
+- **TGA, TPC, DDS, FourPC, TXI** - Textures and texture info
+- **LIP, VIS, LYT** - Lip sync, visibility, layout data
+- **SSF** - Soundset files
+- **WAV** - Audio files
+- **IFO, ARE, GIT** - Module and area data
+- **NCS** - Compiled scripts (executed by game engine)
+- **UTI, UTC, UTD, UTP, UTS, UTT, UTW** - Template files (items, creatures, doors, placeables, sounds, triggers, waypoints)
+- **DLG** - Dialog trees
+- **JRL** - Journal entries
+- **PTH** - Pathfinding data
+- **WOK, DWK, PWK** - Walkmesh data
+- **LTR** - Letter data
+- **GUI** - GUI definitions
+- **FAC** - Faction data
+
+**Total**: **28+ resource types** with verified handlers that are loaded and used from modules.
+
+### Resource Types That Are Stored But Ignored
+
+**Resource types that CAN be stored in modules but are NOT loaded by the game engine**:
+
+- **NSS** (2009, 0x7d9) - **Source scripts (plaintext)**
+  - ✅ **CAN be stored** in modules (no type filtering)
+  - ❌ **NOT loaded by game engine** - No handler found in either swkotor.exe or swkotor2.exe
+  - **Purpose**: Toolset-only - used for compilation to NCS, not executed by game engine
+  - **Evidence**: NSS is NOT in the verified handlers list. Only NCS (compiled scripts) has a handler (swkotor.exe: 0x005d1ac0, swkotor2.exe: 0x0061d6e0)
+  - **Conclusion**: NSS files in modules are **IGNORED** by the game engine. Only NCS files are loaded and executed.
+
+- **TLK** (2018, 0x7e2) - Talk tables
+  - ✅ **CAN be stored** in modules (no type filtering)
+  - ❌ **NOT loaded from modules** - Uses direct file I/O from game root directory
+  - **Evidence**: See "TLK (Talk Tables)" section above
+
+- **RES** (0) - Resource files
+  - ✅ **CAN be stored** in modules (no type filtering)
+  - ❌ **NOT loaded from modules** - Uses direct file I/O from save files
+  - **Evidence**: See "RES Files (Resource Type 0)" section above
+
+- **Container types** (MOD, RIM, ERF, SAV) - Nested containers
+  - ✅ **CAN be stored** in modules (no type filtering)
+  - ❌ **NOT recursively loaded** - Engine doesn't recursively load nested containers
+  - **Note**: These are container formats, not resource content
+
+- **Unregistered types** - Any resource type ID not in the resource type registry
+  - ✅ **CAN be stored** in modules (no type filtering)
+  - ❌ **NOT loaded** - No handler exists, engine doesn't know how to process them
+  - **Examples**: Custom resource types, invalid type IDs
+
+### Summary: Module Resource Validity
+
+| Category | Can Be Stored? | Loaded by Engine? | Used by Engine? |
+|----------|----------------|-------------------|-----------------|
+| **Resource types with handlers** (28+ types) | ✅ YES | ✅ YES | ✅ YES |
+| **NSS** (source scripts) | ✅ YES | ❌ NO | ❌ NO (toolset-only) |
+| **TLK** (talk tables) | ✅ YES | ❌ NO (direct file I/O) | ❌ NO |
+| **RES** (resource files) | ✅ YES | ❌ NO (direct file I/O) | ❌ NO |
+| **Container types** (MOD/RIM/ERF/SAV) | ✅ YES | ❌ NO (no recursion) | ❌ NO |
+| **Unregistered types** | ✅ YES | ❌ NO (no handler) | ❌ NO |
+
+**Key Finding**: **Only resource types with handlers are actually loaded and used by the game engine**. All other resource types are stored but ignored.
+
 ## Special Resource Loading Behaviors
 
 ### TXI/TGA Pairing
@@ -605,6 +675,30 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 
 **Conclusion**: DDS is a first-class texture format that can be used from modules, but it's not part of the automatic texture loading priority system. It requires explicit loading or specific context usage.
 
+### NSS (Source Scripts) vs NCS (Compiled Scripts)
+
+**Question**: Does the engine ever load or use `.nss` files from modules, or are they ignored entirely?
+
+**Answer**: ❌ **NSS files are IGNORED entirely by the game engine**
+
+**Evidence**:
+
+1. **NSS Resource Type**: NSS (2009, 0x7d9) is defined in ResourceType.cs but is **NOT** in the verified handlers list
+2. **NCS Handler Exists**: NCS (2010, 0x7da) has a verified handler:
+   - swkotor.exe: 0x005d1ac0
+   - swkotor2.exe: 0x0061d6e0
+3. **No NSS Handler Found**: Exhaustive search for handlers calling `FUN_004074d0`/`FUN_004075a0` with type 2009 (NSS) found **ZERO results** in both executables
+4. **Game Engine Executes Bytecode**: The game engine executes NCS (compiled bytecode), not NSS (source code)
+5. **NSS is Toolset-Only**: NSS files are used by the toolset/compiler to generate NCS files, not by the game engine
+
+**Conclusion**: 
+- ✅ **NSS files CAN be stored** in modules (no type filtering prevents this)
+- ❌ **NSS files are NOT loaded** by the game engine (no handler exists)
+- ❌ **NSS files are NOT used** by the game engine (engine only executes NCS bytecode)
+- **NSS files in modules are IGNORED** - They take up space but serve no purpose in the game
+
+**Recommendation**: Do NOT place NSS files in modules. Only NCS (compiled) files are needed. NSS files are for development/toolset use only.
+
 ### WAV/OGG Audio
 
 **Question**: Can WAV/OGG be loaded from modules?
@@ -612,7 +706,7 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 **Answer**:
 
 - **WAV (4)**: **YES** - VERIFIED: Handler at swkotor.exe: 0x005d5e90 calls `FUN_004074d0` with type 4
-- **OGG (2078)**: **TODO: Gain Certainty by going through ghidra mcp** - Search for OGG handler (type 2078, 0x81e) and verify it calls `FUN_004074d0`
+- **OGG (2078)**: **VERIFIED**: OGG is **NOT registered** in resource type registry and **NO handler exists** - OGG files in modules will be ignored
 
 **Note**: Audio files may also be loaded from specific directories (e.g., `streamwaves/`, `streammusic/`) rather than through the resource search mechanism. Verify if module loading works for audio playback.
 
