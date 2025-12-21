@@ -333,7 +333,6 @@ Based on `ResourceType.cs`, the following resource types are defined:
 - `LYT` (3000) - Layout data
 - `FAC` (2038) - Faction data
 - `GUI` (2047) - GUI definitions
-- `CUT` (2074) - Cutscene data
 
 **TODO: Gain Certainty by going through ghidra mcp - Verify which of these are truly unsupported by examining resource type handlers and module loading code. Check for string references to these file types and verify if they're filtered or rejected. Unlikely/Unsupported in Modules**:
 
@@ -382,7 +381,7 @@ Based on `ResourceType.cs`, the following resource types are defined:
 - `MVE` (2) - Video files
   - **Handler**: ❌ **NOT FOUND** - No handler in resource system
   - **Loading**: ✅ **CONFIRMED** - Direct directory access from `movies/` directory via directory alias system
-  - **Evidence**: 
+  - **Evidence**:
     - swkotor.exe: `FUN_005e7a90` (0x005e7a90, lines 203-209) sets up "MOVIES:" directory alias to ".\\movies"
     - No handler found that calls `FUN_004074d0` with resource type 2
   - **Module Support**: ❌ **NO** - No resource system handler, uses direct file I/O
@@ -408,14 +407,6 @@ Based on `ResourceType.cs`, the following resource types are defined:
     - swkotor.exe: `FUN_00602d40` (0x00602d40, line 7) uses hardcoded ".\\movies\\55.bik" path (direct file I/O)
   - **Module Support**: ❌ **NO** - Uses directory alias system (MOVIES:), NOT resource system (`FUN_004074d0`)
   - **Override Support**: ❌ **NO** - Cannot be placed in Override directory. Must be placed in `movies/` directory for direct file I/O access
-- `WMV` (12) - Windows Media Video
-  - **Handler**: ❌ **NOT FOUND** - No handler in resource system
-  - **Module Support**: ❌ **NO** - No handler exists
-  - **Override Support**: ❌ **NO** - No handler exists
-- `MP4` - MPEG-4 video
-  - **Status**: ❌ **NOT SUPPORTED** - No resource type ID exists
-  - **Module Support**: ❌ **NO** - Not a supported format
-  - **Override Support**: ❌ **NO** - Not a supported format
 
 ### Media File Priority: Resource System vs Stream Directories
 
@@ -646,7 +637,7 @@ This section provides an exhaustive analysis of **when exactly resource loading 
 
 **Function Chain**:
 
-```
+```sh
 entry (0x006fb509)
   → GameMain (0x004041f0)
     → FUN_005ed860 (0x005ed860)
@@ -685,7 +676,7 @@ entry (0x006fb509)
 
 **Function Chain**:
 
-```
+```sh
 FUN_00409bf0 (0x00409bf0) - Creates thread
   → CreateThread → FUN_00409b90 (0x00409b90) - Thread entry point (swkotor.exe)
   → CreateThread → FUN_00409e70 (0x00409e70) - Thread entry point (swkotor2.exe)
@@ -726,7 +717,7 @@ while ((DAT_007a39e8 != 0 && (*(int *)((int)DAT_007a39e8 + 0x48) == 0))) {
 
 **Function Chain**:
 
-```
+```sh
 FUN_004babb0 (0x004babb0) - Module transition handler
   → FUN_004ba920 (0x004ba920) - Load module
     → FUN_00408bc0 (0x00408bc0) - Check for .mod or .rim
@@ -763,7 +754,7 @@ FUN_004babb0 (0x004babb0) - Module transition handler
 
 **Function Chain**:
 
-```
+```sh
 Resource Type Handler (e.g., FUN_005d5e90 for WAV, FUN_00596670 for textures)
   → FUN_004074d0 (0x004074d0) - Resource lookup
     → FUN_00407230 (0x00407230) - Core search
@@ -872,7 +863,7 @@ FUN_00406e20 (0x00406e20) - Opens RIM file
 
 **Function Chain**:
 
-```
+```sh
 FUN_00408830 (0x00408830) / FUN_00407830 (0x00407830) - Resource table cleanup
   → FUN_0040d2e0 (0x0040d2e0) - Load resources still in demand
     → FUN_00407230 (0x00407230) - Search for resources
@@ -904,7 +895,7 @@ FUN_00408830 (0x00408830) / FUN_00407830 (0x00407830) - Resource table cleanup
 
 **Function Chain**:
 
-```
+```sh
 FUN_00401380 (0x00401380) - Game system initialization
   → FUN_004ae8f0 (0x004ae8f0)
     → FUN_004b63e0 (0x004b63e0) - Initialize game systems
