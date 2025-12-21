@@ -54,6 +54,8 @@ namespace Andastra.Runtime.MonoGame.Backends
         // DirectX 12 GUIDs
         private static readonly Guid IID_ID3D12Device = new Guid(0x189819f1, 0x1db6, 0x4b57, 0xbe, 0x54, 0x18, 0x21, 0x33, 0x9b, 0x85, 0xf7);
         private static readonly Guid IID_ID3D12Device5 = new Guid(0x8b4f173b, 0x2fea, 0x4b80, 0xb4, 0xc4, 0x52, 0x46, 0xa8, 0xe9, 0xda, 0x52);
+        private static readonly Guid IID_ID3D12StateObject = new Guid(0x47016943, 0xfca8, 0x4594, 0x93, 0xea, 0xaf, 0x25, 0x8b, 0xdc, 0x7b, 0x77);
+        private static readonly Guid IID_ID3D12StateObjectProperties = new Guid(0xde5fa827, 0x91bf, 0x4fb9, 0xb6, 0x01, 0x5c, 0x10, 0x5e, 0x15, 0x58, 0xdc);
 
         // DirectX 12 COM interface declarations (simplified - full implementation would require complete COM interop)
         [ComImport]
@@ -72,6 +74,24 @@ namespace Andastra.Runtime.MonoGame.Backends
         {
             // ID3D12Device5 methods for raytracing
             // This is a placeholder structure
+        }
+
+        [ComImport]
+        [Guid("47016943-fca8-4594-93ea-af258bdc7b77")]
+        [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+        private interface ID3D12StateObject
+        {
+            // ID3D12StateObject methods
+            // This is a placeholder structure - actual methods accessed via vtable
+        }
+
+        [ComImport]
+        [Guid("de5fa827-91bf-4fb9-b601-5c105e1558dc")]
+        [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+        private interface ID3D12StateObjectProperties
+        {
+            // ID3D12StateObjectProperties methods
+            // This is a placeholder structure - actual methods accessed via vtable
         }
 
         // DirectX 12 function pointers for P/Invoke (simplified - full implementation requires extensive declarations)
@@ -614,7 +634,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 // Step 1: Get or create root signature from binding layouts
                 // Note: CreateBindingLayout also has a TODO for root signature creation
-                // For now, we try to get root signature from binding layouts if they exist
+                // TODO: STUB - For now, we try to get root signature from binding layouts if they exist
                 if (desc.BindingLayouts != null && desc.BindingLayouts.Length > 0)
                 {
                     // Get root signature from first binding layout (pipeline typically uses one root signature)
@@ -624,7 +644,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     {
                         // D3D12BindingLayout stores root signature internally
                         // We need to access it via a method or property
-                        // For now, we'll need to create root signature if not already created
+                        // TODO: STUB - For now, we'll need to create root signature if not already created
                         // This will be fully implemented when CreateBindingLayout is implemented
                         rootSignature = IntPtr.Zero; // Will be set when root signature is created
                     }
@@ -867,7 +887,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     if (errorBlobPtr != IntPtr.Zero)
                     {
                         // Log error blob if available (would need ID3DBlob interface to read)
-                        // For now, just release it
+                        // TODO: STUB - For now, just release it
                         ReleaseComObject(errorBlobPtr);
                     }
 
@@ -930,7 +950,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             _resources[handle] = layout;
 
                         // Store range pointers for cleanup on disposal (would need to track these in D3D12BindingLayout)
-                        // For now, we'll free them immediately after root signature creation
+                        // TODO: STUB - For now, we'll free them immediately after root signature creation
                         // In a full implementation, these would be stored and freed when the layout is disposed
                         foreach (var ptr in rangePointers)
                         {
@@ -1366,7 +1386,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                     // Create acceleration structure wrapper
                     // Note: The actual building happens later via BuildBottomLevelAccelStruct on a command list
-                    var accelStruct = new D3D12AccelStruct(handle, desc, IntPtr.Zero, resultBuffer, resultBufferGpuVa, _device5);
+                    var accelStruct = new D3D12AccelStruct(handle, desc, IntPtr.Zero, resultBuffer, resultBufferGpuVa, _device5, this);
                     _resources[handle] = accelStruct;
 
                     return accelStruct;
@@ -1452,7 +1472,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                 // Create acceleration structure wrapper
                 // Note: The actual building happens later via BuildTopLevelAccelStruct on a command list
-                var accelStruct = new D3D12AccelStruct(handle, desc, IntPtr.Zero, resultBuffer, resultBufferGpuVa, _device5);
+                var accelStruct = new D3D12AccelStruct(handle, desc, IntPtr.Zero, resultBuffer, resultBufferGpuVa, _device5, this);
                 _resources[handle] = accelStruct;
 
                 return accelStruct;
@@ -2905,6 +2925,35 @@ namespace Andastra.Runtime.MonoGame.Backends
             public uint MemoryPoolPreference; // D3D12_MEMORY_POOL
             public uint CreationNodeMask; // UINT
             public uint VisibleNodeMask; // UINT
+        }
+
+        /// <summary>
+        /// D3D12_CLEAR_VALUE structure for optimized clear values.
+        /// Based on DirectX 12 Clear Values: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_clear_value
+        /// </summary>
+        [StructLayout(LayoutKind.Explicit)]
+        private struct D3D12_CLEAR_VALUE
+        {
+            [FieldOffset(0)]
+            public uint Format; // DXGI_FORMAT
+
+            [FieldOffset(4)]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            public float[] Color; // float[4] for render targets
+
+            [FieldOffset(4)]
+            public D3D12_DEPTH_STENCIL_VALUE DepthStencil; // For depth-stencil targets
+        }
+
+        /// <summary>
+        /// D3D12_DEPTH_STENCIL_VALUE structure for depth-stencil clear values.
+        /// Based on DirectX 12 Depth Stencil Values: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_depth_stencil_value
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_DEPTH_STENCIL_VALUE
+        {
+            public float Depth; // float
+            public byte Stencil; // UINT8
         }
 
         #endregion
@@ -4908,6 +4957,26 @@ namespace Andastra.Runtime.MonoGame.Backends
             return rtvHandle;
         }
 
+        /// <summary>
+        /// Creates an SRV descriptor for a texture.
+        /// Based on DirectX 12 Shader Resource Views: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createshaderresourceview
+        /// Note: In a full implementation, SRV descriptors would typically be allocated from shader-visible descriptor heaps.
+        /// This is a simplified version that creates a non-shader-visible descriptor for texture management.
+        /// </summary>
+        private IntPtr CreateSrvDescriptorForTexture(IntPtr d3d12Resource, TextureDesc desc, uint dxgiFormat, uint resourceDimension)
+        {
+            if (d3d12Resource == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            // TODO: STUB - For now, return IntPtr.Zero as SRV descriptors are typically managed by binding sets
+            // The texture can still be used with GetOrCreateRtvHandle/GetOrCreateDsvHandle for render targets/depth stencils
+            // SRV descriptors for shader binding will be created through CreateBindingSet
+            // This is a placeholder that can be extended if needed for texture-only SRV management
+            return IntPtr.Zero;
+        }
+
         #endregion
 
         #region D3D12 UAV Descriptor Heap Management
@@ -5285,6 +5354,42 @@ namespace Andastra.Runtime.MonoGame.Backends
                     return 3; // DXGI_FORMAT_R32G32B32A32_SINT
                 default:
                     return 0; // DXGI_FORMAT_UNKNOWN
+            }
+        }
+
+        /// <summary>
+        /// Converts TextureFormat to DXGI_FORMAT for texture resource creation.
+        /// Based on DirectX 12 Texture Formats: https://docs.microsoft.com/en-us/windows/win32/api/dxgiformat/ne-dxgiformat-dxgi_format
+        /// </summary>
+        private uint ConvertTextureFormatToDxgiFormatForTexture(TextureFormat format)
+        {
+            // Use the same conversion as RTV since textures can generally use the same formats
+            return ConvertTextureFormatToDxgiFormatForRtv(format);
+        }
+
+        /// <summary>
+        /// Maps TextureDimension enum to D3D12_RESOURCE_DIMENSION.
+        /// Based on DirectX 12 Resource Dimensions: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ne-d3d12-d3d12_resource_dimension
+        /// </summary>
+        private static uint MapTextureDimensionToD3D12(TextureDimension dimension)
+        {
+            switch (dimension)
+            {
+                case TextureDimension.Texture1D:
+                case TextureDimension.Texture1DArray:
+                    return D3D12_RESOURCE_DIMENSION_TEXTURE1D;
+
+                case TextureDimension.Texture2D:
+                case TextureDimension.Texture2DArray:
+                case TextureDimension.TextureCube:
+                case TextureDimension.TextureCubeArray:
+                    return D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+
+                case TextureDimension.Texture3D:
+                    return D3D12_RESOURCE_DIMENSION_TEXTURE3D;
+
+                default:
+                    return D3D12_RESOURCE_DIMENSION_TEXTURE2D; // Default to 2D
             }
         }
 
@@ -5886,7 +5991,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 if (descriptorHeap != IntPtr.Zero && parentDevice != null)
                 {
                     D3D12_GPU_DESCRIPTOR_HANDLE gpuHeapStart = _parentDevice.CallGetGPUDescriptorHandleForHeapStart(descriptorHeap);
-                    // For now, use heap start (offset 0). When CreateBindingSet is fully implemented,
+                    // TODO: STUB - For now, use heap start (offset 0). When CreateBindingSet is fully implemented,
                     // it should calculate the proper offset based on descriptor allocation
                     _gpuDescriptorHandle = gpuHeapStart;
                 }
@@ -5925,10 +6030,11 @@ namespace Andastra.Runtime.MonoGame.Backends
             private readonly IntPtr _d3d12AccelStruct;
             private readonly IBuffer _backingBuffer;
             private readonly IntPtr _device5;
+            private readonly D3D12Device _parentDevice;
             private IBuffer _scratchBuffer;
             private ulong _scratchBufferDeviceAddress;
 
-            public D3D12AccelStruct(IntPtr handle, AccelStructDesc desc, IntPtr d3d12AccelStruct, IBuffer backingBuffer, ulong deviceAddress, IntPtr device5)
+            public D3D12AccelStruct(IntPtr handle, AccelStructDesc desc, IntPtr d3d12AccelStruct, IBuffer backingBuffer, ulong deviceAddress, IntPtr device5, D3D12Device parentDevice)
             {
                 _handle = handle;
                 Desc = desc;
@@ -5936,6 +6042,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _backingBuffer = backingBuffer;
                 DeviceAddress = deviceAddress;
                 _device5 = device5;
+                _parentDevice = parentDevice;
                 IsTopLevel = desc.IsTopLevel;
                 _scratchBuffer = null;
                 _scratchBufferDeviceAddress = 0UL;
@@ -6005,11 +6112,53 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             public void Dispose()
             {
-                // TODO: Release D3D12 acceleration structure
-                // - Release backing buffer resource
-                // Note: Acceleration structures are resources, released via ID3D12Resource::Release()
-                _scratchBuffer?.Dispose();
-                _backingBuffer?.Dispose();
+                // Release D3D12 acceleration structure
+                // Based on DirectX 12 DXR API: Acceleration structures are stored as data in ID3D12Resource buffers
+                // The backing buffer (ID3D12Resource) contains the acceleration structure data and must be released
+                // There is no separate COM interface for acceleration structures - they're just data in buffers
+                // Reference: https://docs.microsoft.com/en-us/windows/win32/direct3d12/direct3d-12-raytracing-acceleration-structure
+                
+                // Release scratch buffer first (temporary buffer used during building)
+                if (_scratchBuffer != null)
+                {
+                    _scratchBuffer.Dispose();
+                    _scratchBuffer = null;
+                    _scratchBufferDeviceAddress = 0UL;
+                }
+                
+                // Release backing buffer (this is the ID3D12Resource that contains the acceleration structure data)
+                // Disposing the buffer releases the underlying ID3D12Resource via IUnknown::Release()
+                if (_backingBuffer != null)
+                {
+                    _backingBuffer.Dispose();
+                }
+                
+                // Release acceleration structure COM object if it exists (currently always IntPtr.Zero, but future-proof)
+                // Note: In current D3D12 implementation, _d3d12AccelStruct is always IntPtr.Zero because
+                // acceleration structures are stored as data in buffers, not as separate COM objects
+                if (_d3d12AccelStruct != IntPtr.Zero && _parentDevice != null)
+                {
+                    try
+                    {
+                        // Release the COM object through IUnknown::Release() vtable call
+                        // This decrements the reference count and frees the object when count reaches zero
+                        uint refCount = _parentDevice.ReleaseComObject(_d3d12AccelStruct);
+                        if (refCount > 0)
+                        {
+                            Console.WriteLine($"[D3D12Device] Acceleration structure still has {refCount} references after Release()");
+                        }
+                        else
+                        {
+                            Console.WriteLine("[D3D12Device] Successfully released acceleration structure COM object");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log error but continue cleanup - don't throw from Dispose
+                        Console.WriteLine($"[D3D12Device] Error releasing acceleration structure COM object: {ex.Message}");
+                        Console.WriteLine($"[D3D12Device] Stack trace: {ex.StackTrace}");
+                    }
+                }
             }
         }
 
@@ -6769,7 +6918,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                 // Validate buffer sizes to ensure copy operation is within bounds
                 // Note: IBuffer interface doesn't expose SizeInBytes directly, so we validate via buffer descriptions if available
-                // For now, we assume the caller has validated the copy ranges
+                // TODO: STUB - For now, we assume the caller has validated the copy ranges
 
                 // Transition source buffer to COPY_SOURCE state
                 SetBufferState(src, ResourceState.CopySource);
@@ -8902,7 +9051,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                 // Create delegate from function pointer
                 // Note: Using Marshal.GetDelegateForFunctionPointer with a type defined elsewhere
-                // For now, use a simpler approach with a local delegate type
+                // TODO: STUB - For now, use a simpler approach with a local delegate type
                 MapResourceDelegateInternal mapResource = (MapResourceDelegateInternal)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(MapResourceDelegateInternal));
 
                 IntPtr mappedData;
@@ -10771,6 +10920,167 @@ namespace Andastra.Runtime.MonoGame.Backends
             public uint Depth;
         }
 
+        // D3D12 raytracing state object structures for pipeline creation
+        // Based on D3D12 DXR API: https://docs.microsoft.com/en-us/windows/win32/direct3d12/d3d12-raytracing-pipeline
+
+        // State object subobject types
+        private const uint D3D12_STATE_SUBOBJECT_TYPE_STATE_OBJECT_CONFIG = 0;
+        private const uint D3D12_STATE_SUBOBJECT_TYPE_GLOBAL_ROOT_SIGNATURE = 1;
+        private const uint D3D12_STATE_SUBOBJECT_TYPE_LOCAL_ROOT_SIGNATURE = 2;
+        private const uint D3D12_STATE_SUBOBJECT_TYPE_NODE_MASK = 3;
+        private const uint D3D12_STATE_SUBOBJECT_TYPE_DXIL_LIBRARY = 5;
+        private const uint D3D12_STATE_SUBOBJECT_TYPE_EXISTING_COLLECTION = 6;
+        private const uint D3D12_STATE_SUBOBJECT_TYPE_SUBOBJECT_TO_EXPORTS_ASSOCIATION = 7;
+        private const uint D3D12_STATE_SUBOBJECT_TYPE_DXIL_SUBOBJECT_TO_EXPORTS_ASSOCIATION = 8;
+        private const uint D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_SHADER_CONFIG = 9;
+        private const uint D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_PIPELINE_CONFIG = 10;
+        private const uint D3D12_STATE_SUBOBJECT_TYPE_HIT_GROUP = 11;
+
+        /// <summary>
+        /// State subobject wrapper structure.
+        /// Based on D3D12 API: D3D12_STATE_SUBOBJECT
+        /// Each subobject in a state object is wrapped in this structure.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_STATE_SUBOBJECT
+        {
+            /// <summary>
+            /// Type of subobject (e.g., D3D12_STATE_SUBOBJECT_TYPE_DXIL_LIBRARY).
+            /// </summary>
+            public uint Type;
+
+            /// <summary>
+            /// Pointer to the subobject description structure.
+            /// </summary>
+            public IntPtr pDesc;
+        }
+
+        /// <summary>
+        /// State object description.
+        /// Based on D3D12 API: D3D12_STATE_OBJECT_DESC
+        /// Contains array of subobjects that define the raytracing pipeline.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_STATE_OBJECT_DESC
+        {
+            /// <summary>
+            /// Type of state object (D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE = 0).
+            /// </summary>
+            public uint Type;
+
+            /// <summary>
+            /// Number of subobjects.
+            /// </summary>
+            public uint NumSubobjects;
+
+            /// <summary>
+            /// Pointer to array of D3D12_STATE_SUBOBJECT structures.
+            /// </summary>
+            public IntPtr pSubobjects;
+        }
+
+        // State object type constants
+        private const uint D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE = 0;
+
+        /// <summary>
+        /// DXIL library subobject description.
+        /// Based on D3D12 API: D3D12_DXIL_LIBRARY_DESC
+        /// Contains the shader bytecode for all shaders in the library.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_DXIL_LIBRARY_DESC
+        {
+            /// <summary>
+            /// Shader bytecode (DXIL binary).
+            /// </summary>
+            public D3D12_SHADER_BYTECODE DXILLibrary;
+        }
+
+        /// <summary>
+        /// Hit group subobject description.
+        /// Based on D3D12 API: D3D12_HIT_GROUP_DESC
+        /// Defines a hit group that combines closest hit, any hit, and intersection shaders.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_HIT_GROUP_DESC
+        {
+            /// <summary>
+            /// Hit group name (export name for the hit group).
+            /// </summary>
+            public IntPtr HitGroupExport;
+
+            /// <summary>
+            /// Type of hit group (D3D12_HIT_GROUP_TYPE_TRIANGLES = 0 or D3D12_HIT_GROUP_TYPE_PROCEDURAL_PRIMITIVE = 1).
+            /// </summary>
+            public uint Type;
+
+            /// <summary>
+            /// Closest hit shader export name (optional, can be null).
+            /// </summary>
+            public IntPtr AnyHitShaderImport;
+
+            /// <summary>
+            /// Any hit shader export name (optional, can be null).
+            /// </summary>
+            public IntPtr ClosestHitShaderImport;
+
+            /// <summary>
+            /// Intersection shader export name (optional, can be null).
+            /// </summary>
+            public IntPtr IntersectionShaderImport;
+        }
+
+        // Hit group type constants
+        private const uint D3D12_HIT_GROUP_TYPE_TRIANGLES = 0;
+        private const uint D3D12_HIT_GROUP_TYPE_PROCEDURAL_PRIMITIVE = 1;
+
+        /// <summary>
+        /// Raytracing shader config subobject description.
+        /// Based on D3D12 API: D3D12_RAYTRACING_SHADER_CONFIG
+        /// Specifies maximum payload and attribute sizes for shaders.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_RAYTRACING_SHADER_CONFIG
+        {
+            /// <summary>
+            /// Maximum payload size in bytes.
+            /// </summary>
+            public uint MaxPayloadSizeInBytes;
+
+            /// <summary>
+            /// Maximum attribute size in bytes.
+            /// </summary>
+            public uint MaxAttributeSizeInBytes;
+        }
+
+        /// <summary>
+        /// Raytracing pipeline config subobject description.
+        /// Based on D3D12 API: D3D12_RAYTRACING_PIPELINE_CONFIG
+        /// Specifies maximum recursion depth for the pipeline.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_RAYTRACING_PIPELINE_CONFIG
+        {
+            /// <summary>
+            /// Maximum recursion depth (how many times a ray can bounce).
+            /// </summary>
+            public uint MaxTraceRecursionDepth;
+        }
+
+        /// <summary>
+        /// Global root signature subobject description.
+        /// Based on D3D12 API: D3D12_GLOBAL_ROOT_SIGNATURE
+        /// Specifies the global root signature used by all shaders in the pipeline.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_GLOBAL_ROOT_SIGNATURE
+        {
+            /// <summary>
+            /// Pointer to ID3D12RootSignature interface.
+            /// </summary>
+            public IntPtr pGlobalRootSignature;
+        }
+
         // COM interface method delegate for BuildRaytracingAccelerationStructure
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void BuildRaytracingAccelerationStructureDelegate(
@@ -10803,6 +11113,27 @@ namespace Andastra.Runtime.MonoGame.Backends
         // COM interface method delegate for GetGPUVirtualAddress
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate ulong GetGPUVirtualAddressDelegate(IntPtr resource);
+
+        // COM interface method delegate for CreateStateObject (ID3D12Device5::CreateStateObject)
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int CreateStateObjectDelegate(
+            IntPtr device5,
+            IntPtr pDesc,
+            ref Guid riid,
+            IntPtr ppStateObject);
+
+        // COM interface method delegate for QueryInterface (IUnknown::QueryInterface)
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int QueryInterfaceDelegate(
+            IntPtr comObject,
+            ref Guid riid,
+            IntPtr ppvObject);
+
+        // COM interface method delegate for GetShaderIdentifier (ID3D12StateObjectProperties::GetShaderIdentifier)
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate IntPtr GetShaderIdentifierDelegate(
+            IntPtr properties,
+            IntPtr pExportName);
 
         /// <summary>
         /// Calls ID3D12Device5::GetRaytracingAccelerationStructurePrebuildInfo through COM vtable.
