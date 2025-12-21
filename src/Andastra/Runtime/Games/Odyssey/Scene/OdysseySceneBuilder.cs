@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Andastra.Runtime.Content.Interfaces;
-using Andastra.Parsing.Formats.LYT;
+using Andastra.Parsing.Resource.Formats.LYT;
 using Andastra.Parsing.Formats.VIS;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common.Scene;

@@ -40,6 +40,7 @@ AABB stands for "Axis-Aligned Bounding Box." This is just a box that wraps aroun
 The tree starts with one big box that contains all triangles. This big box is split into two smaller boxes. Each smaller box is split into two even smaller boxes, and so on, until you reach boxes that contain just one triangle.
 
 When the game needs to find a triangle:
+
 1. Start at the top (big box)
 2. Check which of the two child boxes contains the point you're looking for
 3. Go to that child box
@@ -120,12 +121,14 @@ The AABB nodes are stored sequentially in the file starting at `aabb_offset`. Th
 Think of the AABB nodes as stored in a list: node 0, node 1, node 2, node 3, and so on. When a parent node needs to point to a child node, it stores the position number in the list.
 
 There are different ways to count positions:
+
 1. **0-based counting**: Start counting at 0. First item is 0, second is 1, third is 2. This is how arrays work in most programming languages.
 2. **1-based counting**: Start counting at 1. First item is 1, second is 2, third is 3. This is how humans normally count.
 
 The game engine uses 0-based counting. So if a parent node's left child is the 6th node in the list (at position 5, because we start counting from 0), the child index should be `5`, not `6`.
 
 What happens if you use the wrong counting:
+
 - If you write `6` when it should be `5`, the game will look at the 7th node instead of the 6th node
 - This means it's looking at the wrong child node
 - The entire tree becomes broken - parent nodes point to wrong children

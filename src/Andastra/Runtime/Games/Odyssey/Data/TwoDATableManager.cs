@@ -7,6 +7,10 @@ using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Engines.Odyssey.Profiles;
+using AppearanceData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.AppearanceData;
+using BaseItemData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.BaseItemData;
+using FeatData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.FeatData;
+using SpellData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.SpellData;
 
 namespace Andastra.Runtime.Engines.Odyssey.Data
 {

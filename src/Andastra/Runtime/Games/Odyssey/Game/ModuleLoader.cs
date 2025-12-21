@@ -11,7 +11,7 @@ using Andastra.Parsing;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.LYT;
+using Andastra.Parsing.Resource.Formats.LYT;
 using Andastra.Parsing.Formats.VIS;
 using Andastra.Parsing.Formats.BWM;
 using Andastra.Parsing.Formats.MDL;

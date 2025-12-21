@@ -11,7 +11,7 @@ using Andastra.Parsing.Resource.Formats.TEX;
 using Andastra.Parsing.Formats.DDS;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Graphics;
-using Andastra.Runtime.Graphics.MonoGame.Converters;
+using Andastra.Runtime.MonoGame.Converters;
 using Andastra.Runtime.Graphics.MonoGame.Graphics;
 using MonoGameTexture2D = Andastra.Runtime.Graphics.MonoGame.Graphics.MonoGameTexture2D;
 using JetBrains.Annotations;

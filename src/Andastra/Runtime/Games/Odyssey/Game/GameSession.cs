@@ -29,8 +29,8 @@ using Andastra.Parsing.Resource;
 using Andastra.Runtime.Core;
 using Andastra.Runtime.Core.Journal;
 using Andastra.Runtime.Core.Plot;
-using Andastra.Parsing.Installation;
-using Andastra.Runtime.Game.Core;
+using Andastra.Runtime.Core.Game;
+using GameDataManager = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager;
 
 namespace Andastra.Runtime.Engines.Odyssey.Game
 {
@@ -58,7 +58,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         private readonly IScriptGlobals _globals;
         private readonly Installation _installation;
         private readonly Loading.ModuleLoader _moduleLoader;
-        private readonly Data.GameDataManager _gameDataManager;
+        private readonly GameDataManager _gameDataManager;
 
         // Game systems
         private readonly TriggerSystem _triggerSystem;
@@ -82,7 +82,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         private IEntity _playerEntity;
         private string _currentModuleName;
         private float _moduleHeartbeatTimer;
-        private Andastra.Runtime.Game.Core.CharacterCreationData _pendingCharacterData;
+        private CharacterCreationData _pendingCharacterData;
 
         /// <summary>
         /// Gets the current player entity.
@@ -221,7 +221,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             // Based on swkotor2.exe: GameDataManager provides access to 2DA tables (appearance.2da, etc.)
             // Located via string references: "2DAName" @ 0x007c3980, " 2DA file" @ 0x007c4674
             // Original implementation: GameDataManager loads and caches 2DA tables from installation
-            _gameDataManager = new Data.GameDataManager(_installation);
+            _gameDataManager = new GameDataManager(_installation);
             var gameDataProvider = new Data.OdysseyGameDataProvider(_gameDataManager);
             _world.GameDataProvider = gameDataProvider;
 
@@ -429,7 +429,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         /// Module name casing: Ghidra shows "001ebo" (lowercase) and "END_M01AA" (uppercase)
         /// Resource lookup is case-insensitive, we use lowercase to match Andastra.Parsing conventions
         /// </remarks>
-        public void StartNewGame([CanBeNull] Andastra.Runtime.Game.Core.CharacterCreationData characterData = null)
+        public void StartNewGame([CanBeNull] CharacterCreationData characterData = null)
         {
             Console.WriteLine("[GameSession] Starting new game");
 
@@ -702,7 +702,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         /// - Gender: Male=0, Female=1
         /// - Faction Friendly1 = 2 (standard player faction)
         /// </remarks>
-        private IEntity CreatePlayerFromCharacterData(Andastra.Runtime.Game.Core.CharacterCreationData characterData, System.Numerics.Vector3 position, float facing)
+        private IEntity CreatePlayerFromCharacterData(CharacterCreationData characterData, System.Numerics.Vector3 position, float facing)
         {
             if (characterData == null || _world == null)
             {
@@ -731,22 +731,22 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             int classId;
             switch (characterData.Class)
             {
-                case Andastra.Runtime.Game.Core.CharacterClass.Soldier:
+                case CharacterClass.Soldier:
                     classId = 0;
                     break;
-                case Andastra.Runtime.Game.Core.CharacterClass.Scout:
+                case CharacterClass.Scout:
                     classId = 1;
                     break;
-                case Andastra.Runtime.Game.Core.CharacterClass.Scoundrel:
+                case CharacterClass.Scoundrel:
                     classId = 2;
                     break;
-                case Andastra.Runtime.Game.Core.CharacterClass.JediGuardian:
+                case CharacterClass.JediGuardian:
                     classId = 3;
                     break;
-                case Andastra.Runtime.Game.Core.CharacterClass.JediConsular:
+                case CharacterClass.JediConsular:
                     classId = 4;
                     break;
-                case Andastra.Runtime.Game.Core.CharacterClass.JediSentinel:
+                case CharacterClass.JediSentinel:
                     classId = 5;
                     break;
                 default:
@@ -756,7 +756,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             }
 
             // Map Gender enum to integer (Male=0, Female=1)
-            int genderValue = characterData.Gender == Andastra.Runtime.Game.Core.Gender.Male ? 0 : 1;
+            int genderValue = characterData.Gender == Gender.Male ? 0 : 1;
 
             // Get class data for HP/FP calculations
             Data.ClassData classData = _gameDataManager?.GetClass(classId);
