@@ -354,7 +354,8 @@ Based on `ResourceType.cs`, the following resource types are defined:
 - `BMU` (8) - Obfuscated MP3 audio
   - **Module Support**: ❓ **UNKNOWN** - Need to verify if Miles audio system or resource system handles this
 - `OGG` (2078) - OGG audio
-  - **Module Support**: ❓ **UNKNOWN** - Need to verify if Miles audio system or resource system handles this
+  - **VERIFIED**: OGG is **NOT registered** in resource type registry (swkotor.exe: `FUN_005e6d20`, swkotor2.exe: `FUN_00632510`)
+  - **Module Support**: ❌ **NO** - OGG files in modules will be ignored. OGG is loaded via direct file I/O (Miles audio system or similar), not through resource system
 - `MVE` (2) - Video files
   - **Loading**: Direct directory access from `movies/` directory (mapped via `FUN_005e7a90`)
   - **Module Support**: ❌ **NO** - Video files loaded via direct directory access
