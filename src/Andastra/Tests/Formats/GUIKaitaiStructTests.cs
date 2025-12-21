@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using Andastra.Parsing.Resource.Generics.GUI;
 using Andastra.Parsing.Tests.Common;
+using Andastra.Parsing.Common;
 using FluentAssertions;
 using Xunit;
 
@@ -888,65 +889,38 @@ namespace Andastra.Parsing.Tests.Formats
 
         private static void CreateTestGuiFile(string path)
         {
-            // Create a minimal valid GUI file using GFF structure
-            // This is a simplified version - in practice, you'd use GFFAuto
-            // TODO: STUB - For now, we'll create a minimal valid GFF file with GUI signature
-            using (var fs = File.Create(path))
+            // Create a minimal valid GUI file using proper GFF structure
+            // Based on GUI format specification: vendor/PyKotor/wiki/GFF-GUI.md
+            // Uses GUIWriter to ensure proper GFF structure with GUI signature
+            var gui = new GUI
             {
-                // Write GFF header (56 bytes)
-                // File type: "GUI "
-                fs.Write(Encoding.ASCII.GetBytes("GUI "), 0, 4);
-                // Version: "V3.2"
-                fs.Write(Encoding.ASCII.GetBytes("V3.2"), 0, 4);
-                // Struct array offset: 56 (right after header)
-                fs.Write(BitConverter.GetBytes((uint)56), 0, 4);
-                // Struct count: 1 (root struct)
-                fs.Write(BitConverter.GetBytes((uint)1), 0, 4);
-                // Field array offset: 68 (56 + 12)
-                fs.Write(BitConverter.GetBytes((uint)68), 0, 4);
-                // Field count: 1
-                fs.Write(BitConverter.GetBytes((uint)1), 0, 4);
-                // Label array offset: 80 (68 + 12)
-                fs.Write(BitConverter.GetBytes((uint)80), 0, 4);
-                // Label count: 1
-                fs.Write(BitConverter.GetBytes((uint)1), 0, 4);
-                // Field data offset: 96 (80 + 16)
-                fs.Write(BitConverter.GetBytes((uint)96), 0, 4);
-                // Field data count: 0
-                fs.Write(BitConverter.GetBytes((uint)0), 0, 4);
-                // Field indices offset: 0
-                fs.Write(BitConverter.GetBytes((uint)0), 0, 4);
-                // Field indices count: 0
-                fs.Write(BitConverter.GetBytes((uint)0), 0, 4);
-                // List indices offset: 0
-                fs.Write(BitConverter.GetBytes((uint)0), 0, 4);
-                // List indices count: 0
-                fs.Write(BitConverter.GetBytes((uint)0), 0, 4);
+                Tag = "TestGUI"
+            };
 
-                // Struct entry (12 bytes)
-                // Struct ID: 0xFFFFFFFF (-1 for root)
-                fs.Write(BitConverter.GetBytes((int)-1), 0, 4);
-                // Data or offset: 0 (field index)
-                fs.Write(BitConverter.GetBytes((uint)0), 0, 4);
-                // Field count: 1
-                fs.Write(BitConverter.GetBytes((uint)1), 0, 4);
+            // Create a minimal panel control to ensure valid GUI structure
+            // Panel (type 2) is a common container control
+            var panel = new GUIControl
+            {
+                GuiType = GUIControlType.Panel,
+                Id = 1,
+                Tag = "TestPanel",
+                Extent = new Vector4(0, 0, 640, 480), // Standard screen size
+                Position = new Vector2(0, 0),
+                Size = new Vector2(640, 480)
+            };
 
-                // Field entry (12 bytes)
-                // Field type: 10 (String)
-                fs.Write(BitConverter.GetBytes((uint)10), 0, 4);
-                // Label index: 0
-                fs.Write(BitConverter.GetBytes((uint)0), 0, 4);
-                // Data or offset: 0 (would be offset to field_data, but we have no field_data)
-                fs.Write(BitConverter.GetBytes((uint)0), 0, 4);
+            gui.Controls.Add(panel);
+            gui.Root = panel;
 
-                // Label entry (16 bytes)
-                // Label: "Tag" + null padding
-                byte[] label = new byte[16];
-                Encoding.ASCII.GetBytes("Tag").CopyTo(label, 0);
-                fs.Write(label, 0, 16);
-            }
-
+            // Use GUIWriter to convert GUI object to proper GFF binary format
+            // This ensures correct GFF structure with GUI signature, proper offsets, and valid field data
+            var writer = new GUIWriter(gui);
+            
+            // Ensure directory exists
             Directory.CreateDirectory(Path.GetDirectoryName(path));
+            
+            // Write the GUI file using GUIWriter (handles all GFF structure details)
+            writer.WriteToFile(path);
         }
     }
 }
