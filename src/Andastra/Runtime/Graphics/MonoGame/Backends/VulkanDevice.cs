@@ -2998,7 +2998,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     binding = (uint)item.Slot,
                     descriptorType = descriptorType,
                     descriptorCount = (uint)item.Count,
-                    stageFlags = VkShaderStageFlags.VK_SHADER_STAGE_ALL, // TODO: Convert from item.ShaderStages
+                    stageFlags = ConvertShaderStageFlagsToVk(item.Stages),
                     pImmutableSamplers = IntPtr.Zero
                 };
             }
@@ -8499,7 +8499,273 @@ namespace Andastra.Runtime.MonoGame.Backends
                 {
                     throw new InvalidOperationException("Command list must be open before building acceleration structure");
                 }
-                // TODO: STUB - Implement vkCmdBuildAccelerationStructuresKHR for TLAS
+
+                if (accelStruct == null)
+                {
+                    throw new ArgumentNullException(nameof(accelStruct));
+                }
+
+                if (instances == null || instances.Length == 0)
+                {
+                    throw new ArgumentException("Instances array cannot be null or empty", nameof(instances));
+                }
+
+                // Validate that acceleration structure functions are available
+                if (vkCmdBuildAccelerationStructuresKHR == null || 
+                    vkGetAccelerationStructureBuildSizesKHR == null ||
+                    vkGetBufferDeviceAddressKHR == null ||
+                    vkCreateAccelerationStructureKHR == null)
+                {
+                    throw new NotSupportedException("VK_KHR_acceleration_structure extension functions are not available");
+                }
+
+                // Cast to VulkanAccelStruct to access internal handles
+                VulkanAccelStruct vulkanAccelStruct = accelStruct as VulkanAccelStruct;
+                if (vulkanAccelStruct == null)
+                {
+                    throw new ArgumentException("Acceleration structure must be a VulkanAccelStruct", nameof(accelStruct));
+                }
+
+                if (!vulkanAccelStruct.IsTopLevel)
+                {
+                    throw new ArgumentException("Acceleration structure must be a top-level acceleration structure", nameof(accelStruct));
+                }
+
+                // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBuildAccelerationStructuresKHR.html
+                // TLAS building requires:
+                // 1. Instance buffer containing VkAccelerationStructureInstanceKHR data
+                // 2. Geometry with type VK_GEOMETRY_TYPE_INSTANCES_KHR
+                // 3. Build geometry info with type VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR
+
+                uint instanceCount = (uint)instances.Length;
+
+                // Create instance buffer to hold AccelStructInstance data
+                // AccelStructInstance matches VkAccelerationStructureInstanceKHR layout (64 bytes)
+                int instanceStructSize = Marshal.SizeOf(typeof(AccelStructInstance));
+                int instanceBufferSize = instanceStructSize * instances.Length;
+
+                BufferDesc instanceBufferDesc = new BufferDesc
+                {
+                    ByteSize = instanceBufferSize,
+                    Usage = BufferUsageFlags.AccelStructStorage | BufferUsageFlags.AccelStructBuildInput,
+                    InitialState = ResourceState.AccelStructBuildInput,
+                    IsAccelStructBuildInput = true,
+                    DebugName = "TLAS_InstanceBuffer"
+                };
+
+                IBuffer instanceBuffer = _device.CreateBuffer(instanceBufferDesc);
+                if (instanceBuffer == null)
+                {
+                    throw new InvalidOperationException("Failed to create instance buffer for TLAS");
+                }
+
+                try
+                {
+                    // Write instance data to buffer
+                    // Based on Vulkan API: Instance data must be written before building
+                    WriteBuffer(instanceBuffer, instances, 0);
+
+                    // Get device address of instance buffer
+                    VulkanBuffer vulkanInstanceBuffer = instanceBuffer as VulkanBuffer;
+                    if (vulkanInstanceBuffer == null)
+                    {
+                        throw new InvalidOperationException("Instance buffer must be a VulkanBuffer");
+                    }
+
+                    IntPtr vkInstanceBuffer = vulkanInstanceBuffer.VkBuffer;
+                    if (vkInstanceBuffer == IntPtr.Zero)
+                    {
+                        throw new InvalidOperationException("Instance buffer has invalid Vulkan handle");
+                    }
+
+                    VkBufferDeviceAddressInfo instanceBufferInfo = new VkBufferDeviceAddressInfo
+                    {
+                        sType = VkStructureType.VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
+                        pNext = IntPtr.Zero,
+                        buffer = vkInstanceBuffer
+                    };
+                    ulong instanceBufferAddress = vkGetBufferDeviceAddressKHR(_device, ref instanceBufferInfo);
+
+                    // Set up geometry data for instances
+                    // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureGeometryInstancesDataKHR.html
+                    VkAccelerationStructureGeometryInstancesDataKHR instancesData = new VkAccelerationStructureGeometryInstancesDataKHR
+                    {
+                        sType = VkStructureType.VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_INSTANCES_DATA_KHR,
+                        pNext = IntPtr.Zero,
+                        arrayOfPointers = VkBool32.VK_FALSE, // Array of instances, not array of pointers
+                        dataDeviceAddress = instanceBufferAddress
+                    };
+
+                    // Create geometry data union (instances variant)
+                    VkAccelerationStructureGeometryDataKHR geometryData = new VkAccelerationStructureGeometryDataKHR();
+                    geometryData.instances = instancesData;
+
+                    // Create geometry structure
+                    // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureGeometryKHR.html
+                    VkAccelerationStructureGeometryKHR vkGeometry = new VkAccelerationStructureGeometryKHR
+                    {
+                        sType = VkStructureType.VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR,
+                        pNext = IntPtr.Zero,
+                        geometryType = VkGeometryTypeKHR.VK_GEOMETRY_TYPE_INSTANCES_KHR,
+                        geometry = geometryData,
+                        flags = 0 // No special flags for instances geometry
+                    };
+
+                    // Marshal geometry to unmanaged memory
+                    IntPtr geometryPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(VkAccelerationStructureGeometryKHR)));
+                    try
+                    {
+                        Marshal.StructureToPtr(vkGeometry, geometryPtr, false);
+
+                        // Create build geometry info
+                        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureBuildGeometryInfoKHR.html
+                        VkAccelerationStructureBuildGeometryInfoKHR buildInfo = new VkAccelerationStructureBuildGeometryInfoKHR
+                        {
+                            sType = VkStructureType.VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR,
+                            pNext = IntPtr.Zero,
+                            type = VkAccelerationStructureTypeKHR.VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR,
+                            flags = VkBuildAccelerationStructureFlagsKHR.VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR,
+                            mode = VkBuildAccelerationStructureModeKHR.VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR,
+                            srcAccelerationStructure = IntPtr.Zero, // Building new, not updating
+                            dstAccelerationStructure = vulkanAccelStruct.VkAccelStruct,
+                            geometryCount = 1, // Single geometry containing all instances
+                            pGeometries = geometryPtr,
+                            ppGeometries = IntPtr.Zero,
+                            scratchDataDeviceAddress = 0UL // Will be set after calculating sizes
+                        };
+
+                        // Calculate build sizes
+                        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetAccelerationStructureBuildSizesKHR.html
+                        IntPtr maxPrimitiveCountsPtr = Marshal.AllocHGlobal(sizeof(uint));
+                        try
+                        {
+                            Marshal.WriteInt32(maxPrimitiveCountsPtr, (int)instanceCount);
+
+                            VkAccelerationStructureBuildSizesInfoKHR sizeInfo = new VkAccelerationStructureBuildSizesInfoKHR
+                            {
+                                sType = VkStructureType.VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR,
+                                pNext = IntPtr.Zero,
+                                accelerationStructureSize = 0UL,
+                                updateScratchSize = 0UL,
+                                buildScratchSize = 0UL
+                            };
+
+                            vkGetAccelerationStructureBuildSizesKHR(
+                                _device,
+                                VkAccelerationStructureBuildTypeKHR.VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
+                                ref buildInfo,
+                                maxPrimitiveCountsPtr,
+                                ref sizeInfo);
+
+                            // Allocate scratch buffer for acceleration structure build
+                            // Scratch buffer is temporary memory used during the build process
+                            // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetBufferDeviceAddressKHR.html
+                            ulong scratchBufferAddress = 0UL;
+                            if (sizeInfo.buildScratchSize > 0)
+                            {
+                                // Create scratch buffer with required usage flags
+                                BufferDesc scratchBufferDesc = new BufferDesc
+                                {
+                                    ByteSize = (int)sizeInfo.buildScratchSize,
+                                    Usage = BufferUsageFlags.ShaderResource | BufferUsageFlags.IndirectArgument
+                                };
+                                
+                                IBuffer scratchBuffer = _device.CreateBuffer(scratchBufferDesc);
+                                if (scratchBuffer != null)
+                                {
+                                    _scratchBuffers.Add(scratchBuffer);
+
+                                    VulkanBuffer vulkanScratchBuffer = scratchBuffer as VulkanBuffer;
+                                    if (vulkanScratchBuffer != null)
+                                    {
+                                        IntPtr vkScratchBuffer = vulkanScratchBuffer.VkBuffer;
+                                        if (vkScratchBuffer != IntPtr.Zero)
+                                        {
+                                            VkBufferDeviceAddressInfo scratchBufferInfo = new VkBufferDeviceAddressInfo
+                                            {
+                                                sType = VkStructureType.VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
+                                                pNext = IntPtr.Zero,
+                                                buffer = vkScratchBuffer
+                                            };
+                                            scratchBufferAddress = vkGetBufferDeviceAddressKHR(_device, ref scratchBufferInfo);
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            buildInfo.scratchDataDeviceAddress = scratchBufferAddress;
+
+                            // Create build range info for instances
+                            // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureBuildRangeInfoKHR.html
+                            VkAccelerationStructureBuildRangeInfoKHR buildRange = new VkAccelerationStructureBuildRangeInfoKHR
+                            {
+                                primitiveCount = instanceCount,
+                                primitiveOffset = 0,
+                                firstVertex = 0,
+                                transformOffset = 0
+                            };
+
+                            // Allocate memory for build range info pointer
+                            IntPtr buildRangePtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(VkAccelerationStructureBuildRangeInfoKHR)));
+                            try
+                            {
+                                Marshal.StructureToPtr(buildRange, buildRangePtr, false);
+
+                                // Allocate memory for array of build range info pointers
+                                // ppBuildRangeInfos is an array of pointers to arrays of VkAccelerationStructureBuildRangeInfoKHR
+                                // For TLAS with single geometry, we have one pointer to one array
+                                IntPtr buildRangeInfoArrayPtr = Marshal.AllocHGlobal(IntPtr.Size);
+                                try
+                                {
+                                    Marshal.WriteIntPtr(buildRangeInfoArrayPtr, buildRangePtr);
+
+                                    // Marshal buildInfo to unmanaged memory
+                                    IntPtr buildInfoPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(VkAccelerationStructureBuildGeometryInfoKHR)));
+                                    try
+                                    {
+                                        Marshal.StructureToPtr(buildInfo, buildInfoPtr, false);
+
+                                        // Build acceleration structure
+                                        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBuildAccelerationStructuresKHR.html
+                                        vkCmdBuildAccelerationStructuresKHR(
+                                            _vkCommandBuffer,
+                                            1, // infoCount
+                                            buildInfoPtr, // pInfos (pointer to array of VkAccelerationStructureBuildGeometryInfoKHR)
+                                            buildRangeInfoArrayPtr); // ppBuildRangeInfos (pointer to array of pointers to VkAccelerationStructureBuildRangeInfoKHR arrays)
+                                    }
+                                    finally
+                                    {
+                                        Marshal.FreeHGlobal(buildInfoPtr);
+                                    }
+                                }
+                                finally
+                                {
+                                    Marshal.FreeHGlobal(buildRangeInfoArrayPtr);
+                                }
+                            }
+                            finally
+                            {
+                                Marshal.FreeHGlobal(buildRangePtr);
+                            }
+                        }
+                        finally
+                        {
+                            Marshal.FreeHGlobal(maxPrimitiveCountsPtr);
+                        }
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(geometryPtr);
+                    }
+                }
+                finally
+                {
+                    // Clean up instance buffer
+                    if (instanceBuffer != null)
+                    {
+                        instanceBuffer.Dispose();
+                    }
+                }
             }
 
             public void CompactBottomLevelAccelStruct(IAccelStruct dest, IAccelStruct src)
