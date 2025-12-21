@@ -228,6 +228,12 @@ namespace Andastra.Parsing.Common
                 case ".rim":
                     modType = KModuleType.MAIN;
                     break;
+                case "_a.rim":
+                    modType = KModuleType.AREA;
+                    break;
+                case "_adx.rim":
+                    modType = KModuleType.AREA_EXTENDED;
+                    break;
                 case "_s.rim":
                     modType = KModuleType.DATA;
                     break;
@@ -316,6 +322,10 @@ namespace Andastra.Parsing.Common
                     return new ModuleDataPiece(path, createIfNotExist);
                 case KModuleType.MAIN:
                     return new ModuleLinkPiece(path, createIfNotExist);
+                case KModuleType.AREA:
+                    return new ModuleLinkPiece(path, createIfNotExist);  // _a.rim uses same structure as .rim
+                case KModuleType.AREA_EXTENDED:
+                    return new ModuleLinkPiece(path, createIfNotExist);  // _adx.rim uses same structure as .rim
                 case KModuleType.K2_DLG:
                     return new ModuleDLGPiece(path, createIfNotExist);
                 case KModuleType.MOD:
