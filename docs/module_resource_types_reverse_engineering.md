@@ -1374,7 +1374,7 @@ if (iVar7 == 0) {
 | **BMU** | ❓ UNKNOWN | ❓ UNKNOWN | ❌ NO - No handler exists |
 | **OGG** | ❌ NO | ❌ NO | ❌ NO - No handler exists |
 | **MP3** | ❌ NO | ❌ NO | ❌ NO - Not a game resource type |
-| **MVE/MPG/BIK** | ❌ NO | ❌ NO | ❓ UNKNOWN - Video formats likely use direct file I/O, not resource system |
+| **MVE/MPG/BIK** | ❌ NO | ❌ NO | ❌ NO - Video formats use direct file I/O via MOVIES: alias, NOT resource system (swkotor.exe: FUN_005e7a90 0x005e7a90, FUN_005fbbf0 0x005fbbf0) |
 | **WMV** | ❌ NO | ❌ NO | ❌ NO - No handler exists |
 | **MP4** | ❌ NO | ❌ NO | ❌ NO - Not supported |
 
@@ -1388,7 +1388,7 @@ if (iVar7 == 0) {
 
 - **WAV**: ✅ **YES** - Can be placed in patch.erf (uses resource system)
 - **BMU/OGG/MP3/WMV/MP4**: ❌ **NO** - No handlers exist, cannot be loaded
-- **MVE/MPG/BIK**: ❓ **UNKNOWN** - Video formats likely use direct file I/O from `movies/` directory, not resource system
+- **MVE/MPG/BIK**: ❌ **NO** - Video formats use direct file I/O via MOVIES: alias, NOT resource system (swkotor.exe: FUN_005e7a90 0x005e7a90, FUN_005fbbf0 0x005fbbf0). Cannot be placed in patch.erf
 
 **Priority: patch.erf vs Stream Directories**:
 
