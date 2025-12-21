@@ -7,6 +7,32 @@ using CoreMDLModel = Andastra.Runtime.Core.MDL.MDLModel;
 using ContentMDLModel = Andastra.Runtime.Content.MDL.MDLModel;
 using CoreVector3Data = Andastra.Runtime.Core.MDL.Vector3Data;
 using ContentVector3Data = Andastra.Runtime.Content.MDL.Vector3Data;
+using CoreVector2Data = Andastra.Runtime.Core.MDL.Vector2Data;
+using ContentVector2Data = Andastra.Runtime.Content.MDL.Vector2Data;
+using CoreVector4Data = Andastra.Runtime.Core.MDL.Vector4Data;
+using ContentVector4Data = Andastra.Runtime.Content.MDL.Vector4Data;
+using CoreMDLNodeData = Andastra.Runtime.Core.MDL.MDLNodeData;
+using ContentMDLNodeData = Andastra.Runtime.Content.MDL.MDLNodeData;
+using CoreMDLAnimationData = Andastra.Runtime.Core.MDL.MDLAnimationData;
+using ContentMDLAnimationData = Andastra.Runtime.Content.MDL.MDLAnimationData;
+using CoreMDLControllerData = Andastra.Runtime.Core.MDL.MDLControllerData;
+using ContentMDLControllerData = Andastra.Runtime.Content.MDL.MDLControllerData;
+using CoreMDLMeshData = Andastra.Runtime.Core.MDL.MDLMeshData;
+using ContentMDLMeshData = Andastra.Runtime.Content.MDL.MDLMeshData;
+using CoreMDLLightData = Andastra.Runtime.Core.MDL.MDLLightData;
+using ContentMDLLightData = Andastra.Runtime.Content.MDL.MDLLightData;
+using CoreMDLEmitterData = Andastra.Runtime.Core.MDL.MDLEmitterData;
+using ContentMDLEmitterData = Andastra.Runtime.Content.MDL.MDLEmitterData;
+using CoreMDLReferenceData = Andastra.Runtime.Core.MDL.MDLReferenceData;
+using ContentMDLReferenceData = Andastra.Runtime.Content.MDL.MDLReferenceData;
+using CoreMDLDanglymeshData = Andastra.Runtime.Core.MDL.MDLDanglymeshData;
+using ContentMDLDanglymeshData = Andastra.Runtime.Content.MDL.MDLDanglymeshData;
+using CoreMDLSkinData = Andastra.Runtime.Core.MDL.MDLSkinData;
+using ContentMDLSkinData = Andastra.Runtime.Content.MDL.MDLSkinData;
+using CoreMDLEventData = Andastra.Runtime.Core.MDL.MDLEventData;
+using ContentMDLEventData = Andastra.Runtime.Content.MDL.MDLEventData;
+using CoreMDLFaceData = Andastra.Runtime.Core.MDL.MDLFaceData;
+using ContentMDLFaceData = Andastra.Runtime.Content.MDL.MDLFaceData;
 
 namespace Andastra.Runtime.Content.MDL
 {
@@ -381,10 +407,406 @@ namespace Andastra.Runtime.Content.MDL
                 NodeCount = contentModel.NodeCount,
                 AnimationArrayOffset = contentModel.AnimationArrayOffset,
                 AnimationCount = contentModel.AnimationCount,
-                RootNode = null, // TODO: Convert RootNode from Content to Core
-                Animations = null // TODO: Convert Animations from Content to Core
+                RootNode = ConvertNode(contentModel.RootNode),
+                Animations = ConvertAnimations(contentModel.Animations)
             };
             return coreModel;
+        }
+
+        /// <summary>
+        /// Converts a Content.MDL.MDLNodeData to Core.MDL.MDLNodeData recursively.
+        /// </summary>
+        private CoreMDLNodeData ConvertNode(ContentMDLNodeData contentNode)
+        {
+            if (contentNode == null)
+            {
+                return null;
+            }
+
+            var coreNode = new CoreMDLNodeData
+            {
+                Name = contentNode.Name,
+                NodeType = contentNode.NodeType,
+                NodeIndex = contentNode.NodeIndex,
+                NameIndex = contentNode.NameIndex,
+                Position = new CoreVector3Data(contentNode.Position.X, contentNode.Position.Y, contentNode.Position.Z),
+                Orientation = new CoreVector4Data(contentNode.Orientation.X, contentNode.Orientation.Y, contentNode.Orientation.Z, contentNode.Orientation.W),
+                Controllers = ConvertControllers(contentNode.Controllers),
+                Mesh = ConvertMesh(contentNode.Mesh),
+                Light = ConvertLight(contentNode.Light),
+                Emitter = ConvertEmitter(contentNode.Emitter),
+                Reference = ConvertReference(contentNode.Reference)
+            };
+
+            // Convert children recursively
+            if (contentNode.Children != null && contentNode.Children.Length > 0)
+            {
+                coreNode.Children = new CoreMDLNodeData[contentNode.Children.Length];
+                for (int i = 0; i < contentNode.Children.Length; i++)
+                {
+                    coreNode.Children[i] = ConvertNode(contentNode.Children[i]);
+                }
+            }
+
+            return coreNode;
+        }
+
+        /// <summary>
+        /// Converts Content.MDL.MDLAnimationData array to Core.MDL.MDLAnimationData array.
+        /// </summary>
+        private CoreMDLAnimationData[] ConvertAnimations(ContentMDLAnimationData[] contentAnimations)
+        {
+            if (contentAnimations == null || contentAnimations.Length == 0)
+            {
+                return null;
+            }
+
+            var coreAnimations = new CoreMDLAnimationData[contentAnimations.Length];
+            for (int i = 0; i < contentAnimations.Length; i++)
+            {
+                var contentAnim = contentAnimations[i];
+                if (contentAnim != null)
+                {
+                    coreAnimations[i] = new CoreMDLAnimationData
+                    {
+                        Name = contentAnim.Name,
+                        AnimRoot = contentAnim.AnimRoot,
+                        Length = contentAnim.Length,
+                        TransitionTime = contentAnim.TransitionTime,
+                        Events = ConvertEvents(contentAnim.Events),
+                        RootNode = ConvertNode(contentAnim.RootNode)
+                    };
+                }
+            }
+            return coreAnimations;
+        }
+
+        /// <summary>
+        /// Converts Content.MDL.MDLEventData array to Core.MDL.MDLEventData array.
+        /// </summary>
+        private CoreMDLEventData[] ConvertEvents(ContentMDLEventData[] contentEvents)
+        {
+            if (contentEvents == null || contentEvents.Length == 0)
+            {
+                return null;
+            }
+
+            var coreEvents = new CoreMDLEventData[contentEvents.Length];
+            for (int i = 0; i < contentEvents.Length; i++)
+            {
+                var contentEvent = contentEvents[i];
+                coreEvents[i] = new CoreMDLEventData
+                {
+                    ActivationTime = contentEvent.ActivationTime,
+                    Name = contentEvent.Name
+                };
+            }
+            return coreEvents;
+        }
+
+        /// <summary>
+        /// Converts Content.MDL.MDLControllerData array to Core.MDL.MDLControllerData array.
+        /// </summary>
+        private CoreMDLControllerData[] ConvertControllers(ContentMDLControllerData[] contentControllers)
+        {
+            if (contentControllers == null || contentControllers.Length == 0)
+            {
+                return null;
+            }
+
+            var coreControllers = new CoreMDLControllerData[contentControllers.Length];
+            for (int i = 0; i < contentControllers.Length; i++)
+            {
+                var contentController = contentControllers[i];
+                if (contentController != null)
+                {
+                    coreControllers[i] = new CoreMDLControllerData
+                    {
+                        Type = contentController.Type,
+                        RowCount = contentController.RowCount,
+                        TimeIndex = contentController.TimeIndex,
+                        DataIndex = contentController.DataIndex,
+                        ColumnCount = contentController.ColumnCount,
+                        IsBezier = contentController.IsBezier,
+                        TimeKeys = contentController.TimeKeys != null ? (float[])contentController.TimeKeys.Clone() : null,
+                        Values = contentController.Values != null ? (float[])contentController.Values.Clone() : null
+                    };
+                }
+            }
+            return coreControllers;
+        }
+
+        /// <summary>
+        /// Converts Content.MDL.MDLMeshData to Core.MDL.MDLMeshData.
+        /// </summary>
+        private CoreMDLMeshData ConvertMesh(ContentMDLMeshData contentMesh)
+        {
+            if (contentMesh == null)
+            {
+                return null;
+            }
+
+            var coreMesh = new CoreMDLMeshData
+            {
+                BoundingBoxMin = new CoreVector3Data(contentMesh.BoundingBoxMin.X, contentMesh.BoundingBoxMin.Y, contentMesh.BoundingBoxMin.Z),
+                BoundingBoxMax = new CoreVector3Data(contentMesh.BoundingBoxMax.X, contentMesh.BoundingBoxMax.Y, contentMesh.BoundingBoxMax.Z),
+                Radius = contentMesh.Radius,
+                AveragePoint = new CoreVector3Data(contentMesh.AveragePoint.X, contentMesh.AveragePoint.Y, contentMesh.AveragePoint.Z),
+                DiffuseColor = new CoreVector3Data(contentMesh.DiffuseColor.X, contentMesh.DiffuseColor.Y, contentMesh.DiffuseColor.Z),
+                AmbientColor = new CoreVector3Data(contentMesh.AmbientColor.X, contentMesh.AmbientColor.Y, contentMesh.AmbientColor.Z),
+                TransparencyHint = contentMesh.TransparencyHint,
+                Texture0 = contentMesh.Texture0,
+                Texture1 = contentMesh.Texture1,
+                Texture2 = contentMesh.Texture2,
+                Texture3 = contentMesh.Texture3,
+                UVDirectionX = contentMesh.UVDirectionX,
+                UVDirectionY = contentMesh.UVDirectionY,
+                UVJitter = contentMesh.UVJitter,
+                UVJitterSpeed = contentMesh.UVJitterSpeed,
+                MDXVertexSize = contentMesh.MDXVertexSize,
+                MDXDataFlags = contentMesh.MDXDataFlags,
+                MDXDataOffset = contentMesh.MDXDataOffset,
+                MDXPositionOffset = contentMesh.MDXPositionOffset,
+                MDXNormalOffset = contentMesh.MDXNormalOffset,
+                MDXColorOffset = contentMesh.MDXColorOffset,
+                MDXTex0Offset = contentMesh.MDXTex0Offset,
+                MDXTex1Offset = contentMesh.MDXTex1Offset,
+                MDXTex2Offset = contentMesh.MDXTex2Offset,
+                MDXTex3Offset = contentMesh.MDXTex3Offset,
+                MDXTangentOffset = contentMesh.MDXTangentOffset,
+                MDXUnknown1Offset = contentMesh.MDXUnknown1Offset,
+                MDXUnknown2Offset = contentMesh.MDXUnknown2Offset,
+                MDXUnknown3Offset = contentMesh.MDXUnknown3Offset,
+                VertexCount = contentMesh.VertexCount,
+                FaceCount = contentMesh.FaceCount,
+                TextureCount = contentMesh.TextureCount,
+                HasLightmap = contentMesh.HasLightmap,
+                RotateTexture = contentMesh.RotateTexture,
+                BackgroundGeometry = contentMesh.BackgroundGeometry,
+                Shadow = contentMesh.Shadow,
+                Beaming = contentMesh.Beaming,
+                Render = contentMesh.Render,
+                TotalArea = contentMesh.TotalArea,
+                Positions = ConvertVector3Array(contentMesh.Positions),
+                Normals = ConvertVector3Array(contentMesh.Normals),
+                TexCoords0 = ConvertVector2Array(contentMesh.TexCoords0),
+                TexCoords1 = ConvertVector2Array(contentMesh.TexCoords1),
+                TexCoords2 = ConvertVector2Array(contentMesh.TexCoords2),
+                TexCoords3 = ConvertVector2Array(contentMesh.TexCoords3),
+                Colors = ConvertVector3Array(contentMesh.Colors),
+                Tangents = ConvertVector3Array(contentMesh.Tangents),
+                Bitangents = ConvertVector3Array(contentMesh.Bitangents),
+                Indices = contentMesh.Indices != null ? (ushort[])contentMesh.Indices.Clone() : null,
+                Faces = ConvertFaces(contentMesh.Faces),
+                Skin = ConvertSkin(contentMesh.Skin),
+                Danglymesh = ConvertDanglymesh(contentMesh.Danglymesh)
+            };
+            return coreMesh;
+        }
+
+        /// <summary>
+        /// Converts Content.MDL.MDLFaceData array to Core.MDL.MDLFaceData array.
+        /// </summary>
+        private CoreMDLFaceData[] ConvertFaces(ContentMDLFaceData[] contentFaces)
+        {
+            if (contentFaces == null || contentFaces.Length == 0)
+            {
+                return null;
+            }
+
+            var coreFaces = new CoreMDLFaceData[contentFaces.Length];
+            for (int i = 0; i < contentFaces.Length; i++)
+            {
+                var contentFace = contentFaces[i];
+                coreFaces[i] = new CoreMDLFaceData
+                {
+                    Normal = new CoreVector3Data(contentFace.Normal.X, contentFace.Normal.Y, contentFace.Normal.Z),
+                    PlaneDistance = contentFace.PlaneDistance,
+                    Material = contentFace.Material,
+                    Adjacent0 = contentFace.Adjacent0,
+                    Adjacent1 = contentFace.Adjacent1,
+                    Adjacent2 = contentFace.Adjacent2,
+                    Vertex0 = contentFace.Vertex0,
+                    Vertex1 = contentFace.Vertex1,
+                    Vertex2 = contentFace.Vertex2
+                };
+            }
+            return coreFaces;
+        }
+
+        /// <summary>
+        /// Converts Content.MDL.MDLSkinData to Core.MDL.MDLSkinData.
+        /// </summary>
+        private CoreMDLSkinData ConvertSkin(ContentMDLSkinData contentSkin)
+        {
+            if (contentSkin == null)
+            {
+                return null;
+            }
+
+            return new CoreMDLSkinData
+            {
+                MDXBoneWeightsOffset = contentSkin.MDXBoneWeightsOffset,
+                MDXBoneIndicesOffset = contentSkin.MDXBoneIndicesOffset,
+                BoneWeights = contentSkin.BoneWeights != null ? (float[])contentSkin.BoneWeights.Clone() : null,
+                BoneIndices = contentSkin.BoneIndices != null ? (int[])contentSkin.BoneIndices.Clone() : null,
+                BoneMap = contentSkin.BoneMap != null ? (int[])contentSkin.BoneMap.Clone() : null,
+                QBones = ConvertVector4Array(contentSkin.QBones),
+                TBones = ConvertVector3Array(contentSkin.TBones)
+            };
+        }
+
+        /// <summary>
+        /// Converts Content.MDL.MDLDanglymeshData to Core.MDL.MDLDanglymeshData.
+        /// </summary>
+        private CoreMDLDanglymeshData ConvertDanglymesh(ContentMDLDanglymeshData contentDanglymesh)
+        {
+            if (contentDanglymesh == null)
+            {
+                return null;
+            }
+
+            return new CoreMDLDanglymeshData
+            {
+                Constraints = contentDanglymesh.Constraints != null ? (float[])contentDanglymesh.Constraints.Clone() : null,
+                Displacement = contentDanglymesh.Displacement,
+                Tightness = contentDanglymesh.Tightness,
+                Period = contentDanglymesh.Period
+            };
+        }
+
+        /// <summary>
+        /// Converts Content.MDL.MDLLightData to Core.MDL.MDLLightData.
+        /// </summary>
+        private CoreMDLLightData ConvertLight(ContentMDLLightData contentLight)
+        {
+            if (contentLight == null)
+            {
+                return null;
+            }
+
+            return new CoreMDLLightData
+            {
+                FlareRadius = contentLight.FlareRadius,
+                LightPriority = contentLight.LightPriority,
+                AmbientOnly = contentLight.AmbientOnly,
+                DynamicType = contentLight.DynamicType,
+                AffectDynamic = contentLight.AffectDynamic,
+                Shadow = contentLight.Shadow,
+                Flare = contentLight.Flare,
+                FadingLight = contentLight.FadingLight,
+                FlareSizes = contentLight.FlareSizes != null ? (float[])contentLight.FlareSizes.Clone() : null,
+                FlarePositions = contentLight.FlarePositions != null ? (float[])contentLight.FlarePositions.Clone() : null,
+                FlareColorShifts = ConvertVector3Array(contentLight.FlareColorShifts),
+                FlareTextures = contentLight.FlareTextures != null ? (string[])contentLight.FlareTextures.Clone() : null
+            };
+        }
+
+        /// <summary>
+        /// Converts Content.MDL.MDLEmitterData to Core.MDL.MDLEmitterData.
+        /// </summary>
+        private CoreMDLEmitterData ConvertEmitter(ContentMDLEmitterData contentEmitter)
+        {
+            if (contentEmitter == null)
+            {
+                return null;
+            }
+
+            return new CoreMDLEmitterData
+            {
+                DeadSpace = contentEmitter.DeadSpace,
+                BlastRadius = contentEmitter.BlastRadius,
+                BlastLength = contentEmitter.BlastLength,
+                BranchCount = contentEmitter.BranchCount,
+                ControlPtSmoothing = contentEmitter.ControlPtSmoothing,
+                XGrid = contentEmitter.XGrid,
+                YGrid = contentEmitter.YGrid,
+                UpdateScript = contentEmitter.UpdateScript,
+                RenderScript = contentEmitter.RenderScript,
+                BlendScript = contentEmitter.BlendScript,
+                Texture = contentEmitter.Texture,
+                ChunkName = contentEmitter.ChunkName,
+                TwoSidedTex = contentEmitter.TwoSidedTex,
+                Loop = contentEmitter.Loop,
+                RenderOrder = contentEmitter.RenderOrder,
+                FrameBlending = contentEmitter.FrameBlending,
+                DepthTexture = contentEmitter.DepthTexture,
+                Flags = contentEmitter.Flags
+            };
+        }
+
+        /// <summary>
+        /// Converts Content.MDL.MDLReferenceData to Core.MDL.MDLReferenceData.
+        /// </summary>
+        private CoreMDLReferenceData ConvertReference(ContentMDLReferenceData contentReference)
+        {
+            if (contentReference == null)
+            {
+                return null;
+            }
+
+            return new CoreMDLReferenceData
+            {
+                ModelResRef = contentReference.ModelResRef,
+                Reattachable = contentReference.Reattachable
+            };
+        }
+
+        /// <summary>
+        /// Converts Content.MDL.Vector3Data array to Core.MDL.Vector3Data array.
+        /// </summary>
+        private CoreVector3Data[] ConvertVector3Array(ContentVector3Data[] contentVectors)
+        {
+            if (contentVectors == null || contentVectors.Length == 0)
+            {
+                return null;
+            }
+
+            var coreVectors = new CoreVector3Data[contentVectors.Length];
+            for (int i = 0; i < contentVectors.Length; i++)
+            {
+                var contentVec = contentVectors[i];
+                coreVectors[i] = new CoreVector3Data(contentVec.X, contentVec.Y, contentVec.Z);
+            }
+            return coreVectors;
+        }
+
+        /// <summary>
+        /// Converts Content.MDL.Vector2Data array to Core.MDL.Vector2Data array.
+        /// </summary>
+        private CoreVector2Data[] ConvertVector2Array(ContentVector2Data[] contentVectors)
+        {
+            if (contentVectors == null || contentVectors.Length == 0)
+            {
+                return null;
+            }
+
+            var coreVectors = new CoreVector2Data[contentVectors.Length];
+            for (int i = 0; i < contentVectors.Length; i++)
+            {
+                var contentVec = contentVectors[i];
+                coreVectors[i] = new CoreVector2Data(contentVec.X, contentVec.Y);
+            }
+            return coreVectors;
+        }
+
+        /// <summary>
+        /// Converts Content.MDL.Vector4Data array to Core.MDL.Vector4Data array.
+        /// </summary>
+        private CoreVector4Data[] ConvertVector4Array(ContentVector4Data[] contentVectors)
+        {
+            if (contentVectors == null || contentVectors.Length == 0)
+            {
+                return null;
+            }
+
+            var coreVectors = new CoreVector4Data[contentVectors.Length];
+            for (int i = 0; i < contentVectors.Length; i++)
+            {
+                var contentVec = contentVectors[i];
+                coreVectors[i] = new CoreVector4Data(contentVec.X, contentVec.Y, contentVec.Z, contentVec.W);
+            }
+            return coreVectors;
         }
     }
 }
