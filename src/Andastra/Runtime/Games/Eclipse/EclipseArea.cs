@@ -1553,7 +1553,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 //     }
                 // }
 
-                // For now, initialize empty list until exact data structure is determined
+                // TODO: STUB - For now, initialize empty list until exact data structure is determined
                 // This ensures the rendering code can run without errors
                 _staticObjects = new List<StaticObjectInfo>();
             }
@@ -1804,7 +1804,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     // Check for fog from ARE file fog properties (fog is part of weather system)
                     // If fog is enabled in ARE file, use Fog weather type
                     // Note: Fog properties would need to be read from ARE file in LoadAreaProperties
-                    // For now, default to no weather if no rain/snow/lightning chances
+                    // TODO: STUB - For now, default to no weather if no rain/snow/lightning chances
                     defaultWeather = WeatherType.None;
                     weatherIntensity = 0.0f;
                 }
@@ -1861,7 +1861,7 @@ namespace Andastra.Runtime.Games.Eclipse
             {
                 // Check if ARE file contains audio zone definitions
                 // Based on ARE format: Audio zone definitions may be in a list (AudioZone_List)
-                // For now, check if we can parse audio zones from _areaData
+                // TODO: STUB - For now, check if we can parse audio zones from _areaData
                 // If not available, create default zone from area bounds
                 bool audioZonesCreated = false;
 
@@ -2039,7 +2039,7 @@ namespace Andastra.Runtime.Games.Eclipse
             // 3. Load particle emitter definitions from ARE file (future enhancement)
             // Based on daorigins.exe: Particle emitters can be defined in ARE file
             // Particle emitter definitions would be loaded here and created in particle system
-            // For now, particle emitters are created dynamically by InitializeInteractiveElements()
+            // TODO: STUB - For now, particle emitters are created dynamically by InitializeInteractiveElements()
         }
 
         /// <summary>
@@ -2230,7 +2230,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 // Check for weather transition triggers in area data
                 // Based on daorigins.exe: Weather transitions can be scripted or time-based
                 // This would typically be configured in area data or module scripts
-                // For now, we mark the area as supporting weather transitions
+                // TODO: STUB - For now, we mark the area as supporting weather transitions
                 SetData("SupportsWeatherTransitions", true);
             }
 
@@ -2878,7 +2878,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 {
                     // Try to get bounds from renderable component
                     // Note: IRenderableComponent interface may need Bounds property or GetBounds() method
-                    // For now, we'll use type-based defaults and check for entity data
+                    // TODO: STUB - For now, we'll use type-based defaults and check for entity data
                     if (entity.HasData("MeshBounds"))
                     {
                         Vector3 meshBounds = entity.GetData<Vector3>("MeshBounds", Vector3.Zero);
@@ -2900,7 +2900,7 @@ namespace Andastra.Runtime.Games.Eclipse
                             // Creatures: Default radius 0.5f (medium creature size)
                             // Based on EclipseCreatureCollisionDetector: Default radius 0.5f from appearance.2da hitradius
                             // In a full implementation, would query collision detector for actual creature bounding box
-                            // For now, use default creature size (spherical approximation)
+                            // TODO: STUB - For now, use default creature size (spherical approximation)
                             float creatureRadius = 0.5f;
                             
                             // Try to get creature radius from appearance data if available
@@ -3725,7 +3725,7 @@ namespace Andastra.Runtime.Games.Eclipse
             // - Cascaded shadow maps for directional lights (better quality at different distances)
             // - Cube shadow maps for point lights (6 faces for omni-directional shadows)
 
-            // For now, shadow mapping infrastructure is in place but requires:
+            // TODO: STUB - For now, shadow mapping infrastructure is in place but requires:
             // 1. Lighting system integration to query shadow-casting lights
             // 2. Shadow map texture creation and management
             // 3. Shadow rendering shader implementation
@@ -4184,7 +4184,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 // 1. Create modified vertex buffer with deformed vertex positions
                 // 2. Create modified index buffer excluding destroyed face indices
                 // 3. Render only visible, non-destroyed geometry
-                // For now, we render the entire mesh (destroyed faces are still present but marked as destroyed)
+                // TODO: STUB - For now, we render the entire mesh (destroyed faces are still present but marked as destroyed)
                 graphicsDevice.SetVertexBuffer(originalMeshData.VertexBuffer);
                 graphicsDevice.SetIndexBuffer(originalMeshData.IndexBuffer);
 
@@ -4220,7 +4220,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     }
 
                     // Get debris mesh data (would be generated from destroyed faces in full implementation)
-                    // For now, debris rendering is a placeholder - full implementation would:
+                    // TODO: STUB - For now, debris rendering is a placeholder - full implementation would:
                     // 1. Generate mesh data from destroyed face indices
                     // 2. Apply debris transform (position, rotation)
                     // 3. Render debris geometry with physics-based transform
@@ -4524,7 +4524,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 // Based on swkotor2.exe: Entities with opacity < 1.0 use alpha blending
                 IBlendState blendState = graphicsDevice.CreateBlendState();
                 // Note: Actual blend state configuration would set alpha blending parameters
-                // For now, use default blend state (implementation may need to be enhanced)
+                // TODO: STUB - For now, use default blend state (implementation may need to be enhanced)
                 graphicsDevice.SetBlendState(blendState);
             }
             else
@@ -4534,7 +4534,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Apply opacity to basic effect if supported
             // Note: BasicEffect may not directly support opacity, but we can apply it via material color
-            // For now, we'll render with the entity's world matrix (already set above)
+            // TODO: STUB - For now, we'll render with the entity's world matrix (already set above)
 
             // Set rendering states for entity geometry
             graphicsDevice.SetSamplerState(0, graphicsDevice.CreateSamplerState());
@@ -4668,7 +4668,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     {
                         // Particle rendering would be implemented here
                         // This requires particle system rendering implementation
-                        // For now, particle rendering is handled by the particle system renderer when available
+                        // TODO: STUB - For now, particle rendering is handled by the particle system renderer when available
                     }
                 }
             }
@@ -4831,7 +4831,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 if (toneMappedTarget != null)
                 {
                     // In a full implementation, this would blit the final texture to the back buffer
-                    // For now, we'll set it as the render target (assuming caller handles final output)
+                    // TODO: STUB - For now, we'll set it as the render target (assuming caller handles final output)
                     graphicsDevice.RenderTarget = toneMappedTarget;
                 }
             }
@@ -4966,7 +4966,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 // daorigins.exe: Bright pass shader extracts luminance and applies threshold
                 // Based on daorigins.exe/DragonAge2.exe: Post-processing bright pass extraction
                 // 
-                // For now, use sprite batch to copy texture (full shader implementation requires shader files)
+                // TODO: STUB - For now, use sprite batch to copy texture (full shader implementation requires shader files)
                 // The structure is complete and ready for shader integration
                 ISpriteBatch spriteBatch = graphicsDevice.CreateSpriteBatch();
                 if (spriteBatch != null && hdrInput.ColorTexture != null)
@@ -5019,7 +5019,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 // daorigins.exe: Uses separable Gaussian blur for bloom glow effect
                 // Based on daorigins.exe/DragonAge2.exe: Multi-pass Gaussian blur for post-processing
                 //
-                // For now, use sprite batch to copy texture (full shader implementation requires shader files)
+                // TODO: STUB - For now, use sprite batch to copy texture (full shader implementation requires shader files)
                 // The structure is complete and ready for shader integration
                 graphicsDevice.RenderTarget = output;
                 graphicsDevice.Clear(new Color(0, 0, 0, 0));
@@ -5077,7 +5077,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 // daorigins.exe: Additive bloom compositing for glow effect
                 // Based on daorigins.exe/DragonAge2.exe: Bloom compositing with intensity control
                 //
-                // For now, use sprite batch to composite textures (full shader implementation requires shader files)
+                // TODO: STUB - For now, use sprite batch to composite textures (full shader implementation requires shader files)
                 // The structure is complete and ready for shader integration
                 ISpriteBatch spriteBatch = graphicsDevice.CreateSpriteBatch();
                 if (spriteBatch != null && hdrScene.ColorTexture != null && bloom.ColorTexture != null)
@@ -5134,7 +5134,7 @@ namespace Andastra.Runtime.Games.Eclipse
             // Original game uses fixed lighting, but modern implementation uses HDR for realism
             // Based on daorigins.exe/DragonAge2.exe: HDR tone mapping for display conversion
             //
-            // For now, use sprite batch to copy texture (full shader implementation requires shader files)
+            // TODO: STUB - For now, use sprite batch to copy texture (full shader implementation requires shader files)
             // The structure is complete and ready for shader integration
             // Note: Tone mapping modifies the render target in-place, so we work directly on hdrInput
             // In a full implementation, this would render to a separate output render target
@@ -5170,7 +5170,7 @@ namespace Andastra.Runtime.Games.Eclipse
             // Adjusts color temperature, contrast, and saturation
             // Based on daorigins.exe/DragonAge2.exe: Color grading for artistic control
             //
-            // For now, use sprite batch to copy texture (full shader implementation requires shader files)
+            // TODO: STUB - For now, use sprite batch to copy texture (full shader implementation requires shader files)
             // The structure is complete and ready for shader integration
             // Note: Color grading modifies the render target in-place, so we work directly on input
             // In a full implementation, this would render to a separate output render target
@@ -6485,7 +6485,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                 if (finalPosition == Vector3.Zero && modifiedVertex.Displacement != Vector3.Zero)
                                 {
                                     // If ModifiedPosition is zero but Displacement is set, we'd need original position
-                                    // For now, use Displacement as the new position (full implementation would get original)
+                                    // TODO: STUB - For now, use Displacement as the new position (full implementation would get original)
                                     finalPosition = modifiedVertex.Displacement;
                                 }
 
@@ -6506,7 +6506,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
                 // Extract vertex positions and indices from original mesh data
                 // Note: In a full implementation, we would read vertex data from VertexBuffer and IndexBuffer
-                // For now, we use a helper method that attempts to extract data from cached MDL if available
+                // TODO: STUB - For now, we use a helper method that attempts to extract data from cached MDL if available
                 // TODO: PLACEHOLDER - Full implementation would read vertex/index data from GPU buffers or cache original data
                 List<Vector3> vertices = ExtractVertexPositions(originalMeshData, meshId);
                 List<int> indices = ExtractIndices(originalMeshData, meshId);
