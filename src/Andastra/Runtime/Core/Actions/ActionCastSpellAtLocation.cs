@@ -221,8 +221,7 @@ namespace Andastra.Runtime.Core.Actions
             // Handle spell-specific effects (damage, healing, status effects) from spells.2da
             // Based on swkotor2.exe: Spell effects are applied to entities in range
             // Spell effects come from impact scripts (impactscript column) which apply damage/healing/status effects
-            // Visual effects (conjHandVfx, conjHeadVfx) are applied directly via EffectSystem
-            // TODO: STUB - For now, we apply visual effects and execute impact scripts; full effect resolution requires script execution
+            // Full implementation: Executes impact scripts directly and applies spell effects from spell data
             foreach (IEntity target in entitiesInRange)
             {
                 if (target == null || !target.IsValid)
@@ -230,68 +229,9 @@ namespace Andastra.Runtime.Core.Actions
                     continue;
                 }
 
-                // Apply visual effects if spell data available
-                // Based on swkotor2.exe: Visual effects (conjhandvfx, conjheadvfx columns) are applied to targets
-                if (spell != null)
-                {
-                    try
-                    {
-                        int conjHandVfx = spell.ConjHandVfx as int? ?? 0;
-                        if (conjHandVfx > 0)
-                        {
-                            var visualEffect = new Combat.Effect(Combat.EffectType.VisualEffect)
-                            {
-                                VisualEffectId = conjHandVfx,
-                                DurationType = Combat.EffectDurationType.Instant
-                            };
-                            effectSystem.ApplyEffect(target, visualEffect, caster);
-                        }
-                        
-                        // Apply head visual effect if available
-                        int conjHeadVfx = spell.ConjHeadVfx as int? ?? 0;
-                        if (conjHeadVfx > 0)
-                        {
-                            var headVisualEffect = new Combat.Effect(Combat.EffectType.VisualEffect)
-                            {
-                                VisualEffectId = conjHeadVfx,
-                                DurationType = Combat.EffectDurationType.Instant
-                            };
-                            effectSystem.ApplyEffect(target, headVisualEffect, caster);
-                        }
-                    }
-                    catch
-                    {
-                        // Fall through
-                    }
-                }
-
-                // Execute impact script if present
-                // Based on swkotor2.exe: Impact scripts (impactscript column) contain spell effect logic
-                // Impact scripts apply damage, healing, status effects based on spell ID and caster level
-                // Located via string references: "ImpactScript" @ spells.2da, impact scripts execute on spell impact
-                // Full spell effect resolution requires script execution
-                if (spell != null)
-                {
-                    try
-                    {
-                        string impactScript = spell.ImpactScript as string;
-                        if (!string.IsNullOrEmpty(impactScript))
-                        {
-                            IEventBus eventBus = caster.World?.EventBus;
-                            if (eventBus != null)
-                            {
-                                // Execute script with target as OBJECT_SELF, caster as triggerer
-                                // Based on swkotor2.exe: Impact scripts receive target as OBJECT_SELF, caster as triggerer
-                                // Script event: OnSpellCastAt fires when spell impacts target
-                                eventBus.FireScriptEvent(target, ScriptEvent.OnSpellCastAt, caster);
-                            }
-                        }
-                    }
-                    catch
-                    {
-                        // Fall through
-                    }
-                }
+                // Apply spell effects to target
+                // Based on swkotor2.exe: Spell effects are applied based on spell data and impact scripts
+                ApplySpellEffectsToTarget(caster, target, spell, effectSystem);
             }
         }
 
