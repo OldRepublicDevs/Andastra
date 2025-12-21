@@ -604,8 +604,60 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
 
         private void StoreState(NCSInstruction instruction)
         {
+            // Store current stack state (for action queue restoration)
             _stack.StoreState();
-            // Python implementation stores action queue - simplified for now
+
+            // Based on Python implementation: store_state method collects instruction block until RETN
+            // Python: index = self._cursor_index
+            // Python: tempcursor = self._ncs.instructions[index + 2]
+            // Python: temp_index = index + 2
+            // Python: block = []
+            // Python: while tempcursor.ins_type != NCSInstructionType.RETN:
+            // Python:     block.append(tempcursor)
+            // Python:     temp_index += 1
+            // Python:     tempcursor = self._ncs.instructions[temp_index]
+            // Python: self._stack.add(DataType.ACTION, ActionStackValue(block, self._stack.state()))
+            int index = _cursorIndex;
+
+            // Start from index + 2 (skip STORE_STATE instruction and the next instruction)
+            // The next instruction after STORE_STATE is typically a jump or other control flow
+            int tempIndex = index + 2;
+            if (tempIndex >= _ncs.Instructions.Count)
+            {
+                throw new InvalidOperationException($"STORE_STATE at index {index}: Cannot find instruction block (index + 2 = {tempIndex} is out of range)");
+            }
+
+            NCSInstruction tempCursor = _ncs.Instructions[tempIndex];
+            if (tempCursor == null)
+            {
+                throw new InvalidOperationException($"STORE_STATE at index {index}: Instruction at index {tempIndex} is null");
+            }
+
+            // Collect instruction block until RETN is found
+            var block = new List<NCSInstruction>();
+            while (tempCursor.InsType != NCSInstructionType.RETN)
+            {
+                block.Add(tempCursor);
+                tempIndex++;
+                if (tempIndex >= _ncs.Instructions.Count)
+                {
+                    throw new InvalidOperationException($"STORE_STATE at index {index}: Instruction block does not end with RETN (reached end of instructions at index {tempIndex})");
+                }
+                tempCursor = _ncs.Instructions[tempIndex];
+                if (tempCursor == null)
+                {
+                    throw new InvalidOperationException($"STORE_STATE at index {index}: Instruction at index {tempIndex} is null");
+                }
+            }
+
+            // Create ActionStackValue with the instruction block and current stack state
+            // This represents a delayed action that can be executed later
+            // Based on Python: ActionStackValue(block, self._stack.state())
+            var actionStackValue = new ActionStackValue(block, _stack.State());
+
+            // Push ACTION onto stack
+            // Based on Python: self._stack.add(DataType.ACTION, ActionStackValue(...))
+            _stack.Add(DataType.Action, actionStackValue);
         }
 
         private void ExecuteAction(NCSInstruction instruction)
@@ -777,7 +829,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
         }
 
         /// <summary>
-        /// Set a mock function for testing.
+        // TODO: / Set a mock function for testing.
         /// </summary>
         public void SetMock(string functionName, Func<object[], object> mock)
         {
@@ -787,13 +839,13 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
                 throw new ArgumentException($"Function '{functionName}' does not exist.");
             }
 
-            // Python validates parameter count using signature(mock).parameters
+            // TODO:  Python validates parameter count using signature(mock).parameters
             // For C#, we can't easily inspect the Func signature, so we'll validate at call time
             _mocks[functionName] = mock;
         }
 
         /// <summary>
-        /// Remove a mock function.
+        // TODO: / Remove a mock function.
         /// </summary>
         public void RemoveMock(string functionName)
         {
@@ -862,6 +914,43 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
             FunctionName = functionName;
             ArgValues = argValues;
             ReturnValue = returnValue;
+        }
+    }
+
+    /// <summary>
+    /// Represents a stored action block with its associated stack state.
+    /// Used for delayed execution of actions in the action queue system.
+    /// Based on Python implementation: ActionStackValue(NamedTuple) with block and stack fields.
+    /// </summary>
+    /// <remarks>
+    /// Action Queue System:
+    /// - STORE_STATE instruction collects a block of instructions until RETN
+    /// - The instruction block and stack state are stored together as an ACTION value
+    /// - This allows delayed execution of actions (e.g., ActionDoCommand, ActionQueueCommand)
+    /// - When the action is executed later, the stack state is restored and the block is executed
+    /// - Based on Python implementation: ActionStackValue(block, stack) stored as DataType.ACTION
+    /// </remarks>
+    public class ActionStackValue
+    {
+        /// <summary>
+        /// The instruction block to execute (from STORE_STATE + 2 until RETN).
+        /// </summary>
+        public List<NCSInstruction> Block { get; }
+
+        /// <summary>
+        /// The stack state at the time of STORE_STATE (snapshot of stack contents).
+        /// </summary>
+        public List<StackObject> Stack { get; }
+
+        /// <summary>
+        /// Initializes a new instance of ActionStackValue.
+        /// </summary>
+        /// <param name="block">The instruction block to execute.</param>
+        /// <param name="stack">The stack state snapshot.</param>
+        public ActionStackValue(List<NCSInstruction> block, List<StackObject> stack)
+        {
+            Block = block ?? throw new ArgumentNullException(nameof(block));
+            Stack = stack ?? throw new ArgumentNullException(nameof(stack));
         }
     }
 }
