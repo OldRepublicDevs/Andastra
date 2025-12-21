@@ -85,7 +85,7 @@ namespace Andastra.Runtime.MonoGame.Textures
 
             _graphicsDevice = graphicsDevice;
             _textures = new Dictionary<string, TextureEntry>();
-            _loadingTasks = new Dictionary<string, Task>();
+            _loadingTasks = new Dictionary<string, Task<byte[]>>();
             _cancellationTokenSource = new CancellationTokenSource();
             _textureLoader = textureLoader;
             _maxVRAMBudget = maxVRAMBudget;

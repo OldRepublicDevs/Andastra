@@ -23,6 +23,7 @@ namespace HolocronToolset.Dialogs
         private ColorEdit _colorEdit;
         private TextBox _warpCodeEdit;
         private ComboBox _skyboxSelect;
+        private ComboBox _gameTypeSelect;
         private Button _okButton;
         private Button _cancelButton;
 
@@ -78,6 +79,7 @@ namespace HolocronToolset.Dialogs
             formPanel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             formPanel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             formPanel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            formPanel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
             var nameLabel = new TextBlock { Text = "Name:", VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
             _nameEdit = new LocalizedStringEdit();
@@ -119,6 +121,15 @@ namespace HolocronToolset.Dialogs
             formPanel.Children.Add(skyboxLabel);
             formPanel.Children.Add(_skyboxSelect);
 
+            var gameTypeLabel = new TextBlock { Text = "Target Game:", VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
+            _gameTypeSelect = new ComboBox();
+            Grid.SetRow(gameTypeLabel, 4);
+            Grid.SetColumn(gameTypeLabel, 0);
+            Grid.SetRow(_gameTypeSelect, 4);
+            Grid.SetColumn(_gameTypeSelect, 1);
+            formPanel.Children.Add(gameTypeLabel);
+            formPanel.Children.Add(_gameTypeSelect);
+
             mainPanel.Children.Add(formPanel);
 
             // Buttons
@@ -137,7 +148,7 @@ namespace HolocronToolset.Dialogs
         private void SetupUI()
         {
             // If controls are already initialized (e.g., by SetupProgrammaticUI), skip control finding
-            if (_nameEdit != null && _colorEdit != null && _warpCodeEdit != null && _skyboxSelect != null && _okButton != null && _cancelButton != null)
+            if (_nameEdit != null && _colorEdit != null && _warpCodeEdit != null && _skyboxSelect != null && _gameTypeSelect != null && _okButton != null && _cancelButton != null)
             {
                 return;
             }
@@ -150,6 +161,7 @@ namespace HolocronToolset.Dialogs
                 _colorEdit = this.FindControl<ColorEdit>("colorEdit");
                 _warpCodeEdit = this.FindControl<TextBox>("warpCodeEdit");
                 _skyboxSelect = this.FindControl<ComboBox>("skyboxSelect");
+                _gameTypeSelect = this.FindControl<ComboBox>("gameTypeSelect");
                 _okButton = this.FindControl<Button>("okButton");
                 _cancelButton = this.FindControl<Button>("cancelButton");
             }
@@ -245,6 +257,29 @@ namespace HolocronToolset.Dialogs
                     _skyboxSelect.SelectedIndex = 0; // Default to [None]
                 }
             }
+
+            // Populate and set target game type selector
+            if (_gameTypeSelect != null)
+            {
+                _gameTypeSelect.Items.Clear();
+                _gameTypeSelect.Items.Add("Use Installation Default");
+                _gameTypeSelect.Items.Add("Knights of the Old Republic (K1)");
+                _gameTypeSelect.Items.Add("The Sith Lords (TSL/K2)");
+
+                // Set current selection based on indoor_map.TargetGameType
+                if (_indoorMap.TargetGameType == null)
+                {
+                    _gameTypeSelect.SelectedIndex = 0; // Use Installation Default
+                }
+                else if (_indoorMap.TargetGameType == true)
+                {
+                    _gameTypeSelect.SelectedIndex = 2; // TSL/K2
+                }
+                else
+                {
+                    _gameTypeSelect.SelectedIndex = 1; // K1
+                }
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/indoor_settings.py:89-95
@@ -280,6 +315,25 @@ namespace HolocronToolset.Dialogs
                 {
                     var selectedItem = _skyboxSelect.Items[_skyboxSelect.SelectedIndex];
                     _indoorMap.Skybox = selectedItem?.ToString() ?? "";
+                }
+
+                // Get target_game_type from combo box (null = use installation default, true = TSL, false = K1)
+                if (_gameTypeSelect != null && _gameTypeSelect.SelectedIndex >= 0)
+                {
+                    var selectedItem = _gameTypeSelect.Items[_gameTypeSelect.SelectedIndex];
+                    // Items are stored with data: null, false, true for indices 0, 1, 2
+                    if (_gameTypeSelect.SelectedIndex == 0)
+                    {
+                        _indoorMap.TargetGameType = null; // Use Installation Default
+                    }
+                    else if (_gameTypeSelect.SelectedIndex == 1)
+                    {
+                        _indoorMap.TargetGameType = false; // K1
+                    }
+                    else if (_gameTypeSelect.SelectedIndex == 2)
+                    {
+                        _indoorMap.TargetGameType = true; // TSL/K2
+                    }
                 }
             }
 
