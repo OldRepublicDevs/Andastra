@@ -408,6 +408,7 @@ Based on `ResourceType.cs`, the following resource types are defined:
 **Answer**: **Override/Modules take priority over stream directories**
 
 **Evidence from Codebase** (`InstallationResourceManager.cs` default search order):
+
 1. **OVERRIDE** - Highest priority
 2. **MODULES** - Second priority
 3. **CHITIN** - Third priority
@@ -418,7 +419,8 @@ Based on `ResourceType.cs`, the following resource types are defined:
 8. **LIPS** - Lip sync files
 9. **RIMS** - Module RIM files
 
-**Conclusion**: 
+**Conclusion**:
+
 - ✅ Files in **Override** will be found before stream directories
 - ✅ Files in **Modules** will be found before stream directories
 - ⚠️ Stream directories are searched **AFTER** modules, so they act as fallback locations
@@ -512,7 +514,7 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 
 **Question**: Are DDS textures supported? What priority do they have? Can they be in modules?
 
-**Answer**: 
+**Answer**:
 
 **✅ YES - DDS is fully supported** with the following characteristics:
 
@@ -538,6 +540,7 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
   - All standard resource locations
 
 **Usage**: DDS textures work when:
+
 - Explicitly loaded via DDS-specific loading functions
 - Used in specific contexts that call DDS loader directly
 - **NOT** automatically loaded as fallback when TGA/TPC are missing
