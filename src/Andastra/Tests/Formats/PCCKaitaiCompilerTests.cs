@@ -59,19 +59,40 @@ namespace Andastra.Parsing.Tests.Formats
             if (javaCheck.ExitCode != 0)
             {
                 // Skip test if Java is not available
+                // Java is required for running the Kaitai Struct compiler (either as executable or JAR)
                 return;
             }
 
-            // Try to find Kaitai Struct compiler
-            var kscCheck = RunCommand("kaitai-struct-compiler", "--version");
-            if (kscCheck.ExitCode != 0)
+            // Try to find Kaitai Struct compiler using comprehensive search
+            // First, try to find the executable
+            string compilerPath = FindKaitaiCompiler();
+            
+            // If executable not found, try to find the JAR file
+            if (string.IsNullOrEmpty(compilerPath))
             {
-                // Try with .jar extension or check if it's in PATH
-                // TODO: STUB - For now, we'll skip if not found - in CI/CD this should be installed
+                string jarPath = FindKaitaiCompilerJar();
+                if (!string.IsNullOrEmpty(jarPath) && File.Exists(jarPath))
+                {
+                    // Test JAR execution
+                    var jarCheck = RunCommand("java", $"-jar \"{jarPath}\" --version");
+                    jarCheck.ExitCode.Should().Be(0, 
+                        $"Kaitai Struct compiler JAR should be executable. " +
+                        $"JAR path: {jarPath}, Error: {jarCheck.Error}");
+                    return;
+                }
+                
+                // Compiler not found in any location
+                // In CI/CD environments, the Kaitai Struct compiler should be installed
+                // either via package manager (e.g., apt, brew, chocolatey) or downloaded
+                // as a JAR file and referenced via KAITAI_COMPILER_JAR environment variable
                 return;
             }
 
-            kscCheck.ExitCode.Should().Be(0, "Kaitai Struct compiler should be available");
+            // Test executable availability
+            var kscCheck = RunCommand(compilerPath, "--version");
+            kscCheck.ExitCode.Should().Be(0, 
+                $"Kaitai Struct compiler should be available and executable. " +
+                $"Compiler path: {compilerPath}, Error: {kscCheck.Error}");
         }
 
         [Fact(Timeout = 300000)]
