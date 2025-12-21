@@ -144,7 +144,11 @@ namespace Andastra.Runtime.MonoGame.Backends
             _device = device;
             _device5 = device5;
             _commandQueue = commandQueue;
-            _capabilities = capabilities ?? throw new ArgumentNullException(nameof(capabilities));
+            if (capabilities == null)
+            {
+                throw new ArgumentNullException(nameof(capabilities));
+            }
+            _capabilities = capabilities;
             _resources = new Dictionary<IntPtr, IResource>();
             _nextResourceHandle = 1;
             _currentFrameIndex = 0;
@@ -597,18 +601,71 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ObjectDisposedException(nameof(D3D12Device));
             }
 
-            // TODO: IMPLEMENT - Allocate D3D12 command list
-            // - Get command allocator for current frame
-            // - Call ID3D12Device::CreateCommandList with appropriate type
-            // - Wrap in D3D12CommandList and return
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                throw new PlatformNotSupportedException("DirectX 12 command lists are only supported on Windows");
+            }
 
-            IntPtr handle = new IntPtr(_nextResourceHandle++);
-            IntPtr commandList = new IntPtr(_nextResourceHandle++); // Placeholder
-            IntPtr commandAllocator = new IntPtr(_nextResourceHandle++); // Placeholder - TODO: Create actual command allocator
-            var cmdList = new D3D12CommandList(handle, type, this, commandList, commandAllocator, _device);
-            _resources[handle] = cmdList;
+            // Map CommandListType to D3D12_COMMAND_LIST_TYPE
+            uint d3d12CommandListType = MapCommandListTypeToD3D12(type);
 
-            return cmdList;
+            // Create command allocator for this command list
+            // Each command list needs its own allocator (allocators can be reused after command lists are executed)
+            IntPtr commandAllocatorPtr = Marshal.AllocHGlobal(IntPtr.Size);
+            try
+            {
+                Guid iidCommandAllocator = IID_ID3D12CommandAllocator;
+                int hr = CallCreateCommandAllocator(_device, d3d12CommandListType, ref iidCommandAllocator, commandAllocatorPtr);
+                if (hr < 0)
+                {
+                    throw new InvalidOperationException($"CreateCommandAllocator failed with HRESULT 0x{hr:X8}");
+                }
+
+                IntPtr commandAllocator = Marshal.ReadIntPtr(commandAllocatorPtr);
+                if (commandAllocator == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("CreateCommandAllocator returned null allocator pointer");
+                }
+
+                // Create command list with the allocator
+                IntPtr commandListPtr = Marshal.AllocHGlobal(IntPtr.Size);
+                try
+                {
+                    Guid iidCommandList = IID_ID3D12GraphicsCommandList;
+                    // nodeMask: 0 for single GPU, pInitialState: NULL (no initial pipeline state)
+                    hr = CallCreateCommandList(_device, 0, d3d12CommandListType, commandAllocator, IntPtr.Zero, ref iidCommandList, commandListPtr);
+                    if (hr < 0)
+                    {
+                        // Release the allocator if command list creation fails
+                        ReleaseComObject(commandAllocator);
+                        throw new InvalidOperationException($"CreateCommandList failed with HRESULT 0x{hr:X8}");
+                    }
+
+                    IntPtr commandList = Marshal.ReadIntPtr(commandListPtr);
+                    if (commandList == IntPtr.Zero)
+                    {
+                        // Release the allocator if command list creation fails
+                        ReleaseComObject(commandAllocator);
+                        throw new InvalidOperationException("CreateCommandList returned null command list pointer");
+                    }
+
+                    // Wrap in D3D12CommandList and return
+                    IntPtr handle = new IntPtr(_nextResourceHandle++);
+                    var cmdList = new D3D12CommandList(handle, type, this, commandList, commandAllocator, _device);
+                    _resources[handle] = cmdList;
+
+                    return cmdList;
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(commandListPtr);
+                }
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(commandAllocatorPtr);
+            }
         }
 
         public ITexture CreateHandleForNativeTexture(IntPtr nativeHandle, TextureDesc desc)
@@ -1711,6 +1768,19 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static readonly Guid IID_ID3D12Fence = new Guid(0x0a753dcf, 0xc4d8, 0x4b91, 0xad, 0xf6, 0xbe, 0x5a, 0x60, 0xd9, 0x5a, 0x76);
         private static readonly Guid IID_ID3D12PipelineState = new Guid(0x765a30f3, 0xf624, 0x4c6f, 0xa8, 0x28, 0xac, 0xe9, 0xf7, 0x01, 0x72, 0x85);
 
+        // DirectX 12 Interface IDs for command list and allocator
+        // Based on DirectX 12 Command List Creation: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createcommandallocator
+        // Based on DirectX 12 Command List Creation: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createcommandlist
+        private static readonly Guid IID_ID3D12CommandAllocator = new Guid(0x6102dee4, 0xaf59, 0x4b09, 0xb9, 0x99, 0xb4, 0x4d, 0x73, 0xf0, 0x9b, 0x24);
+        private static readonly Guid IID_ID3D12GraphicsCommandList = new Guid(0x5b160d0f, 0xac1b, 0x4185, 0x8b, 0xa8, 0xb3, 0xae, 0x42, 0xa5, 0xb4, 0x55);
+
+        // DirectX 12 Command List Type constants
+        // Based on D3D12_COMMAND_LIST_TYPE enum: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ne-d3d12-d3d12_command_list_type
+        private const uint D3D12_COMMAND_LIST_TYPE_DIRECT = 0;    // Graphics/Direct command list
+        private const uint D3D12_COMMAND_LIST_TYPE_BUNDLE = 1;    // Bundle command list (not used in our enum)
+        private const uint D3D12_COMMAND_LIST_TYPE_COMPUTE = 2;   // Compute command list
+        private const uint D3D12_COMMAND_LIST_TYPE_COPY = 3;      // Copy command list
+
         /// <summary>
         /// D3D12_DESCRIPTOR_HEAP_DESC structure.
         /// Based on DirectX 12 Descriptor Heaps: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_descriptor_heap_desc
@@ -1722,6 +1792,16 @@ namespace Andastra.Runtime.MonoGame.Backends
             public uint NumDescriptors;
             public uint Flags; // D3D12_DESCRIPTOR_HEAP_FLAGS
             public uint NodeMask;
+        }
+
+        /// <summary>
+        /// D3D12_COMMAND_ALLOCATOR_DESC structure for command allocator creation.
+        /// Based on DirectX 12 Command Allocator: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_command_allocator_desc
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_COMMAND_ALLOCATOR_DESC
+        {
+            public uint Type; // D3D12_COMMAND_LIST_TYPE
         }
 
         /// <summary>
@@ -2172,6 +2252,101 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 // Note: We don't free pDescPtr here because the structure contains pointers to other allocated memory
                 // that will be freed by FreeGraphicsPipelineStateDesc
+            }
+        }
+
+        /// <summary>
+        /// Calls ID3D12Device::CreateCommandAllocator through COM vtable.
+        /// VTable index 26 for ID3D12Device.
+        /// Based on DirectX 12 Command Allocator Creation: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createcommandallocator
+        /// </summary>
+        private unsafe int CallCreateCommandAllocator(IntPtr device, uint type, ref Guid riid, IntPtr ppCommandAllocator)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return unchecked((int)0x80004001); // E_NOTIMPL - Not implemented on this platform
+            }
+
+            if (device == IntPtr.Zero || ppCommandAllocator == IntPtr.Zero)
+            {
+                return unchecked((int)0x80070057); // E_INVALIDARG
+            }
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)device;
+            if (vtable == null)
+            {
+                return unchecked((int)0x80004003); // E_POINTER
+            }
+
+            // CreateCommandAllocator is at index 26 in ID3D12Device vtable
+            IntPtr methodPtr = vtable[26];
+            if (methodPtr == IntPtr.Zero)
+            {
+                return unchecked((int)0x80004002); // E_NOINTERFACE
+            }
+
+            CreateCommandAllocatorDelegate createCommandAllocator =
+                (CreateCommandAllocatorDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CreateCommandAllocatorDelegate));
+
+            return createCommandAllocator(device, type, ref riid, ppCommandAllocator);
+        }
+
+        /// <summary>
+        /// Calls ID3D12Device::CreateCommandList through COM vtable.
+        /// VTable index 28 for ID3D12Device.
+        /// Based on DirectX 12 Command List Creation: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createcommandlist
+        /// </summary>
+        private unsafe int CallCreateCommandList(IntPtr device, uint nodeMask, uint type, IntPtr pCommandAllocator, IntPtr pInitialState, ref Guid riid, IntPtr ppCommandList)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return unchecked((int)0x80004001); // E_NOTIMPL - Not implemented on this platform
+            }
+
+            if (device == IntPtr.Zero || pCommandAllocator == IntPtr.Zero || ppCommandList == IntPtr.Zero)
+            {
+                return unchecked((int)0x80070057); // E_INVALIDARG
+            }
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)device;
+            if (vtable == null)
+            {
+                return unchecked((int)0x80004003); // E_POINTER
+            }
+
+            // CreateCommandList is at index 28 in ID3D12Device vtable
+            IntPtr methodPtr = vtable[28];
+            if (methodPtr == IntPtr.Zero)
+            {
+                return unchecked((int)0x80004002); // E_NOINTERFACE
+            }
+
+            CreateCommandListDelegate createCommandList =
+                (CreateCommandListDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CreateCommandListDelegate));
+
+            return createCommandList(device, nodeMask, type, pCommandAllocator, pInitialState, ref riid, ppCommandList);
+        }
+
+        /// <summary>
+        /// Maps CommandListType enum to D3D12_COMMAND_LIST_TYPE.
+        /// Based on DirectX 12 Command List Types: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ne-d3d12-d3d12_command_list_type
+        /// </summary>
+        private static uint MapCommandListTypeToD3D12(CommandListType type)
+        {
+            switch (type)
+            {
+                case CommandListType.Graphics:
+                    return D3D12_COMMAND_LIST_TYPE_DIRECT;
+                case CommandListType.Compute:
+                    return D3D12_COMMAND_LIST_TYPE_COMPUTE;
+                case CommandListType.Copy:
+                    return D3D12_COMMAND_LIST_TYPE_COPY;
+                default:
+                    return D3D12_COMMAND_LIST_TYPE_DIRECT; // Default to graphics/direct
             }
         }
 
@@ -2897,23 +3072,12 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         /// <summary>
         /// Frees allocated memory from D3D12_GRAPHICS_PIPELINE_STATE_DESC structure.
-        /// Note: This structure contains pointers to marshalled data that must be freed.
         /// </summary>
         private void FreeGraphicsPipelineStateDesc(ref D3D12_GRAPHICS_PIPELINE_STATE_DESC desc)
         {
-            // Free input element descriptors and their semantic name strings
-            if (desc.pInputElementDescs != IntPtr.Zero && desc.InputElementDescsCount > 0)
+            // Free input element descriptors
+            if (desc.pInputElementDescs != IntPtr.Zero)
             {
-                int elementSize = Marshal.SizeOf(typeof(D3D12_INPUT_ELEMENT_DESC));
-                for (uint i = 0; i < desc.InputElementDescsCount; i++)
-                {
-                    IntPtr elementPtr = new IntPtr(desc.pInputElementDescs.ToInt64() + i * elementSize);
-                    var element = (D3D12_INPUT_ELEMENT_DESC)Marshal.PtrToStructure(elementPtr, typeof(D3D12_INPUT_ELEMENT_DESC));
-                    if (element.SemanticName != IntPtr.Zero)
-                    {
-                        Marshal.FreeHGlobal(element.SemanticName);
-                    }
-                }
                 Marshal.FreeHGlobal(desc.pInputElementDescs);
                 desc.pInputElementDescs = IntPtr.Zero;
             }
