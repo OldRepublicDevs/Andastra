@@ -91,7 +91,7 @@ namespace Andastra.Runtime.Core.Save
         /// <summary>
         /// Local area variables.
         /// </summary>
-        public Dictionary<string, object> LocalVariables { get; set; }
+        public LocalVariableSet LocalVariables { get; set; }
 
         public AreaState()
         {
@@ -106,7 +106,7 @@ namespace Andastra.Runtime.Core.Save
             CameraStates = new List<EntityState>();
             DestroyedEntityIds = new List<uint>();
             SpawnedEntities = new List<SpawnedEntityState>();
-            LocalVariables = new Dictionary<string, object>();
+            LocalVariables = new LocalVariableSet();
         }
     }
 

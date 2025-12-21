@@ -94,6 +94,11 @@ namespace Andastra.Runtime.Games.Odyssey
         private byte _transPendNextId;
         private byte _transPendCurrId;
 
+        // Area local variables storage
+        // Based on swkotor2.exe: Area local variable storage system
+        // Area variables are stored separately from entity variables and persist across area loads
+        private Andastra.Runtime.Core.Save.LocalVariableSet _localVariables;
+
         /// <summary>
         /// Creates a new Odyssey area.
         /// </summary>
@@ -137,6 +142,10 @@ namespace Andastra.Runtime.Games.Odyssey
             _transPending = false;
             _transPendNextId = 0;
             _transPendCurrId = 0;
+
+            // Initialize area local variables storage
+            // Based on swkotor2.exe: Area variables are initialized when area is created
+            _localVariables = new Andastra.Runtime.Core.Save.LocalVariableSet();
 
             LoadAreaGeometry(areData);
             LoadEntities(gitData);
@@ -2841,6 +2850,223 @@ namespace Andastra.Runtime.Games.Odyssey
             _resRef = null;
             _displayName = null;
             _tag = null;
+
+            // Clear area local variables
+            // Based on swkotor2.exe: Area variables are cleared during unload
+            if (_localVariables != null)
+            {
+                _localVariables.Ints.Clear();
+                _localVariables.Floats.Clear();
+                _localVariables.Strings.Clear();
+                _localVariables.Objects.Clear();
+                _localVariables.Locations.Clear();
+            }
+        }
+
+        /// <summary>
+        /// Gets the area local variables storage.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Area local variable storage
+        /// Area variables are stored separately from entity variables
+        /// </remarks>
+        public Andastra.Runtime.Core.Save.LocalVariableSet GetLocalVariables()
+        {
+            if (_localVariables == null)
+            {
+                _localVariables = new Andastra.Runtime.Core.Save.LocalVariableSet();
+            }
+            return _localVariables;
+        }
+
+        /// <summary>
+        /// Sets area local integer variable.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Area variable storage system
+        /// </remarks>
+        public void SetLocalInt(string name, int value)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return;
+            }
+            if (_localVariables == null)
+            {
+                _localVariables = new Andastra.Runtime.Core.Save.LocalVariableSet();
+            }
+            _localVariables.Ints[name] = value;
+        }
+
+        /// <summary>
+        /// Gets area local integer variable.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Area variable storage system
+        /// </remarks>
+        public int GetLocalInt(string name)
+        {
+            if (string.IsNullOrEmpty(name) || _localVariables == null)
+            {
+                return 0;
+            }
+            if (_localVariables.Ints.TryGetValue(name, out int value))
+            {
+                return value;
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// Sets area local float variable.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Area variable storage system
+        /// </remarks>
+        public void SetLocalFloat(string name, float value)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return;
+            }
+            if (_localVariables == null)
+            {
+                _localVariables = new Andastra.Runtime.Core.Save.LocalVariableSet();
+            }
+            _localVariables.Floats[name] = value;
+        }
+
+        /// <summary>
+        /// Gets area local float variable.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Area variable storage system
+        /// </remarks>
+        public float GetLocalFloat(string name)
+        {
+            if (string.IsNullOrEmpty(name) || _localVariables == null)
+            {
+                return 0.0f;
+            }
+            if (_localVariables.Floats.TryGetValue(name, out float value))
+            {
+                return value;
+            }
+            return 0.0f;
+        }
+
+        /// <summary>
+        /// Sets area local string variable.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Area variable storage system
+        /// </remarks>
+        public void SetLocalString(string name, string value)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return;
+            }
+            if (_localVariables == null)
+            {
+                _localVariables = new Andastra.Runtime.Core.Save.LocalVariableSet();
+            }
+            _localVariables.Strings[name] = value ?? "";
+        }
+
+        /// <summary>
+        /// Gets area local string variable.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Area variable storage system
+        /// </remarks>
+        public string GetLocalString(string name)
+        {
+            if (string.IsNullOrEmpty(name) || _localVariables == null)
+            {
+                return "";
+            }
+            if (_localVariables.Strings.TryGetValue(name, out string value))
+            {
+                return value ?? "";
+            }
+            return "";
+        }
+
+        /// <summary>
+        /// Sets area local object reference variable.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Area variable storage system
+        /// </remarks>
+        public void SetLocalObject(string name, uint objectId)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return;
+            }
+            if (_localVariables == null)
+            {
+                _localVariables = new Andastra.Runtime.Core.Save.LocalVariableSet();
+            }
+            _localVariables.Objects[name] = objectId;
+        }
+
+        /// <summary>
+        /// Gets area local object reference variable.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Area variable storage system
+        /// </remarks>
+        public uint GetLocalObject(string name)
+        {
+            if (string.IsNullOrEmpty(name) || _localVariables == null)
+            {
+                return 0;
+            }
+            if (_localVariables.Objects.TryGetValue(name, out uint value))
+            {
+                return value;
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// Sets area local location variable.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Area variable storage system
+        /// </remarks>
+        public void SetLocalLocation(string name, Andastra.Runtime.Core.Save.SavedLocation location)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return;
+            }
+            if (_localVariables == null)
+            {
+                _localVariables = new Andastra.Runtime.Core.Save.LocalVariableSet();
+            }
+            _localVariables.Locations[name] = location;
+        }
+
+        /// <summary>
+        /// Gets area local location variable.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Area variable storage system
+        /// </remarks>
+        public Andastra.Runtime.Core.Save.SavedLocation GetLocalLocation(string name)
+        {
+            if (string.IsNullOrEmpty(name) || _localVariables == null)
+            {
+                return null;
+            }
+            if (_localVariables.Locations.TryGetValue(name, out Andastra.Runtime.Core.Save.SavedLocation value))
+            {
+                return value;
+            }
+            return null;
         }
     }
 }
