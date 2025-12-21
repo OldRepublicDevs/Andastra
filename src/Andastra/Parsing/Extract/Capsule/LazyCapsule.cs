@@ -402,6 +402,71 @@ namespace Andastra.Parsing.Extract.Capsule
             _cachedResources = null;
         }
 
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/capsule.py:329-333
+        // Original: def as_cached_erf(self, erf_type: ERFType | None = None) -> ERF:
+        /// <summary>
+        /// Converts this lazy capsule to a fully-loaded ERF by loading all resources into memory.
+        /// </summary>
+        public ERF AsCachedErf(ERFType? erfType = null)
+        {
+            ERFType type = erfType ?? DetermineErfType();
+            ERF erf = new ERF(type);
+            foreach (FileResource resource in Resources())
+            {
+                byte[] data = resource.Data();
+                erf.SetData(resource.ResName, resource.ResType, data);
+            }
+            return erf;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/capsule.py:335-339
+        // Original: def as_cached_rim(self) -> RIM:
+        /// <summary>
+        /// Converts this lazy capsule to a fully-loaded RIM by loading all resources into memory.
+        /// </summary>
+        public RIM AsCachedRim()
+        {
+            RIM rim = new RIM();
+            foreach (FileResource resource in Resources())
+            {
+                byte[] data = resource.Data();
+                rim.SetData(resource.ResName, resource.ResType, data);
+            }
+            return rim;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/capsule.py:341-346
+        // Original: def as_cached(self) -> ERF | RIM:
+        /// <summary>
+        /// Converts this lazy capsule to a fully-loaded ERF or RIM based on the file type.
+        /// </summary>
+        public object AsCached()
+        {
+            if (Andastra.Parsing.Tools.FileHelpers.IsAnyErfTypeFile(_filepath))
+            {
+                return AsCachedErf();
+            }
+            else
+            {
+                return AsCachedRim();
+            }
+        }
+
+        // Helper method to determine ERFType from capsule type
+        private ERFType DetermineErfType()
+        {
+            switch (_capsuleType)
+            {
+                case CapsuleType.ERF:
+                    return ERFType.ERF;
+                case CapsuleType.MOD:
+                case CapsuleType.SAV:
+                    return ERFType.MOD; // SAV files use MOD format
+                default:
+                    return ERFType.ERF; // Default fallback
+            }
+        }
+
         /// <summary>
         /// Converts this lazy capsule to a fully-loaded Capsule.
         /// </summary>

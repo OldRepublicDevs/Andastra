@@ -234,21 +234,14 @@ namespace Andastra.Parsing.Resource
             {
                 try
                 {
-                    // LazyCapsule.as_cached() needs to be implemented
-                    // TODO: STUB - For now, try to load as ERF or RIM
-                    return ERFAuto.ReadErf(lazyCapsule.FilePath);
+                    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/salvage.py:262
+                    // Original: return capsule_obj.as_cached()
+                    return lazyCapsule.AsCached();
                 }
-                catch
+                catch (Exception ex)
                 {
-                    try
-                    {
-                        return RIMAuto.ReadRim(lazyCapsule.FilePath);
-                    }
-                    catch
-                    {
-                        new RobustLogger().Warning($"Corrupted LazyCapsule object passed to `validate_capsule` could not be loaded into memory");
-                        return null;
-                    }
+                    new RobustLogger().Warning($"Corrupted LazyCapsule object passed to `validate_capsule` could not be loaded into memory: {ex.Message}");
+                    return null;
                 }
             }
 
