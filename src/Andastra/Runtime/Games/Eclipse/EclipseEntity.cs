@@ -1254,8 +1254,36 @@ namespace Andastra.Runtime.Games.Eclipse
                         transformComponent.Position = new System.Numerics.Vector3(x, y, z);
                         transformComponent.Facing = facing;
                         transformComponent.Scale = new System.Numerics.Vector3(scaleX, scaleY, scaleZ);
-                        // TODO: STUB - Parent reference restoration would require entity lookup by ObjectId
-                        // This is handled by the save system after all entities are deserialized
+                        
+                        // Restore parent reference by looking up entity by ObjectId
+                        // Based on daorigins.exe and DragonAge2.exe: Parent references are restored during entity deserialization
+                        // Parent entity lookup: Uses World.GetEntity to find parent entity by ObjectId
+                        // If parent hasn't been deserialized yet, store ObjectId for later restoration
+                        if (parentObjectId != 0)
+                        {
+                            // Try immediate lookup if World is available and parent entity is already loaded
+                            if (_world != null)
+                            {
+                                IEntity parentEntity = _world.GetEntity(parentObjectId);
+                                if (parentEntity != null && parentEntity.IsValid)
+                                {
+                                    // Parent found - restore reference immediately
+                                    transformComponent.Parent = parentEntity;
+                                }
+                                else
+                                {
+                                    // Parent not found yet - store ObjectId for later restoration
+                                    // This matches the pattern used by OdysseyEntity and AuroraEntity
+                                    // The save system will restore parent references after all entities are deserialized
+                                    SetData("_ParentObjectId", parentObjectId);
+                                }
+                            }
+                            else
+                            {
+                                // World not available - store ObjectId for later restoration
+                                SetData("_ParentObjectId", parentObjectId);
+                            }
+                        }
                     }
                 }
 
@@ -1663,6 +1691,76 @@ namespace Andastra.Runtime.Games.Eclipse
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Restores parent references after all entities have been deserialized.
+        /// </summary>
+        /// <remarks>
+        /// Based on daorigins.exe and DragonAge2.exe: Parent references are restored after all entities are loaded.
+        /// This method should be called by the save system after all entities have been deserialized.
+        /// Looks up parent entity by ObjectId stored in _ParentObjectId data field and sets transform component parent.
+        /// 
+        /// Parent Reference Restoration:
+        /// - Reads _ParentObjectId from entity's data dictionary
+        /// - Looks up parent entity using World.GetEntity(parentObjectId)
+        /// - Sets transform component parent if parent entity is found and valid
+        /// - Clears _ParentObjectId from data dictionary after restoration
+        /// 
+        /// This matches the pattern used by OdysseyEntity and AuroraEntity for parent reference restoration.
+        /// </remarks>
+        public void RestoreParentReference()
+        {
+            // Check if we have a stored parent ObjectId
+            object parentObjectIdObj = GetData("_ParentObjectId");
+            if (parentObjectIdObj == null)
+            {
+                // No stored parent ObjectId - nothing to restore
+                return;
+            }
+
+            // Get parent ObjectId (should be uint, but handle int conversion for safety)
+            uint parentObjectId = 0;
+            if (parentObjectIdObj is uint parentId)
+            {
+                parentObjectId = parentId;
+            }
+            else if (parentObjectIdObj is int parentIdInt)
+            {
+                parentObjectId = (uint)parentIdInt;
+            }
+            else
+            {
+                // Invalid type - clear and return
+                SetData("_ParentObjectId", null);
+                return;
+            }
+
+            if (parentObjectId == 0)
+            {
+                // Invalid ObjectId - clear and return
+                SetData("_ParentObjectId", null);
+                return;
+            }
+
+            // Look up parent entity
+            if (_world != null)
+            {
+                IEntity parentEntity = _world.GetEntity(parentObjectId);
+                if (parentEntity != null && parentEntity.IsValid)
+                {
+                    // Parent found - restore reference
+                    var transformComponent = GetComponent<ITransformComponent>();
+                    if (transformComponent != null)
+                    {
+                        transformComponent.Parent = parentEntity;
+                    }
+                }
+            }
+
+            // Clear stored parent ObjectId after restoration attempt
+            // This ensures we don't try to restore it again
+            SetData("_ParentObjectId", null);
         }
     }
 
