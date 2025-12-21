@@ -1606,8 +1606,6 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
         private static extern bool wglMakeCurrent(IntPtr hdc, IntPtr hglrc);
 
         #endregion
-
-        #endregion
     }
 }
 
