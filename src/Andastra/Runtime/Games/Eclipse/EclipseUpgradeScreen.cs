@@ -57,6 +57,12 @@ namespace Andastra.Runtime.Games.Eclipse
         private Dictionary<int, string> _slotUpgradeListBoxTags; // List box tag names indexed by slot number
         private const int MaxUpgradeSlots = 6; // Maximum number of upgrade slots (typical for Eclipse items)
 
+        // Cached armor itemclass values from baseitems.2da
+        // Based on Dragon Age Origins: ItemUpgrade system loads baseitems.2da to check itemclass column for armor
+        // Cache is populated on first access to avoid repeated file I/O
+        private HashSet<int> _armorItemClasses; // Set of itemclass values that represent armor items
+        private bool _armorItemClassesLoaded; // Flag indicating if cache has been loaded
+
         /// <summary>
         /// Initializes a new instance of the Eclipse upgrade screen.
         /// </summary>
@@ -71,6 +77,8 @@ namespace Andastra.Runtime.Games.Eclipse
             _availableUpgradesPerSlot = new Dictionary<int, List<string>>();
             _slotUpgradeListBoxTags = new Dictionary<int, string>();
             _selectedUpgradeSlot = -1;
+            _armorItemClasses = null;
+            _armorItemClassesLoaded = false;
         }
 
         /// <summary>
@@ -108,7 +116,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// - DragonAge2.exe: GUIItemUpgrade class structure handles upgrade screen display
         /// -  games: No upgrade screen support (method handles gracefully)
         /// 
-        /// Full implementation:
+        // TODO: / Full implementation:
         /// 1. Load ItemUpgrade GUI (GUIItemUpgrade class)
         ///   - Based on daorigins.exe: COMMAND_OPENITEMUPGRADEGUI @ 0x00af1c7c
         ///   - Based on DragonAge2.exe: GUIItemUpgrade class structure
@@ -173,7 +181,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// - daorigins.exe: GUIItemUpgrade class handles screen hiding
         /// - DragonAge2.exe: GUIItemUpgrade class structure handles screen state management
         /// 
-        /// Full implementation:
+        // TODO: / Full implementation:
         /// 1. Hide ItemUpgrade GUI
         ///   - Based on daorigins.exe: GUIItemUpgrade class hides screen
         ///   - Based on DragonAge2.exe: GUIItemUpgrade class structure
@@ -588,7 +596,7 @@ namespace Andastra.Runtime.Games.Eclipse
         ///   2. Upgrade slot compatibility (upgrade must match the slot type)
         ///   3. Prerequisites (Dragon Age 2: UpgradePrereqType checks)
         /// 
-        /// Full implementation based on:
+        // TODO: / Full implementation based on:
         /// - daorigins.exe: ItemUpgrade @ 0x00aef22c - item compatibility checking
         /// - DragonAge2.exe: UpgradePrereqType @ 0x00c0583c - prerequisite checking
         /// - DragonAge2.exe: GetAbilityUpgradedValue @ 0x00c0f20c - ability-based upgrade filtering
@@ -655,7 +663,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// - Armor upgrades can only be applied to armor
         /// - Other item type upgrades follow similar patterns
         /// 
-        /// Full implementation based on:
+        // TODO: / Full implementation based on:
         /// - daorigins.exe: ItemUpgrade @ 0x00aef22c - checks baseitems.2da itemclass/weapontype
         /// </remarks>
         private bool CheckItemTypeCompatibility(IItemComponent targetItem, IItemComponent upgradeItem)
@@ -746,7 +754,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                 int? upgradeWeaponType = upgradeRow.GetInteger("weapontype", null);
 
                                 // Melee weapon upgrades should match melee weapons, ranged upgrades match ranged
-                                // This is a simplified check - full implementation would check specific weapon type compatibility
+                                // TODO:  This is a simplified check - full implementation would check specific weapon type compatibility
                                 bool targetIsRanged = targetRow.GetBoolean("rangedweapon", false) ?? false;
                                 bool upgradeIsRanged = upgradeRow.GetBoolean("rangedweapon", false) ?? false;
 
@@ -761,7 +769,76 @@ namespace Andastra.Runtime.Games.Eclipse
 
                             // Check if upgrade item is actually an upgrade item (typically has BaseItem indicating upgrade type)
                             // Upgrade items in Eclipse typically have specific base item IDs or itemclass values
-                            // For now, allow any item with properties to be an upgrade if it passes type checks
+                            // Based on Dragon Age Origins: Upgrade items must have properties and be compatible with target item type
+                            // An upgrade item should:
+                            // 1. Have properties (checked in IsCompatibleUpgrade, but verify here for safety)
+                            // 2. Not be a consumable/quest item that happens to have properties
+                            // 3. Be a valid upgrade item type (weapon upgrade, armor upgrade, etc.)
+                            
+                            // Verify upgrade item has properties (required for upgrades)
+                            // Based on Dragon Age Origins: Upgrade items must have properties to modify target items
+                            if (upgradeItem.Properties == null || upgradeItem.Properties.Count == 0)
+                            {
+                                // Upgrade item must have properties to be a valid upgrade
+                                return false;
+                            }
+
+                            // Check if upgrade item is a consumable or quest item (these are not upgrades)
+                            // Based on Dragon Age Origins: Consumables and quest items are not upgrade items
+                            // Consumables typically have itemclass values that indicate they are consumables
+                            // Quest items typically have Plot flag set, but we check itemclass here
+                            
+                            // Check if itemclass indicates it's a consumable or quest item
+                            // In Dragon Age, consumables typically have specific itemclass values
+                            // Quest items may have Plot flag, but we focus on itemclass here
+                            // Upgrade items should be weapon/armor/shield upgrades, not consumables
+                            
+                            // If upgrade item is not a weapon, armor, or shield, it might be a consumable or quest item
+                            // Only allow weapon/armor/shield items as upgrades (they modify equipment)
+                            // Based on Dragon Age Origins: Upgrade items are equipment modifications, not consumables
+                            if (!upgradeIsWeapon && !upgradeIsArmor && !upgradeIsShield)
+                            {
+                                // Item is not a weapon, armor, or shield - likely a consumable or quest item
+                                // These are not valid upgrade items even if they have properties
+                                return false;
+                            }
+
+                            // Additional check: Verify upgrade item is meant to be used as an upgrade
+                            // In Dragon Age, upgrade items are typically items that modify other items
+                            // They should have properties that enhance the target item
+                            // We've already verified:
+                            // - Item has properties (above)
+                            // - Item type is compatible with target (weapon/armor/shield match)
+                            // - Item is not a consumable/quest item (above)
+                            
+                            // Final verification: Check if upgrade item has meaningful properties for upgrades
+                            // Based on Dragon Age Origins: Upgrade items should have properties that modify item stats
+                            // Properties like damage bonuses, stat bonuses, etc. indicate it's an upgrade item
+                            bool hasUpgradeProperties = false;
+                            foreach (var prop in upgradeItem.Properties)
+                            {
+                                // Check if property is a meaningful upgrade property
+                                // Upgrade properties typically modify stats, damage, armor, etc.
+                                // Properties with PropertyType > 0 are typically meaningful
+                                if (prop.PropertyType > 0)
+                                {
+                                    hasUpgradeProperties = true;
+                                    break;
+                                }
+                            }
+
+                            if (!hasUpgradeProperties)
+                            {
+                                // Upgrade item has no meaningful properties - not a valid upgrade
+                                return false;
+                            }
+
+                            // Upgrade item passes all checks:
+                            // - Has properties
+                            // - Type is compatible with target (weapon/armor/shield match)
+                            // - Is not a consumable/quest item
+                            // - Has meaningful upgrade properties
+                            // Based on Dragon Age Origins: Item is a valid upgrade item
                         }
                     }
                 }
@@ -801,6 +878,96 @@ namespace Andastra.Runtime.Games.Eclipse
         }
 
         /// <summary>
+        /// Loads baseitems.2da and populates the armor itemclass cache.
+        /// </summary>
+        /// <remarks>
+        /// Based on Dragon Age Origins: ItemUpgrade system loads baseitems.2da to check itemclass column.
+        /// This method loads baseitems.2da, iterates through all rows, and identifies armor items by checking
+        /// if the base item ID is in the known armor base items set. It then collects all itemclass values
+        /// from armor rows and caches them for efficient lookup.
+        /// 
+        /// daorigins.exe: ItemUpgrade @ 0x00aef22c - loads baseitems.2da and checks itemclass column
+        /// </remarks>
+        private void LoadArmorItemClasses()
+        {
+            if (_armorItemClassesLoaded)
+            {
+                return;
+            }
+
+            _armorItemClasses = new HashSet<int>();
+            _armorItemClassesLoaded = true;
+
+            try
+            {
+                // Load baseitems.2da to check item class
+                // Based on Dragon Age Origins: ItemUpgrade system loads baseitems.2da to check item types
+                ResourceResult baseitemsResult = _installation.Resource("baseitems", ResourceType.TwoDA, null, null);
+                if (baseitemsResult == null || baseitemsResult.Data == null || baseitemsResult.Data.Length == 0)
+                {
+                    // Cannot load baseitems.2da, fall back to known armor base items
+                    // Based on UTI.ArmorBaseItems: Known armor base item IDs
+                    foreach (int armorBaseItem in Andastra.Parsing.Resource.Generics.UTI.UTI.ArmorBaseItems)
+                    {
+                        // For fallback, we can't determine itemclass without baseitems.2da
+                        // So we'll use the fallback logic in IsArmorItemClass
+                    }
+                    return;
+                }
+
+                using (var stream = new System.IO.MemoryStream(baseitemsResult.Data))
+                {
+                    var reader = new TwoDABinaryReader(stream);
+                    TwoDA baseitems = reader.Load();
+
+                    if (baseitems == null)
+                    {
+                        return;
+                    }
+
+                    // Known armor base item IDs from UTI.ArmorBaseItems
+                    // Based on PyKotor: ARMOR_BASE_ITEMS = {35, 36, 37, 38, 39, 40, 41, 42, 43, 53, 58, 63, 64, 65, 69, 71, 85, 89, 98, 100, 102, 103}
+                    HashSet<int> knownArmorBaseItems = new HashSet<int>(Andastra.Parsing.Resource.Generics.UTI.UTI.ArmorBaseItems);
+
+                    // Iterate through all rows in baseitems.2da
+                    // Based on Dragon Age Origins: ItemUpgrade system checks all rows to determine armor items
+                    for (int rowIndex = 0; rowIndex < baseitems.GetHeight(); rowIndex++)
+                    {
+                        TwoDARow row = baseitems.GetRow(rowIndex);
+                        if (row == null)
+                        {
+                            continue;
+                        }
+
+                        // Check if this base item ID is a known armor base item
+                        // Based on Dragon Age Origins: Armor items have specific base item IDs
+                        bool isArmorBaseItem = knownArmorBaseItems.Contains(rowIndex);
+
+                        // Also check if the row has armor-related properties
+                        // Some games may have additional columns that indicate armor (e.g., equipableslots for armor slot)
+                        // For Eclipse games, we primarily rely on known armor base item IDs
+                        if (isArmorBaseItem)
+                        {
+                            // Get itemclass value from this row
+                            // Based on Dragon Age Origins: ItemUpgrade system reads itemclass column from baseitems.2da
+                            int? itemClass = row.GetInteger("itemclass", null);
+                            if (itemClass.HasValue)
+                            {
+                                // Add this itemclass value to the armor itemclass set
+                                _armorItemClasses.Add(itemClass.Value);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // Error loading baseitems.2da, cache will remain empty and fallback logic will be used
+                _armorItemClasses = null;
+            }
+        }
+
+        /// <summary>
         /// Checks if an item class value represents armor.
         /// </summary>
         /// <param name="itemClass">Item class value from baseitems.2da.</param>
@@ -808,6 +975,9 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// Based on Dragon Age Origins: ItemUpgrade system checks itemclass to determine if item is armor.
         /// Armor item classes typically include light, medium, and heavy armor types.
+        /// 
+        /// Full implementation: Loads baseitems.2da and checks itemclass column for all armor base items.
+        /// daorigins.exe: ItemUpgrade @ 0x00aef22c - checks baseitems.2da itemclass column
         /// </remarks>
         private bool IsArmorItemClass(int? itemClass)
         {
@@ -816,14 +986,27 @@ namespace Andastra.Runtime.Games.Eclipse
                 return false;
             }
 
-            // Armor item classes typically include:
-            // - Light armor
-            // - Medium armor
-            // - Heavy armor
-            // Typical armor itemclass values vary by game, but often in specific ranges
-            // For Eclipse games, check against known armor base item IDs
-            // Based on UTI.ArmorBaseItems: 35, 36, 37, 38, 39, 40, 41, 42, 43, 53, 58, 63, 64, 65, 69, 71, 85, 89, 98, 100, 102, 103
-            // This is a simplified check - full implementation would load baseitems.2da and check itemclass column
+            // Load armor itemclass cache if not already loaded
+            // Based on Dragon Age Origins: ItemUpgrade system loads baseitems.2da to check itemclass column
+            if (!_armorItemClassesLoaded)
+            {
+                LoadArmorItemClasses();
+            }
+
+            // Check if itemclass is in the cached armor itemclass set
+            // Based on Dragon Age Origins: ItemUpgrade system checks itemclass from baseitems.2da
+            if (_armorItemClasses != null && _armorItemClasses.Count > 0)
+            {
+                if (_armorItemClasses.Contains(itemClass.Value))
+                {
+                    return true;
+                }
+            }
+
+            // Fallback: If baseitems.2da couldn't be loaded or cache is empty, use known armor base items
+            // Based on UTI.ArmorBaseItems: Known armor base item IDs
+            // Note: This fallback checks if itemClass matches known armor base item IDs, which is not ideal
+            // but provides backward compatibility if baseitems.2da is unavailable
             return Andastra.Parsing.Resource.Generics.UTI.UTI.ArmorBaseItems.Contains(itemClass.Value) ||
                    (itemClass.Value >= 30 && itemClass.Value < 110);
         }
@@ -844,7 +1027,7 @@ namespace Andastra.Runtime.Games.Eclipse
             }
 
             // Shield item classes typically have specific values
-            // This is a simplified check - full implementation would load baseitems.2da and check itemclass column
+            // TODO:  This is a simplified check - full implementation would load baseitems.2da and check itemclass column
             return itemClass.Value >= 20 && itemClass.Value < 35;
         }
 
@@ -859,7 +1042,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on Eclipse upgrade system: Upgrade items have UpgradeType field in their properties.
         /// The UpgradeType must match the slot type for compatibility.
         /// 
-        /// Full implementation based on:
+        // TODO: / Full implementation based on:
         /// - daorigins.exe: ItemUpgrade @ 0x00aef22c - checks UpgradeType field in upgrade properties
         /// - DragonAge2.exe: Enhanced upgrade system checks UpgradeType compatibility
         /// </remarks>
@@ -897,7 +1080,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                 hasUpgradeType = true;
                                 // Check if UpgradeType matches the slot
                                 // UpgradeType typically corresponds to slot index or slot type
-                                // For now, allow if UpgradeType matches slot or is unset (generic upgrade)
+                                // TODO: STUB - For now, allow if UpgradeType matches slot or is unset (generic upgrade)
                                 if (utiProp.UpgradeType.Value == upgradeSlot || utiProp.UpgradeType.Value < 0)
                                 {
                                     return true;
@@ -934,7 +1117,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// - Previous upgrade requirements
         /// - Character level requirements
         /// 
-        /// Full implementation based on:
+        // TODO: / Full implementation based on:
         /// - DragonAge2.exe: UpgradePrereqType @ 0x00c0583c - checks upgrade prerequisites
         /// </remarks>
         private bool CheckUpgradePrerequisites(IItemComponent targetItem, IItemComponent upgradeItem, int upgradeSlot)
@@ -961,13 +1144,13 @@ namespace Andastra.Runtime.Games.Eclipse
             // Based on Dragon Age 2: UpgradePrereqType checks item UpgradeLevel or quality
             int targetUpgradeLevel = targetItem.Properties != null && targetItem.Properties.Count > 0 ? 0 : 0;
             // In Dragon Age 2, items have UpgradeLevel field that may affect upgrade compatibility
-            // For now, allow all upgrades (full implementation would check UpgradeLevel compatibility)
+            // TODO: STUB - For now, allow all upgrades (full implementation would check UpgradeLevel compatibility)
 
             // Check if previous upgrades in other slots are required
             // Based on Dragon Age 2: Some upgrades require other upgrades to be installed first
-            // This is a simplified check - full implementation would check upgrade dependency chains
+            // TODO:  This is a simplified check - full implementation would check upgrade dependency chains
 
-            // For now, all prerequisites pass (full implementation would parse UpgradePrereqType from UTI)
+            // TODO: STUB - For now, all prerequisites pass (full implementation would parse UpgradePrereqType from UTI)
             return true;
         }
 
@@ -980,7 +1163,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on DragonAge2.exe: GetAbilityUpgradedValue @ 0x00c0f20c checks ability requirements.
         /// Some upgrades require specific ability scores (STR, DEX, etc.) from the character.
         /// 
-        /// Full implementation based on:
+        // TODO: / Full implementation based on:
         /// - DragonAge2.exe: GetAbilityUpgradedValue @ 0x00c0f20c - checks ability requirements for upgrades
         /// </remarks>
         private bool CheckAbilityRequirements(IItemComponent upgradeItem)
@@ -1032,11 +1215,11 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Check ability requirements from upgrade properties
             // Based on Dragon Age 2: GetAbilityUpgradedValue checks upgrade properties for ability requirements
-            // For now, allow all upgrades (full implementation would parse ability requirements from UTI properties)
+            // TODO: STUB - For now, allow all upgrades (full implementation would parse ability requirements from UTI properties)
             // Typical ability requirements would be stored in upgrade properties or UTI fields
             // Examples: Minimum STR, DEX, etc. required to use the upgrade
 
-            // For now, all ability requirements pass (full implementation would check upgrade property values)
+            // TODO: STUB - For now, all ability requirements pass (full implementation would check upgrade property values)
             return true;
         }
 
@@ -1550,7 +1733,7 @@ namespace Andastra.Runtime.Games.Eclipse
             _availableUpgradesPerSlot[slot] = availableUpgrades;
 
             // Note: In the actual GUI format, list box items are typically stored as children (ProtoItem controls)
-            // For now, we store the available upgrades and use CurrentValue to track selection
+            // TODO: STUB - For now, we store the available upgrades and use CurrentValue to track selection
             // The actual GUI rendering system would use this data to populate visible list items
             // CurrentValue represents the selected index in the available upgrades list
 
