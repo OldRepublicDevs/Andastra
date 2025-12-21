@@ -1411,6 +1411,24 @@ namespace Andastra.Runtime.MonoGame.Backends
     {
         private const string MetalFramework = "/System/Library/Frameworks/Metal.framework/Metal";
         private const string QuartzCoreFramework = "/System/Library/Frameworks/QuartzCore.framework/QuartzCore";
+        private const string LibObjC = "/usr/lib/libobjc.A.dylib";
+
+        // Objective-C runtime functions for calling Metal methods
+        // Metal uses Objective-C, so we use objc_msgSend to call instance methods
+        [DllImport(LibObjC, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr objc_msgSend_object(IntPtr receiver, IntPtr selector);
+
+        [DllImport(LibObjC, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr objc_msgSend_void(IntPtr receiver, IntPtr selector);
+
+        // objc_msgSend for copyFromTexture with struct parameters
+        // Method signature: - (void)copyFromTexture:(id<MTLTexture>)sourceTexture sourceSlice:(NSUInteger)sourceSlice sourceLevel:(NSUInteger)sourceLevel sourceOrigin:(MTLOrigin)sourceOrigin sourceSize:(MTLSize)sourceSize toTexture:(id<MTLTexture>)destinationTexture destinationSlice:(NSUInteger)destinationSlice destinationLevel:(NSUInteger)destinationLevel destinationOrigin:(MTLOrigin)destinationOrigin;
+        [DllImport(LibObjC, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void objc_msgSend_copyFromTexture(IntPtr receiver, IntPtr selector, IntPtr sourceTexture, ulong sourceSlice, ulong sourceLevel,
+            MetalOrigin sourceOrigin, MetalSize sourceSize, IntPtr destinationTexture, ulong destinationSlice, ulong destinationLevel, MetalOrigin destinationOrigin);
+
+        [DllImport(LibObjC, EntryPoint = "sel_registerName")]
+        private static extern IntPtr sel_registerName([MarshalAs(UnmanagedType.LPStr)] string str);
 
         // Device creation
         [DllImport(MetalFramework, EntryPoint = "MTLCreateSystemDefaultDevice")]
@@ -1576,18 +1594,80 @@ namespace Andastra.Runtime.MonoGame.Backends
         // Blit command encoder
         // Based on Metal API: MTLCommandBuffer::blitCommandEncoder()
         // Metal API Reference: https://developer.apple.com/documentation/metal/mtlcommandbuffer/1443003-blitcommandencoder
-        [DllImport(MetalFramework)]
-        public static extern IntPtr CreateBlitCommandEncoder(IntPtr commandBuffer);
+        // Metal uses Objective-C, so we use objc_msgSend to call the method
+        // Method signature: - (id<MTLBlitCommandEncoder>)blitCommandEncoder;
+        public static IntPtr CreateBlitCommandEncoder(IntPtr commandBuffer)
+        {
+            if (commandBuffer == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
 
-        [DllImport(MetalFramework)]
-        public static extern void ReleaseBlitCommandEncoder(IntPtr encoder);
+            try
+            {
+                IntPtr selector = sel_registerName("blitCommandEncoder");
+                return objc_msgSend_object(commandBuffer, selector);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalNative] CreateBlitCommandEncoder: Exception: {ex.Message}");
+                return IntPtr.Zero;
+            }
+        }
+
+        // Release blit command encoder
+        // Metal API: - (void)endEncoding;
+        // Note: Metal uses ARC (Automatic Reference Counting), so we don't need to explicitly release
+        // The encoder will be deallocated when the command buffer is released
+        // We call endEncoding to finalize the encoder
+        public static void ReleaseBlitCommandEncoder(IntPtr encoder)
+        {
+            if (encoder == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                // End encoding first
+                IntPtr endSelector = sel_registerName("endEncoding");
+                objc_msgSend_void(encoder, endSelector);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalNative] ReleaseBlitCommandEncoder: Exception: {ex.Message}");
+            }
+        }
 
         // Texture copying via blit command encoder
         // Based on Metal API: MTLBlitCommandEncoder::copyFromTexture:sourceSlice:sourceLevel:sourceOrigin:sourceSize:toTexture:destinationSlice:destinationLevel:destinationOrigin:
         // Metal API Reference: https://developer.apple.com/documentation/metal/mtlblitcommandencoder/1400769-copyfromtexture
-        [DllImport(MetalFramework)]
-        public static extern void CopyFromTexture(IntPtr blitEncoder, IntPtr sourceTexture, uint sourceSlice, uint sourceLevel,
-            MetalOrigin sourceOrigin, MetalSize sourceSize, IntPtr destinationTexture, uint destinationSlice, uint destinationLevel, MetalOrigin destinationOrigin);
+        // Method signature: - (void)copyFromTexture:(id<MTLTexture>)sourceTexture sourceSlice:(NSUInteger)sourceSlice sourceLevel:(NSUInteger)sourceLevel sourceOrigin:(MTLOrigin)sourceOrigin sourceSize:(MTLSize)sourceSize toTexture:(id<MTLTexture>)destinationTexture destinationSlice:(NSUInteger)destinationSlice destinationLevel:(NSUInteger)destinationLevel destinationOrigin:(MTLOrigin)destinationOrigin;
+        // Note: On 64-bit systems, NSUInteger is 64-bit (ulong), not 32-bit (uint)
+        public static void CopyFromTexture(IntPtr blitEncoder, IntPtr sourceTexture, uint sourceSlice, uint sourceLevel,
+            MetalOrigin sourceOrigin, MetalSize sourceSize, IntPtr destinationTexture, uint destinationSlice, uint destinationLevel, MetalOrigin destinationOrigin)
+        {
+            if (blitEncoder == IntPtr.Zero || sourceTexture == IntPtr.Zero || destinationTexture == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                // Register selector for copyFromTexture:sourceSlice:sourceLevel:sourceOrigin:sourceSize:toTexture:destinationSlice:destinationLevel:destinationOrigin:
+                IntPtr selector = sel_registerName("copyFromTexture:sourceSlice:sourceLevel:sourceOrigin:sourceSize:toTexture:destinationSlice:destinationLevel:destinationOrigin:");
+                
+                // Call the method
+                // Note: On 64-bit systems, NSUInteger is 64-bit (ulong), so we cast uint to ulong
+                objc_msgSend_copyFromTexture(blitEncoder, selector, sourceTexture, (ulong)sourceSlice, (ulong)sourceLevel,
+                    sourceOrigin, sourceSize, destinationTexture, (ulong)destinationSlice, (ulong)destinationLevel, destinationOrigin);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalNative] CopyFromTexture: Exception: {ex.Message}");
+                Console.WriteLine($"[MetalNative] CopyFromTexture: Stack trace: {ex.StackTrace}");
+            }
+        }
 
         // Device queries
         [DllImport(MetalFramework)]
