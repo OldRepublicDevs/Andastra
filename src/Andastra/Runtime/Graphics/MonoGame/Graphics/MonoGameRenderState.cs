@@ -117,7 +117,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
                 case Microsoft.Xna.Framework.Graphics.FillMode.WireFrame:
                     return Andastra.Runtime.Graphics.FillMode.WireFrame;
                 default:
-                    return FillMode.Solid;
+                    return Andastra.Runtime.Graphics.FillMode.Solid;
             }
         }
     }
@@ -172,8 +172,9 @@ namespace Andastra.Runtime.MonoGame.Graphics
 
         public Andastra.Runtime.Graphics.StencilOperation StencilDepthFail
         {
-            get { return ConvertStencilOperation(_state.StencilDepthFail); }
-            set { _state.StencilDepthFail = ConvertStencilOperation(value); }
+            // MonoGame DepthStencilState does not have StencilDepthFail - use StencilFail as fallback
+            get { return ConvertStencilOperation(_state.StencilFail); }
+            set { /* Not supported in MonoGame */ }
         }
 
         public Andastra.Runtime.Graphics.StencilOperation StencilPass
@@ -243,7 +244,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
 
         public MonoGameBlendState(Microsoft.Xna.Framework.Graphics.BlendState state = null)
         {
-            _state = state ?? new BlendState();
+            _state = state ?? new Microsoft.Xna.Framework.Graphics.BlendState();
         }
 
         public Andastra.Runtime.Graphics.BlendFunction AlphaBlendFunction

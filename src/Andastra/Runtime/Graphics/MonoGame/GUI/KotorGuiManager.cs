@@ -820,13 +820,10 @@ namespace Andastra.Runtime.MonoGame.GUI
                     GraphicsVector2 textSize = font.MeasureString(text);
 
                     // Calculate text position based on alignment
-                    XnaVector2 textPos = CalculateTextPosition(button.GuiText.Alignment, position, size, new XnaVector2(textSize.X, textSize.Y)); 
-                        new GraphicsVector2(position.X, position.Y), 
-                        new GraphicsVector2(size.X, size.Y), 
-                        new GraphicsVector2(textSize.X, textSize.Y));
+                    XnaVector2 textPos = CalculateTextPosition(button.GuiText.Alignment, position, size, new XnaVector2(textSize.X, textSize.Y));
 
-                    // Render text using bitmap font (convert Graphics.Vector2 to XnaVector2)
-                    RenderBitmapText(font, text, new XnaVector2(textPos.X, textPos.Y), textColor);
+                    // Render text using bitmap font
+                    RenderBitmapText(font, text, textPos, textColor);
                 }
             }
         }
@@ -862,16 +859,13 @@ namespace Andastra.Runtime.MonoGame.GUI
                 if (font != null)
                 {
                     // Measure text size
-                    System.Numerics.Vector2 textSize = font.MeasureString(text);
+                    GraphicsVector2 textSize = font.MeasureString(text);
 
-                    // Calculate text position based on alignment (convert to Graphics.Vector2)
-                    GraphicsVector2 textPos = CalculateTextPosition(label.GuiText.Alignment, 
-                        new GraphicsVector2(position.X, position.Y), 
-                        new GraphicsVector2(size.X, size.Y), 
-                        new GraphicsVector2(textSize.X, textSize.Y));
+                    // Calculate text position based on alignment
+                    XnaVector2 textPos = CalculateTextPosition(label.GuiText.Alignment, position, size, new XnaVector2(textSize.X, textSize.Y));
 
-                    // Render text using bitmap font (convert Graphics.Vector2 to XnaVector2)
-                    RenderBitmapText(font, text, new XnaVector2(textPos.X, textPos.Y), textColor);
+                    // Render text using bitmap font
+                    RenderBitmapText(font, text, textPos, textColor);
                 }
             }
         }
@@ -1177,7 +1171,7 @@ namespace Andastra.Runtime.MonoGame.GUI
             if (!string.IsNullOrEmpty(itemText))
             {
                 // Use proto item's text properties if available, otherwise use defaults
-                Color textColor;
+                XnaColor textColor;
                 int alignment;
                 ResRef fontResRef;
 
@@ -1204,16 +1198,13 @@ namespace Andastra.Runtime.MonoGame.GUI
                 if (font != null)
                 {
                     // Measure text size
-                    System.Numerics.Vector2 textSize = font.MeasureString(itemText);
+                    GraphicsVector2 textSize = font.MeasureString(itemText);
 
-                    // Calculate text position based on alignment (convert to Graphics.Vector2)
-                    GraphicsVector2 textPos = CalculateTextPosition(alignment, 
-                        new GraphicsVector2(position.X, position.Y), 
-                        new GraphicsVector2(size.X, size.Y), 
-                        new GraphicsVector2(textSize.X, textSize.Y));
+                    // Calculate text position based on alignment
+                    XnaVector2 textPos = CalculateTextPosition(alignment, position, size, new XnaVector2(textSize.X, textSize.Y));
 
-                    // Render text using bitmap font (convert Graphics.Vector2 to XnaVector2)
-                    RenderBitmapText(font, itemText, new XnaVector2(textPos.X, textPos.Y), textColor);
+                    // Render text using bitmap font
+                    RenderBitmapText(font, itemText, textPos, textColor);
                 }
             }
         }
@@ -1312,14 +1303,14 @@ namespace Andastra.Runtime.MonoGame.GUI
             }
 
             // Render progress fill
-            if (progressBar.Progress != null && progressBar.MaxValue > 0)
+            if (progressBar.MaxValue > 0)
             {
                 float progress = (float)progressBar.CurrentValue / progressBar.MaxValue;
                 int fillWidth = (int)(size.X * progress);
 
-                if (fillWidth > 0 && progressBar.Progress.Fill != null && !progressBar.Progress.Fill.IsBlank())
+                if (fillWidth > 0 && progressBar.ProgressFillTexture != null && !progressBar.ProgressFillTexture.IsBlank())
                 {
-                    Texture2D progressTexture = LoadTexture(progressBar.Progress.Fill.ToString());
+                    Texture2D progressTexture = LoadTexture(progressBar.ProgressFillTexture.ToString());
                     if (progressTexture != null)
                     {
                         XnaColor tint = Microsoft.Xna.Framework.Color.White;
@@ -1835,6 +1826,56 @@ namespace Andastra.Runtime.MonoGame.GUI
             return font;
         }
 
+
+        /// <summary>
+        /// Calculates the position for text based on alignment.
+        /// </summary>
+        /// <param name="alignment">Text alignment (0=left, 1=center, 2=right, etc.).</param>
+        /// <param name="position">Control position.</param>
+        /// <param name="size">Control size.</param>
+        /// <param name="textSize">Measured text size.</param>
+        /// <returns>The calculated text position.</returns>
+        /// <remarks>
+        /// Based on swkotor.exe and swkotor2.exe: GUI text alignment calculations
+        /// Alignment values: 0=TopLeft, 1=TopCenter, 2=TopRight, 3=MiddleLeft, 4=Center, 5=MiddleRight, 6=BottomLeft, 7=BottomCenter, 8=BottomRight
+        /// </remarks>
+        private XnaVector2 CalculateTextPosition(int alignment, XnaVector2 position, XnaVector2 size, XnaVector2 textSize)
+        {
+            float x = position.X;
+            float y = position.Y;
+
+            // Horizontal alignment
+            int hAlign = alignment % 3; // 0=Left, 1=Center, 2=Right
+            switch (hAlign)
+            {
+                case 0: // Left
+                    x = position.X;
+                    break;
+                case 1: // Center
+                    x = position.X + (size.X - textSize.X) / 2.0f;
+                    break;
+                case 2: // Right
+                    x = position.X + size.X - textSize.X;
+                    break;
+            }
+
+            // Vertical alignment
+            int vAlign = alignment / 3; // 0=Top, 1=Middle, 2=Bottom
+            switch (vAlign)
+            {
+                case 0: // Top
+                    y = position.Y;
+                    break;
+                case 1: // Middle
+                    y = position.Y + (size.Y - textSize.Y) / 2.0f;
+                    break;
+                case 2: // Bottom
+                    y = position.Y + size.Y - textSize.Y;
+                    break;
+            }
+
+            return new XnaVector2(x, y);
+        }
 
         /// <summary>
         /// Renders text using a bitmap font.
