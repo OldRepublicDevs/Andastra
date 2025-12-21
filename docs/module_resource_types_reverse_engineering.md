@@ -316,18 +316,80 @@ if (iVar7 == 0) {
 
 **Module Support**: `FUN_00408bc0` calls `FUN_00407230` which searches all locations including modules, so TPC/TGA CAN be loaded from modules.
 
+## Module File Priority Order (PROVEN)
+
+### K1 (swkotor.exe) - `FUN_004094a0`
+
+**Loading Order** (lines 32-142):
+1. **`.rim`** (line 42: `FUN_00406e20(param_1,aiStack_38,4,0)`) - Loaded FIRST if flag is 0
+2. **`.mod`** (line 136: `FUN_00406e20(param_1,aiStack_38,3,2)`) - Loaded if exists (overrides `.rim`)
+3. **`_s.rim`** (line 118: `FUN_00406e20(param_1,aiStack_38,4,0)`) - Loaded if `.mod` doesn't exist (adds to `.rim`)
+
+**Duplicate Handling** (`FUN_0040e990` lines 30-91):
+- Line 36: Checks if resource with same ResRef+Type already exists
+- Line 39-91: If duplicate found AND resource is already loaded (`*(int *)((int)this_00 + 0x14) != -1`), returns 0 (ignores duplicate)
+- Line 94-101: If no duplicate OR resource not loaded, registers new resource
+
+**Result**: **FIRST resource registered wins**. Later duplicates are ignored.
+
+**Priority Order**:
+1. **`.rim`** - Registered first (if flag is 0)
+2. **`.mod`** - Registered second (if exists), **OVERRIDES** `.rim` entries
+3. **`_s.rim`** - Registered third (if `.mod` doesn't exist), **ADDS** to `.rim` entries
+
+**Answer**: If same resource exists in `.rim` and `_s.rim`, **`.rim` wins** (registered first). If same resource exists in `.rim` and `.mod`, **`.mod` wins** (registered second, overrides).
+
+### K2 (swkotor2.exe) - `FUN_004096b0`
+
+**Loading Order** (lines 36-165):
+1. **`.rim`** (line 46: `FUN_00406ef0(param_1,aiStack_58,4,0)`) - Loaded FIRST if flag is 0
+2. **`.mod`** (line 161: `FUN_00406ef0(param_1,aiStack_58,3,2)`) - Loaded if exists (overrides `.rim`)
+3. **`_s.rim`** (line 122: `FUN_00406ef0(param_1,aiStack_58,4,0)`) - Loaded if `.mod` doesn't exist (adds to `.rim`)
+4. **`_dlg.erf`** (line 147: `FUN_00406ef0(param_1,piVar3,3,2)`) - Loaded after `_s.rim` if `.mod` doesn't exist
+
+**Duplicate Handling**: Same as K1 - first registered wins.
+
+**Priority Order**:
+1. **`.rim`** - Registered first (if flag is 0)
+2. **`.mod`** - Registered second (if exists), **OVERRIDES** `.rim` entries
+3. **`_s.rim`** - Registered third (if `.mod` doesn't exist), **ADDS** to `.rim` entries
+4. **`_dlg.erf`** - Registered fourth (if `.mod` doesn't exist), **ADDS** to `.rim` and `_s.rim` entries
+
+**Answer**: 
+- If same resource exists in `.rim` and `_s.rim`, **`.rim` wins** (registered first)
+- If same resource exists in `_s.rim` and `_dlg.erf`, **`_s.rim` wins** (registered first)
+- If same resource exists in `.rim` and `.mod`, **`.mod` wins** (registered second, overrides)
+
+## Override Directory Priority (PROVEN)
+
+### K1 (swkotor.exe) - `FUN_0040f200`
+
+**Enumeration** (`FUN_005e8cf0` line 78):
+- Uses `FindFirstFileA` with pattern `"%s\\*.%s"` (line 76) - **FLAT enumeration only**
+- Line 102: Checks `dwFileAttributes & 0x10` (directory flag)
+- Line 172-199: If directory found AND `param_5 != 0`, recursively enumerates subdirectories
+- **BUT**: `FUN_0040f200` calls `FUN_005e6640` with `param_5=0` (line 32), so **NO subdirectory recursion**
+
+**Result**: **Override directory is FLAT** - only top-level files are loaded. Subfolders are **NOT** searched.
+
+### K2 (swkotor2.exe) - `FUN_00410d20`
+
+**Enumeration** (lines 78-200):
+- Line 78: `FUN_00631e60(...,-1,1,0)` - Enumerates **subdirectories** (param_5=1)
+- Line 101: `FUN_00631e60(...,-1,0,0)` - Enumerates **files in each subdirectory** (param_5=0)
+- Line 118: `FUN_00631e60(...,-1,0,0)` - Enumerates **files in root override** (param_5=0)
+- Lines 158-174: **Process root files FIRST**
+- Lines 176-200: **Process subdirectory files AFTER**
+
+**Registration Order**:
+1. **Root override files** (lines 168: `FUN_0040f270`) - Registered first
+2. **Subdirectory files** (lines 191: `FUN_0040f270`) - Registered second
+
+**Result**: **Root override files win** over subdirectory files. Subfolders ARE searched, but root files have priority.
+
 ## Multiple Module Files - Resource Resolution
 
-When the same resource exists in multiple module files (e.g., `module.rim` and `module_s.rim`), the engine uses the **first match** found in the search order:
-
-1. Resources are registered in order: `.mod` → `.rim` → `_s.rim` → `_dlg.erf` (K2)
-2. `FUN_00407230` searches locations in priority order (see above)
-3. **First match wins** - later registrations are ignored if resource already exists
-
-**Example**: If `appearances.2da` exists in both `module.rim` and `module_s.rim`:
-- First file loaded registers the resource
-- Second file's entry is skipped (duplicate ResRef+Type)
-- Engine uses the first one found
+**See "Module File Priority Order" section above for complete details with exact instruction-level proof.**
 
 ## Summary
 
@@ -346,7 +408,10 @@ When the same resource exists in multiple module files (e.g., `module.rim` and `
 
 4. **`.hak` files**: ❌ **NOT SUPPORTED** - No references found in either executable
 
-5. **Subfolders**: ❌ NOT supported - ResRef is a flat 16-byte ASCII string
+5. **Subfolders in modules**: ❌ NOT supported - ResRef is a flat 16-byte ASCII string
+   - **Override subfolders**: 
+     - **K1**: ❌ NOT supported - Only top-level override files are loaded (`FUN_0040f200` calls `FUN_005e6640` with `param_5=0`)
+     - **K2**: ✅ Supported - Subfolders ARE searched, but **root override files have priority** (`FUN_00410d20` lines 158-200)
 
 6. **Resource types**: ✅ Engine accepts ANY resource type in modules (no filtering)
    - Container format allows any resource type ID
