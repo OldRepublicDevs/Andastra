@@ -43,38 +43,53 @@ namespace Andastra.Parsing.Common
                 return false;
             }
 
+            // Must be trimmed (no leading/trailing whitespace)
             if (text != text.Trim())
             {
                 return false;
             }
 
-            if (text.Length > MaxLength)
-            {
-                return false;
-            }
-
+            // Strict ASCII validation
             if (!IsAscii(text))
             {
                 return false;
             }
 
+            // Strict maximum length validation (16 characters)
+            if (text.Length > MaxLength)
+            {
+                return false;
+            }
+
+            // Must not contain invalid characters
             return !InvalidCharacters.Any(c => text.Contains(c));
         }
 
+        /// <summary>
+        /// Validates that the string contains only ASCII characters (strict enforcement).
+        /// ASCII characters have values 0-127.
+        /// </summary>
         private static bool IsAscii(string text)
         {
-            return text.All(c => c < 128);
+            if (string.IsNullOrEmpty(text))
+            {
+                return true;
+            }
+            // Strict ASCII: all characters must be in range 0-127
+            return text.All(c => c >= 0 && c <= 127);
         }
 
         public void SetData(string text, bool truncate = false)
         {
             text = text?.Trim() ?? string.Empty;
 
+            // Strict ASCII validation - must be checked first
             if (!IsAscii(text))
             {
                 throw new InvalidEncodingException($"'{text}' must only contain ASCII characters.");
             }
 
+            // Strict maximum length validation (16 characters)
             if (text.Length > MaxLength)
             {
                 if (truncate)
@@ -87,6 +102,7 @@ namespace Andastra.Parsing.Common
                 }
             }
 
+            // Check for invalid characters (Windows filename restrictions)
             if (InvalidCharacters.Any(c => text.Contains(c)))
             {
                 throw new InvalidFormatException("ResRefs must conform to Windows filename requirements.");
