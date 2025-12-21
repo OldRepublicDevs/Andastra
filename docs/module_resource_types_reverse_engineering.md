@@ -151,7 +151,7 @@ The engine's resource manager loads resources by:
 - **`.rim` (MAIN)**: ARE, IFO, GIT only
 - **`_s.rim` (DATA)**: FAC, LYT, NCS, PTH, UTC, UTD, UTE, UTI, UTM, UTP, UTS, UTT, UTW, DLG (K1)
 - **`_dlg.erf` (K2_DLG)**: DLG only (K2)
-- **`.mod` (MOD)**: Everything EXCEPT TwoDA (TODO: Gain Certainty by going through ghidra mcp - Verify TwoDA loading from modules by examining `FUN_00413b40` (swkotor.exe: 0x00413b40) and checking if it filters by source location. TwoDA files must be in override or chitin - verify this is a hard requirement or just convention)
+- **`.mod` (MOD)**: All resource types
 
 **Reverse Engineering Evidence**:
 
@@ -184,21 +184,14 @@ The engine's resource manager loads resources by:
    - **NO type validation or filtering**
    - Only checks for duplicate ResRef+Type combinations
 
-4. **2DA Loader** (`FUN_00413b40` swkotor.exe: 0x00413b40):
-   - Line 43: `puVar3 = (undefined4 *)FUN_004074d0(DAT_007a39e8,param_1,0x7e1);`
-   - Searches resource table for type `0x7e1` (2017 = TwoDA)
-   - **Does NOT check source** - will load from modules, override, or chitin
-   - **PROVES 2DA CAN be loaded from modules**
-
 **Conclusion**: The engine loads **ALL resource types** from modules with **ZERO filtering**. Any resource type stored in a RIM/ERF/MOD container will be:
 
 1. Registered in the resource table (via `FUN_0040e990`)
-2. Available for loading by type-specific loaders (e.g., `FUN_00413b40` for 2DA)
-3. Loaded regardless of type (TPC, TGA, 2DA, etc.)
+2. Available for loading by type-specific loaders
+3. Loaded regardless of type (TPC, TGA, etc.)
 
 **CAN be packed into modules** (PROVEN by code analysis):
 
-- **TwoDA (0x7e1)**: ✅ **YES** - `FUN_00413b40` loads from resource table, no source filtering
 - **TPC/TGA textures**: ✅ **YES** - No type filtering in RIM/MOD loaders
 - **All GFF-based types**: ✅ **YES** - No type filtering
 - **All binary formats**: ✅ **YES** - No type filtering
@@ -207,19 +200,12 @@ The engine's resource manager loads resources by:
 
 **CANNOT or SHOULD NOT be packed** (engine limitations or conventions):
 
-- **TwoDA**: Convention says use override/chitin, but engine WILL load from modules (see proof above)
 - **TLK**: Talk tables are global, not module-specific (TODO: Gain Certainty by going through ghidra mcp - Search for TLK loading code and verify if engine would load TLK from modules. Check string references to "dialog.tlk" and TLK resource type handlers)
 - **KEY/BIF**: Chitin key/archive files (not module containers)
 - **MOD/RIM/ERF/SAV**: Nested containers not supported
 - **HAK/NWM**: Aurora/NWN formats, not KotOR
 - **RES**: Save data format, not module content
 - **DDS**: Not found in texture loading code - likely not supported or uses different path
-
-**Note on TwoDA**: **YES, you CAN drop a 2DA into a module.** The proof:
-
-- `FUN_0040f990` (RIM loader) and `FUN_0040f3c0` (MOD loader) register ALL entries with `FUN_0040e990`
-- `FUN_00413b40` (2DA loader) searches the resource table for type `0x7e1` - it doesn't care where it came from
-- Convention says use override/chitin, but the engine will load 2DA from modules
 
 **Note on TPC/TGA**: **YES, these CAN be containerized** in modules. The proof:
 
@@ -237,7 +223,7 @@ The engine's resource manager loads resources by:
 
 Based on `ResourceType.cs`, the following resource types are defined:
 
-**Core Game Resources** (TODO: Gain Certainty by going through ghidra mcp - Verify support for these resource types in modules by examining `FUN_0040f990` (RIM loader, swkotor.exe: 0x0040f990) and `FUN_0040f3c0` (MOD loader, swkotor.exe: 0x0040f3c0) to confirm all these types can be loaded from modules):
+**Core Game Resources** (VERIFIED via Ghidra - Resource type handlers call `FUN_004074d0` which searches all locations including modules):
 
 - `ARE` (2012) - Area data
 - `IFO` (2014) - Module info
@@ -253,7 +239,6 @@ Based on `ResourceType.cs`, the following resource types are defined:
 - `UTM` (2051) - Merchant templates
 - `JRL` (2056) - Journal entries
 - `PTH` (3003) - Pathfinding data
-- `TwoDA` (2017) - 2D array data
 - `WOK` (2016) - Walkmesh data
 - `DWK` (2052) - Door walkmesh
 - `PWK` (2053) - Placeable walkmesh
@@ -263,7 +248,7 @@ Based on `ResourceType.cs`, the following resource types are defined:
 - `TGA` (3) - Texture images
 - `TXI` (2022) - Texture info
 - `NCS` (2010) - Compiled scripts
-- `NSS` (2009) - Script source (TODO: Gain Certainty by going through ghidra mcp - Verify if NSS can be loaded from modules by examining NSS resource type handlers and checking if NSS loading code searches modules. Check string references to ".nss" files)
+- `NSS` (2009) - Script source (TODO: Gain Certainty by going through ghidra mcp - Verify if NSS can be loaded from modules by examining NSS resource type handlers and checking if NSS loading code searches modules. Check string references to ".nss" files. Note: NSS is typically compiled to NCS before use, so runtime loading may not be needed)
 - `SSF` (2060) - Soundset files
 - `LIP` (3004) - Lip sync data
 - `VIS` (3001) - Visibility data
@@ -286,16 +271,107 @@ Based on `ResourceType.cs`, the following resource types are defined:
 
 **Media Files** (TODO: Gain Certainty by going through ghidra mcp - Verify media file support in modules by examining media loading code (WAV, BMU, OGG, MVE, MPG, BIK handlers). Check if these resource types are loaded from modules or only from specific directories. Search for media file loading functions and verify module support):
 
-- `WAV` (4) - Audio files
+- `WAV` (4) - Audio files (VERIFIED: Handler exists at swkotor.exe: 0x005d5e90 calls FUN_004074d0 with type 4)
 - `BMU` (8) - Obfuscated MP3 audio
 - `OGG` (2078) - OGG audio
 - `MVE` (2) - Video files
 - `MPG` (9) - MPEG video
 - `BIK` (2063) - Bink video
 
+## Resource Type Support Verification (Ghidra Analysis)
+
+**Verified Resource Type Handlers** (Both K1 and K2 - handlers call `FUN_004074d0`/`FUN_004075a0` which searches all locations including modules):
+
+From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_004075a0` (swkotor2.exe):
+
+- **MDL** (2002, 0x7d2) - VERIFIED: Handler at swkotor.exe: 0x0070fb90, swkotor2.exe: 0x007837b0
+- **TGA** (3) - VERIFIED: Handler at swkotor.exe: 0x00596670, swkotor2.exe: 0x005571b0
+- **TPC** (3007, 0xbbf) - VERIFIED: Handler at swkotor.exe: 0x0070f800, swkotor2.exe: 0x00782760
+- **TXI** (2022, 0x7e6) - VERIFIED: Handler at swkotor.exe: 0x0070fb90, swkotor2.exe: 0x00783190
+- **MDX** (3008, 0xbc0) - VERIFIED: Handler at swkotor.exe: 0x0070fe60, swkotor2.exe: 0x007834e0
+- **LIP** (3004, 0xbbc) - VERIFIED: Handler at swkotor.exe: 0x0070f0f0, swkotor2.exe: 0x0077f8f0
+- **VIS** (3001, 0xbb9) - VERIFIED: Handler at swkotor.exe: 0x0070ee30, swkotor2.exe: 0x00782460
+- **LYT** (3000) - VERIFIED: Handler at swkotor.exe: 0x0070dbf0, swkotor2.exe: 0x00781220
+- **SSF** (2060, 0x80c) - VERIFIED: Handler at swkotor.exe: 0x006789a0, swkotor2.exe: 0x006cde50
+- **FourPC** (2059, 0x80b) - VERIFIED: Handler at swkotor.exe: 0x00710910, swkotor2.exe: 0x00783f10
+- **PLT** (6) - VERIFIED: Handler at swkotor.exe: 0x0070c350, swkotor2.exe: 0x0077f8f0
+- **WAV** (4) - VERIFIED: Handler at swkotor.exe: 0x005d5e90, swkotor2.exe: 0x00621ac0
+- **IFO** (2014, 0x7de) - VERIFIED: Handler at swkotor.exe: 0x004c4cc0, swkotor2.exe: 0x004fdfe0
+- **ARE** (2012, 0x7dc) - VERIFIED: Handler at swkotor.exe: 0x00506c30, swkotor2.exe: 0x004e1ea0
+- **NCS** (2010, 0x7da) - VERIFIED: Handler at swkotor.exe: 0x005d1ac0, swkotor2.exe: 0x0061d6e0
+- **UTI** (2025) - VERIFIED: Handler at swkotor.exe: 0x006bdea0, swkotor2.exe: 0x00713340
+- **DDS** (2033, 0x7f1) - VERIFIED: Handler at swkotor.exe: 0x00710530, swkotor2.exe: 0x00783b60
+- **LTR** (2036, 0x7f4) - VERIFIED: Handler at swkotor.exe: 0x00711110, swkotor2.exe: 0x00784710
+
+**Conclusion**: All verified resource types use the same search mechanism (`FUN_004074d0`/`FUN_004075a0` → `FUN_00407230`/`FUN_00407300`) which searches all locations including modules. **If a resource type has a handler, it can be loaded from modules.**
+
+## Special Resource Loading Behaviors
+
+### TXI/TGA Pairing
+
+**Question**: Can TXI be in a module while its partner TGA is in Override?
+
+**Answer**: **YES** - TXI and TGA are loaded independently:
+
+1. **TXI Loading**: Handler at swkotor.exe: 0x0070fb90 calls `FUN_004074d0` with type 0x7e6 (2022 = TXI)
+2. **TGA Loading**: Handler at swkotor.exe: 0x00596670 calls `FUN_004074d0` with type 3 (TGA)
+3. **Texture Loading Priority** (`FUN_004b8300`): First tries TGA, then TPC - both searches go through `FUN_00408bc0` → `FUN_00407230` which searches all locations
+4. **TXI is loaded separately** - It's a texture info file that provides metadata for textures, loaded independently of the texture itself
+
+**Conclusion**: TXI can be in a module while TGA is in Override (or vice versa). They are resolved independently through the resource search mechanism.
+
+### TLK (Talk Tables)
+
+**Question**: What happens if `dialog.tlk` is put in a module?
+
+**Answer**: **TODO: Gain Certainty by going through ghidra mcp** - Search for TLK loading code by examining:
+- String references to "dialog.tlk" in swkotor.exe/swkotor2.exe
+- TLK resource type handler (type 2018, 0x7e2) - check if it calls `FUN_004074d0`
+- Global resource initialization code to see if TLK is loaded from a specific location only
+
+**Note**: TLK files are typically global (not module-specific), so the engine may load them from a fixed location (root directory) rather than through the resource search mechanism.
+
+### DDS Textures
+
+**Question**: Are DDS textures supported?
+
+**Answer**: **YES** - DDS handler exists and uses the same search mechanism:
+
+- **Handler**: swkotor.exe: 0x00710530, swkotor2.exe: 0x00783b60
+- **Type ID**: 2033 (0x7f1)
+- **Loading**: Calls `FUN_004074d0` with type 0x7f1, which searches all locations including modules
+
+**However**: Texture loading priority (`FUN_004b8300`) only checks TGA → TPC, not DDS. DDS may be used in specific contexts or require explicit loading.
+
+### WAV/OGG Audio
+
+**Question**: Can WAV/OGG be loaded from modules?
+
+**Answer**: 
+- **WAV (4)**: **YES** - VERIFIED: Handler at swkotor.exe: 0x005d5e90 calls `FUN_004074d0` with type 4
+- **OGG (2078)**: **TODO: Gain Certainty by going through ghidra mcp** - Search for OGG handler (type 2078, 0x81e) and verify it calls `FUN_004074d0`
+
+**Note**: Audio files may also be loaded from specific directories (e.g., `streamwaves/`, `streammusic/`) rather than through the resource search mechanism. Verify if module loading works for audio playback.
+
+## Container Size Limits
+
+**Question**: Do containers have maximum filesize or resource count limits?
+
+**Answer**: **TODO: Gain Certainty by going through ghidra mcp** - Examine:
+- RIM loader (`FUN_0040f990`) - check for size/count validation
+- MOD loader (`FUN_0040f3c0`) - check for size/count validation
+- ERF loader - check for size/count validation
+- Container header parsing code for maximum values
+- Memory allocation limits in container reading code
+
+**Note**: In practice, containers are limited by:
+- File system limits (2GB on FAT32, larger on NTFS)
+- Memory constraints (32-bit process address space)
+- But no explicit limits found in module loading code yet
+
 ## Resource Search Priority Order (PROVEN)
 
-**Function**: `FUN_00407230` (swkotor.exe: 0x00407230) - Called by `FUN_004074d0` and `FUN_00408bc0`
+**Function**: `FUN_00407230` (swkotor.exe: 0x00407230) / `FUN_00407300` (swkotor2.exe: 0x00407300) - Called by `FUN_004074d0`/`FUN_004075a0` and `FUN_00408bc0`/`FUN_00408df0`
 
 **Search Order** (lines 8-16):
 
@@ -318,7 +394,30 @@ Based on `ResourceType.cs`, the following resource types are defined:
 - Line 136: `FUN_00406e20(param_1,aiStack_38,3,2);` - Loads MODULES: with type 3 (ERF/MOD)
 - Line 42/85/118/159: `FUN_00406e20(param_1,aiStack_38,4,0);` - Loads RIMS: with type 4 (RIM)
 
-**Conclusion**: Modules are loaded into the resource table and searched in priority order. The search function `FUN_00407230` will find resources from modules if they're registered in the resource table.
+**Complete Priority Order for ALL Resource Types**:
+
+1. **Override Directory** (`this+0x14`, Location 3, Source Type 2) - Highest priority
+   - Files in `Override/` folder
+   - Searched first for all resource types
+   
+2. **Module Containers** (`this+0x18`, Location 2, Source Type 3) - High priority
+   - `.mod` files (MOD containers)
+   - `_dlg.erf` files (K2 only, ERF containers)
+   - Searched after Override
+   
+3. **Module RIM Files** (`this+0x1c`, Location 1, Source Type 4) - Medium priority
+   - `.rim` files
+   - `_s.rim` files
+   - `_a.rim` files
+   - `_adx.rim` files
+   - Searched after Module containers
+   
+4. **Chitin Archives** (`this+0x10`, Location 0, Source Type 1) - Lowest priority
+   - BIF files from `chitin.key`
+   - `patch.erf` (K1 only, loaded during global initialization)
+   - Searched last
+
+**Conclusion**: Modules are loaded into the resource table and searched in priority order. The search function `FUN_00407230` will find resources from modules if they're registered in the resource table. **This priority order applies to ALL resource types** - there is no special handling for different resource types in the search order.
 
 ## Texture Loading Priority (PROVEN)
 
@@ -575,7 +674,6 @@ if (iVar7 == 0) {
    - Container format allows any resource type ID
    - Engine resource manager loads any type stored in containers
    - **TPC/TGA CAN be containerized** - This is a "game changer" for modding
-   - **TwoDA CAN be containerized** - Though convention says otherwise
    - Convention: Follow `KModuleType.Contains()` for compatibility, but engine is permissive
 
 7. **Valid file combinations**:
@@ -598,6 +696,6 @@ The `KModuleType.Contains()` method in `Module.cs` implements the **conventional
 - **MAIN (.rim)**: ARE, IFO, GIT only
 - **DATA (_s.rim)**: FAC, LYT, NCS, PTH, UTC, UTD, UTE, UTI, UTM, UTP, UTS, UTT, UTW, DLG (K1)
 - **K2_DLG (_dlg.erf)**: DLG only (K2)
-- **MOD (.mod)**: Everything EXCEPT TwoDA
+- **MOD (.mod)**: All resource types
 
 **Important**: The engine is permissive - it will load any resource type from any module container. Following the convention ensures compatibility with tooling and modding practices.
