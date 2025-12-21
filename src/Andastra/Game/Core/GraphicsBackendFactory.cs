@@ -30,9 +30,9 @@ namespace Andastra.Runtime.Game.Core
             switch (backendType)
             {
                 case GraphicsBackendType.MonoGame:
-                    return new Odyssey.MonoGame.Graphics.MonoGameGraphicsBackend();
+                    return new Andastra.Runtime.MonoGame.Graphics.MonoGameGraphicsBackend();
                 case GraphicsBackendType.Stride:
-                    return new Odyssey.Stride.Graphics.StrideGraphicsBackend();
+                    return new Andastra.Runtime.Graphics.Stride.Graphics.StrideGraphicsBackend();
                 default:
                     throw new ArgumentException("Unknown graphics backend type: " + backendType, nameof(backendType));
             }

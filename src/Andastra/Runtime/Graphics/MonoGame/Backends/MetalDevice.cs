@@ -28,23 +28,23 @@ namespace Andastra.Runtime.MonoGame.Backends
     public class MetalDevice : IDevice
     {
         private readonly MetalBackend _backend;
-        private readonly IntPtr _device; // id&lt;MTLDevice&gt;
+        private readonly IntPtr _device; // id<MTLDevice>
         private readonly GraphicsCapabilities _capabilities;
         private bool _disposed;
 
         // Resource tracking
-        private readonly Dictionary&lt;IntPtr, MetalTexture&gt; _textures;
-        private readonly Dictionary&lt;IntPtr, MetalBuffer&gt; _buffers;
-        private readonly Dictionary&lt;IntPtr, MetalSampler&gt; _samplers;
-        private readonly Dictionary&lt;IntPtr, MetalShader&gt; _shaders;
-        private readonly Dictionary&lt;IntPtr, MetalPipeline&gt; _pipelines;
-        private readonly Dictionary&lt;IntPtr, MetalAccelStruct&gt; _accelStructs;
-        private readonly Dictionary&lt;IntPtr, MetalRaytracingPipeline&gt; _raytracingPipelines;
-        private readonly Dictionary&lt;IntPtr, MetalFramebuffer&gt; _framebuffers;
-        private readonly Dictionary&lt;IntPtr, MetalBindingLayout&gt; _bindingLayouts;
-        private readonly Dictionary&lt;IntPtr, MetalBindingSet&gt; _bindingSets;
-        private readonly Dictionary&lt;IntPtr, MetalCommandList&gt; _commandLists;
-        private readonly Dictionary&lt;IntPtr, MetalFence&gt; _fences;
+        private readonly Dictionary<IntPtr, MetalTexture> _textures;
+        private readonly Dictionary<IntPtr, MetalBuffer> _buffers;
+        private readonly Dictionary<IntPtr, MetalSampler> _samplers;
+        private readonly Dictionary<IntPtr, MetalShader> _shaders;
+        private readonly Dictionary<IntPtr, MetalPipeline> _pipelines;
+        private readonly Dictionary<IntPtr, MetalAccelStruct> _accelStructs;
+        private readonly Dictionary<IntPtr, MetalRaytracingPipeline> _raytracingPipelines;
+        private readonly Dictionary<IntPtr, MetalFramebuffer> _framebuffers;
+        private readonly Dictionary<IntPtr, MetalBindingLayout> _bindingLayouts;
+        private readonly Dictionary<IntPtr, MetalBindingSet> _bindingSets;
+        private readonly Dictionary<IntPtr, MetalCommandList> _commandLists;
+        private readonly Dictionary<IntPtr, MetalFence> _fences;
 
         private uint _nextResourceHandle;
 
@@ -101,18 +101,18 @@ namespace Andastra.Runtime.MonoGame.Backends
             _capabilities = backend.Capabilities;
 
             // Initialize resource dictionaries
-            _textures = new Dictionary&lt;IntPtr, MetalTexture&gt;();
-            _buffers = new Dictionary&lt;IntPtr, MetalBuffer&gt;();
-            _samplers = new Dictionary&lt;IntPtr, MetalSampler&gt;();
-            _shaders = new Dictionary&lt;IntPtr, MetalShader&gt;();
-            _pipelines = new Dictionary&lt;IntPtr, MetalPipeline&gt;();
-            _accelStructs = new Dictionary&lt;IntPtr, MetalAccelStruct&gt;();
-            _raytracingPipelines = new Dictionary&lt;IntPtr, MetalRaytracingPipeline&gt;();
-            _framebuffers = new Dictionary&lt;IntPtr, MetalFramebuffer&gt;();
-            _bindingLayouts = new Dictionary&lt;IntPtr, MetalBindingLayout&gt;();
-            _bindingSets = new Dictionary&lt;IntPtr, MetalBindingSet&gt;();
-            _commandLists = new Dictionary&lt;IntPtr, MetalCommandList&gt;();
-            _fences = new Dictionary&lt;IntPtr, MetalFence&gt;();
+            _textures = new Dictionary<IntPtr, MetalTexture>();
+            _buffers = new Dictionary<IntPtr, MetalBuffer>();
+            _samplers = new Dictionary<IntPtr, MetalSampler>();
+            _shaders = new Dictionary<IntPtr, MetalShader>();
+            _pipelines = new Dictionary<IntPtr, MetalPipeline>();
+            _accelStructs = new Dictionary<IntPtr, MetalAccelStruct>();
+            _raytracingPipelines = new Dictionary<IntPtr, MetalRaytracingPipeline>();
+            _framebuffers = new Dictionary<IntPtr, MetalFramebuffer>();
+            _bindingLayouts = new Dictionary<IntPtr, MetalBindingLayout>();
+            _bindingSets = new Dictionary<IntPtr, MetalBindingSet>();
+            _commandLists = new Dictionary<IntPtr, MetalCommandList>();
+            _fences = new Dictionary<IntPtr, MetalFence>();
 
             _nextResourceHandle = 1;
         }
@@ -638,30 +638,11 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         #region Private Helper Methods
 
-        private TextureFormat ConvertTextureFormat(Andastra.Runtime.MonoGame.Rendering.TextureFormat format)
+        private TextureFormat ConvertTextureFormat(TextureFormat format)
         {
-            // Map IDevice TextureFormat to MetalBackend TextureFormat
-            switch (format)
-            {
-                case TextureFormat.R8G8B8A8_UNorm:
-                    return Andastra.Runtime.MonoGame.Rendering.TextureFormat.R8G8B8A8_UNorm;
-                case TextureFormat.R8G8B8A8_UNorm_SRGB:
-                    return Andastra.Runtime.MonoGame.Rendering.TextureFormat.R8G8B8A8_UNorm_SRGB;
-                case TextureFormat.B8G8R8A8_UNorm:
-                    return Andastra.Runtime.MonoGame.Rendering.TextureFormat.B8G8R8A8_UNorm;
-                case TextureFormat.B8G8R8A8_UNorm_SRGB:
-                    return Andastra.Runtime.MonoGame.Rendering.TextureFormat.B8G8R8A8_UNorm_SRGB;
-                case TextureFormat.R16G16B16A16_Float:
-                    return Andastra.Runtime.MonoGame.Rendering.TextureFormat.R16G16B16A16_Float;
-                case TextureFormat.R32G32B32A32_Float:
-                    return Andastra.Runtime.MonoGame.Rendering.TextureFormat.R32G32B32A32_Float;
-                case TextureFormat.D32_Float:
-                    return Andastra.Runtime.MonoGame.Rendering.TextureFormat.D32_Float;
-                case TextureFormat.D24_UNorm_S8_UInt:
-                    return Andastra.Runtime.MonoGame.Rendering.TextureFormat.D24_UNorm_S8_UInt;
-                default:
-                    return Andastra.Runtime.MonoGame.Rendering.TextureFormat.R8G8B8A8_UNorm;
-            }
+            // Pass-through conversion: IDevice TextureFormat to IGraphicsBackend TextureFormat
+            // Both use the same enum from Andastra.Runtime.MonoGame.Interfaces namespace
+            return format;
         }
 
         private TextureUsage ConvertTextureUsage(TextureUsage usage)
@@ -842,7 +823,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             var elements = new InputElement[layout.Attributes.Length];
-            for (int i = 0; i &lt; layout.Attributes.Length; i++)
+            for (int i = 0; i < layout.Attributes.Length; i++)
             {
                 var attr = layout.Attributes[i];
                 elements[i] = new InputElement
@@ -1192,13 +1173,13 @@ namespace Andastra.Runtime.MonoGame.Backends
     internal class MetalRaytracingPipeline : IRaytracingPipeline
     {
         private readonly IntPtr _handle;
-        private readonly RaytracingPipelineDesc _desc;
+        private readonly Interfaces.RaytracingPipelineDesc _desc;
         private readonly IntPtr _raytracingPipelineState;
         private bool _disposed;
 
-        public RaytracingPipelineDesc Desc { get { return _desc; } }
+        public Interfaces.RaytracingPipelineDesc Desc { get { return _desc; } }
 
-        public MetalRaytracingPipeline(IntPtr handle, RaytracingPipelineDesc desc, IntPtr raytracingPipelineState)
+        public MetalRaytracingPipeline(IntPtr handle, Interfaces.RaytracingPipelineDesc desc, IntPtr raytracingPipelineState)
         {
             _handle = handle;
             _desc = desc;
@@ -1742,7 +1723,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         {
             // Wait for fence value on CPU
             // Metal uses MTLEvent or MTLSharedEvent for synchronization
-            while (_completedValue &lt; value)
+            while (_completedValue < value)
             {
                 System.Threading.Thread.Sleep(1);
             }

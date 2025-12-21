@@ -488,7 +488,7 @@ namespace Andastra.Parsing.Tests.Formats
         private string DownloadAndInstallKaitaiCompiler()
         {
             const string version = "0.10";
-            const string downloadUrl = $"https://github.com/kaitai-io/kaitai_struct_compiler/releases/download/{version}/kaitai-struct-compiler-{version}.zip";
+            const string downloadUrl = "https://github.com/kaitai-io/kaitai_struct_compiler/releases/download/" + version + "/kaitai-struct-compiler-" + version + ".zip";
 
             // Determine install directory (prefer user's home directory)
             string installDir;

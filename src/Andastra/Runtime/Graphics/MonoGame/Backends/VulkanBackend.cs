@@ -82,6 +82,32 @@ namespace Andastra.Runtime.MonoGame.Backends
             VK_PHYSICAL_DEVICE_TYPE_CPU = 4,
         }
 
+        // Vulkan core structures
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkApplicationInfo
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public IntPtr pApplicationName;
+            public uint applicationVersion;
+            public IntPtr pEngineName;
+            public uint engineVersion;
+            public uint apiVersion;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkInstanceCreateInfo
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public uint flags;
+            public IntPtr pApplicationInfo;
+            public uint enabledLayerCount;
+            public IntPtr ppEnabledLayerNames;
+            public uint enabledExtensionCount;
+            public IntPtr ppEnabledExtensionNames;
+        }
+
         // Vulkan structures for physical device queries
         [StructLayout(LayoutKind.Sequential)]
         private struct VkPhysicalDeviceProperties
@@ -351,6 +377,83 @@ namespace Andastra.Runtime.MonoGame.Backends
             public VkPhysicalDeviceMemoryProperties MemoryProperties;
             public ulong DedicatedVideoMemory;
         }
+
+        // Vulkan function pointers
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkCreateInstanceDelegate(ref VkInstanceCreateInfo pCreateInfo, IntPtr pAllocator, out IntPtr pInstance);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkDestroyInstanceDelegate(IntPtr instance, IntPtr pAllocator);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkEnumeratePhysicalDevicesDelegate(IntPtr instance, ref uint pPhysicalDeviceCount, IntPtr pPhysicalDevices);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkGetPhysicalDevicePropertiesDelegate(IntPtr physicalDevice, out VkPhysicalDeviceProperties pProperties);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate IntPtr vkGetInstanceProcAddrDelegate(IntPtr instance, string pName);
+
+        // Function pointer storage
+        private static vkCreateInstanceDelegate vkCreateInstance;
+        private static vkDestroyInstanceDelegate vkDestroyInstance;
+        private static vkEnumeratePhysicalDevicesDelegate vkEnumeratePhysicalDevices;
+        private static vkGetPhysicalDevicePropertiesDelegate vkGetPhysicalDeviceProperties;
+        private static vkGetInstanceProcAddrDelegate vkGetInstanceProcAddr;
+
+        // Initialize Vulkan function pointers
+        private static void InitializeVulkanFunctions(IntPtr instance)
+        {
+            // Load vkGetInstanceProcAddr first (it's used to load other functions)
+            IntPtr vulkanModule = LoadVulkanLibrary();
+            if (vulkanModule == IntPtr.Zero)
+            {
+                throw new DllNotFoundException("Failed to load Vulkan library");
+            }
+
+            IntPtr procAddrPtr = GetProcAddress(vulkanModule, "vkGetInstanceProcAddr");
+            if (procAddrPtr == IntPtr.Zero)
+            {
+                throw new EntryPointNotFoundException("vkGetInstanceProcAddr not found");
+            }
+
+            vkGetInstanceProcAddr = Marshal.GetDelegateForFunctionPointer<vkGetInstanceProcAddrDelegate>(procAddrPtr);
+
+            // Load other functions
+            vkCreateInstance = LoadInstanceFunction<vkCreateInstanceDelegate>(instance, "vkCreateInstance");
+            vkDestroyInstance = LoadInstanceFunction<vkDestroyInstanceDelegate>(instance, "vkDestroyInstance");
+            vkEnumeratePhysicalDevices = LoadInstanceFunction<vkEnumeratePhysicalDevicesDelegate>(instance, "vkEnumeratePhysicalDevices");
+            vkGetPhysicalDeviceProperties = LoadInstanceFunction<vkGetPhysicalDevicePropertiesDelegate>(instance, "vkGetPhysicalDeviceProperties");
+        }
+
+        private static T LoadInstanceFunction<T>(IntPtr instance, string name) where T : Delegate
+        {
+            IntPtr funcPtr = vkGetInstanceProcAddr(instance, name);
+            if (funcPtr == IntPtr.Zero)
+            {
+                throw new EntryPointNotFoundException($"Vulkan function {name} not found");
+            }
+            return Marshal.GetDelegateForFunctionPointer<T>(funcPtr);
+        }
+
+        private static IntPtr LoadVulkanLibrary()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return LoadLibrary("vulkan-1.dll");
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return LoadLibrary("libvulkan.so.1");
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                return LoadLibrary("libvulkan.1.dylib");
+            }
+            return IntPtr.Zero;
+        }
+
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Ansi)]
+        private static extern IntPtr LoadLibrary(string lpFileName);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Ansi)]
+        private static extern IntPtr GetProcAddress(IntPtr hModule, string lpProcName);
 
         #endregion
 
@@ -674,19 +777,122 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         private bool CreateInstance()
         {
-            // VkApplicationInfo
-            // VkInstanceCreateInfo
-            // Enable validation layers in debug
-            // Enable required extensions:
-            //   VK_KHR_surface
-            //   VK_KHR_win32_surface (Windows)
-            //   VK_KHR_xlib_surface (Linux)
-            //   VK_EXT_debug_utils (debug)
+            try
+            {
+                // Get required extensions
+                string[] extensions = GetRequiredExtensions();
 
-            // TODO: STUB - vkCreateInstance(...)
+                // Create VkApplicationInfo
+                VkApplicationInfo appInfo = new VkApplicationInfo
+                {
+                    sType = VkStructureType.VK_STRUCTURE_TYPE_APPLICATION_INFO,
+                    pNext = IntPtr.Zero,
+                    pApplicationName = Marshal.StringToHGlobalAnsi("Andastra"),
+                    applicationVersion = MakeVersion(1, 0, 0),
+                    pEngineName = Marshal.StringToHGlobalAnsi("Andastra Engine"),
+                    engineVersion = MakeVersion(1, 0, 0),
+                    apiVersion = VK_API_VERSION_1_2
+                };
 
-            _instance = new IntPtr(1); // TODO: STUB - Placeholder
-            return true;
+                // Create VkInstanceCreateInfo
+                VkInstanceCreateInfo createInfo = new VkInstanceCreateInfo
+                {
+                    sType = VkStructureType.VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+                    pNext = IntPtr.Zero,
+                    flags = 0,
+                    pApplicationInfo = MarshalToPtr(appInfo),
+                    enabledLayerCount = 0,
+                    ppEnabledLayerNames = IntPtr.Zero,
+                    enabledExtensionCount = (uint)extensions.Length,
+                    ppEnabledExtensionNames = MarshalStringArray(extensions)
+                };
+
+                IntPtr instanceHandle;
+                VkResult result = vkCreateInstance(ref createInfo, IntPtr.Zero, out instanceHandle);
+
+                // Free marshalled memory
+                Marshal.FreeHGlobal(appInfo.pApplicationName);
+                Marshal.FreeHGlobal(appInfo.pEngineName);
+                Marshal.FreeHGlobal(createInfo.pApplicationInfo);
+                Marshal.FreeHGlobal(createInfo.ppEnabledExtensionNames);
+
+                if (result != VkResult.VK_SUCCESS)
+                {
+                    Console.WriteLine($"[VulkanBackend] vkCreateInstance failed: {result}");
+                    return false;
+                }
+
+                _instance = instanceHandle;
+
+                // Initialize Vulkan function pointers
+                InitializeVulkanFunctions(_instance);
+
+                Console.WriteLine("[VulkanBackend] Vulkan instance created successfully");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[VulkanBackend] CreateInstance exception: {ex.Message}");
+                return false;
+            }
+        }
+
+        private string[] GetRequiredExtensions()
+        {
+            var extensions = new List<string>
+            {
+                "VK_KHR_surface"
+            };
+
+            // Platform-specific surface extensions
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                extensions.Add("VK_KHR_win32_surface");
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                extensions.Add("VK_KHR_xlib_surface");
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                extensions.Add("VK_MVK_macos_surface");
+            }
+
+            // Debug utils if validation is enabled
+            if (_settings.ValidationEnabled)
+            {
+                extensions.Add("VK_EXT_debug_utils");
+            }
+
+            return extensions.ToArray();
+        }
+
+        private static uint MakeVersion(uint major, uint minor, uint patch)
+        {
+            return (major << 22) | (minor << 12) | patch;
+        }
+
+        private const uint VK_API_VERSION_1_2 = MakeVersion(1, 2, 0);
+
+        private static IntPtr MarshalToPtr<T>(T structure) where T : struct
+        {
+            IntPtr ptr = Marshal.AllocHGlobal(Marshal.SizeOf<T>());
+            Marshal.StructureToPtr(structure, ptr, false);
+            return ptr;
+        }
+
+        private static IntPtr MarshalStringArray(string[] strings)
+        {
+            IntPtr[] stringPtrs = new IntPtr[strings.Length];
+            for (int i = 0; i < strings.Length; i++)
+            {
+                stringPtrs[i] = Marshal.StringToHGlobalAnsi(strings[i]);
+            }
+
+            IntPtr arrayPtr = Marshal.AllocHGlobal(IntPtr.Size * strings.Length);
+            Marshal.Copy(stringPtrs, 0, arrayPtr, strings.Length);
+
+            return arrayPtr;
         }
 
         /// <summary>
@@ -722,6 +928,77 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 Console.WriteLine("[VulkanBackend] SelectPhysicalDevice: No physical devices found");
                 return false;
+            }
+
+            // Allocate array for device handles
+            IntPtr[] devices = new IntPtr[deviceCount];
+            result = vkEnumeratePhysicalDevices(_instance, ref deviceCount, devices[0]);
+            if (result != VkResult.VK_SUCCESS)
+            {
+                Console.WriteLine($"[VulkanBackend] SelectPhysicalDevice: Failed to get device handles: {result}");
+                return false;
+            }
+
+            // Step 2: Select best device
+            IntPtr selectedDevice = IntPtr.Zero;
+            int bestScore = -1;
+
+            for (int i = 0; i < deviceCount; i++)
+            {
+                VkPhysicalDeviceProperties properties;
+                vkGetPhysicalDeviceProperties(devices[i], out properties);
+
+                int score = ScorePhysicalDevice(properties);
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    selectedDevice = devices[i];
+                    _capabilities.DeviceName = Marshal.PtrToStringAnsi(properties.deviceName) ?? "Unknown Device";
+                }
+            }
+
+            if (selectedDevice == IntPtr.Zero)
+            {
+                Console.WriteLine("[VulkanBackend] SelectPhysicalDevice: No suitable device found");
+                return false;
+            }
+
+            _physicalDevice = selectedDevice;
+            Console.WriteLine($"[VulkanBackend] Selected physical device: {_capabilities.DeviceName}");
+
+            // Update capabilities
+            _capabilities = new GraphicsCapabilities
+            {
+                DeviceName = _capabilities.DeviceName,
+                SupportsRaytracing = false, // TODO: Check for raytracing support
+                MaxTextureSize = 16384, // Conservative default
+                MaxRenderTargetSize = 16384, // Conservative default
+                SupportsComputeShaders = true,
+                SupportsGeometryShaders = true,
+                SupportsTessellation = true
+            };
+
+            return true;
+        }
+
+        private int ScorePhysicalDevice(VkPhysicalDeviceProperties properties)
+        {
+            int score = 0;
+
+            // Prefer discrete GPU over integrated
+            if (properties.deviceType == VkPhysicalDeviceType.VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+            {
+                score += 1000;
+            }
+            else if (properties.deviceType == VkPhysicalDeviceType.VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
+            {
+                score += 100;
+            }
+
+            // Basic functionality check - all devices should support this
+            score += 10;
+
+            return score;
             }
 
             Console.WriteLine($"[VulkanBackend] Found {deviceCount} physical device(s)");
