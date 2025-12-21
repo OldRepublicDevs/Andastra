@@ -15,7 +15,7 @@ namespace KotorCLI.Commands
         public static void AddToRootCommand(RootCommand rootCommand)
         {
             var listCommand = new Command("list", "List all targets defined in kotorcli.cfg");
-            var targetsArgument = new Argument<string[]>("targets", () => Array.Empty<string>(), "Specific targets to list");
+            var targetsArgument = new Argument<string[]>("targets");
             listCommand.Add(targetsArgument);
             var quietOption = new Option<bool>("--quiet", "List only target names");
             listCommand.Options.Add(quietOption);

@@ -13,10 +13,10 @@ namespace KotorCLI.Commands
         {
             var checkTxiCmd = new Command("check-txi", "Check if TXI files exist for specific textures");
             var checkTxiInstall = new Option<string>(new[] { "-i", "--installation" }, "Path to KOTOR installation");
-            checkTxiInstall.IsRequired = true;
+            checkTxiInstall.Required = true;
             checkTxiCmd.Options.Add(checkTxiInstall);
             var texturesOption = new Option<string[]>(new[] { "-t", "--textures" }, "Texture names to check (without extension)");
-            texturesOption.IsRequired = true;
+            texturesOption.Required = true;
             checkTxiCmd.Options.Add(texturesOption);
             checkTxiCmd.SetAction(parseResult =>
             {
@@ -30,10 +30,10 @@ namespace KotorCLI.Commands
 
             var check2DaCmd = new Command("check-2da", "Check if a 2DA file exists in installation");
             var check2DaName = new Option<string>("--2da", "2DA file name (without extension)");
-            check2DaName.IsRequired = true;
+            check2DaName.Required = true;
             check2DaCmd.Options.Add(check2DaName);
             var check2DaInstall = new Option<string>(new[] { "-i", "--installation" }, "Path to KOTOR installation");
-            check2DaInstall.IsRequired = true;
+            check2DaInstall.Required = true;
             check2DaCmd.Options.Add(check2DaInstall);
             check2DaCmd.SetAction(parseResult =>
             {

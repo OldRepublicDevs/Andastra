@@ -57,23 +57,24 @@ description = ""Default target""
         public static void AddToRootCommand(RootCommand rootCommand)
         {
             var initCommand = new Command("init", "Create a new kotorcli package");
-            var dirArgument = new Argument<string>("dir", () => ".", "Directory to initialize (default: current directory)");
+            var dirArgument = new Argument<string>("dir");
             initCommand.Add(dirArgument);
-            var fileArgument = new Argument<string>("file", () => null, "File to unpack into the new package");
+            var fileArgument = new Argument<string>("file");
             initCommand.Add(fileArgument);
             var defaultOption = new Option<bool>("--default", "Skip package generation dialog");
             initCommand.Options.Add(defaultOption);
-            var vcsOption = new Option<string>("--vcs", () => "git", "Version control system to use");
+            var vcsOption = new Option<string>("--vcs", "Version control system to use");
+            vcsOption.SetDefaultValue("git");
             initCommand.Options.Add(vcsOption);
             var initFileOption = new Option<string>("--file", "File to unpack into the package");
             initCommand.Options.Add(initFileOption);
             
             initCommand.SetAction(parseResult =>
             {
-                var dir = parseResult.GetValue(dirArgument);
+                var dir = parseResult.GetValue(dirArgument) ?? ".";
                 var file = parseResult.GetValue(fileArgument);
                 var defaultMode = parseResult.GetValue(defaultOption);
-                var vcs = parseResult.GetValue(vcsOption);
+                var vcs = parseResult.GetValue(vcsOption) ?? "git";
                 var initFile = parseResult.GetValue(initFileOption) ?? file;
                 
                 var logger = new StandardLogger();
