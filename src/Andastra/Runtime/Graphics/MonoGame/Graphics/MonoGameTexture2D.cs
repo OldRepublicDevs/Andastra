@@ -11,7 +11,10 @@ namespace Andastra.Runtime.Graphics.MonoGame.Graphics
     {
         private readonly Texture2D _texture;
 
-        internal Texture2D Texture => _texture;
+        /// <summary>
+        /// Gets the underlying MonoGame Texture2D (for interop use).
+        /// </summary>
+        public Texture2D Texture => _texture;
 
         public MonoGameTexture2D(Texture2D texture)
         {

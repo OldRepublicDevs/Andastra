@@ -76,7 +76,7 @@ namespace Andastra.Runtime.Games.Eclipse.Journal
                 byte[] jrlData = resource.Data;
 
                 // Parse JRL file (attempt GFF format first, Eclipse may use different format)
-                JRL jrl = JRLHelper.ReadJrl(jrlData);
+                JRL jrl = JRLHelpers.ReadJrl(jrlData);
                 if (jrl != null)
                 {
                     // Cache the loaded JRL
@@ -160,7 +160,7 @@ namespace Andastra.Runtime.Games.Eclipse.Journal
 
             // Resolve LocalizedString to text
             LocalizedString locString = entry.Text;
-            if (locString == null || !locString.IsValid)
+            if (locString == null || locString.StringRef < 0)
             {
                 return null;
             }
@@ -168,24 +168,24 @@ namespace Andastra.Runtime.Games.Eclipse.Journal
             // Resolve using TLK tables (Eclipse may use different TLK format)
             if (_baseTlk != null)
             {
-                string text = _baseTlk.GetString(locString.StringId);
-                if (!string.IsNullOrEmpty(text))
+                TLKEntry tlkEntry = _baseTlk.Get(locString.StringRef);
+                if (tlkEntry != null && !string.IsNullOrEmpty(tlkEntry.Text))
                 {
-                    return text;
+                    return tlkEntry.Text;
                 }
             }
 
             if (_customTlk != null)
             {
-                string text = _customTlk.GetString(locString.StringId);
-                if (!string.IsNullOrEmpty(text))
+                TLKEntry tlkEntry = _customTlk.Get(locString.StringRef);
+                if (tlkEntry != null && !string.IsNullOrEmpty(tlkEntry.Text))
                 {
-                    return text;
+                    return tlkEntry.Text;
                 }
             }
 
             // Fallback: return string ID if TLK not available
-            return locString.StringId.ToString();
+            return locString.StringRef.ToString();
         }
 
         /// <summary>

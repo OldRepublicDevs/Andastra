@@ -12,6 +12,11 @@ namespace Andastra.Runtime.Graphics.MonoGame.Graphics
     {
         private readonly GraphicsDevice _device;
 
+        /// <summary>
+        /// Gets the underlying MonoGame GraphicsDevice (for interop use).
+        /// </summary>
+        public GraphicsDevice Device => _device;
+
         public MonoGameGraphicsDevice(GraphicsDevice device)
         {
             _device = device ?? throw new ArgumentNullException(nameof(device));

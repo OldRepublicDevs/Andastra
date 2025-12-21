@@ -1,4 +1,5 @@
 using System.Numerics;
+using FogMode = Andastra.Runtime.Graphics.MonoGame.Interfaces.FogMode;
 
 namespace Andastra.Runtime.Games.Eclipse.Lighting
 {
@@ -31,6 +32,39 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
         /// Whether fog is enabled.
         /// </summary>
         public bool Enabled;
+
+        /// <summary>
+        /// Fog mode (exponential, linear, etc.).
+        /// </summary>
+        public FogMode Mode;
+
+        /// <summary>
+        /// Fog start distance (alias for StartDistance).
+        /// </summary>
+        public float Start
+        {
+            get { return StartDistance; }
+            set { StartDistance = value; }
+        }
+
+        /// <summary>
+        /// Fog end distance (alias for EndDistance).
+        /// </summary>
+        public float End
+        {
+            get { return EndDistance; }
+            set { EndDistance = value; }
+        }
+
+        /// <summary>
+        /// Whether height-based fog is enabled.
+        /// </summary>
+        public bool HeightFog;
+
+        /// <summary>
+        /// Whether volumetric fog is enabled.
+        /// </summary>
+        public bool Volumetric;
     }
 }
 

@@ -172,6 +172,11 @@ namespace Andastra.Runtime.Core.Interfaces.Components
         /// Upgrade index (slot position).
         /// </summary>
         public int Index { get; set; }
+
+        /// <summary>
+        /// Template ResRef for the upgrade (UTI resource reference).
+        /// </summary>
+        public string TemplateResRef { get; set; }
     }
 }
 
