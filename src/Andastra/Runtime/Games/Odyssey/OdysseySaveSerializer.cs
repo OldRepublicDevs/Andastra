@@ -2314,6 +2314,61 @@ namespace Andastra.Runtime.Games.Odyssey
             // by the save system and would be added to areaState.DestroyedEntityIds and
             // areaState.SpawnedEntities by the calling code if needed
 
+            // Extract area-level local variables
+            // Based on swkotor2.exe: Area local variables are extracted from area's variable storage
+            // Original implementation: FUN_005226d0 @ 0x005226d0 extracts area variables when saving
+            if (odysseyArea != null)
+            {
+                Andastra.Runtime.Core.Save.LocalVariableSet areaVars = odysseyArea.GetLocalVariables();
+                if (areaVars != null && !areaVars.IsEmpty)
+                {
+                    // Copy all variable types from area to areaState
+                    // Based on swkotor2.exe: All variable types are saved to area state
+                    if (areaVars.Ints != null && areaVars.Ints.Count > 0)
+                    {
+                        foreach (var kvp in areaVars.Ints)
+                        {
+                            areaState.LocalVariables.Ints[kvp.Key] = kvp.Value;
+                        }
+                    }
+
+                    if (areaVars.Floats != null && areaVars.Floats.Count > 0)
+                    {
+                        foreach (var kvp in areaVars.Floats)
+                        {
+                            areaState.LocalVariables.Floats[kvp.Key] = kvp.Value;
+                        }
+                    }
+
+                    if (areaVars.Strings != null && areaVars.Strings.Count > 0)
+                    {
+                        foreach (var kvp in areaVars.Strings)
+                        {
+                            areaState.LocalVariables.Strings[kvp.Key] = kvp.Value ?? "";
+                        }
+                    }
+
+                    if (areaVars.Objects != null && areaVars.Objects.Count > 0)
+                    {
+                        foreach (var kvp in areaVars.Objects)
+                        {
+                            areaState.LocalVariables.Objects[kvp.Key] = kvp.Value;
+                        }
+                    }
+
+                    if (areaVars.Locations != null && areaVars.Locations.Count > 0)
+                    {
+                        foreach (var kvp in areaVars.Locations)
+                        {
+                            if (kvp.Value != null)
+                            {
+                                areaState.LocalVariables.Locations[kvp.Key] = kvp.Value;
+                            }
+                        }
+                    }
+                }
+            }
+
             return areaState;
         }
 
@@ -4228,10 +4283,12 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <remarks>
         /// Based on swkotor2.exe: Area local variable storage
         /// Area variables are stored separately from entity variables
+        /// Original implementation: FUN_005226d0 @ 0x005226d0 applies area variables from save file
+        /// Variables are restored to area's variable storage system when area is loaded from save
         /// </remarks>
-        private void ApplyAreaLocalVariables(Dictionary<string, object> localVariables, OdysseyArea odysseyArea)
+        private void ApplyAreaLocalVariables(Andastra.Runtime.Core.Save.LocalVariableSet localVariables, OdysseyArea odysseyArea)
         {
-            if (localVariables == null || localVariables.Count == 0)
+            if (localVariables == null || localVariables.IsEmpty)
             {
                 return;
             }
@@ -4241,10 +4298,61 @@ namespace Andastra.Runtime.Games.Odyssey
                 return;
             }
 
-            // Area local variables would be stored in area's variable system
-            // TODO: STUB - Note: Full implementation would require access to area's variable storage
-            // This is a placeholder that would need to be completed when area variable system is fully implemented
-            // Variables would be stored via IArea's variable system or similar interface
+            // Get area's variable storage
+            Andastra.Runtime.Core.Save.LocalVariableSet areaVars = odysseyArea.GetLocalVariables();
+
+            // Copy integer variables
+            // Based on swkotor2.exe: Integer variables are restored from save file
+            if (localVariables.Ints != null && localVariables.Ints.Count > 0)
+            {
+                foreach (var kvp in localVariables.Ints)
+                {
+                    areaVars.Ints[kvp.Key] = kvp.Value;
+                }
+            }
+
+            // Copy float variables
+            // Based on swkotor2.exe: Float variables are restored from save file
+            if (localVariables.Floats != null && localVariables.Floats.Count > 0)
+            {
+                foreach (var kvp in localVariables.Floats)
+                {
+                    areaVars.Floats[kvp.Key] = kvp.Value;
+                }
+            }
+
+            // Copy string variables
+            // Based on swkotor2.exe: String variables are restored from save file
+            if (localVariables.Strings != null && localVariables.Strings.Count > 0)
+            {
+                foreach (var kvp in localVariables.Strings)
+                {
+                    areaVars.Strings[kvp.Key] = kvp.Value ?? "";
+                }
+            }
+
+            // Copy object reference variables
+            // Based on swkotor2.exe: Object reference variables are restored from save file
+            if (localVariables.Objects != null && localVariables.Objects.Count > 0)
+            {
+                foreach (var kvp in localVariables.Objects)
+                {
+                    areaVars.Objects[kvp.Key] = kvp.Value;
+                }
+            }
+
+            // Copy location variables
+            // Based on swkotor2.exe: Location variables are restored from save file
+            if (localVariables.Locations != null && localVariables.Locations.Count > 0)
+            {
+                foreach (var kvp in localVariables.Locations)
+                {
+                    if (kvp.Value != null)
+                    {
+                        areaVars.Locations[kvp.Key] = kvp.Value;
+                    }
+                }
+            }
         }
 
         /// <summary>
