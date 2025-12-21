@@ -175,6 +175,8 @@ namespace Andastra.Runtime.MonoGame.Converters
             };
 
             // Convert each face
+            // Store previous mipmap data for each face to enable proper downsampling
+            byte[][] previousMipmapDataPerFace = new byte[6][];
             for (int faceIndex = 0; faceIndex < 6; faceIndex++)
             {
                 TPCLayer layer = tpc.Layers[faceIndex];
@@ -195,6 +197,8 @@ namespace Andastra.Runtime.MonoGame.Converters
                             throw new ArgumentException($"Cube map face {faceIndex} mipmap {mipLevel} has incorrect dimensions", "tpc");
                         }
                         rgbaData = ConvertMipmapToRgba(mipmap);
+                        // Store for potential use in next mipmap generation
+                        previousMipmapDataPerFace[faceIndex] = rgbaData;
                     }
                     else if (generateMipmaps)
                     {
@@ -204,35 +208,16 @@ namespace Andastra.Runtime.MonoGame.Converters
                         // Original implementation: Each mipmap level is half the size of previous level
                         // Use previous mipmap level for proper downsampling (not base level)
                         // This ensures each mipmap is properly filtered from its immediate parent
-                        byte[] previousMipmapData;
-                        if (mipLevel == 1)
+                        byte[] previousMipmapData = previousMipmapDataPerFace[faceIndex];
+                        if (previousMipmapData == null)
                         {
-                            // First generated mipmap: downsample from base level (mipLevel 0)
-                            TPCMipmap baseMip = layer.Mipmaps[0];
-                            previousMipmapData = ConvertMipmapToRgba(baseMip);
-                        }
-                        else
-                        {
-                            // Subsequent mipmaps: downsample from previous generated mipmap
-                            // Get the previous mipmap data that was just generated
-                            int prevSize = currentSize << 1; // Previous size is double current size
-                            previousMipmapData = new byte[prevSize * prevSize * 4];
-                            // Retrieve previous mipmap data from cube map
-                            Color[] prevColorData = new Color[prevSize * prevSize];
-                            cubeMap.GetData(face, mipLevel - 1, null, prevColorData, 0, prevColorData.Length);
-                            // Convert Color[] back to RGBA byte[]
-                            for (int i = 0; i < prevColorData.Length; i++)
-                            {
-                                int offset = i * 4;
-                                previousMipmapData[offset] = prevColorData[i].R;
-                                previousMipmapData[offset + 1] = prevColorData[i].G;
-                                previousMipmapData[offset + 2] = prevColorData[i].B;
-                                previousMipmapData[offset + 3] = prevColorData[i].A;
-                            }
+                            throw new InvalidOperationException($"Cannot generate mipmap {mipLevel} for face {faceIndex}: previous mipmap data not available");
                         }
                         // Downsample using bilinear filtering for high-quality mipmaps
-                        int prevSizeForDownsample = mipLevel == 1 ? size : (currentSize << 1);
-                        rgbaData = DownsampleBilinear(previousMipmapData, prevSizeForDownsample, prevSizeForDownsample, currentSize, currentSize);
+                        int prevSize = mipLevel == 1 ? size : (currentSize << 1);
+                        rgbaData = DownsampleBilinear(previousMipmapData, prevSize, prevSize, currentSize, currentSize);
+                        // Store for next mipmap generation
+                        previousMipmapDataPerFace[faceIndex] = rgbaData;
                     }
                     else
                     {
@@ -387,34 +372,109 @@ namespace Andastra.Runtime.MonoGame.Converters
             int width = baseMipmap.Width;
             int height = baseMipmap.Height;
 
-            // Convert to RGBA for MonoGame
-            // MonoGame Texture2D constructor accepts Color[] or byte[] data
+            // Determine mipmap count
+            int mipmapCount = layer.Mipmaps.Count;
+            if (generateMipmaps && mipmapCount == 1)
+            {
+                // Calculate mipmap count for generation
+                int tempWidth = width;
+                int tempHeight = height;
+                while (tempWidth > 1 || tempHeight > 1)
+                {
+                    mipmapCount++;
+                    tempWidth = Math.Max(1, tempWidth >> 1);
+                    tempHeight = Math.Max(1, tempHeight >> 1);
+                }
+            }
+
+            // Create Texture2D with mipmap support
             // Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Graphics.Texture2D.html
             // Texture2D(GraphicsDevice, int, int, bool, SurfaceFormat) constructor
             // Method signature: Texture2D(GraphicsDevice graphicsDevice, int width, int height, bool mipmap, SurfaceFormat format)
             // Source: https://docs.monogame.net/articles/getting_to_know/howto/graphics/HowTo_Load_Texture.html
-            byte[] rgbaData = ConvertMipmapToRgba(baseMipmap);
+            Texture2D texture = new Texture2D(device, width, height, generateMipmaps || mipmapCount > 1, SurfaceFormat.Color);
 
-            // Create Texture2D from RGBA data
-            // Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Graphics.Texture2D.html
-            // Texture2D.SetData<T>(T[]) sets texture pixel data
-            // Method signature: void SetData<T>(T[] data) where T : struct
-            // We'll create the texture and then set the data
-            // Source: https://docs.monogame.net/articles/getting_to_know/howto/graphics/HowTo_Load_Texture.html
-            Texture2D texture = new Texture2D(device, width, height, generateMipmaps, SurfaceFormat.Color);
-
-            // Convert byte array to Color array for SetData
-            Color[] colorData = new Color[width * height];
-            for (int i = 0; i < colorData.Length; i++)
+            // Process each mipmap level
+            int currentWidth = width;
+            int currentHeight = height;
+            for (int mipLevel = 0; mipLevel < mipmapCount; mipLevel++)
             {
-                int offset = i * 4;
-                if (offset + 3 < rgbaData.Length)
+                byte[] rgbaData;
+                if (mipLevel < layer.Mipmaps.Count)
                 {
-                    colorData[i] = new Color(rgbaData[offset], rgbaData[offset + 1], rgbaData[offset + 2], rgbaData[offset + 3]);
+                    // Use existing mipmap from TPC
+                    TPCMipmap mipmap = layer.Mipmaps[mipLevel];
+                    if (mipmap.Width != currentWidth || mipmap.Height != currentHeight)
+                    {
+                        throw new ArgumentException($"TPC mipmap {mipLevel} has incorrect dimensions: expected {currentWidth}x{currentHeight}, got {mipmap.Width}x{mipmap.Height}", "layer");
+                    }
+                    rgbaData = ConvertMipmapToRgba(mipmap);
                 }
+                else if (generateMipmaps)
+                {
+                    // Generate mipmap by downsampling previous mipmap level
+                    // Based on swkotor2.exe: Mipmaps are generated by downsampling previous level
+                    // Located via string references: Texture mipmap generation
+                    // Original implementation: Each mipmap level is half the size of previous level
+                    // Use previous mipmap level for proper downsampling
+                    // Store previous mipmap data as we process each level
+                    byte[] previousMipmapData;
+                    if (mipLevel == 1)
+                    {
+                        // First generated mipmap: downsample from base level (mipLevel 0)
+                        TPCMipmap baseMip = layer.Mipmaps[0];
+                        previousMipmapData = ConvertMipmapToRgba(baseMip);
+                    }
+                    else
+                    {
+                        // Subsequent mipmaps: downsample from previous generated mipmap
+                        // Get the previous mipmap data that was just generated
+                        int prevWidth = currentWidth << 1;
+                        int prevHeight = currentHeight << 1;
+                        previousMipmapData = new byte[prevWidth * prevHeight * 4];
+                        // Retrieve previous mipmap data from texture
+                        Color[] prevColorData = new Color[prevWidth * prevHeight];
+                        texture.GetData(mipLevel - 1, null, prevColorData, 0, prevColorData.Length);
+                        // Convert Color[] back to RGBA byte[]
+                        for (int i = 0; i < prevColorData.Length; i++)
+                        {
+                            int offset = i * 4;
+                            previousMipmapData[offset] = prevColorData[i].R;
+                            previousMipmapData[offset + 1] = prevColorData[i].G;
+                            previousMipmapData[offset + 2] = prevColorData[i].B;
+                            previousMipmapData[offset + 3] = prevColorData[i].A;
+                        }
+                    }
+                    // Downsample using bilinear filtering for high-quality mipmaps
+                    int prevWidthForDownsample = mipLevel == 1 ? width : (currentWidth << 1);
+                    int prevHeightForDownsample = mipLevel == 1 ? height : (currentHeight << 1);
+                    rgbaData = DownsampleBilinear(previousMipmapData, prevWidthForDownsample, prevHeightForDownsample, currentWidth, currentHeight);
+                }
+                else
+                {
+                    break; // No more mipmaps to process
+                }
+
+                // Convert byte array to Color array for SetData
+                Color[] colorData = new Color[currentWidth * currentHeight];
+                for (int i = 0; i < colorData.Length; i++)
+                {
+                    int offset = i * 4;
+                    if (offset + 3 < rgbaData.Length)
+                    {
+                        colorData[i] = new Color(rgbaData[offset], rgbaData[offset + 1], rgbaData[offset + 2], rgbaData[offset + 3]);
+                    }
+                }
+
+                // Set mipmap level data
+                // Based on MonoGame API: void SetData<T>(int level, Rectangle? rect, T[] data, int startIndex, int elementCount)
+                texture.SetData(mipLevel, null, colorData, 0, colorData.Length);
+
+                // Next mipmap is half the size
+                currentWidth = Math.Max(1, currentWidth >> 1);
+                currentHeight = Math.Max(1, currentHeight >> 1);
             }
 
-            texture.SetData(colorData);
             return texture;
         }
 
