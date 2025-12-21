@@ -14,10 +14,10 @@ namespace KotorCLI.Commands
             var createArchiveCommand = new Command("create-archive", "Create archive (ERF, RIM) from directory");
             createArchiveCommand.AddAlias("pack-archive");
             var directoryOption = new Option<string>(new[] { "-d", "--directory" }, "Directory to pack");
-            directoryOption.IsRequired = true;
+            directoryOption.Required = true;
             createArchiveCommand.Options.Add(directoryOption);
             var outputOption = new Option<string>(new[] { "-o", "--output" }, "Output archive file");
-            outputOption.IsRequired = true;
+            outputOption.Required = true;
             createArchiveCommand.Options.Add(outputOption);
             var typeOption = new Option<string>("--type", "Archive type (ERF, MOD, SAV, RIM)");
             createArchiveCommand.Options.Add(typeOption);

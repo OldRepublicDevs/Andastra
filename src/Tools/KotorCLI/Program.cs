@@ -21,9 +21,10 @@ namespace KotorCLI
 
             // Global options (add as regular options to root command)
             var versionOption = new Option<bool>(
-                new[] { "--version", "-v" },
+                "--version",
                 "Show version information"
             );
+            versionOption.AddAlias("-v");
             rootCommand.Options.Add(versionOption);
 
             var verboseOption = new Option<bool>(
@@ -96,7 +97,8 @@ namespace KotorCLI
 
             try
             {
-                return rootCommand.Invoke(args);
+                var parseResult = rootCommand.Parse(args);
+                return parseResult.Invoke();
             }
             catch (Exception ex)
             {

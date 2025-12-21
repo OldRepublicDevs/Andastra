@@ -20,10 +20,10 @@ namespace KotorCLI.Commands
         {
             var configCommand = new Command("config", "Get, set, or unset user-defined configuration options");
 
-            var keyArgument = new Argument<string>("key", () => null, "Configuration key");
+            var keyArgument = new Argument<string>("key");
             configCommand.Add(keyArgument);
 
-            var valueArgument = new Argument<string>("value", () => null, "Configuration value");
+            var valueArgument = new Argument<string>("value");
             configCommand.Add(valueArgument);
 
             var globalOption = new Option<bool>(

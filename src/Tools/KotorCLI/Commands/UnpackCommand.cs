@@ -22,9 +22,9 @@ namespace KotorCLI.Commands
         public static void AddToRootCommand(RootCommand rootCommand)
         {
             var unpackCommand = new Command("unpack", "Unpack a file into the project source tree");
-            var targetArgument = new Argument<string>("target", () => null, "Target to unpack");
+            var targetArgument = new Argument<string>("target");
             unpackCommand.Add(targetArgument);
-            var fileArgument = new Argument<string>("file", () => null, "File to unpack");
+            var fileArgument = new Argument<string>("file");
             unpackCommand.Add(fileArgument);
             var fileOption = new Option<string>("--file", "File or directory to unpack into the target's source tree");
             unpackCommand.Options.Add(fileOption);

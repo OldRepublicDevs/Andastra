@@ -14,7 +14,7 @@ namespace KotorCLI.Commands
         {
             var extractCommand = new Command("extract", "Extract resources from archive files (KEY/BIF, RIM, ERF, etc.)");
             var fileOption = new Option<string>("--file", "Archive file to extract");
-            fileOption.IsRequired = true;
+            fileOption.Required = true;
             extractCommand.Options.Add(fileOption);
             var outputOption = new Option<string>(new[] { "-o", "--output" }, "Output directory (default: archive_name)");
             extractCommand.Options.Add(outputOption);

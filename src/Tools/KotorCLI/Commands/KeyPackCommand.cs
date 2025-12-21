@@ -14,10 +14,10 @@ namespace KotorCLI.Commands
             var keyPackCommand = new Command("key-pack", "Create KEY file from directory containing BIF files");
             keyPackCommand.AddAlias("create-key");
             var directoryOption = new Option<string>(new[] { "-d", "--directory" }, "Directory containing BIF files");
-            directoryOption.IsRequired = true;
+            directoryOption.Required = true;
             keyPackCommand.Options.Add(directoryOption);
             var outputOption = new Option<string>(new[] { "-o", "--output" }, "Output KEY file");
-            outputOption.IsRequired = true;
+            outputOption.Required = true;
             keyPackCommand.Options.Add(outputOption);
             var bifDirOption = new Option<string>("--bif-dir", "Directory where BIF files are located (for relative paths in KEY)");
             keyPackCommand.Options.Add(bifDirOption);

@@ -20,7 +20,7 @@ namespace KotorCLI.Commands
         public static void AddToRootCommand(RootCommand rootCommand)
         {
             var convertCommand = new Command("convert", "Convert all JSON sources to their GFF counterparts");
-            var targetsArgument = new Argument<string[]>("targets", () => Array.Empty<string>(), "Targets to convert (use 'all' for all targets)");
+            var targetsArgument = new Argument<string[]>("targets");
             convertCommand.Add(targetsArgument);
             var cleanOption = new Option<bool>("--clean", "Clear the cache before converting");
             convertCommand.Options.Add(cleanOption);
@@ -76,7 +76,7 @@ namespace KotorCLI.Commands
                 // Process each target
                 foreach (var target in targets)
                 {
-                    var targetName = target.GetValueOrDefault("name")?.ToString() ?? "unnamed";
+                    var targetName = GetTomlValue<string>(target, "name") ?? "unnamed";
                     logger.Info($"Converting target: {targetName}");
 
                     // Get cache directory
@@ -181,6 +181,19 @@ namespace KotorCLI.Commands
             // Simple pattern matching - convert glob pattern to regex
             var regexPattern = "^" + Regex.Escape(pattern).Replace("\\*", ".*").Replace("\\?", ".") + "$";
             return Regex.IsMatch(path, regexPattern, RegexOptions.IgnoreCase);
+        }
+
+        private static T GetTomlValue<T>(Tomlyn.Model.TomlTable table, string key)
+        {
+            if (table.TryGetValue(key, out object value))
+            {
+                if (value is T direct)
+                {
+                    return direct;
+                }
+                return (T)Convert.ChangeType(value, typeof(T));
+            }
+            return default(T);
         }
     }
 }

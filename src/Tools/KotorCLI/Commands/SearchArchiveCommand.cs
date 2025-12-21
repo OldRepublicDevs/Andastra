@@ -14,7 +14,7 @@ namespace KotorCLI.Commands
             var searchArchiveCommand = new Command("search-archive", "Search for resources in archive files");
             searchArchiveCommand.AddAlias("grep-archive");
             var fileOption = new Option<string>(new[] { "-f", "--file" }, "Archive file to search");
-            fileOption.IsRequired = true;
+            fileOption.Required = true;
             searchArchiveCommand.Options.Add(fileOption);
             var patternArgument = new Argument<string>("pattern", "Search pattern (supports wildcards)");
             searchArchiveCommand.Add(patternArgument);

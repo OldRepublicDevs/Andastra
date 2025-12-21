@@ -14,7 +14,7 @@ namespace KotorCLI.Commands
             var listArchiveCommand = new Command("list-archive", "List contents of archive files (KEY/BIF, RIM, ERF, etc.)");
             listArchiveCommand.AddAlias("ls-archive");
             var fileOption = new Option<string>("--file", "Archive file to list");
-            fileOption.IsRequired = true;
+            fileOption.Required = true;
             listArchiveCommand.Options.Add(fileOption);
             var verboseOption = new Option<bool>(new[] { "-v", "--verbose" }, "Show detailed resource information");
             listArchiveCommand.Options.Add(verboseOption);
