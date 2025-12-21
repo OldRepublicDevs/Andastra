@@ -1,3 +1,4 @@
+using System.Threading;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Scripting.Interfaces;
 
@@ -23,10 +24,27 @@ namespace Andastra.Runtime.Scripting.VM
     /// - Script context is passed to NCS VM for ACTION opcode execution (engine function calls via EngineApi.CallEngineFunction)
     /// - Context cloning: WithCaller/WithTriggerer create new contexts with modified caller/triggerer (for nested script calls)
     /// - Additional context: Stores extra context data (DialogueManager, GameSession, etc.) for system-specific access
+    /// - Current context tracking: Uses AsyncLocal to track the current execution context for delayed script execution (DelayCommand)
+    ///   - Based on swkotor2.exe: Execution context stack tracking for nested script calls and delayed actions
+    ///   - Original implementation: Maintains execution context stack to allow delayed actions to access original caller/triggerer
     /// - Based on NCS VM execution model in vendor/PyKotor/wiki/NCS-File-Format.md
     /// </remarks>
     public class ExecutionContext : IExecutionContext
     {
+        /// <summary>
+        /// Thread-local storage for the current execution context.
+        /// Used to track the active execution context during script execution for delayed script context capture.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Execution context stack tracking system.
+        /// Located via string references: Execution context maintained for each script execution.
+        /// Original implementation: Execution context stack allows nested script calls and delayed actions
+        /// (DelayCommand) to access the original caller and triggerer from when the script was first executed.
+        /// When QueueDelayedScript is called, it can retrieve the current execution context to capture
+        /// the triggerer for delayed script execution.
+        /// </remarks>
+        private static readonly AsyncLocal<IExecutionContext> _currentContext = new AsyncLocal<IExecutionContext>();
+
         public ExecutionContext(IEntity caller, IWorld world, IEngineApi engineApi, IScriptGlobals globals)
         {
             Caller = caller;
@@ -79,6 +97,36 @@ namespace Andastra.Runtime.Scripting.VM
         public void SetTriggerer(IEntity triggerer)
         {
             Triggerer = triggerer;
+        }
+
+        /// <summary>
+        /// Gets the current execution context for the current async execution flow.
+        /// </summary>
+        /// <returns>The current execution context, or null if no context is active.</returns>
+        /// <remarks>
+        /// Based on swkotor2.exe: Execution context stack tracking system.
+        /// Original implementation: Allows code to retrieve the current execution context
+        /// for delayed script execution and other operations that need access to the
+        /// current script's caller and triggerer.
+        /// </remarks>
+        public static IExecutionContext GetCurrent()
+        {
+            return _currentContext.Value;
+        }
+
+        /// <summary>
+        /// Sets the current execution context for the current async execution flow.
+        /// </summary>
+        /// <param name="context">The execution context to set as current, or null to clear.</param>
+        /// <remarks>
+        /// Based on swkotor2.exe: Execution context stack tracking system.
+        /// Original implementation: Sets the current execution context so that delayed
+        /// script execution and other operations can access the current script's caller
+        /// and triggerer. Should be called by NcsVm when starting and ending script execution.
+        /// </remarks>
+        public static void SetCurrent(IExecutionContext context)
+        {
+            _currentContext.Value = context;
         }
     }
 }

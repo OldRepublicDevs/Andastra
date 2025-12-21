@@ -237,12 +237,23 @@ namespace Andastra.Runtime.Games.Common
             // The current execution context (caller, triggerer) is captured in the closure
             // This allows the delayed script to execute with the same context as when it was queued
             IEntity capturedCaller = entity;
-            IEntity capturedTriggerer = null; // Will be set from current execution context if available
+            IEntity capturedTriggerer = null;
             
-            // Try to get triggerer from current execution context if available
-            // This is engine-specific: Some engines maintain execution context stack
-            // TODO: STUB - For now, we'll use the entity as both caller and triggerer
-            // Engine-specific subclasses can override to provide better context capture
+            // Get triggerer from current execution context if available
+            // Based on swkotor2.exe: Execution context stack tracking for delayed script execution
+            // Located via string references: Execution context maintained for each script execution
+            // Original implementation: Delayed actions (DelayCommand) capture the current execution context's
+            // triggerer so that when the delayed script executes, it has access to the original triggerer
+            // from when DelayCommand was called. This enables scripts to properly identify what entity
+            // triggered the original script event, even after a delay.
+            var currentContext = ExecutionContext.GetCurrent();
+            if (currentContext != null)
+            {
+                // Use the current execution context's triggerer for delayed script execution
+                // This matches the original engine behavior where delayed scripts inherit the
+                // execution context from the script that queued them
+                capturedTriggerer = currentContext.Triggerer;
+            }
             
             // Create ActionDoCommand that executes the script
             // Common across all engines: DelayCommand creates action that executes script with captured context

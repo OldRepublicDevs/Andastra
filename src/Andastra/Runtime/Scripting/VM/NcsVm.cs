@@ -126,6 +126,11 @@ namespace Andastra.Runtime.Scripting.VM
             _running = true;
             _aborted = false;
             _context = ctx;
+            
+            // Set current execution context for async execution flow tracking
+            // Based on swkotor2.exe: Execution context stack tracking for delayed script execution
+            // Original implementation: Sets current execution context so delayed actions can access caller/triggerer
+            ExecutionContext.SetCurrent(ctx);
 
             // Clear pools for new execution
             _stringPool.Clear();
@@ -171,6 +176,10 @@ namespace Andastra.Runtime.Scripting.VM
             finally
             {
                 _running = false;
+                // Clear current execution context after script execution completes
+                // Based on swkotor2.exe: Execution context stack tracking cleanup
+                // Original implementation: Clears current execution context when script execution ends
+                ExecutionContext.SetCurrent(null);
             }
 
             return result;
