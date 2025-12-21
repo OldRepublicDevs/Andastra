@@ -2369,10 +2369,15 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                 // Create TLAS descriptor for building
                 // Metal requires a descriptor that references the instance buffer
+                // For TLAS, the descriptor should be of type MTLAccelerationStructureGeometryInstanceDescriptor
+                // which contains the instance buffer reference and instance count
                 AccelStructDesc tlasDesc = metalAccelStruct.Desc;
                 
-                // Update descriptor with instance count
-                // Note: Metal's descriptor is created separately and references the instance buffer
+                // Note: CreateAccelerationStructureDescriptor may need to be extended to support
+                // instance buffer references for TLAS. For now, we create the descriptor and assume
+                // it will be properly configured with instance buffer reference via native interop
+                // In a full implementation, we would set the instance buffer on the descriptor using
+                // Metal API: MTLAccelerationStructureGeometryInstanceDescriptor::setInstanceBuffer:offset:stridedBytesPerInstance:
                 IntPtr tlasDescriptor = MetalNative.CreateAccelerationStructureDescriptor(device, tlasDesc);
                 if (tlasDescriptor == IntPtr.Zero)
                 {
@@ -2382,11 +2387,11 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                 try
                 {
-                    // For Metal TLAS, we need to set the instance buffer and count on the descriptor
-                    // This is typically done via MTLAccelerationStructureGeometryInstanceDescriptor
-                    // However, since our CreateAccelerationStructureDescriptor already handles descriptor creation,
-                    // we assume the descriptor is properly configured. We may need to extend the descriptor
-                    // creation to accept instance buffer references in the future.
+                    // TODO: Set instance buffer reference on descriptor
+                    // Metal API: [MTLAccelerationStructureGeometryInstanceDescriptor setInstanceBuffer:instanceBuffer offset:0]
+                    // Metal API: [MTLAccelerationStructureGeometryInstanceDescriptor setInstanceCount:instanceCount]
+                    // This requires additional native interop functions to set properties on the descriptor
+                    // For now, we assume the descriptor creation handles this, or it will be extended in the future
 
                     // Estimate scratch buffer size for TLAS building
                     // Metal requires a scratch buffer for building acceleration structures
@@ -2453,10 +2458,10 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
             finally
             {
-                // Dispose instance buffer wrapper (which will release the native buffer)
-                if (instanceBufferWrapper != null)
+                // Release instance buffer
+                if (instanceBuffer != IntPtr.Zero)
                 {
-                    instanceBufferWrapper.Dispose();
+                    MetalNative.ReleaseBuffer(instanceBuffer);
                 }
             }
         }
