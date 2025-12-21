@@ -2228,6 +2228,37 @@ namespace Andastra.Runtime.MonoGame.Backends
             _samplerHeapCapacity = 0;
             _samplerHeapNextIndex = 0;
 
+            // Release SRV descriptor heap if it was created
+            if (_srvDescriptorHeap != IntPtr.Zero)
+            {
+                try
+                {
+                    // Release the COM object through IUnknown::Release() vtable call
+                    uint refCount = ReleaseComObject(_srvDescriptorHeap);
+                    if (refCount > 0)
+                    {
+                        Console.WriteLine($"[D3D12Device] SRV descriptor heap still has {refCount} references after Release()");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Log error but continue cleanup - don't throw from Dispose
+                    Console.WriteLine($"[D3D12Device] Error releasing SRV descriptor heap: {ex.Message}");
+                }
+                finally
+                {
+                    // Always clear the handle even if Release() failed
+                    _srvDescriptorHeap = IntPtr.Zero;
+                }
+            }
+
+            // Clear SRV descriptor heap state
+            _srvHeapCpuStartHandle = IntPtr.Zero;
+            _srvHeapDescriptorIncrementSize = 0;
+            _srvHeapCapacity = 0;
+            _srvHeapNextIndex = 0;
+            _textureSrvHandles?.Clear();
+
             // Release idle fence and event handle if they were created
             if (_idleFence != IntPtr.Zero)
             {
@@ -5131,12 +5162,15 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             // Set dimension-specific parameters
             // For most textures, we use the default mip settings (all mips, starting from mip 0)
+            // In DirectX 12, -1 (0xFFFFFFFF) means "use all available mips"
+            uint mipLevels = (desc.MipLevels > 0) ? unchecked((uint)desc.MipLevels) : unchecked((uint)(-1));
+            
             if (srvDimension == D3D12_SRV_DIMENSION_TEXTURE2D)
             {
                 srvDesc.Texture2D = new D3D12_TEX2D_SRV
                 {
                     MostDetailedMip = 0, // Start from first mip level
-                    MipLevels = unchecked((uint)(desc.MipLevels > 0 ? desc.MipLevels : -1)), // -1 means all mips
+                    MipLevels = mipLevels, // -1 (0xFFFFFFFF) means all mips, otherwise use specified count
                     PlaneSlice = 0, // Typically 0 for non-planar formats
                     ResourceMinLODClamp = 0.0f // No clamping
                 };
@@ -5146,7 +5180,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 srvDesc.Texture1D = new D3D12_TEX1D_SRV
                 {
                     MostDetailedMip = 0,
-                    MipLevels = unchecked((uint)(desc.MipLevels > 0 ? desc.MipLevels : -1)),
+                    MipLevels = mipLevels,
                     ResourceMinLODClamp = 0.0f
                 };
             }
@@ -5155,7 +5189,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 srvDesc.Texture3D = new D3D12_TEX3D_SRV
                 {
                     MostDetailedMip = 0,
-                    MipLevels = unchecked((uint)(desc.MipLevels > 0 ? desc.MipLevels : -1)),
+                    MipLevels = mipLevels,
                     ResourceMinLODClamp = 0.0f
                 };
             }

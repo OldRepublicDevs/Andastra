@@ -2467,10 +2467,57 @@ namespace Andastra.Runtime.MonoGame.Backends
                 IntPtr computeFunction = MetalNative.CreateFunctionFromLibrary(defaultLibrary, "clearUAVFloat");
                 if (computeFunction == IntPtr.Zero)
                 {
-                    // Shader function not found - log warning and return
-                    // TODO:  In a full implementation, this would trigger shader compilation or load from library
-                    Console.WriteLine("[MetalCommandList] ClearUAVFloat: Compute shader function 'clearUAVFloat' not found in library. Shader must be compiled and linked into the Metal library.");
-                    return;
+                    // Shader function not found - try runtime compilation from source
+                    Console.WriteLine("[MetalCommandList] ClearUAVFloat: Compute shader function 'clearUAVFloat' not found in library. Attempting runtime compilation from source.");
+                    
+                    // Metal Shading Language source code for clearUAVFloat compute shader
+                    string shaderSource = @"
+                        #include <metal_stdlib>
+                        using namespace metal;
+                        
+                        kernel void clearUAVFloat(texture2d<float, access::write> output [[texture(0)]],
+                                                  constant float4& clearValue [[buffer(0)]],
+                                                  uint2 gid [[thread_position_in_grid]])
+                        {
+                            if (gid.x < output.get_width() && gid.y < output.get_height())
+                            {
+                                output.write(clearValue, gid);
+                            }
+                        }
+                    ";
+
+                    IntPtr device = _backend.GetNativeDevice();
+                    if (device == IntPtr.Zero)
+                    {
+                        Console.WriteLine("[MetalCommandList] ClearUAVFloat: Device not available for runtime compilation");
+                        return;
+                    }
+
+                    // Compile shader library from source
+                    IntPtr compiledLibrary = MetalNative.CompileLibraryFromSource(device, shaderSource, out IntPtr compileError);
+                    if (compiledLibrary == IntPtr.Zero)
+                    {
+                        string errorMsg = compileError != IntPtr.Zero ? MetalNative.GetNSErrorDescription(compileError) : "Unknown compilation error";
+                        Console.WriteLine($"[MetalCommandList] ClearUAVFloat: Failed to compile shader from source: {errorMsg}");
+                        return;
+                    }
+
+                    try
+                    {
+                        // Get function from compiled library
+                        computeFunction = MetalNative.CreateFunctionFromLibrary(compiledLibrary, "clearUAVFloat");
+                        if (computeFunction == IntPtr.Zero)
+                        {
+                            Console.WriteLine("[MetalCommandList] ClearUAVFloat: Function 'clearUAVFloat' not found in compiled library");
+                            MetalNative.ReleaseLibrary(compiledLibrary);
+                            return;
+                        }
+                    }
+                    finally
+                    {
+                        // Release compiled library (function retains reference)
+                        MetalNative.ReleaseLibrary(compiledLibrary);
+                    }
                 }
 
                 // Create compute pipeline state
@@ -2554,9 +2601,9 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// }
         /// ```
         /// 
-        /// Shader compilation: This shader must be compiled into a Metal library (e.g., .metallib file)
-        // TODO: / and linked into the application. Runtime shader compilation from source would require
-        /// Objective-C interop infrastructure. In practice, shaders are compiled at build time.
+        /// Shader compilation: This shader is compiled at runtime from source if not found in the default library.
+        /// Runtime shader compilation uses Metal's newLibraryWithSource:options:error: API via Objective-C interop.
+        /// Falls back to runtime compilation if the shader is not available in pre-compiled libraries.
         /// </summary>
         public void ClearUAVUint(ITexture texture, uint value)
         {
@@ -2656,10 +2703,57 @@ namespace Andastra.Runtime.MonoGame.Backends
                 IntPtr computeFunction = MetalNative.CreateFunctionFromLibrary(defaultLibrary, "clearUAVUint");
                 if (computeFunction == IntPtr.Zero)
                 {
-                    // Shader function not found - log warning and return
-                    // TODO:  In a full implementation, this would trigger shader compilation or load from library
-                    Console.WriteLine("[MetalCommandList] ClearUAVUint: Compute shader function 'clearUAVUint' not found in library. Shader must be compiled and linked into the Metal library.");
-                    return;
+                    // Shader function not found - try runtime compilation from source
+                    Console.WriteLine("[MetalCommandList] ClearUAVUint: Compute shader function 'clearUAVUint' not found in library. Attempting runtime compilation from source.");
+                    
+                    // Metal Shading Language source code for clearUAVUint compute shader
+                    string shaderSource = @"
+                        #include <metal_stdlib>
+                        using namespace metal;
+                        
+                        kernel void clearUAVUint(texture2d<uint, access::write> output [[texture(0)]],
+                                                 constant uint& clearValue [[buffer(0)]],
+                                                 uint2 gid [[thread_position_in_grid]])
+                        {
+                            if (gid.x < output.get_width() && gid.y < output.get_height())
+                            {
+                                output.write(clearValue, gid);
+                            }
+                        }
+                    ";
+
+                    IntPtr device = _backend.GetNativeDevice();
+                    if (device == IntPtr.Zero)
+                    {
+                        Console.WriteLine("[MetalCommandList] ClearUAVUint: Device not available for runtime compilation");
+                        return;
+                    }
+
+                    // Compile shader library from source
+                    IntPtr compiledLibrary = MetalNative.CompileLibraryFromSource(device, shaderSource, out IntPtr compileError);
+                    if (compiledLibrary == IntPtr.Zero)
+                    {
+                        string errorMsg = compileError != IntPtr.Zero ? MetalNative.GetNSErrorDescription(compileError) : "Unknown compilation error";
+                        Console.WriteLine($"[MetalCommandList] ClearUAVUint: Failed to compile shader from source: {errorMsg}");
+                        return;
+                    }
+
+                    try
+                    {
+                        // Get function from compiled library
+                        computeFunction = MetalNative.CreateFunctionFromLibrary(compiledLibrary, "clearUAVUint");
+                        if (computeFunction == IntPtr.Zero)
+                        {
+                            Console.WriteLine("[MetalCommandList] ClearUAVUint: Function 'clearUAVUint' not found in compiled library");
+                            MetalNative.ReleaseLibrary(compiledLibrary);
+                            return;
+                        }
+                    }
+                    finally
+                    {
+                        // Release compiled library (function retains reference)
+                        MetalNative.ReleaseLibrary(compiledLibrary);
+                    }
                 }
 
                 // Create compute pipeline state
