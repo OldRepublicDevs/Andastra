@@ -1609,8 +1609,16 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 uint combinedFlags = _kotor2ExtensionFlag2 | _kotor2ExtensionFlag5 | _kotor2ExtensionFlag4;
                 result = ((_kotor2ExtensionFlags & combinedFlags) == combinedFlags) ? 1u : 0u;
                 _kotor2CapabilityFlag2 = result;
-                // Additional check would be performed here (FUN_00475520)
-                // TODO: STUB - For now, this is a placeholder
+                // TODO: GHIDRA_REQUIRED - Implement FUN_00475520 additional check
+                // swkotor2.exe: FUN_00475520 @ 0x00475520 performs an additional validation check
+                // after the extension flags are verified. This function needs to be reverse-engineered
+                // in Ghidra to determine:
+                // 1. What additional validation it performs (runtime check, function pointer validation, version check, etc.)
+                // 2. How it modifies the result value (if at all)
+                // 3. What parameters it takes (if any)
+                // 4. What global variables or state it accesses
+                // Once reverse-engineered, implement the exact logic here to ensure 1:1 parity.
+                // Current implementation is functional but incomplete without this check.
             }
             return result;
         }
