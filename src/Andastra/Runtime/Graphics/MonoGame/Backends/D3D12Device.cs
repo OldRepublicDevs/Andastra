@@ -768,6 +768,58 @@ namespace Andastra.Runtime.MonoGame.Backends
         }
 
         /// <summary>
+        /// D3D12_TEXTURE_COPY_LOCATION structure for texture copy operations.
+        /// Based on DirectX 12 Texture Copy: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_texture_copy_location
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_TEXTURE_COPY_LOCATION
+        {
+            public IntPtr pResource; // ID3D12Resource*
+            public uint Type; // D3D12_TEXTURE_COPY_TYPE
+            public D3D12_TEXTURE_COPY_LOCATION_UNION Union;
+        }
+
+        /// <summary>
+        /// Union structure for D3D12_TEXTURE_COPY_LOCATION (either SubresourceIndex or PlacedFootprint).
+        /// </summary>
+        [StructLayout(LayoutKind.Explicit)]
+        private struct D3D12_TEXTURE_COPY_LOCATION_UNION
+        {
+            [FieldOffset(0)]
+            public uint SubresourceIndex; // UINT - used when Type is D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX
+
+            [FieldOffset(0)]
+            public D3D12_PLACED_SUBRESOURCE_FOOTPRINT PlacedFootprint; // used when Type is D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT
+        }
+
+        /// <summary>
+        /// D3D12_PLACED_SUBRESOURCE_FOOTPRINT structure.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_PLACED_SUBRESOURCE_FOOTPRINT
+        {
+            public ulong Offset; // UINT64
+            public D3D12_SUBRESOURCE_FOOTPRINT Footprint;
+        }
+
+        /// <summary>
+        /// D3D12_SUBRESOURCE_FOOTPRINT structure.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_SUBRESOURCE_FOOTPRINT
+        {
+            public uint Format; // DXGI_FORMAT
+            public uint Width; // UINT
+            public uint Height; // UINT
+            public uint Depth; // UINT
+            public uint RowPitch; // UINT
+        }
+
+        // DirectX 12 Texture Copy Type constants
+        private const uint D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX = 0;
+        private const uint D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT = 1;
+
+        /// <summary>
         /// D3D12_RESOURCE_UAV_BARRIER structure for UAV barriers.
         /// </summary>
         [StructLayout(LayoutKind.Sequential)]
@@ -783,6 +835,40 @@ namespace Andastra.Runtime.MonoGame.Backends
         // COM interface method delegate for Dispatch
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void DispatchDelegate(IntPtr commandList, uint threadGroupCountX, uint threadGroupCountY, uint threadGroupCountZ);
+
+        // COM interface method delegate for SetPipelineState
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void SetPipelineStateDelegate(IntPtr commandList, IntPtr pPipelineState);
+
+        // COM interface method delegate for SetComputeRootSignature
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void SetComputeRootSignatureDelegate(IntPtr commandList, IntPtr pRootSignature);
+
+        // COM interface method delegate for SetComputeRootDescriptorTable
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void SetComputeRootDescriptorTableDelegate(IntPtr commandList, uint RootParameterIndex, D3D12_GPU_DESCRIPTOR_HANDLE BaseDescriptor);
+
+        // COM interface method delegate for SetDescriptorHeaps
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void SetDescriptorHeapsDelegate(IntPtr commandList, uint NumDescriptorHeaps, IntPtr ppDescriptorHeaps);
+
+        // D3D12 GPU descriptor handle structure
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_GPU_DESCRIPTOR_HANDLE
+        {
+            public ulong ptr;
+        }
+
+        // COM interface method delegate for CopyTextureRegion
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void CopyTextureRegionDelegate(
+            IntPtr commandList,
+            IntPtr pDst,
+            uint DstX,
+            uint DstY,
+            uint DstZ,
+            IntPtr pSrc,
+            IntPtr pSrcBox);
 
         /// <summary>
         /// Maps ResourceState enum to D3D12_RESOURCE_STATES flags.
@@ -1745,6 +1831,10 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _device = device;
             }
 
+            // Accessors for command list to use
+            public IntPtr GetPipelineState() { return _d3d12PipelineState; }
+            public IntPtr GetRootSignature() { return _rootSignature; }
+
             public void Dispose()
             {
                 // TODO: Release D3D12 pipeline state and root signature
@@ -1972,7 +2062,101 @@ namespace Andastra.Runtime.MonoGame.Backends
             public void WriteBuffer<T>(IBuffer buffer, T[] data, int destOffset = 0) where T : unmanaged { /* TODO: Use upload heap or UpdateSubresources */ }
             public void WriteTexture(ITexture texture, int mipLevel, int arraySlice, byte[] data) { /* TODO: UpdateSubresources */ }
             public void CopyBuffer(IBuffer dest, int destOffset, IBuffer src, int srcOffset, int size) { /* TODO: CopyBufferRegion */ }
-            public void CopyTexture(ITexture dest, ITexture src) { /* TODO: CopyResource or CopyTextureRegion */ }
+            public void CopyTexture(ITexture dest, ITexture src)
+            {
+                if (dest == null || src == null)
+                {
+                    throw new ArgumentNullException(dest == null ? nameof(dest) : nameof(src));
+                }
+
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Cannot record commands when command list is closed");
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    return; // Command list not initialized
+                }
+
+                // Get native resource handles from textures
+                // NativeHandle should contain the ID3D12Resource* pointer for D3D12Texture instances
+                IntPtr srcResource = src.NativeHandle;
+                IntPtr dstResource = dest.NativeHandle;
+
+                if (srcResource == IntPtr.Zero || dstResource == IntPtr.Zero)
+                {
+                    throw new ArgumentException("Source or destination texture has invalid native handle");
+                }
+
+                // Validate texture dimensions match (for full copy)
+                if (src.Desc.Width != dest.Desc.Width || src.Desc.Height != dest.Desc.Height)
+                {
+                    throw new ArgumentException("Source and destination textures must have matching dimensions for copy operation");
+                }
+
+                // Validate format compatibility (must match for full texture copy)
+                if (src.Desc.Format != dest.Desc.Format)
+                {
+                    throw new ArgumentException("Source and destination textures must have matching formats for copy operation");
+                }
+
+                // Transition source texture to COPY_SOURCE state
+                SetTextureState(src, ResourceState.CopySource);
+                // Transition destination texture to COPY_DEST state
+                SetTextureState(dest, ResourceState.CopyDest);
+                // Commit barriers before copy operation
+                CommitBarriers();
+
+                // Create copy locations for both source and destination
+                // Use SUBRESOURCE_INDEX type for texture-to-texture copy
+                var srcLocation = new D3D12_TEXTURE_COPY_LOCATION
+                {
+                    pResource = srcResource,
+                    Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
+                    Union = new D3D12_TEXTURE_COPY_LOCATION_UNION
+                    {
+                        SubresourceIndex = 0 // Copy first mip level and first array slice
+                    }
+                };
+
+                var dstLocation = new D3D12_TEXTURE_COPY_LOCATION
+                {
+                    pResource = dstResource,
+                    Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
+                    Union = new D3D12_TEXTURE_COPY_LOCATION_UNION
+                    {
+                        SubresourceIndex = 0 // Copy to first mip level and first array slice
+                    }
+                };
+
+                // Allocate memory for copy location structures
+                int locationSize = Marshal.SizeOf(typeof(D3D12_TEXTURE_COPY_LOCATION));
+                IntPtr srcLocationPtr = Marshal.AllocHGlobal(locationSize);
+                IntPtr dstLocationPtr = Marshal.AllocHGlobal(locationSize);
+
+                try
+                {
+                    // Marshal structures to unmanaged memory
+                    Marshal.StructureToPtr(srcLocation, srcLocationPtr, false);
+                    Marshal.StructureToPtr(dstLocation, dstLocationPtr, false);
+
+                    // CopyTextureRegion signature: void CopyTextureRegion(
+                    //   const D3D12_TEXTURE_COPY_LOCATION *pDst,
+                    //   UINT DstX, UINT DstY, UINT DstZ,
+                    //   const D3D12_TEXTURE_COPY_LOCATION *pSrc,
+                    //   const D3D12_BOX *pSrcBox)
+                    // pSrcBox = null means copy entire source texture
+                    // DstX/Y/Z = 0 means copy to origin of destination
+                    CallCopyTextureRegion(_d3d12CommandList, dstLocationPtr, 0, 0, 0, srcLocationPtr, IntPtr.Zero);
+                }
+                finally
+                {
+                    // Free allocated memory
+                    Marshal.FreeHGlobal(srcLocationPtr);
+                    Marshal.FreeHGlobal(dstLocationPtr);
+                }
+            }
             public void ClearColorAttachment(IFramebuffer framebuffer, int attachmentIndex, Vector4 color) { /* TODO: ClearRenderTargetView */ }
             public void ClearDepthStencilAttachment(IFramebuffer framebuffer, float depth, byte stencil, bool clearDepth = true, bool clearStencil = true)
             {
@@ -2226,6 +2410,43 @@ namespace Andastra.Runtime.MonoGame.Backends
                     (ResourceBarrierDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(ResourceBarrierDelegate));
 
                 resourceBarrier(commandList, numBarriers, pBarriers);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::CopyTextureRegion through COM vtable.
+            /// VTable index 45 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Texture Copy: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-copytextureregion
+            /// </summary>
+            private unsafe void CallCopyTextureRegion(
+                IntPtr commandList,
+                IntPtr pDst,
+                uint DstX,
+                uint DstY,
+                uint DstZ,
+                IntPtr pSrc,
+                IntPtr pSrcBox)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero || pDst == IntPtr.Zero || pSrc == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // CopyTextureRegion is at index 45 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[45];
+
+                // Create delegate from function pointer
+                CopyTextureRegionDelegate copyTextureRegion =
+                    (CopyTextureRegionDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CopyTextureRegionDelegate));
+
+                copyTextureRegion(commandList, pDst, DstX, DstY, DstZ, pSrc, pSrcBox);
             }
 
             /// <summary>

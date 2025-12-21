@@ -1787,7 +1787,30 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 return;
             }
-            // TODO: Implement debug event begin for Metal
+
+            if (string.IsNullOrEmpty(name))
+            {
+                return;
+            }
+
+            // Push debug group on active command encoder if available, otherwise on command buffer
+            // Based on Metal API: -[MTLCommandBuffer pushDebugGroup:] and -[MTLRenderCommandEncoder pushDebugGroup:]
+            // Metal API Reference: https://developer.apple.com/documentation/metal/mtlcommandbuffer/1458038-pushdebuggroup
+            // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/2866163-pushdebuggroup
+            // Debug groups pushed on encoders are scoped to that encoder's commands
+            // Debug groups pushed on command buffers apply to all encoders created from that buffer
+            IntPtr target = _currentRenderCommandEncoder;
+            if (target == IntPtr.Zero)
+            {
+                // No active encoder, use command buffer from backend
+                target = _backend.GetCurrentCommandBuffer();
+                if (target == IntPtr.Zero)
+                {
+                    return;
+                }
+            }
+
+            MetalNative.PushDebugGroup(target, name);
         }
 
         public void EndDebugEvent()
@@ -1796,7 +1819,23 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 return;
             }
-            // TODO: Implement debug event end for Metal
+
+            // Pop debug group from active command encoder if available, otherwise from command buffer
+            // Based on Metal API: -[MTLCommandBuffer popDebugGroup] and -[MTLRenderCommandEncoder popDebugGroup]
+            // Metal API Reference: https://developer.apple.com/documentation/metal/mtlcommandbuffer/1458040-popdebuggroup
+            // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/2866164-popdebuggroup
+            IntPtr target = _currentRenderCommandEncoder;
+            if (target == IntPtr.Zero)
+            {
+                // No active encoder, use command buffer from backend
+                target = _backend.GetCurrentCommandBuffer();
+                if (target == IntPtr.Zero)
+                {
+                    return;
+                }
+            }
+
+            MetalNative.PopDebugGroup(target);
         }
 
         public void InsertDebugMarker(string name, Vector4 color)
@@ -1805,7 +1844,30 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 return;
             }
-            // TODO: Implement debug marker for Metal
+
+            if (string.IsNullOrEmpty(name))
+            {
+                return;
+            }
+
+            // Insert debug marker by pushing and immediately popping a debug group
+            // This creates an instant marker point in the command stream
+            // Based on Metal API: pushDebugGroup: followed immediately by popDebugGroup
+            // Metal API Reference: https://developer.apple.com/documentation/metal/mtlcommandbuffer/1458038-pushdebuggroup
+            // Note: Metal doesn't have a direct "insert marker" API, so we use push/pop pattern
+            IntPtr target = _currentRenderCommandEncoder;
+            if (target == IntPtr.Zero)
+            {
+                // No active encoder, use command buffer from backend
+                target = _backend.GetCurrentCommandBuffer();
+                if (target == IntPtr.Zero)
+                {
+                    return;
+                }
+            }
+
+            MetalNative.PushDebugGroup(target, name);
+            MetalNative.PopDebugGroup(target);
         }
 
         public void Dispose()

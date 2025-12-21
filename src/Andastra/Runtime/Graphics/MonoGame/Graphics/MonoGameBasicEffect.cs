@@ -161,6 +161,46 @@ namespace Andastra.Runtime.MonoGame.Graphics
             }
         }
 
+        public override bool FogEnabled
+        {
+            get { return base.FogEnabled; }
+            set
+            {
+                base.FogEnabled = value;
+                _effect.FogEnabled = value;
+            }
+        }
+
+        public override Vector3 FogColor
+        {
+            get { return base.FogColor; }
+            set
+            {
+                base.FogColor = value;
+                _effect.FogColor = ConvertVector3(value);
+            }
+        }
+
+        public override float FogStart
+        {
+            get { return base.FogStart; }
+            set
+            {
+                base.FogStart = value;
+                _effect.FogStart = value;
+            }
+        }
+
+        public override float FogEnd
+        {
+            get { return base.FogEnd; }
+            set
+            {
+                base.FogEnd = value;
+                _effect.FogEnd = value;
+            }
+        }
+
         protected override IEffectTechnique GetCurrentTechniqueInternal()
         {
             return new MonoGameEffectTechnique(_effect.CurrentTechnique);
