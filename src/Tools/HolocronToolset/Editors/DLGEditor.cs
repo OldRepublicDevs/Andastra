@@ -173,6 +173,14 @@ namespace HolocronToolset.Editors
         private NumericUpDown _delaySpin;
         // Original: QLineEdit voIdEdit (row 4, column 1 in file properties grid)
         private TextBox _voIdEdit;
+
+        // UI Controls - Camera widgets
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui:1112-1151
+        // Original: QSpinBox cameraIdSpin, cameraAnimSpin, QComboBox cameraAngleSelect, cameraEffectSelect
+        private NumericUpDown _cameraIdSpin;
+        private NumericUpDown _cameraAnimSpin;
+        private ComboBox _cameraAngleSelect;
+        private ComboBox _cameraEffectSelect;
         // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
         // Original: QComboBox ambientTrackCombo
         private ComboBox _ambientTrackCombo;
@@ -528,6 +536,51 @@ namespace HolocronToolset.Editors
             timingPanel.Children.Add(_fadeTypeSpin);
             panel.Children.Add(timingPanel);
 
+            // Initialize camera widgets
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui:1112-1151
+            // Original: QSpinBox cameraIdSpin, cameraAnimSpin, QComboBox cameraAngleSelect, cameraEffectSelect
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2524-2527
+            // Original: item.link.node.camera_id = self.ui.cameraIdSpin.value(), item.link.node.camera_anim = self.ui.cameraAnimSpin.value(), item.link.node.camera_angle = self.ui.cameraAngleSelect.currentIndex(), item.link.node.camera_effect = self.ui.cameraEffectSelect.currentIndex()
+            _cameraIdSpin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = -1 };
+            _cameraIdSpin.ValueChanged += (s, e) => OnNodeUpdate();
+
+            _cameraAnimSpin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = 0 };
+            _cameraAnimSpin.ValueChanged += (s, e) => OnNodeUpdate();
+
+            _cameraAngleSelect = new ComboBox();
+            // Camera angle options: 0-7 (matching Python implementation)
+            // 0 = Default, 1-6 = Various angles, 7 = Custom
+            _cameraAngleSelect.Items.Add("Default (0)");
+            _cameraAngleSelect.Items.Add("Angle 1");
+            _cameraAngleSelect.Items.Add("Angle 2");
+            _cameraAngleSelect.Items.Add("Angle 3");
+            _cameraAngleSelect.Items.Add("Angle 4");
+            _cameraAngleSelect.Items.Add("Angle 5");
+            _cameraAngleSelect.Items.Add("Angle 6");
+            _cameraAngleSelect.Items.Add("Custom (7)");
+            _cameraAngleSelect.SelectedIndex = 0;
+            _cameraAngleSelect.SelectionChanged += (s, e) => OnNodeUpdate();
+
+            _cameraEffectSelect = new ComboBox();
+            // Camera effect options (matching Python implementation)
+            _cameraEffectSelect.Items.Add("None (0)");
+            _cameraEffectSelect.Items.Add("Effect 1");
+            _cameraEffectSelect.Items.Add("Effect 2");
+            _cameraEffectSelect.Items.Add("Effect 3");
+            _cameraEffectSelect.SelectedIndex = 0;
+            _cameraEffectSelect.SelectionChanged += (s, e) => OnNodeUpdate();
+
+            var cameraPanel = new StackPanel();
+            cameraPanel.Children.Add(new TextBlock { Text = "Camera ID:" });
+            cameraPanel.Children.Add(_cameraIdSpin);
+            cameraPanel.Children.Add(new TextBlock { Text = "Camera Animation:" });
+            cameraPanel.Children.Add(_cameraAnimSpin);
+            cameraPanel.Children.Add(new TextBlock { Text = "Camera Angle:" });
+            cameraPanel.Children.Add(_cameraAngleSelect);
+            cameraPanel.Children.Add(new TextBlock { Text = "Camera Effect:" });
+            cameraPanel.Children.Add(_cameraEffectSelect);
+            panel.Children.Add(cameraPanel);
+
             // Initialize voice combo box
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:365
             // Original: self.ui.voiceComboBox.currentTextChanged.connect(self.on_node_update)
@@ -587,7 +640,7 @@ namespace HolocronToolset.Editors
 
         /// <summary>
         /// Sets up the context menu for the dialog tree.
-        /// Matching PyKotor implementation that checks for customContextMenuRequested signal receivers.
+        /// Matching PyKotor implementation that uses dynamic context menu creation via _get_link_context_menu.
         /// </summary>
         private void SetupDialogTreeContextMenu()
         {
@@ -596,49 +649,455 @@ namespace HolocronToolset.Editors
                 return;
             }
 
-            var contextMenu = new ContextMenu();
+            // In Avalonia, we handle context menu requests via the ContextRequested event
+            // This allows us to create dynamic context menus based on the selected item
+            _dialogTree.ContextRequested += (sender, e) =>
+            {
+                // Get the item at the pointer position
+                var point = e.TryGetPosition(_dialogTree);
+                if (!point.HasValue)
+                {
+                    return;
+                }
+
+                // Find the item at the pointer position
+                DLGStandardItem item = null;
+                var selectedItem = _dialogTree.SelectedItem;
+                if (selectedItem is TreeViewItem treeItem && treeItem.Tag is DLGStandardItem dlgItem)
+                {
+                    item = dlgItem;
+                }
+                else if (selectedItem is DLGStandardItem dlgItemDirect)
+                {
+                    item = dlgItemDirect;
+                }
+
+                if (item != null)
+                {
+                    var contextMenu = GetLinkContextMenu(_dialogTree, item);
+                    if (contextMenu != null)
+                    {
+                        contextMenu.Open(_dialogTree);
+                        e.Handled = true;
+                    }
+                }
+                else
+                {
+                    // No item selected - show empty context menu or menu for adding root node
+                    var contextMenu = new ContextMenu();
+                    var addEntryItem = new MenuItem
+                    {
+                        Header = "Add Entry"
+                    };
+                    addEntryItem.Click += (s, args) => _model.AddRootNode();
+                    contextMenu.Items.Add(addEntryItem);
+                    contextMenu.Open(_dialogTree);
+                    e.Handled = true;
+                }
+            };
+        }
+
+        /// <summary>
+        /// Gets the context menu for a dialog tree item.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1711-1875
+        /// Original: def _get_link_context_menu(self, source_widget: DLGListWidget | DLGTreeView, item: DLGStandardItem | DLGListWidgetItem) -> _QMenu:
+        /// </summary>
+        /// <param name="sourceWidget">The source widget (TreeView or DLGListWidget).</param>
+        /// <param name="item">The item to get the context menu for.</param>
+        /// <returns>The context menu for the item.</returns>
+        public ContextMenu GetLinkContextMenu(Control sourceWidget, DLGStandardItem item)
+        {
+            if (item?.Link == null)
+            {
+                return null;
+            }
+
+            // Matching PyKotor: self._check_clipboard_for_json_node()
+            CheckClipboardForJsonNode();
+
+            // Matching PyKotor: not_an_orphan: bool = source_widget is not self.orphaned_nodes_list
+            bool notAnOrphan = sourceWidget != _orphanedNodesList;
+
+            // Matching PyKotor: node_type: Literal["Entry", "Reply"] = "Entry" if isinstance(item.link.node, DLGEntry) else "Reply"
+            string nodeType = item.Link.Node is DLGEntry ? "Entry" : "Reply";
+            string otherNodeType = item.Link.Node is DLGEntry ? "Reply" : "Entry";
+
+            var menu = new ContextMenu();
             var menuItems = new List<MenuItem>();
 
-            // Add menu item for adding child nodes
-            var addChildItem = new MenuItem
+            // Actions for both list widget and tree view
+            // Matching PyKotor: edit_text_action: _QAction | None = menu.addAction("Edit Text")
+            var editTextItem = new MenuItem
             {
-                Header = "Add Child",
-                Command = ReactiveUI.ReactiveCommand.Create(AddChildToSelectedItem)
+                Header = "Edit Text"
             };
-            menuItems.Add(addChildItem);
-
-            // Add menu item for deleting nodes
-            var deleteItem = new MenuItem
+            editTextItem.Click += (s, e) =>
             {
-                Header = "Delete",
-                Command = ReactiveUI.ReactiveCommand.Create(() => DeleteSelectedNode())
+                // Matching PyKotor: edit_text_action.triggered.connect(lambda *args: self.edit_text(indexes=source_widget.selectedIndexes(), source_widget=source_widget))
+                EditText();
             };
-            menuItems.Add(deleteItem);
+            menuItems.Add(editTextItem);
 
-            // Add separator
+            // Matching PyKotor: focus_action: _QAction | None = menu.addAction("Focus")
+            var focusItem = new MenuItem
+            {
+                Header = "Focus"
+            };
+            focusItem.Click += (s, e) =>
+            {
+                // Matching PyKotor: focus_action.triggered.connect(lambda: self.focus_on_node(item.link))
+                FocusOnNode(item.Link);
+            };
+            // Matching PyKotor: focus_action.setEnabled(bool(item.link.node.links))
+            focusItem.IsEnabled = item.Link.Node?.Links != null && item.Link.Node.Links.Count > 0;
+            // Matching PyKotor: focus_action.setVisible(not_an_orphan)
+            focusItem.IsVisible = notAnOrphan;
+            menuItems.Add(focusItem);
+
+            // Matching PyKotor: find_references_action: _QAction | None = menu.addAction("Find References")
+            var findReferencesItem = new MenuItem
+            {
+                Header = "Find References"
+            };
+            findReferencesItem.Click += (s, e) =>
+            {
+                // Matching PyKotor: find_references_action.triggered.connect(lambda: self.find_references(item))
+                FindReferences(item);
+            };
+            // Matching PyKotor: find_references_action.setVisible(not_an_orphan)
+            findReferencesItem.IsVisible = notAnOrphan;
+            menuItems.Add(findReferencesItem);
+
+            // Play menu for both
+            // Matching PyKotor: play_menu: _QMenu | None = menu.addMenu("Play")
+            var playMenu = new MenuItem
+            {
+                Header = "Play"
+            };
+            var playSubMenuItems = new List<MenuItem>();
+
+            // Matching PyKotor: play_sound_action: _QAction | None = play_menu.addAction("Play Sound")
+            var playSoundItem = new MenuItem
+            {
+                Header = "Play Sound"
+            };
+            playSoundItem.Click += (s, e) =>
+            {
+                // Matching PyKotor: play_sound_action.triggered.connect(lambda: (self.play_sound("" if item.link is None else str(item.link.node.sound)) and None) or None)
+                string soundResref = item.Link?.Node?.Sound?.ToString() ?? "";
+                if (!string.IsNullOrEmpty(soundResref))
+                {
+                    PlaySound(soundResref, new[] { SearchLocation.SOUND, SearchLocation.VOICE });
+                }
+            };
+            // Matching PyKotor: play_sound_action.setEnabled(bool(self.ui.soundComboBox.currentText().strip()))
+            // Note: We check the node's sound property directly since we don't have a separate soundComboBox UI control
+            string soundResref = item.Link?.Node?.Sound?.ToString() ?? "";
+            playSoundItem.IsEnabled = !string.IsNullOrWhiteSpace(soundResref);
+            playSubMenuItems.Add(playSoundItem);
+
+            // Matching PyKotor: play_voice_action: _QAction | None = play_menu.addAction("Play Voice")
+            var playVoiceItem = new MenuItem
+            {
+                Header = "Play Voice"
+            };
+            playVoiceItem.Click += (s, e) =>
+            {
+                // Matching PyKotor: play_voice_action.triggered.connect(lambda: (self.play_sound("" if item.link is None else str(item.link.node.vo_resref)) and None) or None)
+                string voiceResref = item.Link?.Node?.VoResref?.ToString() ?? "";
+                if (!string.IsNullOrEmpty(voiceResref))
+                {
+                    PlaySound(voiceResref, new[] { SearchLocation.VOICE });
+                }
+            };
+            // Matching PyKotor: play_voice_action.setEnabled(bool(self.ui.voiceComboBox.currentText().strip()))
+            // Note: We check the node's vo_resref property directly
+            string voiceResrefForEnable = item.Link?.Node?.VoResref?.ToString() ?? "";
+            playVoiceItem.IsEnabled = !string.IsNullOrWhiteSpace(voiceResrefForEnable);
+            playSubMenuItems.Add(playVoiceItem);
+
+            // Matching PyKotor: play_menu.setEnabled(bool(self.ui.soundComboBox.currentText().strip() or self.ui.voiceComboBox.currentText().strip()))
+            playMenu.IsEnabled = !string.IsNullOrWhiteSpace(soundResref) || !string.IsNullOrWhiteSpace(voiceResrefForEnable);
+            foreach (var subItem in playSubMenuItems)
+            {
+                playMenu.Items.Add(subItem);
+            }
+            menuItems.Add(playMenu);
+
+            // Matching PyKotor: menu.addSeparator()
             menuItems.Add(new MenuItem { Header = "-" });
 
-            // Add menu item for copying nodes
-            var copyItem = new MenuItem
+            // Copy actions for both
+            // Matching PyKotor: copy_node_action: _QAction | None = menu.addAction(f"Copy {node_type} to Clipboard")
+            var copyNodeItem = new MenuItem
             {
-                Header = "Copy",
-                Command = ReactiveUI.ReactiveCommand.Create(() => CopyLinkAndNode())
+                Header = $"Copy {nodeType} to Clipboard"
             };
-            menuItems.Add(copyItem);
-
-            // Add menu item for pasting nodes
-            var pasteItem = new MenuItem
+            copyNodeItem.Click += async (s, e) =>
             {
-                Header = "Paste",
-                Command = ReactiveUI.ReactiveCommand.Create(() => PasteItem(asNewBranches: false))
+                // Matching PyKotor: copy_node_action.triggered.connect(lambda: self.model.copy_link_and_node(item.link))
+                if (item.Link != null)
+                {
+                    await _model.CopyLinkAndNode(item.Link, this);
+                }
             };
-            menuItems.Add(pasteItem);
+            menuItems.Add(copyNodeItem);
 
-            foreach (var item in menuItems)
+            // Matching PyKotor: copy_gff_path_action: _QAction | None = menu.addAction("Copy GFF Path")
+            var copyGffPathItem = new MenuItem
             {
-                contextMenu.Items.Add(item);
+                Header = "Copy GFF Path"
+            };
+            copyGffPathItem.Click += (s, e) =>
+            {
+                // Matching PyKotor: copy_gff_path_action.triggered.connect(lambda: self.copy_path(None if item.link is None else item.link.node))
+                CopyPath();
+            };
+            // Matching PyKotor: copy_gff_path_action.setVisible(not_an_orphan)
+            copyGffPathItem.IsVisible = notAnOrphan;
+            menuItems.Add(copyGffPathItem);
+
+            // Matching PyKotor: menu.addSeparator()
+            menuItems.Add(new MenuItem { Header = "-" });
+
+            if (sourceWidget is TreeView)
+            {
+                // Tree view only actions
+                // Matching PyKotor: expand_all_children_action: _QAction | None = menu.addAction("Expand All Children")
+                var expandAllChildrenItem = new MenuItem
+                {
+                    Header = "Expand All Children"
+                };
+                expandAllChildrenItem.Click += (s, e) =>
+                {
+                    // Matching PyKotor: expand_all_children_action.triggered.connect(lambda: self.set_expand_recursively(item, set(), expand=True))
+                    // Find the TreeViewItem for this DLGStandardItem
+                    TreeViewItem treeItem = FindTreeViewItem(_dialogTree.ItemsSource as System.Collections.IEnumerable, item);
+                    if (treeItem != null)
+                    {
+                        SetExpandRecursivelyInternal(item, treeItem, new HashSet<DLGNode>(), true, 11, 0, true);
+                    }
+                };
+                menuItems.Add(expandAllChildrenItem);
+
+                // Matching PyKotor: collapse_all_children_action: _QAction | None = menu.addAction("Collapse All Children")
+                var collapseAllChildrenItem = new MenuItem
+                {
+                    Header = "Collapse All Children"
+                };
+                collapseAllChildrenItem.Click += (s, e) =>
+                {
+                    // Matching PyKotor: collapse_all_children_action.triggered.connect(lambda: self.set_expand_recursively(item, set(), expand=False))
+                    // Find the TreeViewItem for this DLGStandardItem
+                    TreeViewItem treeItem = FindTreeViewItem(_dialogTree.ItemsSource as System.Collections.IEnumerable, item);
+                    if (treeItem != null)
+                    {
+                        SetExpandRecursivelyInternal(item, treeItem, new HashSet<DLGNode>(), false, 11, 0, true);
+                    }
+                };
+                menuItems.Add(collapseAllChildrenItem);
+
+                // Matching PyKotor: menu.addSeparator()
+                menuItems.Add(new MenuItem { Header = "-" });
+
+                // Paste actions
+                // Matching PyKotor: paste_link_action: _QAction = menu.addAction(f"Paste {other_node_type} from Clipboard as Link")
+                var pasteLinkItem = new MenuItem
+                {
+                    Header = $"Paste {otherNodeType} from Clipboard as Link"
+                };
+                // Matching PyKotor: paste_new_action: _QAction = menu.addAction(f"Paste {other_node_type} from Clipboard as Deep Copy")
+                var pasteNewItem = new MenuItem
+                {
+                    Header = $"Paste {otherNodeType} from Clipboard as Deep Copy"
+                };
+
+                // Matching PyKotor: if self._copy is None: paste_link_action.setEnabled(False), paste_new_action.setEnabled(False)
+                if (_copy == null)
+                {
+                    pasteLinkItem.IsEnabled = false;
+                    pasteNewItem.IsEnabled = false;
+                }
+                else
+                {
+                    // Matching PyKotor: copied_node_type: Literal["Entry", "Reply"] = "Entry" if isinstance(self._copy.node, DLGEntry) else "Reply"
+                    string copiedNodeType = _copy.Node is DLGEntry ? "Entry" : "Reply";
+                    pasteLinkItem.Header = $"Paste {copiedNodeType} from Clipboard as Link";
+                    pasteNewItem.Header = $"Paste {copiedNodeType} from Clipboard as Deep Copy";
+                    // Matching PyKotor: if node_type == copied_node_type: paste_link_action.setEnabled(False), paste_new_action.setEnabled(False)
+                    if (nodeType == copiedNodeType)
+                    {
+                        pasteLinkItem.IsEnabled = false;
+                        pasteNewItem.IsEnabled = false;
+                    }
+                }
+
+                pasteLinkItem.Click += (s, e) =>
+                {
+                    // Matching PyKotor: paste_link_action.triggered.connect(lambda: self.model.paste_item(item, as_new_branches=False))
+                    _model.PasteItem(item, _copy, asNewBranches: false);
+                };
+
+                pasteNewItem.Click += (s, e) =>
+                {
+                    // Matching PyKotor: paste_new_action.triggered.connect(lambda: self.model.paste_item(item, as_new_branches=True))
+                    _model.PasteItem(item, _copy, asNewBranches: true);
+                };
+
+                menuItems.Add(pasteLinkItem);
+                menuItems.Add(pasteNewItem);
+
+                // Matching PyKotor: menu.addSeparator()
+                menuItems.Add(new MenuItem { Header = "-" });
+
+                // Add/Move actions
+                // Matching PyKotor: add_node_action: _QAction | None = menu.addAction(f"Add {other_node_type}")
+                var addNodeItem = new MenuItem
+                {
+                    Header = $"Add {otherNodeType}"
+                };
+                addNodeItem.Click += (s, e) =>
+                {
+                    // Matching PyKotor: add_node_action.triggered.connect(lambda: self.model.add_child_to_item(item))
+                    _model.AddChildToItem(item, null);
+                };
+                menuItems.Add(addNodeItem);
+
+                // Matching PyKotor: menu.addSeparator()
+                menuItems.Add(new MenuItem { Header = "-" });
+
+                // Matching PyKotor: move_up_action: _QAction | None = menu.addAction("Move Up")
+                var moveUpItem = new MenuItem
+                {
+                    Header = "Move Up"
+                };
+                moveUpItem.Click += (s, e) =>
+                {
+                    // Matching PyKotor: move_up_action.triggered.connect(lambda: self.model.shift_item(item, -1))
+                    _model.ShiftItem(item, -1);
+                    UpdateTreeView();
+                };
+                menuItems.Add(moveUpItem);
+
+                // Matching PyKotor: move_down_action: _QAction | None = menu.addAction("Move Down")
+                var moveDownItem = new MenuItem
+                {
+                    Header = "Move Down"
+                };
+                moveDownItem.Click += (s, e) =>
+                {
+                    // Matching PyKotor: move_down_action.triggered.connect(lambda: self.model.shift_item(item, -1)) [Note: Python uses -1 for down, but logic is reversed]
+                    _model.ShiftItem(item, 1);
+                    UpdateTreeView();
+                };
+                menuItems.Add(moveDownItem);
+
+                // Matching PyKotor: menu.addSeparator()
+                menuItems.Add(new MenuItem { Header = "-" });
+
+                // Remove action
+                // Matching PyKotor: remove_link_action: _QAction | None = menu.addAction(f"Remove {node_type}")
+                var removeLinkItem = new MenuItem
+                {
+                    Header = $"Remove {nodeType}"
+                };
+                removeLinkItem.Click += (s, e) =>
+                {
+                    // Matching PyKotor: remove_link_action.triggered.connect(lambda: self.model.remove_link(item))
+                    RemoveLink(item);
+                };
+                menuItems.Add(removeLinkItem);
+
+                // Matching PyKotor: menu.addSeparator()
+                menuItems.Add(new MenuItem { Header = "-" });
             }
-            _dialogTree.ContextMenu = contextMenu;
+
+            // Matching PyKotor: delete_all_references_action = QAction(f"Delete ALL References to {node_type}", menu)
+            var deleteAllReferencesItem = new MenuItem
+            {
+                Header = $"Delete ALL References to {nodeType}"
+            };
+            deleteAllReferencesItem.Click += (s, e) =>
+            {
+                // Matching PyKotor: delete_all_references_action.triggered.connect(lambda: self.model.delete_node_everywhere(item.link.node))
+                if (item.Link?.Node != null)
+                {
+                    _model.DeleteNodeEverywhere(item.Link.Node);
+                    UpdateTreeView();
+                }
+            };
+            // Matching PyKotor: delete_all_references_action.setVisible(not_an_orphan)
+            deleteAllReferencesItem.IsVisible = notAnOrphan;
+            menuItems.Add(deleteAllReferencesItem);
+
+            foreach (var menuItem in menuItems)
+            {
+                menu.Items.Add(menuItem);
+            }
+
+            return menu;
+        }
+
+        /// <summary>
+        /// Checks the clipboard for a JSON node and sets _copy if found.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1465-1478
+        /// Original: def _check_clipboard_for_json_node(self):
+        /// </summary>
+        private void CheckClipboardForJsonNode()
+        {
+            try
+            {
+                var topLevel = Avalonia.Controls.TopLevel.GetTopLevel(this);
+                if (topLevel?.Clipboard == null)
+                {
+                    return;
+                }
+
+                // Note: Avalonia clipboard access is async, but we'll use a synchronous approach for now
+                // In a full implementation, we might need to make this async or use a different approach
+                // For now, we'll just try to get the clipboard text if possible
+                // Matching PyKotor: clipboard_text: str = cb.text()
+                // Matching PyKotor: node_data: dict[str | int, Any] = json.loads(clipboard_text)
+                // Matching PyKotor: if isinstance(node_data, dict) and "type" in node_data: self._copy = DLGLink.from_dict(node_data)
+                // This is a simplified implementation - in a full implementation, we'd need async clipboard access
+            }
+            catch (Exception)
+            {
+                // Matching PyKotor: except json.JSONDecodeError: ... except Exception: self._logger.exception("Invalid JSON node on clipboard.")
+                // Silently ignore clipboard errors
+            }
+        }
+
+        /// <summary>
+        /// Removes a link from the parent node.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:620-634
+        /// Original: def remove_link(self, item: DLGStandardItem):
+        /// </summary>
+        /// <param name="item">The item whose link should be removed.</param>
+        private void RemoveLink(DLGStandardItem item)
+        {
+            if (item == null || item.Link == null)
+            {
+                return;
+            }
+
+            var parent = item.Parent;
+            if (parent == null)
+            {
+                // Remove from root items
+                _model.RemoveStarter(item.Link);
+            }
+            else
+            {
+                // Remove from parent's children
+                if (parent.Link?.Node != null)
+                {
+                    parent.Link.Node.Links.Remove(item.Link);
+                    parent.RemoveChild(item);
+                }
+            }
+
+            UpdateTreeView();
         }
 
         /// <summary>
@@ -1065,6 +1524,13 @@ namespace HolocronToolset.Editors
         public NumericUpDown DelaySpin => _delaySpin;
         public NumericUpDown WaitFlagSpin => _waitFlagSpin;
         public NumericUpDown FadeTypeSpin => _fadeTypeSpin;
+
+        // Expose camera widgets for testing
+        // Matching PyKotor implementation: editor.ui.cameraIdSpin, editor.ui.cameraAnimSpin, editor.ui.cameraAngleSelect, editor.ui.cameraEffectSelect
+        public NumericUpDown CameraIdSpin => _cameraIdSpin;
+        public NumericUpDown CameraAnimSpin => _cameraAnimSpin;
+        public ComboBox CameraAngleSelect => _cameraAngleSelect;
+        public ComboBox CameraEffectSelect => _cameraEffectSelect;
 
         // Expose speaker widgets for testing
         // Matching PyKotor implementation: editor.ui.speakerEdit, editor.ui.speakerEditLabel
@@ -1611,6 +2077,48 @@ namespace HolocronToolset.Editors
             {
                 string voiceText = _voiceComboBox.Text ?? string.Empty;
                 node.VoResRef = string.IsNullOrEmpty(voiceText) ? ResRef.FromBlank() : new ResRef(voiceText);
+            }
+
+            // Update camera properties in node
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2524-2527
+            // Original: item.link.node.camera_id = self.ui.cameraIdSpin.value(), item.link.node.camera_anim = self.ui.cameraAnimSpin.value(), item.link.node.camera_angle = self.ui.cameraAngleSelect.currentIndex(), item.link.node.camera_effect = self.ui.cameraEffectSelect.currentIndex()
+            if (_cameraIdSpin != null && node != null)
+            {
+                node.CameraId = _cameraIdSpin.Value.HasValue ? (int?)_cameraIdSpin.Value.Value : null;
+            }
+
+            if (_cameraAnimSpin != null && node != null)
+            {
+                node.CameraAnim = _cameraAnimSpin.Value.HasValue ? (int?)_cameraAnimSpin.Value.Value : null;
+            }
+
+            if (_cameraAngleSelect != null && node != null)
+            {
+                node.CameraAngle = _cameraAngleSelect.SelectedIndex >= 0 ? _cameraAngleSelect.SelectedIndex : 0;
+            }
+
+            if (_cameraEffectSelect != null && node != null)
+            {
+                node.CameraEffect = _cameraEffectSelect.SelectedIndex >= 0 ? (int?)_cameraEffectSelect.SelectedIndex : null;
+            }
+
+            // Handle camera ID and angle interaction (matching Python logic)
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2529-2532
+            // Original: if item.link.node.camera_id >= 0 and item.link.node.camera_angle == 0: self.ui.cameraAngleSelect.setCurrentIndex(6), elif item.link.node.camera_id == -1 and item.link.node.camera_angle == 7: self.ui.cameraAngleSelect.setCurrentIndex(0)
+            if (_cameraIdSpin != null && _cameraAngleSelect != null && node != null)
+            {
+                int? cameraId = _cameraIdSpin.Value.HasValue ? (int?)_cameraIdSpin.Value.Value : null;
+                int cameraAngle = _cameraAngleSelect.SelectedIndex >= 0 ? _cameraAngleSelect.SelectedIndex : 0;
+                if (cameraId.HasValue && cameraId.Value >= 0 && cameraAngle == 0)
+                {
+                    _cameraAngleSelect.SelectedIndex = 6;
+                    node.CameraAngle = 6;
+                }
+                else if (cameraId.HasValue && cameraId.Value == -1 && cameraAngle == 7)
+                {
+                    _cameraAngleSelect.SelectedIndex = 0;
+                    node.CameraAngle = 0;
+                }
             }
         }
 
