@@ -5307,11 +5307,6 @@ namespace Andastra.Runtime.MonoGame.Backends
             private RaytracingState _raytracingState;
             private bool _hasRaytracingState;
 
-            // Compute pipeline cache for ClearUAVUint
-            private static IntPtr _clearUAVUintComputePipeline = IntPtr.Zero;
-            private static IntPtr _clearUAVUintPipelineLayout = IntPtr.Zero;
-            private static IntPtr _clearUAVUintDescriptorSetLayout = IntPtr.Zero;
-
             // Pending barrier entry for buffers
             private struct PendingBufferBarrier
             {
@@ -6624,45 +6619,10 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // This is the correct layout for UAVs and allows subsequent compute shader access
                 // No transition back is needed
             }
-            // Helper method to get SPIR-V bytecode for compute shader that clears a uint storage image
-            // GLSL equivalent:
-            // #version 450
-            // layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
-            // layout(set = 0, binding = 0, r32ui) uniform writeonly uimage2D outputImage;
-            // layout(set = 0, binding = 1, std140) uniform ClearValueBuffer { uint clearValue; } uClearValue;
-            // void main() {
-            //     ivec2 coord = ivec2(gl_GlobalInvocationID.xy);
-            //     imageStore(outputImage, coord, uvec4(uClearValue.clearValue, 0, 0, 0));
-            // }
-            private byte[] GetClearUAVUintComputeShaderSpirV()
-            {
-                // Minimal SPIR-V 1.0 compute shader bytecode for clearing r32ui storage image
-                // Generated from GLSL shader above using glslangValidator
-                // This is a valid SPIR-V shader that:
-                // - Has local size 16x16x1
-                // - Takes a storage image (r32ui) at binding 0
-                // - Takes a uniform buffer with uint clearValue at binding 1
-                // - Writes the clear value to each pixel
-                return new byte[]
-                {
-                    0x03, 0x02, 0x23, 0x07, // Magic number and version
-                    0x00, 0x00, 0x01, 0x00, // Version 1.0, tool ID 0
-                    0x00, 0x00, 0x08, 0x00, // Bound: 8, schema: 0
-                    0x72, 0x00, 0x03, 0x00, // OpCapability Shader
-                    0x72, 0x00, 0x1E, 0x00, // OpCapability ImageBuffer (or StorageImageWriteWithoutFormat for newer)
-                    0x0A, 0x00, 0x03, 0x00, 0x53, 0x00, 0x68, 0x00, 0x61, 0x00, 0x64, 0x00, 0x65, 0x00, 0x72, 0x00, // OpExtension "SPV_KHR_storage_buffer_storage_class"
-                    0x0B, 0x00, 0x03, 0x00, 0x01, 0x00, 0x00, 0x00, // OpMemoryModel Logical GLSL450
-                    0x0C, 0x00, 0x03, 0x00, 0x14, 0x00, 0x00, 0x00, // OpEntryPoint GLCompute %4 "main" %gl_GlobalInvocationID
-                    0x0D, 0x00, 0x03, 0x00, 0x14, 0x00, 0x10, 0x00, 0x10, 0x00, 0x01, 0x00, // OpExecutionMode %4 LocalSize 16 16 1
-                    0x0E, 0x00, 0x03, 0x00, 0x20, 0x00, 0x00, 0x00, // OpSource GLSL 450
-                    // ... more SPIR-V instructions would follow, but this is getting too complex
-                    // For now, using a simpler approach with vkCmdClearColorImage
-                };
-            }
-
-            // Note: The above SPIR-V is incomplete - generating full SPIR-V manually is error-prone
-            // For a production implementation, use glslangValidator or similar to compile GLSL to SPIR-V
-            // For now, implementing with vkCmdClearColorImage which supports integer formats via VkClearColorValue.uint32
+            // ClearUAVUint implementation using vkCmdClearColorImage
+            // vkCmdClearColorImage supports integer formats via VkClearColorValue union (uint32[4] member)
+            // This is the most efficient approach for clearing storage images with integer formats
+            // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdClearColorImage.html
             public void ClearUAVUint(ITexture texture, uint value)
             {
                 if (!_isOpen || texture == null)
@@ -6707,84 +6667,73 @@ namespace Andastra.Runtime.MonoGame.Backends
                     return;
                 }
 
-                // Check if vkCmdClearColorImage supports this format for integer clears
-                // vkCmdClearColorImage can clear integer formats using VkClearColorValue.uint32
-                // However, for storage images (UAVs), we should use compute shader for correctness
-                // For now, try vkCmdClearColorImage if available, otherwise fall back to compute shader approach
-
-                // Transition image to TRANSFER_DST_OPTIMAL for clearing (vkCmdClearColorImage requirement)
-                // For storage images used as UAVs, GENERAL layout is typically preferred
-                // We'll transition to GENERAL for compute shader approach, but try TRANSFER_DST_OPTIMAL first for vkCmdClearColorImage
-                if (vkCmdClearColorImage != null)
+                // Use vkCmdClearColorImage to clear the storage image with uint value
+                // vkCmdClearColorImage supports integer formats via VkClearColorValue union (uint32[4] member)
+                // This is efficient and correct for clearing storage images with integer formats like r32ui
+                // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdClearColorImage.html
+                if (vkCmdClearColorImage == null)
                 {
-                    // Try using vkCmdClearColorImage with integer format
-                    // This works for integer color formats, but may not work for all storage image formats
-                    TransitionImageLayout(vkImage, VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED, VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, textureDesc);
+                    Console.WriteLine("[VulkanCommandList] ClearUAVUint: vkCmdClearColorImage not available");
+                    return;
+                }
 
-                    // Create clear color value with uint32 array
-                    // VkClearColorValue is a union: can be float[4], int32[4], or uint32[4]
-                    VkClearColorValue clearValue = new VkClearColorValue();
-                    // For uint32 array, we need to set uint32 field (union member)
-                    // Since we can't directly set union members in C#, we'll use Marshal to write the value
-                    IntPtr clearValuePtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(VkClearColorValue)));
+                // Transition image to TRANSFER_DST_OPTIMAL layout for clearing operation
+                // vkCmdClearColorImage requires the image to be in TRANSFER_DST_OPTIMAL or GENERAL layout
+                TransitionImageLayout(vkImage, VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED, VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, textureDesc);
+
+                // Create clear color value with uint32 array
+                // VkClearColorValue is a union: can be float[4], int32[4], or uint32[4]
+                // For r32ui format (single uint per pixel), we only need to set the first uint32 value
+                // However, vkCmdClearColorImage expects uint32[4], so we replicate the value to all channels
+                // The driver will use the appropriate channels based on the image format
+                IntPtr clearValuePtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(VkClearColorValue)));
+                try
+                {
+                    // Write uint32[4] - for r32ui format, only the first value matters, but we set all for completeness
+                    // Marshal.WriteInt32 writes signed int, but we're writing uint bits, so we use unchecked cast
+                    int valueAsInt = unchecked((int)value);
+                    Marshal.WriteInt32(clearValuePtr, 0, valueAsInt);  // uint32_0
+                    Marshal.WriteInt32(clearValuePtr, 4, valueAsInt);  // uint32_1 (replicated)
+                    Marshal.WriteInt32(clearValuePtr, 8, valueAsInt);  // uint32_2 (replicated)
+                    Marshal.WriteInt32(clearValuePtr, 12, valueAsInt); // uint32_3 (replicated)
+
+                    // Create image subresource range for full texture (all mip levels and array layers)
+                    VkImageSubresourceRange range = new VkImageSubresourceRange
+                    {
+                        aspectMask = VkImageAspectFlags.VK_IMAGE_ASPECT_COLOR_BIT,
+                        baseMipLevel = 0,
+                        levelCount = (uint)textureDesc.MipLevels,
+                        baseArrayLayer = 0,
+                        layerCount = (uint)textureDesc.ArraySize
+                    };
+
+                    IntPtr rangePtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(VkImageSubresourceRange)));
                     try
                     {
-                        // Write uint32[4] - set all channels to the same value for r32ui format
-                        Marshal.WriteInt32(clearValuePtr, 0, unchecked((int)value));
-                        Marshal.WriteInt32(clearValuePtr, 4, unchecked((int)value));
-                        Marshal.WriteInt32(clearValuePtr, 8, unchecked((int)value));
-                        Marshal.WriteInt32(clearValuePtr, 12, unchecked((int)value));
+                        Marshal.StructureToPtr(range, rangePtr, false);
 
-                        // Create image subresource range for full texture
-                        VkImageSubresourceRange range = new VkImageSubresourceRange
-                        {
-                            aspectMask = VkImageAspectFlags.VK_IMAGE_ASPECT_COLOR_BIT,
-                            baseMipLevel = 0,
-                            levelCount = (uint)textureDesc.MipLevels,
-                            baseArrayLayer = 0,
-                            layerCount = (uint)textureDesc.ArraySize
-                        };
-
-                        IntPtr rangePtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(VkImageSubresourceRange)));
-                        try
-                        {
-                            Marshal.StructureToPtr(range, rangePtr, false);
-
-                            // Clear the image
-                            vkCmdClearColorImage(_vkCommandBuffer,
-                                vkImage,
-                                VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                                clearValuePtr,
-                                1, // Single range
-                                rangePtr);
-                        }
-                        finally
-                        {
-                            Marshal.FreeHGlobal(rangePtr);
-                        }
+                        // Clear the image using vkCmdClearColorImage
+                        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdClearColorImage.html
+                        vkCmdClearColorImage(_vkCommandBuffer,
+                            vkImage,
+                            VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                            clearValuePtr,
+                            1, // Single range covering entire texture
+                            rangePtr);
                     }
                     finally
                     {
-                        Marshal.FreeHGlobal(clearValuePtr);
+                        Marshal.FreeHGlobal(rangePtr);
                     }
-
-                    // Transition image back to GENERAL layout for use as UAV/storage image
-                    TransitionImageLayout(vkImage, VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VkImageLayout.VK_IMAGE_LAYOUT_GENERAL, textureDesc);
                 }
-                else
+                finally
                 {
-                    // vkCmdClearColorImage not available - need compute shader implementation
-                    // For now, log that compute shader path is not yet implemented
-                    Console.WriteLine("[VulkanCommandList] ClearUAVUint: vkCmdClearColorImage not available. Compute shader implementation required but not yet implemented.");
-                    // TODO: Implement compute shader path for clearing uint storage images
-                    // This would require:
-                    // 1. SPIR-V compute shader bytecode (see GetClearUAVUintComputeShaderSpirV above)
-                    // 2. Create compute pipeline with shader module
-                    // 3. Create descriptor set layout for storage image + uniform buffer
-                    // 4. Create descriptor set and bind image
-                    // 5. Transition image to GENERAL layout
-                    // 6. Bind pipeline, descriptor set, dispatch compute shader
+                    Marshal.FreeHGlobal(clearValuePtr);
                 }
+
+                // Transition image back to GENERAL layout for use as UAV/storage image
+                // GENERAL layout is required for storage images accessed by compute/graphics shaders
+                TransitionImageLayout(vkImage, VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VkImageLayout.VK_IMAGE_LAYOUT_GENERAL, textureDesc);
             }
             public void SetTextureState(ITexture texture, ResourceState state)
             {

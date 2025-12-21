@@ -8384,7 +8384,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             /// Converts Viewport[] to D3D12_VIEWPORT[] and calls ID3D12GraphicsCommandList::RSSetViewports.
             /// Based on DirectX 12 Viewports: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-rssetviewports
             /// </summary>
-            public unsafe void SetViewports(Viewport[] viewports)
+            public void SetViewports(Viewport[] viewports)
             {
                 if (!_isOpen)
                 {
