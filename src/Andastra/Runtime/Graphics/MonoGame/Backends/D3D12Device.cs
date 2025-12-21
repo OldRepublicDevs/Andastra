@@ -1056,6 +1056,30 @@ namespace Andastra.Runtime.MonoGame.Backends
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void SetComputeRootDescriptorTableDelegate(IntPtr commandList, uint RootParameterIndex, D3D12_GPU_DESCRIPTOR_HANDLE BaseDescriptor);
 
+        // COM interface method delegate for SetGraphicsRootSignature
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void SetGraphicsRootSignatureDelegate(IntPtr commandList, IntPtr pRootSignature);
+
+        // COM interface method delegate for SetGraphicsRootDescriptorTable
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void SetGraphicsRootDescriptorTableDelegate(IntPtr commandList, uint RootParameterIndex, D3D12_GPU_DESCRIPTOR_HANDLE BaseDescriptor);
+
+        // COM interface method delegate for RSSetViewports
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void RSSetViewportsDelegate(IntPtr commandList, uint NumViewports, IntPtr pViewports);
+
+        // COM interface method delegate for IASetVertexBuffers
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void IASetVertexBuffersDelegate(IntPtr commandList, uint StartSlot, uint NumViews, IntPtr pViews);
+
+        // COM interface method delegate for IASetIndexBuffer
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void IASetIndexBufferDelegate(IntPtr commandList, IntPtr pView);
+
+        // COM interface method delegate for OMSetRenderTargets
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void OMSetRenderTargetsDelegate(IntPtr commandList, uint NumRenderTargetDescriptors, IntPtr pRenderTargetDescriptors, byte RTsSingleHandleToDescriptorRange, IntPtr pDepthStencilDescriptor);
+
         // COM interface method delegate for SetDescriptorHeaps
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void SetDescriptorHeapsDelegate(IntPtr commandList, uint NumDescriptorHeaps, IntPtr ppDescriptorHeaps);
@@ -1082,6 +1106,45 @@ namespace Andastra.Runtime.MonoGame.Backends
             public int top;    // LONG
             public int right;  // LONG
             public int bottom; // LONG
+        }
+
+        /// <summary>
+        /// D3D12_VIEWPORT structure for viewport setting.
+        /// Based on DirectX 12 Viewports: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_viewport
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_VIEWPORT
+        {
+            public double TopLeftX;    // FLOAT as double for alignment
+            public double TopLeftY;    // FLOAT as double for alignment
+            public double Width;       // FLOAT as double for alignment
+            public double Height;      // FLOAT as double for alignment
+            public double MinDepth;    // FLOAT as double for alignment
+            public double MaxDepth;    // FLOAT as double for alignment
+        }
+
+        /// <summary>
+        /// D3D12_VERTEX_BUFFER_VIEW structure for vertex buffer binding.
+        /// Based on DirectX 12 Vertex Buffer Views: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_vertex_buffer_view
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_VERTEX_BUFFER_VIEW
+        {
+            public ulong BufferLocation;  // D3D12_GPU_VIRTUAL_ADDRESS
+            public uint SizeInBytes;      // UINT
+            public uint StrideInBytes;    // UINT
+        }
+
+        /// <summary>
+        /// D3D12_INDEX_BUFFER_VIEW structure for index buffer binding.
+        /// Based on DirectX 12 Index Buffer Views: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_index_buffer_view
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_INDEX_BUFFER_VIEW
+        {
+            public ulong BufferLocation;  // D3D12_GPU_VIRTUAL_ADDRESS
+            public uint SizeInBytes;      // UINT
+            public uint Format;           // DXGI_FORMAT (DXGI_FORMAT_R16_UINT = 56, DXGI_FORMAT_R32_UINT = 57)
         }
 
         /// <summary>
@@ -2120,6 +2183,10 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _device = device;
             }
 
+            // Accessors for command list to use
+            public IntPtr GetPipelineState() { return _d3d12PipelineState; }
+            public IntPtr GetRootSignature() { return _rootSignature; }
+
             public void Dispose()
             {
                 // TODO: Release D3D12 pipeline state and root signature
@@ -2373,6 +2440,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _isOpen = false;
                 _pendingBarriers = new List<PendingBarrier>();
                 _resourceStates = new Dictionary<object, ResourceState>();
+                _hasRaytracingState = false;
             }
 
             public void Open()
@@ -3717,7 +3785,159 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _raytracingState = state;
                 _hasRaytracingState = true;
             }
-            public void DispatchRays(DispatchRaysArguments args) { /* TODO: DispatchRays */ }
+            public void DispatchRays(DispatchRaysArguments args)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open to dispatch rays");
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("Command list is not initialized");
+                }
+
+                // Validate dispatch dimensions
+                if (args.Width <= 0 || args.Height <= 0 || args.Depth <= 0)
+                {
+                    throw new ArgumentException($"Invalid dispatch dimensions: Width={args.Width}, Height={args.Height}, Depth={args.Depth}. All dimensions must be greater than zero.");
+                }
+
+                // Check that raytracing state is set
+                if (!_hasRaytracingState)
+                {
+                    throw new InvalidOperationException("Raytracing state must be set before dispatching rays. Call SetRaytracingState first.");
+                }
+
+                // Get shader binding table from raytracing state
+                ShaderBindingTable shaderTable = _raytracingState.ShaderTable;
+
+                // Validate that shader binding table buffer is set (required for ray generation shader)
+                if (shaderTable.Buffer == null)
+                {
+                    throw new InvalidOperationException("Shader binding table buffer is required for DispatchRays");
+                }
+
+                // Get GPU virtual addresses for shader binding table buffers
+                // The buffer's NativeHandle should contain the ID3D12Resource* pointer
+                IntPtr rayGenBufferResource = shaderTable.Buffer.NativeHandle;
+                if (rayGenBufferResource == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("Ray generation shader binding table buffer has invalid native handle");
+                }
+
+                // Get GPU virtual address for ray generation shader table
+                // StartAddress = buffer base address + offset
+                ulong rayGenBaseGpuVa = _device.GetGpuVirtualAddress(rayGenBufferResource);
+                if (rayGenBaseGpuVa == 0UL)
+                {
+                    throw new InvalidOperationException("Failed to get GPU virtual address for ray generation shader binding table buffer");
+                }
+
+                ulong rayGenGpuVa = rayGenBaseGpuVa + shaderTable.RayGenOffset;
+                ulong rayGenSize = shaderTable.RayGenSize;
+
+                // Validate ray generation shader table size
+                if (rayGenSize == 0UL)
+                {
+                    throw new InvalidOperationException("Ray generation shader table size cannot be zero");
+                }
+
+                // Get miss shader table GPU virtual address (optional)
+                ulong missGpuVa = 0UL;
+                ulong missSize = 0UL;
+                ulong missStride = 0UL;
+                if (shaderTable.MissSize > 0UL)
+                {
+                    // Miss shader table uses the same buffer but different offset
+                    missGpuVa = rayGenBaseGpuVa + shaderTable.MissOffset;
+                    missSize = shaderTable.MissSize;
+                    missStride = shaderTable.MissStride > 0UL ? shaderTable.MissStride : missSize;
+                }
+
+                // Get hit group shader table GPU virtual address (optional)
+                ulong hitGroupGpuVa = 0UL;
+                ulong hitGroupSize = 0UL;
+                ulong hitGroupStride = 0UL;
+                if (shaderTable.HitGroupSize > 0UL)
+                {
+                    // Hit group shader table uses the same buffer but different offset
+                    hitGroupGpuVa = rayGenBaseGpuVa + shaderTable.HitGroupOffset;
+                    hitGroupSize = shaderTable.HitGroupSize;
+                    hitGroupStride = shaderTable.HitGroupStride > 0UL ? shaderTable.HitGroupStride : hitGroupSize;
+                }
+
+                // Get callable shader table GPU virtual address (optional, typically not used)
+                ulong callableGpuVa = 0UL;
+                ulong callableSize = 0UL;
+                ulong callableStride = 0UL;
+                if (shaderTable.CallableSize > 0UL)
+                {
+                    // Callable shader table uses the same buffer but different offset
+                    callableGpuVa = rayGenBaseGpuVa + shaderTable.CallableOffset;
+                    callableSize = shaderTable.CallableSize;
+                    callableStride = shaderTable.CallableStride > 0UL ? shaderTable.CallableStride : callableSize;
+                }
+
+                // Build D3D12_DISPATCH_RAYS_DESC structure
+                D3D12_DISPATCH_RAYS_DESC dispatchRaysDesc = new D3D12_DISPATCH_RAYS_DESC
+                {
+                    // Ray generation shader table (required)
+                    RayGenerationShaderRecord = new D3D12_GPU_VIRTUAL_ADDRESS_RANGE
+                    {
+                        StartAddress = rayGenGpuVa,
+                        SizeInBytes = rayGenSize
+                    },
+
+                    // Miss shader table (optional)
+                    MissShaderTable = new D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE
+                    {
+                        StartAddress = missGpuVa,
+                        SizeInBytes = missSize,
+                        StrideInBytes = missStride
+                    },
+
+                    // Hit group shader table (optional)
+                    HitGroupTable = new D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE
+                    {
+                        StartAddress = hitGroupGpuVa,
+                        SizeInBytes = hitGroupSize,
+                        StrideInBytes = hitGroupStride
+                    },
+
+                    // Callable shader table (optional)
+                    CallableShaderTable = new D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE
+                    {
+                        StartAddress = callableGpuVa,
+                        SizeInBytes = callableSize,
+                        StrideInBytes = callableStride
+                    },
+
+                    // Dispatch dimensions
+                    Width = unchecked((uint)args.Width),
+                    Height = unchecked((uint)args.Height),
+                    Depth = unchecked((uint)args.Depth)
+                };
+
+                // Marshal structure to unmanaged memory
+                int descSize = Marshal.SizeOf(typeof(D3D12_DISPATCH_RAYS_DESC));
+                IntPtr descPtr = Marshal.AllocHGlobal(descSize);
+                try
+                {
+                    Marshal.StructureToPtr(dispatchRaysDesc, descPtr, false);
+
+                    // Commit any pending barriers before dispatching rays
+                    CommitBarriers();
+
+                    // Call ID3D12GraphicsCommandList4::DispatchRays
+                    _device.CallDispatchRays(_d3d12CommandList, descPtr);
+                }
+                finally
+                {
+                    // Free allocated memory
+                    Marshal.FreeHGlobal(descPtr);
+                }
+            }
             public void BuildBottomLevelAccelStruct(IAccelStruct accelStruct, GeometryDesc[] geometries)
             {
                 if (!_isOpen)
@@ -4385,6 +4605,36 @@ namespace Andastra.Runtime.MonoGame.Backends
                 (GetGPUVirtualAddressDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(GetGPUVirtualAddressDelegate));
 
             return getGpuVa(resource);
+        }
+
+        /// <summary>
+        /// Calls ID3D12GraphicsCommandList4::DispatchRays through COM vtable.
+        /// VTable index 98 for ID3D12GraphicsCommandList4 (inherits from ID3D12GraphicsCommandList).
+        /// Based on D3D12 DXR API: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist4-dispatchrays
+        /// </summary>
+        internal unsafe void CallDispatchRays(IntPtr commandList, IntPtr pDesc)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (commandList == IntPtr.Zero || pDesc == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)commandList;
+            // DispatchRays is at index 98 in ID3D12GraphicsCommandList4 vtable (after BuildRaytracingAccelerationStructure which is 97)
+            IntPtr methodPtr = vtable[98];
+
+            // Create delegate from function pointer
+            DispatchRaysDelegate dispatchRays =
+                (DispatchRaysDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(DispatchRaysDelegate));
+
+            dispatchRays(commandList, pDesc);
         }
 
         // COM interface method delegate for CreateCommandSignature
