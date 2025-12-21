@@ -48,6 +48,29 @@ namespace Andastra.Parsing.Tests.Uninstall
             }
         }
 
+        /// <summary>
+        /// Ensures a backup folder has at least one dummy file so it's not considered empty.
+        /// This is required because GetMostRecentBackup filters out empty folders.
+        /// </summary>
+        /// <param name="backupFolderPath">Path to the backup folder</param>
+        /// <param name="fileName">Optional name for the dummy file (default: "dummy.txt")</param>
+        /// <returns>Path to the created dummy file</returns>
+        private string EnsureBackupFolderHasFile(string backupFolderPath, string fileName = "dummy.txt")
+        {
+            if (!Directory.Exists(backupFolderPath))
+            {
+                Directory.CreateDirectory(backupFolderPath);
+            }
+
+            string dummyFilePath = Path.Combine(backupFolderPath, fileName);
+            if (!File.Exists(dummyFilePath))
+            {
+                File.WriteAllText(dummyFilePath, "dummy content for backup folder");
+            }
+
+            return dummyFilePath;
+        }
+
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void IsValidBackupFolder_ValidFormat_ReturnsTrue()
         {
@@ -102,14 +125,9 @@ namespace Andastra.Parsing.Tests.Uninstall
             string backup2 = Path.Combine(_backupDir, "2024-01-16_10.20.30");
             string backup3 = Path.Combine(_backupDir, "2024-01-14_08.15.00");
 
-            Directory.CreateDirectory(backup1);
-            Directory.CreateDirectory(backup2);
-            Directory.CreateDirectory(backup3);
-
-            // Create dummy files so folders aren't empty
-            File.WriteAllText(Path.Combine(backup1, "file1.txt"), "test");
-            File.WriteAllText(Path.Combine(backup2, "file2.txt"), "test");
-            File.WriteAllText(Path.Combine(backup3, "file3.txt"), "test");
+            EnsureBackupFolderHasFile(backup1, "file1.txt");
+            EnsureBackupFolderHasFile(backup2, "file2.txt");
+            EnsureBackupFolderHasFile(backup3, "file3.txt");
 
             var backupPath = new CaseAwarePath(_backupDir);
 
@@ -232,6 +250,49 @@ namespace Andastra.Parsing.Tests.Uninstall
                 new CaseAwarePath(_gameDir),
                 logger
             );
+
+            // Act
+            bool result = uninstaller.UninstallSelectedMod(
+                showErrorDialog: null,
+                showYesNoDialog: (title, msg) => true, // Confirm
+                showYesNoCancelDialog: (title, msg) => false // Don't delete backup
+            );
+
+            // Assert
+            result.Should().BeTrue();
+            File.Exists(fileToDelete).Should().BeFalse();
+            File.Exists(Path.Combine(_gameDir, "test_file.txt")).Should().BeTrue();
+        }
+
+        [Fact(Timeout = 120000)] // 2 minutes timeout
+        public void UninstallSelectedMod_WithoutUserConfirmation_ReturnsFalse()
+        {
+            // Arrange
+            string backupFolder = Path.Combine(_backupDir, "2024-01-15_14.30.45");
+            Directory.CreateDirectory(backupFolder);
+            File.WriteAllText(Path.Combine(backupFolder, "test.txt"), "test");
+
+            var logger = new PatchLogger();
+            var uninstaller = new ModUninstaller(
+                new CaseAwarePath(_backupDir),
+                new CaseAwarePath(_gameDir),
+                logger
+            );
+
+            // Act
+            bool result = uninstaller.UninstallSelectedMod(
+                showErrorDialog: null,
+                showYesNoDialog: (title, msg) => false, // Cancel
+                showYesNoCancelDialog: null
+            );
+
+            // Assert
+            result.Should().BeFalse();
+        }
+
+    }
+}
+
 
             // Act
             bool result = uninstaller.UninstallSelectedMod(
