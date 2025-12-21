@@ -1368,17 +1368,33 @@ if (iVar7 == 0) {
 - **Same resource in `_a.rim`/`_adx.rim` and `.rim`**: `.rim` wins (main `.rim` loads first, area files supplement it)
 - **CRITICAL**: When `.mod` exists, `.rim` and `_s.rim` are NOT loaded - `.mod` completely replaces them
 
+**When is `.rim` Loaded in Complex Mode?**
+
+**VERIFIED** (swkotor.exe: `FUN_004094a0` at 0x004094a0):
+- **`.rim` is loaded FIRST** in complex mode, before any checks
+- **Decompiled Code Evidence**: The function loads `.rim` at the beginning of complex mode (before line 50), then checks for `_a.rim`/`_adx.rim` to supplement it
+- **If `.mod` exists**: `.rim` is loaded but then **replaced** by `.mod` (`.mod` overrides all `.rim` entries via duplicate handling)
+- **If `.mod` doesn't exist**: `.rim` remains loaded and `_s.rim` supplements it
+
+**Complete Loading Order** (swkotor.exe: `FUN_004094a0` at 0x004094a0, complex mode):
+1. **Load `.rim`** (base module file) - Loaded FIRST
+2. **Check and load `_a.rim`** (if ARE found) - Supplements `.rim`
+3. **Check and load `_adx.rim`** (if ARE found) - Supplements `.rim`
+4. **Load Override Directory** - Override files registered
+5. **Check and load `.mod`** (if exists) - **REPLACES** `.rim` (all `.rim` entries overridden)
+6. **Check and load `_s.rim`** (if ARE found AND `.mod` doesn't exist) - Supplements `.rim`
+
 **Edge Cases**:
 
 - **Flag == 0, only `.rim` exists**: Only `.rim` is loaded, function returns immediately
 - **Flag == 0, `.rim` + `_a.rim` exist**: Only `.rim` is loaded (flag == 0 bypasses `_a.rim` check)
 - **Flag != 0, `.rim` + `_a.rim` exist**: Both `.rim` and `_a.rim` are loaded (`.rim` loads first, `_a.rim` supplements)
-- **Flag != 0, `.mod` exists**: Only `.mod` is loaded, `.rim` and `_s.rim` are NOT loaded
-- **Flag != 0, `.mod` + `_a.rim` exist**: Only `.mod` is loaded, `_a.rim` is NOT loaded (`.mod` check happens before `_a.rim` check)
+- **Flag != 0, `.mod` exists**: `.rim` is loaded first, then `.mod` is loaded and **overrides** all `.rim` entries. `_s.rim` is NOT loaded.
+- **Flag != 0, `.mod` + `_a.rim` exist**: `.rim` is loaded first, then `.mod` is loaded and **overrides** all `.rim` entries. `_a.rim` is NOT loaded (`.mod` check happens before `_a.rim` check, and `.mod` replaces `.rim`).
 - **Flag != 0, `.rim` + `_s.rim` exist, no `.mod`**: Both `.rim` and `_s.rim` are loaded (`.rim` loads first, `_s.rim` supplements)
 - **Flag != 0, `.rim` + `_a.rim` + `_adx.rim` exist**: All three are loaded (`.rim` first, then `_a.rim`, then `_adx.rim`)
-- **Flag != 0, `.rim` + `_a.rim` + `_adx.rim` + `_s.rim` exist**: All four are loaded (`.rim` first, then `_a.rim`, then `_adx.rim`, then `_s.rim`)
-- **Duplicate resources**: First registered wins, later duplicates are ignored (checked in `FUN_0040e990` line 36)
+- **Flag != 0, `.rim` + `_a.rim` + `_adx.rim` + `_s.rim` exist, no `.mod`**: All four are loaded (`.rim` first, then `_a.rim`, then `_adx.rim`, then `_s.rim`)
+- **Duplicate resources**: First registered wins, later duplicates are ignored (checked in swkotor.exe: `FUN_0040e990` at 0x0040e990, line 36)
 
 ### K2 (swkotor2.exe) - `FUN_004096b0`
 
@@ -1447,16 +1463,33 @@ if (iVar7 == 0) {
 - **Same resource in `.rim` and `.mod`**: `.mod` wins (registered after `.rim`, overrides it)
 - **CRITICAL**: When `.mod` exists, `.rim`, `_s.rim`, and `_dlg.erf` are NOT loaded - `.mod` completely replaces them
 
+**When is `.rim` Loaded in Complex Mode?**
+
+**VERIFIED** (swkotor2.exe: `FUN_004096b0` at 0x004096b0):
+- **`.rim` is loaded FIRST** in complex mode, before any checks
+- **Decompiled Code Evidence**: The function loads `.rim` at the beginning of complex mode (before line 54), then checks for `_a.rim`/`_adx.rim` to supplement it
+- **If `.mod` exists**: `.rim` is loaded but then **replaced** by `.mod` (`.mod` overrides all `.rim` entries via duplicate handling)
+- **If `.mod` doesn't exist**: `.rim` remains loaded and `_s.rim` + `_dlg.erf` supplement it
+
+**Complete Loading Order** (swkotor2.exe: `FUN_004096b0` at 0x004096b0, complex mode):
+1. **Load `.rim`** (base module file) - Loaded FIRST
+2. **Check and load `_a.rim`** (if ARE found) - Supplements `.rim`
+3. **Check and load `_adx.rim`** (if ARE found) - Supplements `.rim`
+4. **Load Override Directory** - Override files registered
+5. **Check and load `.mod`** (if exists) - **REPLACES** `.rim` (all `.rim` entries overridden)
+6. **Check and load `_s.rim`** (if ARE found AND `.mod` doesn't exist) - Supplements `.rim`
+7. **Load `_dlg.erf`** (if exists AND `.mod` doesn't exist, K2 only) - Supplements `.rim` and `_s.rim`
+
 **Edge Cases** (K2):
 
 - **Flag == 0, only `.rim` exists**: Only `.rim` is loaded, function returns immediately
 - **Flag == 0, `.rim` + `_a.rim` exist**: Only `.rim` is loaded (flag == 0 bypasses `_a.rim` check)
 - **Flag != 0, `.rim` + `_a.rim` exist**: Both `.rim` and `_a.rim` are loaded (`.rim` loads first, `_a.rim` supplements)
-- **Flag != 0, `.mod` exists**: Only `.mod` is loaded, `.rim`, `_s.rim`, and `_dlg.erf` are NOT loaded
-- **Flag != 0, `.mod` + `_a.rim` exist**: Only `.mod` is loaded, `_a.rim` is NOT loaded (`.mod` check happens before `_a.rim` check)
+- **Flag != 0, `.mod` exists**: `.rim` is loaded first, then `.mod` is loaded and **overrides** all `.rim` entries. `_s.rim` and `_dlg.erf` are NOT loaded.
+- **Flag != 0, `.mod` + `_a.rim` exist**: `.rim` is loaded first, then `.mod` is loaded and **overrides** all `.rim` entries. `_a.rim` is NOT loaded (`.mod` check happens before `_a.rim` check, and `.mod` replaces `.rim`).
 - **Flag != 0, `.rim` + `_s.rim` + `_dlg.erf` exist, no `.mod`**: All three are loaded (`.rim` first, then `_s.rim`, then `_dlg.erf`)
-- **Flag != 0, `.rim` + `_a.rim` + `_adx.rim` + `_s.rim` + `_dlg.erf` exist**: All five are loaded (`.rim` first, then `_a.rim`, then `_adx.rim`, then `_s.rim`, then `_dlg.erf`)
-- **Duplicate resources**: First registered wins, later duplicates are ignored (checked in `FUN_0040e990` line 36)
+- **Flag != 0, `.rim` + `_a.rim` + `_adx.rim` + `_s.rim` + `_dlg.erf` exist, no `.mod`**: All five are loaded (`.rim` first, then `_a.rim`, then `_adx.rim`, then `_s.rim`, then `_dlg.erf`)
+- **Duplicate resources**: First registered wins, later duplicates are ignored (checked in swkotor2.exe: `FUN_0040e990` at 0x0040e990, line 36)
 
 ## Override Directory Priority (PROVEN)
 
@@ -1496,9 +1529,200 @@ if (iVar7 == 0) {
 - Only **1 level deep** subdirectories are searched
 - Files at 2+ levels deep are **NOT PROCESSED**
 
-## Multiple Module Files - Resource Resolution
+## Multiple Module Files - Resource Resolution and Combinations
 
-**See "Module File Priority Order" section above for complete details with exact instruction-level proof.**
+### Complete Priority Order for Duplicate Resources
+
+**Question**: If the same resource (same ResRef and type) exists in multiple module files (`.rim`, `_s.rim`, `_dlg.erf`, `_adx.rim`), which takes priority?
+
+**Answer**: **FIRST registered wins** - Resources are registered in the order files are opened, and duplicates are ignored.
+
+**Duplicate Handling** (swkotor.exe: `FUN_0040e990` at 0x0040e990, swkotor2.exe: `FUN_0040e990` at 0x0040e990):
+- Line 36: Checks if resource with same ResRef+Type already exists
+- Line 39-91: If duplicate found AND resource is already loaded (`*(int *)((int)this_00 + 0x14) != -1`), returns 0 (ignores duplicate)
+- Line 94-101: If no duplicate OR resource not loaded, registers new resource
+- **Result**: **FIRST resource registered wins**. Later duplicates are ignored.
+
+### K1 (swkotor.exe) - Complete Priority Order
+
+**Function**: swkotor.exe: `FUN_004094a0` at 0x004094a0
+
+**Complete Resource Registration Order** (complex mode, when all files exist and `.mod` does NOT exist):
+
+1. **`.rim`** - **HIGHEST PRIORITY** (loaded first, line ~32-42)
+   - Base module file
+   - All resources in `.rim` are registered first
+   - **Wins** over duplicates in all other files
+
+2. **`_a.rim`** (if ARE found, line 159)
+   - Loaded after `.rim`
+   - Resources supplement `.rim` (duplicates ignored)
+   - **Loses** to `.rim` for duplicate resources
+
+3. **`_adx.rim`** (if ARE found, line 85)
+   - Loaded after `.rim` and `_a.rim`
+   - Resources supplement `.rim` (duplicates ignored)
+   - **Loses** to `.rim` and `_a.rim` for duplicate resources
+
+4. **Override Directory** (line 91)
+   - Loaded after RIM files
+   - **Wins** over all module files (Override has highest priority in resource search)
+
+5. **`.mod`** (if exists, line 136)
+   - Loaded after `.rim`
+   - **OVERRIDES** all `.rim` entries (duplicates replace existing entries)
+   - **Wins** over `.rim`, `_a.rim`, `_adx.rim`, `_s.rim` for duplicate resources
+   - **CRITICAL**: When `.mod` exists, `_s.rim` is NOT loaded
+
+6. **`_s.rim`** (if ARE found AND `.mod` doesn't exist, line 118)
+   - Loaded after `.rim`, `_a.rim`, `_adx.rim`
+   - Resources supplement `.rim` (duplicates ignored)
+   - **Loses** to `.rim`, `_a.rim`, `_adx.rim` for duplicate resources
+
+**Complete Priority Order** (when same resource exists in multiple files, `.mod` does NOT exist):
+
+1. **Override Directory** - **HIGHEST** (searched first in resource lookup)
+2. **`.rim`** - **HIGHEST** among module files (registered first)
+3. **`_a.rim`** - Second (registered after `.rim`, duplicates ignored)
+4. **`_adx.rim`** - Third (registered after `_a.rim`, duplicates ignored)
+5. **`_s.rim`** - Fourth (registered after `_adx.rim`, duplicates ignored)
+6. **Chitin BIFs** - **LOWEST** (searched last in resource lookup)
+
+**Complete Priority Order** (when `.mod` exists):
+
+1. **Override Directory** - **HIGHEST** (searched first in resource lookup)
+2. **`.mod`** - **HIGHEST** among module files (overrides all `.rim` entries)
+3. **Chitin BIFs** - **LOWEST** (searched last in resource lookup)
+4. **`.rim`, `_a.rim`, `_adx.rim`, `_s.rim`** - **NOT LOADED** (`.mod` replaces them)
+
+### K2 (swkotor2.exe) - Complete Priority Order
+
+**Function**: swkotor2.exe: `FUN_004096b0` at 0x004096b0
+
+**Complete Resource Registration Order** (complex mode, when all files exist and `.mod` does NOT exist):
+
+1. **`.rim`** - **HIGHEST PRIORITY** (loaded first, line ~36-46)
+   - Base module file
+   - All resources in `.rim` are registered first
+   - **Wins** over duplicates in all other files
+
+2. **`_a.rim`** (if ARE found, line 182)
+   - Loaded after `.rim`
+   - Resources supplement `.rim` (duplicates ignored)
+   - **Loses** to `.rim` for duplicate resources
+
+3. **`_adx.rim`** (if ARE found, line 89)
+   - Loaded after `.rim` and `_a.rim`
+   - Resources supplement `.rim` (duplicates ignored)
+   - **Loses** to `.rim` and `_a.rim` for duplicate resources
+
+4. **Override Directory** (line 95)
+   - Loaded after RIM files
+   - **Wins** over all module files (Override has highest priority in resource search)
+
+5. **`.mod`** (if exists, line 161)
+   - Loaded after `.rim`
+   - **OVERRIDES** all `.rim` entries (duplicates replace existing entries)
+   - **Wins** over `.rim`, `_a.rim`, `_adx.rim`, `_s.rim`, `_dlg.erf` for duplicate resources
+   - **CRITICAL**: When `.mod` exists, `_s.rim` and `_dlg.erf` are NOT loaded
+
+6. **`_s.rim`** (if ARE found AND `.mod` doesn't exist, line 122)
+   - Loaded after `.rim`, `_a.rim`, `_adx.rim`
+   - Resources supplement `.rim` (duplicates ignored)
+   - **Loses** to `.rim`, `_a.rim`, `_adx.rim` for duplicate resources
+
+7. **`_dlg.erf`** (if exists AND `.mod` doesn't exist, K2 only, line 147)
+   - Loaded after `.rim`, `_a.rim`, `_adx.rim`, `_s.rim`
+   - Resources supplement `.rim` and `_s.rim` (duplicates ignored)
+   - **Loses** to `.rim`, `_a.rim`, `_adx.rim`, `_s.rim` for duplicate resources
+
+**Complete Priority Order** (when same resource exists in multiple files, `.mod` does NOT exist):
+
+1. **Override Directory** - **HIGHEST** (searched first in resource lookup)
+2. **`.rim`** - **HIGHEST** among module files (registered first)
+3. **`_a.rim`** - Second (registered after `.rim`, duplicates ignored)
+4. **`_adx.rim`** - Third (registered after `_a.rim`, duplicates ignored)
+5. **`_s.rim`** - Fourth (registered after `_adx.rim`, duplicates ignored)
+6. **`_dlg.erf`** - Fifth (registered after `_s.rim`, duplicates ignored, K2 only)
+7. **Chitin BIFs** - **LOWEST** (searched last in resource lookup)
+
+**Complete Priority Order** (when `.mod` exists):
+
+1. **Override Directory** - **HIGHEST** (searched first in resource lookup)
+2. **`.mod`** - **HIGHEST** among module files (overrides all `.rim` entries)
+3. **Chitin BIFs** - **LOWEST** (searched last in resource lookup)
+4. **`.rim`, `_a.rim`, `_adx.rim`, `_s.rim`, `_dlg.erf`** - **NOT LOADED** (`.mod` replaces them)
+
+### ARE Resource in `_dlg.erf` - Special Case
+
+**Question**: What happens if ARE is in `_dlg.erf` while `_adx.rim`, `.rim`, and `_s.rim` contain other resources?
+
+**Answer** (K2 only - `_dlg.erf` doesn't exist in K1):
+
+**VERIFIED** (swkotor2.exe: `FUN_004096b0` at 0x004096b0):
+
+1. **ARE Check Logic** (lines 54-92):
+   - Function checks `_a.rim` (line 54-66) for ARE resource type `0xbba` (3002)
+   - If not found, checks `_adx.rim` (line 68-92) for ARE resource type `0xbba` (3002)
+   - **`_dlg.erf` is NOT checked for ARE** - The ARE check only happens for `_a.rim` and `_adx.rim`
+
+2. **`_dlg.erf` Loading** (lines 128-149):
+   - `_dlg.erf` is loaded **ONLY if `.mod` doesn't exist** (inside `if (iVar5 == 0)` block at line 100)
+   - `_dlg.erf` is loaded **AFTER** `_s.rim` (line 122 loads `_s.rim`, line 147 loads `_dlg.erf`)
+   - **No ARE check** - `_dlg.erf` is loaded as an ERF container, all resources are registered regardless of type
+
+3. **Result**:
+   - **If ARE is in `_dlg.erf`**: ARE resource will be loaded and registered, but it **will NOT be used** for the area file check (the check only looks in `_a.rim` and `_adx.rim`)
+   - **If ARE is in `_adx.rim`**: ARE resource will be found by the check, `_adx.rim` will be loaded, and ARE will be used
+   - **If ARE is in `.rim` or `_s.rim`**: ARE resource will be loaded, but it **will NOT be found** by the area file check (check only looks in `_a.rim` and `_adx.rim`)
+   - **Priority for duplicate ARE**: If ARE exists in multiple files, the first registered wins (`.rim` → `_a.rim` → `_adx.rim` → `_s.rim` → `_dlg.erf`)
+
+**Conclusion**: ARE in `_dlg.erf` will be loaded and registered, but the area file check logic will **NOT find it** because it only searches `_a.rim` and `_adx.rim`. The ARE in `_dlg.erf` will be available for resource lookup, but won't trigger the area file loading behavior.
+
+### Summary: Complete Priority Order for Duplicate Resources
+
+**K1 (swkotor.exe)** - When `.mod` does NOT exist:
+
+| Priority | File | When Loaded | Duplicate Behavior |
+|----------|------|-------------|-------------------|
+| 1 (Highest) | Override Directory | Line 91 | Overrides all module files |
+| 2 | `.rim` | Line ~32-42 (first) | Base module, wins over all other module files |
+| 3 | `_a.rim` | Line 159 (if ARE found) | Duplicates ignored (`.rim` wins) |
+| 4 | `_adx.rim` | Line 85 (if ARE found) | Duplicates ignored (`.rim`/`_a.rim` win) |
+| 5 | `_s.rim` | Line 118 (if ARE found, no `.mod`) | Duplicates ignored (`.rim`/`_a.rim`/`_adx.rim` win) |
+| 6 (Lowest) | Chitin BIFs | Resource search | Searched last |
+
+**K1 (swkotor.exe)** - When `.mod` EXISTS:
+
+| Priority | File | When Loaded | Duplicate Behavior |
+|----------|------|-------------|-------------------|
+| 1 (Highest) | Override Directory | Line 91 | Overrides all module files |
+| 2 | `.mod` | Line 136 | **OVERRIDES** all `.rim` entries |
+| 3 (Lowest) | Chitin BIFs | Resource search | Searched last |
+| N/A | `.rim`, `_a.rim`, `_adx.rim`, `_s.rim` | **NOT LOADED** | `.mod` replaces them |
+
+**K2 (swkotor2.exe)** - When `.mod` does NOT exist:
+
+| Priority | File | When Loaded | Duplicate Behavior |
+|----------|------|-------------|-------------------|
+| 1 (Highest) | Override Directory | Line 95 | Overrides all module files |
+| 2 | `.rim` | Line ~36-46 (first) | Base module, wins over all other module files |
+| 3 | `_a.rim` | Line 182 (if ARE found) | Duplicates ignored (`.rim` wins) |
+| 4 | `_adx.rim` | Line 89 (if ARE found) | Duplicates ignored (`.rim`/`_a.rim` win) |
+| 5 | `_s.rim` | Line 122 (if ARE found, no `.mod`) | Duplicates ignored (`.rim`/`_a.rim`/`_adx.rim` win) |
+| 6 | `_dlg.erf` | Line 147 (if exists, no `.mod`, K2 only) | Duplicates ignored (`.rim`/`_a.rim`/`_adx.rim`/`_s.rim` win) |
+| 7 (Lowest) | Chitin BIFs | Resource search | Searched last |
+
+**K2 (swkotor2.exe)** - When `.mod` EXISTS:
+
+| Priority | File | When Loaded | Duplicate Behavior |
+|----------|------|-------------|-------------------|
+| 1 (Highest) | Override Directory | Line 95 | Overrides all module files |
+| 2 | `.mod` | Line 161 | **OVERRIDES** all `.rim` entries |
+| 3 (Lowest) | Chitin BIFs | Resource search | Searched last |
+| N/A | `.rim`, `_a.rim`, `_adx.rim`, `_s.rim`, `_dlg.erf` | **NOT LOADED** | `.mod` replaces them |
+
+**Key Finding**: **`.rim` always loads FIRST** and has highest priority among module files. All other files supplement it (duplicates are ignored). **`.mod` is the exception** - it overrides all `.rim` entries and prevents `_s.rim`/`_dlg.erf` from loading.
 
 ## patch.erf (K1 Only)
 
