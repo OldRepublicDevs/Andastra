@@ -597,12 +597,6 @@ namespace Andastra.Runtime.MonoGame.Backends
         private delegate void vkCmdDispatchDelegate(IntPtr commandBuffer, uint groupCountX, uint groupCountY, uint groupCountZ);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate void vkCmdDrawDelegate(IntPtr commandBuffer, uint vertexCount, uint instanceCount, uint firstVertex, uint firstInstance);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate void vkCmdDrawIndexedDelegate(IntPtr commandBuffer, uint indexCount, uint instanceCount, uint firstIndex, int vertexOffset, uint firstInstance);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkCmdBeginDebugUtilsLabelEXTDelegate(IntPtr commandBuffer, ref VkDebugUtilsLabelEXT pLabelInfo);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
@@ -673,6 +667,8 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static vkCmdEndDebugUtilsLabelEXTDelegate vkCmdEndDebugUtilsLabelEXT;
         private static vkCmdInsertDebugUtilsLabelEXTDelegate vkCmdInsertDebugUtilsLabelEXT;
         private static vkCmdPipelineBarrierDelegate vkCmdPipelineBarrier;
+        private static vkCmdDrawDelegate vkCmdDraw;
+        private static vkCmdDrawIndexedDelegate vkCmdDrawIndexed;
 
         // Helper methods for Vulkan interop
         private static void InitializeVulkanFunctions(IntPtr device)
@@ -2462,14 +2458,6 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _device = device;
             }
 
-            /// <summary>
-            /// Gets the VkDescriptorSetLayout handle. Used internally for descriptor set allocation.
-            /// </summary>
-            internal IntPtr VkDescriptorSetLayout
-            {
-                get { return _vkDescriptorSetLayout; }
-            }
-
             public void Dispose()
             {
                 if (_vkDescriptorSetLayout != IntPtr.Zero && _device != IntPtr.Zero)
@@ -2900,7 +2888,43 @@ namespace Andastra.Runtime.MonoGame.Backends
             public void SetScissors(Rectangle[] scissors) { /* TODO: vkCmdSetScissor */ }
             public void SetBlendConstant(Vector4 color) { /* TODO: vkCmdSetBlendConstants */ }
             public void SetStencilRef(uint reference) { /* TODO: vkCmdSetStencilReference */ }
-            public void Draw(DrawArguments args) { /* TODO: vkCmdDraw */ }
+            public void Draw(DrawArguments args)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before drawing");
+                }
+
+                if (args.VertexCount <= 0)
+                {
+                    return; // Nothing to draw
+                }
+
+                // vkCmdDraw signature:
+                // void vkCmdDraw(
+                //     VkCommandBuffer commandBuffer,
+                //     uint32_t vertexCount,
+                //     uint32_t instanceCount,
+                //     uint32_t firstVertex,
+                //     uint32_t firstInstance);
+                //
+                // Maps from DrawArguments:
+                // - vertexCount: args.VertexCount
+                // - instanceCount: args.InstanceCount (defaults to 1 if 0 or negative)
+                // - firstVertex: args.StartVertexLocation
+                // - firstInstance: args.StartInstanceLocation
+
+                uint instanceCount = args.InstanceCount > 0 ? unchecked((uint)args.InstanceCount) : 1u;
+                uint firstVertex = unchecked((uint)System.Math.Max(0, args.StartVertexLocation));
+                uint firstInstance = unchecked((uint)System.Math.Max(0, args.StartInstanceLocation));
+
+                vkCmdDraw(
+                    _vkCommandBuffer,
+                    unchecked((uint)args.VertexCount),
+                    instanceCount,
+                    firstVertex,
+                    firstInstance);
+            }
             public void DrawIndexed(DrawArguments args) { /* TODO: vkCmdDrawIndexed */ }
             public void DrawIndirect(IBuffer argumentBuffer, int offset, int drawCount, int stride) { /* TODO: vkCmdDrawIndirect */ }
             public void DrawIndexedIndirect(IBuffer argumentBuffer, int offset, int drawCount, int stride) { /* TODO: vkCmdDrawIndexedIndirect */ }
