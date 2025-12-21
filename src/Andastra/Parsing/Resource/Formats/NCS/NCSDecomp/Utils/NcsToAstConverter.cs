@@ -655,25 +655,29 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 }
                 else if (entryJsrTargetIsLastRetn2 && entryJsrTarget >= 0 && entryJsrTarget >= entryStubEnd)
                 {
-                    // CRITICAL FIX: If entry JSR targets last RETN, the main function code starts right after SAVEBP
-                    // TODO:  (or after entry stub if there's code there), not at entryStubEnd.
-                    // TODO:  The entry stub (JSR+RETN) is just a wrapper - the actual main code is after globals initialization.
-                    // Use SAVEBP+1 as mainStart to include all code from after globals to the last RETN.
-                    // TODO:  If entry stub exists, check if there's code between entryStubEnd and last RETN.
-                    // If entryStubEnd is very close to last RETN (only cleanup code), use SAVEBP+1 instead.
-                    int codeAfterEntryStub = instructions.Count - entryStubEnd;
-                    if (codeAfterEntryStub <= 3)
+                    // CRITICAL FIX: If entry JSR targets last RETN, determine where main code actually starts
+                    // swkotor2.exe: 0x004eb750 - Entry stub (JSR+RETN) is just a wrapper - actual main code is after globals initialization
+                    // The entry stub wraps the main function call, but the actual main code is after globals (SAVEBP+1)
+                    // If there's only cleanup code after entry stub (MOVSP+RETN+RETN), main code is before entry stub
+                    // If there's real code after entry stub, that's the main code
+                    
+                    // Check if code after entry stub is cleanup code or real main code
+                    bool isCleanupAfterStub = IsCodeAfterEntryStubCleanup(instructions, entryStubEnd);
+                    
+                    if (isCleanupAfterStub)
                     {
-                        // TODO:  Only cleanup code (MOVSP+RETN+RETN) after entry stub - main code is before entry stub
+                        // Only cleanup code after entry stub - main code is before entry stub (after globals initialization)
+                        // Entry stub is just a wrapper, actual main code starts at SAVEBP+1
                         mainStart = savebpIndex + 1;
                         mainStartIsAfterSavebp = true; // Mark that mainStart was intentionally set to SAVEBP+1
-                        Debug($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} is last RETN, but only {codeAfterEntryStub} instructions after entry stub at {entryStubEnd} (likely cleanup), using SAVEBP+1 ({mainStart}) as mainStart");
+                        Debug($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} is last RETN, code after entry stub at {entryStubEnd} is cleanup code - entry stub is wrapper, main code starts at SAVEBP+1 ({mainStart})");
                     }
                     else
                     {
-                        // TODO:  There's actual code after entry stub - use entryStubEnd as mainStart
+                        // There's actual main code after entry stub - use entryStubEnd as mainStart
+                        // This handles cases where entry stub wraps main but main code continues after stub
                         mainStart = entryStubEnd;
-                        Debug($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} is last RETN and after entry stub at {entryStubEnd}, using entryStubEnd as mainStart (main includes all code from {entryStubEnd} to last RETN)");
+                        Debug($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} is last RETN, code after entry stub at {entryStubEnd} is real main code - using entryStubEnd ({mainStart}) as mainStart");
                     }
                 }
                 else
@@ -2539,6 +2543,132 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             }
 
             return false;
+        }
+
+        // swkotor2.exe: 0x004eb750 - Detect if code after entry stub is cleanup code or real main code
+        // Entry stub (JSR+RETN) is just a wrapper - actual main code is after globals initialization
+        // This method determines if code after entry stub is:
+        // - Cleanup code: MOVSP+RETN+RETN pattern (or similar cleanup patterns)
+        // - Real main code: ACTION instructions, meaningful control flow, etc.
+        // Returns true if code after entry stub is cleanup code, false if it's real main code
+        private static bool IsCodeAfterEntryStubCleanup(List<NCSInstruction> instructions, int entryStubEnd)
+        {
+            if (instructions == null || entryStubEnd < 0 || entryStubEnd >= instructions.Count)
+            {
+                return false; // Can't determine, assume it's not cleanup
+            }
+
+            int codeAfterStub = instructions.Count - entryStubEnd;
+            
+            // If there's no code after entry stub, it's not cleanup (edge case)
+            if (codeAfterStub == 0)
+            {
+                return false;
+            }
+
+            // Check for cleanup patterns at the end of the file
+            // Pattern 1: MOVSP+RETN+RETN (standard cleanup pattern)
+            if (codeAfterStub >= 3)
+            {
+                int movspIdx = entryStubEnd;
+                int retn1Idx = entryStubEnd + 1;
+                int retn2Idx = entryStubEnd + 2;
+                
+                if (movspIdx < instructions.Count && retn1Idx < instructions.Count && retn2Idx < instructions.Count &&
+                    instructions[movspIdx].InsType == NCSInstructionType.MOVSP &&
+                    instructions[retn1Idx].InsType == NCSInstructionType.RETN &&
+                    instructions[retn2Idx].InsType == NCSInstructionType.RETN &&
+                    retn2Idx == instructions.Count - 1) // Must be at the very end
+                {
+                    // This is cleanup code pattern - check if there's any meaningful code before it
+                    // If there are only these 3 instructions, it's cleanup
+                    if (codeAfterStub == 3)
+                    {
+                        return true;
+                    }
+                    
+                    // If there are more instructions, check if they're meaningful (ACTION, JSR, etc.)
+                    // or just more cleanup/stack management
+                    bool hasMeaningfulCode = false;
+                    for (int i = entryStubEnd; i < movspIdx; i++)
+                    {
+                        if (i < instructions.Count)
+                        {
+                            NCSInstructionType insType = instructions[i].InsType;
+                            // Meaningful instructions that indicate real main code
+                            if (insType == NCSInstructionType.ACTION ||
+                                insType == NCSInstructionType.JSR ||
+                                insType == NCSInstructionType.JMP ||
+                                insType == NCSInstructionType.JZ ||
+                                insType == NCSInstructionType.JNZ ||
+                                insType == NCSInstructionType.CONSTI ||
+                                insType == NCSInstructionType.CONSTF ||
+                                insType == NCSInstructionType.CONSTS ||
+                                insType == NCSInstructionType.CONSTO)
+                            {
+                                hasMeaningfulCode = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // If no meaningful code before cleanup pattern, it's all cleanup
+                    return !hasMeaningfulCode;
+                }
+            }
+
+            // Pattern 2: MOVSP+RETN (alternative cleanup pattern, shorter)
+            if (codeAfterStub >= 2)
+            {
+                int movspIdx = entryStubEnd;
+                int retnIdx = entryStubEnd + 1;
+                
+                if (movspIdx < instructions.Count && retnIdx < instructions.Count &&
+                    instructions[movspIdx].InsType == NCSInstructionType.MOVSP &&
+                    instructions[retnIdx].InsType == NCSInstructionType.RETN &&
+                    retnIdx == instructions.Count - 1) // Must be at the very end
+                {
+                    // This is cleanup code pattern
+                    return true;
+                }
+            }
+
+            // Pattern 3: Just RETN at the end (minimal cleanup)
+            if (codeAfterStub == 1)
+            {
+                int retnIdx = entryStubEnd;
+                if (retnIdx < instructions.Count &&
+                    instructions[retnIdx].InsType == NCSInstructionType.RETN &&
+                    retnIdx == instructions.Count - 1)
+                {
+                    // Single RETN at the end - likely cleanup if entry stub exists
+                    return true;
+                }
+            }
+
+            // If we get here, there's likely real main code after entry stub
+            // Check for meaningful instructions that indicate real code
+            int meaningfulInstructionCount = 0;
+            int maxCheck = Math.Min(entryStubEnd + 10, instructions.Count); // Check up to 10 instructions after stub
+            for (int i = entryStubEnd; i < maxCheck; i++)
+            {
+                if (i < instructions.Count)
+                {
+                    NCSInstructionType insType = instructions[i].InsType;
+                    // Count meaningful instructions that indicate real main code
+                    if (insType == NCSInstructionType.ACTION ||
+                        insType == NCSInstructionType.JSR ||
+                        insType == NCSInstructionType.JMP ||
+                        insType == NCSInstructionType.JZ ||
+                        insType == NCSInstructionType.JNZ)
+                    {
+                        meaningfulInstructionCount++;
+                    }
+                }
+            }
+
+            // If we find meaningful instructions, it's real main code, not cleanup
+            return meaningfulInstructionCount == 0;
         }
 
         private class PlaceholderBinaryOp : PBinaryOp
