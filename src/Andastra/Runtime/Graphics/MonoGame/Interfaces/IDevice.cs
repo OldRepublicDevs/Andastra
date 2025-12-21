@@ -367,6 +367,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         public bool KeepInitialState;
         public bool CanHaveRawViews;
         public bool IsAccelStructBuildInput;
+        public BufferHeapType HeapType;
         public string DebugName;
         
         public BufferDesc SetByteSize(int size) { ByteSize = size; return this; }
@@ -378,6 +379,13 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         public BufferDesc SetIsAccelStructBuildInput(bool v) { IsAccelStructBuildInput = v; return this; }
         public BufferDesc SetKeepInitialState(bool v) { KeepInitialState = v; return this; }
         public BufferDesc SetInitialState(ResourceState state) { InitialState = state; return this; }
+        /// <summary>
+        /// Sets the heap type for this buffer. For D3D12 backend, this determines memory placement:
+        /// - Default: GPU-accessible only (D3D12_HEAP_TYPE_DEFAULT)
+        /// - Upload: CPU-writable, GPU-readable (D3D12_HEAP_TYPE_UPLOAD) - use for staging/dynamic buffers
+        /// - Readback: CPU-readable, GPU-writable (D3D12_HEAP_TYPE_READBACK) - use for reading back GPU results
+        /// </summary>
+        public BufferDesc SetHeapType(BufferHeapType heapType) { HeapType = heapType; return this; }
         public BufferDesc SetDebugName(string name) { DebugName = name; return this; }
     }
     
@@ -569,6 +577,35 @@ namespace Andastra.Runtime.MonoGame.Interfaces
     #region Supporting Enums and Structs
     
     public enum TextureDimension { Texture1D, Texture2D, Texture3D, TextureCube, Texture1DArray, Texture2DArray, TextureCubeArray }
+    
+    /// <summary>
+    /// Buffer heap type for D3D12 backend, specifying memory placement strategy.
+    /// Maps to D3D12_HEAP_TYPE values:
+    /// - Default: GPU-accessible only, best performance for GPU-only resources (D3D12_HEAP_TYPE_DEFAULT)
+    /// - Upload: CPU-writable, GPU-readable, for staging/upload buffers (D3D12_HEAP_TYPE_UPLOAD)
+    /// - Readback: CPU-readable, GPU-writable, for reading back GPU results (D3D12_HEAP_TYPE_READBACK)
+    /// </summary>
+    public enum BufferHeapType
+    {
+        /// <summary>
+        /// Default heap type - GPU-accessible only, best performance for GPU-only resources.
+        /// Use this for vertex buffers, index buffers, constant buffers that are set once and used by GPU.
+        /// </summary>
+        Default = 0,
+        
+        /// <summary>
+        /// Upload heap type - CPU-writable, GPU-readable.
+        /// Use this for buffers that are frequently updated from CPU (dynamic buffers, staging buffers).
+        /// Allows direct CPU writes without needing temporary staging buffers.
+        /// </summary>
+        Upload = 1,
+        
+        /// <summary>
+        /// Readback heap type - CPU-readable, GPU-writable.
+        /// Use this for buffers that need to be read back by CPU (e.g., query results, GPU compute outputs).
+        /// </summary>
+        Readback = 2
+    }
     
     public enum ResourceState
     {
