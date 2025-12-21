@@ -1035,7 +1035,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private IntPtr ConvertInputLayout(InputLayout layout)
         {
             // Create MTLVertexDescriptor from InputLayout
-            // This is a simplified conversion - full implementation would map all attributes
+            // TODO:  This is a simplified conversion - full implementation would map all attributes
             IntPtr vertexDescriptor = MetalNative.CreateVertexDescriptor();
             if (vertexDescriptor == IntPtr.Zero)
             {
@@ -1462,6 +1462,208 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         [DllImport(MetalFramework)]
         public static extern void ReleaseFunction(IntPtr function);
+
+        // Runtime shader compilation
+        // Metal API: - (nullable id<MTLLibrary>)newLibraryWithSource:(NSString *)source options:(nullable MTLCompileOptions *)options error:(NSError **)error
+        // This requires Objective-C interop using objc_msgSend since Metal is an Objective-C API
+        // Method signature: (id<MTLLibrary>)newLibraryWithSource:(NSString *)source options:(MTLCompileOptions *)options error:(NSError **)error
+        [DllImport(LibObjC, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr objc_msgSend_libraryWithSource(IntPtr receiver, IntPtr selector, IntPtr source, IntPtr options, IntPtr errorPtr);
+
+        // MTLCompileOptions creation and configuration
+        // Metal API: + (MTLCompileOptions *)new
+        [DllImport(LibObjC, EntryPoint = "objc_getClass", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr objc_getClass([MarshalAs(UnmanagedType.LPStr)] string className);
+
+        [DllImport(LibObjC, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr objc_msgSend_class(IntPtr receiver, IntPtr selector);
+
+        // NSString creation from C string
+        // Foundation API: + (NSString *)stringWithUTF8String:(const char *)nullTerminatedCString
+        // Objective-C method signature: + (instancetype)stringWithUTF8String:(const char *)nullTerminatedCString
+        [DllImport(LibObjC, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr objc_msgSend_stringWithUTF8String(IntPtr receiver, IntPtr selector, IntPtr utf8String);
+
+        private static IntPtr CreateNSString(string str)
+        {
+            if (string.IsNullOrEmpty(str))
+            {
+                return IntPtr.Zero;
+            }
+
+            IntPtr nsStringClass = objc_getClass("NSString");
+            if (nsStringClass == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            IntPtr stringWithUTF8StringSel = sel_registerName("stringWithUTF8String:");
+            if (stringWithUTF8StringSel == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            // Convert C# string to UTF-8 bytes
+            byte[] utf8Bytes = System.Text.Encoding.UTF8.GetBytes(str);
+            IntPtr utf8Ptr = Marshal.AllocHGlobal(utf8Bytes.Length + 1);
+            try
+            {
+                Marshal.Copy(utf8Bytes, 0, utf8Ptr, utf8Bytes.Length);
+                Marshal.WriteByte(utf8Ptr, utf8Bytes.Length, 0); // Null terminator
+
+                // Call [NSString stringWithUTF8String:utf8Ptr]
+                // This is a class method, so receiver is the class object
+                IntPtr nsString = objc_msgSend_stringWithUTF8String(nsStringClass, stringWithUTF8StringSel, utf8Ptr);
+                return nsString;
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(utf8Ptr);
+            }
+        }
+
+        /// <summary>
+        /// Compiles a Metal shader library from source code at runtime.
+        /// Metal API: [device newLibraryWithSource:source options:options error:&error]
+        /// This enables runtime shader compilation from source code without requiring pre-compiled .metallib files.
+        /// 
+        /// Based on Metal API: MTLDevice::newLibraryWithSource:options:error:
+        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtldevice/1433401-newlibrarywithsource
+        /// </summary>
+        /// <param name="device">Metal device handle (id&lt;MTLDevice&gt;)</param>
+        /// <param name="source">Metal shader source code (Metal Shading Language)</param>
+        /// <param name="error">Output parameter for compilation error (NSError**), can be IntPtr.Zero to ignore</param>
+        /// <returns>Compiled Metal library (id&lt;MTLLibrary&gt;), or IntPtr.Zero if compilation failed</returns>
+        public static IntPtr CompileLibraryFromSource(IntPtr device, string source, out IntPtr error)
+        {
+            error = IntPtr.Zero;
+
+            if (device == IntPtr.Zero || string.IsNullOrEmpty(source))
+            {
+                return IntPtr.Zero;
+            }
+
+            try
+            {
+                // Create NSString from source code
+                IntPtr sourceString = CreateNSString(source);
+                if (sourceString == IntPtr.Zero)
+                {
+                    Console.WriteLine("[MetalNative] CompileLibraryFromSource: Failed to create NSString from source");
+                    return IntPtr.Zero;
+                }
+
+                try
+                {
+                    // Get selector for newLibraryWithSource:options:error:
+                    IntPtr newLibraryWithSourceSel = sel_registerName("newLibraryWithSource:options:error:");
+                    if (newLibraryWithSourceSel == IntPtr.Zero)
+                    {
+                        Console.WriteLine("[MetalNative] CompileLibraryFromSource: Failed to register selector");
+                        return IntPtr.Zero;
+                    }
+
+                    // Create MTLCompileOptions (can be nil for default options)
+                    IntPtr compileOptions = IntPtr.Zero; // Use default compilation options
+
+                    // Allocate memory for NSError** (pointer to pointer)
+                    IntPtr errorPtr = Marshal.AllocHGlobal(IntPtr.Size);
+                    try
+                    {
+                        Marshal.WriteIntPtr(errorPtr, IntPtr.Zero); // Initialize to nil
+
+                        // Call [device newLibraryWithSource:sourceString options:compileOptions error:&error]
+                        IntPtr library = objc_msgSend_libraryWithSource(device, newLibraryWithSourceSel, sourceString, compileOptions, errorPtr);
+
+                        // Get error if compilation failed
+                        if (library == IntPtr.Zero)
+                        {
+                            IntPtr errorObj = Marshal.ReadIntPtr(errorPtr);
+                            if (errorObj != IntPtr.Zero)
+                            {
+                                error = errorObj;
+                                // Compilation failed - try to get error message
+                                string errorMsg = GetNSErrorDescription(error);
+                                Console.WriteLine($"[MetalNative] CompileLibraryFromSource: Shader compilation failed: {errorMsg}");
+                            }
+                            else
+                            {
+                                Console.WriteLine("[MetalNative] CompileLibraryFromSource: Shader compilation failed with unknown error");
+                            }
+                        }
+
+                        return library;
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(errorPtr);
+                    }
+
+                    return library;
+                }
+                finally
+                {
+                    // Release NSString (if needed - NSString may be autoreleased)
+                    // In practice, NSString objects created with stringWithUTF8String: are autoreleased
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalNative] CompileLibraryFromSource: Exception during compilation: {ex.Message}");
+                return IntPtr.Zero;
+            }
+        }
+
+        // NSString UTF8String method
+        // Objective-C method signature: - (const char *)UTF8String
+        [DllImport(LibObjC, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr objc_msgSend_UTF8String(IntPtr receiver, IntPtr selector);
+
+        /// <summary>
+        /// Gets error description from NSError object.
+        /// </summary>
+        public static string GetNSErrorDescription(IntPtr nsError)
+        {
+            if (nsError == IntPtr.Zero)
+            {
+                return "Unknown error";
+            }
+
+            try
+            {
+                // Get localizedDescription from NSError
+                IntPtr localizedDescriptionSel = sel_registerName("localizedDescription");
+                if (localizedDescriptionSel == IntPtr.Zero)
+                {
+                    return "Failed to get error description";
+                }
+
+                IntPtr descriptionString = objc_msgSend_object(nsError, localizedDescriptionSel);
+                if (descriptionString == IntPtr.Zero)
+                {
+                    return "Unknown error";
+                }
+
+                // Convert NSString to C# string
+                IntPtr utf8StringSel = sel_registerName("UTF8String");
+                if (utf8StringSel == IntPtr.Zero)
+                {
+                    return "Failed to get error description";
+                }
+
+                IntPtr utf8Ptr = objc_msgSend_UTF8String(descriptionString, utf8StringSel);
+                if (utf8Ptr == IntPtr.Zero)
+                {
+                    return "Unknown error";
+                }
+
+                return Marshal.PtrToStringUTF8(utf8Ptr) ?? "Unknown error";
+            }
+            catch
+            {
+                return "Failed to retrieve error description";
+            }
+        }
 
         // Command buffer
         [DllImport(MetalFramework)]
