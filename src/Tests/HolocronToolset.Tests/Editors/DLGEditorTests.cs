@@ -2602,8 +2602,6 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestDlgEditorCreateFromScratchRoundtrip: Create from scratch roundtrip test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_keyboard_shortcuts_exist (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1845-1854)
-        // Original: def test_dlg_editor_keyboard_shortcuts_exist(qtbot, installation: HTInstallation): Test keyboard shortcuts exist
         // Matching PyKotor implementation at vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1845-1854
         // Original: def test_dlg_editor_keyboard_shortcuts_exist(qtbot, installation: HTInstallation): Test that keyboard shortcuts are properly set up
         [Fact]
@@ -2617,6 +2615,9 @@ namespace HolocronToolset.Tests.Editors
             // Matching PyKotor: assert isinstance(editor.keys_down, set)
             editor.KeysDown.Should().NotBeNull("KeysDown property should exist");
             editor.KeysDown.Should().BeOfType<HashSet<Key>>("KeysDown should be a HashSet<Key>");
+            
+            // Verify KeysDown is initialized as empty set (matching Python implementation where keys_down starts as empty set)
+            editor.KeysDown.Should().BeEmpty("KeysDown should be initialized as empty set");
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1856-1875
