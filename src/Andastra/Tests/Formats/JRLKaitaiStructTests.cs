@@ -659,8 +659,8 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Validate quest name LocalizedString
             parsedQuest.Name.Should().NotBeNull("Quest name should not be null");
-            string originalQuestName = originalQuest.Name.GetData(Language.English, Gender.Male);
-            string parsedQuestName = parsedQuest.Name.GetData(Language.English, Gender.Male);
+            string originalQuestName = originalQuest.Name.Get(Language.English, Gender.Male);
+            string parsedQuestName = parsedQuest.Name.Get(Language.English, Gender.Male);
             parsedQuestName.Should().Be(originalQuestName, "Quest name should match");
 
             // Validate quest entries
@@ -675,8 +675,8 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Validate entry text LocalizedString
             parsedEntry.Text.Should().NotBeNull("Entry text should not be null");
-            string originalEntryText = originalEntry.Text.GetData(Language.English, Gender.Male);
-            string parsedEntryText = parsedEntry.Text.GetData(Language.English, Gender.Male);
+            string originalEntryText = originalEntry.Text.Get(Language.English, Gender.Male);
+            string parsedEntryText = parsedEntry.Text.Get(Language.English, Gender.Male);
             parsedEntryText.Should().Be(originalEntryText, "Entry text should match");
 
             // Test roundtrip consistency: write -> read -> write -> read
