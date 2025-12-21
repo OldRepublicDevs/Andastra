@@ -303,7 +303,13 @@ namespace Andastra.Runtime.Core.Actions
             // param_4: Output blocking creature ObjectId (uint) or null
             // Returns: 0 if collision detected, 1 if path is clear
             // Uses FUN_004e17a0 and FUN_004f5290 for collision detection with creature bounding boxes
-            // Implementation: Now uses proper bounding box collision detection instead of simplified radius-based check
+            // Implementation: Uses proper bounding box collision detection (not simplified radius-based check)
+            // - GetCreatureBoundingBox() retrieves engine-specific bounding boxes from appearance.2da hitradius
+            // - CheckLineSegmentVsBoundingBox() performs line-segment vs axis-aligned bounding box intersection
+            // - Uses Minkowski sum to expand creature bounding box by actor's bounding box for accurate collision
+            // - Matches original engine behavior: FUN_005479f0 uses bounding box width/height from entity structure
+            // - K1 (swkotor.exe): Radius at offset +8 from bounding box pointer (0x340)
+            // - K2 (swkotor2.exe): Width at +0x14, height at +0xbc from bounding box pointer (0x380)
             // Exclude target object from collision checking (we're moving towards it)
             uint blockingCreatureId;
             Vector3 collisionNormal;
