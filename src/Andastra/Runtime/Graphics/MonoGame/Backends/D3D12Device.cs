@@ -76,7 +76,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         // DirectX 12 function pointers for P/Invoke (simplified - full implementation requires extensive declarations)
         // In a complete implementation, these would be loaded via GetProcAddress or use SharpDX/Vortice wrapper
-
+        
         #endregion
 
         private readonly IntPtr _device;
@@ -114,7 +114,6 @@ namespace Andastra.Runtime.MonoGame.Backends
         private int _dsvHeapNextIndex;
         private const int DefaultDsvHeapCapacity = 1024;
         private readonly Dictionary<IntPtr, IntPtr> _textureDsvHandles; // Cache of texture -> DSV handle mappings
-        private readonly Dictionary<IntPtr, IntPtr> _textureRtvHandles; // Cache of texture -> RTV handle mappings
 
         public GraphicsCapabilities Capabilities
         {
@@ -145,11 +144,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             _device = device;
             _device5 = device5;
             _commandQueue = commandQueue;
-            if (capabilities == null)
-            {
-                throw new ArgumentNullException(nameof(capabilities));
-            }
-            _capabilities = capabilities;
+            _capabilities = capabilities ?? throw new ArgumentNullException(nameof(capabilities));
             _resources = new Dictionary<IntPtr, IResource>();
             _nextResourceHandle = 1;
             _currentFrameIndex = 0;
@@ -334,10 +329,10 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 // On non-Windows platforms, return a sampler with zero handle
                 // The application should use VulkanDevice for cross-platform support
-                IntPtr nonWindowsHandle = new IntPtr(_nextResourceHandle++);
-                var nonWindowsSampler = new D3D12Sampler(nonWindowsHandle, desc, IntPtr.Zero, _device);
-                _resources[nonWindowsHandle] = nonWindowsSampler;
-                return nonWindowsSampler;
+                IntPtr handle = new IntPtr(_nextResourceHandle++);
+                var sampler = new D3D12Sampler(handle, desc, IntPtr.Zero, _device);
+                _resources[handle] = sampler;
+                return sampler;
             }
 
             // Convert SamplerDesc to D3D12_SAMPLER_DESC
@@ -409,93 +404,24 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ObjectDisposedException(nameof(D3D12Device));
             }
 
-            // Create D3D12 graphics pipeline state object
-            // Based on DirectX 12 Graphics Pipeline State: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-creategraphicspipelinestate
-            // VTable index 43 for ID3D12Device::CreateGraphicsPipelineState
-            // Based on daorigins.exe/DragonAge2.exe: Graphics pipeline creation for rendering
-
-            // Platform check: DirectX 12 COM is Windows-only
-            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            if (desc == null)
             {
-                // On non-Windows platforms, return a pipeline with zero handles
-                IntPtr handle = new IntPtr(_nextResourceHandle++);
-                var pipeline = new D3D12GraphicsPipeline(handle, desc, IntPtr.Zero, IntPtr.Zero, _device);
-                _resources[handle] = pipeline;
-                return pipeline;
+                throw new ArgumentNullException(nameof(desc));
             }
 
-            IntPtr rootSignature = IntPtr.Zero;
-            IntPtr pipelineState = IntPtr.Zero;
+            // TODO: IMPLEMENT - Create D3D12 graphics pipeline state object
+            // - Convert GraphicsPipelineDesc to D3D12_GRAPHICS_PIPELINE_STATE_DESC
+            // - Set shader bytecode from IShader objects
+            // - Convert InputLayout, BlendState, RasterState, DepthStencilState
+            // - Convert RootSignature from BindingLayouts
+            // - Call ID3D12Device::CreateGraphicsPipelineState
+            // - Wrap in D3D12GraphicsPipeline and return
 
-            try
-            {
-                // Step 1: Get or create root signature from binding layouts
-                // Note: CreateBindingLayout also has a TODO for root signature creation
-                // For now, we try to get root signature from binding layouts if they exist
-                if (desc.BindingLayouts != null && desc.BindingLayouts.Length > 0)
-                {
-                    // Get root signature from first binding layout (pipeline typically uses one root signature)
-                    // In a full implementation, multiple root signatures would be combined
-                    var firstLayout = desc.BindingLayouts[0] as D3D12BindingLayout;
-                    if (firstLayout != null)
-                    {
-                        // D3D12BindingLayout stores root signature internally
-                        // We need to access it via a method or property
-                        // For now, we'll need to create root signature if not already created
-                        // This will be fully implemented when CreateBindingLayout is implemented
-                        rootSignature = IntPtr.Zero; // Will be set when root signature is created
-                    }
-                }
+            IntPtr handle = new IntPtr(_nextResourceHandle++);
+            var pipeline = new D3D12GraphicsPipeline(handle, desc, IntPtr.Zero, IntPtr.Zero, _device);
+            _resources[handle] = pipeline;
 
-                // Step 2: Convert GraphicsPipelineDesc to D3D12_GRAPHICS_PIPELINE_STATE_DESC
-                var pipelineDesc = ConvertGraphicsPipelineDescToD3D12(desc, framebuffer, rootSignature);
-
-                // Step 3: Create the pipeline state object
-                IntPtr pipelineStatePtr = Marshal.AllocHGlobal(IntPtr.Size);
-                try
-                {
-                    Guid iidPipelineState = IID_ID3D12PipelineState;
-                    int hr = CallCreateGraphicsPipelineState(_device, ref pipelineDesc, ref iidPipelineState, pipelineStatePtr);
-                    if (hr < 0)
-                    {
-                        throw new InvalidOperationException($"CreateGraphicsPipelineState failed with HRESULT 0x{hr:X8}");
-                    }
-
-                    pipelineState = Marshal.ReadIntPtr(pipelineStatePtr);
-                    if (pipelineState == IntPtr.Zero)
-                    {
-                        throw new InvalidOperationException("Pipeline state pointer is null");
-                    }
-                }
-                finally
-                {
-                    // Free marshalled structures
-                    FreeGraphicsPipelineStateDesc(ref pipelineDesc);
-                    Marshal.FreeHGlobal(pipelineStatePtr);
-                }
-
-                IntPtr handle = new IntPtr(_nextResourceHandle++);
-                var pipeline = new D3D12GraphicsPipeline(handle, desc, pipelineState, rootSignature, _device);
-                _resources[handle] = pipeline;
-
-                return pipeline;
-            }
-            catch (Exception ex)
-            {
-                // Clean up on failure
-                if (pipelineState != IntPtr.Zero)
-                {
-                    // Release pipeline state (would need Release() call in full implementation)
-                }
-
-                // Return pipeline with zero handles on failure (allows graceful degradation)
-                IntPtr handle = new IntPtr(_nextResourceHandle++);
-                var pipeline = new D3D12GraphicsPipeline(handle, desc, IntPtr.Zero, rootSignature, _device);
-                _resources[handle] = pipeline;
-
-                Console.WriteLine($"[D3D12Device] WARNING: Failed to create graphics pipeline state: {ex.Message}");
-                return pipeline;
-            }
+            return pipeline;
         }
 
         public IComputePipeline CreateComputePipeline(ComputePipelineDesc desc)
@@ -503,6 +429,11 @@ namespace Andastra.Runtime.MonoGame.Backends
             if (!IsValid)
             {
                 throw new ObjectDisposedException(nameof(D3D12Device));
+            }
+
+            if (desc == null)
+            {
+                throw new ArgumentNullException(nameof(desc));
             }
 
             // TODO: IMPLEMENT - Create D3D12 compute pipeline state object
@@ -592,71 +523,17 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ObjectDisposedException(nameof(D3D12Device));
             }
 
-            // Platform check: DirectX 12 COM is Windows-only
-            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-            {
-                throw new PlatformNotSupportedException("DirectX 12 command lists are only supported on Windows");
-            }
+            // TODO: IMPLEMENT - Allocate D3D12 command list
+            // - Get command allocator for current frame
+            // - Call ID3D12Device::CreateCommandList with appropriate type
+            // - Wrap in D3D12CommandList and return
 
-            // Map CommandListType to D3D12_COMMAND_LIST_TYPE
-            uint d3d12CommandListType = MapCommandListTypeToD3D12(type);
+            IntPtr handle = new IntPtr(_nextResourceHandle++);
+            IntPtr commandList = new IntPtr(_nextResourceHandle++); // Placeholder
+            var cmdList = new D3D12CommandList(handle, type, this, commandList, _device);
+            _resources[handle] = cmdList;
 
-            // Create command allocator for this command list
-            // Each command list needs its own allocator (allocators can be reused after command lists are executed)
-            IntPtr commandAllocatorPtr = Marshal.AllocHGlobal(IntPtr.Size);
-            try
-            {
-                Guid iidCommandAllocator = IID_ID3D12CommandAllocator;
-                int hr = CallCreateCommandAllocator(_device, d3d12CommandListType, ref iidCommandAllocator, commandAllocatorPtr);
-                if (hr < 0)
-                {
-                    throw new InvalidOperationException($"CreateCommandAllocator failed with HRESULT 0x{hr:X8}");
-                }
-
-                IntPtr commandAllocator = Marshal.ReadIntPtr(commandAllocatorPtr);
-                if (commandAllocator == IntPtr.Zero)
-                {
-                    throw new InvalidOperationException("CreateCommandAllocator returned null allocator pointer");
-                }
-
-                // Create command list with the allocator
-                IntPtr commandListPtr = Marshal.AllocHGlobal(IntPtr.Size);
-                try
-                {
-                    Guid iidCommandList = IID_ID3D12GraphicsCommandList;
-                    // nodeMask: 0 for single GPU, pInitialState: NULL (no initial pipeline state)
-                    hr = CallCreateCommandList(_device, 0, d3d12CommandListType, commandAllocator, IntPtr.Zero, ref iidCommandList, commandListPtr);
-                    if (hr < 0)
-                    {
-                        // Release the allocator if command list creation fails
-                        ReleaseComObject(commandAllocator);
-                        throw new InvalidOperationException($"CreateCommandList failed with HRESULT 0x{hr:X8}");
-                    }
-
-                    IntPtr commandList = Marshal.ReadIntPtr(commandListPtr);
-                    if (commandList == IntPtr.Zero)
-                    {
-                        // Release the allocator if command list creation fails
-                        ReleaseComObject(commandAllocator);
-                        throw new InvalidOperationException("CreateCommandList returned null command list pointer");
-                    }
-
-                    // Wrap in D3D12CommandList and return
-                    IntPtr handle = new IntPtr(_nextResourceHandle++);
-                    var cmdList = new D3D12CommandList(handle, type, this, commandList, commandAllocator, _device);
-                    _resources[handle] = cmdList;
-
-                    return cmdList;
-                }
-                finally
-                {
-                    Marshal.FreeHGlobal(commandListPtr);
-                }
-            }
-            finally
-            {
-                Marshal.FreeHGlobal(commandAllocatorPtr);
-            }
+            return cmdList;
         }
 
         public ITexture CreateHandleForNativeTexture(IntPtr nativeHandle, TextureDesc desc)
@@ -693,6 +570,11 @@ namespace Andastra.Runtime.MonoGame.Backends
             if (!_capabilities.SupportsRaytracing)
             {
                 throw new NotSupportedException("Raytracing is not supported on this device");
+            }
+
+            if (desc == null)
+            {
+                throw new ArgumentNullException(nameof(desc));
             }
 
             if (_device5 == IntPtr.Zero)
@@ -788,104 +670,11 @@ namespace Andastra.Runtime.MonoGame.Backends
                 return;
             }
 
-            // Platform check: DirectX 12 COM is Windows-only
-            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-            {
-                // On non-Windows platforms, ExecuteCommandLists is a no-op
-                // The application should use VulkanDevice for cross-platform support
-                return;
-            }
-
-            if (_commandQueue == IntPtr.Zero)
-            {
-                throw new InvalidOperationException("Command queue is not initialized");
-            }
-
-            // Close all command lists if not already closed
-            // Command lists must be closed before they can be executed
-            foreach (ICommandList commandList in commandLists)
-            {
-                if (commandList == null)
-                {
-                    continue;
-                }
-
-                // Check if command list is a D3D12CommandList
-                D3D12CommandList d3d12CommandList = commandList as D3D12CommandList;
-                if (d3d12CommandList == null)
-                {
-                    Console.WriteLine("[D3D12Device] Warning: Command list is not a D3D12CommandList, skipping execution");
-                    continue;
-                }
-
-                // Close the command list if it's still open
-                // The Close() method handles checking if it's already closed
-                try
-                {
-                    commandList.Close();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[D3D12Device] Warning: Failed to close command list before execution: {ex.Message}");
-                    // Continue with execution attempt - the command list may already be closed
-                }
-            }
-
-            // Build array of ID3D12CommandList pointers
-            // Filter out null command lists and non-D3D12 command lists
-            List<IntPtr> nativeCommandLists = new List<IntPtr>();
-            foreach (ICommandList commandList in commandLists)
-            {
-                if (commandList == null)
-                {
-                    continue;
-                }
-
-                D3D12CommandList d3d12CommandList = commandList as D3D12CommandList;
-                if (d3d12CommandList == null)
-                {
-                    continue; // Skip non-D3D12 command lists
-                }
-
-                // Get native command list pointer
-                IntPtr nativeCommandList = d3d12CommandList.GetNativeCommandListPointer();
-                if (nativeCommandList != IntPtr.Zero)
-                {
-                    nativeCommandLists.Add(nativeCommandList);
-                }
-            }
-
-            if (nativeCommandLists.Count == 0)
-            {
-                // No valid command lists to execute
-                return;
-            }
-
-            // Allocate unmanaged memory for array of command list pointers
-            // ID3D12CommandQueue::ExecuteCommandLists expects: ID3D12CommandList* const* ppCommandLists
-            // This is an array of pointers to ID3D12CommandList interfaces
-            IntPtr commandListArrayPtr = Marshal.AllocHGlobal(IntPtr.Size * nativeCommandLists.Count);
-            try
-            {
-                // Write command list pointers to the array
-                for (int i = 0; i < nativeCommandLists.Count; i++)
-                {
-                    IntPtr commandListPtr = nativeCommandLists[i];
-                    IntPtr arrayElementPtr = new IntPtr(commandListArrayPtr.ToInt64() + (i * IntPtr.Size));
-                    Marshal.WriteIntPtr(arrayElementPtr, commandListPtr);
-                }
-
-                // Call ID3D12CommandQueue::ExecuteCommandLists
-                // ExecuteCommandLists signature: void ExecuteCommandLists(UINT NumCommandLists, ID3D12CommandList* const* ppCommandLists)
-                // VTable index: ExecuteCommandLists is at index 4 in ID3D12CommandQueue vtable
-                // (after IUnknown: QueryInterface, AddRef, Release, UpdateTileMappings)
-                CallExecuteCommandLists(_commandQueue, (uint)nativeCommandLists.Count, commandListArrayPtr);
-            }
-            finally
-            {
-                // Free the allocated array memory
-                Marshal.FreeHGlobal(commandListArrayPtr);
-            }
+            // TODO: IMPLEMENT - Execute D3D12 command lists
+            // - Close command lists if not already closed
+            // - Build array of ID3D12CommandList pointers
+            // - Call ID3D12CommandQueue::ExecuteCommandLists
+            // - Signal fence for synchronization if needed
         }
 
         public void WaitIdle()
@@ -1051,116 +840,30 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ObjectDisposedException(nameof(D3D12Device));
             }
 
-            // Platform check: DirectX 12 COM is Windows-only
-            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-            {
-                // On non-Windows platforms, fall back to basic format checks
-                return IsFormatSupportedFallback(format, usage);
-            }
+            // TODO: IMPLEMENT - Query D3D12 format support
+            // - Call ID3D12Device::CheckFeatureSupport with D3D12_FEATURE_FORMAT_SUPPORT
+            // - Check D3D12_FORMAT_SUPPORT flags against usage requirements
+            // - Return true if format supports the requested usage
 
-            if (_device == IntPtr.Zero)
-            {
-                return false;
-            }
-
-            // Convert TextureFormat to DXGI_FORMAT
-            uint dxgiFormat = ConvertTextureFormatToDxgiFormatForTexture(format);
-            if (dxgiFormat == 0) // DXGI_FORMAT_UNKNOWN
-            {
-                return false;
-            }
-
-            // Query format support using CheckFeatureSupport
-            D3D12_FEATURE_FORMAT_SUPPORT formatSupport = new D3D12_FEATURE_FORMAT_SUPPORT
-            {
-                Format = dxgiFormat,
-                Support1 = 0,
-                Support2 = 0
-            };
-
-            int hr = CallCheckFeatureSupport(_device, D3D12_FEATURE_FORMAT_SUPPORT_ENUM, ref formatSupport, Marshal.SizeOf(typeof(D3D12_FEATURE_FORMAT_SUPPORT)));
-            if (hr != 0) // S_OK = 0
-            {
-                // If CheckFeatureSupport fails, fall back to basic checks
-                return IsFormatSupportedFallback(format, usage);
-            }
-
-            // Map TextureUsage flags to D3D12_FORMAT_SUPPORT flags
-            uint requiredSupport = MapTextureUsageToFormatSupport(usage);
-
-            // Check if format supports all required usage flags
-            // If no specific usage is required, assume format is supported if query succeeded
-            if (requiredSupport == 0)
-            {
-                return true;
-            }
-
-            return (formatSupport.Support1 & requiredSupport) == requiredSupport;
-        }
-
-        /// <summary>
-        /// Fallback format support check when CheckFeatureSupport is unavailable.
-        /// </summary>
-        private bool IsFormatSupportedFallback(TextureFormat format, TextureUsage usage)
-        {
-            // Basic format support checks for common formats
+            // Placeholder: assume common formats are supported
             switch (format)
             {
-                case TextureFormat.R8G8B8A8_UNorm:
-                case TextureFormat.R8G8B8A8_UNorm_SRGB:
-                case TextureFormat.B8G8R8A8_UNorm:
-                case TextureFormat.B8G8R8A8_UNorm_SRGB:
+                case TextureFormat.RGBA8_UNORM:
+                case TextureFormat.RGBA8_SRGB:
                     return (usage & (TextureUsage.ShaderResource | TextureUsage.RenderTarget)) != 0;
 
-                case TextureFormat.R16G16B16A16_Float:
-                case TextureFormat.R32G32B32A32_Float:
+                case TextureFormat.RGBA16_FLOAT:
+                case TextureFormat.RGBA32_FLOAT:
                     return (usage & (TextureUsage.ShaderResource | TextureUsage.RenderTarget | TextureUsage.UnorderedAccess)) != 0;
 
-                case TextureFormat.D24_UNorm_S8_UInt:
-                case TextureFormat.D32_Float:
-                case TextureFormat.D32_Float_S8_UInt:
+                case TextureFormat.D24_UNORM_S8_UINT:
+                case TextureFormat.D32_FLOAT:
+                case TextureFormat.D32_FLOAT_S8_UINT:
                     return (usage & TextureUsage.DepthStencil) != 0;
 
                 default:
                     return false;
             }
-        }
-
-        /// <summary>
-        /// Maps TextureUsage flags to D3D12_FORMAT_SUPPORT flags.
-        /// </summary>
-        private uint MapTextureUsageToFormatSupport(TextureUsage usage)
-        {
-            uint supportFlags = 0;
-
-            if ((usage & TextureUsage.ShaderResource) != 0)
-            {
-                // Shader resource requires texture support
-                supportFlags |= D3D12_FORMAT_SUPPORT_TEXTURE1D;
-                supportFlags |= D3D12_FORMAT_SUPPORT_TEXTURE2D;
-                supportFlags |= D3D12_FORMAT_SUPPORT_TEXTURE3D;
-                supportFlags |= D3D12_FORMAT_SUPPORT_SHADER_SAMPLE;
-            }
-
-            if ((usage & TextureUsage.RenderTarget) != 0)
-            {
-                // Render target requires render target support
-                supportFlags |= D3D12_FORMAT_SUPPORT_RENDER_TARGET;
-            }
-
-            if ((usage & TextureUsage.DepthStencil) != 0)
-            {
-                // Depth stencil requires depth stencil support
-                supportFlags |= D3D12_FORMAT_SUPPORT_DEPTH_STENCIL;
-            }
-
-            if ((usage & TextureUsage.UnorderedAccess) != 0)
-            {
-                // Unordered access requires UAV support
-                supportFlags |= D3D12_FORMAT_SUPPORT_TYPED_UNORDERED_ACCESS_VIEW;
-            }
-
-            return supportFlags;
         }
 
         public int GetCurrentFrameIndex()
@@ -1228,7 +931,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     _samplerDescriptorHeap = IntPtr.Zero;
                 }
             }
-
+            
             // Clear descriptor heap state
             _samplerHeapCpuStartHandle = IntPtr.Zero;
             _samplerHeapDescriptorIncrementSize = 0;
@@ -1313,7 +1016,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// All COM interfaces inherit from IUnknown, which has Release at vtable index 2.
         /// Based on COM Reference Counting: https://docs.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-release
         /// </summary>
-        private static unsafe uint ReleaseComObject(IntPtr comObject)
+        private unsafe uint ReleaseComObject(IntPtr comObject)
         {
             // Platform check: DirectX 12 COM is Windows-only
             if (Environment.OSVersion.Platform != PlatformID.Win32NT)
@@ -1503,54 +1206,6 @@ namespace Andastra.Runtime.MonoGame.Backends
             public IntPtr pResource; // ID3D12Resource*
         }
 
-        // DirectX 12 Feature constants (D3D12_FEATURE)
-        private const uint D3D12_FEATURE_FORMAT_SUPPORT_ENUM = 0;
-
-        // DirectX 12 Format Support flags (D3D12_FORMAT_SUPPORT)
-        private const uint D3D12_FORMAT_SUPPORT_BUFFER = 0x1;
-        private const uint D3D12_FORMAT_SUPPORT_IA_VERTEX_BUFFER = 0x2;
-        private const uint D3D12_FORMAT_SUPPORT_IA_INDEX_BUFFER = 0x4;
-        private const uint D3D12_FORMAT_SUPPORT_SO_BUFFER = 0x8;
-        private const uint D3D12_FORMAT_SUPPORT_TEXTURE1D = 0x10;
-        private const uint D3D12_FORMAT_SUPPORT_TEXTURE2D = 0x20;
-        private const uint D3D12_FORMAT_SUPPORT_TEXTURE3D = 0x40;
-        private const uint D3D12_FORMAT_SUPPORT_TEXTURECUBE = 0x80;
-        private const uint D3D12_FORMAT_SUPPORT_SHADER_LOAD = 0x100;
-        private const uint D3D12_FORMAT_SUPPORT_SHADER_SAMPLE = 0x200;
-        private const uint D3D12_FORMAT_SUPPORT_SHADER_SAMPLE_COMPARISON = 0x400;
-        private const uint D3D12_FORMAT_SUPPORT_SHADER_SAMPLE_MONO_TEXT = 0x800;
-        private const uint D3D12_FORMAT_SUPPORT_MIP = 0x1000;
-        private const uint D3D12_FORMAT_SUPPORT_MIP_AUTOGEN = 0x2000;
-        private const uint D3D12_FORMAT_SUPPORT_RENDER_TARGET = 0x4000;
-        private const uint D3D12_FORMAT_SUPPORT_BLENDABLE = 0x8000;
-        private const uint D3D12_FORMAT_SUPPORT_DEPTH_STENCIL = 0x10000;
-        private const uint D3D12_FORMAT_SUPPORT_CPU_LOCKABLE = 0x20000;
-        private const uint D3D12_FORMAT_SUPPORT_MULTISAMPLE_RESOLVE = 0x40000;
-        private const uint D3D12_FORMAT_SUPPORT_DISPLAY = 0x80000;
-        private const uint D3D12_FORMAT_SUPPORT_CAST_WITHIN_BIT_LAYOUT = 0x100000;
-        private const uint D3D12_FORMAT_SUPPORT_MULTISAMPLE_RENDERTARGET = 0x200000;
-        private const uint D3D12_FORMAT_SUPPORT_MULTISAMPLE_LOAD = 0x400000;
-        private const uint D3D12_FORMAT_SUPPORT_SHADER_GATHER = 0x800000;
-        private const uint D3D12_FORMAT_SUPPORT_BACK_BUFFER_CAST = 0x1000000;
-        private const uint D3D12_FORMAT_SUPPORT_TYPED_UNORDERED_ACCESS_VIEW = 0x2000000;
-        private const uint D3D12_FORMAT_SUPPORT_SHADER_GATHER_COMPARISON = 0x4000000;
-        private const uint D3D12_FORMAT_SUPPORT_DECODER_OUTPUT = 0x8000000;
-        private const uint D3D12_FORMAT_SUPPORT_VIDEO_PROCESSOR_OUTPUT = 0x10000000;
-        private const uint D3D12_FORMAT_SUPPORT_VIDEO_PROCESSOR_INPUT = 0x20000000;
-        private const uint D3D12_FORMAT_SUPPORT_VIDEO_ENCODER = 0x40000000;
-
-        /// <summary>
-        /// D3D12_FEATURE_FORMAT_SUPPORT structure for format support queries.
-        /// Based on DirectX 12 Feature Support: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_feature_data_format_support
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
-        private struct D3D12_FEATURE_FORMAT_SUPPORT
-        {
-            public uint Format; // DXGI_FORMAT
-            public uint Support1; // D3D12_FORMAT_SUPPORT1
-            public uint Support2; // D3D12_FORMAT_SUPPORT2
-        }
-
         // COM interface method delegate for ResourceBarrier
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void ResourceBarrierDelegate(IntPtr commandList, uint numBarriers, IntPtr pBarriers);
@@ -1605,16 +1260,6 @@ namespace Andastra.Runtime.MonoGame.Backends
         // COM interface method delegate for Close (ID3D12CommandList::Close)
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate int CloseDelegate(IntPtr commandList);
-
-        // COM interface method delegate for Reset (ID3D12CommandAllocator::Reset)
-        // Based on DirectX 12 Command Allocator Reset: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12commandallocator-reset
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate int CommandAllocatorResetDelegate(IntPtr commandAllocator);
-
-        // COM interface method delegate for Reset (ID3D12GraphicsCommandList::Reset)
-        // Based on DirectX 12 Command List Reset: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-reset
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate int CommandListResetDelegate(IntPtr commandList, IntPtr pAllocator, IntPtr pInitialState);
 
         // COM interface method delegate for DrawIndexedInstanced
         // Based on DirectX 12 DrawIndexedInstanced: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-drawindexedinstanced
@@ -1733,10 +1378,6 @@ namespace Andastra.Runtime.MonoGame.Backends
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate int SetEventOnCompletionDelegate(IntPtr fence, ulong value, IntPtr hEvent);
 
-        // COM interface method delegate for Map (ID3D12Resource::Map)
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate int MapResourceDelegateInternal(IntPtr resource, uint subresource, IntPtr pReadRange, out IntPtr ppData);
-
         /// <summary>
         /// Maps ResourceState enum to D3D12_RESOURCE_STATES flags.
         /// Based on DirectX 12 Resource States: https://docs.microsoft.com/en-us/windows/win32/direct3d12/using-resource-barriers-to-synchronize-resource-states-in-directx-12
@@ -1847,7 +1488,6 @@ namespace Andastra.Runtime.MonoGame.Backends
         #region D3D12 Sampler Structures and Constants
 
         // DirectX 12 Descriptor Heap Types
-        private const uint D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV = 0;
         private const uint D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER = 1;
         private const uint D3D12_DESCRIPTOR_HEAP_TYPE_RTV = 2;
         private const uint D3D12_DESCRIPTOR_HEAP_TYPE_DSV = 3;
@@ -1891,20 +1531,6 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         // DirectX 12 Interface ID for ID3D12Fence
         private static readonly Guid IID_ID3D12Fence = new Guid(0x0a753dcf, 0xc4d8, 0x4b91, 0xad, 0xf6, 0xbe, 0x5a, 0x60, 0xd9, 0x5a, 0x76);
-        private static readonly Guid IID_ID3D12PipelineState = new Guid(0x765a30f3, 0xf624, 0x4c6f, 0xa8, 0x28, 0xac, 0xe9, 0xf7, 0x01, 0x72, 0x85);
-
-        // DirectX 12 Interface IDs for command list and allocator
-        // Based on DirectX 12 Command List Creation: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createcommandallocator
-        // Based on DirectX 12 Command List Creation: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createcommandlist
-        private static readonly Guid IID_ID3D12CommandAllocator = new Guid(0x6102dee4, 0xaf59, 0x4b09, 0xb9, 0x99, 0xb4, 0x4d, 0x73, 0xf0, 0x9b, 0x24);
-        private static readonly Guid IID_ID3D12GraphicsCommandList = new Guid(0x5b160d0f, 0xac1b, 0x4185, 0x8b, 0xa8, 0xb3, 0xae, 0x42, 0xa5, 0xb4, 0x55);
-
-        // DirectX 12 Command List Type constants
-        // Based on D3D12_COMMAND_LIST_TYPE enum: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ne-d3d12-d3d12_command_list_type
-        private const uint D3D12_COMMAND_LIST_TYPE_DIRECT = 0;    // Graphics/Direct command list
-        private const uint D3D12_COMMAND_LIST_TYPE_BUNDLE = 1;    // Bundle command list (not used in our enum)
-        private const uint D3D12_COMMAND_LIST_TYPE_COMPUTE = 2;   // Compute command list
-        private const uint D3D12_COMMAND_LIST_TYPE_COPY = 3;      // Copy command list
 
         /// <summary>
         /// D3D12_DESCRIPTOR_HEAP_DESC structure.
@@ -1917,185 +1543,6 @@ namespace Andastra.Runtime.MonoGame.Backends
             public uint NumDescriptors;
             public uint Flags; // D3D12_DESCRIPTOR_HEAP_FLAGS
             public uint NodeMask;
-        }
-
-        /// <summary>
-        /// D3D12_COMMAND_ALLOCATOR_DESC structure for command allocator creation.
-        /// Based on DirectX 12 Command Allocator: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_command_allocator_desc
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
-        private struct D3D12_COMMAND_ALLOCATOR_DESC
-        {
-            public uint Type; // D3D12_COMMAND_LIST_TYPE
-        }
-
-        /// <summary>
-        /// D3D12_GRAPHICS_PIPELINE_STATE_DESC structure for graphics pipeline creation.
-        /// Based on DirectX 12 Graphics Pipeline State: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_graphics_pipeline_state_desc
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
-        private struct D3D12_GRAPHICS_PIPELINE_STATE_DESC
-        {
-            public IntPtr pRootSignature; // ID3D12RootSignature*
-            public D3D12_SHADER_BYTECODE VS; // Vertex shader bytecode
-            public D3D12_SHADER_BYTECODE PS; // Pixel shader bytecode
-            public D3D12_SHADER_BYTECODE DS; // Domain shader bytecode
-            public D3D12_SHADER_BYTECODE HS; // Hull shader bytecode
-            public D3D12_SHADER_BYTECODE GS; // Geometry shader bytecode
-            public D3D12_STREAM_OUTPUT_DESC StreamOutput;
-            public D3D12_BLEND_DESC BlendState;
-            public uint SampleMask; // UINT
-            public D3D12_RASTERIZER_DESC RasterizerState;
-            public D3D12_DEPTH_STENCIL_DESC DepthStencilState;
-            public IntPtr pInputElementDescs; // D3D12_INPUT_ELEMENT_DESC*
-            public uint InputElementDescsCount; // UINT
-            public uint IBStripCutValue; // D3D12_INDEX_BUFFER_STRIP_CUT_VALUE
-            public uint PrimitiveTopologyType; // D3D12_PRIMITIVE_TOPOLOGY_TYPE
-            public uint NumRenderTargets; // UINT
-            public uint RTVFormats0; // DXGI_FORMAT (first render target format)
-            public uint RTVFormats1; // DXGI_FORMAT
-            public uint RTVFormats2; // DXGI_FORMAT
-            public uint RTVFormats3; // DXGI_FORMAT
-            public uint RTVFormats4; // DXGI_FORMAT
-            public uint RTVFormats5; // DXGI_FORMAT
-            public uint RTVFormats6; // DXGI_FORMAT
-            public uint RTVFormats7; // DXGI_FORMAT
-            public uint DSVFormat; // DXGI_FORMAT
-            public D3D12_SAMPLE_DESC SampleDesc;
-            public uint NodeMask; // UINT
-            public D3D12_CACHED_PIPELINE_STATE CachedPSO;
-            public uint Flags; // D3D12_PIPELINE_STATE_FLAGS
-        }
-
-        /// <summary>
-        /// D3D12_SHADER_BYTECODE structure for shader bytecode.
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
-        private struct D3D12_SHADER_BYTECODE
-        {
-            public IntPtr pShaderBytecode; // void*
-            public ulong BytecodeLength; // SIZE_T
-        }
-
-        /// <summary>
-        /// D3D12_STREAM_OUTPUT_DESC structure for stream output.
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
-        private struct D3D12_STREAM_OUTPUT_DESC
-        {
-            public IntPtr pSODeclaration; // D3D12_SO_DECLARATION_ENTRY*
-            public uint NumEntries; // UINT
-            public IntPtr pBufferStrides; // UINT*
-            public uint NumStrides; // UINT
-            public uint RasterizedStream; // UINT
-        }
-
-        /// <summary>
-        /// D3D12_BLEND_DESC structure for blend state.
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
-        private struct D3D12_BLEND_DESC
-        {
-            public byte AlphaToCoverageEnable; // BOOL
-            public byte IndependentBlendEnable; // BOOL
-            public D3D12_RENDER_TARGET_BLEND_DESC RenderTarget0;
-            public D3D12_RENDER_TARGET_BLEND_DESC RenderTarget1;
-            public D3D12_RENDER_TARGET_BLEND_DESC RenderTarget2;
-            public D3D12_RENDER_TARGET_BLEND_DESC RenderTarget3;
-            public D3D12_RENDER_TARGET_BLEND_DESC RenderTarget4;
-            public D3D12_RENDER_TARGET_BLEND_DESC RenderTarget5;
-            public D3D12_RENDER_TARGET_BLEND_DESC RenderTarget6;
-            public D3D12_RENDER_TARGET_BLEND_DESC RenderTarget7;
-        }
-
-        /// <summary>
-        /// D3D12_RENDER_TARGET_BLEND_DESC structure for render target blend state.
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
-        private struct D3D12_RENDER_TARGET_BLEND_DESC
-        {
-            public byte BlendEnable; // BOOL
-            public byte LogicOpEnable; // BOOL
-            public uint SrcBlend; // D3D12_BLEND
-            public uint DestBlend; // D3D12_BLEND
-            public uint BlendOp; // D3D12_BLEND_OP
-            public uint SrcBlendAlpha; // D3D12_BLEND
-            public uint DestBlendAlpha; // D3D12_BLEND
-            public uint BlendOpAlpha; // D3D12_BLEND_OP
-            public uint LogicOp; // D3D12_LOGIC_OP
-            public byte RenderTargetWriteMask; // UINT8
-        }
-
-        /// <summary>
-        /// D3D12_RASTERIZER_DESC structure for rasterizer state.
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
-        private struct D3D12_RASTERIZER_DESC
-        {
-            public uint FillMode; // D3D12_FILL_MODE
-            public uint CullMode; // D3D12_CULL_MODE
-            public byte FrontCounterClockwise; // BOOL
-            public int DepthBias; // INT
-            public float DepthBiasClamp;
-            public float SlopeScaledDepthBias;
-            public byte DepthClipEnable; // BOOL
-            public byte MultisampleEnable; // BOOL
-            public byte AntialiasedLineEnable; // BOOL
-            public uint ForcedSampleCount; // UINT
-            public uint ConservativeRaster; // D3D12_CONSERVATIVE_RASTERIZATION_MODE
-        }
-
-        /// <summary>
-        /// D3D12_DEPTH_STENCIL_DESC structure for depth-stencil state.
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
-        private struct D3D12_DEPTH_STENCIL_DESC
-        {
-            public byte DepthEnable; // BOOL
-            public byte DepthWriteMask; // D3D12_DEPTH_WRITE_MASK
-            public uint DepthFunc; // D3D12_COMPARISON_FUNC
-            public byte StencilEnable; // BOOL
-            public byte StencilReadMask; // UINT8
-            public byte StencilWriteMask; // UINT8
-            public D3D12_DEPTH_STENCILOP_DESC FrontFace;
-            public D3D12_DEPTH_STENCILOP_DESC BackFace;
-        }
-
-        /// <summary>
-        /// D3D12_DEPTH_STENCILOP_DESC structure for depth-stencil operations.
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
-        private struct D3D12_DEPTH_STENCILOP_DESC
-        {
-            public uint StencilFailOp; // D3D12_STENCIL_OP
-            public uint StencilDepthFailOp; // D3D12_STENCIL_OP
-            public uint StencilPassOp; // D3D12_STENCIL_OP
-            public uint StencilFunc; // D3D12_COMPARISON_FUNC
-        }
-
-        /// <summary>
-        /// D3D12_INPUT_ELEMENT_DESC structure for input layout.
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-        private struct D3D12_INPUT_ELEMENT_DESC
-        {
-            public IntPtr SemanticName; // LPCSTR (marshalled as IntPtr)
-            public uint SemanticIndex; // UINT
-            public uint Format; // DXGI_FORMAT
-            public uint InputSlot; // UINT
-            public uint AlignedByteOffset; // UINT
-            public uint InputSlotClass; // D3D12_INPUT_CLASSIFICATION
-            public uint InstanceDataStepRate; // UINT
-        }
-
-        /// <summary>
-        /// D3D12_CACHED_PIPELINE_STATE structure for cached pipeline state.
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
-        private struct D3D12_CACHED_PIPELINE_STATE
-        {
-            public IntPtr pCachedBlob; // void*
-            public ulong CachedBlobSizeInBytes; // SIZE_T
         }
 
         /// <summary>
@@ -2126,9 +1573,6 @@ namespace Andastra.Runtime.MonoGame.Backends
         private delegate int CreateCommittedResourceDelegate(IntPtr device, IntPtr pHeapProperties, uint HeapFlags, IntPtr pDesc, uint InitialResourceState, IntPtr pOptimizedClearValue, ref Guid riidResource, IntPtr ppvResource);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate int CreateGraphicsPipelineStateDelegate(IntPtr device, IntPtr pDesc, ref Guid riid, IntPtr ppPipelineState);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate IntPtr GetCPUDescriptorHandleForHeapStartDelegate(IntPtr descriptorHeap);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
@@ -2139,73 +1583,6 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void CreateSamplerDelegate(IntPtr device, IntPtr pDesc, IntPtr DestDescriptor);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate int CheckFeatureSupportDelegate(IntPtr device, uint Feature, IntPtr pFeatureSupportData, uint FeatureSupportDataSize);
-
-        /// <summary>
-        /// Calls ID3D12Device::CheckFeatureSupport through COM vtable.
-        /// VTable index 6 for ID3D12Device.
-        /// Based on DirectX 12 Feature Support: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-checkfeaturesupport
-        /// </summary>
-        private unsafe int CallCheckFeatureSupport(IntPtr device, uint feature, ref D3D12_FEATURE_FORMAT_SUPPORT featureSupportData, int featureSupportDataSize)
-        {
-            // Platform check: DirectX 12 COM is Windows-only
-            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-            {
-                return unchecked((int)0x80004001); // E_NOTIMPL - Not implemented on this platform
-            }
-
-            if (device == IntPtr.Zero)
-            {
-                return unchecked((int)0x80070057); // E_INVALIDARG
-            }
-
-            // Get vtable pointer from device
-            IntPtr* vtable = *(IntPtr**)device;
-            if (vtable == null)
-            {
-                return unchecked((int)0x80004003); // E_POINTER
-            }
-
-            // CheckFeatureSupport is at index 6 in ID3D12Device vtable
-            IntPtr methodPtr = vtable[6];
-            if (methodPtr == IntPtr.Zero)
-            {
-                return unchecked((int)0x80004002); // E_NOINTERFACE
-            }
-
-            // Allocate unmanaged memory for feature support data
-            IntPtr pFeatureSupportData = Marshal.AllocHGlobal(featureSupportDataSize);
-            try
-            {
-                // Marshal structure to unmanaged memory
-                Marshal.StructureToPtr(featureSupportData, pFeatureSupportData, false);
-
-                // Create delegate from function pointer
-                CheckFeatureSupportDelegate checkFeatureSupport =
-                    (CheckFeatureSupportDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CheckFeatureSupportDelegate));
-
-                // Call CheckFeatureSupport
-                int hr = checkFeatureSupport(device, feature, pFeatureSupportData, (uint)featureSupportDataSize);
-
-                // If successful, marshal result back
-                if (hr == 0) // S_OK
-                {
-                    featureSupportData = (D3D12_FEATURE_FORMAT_SUPPORT)Marshal.PtrToStructure(pFeatureSupportData, typeof(D3D12_FEATURE_FORMAT_SUPPORT));
-                }
-
-                return hr;
-            }
-            finally
-            {
-                // Always free unmanaged memory
-                if (pFeatureSupportData != IntPtr.Zero)
-                {
-                    Marshal.FreeHGlobal(pFeatureSupportData);
-                }
-            }
-        }
 
         /// <summary>
         /// Calls ID3D12Device::CreateCommittedResource through COM vtable.
@@ -2309,7 +1686,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// Calls ID3D12DescriptorHeap::GetGPUDescriptorHandleForHeapStart through COM vtable.
         /// VTable index 10 for ID3D12DescriptorHeap.
         /// Based on DirectX 12 Descriptor Heaps: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12descriptorheap-getgpudescriptorhandleforheapstart
-        ///
+        /// 
         /// DirectX 12 GPU descriptor handles are used to reference descriptors from command lists during GPU execution.
         /// The handle must be preserved until all referencing command lists have finished execution.
         /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
@@ -2397,149 +1774,6 @@ namespace Andastra.Runtime.MonoGame.Backends
                 (CreateSamplerDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CreateSamplerDelegate));
 
             createSampler(device, pDesc, DestDescriptor);
-        }
-
-        /// <summary>
-        /// Calls ID3D12Device::CreateGraphicsPipelineState through COM vtable.
-        /// VTable index 43 for ID3D12Device.
-        /// Based on DirectX 12 Graphics Pipeline State: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-creategraphicspipelinestate
-        /// </summary>
-        private unsafe int CallCreateGraphicsPipelineState(IntPtr device, ref D3D12_GRAPHICS_PIPELINE_STATE_DESC pDesc, ref Guid riid, IntPtr ppPipelineState)
-        {
-            // Platform check: DirectX 12 COM is Windows-only
-            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-            {
-                return unchecked((int)0x80004001); // E_NOTIMPL - Not implemented on this platform
-            }
-
-            if (device == IntPtr.Zero || ppPipelineState == IntPtr.Zero)
-            {
-                return unchecked((int)0x80070057); // E_INVALIDARG
-            }
-
-            // Get vtable pointer (first field of COM object)
-            IntPtr* vtable = *(IntPtr**)device;
-            // CreateGraphicsPipelineState is at index 43 in ID3D12Device vtable
-            IntPtr methodPtr = vtable[43];
-
-            if (methodPtr == IntPtr.Zero)
-            {
-                return unchecked((int)0x80004002); // E_NOINTERFACE
-            }
-
-            // Marshal the pipeline state description structure
-            int descSize = Marshal.SizeOf(typeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
-            IntPtr pDescPtr = Marshal.AllocHGlobal(descSize);
-            try
-            {
-                Marshal.StructureToPtr(pDesc, pDescPtr, false);
-
-                // Create delegate from function pointer (C# 7.3 compatible)
-                CreateGraphicsPipelineStateDelegate createGraphicsPipelineState =
-                    (CreateGraphicsPipelineStateDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CreateGraphicsPipelineStateDelegate));
-
-                return createGraphicsPipelineState(device, pDescPtr, ref riid, ppPipelineState);
-            }
-            finally
-            {
-                // Note: We don't free pDescPtr here because the structure contains pointers to other allocated memory
-                // that will be freed by FreeGraphicsPipelineStateDesc
-            }
-        }
-
-        /// <summary>
-        /// Calls ID3D12Device::CreateCommandAllocator through COM vtable.
-        /// VTable index 26 for ID3D12Device.
-        /// Based on DirectX 12 Command Allocator Creation: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createcommandallocator
-        /// </summary>
-        private unsafe int CallCreateCommandAllocator(IntPtr device, uint type, ref Guid riid, IntPtr ppCommandAllocator)
-        {
-            // Platform check: DirectX 12 COM is Windows-only
-            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-            {
-                return unchecked((int)0x80004001); // E_NOTIMPL - Not implemented on this platform
-            }
-
-            if (device == IntPtr.Zero || ppCommandAllocator == IntPtr.Zero)
-            {
-                return unchecked((int)0x80070057); // E_INVALIDARG
-            }
-
-            // Get vtable pointer
-            IntPtr* vtable = *(IntPtr**)device;
-            if (vtable == null)
-            {
-                return unchecked((int)0x80004003); // E_POINTER
-            }
-
-            // CreateCommandAllocator is at index 26 in ID3D12Device vtable
-            IntPtr methodPtr = vtable[26];
-            if (methodPtr == IntPtr.Zero)
-            {
-                return unchecked((int)0x80004002); // E_NOINTERFACE
-            }
-
-            CreateCommandAllocatorDelegate createCommandAllocator =
-                (CreateCommandAllocatorDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CreateCommandAllocatorDelegate));
-
-            return createCommandAllocator(device, type, ref riid, ppCommandAllocator);
-        }
-
-        /// <summary>
-        /// Calls ID3D12Device::CreateCommandList through COM vtable.
-        /// VTable index 28 for ID3D12Device.
-        /// Based on DirectX 12 Command List Creation: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createcommandlist
-        /// </summary>
-        private unsafe int CallCreateCommandList(IntPtr device, uint nodeMask, uint type, IntPtr pCommandAllocator, IntPtr pInitialState, ref Guid riid, IntPtr ppCommandList)
-        {
-            // Platform check: DirectX 12 COM is Windows-only
-            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-            {
-                return unchecked((int)0x80004001); // E_NOTIMPL - Not implemented on this platform
-            }
-
-            if (device == IntPtr.Zero || pCommandAllocator == IntPtr.Zero || ppCommandList == IntPtr.Zero)
-            {
-                return unchecked((int)0x80070057); // E_INVALIDARG
-            }
-
-            // Get vtable pointer
-            IntPtr* vtable = *(IntPtr**)device;
-            if (vtable == null)
-            {
-                return unchecked((int)0x80004003); // E_POINTER
-            }
-
-            // CreateCommandList is at index 28 in ID3D12Device vtable
-            IntPtr methodPtr = vtable[28];
-            if (methodPtr == IntPtr.Zero)
-            {
-                return unchecked((int)0x80004002); // E_NOINTERFACE
-            }
-
-            CreateCommandListDelegate createCommandList =
-                (CreateCommandListDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CreateCommandListDelegate));
-
-            return createCommandList(device, nodeMask, type, pCommandAllocator, pInitialState, ref riid, ppCommandList);
-        }
-
-        /// <summary>
-        /// Maps CommandListType enum to D3D12_COMMAND_LIST_TYPE.
-        /// Based on DirectX 12 Command List Types: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ne-d3d12-d3d12_command_list_type
-        /// </summary>
-        private static uint MapCommandListTypeToD3D12(CommandListType type)
-        {
-            switch (type)
-            {
-                case CommandListType.Graphics:
-                    return D3D12_COMMAND_LIST_TYPE_DIRECT;
-                case CommandListType.Compute:
-                    return D3D12_COMMAND_LIST_TYPE_COMPUTE;
-                case CommandListType.Copy:
-                    return D3D12_COMMAND_LIST_TYPE_COPY;
-                default:
-                    return D3D12_COMMAND_LIST_TYPE_DIRECT; // Default to graphics/direct
-            }
         }
 
         /// <summary>
@@ -3080,162 +2314,6 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         #endregion
 
-        #region D3D12 CBV/SRV/UAV Descriptor Heap Management
-
-        /// <summary>
-        /// Ensures the CBV/SRV/UAV descriptor heap is created and initialized.
-        /// Creates a CBV/SRV/UAV descriptor heap with the default capacity if one doesn't exist.
-        /// Based on DirectX 12 Descriptor Heaps: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_descriptor_heap_desc
-        /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
-        /// </summary>
-        private void EnsureCbvSrvUavDescriptorHeap()
-        {
-            if (_cbvSrvUavDescriptorHeap != IntPtr.Zero)
-            {
-                return; // Heap already exists
-            }
-
-            // Platform check: DirectX 12 COM is Windows-only
-            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-            {
-                return;
-            }
-
-            if (_device == IntPtr.Zero)
-            {
-                return;
-            }
-
-            try
-            {
-                // Create D3D12_DESCRIPTOR_HEAP_DESC structure for CBV/SRV/UAV heap
-                var heapDesc = new D3D12_DESCRIPTOR_HEAP_DESC
-                {
-                    Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-                    NumDescriptors = (uint)DefaultCbvSrvUavHeapCapacity,
-                    Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
-                    NodeMask = 0
-                };
-
-                // Allocate memory for the descriptor heap descriptor structure
-                int heapDescSize = Marshal.SizeOf(typeof(D3D12_DESCRIPTOR_HEAP_DESC));
-                IntPtr heapDescPtr = Marshal.AllocHGlobal(heapDescSize);
-                try
-                {
-                    Marshal.StructureToPtr(heapDesc, heapDescPtr, false);
-
-                    // Allocate memory for the output descriptor heap pointer
-                    IntPtr heapPtr = Marshal.AllocHGlobal(IntPtr.Size);
-                    try
-                    {
-                        // Call ID3D12Device::CreateDescriptorHeap
-                        Guid iidDescriptorHeap = IID_ID3D12DescriptorHeap;
-                        int hr = CallCreateDescriptorHeap(_device, heapDescPtr, ref iidDescriptorHeap, heapPtr);
-                        if (hr < 0)
-                        {
-                            throw new InvalidOperationException($"CreateDescriptorHeap failed with HRESULT 0x{hr:X8}");
-                        }
-
-                        // Get the descriptor heap pointer
-                        IntPtr descriptorHeap = Marshal.ReadIntPtr(heapPtr);
-                        if (descriptorHeap == IntPtr.Zero)
-                        {
-                            throw new InvalidOperationException("Descriptor heap pointer is null");
-                        }
-
-                        // Get descriptor heap start handle (CPU handle for descriptor heap)
-                        IntPtr cpuHandle = CallGetCPUDescriptorHandleForHeapStart(descriptorHeap);
-                        if (cpuHandle == IntPtr.Zero)
-                        {
-                            throw new InvalidOperationException("Failed to get CPU descriptor handle for heap start");
-                        }
-
-                        // Get descriptor increment size
-                        uint descriptorIncrementSize = CallGetDescriptorHandleIncrementSize(_device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-                        if (descriptorIncrementSize == 0)
-                        {
-                            throw new InvalidOperationException("Failed to get descriptor handle increment size");
-                        }
-
-                        // Store heap information
-                        _cbvSrvUavDescriptorHeap = descriptorHeap;
-                        _cbvSrvUavHeapCpuStartHandle = cpuHandle;
-                        _cbvSrvUavHeapDescriptorIncrementSize = descriptorIncrementSize;
-                        _cbvSrvUavHeapCapacity = DefaultCbvSrvUavHeapCapacity;
-                        _cbvSrvUavHeapNextIndex = 0;
-                    }
-                    finally
-                    {
-                        Marshal.FreeHGlobal(heapPtr);
-                    }
-                }
-                finally
-                {
-                    Marshal.FreeHGlobal(heapDescPtr);
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"Failed to create CBV/SRV/UAV descriptor heap: {ex.Message}", ex);
-            }
-        }
-
-        /// <summary>
-        /// Allocates a descriptor handle from the CBV/SRV/UAV descriptor heap.
-        /// Returns IntPtr.Zero if allocation fails.
-        /// Based on DirectX 12 Descriptor Heaps: https://docs.microsoft.com/en-us/windows/win32/direct3d12/descriptors-overview
-        /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
-        /// </summary>
-        private IntPtr AllocateCbvSrvUavDescriptor()
-        {
-            EnsureCbvSrvUavDescriptorHeap();
-
-            if (_cbvSrvUavDescriptorHeap == IntPtr.Zero)
-            {
-                return IntPtr.Zero;
-            }
-
-            if (_cbvSrvUavHeapNextIndex >= _cbvSrvUavHeapCapacity)
-            {
-                // Heap is full - in a production implementation, we might want to create a larger heap or handle this differently
-                throw new InvalidOperationException($"CBV/SRV/UAV descriptor heap is full (capacity: {_cbvSrvUavHeapCapacity})");
-            }
-
-            // Calculate CPU descriptor handle for this index
-            IntPtr cpuDescriptorHandle = OffsetDescriptorHandle(_cbvSrvUavHeapCpuStartHandle, _cbvSrvUavHeapNextIndex, _cbvSrvUavHeapDescriptorIncrementSize);
-            int allocatedIndex = _cbvSrvUavHeapNextIndex;
-            _cbvSrvUavHeapNextIndex++;
-
-            return cpuDescriptorHandle;
-        }
-
-        /// <summary>
-        /// Gets the GPU virtual address of a buffer resource.
-        /// Based on DirectX 12 Resource Address: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12resource-getgpuvirtualaddress
-        /// </summary>
-        private unsafe ulong GetBufferGpuVirtualAddress(IntPtr d3d12Resource)
-        {
-            if (d3d12Resource == IntPtr.Zero)
-            {
-                return 0;
-            }
-
-            // GetGPUVirtualAddress is at index 51 in ID3D12Resource vtable
-            IntPtr* vtable = *(IntPtr**)d3d12Resource;
-            IntPtr methodPtr = vtable[51];
-
-            // Delegate signature: ulong GetGPUVirtualAddress()
-            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-            delegate ulong GetGPUVirtualAddressDelegate(IntPtr resource);
-
-            GetGPUVirtualAddressDelegate getGpuAddress =
-                (GetGPUVirtualAddressDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(GetGPUVirtualAddressDelegate));
-
-            return getGpuAddress(d3d12Resource);
-        }
-
-        #endregion
-
         #region Resource Interface
 
         private interface IResource : IDisposable
@@ -3284,150 +2362,6 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // They don't need individual release - the descriptor heap itself manages their lifetime
                 // If descriptors were allocated from a heap, releasing the heap will clean them up
                 // Standalone descriptors allocated via CreateXXXDescriptorHandle are managed by the device
-            }
-        }
-
-        /// <summary>
-        /// Converts GraphicsPipelineDesc to D3D12_GRAPHICS_PIPELINE_STATE_DESC.
-        /// Based on DirectX 12 Graphics Pipeline State: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_graphics_pipeline_state_desc
-        /// </summary>
-        private D3D12_GRAPHICS_PIPELINE_STATE_DESC ConvertGraphicsPipelineDescToD3D12(GraphicsPipelineDesc desc, IFramebuffer framebuffer, IntPtr rootSignature)
-        {
-            var d3d12Desc = new D3D12_GRAPHICS_PIPELINE_STATE_DESC();
-
-            // Root signature
-            d3d12Desc.pRootSignature = rootSignature;
-
-            // Shader bytecode
-            d3d12Desc.VS = GetShaderBytecode(desc.VertexShader);
-            d3d12Desc.PS = GetShaderBytecode(desc.PixelShader);
-            d3d12Desc.HS = GetShaderBytecode(desc.HullShader);
-            d3d12Desc.DS = GetShaderBytecode(desc.DomainShader);
-            d3d12Desc.GS = GetShaderBytecode(desc.GeometryShader);
-
-            // Stream output (not used in our abstraction)
-            d3d12Desc.StreamOutput = new D3D12_STREAM_OUTPUT_DESC
-            {
-                pSODeclaration = IntPtr.Zero,
-                NumEntries = 0,
-                pBufferStrides = IntPtr.Zero,
-                NumStrides = 0,
-                RasterizedStream = 0
-            };
-
-            // Blend state
-            d3d12Desc.BlendState = ConvertBlendStateDescToD3D12(desc.BlendState);
-
-            // Sample mask (default to all samples)
-            d3d12Desc.SampleMask = 0xFFFFFFFF;
-
-            // Rasterizer state
-            d3d12Desc.RasterizerState = ConvertRasterStateDescToD3D12(desc.RasterState);
-
-            // Depth-stencil state
-            d3d12Desc.DepthStencilState = ConvertDepthStencilStateDescToD3D12(desc.DepthStencilState);
-
-            // Input layout
-            if (desc.InputLayout.Attributes != null && desc.InputLayout.Attributes.Length > 0)
-            {
-                d3d12Desc.InputElementDescsCount = (uint)desc.InputLayout.Attributes.Length;
-                d3d12Desc.pInputElementDescs = MarshalInputElementDescs(desc.InputLayout.Attributes);
-            }
-            else
-            {
-                d3d12Desc.InputElementDescsCount = 0;
-                d3d12Desc.pInputElementDescs = IntPtr.Zero;
-            }
-
-            // Index buffer strip cut value (not used)
-            d3d12Desc.IBStripCutValue = 0; // D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED
-
-            // Primitive topology type
-            d3d12Desc.PrimitiveTopologyType = ConvertPrimitiveTopologyToD3D12(desc.PrimitiveTopology);
-
-            // Render target formats from framebuffer
-            if (framebuffer != null && framebuffer.Desc.ColorAttachments != null && framebuffer.Desc.ColorAttachments.Length > 0)
-            {
-                d3d12Desc.NumRenderTargets = (uint)Math.Min(framebuffer.Desc.ColorAttachments.Length, 8);
-                for (int i = 0; i < d3d12Desc.NumRenderTargets && i < 8; i++)
-                {
-                    var attachment = framebuffer.Desc.ColorAttachments[i];
-                    if (attachment.Texture != null)
-                    {
-                        uint format = ConvertTextureFormatToDxgiFormat(attachment.Texture.Desc.Format);
-                        switch (i)
-                        {
-                            case 0: d3d12Desc.RTVFormats0 = format; break;
-                            case 1: d3d12Desc.RTVFormats1 = format; break;
-                            case 2: d3d12Desc.RTVFormats2 = format; break;
-                            case 3: d3d12Desc.RTVFormats3 = format; break;
-                            case 4: d3d12Desc.RTVFormats4 = format; break;
-                            case 5: d3d12Desc.RTVFormats5 = format; break;
-                            case 6: d3d12Desc.RTVFormats6 = format; break;
-                            case 7: d3d12Desc.RTVFormats7 = format; break;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                d3d12Desc.NumRenderTargets = 1;
-                d3d12Desc.RTVFormats0 = 87; // DXGI_FORMAT_R8G8B8A8_UNORM (default)
-                d3d12Desc.RTVFormats1 = 0; // DXGI_FORMAT_UNKNOWN
-                d3d12Desc.RTVFormats2 = 0;
-                d3d12Desc.RTVFormats3 = 0;
-                d3d12Desc.RTVFormats4 = 0;
-                d3d12Desc.RTVFormats5 = 0;
-                d3d12Desc.RTVFormats6 = 0;
-                d3d12Desc.RTVFormats7 = 0;
-            }
-
-            // Depth-stencil format
-            if (framebuffer != null && framebuffer.Desc.DepthAttachment.Texture != null)
-            {
-                d3d12Desc.DSVFormat = ConvertTextureFormatToDxgiFormat(framebuffer.Desc.DepthAttachment.Texture.Desc.Format);
-            }
-            else
-            {
-                d3d12Desc.DSVFormat = 0; // DXGI_FORMAT_UNKNOWN
-            }
-
-            // Sample description
-            if (framebuffer != null && framebuffer.Desc.ColorAttachments != null && framebuffer.Desc.ColorAttachments.Length > 0 && framebuffer.Desc.ColorAttachments[0].Texture != null)
-            {
-                d3d12Desc.SampleDesc = new D3D12_SAMPLE_DESC
-                {
-                    Count = (uint)framebuffer.Desc.ColorAttachments[0].Texture.Desc.SampleCount,
-                    Quality = 0 // Standard quality
-                };
-            }
-            else
-            {
-                d3d12Desc.SampleDesc = new D3D12_SAMPLE_DESC { Count = 1, Quality = 0 };
-            }
-
-            // Node mask (default to node 0)
-            d3d12Desc.NodeMask = 0;
-
-            // Cached PSO (not used)
-            d3d12Desc.CachedPSO = new D3D12_CACHED_PIPELINE_STATE { pCachedBlob = IntPtr.Zero, CachedBlobSizeInBytes = 0 };
-
-            // Pipeline state flags (default)
-            d3d12Desc.Flags = 0; // D3D12_PIPELINE_STATE_FLAG_NONE
-
-            return d3d12Desc;
-        }
-
-        /// <summary>
-        /// Frees allocated memory from D3D12_GRAPHICS_PIPELINE_STATE_DESC structure.
-        /// </summary>
-        private void FreeGraphicsPipelineStateDesc(ref D3D12_GRAPHICS_PIPELINE_STATE_DESC desc)
-        {
-            // Free input element descriptors
-            if (desc.pInputElementDescs != IntPtr.Zero)
-            {
-                Marshal.FreeHGlobal(desc.pInputElementDescs);
-                desc.pInputElementDescs = IntPtr.Zero;
             }
         }
 
@@ -3526,40 +2460,9 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             public void Dispose()
             {
-                // Release D3D12 pipeline state and root signature
-                // Based on DirectX 12 COM Reference Counting: https://docs.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-release
-                // ID3D12PipelineState and ID3D12RootSignature are COM objects that must be released via IUnknown::Release()
-                // This prevents memory leaks and properly decrements reference counts
-
-                if (_d3d12PipelineState != IntPtr.Zero)
-                {
-                    uint refCount = ReleaseComObject(_d3d12PipelineState);
-                    if (refCount > 0)
-                    {
-                        // Reference count > 0 means other objects still hold references
-                        // This is normal and expected - the object will be freed when all references are released
-                    }
-                    else
-                    {
-                        // Reference count reached 0, object was freed
-                        // This is the expected behavior when disposing
-                    }
-                }
-
-                if (_rootSignature != IntPtr.Zero)
-                {
-                    uint refCount = ReleaseComObject(_rootSignature);
-                    if (refCount > 0)
-                    {
-                        // Reference count > 0 means other objects still hold references
-                        // This is normal and expected - the object will be freed when all references are released
-                    }
-                    else
-                    {
-                        // Reference count reached 0, object was freed
-                        // This is the expected behavior when disposing
-                    }
-                }
+                // TODO: Release D3D12 pipeline state and root signature
+                // - Call ID3D12PipelineState::Release()
+                // - Call ID3D12RootSignature::Release()
             }
         }
 
@@ -3586,40 +2489,9 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             public void Dispose()
             {
-                // Release D3D12 pipeline state and root signature
-                // Based on DirectX 12 COM Reference Counting: https://docs.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-release
-                // ID3D12PipelineState and ID3D12RootSignature are COM objects that must be released via IUnknown::Release()
-                // This prevents memory leaks and properly decrements reference counts
-
-                if (_d3d12PipelineState != IntPtr.Zero)
-                {
-                    uint refCount = ReleaseComObject(_d3d12PipelineState);
-                    if (refCount > 0)
-                    {
-                        // Reference count > 0 means other objects still hold references
-                        // This is normal and expected - the object will be freed when all references are released
-                    }
-                    else
-                    {
-                        // Reference count reached 0, object was freed
-                        // This is the expected behavior when disposing
-                    }
-                }
-
-                if (_rootSignature != IntPtr.Zero)
-                {
-                    uint refCount = ReleaseComObject(_rootSignature);
-                    if (refCount > 0)
-                    {
-                        // Reference count > 0 means other objects still hold references
-                        // This is normal and expected - the object will be freed when all references are released
-                    }
-                    else
-                    {
-                        // Reference count reached 0, object was freed
-                        // This is the expected behavior when disposing
-                    }
-                }
+                // TODO: Release D3D12 pipeline state and root signature
+                // - Call ID3D12PipelineState::Release()
+                // - Call ID3D12RootSignature::Release()
             }
         }
 
@@ -3673,70 +2545,13 @@ namespace Andastra.Runtime.MonoGame.Backends
             private readonly IntPtr _handle;
             private readonly IntPtr _rootSignature;
             private readonly IntPtr _device;
-            private readonly uint _rootParameterIndex;
 
             public D3D12BindingLayout(IntPtr handle, BindingLayoutDesc desc, IntPtr rootSignature, IntPtr device)
-                : this(handle, desc, rootSignature, device, CalculateRootParameterIndex(desc))
-            {
-            }
-
-            public D3D12BindingLayout(IntPtr handle, BindingLayoutDesc desc, IntPtr rootSignature, IntPtr device, uint rootParameterIndex)
             {
                 _handle = handle;
                 Desc = desc;
                 _rootSignature = rootSignature;
                 _device = device;
-                _rootParameterIndex = rootParameterIndex;
-            }
-
-            /// <summary>
-            /// Gets the root parameter index for this binding layout in the root signature.
-            /// In DirectX 12, each binding layout maps to one root parameter (typically a descriptor table).
-            /// The root parameter index is determined by the order in which root parameters are defined in the root signature.
-            /// Based on DirectX 12 Root Parameters: https://docs.microsoft.com/en-us/windows/win32/direct3d12/root-signatures
-            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
-            /// </summary>
-            public uint GetRootParameterIndex()
-            {
-                return _rootParameterIndex;
-            }
-
-            /// <summary>
-            /// Calculates the root parameter index from the binding layout descriptor.
-            /// Uses the minimum slot number from binding layout items as the root parameter index.
-            /// This is a common pattern where the slot number corresponds to the root parameter index.
-            /// When root signature creation is fully implemented, this should be set explicitly during root signature creation.
-            /// </summary>
-            private static uint CalculateRootParameterIndex(BindingLayoutDesc desc)
-            {
-                if (desc.Items == null || desc.Items.Length == 0)
-                {
-                    return 0;
-                }
-
-                // Find the minimum slot number - this typically corresponds to the root parameter index
-                int minSlot = int.MaxValue;
-                for (int i = 0; i < desc.Items.Length; i++)
-                {
-                    if (desc.Items[i].Slot < minSlot)
-                    {
-                        minSlot = desc.Items[i].Slot;
-                    }
-                }
-
-                // If no valid slot found, default to 0
-                if (minSlot == int.MaxValue)
-                {
-                    return 0;
-                }
-
-                // Ensure non-negative and cast to uint
-                if (minSlot < 0)
-                {
-                    return 0;
-                }
-
-                return unchecked((uint)minSlot);
             }
 
             public void Dispose()
@@ -3824,30 +2639,9 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             public void Dispose()
             {
-                // Release D3D12 acceleration structure
-                // Based on DirectX 12 COM Reference Counting: https://docs.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-release
-                // ID3D12Resource (acceleration structure) is a COM object that must be released via IUnknown::Release()
-                // This prevents memory leaks and properly decrements reference counts
-                // Note: Acceleration structures are D3D12 resources stored in backing buffers
-                
-                // Release the acceleration structure COM object
-                if (_d3d12AccelStruct != IntPtr.Zero)
-                {
-                    uint refCount = ReleaseComObject(_d3d12AccelStruct);
-                    if (refCount > 0)
-                    {
-                        // Reference count > 0 means other objects still hold references
-                        // This is normal and expected - the object will be freed when all references are released
-                    }
-                    else
-                    {
-                        // Reference count reached 0, object was freed
-                        // This is the expected behavior when disposing
-                    }
-                }
-                
-                // Release backing buffer resource
-                // The backing buffer holds the acceleration structure data
+                // TODO: Release D3D12 acceleration structure
+                // - Release backing buffer resource
+                // Note: Acceleration structures are resources, released via ID3D12Resource::Release()
                 _backingBuffer?.Dispose();
             }
         }
@@ -3871,71 +2665,6 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _device5 = device5;
             }
 
-            public byte[] GetShaderIdentifier(string exportName)
-            {
-                if (string.IsNullOrEmpty(exportName))
-                {
-                    return null;
-                }
-
-                // If properties interface is already available, use it directly
-                if (_properties != IntPtr.Zero)
-                {
-                    // Cast the properties pointer to ID3D12StateObjectProperties interface
-                    ID3D12StateObjectProperties props = (ID3D12StateObjectProperties)Marshal.GetObjectForIUnknown(_properties);
-                    if (props != null)
-                    {
-                        // GetShaderIdentifier returns a pointer to 32 bytes of shader identifier data
-                        // D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES = 32
-                        IntPtr shaderIdPtr = props.GetShaderIdentifier(exportName);
-                        if (shaderIdPtr != IntPtr.Zero)
-                        {
-                            // Copy the 32 bytes of shader identifier data
-                            const int D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES = 32;
-                            byte[] shaderId = new byte[D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES];
-                            Marshal.Copy(shaderIdPtr, shaderId, 0, D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
-                            return shaderId;
-                        }
-                    }
-                }
-
-                // If properties not available, try to query from state object
-                if (_d3d12StateObject != IntPtr.Zero)
-                {
-                    IntPtr propertiesPtr = IntPtr.Zero;
-                    int hr = Marshal.QueryInterface(_d3d12StateObject, ref IID_ID3D12StateObjectProperties, out propertiesPtr);
-                    if (hr == 0 && propertiesPtr != IntPtr.Zero)
-                    {
-                        try
-                        {
-                            ID3D12StateObjectProperties props = (ID3D12StateObjectProperties)Marshal.GetObjectForIUnknown(propertiesPtr);
-                            if (props != null)
-                            {
-                                IntPtr shaderIdPtr = props.GetShaderIdentifier(exportName);
-                                if (shaderIdPtr != IntPtr.Zero)
-                                {
-                                    const int D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES = 32;
-                                    byte[] shaderId = new byte[D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES];
-                                    Marshal.Copy(shaderIdPtr, shaderId, 0, D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
-                                    return shaderId;
-                                }
-                            }
-                        }
-                        finally
-                        {
-                            // Release the queried interface
-                            if (propertiesPtr != IntPtr.Zero)
-                            {
-                                Marshal.Release(propertiesPtr);
-                            }
-                        }
-                    }
-                }
-
-                // Export name not found or pipeline not fully initialized
-                return null;
-            }
-
             public void Dispose()
             {
                 // TODO: Release D3D12 state object
@@ -3953,7 +2682,6 @@ namespace Andastra.Runtime.MonoGame.Backends
             private readonly D3D12Device _device;
             private readonly IntPtr _d3d12CommandList;
             private readonly IntPtr _d3d12Device;
-            private readonly IntPtr _d3d12CommandAllocator;
             private bool _isOpen;
 
             // Barrier tracking
@@ -3973,13 +2701,12 @@ namespace Andastra.Runtime.MonoGame.Backends
                 public uint StateAfter;
             }
 
-            public D3D12CommandList(IntPtr handle, CommandListType type, D3D12Device device, IntPtr d3d12CommandList, IntPtr d3d12CommandAllocator, IntPtr d3d12Device)
+            public D3D12CommandList(IntPtr handle, CommandListType type, D3D12Device device, IntPtr d3d12CommandList, IntPtr d3d12Device)
             {
                 _handle = handle;
                 _type = type;
                 _device = device;
                 _d3d12CommandList = d3d12CommandList;
-                _d3d12CommandAllocator = d3d12CommandAllocator;
                 _d3d12Device = d3d12Device;
                 _isOpen = false;
                 _pendingBarriers = new List<PendingBarrier>();
@@ -3987,55 +2714,16 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _hasRaytracingState = false;
             }
 
-            /// <summary>
-            /// Opens the command list for recording commands.
-            /// Resets the command allocator and command list before starting a new recording session.
-            /// Based on DirectX 12 Command List Recording: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-reset
-            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
-            /// </summary>
             public void Open()
             {
                 if (_isOpen)
                 {
-                    return; // Already open, no need to reset
+                    return;
                 }
 
-                // Reset command allocator first
-                // Command allocator must be reset before resetting the command list
-                // This makes the memory available for reuse by the command list
-                if (_d3d12CommandAllocator != IntPtr.Zero)
-                {
-                    int allocatorHr = CallCommandAllocatorReset(_d3d12CommandAllocator);
-                    if (allocatorHr < 0)
-                    {
-                        // HRESULT indicates failure
-                        // According to D3D12 documentation, Reset can fail if:
-                        // - The command allocator is being used by a command list that hasn't been executed yet
-                        // - Device was removed
-                        // We continue anyway - the error will be caught when resetting the command list
-                    }
-                }
-
-                // Reset command list with allocator and optional initial PSO
-                // pInitialState can be NULL (IntPtr.Zero) to reset without setting a PSO
-                // The PSO will be set later via SetGraphicsState or SetComputeState
-                if (_d3d12CommandList != IntPtr.Zero && _d3d12CommandAllocator != IntPtr.Zero)
-                {
-                    // Reset command list with allocator and no initial PSO (NULL)
-                    // PSO will be set explicitly when graphics/compute state is set
-                    int commandListHr = CallCommandListReset(_d3d12CommandList, _d3d12CommandAllocator, IntPtr.Zero);
-                    if (commandListHr < 0)
-                    {
-                        // HRESULT indicates failure
-                        // According to D3D12 documentation, Reset can fail if:
-                        // - The command list is still being executed by the GPU
-                        // - The command allocator hasn't been reset (we reset it above, but check anyway)
-                        // - Device was removed
-                        // - Invalid allocator or command list pointers
-                        // We still mark as open to allow caller to proceed, but operations may fail
-                        // The error will be caught when trying to record commands
-                    }
-                }
+                // TODO: Reset command list and allocator
+                // - Call ID3D12CommandAllocator::Reset
+                // - Call ID3D12GraphicsCommandList::Reset with allocator and PSO (if any)
 
                 // Clear barrier tracking for new recording session
                 _pendingBarriers.Clear();
@@ -4080,556 +2768,9 @@ namespace Andastra.Runtime.MonoGame.Backends
             // These are stubbed with TODO comments indicating D3D12 API calls needed
             // Implementation will be completed when DirectX 12 interop is added
 
-            /// <summary>
-            /// Writes byte array data to a buffer using an upload heap staging buffer.
-            /// 
-            /// Implementation: Creates a temporary upload buffer, maps it for CPU access,
-            /// copies the data, unmaps it, then uses CopyBufferRegion to copy from the
-            /// staging buffer to the destination buffer.
-            /// 
-            /// Based on DirectX 12 UpdateSubresources pattern:
-            /// https://docs.microsoft.com/en-us/windows/win32/direct3d12/uploading-resource-data
-            /// 
-            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
-            /// </summary>
-            /// <param name="buffer">Destination buffer to write data to</param>
-            /// <param name="data">Byte array containing data to write</param>
-            /// <param name="destOffset">Byte offset into the destination buffer where data should be written</param>
-            /// <exception cref="ArgumentNullException">Thrown if buffer or data is null</exception>
-            /// <exception cref="ArgumentException">Thrown if data array is empty or destOffset is negative</exception>
-            /// <exception cref="InvalidOperationException">Thrown if command list is closed or device is not available</exception>
-            public void WriteBuffer(IBuffer buffer, byte[] data, int destOffset = 0)
-            {
-                if (buffer == null)
-                {
-                    throw new ArgumentNullException(nameof(buffer));
-                }
-
-                if (data == null)
-                {
-                    throw new ArgumentNullException(nameof(data));
-                }
-
-                if (data.Length == 0)
-                {
-                    throw new ArgumentException("Data array cannot be empty", nameof(data));
-                }
-
-                if (destOffset < 0)
-                {
-                    throw new ArgumentException("Destination offset must be non-negative", nameof(destOffset));
-                }
-
-                if (!_isOpen)
-                {
-                    throw new InvalidOperationException("Cannot record commands when command list is closed");
-                }
-
-                if (_d3d12CommandList == IntPtr.Zero)
-                {
-                    return; // Command list not initialized
-                }
-
-                if (_d3d12Device == IntPtr.Zero)
-                {
-                    throw new InvalidOperationException("D3D12 device is not available");
-                }
-
-                // Validate buffer has valid native handle
-                IntPtr bufferResource = buffer.NativeHandle;
-                if (bufferResource == IntPtr.Zero)
-                {
-                    throw new ArgumentException("Buffer has invalid native handle", nameof(buffer));
-                }
-
-                // Validate buffer size
-                BufferDesc bufferDescription = buffer.Desc;
-                if (destOffset + data.Length > bufferDescription.ByteSize)
-                {
-                    throw new ArgumentException($"Data size ({data.Length} bytes) plus destination offset ({destOffset} bytes) exceeds buffer size ({bufferDescription.ByteSize} bytes)", nameof(data));
-                }
-
-                // Create temporary upload buffer for staging
-                // Upload buffers use D3D12_HEAP_TYPE_UPLOAD and are CPU-writable, GPU-readable
-                IntPtr stagingBufferResource = IntPtr.Zero;
-                try
-                {
-                    // Create resource description for staging buffer
-                    D3D12_RESOURCE_DESC stagingBufferDesc = new D3D12_RESOURCE_DESC
-                    {
-                        Dimension = 1, // D3D12_RESOURCE_DIMENSION_BUFFER
-                        Alignment = 0,
-                        Width = unchecked((ulong)data.Length),
-                        Height = 1,
-                        DepthOrArraySize = 1,
-                        MipLevels = 1,
-                        Format = 0, // DXGI_FORMAT_UNKNOWN for buffers
-                        SampleDesc = new D3D12_SAMPLE_DESC { Count = 1, Quality = 0 },
-                        Layout = 0, // D3D12_TEXTURE_LAYOUT_ROW_MAJOR
-                        Flags = 0 // D3D12_RESOURCE_FLAG_NONE
-                    };
-
-                    // Create heap properties for upload heap
-                    D3D12_HEAP_PROPERTIES heapProperties = new D3D12_HEAP_PROPERTIES
-                    {
-                        Type = D3D12_HEAP_TYPE_UPLOAD,
-                        CPUPageProperty = 0, // D3D12_CPU_PAGE_PROPERTY_UNKNOWN
-                        MemoryPoolPreference = 0, // D3D12_MEMORY_POOL_UNKNOWN
-                        CreationNodeMask = 0,
-                        VisibleNodeMask = 0
-                    };
-
-                    // Allocate memory for structures
-                    int heapPropertiesSize = Marshal.SizeOf(typeof(D3D12_HEAP_PROPERTIES));
-                    IntPtr heapPropertiesPtr = Marshal.AllocHGlobal(heapPropertiesSize);
-                    int resourceDescSize = Marshal.SizeOf(typeof(D3D12_RESOURCE_DESC));
-                    IntPtr resourceDescPtr = Marshal.AllocHGlobal(resourceDescSize);
-                    IntPtr resourcePtr = Marshal.AllocHGlobal(IntPtr.Size);
-
-                    try
-                    {
-                        // Marshal structures to unmanaged memory
-                        Marshal.StructureToPtr(heapProperties, heapPropertiesPtr, false);
-                        Marshal.StructureToPtr(stagingBufferDesc, resourceDescPtr, false);
-
-                        // IID_ID3D12Resource
-                        Guid iidResource = new Guid("696442be-a72e-4059-bc79-5b5c98040fad");
-
-                        // Initial state is D3D12_RESOURCE_STATE_GENERIC_READ (0) for upload heap
-                        int hr = CallCreateCommittedResource(_d3d12Device, heapPropertiesPtr, 0, resourceDescPtr, 0, IntPtr.Zero, ref iidResource, resourcePtr);
-                        if (hr < 0)
-                        {
-                            throw new InvalidOperationException($"Failed to create staging buffer: HRESULT 0x{hr:X8}");
-                        }
-
-                        stagingBufferResource = Marshal.ReadIntPtr(resourcePtr);
-                        if (stagingBufferResource == IntPtr.Zero)
-                        {
-                            throw new InvalidOperationException("CreateCommittedResource returned null staging buffer");
-                        }
-                    }
-                    finally
-                    {
-                        Marshal.FreeHGlobal(heapPropertiesPtr);
-                        Marshal.FreeHGlobal(resourceDescPtr);
-                        Marshal.FreeHGlobal(resourcePtr);
-                    }
-
-                    // Map the staging buffer and copy data
-                    // For upload heaps, we can map and write directly
-                    IntPtr mappedData = MapStagingBufferResource(stagingBufferResource, 0, unchecked((ulong)data.Length));
-                    if (mappedData == IntPtr.Zero)
-                    {
-                        throw new InvalidOperationException("Failed to map staging buffer");
-                    }
-
-                    try
-                    {
-                        // Copy data from byte array to mapped buffer
-                        // Use C# 7.3 compatible code (avoid System.Buffer.MemoryCopy which is C# 8.0+)
-                        unsafe
-                        {
-                            byte* dstPtr = (byte*)mappedData;
-                            fixed (byte* srcPtr = data)
-                            {
-                                for (int i = 0; i < data.Length; i++)
-                                {
-                                    dstPtr[i] = srcPtr[i];
-                                }
-                            }
-                        }
-                    }
-                    finally
-                    {
-                        UnmapStagingBufferResource(stagingBufferResource, 0, unchecked((ulong)data.Length));
-                    }
-
-                    // Transition destination buffer to COPY_DEST state
-                    SetBufferState(buffer, ResourceState.CopyDest);
-                    // Staging buffer is already in GENERIC_READ state (upload heap default)
-                    CommitBarriers();
-
-                    // Copy from staging buffer to destination buffer using CopyBufferRegion
-                    // CopyBufferRegion signature: void CopyBufferRegion(
-                    //   ID3D12Resource* pDstBuffer,
-                    //   UINT64 DstOffset,
-                    //   ID3D12Resource* pSrcBuffer,
-                    //   UINT64 SrcOffset,
-                    //   UINT64 NumBytes)
-                    CallCopyBufferRegion(
-                        _d3d12CommandList,
-                        bufferResource,
-                        unchecked((ulong)destOffset),
-                        stagingBufferResource,
-                        0UL,
-                        unchecked((ulong)data.Length));
-                }
-                finally
-                {
-                    // Release staging buffer resource
-                    if (stagingBufferResource != IntPtr.Zero)
-                    {
-                        ReleaseComObject(stagingBufferResource);
-                    }
-                }
-            }
-
-            /// <summary>
-            /// Writes typed array data to a buffer using an upload heap staging buffer.
-            /// 
-            /// Implementation: Converts the typed array to bytes, then uses the same
-            /// upload heap staging pattern as WriteBuffer(byte[]).
-            /// 
-            /// Based on DirectX 12 UpdateSubresources pattern:
-            /// https://docs.microsoft.com/en-us/windows/win32/direct3d12/uploading-resource-data
-            /// 
-            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
-            /// </summary>
-            /// <typeparam name="T">Unmanaged type of array elements</typeparam>
-            /// <param name="buffer">Destination buffer to write data to</param>
-            /// <param name="data">Typed array containing data to write</param>
-            /// <param name="destOffset">Byte offset into the destination buffer where data should be written</param>
-            /// <exception cref="ArgumentNullException">Thrown if buffer or data is null</exception>
-            /// <exception cref="ArgumentException">Thrown if data array is empty or destOffset is negative</exception>
-            /// <exception cref="InvalidOperationException">Thrown if command list is closed or device is not available</exception>
-            public void WriteBuffer<T>(IBuffer buffer, T[] data, int destOffset = 0) where T : unmanaged
-            {
-                if (buffer == null)
-                {
-                    throw new ArgumentNullException(nameof(buffer));
-                }
-
-                if (data == null)
-                {
-                    throw new ArgumentNullException(nameof(data));
-                }
-
-                if (data.Length == 0)
-                {
-                    throw new ArgumentException("Data array cannot be empty", nameof(data));
-                }
-
-                if (destOffset < 0)
-                {
-                    throw new ArgumentException("Destination offset must be non-negative", nameof(destOffset));
-                }
-
-                // Calculate byte size of typed array
-                int elementSize = Marshal.SizeOf(typeof(T));
-                int totalByteSize = data.Length * elementSize;
-
-                // Validate buffer size
-                BufferDesc bufferDesc = buffer.Desc;
-                if (destOffset + totalByteSize > bufferDesc.ByteSize)
-                {
-                    throw new ArgumentException($"Data size ({totalByteSize} bytes) plus destination offset ({destOffset} bytes) exceeds buffer size ({bufferDesc.ByteSize} bytes)", nameof(data));
-                }
-
-                // Convert typed array to byte array
-                // Use C# 7.3 compatible code (avoid System.Buffer.MemoryCopy which is C# 8.0+)
-                byte[] byteData = new byte[totalByteSize];
-                unsafe
-                {
-                    fixed (T* srcPtr = data)
-                    fixed (byte* dstPtr = byteData)
-                    {
-                        byte* srcBytePtr = (byte*)srcPtr;
-                        for (int i = 0; i < totalByteSize; i++)
-                        {
-                            dstPtr[i] = srcBytePtr[i];
-                        }
-                    }
-                }
-
-                // Delegate to byte array version
-                WriteBuffer(buffer, byteData, destOffset);
-            }
-            /// <summary>
-            /// Writes texture data to a texture subresource using a staging buffer.
-            ///
-            /// Implementation: Creates a temporary upload buffer, copies data with proper row pitch alignment,
-            /// then uses CopyTextureRegion to copy from the upload buffer to the texture.
-            ///
-            /// Based on DirectX 12 UpdateSubresources pattern:
-            /// https://docs.microsoft.com/en-us/windows/win32/direct3d12/uploading-resource-data
-            ///
-            /// Note: This implementation uses approximate footprint calculations for standard formats.
-            /// A full implementation would use ID3D12Device::GetCopyableFootprints for exact layouts.
-            /// </summary>
-            public void WriteTexture(ITexture texture, int mipLevel, int arraySlice, byte[] data)
-            {
-                if (texture == null)
-                {
-                    throw new ArgumentNullException(nameof(texture));
-                }
-
-                if (data == null)
-                {
-                    throw new ArgumentNullException(nameof(data));
-                }
-
-                if (data.Length == 0)
-                {
-                    throw new ArgumentException("Data array cannot be empty", nameof(data));
-                }
-
-                if (!_isOpen)
-                {
-                    throw new InvalidOperationException("Cannot record commands when command list is closed");
-                }
-
-                if (_d3d12CommandList == IntPtr.Zero)
-                {
-                    return; // Command list not initialized
-                }
-
-                if (_d3d12Device == IntPtr.Zero)
-                {
-                    throw new InvalidOperationException("D3D12 device is not available");
-                }
-
-                // Validate mip level and array slice
-                TextureDesc desc = texture.Desc;
-                if (mipLevel < 0 || mipLevel >= desc.MipLevels)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(mipLevel), $"Mip level must be between 0 and {desc.MipLevels - 1}");
-                }
-
-                if (arraySlice < 0 || arraySlice >= desc.ArraySize)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(arraySlice), $"Array slice must be between 0 and {desc.ArraySize - 1}");
-                }
-
-                // Calculate mip level dimensions
-                uint mipWidth = unchecked((uint)Math.Max(1, desc.Width >> mipLevel));
-                uint mipHeight = unchecked((uint)Math.Max(1, desc.Height >> mipLevel));
-                uint mipDepth = unchecked((uint)Math.Max(1, (desc.Depth > 0 ? desc.Depth : 1) >> mipLevel));
-
-                // Get texture format and calculate bytes per pixel
-                uint bytesPerPixel = GetBytesPerPixelForTextureFormat(desc.Format);
-                if (bytesPerPixel == 0)
-                {
-                    throw new NotSupportedException($"Texture format {desc.Format} is not supported for WriteTexture (compressed formats require special handling)");
-                }
-
-                // Calculate row pitch with D3D12 alignment (256 bytes)
-                // D3D12 requires row pitch to be aligned to D3D12_TEXTURE_DATA_PITCH_ALIGNMENT (256 bytes)
-                const uint D3D12_TEXTURE_DATA_PITCH_ALIGNMENT = 256;
-                uint rowPitch = (mipWidth * bytesPerPixel + D3D12_TEXTURE_DATA_PITCH_ALIGNMENT - 1) & ~(D3D12_TEXTURE_DATA_PITCH_ALIGNMENT - 1);
-                uint slicePitch = rowPitch * mipHeight;
-                uint totalSize = slicePitch * mipDepth;
-
-                // Validate data size matches expected size
-                if (data.Length < totalSize)
-                {
-                    throw new ArgumentException($"Data array size ({data.Length}) is too small for texture subresource (expected at least {totalSize} bytes)", nameof(data));
-                }
-
-                // Calculate subresource index
-                // Subresource index = arraySlice * MipLevels + mipLevel
-                uint subresourceIndex = unchecked((uint)(arraySlice * desc.MipLevels + mipLevel));
-
-                // Create temporary upload buffer for staging directly using D3D12_HEAP_TYPE_UPLOAD
-                // Upload buffers use D3D12_HEAP_TYPE_UPLOAD and are CPU-writable, GPU-readable
-                // We create the staging buffer directly rather than using CreateBuffer to ensure upload heap type
-                IntPtr stagingBufferResource = IntPtr.Zero;
-                try
-                {
-                    // Create resource description for staging buffer
-                    D3D12_RESOURCE_DESC bufferDesc = new D3D12_RESOURCE_DESC
-                    {
-                        Dimension = D3D12_RESOURCE_DIMENSION_BUFFER,
-                        Alignment = 0,
-                        Width = totalSize,
-                        Height = 1,
-                        DepthOrArraySize = 1,
-                        MipLevels = 1,
-                        Format = 0, // DXGI_FORMAT_UNKNOWN for buffers
-                        SampleDesc = new D3D12_SAMPLE_DESC { Count = 1, Quality = 0 },
-                        Layout = 0, // D3D12_TEXTURE_LAYOUT_ROW_MAJOR
-                        Flags = 0 // D3D12_RESOURCE_FLAG_NONE
-                    };
-
-                    // Create heap properties for upload heap
-                    D3D12_HEAP_PROPERTIES heapProperties = new D3D12_HEAP_PROPERTIES
-                    {
-                        Type = D3D12_HEAP_TYPE_UPLOAD,
-                        CPUPageProperty = 0, // D3D12_CPU_PAGE_PROPERTY_UNKNOWN
-                        MemoryPoolPreference = 0, // D3D12_MEMORY_POOL_UNKNOWN
-                        CreationNodeMask = 0,
-                        VisibleNodeMask = 0
-                    };
-
-                    // Allocate memory for structures
-                    int heapPropertiesSize = Marshal.SizeOf(typeof(D3D12_HEAP_PROPERTIES));
-                    IntPtr heapPropertiesPtr = Marshal.AllocHGlobal(heapPropertiesSize);
-                    int resourceDescSize = Marshal.SizeOf(typeof(D3D12_RESOURCE_DESC));
-                    IntPtr resourceDescPtr = Marshal.AllocHGlobal(resourceDescSize);
-                    IntPtr resourcePtr = Marshal.AllocHGlobal(IntPtr.Size);
-
-                    try
-                    {
-                        // Marshal structures to unmanaged memory
-                        Marshal.StructureToPtr(heapProperties, heapPropertiesPtr, false);
-                        Marshal.StructureToPtr(stagingBufferDesc, resourceDescPtr, false);
-
-                        // IID_ID3D12Resource
-                        Guid iidResource = new Guid("696442be-a72e-4059-bc79-5b5c98040fad");
-
-                        // Initial state is D3D12_RESOURCE_STATE_GENERIC_READ (0) for upload heap
-                        int hr = CallCreateCommittedResource(_d3d12Device, heapPropertiesPtr, 0, resourceDescPtr, 0, IntPtr.Zero, ref iidResource, resourcePtr);
-                        if (hr < 0)
-                        {
-                            throw new InvalidOperationException($"Failed to create staging buffer: HRESULT 0x{hr:X8}");
-                        }
-
-                        stagingBufferResource = Marshal.ReadIntPtr(resourcePtr);
-                        if (stagingBufferResource == IntPtr.Zero)
-                        {
-                            throw new InvalidOperationException("CreateCommittedResource returned null staging buffer");
-                        }
-                    }
-                    finally
-                    {
-                        Marshal.FreeHGlobal(heapPropertiesPtr);
-                        Marshal.FreeHGlobal(resourceDescPtr);
-                        Marshal.FreeHGlobal(resourcePtr);
-                    }
-
-                    // Map the staging buffer and copy data with proper row pitch
-                    // For upload heaps, we can map and write directly
-                    IntPtr mappedData = MapStagingBufferResource(stagingBufferResource, 0, totalSize);
-                    if (mappedData == IntPtr.Zero)
-                    {
-                        throw new InvalidOperationException("Failed to map staging buffer");
-                    }
-
-                    try
-                    {
-                        // Copy data row by row, respecting row pitch alignment
-                        // Use C# 7.3 compatible code (avoid System.Buffer.MemoryCopy which is C# 8.0+)
-                        unsafe
-                        {
-                            byte* dstPtr = (byte*)mappedData;
-                            fixed (byte* srcPtr = data)
-                            {
-                                for (uint z = 0; z < mipDepth; z++)
-                                {
-                                    for (uint y = 0; y < mipHeight; y++)
-                                    {
-                                        uint srcRowOffset = (z * mipHeight * mipWidth * bytesPerPixel) + (y * mipWidth * bytesPerPixel);
-                                        uint dstRowOffset = (z * slicePitch) + (y * rowPitch);
-
-                                        // C# 7.3 compatible: use pointer arithmetic and loop instead of System.Buffer.MemoryCopy
-                                        byte* srcRowPtr = srcPtr + srcRowOffset;
-                                        byte* dstRowPtr = dstPtr + dstRowOffset;
-                                        uint rowSize = mipWidth * bytesPerPixel;
-                                        for (uint x = 0; x < rowSize; x++)
-                                        {
-                                            dstRowPtr[x] = srcRowPtr[x];
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    finally
-                    {
-                        UnmapStagingBufferResource(stagingBufferResource, 0, totalSize);
-                    }
-
-                    // Transition texture to COPY_DEST state
-                    SetTextureState(texture, ResourceState.CopyDest);
-                    // Transition staging buffer to COPY_SOURCE state (though upload buffers are always in generic read state)
-                    CommitBarriers();
-
-                    // Get texture resource handle
-                    IntPtr textureResource = texture.NativeHandle;
-                    if (textureResource == IntPtr.Zero)
-                    {
-                        throw new ArgumentException("Texture has invalid native handle");
-                    }
-
-                    // Create copy locations for staging buffer (source) and texture (destination)
-                    // For buffer-to-texture copy, source uses PLACED_FOOTPRINT type
-                    uint dxgiFormat = ConvertTextureFormatToDxgiFormatForTexture(desc.Format);
-                    if (dxgiFormat == 0)
-                    {
-                        throw new NotSupportedException($"Texture format {desc.Format} cannot be converted to DXGI_FORMAT");
-                    }
-
-                    // Create footprint for the staging buffer
-                    D3D12_PLACED_SUBRESOURCE_FOOTPRINT placedFootprint = new D3D12_PLACED_SUBRESOURCE_FOOTPRINT
-                    {
-                        Offset = 0, // Data starts at offset 0 in the staging buffer
-                        Footprint = new D3D12_SUBRESOURCE_FOOTPRINT
-                        {
-                            Format = dxgiFormat,
-                            Width = mipWidth,
-                            Height = mipHeight,
-                            Depth = mipDepth,
-                            RowPitch = rowPitch
-                        }
-                    };
-
-                    var srcLocation = new D3D12_TEXTURE_COPY_LOCATION
-                    {
-                        pResource = stagingBufferResource,
-                        Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT,
-                        PlacedFootprint = placedFootprint
-                    };
-
-                    var dstLocation = new D3D12_TEXTURE_COPY_LOCATION
-                    {
-                        pResource = textureResource,
-                        Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
-                        PlacedFootprint = new D3D12_PLACED_SUBRESOURCE_FOOTPRINT() // Initialize to zero, will set subresource index
-                    };
-
-                    // Allocate memory for copy location structures
-                    int locationSize = Marshal.SizeOf(typeof(D3D12_TEXTURE_COPY_LOCATION));
-                    IntPtr srcLocationPtr = Marshal.AllocHGlobal(locationSize);
-                    IntPtr dstLocationPtr = Marshal.AllocHGlobal(locationSize);
-
-                    try
-                    {
-                        // Marshal structures to unmanaged memory
-                        Marshal.StructureToPtr(srcLocation, srcLocationPtr, false);
-                        Marshal.StructureToPtr(dstLocation, dstLocationPtr, false);
-
-                        // Set SubresourceIndex in the destination location union
-                        // Offset = sizeof(IntPtr) + sizeof(uint) = 8 + 4 = 12 bytes from start of structure
-                        unsafe
-                        {
-                            uint* dstSubresourcePtr = (uint*)((byte*)dstLocationPtr + 12);
-                            *dstSubresourcePtr = subresourceIndex;
-                        }
-
-                        // CopyTextureRegion signature: void CopyTextureRegion(
-                        //   const D3D12_TEXTURE_COPY_LOCATION *pDst,
-                        //   UINT DstX, UINT DstY, UINT DstZ,
-                        //   const D3D12_TEXTURE_COPY_LOCATION *pSrc,
-                        //   const D3D12_BOX *pSrcBox)
-                        // pSrcBox = null means copy entire source region
-                        // DstX/Y/Z = 0 means copy to origin of destination subresource
-                        CallCopyTextureRegion(_d3d12CommandList, dstLocationPtr, 0, 0, 0, srcLocationPtr, IntPtr.Zero);
-                    }
-                    finally
-                    {
-                        // Free allocated memory
-                        Marshal.FreeHGlobal(srcLocationPtr);
-                        Marshal.FreeHGlobal(dstLocationPtr);
-                    }
-                }
-                finally
-                {
-                    // Release staging buffer resource
-                    if (stagingBufferResource != IntPtr.Zero)
-                    {
-                        ReleaseComObject(stagingBufferResource);
-                    }
-                }
-            }
+            public void WriteBuffer(IBuffer buffer, byte[] data, int destOffset = 0) { /* TODO: Use upload heap or UpdateSubresources */ }
+            public void WriteBuffer<T>(IBuffer buffer, T[] data, int destOffset = 0) where T : unmanaged { /* TODO: Use upload heap or UpdateSubresources */ }
+            public void WriteTexture(ITexture texture, int mipLevel, int arraySlice, byte[] data) { /* TODO: UpdateSubresources */ }
             public void CopyBuffer(IBuffer dest, int destOffset, IBuffer src, int srcOffset, int size)
             {
                 if (dest == null || src == null)
@@ -4686,7 +2827,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 //   ID3D12Resource* pSrcBuffer,
                 //   UINT64 SrcOffset,
                 //   UINT64 NumBytes)
-                //
+                // 
                 // Based on DirectX 12 documentation:
                 // - pDstBuffer: Destination buffer resource
                 // - DstOffset: Offset in bytes from the start of the destination buffer
@@ -5034,99 +3175,6 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             /// <summary>
-            /// Calls ID3D12CommandAllocator::Reset through COM vtable.
-            /// VTable index 3 for ID3D12CommandAllocator (first method after IUnknown: QueryInterface, AddRef, Release).
-            /// Based on DirectX 12 Command Allocator Reset: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12commandallocator-reset
-            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
-            /// </summary>
-            private unsafe int CallCommandAllocatorReset(IntPtr commandAllocator)
-            {
-                // Platform check: DirectX 12 COM is Windows-only
-                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-                {
-                    return (int)HRESULT.E_FAIL;
-                }
-
-                if (commandAllocator == IntPtr.Zero)
-                {
-                    return (int)HRESULT.E_INVALIDARG;
-                }
-
-                // Get vtable pointer
-                IntPtr* vtable = *(IntPtr**)commandAllocator;
-                // Reset is at index 3 in ID3D12CommandAllocator vtable (after IUnknown methods)
-                IntPtr methodPtr = vtable[3];
-
-                // Create delegate from function pointer
-                CommandAllocatorResetDelegate resetAllocator =
-                    (CommandAllocatorResetDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CommandAllocatorResetDelegate));
-
-                return resetAllocator(commandAllocator);
-            }
-
-            /// <summary>
-            /// Calls ID3D12GraphicsCommandList::Reset through COM vtable.
-            /// VTable index 4 for ID3D12GraphicsCommandList (first method after IUnknown: QueryInterface, AddRef, Release, GetDevice).
-            /// Based on DirectX 12 Command List Reset: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-reset
-            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
-            /// </summary>
-            private unsafe int CallCommandListReset(IntPtr commandList, IntPtr pAllocator, IntPtr pInitialState)
-            {
-                // Platform check: DirectX 12 COM is Windows-only
-                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-                {
-                    return (int)HRESULT.E_FAIL;
-                }
-
-                if (commandList == IntPtr.Zero || pAllocator == IntPtr.Zero)
-                {
-                    return (int)HRESULT.E_INVALIDARG;
-                }
-
-                // Get vtable pointer
-                IntPtr* vtable = *(IntPtr**)commandList;
-                // Reset is at index 4 in ID3D12GraphicsCommandList vtable (after IUnknown methods and GetDevice)
-                IntPtr methodPtr = vtable[4];
-
-                // Create delegate from function pointer
-                CommandListResetDelegate resetCommandList =
-                    (CommandListResetDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CommandListResetDelegate));
-
-                return resetCommandList(commandList, pAllocator, pInitialState);
-            }
-
-            /// <summary>
-            /// Calls ID3D12GraphicsCommandList::Close through COM vtable.
-            /// VTable index 5 for ID3D12GraphicsCommandList (after Reset at index 4).
-            /// Based on DirectX 12 Command List Close: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-close
-            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
-            /// </summary>
-            private unsafe int CallClose(IntPtr commandList)
-            {
-                // Platform check: DirectX 12 COM is Windows-only
-                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-                {
-                    return (int)HRESULT.E_FAIL;
-                }
-
-                if (commandList == IntPtr.Zero)
-                {
-                    return (int)HRESULT.E_INVALIDARG;
-                }
-
-                // Get vtable pointer
-                IntPtr* vtable = *(IntPtr**)commandList;
-                // Close is at index 5 in ID3D12GraphicsCommandList vtable (after Reset at index 4)
-                IntPtr methodPtr = vtable[5];
-
-                // Create delegate from function pointer
-                CloseDelegate closeCommandList =
-                    (CloseDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CloseDelegate));
-
-                return closeCommandList(commandList);
-            }
-
-            /// <summary>
             /// Calls ID3D12GraphicsCommandList::ResourceBarrier through COM vtable.
             /// VTable index 44 for ID3D12GraphicsCommandList.
             /// Based on DirectX 12 Resource Barriers: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-resourcebarrier
@@ -5197,7 +3245,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             /// Calls ID3D12GraphicsCommandList::CopyBufferRegion through COM vtable.
             /// VTable index 46 for ID3D12GraphicsCommandList.
             /// Based on DirectX 12 Buffer Copy: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-copybufferregion
-            ///
+            /// 
             /// CopyBufferRegion copies a region of data from one buffer to another.
             /// Signature: void CopyBufferRegion(
             ///   ID3D12Resource* pDstBuffer,
@@ -5616,12 +3664,6 @@ namespace Andastra.Runtime.MonoGame.Backends
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             private delegate void EndEventDelegate(IntPtr commandList);
 
-            // COM interface method delegate for SetMarker
-            // Based on DirectX 12 Debug Events: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-setmarker
-            // SetMarker is similar to BeginEvent but doesn't require an EndEvent call - it's a single marker point
-            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-            private delegate void SetMarkerDelegate(IntPtr commandList, uint Metadata, IntPtr pData, uint Size);
-
             /// <summary>
             /// Calls ID3D12GraphicsCommandList::ClearDepthStencilView through COM vtable.
             /// VTable index 48 for ID3D12GraphicsCommandList.
@@ -5744,193 +3786,8 @@ namespace Andastra.Runtime.MonoGame.Backends
                 endEvent(commandList);
             }
 
-            /// <summary>
-            /// Calls ID3D12GraphicsCommandList::SetMarker through COM vtable.
-            /// VTable index 59 for ID3D12GraphicsCommandList.
-            /// Based on DirectX 12 Debug Events: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-setmarker
-            /// Note: SetMarker is similar to BeginEvent but doesn't require an EndEvent call - it's a single marker point.
-            /// This is used by PIX and other debuggers to mark specific points in the command list without creating an event region.
-            /// </summary>
-            private unsafe void CallSetMarker(IntPtr commandList, uint metadata, IntPtr pData, uint size)
-            {
-                // Platform check: DirectX 12 COM is Windows-only
-                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-                {
-                    return;
-                }
-
-                if (commandList == IntPtr.Zero)
-                {
-                    return;
-                }
-
-                // Get vtable pointer
-                IntPtr* vtable = *(IntPtr**)commandList;
-                // SetMarker is at index 59 in ID3D12GraphicsCommandList vtable (after BeginEvent at 57, EndEvent at 58)
-                IntPtr methodPtr = vtable[59];
-
-                // Create delegate from function pointer
-                SetMarkerDelegate setMarker =
-                    (SetMarkerDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(SetMarkerDelegate));
-
-                setMarker(commandList, metadata, pData, size);
-            }
-
-            /// <summary>
-            /// Inserts a UAV (Unordered Access View) barrier for a texture resource.
-            ///
-            /// A UAV barrier ensures that all UAV writes to the resource have completed before
-            /// subsequent operations (compute shaders, pixel shaders, etc.) can read from the resource.
-            /// This is necessary when a resource is both written to and read from as a UAV in different
-            /// draw/dispatch calls within the same command list.
-            ///
-            /// Based on DirectX 12 API: ID3D12GraphicsCommandList::ResourceBarrier
-            /// Located via DirectX 12 documentation: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-resourcebarrier
-            /// Original implementation: Records a UAV barrier command into the command list
-            /// UAV barriers use D3D12_RESOURCE_BARRIER_TYPE_UAV barrier type
-            ///
-            /// Note: UAV barriers differ from transition barriers - they don't change resource state,
-            /// they only synchronize access between UAV write and read operations.
-            /// </summary>
-            public void UAVBarrier(ITexture texture)
-            {
-                if (!_isOpen)
-                {
-                    return; // Cannot record commands when command list is closed
-                }
-
-                if (texture == null)
-                {
-                    return; // Null texture - nothing to barrier
-                }
-
-                if (_d3d12CommandList == IntPtr.Zero)
-                {
-                    return; // Command list not initialized
-                }
-
-                // Get native resource handle from texture
-                IntPtr resource = texture.NativeHandle;
-                if (resource == IntPtr.Zero)
-                {
-                    return; // Invalid texture native handle
-                }
-
-                // Allocate memory for D3D12_RESOURCE_BARRIER structure
-                int barrierSize = Marshal.SizeOf(typeof(D3D12_RESOURCE_BARRIER));
-                IntPtr barrierPtr = Marshal.AllocHGlobal(barrierSize);
-
-                try
-                {
-                    // Create UAV barrier structure
-                    // For UAV barriers:
-                    // - Type = D3D12_RESOURCE_BARRIER_TYPE_UAV (2)
-                    // - Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE (0)
-                    // - Transition.pResource = resource pointer (using Transition union member for UAV barrier)
-                    // - Transition.Subresource, StateBefore, StateAfter are ignored for UAV barriers
-                    var barrier = new D3D12_RESOURCE_BARRIER
-                    {
-                        Type = D3D12_RESOURCE_BARRIER_TYPE_UAV,
-                        Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE,
-                        Transition = new D3D12_RESOURCE_TRANSITION_BARRIER
-                        {
-                            pResource = resource,
-                            Subresource = 0, // Ignored for UAV barriers
-                            StateBefore = 0, // Ignored for UAV barriers
-                            StateAfter = 0   // Ignored for UAV barriers
-                        }
-                    };
-
-                    // Marshal structure to unmanaged memory
-                    Marshal.StructureToPtr(barrier, barrierPtr, false);
-
-                    // Call ResourceBarrier with single barrier
-                    CallResourceBarrier(_d3d12CommandList, 1, barrierPtr);
-                }
-                finally
-                {
-                    // Free allocated memory
-                    Marshal.FreeHGlobal(barrierPtr);
-                }
-            }
-
-            /// <summary>
-            /// Inserts a UAV (Unordered Access View) barrier for a buffer resource.
-            ///
-            /// A UAV barrier ensures that all UAV writes to the buffer have completed before
-            /// subsequent operations (compute shaders, pixel shaders, etc.) can read from the buffer.
-            /// This is necessary when a buffer is both written to and read from as a UAV in different
-            /// draw/dispatch calls within the same command list.
-            ///
-            /// Based on DirectX 12 API: ID3D12GraphicsCommandList::ResourceBarrier
-            /// Located via DirectX 12 documentation: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-resourcebarrier
-            /// Original implementation: Records a UAV barrier command into the command list
-            /// UAV barriers use D3D12_RESOURCE_BARRIER_TYPE_UAV barrier type
-            ///
-            /// Note: UAV barriers differ from transition barriers - they don't change resource state,
-            /// they only synchronize access between UAV write and read operations.
-            /// </summary>
-            public void UAVBarrier(IBuffer buffer)
-            {
-                if (!_isOpen)
-                {
-                    return; // Cannot record commands when command list is closed
-                }
-
-                if (buffer == null)
-                {
-                    return; // Null buffer - nothing to barrier
-                }
-
-                if (_d3d12CommandList == IntPtr.Zero)
-                {
-                    return; // Command list not initialized
-                }
-
-                // Get native resource handle from buffer
-                IntPtr resource = buffer.NativeHandle;
-                if (resource == IntPtr.Zero)
-                {
-                    return; // Invalid buffer native handle
-                }
-
-                // Allocate memory for D3D12_RESOURCE_BARRIER structure
-                int barrierSize = Marshal.SizeOf(typeof(D3D12_RESOURCE_BARRIER));
-                IntPtr barrierPtr = Marshal.AllocHGlobal(barrierSize);
-
-                try
-                {
-                    // Create UAV barrier structure
-                    // For UAV barriers:
-                    // - Type = D3D12_RESOURCE_BARRIER_TYPE_UAV (2)
-                    // - Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE (0)
-                    // - Transition.pResource = resource pointer (using Transition union member for UAV barrier)
-                    // - Transition.Subresource, StateBefore, StateAfter are ignored for UAV barriers
-                    var barrier = new D3D12_RESOURCE_BARRIER
-                    {
-                        Type = D3D12_RESOURCE_BARRIER_TYPE_UAV,
-                        Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE,
-                        Transition = new D3D12_RESOURCE_TRANSITION_BARRIER
-                        {
-                            pResource = resource,
-                            Subresource = 0, // Ignored for UAV barriers
-                            StateBefore = 0, // Ignored for UAV barriers
-                            StateAfter = 0   // Ignored for UAV barriers
-                        }
-                    };
-
-                    // Marshal structure to unmanaged memory
-                    Marshal.StructureToPtr(barrier, barrierPtr, false);
-
-                    // Call ResourceBarrier with single barrier
-                    CallResourceBarrier(_d3d12CommandList, 1, barrierPtr);
-                }
-                finally
-                {
-                    // Free allocated memory
-                    Marshal.FreeHGlobal(barrierPtr);
-                }
-            }
+            public void UAVBarrier(ITexture texture) { /* TODO: UAVBarrier */ }
+            public void UAVBarrier(IBuffer buffer) { /* TODO: UAVBarrier */ }
             public void SetGraphicsState(GraphicsState state)
             {
                 if (!_isOpen)
@@ -5981,7 +3838,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     if (d3d12Framebuffer != null)
                     {
                         FramebufferDesc fbDesc = d3d12Framebuffer.Desc;
-
+                        
                         // Get render target views for color attachments
                         uint numRenderTargets = 0;
                         IntPtr renderTargetDescriptorsPtr = IntPtr.Zero;
@@ -5990,7 +3847,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                         if (fbDesc.ColorAttachments != null && fbDesc.ColorAttachments.Length > 0)
                         {
                             numRenderTargets = unchecked((uint)fbDesc.ColorAttachments.Length);
-
+                            
                             // Allocate memory for array of CPU descriptor handles
                             // D3D12_CPU_DESCRIPTOR_HANDLE is a struct with one IntPtr field
                             int handleSize = Marshal.SizeOf<D3D12_CPU_DESCRIPTOR_HANDLE>();
@@ -6048,7 +3905,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                 // Allocate memory for depth-stencil descriptor handle
                                 int dsvHandleSize = Marshal.SizeOf<D3D12_CPU_DESCRIPTOR_HANDLE>();
                                 depthStencilDescriptorPtr = Marshal.AllocHGlobal(dsvHandleSize);
-
+                                
                                 D3D12_CPU_DESCRIPTOR_HANDLE dsvCpuHandle = new D3D12_CPU_DESCRIPTOR_HANDLE
                                 {
                                     ptr = dsvHandle
@@ -6240,7 +4097,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                         }
 
                         BufferDesc bufferDesc = vertexBuffers[i].Desc;
-
+                        
                         // Try to get stride from buffer's StructStride if available
                         if (bufferDesc.StructStride > 0)
                         {
@@ -6251,7 +4108,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                             // Calculate stride from input layout attributes for this buffer index
                             uint maxOffset = 0;
                             uint maxSize = 0;
-
+                            
                             foreach (VertexAttributeDesc attr in inputLayout.Attributes)
                             {
                                 if (attr.BufferIndex == i)
@@ -6259,7 +4116,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                     // Calculate size of this attribute based on format
                                     uint attrSize = GetFormatSize(attr.Format);
                                     uint attrEnd = unchecked((uint)attr.Offset + attrSize);
-
+                                    
                                     if (attrEnd > maxOffset + maxSize)
                                     {
                                         maxOffset = unchecked((uint)attr.Offset);
@@ -6270,7 +4127,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                             // Stride is the maximum offset + size, rounded up to next 4-byte boundary for alignment
                             strides[i] = (maxOffset + maxSize + 3) & ~3U; // Align to 4 bytes
-
+                            
                             // If no attributes found, use a default stride based on buffer size
                             if (strides[i] == 0 && bufferDesc.ByteSize > 0)
                             {
@@ -6425,246 +4282,9 @@ namespace Andastra.Runtime.MonoGame.Backends
                         return 4; // Default to 4 bytes
                 }
             }
-
-            /// <summary>
-            /// Gets the number of bytes per pixel for a texture format.
-            /// Returns 0 for compressed formats that require special handling.
-            /// </summary>
-            private uint GetBytesPerPixelForTextureFormat(TextureFormat format)
-            {
-                // Most formats use the same size as GetFormatSize
-                // Compressed formats (BC/DXT, ASTC) return 0 to indicate special handling needed
-                switch (format)
-                {
-                    // Uncompressed formats
-                    case TextureFormat.R8_UNorm:
-                    case TextureFormat.R8_UInt:
-                    case TextureFormat.R8_SInt:
-                        return 1;
-                    case TextureFormat.R8G8_UNorm:
-                    case TextureFormat.R8G8_UInt:
-                    case TextureFormat.R8G8_SInt:
-                    case TextureFormat.R16_UNorm:
-                    case TextureFormat.R16_UInt:
-                    case TextureFormat.R16_SInt:
-                    case TextureFormat.R16_Float:
-                        return 2;
-                    case TextureFormat.R8G8B8A8_UNorm:
-                    case TextureFormat.R8G8B8A8_UInt:
-                    case TextureFormat.R8G8B8A8_SInt:
-                    case TextureFormat.R32_UInt:
-                    case TextureFormat.R32_SInt:
-                    case TextureFormat.R32_Float:
-                        return 4;
-                    case TextureFormat.R32G32_Float:
-                    case TextureFormat.R32G32_UInt:
-                    case TextureFormat.R32G32_SInt:
-                        return 8;
-                    case TextureFormat.R32G32B32_Float:
-                        return 12;
-                    case TextureFormat.R32G32B32A32_Float:
-                    case TextureFormat.R32G32B32A32_UInt:
-                    case TextureFormat.R32G32B32A32_SInt:
-                        return 16;
-                    // Compressed formats - return 0 to indicate special handling needed
-                    case TextureFormat.BC1:
-                    case TextureFormat.BC1_UNorm:
-                    case TextureFormat.BC1_UNorm_SRGB:
-                    case TextureFormat.BC2:
-                    case TextureFormat.BC2_UNorm:
-                    case TextureFormat.BC2_UNorm_SRGB:
-                    case TextureFormat.BC3:
-                    case TextureFormat.BC3_UNorm:
-                    case TextureFormat.BC3_UNorm_SRGB:
-                    case TextureFormat.BC4:
-                    case TextureFormat.BC4_UNorm:
-                    case TextureFormat.BC5:
-                    case TextureFormat.BC5_UNorm:
-                    case TextureFormat.BC6H:
-                    case TextureFormat.BC6H_UFloat:
-                    case TextureFormat.BC7:
-                    case TextureFormat.BC7_UNorm:
-                    case TextureFormat.BC7_UNorm_SRGB:
-                    case TextureFormat.ASTC_4x4:
-                    case TextureFormat.ASTC_5x5:
-                    case TextureFormat.ASTC_6x6:
-                    case TextureFormat.ASTC_8x8:
-                    case TextureFormat.ASTC_10x10:
-                    case TextureFormat.ASTC_12x12:
-                        return 0; // Compressed formats require block-based calculations
-                    default:
-                        return 4; // Default to 4 bytes per pixel
-                }
-            }
-
-            /// <summary>
-            /// Converts TextureFormat to DXGI_FORMAT for texture operations.
-            /// Based on DirectX 12 Texture Formats: https://docs.microsoft.com/en-us/windows/win32/api/dxgiformat/ne-dxgiformat-dxgi_format
-            /// </summary>
-            private uint ConvertTextureFormatToDxgiFormatForTexture(TextureFormat format)
-            {
-                switch (format)
-                {
-                    case TextureFormat.R8_UNorm:
-                        return 61; // DXGI_FORMAT_R8_UNORM
-                    case TextureFormat.R8_UInt:
-                        return 62; // DXGI_FORMAT_R8_UINT
-                    case TextureFormat.R8_SInt:
-                        return 63; // DXGI_FORMAT_R8_SINT
-                    case TextureFormat.R8G8_UNorm:
-                        return 49; // DXGI_FORMAT_R8G8_UNORM
-                    case TextureFormat.R8G8_UInt:
-                        return 50; // DXGI_FORMAT_R8G8_UINT
-                    case TextureFormat.R8G8_SInt:
-                        return 51; // DXGI_FORMAT_R8G8_SINT
-                    case TextureFormat.R8G8B8A8_UNorm:
-                        return 28; // DXGI_FORMAT_R8G8B8A8_UNORM
-                    case TextureFormat.R8G8B8A8_UInt:
-                        return 30; // DXGI_FORMAT_R8G8B8A8_UINT
-                    case TextureFormat.R8G8B8A8_SInt:
-                        return 29; // DXGI_FORMAT_R8G8B8A8_SINT
-                    case TextureFormat.R16_UNorm:
-                        return 56; // DXGI_FORMAT_R16_UNORM
-                    case TextureFormat.R16_UInt:
-                        return 57; // DXGI_FORMAT_R16_UINT
-                    case TextureFormat.R16_SInt:
-                        return 58; // DXGI_FORMAT_R16_SINT
-                    case TextureFormat.R16_Float:
-                        return 54; // DXGI_FORMAT_R16_FLOAT
-                    case TextureFormat.R32_UInt:
-                        return 42; // DXGI_FORMAT_R32_UINT
-                    case TextureFormat.R32_SInt:
-                        return 43; // DXGI_FORMAT_R32_SINT
-                    case TextureFormat.R32_Float:
-                        return 41; // DXGI_FORMAT_R32_FLOAT
-                    case TextureFormat.R32G32_Float:
-                        return 16; // DXGI_FORMAT_R32G32_FLOAT
-                    case TextureFormat.R32G32_UInt:
-                        return 52; // DXGI_FORMAT_R32G32_UINT
-                    case TextureFormat.R32G32_SInt:
-                        return 53; // DXGI_FORMAT_R32G32_SINT
-                    case TextureFormat.R32G32B32_Float:
-                        return 6; // DXGI_FORMAT_R32G32B32_FLOAT
-                    case TextureFormat.R32G32B32A32_Float:
-                        return 2; // DXGI_FORMAT_R32G32B32A32_FLOAT
-                    case TextureFormat.R32G32B32A32_UInt:
-                        return 1; // DXGI_FORMAT_R32G32B32A32_UINT
-                    case TextureFormat.R32G32B32A32_SInt:
-                        return 3; // DXGI_FORMAT_R32G32B32A32_SINT
-                    case TextureFormat.BC1:
-                    case TextureFormat.BC1_UNorm:
-                        return 71; // DXGI_FORMAT_BC1_UNORM
-                    case TextureFormat.BC1_UNorm_SRGB:
-                        return 72; // DXGI_FORMAT_BC1_UNORM_SRGB
-                    case TextureFormat.BC2:
-                    case TextureFormat.BC2_UNorm:
-                        return 74; // DXGI_FORMAT_BC2_UNORM
-                    case TextureFormat.BC2_UNorm_SRGB:
-                        return 75; // DXGI_FORMAT_BC2_UNORM_SRGB
-                    case TextureFormat.BC3:
-                    case TextureFormat.BC3_UNorm:
-                        return 77; // DXGI_FORMAT_BC3_UNORM
-                    case TextureFormat.BC3_UNorm_SRGB:
-                        return 78; // DXGI_FORMAT_BC3_UNORM_SRGB
-                    case TextureFormat.BC4:
-                    case TextureFormat.BC4_UNorm:
-                        return 80; // DXGI_FORMAT_BC4_UNORM
-                    case TextureFormat.BC5:
-                    case TextureFormat.BC5_UNorm:
-                        return 83; // DXGI_FORMAT_BC5_UNORM
-                    case TextureFormat.BC6H:
-                    case TextureFormat.BC6H_UFloat:
-                        return 95; // DXGI_FORMAT_BC6H_UF16
-                    case TextureFormat.BC7:
-                    case TextureFormat.BC7_UNorm:
-                        return 98; // DXGI_FORMAT_BC7_UNORM
-                    case TextureFormat.BC7_UNorm_SRGB:
-                        return 99; // DXGI_FORMAT_BC7_UNORM_SRGB
-                    default:
-                        return 0; // DXGI_FORMAT_UNKNOWN
-                }
-            }
-
-            /// <summary>
-            /// Maps a staging buffer resource for CPU access.
-            /// Based on DirectX 12 Resource Mapping: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12resource-map
-            /// </summary>
-            private unsafe IntPtr MapStagingBufferResource(IntPtr resource, ulong subresource, ulong size)
-            {
-                // ID3D12Resource::Map signature:
-                // HRESULT Map(UINT Subresource, const D3D12_RANGE *pReadRange, void **ppData)
-                // For upload heaps, pReadRange can be NULL to map the entire resource
-                // Subresource is 0 for buffers
-
-                // Platform check: DirectX 12 COM is Windows-only
-                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-                {
-                    return IntPtr.Zero;
-                }
-
-                if (resource == IntPtr.Zero)
-                {
-                    return IntPtr.Zero;
-                }
-
-                // Get vtable pointer
-                IntPtr* vtable = *(IntPtr**)resource;
-                // Map is at index 8 in ID3D12Resource vtable
-                IntPtr methodPtr = vtable[8];
-
-                // Create delegate from function pointer
-                // Note: Using Marshal.GetDelegateForFunctionPointer with a type defined elsewhere
-                // For now, use a simpler approach with a local delegate type
-                MapResourceDelegateInternal mapResource = (MapResourceDelegateInternal)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(MapResourceDelegateInternal));
-
-                IntPtr mappedData;
-                int hr = mapResource(resource, unchecked((uint)subresource), IntPtr.Zero, out mappedData);
-                if (hr < 0)
-                {
-                    return IntPtr.Zero;
-                }
-
-                return mappedData;
-            }
-
-            /// <summary>
-            /// Unmaps a staging buffer resource.
-            /// Based on DirectX 12 Resource Unmapping: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12resource-unmap
-            /// </summary>
-            private unsafe void UnmapStagingBufferResource(IntPtr resource, ulong subresource, ulong size)
-            {
-                // ID3D12Resource::Unmap signature:
-                // void Unmap(UINT Subresource, const D3D12_RANGE *pWrittenRange)
-                // For upload heaps, pWrittenRange can be NULL to unmap the entire resource
-                // Subresource is 0 for buffers
-
-                // Platform check: DirectX 12 COM is Windows-only
-                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-                {
-                    return;
-                }
-
-                if (resource == IntPtr.Zero)
-                {
-                    return;
-                }
-
-                // Get vtable pointer
-                IntPtr* vtable = *(IntPtr**)resource;
-                // Unmap is at index 9 in ID3D12Resource vtable
-                IntPtr methodPtr = vtable[9];
-
-                // Create delegate from function pointer
-                [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-                delegate void UnmapResourceDelegate(IntPtr resource, uint subresource, IntPtr pWrittenRange);
-                UnmapResourceDelegate unmapResource = (UnmapResourceDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(UnmapResourceDelegate));
-
-                unmapResource(resource, unchecked((uint)subresource), IntPtr.Zero);
-            }
-
             public void SetViewport(Viewport viewport) { /* TODO: RSSetViewports */ }
             public void SetViewports(Viewport[] viewports) { /* TODO: RSSetViewports */ }
-
+            
             /// <summary>
             /// Sets a single scissor rectangle.
             /// Converts Rectangle (X, Y, Width, Height) to D3D12_RECT (left, top, right, bottom).
@@ -7041,14 +4661,14 @@ namespace Andastra.Runtime.MonoGame.Backends
                         }
 
                         // Get descriptor heap from binding set
-                        // D3D12BindingSet provides GetDescriptorHeap() method to access the descriptor heap
-                        // We collect unique descriptor heaps to set them on the command list
-                        IntPtr descriptorHeap = d3d12BindingSet.GetDescriptorHeap();
-                        if (descriptorHeap != IntPtr.Zero && !seenHeaps.Contains(descriptorHeap))
-                        {
-                            descriptorHeaps.Add(descriptorHeap);
-                            seenHeaps.Add(descriptorHeap);
-                        }
+                        // TODO: Add GetDescriptorHeap() method to D3D12BindingSet to access _descriptorHeap
+                        // For now, we'll need to add an accessor method
+                        // IntPtr descriptorHeap = d3d12BindingSet.GetDescriptorHeap();
+                        // if (descriptorHeap != IntPtr.Zero && !seenHeaps.Contains(descriptorHeap))
+                        // {
+                        //     descriptorHeaps.Add(descriptorHeap);
+                        //     seenHeaps.Add(descriptorHeap);
+                        // }
                     }
 
                     // Set descriptor heaps if we have any
@@ -7737,14 +5357,6 @@ namespace Andastra.Runtime.MonoGame.Backends
         private const uint D3D12_ELEMENTS_LAYOUT_ARRAY = 0;
         private const uint D3D12_ELEMENTS_LAYOUT_ARRAY_OF_POINTERS = 1;
 
-        // D3D12 Raytracing Instance Flags
-        // Based on D3D12 API: D3D12_RAYTRACING_INSTANCE_FLAGS
-        private const uint D3D12_RAYTRACING_INSTANCE_FLAG_NONE = 0;
-        private const uint D3D12_RAYTRACING_INSTANCE_FLAG_TRIANGLE_CULL_DISABLE = 0x1;
-        private const uint D3D12_RAYTRACING_INSTANCE_FLAG_TRIANGLE_FRONT_COUNTERCLOCKWISE = 0x2;
-        private const uint D3D12_RAYTRACING_INSTANCE_FLAG_FORCE_OPAQUE = 0x4;
-        private const uint D3D12_RAYTRACING_INSTANCE_FLAG_FORCE_NON_OPAQUE = 0x8;
-
         #endregion
 
         #region D3D12 ExecuteIndirect Structures and Constants
@@ -7844,53 +5456,8 @@ namespace Andastra.Runtime.MonoGame.Backends
         }
 
         /// <summary>
-        /// Raytracing instance description.
-        /// Based on D3D12 API: D3D12_RAYTRACING_INSTANCE_DESC
-        /// 
-        /// Describes a single instance in a top-level acceleration structure.
-        /// Contains transform matrix, instance flags, instance ID, shader binding table offset,
-        /// and reference to the bottom-level acceleration structure.
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
-        private struct D3D12_RAYTRACING_INSTANCE_DESC
-        {
-            /// <summary>
-            /// 3x4 row-major transform matrix (12 floats = 48 bytes).
-            /// Matrix layout: [m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23]
-            /// </summary>
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 12)]
-            public float[] Transform;
-            
-            /// <summary>
-            /// 24-bit instance custom index (packed with flags).
-            /// Bits 0-23: Instance custom index
-            /// Bits 24-31: Instance flags
-            /// </summary>
-            public uint InstanceID_InstanceMask;
-            
-            /// <summary>
-            /// 24-bit shader binding table offset (packed with flags).
-            /// Bits 0-23: Shader binding table record offset
-            /// Bit 24: Triangle cull disable flag
-            /// Bit 25: Triangle front counter-clockwise flag
-            /// Bit 26: Force opaque flag
-            /// Bit 27: Force non-opaque flag
-            /// Bits 28-31: Reserved (must be 0)
-            /// </summary>
-            public uint InstanceContributionToHitGroupIndex_Flags;
-            
-            /// <summary>
-            /// GPU virtual address of the bottom-level acceleration structure.
-            /// </summary>
-            public ulong AccelerationStructure;
-        }
-
-        /// <summary>
         /// Build raytracing acceleration structure inputs.
         /// Based on D3D12 API: D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS
-        /// 
-        /// Note: For top-level acceleration structures, pGeometryDescs points to D3D12_RAYTRACING_INSTANCE_DESC array.
-        /// For bottom-level acceleration structures, pGeometryDescs points to D3D12_RAYTRACING_GEOMETRY_DESC array.
         /// </summary>
         [StructLayout(LayoutKind.Sequential)]
         private struct D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS
@@ -7899,7 +5466,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             public uint Flags;
             public uint NumDescs;
             public uint DescsLayout;
-            public IntPtr pGeometryDescs; // Union: pGeometryDescs or pInstanceDescs depending on Type
+            public IntPtr pGeometryDescs;
         }
 
         /// <summary>
@@ -8451,42 +6018,6 @@ namespace Andastra.Runtime.MonoGame.Backends
                 ArgumentBufferOffset,
                 pCountBuffer,
                 CountBufferOffset);
-        }
-
-        /// <summary>
-        /// Calls ID3D12CommandQueue::ExecuteCommandLists through COM vtable.
-        /// VTable index 4 for ID3D12CommandQueue (after IUnknown: QueryInterface, AddRef, Release, UpdateTileMappings).
-        /// Based on DirectX 12 Command Queue: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12commandqueue-executecommandlists
-        ///
-        /// ExecuteCommandLists submits command lists to the command queue for execution on the GPU.
-        /// All command lists must be closed before execution.
-        ///
-        /// Signature: void ExecuteCommandLists(UINT NumCommandLists, ID3D12CommandList* const* ppCommandLists)
-        /// </summary>
-        private unsafe void CallExecuteCommandLists(IntPtr commandQueue, uint numCommandLists, IntPtr ppCommandLists)
-        {
-            // Platform check: DirectX 12 COM is Windows-only
-            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-            {
-                return;
-            }
-
-            if (commandQueue == IntPtr.Zero || ppCommandLists == IntPtr.Zero || numCommandLists == 0)
-            {
-                return;
-            }
-
-            // Get vtable pointer
-            IntPtr* vtable = *(IntPtr**)commandQueue;
-            // ExecuteCommandLists is at index 4 in ID3D12CommandQueue vtable
-            // (after IUnknown: QueryInterface, AddRef, Release, UpdateTileMappings)
-            IntPtr methodPtr = vtable[4];
-
-            // Create delegate from function pointer
-            ExecuteCommandListsDelegate executeCommandLists =
-                (ExecuteCommandListsDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(ExecuteCommandListsDelegate));
-
-            executeCommandLists(commandQueue, numCommandLists, ppCommandLists);
         }
 
         /// <summary>
