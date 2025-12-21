@@ -670,7 +670,7 @@ namespace Andastra.Runtime.Games.Eclipse
             // ResRef field - based on ARE format specification
             if (!string.IsNullOrEmpty(_resRef))
             {
-                ResRef resRefObj = ResRef.FromString(_resRef);
+                Andastra.Parsing.Common.ResRef resRefObj = Andastra.Parsing.Common.ResRef.FromString(_resRef);
                 root.SetResRef("ResRef", resRefObj);
             }
 
@@ -698,10 +698,10 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Script hooks - set to empty ResRefs if not specified
             // Based on ARE format specification
-            root.SetResRef("OnEnter", ResRef.FromBlank());
-            root.SetResRef("OnExit", ResRef.FromBlank());
-            root.SetResRef("OnHeartbeat", ResRef.FromBlank());
-            root.SetResRef("OnUserDefined", ResRef.FromBlank());
+            root.SetResRef("OnEnter", Andastra.Parsing.Common.ResRef.FromBlank());
+            root.SetResRef("OnExit", Andastra.Parsing.Common.ResRef.FromBlank());
+            root.SetResRef("OnHeartbeat", Andastra.Parsing.Common.ResRef.FromBlank());
+            root.SetResRef("OnUserDefined", Andastra.Parsing.Common.ResRef.FromBlank());
 
             // Lighting defaults - based on ARE format specification
             // Eclipse has advanced lighting system, but we save defaults for compatibility
@@ -761,7 +761,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Grass properties - based on ARE format specification
             // Eclipse may use these for environmental effects
-            root.SetResRef("Grass_TexName", ResRef.FromBlank());
+            root.SetResRef("Grass_TexName", Andastra.Parsing.Common.ResRef.FromBlank());
             root.SetSingle("Grass_Density", 0.0f);
             root.SetSingle("Grass_QuadSize", 0.0f);
             root.SetSingle("Grass_Prob_LL", 0.0f);
@@ -776,7 +776,7 @@ namespace Andastra.Runtime.Games.Eclipse
             // Default value: 0.2, but using 0.0 for Eclipse compatibility
             root.SetSingle("AlphaTest", 0.0f);
             root.SetInt32("CameraStyle", 0);
-            root.SetResRef("DefaultEnvMap", ResRef.FromBlank());
+            root.SetResRef("DefaultEnvMap", Andastra.Parsing.Common.ResRef.FromBlank());
             root.SetUInt8("DisableTransit", 0);
             root.SetUInt8("StealthXPEnabled", 0);
             root.SetUInt32("StealthXPLoss", 0);
@@ -1859,7 +1859,7 @@ namespace Andastra.Runtime.Games.Eclipse
             }
 
             // Get transform component for position/facing
-            Interfaces.Components.ITransformComponent transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
+            ITransformComponent transform = entity.GetComponent<ITransformComponent>();
             if (transform != null)
             {
                 state.Position = transform.Position;
@@ -1871,7 +1871,7 @@ namespace Andastra.Runtime.Games.Eclipse
             Vector3 velocity;
             Vector3 angularVelocity;
             float mass;
-            List<PhysicsConstraint> constraints;
+            List<Physics.PhysicsConstraint> constraints;
 
             state.HasPhysics = _physicsSystem.GetRigidBodyState(entity, out velocity, out angularVelocity, out mass, out constraints);
 
@@ -1890,9 +1890,9 @@ namespace Andastra.Runtime.Games.Eclipse
                 if (constraints != null && constraints.Count > 0)
                 {
                     // Create deep copies of constraints to preserve state
-                    foreach (PhysicsConstraint constraint in constraints)
+                    foreach (Physics.PhysicsConstraint constraint in constraints)
                     {
-                        var constraintCopy = new PhysicsConstraint
+                        var constraintCopy = new Physics.PhysicsConstraint
                         {
                             EntityA = constraint.EntityA,
                             EntityB = constraint.EntityB,
@@ -1937,7 +1937,7 @@ namespace Andastra.Runtime.Games.Eclipse
             }
 
             // Restore transform if available
-            Interfaces.Components.ITransformComponent transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
+            ITransformComponent transform = entity.GetComponent<ITransformComponent>();
             if (transform != null)
             {
                 // Position was already updated in HandleAreaTransition
@@ -1985,7 +1985,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     EclipsePhysicsSystem eclipsePhysics = targetArea._physicsSystem as EclipsePhysicsSystem;
                     if (eclipsePhysics != null)
                     {
-                        foreach (PhysicsConstraint constraint in savedState.Constraints)
+                        foreach (var constraint in savedState.Constraints)
                         {
                             // Update constraint entity references if needed
                             // EntityA should be the current entity
@@ -2036,7 +2036,7 @@ namespace Andastra.Runtime.Games.Eclipse
             }
 
             // Get transform component for position
-            Interfaces.Components.ITransformComponent transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
+            ITransformComponent transform = entity.GetComponent<ITransformComponent>();
             Vector3 position = Vector3.Zero;
             if (transform != null)
             {
@@ -2111,11 +2111,11 @@ namespace Andastra.Runtime.Games.Eclipse
             public Vector3 AngularVelocity { get; set; }
             public float Mass { get; set; }
             public bool HasPhysics { get; set; }
-            public List<PhysicsConstraint> Constraints { get; set; }
+            public List<Physics.PhysicsConstraint> Constraints { get; set; }
 
             public PhysicsState()
             {
-                Constraints = new List<PhysicsConstraint>();
+                Constraints = new List<Physics.PhysicsConstraint>();
             }
         }
 
@@ -2510,7 +2510,7 @@ namespace Andastra.Runtime.Games.Eclipse
             }
 
             // Get entity transform
-            Interfaces.Components.ITransformComponent transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
+            ITransformComponent transform = entity.GetComponent<ITransformComponent>();
             if (transform == null)
             {
                 return;

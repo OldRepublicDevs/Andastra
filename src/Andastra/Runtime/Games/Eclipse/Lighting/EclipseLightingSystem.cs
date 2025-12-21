@@ -104,7 +104,7 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
         /// </summary>
         public IDynamicLight PrimaryDirectionalLight
         {
-            get { return _primaryDirectional; }
+            get { return _primaryDirectional != null ? new DynamicLightAdapter(_primaryDirectional) : null; }
         }
 
         /// <summary>
@@ -317,7 +317,7 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
         /// </summary>
         /// <param name="type">Type of light to create.</param>
         /// <returns>The created light, or null if max lights reached.</returns>
-        public IDynamicLight CreateLight(Andastra.Runtime.Graphics.MonoGame.Enums.LightType type)
+        public IDynamicLight CreateLight(LightType type)
         {
             if (_lights.Count >= MaxLights)
             {
@@ -330,7 +330,8 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
             _lightMap[light.LightId] = light;
             _clustersDirty = true;
 
-            return light;
+            // Create adapter to bridge MonoGame.DynamicLight to Eclipse.IDynamicLight
+            return new DynamicLightAdapter(light);
         }
 
         /// <summary>
@@ -405,7 +406,15 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
         /// <param name="light">The light to set as primary directional.</param>
         public void SetPrimaryDirectionalLight(IDynamicLight light)
         {
-            _primaryDirectional = light as DynamicLight;
+            // Extract underlying DynamicLight from adapter if needed
+            if (light is DynamicLightAdapter adapter)
+            {
+                _primaryDirectional = adapter.Light;
+            }
+            else
+            {
+                _primaryDirectional = light as DynamicLight;
+            }
         }
 
         /// <summary>
@@ -419,7 +428,7 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
             {
                 if (light.Enabled)
                 {
-                    active.Add(light);
+                    active.Add(new DynamicLightAdapter(light));
                 }
             }
             return active.ToArray();
@@ -446,7 +455,7 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
                 {
                     case LightType.Directional:
                         // Directional lights affect everything
-                        affecting.Add(light);
+                        affecting.Add(new DynamicLightAdapter(light));
                         break;
 
                     case LightType.Point:
@@ -456,7 +465,7 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
                         float dist = Vector3.Distance(light.Position, position);
                         if (dist <= light.Radius + radius)
                         {
-                            affecting.Add(light);
+                            affecting.Add(new DynamicLightAdapter(light));
                         }
                         break;
                 }
@@ -681,5 +690,28 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
 
             _disposed = true;
         }
+    }
+
+    /// <summary>
+    /// Adapter to bridge MonoGame.DynamicLight to Eclipse.IDynamicLight interface.
+    /// </summary>
+    internal class DynamicLightAdapter : IDynamicLight
+    {
+        private readonly DynamicLight _light;
+
+        public DynamicLightAdapter(DynamicLight light)
+        {
+            _light = light ?? throw new ArgumentNullException(nameof(light));
+        }
+
+        public Vector3 Position => _light.Position;
+        public Vector3 Color => _light.Color;
+        public float Intensity => _light.Intensity;
+        public float Range => _light.Radius;
+
+        /// <summary>
+        /// Gets the underlying DynamicLight instance.
+        /// </summary>
+        public DynamicLight Light => _light;
     }
 }

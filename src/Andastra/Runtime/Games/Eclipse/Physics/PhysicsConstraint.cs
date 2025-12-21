@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Numerics;
 using Andastra.Runtime.Core.Interfaces;
 
@@ -9,14 +10,29 @@ namespace Andastra.Runtime.Games.Eclipse.Physics
     public class PhysicsConstraint
     {
         /// <summary>
-        /// Entity this constraint is attached to.
+        /// The entity this constraint is attached to (primary body).
         /// </summary>
-        public IEntity Entity { get; set; }
+        public IEntity EntityA { get; set; }
+
+        /// <summary>
+        /// The other entity this constraint connects to (secondary body, null for world constraints).
+        /// </summary>
+        public IEntity EntityB { get; set; }
 
         /// <summary>
         /// Constraint type.
         /// </summary>
         public ConstraintType Type { get; set; }
+
+        /// <summary>
+        /// Local anchor point on EntityA.
+        /// </summary>
+        public Vector3 AnchorA { get; set; }
+
+        /// <summary>
+        /// Local anchor point on EntityB (or world position if EntityB is null).
+        /// </summary>
+        public Vector3 AnchorB { get; set; }
 
         /// <summary>
         /// Constraint position in world space.
@@ -37,6 +53,16 @@ namespace Andastra.Runtime.Games.Eclipse.Physics
         /// Constraint stiffness.
         /// </summary>
         public float Stiffness { get; set; }
+
+        /// <summary>
+        /// Constraint-specific parameters (e.g., limits, spring constants).
+        /// </summary>
+        public Dictionary<string, float> Parameters { get; set; }
+
+        public PhysicsConstraint()
+        {
+            Parameters = new Dictionary<string, float>();
+        }
     }
 
     /// <summary>

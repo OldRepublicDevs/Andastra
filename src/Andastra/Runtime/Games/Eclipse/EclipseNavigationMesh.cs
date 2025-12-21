@@ -172,7 +172,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// 3. Select best walkable candidate based on distance and surface type
         /// 4. Verify point is within acceptable distance threshold of walkable surface
         /// </remarks>
-        public bool IsPointWalkable(Vector3 point)
+        public override bool IsPointWalkable(Vector3 point)
         {
             // If no static geometry, check dynamic obstacles and multi-level surfaces only
             if (_staticFaceCount == 0)
@@ -247,6 +247,15 @@ namespace Andastra.Runtime.Games.Eclipse
             }
 
             return true;
+        }
+        
+        public override Vector3? ProjectPoint(Vector3 point)
+        {
+            if (ProjectToWalkmesh(point, out Vector3 result, out float height))
+            {
+                return result;
+            }
+            return null;
         }
 
         /// <summary>
@@ -348,7 +357,12 @@ namespace Andastra.Runtime.Games.Eclipse
         /// 3. Check multi-level surfaces (platforms, elevated surfaces)
         /// 4. Select best projection based on distance and surface type
         /// </remarks>
-        public bool ProjectToWalkmesh(Vector3 point, out Vector3 result, out float height)
+        public override bool ProjectToWalkmesh(Vector3 point, out Vector3 result, out float height)
+        {
+            return ProjectToWalkmeshInternal(point, out result, out height);
+        }
+        
+        private bool ProjectToWalkmeshInternal(Vector3 point, out Vector3 result, out float height)
         {
             result = point;
             height = point.Y;
@@ -687,7 +701,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Check if search sphere intersects AABB
             Vector3 aabbCenter = (node.BoundsMin + node.BoundsMax) * 0.5f;
-            float distSq = Vector3.DistanceSquared2D(point, aabbCenter);
+            float distSq = Vector3Extensions.DistanceSquared2D(point, aabbCenter);
             float radiusSq = radius * radius;
 
             // Simple AABB-sphere intersection test (2D)
@@ -939,7 +953,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 // Step 1: Convert ObstacleInfo to DynamicObstacle and register temporarily
                 for (int i = 0; i < obstacles.Count; i++)
                 {
-                    Interfaces.ObstacleInfo obstacleInfo = obstacles[i];
+                    ObstacleInfo obstacleInfo = obstacles[i];
                     
                     // Skip invalid obstacles (zero or negative radius)
                     if (obstacleInfo.Radius <= 0.0f)
@@ -1209,8 +1223,8 @@ namespace Andastra.Runtime.Games.Eclipse
             }
 
             // Internal node - test children
-            Vector3 leftHit, rightHit;
-            int leftFace, rightFace;
+            Vector3 leftHit = Vector3.Zero, rightHit = Vector3.Zero;
+            int leftFace = -1, rightFace = -1;
             bool leftHitResult = false;
             bool rightHitResult = false;
 

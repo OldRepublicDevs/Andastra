@@ -154,7 +154,7 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
                 // GUIReader handles GFF-based GUI format (same parser used by Odyssey/Aurora)
                 // Based on Eclipse engine: Uses same GFF GUI format structure as Odyssey/Aurora
                 GUIReader guiReader = new GUIReader(resourceResult.Data);
-                GUI gui = guiReader.Load();
+                ParsingGUI gui = guiReader.Load();
 
                 if (gui == null || gui.Controls == null || gui.Controls.Count == 0)
                 {
@@ -254,7 +254,7 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
 
             UpdateHighlightedButton(currentMouseState.X, currentMouseState.Y);
 
-            if (_previousMouseState.LeftButton == ButtonState.Released && currentMouseState.LeftButton == ButtonState.Pressed)
+            if (_previousMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released && currentMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
             {
                 HandleMouseClick(currentMouseState.X, currentMouseState.Y);
             }

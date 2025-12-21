@@ -6,9 +6,12 @@ using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Parsing;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Resource;
+using static Andastra.Parsing.Common.GameExtensions;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource.Generics.GUI;
 using ParsingGUI = Andastra.Parsing.Resource.Generics.GUI.GUI;
+using UTI = Andastra.Parsing.Resource.Generics.UTI.UTI;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Games.Eclipse.GUI;
 using Andastra.Runtime.Graphics;
@@ -553,7 +556,9 @@ namespace Andastra.Runtime.Games.Eclipse
             }
 
             Game game = _installation.Game;
-            return game.Is();
+            // Check if this is NOT an Eclipse game (games without item upgrade support)
+            // Eclipse games (Dragon Age) have item upgrade systems
+            return !game.IsEclipse();
         }
 
         /// <summary>

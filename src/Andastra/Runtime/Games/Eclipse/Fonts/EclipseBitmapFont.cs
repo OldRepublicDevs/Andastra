@@ -172,13 +172,13 @@ namespace Andastra.Runtime.Games.Eclipse.Fonts
                             texture = new Texture2D(mgDevice, parseResult.Width, parseResult.Height, false, SurfaceFormat.Color);
                             
                             // Convert RGBA byte array to Color array
-                            Color[] colorData = new Color[parseResult.Width * parseResult.Height];
+                            Microsoft.Xna.Framework.Color[] colorData = new Microsoft.Xna.Framework.Color[parseResult.Width * parseResult.Height];
                             for (int i = 0; i < colorData.Length; i++)
                             {
                                 int offset = i * 4;
                                 if (offset + 3 < parseResult.RgbaData.Length)
                                 {
-                                    colorData[i] = new Color(parseResult.RgbaData[offset], parseResult.RgbaData[offset + 1], 
+                                    colorData[i] = new Microsoft.Xna.Framework.Color(parseResult.RgbaData[offset], parseResult.RgbaData[offset + 1], 
                                                              parseResult.RgbaData[offset + 2], parseResult.RgbaData[offset + 3]);
                                 }
                             }
@@ -210,13 +210,13 @@ namespace Andastra.Runtime.Games.Eclipse.Fonts
                                 texture = new Texture2D(mgDevice, parseResult.Width, parseResult.Height, false, SurfaceFormat.Color);
                                 
                                 // Convert RGBA byte array to Color array
-                                Color[] colorData = new Color[parseResult.Width * parseResult.Height];
+                                Microsoft.Xna.Framework.Color[] colorData = new Microsoft.Xna.Framework.Color[parseResult.Width * parseResult.Height];
                                 for (int i = 0; i < colorData.Length; i++)
                                 {
                                     int offset = i * 4;
                                     if (offset + 3 < parseResult.RgbaData.Length)
                                     {
-                                        colorData[i] = new Color(parseResult.RgbaData[offset], parseResult.RgbaData[offset + 1], 
+                                        colorData[i] = new Microsoft.Xna.Framework.Color(parseResult.RgbaData[offset], parseResult.RgbaData[offset + 1], 
                                                                  parseResult.RgbaData[offset + 2], parseResult.RgbaData[offset + 3]);
                                     }
                                 }
@@ -369,7 +369,7 @@ namespace Andastra.Runtime.Games.Eclipse.Fonts
 
                     charMap[i] = new CharacterInfo
                     {
-                        SourceRect = new Rectangle((int)x, (int)y, (int)cellWidth, (int)cellHeight),
+                        SourceRect = new Microsoft.Xna.Framework.Rectangle((int)x, (int)y, (int)cellWidth, (int)cellHeight),
                         Width = cellWidth,
                         Height = cellHeight
                     };
@@ -396,7 +396,7 @@ namespace Andastra.Runtime.Games.Eclipse.Fonts
 
                     charMap[i] = new CharacterInfo
                     {
-                        SourceRect = new Rectangle((int)x1, (int)y1, (int)width, (int)height),
+                        SourceRect = new Microsoft.Xna.Framework.Rectangle((int)x1, (int)y1, (int)width, (int)height),
                         Width = width,
                         Height = height
                     };
