@@ -671,11 +671,35 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static vkCmdDrawIndexedDelegate vkCmdDrawIndexed;
 
         // Helper methods for Vulkan interop
-        private static void InitializeVulkanFunctions(IntPtr device)
+        // P/Invoke for core Vulkan instance function
+        [DllImport(VulkanLibrary, CallingConvention = CallingConvention.Cdecl, EntryPoint = "vkGetInstanceProcAddr")]
+        private static extern IntPtr vkGetInstanceProcAddrNative(IntPtr instance, string pName);
+
+        private static void InitializeVulkanFunctions(IntPtr device, IntPtr instance)
         {
-            // Load Vulkan functions - in a real implementation, these would be loaded via vkGetDeviceProcAddr
-            // For this example, we'll assume they're available through P/Invoke
-            // This is a simplified version - real implementation would need proper function loading
+            if (device == IntPtr.Zero || instance == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Load vkGetDeviceProcAddr via vkGetInstanceProcAddr
+            // vkGetDeviceProcAddr is a core Vulkan function used to load device-level functions
+            IntPtr getDeviceProcAddrPtr = vkGetInstanceProcAddrNative(instance, "vkGetDeviceProcAddr");
+            if (getDeviceProcAddrPtr != IntPtr.Zero)
+            {
+                vkGetDeviceProcAddr = Marshal.GetDelegateForFunctionPointer<vkGetDeviceProcAddrDelegate>(getDeviceProcAddrPtr);
+            }
+
+            // Load acceleration structure extension functions if available
+            // VK_KHR_acceleration_structure extension provides vkDestroyAccelerationStructureKHR
+            if (vkGetDeviceProcAddr != null)
+            {
+                IntPtr destroyAccelStructPtr = vkGetDeviceProcAddr(device, "vkDestroyAccelerationStructureKHR");
+                if (destroyAccelStructPtr != IntPtr.Zero)
+                {
+                    vkDestroyAccelerationStructureKHR = Marshal.GetDelegateForFunctionPointer<vkDestroyAccelerationStructureKHRDelegate>(destroyAccelStructPtr);
+                }
+            }
         }
 
         private static void CheckResult(VkResult result, string operation)
@@ -775,12 +799,42 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         private IntPtr CreateCommandPool(uint queueFamilyIndex)
         {
-            // TODO: IMPLEMENT - Create VkCommandPool for the specified queue family
-            // - vkCreateCommandPool with queue family index
-            // - Return command pool handle
+            // Create VkCommandPoolCreateInfo structure
+            // VkCommandPoolCreateInfo structure (Vulkan 1.0):
+            // - sType: VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO (39)
+            // - pNext: nullptr
+            // - flags: VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT (allows individual command buffer reset)
+            // - queueFamilyIndex: queue family index for command buffer allocation
+            VkCommandPoolCreateInfo createInfo = new VkCommandPoolCreateInfo
+            {
+                sType = VkStructureType.VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+                pNext = IntPtr.Zero,
+                flags = VkCommandPoolCreateFlags.VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+                queueFamilyIndex = queueFamilyIndex
+            };
 
-            // For now, return a placeholder - real implementation would create actual command pools
-            return new IntPtr(_nextResourceHandle++);
+            // Allocate unmanaged memory for the structure
+            int structSize = Marshal.SizeOf(typeof(VkCommandPoolCreateInfo));
+            IntPtr createInfoPtr = Marshal.AllocHGlobal(structSize);
+            try
+            {
+                // Copy structure to unmanaged memory
+                Marshal.StructureToPtr(createInfo, createInfoPtr, false);
+
+                // Call vkCreateCommandPool
+                IntPtr commandPool;
+                VkResult result = vkCreateCommandPool(_device, createInfoPtr, IntPtr.Zero, out commandPool);
+
+                // Check result and throw exception on failure
+                CheckResult(result, "vkCreateCommandPool");
+
+                return commandPool;
+            }
+            finally
+            {
+                // Free unmanaged memory
+                Marshal.FreeHGlobal(createInfoPtr);
+            }
         }
 
         #region Resource Creation
@@ -2247,6 +2301,14 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _vkMemory = vkMemory;
                 _device = device;
                 NativeHandle = _vkBuffer != IntPtr.Zero ? _vkBuffer : handle;
+            }
+
+            /// <summary>
+            /// Gets the VkBuffer handle. Used internally for descriptor set updates.
+            /// </summary>
+            internal IntPtr VkBuffer
+            {
+                get { return _vkBuffer; }
             }
 
             public void Dispose()

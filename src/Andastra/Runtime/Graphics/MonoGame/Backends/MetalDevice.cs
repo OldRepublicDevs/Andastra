@@ -1317,6 +1317,8 @@ namespace Andastra.Runtime.MonoGame.Backends
         private readonly MetalBackend _backend;
         private bool _disposed;
         private bool _isOpen;
+        private IntPtr _currentRenderCommandEncoder; // id<MTLRenderCommandEncoder>
+        private GraphicsState _currentGraphicsState; // Current graphics state for accessing index buffer
 
         public MetalCommandList(IntPtr handle, CommandListType type, MetalBackend backend)
         {
@@ -1324,6 +1326,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             _type = type;
             _backend = backend;
             _isOpen = false;
+            _currentRenderCommandEncoder = IntPtr.Zero;
         }
 
         public void Open()
@@ -1483,8 +1486,16 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 return;
             }
-            // TODO: Implement graphics state setting
+            
+            // TODO: Implement complete graphics state setting
             // This would set pipeline, framebuffer, viewports, binding sets, etc.
+            // When implemented, this method should:
+            // 1. Create render pass descriptor from framebuffer
+            // 2. Begin render pass and store render command encoder in _currentRenderCommandEncoder
+            // 3. Set pipeline state
+            // 4. Set viewports from state.Viewport
+            // 5. Set binding sets
+            // 6. Set vertex/index buffers
         }
 
         public void SetViewport(Viewport viewport)
@@ -1493,16 +1504,42 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 return;
             }
-            // TODO: Set viewport on render command encoder
+
+            // Viewport can only be set on an active render command encoder
+            // The render command encoder is created by SetGraphicsState when a render pass begins
+            // Based on Metal API: MTLRenderCommandEncoder::setViewport(MTLViewport)
+            // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1516251-setviewport
+            if (_currentRenderCommandEncoder == IntPtr.Zero)
+            {
+                // Render command encoder not available - SetGraphicsState must be called first to begin render pass
+                return;
+            }
+
+            // Set viewport on render command encoder
+            // Metal viewport uses double precision for coordinates, but we use float
+            // Metal API expects: origin (x, y), size (width, height), znear (minDepth), zfar (maxDepth)
+            MetalNative.SetViewport(_currentRenderCommandEncoder, viewport.X, viewport.Y, viewport.Width, viewport.Height, viewport.MinDepth, viewport.MaxDepth);
         }
 
         public void SetViewports(Viewport[] viewports)
         {
-            if (!_isOpen || viewports == null)
+            if (!_isOpen || viewports == null || viewports.Length == 0)
             {
                 return;
             }
-            // TODO: Set multiple viewports
+
+            // Multiple viewports can only be set on an active render command encoder
+            // Based on Metal API: MTLRenderCommandEncoder::setViewports(MTLViewport*, NSUInteger count)
+            // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1516251-setviewport
+            if (_currentRenderCommandEncoder == IntPtr.Zero)
+            {
+                // Render command encoder not available - SetGraphicsState must be called first to begin render pass
+                return;
+            }
+
+            // Set multiple viewports on render command encoder
+            // Metal supports multiple viewports (viewport arrays) for multi-view rendering
+            MetalNative.SetViewports(_currentRenderCommandEncoder, viewports, (uint)viewports.Length);
         }
 
         public void SetScissor(Rectangle scissor)
@@ -1867,4 +1904,5 @@ namespace Andastra.Runtime.MonoGame.Backends
 
     #endregion
 }
+
 

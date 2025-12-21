@@ -15,6 +15,7 @@ using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
 using HolocronToolset.Utils;
 using HolocronToolset.Widgets;
+using HolocronToolset.Widgets.Edit;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
@@ -33,7 +34,7 @@ namespace HolocronToolset.Editors
         private Button _tagGenerateBtn;
         private TextBox _resrefEdit;
         private Button _resrefGenerateBtn;
-        private ComboBox _appearanceSelect;
+        private ComboBox2DA _appearanceSelect;
         private TextBox _conversationEdit;
         private Button _conversationModifyBtn;
 
@@ -42,7 +43,7 @@ namespace HolocronToolset.Editors
         private CheckBox _plotCheckbox;
         private CheckBox _staticCheckbox;
         private CheckBox _notBlastableCheckbox;
-        private ComboBox _factionSelect;
+        private ComboBox2DA _factionSelect;
         private NumericUpDown _animationStateSpin;
         private NumericUpDown _currentHpSpin;
         private NumericUpDown _maxHpSpin;
@@ -72,14 +73,14 @@ namespace HolocronToolset.Editors
         public Button TagGenerateBtn => _tagGenerateBtn;
         public TextBox ResrefEdit => _resrefEdit;
         public Button ResrefGenerateBtn => _resrefGenerateBtn;
-        public ComboBox AppearanceSelect => _appearanceSelect;
+        public ComboBox2DA AppearanceSelect => _appearanceSelect;
         public TextBox ConversationEdit => _conversationEdit;
         public Button ConversationModifyBtn => _conversationModifyBtn;
         public CheckBox Min1HpCheckbox => _min1HpCheckbox;
         public CheckBox PlotCheckbox => _plotCheckbox;
         public CheckBox StaticCheckbox => _staticCheckbox;
         public CheckBox NotBlastableCheckbox => _notBlastableCheckbox;
-        public ComboBox FactionSelect => _factionSelect;
+        public ComboBox2DA FactionSelect => _factionSelect;
         public NumericUpDown AnimationStateSpin => _animationStateSpin;
         public NumericUpDown CurrentHpSpin => _currentHpSpin;
         public NumericUpDown MaxHpSpin => _maxHpSpin;
@@ -130,7 +131,7 @@ namespace HolocronToolset.Editors
                 _tagGenerateBtn = this.FindControl<Button>("tagGenerateBtn");
                 _resrefEdit = this.FindControl<TextBox>("resrefEdit");
                 _resrefGenerateBtn = this.FindControl<Button>("resrefGenerateBtn");
-                _appearanceSelect = this.FindControl<ComboBox>("appearanceSelect");
+                _appearanceSelect = this.FindControl<ComboBox2DA>("appearanceSelect");
                 _conversationEdit = this.FindControl<TextBox>("conversationEdit");
                 _conversationModifyBtn = this.FindControl<Button>("conversationModifyBtn");
                 _min1HpCheckbox = this.FindControl<CheckBox>("min1HpCheckbox");
@@ -378,12 +379,61 @@ namespace HolocronToolset.Editors
             }
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:107-144
+        // Original: def _setup_installation(self, installation):
+        private void SetupInstallation(HTInstallation installation)
+        {
+            _installation = installation;
+            if (_nameEdit != null)
+            {
+                _nameEdit.SetInstallation(installation);
+            }
+
+            // Matching PyKotor implementation: required: list[str] = [HTInstallation.TwoDA_DOORS, HTInstallation.TwoDA_FACTIONS]
+            // Load required 2da files if they have not been loaded already
+            string[] required = { HTInstallation.TwoDADoors, HTInstallation.TwoDAFactions };
+            installation.HtBatchCache2DA(required);
+
+            // Matching PyKotor implementation: appearances: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_DOORS)
+            TwoDA appearances = installation.HtGetCache2DA(HTInstallation.TwoDADoors);
+            if (_appearanceSelect != null)
+            {
+                _appearanceSelect.Items.Clear();
+                if (appearances != null)
+                {
+                    // Matching PyKotor implementation: self.ui.appearanceSelect.set_context(appearances, self._installation, HTInstallation.TwoDA_DOORS)
+                    _appearanceSelect.SetContext(appearances, installation, HTInstallation.TwoDADoors);
+                    // Matching PyKotor implementation: self.ui.appearanceSelect.set_items(appearances.get_column("label"))
+                    List<string> appearanceLabels = appearances.GetColumn("label");
+                    _appearanceSelect.SetItems(appearanceLabels, sortAlphabetically: false);
+                }
+            }
+
+            // Matching PyKotor implementation: factions: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_FACTIONS)
+            TwoDA factions = installation.HtGetCache2DA(HTInstallation.TwoDAFactions);
+            if (_factionSelect != null)
+            {
+                _factionSelect.Items.Clear();
+                if (factions != null)
+                {
+                    // Matching PyKotor implementation: self.ui.factionSelect.set_context(factions, self._installation, HTInstallation.TwoDA_FACTIONS)
+                    _factionSelect.SetContext(factions, installation, HTInstallation.TwoDAFactions);
+                    // Matching PyKotor implementation: self.ui.factionSelect.set_items(factions.get_column("label"))
+                    List<string> factionLabels = factions.GetColumn("label");
+                    _factionSelect.SetItems(factionLabels, sortAlphabetically: false);
+                }
+            }
+        }
+
         private void SetupUI()
         {
             if (_installation == null)
             {
                 return;
             }
+
+            // Setup installation-specific data (2DA files, etc.)
+            SetupInstallation(_installation);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:148-159
             // Original: installation.setup_file_context_menu(self.ui.onClickEdit, [ResourceType.NSS, ResourceType.NCS])
