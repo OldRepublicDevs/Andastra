@@ -783,6 +783,76 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
         }
 
+        /// <summary>
+        /// Converts vertex format to Metal vertex format for raytracing acceleration structures.
+        /// Based on Metal API: MTLAccelerationStructureTriangleGeometryDescriptor vertex format
+        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlaccelerationstructuretrianglegeometrydescriptor
+        /// </summary>
+        private uint ConvertVertexFormatToMetal(TextureFormat format)
+        {
+            // Metal supports float3, float2, and half3, half2 vertex formats for raytracing
+            // Map common vertex formats to Metal equivalents
+            switch (format)
+            {
+                case TextureFormat.R32G32B32_Float:
+                    return 0; // MTLAttributeFormatFloat3
+                case TextureFormat.R32G32_Float:
+                    return 1; // MTLAttributeFormatFloat2
+                case TextureFormat.R16G16B16A16_Float:
+                    return 2; // MTLAttributeFormatHalf3 (using first 3 components)
+                case TextureFormat.R16G16_Float:
+                    return 3; // MTLAttributeFormatHalf2
+                default:
+                    // Default to float3 for unknown formats (most common case for position data)
+                    return 0; // MTLAttributeFormatFloat3
+            }
+        }
+
+        /// <summary>
+        /// Converts index format to Metal index format for raytracing acceleration structures.
+        /// Based on Metal API: MTLAccelerationStructureTriangleGeometryDescriptor index format
+        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlaccelerationstructuretrianglegeometrydescriptor
+        /// </summary>
+        private uint ConvertIndexFormatToMetal(TextureFormat format)
+        {
+            // Metal supports UInt16 and UInt32 index formats for raytracing
+            switch (format)
+            {
+                case TextureFormat.R16_UInt:
+                    return 0; // MTLIndexTypeUInt16
+                case TextureFormat.R32_UInt:
+                    return 1; // MTLIndexTypeUInt32
+                default:
+                    // Default to UInt32 for unknown formats
+                    return 1; // MTLIndexTypeUInt32
+            }
+        }
+
+        /// <summary>
+        /// Converts geometry flags to Metal geometry flags for raytracing acceleration structures.
+        /// Based on Metal API: MTLAccelerationStructureGeometryDescriptor options
+        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlaccelerationstructuregeometrydescriptor
+        /// </summary>
+        private uint ConvertGeometryFlagsToMetal(GeometryFlags flags)
+        {
+            uint metalFlags = 0;
+            
+            // Metal uses MTLAccelerationStructureGeometryOptionOpaque flag
+            if ((flags & GeometryFlags.Opaque) != 0)
+            {
+                metalFlags |= 1; // MTLAccelerationStructureGeometryOptionOpaque
+            }
+            
+            // Metal uses MTLAccelerationStructureGeometryOptionDuplicateGeometry flag
+            if ((flags & GeometryFlags.NoDuplicateAnyHit) == 0)
+            {
+                // If NoDuplicateAnyHit is NOT set, geometry can be duplicated
+                // This is the default behavior in Metal
+            }
+            
+            return metalFlags;
+        }
+
         private ShaderType ConvertShaderType(ShaderType type)
         {
             // ShaderType enum is the same in both namespaces
@@ -3455,11 +3525,235 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         public void BuildBottomLevelAccelStruct(IAccelStruct accelStruct, GeometryDesc[] geometries)
         {
-            if (!_isOpen || accelStruct == null)
+            if (!_isOpen)
             {
+                throw new InvalidOperationException("Command list must be open to record build commands");
+            }
+
+            if (accelStruct == null)
+            {
+                throw new ArgumentNullException(nameof(accelStruct));
+            }
+
+            if (geometries == null || geometries.Length == 0)
+            {
+                throw new ArgumentException("At least one geometry must be provided", nameof(geometries));
+            }
+
+            // Validate that this is a bottom-level acceleration structure
+            if (accelStruct.IsTopLevel)
+            {
+                throw new ArgumentException("Acceleration structure must be bottom-level for BuildBottomLevelAccelStruct", nameof(accelStruct));
+            }
+
+            // Cast to MetalAccelStruct to access native handles
+            MetalAccelStruct metalAccelStruct = accelStruct as MetalAccelStruct;
+            if (metalAccelStruct == null)
+            {
+                throw new ArgumentException("Acceleration structure must be a Metal acceleration structure", nameof(accelStruct));
+            }
+
+            // Get native acceleration structure handle
+            IntPtr accelStructHandle = metalAccelStruct.NativeHandle;
+            if (accelStructHandle == IntPtr.Zero)
+            {
+                Console.WriteLine("[MetalCommandList] BuildBottomLevelAccelStruct: Invalid acceleration structure native handle");
                 return;
             }
-            // TODO: Implement BLAS build for Metal 3.0
+
+            // Get Metal device for creating buffers and descriptors
+            IntPtr device = _backend.GetMetalDevice();
+            if (device == IntPtr.Zero)
+            {
+                Console.WriteLine("[MetalCommandList] BuildBottomLevelAccelStruct: Failed to get Metal device");
+                return;
+            }
+
+            // Validate all geometries are triangles (BLAS only supports triangles)
+            for (int i = 0; i < geometries.Length; i++)
+            {
+                if (geometries[i].Type != GeometryType.Triangles)
+                {
+                    throw new ArgumentException($"Geometry at index {i} must be of type Triangles for bottom-level acceleration structures", nameof(geometries));
+                }
+
+                var triangles = geometries[i].Triangles;
+                if (triangles.VertexBuffer == null)
+                {
+                    throw new ArgumentException($"Geometry at index {i} must have a vertex buffer", nameof(geometries));
+                }
+
+                if (triangles.VertexCount <= 0)
+                {
+                    throw new ArgumentException($"Geometry at index {i} must have a positive vertex count", nameof(geometries));
+                }
+
+                if (triangles.VertexStride <= 0)
+                {
+                    throw new ArgumentException($"Geometry at index {i} must have a positive vertex stride", nameof(geometries));
+                }
+            }
+
+            try
+            {
+                // Get acceleration structure descriptor from the acceleration structure
+                // For BLAS, we need to create a descriptor with triangle geometry data
+                AccelStructDesc blasDesc = metalAccelStruct.Desc;
+
+                // Create BLAS descriptor
+                IntPtr blasDescriptor = MetalNative.CreateAccelerationStructureDescriptor(device, blasDesc);
+                if (blasDescriptor == IntPtr.Zero)
+                {
+                    Console.WriteLine("[MetalCommandList] BuildBottomLevelAccelStruct: Failed to create BLAS descriptor");
+                    return;
+                }
+
+                try
+                {
+                    // Set triangle geometry data on the descriptor for each geometry
+                    // Metal requires MTLAccelerationStructureTriangleGeometryDescriptor for each triangle geometry
+                    for (int i = 0; i < geometries.Length; i++)
+                    {
+                        var geometry = geometries[i];
+                        var triangles = geometry.Triangles;
+
+                        // Get native buffer handles
+                        MetalBuffer vertexMetalBuffer = triangles.VertexBuffer as MetalBuffer;
+                        if (vertexMetalBuffer == null)
+                        {
+                            throw new ArgumentException($"Geometry at index {i} vertex buffer is not a Metal buffer", nameof(geometries));
+                        }
+
+                        IntPtr vertexBuffer = vertexMetalBuffer.NativeHandle;
+                        if (vertexBuffer == IntPtr.Zero)
+                        {
+                            throw new ArgumentException($"Geometry at index {i} has an invalid vertex buffer", nameof(geometries));
+                        }
+
+                        // Handle index buffer (optional for some geometries)
+                        IntPtr indexBuffer = IntPtr.Zero;
+                        uint indexCount = 0;
+                        bool hasIndexBuffer = false;
+
+                        if (triangles.IndexBuffer != null)
+                        {
+                            MetalBuffer indexMetalBuffer = triangles.IndexBuffer as MetalBuffer;
+                            if (indexMetalBuffer != null)
+                            {
+                                indexBuffer = indexMetalBuffer.NativeHandle;
+                                if (indexBuffer != IntPtr.Zero)
+                                {
+                                    indexCount = (uint)triangles.IndexCount;
+                                    hasIndexBuffer = true;
+                                }
+                            }
+                        }
+
+                        // Set triangle geometry on descriptor
+                        // Metal API: MTLAccelerationStructureTriangleGeometryDescriptor
+                        // We need to set vertex buffer, index buffer, and geometry properties
+                        MetalNative.SetTriangleGeometryOnDescriptor(
+                            blasDescriptor,
+                            i,
+                            vertexBuffer,
+                            (ulong)triangles.VertexOffset,
+                            (uint)triangles.VertexStride,
+                            (uint)triangles.VertexCount,
+                            ConvertVertexFormatToMetal(triangles.VertexFormat),
+                            indexBuffer,
+                            (ulong)(hasIndexBuffer ? triangles.IndexOffset : 0),
+                            indexCount,
+                            ConvertIndexFormatToMetal(triangles.IndexFormat),
+                            triangles.TransformBuffer != null ? ((MetalBuffer)triangles.TransformBuffer).NativeHandle : IntPtr.Zero,
+                            (ulong)(triangles.TransformBuffer != null ? triangles.TransformOffset : 0),
+                            ConvertGeometryFlagsToMetal(geometry.Flags));
+                    }
+
+                    // Set geometry count on descriptor
+                    MetalNative.SetGeometryCountOnDescriptor(blasDescriptor, (uint)geometries.Length);
+
+                    // Estimate scratch buffer size for BLAS building
+                    // Metal requires a scratch buffer for building acceleration structures
+                    // For BLAS with triangles: conservative estimate is ~32 bytes per triangle for scratch space
+                    // This is a reasonable estimate when exact size query is not available
+                    ulong totalTriangles = 0UL;
+                    for (int i = 0; i < geometries.Length; i++)
+                    {
+                        if (geometries[i].Triangles.IndexCount > 0)
+                        {
+                            totalTriangles += (ulong)(geometries[i].Triangles.IndexCount / 3);
+                        }
+                        else
+                        {
+                            // If no indices, estimate triangles from vertices (assuming triangle list)
+                            totalTriangles += (ulong)(geometries[i].Triangles.VertexCount / 3);
+                        }
+                    }
+
+                    // Conservative estimate: 32 bytes per triangle for scratch buffer
+                    // Minimum 256KB to ensure we have enough space for small geometries
+                    ulong estimatedScratchSize = (totalTriangles * 32UL);
+                    if (estimatedScratchSize < 256UL * 1024UL)
+                    {
+                        estimatedScratchSize = 256UL * 1024UL; // Minimum 256KB
+                    }
+
+                    // Round up to next 256-byte alignment (Metal requirement)
+                    estimatedScratchSize = (estimatedScratchSize + 255UL) & ~255UL;
+
+                    // Create scratch buffer for building
+                    // StorageModePrivate is preferred for GPU-only scratch buffers
+                    IntPtr scratchBuffer = MetalNative.CreateBufferWithOptions(device, estimatedScratchSize, (uint)MetalResourceOptions.StorageModePrivate);
+                    if (scratchBuffer == IntPtr.Zero)
+                    {
+                        // Fallback to shared storage mode if private fails
+                        scratchBuffer = MetalNative.CreateBufferWithOptions(device, estimatedScratchSize, (uint)MetalResourceOptions.StorageModeShared);
+                        if (scratchBuffer == IntPtr.Zero)
+                        {
+                            Console.WriteLine("[MetalCommandList] BuildBottomLevelAccelStruct: Failed to create scratch buffer");
+                            return;
+                        }
+                    }
+
+                    try
+                    {
+                        // Get or create acceleration structure command encoder
+                        IntPtr accelStructEncoder = GetOrCreateAccelerationStructureCommandEncoder();
+                        if (accelStructEncoder == IntPtr.Zero)
+                        {
+                            Console.WriteLine("[MetalCommandList] BuildBottomLevelAccelStruct: Failed to get acceleration structure command encoder");
+                            return;
+                        }
+
+                        // Build the bottom-level acceleration structure
+                        // Metal API: [MTLAccelerationStructureCommandEncoder buildAccelerationStructure:descriptor:scratchBuffer:scratchBufferOffset:]
+                        MetalNative.BuildAccelerationStructure(accelStructEncoder, accelStructHandle, blasDescriptor, scratchBuffer, 0);
+
+                        // Note: We don't end encoding here because the encoder is managed by GetOrCreateAccelerationStructureCommandEncoder
+                        // and will be ended when the command list is closed or another encoder type is created
+                    }
+                    finally
+                    {
+                        // Release scratch buffer
+                        if (scratchBuffer != IntPtr.Zero)
+                        {
+                            MetalNative.ReleaseBuffer(scratchBuffer);
+                        }
+                    }
+                }
+                finally
+                {
+                    // Release BLAS descriptor
+                    if (blasDescriptor != IntPtr.Zero)
+                    {
+                        MetalNative.ReleaseAccelerationStructureDescriptor(blasDescriptor);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to build bottom-level acceleration structure: {ex.Message}", ex);
+            }
         }
 
         public void BuildTopLevelAccelStruct(IAccelStruct accelStruct, AccelStructInstance[] instances)
@@ -3951,6 +4245,317 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         [DllImport("/System/Library/Frameworks/Metal.framework/Metal")]
         public static extern IntPtr CreateRaytracingPipelineState(IntPtr device, IntPtr descriptor);
+
+        /// <summary>
+        /// Sets triangle geometry data on a BLAS acceleration structure descriptor.
+        /// Based on Metal API: MTLAccelerationStructureTriangleGeometryDescriptor
+        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlaccelerationstructuretrianglegeometrydescriptor
+        /// </summary>
+        /// <param name="descriptor">BLAS acceleration structure descriptor</param>
+        /// <param name="geometryIndex">Index of the geometry in the descriptor</param>
+        /// <param name="vertexBuffer">Metal buffer containing vertex data</param>
+        /// <param name="vertexOffset">Offset into vertex buffer in bytes</param>
+        /// <param name="vertexStride">Stride between vertices in bytes</param>
+        /// <param name="vertexCount">Number of vertices</param>
+        /// <param name="vertexFormat">Metal vertex format (MTLAttributeFormat)</param>
+        /// <param name="indexBuffer">Metal buffer containing index data (IntPtr.Zero if no indices)</param>
+        /// <param name="indexOffset">Offset into index buffer in bytes</param>
+        /// <param name="indexCount">Number of indices</param>
+        /// <param name="indexFormat">Metal index format (MTLIndexType)</param>
+        /// <param name="transformBuffer">Metal buffer containing transform data (IntPtr.Zero if no transform)</param>
+        /// <param name="transformOffset">Offset into transform buffer in bytes</param>
+        /// <param name="geometryFlags">Metal geometry flags (MTLAccelerationStructureGeometryOptions)</param>
+        public static void SetTriangleGeometryOnDescriptor(
+            IntPtr descriptor,
+            int geometryIndex,
+            IntPtr vertexBuffer,
+            ulong vertexOffset,
+            uint vertexStride,
+            uint vertexCount,
+            uint vertexFormat,
+            IntPtr indexBuffer,
+            ulong indexOffset,
+            uint indexCount,
+            uint indexFormat,
+            IntPtr transformBuffer,
+            ulong transformOffset,
+            uint geometryFlags)
+        {
+            if (descriptor == IntPtr.Zero || vertexBuffer == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                // Use Objective-C runtime to call methods on MTLAccelerationStructureDescriptor
+                // Metal API: [descriptor setGeometryDescriptors:geometryDescriptors count:count]
+                // For each geometry, we create a MTLAccelerationStructureTriangleGeometryDescriptor
+                // and set its properties using objc_msgSend
+                
+                // Create triangle geometry descriptor for this geometry
+                IntPtr triangleGeometryDesc = CreateTriangleGeometryDescriptor();
+                if (triangleGeometryDesc == IntPtr.Zero)
+                {
+                    Console.WriteLine("[MetalNative] SetTriangleGeometryOnDescriptor: Failed to create triangle geometry descriptor");
+                    return;
+                }
+
+                try
+                {
+                    // Set vertex buffer and properties
+                    SetTriangleGeometryVertexBuffer(triangleGeometryDesc, vertexBuffer, vertexOffset, vertexStride, vertexCount, vertexFormat);
+                    
+                    // Set index buffer if provided
+                    if (indexBuffer != IntPtr.Zero && indexCount > 0)
+                    {
+                        SetTriangleGeometryIndexBuffer(triangleGeometryDesc, indexBuffer, indexOffset, indexCount, indexFormat);
+                    }
+                    
+                    // Set transform buffer if provided
+                    if (transformBuffer != IntPtr.Zero)
+                    {
+                        SetTriangleGeometryTransformBuffer(triangleGeometryDesc, transformBuffer, transformOffset);
+                    }
+                    
+                    // Set geometry options/flags
+                    SetTriangleGeometryOptions(triangleGeometryDesc, geometryFlags);
+                    
+                    // Add geometry descriptor to acceleration structure descriptor
+                    AddGeometryDescriptorToAccelerationStructureDescriptor(descriptor, triangleGeometryDesc, geometryIndex);
+                }
+                finally
+                {
+                    // Release triangle geometry descriptor (it's retained by the acceleration structure descriptor)
+                    ReleaseTriangleGeometryDescriptor(triangleGeometryDesc);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalNative] SetTriangleGeometryOnDescriptor: Exception: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Sets the geometry count on an acceleration structure descriptor.
+        /// Based on Metal API: MTLAccelerationStructureDescriptor::setGeometryDescriptors:count:
+        /// </summary>
+        public static void SetGeometryCountOnDescriptor(IntPtr descriptor, uint geometryCount)
+        {
+            if (descriptor == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                // Use Objective-C runtime to set geometry count
+                // Metal API: [descriptor setGeometryCount:geometryCount]
+                IntPtr selector = sel_registerName("setGeometryCount:");
+                objc_msgSend_void_uint(descriptor, selector, geometryCount);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalNative] SetGeometryCountOnDescriptor: Exception: {ex.Message}");
+            }
+        }
+
+        // Helper functions for triangle geometry descriptor manipulation
+        // These use Objective-C runtime to interact with MTLAccelerationStructureTriangleGeometryDescriptor
+        
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr objc_msgSend_void_uint(IntPtr receiver, IntPtr selector, uint value);
+
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void objc_msgSend_void_ulong(IntPtr receiver, IntPtr selector, ulong value);
+
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void objc_msgSend_void_uint_ulong_uint_uint_uint(IntPtr receiver, IntPtr selector, IntPtr buffer, ulong offset, uint stride, uint count, uint format);
+
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void objc_msgSend_void_uint_ulong_uint_uint(IntPtr receiver, IntPtr selector, IntPtr buffer, ulong offset, uint count, uint format);
+
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void objc_msgSend_void_uint_ulong(IntPtr receiver, IntPtr selector, IntPtr buffer, ulong offset);
+
+        private static IntPtr CreateTriangleGeometryDescriptor()
+        {
+            try
+            {
+                // Allocate MTLAccelerationStructureTriangleGeometryDescriptor using Objective-C runtime
+                // Metal API: [[MTLAccelerationStructureTriangleGeometryDescriptor alloc] init]
+                IntPtr triangleGeometryDescClass = objc_getClass("MTLAccelerationStructureTriangleGeometryDescriptor");
+                if (triangleGeometryDescClass == IntPtr.Zero)
+                {
+                    return IntPtr.Zero;
+                }
+
+                IntPtr allocSelector = sel_registerName("alloc");
+                IntPtr allocResult = objc_msgSend_object(triangleGeometryDescClass, allocSelector);
+                
+                IntPtr initSelector = sel_registerName("init");
+                return objc_msgSend_object(allocResult, initSelector);
+            }
+            catch
+            {
+                return IntPtr.Zero;
+            }
+        }
+
+        private static void ReleaseTriangleGeometryDescriptor(IntPtr descriptor)
+        {
+            if (descriptor == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                IntPtr selector = sel_registerName("release");
+                objc_msgSend_void(descriptor, selector);
+            }
+            catch
+            {
+                // Ignore errors during release
+            }
+        }
+
+        private static void SetTriangleGeometryVertexBuffer(IntPtr triangleDesc, IntPtr vertexBuffer, ulong vertexOffset, uint vertexStride, uint vertexCount, uint vertexFormat)
+        {
+            if (triangleDesc == IntPtr.Zero || vertexBuffer == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                // Metal API: [triangleDesc setVertexBuffer:vertexBuffer offset:vertexOffset]
+                IntPtr setVertexBufferSelector = sel_registerName("setVertexBuffer:offset:");
+                objc_msgSend_void_uint_ulong(triangleDesc, setVertexBufferSelector, vertexBuffer, vertexOffset);
+                
+                // Metal API: [triangleDesc setVertexStride:vertexStride]
+                IntPtr setVertexStrideSelector = sel_registerName("setVertexStride:");
+                objc_msgSend_void_ulong(triangleDesc, setVertexStrideSelector, vertexStride);
+                
+                // Metal API: [triangleDesc setVertexCount:vertexCount]
+                IntPtr setVertexCountSelector = sel_registerName("setVertexCount:");
+                objc_msgSend_void_ulong(triangleDesc, setVertexCountSelector, vertexCount);
+                
+                // Metal API: [triangleDesc setVertexFormat:vertexFormat]
+                IntPtr setVertexFormatSelector = sel_registerName("setVertexFormat:");
+                objc_msgSend_void_uint(triangleDesc, setVertexFormatSelector, vertexFormat);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalNative] SetTriangleGeometryVertexBuffer: Exception: {ex.Message}");
+            }
+        }
+
+        private static void SetTriangleGeometryIndexBuffer(IntPtr triangleDesc, IntPtr indexBuffer, ulong indexOffset, uint indexCount, uint indexFormat)
+        {
+            if (triangleDesc == IntPtr.Zero || indexBuffer == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                // Metal API: [triangleDesc setIndexBuffer:indexBuffer offset:indexOffset]
+                IntPtr setIndexBufferSelector = sel_registerName("setIndexBuffer:offset:");
+                objc_msgSend_void_uint_ulong(triangleDesc, setIndexBufferSelector, indexBuffer, indexOffset);
+                
+                // Metal API: [triangleDesc setIndexCount:indexCount]
+                IntPtr setIndexCountSelector = sel_registerName("setIndexCount:");
+                objc_msgSend_void_ulong(triangleDesc, setIndexCountSelector, indexCount);
+                
+                // Metal API: [triangleDesc setIndexType:indexFormat]
+                IntPtr setIndexTypeSelector = sel_registerName("setIndexType:");
+                objc_msgSend_void_uint(triangleDesc, setIndexTypeSelector, indexFormat);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalNative] SetTriangleGeometryIndexBuffer: Exception: {ex.Message}");
+            }
+        }
+
+        private static void SetTriangleGeometryTransformBuffer(IntPtr triangleDesc, IntPtr transformBuffer, ulong transformOffset)
+        {
+            if (triangleDesc == IntPtr.Zero || transformBuffer == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                // Metal API: [triangleDesc setTransformBuffer:transformBuffer offset:transformOffset]
+                IntPtr setTransformBufferSelector = sel_registerName("setTransformBuffer:offset:");
+                objc_msgSend_void_uint_ulong(triangleDesc, setTransformBufferSelector, transformBuffer, transformOffset);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalNative] SetTriangleGeometryTransformBuffer: Exception: {ex.Message}");
+            }
+        }
+
+        private static void SetTriangleGeometryOptions(IntPtr triangleDesc, uint geometryFlags)
+        {
+            if (triangleDesc == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                // Metal API: [triangleDesc setOpaque:(geometryFlags & MTLAccelerationStructureGeometryOptionOpaque) != 0]
+                bool isOpaque = (geometryFlags & 1) != 0;
+                IntPtr setOpaqueSelector = sel_registerName("setOpaque:");
+                objc_msgSend_void_bool(triangleDesc, setOpaqueSelector, isOpaque);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalNative] SetTriangleGeometryOptions: Exception: {ex.Message}");
+            }
+        }
+
+        private static void AddGeometryDescriptorToAccelerationStructureDescriptor(IntPtr accelStructDesc, IntPtr triangleDesc, int geometryIndex)
+        {
+            if (accelStructDesc == IntPtr.Zero || triangleDesc == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                // Metal API: [accelStructDesc setGeometryDescriptor:triangleDesc atIndex:geometryIndex]
+                // We need to get the geometry descriptors array and set the element at geometryIndex
+                IntPtr getGeometryDescriptorsSelector = sel_registerName("geometryDescriptors");
+                IntPtr geometryDescriptorsArray = objc_msgSend_object(accelStructDesc, getGeometryDescriptorsSelector);
+                
+                if (geometryDescriptorsArray != IntPtr.Zero)
+                {
+                    // Set the geometry descriptor at the specified index
+                    // Metal API: [geometryDescriptorsArray setObject:triangleDesc atIndexedSubscript:geometryIndex]
+                    IntPtr setObjectSelector = sel_registerName("setObject:atIndexedSubscript:");
+                    objc_msgSend_void_int_object(geometryDescriptorsArray, setObjectSelector, geometryIndex, triangleDesc);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalNative] AddGeometryDescriptorToAccelerationStructureDescriptor: Exception: {ex.Message}");
+            }
+        }
+
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void objc_msgSend_void_bool(IntPtr receiver, IntPtr selector, bool value);
+
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void objc_msgSend_void_int_object(IntPtr receiver, IntPtr selector, int index, IntPtr object);
+
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_getClass", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr objc_getClass(string className);
+
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr objc_msgSend_object(IntPtr receiver, IntPtr selector);
 
         [DllImport("/System/Library/Frameworks/Metal.framework/Metal")]
         public static extern void ReleaseRaytracingPipelineState(IntPtr raytracingPipelineState);
