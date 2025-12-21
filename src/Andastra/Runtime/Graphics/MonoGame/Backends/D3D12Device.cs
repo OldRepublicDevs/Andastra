@@ -2132,13 +2132,32 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// <summary>
         /// D3D12_RENDER_TARGET_VIEW_DESC structure for render target views.
         /// Based on DirectX 12 Render Target Views: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_render_target_view_desc
+        /// Uses explicit layout to model the union of view dimension types.
         /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
+        [StructLayout(LayoutKind.Explicit)]
         private struct D3D12_RENDER_TARGET_VIEW_DESC
         {
+            [FieldOffset(0)]
             public uint Format; // DXGI_FORMAT
+            [FieldOffset(4)]
             public uint ViewDimension; // D3D12_RTV_DIMENSION
-            public D3D12_RTV_DIMENSION_UNION Union; // Union of D3D12_TEX1D_RTV, D3D12_TEX1D_ARRAY_RTV, D3D12_TEX2D_RTV, etc.
+            // Union members start at offset 8 (all overlap at the same offset)
+            [FieldOffset(8)]
+            public D3D12_BUFFER_RTV Buffer;
+            [FieldOffset(8)]
+            public D3D12_TEX1D_RTV Texture1D;
+            [FieldOffset(8)]
+            public D3D12_TEX1D_ARRAY_RTV Texture1DArray;
+            [FieldOffset(8)]
+            public D3D12_TEX2D_RTV Texture2D;
+            [FieldOffset(8)]
+            public D3D12_TEX2D_ARRAY_RTV Texture2DArray;
+            [FieldOffset(8)]
+            public D3D12_TEX2DMS_RTV Texture2DMS;
+            [FieldOffset(8)]
+            public D3D12_TEX2DMS_ARRAY_RTV Texture2DMSArray;
+            [FieldOffset(8)]
+            public D3D12_TEX3D_RTV Texture3D;
         }
 
         /// <summary>
@@ -2155,30 +2174,6 @@ namespace Andastra.Runtime.MonoGame.Backends
         private const uint D3D12_RTV_DIMENSION_TEXTURE2DMSARRAY = 7;
         private const uint D3D12_RTV_DIMENSION_TEXTURE3D = 8;
 
-        /// <summary>
-        /// Union structure for D3D12_RENDER_TARGET_VIEW_DESC (matches D3D12_RTV_DIMENSION_UNION).
-        /// Uses explicit layout to match DirectX 12 union structure.
-        /// </summary>
-        [StructLayout(LayoutKind.Explicit)]
-        private struct D3D12_RTV_DIMENSION_UNION
-        {
-            [FieldOffset(0)]
-            public D3D12_BUFFER_RTV Buffer;
-            [FieldOffset(0)]
-            public D3D12_TEX1D_RTV Texture1D;
-            [FieldOffset(0)]
-            public D3D12_TEX1D_ARRAY_RTV Texture1DArray;
-            [FieldOffset(0)]
-            public D3D12_TEX2D_RTV Texture2D;
-            [FieldOffset(0)]
-            public D3D12_TEX2D_ARRAY_RTV Texture2DArray;
-            [FieldOffset(0)]
-            public D3D12_TEX2DMS_RTV Texture2DMS;
-            [FieldOffset(0)]
-            public D3D12_TEX2DMS_ARRAY_RTV Texture2DMSArray;
-            [FieldOffset(0)]
-            public D3D12_TEX3D_RTV Texture3D;
-        }
 
         /// <summary>
         /// D3D12_BUFFER_RTV structure for buffer render target views.
@@ -2266,14 +2261,30 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// <summary>
         /// D3D12_DEPTH_STENCIL_VIEW_DESC structure for depth-stencil views.
         /// Based on DirectX 12 Depth Stencil Views: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_depth_stencil_view_desc
+        /// Uses explicit layout to model the union of view dimension types.
         /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
+        [StructLayout(LayoutKind.Explicit)]
         private struct D3D12_DEPTH_STENCIL_VIEW_DESC
         {
+            [FieldOffset(0)]
             public uint Format; // DXGI_FORMAT
+            [FieldOffset(4)]
             public uint ViewDimension; // D3D12_DSV_DIMENSION
+            [FieldOffset(8)]
             public uint Flags; // D3D12_DSV_FLAGS
-            public D3D12_DSV_DIMENSION_UNION Union; // Union of D3D12_TEX1D_DSV, D3D12_TEX1D_ARRAY_DSV, D3D12_TEX2D_DSV, etc.
+            // Union members start at offset 12 (all overlap at the same offset)
+            [FieldOffset(12)]
+            public D3D12_TEX1D_DSV Texture1D;
+            [FieldOffset(12)]
+            public D3D12_TEX1D_ARRAY_DSV Texture1DArray;
+            [FieldOffset(12)]
+            public D3D12_TEX2D_DSV Texture2D;
+            [FieldOffset(12)]
+            public D3D12_TEX2D_ARRAY_DSV Texture2DArray;
+            [FieldOffset(12)]
+            public D3D12_TEX2DMS_DSV Texture2DMS;
+            [FieldOffset(12)]
+            public D3D12_TEX2DMS_ARRAY_DSV Texture2DMSArray;
         }
 
         /// <summary>
@@ -2286,26 +2297,6 @@ namespace Andastra.Runtime.MonoGame.Backends
         private const uint D3D12_DSV_DIMENSION_TEXTURE2DARRAY = 4;
         private const uint D3D12_DSV_DIMENSION_TEXTURE2DMS = 5;
         private const uint D3D12_DSV_DIMENSION_TEXTURE2DMSARRAY = 6;
-
-        /// <summary>
-        /// Union structure for D3D12_DEPTH_STENCIL_VIEW_DESC (matches D3D12_DSV_DIMENSION_UNION).
-        /// </summary>
-        [StructLayout(LayoutKind.Explicit)]
-        private struct D3D12_DSV_DIMENSION_UNION
-        {
-            [FieldOffset(0)]
-            public D3D12_TEX1D_DSV Texture1D;
-            [FieldOffset(0)]
-            public D3D12_TEX1D_ARRAY_DSV Texture1DArray;
-            [FieldOffset(0)]
-            public D3D12_TEX2D_DSV Texture2D;
-            [FieldOffset(0)]
-            public D3D12_TEX2D_ARRAY_DSV Texture2DArray;
-            [FieldOffset(0)]
-            public D3D12_TEX2DMS_DSV Texture2DMS;
-            [FieldOffset(0)]
-            public D3D12_TEX2DMS_ARRAY_DSV Texture2DMSArray;
-        }
 
         /// <summary>
         /// D3D12_TEX1D_DSV structure for 1D texture depth-stencil views.
