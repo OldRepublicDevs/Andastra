@@ -1456,6 +1456,12 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static vkCmdCopyBufferToImageDelegate vkCmdCopyBufferToImage;
         private static vkCmdCopyImageDelegate vkCmdCopyImage;
 
+        // vkGetDeviceProcAddr delegate for loading extension functions
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetDeviceProcAddr.html
+        // Signature: PFN_vkGetDeviceProcAddr vkGetDeviceProcAddr(VkDevice device, const char* pName);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Ansi)]
+        private delegate IntPtr vkGetDeviceProcAddrDelegate(IntPtr device, string pName);
+
         // VK_KHR_ray_tracing_pipeline extension function delegates
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate VkResult vkCreateRayTracingPipelinesKHRDelegate(IntPtr device, IntPtr deferredOperation, IntPtr pipelineCache, uint createInfoCount, IntPtr pCreateInfos, IntPtr pAllocator, IntPtr pPipelines);
@@ -1487,7 +1493,9 @@ namespace Andastra.Runtime.MonoGame.Backends
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkCmdCopyAccelerationStructureKHRDelegate(IntPtr commandBuffer, ref VkCopyAccelerationStructureInfoKHR pInfo);
 
-        // TODO:  VK_KHR_ray_tracing_pipeline extension function pointers (static for now - would be loaded via vkGetDeviceProcAddr in real implementation)
+        // VK_KHR_ray_tracing_pipeline extension function pointers (loaded via vkGetDeviceProcAddr)
+        // Based on Vulkan specification: VK_KHR_ray_tracing_pipeline extension functions must be loaded via vkGetDeviceProcAddr
+        // Function pointers are null if extension is not available, allowing graceful degradation
         private static vkCreateRayTracingPipelinesKHRDelegate vkCreateRayTracingPipelinesKHR;
         private static vkGetRayTracingShaderGroupHandlesKHRDelegate vkGetRayTracingShaderGroupHandlesKHR;
         private static vkCmdTraceRaysKHRDelegate vkCmdTraceRaysKHR;
@@ -1565,6 +1573,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// - vkGetRayTracingShaderGroupHandlesKHR: Gets shader group handles for shader binding table
         /// - Function pointers are null if extension is not available
         /// - Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdTraceRaysKHR.html
+        /// - Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetDeviceProcAddr.html
         /// </remarks>
         private static void LoadRayTracingPipelineExtensionFunctions(IntPtr device)
         {
@@ -1573,26 +1582,62 @@ namespace Andastra.Runtime.MonoGame.Backends
                 return;
             }
 
-            // Load vkGetDeviceProcAddr function pointer
-            // In a real implementation, this would be loaded from the Vulkan loader library
-            // TODO: STUB - For now, we'll use a P/Invoke approach or assume it's available
-            // vkGetDeviceProcAddr signature: PFN_vkGetDeviceProcAddr vkGetDeviceProcAddr(VkInstance instance, const char* pName);
-            // We need to get vkGetDeviceProcAddr first, then use it to load extension functions
-            
-            // Note: In a production implementation, vkGetDeviceProcAddr would be obtained from the Vulkan loader
-            // For this implementation, we'll provide a mechanism to load the function when the extension is available
-            // The actual loading would be done via P/Invoke to the Vulkan loader library (vulkan-1.dll on Windows, libvulkan.so on Linux)
-            
-            // Placeholder: Function loading would happen here
-            // In real implementation:
-            // 1. Get vkGetDeviceProcAddr from Vulkan loader
-            // 2. Call vkGetDeviceProcAddr(device, "vkCmdTraceRaysKHR") to get function pointer
-            // 3. Marshal.GetDelegateForFunctionPointer to convert to delegate
-            // 4. Assign to static vkCmdTraceRaysKHR field
-            // 5. Repeat for vkCreateRayTracingPipelinesKHR and vkGetRayTracingShaderGroupHandlesKHR
-            
-            // TODO: STUB - For now, we'll leave it as null - the DispatchRays method will check for null before calling
-            // This allows graceful degradation when the extension is not available
+            try
+            {
+                // Step 1: Load vkGetDeviceProcAddr from Vulkan loader library
+                // vkGetDeviceProcAddr is a core Vulkan function, so we can load it directly from the library
+                IntPtr vulkanLib = NativeMethods.LoadLibrary(VulkanLibrary);
+                if (vulkanLib == IntPtr.Zero)
+                {
+                    // Vulkan library not available - extension functions will remain null
+                    // This allows graceful degradation when Vulkan is not available
+                    return;
+                }
+
+                IntPtr vkGetDeviceProcAddrPtr = NativeMethods.GetProcAddress(vulkanLib, "vkGetDeviceProcAddr");
+                if (vkGetDeviceProcAddrPtr == IntPtr.Zero)
+                {
+                    // vkGetDeviceProcAddr not found - extension functions will remain null
+                    NativeMethods.FreeLibrary(vulkanLib);
+                    return;
+                }
+
+                // Convert vkGetDeviceProcAddr function pointer to delegate
+                vkGetDeviceProcAddrDelegate vkGetDeviceProcAddr = (vkGetDeviceProcAddrDelegate)Marshal.GetDelegateForFunctionPointer(vkGetDeviceProcAddrPtr, typeof(vkGetDeviceProcAddrDelegate));
+
+                // Step 2: Load vkCreateRayTracingPipelinesKHR
+                // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateRayTracingPipelinesKHR.html
+                IntPtr vkCreateRayTracingPipelinesKHRPtr = vkGetDeviceProcAddr(device, "vkCreateRayTracingPipelinesKHR");
+                if (vkCreateRayTracingPipelinesKHRPtr != IntPtr.Zero)
+                {
+                    vkCreateRayTracingPipelinesKHR = (vkCreateRayTracingPipelinesKHRDelegate)Marshal.GetDelegateForFunctionPointer(vkCreateRayTracingPipelinesKHRPtr, typeof(vkCreateRayTracingPipelinesKHRDelegate));
+                }
+
+                // Step 3: Load vkGetRayTracingShaderGroupHandlesKHR
+                // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetRayTracingShaderGroupHandlesKHR.html
+                IntPtr vkGetRayTracingShaderGroupHandlesKHRPtr = vkGetDeviceProcAddr(device, "vkGetRayTracingShaderGroupHandlesKHR");
+                if (vkGetRayTracingShaderGroupHandlesKHRPtr != IntPtr.Zero)
+                {
+                    vkGetRayTracingShaderGroupHandlesKHR = (vkGetRayTracingShaderGroupHandlesKHRDelegate)Marshal.GetDelegateForFunctionPointer(vkGetRayTracingShaderGroupHandlesKHRPtr, typeof(vkGetRayTracingShaderGroupHandlesKHRDelegate));
+                }
+
+                // Step 4: Load vkCmdTraceRaysKHR
+                // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdTraceRaysKHR.html
+                IntPtr vkCmdTraceRaysKHRPtr = vkGetDeviceProcAddr(device, "vkCmdTraceRaysKHR");
+                if (vkCmdTraceRaysKHRPtr != IntPtr.Zero)
+                {
+                    vkCmdTraceRaysKHR = (vkCmdTraceRaysKHRDelegate)Marshal.GetDelegateForFunctionPointer(vkCmdTraceRaysKHRPtr, typeof(vkCmdTraceRaysKHRDelegate));
+                }
+
+                // Free the library handle (function pointers remain valid)
+                NativeMethods.FreeLibrary(vulkanLib);
+            }
+            catch (Exception)
+            {
+                // If loading fails for any reason, extension functions will remain null
+                // This allows graceful degradation when the extension is not available
+                // The calling code should check for null before using these functions
+            }
         }
 
         private static void CheckResult(VkResult result, string operation)
