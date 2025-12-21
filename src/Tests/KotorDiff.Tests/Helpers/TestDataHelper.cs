@@ -1,3 +1,5 @@
+extern alias app;
+
 // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/tests/tslpatcher/test_diff_comprehensive.py:61-257
 // Original: class TestDataHelper: ...
 using System;
@@ -16,7 +18,6 @@ using Andastra.Parsing.Formats.TwoDA;
 using static Andastra.Parsing.Formats.TwoDA.TwoDAAuto;
 using Andastra.Parsing.Formats.TLK;
 using static Andastra.Parsing.Formats.TLK.TLKAuto;
-extern alias app;
 using Andastra.Parsing.Resource;
 using App = app::KotorDiff.App;
 

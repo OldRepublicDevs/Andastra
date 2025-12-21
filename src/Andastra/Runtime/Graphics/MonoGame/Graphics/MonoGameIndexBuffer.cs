@@ -26,7 +26,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
 
         public bool IsShort => _isShort;
 
-        public IntPtr NativeHandle => _buffer.Handle;
+        public IntPtr NativeHandle => IntPtr.Zero; // MonoGame IndexBuffer does not expose Handle directly
 
         public void SetData(int[] indices)
         {

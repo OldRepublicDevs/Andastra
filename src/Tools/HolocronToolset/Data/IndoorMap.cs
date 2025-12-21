@@ -79,7 +79,8 @@ namespace HolocronToolset.Data
             LocalizedString name = null,
             Andastra.Parsing.Common.Color lighting = null,
             string skybox = null,
-            System.Numerics.Vector3? warpPoint = null)
+            System.Numerics.Vector3? warpPoint = null,
+            bool? targetGameType = null)
         {
             Rooms = rooms ?? new List<IndoorMapRoom>();
             ModuleId = moduleId ?? "test01";
@@ -87,6 +88,8 @@ namespace HolocronToolset.Data
             Lighting = lighting ?? new Andastra.Parsing.Common.Color(0.5f, 0.5f, 0.5f);
             Skybox = skybox ?? "";
             WarpPoint = warpPoint ?? System.Numerics.Vector3.Zero;
+            // targetGameType: null = use installation.Tsl, true = TSL/K2, false = K1
+            TargetGameType = targetGameType;
         }
 
         public List<IndoorMapRoom> Rooms { get; set; }
@@ -95,6 +98,8 @@ namespace HolocronToolset.Data
         public Andastra.Parsing.Common.Color Lighting { get; set; }
         public string Skybox { get; set; }
         public System.Numerics.Vector3 WarpPoint { get; set; }
+        // TargetGameType: null = use installation.Tsl, true = TSL/K2, false = K1
+        public bool? TargetGameType { get; set; }
 
         // Build-time state (matching Python implementation)
         private ERF _mod;
@@ -587,8 +592,11 @@ namespace HolocronToolset.Data
             }
 
             // Convert model to target game format (K1 or K2)
-            // Matching Python: mdl_converted: bytes = model.convert_to_k2(mdl_transformed) if installation.tsl else model.convert_to_k1(mdl_transformed)
-            if (installation.Tsl)
+            // Use TargetGameType override if set, otherwise use installation.Tsl
+            // Matching Python: target_tsl: bool = self.target_game_type if self.target_game_type is not None else installation.tsl
+            bool targetTsl = TargetGameType ?? installation.Tsl;
+            // Matching Python: mdl_converted: bytes = model.convert_to_k2(mdl_transformed) if target_tsl else model.convert_to_k1(mdl_transformed)
+            if (targetTsl)
             {
                 mdl = ModelTools.ConvertToK2(mdl);
             }
@@ -1076,8 +1084,10 @@ namespace HolocronToolset.Data
                 _git.Doors.Add(door);
 
                 // Deep copy UTD from door template (matching Python line 484)
-                // Python: utd: UTD = deepcopy(insert.door.utd_k2 if installation.tsl else insert.door.utd_k1)
-                UTD sourceUtd = installation.Tsl ? insert.Door.UtdK2 : insert.Door.UtdK1;
+                // Use TargetGameType override if set, otherwise use installation.Tsl
+                bool targetTsl = TargetGameType ?? installation.Tsl;
+                // Python: utd: UTD = deepcopy(insert.door.utd_k2 if target_tsl else insert.door.utd_k1)
+                UTD sourceUtd = targetTsl ? insert.Door.UtdK2 : insert.Door.UtdK1;
                 if (sourceUtd == null)
                 {
                     new RobustLogger().Warning($"Door insertion {i} has no UTD template (UtdK1/UtdK2 is null). Skipping UTD creation.");
@@ -1111,7 +1121,7 @@ namespace HolocronToolset.Data
 
                 // Add UTD to module (matching Python line 488)
                 // Python: self.mod.set_data(door_resname, ResourceType.UTD, bytes_utd(utd))
-                byte[] utdData = UTDHelpers.BytesUtd(utd, installation.Tsl ? Game.K2 : Game.K1);
+                byte[] utdData = UTDHelpers.BytesUtd(utd, targetTsl ? Game.K2 : Game.K1);
                 _mod.SetData(doorResname, ResourceType.UTD, utdData);
 
                 // Create door hook in layout (matching Python lines 490-491)
@@ -1166,8 +1176,9 @@ namespace HolocronToolset.Data
                                     padMdl = ModelTools.Transform(padMdl, System.Numerics.Vector3.Zero, insert.Rotation);
 
                                     // Convert model to target game format (matching Python line 523)
-                                    // Python: pad_mdl_converted: bytes = model.convert_to_k2(pad_mdl) if installation.tsl else model.convert_to_k1(pad_mdl)
-                                    byte[] padMdlConverted = installation.Tsl
+                                    // Use TargetGameType override if set, otherwise use installation.Tsl (uses outer targetTsl variable)
+                                    // Python: pad_mdl_converted: bytes = model.convert_to_k2(pad_mdl) if target_tsl else model.convert_to_k1(pad_mdl)
+                                    byte[] padMdlConverted = targetTsl
                                         ? ModelTools.ConvertToK2(padMdl)
                                         : ModelTools.ConvertToK1(padMdl);
 
@@ -1261,8 +1272,9 @@ namespace HolocronToolset.Data
                                     padMdl = ModelTools.Transform(padMdl, System.Numerics.Vector3.Zero, insert.Rotation);
 
                                     // Convert model to target game format (matching Python line 563)
-                                    // Python: pad_mdl = model.convert_to_k2(pad_mdl) if installation.tsl else model.convert_to_k1(pad_mdl)
-                                    padMdl = installation.Tsl
+                                    // Use TargetGameType override if set, otherwise use installation.Tsl (uses outer targetTsl variable)
+                                    // Python: pad_mdl = model.convert_to_k2(pad_mdl) if target_tsl else model.convert_to_k1(pad_mdl)
+                                    padMdl = targetTsl
                                         ? ModelTools.ConvertToK2(padMdl)
                                         : ModelTools.ConvertToK1(padMdl);
 
@@ -1649,7 +1661,9 @@ namespace HolocronToolset.Data
         {
             try
             {
-                string loadPath = installation.Tsl ? "./kits/load_k2.tga" : "./kits/load_k1.tga";
+                // Use TargetGameType override if set, otherwise use installation.Tsl
+                bool targetTsl = TargetGameType ?? installation.Tsl;
+                string loadPath = targetTsl ? "./kits/load_k2.tga" : "./kits/load_k1.tga";
                 if (File.Exists(loadPath))
                 {
                     byte[] loadTga = File.ReadAllBytes(loadPath);
@@ -2035,6 +2049,10 @@ namespace HolocronToolset.Data
             data["lighting"] = new[] { Lighting.R, Lighting.G, Lighting.B };
             data["skybox"] = Skybox;
             data["warp"] = ModuleId;
+            if (TargetGameType.HasValue)
+            {
+                data["target_game_type"] = TargetGameType.Value;
+            }
 
             var roomsList = new List<Dictionary<string, object>>();
             foreach (var room in Rooms)
@@ -2195,6 +2213,14 @@ namespace HolocronToolset.Data
             {
                 Skybox = data["skybox"].GetString();
             }
+            if (data.ContainsKey("target_game_type"))
+            {
+                TargetGameType = data["target_game_type"].GetBoolean();
+            }
+            else
+            {
+                TargetGameType = null;
+            }
 
             foreach (var roomData in data["rooms"].EnumerateArray())
             {
@@ -2281,6 +2307,7 @@ namespace HolocronToolset.Data
             ModuleId = "test01";
             Name = LocalizedString.FromEnglish("New Module");
             Lighting = new Andastra.Parsing.Common.Color(0.5f, 0.5f, 0.5f);
+            TargetGameType = null;
         }
 
         /// <summary>
