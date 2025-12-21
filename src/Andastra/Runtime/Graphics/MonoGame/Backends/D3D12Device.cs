@@ -6584,6 +6584,37 @@ namespace Andastra.Runtime.MonoGame.Backends
                 omsetRenderTargets(commandList, NumRenderTargetDescriptors, pRenderTargetDescriptors, RTsSingleHandleToDescriptorRange, pDepthStencilDescriptor);
             }
 
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::OMSetBlendFactor through COM vtable.
+            /// VTable index 48 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Blend Factor: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-omsetblendfactor
+            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+            /// </summary>
+            private unsafe void CallOMSetBlendFactor(IntPtr commandList, IntPtr BlendFactor)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // OMSetBlendFactor is at index 48 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[48];
+
+                // Create delegate from function pointer
+                OMSetBlendFactorDelegate omsetBlendFactor =
+                    (OMSetBlendFactorDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(OMSetBlendFactorDelegate));
+
+                omsetBlendFactor(commandList, BlendFactor);
+            }
+
             // COM interface method delegate for ClearDepthStencilView
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             private delegate void ClearDepthStencilViewDelegate(IntPtr commandList, IntPtr DepthStencilView, uint ClearFlags, float Depth, byte Stencil, uint NumRects, IntPtr pRects);
