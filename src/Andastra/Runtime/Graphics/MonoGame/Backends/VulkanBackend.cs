@@ -50,20 +50,43 @@ namespace Andastra.Runtime.MonoGame.Backends
             get { return _device; }
         }
 
-        public void Initialize(GraphicsCapabilities capabilities, RenderSettings settings)
+        public bool Initialize(RenderSettings settings)
         {
-            if (_initialized)
+            if (settings == null)
             {
-                return;
+                throw new ArgumentNullException(nameof(settings));
             }
 
-            _capabilities = capabilities;
+            if (_initialized)
+            {
+                return true;
+            }
+
             _settings = settings;
 
-            // TODO: STUB - Initialize Vulkan device
-            // This should create a VulkanDevice instance and initialize it
+            // TODO: STUB - Initialize Vulkan device and query capabilities
+            // This should create a VulkanDevice instance, initialize it, and query capabilities
             _device = new VulkanDevice();
+            
+            // Initialize capabilities with default values
+            _capabilities = new GraphicsCapabilities
+            {
+                MaxTextureSize = 8192,
+                MaxRenderTargets = 8,
+                MaxAnisotropy = 16,
+                SupportsComputeShaders = true,
+                SupportsGeometryShaders = true,
+                SupportsTessellation = true,
+                SupportsRaytracing = false, // TODO: Query from device
+                SupportsMeshShaders = false,
+                SupportsVariableRateShading = false,
+                DeviceName = "Vulkan Device",
+                VendorName = "Unknown",
+                ActiveBackend = GraphicsBackend.Vulkan
+            };
+
             _initialized = true;
+            return true;
         }
 
         public void Shutdown()
@@ -80,6 +103,98 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             _initialized = false;
+        }
+
+        public void BeginFrame()
+        {
+            // TODO: STUB - Begin frame rendering
+        }
+
+        public void EndFrame()
+        {
+            // TODO: STUB - End frame and present
+        }
+
+        public void Resize(int width, int height)
+        {
+            if (!_initialized)
+            {
+                return;
+            }
+
+            _settings.Width = width;
+            _settings.Height = height;
+            // TODO: STUB - Resize swap chain
+        }
+
+        public IntPtr CreateTexture(TextureDescription desc)
+        {
+            if (!_initialized)
+            {
+                return IntPtr.Zero;
+            }
+
+            // TODO: STUB - Create Vulkan texture
+            return IntPtr.Zero;
+        }
+
+        public bool UploadTextureData(IntPtr handle, TextureUploadData data)
+        {
+            if (!_initialized)
+            {
+                return false;
+            }
+
+            // TODO: STUB - Upload texture data
+            return false;
+        }
+
+        public IntPtr CreateBuffer(BufferDescription desc)
+        {
+            if (!_initialized)
+            {
+                return IntPtr.Zero;
+            }
+
+            // TODO: STUB - Create Vulkan buffer
+            return IntPtr.Zero;
+        }
+
+        public IntPtr CreatePipeline(PipelineDescription desc)
+        {
+            if (!_initialized)
+            {
+                return IntPtr.Zero;
+            }
+
+            // TODO: STUB - Create Vulkan pipeline
+            return IntPtr.Zero;
+        }
+
+        public void DestroyResource(IntPtr handle)
+        {
+            if (!_initialized)
+            {
+                return;
+            }
+
+            // TODO: STUB - Destroy Vulkan resource
+        }
+
+        public void SetRaytracingLevel(RaytracingLevel level)
+        {
+            // TODO: STUB - Set raytracing level
+        }
+
+        public FrameStatistics GetFrameStatistics()
+        {
+            // TODO: STUB - Get frame statistics
+            return new FrameStatistics();
+        }
+
+        public IDevice GetDevice()
+        {
+            return _device;
         }
 
         public void Dispose()
