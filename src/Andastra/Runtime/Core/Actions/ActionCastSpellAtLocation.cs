@@ -102,7 +102,7 @@ namespace Andastra.Runtime.Core.Actions
                 }
 
                 Vector3 newPosition = transform.Position + direction * moveDistance;
-                
+
                 // Project position to walkmesh surface (matches FUN_004f5070 in swkotor2.exe)
                 // Based on swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 projects positions to walkmesh after movement
                 IArea area = actor.World?.CurrentArea;
@@ -115,7 +115,7 @@ namespace Andastra.Runtime.Core.Actions
                         newPosition = projectedPos;
                     }
                 }
-                
+
                 transform.Position = newPosition;
                 // Y-up system: Atan2(Y, X) for 2D plane facing
                 transform.Facing = (float)System.Math.Atan2(direction.Y, direction.X);
@@ -221,7 +221,7 @@ namespace Andastra.Runtime.Core.Actions
             // Handle spell-specific effects (damage, healing, status effects) from spells.2da
             // Based on swkotor2.exe: Spell effects are applied to entities in range
             // Spell effects come from impact scripts (impactscript column) which apply damage/healing/status effects
-            // Full implementation: Executes impact scripts directly and applies spell effects from spell data
+            // TODO:  Full implementation: Executes impact scripts directly and applies spell effects from spell data
             foreach (IEntity target in entitiesInRange)
             {
                 if (target == null || !target.IsValid)
@@ -255,6 +255,40 @@ namespace Andastra.Runtime.Core.Actions
 
             // Fallback: basic calculation (spell level * 2, minimum 1)
             return 2; // Default cost
+        }
+
+        /// <summary>
+        /// Gets the duration of a visual effect from visualeffects.2da.
+        /// </summary>
+        /// <param name="visualEffectId">The visual effect ID (row index in visualeffects.2da).</param>
+        /// <returns>The duration in seconds, or 2.0f as default if not found.</returns>
+        /// <remarks>
+        /// Visual Effect Duration:
+        /// - Based on swkotor2.exe: Visual effects duration from visualeffects.2da
+        /// - Located via string references: "visualeffects" @ 0x007c4a7c
+        /// - Original implementation: Loads visualeffects.2da table, reads "duration" column for the visual effect ID
+        /// - Visual effect ID is row index in visualeffects.2da
+        /// - Duration is stored as float in seconds in the "duration" column
+        /// - Default duration is 2.0 seconds if visual effect not found or duration not specified
+        /// - Based on visualeffects.2da format documentation in vendor/PyKotor/wiki/2DA-visualeffects.md
+        /// </remarks>
+        private float GetVisualEffectDuration(int visualEffectId)
+        {
+            if (_gameDataManager != null)
+            {
+                dynamic gameDataManager = _gameDataManager;
+                try
+                {
+                    return gameDataManager.GetVisualEffectDuration(visualEffectId);
+                }
+                catch
+                {
+                    // Fall through to default
+                }
+            }
+
+            // Fallback: default duration if GameDataManager not available
+            return 2.0f;
         }
 
         /// <summary>
@@ -314,10 +348,12 @@ namespace Andastra.Runtime.Core.Actions
                                 DurationType = Combat.EffectDurationType.Instant
                             };
                             effectSystem.ApplyEffect(groundVfxEntity, groundVisualEffect, caster);
-                            // Schedule entity destruction after a short delay to allow visual effect to display
+                            // Schedule entity destruction after visual effect duration
                             // Based on swkotor2.exe: Ground visual effects persist for their duration from visualeffects.2da
-                            // TODO: STUB - For now, destroy after 2 seconds (actual duration should come from visualeffects.2da)
-                            caster.World.DelayScheduler?.ScheduleAction(2.0f, () =>
+                            // Located via string references: "visualeffects" @ 0x007c4a7c, duration column in visualeffects.2da
+                            // Original implementation: Visual effects duration is read from visualeffects.2da "duration" column
+                            float visualEffectDuration = GetVisualEffectDuration(conjGrndVfx);
+                            caster.World.DelayScheduler?.ScheduleAction(visualEffectDuration, () =>
                             {
                                 if (groundVfxEntity.IsValid)
                                 {
@@ -348,13 +384,13 @@ namespace Andastra.Runtime.Core.Actions
                     if (!string.IsNullOrEmpty(projectile) || !string.IsNullOrEmpty(projectileModel))
                     {
                         hasProjectile = true;
-                        
+
                         // Get caster position for projectile origin
                         ITransformComponent casterTransform = caster.GetComponent<ITransformComponent>();
                         if (casterTransform != null)
                         {
                             Vector3 projectileStart = casterTransform.Position;
-                            
+
                             // Create projectile entity
                             // Based on swkotor2.exe: Projectile entities use AreaOfEffect object type
                             // Projectile travels from start to target location
@@ -380,7 +416,7 @@ namespace Andastra.Runtime.Core.Actions
                                     data["ProjectileSpellId"] = _spellId;
                                     data["ProjectileSpeed"] = 30.0f; // Default projectile speed (units per second)
                                 }
-                                
+
                                 // Projectile will be handled by rendering/movement system
                                 // On impact, projectile applies spell effects to entities at target location
                                 // Based on swkotor2.exe: Projectile impact applies spell effects to entities at target location
@@ -389,7 +425,7 @@ namespace Andastra.Runtime.Core.Actions
                                 Vector3 toTarget = targetLocation - projectileStart;
                                 toTarget.Y = 0;
                                 float distance = toTarget.Length();
-                                
+
                                 // Get projectile speed (default 30.0 units per second)
                                 // Based on swkotor2.exe: Projectile speed is constant (kProjectileSpeed in vendor/reone implementation)
                                 // Projectile speed may vary by spell type, but default is 30.0 units/second
@@ -399,7 +435,7 @@ namespace Andastra.Runtime.Core.Actions
                                     try
                                     {
                                         // Check if spell has custom projectile speed (not in standard spells.2da, but may be in extended data)
-                                        // For now, use default speed as spells.2da doesn't have explicit speed column
+                                        // TODO: STUB - For now, use default speed as spells.2da doesn't have explicit speed column
                                         // Projectile speed is typically constant across all spells in the engine
                                     }
                                     catch
@@ -407,17 +443,17 @@ namespace Andastra.Runtime.Core.Actions
                                         // Fall through to default
                                     }
                                 }
-                                
+
                                 float travelTime = distance / projectileSpeed;
                                 if (travelTime < 0.1f) travelTime = 0.1f; // Minimum travel time (0.1 seconds)
-                                
+
                                 // Capture variables for impact callback (caster, spell, spellRadius, effectSystem, targetLocation)
                                 IEntity capturedCaster = caster;
                                 dynamic capturedSpell = spell;
                                 float capturedSpellRadius = spellRadius;
                                 Combat.EffectSystem capturedEffectSystem = effectSystem;
                                 Vector3 capturedTargetLocation = targetLocation;
-                                
+
                                 caster.World.DelayScheduler?.ScheduleAction(travelTime, () =>
                                 {
                                     if (projectileEntity.IsValid && capturedCaster.World != null)
@@ -426,7 +462,7 @@ namespace Andastra.Runtime.Core.Actions
                                         // Based on swkotor2.exe: Projectile impact applies spell effects to entities at target location
                                         // Effects are applied to all entities within spell radius at impact location
                                         ApplySpellEffectsToEntitiesAtLocation(capturedCaster, capturedTargetLocation, capturedSpellRadius, capturedSpell, capturedEffectSystem);
-                                        
+
                                         // Destroy projectile entity after impact
                                         capturedCaster.World.DestroyEntity(projectileEntity.ObjectId);
                                     }
@@ -470,7 +506,7 @@ namespace Andastra.Runtime.Core.Actions
                             {
                                 // Create area effect implementation
                                 var areaEffect = new SpellAreaEffect(caster, _spellId, targetLocation, spellRadius, conjDuration, effectSystem, _gameDataManager);
-                                
+
                                 // Get IAreaEffect interface type from the area's assembly
                                 System.Type iAreaEffectType = null;
                                 foreach (System.Type type in areaType.Assembly.GetTypes())
@@ -481,19 +517,19 @@ namespace Andastra.Runtime.Core.Actions
                                         break;
                                     }
                                 }
-                                
+
                                 if (iAreaEffectType != null)
                                 {
                                     // Store area effect in area's internal list via reflection
                                     // Since IAreaEffect is engine-specific and we can't easily create adapters at runtime,
                                     // we'll store the SpellAreaEffect and update it manually via a scheduled action
                                     // The area effect will be updated each frame to apply spell effects to entities in range
-                                    
+
                                     // Schedule periodic updates for the area effect
                                     // Based on swkotor2.exe: Area effects update each frame, applying effects to entities in range
                                     float updateInterval = 0.1f; // Update every 0.1 seconds (10 times per second)
                                     float remainingDuration = conjDuration;
-                                    
+
                                     System.Action updateAction = null;
                                     updateAction = new System.Action(() =>
                                     {
@@ -511,10 +547,10 @@ namespace Andastra.Runtime.Core.Actions
                                             }
                                         }
                                     });
-                                    
+
                                     // Start the update loop
                                     caster.World.DelayScheduler?.ScheduleAction(updateInterval, updateAction);
-                                    
+
                                     // Schedule area effect deactivation after duration
                                     caster.World.DelayScheduler?.ScheduleAction(conjDuration, () =>
                                     {
@@ -583,7 +619,7 @@ namespace Andastra.Runtime.Core.Actions
                         };
                         effectSystem.ApplyEffect(target, visualEffect, caster);
                     }
-                    
+
                     // Apply head visual effect if available
                     int conjHeadVfx = spell.ConjHeadVfx as int? ?? 0;
                     if (conjHeadVfx > 0)
@@ -616,7 +652,7 @@ namespace Andastra.Runtime.Core.Actions
                         // Try to execute impact script directly using script executor
                         // Based on swkotor2.exe: Impact scripts receive target as OBJECT_SELF, caster as triggerer
                         bool scriptExecuted = ExecuteImpactScript(target, impactScript, caster);
-                        
+
                         // Also fire script event for compatibility (some systems may rely on events)
                         // Based on swkotor2.exe: Script events provide additional hooks for spell effects
                         IEventBus eventBus = caster.World?.EventBus;
@@ -663,7 +699,7 @@ namespace Andastra.Runtime.Core.Actions
                 // Try to access script executor through World interface
                 // Script executor may be exposed via reflection or property access
                 System.Type worldType = target.World.GetType();
-                
+
                 // Try property access first (most common pattern)
                 System.Reflection.PropertyInfo scriptExecutorProperty = worldType.GetProperty("ScriptExecutor");
                 if (scriptExecutorProperty != null)
@@ -681,7 +717,7 @@ namespace Andastra.Runtime.Core.Actions
                         }
                     }
                 }
-                
+
                 // Try field access (less common but possible)
                 System.Reflection.FieldInfo scriptExecutorField = worldType.GetField("_scriptExecutor", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 if (scriptExecutorField == null)

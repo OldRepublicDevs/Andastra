@@ -824,6 +824,51 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
             return Math.Max(1, spellLevel * 2);
         }
 
+        /// <summary>
+        /// Gets the duration of a visual effect from visualeffects.2da.
+        /// </summary>
+        /// <param name="visualEffectId">The visual effect ID (row index in visualeffects.2da).</param>
+        /// <returns>The duration in seconds, or 2.0f as default if not found.</returns>
+        /// <remarks>
+        /// Visual Effect Duration:
+        /// - Based on swkotor2.exe: Visual effects duration from visualeffects.2da
+        /// - Located via string references: "visualeffects" @ 0x007c4a7c
+        /// - Original implementation: Loads visualeffects.2da table, reads "duration" column for the visual effect ID
+        /// - Visual effect ID is row index in visualeffects.2da
+        /// - Duration is stored as float in seconds in the "duration" column
+        /// - Default duration is 2.0 seconds if visual effect not found or duration not specified
+        /// - Based on visualeffects.2da format documentation in vendor/PyKotor/wiki/2DA-visualeffects.md
+        /// </remarks>
+        public float GetVisualEffectDuration(int visualEffectId)
+        {
+            if (visualEffectId < 0)
+            {
+                return 2.0f; // Default duration
+            }
+
+            TwoDA table = GetTable("visualeffects");
+            if (table == null || visualEffectId >= table.GetHeight())
+            {
+                return 2.0f; // Default duration if table not found or invalid ID
+            }
+
+            TwoDARow row = table.GetRow(visualEffectId);
+            if (row == null)
+            {
+                return 2.0f; // Default duration if row not found
+            }
+
+            // Get duration from "duration" column
+            float? duration = row.GetFloat("duration");
+            if (duration.HasValue && duration.Value > 0f)
+            {
+                return duration.Value;
+            }
+
+            // Default duration if not specified or invalid
+            return 2.0f;
+        }
+
         #endregion
 
         #region Skill Data
