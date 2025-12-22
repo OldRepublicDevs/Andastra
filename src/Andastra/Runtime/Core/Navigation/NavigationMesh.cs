@@ -1683,14 +1683,23 @@ namespace Andastra.Runtime.Core.Navigation
         /// <summary>
         /// Performs a raycast and returns the hit point (simplified overload).
         /// </summary>
+        /// <param name="origin">Starting point of the ray.</param>
+        /// <param name="direction">Direction the ray travels (will be normalized).</param>
+        /// <param name="maxDistance">Maximum distance the ray can travel.</param>
+        /// <param name="hitPoint">Where the ray hit (if it hit something).</param>
+        /// <returns>True if the ray hit a triangle, false otherwise.</returns>
         /// <remarks>
-        /// Raycast Implementation:
+        /// Simplified Raycast Overload:
         /// - Based on swkotor2.exe walkmesh raycast system
         /// - Located via string references: "Raycast" @ navigation mesh functions
         /// - Original implementation: UpdateCreatureMovement @ 0x0054be70 performs walkmesh raycasts for visibility checks
+        /// - This is a convenience overload that discards the hit face index
+        /// - Calls the full Raycast(origin, direction, maxDistance, out hitPoint, out hitFace) overload
         /// - Comprehensive edge case handling: empty mesh, zero direction, degenerate triangles, ray on surface
         /// - Optimizations: normalized direction caching, early termination, optimized AABB traversal
         /// - Handles all edge cases: degenerate triangles, ray starting inside triangle, precision issues
+        /// 
+        /// Use this overload when you only need the hit point and don't need to know which face was hit.
         /// </remarks>
         public bool Raycast(Vector3 origin, Vector3 direction, float maxDistance, out Vector3 hitPoint)
         {
