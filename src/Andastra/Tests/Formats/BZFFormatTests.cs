@@ -201,22 +201,57 @@ namespace Andastra.Parsing.Tests.Formats
             act2.Should().Throw<FileNotFoundException>();
         }
 
+        /// <summary>
+        /// Creates a proper BZF file with LZMA compression for testing.
+        /// </summary>
+        /// <remarks>
+        /// BZF files are LZMA-compressed BIF archives. This method creates a valid BZF file by:
+        /// 1. Creating a BIF object with BIFType.BZF
+        /// 2. Adding test resource data
+        /// 3. Using BIFBinaryWriter to write the file (which handles LZMA compression automatically)
+        /// 
+        /// The BIFBinaryWriter uses LzmaHelper.Compress() to compress resource data using raw LZMA1 format
+        /// matching PyKotor's compression behavior (lzma.FORMAT_RAW, FILTER_LZMA1).
+        /// 
+        /// BZF file format:
+        /// - Header: "BZF " (4 bytes) + "V1  " (4 bytes) = 8 bytes
+        /// - Variable resource count (4 bytes)
+        /// - Fixed resource count (4 bytes)
+        /// - Offset to variable resource table (4 bytes)
+        /// - Variable resource table (16 bytes per resource)
+        /// - Compressed resource data (LZMA1 compressed)
+        /// 
+        /// Based on:
+        /// - vendor/PyKotor/src/pykotor/resource/formats/bif/io_bif.py (BIFBinaryWriter)
+        /// - vendor/PyKotor/src/pykotor/extract/bzf.py (BZF format structure)
+        /// - src/Andastra/Parsing/Resource/Formats/BIF/BIFBinaryWriter.cs (LZMA compression)
+        /// - src/Andastra/Utility/LZMA/LzmaHelper.cs (raw LZMA1 compression)
+        /// </remarks>
         private static void CreateTestBzfFile(string path)
         {
-            // Note: Creating actual BZF files requires LZMA compression
-            // This is a placeholder - actual BZF creation would use LZMA compression
-            // For testing, we can create a minimal valid BZF structure
-
-            // In practice, BZF files are created by compressing BIF files with LZMA
-            // This test helper creates a basic structure for validation
-            var bif = new BIF(BIFType.BIF);
+            // Create BIF with BIFType.BZF to enable LZMA compression
+            var bif = new BIF(BIFType.BZF);
+            
+            // Add test resource data
             byte[] testData = System.Text.Encoding.ASCII.GetBytes("test resource data");
             bif.SetData(new ResRef("test"), ResourceType.TXT, testData, 1);
 
-            // Write as regular BIF for now (actual BZF would be LZMA compressed)
-            // Real BZF creation would require LZMA compression library
+            // Write BZF file using BIFBinaryWriter
+            // BIFBinaryWriter automatically handles LZMA compression for BZF files via LzmaHelper.Compress()
+            // This creates a proper BZF file with:
+            // - Correct header ("BZF " + "V1  ")
+            // - Resource table with compressed sizes
+            // - LZMA1-compressed resource data (raw format: properties + compressed data)
             byte[] data = new BIFBinaryWriter(bif).Write();
-            Directory.CreateDirectory(Path.GetDirectoryName(path));
+            
+            // Ensure directory exists
+            string directory = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+            
+            // Write the BZF file
             File.WriteAllBytes(path, data);
         }
     }

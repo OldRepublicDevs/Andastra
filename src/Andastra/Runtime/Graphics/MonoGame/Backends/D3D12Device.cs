@@ -977,9 +977,47 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                     if (errorBlobPtr != IntPtr.Zero)
                     {
-                        // Log error blob if available (would need ID3DBlob interface to read)
-                        // TODO: STUB - For now, just release it
-                        ReleaseComObject(errorBlobPtr);
+                        // Read and log error blob content before releasing
+                        // Error blob contains diagnostic messages from D3D12SerializeRootSignature
+                        // Based on DirectX 12 API: ID3DBlob interface provides GetBufferPointer and GetBufferSize
+                        try
+                        {
+                            unsafe
+                            {
+                                // Access ID3DBlob vtable (same structure as blobPtr)
+                                IntPtr* errorBlobVtable = *(IntPtr**)errorBlobPtr;
+                                
+                                // Get error blob size (ID3DBlob::GetBufferSize is at vtable index 3)
+                                IntPtr getErrorBufferSizePtr = errorBlobVtable[3];
+                                GetBufferSizeDelegate getErrorBufferSize = (GetBufferSizeDelegate)Marshal.GetDelegateForFunctionPointer(getErrorBufferSizePtr, typeof(GetBufferSizeDelegate));
+                                IntPtr errorBlobSize = getErrorBufferSize(errorBlobPtr);
+                                
+                                // Get error blob buffer pointer (ID3DBlob::GetBufferPointer is at vtable index 4)
+                                IntPtr getErrorBufferPointerPtr = errorBlobVtable[4];
+                                GetBufferPointerDelegate getErrorBufferPointer = (GetBufferPointerDelegate)Marshal.GetDelegateForFunctionPointer(getErrorBufferPointerPtr, typeof(GetBufferPointerDelegate));
+                                IntPtr errorBlobBuffer = getErrorBufferPointer(errorBlobPtr);
+                                
+                                // Convert error blob buffer to string (null-terminated ANSI string)
+                                if (errorBlobBuffer != IntPtr.Zero && errorBlobSize.ToInt64() > 0)
+                                {
+                                    string errorMessage = Marshal.PtrToStringAnsi(errorBlobBuffer, errorBlobSize.ToInt32());
+                                    if (!string.IsNullOrEmpty(errorMessage))
+                                    {
+                                        Console.WriteLine($"[D3D12Device] WARNING: D3D12SerializeRootSignature returned error blob: {errorMessage}");
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // If reading error blob fails, log the exception but continue
+                            Console.WriteLine($"[D3D12Device] WARNING: Failed to read error blob content: {ex.Message}");
+                        }
+                        finally
+                        {
+                            // Always release the error blob COM object
+                            ReleaseComObject(errorBlobPtr);
+                        }
                     }
 
                     if (blobPtr == IntPtr.Zero)
