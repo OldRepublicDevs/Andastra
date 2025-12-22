@@ -14,7 +14,7 @@ namespace Andastra.Parsing.Formats.BWM
     /// 
     /// WHAT IS A BWM FILE?
     /// 
-    /// A BWM file is a file format used by BioWare games to store walkmesh data. A walkmesh is a simplified
+    // TODO: / A BWM file is a file format used by BioWare games to store walkmesh data. A walkmesh is a simplified
     /// 3D model made of triangles that defines where characters can walk, where they cannot walk, and how
     /// high the ground is at different locations.
     /// 
@@ -1678,6 +1678,65 @@ namespace Andastra.Parsing.Formats.BWM
                     face.V1 = v3;
                     face.V2 = v2;
                     face.V3 = v1;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Remaps dummy transition indices to actual room indices in BWM faces.
+        /// 
+        /// WHAT THIS FUNCTION DOES:
+        /// 
+        /// When the indoor map builder processes a room's walkmesh, it remaps transitions from dummy
+        /// indices (from the kit component) to actual room indices (in the built module). This method
+        /// performs that remapping by finding all faces that have a transition matching the dummy index
+        /// and replacing it with the actual room index.
+        /// 
+        /// HOW IT WORKS:
+        /// 
+        /// For each face in the walkmesh:
+        /// - Checks if Trans1, Trans2, or Trans3 equals the dummy index
+        /// - If so, replaces it with the actual index (which can be null if no connection)
+        /// 
+        /// USAGE:
+        /// 
+        /// This method is called during the indoor map builder's ProcessBwm() method to connect rooms
+        /// together. Each room component has hooks that define where doors can connect. When rooms are
+        /// placed in the map, the hooks are connected, and the transition indices in the walkmesh need
+        /// to be updated to reflect the actual room indices in the final module.
+        /// 
+        /// EXAMPLE:
+        /// 
+        /// A kit component has a walkmesh with Trans1 = 0 (dummy index). When this room is placed in
+        /// a module and connected to room index 5, RemapTransitions(bwm, 0, 5) is called. All faces
+        /// with Trans1 = 0 will have Trans1 changed to 5.
+        /// 
+        /// If a hook has no connection (connection is null), RemapTransitions(bwm, 0, null) will set
+        /// all matching transitions to null, indicating no connection.
+        /// 
+        /// CRITICAL: This method only modifies transition indices. Vertex positions, materials, and
+        /// all other face properties are preserved.
+        /// 
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:426-452
+        /// Original: def remap_transitions(self, bwm: BWM, dummy_index: int, actual_index: int | None):
+        /// </summary>
+        /// <param name="dummyIndex">The dummy transition index to remap (from kit component)</param>
+        /// <param name="actualIndex">The actual transition index to remap to (room index in module), or null if no connection</param>
+        public void RemapTransitions(int dummyIndex, int? actualIndex)
+        {
+            foreach (var face in Faces)
+            {
+                if (face.Trans1 == dummyIndex)
+                {
+                    face.Trans1 = actualIndex;
+                }
+                if (face.Trans2 == dummyIndex)
+                {
+                    face.Trans2 = actualIndex;
+                }
+                if (face.Trans3 == dummyIndex)
+                {
+                    face.Trans3 = actualIndex;
                 }
             }
         }
