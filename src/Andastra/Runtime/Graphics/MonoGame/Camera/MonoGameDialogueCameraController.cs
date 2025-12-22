@@ -4,6 +4,7 @@ using System.Numerics;
 using Andastra.Runtime.Core.Camera;
 using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Core.Interfaces.Components;
 using DialogueCameraAngle = Andastra.Runtime.Core.Camera.DialogueCameraAngle;
 
 namespace Andastra.Runtime.MonoGame.Camera
@@ -295,7 +296,7 @@ namespace Andastra.Runtime.MonoGame.Camera
                 return Vector3.Zero;
             }
 
-            Interfaces.Components.ITransformComponent transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
+            ITransformComponent transform = entity.GetComponent<ITransformComponent>();
             if (transform == null)
             {
                 return Vector3.Zero;
@@ -337,7 +338,7 @@ namespace Andastra.Runtime.MonoGame.Camera
             // Based on swkotor2.exe: Player entity lookup for camera reset
             // Original implementation: Retrieves player entity and sets camera to chase mode
             IEntity playerEntity = _cameraController.GetPlayerEntity();
-            
+
             if (playerEntity != null)
             {
                 // Reset to chase mode following player
