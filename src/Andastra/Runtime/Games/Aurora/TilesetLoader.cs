@@ -308,7 +308,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// - Loads walkmesh (WOK file) for the tile model
         /// - Samples height from walkmesh face at the specified point
         /// - Uses tile center (0.5, 0.5) for default height calculation
-        /// - Falls back to simplified height transition model if walkmesh can't be loaded
+        // TODO: / - Falls back to simplified height transition model if walkmesh can't be loaded
         /// </remarks>
         public float GetTileHeight(string tilesetResRef, int tileId, float sampleX = 0.5f, float sampleZ = 0.5f)
         {
@@ -479,6 +479,62 @@ namespace Andastra.Runtime.Games.Aurora
             {
                 // Failed to load/parse walkmesh
                 return float.MinValue;
+            }
+        }
+
+        /// <summary>
+        /// Gets the walkmesh (BWM) for a tile by loading its WOK file.
+        /// </summary>
+        /// <param name="tilesetResRef">The tileset resource reference.</param>
+        /// <param name="tileId">The tile ID (index into tileset).</param>
+        /// <returns>The walkmesh BWM, or null if not found.</returns>
+        /// <remarks>
+        /// Based on nwmain.exe: CNWTileSurfaceMesh walkmesh loading
+        /// - Gets tile model from tileset
+        /// - Loads walkmesh (WOK file) for the tile model
+        /// - Returns parsed BWM walkmesh data
+        /// - Used for precise geometry testing (raycasting, collision detection)
+        /// </remarks>
+        [CanBeNull]
+        public BWM GetTileWalkmesh(string tilesetResRef, int tileId)
+        {
+            if (tileId < 0)
+            {
+                return null;
+            }
+
+            // Get tile model from tileset
+            string modelName = GetTileModel(tilesetResRef, tileId);
+            if (string.IsNullOrEmpty(modelName))
+            {
+                return null;
+            }
+
+            try
+            {
+                // Load walkmesh (WOK file) for the tile model
+                // Walkmesh filename is model name with .wok extension
+                if (_resourceLoader == null)
+                {
+                    // No resource loader available
+                    return null;
+                }
+
+                byte[] wokData = _resourceLoader(modelName + ".wok");
+                if (wokData == null || wokData.Length == 0)
+                {
+                    // Walkmesh not found
+                    return null;
+                }
+
+                // Parse walkmesh
+                BWM walkmesh = BWMAuto.ReadBwm(wokData);
+                return walkmesh;
+            }
+            catch
+            {
+                // Failed to load/parse walkmesh
+                return null;
             }
         }
 

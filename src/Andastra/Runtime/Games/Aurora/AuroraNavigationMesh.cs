@@ -4,6 +4,8 @@ using System.Numerics;
 using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Games.Common;
+using Andastra.Parsing.Formats.BWM;
+using Andastra.Parsing.Common;
 
 namespace Andastra.Runtime.Games.Aurora
 {
@@ -1999,11 +2001,20 @@ namespace Andastra.Runtime.Games.Aurora
         /// 1. Normalize direction vector
         /// 2. Convert origin to tile coordinates
         /// 3. Use DDA to step through tiles along the ray
-        /// 4. Check each tile for walkability (non-walkable tiles block the ray)
-        /// 5. Return first blocking tile or end point if no obstruction
+        /// 4. For each tile:
+        ///    a. If tileset loader is available, test ray against per-tile walkmesh geometry
+        ///    b. If walkmesh test hits a non-walkable face, return the hit point
+        ///    c. Otherwise, fall back to tile walkability flag check
+        /// 5. Return first blocking tile/walkmesh face or end point if no obstruction
         /// 
-        // TODO: / Note: This is a simplified implementation that uses tile walkability flags.
-        // TODO: / A full implementation would test against per-tile walkmesh geometry when available.
+        /// Implementation:
+        /// - Tests against per-tile walkmesh geometry when available (via TilesetLoader)
+        /// - Uses BWM.Raycast to test ray against walkmesh triangles
+        /// - Only non-walkable faces block the ray (walkable faces allow it to pass through)
+        /// - Falls back to simplified tile walkability flag check when walkmesh data is unavailable
+        /// - Handles tile orientation (0-3 rotations) by transforming ray to tile-local coordinates
+        /// 
+        /// Based on nwmain.exe: CNWTileSurfaceMesh raycast implementation
         /// </remarks>
         public bool Raycast(Vector3 origin, Vector3 direction, float maxDistance, out Vector3 hitPoint, out int hitFace)
         {
@@ -2101,7 +2112,21 @@ namespace Andastra.Runtime.Games.Aurora
                     if (IsTileValid(currentTileX, currentTileY))
                     {
                         AuroraTile tile = _tiles[currentTileY, currentTileX];
-                        // If tile is not walkable, it blocks the ray
+                        
+                        // Try to test against per-tile walkmesh geometry if available
+                        if (_tilesetLoader != null && !string.IsNullOrEmpty(_tilesetResRef))
+                        {
+                            Vector3 walkmeshHitPoint;
+                            if (RaycastAgainstTileWalkmesh(currentTileX, currentTileY, tile, origin, normalizedDir, maxDistance, out walkmeshHitPoint))
+                            {
+                                // Hit a blocking face in the walkmesh
+                                hitPoint = walkmeshHitPoint;
+                                hitFace = -1; // Tile-based, no face index
+                                return true;
+                            }
+                        }
+                        
+                        // Fallback: If tile is not walkable, it blocks the ray
                         if (!tile.IsWalkable)
                         {
                             // Calculate hit point at tile boundary
@@ -2121,7 +2146,21 @@ namespace Andastra.Runtime.Games.Aurora
                 if (IsTileValid(currentTileX, currentTileY))
                 {
                     AuroraTile tile = _tiles[currentTileY, currentTileX];
-                    // Non-walkable tiles block the ray
+                    
+                    // Try to test against per-tile walkmesh geometry if available
+                    if (_tilesetLoader != null && !string.IsNullOrEmpty(_tilesetResRef))
+                    {
+                        Vector3 walkmeshHitPoint;
+                        if (RaycastAgainstTileWalkmesh(currentTileX, currentTileY, tile, origin, normalizedDir, maxDistance, out walkmeshHitPoint))
+                        {
+                            // Hit a blocking face in the walkmesh
+                            hitPoint = walkmeshHitPoint;
+                            hitFace = -1; // Tile-based, no face index
+                            return true;
+                        }
+                    }
+                    
+                    // Fallback: Non-walkable tiles block the ray (simplified check)
                     if (!tile.IsWalkable)
                     {
                         // Calculate hit point at current position
@@ -2197,6 +2236,125 @@ namespace Andastra.Runtime.Games.Aurora
             // Reached iteration limit or exited grid - no hit
             hitPoint = endPoint;
             hitFace = -1;
+            return false;
+        }
+
+        /// <summary>
+        /// Tests raycast against per-tile walkmesh geometry.
+        /// </summary>
+        /// <param name="tileX">Tile X coordinate.</param>
+        /// <param name="tileY">Tile Y coordinate.</param>
+        /// <param name="tile">The tile to test against.</param>
+        /// <param name="origin">Ray origin in world coordinates.</param>
+        /// <param name="direction">Normalized ray direction.</param>
+        /// <param name="maxDistance">Maximum ray distance.</param>
+        /// <param name="hitPoint">Output hit point in world coordinates if a blocking face is hit.</param>
+        /// <returns>True if ray hit a non-walkable face, false otherwise.</returns>
+        /// <remarks>
+        /// Based on nwmain.exe: CNWTileSurfaceMesh raycast testing against walkmesh geometry.
+        /// Tests the ray against the walkmesh triangles for this tile to find blocking faces.
+        /// Only non-walkable faces block the ray (walkable faces allow the ray to pass through).
+        /// 
+        /// Algorithm:
+        /// 1. Load walkmesh (WOK file) for the tile using TilesetLoader
+        /// 2. Transform ray origin to tile-local coordinates (accounting for tile position and orientation)
+        /// 3. Test ray against walkmesh triangles using BWM.Raycast
+        /// 4. Filter hits to only non-walkable materials (blocking faces)
+        /// 5. Transform hit point back to world coordinates
+        /// 6. Return true if a blocking face is hit
+        /// 
+        /// Tile orientation is handled by transforming the ray to tile-local space:
+        /// - Tile position: (tileX * TileSize, 0, tileY * TileSize) in world coordinates
+        /// - Tile orientation: 0-3 rotations (0°, 90°, 180°, 270° counterclockwise)
+        /// - Walkmesh coordinates are relative to tile origin (0,0,0) in tile-local space
+        /// </remarks>
+        private bool RaycastAgainstTileWalkmesh(int tileX, int tileY, AuroraTile tile, Vector3 origin, Vector3 direction, float maxDistance, out Vector3 hitPoint)
+        {
+            hitPoint = origin;
+
+            // Tile must be loaded to have walkmesh data
+            if (!tile.IsLoaded)
+            {
+                return false;
+            }
+
+            // Get walkmesh for this tile
+            BWM walkmesh = _tilesetLoader.GetTileWalkmesh(_tilesetResRef, tile.TileId);
+            if (walkmesh == null || walkmesh.Faces == null || walkmesh.Faces.Count == 0)
+            {
+                // No walkmesh data available - fall back to tile walkability flag
+                return false;
+            }
+
+            // Calculate tile origin in world coordinates
+            // Tiles are positioned at (tileX * TileSize, 0, tileY * TileSize)
+            float tileOriginX = tileX * TileSize;
+            float tileOriginZ = tileY * TileSize;
+            Vector3 tileOrigin = new Vector3(tileOriginX, 0.0f, tileOriginZ);
+
+            // Transform ray origin to tile-local coordinates
+            // Tile-local coordinates are relative to tile origin
+            Vector3 localOrigin = origin - tileOrigin;
+
+            // Apply tile orientation rotation (0-3: 0°, 90°, 180°, 270° counterclockwise)
+            // Orientation affects how the walkmesh is rotated within the tile
+            Vector3 localDirection = direction;
+            if (tile.Orientation != 0)
+            {
+                // Rotate direction vector around Y axis (vertical)
+                // Counterclockwise rotation: angle = -orientation * 90°
+                float angleRad = -(tile.Orientation * 90.0f) * (float)(Math.PI / 180.0);
+                float cosAngle = (float)Math.Cos(angleRad);
+                float sinAngle = (float)Math.Sin(angleRad);
+                
+                // Rotate around Y axis: (x', z') = (x*cos - z*sin, x*sin + z*cos)
+                float rotatedX = localOrigin.X * cosAngle - localOrigin.Z * sinAngle;
+                float rotatedZ = localOrigin.X * sinAngle + localOrigin.Z * cosAngle;
+                localOrigin = new Vector3(rotatedX, localOrigin.Y, rotatedZ);
+                
+                float rotatedDirX = localDirection.X * cosAngle - localDirection.Z * sinAngle;
+                float rotatedDirZ = localDirection.X * sinAngle + localDirection.Z * cosAngle;
+                localDirection = new Vector3(rotatedDirX, localDirection.Y, rotatedDirZ);
+            }
+
+            // Test ray against walkmesh, filtering for non-walkable materials only
+            // Non-walkable faces block the ray (walkable faces allow it to pass through)
+            HashSet<SurfaceMaterial> nonWalkableMaterials = new HashSet<SurfaceMaterial>();
+            foreach (SurfaceMaterial mat in Enum.GetValues(typeof(SurfaceMaterial)))
+            {
+                if (!mat.Walkable())
+                {
+                    nonWalkableMaterials.Add(mat);
+                }
+            }
+
+            // Test raycast against walkmesh with non-walkable materials filter
+            Tuple<BWMFace, float> hitResult = walkmesh.Raycast(localOrigin, localDirection, maxDistance, nonWalkableMaterials);
+            if (hitResult != null && hitResult.Item1 != null && hitResult.Item2 > 0.0f && hitResult.Item2 <= maxDistance)
+            {
+                // Ray hit a non-walkable face - calculate hit point in tile-local coordinates
+                Vector3 localHitPoint = localOrigin + localDirection * hitResult.Item2;
+
+                // Transform hit point back to world coordinates
+                // Reverse tile orientation rotation if needed
+                if (tile.Orientation != 0)
+                {
+                    // Reverse rotation: angle = orientation * 90° (clockwise)
+                    float angleRad = (tile.Orientation * 90.0f) * (float)(Math.PI / 180.0);
+                    float cosAngle = (float)Math.Cos(angleRad);
+                    float sinAngle = (float)Math.Sin(angleRad);
+                    
+                    float rotatedX = localHitPoint.X * cosAngle - localHitPoint.Z * sinAngle;
+                    float rotatedZ = localHitPoint.X * sinAngle + localHitPoint.Z * cosAngle;
+                    localHitPoint = new Vector3(rotatedX, localHitPoint.Y, rotatedZ);
+                }
+
+                // Transform back to world coordinates
+                hitPoint = localHitPoint + tileOrigin;
+                return true;
+            }
+
+            // Ray did not hit any blocking faces in this tile
             return false;
         }
 
