@@ -5,6 +5,7 @@ using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
 using Andastra.Runtime.MonoGame.Lighting;
 using Andastra.Runtime.MonoGame.Graphics;
+using Andastra.Runtime.Graphics;
 using Microsoft.Xna.Framework.Graphics;
 using DynamicLight = Andastra.Runtime.MonoGame.Lighting.DynamicLight;
 using EclipseILightingSystem = Andastra.Runtime.Games.Eclipse.ILightingSystem;
@@ -550,7 +551,7 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
         /// - Calculates view/projection matrices for directional light shadow mapping
         /// - Uses orthographic projection for directional lights (sun/moon)
         /// - Shadow map matrices are stored in DynamicLight for use during rendering
-        /// 
+        ///
         /// Based on daorigins.exe/DragonAge2.exe: Shadow mapping system for directional lights
         /// - Directional lights use orthographic shadow maps (not perspective)
         /// - Shadow map covers a fixed area around the scene (configurable size)
@@ -573,40 +574,45 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
                 // Based on Eclipse engine: Directional lights use orthographic shadow maps
                 // View matrix: Look from light direction towards scene center
                 // Projection matrix: Orthographic projection covering shadow map area
-                
+
                 // Calculate view matrix: look from light direction
                 // Light direction points towards scene, so we look from opposite direction
                 Vector3 lightDirection = _sunLight.Direction;
                 Vector3 lightPosition = -lightDirection * shadowMapFar * 0.5f; // Position light far from scene
                 Vector3 targetPosition = Vector3.Zero; // Look at scene center (can be made configurable)
                 Vector3 upVector = Vector3.UnitY; // Use Y-up (can calculate proper up vector if needed)
-                
+
                 // If light direction is nearly parallel to up vector, use alternative up
                 if (Math.Abs(Vector3.Dot(lightDirection, upVector)) > 0.9f)
                 {
                     upVector = Vector3.UnitZ; // Use Z-up as alternative
                 }
-                
+
                 // Create view matrix looking from light position towards target
-                Matrix4x4 viewMatrix = Matrix4x4.CreateLookAt(lightPosition, targetPosition, upVector);
-                
+                // Based on Eclipse engine: View matrix transforms world space to light space
+                Matrix4x4 viewMatrix = MatrixHelper.CreateLookAt(lightPosition, targetPosition, upVector);
+
                 // Create orthographic projection matrix
                 // Orthographic projection: left, right, bottom, top, near, far
-                Matrix4x4 projectionMatrix = Matrix4x4.CreateOrthographic(
-                    shadowMapSize * 2.0f, // Width (left to right)
-                    shadowMapSize * 2.0f, // Height (bottom to top)
+                // System.Numerics.Matrix4x4 doesn't have CreateOrthographic, so we use CreateOrthographicOffCenter
+                float halfSize = shadowMapSize;
+                Matrix4x4 projectionMatrix = Matrix4x4.CreateOrthographicOffCenter(
+                    -halfSize, // Left
+                    halfSize,  // Right
+                    -halfSize, // Bottom
+                    halfSize,  // Top
                     shadowMapNear,
                     shadowMapFar
                 );
-                
+
                 // Combined light space matrix: projection * view
                 Matrix4x4 lightSpaceMatrix = projectionMatrix * viewMatrix;
-                
+
                 // Store matrices in light object for use during rendering
                 _sunLight.ShadowViewMatrix = viewMatrix;
                 _sunLight.ShadowProjectionMatrix = projectionMatrix;
                 _sunLight.ShadowLightSpaceMatrix = lightSpaceMatrix;
-                
+
                 // Update GPU data (includes shadow map matrices)
                 _sunLight.UpdateGpuData();
             }
@@ -616,39 +622,44 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
             {
                 // Calculate shadow map view/projection matrix based on moon direction
                 // Same approach as sun, but using moon direction
-                
+
                 // Calculate view matrix: look from light direction
                 Vector3 lightDirection = _moonLight.Direction;
                 Vector3 lightPosition = -lightDirection * shadowMapFar * 0.5f; // Position light far from scene
                 Vector3 targetPosition = Vector3.Zero; // Look at scene center
                 Vector3 upVector = Vector3.UnitY; // Use Y-up
-                
+
                 // If light direction is nearly parallel to up vector, use alternative up
                 if (Math.Abs(Vector3.Dot(lightDirection, upVector)) > 0.9f)
                 {
                     upVector = Vector3.UnitZ; // Use Z-up as alternative
                 }
-                
+
                 // Create view matrix looking from light position towards target
-                Matrix4x4 viewMatrix = Matrix4x4.CreateLookAt(lightPosition, targetPosition, upVector);
-                
+                // Based on Eclipse engine: View matrix transforms world space to light space
+                Matrix4x4 viewMatrix = MatrixHelper.CreateLookAt(lightPosition, targetPosition, upVector);
+
                 // Create orthographic projection matrix
                 // Moon uses same shadow map size as sun (can be made different if needed)
-                Matrix4x4 projectionMatrix = Matrix4x4.CreateOrthographic(
-                    shadowMapSize * 2.0f, // Width
-                    shadowMapSize * 2.0f, // Height
+                // System.Numerics.Matrix4x4 doesn't have CreateOrthographic, so we use CreateOrthographicOffCenter
+                float halfSize = shadowMapSize;
+                Matrix4x4 projectionMatrix = Matrix4x4.CreateOrthographicOffCenter(
+                    -halfSize, // Left
+                    halfSize,  // Right
+                    -halfSize, // Bottom
+                    halfSize,  // Top
                     shadowMapNear,
                     shadowMapFar
                 );
-                
+
                 // Combined light space matrix: projection * view
                 Matrix4x4 lightSpaceMatrix = projectionMatrix * viewMatrix;
-                
+
                 // Store matrices in light object for use during rendering
                 _moonLight.ShadowViewMatrix = viewMatrix;
                 _moonLight.ShadowProjectionMatrix = projectionMatrix;
                 _moonLight.ShadowLightSpaceMatrix = lightSpaceMatrix;
-                
+
                 // Update GPU data (includes shadow map matrices)
                 _moonLight.UpdateGpuData();
             }
