@@ -1338,6 +1338,22 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _disposed = true;
             }
         }
+
+        /// <summary>
+        /// Gets the shader identifier for a shader or hit group in the pipeline.
+        /// Shader identifiers are opaque handles used in the shader binding table.
+        /// </summary>
+        /// <param name="exportName">The export name of the shader or hit group (e.g., "ShadowRayGen", "ShadowMiss", "ShadowHitGroup").</param>
+        /// <returns>Shader identifier bytes (typically 32 bytes for D3D12, variable for Vulkan). Returns null if the export name is not found.</returns>
+        public byte[] GetShaderIdentifier(string exportName)
+        {
+            // TODO: STUB - Implement Metal shader identifier retrieval
+            // Metal API: MTLFunctionHandle or MTLIntersectionFunctionTable
+            // Metal doesn't have the same shader identifier concept as D3D12/Vulkan
+            // This would need to map export names to function handles or intersection function table indices
+            // For now, return null to indicate not implemented
+            return null;
+        }
     }
 
     internal class MetalFramebuffer : IFramebuffer
@@ -5098,11 +5114,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
         private static extern void objc_msgSend_void_int_object(IntPtr receiver, IntPtr selector, int index, IntPtr obj);
 
-        [DllImport(LibObjCForDevice, EntryPoint = "objc_getClass", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr objc_getClass(string className);
-
-        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr objc_msgSend_object(IntPtr receiver, IntPtr selector);
+        // Note: objc_getClass and objc_msgSend_object are already defined in MetalBackend.cs (partial class MetalNative)
 
         [DllImport("/System/Library/Frameworks/Metal.framework/Metal")]
         public static extern void ReleaseRaytracingPipelineState(IntPtr raytracingPipelineState);
@@ -5282,15 +5294,8 @@ namespace Andastra.Runtime.MonoGame.Backends
         // Metal debug methods (pushDebugGroup:, popDebugGroup) are Objective-C instance methods
         // These require using objc_msgSend to call them from C#
         // On 64-bit systems, objc_msgSend returns a value even for void methods, so we declare it as IntPtr
-        // Note: LibObjC, objc_msgSend_void, and sel_registerName are already defined in MetalBackend.cs (partial class)
+        // Note: LibObjC, objc_msgSend_void, sel_registerName, objc_getClass, objc_msgSend_object, and CreateNSString are already defined in MetalBackend.cs (partial class)
         private const string LibObjCForDevice = "/usr/lib/libobjc.A.dylib";
-
-        /// <summary>
-        /// Registers an Objective-C selector name.
-        /// Based on Objective-C runtime: sel_registerName
-        /// </summary>
-        [DllImport(LibObjCForDevice, EntryPoint = "sel_registerName", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr sel_registerName([MarshalAs(UnmanagedType.LPStr)] string str);
 
         /// <summary>
         /// Gets the class of an Objective-C object.
@@ -5327,23 +5332,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr objc_msgSend_void_buffer_ulong_size(IntPtr receiver, IntPtr selector, IntPtr indirectBuffer, ulong indirectBufferOffset, MetalSize threadsPerThreadgroup);
 
-        [DllImport("/System/Library/Frameworks/Foundation.framework/Foundation", EntryPoint = "CFStringCreateWithCString")]
-        private static extern IntPtr CFStringCreateWithCString(IntPtr allocator, [MarshalAs(UnmanagedType.LPStr)] string cStr, uint encoding);
-
-        private const uint kCFStringEncodingUTF8 = 0x08000100;
-
-        /// <summary>
-        /// Creates an NSString from a C# string for use with Objective-C methods.
-        /// The caller is responsible for releasing the NSString using CFRelease.
-        /// </summary>
-        private static IntPtr CreateNSString(string str)
-        {
-            if (string.IsNullOrEmpty(str))
-            {
-                return IntPtr.Zero;
-            }
-            return CFStringCreateWithCString(IntPtr.Zero, str, kCFStringEncodingUTF8);
-        }
+        // Note: CreateNSString is already defined in MetalBackend.cs (partial class MetalNative)
 
         /// <summary>
         /// Releases a CFString/NSString created with CreateNSString.

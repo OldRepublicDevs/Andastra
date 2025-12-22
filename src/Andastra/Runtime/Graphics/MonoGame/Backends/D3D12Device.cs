@@ -4335,42 +4335,10 @@ namespace Andastra.Runtime.MonoGame.Backends
             return createRootSignature(device, pBlobWithRootSignature, blobLengthInBytes, ref riid, ppvRootSignature);
         }
 
-        /// <summary>
-        /// Releases a COM object by calling IUnknown::Release.
-        /// All COM interfaces inherit from IUnknown, which has Release at vtable index 2.
-        /// Based on COM Reference Counting: https://docs.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-release
-        /// </summary>
-        private unsafe void ReleaseComObject(IntPtr comObject)
-        {
-            if (comObject == IntPtr.Zero)
-            {
-                return;
-            }
-
-            // Platform check: DirectX 12 COM is Windows-only
-            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-            {
-                return;
-            }
-
-            // Get vtable pointer (first field of COM object)
-            IntPtr* vtable = *(IntPtr**)comObject;
-            if (vtable == null)
-            {
-                return;
-            }
-
-            // Release is at index 2 in IUnknown vtable
-            IntPtr releasePtr = vtable[2];
-            if (releasePtr == IntPtr.Zero)
-            {
-                return;
-            }
-
-            // Create delegate from function pointer
-            ReleaseDelegate release = (ReleaseDelegate)Marshal.GetDelegateForFunctionPointer(releasePtr, typeof(ReleaseDelegate));
-            release(comObject);
-        }
+        // Note: ReleaseComObject is already defined above (returns uint for reference count)
+        // The void version was removed to avoid duplicate method definitions.
+        // Code that calls ReleaseComObject without using the return value will still work
+        // since C# allows ignoring return values.
 
         /// <summary>
         /// Calls ID3D12Device::CreateCommandAllocator through COM vtable.

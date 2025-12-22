@@ -44,25 +44,25 @@ namespace Andastra.Runtime.Graphics.Common.Effects
         protected IEffectTechnique _currentTechnique;
         protected IEffectTechnique[] _techniques;
 
-        public bool FogEnabled
+        public virtual bool FogEnabled
         {
             get { return _fogEnabled; }
             set { _fogEnabled = value; }
         }
 
-        public Vector3 FogColor
+        public virtual Vector3 FogColor
         {
             get { return _fogColor; }
             set { _fogColor = value; }
         }
 
-        public float FogStart
+        public virtual float FogStart
         {
             get { return _fogStart; }
             set { _fogStart = value; }
         }
 
-        public float FogEnd
+        public virtual float FogEnd
         {
             get { return _fogEnd; }
             set { _fogEnd = value; }
