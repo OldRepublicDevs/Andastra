@@ -1768,6 +1768,82 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
         }
 
+        /// <summary>
+        /// Ensures that vkCreateRayTracingPipelinesKHR function pointer is loaded.
+        /// Attempts lazy-loading if not already loaded.
+        /// </summary>
+        /// <param name="device">Vulkan device handle.</param>
+        /// <remarks>
+        /// Based on Vulkan specification: VK_KHR_ray_tracing_pipeline extension functions must be loaded via vkGetDeviceProcAddr.
+        /// This method ensures the function pointer is available before use, attempting to load it if necessary.
+        /// Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetDeviceProcAddr.html
+        /// </remarks>
+        private void EnsureRayTracingPipelineFunctionLoaded(IntPtr device)
+        {
+            // If already loaded, nothing to do
+            if (vkCreateRayTracingPipelinesKHR != null)
+            {
+                return;
+            }
+
+            // Attempt to load the function pointer
+            // This handles cases where initialization might have failed or device was recreated
+            if (device == IntPtr.Zero)
+            {
+                throw new InvalidOperationException("Cannot load vkCreateRayTracingPipelinesKHR: device handle is invalid. VK_KHR_ray_tracing_pipeline extension requires a valid device.");
+            }
+
+            try
+            {
+                // Load vkGetDeviceProcAddr from Vulkan loader library
+                IntPtr vulkanLib = NativeMethods.LoadLibrary(VulkanLibrary);
+                if (vulkanLib == IntPtr.Zero)
+                {
+                    throw new NotSupportedException("Vulkan library not available. Cannot load VK_KHR_ray_tracing_pipeline extension functions. Ensure Vulkan runtime is installed.");
+                }
+
+                try
+                {
+                    IntPtr vkGetDeviceProcAddrPtr = NativeMethods.GetProcAddress(vulkanLib, "vkGetDeviceProcAddr");
+                    if (vkGetDeviceProcAddrPtr == IntPtr.Zero)
+                    {
+                        throw new NotSupportedException("vkGetDeviceProcAddr not found in Vulkan library. This indicates a corrupted or incompatible Vulkan installation.");
+                    }
+
+                    // Convert vkGetDeviceProcAddr function pointer to delegate
+                    vkGetDeviceProcAddrDelegate vkGetDeviceProcAddr = (vkGetDeviceProcAddrDelegate)Marshal.GetDelegateForFunctionPointer(vkGetDeviceProcAddrPtr, typeof(vkGetDeviceProcAddrDelegate));
+
+                    // Load vkCreateRayTracingPipelinesKHR via vkGetDeviceProcAddr
+                    // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateRayTracingPipelinesKHR.html
+                    IntPtr vkCreateRayTracingPipelinesKHRPtr = vkGetDeviceProcAddr(device, "vkCreateRayTracingPipelinesKHR");
+                    if (vkCreateRayTracingPipelinesKHRPtr == IntPtr.Zero)
+                    {
+                        throw new NotSupportedException("vkCreateRayTracingPipelinesKHR function pointer is null. VK_KHR_ray_tracing_pipeline extension is not available on this device. " +
+                            "This may indicate: (1) The extension was not enabled during device creation, (2) The physical device does not support raytracing, " +
+                            "(3) The Vulkan driver version is too old, or (4) The extension is not supported by the current Vulkan implementation.");
+                    }
+
+                    // Convert function pointer to delegate
+                    vkCreateRayTracingPipelinesKHR = (vkCreateRayTracingPipelinesKHRDelegate)Marshal.GetDelegateForFunctionPointer(vkCreateRayTracingPipelinesKHRPtr, typeof(vkCreateRayTracingPipelinesKHRDelegate));
+                }
+                finally
+                {
+                    // Free the library handle (function pointers remain valid)
+                    NativeMethods.FreeLibrary(vulkanLib);
+                }
+            }
+            catch (NotSupportedException)
+            {
+                // Re-throw NotSupportedException as-is (already has proper error message)
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new NotSupportedException($"Failed to load vkCreateRayTracingPipelinesKHR function pointer: {ex.Message}. " +
+                    "VK_KHR_ray_tracing_pipeline extension may not be available on this device.", ex);
+            }
+        }
+
         private static void CheckResult(VkResult result, string operation)
         {
             if (result != VkResult.VK_SUCCESS)
@@ -4854,13 +4930,14 @@ namespace Andastra.Runtime.MonoGame.Backends
                         IntPtr pipelinePtr = Marshal.AllocHGlobal(IntPtr.Size);
                         try
                         {
-                            // Note: vkCreateRayTracingPipelinesKHR should be loaded via vkGetDeviceProcAddr
-                            // TODO: STUB - For now, we assume it's available if raytracing is supported
-                            if (vkCreateRayTracingPipelinesKHR == null)
-                            {
-                                throw new NotSupportedException("vkCreateRayTracingPipelinesKHR function pointer is not initialized. VK_KHR_ray_tracing_pipeline extension may not be available.");
-                            }
+                            // Ensure vkCreateRayTracingPipelinesKHR function pointer is loaded via vkGetDeviceProcAddr
+                            // Based on Vulkan specification: VK_KHR_ray_tracing_pipeline extension functions must be loaded via vkGetDeviceProcAddr
+                            // This performs lazy-loading if the function pointer was not loaded during initialization
+                            // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetDeviceProcAddr.html
+                            EnsureRayTracingPipelineFunctionLoaded(_device);
 
+                            // At this point, vkCreateRayTracingPipelinesKHR is guaranteed to be non-null
+                            // If loading failed, EnsureRayTracingPipelineFunctionLoaded would have thrown NotSupportedException
                             VkResult result = vkCreateRayTracingPipelinesKHR(_device, IntPtr.Zero, IntPtr.Zero, 1, pipelineCreateInfoPtr, IntPtr.Zero, pipelinePtr);
                             CheckResult(result, "vkCreateRayTracingPipelinesKHR");
 
