@@ -29,6 +29,11 @@ namespace Andastra.Runtime.MonoGame.Rendering
             public List<string> WriteResources;
             public List<string> Dependencies;
             public int Priority;
+            /// <summary>
+            /// Resource barriers that need to be executed before this node.
+            /// Barriers are inserted during Compile() and executed during Execute().
+            /// </summary>
+            public List<ResourceBarriers.Barrier> Barriers;
 
             public FrameGraphNode(string name)
             {
@@ -36,6 +41,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
                 ReadResources = new List<string>();
                 WriteResources = new List<string>();
                 Dependencies = new List<string>();
+                Barriers = new List<ResourceBarriers.Barrier>();
             }
         }
 
@@ -72,6 +78,32 @@ namespace Andastra.Runtime.MonoGame.Rendering
                     LastUse = lastUse
                 };
             }
+
+            /// <summary>
+            /// Gets all resource names in the context.
+            /// Used for barrier insertion to iterate over all resources.
+            /// </summary>
+            /// <returns>Collection of resource names.</returns>
+            public IEnumerable<string> GetAllResourceNames()
+            {
+                return _resources.Keys;
+            }
+
+            /// <summary>
+            /// Gets a resource as object (non-generic).
+            /// Used for barrier insertion when resource type is unknown.
+            /// </summary>
+            /// <param name="name">Resource name.</param>
+            /// <returns>Resource object, or null if not found.</returns>
+            public object GetResource(string name)
+            {
+                object resource;
+                if (_resources.TryGetValue(name, out resource))
+                {
+                    return resource;
+                }
+                return null;
+            }
         }
 
         /// <summary>
@@ -86,6 +118,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
         private readonly List<FrameGraphNode> _nodes;
         private readonly Dictionary<string, FrameGraphNode> _nodeMap;
         private FrameGraphContext _context;
+        private ResourceBarriers _resourceBarriers;
 
         /// <summary>
         /// Initializes a new frame graph.
@@ -95,6 +128,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             _nodes = new List<FrameGraphNode>();
             _nodeMap = new Dictionary<string, FrameGraphNode>();
             _context = new FrameGraphContext();
+            _resourceBarriers = new ResourceBarriers();
         }
 
         /// <summary>
@@ -157,11 +191,40 @@ namespace Andastra.Runtime.MonoGame.Rendering
         /// <summary>
         /// Executes the frame graph.
         /// All passes are executed in the order determined by Compile().
+        /// Resource barriers are executed before each pass to ensure proper resource state transitions.
         /// </summary>
+        /// <remarks>
+        /// Execution flow:
+        /// 1. For each node in execution order:
+        ///    a. Execute resource barriers required for this node (state transitions)
+        ///    b. Execute the node's render pass
+        /// 2. Barriers ensure resources are in correct state (e.g., RenderTarget -> ShaderResource)
+        /// 3. Barrier execution is integrated with ResourceBarriers system for modern API support
+        /// </remarks>
         public void Execute()
         {
             foreach (FrameGraphNode node in _nodes)
             {
+                // Execute barriers before node execution
+                // Based on modern graphics API patterns (D3D12, Vulkan):
+                // - Barriers must be executed before resource access
+                // - Barriers ensure proper resource state transitions
+                // - Barrier batching and optimization handled by ResourceBarriers system
+                if (node.Barriers != null && node.Barriers.Count > 0)
+                {
+                    // Add all barriers for this node to ResourceBarriers system
+                    foreach (ResourceBarriers.Barrier barrier in node.Barriers)
+                    {
+                        _resourceBarriers.AddBarrier(barrier.Resource, barrier.Before, barrier.After);
+                    }
+
+                    // Flush barriers to execute them on the graphics device
+                    // Based on D3D12: ResourceBarrier commands are batched and executed
+                    // Based on Vulkan: vkCmdPipelineBarrier commands are batched and executed
+                    _resourceBarriers.Flush();
+                }
+
+                // Execute the node's render pass
                 if (node.Execute != null)
                 {
                     node.Execute(_context);
@@ -287,67 +350,133 @@ namespace Andastra.Runtime.MonoGame.Rendering
         /// Inserts resource barriers between passes that need them.
         /// Resource barriers ensure proper resource state transitions (e.g., render target to shader resource).
         /// 
-        /// In a full implementation, this would:
-        /// - Track resource states (render target, shader resource, unordered access, etc.)
-        /// - Insert barriers when resource state changes between passes
-        /// - Optimize barriers (combine, eliminate redundant barriers)
+        /// Implementation:
+        /// - Tracks resource states (render target, shader resource, unordered access, etc.)
+        /// - Inserts barriers when resource state changes between passes
+        /// - Stores barriers in each node for execution during Execute()
+        /// - Barrier optimization is handled by ResourceBarriers system
         /// 
-        /// For now, this is a placeholder that documents the barrier insertion logic.
-        /// Actual barrier insertion would be backend-specific (D3D12, Vulkan, etc.).
+        /// Based on modern graphics API patterns:
+        /// - D3D12: ResourceBarrier commands ensure proper state transitions
+        /// - Vulkan: vkCmdPipelineBarrier ensures proper state transitions
+        /// - Barriers prevent race conditions and enable optimal GPU utilization
         /// </summary>
         private void InsertBarriers()
         {
             // Track resource states as we process passes
-            Dictionary<string, string> resourceStates = new Dictionary<string, string>();
+            // Maps resource name to current ResourceState enum value
+            Dictionary<string, ResourceBarriers.ResourceState> resourceStates = new Dictionary<string, ResourceBarriers.ResourceState>();
+            // Maps resource name to actual resource object (for barrier execution)
+            Dictionary<string, object> resourceObjects = new Dictionary<string, object>();
+
+            // Initialize resource objects from context
+            // Resources are stored in FrameGraphContext and need to be retrieved for barrier execution
+            foreach (string resourceName in _context.GetAllResourceNames())
+            {
+                object resource = _context.GetResource(resourceName);
+                if (resource != null)
+                {
+                    resourceObjects[resourceName] = resource;
+                }
+            }
 
             for (int i = 0; i < _nodes.Count; i++)
             {
                 FrameGraphNode node = _nodes[i];
-                List<string> barriersNeeded = new List<string>();
+                // Clear barriers from previous compilation
+                node.Barriers.Clear();
 
                 // Check read resources - may need to transition from render target to shader resource
                 foreach (string readResource in node.ReadResources)
                 {
-                    string currentState;
+                    ResourceBarriers.ResourceState currentState;
                     if (resourceStates.TryGetValue(readResource, out currentState))
                     {
-                        if (currentState != "ShaderResource")
+                        if (currentState != ResourceBarriers.ResourceState.ShaderResource)
                         {
                             // Need barrier to transition to shader resource state
-                            barriersNeeded.Add(string.Format("{0}:{1}->ShaderResource", readResource, currentState));
-                            resourceStates[readResource] = "ShaderResource";
+                            // Get resource object from context or resourceObjects map
+                            object resourceObj = null;
+                            if (resourceObjects.TryGetValue(readResource, out resourceObj))
+                            {
+                                // Resource object found - create barrier
+                                node.Barriers.Add(new ResourceBarriers.Barrier
+                                {
+                                    Resource = resourceObj,
+                                    Before = currentState,
+                                    After = ResourceBarriers.ResourceState.ShaderResource
+                                });
+                            }
+                            else
+                            {
+                                // Try to get resource from context
+                                resourceObj = _context.GetResource(readResource);
+                                if (resourceObj != null)
+                                {
+                                    resourceObjects[readResource] = resourceObj;
+                                    node.Barriers.Add(new ResourceBarriers.Barrier
+                                    {
+                                        Resource = resourceObj,
+                                        Before = currentState,
+                                        After = ResourceBarriers.ResourceState.ShaderResource
+                                    });
+                                }
+                            }
+                            resourceStates[readResource] = ResourceBarriers.ResourceState.ShaderResource;
                         }
                     }
                     else
                     {
-                        // First use - assume initial state is correct
-                        resourceStates[readResource] = "ShaderResource";
+                        // First use - assume initial state is ShaderResource (common for read resources)
+                        resourceStates[readResource] = ResourceBarriers.ResourceState.ShaderResource;
                     }
                 }
 
                 // Check write resources - may need to transition to render target state
                 foreach (string writeResource in node.WriteResources)
                 {
-                    string currentState;
+                    ResourceBarriers.ResourceState currentState;
                     if (resourceStates.TryGetValue(writeResource, out currentState))
                     {
-                        if (currentState != "RenderTarget")
+                        if (currentState != ResourceBarriers.ResourceState.RenderTarget)
                         {
                             // Need barrier to transition to render target state
-                            barriersNeeded.Add(string.Format("{0}:{1}->RenderTarget", writeResource, currentState));
-                            resourceStates[writeResource] = "RenderTarget";
+                            // Get resource object from context or resourceObjects map
+                            object resourceObj = null;
+                            if (resourceObjects.TryGetValue(writeResource, out resourceObj))
+                            {
+                                // Resource object found - create barrier
+                                node.Barriers.Add(new ResourceBarriers.Barrier
+                                {
+                                    Resource = resourceObj,
+                                    Before = currentState,
+                                    After = ResourceBarriers.ResourceState.RenderTarget
+                                });
+                            }
+                            else
+                            {
+                                // Try to get resource from context
+                                resourceObj = _context.GetResource(writeResource);
+                                if (resourceObj != null)
+                                {
+                                    resourceObjects[writeResource] = resourceObj;
+                                    node.Barriers.Add(new ResourceBarriers.Barrier
+                                    {
+                                        Resource = resourceObj,
+                                        Before = currentState,
+                                        After = ResourceBarriers.ResourceState.RenderTarget
+                                    });
+                                }
+                            }
+                            resourceStates[writeResource] = ResourceBarriers.ResourceState.RenderTarget;
                         }
                     }
                     else
                     {
-                        // First use - assume render target state
-                        resourceStates[writeResource] = "RenderTarget";
+                        // First use - assume render target state (common for write resources)
+                        resourceStates[writeResource] = ResourceBarriers.ResourceState.RenderTarget;
                     }
                 }
-
-                // In a full implementation, barriers would be inserted into the node's execution
-                // For now, this serves as documentation of the barrier insertion logic
-                // Actual barrier insertion would be backend-specific and integrated into Execute()
             }
         }
 
