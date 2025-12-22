@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework;
 
 namespace Andastra.Runtime.MonoGame.Rendering
 {
@@ -38,6 +39,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             public int PrimitiveCount;
             public object VertexBuffer; // VertexBuffer or equivalent
             public object IndexBuffer;  // IndexBuffer or equivalent
+            public Matrix? WorldMatrix; // Optional world transform matrix for instancing conversion
 
             public DrawIndexedCommandData(PrimitiveType primitiveType, int baseVertex, int minVertexIndex, int numVertices, int startIndex, int primitiveCount, object vertexBuffer, object indexBuffer)
             {
@@ -49,6 +51,20 @@ namespace Andastra.Runtime.MonoGame.Rendering
                 PrimitiveCount = primitiveCount;
                 VertexBuffer = vertexBuffer;
                 IndexBuffer = indexBuffer;
+                WorldMatrix = null;
+            }
+
+            public DrawIndexedCommandData(PrimitiveType primitiveType, int baseVertex, int minVertexIndex, int numVertices, int startIndex, int primitiveCount, object vertexBuffer, object indexBuffer, Matrix? worldMatrix)
+            {
+                PrimitiveType = primitiveType;
+                BaseVertex = baseVertex;
+                MinVertexIndex = minVertexIndex;
+                NumVertices = numVertices;
+                StartIndex = startIndex;
+                PrimitiveCount = primitiveCount;
+                VertexBuffer = vertexBuffer;
+                IndexBuffer = indexBuffer;
+                WorldMatrix = worldMatrix;
             }
         }
 
@@ -281,8 +297,14 @@ namespace Andastra.Runtime.MonoGame.Rendering
             }
 
             // If not consecutive, check if we can convert to instanced rendering
-            // (same geometry, different transforms - would require instancing support)
-            // For now, we only merge consecutive draws
+            // Instancing conversion: Same geometry with different transforms can be converted to instanced rendering
+            // This optimization reduces draw calls when the same mesh is rendered multiple times with different transforms
+            if (TryConvertToInstancedRendering(commands, firstIndex, secondIndex, firstData, secondData))
+            {
+                return true;
+            }
+
+            // Cannot merge - different geometry or transforms not available
             return false;
         }
 
@@ -395,7 +417,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             }
 
             // Merge: Combine instance counts (same geometry, more instances)
-            DrawInstancedCommandData mergedData = new DrawInstancedCommandData(
+            DrawInstancedCommandData mergedInstancedData = new DrawInstancedCommandData(
                 firstData.PrimitiveType,
                 firstData.BaseVertex,
                 firstData.MinVertexIndex,
@@ -407,15 +429,93 @@ namespace Andastra.Runtime.MonoGame.Rendering
                 firstData.VertexBuffer,
                 firstData.IndexBuffer);
 
-            // Update the first command with merged data
-            CommandBuffer.RenderCommand mergedCommand = new CommandBuffer.RenderCommand
+            // Check if either command has instance matrices (from instancing conversion)
+            // If so, we need to combine the instance matrices
+            Matrix[] combinedInstanceMatrices = null;
+            bool firstHasMatrices = first.Data is InstancedDrawCommandData;
+            bool secondHasMatrices = second.Data is InstancedDrawCommandData;
+
+            if (firstHasMatrices || secondHasMatrices)
             {
-                Type = first.Type,
-                Data = mergedData,
-                SortKey = first.SortKey
-            };
-            commands[firstIndex] = mergedCommand;
-            return true;
+                // Extract instance matrices from both commands
+                Matrix[] firstMatrices = null;
+                Matrix[] secondMatrices = null;
+
+                if (firstHasMatrices)
+                {
+                    InstancedDrawCommandData firstWrapper = (InstancedDrawCommandData)first.Data;
+                    firstMatrices = firstWrapper.InstanceMatrices;
+                }
+
+                if (secondHasMatrices)
+                {
+                    InstancedDrawCommandData secondWrapper = (InstancedDrawCommandData)second.Data;
+                    secondMatrices = secondWrapper.InstanceMatrices;
+                }
+
+                // Combine instance matrices
+                int totalInstanceCount = firstData.InstanceCount + secondData.InstanceCount;
+                combinedInstanceMatrices = new Matrix[totalInstanceCount];
+
+                // Copy first command's instance matrices
+                if (firstMatrices != null && firstMatrices.Length == firstData.InstanceCount)
+                {
+                    Array.Copy(firstMatrices, 0, combinedInstanceMatrices, 0, firstData.InstanceCount);
+                }
+                else
+                {
+                    // If first command doesn't have matrices, create identity matrices
+                    // (This shouldn't happen in practice, but handle it gracefully)
+                    for (int i = 0; i < firstData.InstanceCount; i++)
+                    {
+                        combinedInstanceMatrices[i] = Matrix.Identity;
+                    }
+                }
+
+                // Copy second command's instance matrices
+                if (secondMatrices != null && secondMatrices.Length == secondData.InstanceCount)
+                {
+                    Array.Copy(secondMatrices, 0, combinedInstanceMatrices, firstData.InstanceCount, secondData.InstanceCount);
+                }
+                else
+                {
+                    // If second command doesn't have matrices, create identity matrices
+                    for (int i = 0; i < secondData.InstanceCount; i++)
+                    {
+                        combinedInstanceMatrices[firstData.InstanceCount + i] = Matrix.Identity;
+                    }
+                }
+
+                // Create extended instanced command data with combined matrices
+                InstancedDrawCommandData extendedMergedData = new InstancedDrawCommandData
+                {
+                    InstancedData = mergedInstancedData,
+                    InstanceMatrices = combinedInstanceMatrices
+                };
+
+                // Update the first command with merged data
+                CommandBuffer.RenderCommand mergedCommand = new CommandBuffer.RenderCommand
+                {
+                    Type = first.Type,
+                    Data = extendedMergedData,
+                    SortKey = first.SortKey
+                };
+                commands[firstIndex] = mergedCommand;
+                return true;
+            }
+            else
+            {
+                // No instance matrices - use standard instanced command data
+                // Update the first command with merged data
+                CommandBuffer.RenderCommand mergedCommand = new CommandBuffer.RenderCommand
+                {
+                    Type = first.Type,
+                    Data = mergedInstancedData,
+                    SortKey = first.SortKey
+                };
+                commands[firstIndex] = mergedCommand;
+                return true;
+            }
         }
 
         /// <summary>
@@ -505,6 +605,8 @@ namespace Andastra.Runtime.MonoGame.Rendering
         /// 
         /// Returns the extracted data if successful, null if the data format is not recognized.
         /// This ensures we only attempt to merge commands with known, valid data formats.
+        /// 
+        /// Handles both DrawInstancedCommandData and InstancedDrawCommandData (wrapper with instance matrices).
         /// </summary>
         private DrawInstancedCommandData? ExtractDrawInstancedData(object data)
         {
@@ -517,6 +619,12 @@ namespace Andastra.Runtime.MonoGame.Rendering
             if (data is DrawInstancedCommandData drawData)
             {
                 return drawData;
+            }
+
+            // If data is InstancedDrawCommandData (wrapper with instance matrices), extract the instanced data
+            if (data is InstancedDrawCommandData instancedWrapper)
+            {
+                return instancedWrapper.InstancedData;
             }
 
             // Data format not recognized - return null to indicate extraction failure
@@ -541,8 +649,150 @@ namespace Andastra.Runtime.MonoGame.Rendering
             }
 
             // Compare by reference equality
-            // In a full implementation, might also check buffer identity or handle
+            // TODO:  In a full implementation, might also check buffer identity or handle
             return ReferenceEquals(bufferA, bufferB);
+        }
+
+        /// <summary>
+        /// Attempts to convert two indexed draw commands with same geometry but different transforms to instanced rendering.
+        /// 
+        /// This optimization converts multiple draw calls of the same geometry with different world transforms
+        /// into a single instanced draw call, dramatically reducing draw call overhead.
+        /// 
+        /// Requirements for instancing conversion:
+        /// 1. Both commands must have the same geometry (same buffers, same indices, same vertex ranges)
+        /// 2. Both commands must have world transform matrices available
+        /// 3. The transforms must be different (otherwise they would be identical draws)
+        /// 4. The primitive type must support instancing (TriangleList, LineList, PointList)
+        /// </summary>
+        /// <param name="commands">List of commands being optimized.</param>
+        /// <param name="firstIndex">Index of the first draw command.</param>
+        /// <param name="secondIndex">Index of the second draw command.</param>
+        /// <param name="firstData">First draw command data.</param>
+        /// <param name="secondData">Second draw command data.</param>
+        /// <returns>True if conversion to instanced rendering was successful, false otherwise.</returns>
+        private bool TryConvertToInstancedRendering(List<CommandBuffer.RenderCommand> commands, int firstIndex, int secondIndex, DrawIndexedCommandData firstData, DrawIndexedCommandData secondData)
+        {
+            // Check if both commands have world transform matrices available
+            if (!firstData.WorldMatrix.HasValue || !secondData.WorldMatrix.HasValue)
+            {
+                return false; // Cannot convert to instancing without transform data
+            }
+
+            // Check if transforms are different (if identical, they would be redundant draws)
+            Matrix firstMatrix = firstData.WorldMatrix.Value;
+            Matrix secondMatrix = secondData.WorldMatrix.Value;
+            if (AreMatricesEqual(firstMatrix, secondMatrix))
+            {
+                return false; // Transforms are identical - would be redundant instances
+            }
+
+            // Check if geometry is identical (required for instancing)
+            // Geometry is identical if:
+            // 1. Same buffers (already checked in TryMergeDrawIndexedCommands)
+            // 2. Same base vertex
+            // 3. Same start index
+            // 4. Same primitive count
+            // 5. Same vertex range (min vertex index, num vertices)
+            if (firstData.BaseVertex != secondData.BaseVertex ||
+                firstData.StartIndex != secondData.StartIndex ||
+                firstData.PrimitiveCount != secondData.PrimitiveCount ||
+                firstData.MinVertexIndex != secondData.MinVertexIndex ||
+                firstData.NumVertices != secondData.NumVertices)
+            {
+                return false; // Geometry differs - cannot use instancing
+            }
+
+            // Check if primitive type supports instancing
+            // Instancing is typically supported for TriangleList, LineList, PointList
+            // TriangleStrip and LineStrip can be instanced but require special handling
+            if (firstData.PrimitiveType != PrimitiveType.TriangleList &&
+                firstData.PrimitiveType != PrimitiveType.LineList &&
+                firstData.PrimitiveType != PrimitiveType.PointList)
+            {
+                // TriangleStrip and LineStrip can be instanced but require careful handling
+                // For now, we only support TriangleList, LineList, and PointList
+                return false;
+            }
+
+            // Create instance data for the two transforms
+            // Instance data contains world matrices for each instance
+            Matrix[] instanceMatrices = new Matrix[]
+            {
+                firstMatrix,
+                secondMatrix
+            };
+
+            // Create instance buffer data
+            // Based on GPUInstancing.InstanceData structure: Matrix WorldMatrix (64 bytes)
+            // For MonoGame, we'll create a simple instance buffer with just the matrices
+            // In a full implementation, this would use DynamicVertexBuffer with InstanceData structure
+            // For now, we'll store the matrices in the command data and let the renderer handle buffer creation
+            
+            // Create instanced draw command data
+            // Both instances use the same geometry (firstData geometry)
+            DrawInstancedCommandData instancedData = new DrawInstancedCommandData(
+                firstData.PrimitiveType,
+                firstData.BaseVertex,
+                firstData.MinVertexIndex,
+                firstData.NumVertices,
+                firstData.StartIndex,
+                firstData.PrimitiveCount, // Primitive count per instance (same for both)
+                2, // Instance count (two instances)
+                0, // Start instance location
+                firstData.VertexBuffer,
+                firstData.IndexBuffer);
+
+            // Create extended instanced command data that includes instance matrices
+            // We need to store the instance matrices somewhere - create a wrapper structure
+            InstancedDrawCommandData extendedData = new InstancedDrawCommandData
+            {
+                InstancedData = instancedData,
+                InstanceMatrices = instanceMatrices
+            };
+
+            // Update the first command to be an instanced draw
+            CommandBuffer.RenderCommand instancedCommand = new CommandBuffer.RenderCommand
+            {
+                Type = CommandBuffer.CommandType.DrawInstanced,
+                Data = extendedData,
+                SortKey = commands[firstIndex].SortKey // Preserve sort key (same render state)
+            };
+            commands[firstIndex] = instancedCommand;
+
+            // Mark the second command for removal (it's been merged into the instanced draw)
+            // The caller will remove it
+            return true;
+        }
+
+        /// <summary>
+        /// Extended instanced draw command data that includes instance transform matrices.
+        /// This structure wraps DrawInstancedCommandData and adds instance-specific transform data.
+        /// </summary>
+        private struct InstancedDrawCommandData
+        {
+            public DrawInstancedCommandData InstancedData;
+            public Matrix[] InstanceMatrices;
+        }
+
+        /// <summary>
+        /// Checks if two matrices are equal (within floating-point tolerance).
+        /// </summary>
+        /// <param name="a">First matrix.</param>
+        /// <param name="b">Second matrix.</param>
+        /// <returns>True if matrices are equal within tolerance, false otherwise.</returns>
+        private bool AreMatricesEqual(Matrix a, Matrix b)
+        {
+            const float tolerance = 0.0001f; // Floating-point comparison tolerance
+
+            return Math.Abs(a.M11 - b.M11) < tolerance && Math.Abs(a.M12 - b.M12) < tolerance &&
+                   Math.Abs(a.M13 - b.M13) < tolerance && Math.Abs(a.M14 - b.M14) < tolerance &&
+                   Math.Abs(a.M21 - b.M21) < tolerance && Math.Abs(a.M22 - b.M22) < tolerance &&
+                   Math.Abs(a.M23 - b.M23) < tolerance && Math.Abs(a.M24 - b.M24) < tolerance &&
+                   Math.Abs(a.M31 - b.M31) < tolerance && Math.Abs(a.M32 - b.M32) < tolerance &&
+                   Math.Abs(a.M33 - b.M33) < tolerance && Math.Abs(a.M34 - b.M34) < tolerance &&
+                   Math.Abs(a.M41 - b.M41) < tolerance && Math.Abs(a.M42 - b.M42) < tolerance &&
+                   Math.Abs(a.M43 - b.M43) < tolerance && Math.Abs(a.M44 - b.M44) < tolerance;
         }
 
         /// <summary>
