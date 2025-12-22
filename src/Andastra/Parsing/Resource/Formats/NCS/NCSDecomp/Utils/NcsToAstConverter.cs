@@ -593,7 +593,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             {
                 Debug($"DEBUG NcsToAstConverter: Checking entry stub at {entryStubStart}: {instructions[entryStubStart].InsType}, next: {instructions[entryStubStart + 1].InsType}");
                 
-                // TODO:  Check if entry stub starts with RSADD* (function returns a value)
+                // Check if entry stub starts with RSADD* (function returns a value)
                 int jsrOffset = 0; // Offset to JSR instruction from entryStubStart
                 if (IsRsaddInstruction(instructions[entryStubStart].InsType))
                 {
@@ -604,7 +604,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 
                 int jsrIdx = entryStubStart + jsrOffset;
                 
-                // TODO:  Pattern 1: [RSADD*], JSR followed by RETN (simple entry stub)
+                // Pattern 1: [RSADD*], JSR followed by RETN (simple entry stub)
+                // Based on CalculateEntryStubEnd: Entry stub ends after RETN (exclusive index)
                 if (instructions.Count > jsrIdx + 1 &&
                     instructions[jsrIdx].InsType == NCSInstructionType.JSR &&
                     instructions[jsrIdx].Jump != null &&
@@ -613,28 +614,45 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                     try
                     {
                         entryJsrTarget = ncs.GetInstructionIndex(instructions[jsrIdx].Jump);
-                        Debug($"DEBUG NcsToAstConverter: Detected entry stub pattern ({(jsrOffset > 0 ? instructions[entryStubStart].InsType + "+" : "")}JSR+RETN) - JSR at {jsrIdx} targets {entryJsrTarget} (main), returnType={entryReturnType}");
+                        // Entry stub ends after RETN (exclusive index: jsrIdx + 2)
+                        entryStubEnd = jsrIdx + 2;
+                        Debug($"DEBUG NcsToAstConverter: Detected entry stub pattern ({(jsrOffset > 0 ? instructions[entryStubStart].InsType + "+" : "")}JSR+RETN) - JSR at {jsrIdx} targets {entryJsrTarget} (main), returnType={entryReturnType}, entryStubEnd={entryStubEnd}");
                     }
                     catch (Exception)
                     {
                     }
                 }
-                // TODO:  Pattern 2: [RSADD*], JSR, RESTOREBP (entry stub with RESTOREBP, used by external compiler)
+                // Pattern 2: [RSADD*], JSR, RESTOREBP (entry stub with RESTOREBP, used by external compiler)
+                // Based on CalculateEntryStubEnd: Entry stub ends after RESTOREBP (exclusive index)
+                // swkotor2.exe: 0x004eb750 - If RESTOREBP is followed by MOVSP+RETN+RETN at the end, it's cleanup code, not entry stub
                 else if (instructions.Count > jsrIdx + 1 &&
                          instructions[jsrIdx].InsType == NCSInstructionType.JSR &&
                          instructions[jsrIdx].Jump != null &&
                          instructions[jsrIdx + 1].InsType == NCSInstructionType.RESTOREBP)
                 {
-                    try
+                    int restorebpIndex = jsrIdx + 1;
+                    // Check if RESTOREBP is followed by cleanup code at the end of the file
+                    if (IsRestorebpFollowedByCleanupCode(instructions, restorebpIndex))
                     {
-                        entryJsrTarget = ncs.GetInstructionIndex(instructions[jsrIdx].Jump);
-                        Debug($"DEBUG NcsToAstConverter: Detected entry stub pattern ({(jsrOffset > 0 ? instructions[entryStubStart].InsType + "+" : "")}JSR+RESTOREBP) - JSR at {jsrIdx} targets {entryJsrTarget} (main), returnType={entryReturnType}");
+                        // This is cleanup code, not an entry stub - don't set entryStubEnd
+                        Debug($"DEBUG NcsToAstConverter: RESTOREBP at {restorebpIndex} is followed by cleanup code (MOVSP+RETN+RETN at end) - not an entry stub");
                     }
-                    catch (Exception)
+                    else
                     {
+                        try
+                        {
+                            entryJsrTarget = ncs.GetInstructionIndex(instructions[jsrIdx].Jump);
+                            // Entry stub ends after RESTOREBP (exclusive index: jsrIdx + 2)
+                            entryStubEnd = jsrIdx + 2;
+                            Debug($"DEBUG NcsToAstConverter: Detected entry stub pattern ({(jsrOffset > 0 ? instructions[entryStubStart].InsType + "+" : "")}JSR+RESTOREBP) - JSR at {jsrIdx} targets {entryJsrTarget} (main), returnType={entryReturnType}, entryStubEnd={entryStubEnd}");
+                        }
+                        catch (Exception)
+                        {
+                        }
                     }
                 }
                 // Fallback: Check if first instruction IS JSR (void main pattern without RSADD*)
+                // Based on CalculateEntryStubEnd: Entry stub ends after RETN (exclusive index)
                 else if (instructions[entryStubStart].InsType == NCSInstructionType.JSR &&
                          instructions[entryStubStart].Jump != null &&
                          instructions.Count > entryStubStart + 1 &&
@@ -644,7 +662,9 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                     {
                         entryJsrTarget = ncs.GetInstructionIndex(instructions[entryStubStart].Jump);
                         entryReturnType = 0; // void
-                        Debug($"DEBUG NcsToAstConverter: Detected entry stub pattern (JSR+RETN, no RSADD*) - JSR at {entryStubStart} targets {entryJsrTarget} (main), returnType=void");
+                        // Entry stub ends after RETN (exclusive index: entryStubStart + 2)
+                        entryStubEnd = entryStubStart + 2;
+                        Debug($"DEBUG NcsToAstConverter: Detected entry stub pattern (JSR+RETN, no RSADD*) - JSR at {entryStubStart} targets {entryJsrTarget} (main), returnType=void, entryStubEnd={entryStubEnd}");
                     }
                     catch (Exception)
                     {
