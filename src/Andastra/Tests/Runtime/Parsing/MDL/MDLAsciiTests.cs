@@ -17,7 +17,7 @@ namespace Andastra.Tests.Runtime.Parsing.MDL
     /// Exhaustive and comprehensive unit tests for ASCII MDL format handling.
     /// 
     /// This test module provides meticulous coverage of ALL MDL/MDX ASCII format features:
-    /// - All node types (dummy, trimesh, light, emitter, reference, saber, aabb, skin, dangly)
+    // TODO: / - All node types (dummy, trimesh, light, emitter, reference, saber, aabb, skin, dangly)
     /// - All controller types (position, orientation, scale, alpha, color, radius, etc.)
     /// - All mesh data (verts, faces, tverts, bones, weights, constraints)
     /// - Animations with various configurations

@@ -118,7 +118,7 @@ namespace Andastra.Runtime.Games.Eclipse.Environmental
             // - Wind variation
             // - Weather effect updates
 
-            // In a full implementation, this would:
+            // TODO:  In a full implementation, this would:
             // - Update weather transitions (fade in/out)
             // - Update wind variation (gusts, direction changes)
             // - Update weather particle effects

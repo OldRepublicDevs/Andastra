@@ -47,6 +47,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             VK_ERROR_FORMAT_NOT_SUPPORTED = -11,
             VK_ERROR_FRAGMENTED_POOL = -12,
             VK_ERROR_UNKNOWN = -13,
+            VK_ERROR_OUT_OF_POOL_MEMORY = -1000069000,
         }
 
         // Vulkan format mapping
@@ -627,7 +628,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             public uint baseArrayLayer;
             public uint layerCount;
         }
-        
+
         // Vulkan component mapping structure
         // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkComponentMapping.html
         [StructLayout(LayoutKind.Sequential)]
@@ -638,7 +639,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             public VkComponentSwizzle b; // Swizzle for blue component
             public VkComponentSwizzle a; // Swizzle for alpha component
         }
-        
+
         // Vulkan image view create info structure
         // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkImageViewCreateInfo.html
         [StructLayout(LayoutKind.Sequential)]
@@ -1095,7 +1096,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private enum VkImageCreateFlags { }
         private enum VkImageViewCreateFlags { }
         private enum VkImageType { VK_IMAGE_TYPE_2D = 1 }
-        
+
         // Vulkan image view type enum
         // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkImageViewType.html
         private enum VkImageViewType
@@ -1108,7 +1109,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             VK_IMAGE_VIEW_TYPE_2D_ARRAY = 5,
             VK_IMAGE_VIEW_TYPE_CUBE_ARRAY = 6
         }
-        
+
         // Vulkan component swizzle enum
         // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkComponentSwizzle.html
         private enum VkComponentSwizzle
@@ -1552,6 +1553,10 @@ namespace Andastra.Runtime.MonoGame.Backends
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkCmdCopyAccelerationStructureKHRDelegate(IntPtr commandBuffer, ref VkCopyAccelerationStructureInfoKHR pInfo);
 
+        // Core Vulkan function pointers for descriptor sets
+        private static vkAllocateDescriptorSetsDelegate vkAllocateDescriptorSets;
+        private static vkUpdateDescriptorSetsDelegate vkUpdateDescriptorSets;
+
         // VK_KHR_ray_tracing_pipeline extension function pointers (loaded via vkGetDeviceProcAddr)
         // Based on Vulkan specification: VK_KHR_ray_tracing_pipeline extension functions must be loaded via vkGetDeviceProcAddr
         // Function pointers are null if extension is not available, allowing graceful degradation
@@ -1574,10 +1579,10 @@ namespace Andastra.Runtime.MonoGame.Backends
             // Load Vulkan functions - in a real implementation, these would be loaded via vkGetDeviceProcAddr
             // For this example, we'll assume they're available through P/Invoke
             // TODO:  This is a simplified version - real implementation would need proper function loading
-            
+
             // Load VK_KHR_acceleration_structure extension functions if available
             LoadAccelerationStructureExtensionFunctions(device);
-            
+
             // Load VK_KHR_ray_tracing_pipeline extension functions if available
             LoadRayTracingPipelineExtensionFunctions(device);
         }
@@ -2165,7 +2170,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // Determine image aspect mask based on format
                 // Depth/stencil formats need depth/stencil aspects, color formats need color aspect
                 VkImageAspectFlags aspectMask = VkImageAspectFlags.VK_IMAGE_ASPECT_COLOR_BIT;
-                
+
                 // Check format to determine aspect mask (depth/stencil formats override color aspect)
                 if (vkFormat == VkFormat.VK_FORMAT_D24_UNORM_S8_UINT ||
                     vkFormat == VkFormat.VK_FORMAT_D32_SFLOAT_S8_UINT)
@@ -2178,7 +2183,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     // Depth-only format
                     aspectMask = VkImageAspectFlags.VK_IMAGE_ASPECT_DEPTH_BIT;
                 }
-                
+
                 // Create component mapping with identity swizzle (R=R, G=G, B=B, A=A)
                 // Based on Vulkan API: Identity mapping means components are used as-is
                 VkComponentMapping componentMapping = new VkComponentMapping
@@ -2188,7 +2193,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     b = VkComponentSwizzle.VK_COMPONENT_SWIZZLE_IDENTITY,
                     a = VkComponentSwizzle.VK_COMPONENT_SWIZZLE_IDENTITY
                 };
-                
+
                 // Create subresource range covering all mip levels and array layers
                 VkImageSubresourceRange subresourceRange = new VkImageSubresourceRange
                 {
@@ -2198,7 +2203,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     baseArrayLayer = 0,
                     layerCount = (uint)desc.ArraySize
                 };
-                
+
                 // Create image view create info structure
                 VkImageViewCreateInfo imageViewCreateInfo = new VkImageViewCreateInfo
                 {
@@ -2211,13 +2216,13 @@ namespace Andastra.Runtime.MonoGame.Backends
                     components = componentMapping,
                     subresourceRange = subresourceRange
                 };
-                
+
                 // Ensure vkCreateImageView function is available (core Vulkan function)
                 if (vkCreateImageView == null)
                 {
                     throw new InvalidOperationException("vkCreateImageView function is not loaded. Vulkan may not be properly initialized.");
                 }
-                
+
                 // Marshal structure to unmanaged memory for vkCreateImageView
                 // vkCreateImageView uses IntPtr for pCreateInfo, so we need to marshal the structure
                 int createInfoSize = Marshal.SizeOf(typeof(VkImageViewCreateInfo));
@@ -2225,13 +2230,13 @@ namespace Andastra.Runtime.MonoGame.Backends
                 try
                 {
                     Marshal.StructureToPtr(imageViewCreateInfo, createInfoPtr, false);
-                    
+
                     // Create the image view
                     // Based on Vulkan API: vkCreateImageView creates an image view that describes how to access an image
                     IntPtr imageViewHandle;
                     VkResult result = vkCreateImageView(_device, createInfoPtr, IntPtr.Zero, out imageViewHandle);
                     CheckResult(result, "vkCreateImageView");
-                    
+
                     vkImageView = imageViewHandle;
                 }
                 finally
@@ -2309,35 +2314,35 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// <returns>Memory property flags indicating required memory type characteristics.</returns>
         /// <remarks>
         /// Based on Vulkan memory management best practices:
-        /// 
+        ///
         /// Memory type selection strategy:
         /// 1. BufferHeapType.Default (device-local):
         ///    - Use for static buffers that are rarely or never updated from CPU
         ///    - Best performance: Fast GPU access, no CPU visibility overhead
         ///    - Examples: Static vertex/index buffers, GPU-only storage buffers
-        /// 
+        ///
         /// 2. BufferHeapType.Upload (host-visible + host-coherent):
         ///    - Use for dynamic buffers that are frequently updated from CPU
         ///    - Host-visible: Allows CPU to write directly to buffer memory
         ///    - Host-coherent: CPU writes are immediately visible to GPU (no manual cache flushing)
         ///    - Examples: Dynamic constant buffers, staging buffers, frequently updated uniform buffers
-        /// 
+        ///
         /// 3. BufferHeapType.Readback (host-visible):
         ///    - Use for buffers that need to be read back by CPU
         ///    - Host-visible: Allows CPU to read buffer memory
         ///    - May or may not be coherent depending on usage (coherent preferred for simplicity)
         ///    - Examples: Query result buffers, GPU compute output buffers, readback targets
-        /// 
+        ///
         /// 4. Constant buffers (heuristic):
         ///    - Constant buffers are typically dynamic (updated every frame)
         ///    - Default to host-visible + host-coherent if heap type is Default
         ///    - This ensures optimal performance for per-frame constant buffer updates
-        /// 
+        ///
         /// 5. Staging/transfer buffers:
         ///    - If TRANSFER_SRC_BIT is set, buffer is used for staging (host-visible required)
         ///    - Staging buffers copy data from CPU to GPU-resident buffers
         ///    - Always use host-visible + host-coherent for staging buffers
-        /// 
+        ///
         /// Reference: Vulkan Memory Management Best Practices
         /// - https://developer.nvidia.com/vulkan-memory-management
         /// - https://www.khronos.org/registry/vulkan/specs/1.3-extensions/html/vkspec.html#memory-device
@@ -2347,11 +2352,11 @@ namespace Andastra.Runtime.MonoGame.Backends
             // Check if this is a staging buffer (has TRANSFER_SRC usage)
             // Staging buffers are used to transfer data from CPU to GPU-resident buffers
             bool isStagingBuffer = (usageFlags & VkBufferUsageFlags.VK_BUFFER_USAGE_TRANSFER_SRC_BIT) != 0;
-            
+
             // Check if this is a readback buffer (TRANSFER_SRC but used for reading GPU results)
             // Readback buffers are used to read data from GPU back to CPU
             bool isReadbackBuffer = desc.HeapType == BufferHeapType.Readback;
-            
+
             // Check if this is a constant buffer (uniform buffer)
             // Constant buffers are typically updated frequently from CPU
             bool isConstantBuffer = (desc.Usage & BufferUsageFlags.ConstantBuffer) != 0;
@@ -2377,14 +2382,14 @@ namespace Andastra.Runtime.MonoGame.Backends
                 default:
                     // Default heap: GPU-accessible only (best performance for static resources)
                     // However, handle special cases:
-                    
+
                     // Staging buffers always need host-visible memory
                     if (isStagingBuffer)
                     {
                         return VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                                VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
                     }
-                    
+
                     // Constant buffers are typically dynamic (updated every frame)
                     // Use host-visible + host-coherent for optimal CPU update performance
                     if (isConstantBuffer)
@@ -2396,7 +2401,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                         return VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                                VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
                     }
-                    
+
                     // Default case: Static buffers (vertex/index buffers, GPU-only storage)
                     // Use device-local memory for best GPU performance
                     return VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
@@ -3088,7 +3093,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                             // Get texture format and sample count from texture description
                             VkFormat format = ConvertToVkFormat(colorAttachment.Texture.Desc.Format);
                             VkSampleCountFlagBits samples = ConvertToVkSampleCount(colorAttachment.Texture.Desc.SampleCount);
-                            
+
                             attachments.Add(new VkAttachmentDescription
                             {
                                 flags = 0,
@@ -3118,7 +3123,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 {
                     VkFormat depthFormat = ConvertToVkFormat(desc.DepthAttachment.Texture.Desc.Format);
                     VkSampleCountFlagBits depthSamples = ConvertToVkSampleCount(desc.DepthAttachment.Texture.Desc.SampleCount);
-                    
+
                     attachments.Add(new VkAttachmentDescription
                     {
                         flags = 0,
@@ -3388,7 +3393,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 Console.WriteLine($"[VulkanDevice] Error creating VkFramebuffer: {ex.Message}");
                 Console.WriteLine($"[VulkanDevice] Stack trace: {ex.StackTrace}");
-                
+
                 // Clean up render pass if framebuffer creation failed
                 if (vkRenderPass != IntPtr.Zero && vkDestroyRenderPass != null)
                 {
@@ -3430,7 +3435,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // In a production implementation, VulkanTexture would expose this via a property or internal method
                 try
                 {
-                    System.Reflection.FieldInfo field = typeof(VulkanTexture).GetField("_vkImageView", 
+                    System.Reflection.FieldInfo field = typeof(VulkanTexture).GetField("_vkImageView",
                         System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                     if (field != null)
                     {
@@ -3529,7 +3534,8 @@ namespace Andastra.Runtime.MonoGame.Backends
                 case BindingType.ConstantBuffer: return VkDescriptorType.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                 case BindingType.Texture: return VkDescriptorType.VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
                 case BindingType.Sampler: return VkDescriptorType.VK_DESCRIPTOR_TYPE_SAMPLER;
-                case BindingType.UnorderedAccess: return VkDescriptorType.VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+                case BindingType.RWTexture: return VkDescriptorType.VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+                case BindingType.RWBuffer: return VkDescriptorType.VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
                 case BindingType.StructuredBuffer: return VkDescriptorType.VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
                 case BindingType.AccelStruct: return VkDescriptorType.VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
                 default: return VkDescriptorType.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -3572,7 +3578,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// - PreferFastTrace (4) -> VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR (0x00000004)
         /// - PreferFastBuild (8) -> VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_BUILD_BIT_KHR (0x00000008)
         /// - MinimizeMemory (16) -> VK_BUILD_ACCELERATION_STRUCTURE_LOW_MEMORY_BIT_KHR (0x00000010)
-        /// 
+        ///
         /// Default behavior: If no flags are set, defaults to PREFER_FAST_TRACE_BIT_KHR for optimal ray tracing performance.
         /// </remarks>
         private VkBuildAccelerationStructureFlagsKHR ConvertAccelStructBuildFlagsToVkFlags(AccelStructBuildFlags buildFlags)
@@ -3581,7 +3587,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             // Map each flag from AccelStructBuildFlags to corresponding Vulkan flag
             // Based on Vulkan API specification for VkBuildAccelerationStructureFlagsKHR
-            
+
             if ((buildFlags & AccelStructBuildFlags.AllowUpdate) != 0)
             {
                 vkFlags |= VkBuildAccelerationStructureFlagsKHR.VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR;
@@ -3833,7 +3839,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     switch (item.Type)
                     {
                         case BindingType.Texture:
-                        case BindingType.UnorderedAccess:
+                        case BindingType.RWTexture:
                             // Create VkDescriptorImageInfo for texture/image
                             if (item.Texture != null)
                             {
@@ -3844,8 +3850,8 @@ namespace Andastra.Runtime.MonoGame.Backends
                                     {
                                         sampler = IntPtr.Zero,
                                         imageView = imageView,
-                                        imageLayout = item.Type == BindingType.UnorderedAccess 
-                                            ? VkImageLayout.VK_IMAGE_LAYOUT_GENERAL 
+                                        imageLayout = item.Type == BindingType.RWTexture
+                                            ? VkImageLayout.VK_IMAGE_LAYOUT_GENERAL
                                             : VkImageLayout.VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
                                     };
 
@@ -3917,22 +3923,22 @@ namespace Andastra.Runtime.MonoGame.Backends
                                 {
                                     // Set descriptor type for acceleration structure
                                     writeDescriptorSet.descriptorType = VkDescriptorType.VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
-                                    
+
                                     // Create VkWriteDescriptorSetAccelerationStructureKHR structure
                                     // This structure is chained via pNext in VkWriteDescriptorSet
                                     // The structure contains an array of acceleration structure handles
-                                    
+
                                     // Allocate memory for array of acceleration structure handles (IntPtr array)
                                     // TODO: STUB - For now, we support single acceleration structure per binding
                                     IntPtr accelStructHandlesArray = IntPtr.Zero;
                                     IntPtr accelStructInfoPtr = IntPtr.Zero;
-                                    
+
                                     try
                                     {
                                         // Allocate memory for array of acceleration structure handles
                                         accelStructHandlesArray = Marshal.AllocHGlobal(IntPtr.Size);
                                         Marshal.WriteIntPtr(accelStructHandlesArray, accelStructHandle);
-                                        
+
                                         // Create VkWriteDescriptorSetAccelerationStructureKHR structure
                                         VkWriteDescriptorSetAccelerationStructureKHR accelStructInfo = new VkWriteDescriptorSetAccelerationStructureKHR
                                         {
@@ -3941,19 +3947,19 @@ namespace Andastra.Runtime.MonoGame.Backends
                                             accelerationStructureCount = 1,
                                             pAccelerationStructures = accelStructHandlesArray
                                         };
-                                        
+
                                         // Allocate memory for the acceleration structure info structure
                                         accelStructInfoPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(VkWriteDescriptorSetAccelerationStructureKHR)));
                                         Marshal.StructureToPtr(accelStructInfo, accelStructInfoPtr, false);
-                                        
+
                                         // Add both allocations to cleanup list (order: structure first, then handles array)
                                         // This ensures proper cleanup order
                                         accelStructInfoPtrs.Add(accelStructInfoPtr);
                                         accelStructInfoPtrs.Add(accelStructHandlesArray);
-                                        
+
                                         // Chain the acceleration structure info via pNext in VkWriteDescriptorSet
                                         writeDescriptorSet.pNext = accelStructInfoPtr;
-                                        
+
                                         // Clear pointers to prevent double-free (they're now tracked in the list)
                                         accelStructInfoPtr = IntPtr.Zero;
                                         accelStructHandlesArray = IntPtr.Zero;
@@ -4262,7 +4268,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             // Full implementation of VK_KHR_acceleration_structure extension
             // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureKHR.html
-            
+
             // Load extension functions if not already loaded
             LoadAccelerationStructureExtensionFunctions(_device);
 
@@ -4273,8 +4279,8 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             // Determine acceleration structure type
-            VkAccelerationStructureTypeKHR accelType = desc.IsTopLevel 
-                ? VkAccelerationStructureTypeKHR.VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR 
+            VkAccelerationStructureTypeKHR accelType = desc.IsTopLevel
+                ? VkAccelerationStructureTypeKHR.VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR
                 : VkAccelerationStructureTypeKHR.VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
 
             // Calculate buffer size using vkGetAccelerationStructureBuildSizesKHR when geometry data is available
@@ -4282,7 +4288,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             ulong bufferSize = 0UL;
             ulong buildScratchSize = 0UL;
             ulong updateScratchSize = 0UL;
-            
+
             if (desc.IsTopLevel)
             {
                 // For TLAS, estimate size based on max instances
@@ -4299,7 +4305,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // Convert geometry descriptions to Vulkan structures
                 List<VkAccelerationStructureGeometryKHR> vkGeometries = new List<VkAccelerationStructureGeometryKHR>();
                 List<uint> maxPrimitiveCounts = new List<uint>();
-                
+
                 try
                 {
                     foreach (GeometryDesc geom in desc.BottomLevelGeometries)
@@ -4307,12 +4313,12 @@ namespace Andastra.Runtime.MonoGame.Backends
                         if (geom.Type == GeometryType.Triangles)
                         {
                             GeometryTriangles triangles = geom.Triangles;
-                            
+
                             // Get device addresses for buffers (use 0 if buffers not yet created - this is for size calculation)
                             ulong vertexBufferAddress = 0UL;
                             ulong indexBufferAddress = 0UL;
                             ulong transformBufferAddress = 0UL;
-                            
+
                             if (triangles.VertexBuffer != null)
                             {
                                 VulkanBuffer vulkanVertexBuffer = triangles.VertexBuffer as VulkanBuffer;
@@ -4331,7 +4337,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                     }
                                 }
                             }
-                            
+
                             if (triangles.IndexBuffer != null)
                             {
                                 VulkanBuffer vulkanIndexBuffer = triangles.IndexBuffer as VulkanBuffer;
@@ -4350,7 +4356,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                     }
                                 }
                             }
-                            
+
                             if (triangles.TransformBuffer != null)
                             {
                                 VulkanBuffer vulkanTransformBuffer = triangles.TransformBuffer as VulkanBuffer;
@@ -4369,21 +4375,21 @@ namespace Andastra.Runtime.MonoGame.Backends
                                     }
                                 }
                             }
-                            
+
                             // Convert vertex format to VkFormat
                             VkFormat vertexFormat = ConvertToVkFormat(triangles.VertexFormat);
                             if (vertexFormat == VkFormat.VK_FORMAT_UNDEFINED)
                             {
                                 vertexFormat = (VkFormat)106; // VK_FORMAT_R32G32B32_SFLOAT
                             }
-                            
+
                             // Convert index format
                             VkIndexType indexType = VkIndexType.VK_INDEX_TYPE_UINT32;
                             if (triangles.IndexFormat == TextureFormat.R16_UInt)
                             {
                                 indexType = VkIndexType.VK_INDEX_TYPE_UINT16;
                             }
-                            
+
                             // Create triangles data structure
                             VkAccelerationStructureGeometryTrianglesDataKHR trianglesData = new VkAccelerationStructureGeometryTrianglesDataKHR
                             {
@@ -4397,17 +4403,17 @@ namespace Andastra.Runtime.MonoGame.Backends
                                 indexDataDeviceAddress = indexBufferAddress,
                                 transformDataDeviceAddress = transformBufferAddress
                             };
-                            
+
                             // Create geometry structure
                             VkGeometryFlagsKHR geometryFlags = VkGeometryFlagsKHR.VK_GEOMETRY_OPAQUE_BIT_KHR;
                             if ((geom.Flags & GeometryFlags.NoDuplicateAnyHit) != 0)
                             {
                                 geometryFlags |= VkGeometryFlagsKHR.VK_GEOMETRY_NO_DUPLICATE_ANY_HIT_INVOCATION_BIT_KHR;
                             }
-                            
+
                             VkAccelerationStructureGeometryDataKHR geometryData = new VkAccelerationStructureGeometryDataKHR();
                             geometryData.triangles = trianglesData;
-                            
+
                             VkAccelerationStructureGeometryKHR vkGeometry = new VkAccelerationStructureGeometryKHR
                             {
                                 sType = VkStructureType.VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR,
@@ -4416,15 +4422,15 @@ namespace Andastra.Runtime.MonoGame.Backends
                                 geometry = geometryData,
                                 flags = geometryFlags
                             };
-                            
+
                             vkGeometries.Add(vkGeometry);
-                            
+
                             // Calculate primitive count for this geometry
                             uint primitiveCount = (uint)(triangles.IndexCount > 0 ? triangles.IndexCount / 3 : (triangles.VertexCount > 0 ? triangles.VertexCount / 3 : 1));
                             maxPrimitiveCounts.Add(primitiveCount);
                         }
                     }
-                    
+
                     if (vkGeometries.Count > 0)
                     {
                         // Allocate memory for geometry array
@@ -4438,12 +4444,12 @@ namespace Andastra.Runtime.MonoGame.Backends
                                 IntPtr geometryPtr = new IntPtr(geometriesPtr.ToInt64() + i * geometrySize);
                                 Marshal.StructureToPtr(vkGeometries[i], geometryPtr, false);
                             }
-                            
+
                             // Create build geometry info
                             // Convert AccelStructBuildFlags to Vulkan build flags
                             // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkBuildAccelerationStructureFlagsKHR.html
                             VkBuildAccelerationStructureFlagsKHR buildFlags = ConvertAccelStructBuildFlagsToVkFlags(desc.BuildFlags);
-                            
+
                             VkAccelerationStructureBuildGeometryInfoKHR buildInfo = new VkAccelerationStructureBuildGeometryInfoKHR
                             {
                                 sType = VkStructureType.VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR,
@@ -4457,7 +4463,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                 pGeometries = geometriesPtr,
                                 ppGeometries = IntPtr.Zero
                             };
-                            
+
                             // Allocate memory for max primitive counts array
                             IntPtr maxPrimitiveCountsPtr = Marshal.AllocHGlobal(sizeof(uint) * maxPrimitiveCounts.Count);
                             try
@@ -4467,7 +4473,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                 {
                                     Marshal.WriteInt32(maxPrimitiveCountsPtr, i * sizeof(uint), (int)maxPrimitiveCounts[i]);
                                 }
-                                
+
                                 // Get build sizes
                                 VkAccelerationStructureBuildSizesInfoKHR sizeInfo = new VkAccelerationStructureBuildSizesInfoKHR
                                 {
@@ -4477,14 +4483,14 @@ namespace Andastra.Runtime.MonoGame.Backends
                                     buildScratchSize = 0UL,
                                     updateScratchSize = 0UL
                                 };
-                                
+
                                 vkGetAccelerationStructureBuildSizesKHR(
                                     _device,
                                     VkAccelerationStructureBuildTypeKHR.VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
                                     ref buildInfo,
                                     maxPrimitiveCountsPtr,
                                     ref sizeInfo);
-                                
+
                                 bufferSize = sizeInfo.accelerationStructureSize;
                                 buildScratchSize = sizeInfo.buildScratchSize;
                                 updateScratchSize = sizeInfo.updateScratchSize;
@@ -4515,7 +4521,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     updateScratchSize = 4096UL;
                 }
             }
-            
+
             // Use fallback estimates if size calculation didn't produce valid results
             if (bufferSize == 0UL)
             {
@@ -4523,7 +4529,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 buildScratchSize = desc.IsTopLevel ? 2048UL : 8192UL;
                 updateScratchSize = desc.IsTopLevel ? 1024UL : 4096UL;
             }
-            
+
             // Ensure minimum sizes (Vulkan requires at least some space)
             bufferSize = Math.Max(bufferSize, 256UL);
             buildScratchSize = Math.Max(buildScratchSize, 256UL);
@@ -4534,7 +4540,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             var bufferDesc = new BufferDesc
             {
                 ByteSize = (int)bufferSize,
-                Usage = BufferUsageFlags.ShaderResource | BufferUsageFlags.AccelerationStructureStorage
+                Usage = BufferUsageFlags.ShaderResource | BufferUsageFlags.AccelStructStorage
             };
 
             IBuffer accelBuffer = CreateBuffer(bufferDesc);
@@ -4589,7 +4595,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             IntPtr vkAccelStruct = IntPtr.Zero;
             VkResult result = vkCreateAccelerationStructureKHR(_device, ref createInfo, IntPtr.Zero, out vkAccelStruct);
-            
+
             if (result != VkResult.VK_SUCCESS || vkAccelStruct == IntPtr.Zero)
             {
                 accelBuffer.Dispose();
@@ -4981,7 +4987,19 @@ namespace Andastra.Runtime.MonoGame.Backends
                                 // and proper buffer device address support (VK_KHR_buffer_device_address)
 
                                 IntPtr handle = new IntPtr(_nextResourceHandle++);
-                                var pipeline = new VulkanRaytracingPipeline(handle, desc, vkPipeline, pipelineLayout, sbtBuffer, _device);
+                                // Convert interface desc to backend-specific desc for storage
+                                var backendDesc = new Backends.RaytracingPipelineDesc
+                                {
+                                    RayGenShader = desc.Shaders != null && desc.Shaders.Length > 0 ? new byte[0] : new byte[0],
+                                    MissShader = new byte[0],
+                                    ClosestHitShader = new byte[0],
+                                    AnyHitShader = new byte[0],
+                                    MaxPayloadSize = desc.MaxPayloadSize,
+                                    MaxAttributeSize = desc.MaxAttributeSize,
+                                    MaxRecursionDepth = desc.MaxRecursionDepth,
+                                    DebugName = desc.DebugName
+                                };
+                                var pipeline = new VulkanRaytracingPipeline(handle, backendDesc, vkPipeline, pipelineLayout, sbtBuffer, _device);
                                 _resources[handle] = pipeline;
 
                                 return pipeline;
@@ -5124,6 +5142,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 commandBuffers[i] = commandLists[i]._vkCommandBuffer;
             }
 
+            IntPtr pCommandBuffers = MarshalArray(commandBuffers);
             VkSubmitInfo submitInfo = new VkSubmitInfo
             {
                 sType = VkStructureType.VK_STRUCTURE_TYPE_SUBMIT_INFO,
@@ -5132,12 +5151,22 @@ namespace Andastra.Runtime.MonoGame.Backends
                 pWaitSemaphores = IntPtr.Zero,
                 pWaitDstStageMask = IntPtr.Zero,
                 commandBufferCount = (uint)commandBuffers.Length,
-                pCommandBuffers = MarshalArray(commandBuffers),
+                pCommandBuffers = pCommandBuffers,
                 signalSemaphoreCount = 0,
                 pSignalSemaphores = IntPtr.Zero
             };
 
-            CheckResult(vkQueueSubmit(queue, 1, ref submitInfo, IntPtr.Zero), "vkQueueSubmit");
+            IntPtr submitInfoPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(VkSubmitInfo)));
+            try
+            {
+                Marshal.StructureToPtr(submitInfo, submitInfoPtr, false);
+                CheckResult(vkQueueSubmit(queue, 1, submitInfoPtr, IntPtr.Zero), "vkQueueSubmit");
+            }
+            finally
+            {
+                Marshal.DestroyStructure(submitInfoPtr, typeof(VkSubmitInfo));
+                Marshal.FreeHGlobal(submitInfoPtr);
+            }
 
             // Free the marshalled array
             if (submitInfo.pCommandBuffers != IntPtr.Zero)
@@ -5691,6 +5720,9 @@ namespace Andastra.Runtime.MonoGame.Backends
             private readonly IntPtr _vkMemory;
             private readonly IntPtr _vkImageView;
             private readonly IntPtr _device;
+
+            // Public accessor for VkImageView
+            public IntPtr VkImageView { get { return _vkImageView; } }
 
             public VulkanTexture(IntPtr handle, TextureDesc desc, IntPtr nativeHandle = default(IntPtr))
                 : this(handle, desc, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, nativeHandle)
@@ -6280,17 +6312,17 @@ namespace Andastra.Runtime.MonoGame.Backends
         private class VulkanCommandList : ICommandList, IResource
         {
             private readonly IntPtr _handle;
-            private readonly CommandListType _type;
+            internal readonly CommandListType _type;
             private readonly VulkanDevice _device;
-            private readonly IntPtr _vkCommandBuffer;
+            internal readonly IntPtr _vkCommandBuffer;
             private readonly IntPtr _vkCommandPool;
             private readonly IntPtr _vkDevice;
-            private bool _isOpen;
+            internal bool _isOpen;
 
             // Barrier tracking
             private readonly List<PendingBufferBarrier> _pendingBufferBarriers;
             private readonly Dictionary<object, ResourceState> _resourceStates;
-            
+
             // Scratch buffer tracking for acceleration structure builds
             private readonly List<IBuffer> _scratchBuffers;
 
@@ -6367,10 +6399,10 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             /// <summary>
             /// Writes byte array data to a buffer.
-            /// 
+            ///
             /// Uses vkCmdUpdateBuffer for small updates (<= 65536 bytes) or staging buffer + vkCmdCopyBuffer
             /// for larger updates. The data is written starting at the specified destination offset.
-            /// 
+            ///
             /// Based on Vulkan API:
             /// - vkCmdUpdateBuffer: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdUpdateBuffer.html
             /// - vkCmdCopyBuffer: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdCopyBuffer.html
@@ -6454,11 +6486,11 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             /// <summary>
             /// Writes typed array data to a buffer.
-            /// 
+            ///
             /// Converts the typed array to bytes and writes using the same mechanism as WriteBuffer(byte[]).
             /// Uses vkCmdUpdateBuffer for small updates (<= 65536 bytes) or staging buffer + vkCmdCopyBuffer
             /// for larger updates. The data is written starting at the specified destination offset.
-            /// 
+            ///
             /// Based on Vulkan API:
             /// - vkCmdUpdateBuffer: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdUpdateBuffer.html
             /// - vkCmdCopyBuffer: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdCopyBuffer.html
@@ -6571,8 +6603,8 @@ namespace Andastra.Runtime.MonoGame.Backends
             /// </summary>
             private void WriteBufferLarge(byte[] data, IntPtr dstBuffer, ulong dstOffset, ulong dataSize, IBuffer buffer)
             {
-                if (vkCreateBuffer == null || vkAllocateMemory == null || vkMapMemory == null || 
-                    vkUnmapMemory == null || vkCmdCopyBuffer == null || vkGetBufferMemoryRequirements == null || 
+                if (vkCreateBuffer == null || vkAllocateMemory == null || vkMapMemory == null ||
+                    vkUnmapMemory == null || vkCmdCopyBuffer == null || vkGetBufferMemoryRequirements == null ||
                     vkBindBufferMemory == null || vkDestroyBuffer == null || vkFreeMemory == null)
                 {
                     throw new NotSupportedException("Required Vulkan functions are not available");
@@ -6976,18 +7008,18 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
             /// <summary>
             /// Copies data from a source buffer to a destination buffer using GPU-side buffer copy.
-            /// 
+            ///
             /// This performs a GPU-side buffer-to-buffer copy operation using vkCmdCopyBuffer.
             /// The copy operation is recorded into the command buffer and executed when the command buffer is submitted.
-            /// 
+            ///
             /// Buffer state transitions:
             /// - Source buffer is transitioned to CopySource state (if needed)
             /// - Destination buffer is transitioned to CopyDest state (if needed)
             /// - Barriers are committed before the copy operation
-            /// 
+            ///
             /// Based on Vulkan API: vkCmdCopyBuffer
             /// Vulkan API Reference: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdCopyBuffer.html
-            /// 
+            ///
             /// Vulkan Specification:
             /// - vkCmdCopyBuffer signature: void vkCmdCopyBuffer(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t regionCount, const VkBufferCopy* pRegions)
             /// - VkBufferCopy structure contains: srcOffset (VkDeviceSize), dstOffset (VkDeviceSize), size (VkDeviceSize)
@@ -7039,10 +7071,10 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                 // Transition source buffer to CopySource state
                 SetBufferState(src, ResourceState.CopySource);
-                
+
                 // Transition destination buffer to CopyDest state
                 SetBufferState(dest, ResourceState.CopyDest);
-                
+
                 // Commit barriers before copy operation
                 CommitBarriers();
 
@@ -7571,11 +7603,11 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
             /// <summary>
             /// Clears an unordered access view (UAV) texture to a float Vector4 value.
-            /// 
+            ///
             /// Implementation: Uses vkCmdClearColorImage with VK_IMAGE_LAYOUT_GENERAL layout.
             /// UAV textures in Vulkan use GENERAL layout, which is the standard layout for
             /// storage images that can be read/written by compute shaders.
-            /// 
+            ///
             /// Based on Vulkan API: https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdClearColorImage.html
             /// Vulkan spec: vkCmdClearColorImage can be used with VK_IMAGE_LAYOUT_GENERAL layout
             /// for storage images (UAVs).
@@ -8040,17 +8072,17 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             /// <summary>
             /// Inserts a UAV (Unordered Access View) barrier for a texture resource.
-            /// 
+            ///
             /// A UAV barrier ensures that all UAV writes to the texture have completed before
             /// subsequent operations (compute shaders, pixel shaders, etc.) can read from the texture.
             /// This is necessary when a texture is both written to and read from as a UAV in different
             /// draw/dispatch calls within the same command list.
-            /// 
+            ///
             /// Based on Vulkan API: vkCmdPipelineBarrier with VkMemoryBarrier
             /// Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdPipelineBarrier.html
             /// Original implementation: Records a memory barrier command into the command buffer
             /// UAV barriers use VkMemoryBarrier to synchronize all shader storage writes with subsequent reads
-            /// 
+            ///
             /// Note: UAV barriers differ from transition barriers - they don't change resource state,
             /// they only synchronize access between UAV write and read operations.
             /// </summary>
@@ -8122,17 +8154,17 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             /// <summary>
             /// Inserts a UAV (Unordered Access View) barrier for a buffer resource.
-            /// 
+            ///
             /// A UAV barrier ensures that all UAV writes to the buffer have completed before
             /// subsequent operations (compute shaders, pixel shaders, etc.) can read from the buffer.
             /// This is necessary when a buffer is both written to and read from as a UAV in different
             /// draw/dispatch calls within the same command list.
-            /// 
+            ///
             /// Based on Vulkan API: vkCmdPipelineBarrier with VkMemoryBarrier
             /// Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdPipelineBarrier.html
             /// Original implementation: Records a memory barrier command into the command buffer
             /// UAV barriers use VkMemoryBarrier to synchronize all shader storage writes with subsequent reads
-            /// 
+            ///
             /// Note: UAV barriers differ from transition barriers - they don't change resource state,
             /// they only synchronize access between UAV write and read operations.
             /// </summary>
@@ -8203,17 +8235,17 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
             /// <summary>
             /// Sets all graphics pipeline state for rendering.
-            /// 
+            ///
             /// This method configures the complete graphics pipeline state including:
             /// - Graphics pipeline binding
             /// - Viewports and scissor rectangles
             /// - Descriptor sets (shader resources)
             /// - Vertex buffers
             /// - Index buffer
-            /// 
+            ///
             /// Note: Framebuffer and render pass begin/end are typically handled separately,
             /// as render passes define render targets and must be managed around draw calls.
-            /// 
+            ///
             /// Based on Vulkan API: vkCmdBindPipeline, vkCmdSetViewport, vkCmdSetScissor,
             /// vkCmdBindDescriptorSets, vkCmdBindVertexBuffers, vkCmdBindIndexBuffer
             /// Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBindPipeline.html
@@ -8417,11 +8449,11 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
             /// <summary>
             /// Sets a single viewport using vkCmdSetViewport.
-            /// 
+            ///
             /// Defines the viewport rectangle that transforms normalized device coordinates to framebuffer coordinates.
             /// The viewport rectangle defines the region of the framebuffer that will be rendered to, as well as the
             /// depth range for the viewport.
-            /// 
+            ///
             /// Based on Vulkan API: vkCmdSetViewport
             /// Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetViewport.html
             /// </summary>
@@ -8486,11 +8518,11 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             /// <summary>
             /// Sets multiple viewports using vkCmdSetViewport.
-            /// 
+            ///
             /// Defines an array of viewport rectangles that transform normalized device coordinates to framebuffer coordinates.
             /// Multiple viewports can be used for multi-viewport rendering (requires VK_KHR_multiview extension).
             /// Each viewport defines the region of the framebuffer that will be rendered to, as well as the depth range.
-            /// 
+            ///
             /// Based on Vulkan API: vkCmdSetViewport
             /// Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetViewport.html
             /// </summary>
@@ -8565,11 +8597,11 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
             /// <summary>
             /// Sets a single scissor rectangle using vkCmdSetScissor.
-            /// 
+            ///
             /// Defines the scissor rectangle that clips rendering to a specific region of the framebuffer.
             /// All rendering outside this rectangle is discarded. The scissor rectangle is defined in
             /// framebuffer coordinates, with (0,0) at the top-left corner.
-            /// 
+            ///
             /// Based on Vulkan API: vkCmdSetScissor
             /// Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetScissor.html
             /// </summary>
@@ -8636,11 +8668,11 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             /// <summary>
             /// Sets multiple scissor rectangles using vkCmdSetScissor.
-            /// 
+            ///
             /// Defines an array of scissor rectangles that clip rendering. Each viewport (if multiple
             /// viewports are used) can have its own scissor rectangle. The scissor rectangles are defined
             /// in framebuffer coordinates, with (0,0) at the top-left corner.
-            /// 
+            ///
             /// Based on Vulkan API: vkCmdSetScissor
             /// Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetScissor.html
             /// </summary>
@@ -8721,11 +8753,11 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
             /// <summary>
             /// Sets blend constants for blend operations.
-            /// 
+            ///
             /// Blend constants are used when the blend factor is VK_BLEND_FACTOR_CONSTANT_COLOR,
             /// VK_BLEND_FACTOR_CONSTANT_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR, or
             /// VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_ALPHA.
-            /// 
+            ///
             /// Based on Vulkan API: vkCmdSetBlendConstants
             /// Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetBlendConstants.html
             /// </summary>
@@ -8782,12 +8814,12 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
             /// <summary>
             /// Sets the stencil reference value for stencil operations.
-            /// 
+            ///
             /// The stencil reference value is used in stencil compare operations when
             /// the stencil compare operation is VK_COMPARE_OP_EQUAL, VK_COMPARE_OP_NOT_EQUAL,
             /// VK_COMPARE_OP_LESS, VK_COMPARE_OP_LESS_OR_EQUAL, VK_COMPARE_OP_GREATER, or
             /// VK_COMPARE_OP_GREATER_OR_EQUAL.
-            /// 
+            ///
             /// Based on Vulkan API: vkCmdSetStencilReference
             /// Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetStencilReference.html
             /// swkotor2.exe: N/A - Original game used DirectX 9, not Vulkan
@@ -8861,15 +8893,15 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
             /// <summary>
             /// Draws indexed primitives using vkCmdDrawIndexed.
-            /// 
+            ///
             /// Performs an indexed draw call, using indices from the currently bound index buffer
             /// to reference vertices from the vertex buffer. The index buffer must be bound before
             /// calling this method (via SetIndexBuffer or SetGraphicsState).
-            /// 
+            ///
             /// Based on Vulkan API: vkCmdDrawIndexed
             /// Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdDrawIndexed.html
             /// Original implementation: Records an indexed draw command into the command buffer
-            /// 
+            ///
             /// vkCmdDrawIndexed signature:
             /// void vkCmdDrawIndexed(
             ///     VkCommandBuffer commandBuffer,
@@ -8878,14 +8910,14 @@ namespace Andastra.Runtime.MonoGame.Backends
             ///     uint32_t firstIndex,
             ///     int32_t vertexOffset,
             ///     uint32_t firstInstance);
-            /// 
+            ///
             /// Maps from DrawArguments:
             /// - indexCount: args.VertexCount (for indexed draws, VertexCount represents the number of indices to draw)
             /// - instanceCount: args.InstanceCount (defaults to 1 if 0 or negative)
             /// - firstIndex: args.StartIndexLocation (offset into index buffer, in indices)
             /// - vertexOffset: args.BaseVertexLocation (offset added to each vertex index before indexing into vertex buffer)
             /// - firstInstance: args.StartInstanceLocation (first instance ID to draw)
-            /// 
+            ///
             /// Note: The index buffer format (16-bit or 32-bit) is determined when the index buffer is bound.
             /// The graphics pipeline and vertex/index buffers must be bound before calling this method.
             /// </summary>
@@ -8910,17 +8942,17 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // Map DrawArguments to vkCmdDrawIndexed parameters
                 // indexCount: Number of indices to draw (args.VertexCount for indexed draws)
                 uint indexCount = unchecked((uint)args.VertexCount);
-                
+
                 // instanceCount: Number of instances to draw (defaults to 1 if 0 or negative)
                 uint instanceCount = args.InstanceCount > 0 ? unchecked((uint)args.InstanceCount) : 1u;
-                
+
                 // firstIndex: Offset into index buffer, in indices (args.StartIndexLocation)
                 uint firstIndex = unchecked((uint)System.Math.Max(0, args.StartIndexLocation));
-                
+
                 // vertexOffset: Offset added to each vertex index before indexing into vertex buffer (args.BaseVertexLocation)
                 // Note: This is an int32_t in Vulkan, so it can be negative (allows negative vertex offsets)
                 int vertexOffset = args.BaseVertexLocation;
-                
+
                 // firstInstance: First instance ID to draw (args.StartInstanceLocation)
                 uint firstInstance = unchecked((uint)System.Math.Max(0, args.StartInstanceLocation));
 
@@ -8936,18 +8968,18 @@ namespace Andastra.Runtime.MonoGame.Backends
             /// <summary>
             /// Draws primitives using indirect arguments from a buffer.
             /// Records a vkCmdDrawIndirect command that reads draw parameters from the specified buffer.
-            /// 
+            ///
             /// The buffer must contain an array of VkDrawIndirectCommand structures, each containing:
             /// - vertexCount (uint32): Number of vertices to draw
             /// - instanceCount (uint32): Number of instances to draw
             /// - firstVertex (uint32): Index of the first vertex to use
             /// - firstInstance (uint32): Instance ID of the first instance to draw
-            /// 
+            ///
             /// Each VkDrawIndirectCommand is 16 bytes (4 uint32 values).
-            /// 
+            ///
             /// Vulkan API: vkCmdDrawIndirect(commandBuffer, buffer, offset, drawCount, stride)
             /// Vulkan API Reference: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdDrawIndirect.html
-            /// 
+            ///
             /// Requirements:
             /// - Command buffer must be in recording state (Begin() called)
             /// - Graphics pipeline must be bound (SetGraphicsState called)
@@ -9044,7 +9076,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // - firstVertex (uint32) - 4 bytes at offset + 8
                 // - firstInstance (uint32) - 4 bytes at offset + 12
                 // Total: 16 bytes per draw indirect command (VkDrawIndirectCommand)
-                // 
+                //
                 // The buffer layout for drawCount > 1 with stride:
                 // [Command 0: 16 bytes][padding if stride > 16][Command 1: 16 bytes][padding if stride > 16][...]
                 // If stride == 0, commands are tightly packed with no padding.
@@ -9058,7 +9090,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                 // Record the indirect draw command to the command buffer
                 // This command will be executed when the command buffer is submitted to a graphics queue
-                // 
+                //
                 // Vulkan API signature:
                 // void vkCmdDrawIndirect(
                 //     VkCommandBuffer commandBuffer,
@@ -9086,14 +9118,14 @@ namespace Andastra.Runtime.MonoGame.Backends
             /// <summary>
             /// Draws indexed primitives using indirect arguments from a buffer.
             /// Records a vkCmdDrawIndexedIndirect command that reads draw parameters from the specified buffer.
-            /// 
+            ///
             /// The buffer must contain an array of VkDrawIndexedIndirectCommand structures, each containing:
             /// - indexCount (uint32): Number of indices to draw
             /// - instanceCount (uint32): Number of instances to draw
             /// - firstIndex (uint32): First index to use (offset into index buffer)
             /// - vertexOffset (int32): Value added to each vertex index before indexing into vertex buffer
             /// - firstInstance (uint32): First instance ID to use
-            /// 
+            ///
             /// Based on Vulkan API: vkCmdDrawIndexedIndirect
             /// https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdDrawIndexedIndirect.html
             /// </summary>
@@ -9220,7 +9252,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     // Extract VkPipelineLayout from the compute pipeline's descriptor
                     // The pipeline layout is created during pipeline creation and stored with the pipeline
                     // We need access to it to bind descriptor sets correctly
-                    // 
+                    //
                     // For descriptor sets, we need to:
                     // 1. Extract VkDescriptorSet handles from IBindingSet[] (cast to VulkanBindingSet)
                     // 2. Extract VkPipelineLayout from the compute pipeline
@@ -9240,7 +9272,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     // Build arrays of descriptor set handles and dynamic offsets
                     // Note: Dynamic offsets would come from the binding set if it has dynamic uniform buffers
                     int descriptorSetCount = state.BindingSets.Length;
-                    
+
                     for (int i = 0; i < descriptorSetCount; i++)
                     {
                         VulkanBindingSet vulkanBindingSet = state.BindingSets[i] as VulkanBindingSet;
@@ -9619,7 +9651,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 }
 
                 // Validate that acceleration structure functions are available
-                if (vkCmdBuildAccelerationStructuresKHR == null || 
+                if (vkCmdBuildAccelerationStructuresKHR == null ||
                     vkGetAccelerationStructureBuildSizesKHR == null ||
                     vkGetBufferDeviceAddressKHR == null ||
                     vkCreateAccelerationStructureKHR == null)
@@ -9648,7 +9680,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     for (int i = 0; i < geometries.Length; i++)
                     {
                         GeometryDesc geom = geometries[i];
-                        
+
                         if (geom.Type == GeometryType.Triangles)
                         {
                             GeometryTriangles triangles = geom.Triangles;
@@ -9792,7 +9824,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                         else if (geom.Type == GeometryType.AABBs)
                         {
                             GeometryAABBs aabbs = geom.AABBs;
-                            
+
                             // Get device address for AABB buffer
                             ulong aabbBufferAddress = 0UL;
                             if (aabbs.Buffer != null)
@@ -9817,7 +9849,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                     }
                                 }
                             }
-                            
+
                             // Create AABBs data structure
                             // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureGeometryAabbsDataKHR.html
                             VkAccelerationStructureGeometryAabbsDataKHR aabbsData = new VkAccelerationStructureGeometryAabbsDataKHR
@@ -9827,18 +9859,18 @@ namespace Andastra.Runtime.MonoGame.Backends
                                 dataDeviceAddress = aabbBufferAddress,
                                 stride = (ulong)(aabbs.Stride > 0 ? aabbs.Stride : 24) // Default stride is 24 bytes (6 floats: min.x, min.y, min.z, max.x, max.y, max.z)
                             };
-                            
+
                             // Create geometry structure
                             VkGeometryFlagsKHR geometryFlags = VkGeometryFlagsKHR.VK_GEOMETRY_OPAQUE_BIT_KHR;
                             if ((geom.Flags & GeometryFlags.NoDuplicateAnyHit) != 0)
                             {
                                 geometryFlags |= VkGeometryFlagsKHR.VK_GEOMETRY_NO_DUPLICATE_ANY_HIT_INVOCATION_BIT_KHR;
                             }
-                            
+
                             // Create geometry structure with AABBs data in union
                             VkAccelerationStructureGeometryDataKHR geometryData = new VkAccelerationStructureGeometryDataKHR();
                             geometryData.aabbs = aabbsData; // Direct assignment works because of FieldOffset(0)
-                            
+
                             VkAccelerationStructureGeometryKHR vkGeometry = new VkAccelerationStructureGeometryKHR
                             {
                                 sType = VkStructureType.VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR,
@@ -9847,9 +9879,9 @@ namespace Andastra.Runtime.MonoGame.Backends
                                 geometry = geometryData,
                                 flags = geometryFlags
                             };
-                            
+
                             vkGeometries.Add(vkGeometry);
-                            
+
                             // Create build range info for AABBs
                             // For AABBs, primitiveCount is the number of AABB primitives
                             VkAccelerationStructureBuildRangeInfoKHR buildRange = new VkAccelerationStructureBuildRangeInfoKHR
@@ -9941,10 +9973,10 @@ namespace Andastra.Runtime.MonoGame.Backends
                                     ByteSize = (int)sizeInfo.buildScratchSize,
                                     Usage = BufferUsageFlags.ShaderResource | BufferUsageFlags.IndirectArgument
                                 };
-                                
+
                                 IBuffer scratchBuffer = _device.CreateBuffer(scratchBufferDesc);
                                 _scratchBuffers.Add(scratchBuffer);
-                                
+
                                 // Get device address for scratch buffer
                                 VulkanBuffer vulkanScratchBuffer = scratchBuffer as VulkanBuffer;
                                 if (vulkanScratchBuffer != null)
@@ -9962,7 +9994,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                     }
                                 }
                             }
-                            
+
                             buildInfo.scratchDataDeviceAddress = scratchBufferAddress;
 
                             // Allocate memory for build range info pointers array
@@ -10062,7 +10094,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 }
 
                 // Validate that acceleration structure functions are available
-                if (vkCmdBuildAccelerationStructuresKHR == null || 
+                if (vkCmdBuildAccelerationStructuresKHR == null ||
                     vkGetAccelerationStructureBuildSizesKHR == null ||
                     vkGetBufferDeviceAddressKHR == null ||
                     vkCreateAccelerationStructureKHR == null)
@@ -10173,7 +10205,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                         // Convert AccelStructBuildFlags to Vulkan build flags
                         // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkBuildAccelerationStructureFlagsKHR.html
                         VkBuildAccelerationStructureFlagsKHR buildFlags = ConvertAccelStructBuildFlagsToVkFlags(desc.BuildFlags);
-                        
+
                         VkAccelerationStructureBuildGeometryInfoKHR buildInfo = new VkAccelerationStructureBuildGeometryInfoKHR
                         {
                             sType = VkStructureType.VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR,
@@ -10224,7 +10256,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                     ByteSize = (int)sizeInfo.buildScratchSize,
                                     Usage = BufferUsageFlags.ShaderResource | BufferUsageFlags.IndirectArgument
                                 };
-                                
+
                                 IBuffer scratchBuffer = _device.CreateBuffer(scratchBufferDesc);
                                 if (scratchBuffer != null)
                                 {
@@ -10247,7 +10279,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                     }
                                 }
                             }
-                            
+
                             buildInfo.scratchDataDeviceAddress = scratchBufferAddress;
 
                             // Create build range info for instances
@@ -10508,7 +10540,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     }
                 }
                 _scratchBuffers.Clear();
-                
+
                 // Command buffers are managed by the command pool and device
                 // They are automatically freed when the command pool is destroyed
                 // No explicit cleanup needed for command buffers themselves

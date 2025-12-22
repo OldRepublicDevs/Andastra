@@ -6,7 +6,7 @@ using Andastra.Parsing.Resource;
 namespace Andastra.Parsing.Formats.TPC
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/tpc_auto.py
-    // Simplified: detect_tpc, read_tpc, write_tpc, bytes_tpc
+    // TODO:  Simplified: detect_tpc, read_tpc, write_tpc, bytes_tpc
     public static class TPCAuto
     {
         public static ResourceType DetectTpc(object source, int offset = 0)

@@ -7,7 +7,7 @@ using Andastra.Parsing.Formats.MDLData;
 namespace Andastra.Parsing.Formats.MDL
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_auto.py
-    // Simplified detector and dispatcher for MDL/MDL_ASCII
+    // TODO:  Simplified detector and dispatcher for MDL/MDL_ASCII
     public static class MDLAuto
     {
         private static Andastra.Parsing.Common.RawBinaryReader CreateReader(object source, int offset, int? size = null)

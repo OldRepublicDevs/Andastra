@@ -760,7 +760,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
                     // Mock function is set - call it with the arguments
                     // Based on PyKotor: mock is called with args array containing function arguments
                     object[] mockArgs = argsSnap.Select(a => a.Value).ToArray();
-                    
+
                     // Validate parameter count matches function signature
                     // Python validates at SetMock time, but C# validates at call time
                     if (mockArgs.Length != function.Params.Count)
@@ -770,7 +770,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
                             $"but function expects {function.Params.Count} parameters. " +
                             $"Mock functions must accept the same number of arguments as the function signature.");
                     }
-                    
+
                     try
                     {
                         value = mock(mockArgs);
@@ -859,16 +859,16 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
         /// <summary>
         /// Sets a mock function for testing. The mock function will be called instead of the actual
         /// engine function when the specified function is invoked during script execution.
-        /// 
+        ///
         /// This allows testing script behavior without requiring a full game engine runtime.
         /// The mock function receives an array of arguments (in the order they appear in the function
         /// signature) and should return a value matching the function's return type.
-        /// 
+        ///
         /// Parameter count validation: Unlike Python which can inspect the mock function's signature
         /// at registration time, C# Func&lt;object[], object&gt; has a fixed signature. Parameter count
         /// is validated at call time when the function is actually invoked. If the mock receives an
         /// incorrect number of arguments, an InvalidOperationException will be thrown.
-        /// 
+        ///
         /// Based on PyKotor interpreter.py: set_mock() method validates function exists and parameter count.
         /// Python version: Uses signature(mock).parameters to validate parameter count at registration.
         /// C# version: Validates parameter count at call time in ExecuteAction() method.
@@ -887,14 +887,14 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
         ///     // args[0] is the global variable name (string)
         ///     return 42; // Return value as int
         /// });
-        /// 
+        ///
         /// // Mock GetObjectByTag to return a specific object ID
         /// interpreter.SetMock("GetObjectByTag", (args) => {
         ///     // args[0] is the tag (string)
         ///     // args[1] is the nth occurrence (int)
         ///     return 12345; // Return object ID as int
         /// });
-        /// 
+        ///
         /// // Mock void function (return null)
         /// interpreter.SetMock("PrintString", (args) => {
         ///     // args[0] is the string to print
@@ -902,13 +902,13 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
         ///     return null; // Void functions return null
         /// });
         /// </code>
-        /// 
+        ///
         /// Note: The mock function will receive arguments in the order they appear in the function
         /// signature. For example, GetObjectByTag(string tag, int nth) will receive args[0] = tag,
         /// args[1] = nth.
-        /// 
+        ///
         /// Vector parameters are passed as Vector3 objects in the args array.
-        /// 
+        ///
         /// To remove a mock, use RemoveMock().
         /// </remarks>
         public void SetMock(string functionName, Func<object[], object> mock)
@@ -946,14 +946,14 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
         /// After calling RemoveMock, the interpreter will no longer use the mock function
         /// for the specified function name. If no mock was set for the function, this method
         /// does nothing (idempotent operation).
-        /// 
+        ///
         /// When a mock is removed, the interpreter will return null/default values for
         /// non-void functions that don't have mocks set, matching the behavior when no
         /// mock is present.
-        /// 
+        ///
         /// This method is useful for testing scenarios where you want to temporarily
         /// override a function's behavior and then restore the default behavior.
-        /// 
+        ///
         /// Example usage:
         /// <code>
         /// interpreter.SetMock("GetGlobalInt", (args) => 42);

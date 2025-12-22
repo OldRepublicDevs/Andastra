@@ -734,7 +734,7 @@ namespace NSSComp
                         throw new FileNotFoundException($"Include library file not found: {args.IncludeLibPath}");
                     }
                     // TODO: STUB - For now, we'll use the default library
-                    // Full implementation would parse the include library file and merge with defaults
+                    // TODO:  Full implementation would parse the include library file and merge with defaults
                     library = game.IsK1() ? ScriptLib.KOTOR_LIBRARY : ScriptLib.TSL_LIBRARY;
                 }
 

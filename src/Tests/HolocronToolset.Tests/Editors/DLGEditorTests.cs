@@ -3783,7 +3783,7 @@ namespace HolocronToolset.Tests.Editors
                 if (firstItem != null && firstItem.Link != null && firstItem.Link.Node != null)
                 {
                     // Select the first item (simulate tree selection)
-                    // In a full implementation, we would set the tree view selection
+                    // TODO:  In a full implementation, we would set the tree view selection
                     // TODO: STUB - For now, we'll directly test the UI controls
 
                     // Test various param1 values (TSL only, but test that UI updates in-memory model)
@@ -4162,7 +4162,7 @@ namespace HolocronToolset.Tests.Editors
                 if (firstItem != null && firstItem.Link != null)
                 {
                     // Select the first item (simulate tree selection)
-                    // In a full implementation, we would set the tree view selection
+                    // TODO:  In a full implementation, we would set the tree view selection
                     // TODO: STUB - For now, we'll directly test the UI controls
 
                     // Test quest values
@@ -4190,7 +4190,7 @@ namespace HolocronToolset.Tests.Editors
                                 editor.Load(dlgFile, "ORIHA", ResourceType.DLG, data);
 
                                 // Verify quest value is loaded back
-                                // Note: In a full implementation, we would select the item in the tree view
+                                // TODO:  Note: In a full implementation, we would select the item in the tree view
                                 // TODO: STUB - For now, we verify the node directly
                                 if (editor.Model.RowCount > 0)
                                 {

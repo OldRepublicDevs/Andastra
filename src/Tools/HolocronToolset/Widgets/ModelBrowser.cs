@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Controls.Templates;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -296,7 +298,7 @@ namespace HolocronToolset.Widgets
             var modelNames = new List<string>(_models.Keys);
             modelNames.Sort(StringComparer.OrdinalIgnoreCase);
 
-            _modelList.Items = modelNames;
+            _modelList.ItemsSource = modelNames;
 
             // Update status label
             var statusLabel = this.FindControl<TextBlock>("statusLabel");
@@ -341,7 +343,7 @@ namespace HolocronToolset.Widgets
             if (_modelList?.SelectedItem is string modelName)
             {
                 // Double-tap could trigger model preview or usage
-                // For now, just ensure it's selected
+                // TODO: STUB - For now, just ensure it's selected
                 SelectedModel = modelName;
                 ModelSelected?.Invoke(this, modelName);
             }

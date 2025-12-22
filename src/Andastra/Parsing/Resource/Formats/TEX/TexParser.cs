@@ -18,7 +18,7 @@ namespace Andastra.Parsing.Resource.Formats.TEX
     /// Format Support:
     /// - Eclipse TEX: May have a simple header or be DDS-compatible
     /// - Standard DDS variant: TEX files may contain DDS data with optional TEX header
-    /// - BioWare variant: Simplified header similar to BioWare DDS format
+    // TODO: / - BioWare variant: Simplified header similar to BioWare DDS format
     /// - Pixel formats: DXT1/DXT3/DXT5 compression, uncompressed RGB/RGBA/BGR/BGRA
     /// 
     /// Based on reverse engineering analysis:

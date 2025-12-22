@@ -122,7 +122,7 @@ namespace Andastra.Runtime.Scripting
             }
             else if (_resourceProvider is IGameResourceProvider resourceProvider)
             {
-                // Use async method synchronously for now
+                // TODO:  Use async method synchronously for now
                 var task = resourceProvider.GetResourceBytesAsync(new ResourceIdentifier(scriptResRef, ResourceType.NCS), System.Threading.CancellationToken.None);
                 task.Wait();
                 return task.Result;

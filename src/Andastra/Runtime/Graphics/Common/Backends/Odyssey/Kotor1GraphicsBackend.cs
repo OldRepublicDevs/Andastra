@@ -867,7 +867,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             // Matching swkotor.exe: FUN_004a2400 @ 0x004a2400 exactly
             // DAT_0073f218 = 0x8629, DAT_0073f224 = 0x862a, DAT_0073f21c = 0x1700
             // The function pointer DAT_007bb744 is called with 4 parameters, which suggests
-            // it might be a wrapper or the decompiler is showing a simplified view.
+            // TODO:  it might be a wrapper or the decompiler is showing a simplified view.
             // Based on the OpenGL ARB vertex program extension, we use glProgramEnvParameter4fvARB
             // which takes (target, index, params) where params is a GLfloat[4] array.
             if (_kotor1VertexProgramFlag == 0)
@@ -1821,7 +1821,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 // Formula: ((param1 + 3 + ((param1 + 3 >> 0x1f) & 3U)) >> 2) * 
                 //          ((param2 + 3 + ((param2 + 3 >> 0x1f) & 3U)) >> 2) * 
                 //          ((param3 == 4) ? 8 : 8) + 8
-                // Simplified: round up to multiple of 4, multiply, then multiply by format size
+                // TODO:  Simplified: round up to multiple of 4, multiply, then multiply by format size
                 
                 int widthRounded = ((param1 + 3 + ((param1 + 3 >> 31) & 3)) >> 2);
                 int heightRounded = ((param2 + 3 + ((param2 + 3 >> 31) & 3)) >> 2);

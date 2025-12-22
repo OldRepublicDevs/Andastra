@@ -259,7 +259,7 @@ namespace HolocronToolset.Editors
             }
             if (_noteEdit != null)
             {
-                // Map note is a LocalizedString, but we'll display it as text for now
+                // TODO:  Map note is a LocalizedString, but we'll display it as text for now
                 // If it's a string ref, show the string ref; otherwise show the text
                 if (utw.MapNote != null && utw.MapNote.StringRef == -1)
                 {

@@ -171,7 +171,7 @@ namespace KotorDiff.Diff
             }
 
             // Simple unified diff implementation
-            // For a full implementation, would need a proper diff library
+            // TODO:  For a full implementation, would need a proper diff library
             int maxLines = Math.Max(a.Count, b.Count);
             for (int i = 0; i < maxLines; i++)
             {
@@ -290,7 +290,7 @@ namespace KotorDiff.Diff
                 return true;
             }
 
-            // Simple line-by-line diff for now
+            // TODO:  Simple line-by-line diff for now
             var lines1 = text1.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
             var lines2 = text2.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
 

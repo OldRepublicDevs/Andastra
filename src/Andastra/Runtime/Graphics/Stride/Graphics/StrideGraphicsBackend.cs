@@ -147,10 +147,10 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public object CreateSoundPlayer(object resourceProvider)
         {
-            if (resourceProvider is Odyssey.Content.Interfaces.IGameResourceProvider provider)
+            if (resourceProvider is Andastra.Runtime.Content.Interfaces.IGameResourceProvider provider)
             {
                 var spatialAudio = CreateSpatialAudio();
-                return new Odyssey.Stride.Audio.StrideSoundPlayer(provider, spatialAudio);
+                return new Andastra.Runtime.Stride.Audio.StrideSoundPlayer(provider, spatialAudio);
             }
             throw new ArgumentException("Resource provider must be an IGameResourceProvider instance", nameof(resourceProvider));
         }
@@ -166,10 +166,10 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public object CreateVoicePlayer(object resourceProvider)
         {
-            if (resourceProvider is Odyssey.Content.Interfaces.IGameResourceProvider provider)
+            if (resourceProvider is Andastra.Runtime.Content.Interfaces.IGameResourceProvider provider)
             {
                 var spatialAudio = CreateSpatialAudio();
-                return new Odyssey.Stride.Audio.StrideVoicePlayer(provider, spatialAudio);
+                return new Andastra.Runtime.Stride.Audio.StrideVoicePlayer(provider, spatialAudio);
             }
             throw new ArgumentException("Resource provider must be an IGameResourceProvider instance", nameof(resourceProvider));
         }

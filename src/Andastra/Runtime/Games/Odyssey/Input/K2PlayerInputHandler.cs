@@ -67,7 +67,7 @@ namespace Andastra.Runtime.Games.Odyssey.Input
         /// - FUN_005226d0 @ 0x005226d0 processes input and determines cursor mode
         /// - K2-specific: Combat forms (Juyo, Makashi, etc.) may affect cursor appearance
         /// - Otherwise similar to K1 cursor mode determination
-        /// - Uses base class implementation for now, can be extended for combat form-specific cursor modes
+        // TODO: / - Uses base class implementation for now, can be extended for combat form-specific cursor modes
         /// </remarks>
         protected override CursorMode DetermineCursorMode(IEntity hoveredEntity)
         {
@@ -178,7 +178,7 @@ namespace Andastra.Runtime.Games.Odyssey.Input
         /// - Party member influence can change how NPCs react (hostile/friendly)
         /// - Base hostility check is similar to K1, but with K2-specific influence modifiers
         /// - Located via string references: Faction system, influence system
-        /// - Uses base class implementation for now, can be extended for influence system integration
+        // TODO: / - Uses base class implementation for now, can be extended for influence system integration
         /// </remarks>
         protected override bool IsHostile(IEntity entity)
         {

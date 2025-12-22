@@ -247,8 +247,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
             int bab = 0;
             foreach (CreatureClass cls in ClassList)
             {
-                // Simplified BAB calculation based on class type
-                // Full implementation would use classes.2da
+                // TODO:  Simplified BAB calculation based on class type
+                // TODO:  Full implementation would use classes.2da
                 bab += cls.Level;
             }
             return bab;
@@ -400,7 +400,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
         protected override int GetFeatClassId(int featId, object gameDataProvider)
         {
             // Odyssey-specific feat-to-class mappings would go here
-            // For now, return -1 to use total level as fallback
+            // TODO: STUB - For now, return -1 to use total level as fallback
             // Future enhancement: Add specific feat-to-class mappings if needed
             
             // Note: Stunning Fist is an Aurora (Neverwinter Nights) feat, not Odyssey

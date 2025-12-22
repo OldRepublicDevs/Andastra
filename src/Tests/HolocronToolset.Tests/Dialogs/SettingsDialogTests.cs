@@ -99,7 +99,7 @@ namespace HolocronToolset.Tests.Dialogs
             var dialog = new SettingsDialog(parent);
             dialog.Show();
 
-            // Set a dummy setting in GlobalSettings to verify it gets reset/cleared
+            // TODO:  Set a dummy setting in GlobalSettings to verify it gets reset/cleared
             // Note: GlobalSettings is a singleton accessing persistent storage.
             // Clearing it clears the persistent storage.
             var settings = new HolocronToolset.Data.GlobalSettings();

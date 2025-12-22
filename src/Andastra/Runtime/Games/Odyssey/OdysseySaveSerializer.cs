@@ -695,7 +695,7 @@ namespace Andastra.Runtime.Games.Odyssey
             }
             catch
             {
-                // If GetGlobalNames is not implemented or fails, return empty GFF
+                // TODO:  If GetGlobalNames is not implemented or fails, return empty GFF
                 return gff.ToBytes();
             }
 

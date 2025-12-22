@@ -7,14 +7,14 @@ namespace Andastra.Runtime.MonoGame.Rendering
 {
     /// <summary>
     /// GPU-driven indirect rendering using command buffers.
-    /// 
+    ///
     /// Indirect rendering allows the GPU to generate draw commands,
     /// enabling:
     /// - GPU-side culling (compute shader based)
     /// - Automatic LOD selection on GPU
     /// - Massive scalability (millions of objects)
     /// - Reduced CPU overhead
-    /// 
+    ///
     /// Based on modern AAA game GPU-driven rendering techniques.
     /// </summary>
     public class IndirectRenderer : IDisposable
@@ -163,7 +163,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             // 4. Generate indirect draw commands for visible objects
             // 5. Compact visible objects into culled buffer
 
-            // Placeholder - actual implementation requires compute shader
+            // TODO:  Placeholder - actual implementation requires compute shader
             // _graphicsDevice.DispatchCompute(...);
         }
 

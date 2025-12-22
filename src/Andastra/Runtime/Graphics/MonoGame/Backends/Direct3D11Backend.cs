@@ -798,8 +798,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     return DXGI_FORMAT_R16_SINT;
                 case TextureFormat.R16G16_Float:
                     return DXGI_FORMAT_R16G16_FLOAT;
-                case TextureFormat.R16G16_UNorm:
-                    return DXGI_FORMAT_R16G16_UNORM;
+                // Note: R16G16_UNorm is not in TextureFormat enum, using R16G16_UInt as fallback
                 case TextureFormat.R16G16_UInt:
                     return DXGI_FORMAT_R16G16_UINT;
                 case TextureFormat.R16G16_SInt:
@@ -982,7 +981,8 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 mipLevels = (uint)info.TextureDesc.MipLevels;
             }
-            else if (uploadData != null && uploadData.Mipmaps != null && uploadData.Mipmaps.Length > 0)
+            // Note: TextureUploadData is a struct, so we check if Mipmaps is not null and has items
+            else if (uploadData.Mipmaps != null && uploadData.Mipmaps.Length > 0)
             {
                 mipLevels = (uint)uploadData.Mipmaps.Length;
             }

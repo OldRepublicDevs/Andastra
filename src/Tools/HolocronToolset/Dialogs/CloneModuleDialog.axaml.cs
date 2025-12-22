@@ -430,7 +430,7 @@ namespace HolocronToolset.Dialogs
                     ButtonEnum.Ok,
                     MsBox.Avalonia.Enums.Icon.Info);
                 // Show the warning - user must acknowledge before proceeding
-                // In a full implementation, we'd await this, but for now we'll show it
+                // TODO:  In a full implementation, we'd await this, but for now we'll show it
                 // and let the async loader start after user acknowledges
                 warningBox.ShowAsync();
             }

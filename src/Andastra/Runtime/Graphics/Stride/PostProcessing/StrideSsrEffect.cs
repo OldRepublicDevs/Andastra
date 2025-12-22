@@ -299,7 +299,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             {
                 // Set constant buffer data
                 UpdateSsrConstants(input.Width, input.Height);
-                
+
                 // Bind textures through effect parameters
                 // TODO:  In a full implementation, the shader would define these parameters:
                 // parameters.Set("InputTexture", input);
@@ -376,7 +376,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     {
                         // Sample color at hit point (matches GLSL: texture(sMainTex, hitUV))
                         Vector4 hitMainTexSample = SampleTexture(inputData, hitUV, width, height);
-                        
+
                         // Sample lightmap at hit point (matches GLSL: texture(sLightmap, hitUV))
                         // If lightmap is not provided, use white (1.0, 1.0, 1.0) for backward compatibility
                         Vector3 lightmapColor = Vector3.One;
@@ -621,9 +621,9 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
                 // Handle different texture formats
                 PixelFormat format = texture.Format;
-                
+
                 // For color textures (RGBA formats), use Color array
-                if (format == PixelFormat.R8G8B8A8_UNorm || 
+                if (format == PixelFormat.R8G8B8A8_UNorm ||
                     format == PixelFormat.R8G8B8A8_UNorm_SRgb ||
                     format == PixelFormat.R32G32B32A32_Float ||
                     format == PixelFormat.R16G16B16A16_Float ||
@@ -642,7 +642,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     }
                 }
                 // For depth textures, read as float array
-                else if (format == PixelFormat.D32_Float || 
+                else if (format == PixelFormat.D32_Float ||
                          format == PixelFormat.D24_UNorm_S8_UInt ||
                          format == PixelFormat.D16_UNorm ||
                          format == PixelFormat.R32_Float)
@@ -756,13 +756,13 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 PixelFormat format = texture.Format;
 
                 // For color textures (RGBA formats), convert Vector4[] to Color[]
-                if (format == PixelFormat.R8G8B8A8_UNorm || 
+                if (format == PixelFormat.R8G8B8A8_UNorm ||
                     format == PixelFormat.R8G8B8A8_UNorm_SRgb ||
                     format == PixelFormat.B8G8R8A8_UNorm ||
                     format == PixelFormat.B8G8R8A8_UNorm_SRgb)
                 {
                     var colorData = new Stride.Core.Mathematics.Color[size];
-                    
+
                     // Convert Vector4[] to Color[] (clamp to [0,1] and convert to [0,255])
                     for (int i = 0; i < size; i++)
                     {
@@ -772,14 +772,14 @@ namespace Andastra.Runtime.Stride.PostProcessing
                         float g = Math.Max(0.0f, Math.Min(1.0f, v.Y));
                         float b = Math.Max(0.0f, Math.Min(1.0f, v.Z));
                         float a = Math.Max(0.0f, Math.Min(1.0f, v.W));
-                        
+
                         colorData[i] = new Stride.Core.Mathematics.Color(
                             (byte)(r * 255.0f),
                             (byte)(g * 255.0f),
                             (byte)(b * 255.0f),
                             (byte)(a * 255.0f));
                     }
-                    
+
                     texture.SetData(commandList, colorData);
                 }
                 // For HDR formats (R32G32B32A32_Float), write directly as Vector4
@@ -787,42 +787,42 @@ namespace Andastra.Runtime.Stride.PostProcessing
                          format == PixelFormat.R16G16B16A16_Float)
                 {
                     var vectorData = new Stride.Core.Mathematics.Vector4[size];
-                    
+
                     // Convert System.Numerics.Vector4[] to Stride.Core.Mathematics.Vector4[]
                     for (int i = 0; i < size; i++)
                     {
                         var v = data[i];
                         vectorData[i] = new Stride.Core.Mathematics.Vector4(v.X, v.Y, v.Z, v.W);
                     }
-                    
+
                     texture.SetData(commandList, vectorData);
                 }
                 // For depth textures, extract depth channel
-                else if (format == PixelFormat.D32_Float || 
+                else if (format == PixelFormat.D32_Float ||
                          format == PixelFormat.R32_Float)
                 {
                     var floatData = new float[size];
-                    
+
                     // Extract X component (depth) from Vector4
                     for (int i = 0; i < size; i++)
                     {
                         floatData[i] = data[i].X;
                     }
-                    
+
                     texture.SetData(commandList, floatData);
                 }
                 // For single-channel formats, extract single channel
                 else if (format == PixelFormat.R8_UNorm || format == PixelFormat.A8_UNorm)
                 {
                     var byteData = new byte[size];
-                    
+
                     // Extract X component and convert to byte
                     for (int i = 0; i < size; i++)
                     {
                         float value = Math.Max(0.0f, Math.Min(1.0f, data[i].X));
                         byteData[i] = (byte)(value * 255.0f);
                     }
-                    
+
                     texture.SetData(commandList, byteData);
                 }
                 else
@@ -832,7 +832,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     try
                     {
                         var colorData = new Stride.Core.Mathematics.Color[size];
-                        
+
                         for (int i = 0; i < size; i++)
                         {
                             var v = data[i];
@@ -840,14 +840,14 @@ namespace Andastra.Runtime.Stride.PostProcessing
                             float g = Math.Max(0.0f, Math.Min(1.0f, v.Y));
                             float b = Math.Max(0.0f, Math.Min(1.0f, v.Z));
                             float a = Math.Max(0.0f, Math.Min(1.0f, v.W));
-                            
+
                             colorData[i] = new Stride.Core.Mathematics.Color(
                                 (byte)(r * 255.0f),
                                 (byte)(g * 255.0f),
                                 (byte)(b * 255.0f),
                                 (byte)(a * 255.0f));
                         }
-                        
+
                         texture.SetData(commandList, colorData);
                     }
                     catch (Exception ex)

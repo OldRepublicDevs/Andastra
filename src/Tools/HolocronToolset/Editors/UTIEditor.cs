@@ -570,7 +570,7 @@ namespace HolocronToolset.Editors
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:201-214
             // Note: Python reads from LocalizedString widgets (locstring()), but we use TextBox
             // Since we can't reconstruct LocalizedString from text, preserve original from copy
-            // In a full implementation, this would read from a LocalizedString widget
+            // TODO:  In a full implementation, this would read from a LocalizedString widget
             uti.Name = uti.Name ?? LocalizedString.FromInvalid();
             uti.Description = uti.Description ?? LocalizedString.FromInvalid();
             uti.Tag = _tagEdit?.Text ?? uti.Tag ?? "";

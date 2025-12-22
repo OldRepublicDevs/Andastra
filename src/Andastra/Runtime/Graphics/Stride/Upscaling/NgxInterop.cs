@@ -420,7 +420,7 @@ namespace Andastra.Runtime.Stride.Upscaling
 
                 // Fallback: If no backend-specific properties are found, default to DirectX 12
                 // DirectX 12 is the most common backend for DLSS and provides the best feature support
-                // This matches the original stub behavior for backward compatibility
+                // TODO:  This matches the original stub behavior for backward compatibility
                 return NgxBackend.DirectX12;
             }
             catch (Exception ex)

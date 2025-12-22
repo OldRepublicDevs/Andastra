@@ -31,7 +31,7 @@ namespace HolocronToolset.Utils
             string ncsDecompilerPath = settings.GetValue<string>("NcsDecompilerPath", "");
             if (string.IsNullOrEmpty(ncsDecompilerPath) || !File.Exists(ncsDecompilerPath))
             {
-                // In full implementation, would prompt user for decompiler
+                // TODO:  In full implementation, would prompt user for decompiler
                 // TODO: STUB - For now, try to use built-in decompiler
                 try
                 {

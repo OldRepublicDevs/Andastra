@@ -86,7 +86,7 @@ namespace HolocronToolset.Tests.Editors
             data.Length.Should().BeGreaterThan(0);
 
             // Load it back
-            // Note: PTH loading requires LYT file, so we skip loading for now
+            // TODO:  Note: PTH loading requires LYT file, so we skip loading for now
             // Just verify build works
             var loadedPth = Andastra.Parsing.Resource.Generics.PTHAuto.ReadPth(data);
             loadedPth.Should().NotBeNull();

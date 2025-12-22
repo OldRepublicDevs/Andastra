@@ -16,7 +16,7 @@ using PathSelection = HolocronToolset.Editors.PathSelection;
 namespace HolocronToolset.Editors
 {
     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py
-    // Stub for renderArea UI component - will be fully implemented when UI is available
+    // TODO:  Stub for renderArea UI component - will be fully implemented when UI is available
     public class PTHRenderArea
     {
         private PTH _pth;
@@ -191,7 +191,7 @@ namespace HolocronToolset.Editors
         // Material colors dictionary - exposed for testing
         public Dictionary<SurfaceMaterial, Avalonia.Media.Color> MaterialColors { get; private set; }
         
-        // Render area - stub for testing (will be fully implemented when UI is available)
+        // TODO:  Render area - stub for testing (will be fully implemented when UI is available)
         public PTHRenderArea RenderArea { get; private set; }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:121-177

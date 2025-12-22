@@ -73,7 +73,7 @@ namespace KotorDiff.Formatters
 
         private string[] GenerateContextDiff(string[] leftLines, string[] rightLines, string leftFile, string rightFile)
         {
-            // Simplified context diff - in a full implementation, would use a proper diff algorithm
+            // TODO:  Simplified context diff - in a full implementation, would use a proper diff algorithm
             var result = new System.Collections.Generic.List<string>();
             result.Add($"*** {leftFile}");
             result.Add($"--- {rightFile}");

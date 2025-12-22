@@ -1068,7 +1068,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
         /// </summary>
         public void StoreState()
         {
-            // Placeholder - full implementation would handle action queue
+            // TODO:  Placeholder - full implementation would handle action queue
         }
 
         private static bool IsZeroValue([CanBeNull] object value)

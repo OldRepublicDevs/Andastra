@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.TPC;
+using Andastra.Parsing.Formats.TXI;
 using Andastra.Parsing.Resource;
 using ParsingResourceType = Andastra.Parsing.Resource.ResourceType;
 using Andastra.Runtime.Content.Interfaces;
@@ -678,7 +679,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
 
             // Determine texture target (check if we're bound to a cube map)
             // Note: This assumes the texture is already bound when this is called
-            // For cube maps, we would need to track the target, but for now we use GL_TEXTURE_2D
+            // TODO:  For cube maps, we would need to track the target, but for now we use GL_TEXTURE_2D
             // as cube maps are handled in CreateOpenGLCubeMapFromTpc which calls this method
 
             // Apply clamp parameter (texture wrapping)
@@ -1241,7 +1242,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
 
                 // Step 3: Set texture parameters
                 // Based on nwmain.exe: Texture filtering and wrapping are set via SetSamplerState (handled by renderer)
-                // For now, we store texture parameters from TXI if available for later application
+                // TODO: STUB - For now, we store texture parameters from TXI if available for later application
                 if (tpc.TxiObject != null)
                 {
                     ApplyDirectX9TxiParameters(texture, tpc.TxiObject);

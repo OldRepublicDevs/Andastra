@@ -446,11 +446,11 @@ namespace HolocronToolset.Data
     /// TRANSITIONS AND ROOM CONNECTIONS:
     ///
     /// The transition value on a perimeter edge tells which room this edge connects to. When
-    /// the indoor map builder processes a room's walkmesh, it remaps transitions from dummy
+    // TODO: / the indoor map builder processes a room's walkmesh, it remaps transitions from dummy
     /// indices (from the kit component) to actual room indices (in the built module).
     ///
     /// For example:
-    /// - Component has a hook with transition = 1 (dummy index meaning "next room")
+    // TODO: / - Component has a hook with transition = 1 (dummy index meaning "next room")
     /// - When placed in a module, transition = 1 gets remapped to the actual room index (e.g., 5)
     /// - The door is placed at the hook's position, connecting room 0 to room 5
     ///

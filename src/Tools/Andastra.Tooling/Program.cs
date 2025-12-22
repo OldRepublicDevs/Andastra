@@ -509,14 +509,14 @@ namespace Andastra.Runtime.Tooling
                 // Create mocked execution environment
                 Console.WriteLine("Creating mocked execution environment...");
 
-                // Create mock world
+                // TODO:  Create mock world
                 var world = new MockWorld();
 
-                // Create mock entity (caller)
+                // TODO:  Create mock entity (caller)
                 var caller = new MockEntity("SCRIPT_CALLER");
                 world.RegisterEntity(caller);
 
-                // Create mock engine API
+                // TODO:  Create mock engine API
                 var engineApi = new MockEngineApi();
 
                 // Create script globals

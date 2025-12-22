@@ -999,11 +999,11 @@ try:
     # Import the generated parser (module name matches .ksy file id)
     parser_module = __import__('{moduleName}')
     parser_class = getattr(parser_module, '{className}')
-    
+
     # Read GUI file
     with open(r'{escapedGuiPath}', 'rb') as f:
         data = f.read()
-    
+
     # Parse using generated parser
     stream = KaitaiStream(BytesIO(data))
     parsed = parser_class(stream)

@@ -444,7 +444,7 @@ namespace HolocronToolset.Tests.Editors
             editor.IsNoteCheckbox.IsChecked = true;
             editor.IsNoteCheckbox.SetCurrentValue(CheckBox.IsCheckedProperty, true);
 
-            // Workaround for Avalonia headless testing limitation:
+            // TODO:  Workaround for Avalonia headless testing limitation:
             // In headless mode, checkbox property changes don't propagate to Build() correctly.
             // We set the checkbox (verifying the UI works), then directly set the UTW value
             // to test that Build() correctly serializes it. In real UI usage, the checkbox works.
@@ -480,7 +480,7 @@ namespace HolocronToolset.Tests.Editors
             editor.IsNoteCheckbox.IsChecked = false;
             editor.IsNoteCheckbox.SetCurrentValue(CheckBox.IsCheckedProperty, false);
 
-            // Workaround for headless limitation - directly set UTW value
+            // TODO:  Workaround for headless limitation - directly set UTW value
             if (utwField != null && utw != null)
             {
                 utw.HasMapNote = false; // Simulate checkbox being set to false
@@ -746,7 +746,7 @@ namespace HolocronToolset.Tests.Editors
                 editor.NoteEnabledCheckbox.IsChecked = true;
                 editor.NoteEnabledCheckbox.SetCurrentValue(CheckBox.IsCheckedProperty, true);
             }
-            // Workaround for headless limitation - directly set UTW values for checkboxes AFTER setting checkboxes
+            // TODO:  Workaround for headless limitation - directly set UTW values for checkboxes AFTER setting checkboxes
             // This ensures the UTW value is set after the checkboxes, so Build() can detect the manual setting
             var utwField = typeof(UTWEditor).GetField("_utw", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             UTW utw = null;
@@ -755,7 +755,7 @@ namespace HolocronToolset.Tests.Editors
                 utw = utwField.GetValue(editor) as UTW;
                 if (utw != null)
                 {
-                    // Set to true to simulate checkbox being checked (workaround for headless limitation)
+                    // TODO:  Set to true to simulate checkbox being checked (workaround for headless limitation)
                     utw.HasMapNote = true;
                     utw.MapNoteEnabled = true;
                     // Verify they were set
@@ -929,7 +929,7 @@ namespace HolocronToolset.Tests.Editors
             {
                 editor.TagEdit.Text = "modified_roundtrip";
             }
-            // Workaround for headless limitation - directly set UTW values for checkboxes
+            // TODO:  Workaround for headless limitation - directly set UTW values for checkboxes
             var utwField = typeof(UTWEditor).GetField("_utw", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             UTW utw = null;
             if (utwField != null)
@@ -982,7 +982,7 @@ namespace HolocronToolset.Tests.Editors
                 utw = utwField.GetValue(editor) as UTW;
                 if (utw != null)
                 {
-                    // Verify via UTW object (workaround for headless checkbox limitation)
+                    // TODO:  Verify via UTW object (workaround for headless checkbox limitation)
                     utw.HasMapNote.Should().BeTrue("HasMapNote should be true after reload");
                     utw.MapNoteEnabled.Should().BeTrue("MapNoteEnabled should be true after reload");
                 }
@@ -1506,7 +1506,7 @@ namespace HolocronToolset.Tests.Editors
             {
                 editor.TagEdit.Text = "modified_gff_test";
             }
-            // Workaround for headless limitation - directly set UTW value for checkbox
+            // TODO:  Workaround for headless limitation - directly set UTW value for checkbox
             var utwField = typeof(UTWEditor).GetField("_utw", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             UTW utw = null;
             if (utwField != null)
@@ -1875,7 +1875,7 @@ namespace HolocronToolset.Tests.Editors
                 bool hasNote = combination.Item1;
                 bool enabled = combination.Item2;
 
-                // Workaround for headless limitation - directly set UTW values for checkboxes
+                // TODO:  Workaround for headless limitation - directly set UTW values for checkboxes
                 var utwField = typeof(UTWEditor).GetField("_utw", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 UTW utw = null;
                 if (utwField != null)

@@ -186,7 +186,7 @@ namespace Andastra.Runtime.Core.Actions
             // param_4: Output blocking creature ObjectId (uint) or null
             // Returns: 0 if collision detected, 1 if path is clear
             // Uses FUN_004e17a0 and FUN_004f5290 for collision detection with creature bounding boxes
-            // Implementation: Now uses proper bounding box collision detection instead of simplified radius-based check
+            // TODO:  Implementation: Now uses proper bounding box collision detection instead of simplified radius-based check
             uint blockingCreatureId;
             Vector3 collisionNormal;
             bool hasCollision = _collisionDetector.CheckCreatureCollision(actor, currentPosition, newPosition, out blockingCreatureId, out collisionNormal);

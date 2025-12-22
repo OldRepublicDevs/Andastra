@@ -99,7 +99,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/Decompiler.java:2289-2304
         // Original: public static String chooseOutputDirectory() { JFileChooser jFC = new JFileChooser(settings.getProperty("Output Directory")); ... }
-        // Note: C# version simplified for CLI compatibility - UI version is in NCSDecomp MainWindow
+        // TODO:  Note: C# version simplified for CLI compatibility - UI version is in NCSDecomp MainWindow
         public static string ChooseOutputDirectory()
         {
             // Synchronous version for compatibility - returns current setting

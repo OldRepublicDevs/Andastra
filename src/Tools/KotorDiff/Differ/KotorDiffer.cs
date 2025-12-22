@@ -531,7 +531,7 @@ namespace KotorDiff.Differ
             var leftLines = text1.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
             var rightLines = text2.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
 
-            // Simple unified diff - in a full implementation, would use a proper diff algorithm
+            // TODO:  Simple unified diff - in a full implementation, would use a proper diff algorithm
             lines.Add($"--- {fromFile}");
             lines.Add($"+++ {toFile}");
 

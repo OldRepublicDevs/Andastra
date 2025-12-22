@@ -6,7 +6,6 @@ using System.Text;
 using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
 using Andastra.Runtime.MonoGame.Materials;
-using Andastra.Utility;
 
 namespace Andastra.Runtime.MonoGame.Remix
 {
@@ -173,7 +172,7 @@ namespace Andastra.Runtime.MonoGame.Remix
             // Remix uses XXHash64 for material identification
             // Normalize the path to lowercase for consistent hashing
             string normalizedPath = texturePath.ToLowerInvariant();
-            return XXHash64.ComputeHashString(normalizedPath);
+            return global::Andastra.Utility.XXHash64.ComputeHashString(normalizedPath);
         }
 
         private string ExportTexturePath(string name)

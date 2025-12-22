@@ -2380,7 +2380,7 @@ namespace Andastra.Runtime.Content.Save
 
                     // Add powers from KnownPowers that belong to this class level
                     // Note: KnownPowers is a List<string>, we need to convert to integer IDs
-                    // For now, we'll skip powers since we don't have a way to convert string names to IDs
+                    // TODO:  For now, we'll skip powers since we don't have a way to convert string names to IDs
                     // This is acceptable as powers are typically derived from class levels during runtime
                     // If KnownPowers contains numeric strings, we could parse them, but that's not standard
 
@@ -2400,7 +2400,7 @@ namespace Andastra.Runtime.Content.Save
                         utc.Feats.Add(featId);
                     }
                     // If featStr is not a numeric string, we skip it
-                    // In a full implementation, we would look up the feat ID from feat.2da
+                    // TODO:  In a full implementation, we would look up the feat ID from feat.2da
                 }
             }
 
@@ -2456,7 +2456,7 @@ namespace Andastra.Runtime.Content.Save
                         // Create InventoryItem for each item in inventory
                         // Note: StackSize and other item properties are not directly stored in UTC ItemList
                         // UTC ItemList only stores ResRef and Droppable flag
-                        // For simplicity, we add one entry per stack (in a full implementation, we might need to handle stacks differently)
+                        // TODO:  For simplicity, we add one entry per stack (in a full implementation, we might need to handle stacks differently)
                         for (int i = 0; i < itemState.StackSize; i++)
                         {
                             utc.Inventory.Add(new InventoryItem(ResRef.FromString(itemState.TemplateResRef), true));

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Games.Common.Combat;
+using Andastra.Runtime.Core.Combat;
 
 namespace Andastra.Runtime.Core.Combat
 {
@@ -663,7 +663,7 @@ namespace Andastra.Runtime.Core.Combat
             try
             {
                 Type worldType = _world.GetType();
-                
+
                 // Try common property names
                 System.Reflection.PropertyInfo calculatorProp = worldType.GetProperty("WeaponDamageCalculator");
                 if (calculatorProp != null)

@@ -286,7 +286,7 @@ namespace KotorCLI.Commands
 
                         // Only include entries for this BIF (we need to know which BIF this is)
                         // TODO: STUB - For now, we'll match by checking if the resource ID could belong to this BIF
-                        // This is a simplified approach - full implementation would need to track BIF index
+                        // TODO:  This is a simplified approach - full implementation would need to track BIF index
                         resourceLookup[resIndex] = keyEntry;
                     }
                 }

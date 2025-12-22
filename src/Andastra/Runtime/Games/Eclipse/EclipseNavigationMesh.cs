@@ -1233,7 +1233,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 }
             }
 
-            // Check surface material (simplified - full implementation would use material lookup table)
+            // TODO:  Check surface material (simplified - full implementation would use material lookup table)
             int material = _staticSurfaceMaterials[faceIndex];
             // Basic walkability: non-zero materials are generally walkable
             return material != 0;
@@ -1619,7 +1619,7 @@ namespace Andastra.Runtime.Games.Eclipse
             waypoints = null;
 
             // Simple direct path for dynamic-only scenarios
-            // In full implementation, this would use dynamic obstacle avoidance
+            // TODO:  In full implementation, this would use dynamic obstacle avoidance
             waypoints = new[] { start, end };
             return true;
         }
@@ -1694,7 +1694,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// Higher penalty for positions that are exposed to threats.
         /// 
-        /// Full implementation:
+        // TODO: / Full implementation:
         /// 1. Queries combat system for active threats when world is available
         /// 2. Checks line of sight from threats to position
         /// 3. Calculates exposure based on distance and cover availability
@@ -1717,7 +1717,7 @@ namespace Andastra.Runtime.Games.Eclipse
         }
 
         /// <summary>
-        /// Calculates threat exposure using world queries (full implementation).
+        // TODO: / Calculates threat exposure using world queries (full implementation).
         /// Queries for active enemies, checks line of sight, and calculates exposure penalty.
         /// </summary>
         private float CalculateThreatExposureWithWorld(Vector3 position, Vector3 start, Vector3 end)
@@ -1834,7 +1834,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 // Check if entity has combat-related components or is engaged in combat
                 // In Eclipse, entities in combat typically have combat targets or are being targeted
                 // We can infer combat state by checking if entity has recent combat activity
-                // For now, we'll check faction relationships instead (more reliable without direct combat system access)
+                // TODO: STUB - For now, we'll check faction relationships instead (more reliable without direct combat system access)
             }
 
             // Check faction relationships - entity is a threat if hostile to player/party
@@ -4204,7 +4204,7 @@ namespace Andastra.Runtime.Games.Eclipse
         private float CalculateFlankingAngle(Vector3 position, Vector3 center, float radius)
         {
             // For flanking, we want positions that are to the side or rear of the center
-            // This is a simplified calculation - in full implementation, would consider actual threat positions
+            // TODO:  This is a simplified calculation - in full implementation, would consider actual threat positions
 
             Vector3 toCenter = center - position;
             float dist2D = Vector3Extensions.Distance2D(position, center);
@@ -4215,7 +4215,7 @@ namespace Andastra.Runtime.Games.Eclipse
             }
 
             // Ideal flanking positions are at 90 degrees (sides) or 180 degrees (rear)
-            // This is a placeholder - would need actual threat direction in full implementation
+            // TODO: STUB - This is a placeholder - would need actual threat direction in full implementation
             float flankScore = 0.5f; // Default moderate score
 
             // Positions further from center have more flanking potential

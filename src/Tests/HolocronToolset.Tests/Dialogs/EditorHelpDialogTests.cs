@@ -81,8 +81,8 @@ namespace HolocronToolset.Tests.Dialogs
                 string testFile = Path.Combine(wikiDir, "test.md");
                 File.WriteAllText(testFile, "# Test Document\n\nThis is a test.");
 
-                // Mock get_wiki_path to return our test wiki
-                // Note: We can't easily mock static methods in C#, so we'll test with actual path
+                // TODO:  Mock get_wiki_path to return our test wiki
+                // TODO:  Note: We can't easily mock static methods in C#, so we'll test with actual path
                 // For this test, we'll use the actual GetWikiPath and create the file there if possible
                 var dialog = new EditorHelpDialog(null, "test.md");
                 dialog.Show();

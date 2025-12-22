@@ -16,7 +16,7 @@ using Animation = Andastra.Runtime.Core.Animation;
 namespace Andastra.Runtime.Tooling
 {
     /// <summary>
-    /// Mock entity for CLI script execution. Provides minimal implementation for testing scripts.
+    // TODO: / Mock entity for CLI script execution. Provides minimal implementation for testing scripts.
     /// </summary>
     public class MockEntity : IEntity
     {
@@ -112,7 +112,7 @@ namespace Andastra.Runtime.Tooling
     }
 
     /// <summary>
-    /// Mock world for CLI script execution. Provides minimal implementation for testing scripts.
+    // TODO: / Mock world for CLI script execution. Provides minimal implementation for testing scripts.
     /// </summary>
     public class MockWorld : IWorld
     {
@@ -188,13 +188,13 @@ namespace Andastra.Runtime.Tooling
 
         public IEntity CreateEntity(Andastra.Runtime.Core.Templates.IEntityTemplate template, Vector3 position, float facing)
         {
-            // Not implemented for CLI tooling
+            // TODO:  Not implemented for CLI tooling
             return null;
         }
 
         public IEntity CreateEntity(ObjectType objectType, Vector3 position, float facing)
         {
-            // Not implemented for CLI tooling
+            // TODO:  Not implemented for CLI tooling
             return null;
         }
 
@@ -303,18 +303,18 @@ namespace Andastra.Runtime.Tooling
 
         public void Update(float deltaTime)
         {
-            // Not implemented for CLI tooling
+            // TODO:  Not implemented for CLI tooling
         }
     }
 
     /// <summary>
-    /// Mock engine API for CLI script execution. Provides basic function implementations for testing scripts.
+    // TODO: / Mock engine API for CLI script execution. Provides basic function implementations for testing scripts.
     /// Extends BaseEngineApi with minimal implementations of common NWScript functions.
     /// </summary>
     /// <remarks>
     /// Based on swkotor2.exe: Engine API function implementations
     /// Provides implementations for common functions like PrintString, Random, etc.
-    /// TODO: STUB - Functions not implemented will return default values (0, empty string, OBJECT_INVALID, etc.)
+    // TODO: / TODO: STUB - Functions not implemented will return default values (0, empty string, OBJECT_INVALID, etc.)
     /// </remarks>
     public class MockEngineApi : BaseEngineApi
     {

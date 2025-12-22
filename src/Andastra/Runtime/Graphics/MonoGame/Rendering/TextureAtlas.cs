@@ -210,7 +210,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
         {
             // Copy texture data to atlas render target
             // Would use SpriteBatch or render target copy
-            // Placeholder - requires actual implementation
+            // TODO:  Placeholder - requires actual implementation
         }
 
         public void Dispose()

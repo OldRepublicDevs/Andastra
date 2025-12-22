@@ -19,7 +19,7 @@ namespace KotorDiff.Tests.Integration
         {
             var stopwatch = Stopwatch.StartNew();
 
-            // Create temporary directories with mock installation data
+            // TODO:  Create temporary directories with mock installation data
             string tempDir1 = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             string tempDir2 = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
 

@@ -191,7 +191,7 @@ namespace HolocronToolset.Windows
             }
             catch (Exception ex)
             {
-                // Error handling - in full implementation would show error dialog
+                // TODO:  Error handling - in full implementation would show error dialog
                 System.Console.WriteLine($"Failed to open module: {ex.Message}");
                 // Clear module on error to maintain consistent state
                 _module = null;

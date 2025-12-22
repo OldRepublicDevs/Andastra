@@ -105,14 +105,23 @@ namespace Andastra.Parsing.Resource.Generics.GUI
             }
 
             // Color and Alpha
+            // Based on PyKotor: COLOR is Vector3 (RGB), ALPHA is separate float field
+            // Original implementation: swkotor.exe/swkotor2.exe stores COLOR as RGB and ALPHA separately
             if (control.Color != null)
             {
                 gffStruct.SetVector3("COLOR", new Vector3(control.Color.R, control.Color.G, control.Color.B));
-                if (control.Properties.ContainsKey("ALPHA"))
+                // Write ALPHA if it's not the default (1.0f) or if Color has non-default alpha
+                // Based on PyKotor: if control.color.a is not None, write ALPHA field
+                if (control.Alpha != 1.0f)
                 {
-                    float alpha = (float)control.Properties["ALPHA"];
-                    gffStruct.SetSingle("ALPHA", alpha);
+                    gffStruct.SetSingle("ALPHA", control.Alpha);
                 }
+            }
+            else if (control.Alpha != 1.0f)
+            {
+                // If Color is null but Alpha is set, write ALPHA with default white color
+                // This handles the case where ALPHA exists without COLOR
+                gffStruct.SetSingle("ALPHA", control.Alpha);
             }
 
             // Padding, Looping, LeftScrollbar

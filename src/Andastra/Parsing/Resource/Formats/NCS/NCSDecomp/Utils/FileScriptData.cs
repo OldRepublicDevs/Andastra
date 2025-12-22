@@ -162,7 +162,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             // Only applies to generic subX names and matches on body patterns.
             this.HeuristicRenameSubs();
 
-            // If we have no subs, generate comprehensive stub so we always show something
+            // TODO:  If we have no subs, generate comprehensive stub so we always show something
             if (this.subs.Count == 0)
             {
                 // Note: We don't have direct file access here, but we can still provide useful info

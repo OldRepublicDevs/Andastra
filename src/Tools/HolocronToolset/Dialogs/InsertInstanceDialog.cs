@@ -562,7 +562,7 @@ namespace HolocronToolset.Dialogs
             }
             catch (Exception ex)
             {
-                // Log error - in a full implementation, this would use a proper logging system
+                // TODO:  Log error - in a full implementation, this would use a proper logging system
                 System.Console.WriteLine($"Error saving resource to file: {ex.Message}");
                 throw; // Re-throw to allow caller to handle
             }

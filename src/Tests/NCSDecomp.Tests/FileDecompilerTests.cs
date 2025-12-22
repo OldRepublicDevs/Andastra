@@ -22,7 +22,7 @@ namespace NCSDecomp.Tests
             _settings.SetProperty("Output Directory", _tempDir);
             _settings.SetProperty("Game Type", "K1");
             
-            // Create a dummy nwscript.nss for testing if it doesn't exist
+            // TODO:  Create a dummy nwscript.nss for testing if it doesn't exist
             string nwscriptPath = Path.Combine(_tempDir, "nwscript.nss");
             if (!System.IO.File.Exists(nwscriptPath))
             {

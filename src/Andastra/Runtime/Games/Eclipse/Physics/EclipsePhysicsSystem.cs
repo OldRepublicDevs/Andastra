@@ -14,13 +14,13 @@ namespace Andastra.Runtime.Games.Eclipse
     /// Based on reverse engineering of:
     /// - daorigins.exe: Physics world management and rigid body dynamics
     /// - DragonAge2.exe: Enhanced physics system with constraint support
-    /// 
+    ///
     /// Eclipse engine uses Unreal Engine 3's physics system (PhysX) for:
     /// - Rigid body dynamics
     /// - Collision detection and response
     /// - Constraint/joint systems
     /// - Area-based physics worlds
-    /// 
+    ///
     /// This implementation provides:
     /// - Physics world management per area
     /// - Rigid body creation and management
@@ -79,7 +79,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Physics simulation step function
         /// - DragonAge2.exe: Enhanced simulation with sub-stepping
-        /// 
+        ///
         /// Updates all rigid bodies and constraints in the physics world.
         /// </remarks>
         public void StepSimulation(float deltaTime)
@@ -97,7 +97,7 @@ namespace Andastra.Runtime.Games.Eclipse
             foreach (var kvp in _rigidBodies)
             {
                 RigidBodyData body = kvp.Value;
-                
+
                 // Apply gravity
                 if (body.IsDynamic)
                 {
@@ -535,7 +535,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Constraint solving in physics simulation
         /// - DragonAge2.exe: Enhanced constraint solving with iterative methods
-        /// 
+        ///
         /// Implements PhysX-style iterative impulse-based constraint solver.
         /// </remarks>
         private void SolveConstraint(PhysicsConstraint constraint, float deltaTime)
@@ -614,23 +614,23 @@ namespace Andastra.Runtime.Games.Eclipse
             // Position constraint: Keep anchors aligned
             Vector3 positionError = worldAnchorB - worldAnchorA;
             float positionErrorLength = positionError.Length();
-            
+
             if (positionErrorLength > 0.0001f)
             {
                 Vector3 correctionDirection = positionError / positionErrorLength;
                 float invMassA = 1.0f / bodyA.Mass;
                 float invMassB = bodyB != null && bodyB.IsDynamic ? (1.0f / bodyB.Mass) : 0.0f;
                 float totalInvMass = invMassA + invMassB;
-                
+
                 if (totalInvMass > 0.0001f)
                 {
                     float constraintBias = constraint.Stiffness > 0.0f ? constraint.Stiffness : 1000.0f;
                     float correction = (positionErrorLength * constraintBias) / (totalInvMass * deltaTime);
-                    
+
                     Vector3 impulse = correctionDirection * correction;
                     bodyA.Velocity += impulse * invMassA;
                     bodyA.Position += impulse * invMassA * deltaTime;
-                    
+
                     if (bodyB != null && bodyB.IsDynamic)
                     {
                         bodyB.Velocity -= impulse * invMassB;
@@ -645,7 +645,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 Quaternion targetRotation = bodyB.Rotation;
                 Quaternion currentRotation = bodyA.Rotation;
                 Quaternion rotationError = Quaternion.Multiply(Quaternion.Inverse(currentRotation), targetRotation);
-                
+
                 // Convert quaternion error to axis-angle
                 if (rotationError.W < 0.9999f)
                 {
@@ -659,7 +659,7 @@ namespace Andastra.Runtime.Games.Eclipse
                             float invMassA = 1.0f / bodyA.Mass;
                             float invMassB = 1.0f / bodyB.Mass;
                             float totalInvMass = invMassA + invMassB;
-                            
+
                             if (totalInvMass > 0.0001f)
                             {
                                 float constraintBias = constraint.Stiffness > 0.0f ? constraint.Stiffness : 1000.0f;
@@ -696,22 +696,22 @@ namespace Andastra.Runtime.Games.Eclipse
             // Position constraint: Keep anchors aligned (same as ball-and-socket)
             Vector3 positionError = worldAnchorB - worldAnchorA;
             float positionErrorLength = positionError.Length();
-            
+
             if (positionErrorLength > 0.0001f)
             {
                 Vector3 correctionDirection = positionError / positionErrorLength;
                 float invMassA = 1.0f / bodyA.Mass;
                 float invMassB = bodyB != null && bodyB.IsDynamic ? (1.0f / bodyB.Mass) : 0.0f;
                 float totalInvMass = invMassA + invMassB;
-                
+
                 if (totalInvMass > 0.0001f)
                 {
                     float constraintBias = constraint.Stiffness > 0.0f ? constraint.Stiffness : 1000.0f;
                     float correction = (positionErrorLength * constraintBias) / (totalInvMass * deltaTime);
-                    
+
                     Vector3 impulse = correctionDirection * correction;
                     bodyA.Velocity += impulse * invMassA;
-                    
+
                     if (bodyB != null && bodyB.IsDynamic)
                     {
                         bodyB.Velocity -= impulse * invMassB;
@@ -731,7 +731,7 @@ namespace Andastra.Runtime.Games.Eclipse
             float angularVelAlongAxis = Vector3.Dot(bodyA.AngularVelocity, hingeAxis);
             Vector3 constrainedAngularVel = hingeAxis * angularVelAlongAxis;
             Vector3 angularError = bodyA.AngularVelocity - constrainedAngularVel;
-            
+
             if (angularError.LengthSquared() > 0.0001f)
             {
                 float constraintBias = constraint.Stiffness > 0.0f ? constraint.Stiffness : 1000.0f;
@@ -776,23 +776,23 @@ namespace Andastra.Runtime.Games.Eclipse
             // Position constraint: Keep anchors aligned
             Vector3 positionError = worldAnchorB - worldAnchorA;
             float positionErrorLength = positionError.Length();
-            
+
             if (positionErrorLength > 0.0001f)
             {
                 Vector3 correctionDirection = positionError / positionErrorLength;
                 float invMassA = 1.0f / bodyA.Mass;
                 float invMassB = bodyB != null && bodyB.IsDynamic ? (1.0f / bodyB.Mass) : 0.0f;
                 float totalInvMass = invMassA + invMassB;
-                
+
                 if (totalInvMass > 0.0001f)
                 {
                     float constraintBias = constraint.Stiffness > 0.0f ? constraint.Stiffness : 1000.0f;
                     float correction = (positionErrorLength * constraintBias) / (totalInvMass * deltaTime);
-                    
+
                     Vector3 impulse = correctionDirection * correction;
                     bodyA.Velocity += impulse * invMassA;
                     bodyA.Position += impulse * invMassA * deltaTime;
-                    
+
                     if (bodyB != null && bodyB.IsDynamic)
                     {
                         bodyB.Velocity -= impulse * invMassB;
@@ -834,23 +834,23 @@ namespace Andastra.Runtime.Games.Eclipse
             float projectionLength = Vector3.Dot(positionError, slideAxis);
             Vector3 constrainedPosition = slideAxis * projectionLength;
             Vector3 perpendicularError = positionError - constrainedPosition;
-            
+
             if (perpendicularError.LengthSquared() > 0.0001f)
             {
                 float invMassA = 1.0f / bodyA.Mass;
                 float invMassB = bodyB != null && bodyB.IsDynamic ? (1.0f / bodyB.Mass) : 0.0f;
                 float totalInvMass = invMassA + invMassB;
-                
+
                 if (totalInvMass > 0.0001f)
                 {
                     float constraintBias = constraint.Stiffness > 0.0f ? constraint.Stiffness : 1000.0f;
                     float errorLength = perpendicularError.Length();
                     Vector3 correctionDirection = perpendicularError / errorLength;
                     float correction = (errorLength * constraintBias) / (totalInvMass * deltaTime);
-                    
+
                     Vector3 impulse = correctionDirection * correction;
                     bodyA.Velocity += impulse * invMassA;
-                    
+
                     if (bodyB != null && bodyB.IsDynamic)
                     {
                         bodyB.Velocity -= impulse * invMassB;
@@ -863,7 +863,7 @@ namespace Andastra.Runtime.Games.Eclipse
             float velocityAlongAxis = Vector3.Dot(velocityA, slideAxis);
             Vector3 constrainedVelocity = slideAxis * velocityAlongAxis;
             Vector3 perpendicularVelocity = velocityA - constrainedVelocity;
-            
+
             if (perpendicularVelocity.LengthSquared() > 0.0001f)
             {
                 float constraintBias = constraint.Stiffness > 0.0f ? constraint.Stiffness : 1000.0f;
@@ -877,7 +877,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 float currentDistance = projectionLength;
                 float minDistance = constraint.Limits.X;
                 float maxDistance = constraint.Limits.Y;
-                
+
                 if (currentDistance < minDistance)
                 {
                     float correction = (minDistance - currentDistance) * constraint.Stiffness / (deltaTime * bodyA.Mass);
@@ -913,25 +913,25 @@ namespace Andastra.Runtime.Games.Eclipse
 
             Vector3 displacement = worldAnchorB - worldAnchorA;
             float distance = displacement.Length();
-            
+
             if (distance > 0.0001f)
             {
                 Vector3 direction = displacement / distance;
-                
+
                 // Get spring parameters
                 float springConstant = constraint.Stiffness > 0.0f ? constraint.Stiffness : 100.0f;
-                float damping = constraint.Parameters != null && constraint.Parameters.ContainsKey("damping") 
-                    ? constraint.Parameters["damping"] 
+                float damping = constraint.Parameters != null && constraint.Parameters.ContainsKey("damping")
+                    ? constraint.Parameters["damping"]
                     : 0.1f;
                 float restLength = constraint.Parameters != null && constraint.Parameters.ContainsKey("restLength")
                     ? constraint.Parameters["restLength"]
                     : 0.0f;
-                
+
                 float extension = distance - restLength;
-                
+
                 // Calculate spring force (Hooke's law)
                 float springForce = extension * springConstant;
-                
+
                 // Calculate damping force (proportional to relative velocity)
                 Vector3 relativeVelocity = bodyA.Velocity;
                 if (bodyB != null && bodyB.IsDynamic)
@@ -940,15 +940,15 @@ namespace Andastra.Runtime.Games.Eclipse
                 }
                 float relativeSpeed = Vector3.Dot(relativeVelocity, direction);
                 float dampingForce = relativeSpeed * damping;
-                
+
                 // Total force along spring direction
                 float totalForce = springForce + dampingForce;
                 Vector3 force = direction * totalForce;
-                
+
                 // Apply forces
                 float invMassA = 1.0f / bodyA.Mass;
                 bodyA.Velocity += force * invMassA * deltaTime;
-                
+
                 if (bodyB != null && bodyB.IsDynamic)
                 {
                     float invMassB = 1.0f / bodyB.Mass;
@@ -1096,7 +1096,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Static geometry collision shape creation and updates (0x008f12a0)
         /// - DragonAge2.exe: Enhanced collision shape updates for destructible geometry (0x009a45b0)
-        /// 
+        ///
         /// Static geometry collision shapes are triangle meshes representing room/static object geometry.
         /// When geometry is modified (destroyed/deformed), collision shapes are rebuilt to match.
         /// </remarks>

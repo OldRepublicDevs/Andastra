@@ -10,13 +10,13 @@ namespace Andastra.Tests.Runtime.Core.Navigation
 {
     /// <summary>
     /// Tests for walkmesh functionality, focusing on reproducing Indoor Map Builder issues.
-    /// 
+    ///
     /// Issue Background:
     /// The Holocron Indoor Map Builder (v4 beta) generates modules that suffer from three distinct walkability problems:
     /// 1. **Complete Immobility**: Players are stuck in place, unable to move at all.
     /// 2. **Room Transition Failure**: Players can move within a room but cannot transition between rooms via doors.
     /// 3. **Format Conversion Issues**: Modules generated with v2.0.4 work in K1 but fail in K2 after conversion.
-    /// 
+    ///
     /// Root Cause Analysis:
     /// These tests identify and verify fixes for the underlying walkmesh data issues that cause these problems.
     /// </summary>
@@ -24,12 +24,12 @@ namespace Andastra.Tests.Runtime.Core.Navigation
     {
         /// <summary>
         /// Test 1: Verify walkmesh type is correctly set to AreaModel for AABB tree generation.
-        /// 
+        ///
         /// Issue: If WalkmeshType is not set to AreaModel, the AABB tree cannot be built, causing:
         /// - Inefficient brute-force face detection
         /// - Failed FindFaceAt operations
         /// - Players unable to move (cannot find walkable face at player position)
-        /// 
+        ///
         /// This reproduces Problem 1: Complete Immobility
         /// </summary>
         [Fact]
@@ -70,7 +70,7 @@ namespace Andastra.Tests.Runtime.Core.Navigation
 
             // Assert: AreaModel type must be set for AABB tree
             Assert.Equal(BWMType.AreaModel, bwm.WalkmeshType);
-            
+
             // Assert: Should be able to enumerate walkable faces
             var walkableFaces = bwm.WalkableFaces();
             Assert.NotNull(walkableFaces);
@@ -78,11 +78,11 @@ namespace Andastra.Tests.Runtime.Core.Navigation
 
         /// <summary>
         /// Test 2: Verify material preservation during walkmesh transformations.
-        /// 
+        ///
         /// Issue: If material information is lost during copy/transform, all faces become non-walkable:
         /// - Causes complete immobility
         /// - Players cannot find any walkable surface
-        /// 
+        ///
         /// Root Cause: PyKotor's IndoorMap.process_bwm() was losing material data
         /// </summary>
         [Fact]
@@ -121,12 +121,12 @@ namespace Andastra.Tests.Runtime.Core.Navigation
 
         /// <summary>
         /// Test 3: Verify transition indices (Trans1/Trans2/Trans3) are correctly set for door connections.
-        /// 
+        ///
         /// Issue: If transition indices are not remapped when combining room walkmeshes:
         /// - Door connections point to wrong rooms
         /// - Players cannot transition through doors
         /// - Causes Problem 2: Room Transition Failure
-        /// 
+        ///
         /// Root Cause: PyKotor's remap_transitions() function must correctly update Trans1/Trans2/Trans3 fields
         /// </summary>
         [Fact]
@@ -155,7 +155,7 @@ namespace Andastra.Tests.Runtime.Core.Navigation
 
         /// <summary>
         /// Test 4: Verify adjacency connections are maintained within combined walkmeshes.
-        /// 
+        ///
         /// Issue: When multiple room walkmeshes are combined into a single navigation mesh:
         /// - Internal adjacency references must be remapped
         /// - Without remapping, pathfinding cannot navigate between faces
@@ -197,16 +197,16 @@ namespace Andastra.Tests.Runtime.Core.Navigation
 
         /// <summary>
         /// Test 5: Verify walkmesh operations handle placeholder/stub cases correctly.
-        /// 
+        ///
         /// Issue: During indoor map generation, temporary placeholder geometry may be used.
         /// If not properly handled, this causes:
         /// - Invalid face references
         /// - Segmentation faults or access violations
         /// - Null reference exceptions
-        /// 
+        ///
         /// This test comprehensively verifies that ALL BWM operations handle empty, null,
         /// and placeholder walkmesh cases gracefully without throwing exceptions.
-        /// 
+        ///
         /// Based on swkotor2.exe: Empty walkmeshes should return empty/null results without crashing.
         /// Reference: ModuleKit._create_component_from_lyt_room() creates placeholder BWM when WOK is missing.
         /// </summary>

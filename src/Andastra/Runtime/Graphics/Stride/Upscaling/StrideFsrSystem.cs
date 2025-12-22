@@ -110,7 +110,7 @@ namespace Andastra.Runtime.Stride.Upscaling
             // - Bind input resources
             // - Execute FSR compute shader
 
-            // In actual implementation:
+            // TODO:  In actual implementation:
             // ffxFsr2ContextDispatch
 
             Console.WriteLine($"[StrideFSR] Executing FSR: {input.Width}x{input.Height} -> {output.Width}x{output.Height}");

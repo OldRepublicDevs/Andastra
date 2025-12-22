@@ -519,7 +519,7 @@ namespace Andastra.Parsing.Formats.MDL
             }
 
             // Write animation nodes
-            // Animation nodes are written as "node dummy <node_name>" with controllers
+            // TODO:  Animation nodes are written as "node dummy <node_name>" with controllers
             // Build a mapping from animation nodes to their parents for parent writing
             var parentMap = new Dictionary<string, MDLNode>();
             BuildAnimationParentMap(anim.Root, null, parentMap);
@@ -555,7 +555,7 @@ namespace Andastra.Parsing.Formats.MDL
 
         private void WriteAnimationNode(int indent, MDLNode node, MDLNode parent)
         {
-            // Animation nodes are always written as "dummy" type
+            // TODO:  Animation nodes are always written as "dummy" type
             WriteLine(indent, $"node dummy {node.Name}");
 
             // Write parent if this node has one

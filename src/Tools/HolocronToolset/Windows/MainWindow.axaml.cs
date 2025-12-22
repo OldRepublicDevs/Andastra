@@ -554,7 +554,7 @@ namespace HolocronToolset.Windows
             var installations = _settings.Installations();
             if (!installations.ContainsKey(name))
             {
-                // Installation not configured - would prompt user in full implementation
+                // TODO:  Installation not configured - would prompt user in full implementation
                 _gameCombo.SelectedIndex = prevIndex;
                 return;
             }
@@ -565,7 +565,7 @@ namespace HolocronToolset.Windows
 
             if (string.IsNullOrEmpty(path) || !Directory.Exists(path))
             {
-                // Path not set or invalid - would prompt user in full implementation
+                // TODO:  Path not set or invalid - would prompt user in full implementation
                 _gameCombo.SelectedIndex = prevIndex;
                 return;
             }
@@ -990,7 +990,7 @@ namespace HolocronToolset.Windows
                     $"Failed to open file dialog ({errorType})",
                     errorMessage,
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 await errorBox.ShowAsync();
             }
         }

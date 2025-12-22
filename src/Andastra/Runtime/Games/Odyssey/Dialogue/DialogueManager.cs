@@ -60,42 +60,28 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
     {
         // Plot XP calculation multipliers (swkotor2.exe data addresses)
         // Based on swkotor2.exe: FUN_005e6870 @ 0x005e6870 and FUN_0057eb20 @ 0x0057eb20
-        // 
-        // _DAT_007b99b4 @ 0x007b99b4: Base multiplier applied to plotXpPercentage
-        //   - Used in FUN_005e6870: multiplierValue = plotXpPercentage * _DAT_007b99b4
-        //   - Value: 1.0f (verified via logical analysis - pass-through multiplier)
-        //   - Verification: In Ghidra, navigate to 0x007b99b4, view as float (32-bit)
-        //   - If different value found, update this constant to match binary
-        //
-        // _DAT_007b5f88 @ 0x007b5f88: Additional multiplier applied to final XP calculation
-        //   - Used in FUN_0057eb20: finalXP = (baseXP * multiplierValue) * _DAT_007b5f88
-        //   - Value: 1.0f (verified via logical analysis - pass-through multiplier)
-        //   - Verification: In Ghidra, navigate to 0x007b5f88, view as float (32-bit)
-        //   - If different value found, update this constant to match binary
-        //
-        // Verification Instructions:
-        //   1. Open swkotor2.exe in Ghidra
-        //   2. Navigate to address 0x007b99b4, view as float (32-bit), record value
-        //   3. Navigate to address 0x007b5f88, view as float (32-bit), record value
-        //   4. If values differ from 1.0f, update constants to match binary values
-        //   5. See scripts/Verify-PlotXpMultipliers.ps1 for detailed verification script
-        //
-        // Mathematical Logic:
-        //   - If both multipliers are 1.0f: finalXP = baseXP * plotXpPercentage
-        //   - This matches expected behavior where plotXpPercentage (0.0-1.0) directly scales baseXP
-        //   - Multipliers allow game balance tuning without code changes
-        private const float PLOT_XP_BASE_MULTIPLIER = 1.0f; // _DAT_007b99b4 @ 0x007b99b4 - Verified via logical analysis, can be verified in Ghidra
-        private const float PLOT_XP_ADDITIONAL_MULTIPLIER = 1.0f; // _DAT_007b5f88 @ 0x007b5f88 - Verified via logical analysis, can be verified in Ghidra
+        // _DAT_007b99b4: Base multiplier applied to plotXpPercentage
+        // _DAT_007b5f88: Additional multiplier applied to final XP calculation
+        // Verified via Ghidra reverse engineering:
+        // - FUN_005e6870 @ 0x005e6870 line 17: param_2 * _DAT_007b99b4
+        // - FUN_0057eb20 @ 0x0057eb20 line 30: (float)(local_18 * param_2) * _DAT_007b5f88
+        // Memory read from swkotor2.exe:
+        // - 0x007b99b4: 00 00 C8 42 = 100.0f
+        // - 0x007b5f88: 0A D7 23 3C = 0.009999999776482582f (approximately 0.01f)
+        private const float PLOT_XP_BASE_MULTIPLIER = 100.0f; // _DAT_007b99b4 @ 0x007b99b4 - Verified via Ghidra
+        private const float PLOT_XP_ADDITIONAL_MULTIPLIER = 0.009999999776482582f; // _DAT_007b5f88 @ 0x007b5f88 - Verified via Ghidra
         
         // Plot XP threshold check (swkotor2.exe: FUN_005e6870 @ 0x005e6870)
         // Only processes XP if threshold < plotXpPercentage
-        // Verified: Threshold value of 0.0f is correct - ensures XP is only processed when plotXpPercentage > 0
+        // Verified via Ghidra reverse engineering:
+        // - FUN_005e6870 @ 0x005e6870 line 13: if ((param_1 != -1) && (_DAT_007b56fc < param_2))
+        // - Memory read from swkotor2.exe @ 0x007b56fc: 00 00 00 00 = 0.0f
         // Logic verification: Comparison "threshold < plotXpPercentage" with threshold=0.0f correctly filters:
         //   - plotXpPercentage = 0.0f → 0.0 < 0.0 = false → No XP (correct, 0% means no XP award)
         //   - plotXpPercentage > 0.0f → 0.0 < percentage = true → XP processed (correct, any positive % processes XP)
         // This matches the original engine behavior where plot XP is only awarded when the percentage value is positive
         // Original implementation: FUN_005e6870 checks "if (threshold < plotXpPercentage)" before processing XP
-        private const float PLOT_XP_THRESHOLD = 0.0f; // Threshold for plotXpPercentage - Verified via logical analysis matching original engine behavior
+        private const float PLOT_XP_THRESHOLD = 0.0f; // _DAT_007b56fc @ 0x007b56fc - Verified via Ghidra
 
         private readonly Func<string, DLG> _dialogueLoader;
         private readonly Func<string, byte[]> _scriptLoader;
@@ -656,7 +642,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
         }
 
         /// <summary>
-        /// Creates a dummy reply wrapper for entry continuation.
+        // TODO: / Creates a dummy reply wrapper for entry continuation.
         /// </summary>
         private DLGReply CreateDummyReplyForEntry(DLGEntry entry)
         {
@@ -1166,7 +1152,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
                     // This allows journal to track XP rewards and update UI accordingly
                     // Note: Journal notification may be handled internally by the party system or journal system
                     // The exact notification mechanism depends on the implementation of FUN_00681a10
-                    // For now, we rely on the party system's XP award mechanism which should handle journal updates
+                    // TODO: STUB - For now, we rely on the party system's XP award mechanism which should handle journal updates
                 }
             }
 

@@ -1670,7 +1670,7 @@ namespace HolocronToolset.Editors
         {
             if (ncsData == null || ncsData.Length == 0)
             {
-                // Return empty string for invalid input (matching TODO requirement)
+                // TODO:  Return empty string for invalid input (matching TODO requirement)
                 return "";
             }
 
@@ -1688,15 +1688,15 @@ namespace HolocronToolset.Editors
                     {
                         return decompiled;
                     }
-                    // If decompilation returned null or empty, return empty string (matching TODO requirement)
-                    // Python implementation raises ValueError, but TODO explicitly requests returning empty string
+                    // TODO:  If decompilation returned null or empty, return empty string (matching TODO requirement)
+                    // TODO:  Python implementation raises ValueError, but TODO explicitly requests returning empty string
                     System.Console.WriteLine("Decompilation failed: decompile_ncs returned null or empty string");
                     return "";
                 }
                 catch (Exception ex)
                 {
-                    // Decompilation failed - log error and return empty string (matching TODO requirement)
-                    // Python implementation raises ValueError, but TODO explicitly requests returning empty string
+                    // TODO:  Decompilation failed - log error and return empty string (matching TODO requirement)
+                    // TODO:  Python implementation raises ValueError, but TODO explicitly requests returning empty string
                     // This allows caller to handle gracefully without exception handling
                     System.Console.WriteLine($"Decompilation failed: {ex.Message}");
                     if (ex.InnerException != null)
@@ -1707,7 +1707,7 @@ namespace HolocronToolset.Editors
                 }
             }
 
-            // Installation not set - return empty string (matching TODO requirement)
+            // TODO:  Installation not set - return empty string (matching TODO requirement)
             System.Console.WriteLine("Decompilation failed: installation is not set");
             return "";
         }
@@ -2594,7 +2594,7 @@ namespace HolocronToolset.Editors
         // Original: def _update_bookmark_visualization(self):
         private void UpdateBookmarkVisualization()
         {
-            // In a full implementation, this would update visual indicators in the code editor
+            // TODO:  In a full implementation, this would update visual indicators in the code editor
             // TODO: STUB - For now, this is a placeholder that matches the Python interface
         }
 
@@ -3252,7 +3252,7 @@ namespace HolocronToolset.Editors
                     ShowCommandPalette();
                     e.Handled = true;
                 }
-                // Ctrl+P (Quick Open - for now just show command palette, matching PyKotor)
+                // TODO:  Ctrl+P (Quick Open - for now just show command palette, matching PyKotor)
                 else if (e.Key == Key.P && (e.KeyModifiers & KeyModifiers.Control) != 0 && (e.KeyModifiers & KeyModifiers.Shift) == 0)
                 {
                     ShowCommandPalette();
@@ -4977,7 +4977,7 @@ namespace HolocronToolset.Editors
             // Set current file if available
             if (!string.IsNullOrEmpty(_filepath) && File.Exists(_filepath))
             {
-                // Note: In a full implementation, we would select and scroll to the current file
+                // TODO:  Note: In a full implementation, we would select and scroll to the current file
                 // TODO: STUB - For now, we just ensure the model is set up correctly
             }
 
@@ -5230,7 +5230,7 @@ namespace HolocronToolset.Editors
             }
 
             // Get file path from selected item
-            // Note: In a full implementation, we would extract the path from the TreeViewItem
+            // TODO:  Note: In a full implementation, we would extract the path from the TreeViewItem
             // and open it in the editor or a new editor instance
             System.Console.WriteLine("File opened from explorer (implementation in progress)");
         }
