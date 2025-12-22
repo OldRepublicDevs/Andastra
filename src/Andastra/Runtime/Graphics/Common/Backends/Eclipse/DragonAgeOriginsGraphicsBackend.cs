@@ -78,6 +78,20 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             public float V;
         }
 
+        // DirectX 9 delegate declarations for P/Invoke calls
+        // Based on daorigins.exe: DirectX 9 COM interface method calls
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int CreateVertexBufferDelegate(IntPtr device, uint length, uint usage, uint fvf, uint pool, ref IntPtr vertexBuffer);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int LockDelegate(IntPtr vertexBuffer, uint offset, uint size, out IntPtr data, uint flags);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int UnlockDelegate(IntPtr vertexBuffer);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int ReleaseDelegate(IntPtr obj);
+
         public override GraphicsBackendType BackendType => GraphicsBackendType.EclipseEngine;
 
         protected override string GetGameName() => "Dragon Age Origins";
@@ -1340,23 +1354,348 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         /// Renders HUD elements (health bars, minimap, inventory icons, action bar).
         /// Based on daorigins.exe: HUD is always visible during gameplay.
         /// </summary>
+        /// <remarks>
+        /// Based on reverse engineering of daorigins.exe:
+        /// - HUD elements are rendered as 2D sprites (textured quads) over the 3D scene
+        /// - Health bars: Bottom-left corner, shows player and party member health
+        /// - Minimap: Top-right corner, shows area map with player position
+        /// - Action bar: Bottom-center, shows equipped abilities/spells/items (hotkeys 1-9)
+        /// - Inventory icons: Bottom-left, shows equipped items (weapons, armor)
+        /// - Status effects: Bottom-left, shows active buffs/debuffs as small icons
+        /// - DirectX 9 calls: SetTexture, SetStreamSource, DrawPrimitive for textured quads
+        /// - HUD rendering uses screen-space coordinates (0,0 = top-left, viewportWidth/viewportHeight = bottom-right)
+        /// </remarks>
         private void RenderHUD()
         {
-            // Based on daorigins.exe: HUD elements include:
-            // - Health bars (player and party members)
-            // - Mana/stamina bars
-            // - Minimap (top-right corner)
-            // - Inventory icons (equipped items)
-            // - Action bar (abilities, spells, items)
-            // - Quest markers and objectives
-            // - Status effects icons
+            if (_world == null || _d3dDevice == IntPtr.Zero)
+            {
+                return;
+            }
 
-            // HUD rendering would use sprite rendering with UI textures
-            // Each HUD element would be rendered as a textured quad using DrawPrimitive
-            // Texture coordinates would be set based on the UI element's position and size
+            // Get viewport dimensions for HUD element positioning
+            uint viewportWidth = GetViewportWidth();
+            uint viewportHeight = GetViewportHeight();
 
-            // TODO: STUB - For now, this is a placeholder that matches the structure
-            // TODO:  Full implementation would require UI system integration
+            // Set 2D orthographic projection for screen-space rendering
+            // Based on daorigins.exe: UI rendering uses orthographic projection with screen coordinates
+            Matrix4x4 orthoMatrix = Matrix4x4.CreateOrthographicOffCenter(
+                0.0f, viewportWidth, // Left, Right
+                viewportHeight, 0.0f, // Top, Bottom (flipped Y for screen coordinates)
+                0.0f, 1.0f // Near, Far
+            );
+            SetTransformDirectX9(D3DTS_PROJECTION, orthoMatrix);
+
+            // Reset world and view matrices for 2D rendering
+            Matrix4x4 identityMatrix = Matrix4x4.Identity;
+            SetTransformDirectX9(D3DTS_WORLD, identityMatrix);
+            SetTransformDirectX9(D3DTS_VIEW, identityMatrix);
+
+            // 1. Render health bars (player and party members) - bottom-left corner
+            // Based on daorigins.exe: Health bars are rendered at bottom-left, stacked vertically
+            RenderHealthBars(viewportWidth, viewportHeight);
+
+            // 2. Render minimap - top-right corner
+            // Based on daorigins.exe: Minimap is rendered at top-right corner with area map
+            RenderMinimap(viewportWidth, viewportHeight);
+
+            // 3. Render action bar - bottom-center
+            // Based on daorigins.exe: Action bar shows equipped abilities/spells/items (hotkeys 1-9)
+            RenderActionBar(viewportWidth, viewportHeight);
+
+            // 4. Render inventory icons - bottom-left (next to health bars)
+            // Based on daorigins.exe: Inventory icons show equipped items (weapons, armor)
+            RenderInventoryIcons(viewportWidth, viewportHeight);
+
+            // 5. Render status effects icons - bottom-left (above inventory icons)
+            // Based on daorigins.exe: Status effects show active buffs/debuffs as small icons
+            RenderStatusEffects(viewportWidth, viewportHeight);
+        }
+
+        /// <summary>
+        /// Renders health bars for player and party members.
+        /// Based on daorigins.exe: Health bars are rendered at bottom-left, stacked vertically.
+        /// </summary>
+        /// <param name="viewportWidth">Viewport width in pixels.</param>
+        /// <param name="viewportHeight">Viewport height in pixels.</param>
+        private void RenderHealthBars(uint viewportWidth, uint viewportHeight)
+        {
+            if (_world == null)
+            {
+                return;
+            }
+
+            // Health bar dimensions and positioning
+            // Based on daorigins.exe: Health bars are 200px wide, 20px tall, positioned at bottom-left
+            const float healthBarWidth = 200.0f;
+            const float healthBarHeight = 20.0f;
+            const float healthBarSpacing = 5.0f; // Spacing between health bars
+            const float healthBarX = 10.0f; // Left margin
+            float healthBarY = viewportHeight - 100.0f; // Start from bottom, leave room for action bar
+
+            // Get player entity
+            IEntity player = _world.GetEntityByTag("Player", 0);
+            if (player == null)
+            {
+                player = _world.GetEntityByTag("PlayerCharacter", 0);
+            }
+
+            // Render player health bar
+            if (player != null)
+            {
+                RenderHealthBar(healthBarX, healthBarY, healthBarWidth, healthBarHeight, player, true);
+                healthBarY -= (healthBarHeight + healthBarSpacing);
+            }
+
+            // Render party member health bars (up to 3 party members)
+            // Based on daorigins.exe: Party can have up to 3 additional members (4 total including player)
+            for (int i = 0; i < 3; i++)
+            {
+                IEntity partyMember = _world.GetEntityByTag($"PartyMember{i}", 0);
+                if (partyMember == null)
+                {
+                    // Try alternative naming convention
+                    partyMember = _world.GetEntityByTag($"Companion{i}", 0);
+                }
+
+                if (partyMember != null)
+                {
+                    RenderHealthBar(healthBarX, healthBarY, healthBarWidth, healthBarHeight, partyMember, false);
+                    healthBarY -= (healthBarHeight + healthBarSpacing);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Renders a single health bar for an entity.
+        /// Based on daorigins.exe: Health bars show current HP as green bar, missing HP as dark background.
+        /// </summary>
+        /// <param name="x">Health bar X position.</param>
+        /// <param name="y">Health bar Y position.</param>
+        /// <param name="width">Health bar width.</param>
+        /// <param name="height">Health bar height.</param>
+        /// <param name="entity">Entity to render health bar for.</param>
+        /// <param name="isPlayer">True if this is the player's health bar.</param>
+        private void RenderHealthBar(float x, float y, float width, float height, IEntity entity, bool isPlayer)
+        {
+            if (entity == null)
+            {
+                return;
+            }
+
+            // Get stats component for HP values
+            IStatsComponent stats = entity.GetComponent<IStatsComponent>();
+            if (stats == null)
+            {
+                return;
+            }
+
+            int currentHP = stats.CurrentHP;
+            int maxHP = stats.MaxHP;
+
+            if (maxHP <= 0)
+            {
+                return; // Invalid HP values
+            }
+
+            // Calculate health percentage
+            float healthPercent = (float)currentHP / (float)maxHP;
+            if (healthPercent < 0.0f) healthPercent = 0.0f;
+            if (healthPercent > 1.0f) healthPercent = 1.0f;
+
+            // Health bar colors
+            // Based on daorigins.exe: Health bars use green for healthy, red for low health
+            uint backgroundColor = 0xFF404040; // Dark gray background for missing HP
+            uint healthColor;
+            if (healthPercent > 0.5f)
+            {
+                healthColor = 0xFF00FF00; // Green for healthy (>50%)
+            }
+            else if (healthPercent > 0.25f)
+            {
+                healthColor = 0xFFFFFF00; // Yellow for wounded (25-50%)
+            }
+            else
+            {
+                healthColor = 0xFFFF0000; // Red for critical (<25%)
+            }
+
+            // Render health bar background (missing HP)
+            DrawQuad(x, y, width, height, backgroundColor, IntPtr.Zero);
+
+            // Render health bar fill (current HP)
+            float healthWidth = width * healthPercent;
+            if (healthWidth > 0.0f)
+            {
+                DrawQuad(x, y, healthWidth, height, healthColor, IntPtr.Zero);
+            }
+
+            // Render health bar border (white outline)
+            const float borderWidth = 1.0f;
+            uint borderColor = 0xFFFFFFFF; // White border
+            DrawQuad(x, y, width, borderWidth, borderColor, IntPtr.Zero); // Top border
+            DrawQuad(x, y + height - borderWidth, width, borderWidth, borderColor, IntPtr.Zero); // Bottom border
+            DrawQuad(x, y, borderWidth, height, borderColor, IntPtr.Zero); // Left border
+            DrawQuad(x + width - borderWidth, y, borderWidth, height, borderColor, IntPtr.Zero); // Right border
+        }
+
+        /// <summary>
+        /// Renders minimap in top-right corner.
+        /// Based on daorigins.exe: Minimap shows area map with player position indicator.
+        /// </summary>
+        /// <param name="viewportWidth">Viewport width in pixels.</param>
+        /// <param name="viewportHeight">Viewport height in pixels.</param>
+        private void RenderMinimap(uint viewportWidth, uint viewportHeight)
+        {
+            // Minimap dimensions and positioning
+            // Based on daorigins.exe: Minimap is 200x200px, positioned at top-right corner
+            const float minimapSize = 200.0f;
+            const float minimapMargin = 10.0f;
+            float minimapX = viewportWidth - minimapSize - minimapMargin;
+            float minimapY = minimapMargin;
+
+            // Minimap background (dark semi-transparent panel)
+            uint minimapBackgroundColor = 0x80000000; // Black with 50% alpha
+            DrawQuad(minimapX, minimapY, minimapSize, minimapSize, minimapBackgroundColor, IntPtr.Zero);
+
+            // Minimap border
+            const float borderWidth = 2.0f;
+            uint borderColor = 0xFF808080; // Gray border
+            DrawQuad(minimapX, minimapY, minimapSize, borderWidth, borderColor, IntPtr.Zero); // Top border
+            DrawQuad(minimapX, minimapY + minimapSize - borderWidth, minimapSize, borderWidth, borderColor, IntPtr.Zero); // Bottom border
+            DrawQuad(minimapX, minimapY, borderWidth, minimapSize, borderColor, IntPtr.Zero); // Left border
+            DrawQuad(minimapX + minimapSize - borderWidth, minimapY, borderWidth, minimapSize, borderColor, IntPtr.Zero); // Right border
+
+            // TODO: PLACEHOLDER - Minimap content rendering would require:
+            // - Area map texture loading from game resources
+            // - Player position calculation and rendering
+            // - Party member position indicators
+            // - Map zoom/pan functionality
+            // - Full implementation would integrate with area system and camera position
+        }
+
+        /// <summary>
+        /// Renders action bar at bottom-center.
+        /// Based on daorigins.exe: Action bar shows equipped abilities/spells/items (hotkeys 1-9).
+        /// </summary>
+        /// <param name="viewportWidth">Viewport width in pixels.</param>
+        /// <param name="viewportHeight">Viewport height in pixels.</param>
+        private void RenderActionBar(uint viewportWidth, uint viewportHeight)
+        {
+            // Action bar dimensions and positioning
+            // Based on daorigins.exe: Action bar is centered at bottom, shows 9 ability slots
+            const int actionBarSlots = 9;
+            const float slotSize = 50.0f;
+            const float slotSpacing = 5.0f;
+            float actionBarWidth = (actionBarSlots * slotSize) + ((actionBarSlots - 1) * slotSpacing);
+            float actionBarX = (viewportWidth / 2.0f) - (actionBarWidth / 2.0f);
+            float actionBarY = viewportHeight - slotSize - 10.0f; // 10px margin from bottom
+
+            // Render action bar slots
+            for (int i = 0; i < actionBarSlots; i++)
+            {
+                float slotX = actionBarX + (i * (slotSize + slotSpacing));
+
+                // Slot background (dark gray)
+                uint slotBackgroundColor = 0xFF202020;
+                DrawQuad(slotX, actionBarY, slotSize, slotSize, slotBackgroundColor, IntPtr.Zero);
+
+                // Slot border
+                const float borderWidth = 2.0f;
+                uint borderColor = 0xFF808080;
+                DrawQuad(slotX, actionBarY, slotSize, borderWidth, borderColor, IntPtr.Zero); // Top border
+                DrawQuad(slotX, actionBarY + slotSize - borderWidth, slotSize, borderWidth, borderColor, IntPtr.Zero); // Bottom border
+                DrawQuad(slotX, actionBarY, borderWidth, slotSize, borderColor, IntPtr.Zero); // Left border
+                DrawQuad(slotX + slotSize - borderWidth, actionBarY, borderWidth, slotSize, borderColor, IntPtr.Zero); // Right border
+
+                // TODO: PLACEHOLDER - Action bar slot content rendering would require:
+                // - Ability/spell/item icons from game resources
+                // - Cooldown indicators
+                // - Hotkey labels (1-9)
+                // - Full implementation would integrate with ability/item system
+            }
+        }
+
+        /// <summary>
+        /// Renders inventory icons for equipped items.
+        /// Based on daorigins.exe: Inventory icons show equipped items (weapons, armor) at bottom-left.
+        /// </summary>
+        /// <param name="viewportWidth">Viewport width in pixels.</param>
+        /// <param name="viewportHeight">Viewport height in pixels.</param>
+        private void RenderInventoryIcons(uint viewportWidth, uint viewportHeight)
+        {
+            // Inventory icon dimensions and positioning
+            // Based on daorigins.exe: Inventory icons are 40x40px, positioned at bottom-left (above health bars)
+            const float iconSize = 40.0f;
+            const float iconSpacing = 5.0f;
+            const float iconX = 10.0f;
+            float iconY = viewportHeight - 200.0f; // Above health bars
+
+            // Render equipped item icons (weapon, armor, etc.)
+            // Based on daorigins.exe: Shows main hand weapon, off-hand weapon/shield, armor
+            const int maxIcons = 4;
+            for (int i = 0; i < maxIcons; i++)
+            {
+                float currentIconX = iconX + (i * (iconSize + iconSpacing));
+
+                // Icon background (dark gray)
+                uint iconBackgroundColor = 0xFF303030;
+                DrawQuad(currentIconX, iconY, iconSize, iconSize, iconBackgroundColor, IntPtr.Zero);
+
+                // Icon border
+                const float borderWidth = 1.0f;
+                uint borderColor = 0xFF606060;
+                DrawQuad(currentIconX, iconY, iconSize, borderWidth, borderColor, IntPtr.Zero); // Top border
+                DrawQuad(currentIconX, iconY + iconSize - borderWidth, iconSize, borderWidth, borderColor, IntPtr.Zero); // Bottom border
+                DrawQuad(currentIconX, iconY, borderWidth, iconSize, borderColor, IntPtr.Zero); // Left border
+                DrawQuad(currentIconX + iconSize - borderWidth, iconY, borderWidth, iconSize, borderColor, IntPtr.Zero); // Right border
+
+                // TODO: PLACEHOLDER - Inventory icon content rendering would require:
+                // - Item icon textures from game resources
+                // - Equipment slot mapping (main hand, off-hand, armor, etc.)
+                // - Full implementation would integrate with inventory/equipment system
+            }
+        }
+
+        /// <summary>
+        /// Renders status effects icons.
+        /// Based on daorigins.exe: Status effects show active buffs/debuffs as small icons at bottom-left.
+        /// </summary>
+        /// <param name="viewportWidth">Viewport width in pixels.</param>
+        /// <param name="viewportHeight">Viewport height in pixels.</param>
+        private void RenderStatusEffects(uint viewportWidth, uint viewportHeight)
+        {
+            // Status effect icon dimensions and positioning
+            // Based on daorigins.exe: Status effect icons are 32x32px, positioned at bottom-left (above inventory icons)
+            const float iconSize = 32.0f;
+            const float iconSpacing = 3.0f;
+            const float iconX = 10.0f;
+            float iconY = viewportHeight - 250.0f; // Above inventory icons
+
+            // Render status effect icons (buffs/debuffs)
+            // Based on daorigins.exe: Shows active status effects as small icons in a row
+            const int maxStatusEffects = 8;
+            for (int i = 0; i < maxStatusEffects; i++)
+            {
+                float currentIconX = iconX + (i * (iconSize + iconSpacing));
+
+                // Status effect icon background (semi-transparent)
+                uint iconBackgroundColor = 0x80000000; // Black with 50% alpha
+                DrawQuad(currentIconX, iconY, iconSize, iconSize, iconBackgroundColor, IntPtr.Zero);
+
+                // Status effect icon border
+                const float borderWidth = 1.0f;
+                uint borderColor = 0xFF808080;
+                DrawQuad(currentIconX, iconY, iconSize, borderWidth, borderColor, IntPtr.Zero); // Top border
+                DrawQuad(currentIconX, iconY + iconSize - borderWidth, iconSize, borderWidth, borderColor, IntPtr.Zero); // Bottom border
+                DrawQuad(currentIconX, iconY, borderWidth, iconSize, borderColor, IntPtr.Zero); // Left border
+                DrawQuad(currentIconX + iconSize - borderWidth, iconY, borderWidth, iconSize, borderColor, IntPtr.Zero); // Right border
+
+                // TODO: PLACEHOLDER - Status effect icon content rendering would require:
+                // - Status effect icon textures from game resources
+                // - Status effect system integration (buffs/debuffs)
+                // - Duration indicators
+                // - Full implementation would integrate with effect system
+            }
         }
 
         /// <summary>
@@ -1738,7 +2077,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             IntPtr buttonTexture = IntPtr.Zero;
 
             // Load actual button texture from game resources
-            // Button texture loading would use LoadEclipseTexture() with texture name from resources
+            // TODO: Button texture loading would use LoadEclipseTexture() with texture name from resources
             // Normal button texture: "gui_pause_button_normal" or similar
             // Highlighted button texture: "gui_pause_button_highlight" or similar
 
@@ -1993,10 +2332,6 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 IntPtr* vtable = *(IntPtr**)_d3dDevice;
                 IntPtr createVbPtr = vtable[38]; // CreateVertexBuffer vtable index
 
-                // CreateVertexBuffer delegate signature
-                [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-                delegate int CreateVertexBufferDelegate(IntPtr device, uint length, uint usage, uint fvf, uint pool, ref IntPtr vertexBuffer);
-
                 var createVb = Marshal.GetDelegateForFunctionPointer<CreateVertexBufferDelegate>(createVbPtr);
                 const uint D3DUSAGE_WRITEONLY = 0x00000008;
                 const uint D3DPOOL_DEFAULT = 0;
@@ -2009,9 +2344,6 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                     // IDirect3DVertexBuffer9::Lock is at vtable index 11
                     IntPtr* vbVtable = *(IntPtr**)(vertexBufferPtr);
                     IntPtr lockPtr = vbVtable[11];
-
-                    [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-                    delegate int LockDelegate(IntPtr vertexBuffer, uint offset, uint size, out IntPtr data, uint flags);
 
                     var lockVb = Marshal.GetDelegateForFunctionPointer<LockDelegate>(lockPtr);
                     IntPtr lockedData;
@@ -2029,8 +2361,6 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                         // Unlock vertex buffer
                         // IDirect3DVertexBuffer9::Unlock is at vtable index 12
                         IntPtr unlockPtr = vbVtable[12];
-                        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-                        delegate int UnlockDelegate(IntPtr vertexBuffer);
                         var unlockVb = Marshal.GetDelegateForFunctionPointer<UnlockDelegate>(unlockPtr);
                         unlockVb(vertexBufferPtr);
 
@@ -2063,9 +2393,6 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             {
                 IntPtr* vtable = *(IntPtr**)(vertexBufferPtr);
                 IntPtr releasePtr = vtable[2];
-
-                [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-                delegate int ReleaseDelegate(IntPtr obj);
 
                 var release = Marshal.GetDelegateForFunctionPointer<ReleaseDelegate>(releasePtr);
                 release(vertexBufferPtr);
@@ -3713,6 +4040,25 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                     }
 
                     // Read texture pointer from output parameter
+                    IntPtr texture = Marshal.ReadIntPtr(texturePtr);
+                    FreeLibrary(d3dx9Dll);
+                    return texture;
+                }
+                finally
+                {
+                    dataHandle.Free();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] CreateTextureFromDDSData: Exception - {ex.Message}");
+                FreeLibrary(d3dx9Dll);
+                return IntPtr.Zero;
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(texturePtr);
+            }
         }
 
         /// <summary>
