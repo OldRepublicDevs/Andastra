@@ -2759,7 +2759,9 @@ namespace Andastra.Runtime.MonoGame.Backends
             // Store the render pass in the pipeline for use in VkGraphicsPipelineCreateInfo
             // The render pass is not owned by the pipeline - it may be shared with the framebuffer
             // Based on Vulkan specification: VkGraphicsPipelineCreateInfo.renderPass is required for graphics pipelines
-            var pipeline = new VulkanGraphicsPipeline(handle, desc, IntPtr.Zero, pipelineLayout, vkRenderPass, _device);
+            // Note: VulkanGraphicsPipeline constructor takes 5 parameters: (handle, desc, vkPipeline, vkPipelineLayout, device)
+            // vkRenderPass is not stored in the pipeline - it's used during pipeline creation but not needed after
+            var pipeline = new VulkanGraphicsPipeline(handle, desc, IntPtr.Zero, pipelineLayout, _device);
             _resources[handle] = pipeline;
 
             return pipeline;
