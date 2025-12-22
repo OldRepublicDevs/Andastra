@@ -114,6 +114,14 @@ namespace Andastra.Runtime.MonoGame.Lighting
         public bool AffectsSpecular { get; set; } = true;
         public uint CullingMask { get; set; } = uint.MaxValue;
 
+        // Shadow map matrices (for directional lights)
+        // View matrix: transforms world space to light space
+        // Projection matrix: orthographic projection for directional lights
+        // Combined: lightSpaceMatrix = projection * view (used for shadow mapping)
+        public Matrix4x4 ShadowViewMatrix { get; set; } = Matrix4x4.Identity;
+        public Matrix4x4 ShadowProjectionMatrix { get; set; } = Matrix4x4.Identity;
+        public Matrix4x4 ShadowLightSpaceMatrix { get; set; } = Matrix4x4.Identity;
+
         public DynamicLight(LightType type)
         {
             LightId = _nextLightId++;
