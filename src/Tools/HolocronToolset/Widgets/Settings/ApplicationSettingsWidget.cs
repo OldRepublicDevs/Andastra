@@ -200,7 +200,7 @@ namespace HolocronToolset.Widgets.Settings
                 UpdateFontLabel();
 
                 // Note: In Avalonia, there's no direct Application.setFont() like Qt's QApplication.setFont()
-                // Fonts are typically applied via styles/resources. For now, we save the preference
+                // TODO:  Fonts are typically applied via styles/resources. For now, we save the preference
                 // and it can be applied on application restart or via style system if needed.
             }
         }

@@ -79,7 +79,7 @@ namespace Andastra.Runtime.MonoGame.Graphics.Cursor
         private ICursor CreateCursor(CursorType type)
         {
             // Create programmatic cursor textures as fallback
-            // In a full implementation, these would be loaded from game resources
+            // TODO:  In a full implementation, these would be loaded from game resources
             ITexture2D textureUp = CreateCursorTexture(type, false);
             ITexture2D textureDown = CreateCursorTexture(type, true);
 

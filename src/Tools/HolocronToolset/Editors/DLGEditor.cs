@@ -628,7 +628,7 @@ namespace HolocronToolset.Editors
             _removeAnimButton = new Button { Content = "Remove Animation" };
             _editAnimButton = new Button { Content = "Edit Animation" };
 
-            // Add animation controls to UI (basic layout for now)
+            // TODO:  Add animation controls to UI (basic layout for now)
             var animPanel = new StackPanel();
             animPanel.Children.Add(_animsList);
             var buttonPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal };
@@ -1055,13 +1055,13 @@ namespace HolocronToolset.Editors
                     return;
                 }
 
-                // Note: Avalonia clipboard access is async, but we'll use a synchronous approach for now
-                // In a full implementation, we might need to make this async or use a different approach
+                // TODO:  Note: Avalonia clipboard access is async, but we'll use a synchronous approach for now
+                // TODO:  In a full implementation, we might need to make this async or use a different approach
                 // TODO: STUB - For now, we'll just try to get the clipboard text if possible
                 // Matching PyKotor: clipboard_text: str = cb.text()
                 // Matching PyKotor: node_data: dict[str | int, Any] = json.loads(clipboard_text)
                 // Matching PyKotor: if isinstance(node_data, dict) and "type" in node_data: self._copy = DLGLink.from_dict(node_data)
-                // This is a simplified implementation - in a full implementation, we'd need async clipboard access
+                // TODO:  This is a simplified implementation - in a full implementation, we'd need async clipboard access
             }
             catch (Exception)
             {
@@ -2222,7 +2222,7 @@ namespace HolocronToolset.Editors
 
             // Matching PyKotor implementation: if not is_tree_view_call: check focus
             // TODO: STUB - For now, we handle all key events at the window level
-            // In a full implementation, we would check if dialogTree has focus
+            // TODO:  In a full implementation, we would check if dialogTree has focus
 
             // Matching PyKotor implementation: if not selected_index.isValid(): return
             // TODO: STUB - For now, we'll handle keys even without selection (for Insert key to add root node)
@@ -3645,7 +3645,7 @@ namespace HolocronToolset.Editors
             // Find the parent chain and expand them
             // In Avalonia TreeView, we need to expand items by setting IsExpanded
             // TODO: STUB - For now, we'll expand all items to ensure visibility (simplified approach)
-            // A full implementation would track the parent chain and expand only those
+            // TODO:  A full implementation would track the parent chain and expand only those
             ExpandItemRecursive(item);
         }
 
@@ -3659,7 +3659,7 @@ namespace HolocronToolset.Editors
 
             // In Avalonia, TreeViewItem expansion is handled differently
             // TODO: STUB - For now, we'll ensure the item is visible by expanding its parent chain
-            // This is a simplified implementation - a full version would use TreeView's expansion API
+            // TODO:  This is a simplified implementation - a full version would use TreeView's expansion API
 
             // Expand all children recursively
             foreach (var child in item.Children)
@@ -3734,7 +3734,7 @@ namespace HolocronToolset.Editors
             catch (Exception ex)
             {
                 // Matching PyKotor: if no paths or error, log and blink window
-                // In a full implementation, we would log the error: RobustLogger().error(...)
+                // TODO:  In a full implementation, we would log the error: RobustLogger().error(...)
                 BlinkWindow();
                 return;
             }
@@ -3743,7 +3743,7 @@ namespace HolocronToolset.Editors
             if (paths == null || paths.Count == 0)
             {
                 // Matching PyKotor: No paths available - log error and blink window
-                // In a full implementation, we would log: RobustLogger().error("No paths available.")
+                // TODO:  In a full implementation, we would log: RobustLogger().error("No paths available.")
                 BlinkWindow();
                 return;
             }
@@ -3782,7 +3782,7 @@ namespace HolocronToolset.Editors
             catch
             {
                 // Matching PyKotor: Silently handle clipboard errors (Python doesn't catch, but we should)
-                // In a full implementation, we might want to show an error message
+                // TODO:  In a full implementation, we might want to show an error message
             }
         }
 
@@ -3918,7 +3918,7 @@ namespace HolocronToolset.Editors
             else
             {
                 // Matching PyKotor: self._logger.error(f"Failed to find original node for node {source_node!r}")
-                // In a full implementation, we would log this error
+                // TODO:  In a full implementation, we would log this error
                 // TODO: STUB - For now, we silently fail (matching the behavior when logging is not available)
             }
         }

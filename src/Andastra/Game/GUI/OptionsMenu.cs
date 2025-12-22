@@ -361,7 +361,7 @@ namespace Andastra.Runtime.Game.GUI
             };
             options[OptionsCategory.Autopause] = autopauseOptions;
 
-            // Controls options (placeholder for future controls system)
+            // TODO:  Controls options (TODO: STUB - placeholder for future controls system)
             var controlsOptions = new List<OptionItem>
             {
                 new OptionItem("Mouse Sensitivity", OptionType.Numeric, () => (int)(settings.MouseSensitivity * 100), v => settings.MouseSensitivity = v / 100.0f, 1, 100),

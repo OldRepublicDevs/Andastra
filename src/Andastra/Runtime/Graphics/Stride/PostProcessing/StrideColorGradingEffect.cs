@@ -126,7 +126,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             // 32x32x32 LUT: 1024x32 (32 slices of 32x32)
             int width = lutTexture.Width;
             int height = lutTexture.Height;
-            
+
             if (width == 256 && height == 16)
             {
                 _lutSize = 16;
@@ -583,7 +583,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                         if (lutData != null && _lutSize > 0 && _strength > 0.0f)
                         {
                             Vector3 lutColor = SampleLut3D(color, lutData, _lutSize, _lutTexture.Width, _lutTexture.Height);
-                            
+
                             // Step 4: Blend LUT result with adjusted color based on strength
                             // Formula: lerp(adjustedColor, lutColor, strength)
                             finalColor = Vector3.Lerp(color, lutColor, _strength);

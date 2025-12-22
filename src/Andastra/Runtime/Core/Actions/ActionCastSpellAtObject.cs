@@ -41,8 +41,8 @@ namespace Andastra.Runtime.Core.Actions
     /// - Debug: "        SpellsPerDayLeft: " @ 0x007cafe4, "KnownSpells: " @ 0x007cb010
     /// - Script hooks: "k_def_spellat01" @ 0x007c7ed4 (spell defense script example)
     /// - Visual effect errors:
-    ///   - "CSWCAnimBase::LoadModel(): The headconjure dummy has an orientation....It shouldn't!!  The %s model needs to be fixed or else the spell visuals will not be correct." @ 0x007ce278
-    ///   - "CSWCAnimBase::LoadModel(): The handconjure dummy has an orientation....It shouldn't!!  The %s model needs to be fixed or else the spell visuals will not be correct." @ 0x007ce320
+    // TODO: /   - "CSWCAnimBase::LoadModel(): The headconjure dummy has an orientation....It shouldn't!!  The %s model needs to be fixed or else the spell visuals will not be correct." @ 0x007ce278
+    // TODO: /   - "CSWCAnimBase::LoadModel(): The handconjure dummy has an orientation....It shouldn't!!  The %s model needs to be fixed or else the spell visuals will not be correct." @ 0x007ce320
     /// - GUI: "LBL_FORCE" @ 0x007cfc30, "LBL_FORCE_STAT" @ 0x007cfc5c, "LBL_FORCEMASTERY" @ 0x007cfd20
     /// - "PB_FORCE%d" @ 0x007ccf6c (force progress bar format), "ForceDisplay" @ 0x007d2e70
     /// - Original implementation: Moves caster to range, faces target, plays casting animation, applies spell effects
@@ -263,7 +263,7 @@ namespace Andastra.Runtime.Core.Actions
         /// - Spell effects can be: damage, healing, status effects, visual effects
         /// - Impact scripts (impactscript column) contain primary spell effect logic
         /// - Visual effects (conjhandvfx, conjheadvfx) are applied directly from spells.2da
-        /// - Full implementation resolves effects through impact scripts and visual effects from spell data
+        // TODO: / - Full implementation resolves effects through impact scripts and visual effects from spell data
         /// - Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 (spell casting logic)
         /// - swkotor2.exe: Spell effect application applies visual effects and executes impact scripts
         /// </remarks>

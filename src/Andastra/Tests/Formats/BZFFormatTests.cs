@@ -214,10 +214,10 @@ namespace Andastra.Parsing.Tests.Formats
         /// 1. Creating a BIF object with BIFType.BZF
         /// 2. Adding test resource data
         /// 3. Using BIFBinaryWriter to write the file (which handles LZMA compression automatically)
-        /// 
+        ///
         /// The BIFBinaryWriter uses LzmaHelper.Compress() to compress resource data using raw LZMA1 format
         /// matching PyKotor's compression behavior (lzma.FORMAT_RAW, FILTER_LZMA1).
-        /// 
+        ///
         /// BZF file format:
         /// - Header: "BZF " (4 bytes) + "V1  " (4 bytes) = 8 bytes
         /// - Variable resource count (4 bytes)
@@ -225,7 +225,7 @@ namespace Andastra.Parsing.Tests.Formats
         /// - Offset to variable resource table (4 bytes)
         /// - Variable resource table (16 bytes per resource)
         /// - Compressed resource data (LZMA1 compressed)
-        /// 
+        ///
         /// Based on:
         /// - vendor/PyKotor/src/pykotor/resource/formats/bif/io_bif.py (BIFBinaryWriter)
         /// - vendor/PyKotor/src/pykotor/extract/bzf.py (BZF format structure)
@@ -236,7 +236,7 @@ namespace Andastra.Parsing.Tests.Formats
         {
             // Create BIF with BIFType.BZF to enable LZMA compression
             var bif = new BIF(BIFType.BZF);
-            
+
             // Add test resource data
             byte[] testData = System.Text.Encoding.ASCII.GetBytes("test resource data");
             bif.SetData(new ResRef("test"), ResourceType.TXT, testData, 1);
@@ -248,14 +248,14 @@ namespace Andastra.Parsing.Tests.Formats
             // - Resource table with compressed sizes
             // - LZMA1-compressed resource data (raw format: properties + compressed data)
             byte[] data = new BIFBinaryWriter(bif).Write();
-            
+
             // Ensure directory exists
             string directory = Path.GetDirectoryName(path);
             if (!string.IsNullOrEmpty(directory))
             {
                 Directory.CreateDirectory(directory);
             }
-            
+
             // Write the BZF file
             File.WriteAllBytes(path, data);
         }

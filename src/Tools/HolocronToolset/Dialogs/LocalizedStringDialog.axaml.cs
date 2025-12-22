@@ -320,7 +320,7 @@ namespace HolocronToolset.Dialogs
                     if (!File.Exists(tlkPath))
                     {
                         // If TLK doesn't exist, we can't save - just close the dialog
-                        // In a full implementation, we might want to create a new TLK file
+                        // TODO:  In a full implementation, we might want to create a new TLK file
                         Close();
                         return;
                     }
@@ -348,8 +348,8 @@ namespace HolocronToolset.Dialogs
                 }
                 catch (Exception ex)
                 {
-                    // Log the error - in a full implementation, this would show an error dialog
-                    // Matching PyKotor: errors are typically shown via MessageBox, but we'll log for now
+                    // TODO:  Log the error - in a full implementation, this would show an error dialog
+                    // TODO:  Matching PyKotor: errors are typically shown via MessageBox, but we'll log for now
                     System.Console.WriteLine($"Error saving TLK file: {ex.Message}");
                     System.Console.WriteLine($"Stack trace: {ex.StackTrace}");
                     // Continue to close the dialog even if save failed

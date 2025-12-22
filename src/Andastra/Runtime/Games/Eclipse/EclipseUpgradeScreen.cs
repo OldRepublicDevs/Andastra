@@ -995,7 +995,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// This method loads baseitems.2da, iterates through all rows, and identifies shield items by checking
         /// the itemclass column for values that fall in the shield range (typically 20-35). It then collects
         /// all unique itemclass values from shield rows and caches them for efficient lookup.
-        /// 
+        ///
         /// daorigins.exe: ItemUpgrade @ 0x00aef22c - loads baseitems.2da and checks itemclass column
         /// </remarks>
         private void LoadShieldItemClasses()
@@ -1034,7 +1034,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     // We iterate through all rows and collect itemclass values that fall in this range
                     // This approach is more accurate than hardcoding specific base item IDs since
                     // different games may have different base item ID assignments but similar itemclass ranges
-                    
+
                     // Iterate through all rows in baseitems.2da
                     // Based on Dragon Age Origins: ItemUpgrade system checks all rows to determine shield items
                     for (int rowIndex = 0; rowIndex < baseitems.GetHeight(); rowIndex++)
@@ -1076,7 +1076,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// Based on Dragon Age Origins: ItemUpgrade system checks itemclass to determine if item is armor.
         /// Armor item classes typically include light, medium, and heavy armor types.
-        /// 
+        ///
         /// Full implementation: Loads baseitems.2da and checks itemclass column for all armor base items.
         /// daorigins.exe: ItemUpgrade @ 0x00aef22c - checks baseitems.2da itemclass column
         /// </remarks>
@@ -1120,7 +1120,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// Based on Dragon Age Origins: ItemUpgrade system checks itemclass to determine if item is a shield.
         /// Shield item classes typically fall in the 20-35 range.
-        /// 
+        ///
         /// Full implementation: Loads baseitems.2da and checks itemclass column for all shield items.
         /// daorigins.exe: ItemUpgrade @ 0x00aef22c - checks baseitems.2da itemclass column
         /// </remarks>

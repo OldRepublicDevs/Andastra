@@ -6,10 +6,10 @@ namespace Andastra.Runtime.Graphics.Common.Effects
 {
     /// <summary>
     /// Abstract base class for BasicEffect implementations.
-    /// 
+    ///
     /// Provides shared implementation logic for basic 3D rendering effects
     /// that can be inherited by both MonoGame and Stride implementations.
-    /// 
+    ///
     /// Based on MonoGame BasicEffect API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Graphics.BasicEffect.html
     /// </summary>
     /// <remarks>

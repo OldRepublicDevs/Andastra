@@ -40,12 +40,12 @@ namespace Andastra.Tests.Runtime.TestHelpers
         }
 
         /// <summary>
-        /// Creates a mock Installation with resource lookup capabilities.
+        // TODO: / Creates a mock Installation with resource lookup capabilities.
         /// </summary>
         public static Installation CreateMockInstallation()
         {
             // For testing, we'll create a real Installation pointing to a test directory
-            // In a real scenario, you'd use Moq to mock the Installation
+            // TODO:  In a real scenario, you'd use Moq to mock the Installation
             string testPath = Path.Combine(Path.GetTempPath(), "AndastraTestInstallation");
             if (!Directory.Exists(testPath))
             {
@@ -53,14 +53,14 @@ namespace Andastra.Tests.Runtime.TestHelpers
             }
 
             // Create a minimal installation structure
-            // Note: This is a simplified version - real tests would need proper game files
+            // TODO:  Note: This is a simplified version - real tests would need proper game files
             try
             {
                 return new Installation(testPath);
             }
             catch
             {
-                // If installation creation fails, create a mock
+                // TODO:  If installation creation fails, create a mock
                 var mockInstallation = new Mock<Installation>(MockBehavior.Strict);
                 var mockResources = new Mock<IResourceLookup>(MockBehavior.Strict);
                 
@@ -79,7 +79,7 @@ namespace Andastra.Tests.Runtime.TestHelpers
         }
 
         /// <summary>
-        /// Creates a mock Installation with specific resource data.
+        // TODO: / Creates a mock Installation with specific resource data.
         /// </summary>
         public static Installation CreateMockInstallationWithResource(string resRef, ResourceType resourceType, byte[] data)
         {

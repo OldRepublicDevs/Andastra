@@ -182,7 +182,7 @@ namespace Andastra.Runtime.Core.Actions
 
             // For consumable items, apply basic healing if no properties found
             // This handles common consumables like medpacs that may not have explicit properties
-            // Full implementation would check baseitems.2da for item class and apply appropriate effects
+            // TODO:  Full implementation would check baseitems.2da for item class and apply appropriate effects
             if (itemComponent.Properties.Count == 0 && itemComponent.Charges > 0)
             {
                 // Default healing for consumable items (medpacs, stims, etc.)

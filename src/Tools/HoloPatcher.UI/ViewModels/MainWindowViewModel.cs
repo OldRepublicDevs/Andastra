@@ -980,7 +980,7 @@ namespace HoloPatcher.UI.ViewModels
         private async Task<string> ShowChoiceDialogAsync(string title, string message, params string[] options)
         {
             // Use MsBox for simple dialogs - for multiple options, use the first option as default
-            // This is a simplified implementation to avoid circular dependency with Views
+            // TODO:  This is a simplified implementation to avoid circular dependency with Views
             if (options == null || options.Length == 0)
             {
                 return null;

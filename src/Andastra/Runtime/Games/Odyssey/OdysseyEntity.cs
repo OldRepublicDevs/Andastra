@@ -1115,7 +1115,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     transformComponent = GetComponent<ITransformComponent>();
                     if (transformComponent == null)
                     {
-                        // Use reflection or create via factory - for now, assume it exists from Initialize()
+                        // TODO:  Use reflection or create via factory - for now, assume it exists from Initialize()
                         throw new InvalidOperationException("Transform component not found and cannot be created automatically");
                     }
                 }

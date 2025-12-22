@@ -269,7 +269,7 @@ namespace HoloPatcher.UI.Rte
                 catch
                 {
                     // Fallback: property doesn't exist - skip text decorations
-                    // This is a workaround for API differences
+                    // TODO:  This is a workaround for API differences
                 }
             }
         }

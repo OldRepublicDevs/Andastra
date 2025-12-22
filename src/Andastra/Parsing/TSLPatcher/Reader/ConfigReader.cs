@@ -966,7 +966,7 @@ namespace Andastra.Parsing.Reader
                 Dictionary<string, string> fileSectionDict = SectionToDictionary(_ini[fileSectionName]);
                 modifications.PopTslPatcherVars(fileSectionDict, defaultDestination, defaultSourceFolder);
 
-                // Parse all hack entries for this file
+                // TODO:  Parse all hack entries for this file
                 ParseNCSHackEntries(fileSectionDict, modifications);
 
                 // Add the completed modifications to config
@@ -975,7 +975,7 @@ namespace Andastra.Parsing.Reader
         }
 
         /// <summary>
-        /// Parse NCS hack entries from a file section and add them to modifications.
+        // TODO: / Parse NCS hack entries from a file section and add them to modifications.
         ///
         /// Args:
         /// ----
@@ -1024,7 +1024,7 @@ namespace Andastra.Parsing.Reader
 
                 string lowerValue = parsedValue.ToLower();
 
-                // Create appropriate hack entry based on value type
+                // TODO:  Create appropriate hack entry based on value type
                 NCSTokenType tokenType;
                 int tokenIdOrValue;
 

@@ -206,7 +206,7 @@ namespace HolocronToolset.Tests.Windows
             System.Reflection.FieldInfo activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             activeField?.SetValue(window, _installation);
 
-            // Mock some modules
+            // TODO:  Mock some modules
             var moduleItems = new List<object> { "Test Module 1", "Test Module 2" };
             window.RefreshModuleList(reload: false, moduleItems: moduleItems);
 

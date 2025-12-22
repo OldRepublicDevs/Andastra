@@ -15,6 +15,7 @@ using Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Lexer;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils;
+using Andastra.Parsing.Formats.NCS.NCSDecomp.Stack;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
 using InputStream = System.IO.Stream;
 

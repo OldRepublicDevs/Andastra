@@ -293,7 +293,7 @@ namespace HolocronToolset.Editors
             UpdateRoomConnections();
 
             // Scene update - will be implemented when graphics scene is available
-            // For now, we ensure LYT data is consistent and valid
+            // TODO: STUB - For now, we ensure LYT data is consistent and valid
         }
 
         /// <summary>
@@ -1531,7 +1531,7 @@ namespace HolocronToolset.Editors
             
             // If there's a texture browser widget, it should be updated here
             // The actual UI update will depend on the specific texture browser implementation
-            // This is a placeholder for the UI update logic
+            // TODO: STUB - This is a placeholder for the UI update logic
             
             System.Console.WriteLine($"Texture browser updated. {_importedTextures.Count} texture(s) available.");
             foreach (var kvp in _importedTextures)

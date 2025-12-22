@@ -192,6 +192,11 @@ namespace Andastra.Runtime.MonoGame.Backends
         // Frame tracking for multi-buffering
         private int _currentFrameIndex;
 
+        // Fence for device idle synchronization
+        private IntPtr _idleFence;
+        private IntPtr _idleFenceEvent;
+        private ulong _idleFenceValue;
+
         // Sampler descriptor heap management
         private IntPtr _samplerDescriptorHeap;
         private IntPtr _samplerHeapCpuStartHandle;
@@ -2905,6 +2910,12 @@ namespace Andastra.Runtime.MonoGame.Backends
         // Based on DirectX 12 Command Allocator Reset: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12commandallocator-reset
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate int CommandAllocatorResetDelegate(IntPtr commandAllocator);
+        
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int CreateCommandAllocatorDelegate(IntPtr device, uint type, ref Guid riid, IntPtr ppCommandAllocator);
+        
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int CreateCommandListDelegate(IntPtr device, uint nodeMask, uint type, IntPtr pCommandAllocator, IntPtr pInitialState, ref Guid riid, IntPtr ppCommandList);
 
         // COM interface method delegate for Reset (ID3D12GraphicsCommandList::Reset)
         // Based on DirectX 12 Command List Reset: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-reset

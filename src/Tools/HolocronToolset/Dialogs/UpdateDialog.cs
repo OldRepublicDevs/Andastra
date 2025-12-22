@@ -360,7 +360,7 @@ namespace HolocronToolset.Dialogs
                 
                 // Set the HTML content in the changelog edit
                 // Note: TextBox doesn't support HTML, so we'll show the markdown text
-                // In a full implementation, we'd use a WebView or RichTextBox for HTML rendering
+                // TODO:  In a full implementation, we'd use a WebView or RichTextBox for HTML rendering
                 _changelogEdit.Text = body;
             }
         }

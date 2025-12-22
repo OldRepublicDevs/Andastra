@@ -325,7 +325,7 @@ namespace HoloPatcher.UI.Views
         private void ApplyTextDecorationDirectly(TextRange selection, TextDecorationLocation location)
         {
             // Fallback method for applying text decorations when the main formatting approach fails.
-            // This is a simplified implementation that processes all inlines in selected paragraphs.
+            // TODO:  This is a simplified implementation that processes all inlines in selected paragraphs.
             // Get the paragraphs that contain the selection
             Paragraph startPar = selection.GetStartPar();
             Paragraph endPar = selection.GetEndPar();
@@ -359,13 +359,13 @@ namespace HoloPatcher.UI.Views
                 }
             }
 
-            // Process each paragraph's inlines - simplified approach
+            // TODO:  Process each paragraph's inlines - simplified approach
             foreach (Paragraph par in paragraphs)
             {
                 bool isStartPar = (par == startPar);
                 bool isEndPar = (par == endPar);
 
-                // Process all inlines in the paragraph (simplified - process all if paragraph is in selection)
+                // TODO:  Process all inlines in the paragraph (simplified - process all if paragraph is in selection)
                 foreach (IEditable inline in par.Inlines)
                 {
                     if (inline is EditableRun run)

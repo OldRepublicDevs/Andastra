@@ -620,11 +620,13 @@ namespace Andastra.Parsing.Tests.Formats
             GUI gui = new GUIReader(BinaryTestFile).Load();
 
             // Validate control alpha (0.0-1.0 range)
+            // Updated to use new Alpha property instead of Properties["ALPHA"]
             foreach (var control in GetAllControls(gui))
             {
-                if (control.Properties.ContainsKey("ALPHA"))
+                // Check if control has alpha set (not default 1.0f) or if Color is set with alpha
+                if (control.Alpha != 1.0f || (control.Color != null && control.Color.A != 1.0f))
                 {
-                    float alpha = (float)control.Properties["ALPHA"];
+                    float alpha = control.Alpha;
                     alpha.Should().BeInRange(0.0f, 1.0f, "Control alpha should be in 0.0-1.0 range");
                 }
 

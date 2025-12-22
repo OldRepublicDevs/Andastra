@@ -1574,7 +1574,17 @@ namespace Andastra.Parsing.TSLPatcher
                                     storedValue = addRowMod.RowLabel;
                                 }
                             }
-                            // Note: RowValueRowCell requires runtime evaluation, skip for now
+                            else if (rowValue is RowValueRowCell rowCell)
+                            {
+                                // For RowValueRowCell, we need to evaluate the referenced column from the cells dictionary
+                                // This allows static evaluation when the referenced column has a statically evaluable value
+                                // Based on PyKotor: RowValueRowCell references another column in the same row
+                                // We can evaluate it if the referenced column exists in cells and can be statically evaluated
+                                if (cells != null)
+                                {
+                                    storedValue = EvaluateRowValueRowCellStatic(rowCell, cells, new HashSet<string>());
+                                }
+                            }
 
                             if (storedValue != null &&
                                 (!availableTokens.ContainsKey(storedValue) || tokenId < availableTokens[storedValue]))
@@ -1621,6 +1631,47 @@ namespace Andastra.Parsing.TSLPatcher
             {
                 _logFunc?.Invoke($"  Replaced {replacementsMade} cell value(s) with 2DAMEMORY token references");
             }
+        }
+
+        /// <summary>
+        /// Statically evaluate a RowValueRowCell by checking if the referenced column exists in cells and can be statically evaluated.
+        /// Returns the evaluated string value if it can be determined statically, or null if it cannot.
+        /// </summary>
+        [CanBeNull]
+        private string EvaluateRowValueRowCellStatic(RowValueRowCell rowCell, Dictionary<string, RowValue> cells, HashSet<string> visitedColumns)
+        {
+            // Check for circular references
+            if (visitedColumns.Contains(rowCell.Column))
+            {
+                return null; // Circular reference detected, cannot evaluate statically
+            }
+
+            // Check if the referenced column exists in cells
+            if (!cells.ContainsKey(rowCell.Column))
+            {
+                return null; // Column doesn't exist, cannot evaluate statically
+            }
+
+            RowValue referencedValue = cells[rowCell.Column];
+
+            // If it's a constant, we can evaluate it statically
+            if (referencedValue is RowValueConstant constant)
+            {
+                return constant.String;
+            }
+
+            // If it's another RowValueRowCell, recursively evaluate it
+            if (referencedValue is RowValueRowCell nestedRowCell)
+            {
+                visitedColumns.Add(rowCell.Column);
+                string result = EvaluateRowValueRowCellStatic(nestedRowCell, cells, visitedColumns);
+                visitedColumns.Remove(rowCell.Column);
+                return result;
+            }
+
+            // For other types (RowValue2DAMemory, RowValueTLKMemory, RowValueRowIndex, RowValueRowLabel, RowValueHigh),
+            // we cannot evaluate them statically without runtime context
+            return null;
         }
 
         /// <summary>

@@ -310,6 +310,32 @@ namespace Andastra.Runtime.Games.Eclipse.Environmental
         }
 
         /// <summary>
+        /// Gets all active particles for rendering.
+        /// </summary>
+        /// <returns>List of active particles with their rendering data.</returns>
+        /// <remarks>
+        /// Based on daorigins.exe, DragonAge2.exe: Particle rendering data access.
+        /// Returns particles with position, size, and alpha (based on lifetime) for rendering.
+        /// </remarks>
+        public List<(Vector3 Position, float Size, float Alpha)> GetParticlesForRendering()
+        {
+            var result = new List<(Vector3 Position, float Size, float Alpha)>();
+            
+            for (int i = 0; i < _particles.Count; i++)
+            {
+                Particle particle = _particles[i];
+                if (particle.IsActive)
+                {
+                    // Calculate alpha based on lifetime (fade out as particle ages)
+                    float alpha = particle.Lifetime / particle.MaxLifetime;
+                    result.Add((particle.Position, particle.Size, alpha));
+                }
+            }
+            
+            return result;
+        }
+
+        /// <summary>
         /// Activates the emitter.
         /// </summary>
         /// <remarks>

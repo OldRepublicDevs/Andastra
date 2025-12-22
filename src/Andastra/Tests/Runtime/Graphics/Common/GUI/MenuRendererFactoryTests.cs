@@ -214,44 +214,44 @@ namespace Andastra.Tests.Runtime.Graphics.Common.GUI
             bool isInitialized)
         {
             var mockBackend = new Mock<IGraphicsBackend>(MockBehavior.Strict);
-            
+
             // Core properties (from parameters)
             mockBackend.Setup(b => b.BackendType).Returns(backendType);
             mockBackend.Setup(b => b.GraphicsDevice).Returns(graphicsDevice);
             mockBackend.Setup(b => b.IsInitialized).Returns(isInitialized);
-            
+
             // Additional properties (mocked with null/default values for testing)
             mockBackend.Setup(b => b.ContentManager).Returns((IContentManager)null);
             mockBackend.Setup(b => b.Window).Returns((IWindow)null);
             mockBackend.Setup(b => b.InputManager).Returns((IInputManager)null);
             mockBackend.Setup(b => b.SupportsVSync).Returns(true);
-            
+
             // Lifecycle methods (no-ops for testing)
             mockBackend.Setup(b => b.Initialize(
                 It.IsAny<int>(),
                 It.IsAny<int>(),
                 It.IsAny<string>(),
                 It.IsAny<bool>()));
-            
+
             mockBackend.Setup(b => b.Run(
                 It.IsAny<Action<float>>(),
                 It.IsAny<Action>()));
-            
+
             mockBackend.Setup(b => b.Exit());
-            
+
             // Frame management methods (no-ops for testing)
             mockBackend.Setup(b => b.BeginFrame());
             mockBackend.Setup(b => b.EndFrame());
-            
+
             // Renderer creation methods (return null for testing - callers should handle null)
             mockBackend.Setup(b => b.CreateRoomMeshRenderer()).Returns((IRoomMeshRenderer)null);
             mockBackend.Setup(b => b.CreateEntityModelRenderer(
                 It.IsAny<object>(),
                 It.IsAny<object>())).Returns((IEntityModelRenderer)null);
-            
+
             // Audio creation methods (return null for testing)
             mockBackend.Setup(b => b.CreateSpatialAudio()).Returns((ISpatialAudio)null);
-            
+
             // Player creation methods (return null for testing)
             mockBackend.Setup(b => b.CreateDialogueCameraController(
                 It.IsAny<object>())).Returns((object)null);
@@ -261,13 +261,13 @@ namespace Andastra.Tests.Runtime.Graphics.Common.GUI
                 It.IsAny<object>())).Returns((object)null);
             mockBackend.Setup(b => b.CreateVoicePlayer(
                 It.IsAny<object>())).Returns((object)null);
-            
+
             // VSync method (no-op for testing)
             mockBackend.Setup(b => b.SetVSync(It.IsAny<bool>()));
-            
+
             // IDisposable implementation (no-op for testing)
             mockBackend.Setup(b => b.Dispose());
-            
+
             return mockBackend;
         }
     }

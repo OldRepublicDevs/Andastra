@@ -6,7 +6,7 @@ using Andastra.Parsing.Formats.TXI;
 namespace Andastra.Parsing.Formats.TPC
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/io_tpc.py:85-270
-    // Simplified: reads core header, mipmaps, and TXI text without conversions
+    // TODO:  Simplified: reads core header, mipmaps, and TXI text without conversions
     public class TPCBinaryReader : IDisposable
     {
         private readonly Andastra.Parsing.Common.RawBinaryReader _reader;

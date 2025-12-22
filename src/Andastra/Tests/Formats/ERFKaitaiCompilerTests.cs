@@ -256,7 +256,7 @@ namespace Andastra.Parsing.Tests.Formats
             string[] pythonFiles = Directory.GetFiles(langOutputDir, "*.py", SearchOption.AllDirectories);
             pythonFiles.Should().NotBeEmpty("Python parser files should be generated");
 
-            // Note: Actually using the generated parser would require Python runtime and kaitaistruct library
+            // TODO:  Note: Actually using the generated parser would require Python runtime and kaitaistruct library
             // This test validates that compilation succeeds and generates expected files
         }
 

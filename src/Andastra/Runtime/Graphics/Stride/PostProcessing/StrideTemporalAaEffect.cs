@@ -141,7 +141,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             // result = lerp(history, current, blendFactor)
             // blendFactor typically 0.05-0.1 (more history = more AA, more ghosting)
 
-            // In actual implementation:
+            // TODO:  In actual implementation:
             // - Set render target to destination
             // - Bind TAA shader
             // - Set parameters: blend factor, jitter, etc.
@@ -154,7 +154,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         private void CopyToHistory(Texture source, Texture destination, RenderContext context)
         {
             // Copy current output to history buffer for next frame
-            // In actual implementation: use Stride's copy command
+            // TODO:  In actual implementation: use Stride's copy command
         }
 
         protected override void OnDispose()

@@ -717,7 +717,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
         ///   1. Member is in active party
         ///   2. Member is within MaxXpShareDistance of victim (default 30 meters)
         ///   3. Member is alive and not dead
-        /// - XP calculation: CR * 100 (simplified KOTOR formula, not full D&D 3.5)
+        // TODO: / - XP calculation: CR * 100 (simplified KOTOR formula, not full D&D 3.5)
         /// - Each participating member receives full XP amount (not divided)
         /// - Original engine behavior: All party members in range receive full XP, not split
         /// </remarks>
@@ -742,7 +742,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
             }
 
             // Calculate XP: Base formula is CR * 100, with diminishing returns
-            // KOTOR uses a simplified XP system compared to D&D 3.5
+            // TODO:  KOTOR uses a simplified XP system compared to D&D 3.5
             int xpAwarded = (int)(cr * 100);
 
             // Get victim position for distance calculations

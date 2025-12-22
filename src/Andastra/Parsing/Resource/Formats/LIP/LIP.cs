@@ -139,7 +139,7 @@ namespace Andastra.Parsing.Formats.LIP
             // Since LIPShape is a discrete enum, we select the shape we're closest to in time
             // When factor is exactly 0.5, we prefer the left shape for consistency
             // This matches the PyKotor reference implementation behavior
-            // Note: True interpolation between discrete mouth shapes would require a transition matrix
+            // TODO:  Note: True interpolation between discrete mouth shapes would require a transition matrix
             // that defines intermediate shapes, but the time-based selection approach is standard
             // for lip-sync data where shapes represent distinct phonemes
             if (factor > 0.5f)

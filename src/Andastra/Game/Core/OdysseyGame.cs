@@ -99,7 +99,7 @@ namespace Andastra.Runtime.Game.Core
         // Room rendering (using abstraction layer)
         private IRoomMeshRenderer _roomRenderer;
         private Dictionary<string, IRoomMeshData> _roomMeshes;
-        
+
         // Room bounds cache for efficient player room detection
         // Based on swkotor.exe and swkotor2.exe: Room bounds are calculated from MDL model geometry
         // Original implementation: FUN_004e17a0 @ 0x004e17a0 (spatial query) checks room bounds for entity placement
@@ -329,14 +329,14 @@ namespace Andastra.Runtime.Game.Core
                         // Based on swkotor.exe FUN_0067ace0: Button sounds ("gui_actscroll", "gui_actclick")
                         // Based on swkotor2.exe FUN_006d0790: Button sounds ("gui_actscroll", "gui_actclick")
                         var guiSoundPlayer = _graphicsBackend.CreateSoundPlayer(resourceProvider);
-                        
+
                         _guiManager = new Andastra.Runtime.Graphics.MonoGame.GUI.KotorGuiManager(installation, mgDevice.Device, guiSoundPlayer);
-                        
+
                         // Subscribe to button click events
                         // Based on swkotor.exe FUN_0067c4c0: Button event handlers (0x27 hover, 0x2d leave, 0 click, 1 release)
                         // Based on swkotor2.exe FUN_006d2350: Button event handlers
                         _guiManager.OnButtonClicked += HandleGuiButtonClick;
-                        
+
                         Console.WriteLine("[Odyssey] GUI manager initialized successfully with sound support");
                     }
                     else
@@ -929,7 +929,7 @@ namespace Andastra.Runtime.Game.Core
                     // Original implementation flow: New Game button -> Character creation screen -> Character creation completes -> Module loads -> Player entity created
                     // This matches the original games: character creation must complete before module loads
                     Console.WriteLine("[Odyssey] New Game button clicked - transitioning to character creation");
-                    
+
                     // Stop main menu music and start character creation music
                     // Based on swkotor.exe FUN_005f9af0: Plays "mus_theme_rep" for character creation (param_1 == 0)
                     // Based on swkotor2.exe: Plays "mus_main" for character creation (vendor/reone implementation)
@@ -939,7 +939,7 @@ namespace Andastra.Runtime.Game.Core
                         _musicStarted = false;
                         Console.WriteLine("[Odyssey] Main menu music stopped");
                     }
-                    
+
                     // Start character creation music
                     if (_musicPlayer != null && _musicEnabled)
                     {
@@ -954,7 +954,7 @@ namespace Andastra.Runtime.Game.Core
                             Console.WriteLine($"[Odyssey] WARNING: Failed to play character creation music: {chargenMusicResRef}");
                         }
                     }
-                    
+
                     _currentState = GameState.CharacterCreation;
                     if (_characterCreationScreen == null)
                     {
@@ -968,14 +968,14 @@ namespace Andastra.Runtime.Game.Core
                         {
                             installation = new Installation(_settings.GamePath, _settings.Game == Andastra.Runtime.Core.KotorGame.K1 ? Andastra.Parsing.Common.Game.K1 : Andastra.Parsing.Common.Game.K2);
                         }
-                        
+
                         if (installation == null)
                         {
                             Console.WriteLine("[Odyssey] ERROR: Cannot create character creation screen - no installation available");
                             _currentState = GameState.MainMenu;
                             break;
                         }
-                        
+
                         _characterCreationScreen = new CharacterCreationScreen(
                             _graphicsDevice,
                             installation,
@@ -1313,7 +1313,7 @@ namespace Andastra.Runtime.Game.Core
                                     // Handle null, empty, or "NULL" texture names
                                     // Based on swkotor.exe and swkotor2.exe: Texture names can be null, empty, or "NULL" string
                                     // Original implementation: Skips texture loading for invalid texture names, uses default material
-                                    if (string.IsNullOrEmpty(textureName) || 
+                                    if (string.IsNullOrEmpty(textureName) ||
                                         textureName.Equals("NULL", StringComparison.OrdinalIgnoreCase) ||
                                         textureName.Equals("NONE", StringComparison.OrdinalIgnoreCase))
                                     {
@@ -1550,7 +1550,7 @@ namespace Andastra.Runtime.Game.Core
             // Based on swkotor2.exe FUN_006d2350:120-150, the original implementation checks
             // gui3D_room model condition to determine variant. The exact condition check is not
             // fully reverse-engineered, but mainmenu01 is confirmed as the default variant.
-            // 
+            //
             // Potential future enhancements:
             // - Check for specific nodes in the model hierarchy
             // - Check model properties or flags
@@ -1761,7 +1761,7 @@ namespace Andastra.Runtime.Game.Core
         /// Based on swkotor.exe FUN_0067c4c0: Renders 3D character model at camerahook position with rotation
         /// Based on swkotor2.exe FUN_006d2350: Renders 3D character model with menu variant and rotation
         /// Original games rotate the character model continuously around the Y-axis (vertical axis)
-        /// 
+        ///
         /// Note: Original games also play a "default" animation on the main menu model
         /// (swkotor.exe line 37: Set animation to DAT_0073df6c, swkotor2.exe line 125: Set animation to "default")
         /// Character model animation playback requires full MDL animation system integration:
@@ -2429,7 +2429,7 @@ namespace Andastra.Runtime.Game.Core
         private void OnCharacterCreationCancel()
         {
             Console.WriteLine("[Odyssey] Character creation cancelled - returning to main menu");
-            
+
             // Stop character creation music and restart main menu music
             // Based on swkotor.exe and swkotor2.exe: When canceling character creation, return to main menu music
             if (_musicPlayer != null && _musicStarted)
@@ -2438,7 +2438,7 @@ namespace Andastra.Runtime.Game.Core
                 _musicStarted = false;
                 Console.WriteLine("[Odyssey] Character creation music stopped");
             }
-            
+
             // Restart main menu music
             if (_musicPlayer != null && _musicEnabled)
             {
@@ -2449,7 +2449,7 @@ namespace Andastra.Runtime.Game.Core
                     Console.WriteLine($"[Odyssey] Main menu music restarted: {musicResRef}");
                 }
             }
-            
+
             _currentState = GameState.MainMenu;
             _characterCreationScreen = null; // Allow recreation on next New Game click
         }
@@ -4083,7 +4083,7 @@ namespace Andastra.Runtime.Game.Core
 
                 // Build node transform (position + orientation)
                 System.Numerics.Matrix4x4 nodeTransform = System.Numerics.Matrix4x4.Identity;
-                
+
                 // Apply position
                 if (node.Position.X != 0.0f || node.Position.Y != 0.0f || node.Position.Z != 0.0f)
                 {
@@ -4093,7 +4093,7 @@ namespace Andastra.Runtime.Game.Core
                 }
 
                 // Apply orientation (quaternion)
-                if (node.Orientation.W != 0.0f || node.Orientation.X != 0.0f || 
+                if (node.Orientation.W != 0.0f || node.Orientation.X != 0.0f ||
                     node.Orientation.Y != 0.0f || node.Orientation.Z != 0.0f)
                 {
                     System.Numerics.Quaternion quat = new System.Numerics.Quaternion(
@@ -4211,12 +4211,12 @@ namespace Andastra.Runtime.Game.Core
                 // Transform cached bounds from model space to world space
                 // Cached bounds are in model space (centered at origin), need to apply room transform
                 System.Numerics.Vector3 roomPos = new System.Numerics.Vector3(room.Position.X, room.Position.Y, room.Position.Z);
-                
+
                 // Apply rotation if needed
                 if (Math.Abs(room.Rotation) > 0.001f)
                 {
                     float rotationRadians = room.Rotation * (float)(Math.PI / 180.0);
-                    
+
                     // Transform all 8 corners of the bounding box
                     System.Numerics.Vector3[] corners = new System.Numerics.Vector3[8];
                     corners[0] = new System.Numerics.Vector3(cachedBounds.Item1.X, cachedBounds.Item1.Y, cachedBounds.Item1.Z);
@@ -4285,7 +4285,7 @@ namespace Andastra.Runtime.Game.Core
 
                 // Transform to world space for return value
                 System.Numerics.Vector3 roomPos = new System.Numerics.Vector3(room.Position.X, room.Position.Y, room.Position.Z);
-                
+
                 if (Math.Abs(room.Rotation) > 0.001f)
                 {
                     float rotationRadians = room.Rotation * (float)(Math.PI / 180.0);
@@ -4369,7 +4369,7 @@ namespace Andastra.Runtime.Game.Core
             for (int i = 0; i < area.Rooms.Count; i++)
             {
                 Andastra.Runtime.Core.Module.RoomInfo room = area.Rooms[i];
-                
+
                 // Get room bounds (cached or calculated)
                 Tuple<System.Numerics.Vector3, System.Numerics.Vector3> bounds = GetRoomBounds(room);
                 if (bounds != null)

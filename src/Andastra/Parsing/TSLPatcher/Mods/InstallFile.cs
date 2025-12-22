@@ -25,7 +25,7 @@ namespace Andastra.Parsing.Mods
         }
 
         /// <summary>
-        /// HACK(th3w1zard1): organize this into PatcherModifications class later, this is only used for nwscript.nss currently.
+        // TODO: / HACK(th3w1zard1): organize this into PatcherModifications class later, this is only used for nwscript.nss currently.
         /// </summary>
         public override int GetHashCode()
         {

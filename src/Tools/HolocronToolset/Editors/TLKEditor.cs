@@ -335,7 +335,7 @@ namespace HolocronToolset.Editors
                 return;
             }
 
-            // Load TLK synchronously for now (can be made async later)
+            // TODO:  Load TLK synchronously for now (can be made async later)
             try
             {
                 var tlk = TLKAuto.ReadTlk(data);

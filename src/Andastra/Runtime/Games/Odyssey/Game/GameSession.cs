@@ -460,7 +460,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             // Based on swkotor2.exe FUN_006d0b00 line 31: Load effects directory
             // Note: HD0:effects is a directory alias, resource system handles this automatically
 
-            // Load module synchronously for now (can be made async later)
+            // TODO:  Load module synchronously for now (can be made async later)
             // Equivalent to FUN_0074a700: Create and load module
             Task<bool> loadTask = LoadModuleAsync(startingModule);
             loadTask.Wait();
@@ -1478,7 +1478,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 int abilityId = quickSlots.GetQuickSlotAbility(slotIndex);
                 if (abilityId >= 0)
                 {
-                    // Queue ActionCastSpellAtObject action (target self for now)
+                    // TODO:  Queue ActionCastSpellAtObject action (target self for now)
                     // Based on swkotor2.exe: Spell casting from quick slots
                     // Located via string references: Quick slot system handles spell casting
                     // Original implementation: Quick slot ability usage casts spell at self or selected target

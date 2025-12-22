@@ -344,7 +344,7 @@ namespace KotorDiff.Diff
 
                 if (fieldDiff != null)
                 {
-                    // Handle nested struct diffs (simplified for now)
+                    // TODO:  Handle nested struct diffs (simplified for now)
                     fieldDiffs.Add(fieldDiff);
                 }
             }

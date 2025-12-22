@@ -1,6 +1,9 @@
 # HoloPatcher.NET Rules for AI Agents  
 (2025 Edition – Optimized for LLM Performance & Compliance)
 
+# IMPORTANT: IF YOU ARE USING GHIDRA FOR A TASK, AND IT **FAILS** for any reason, YOU MUST GET IT WORKING before doing ANYTHING else. If you cannoot, STOP **IMMEDIATELY**. DO NOT USE OTHER REFERENCES. This only applies to tasks requiring authorative/accurate reverse engineered elements.
+- Use ghidra mcp to ensure 1:1 parity. Setup using mcp server tool 'open-project' on project path "C:\Users\boden\Andastra Ghidra Project.gpr"
+
 ## 1. CRITICAL: ALWAYS COMMIT EVERY CHANGE
 **Rule #1 – Non-negotiable**  
 After ANY file change (create, modify, delete, move):  

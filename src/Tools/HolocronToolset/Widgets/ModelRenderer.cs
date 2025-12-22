@@ -32,7 +32,7 @@ namespace HolocronToolset.Widgets
         public void SetModel(byte[] mdlData, byte[] mdxData)
         {
             // Store model data for rendering
-            // In full implementation, this would load the model into the OpenGL scene
+            // TODO:  In full implementation, this would load the model into the OpenGL scene
             _mdlData = mdlData;
             _mdxData = mdxData;
         }
@@ -51,7 +51,7 @@ namespace HolocronToolset.Widgets
         public void SetCreature(UTC utc)
         {
             // Store UTC for creature rendering
-            // In full implementation, this would load the creature model into the OpenGL scene
+            // TODO:  In full implementation, this would load the creature model into the OpenGL scene
             // Matching PyKotor: self._creature_to_load = utc
             _creatureToLoad = utc;
         }

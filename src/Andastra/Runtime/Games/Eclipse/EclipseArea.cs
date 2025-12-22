@@ -5575,7 +5575,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
                         // Use ModifiedPosition if available, otherwise calculate from original + Displacement
                         Vector3 newPosition;
-                        if (modifiedVertex.ModifiedPosition != Vector3.Zero || 
+                        if (modifiedVertex.ModifiedPosition != Vector3.Zero ||
                             (modifiedVertex.ModifiedPosition.X != 0 || modifiedVertex.ModifiedPosition.Y != 0 || modifiedVertex.ModifiedPosition.Z != 0))
                         {
                             newPosition = modifiedVertex.ModifiedPosition;
@@ -5661,7 +5661,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
                         // Use ModifiedPosition if available, otherwise calculate from original + Displacement
                         Vector3 newPosition;
-                        if (modifiedVertex.ModifiedPosition != Vector3.Zero || 
+                        if (modifiedVertex.ModifiedPosition != Vector3.Zero ||
                             (modifiedVertex.ModifiedPosition.X != 0 || modifiedVertex.ModifiedPosition.Y != 0 || modifiedVertex.ModifiedPosition.Z != 0))
                         {
                             newPosition = modifiedVertex.ModifiedPosition;

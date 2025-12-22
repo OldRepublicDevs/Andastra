@@ -21,6 +21,40 @@ namespace Andastra.Parsing.Resource.Generics.GUI
         public Vector4 Extent { get; set; } = new Vector4(0, 0, 0, 0);
         public GUIBorder Border { get; set; }
         public Color Color { get; set; }
+        
+        /// <summary>
+        /// Gets or sets the alpha transparency value (0.0-1.0).
+        /// This property provides convenient access to the Color's alpha channel.
+        /// Based on PyKotor: ALPHA field is stored separately from COLOR in GFF files.
+        /// Original implementation: swkotor.exe/swkotor2.exe stores COLOR as Vector3 (RGB) and ALPHA as separate float.
+        /// </summary>
+        public float Alpha
+        {
+            get
+            {
+                if (Color == null)
+                {
+                    return 1.0f; // Default opaque when Color is not set
+                }
+                return Color.A;
+            }
+            set
+            {
+                if (Color == null)
+                {
+                    // If Color is null, create a default white color with the specified alpha
+                    // Based on PyKotor: When ALPHA exists but COLOR doesn't, use default white (1,1,1) with specified alpha
+                    Color = new Color(1.0f, 1.0f, 1.0f, value);
+                }
+                else
+                {
+                    // Update existing Color's alpha channel
+                    // Based on PyKotor: control.color.a = alpha (updates alpha on existing Color)
+                    Color = new Color(Color.R, Color.G, Color.B, value);
+                }
+            }
+        }
+        
         public GUIBorder Hilight { get; set; }
         public string ParentTag { get; set; }
         public int? ParentId { get; set; }

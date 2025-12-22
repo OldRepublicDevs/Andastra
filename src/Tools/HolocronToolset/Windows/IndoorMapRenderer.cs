@@ -134,7 +134,7 @@ namespace HolocronToolset.Windows
             // Matching Python line 2602: self._map = indoor_map
             _map = indoorMap;
             // Matching Python line 2603: self._cached_walkmeshes.clear()
-            // Note: Cached walkmeshes will be implemented when needed - for now, we clear the cache by resetting
+            // TODO:  Note: Cached walkmeshes will be implemented when needed - for now, we clear the cache by resetting
             // Matching Python line 2604: self.mark_dirty()
             MarkDirty();
         }

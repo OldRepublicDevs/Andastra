@@ -84,8 +84,8 @@ namespace Andastra.Runtime.Games.Aurora.Components
         ///    - For armor proficiency: Checks if equipped armor AC is <= 3 (light armor)
         ///    - For shield proficiency: Checks if creature has shield equipped
         ///
-        /// Current implementation: Simplified version that checks both feat lists
-        /// Full implementation would include special armor/shield proficiency checks
+        // TODO: / Current implementation: Simplified version that checks both feat lists
+        // TODO: / Full implementation would include special armor/shield proficiency checks
         /// </remarks>
         public override bool HasFeat(int featId)
         {

@@ -1254,7 +1254,7 @@ void helper() {
             // Matching Python: editor.ui.snippetSearchEdit.setText("main")
             // Matching Python: editor._filter_snippets()
             // Note: Filtering might not be implemented yet, so we verify the snippet list exists and can be filtered
-            // In a full implementation, filtering would hide/show items based on search text
+            // TODO:  In a full implementation, filtering would hide/show items based on search text
             // TODO: STUB - For now, we verify that snippets are accessible and the list is functional
             var snippetSearchEditField = typeof(NSSEditor).GetField("_snippetSearchEdit", BindingFlags.NonPublic | BindingFlags.Instance);
             if (snippetSearchEditField != null)
@@ -1289,7 +1289,7 @@ void helper() {
             }
 
             // Matching Python: assert visible_count >= 1
-            // Note: TODO: STUB - Iffiltering is not implemented, all items will be visible, which is also acceptable
+            // TODO:  Note: TODO: STUB - Iffiltering is not implemented, all items will be visible, which is also acceptable
             visibleCount.Should().BeGreaterThanOrEqualTo(1, "At least one snippet should be visible after filtering");
         }
 
@@ -5352,7 +5352,7 @@ xyz uvw";
             codeEditor.ColumnSelectionMode.Should().BeFalse("Column selection mode should be false initially");
 
             // Simulate Alt+Shift mouse press by calling OnPointerPressed via reflection
-            // Create a mock PointerPressedEventArgs
+            // TODO:  Create a mock PointerPressedEventArgs
             // Since we can't easily create PointerPressedEventArgs in tests, we'll test the behavior
             // by directly invoking the method that handles the column selection mode activation
 
@@ -5362,13 +5362,13 @@ xyz uvw";
 
             if (onPointerPressedMethod != null)
             {
-                // Create a mock pointer pressed event
+                // TODO:  Create a mock pointer pressed event
                 // In Avalonia, we need to create a PointerPressedEventArgs
                 // Since this is complex, we'll test the column selection mode property directly
                 // by simulating the state change
 
                 // For testing purposes, we'll verify that the ColumnSelectionMode property exists
-                // and can be accessed. The actual pointer event simulation would require
+                // TODO:  and can be accessed. The actual pointer event simulation would require
                 // a more complex setup with Avalonia's input system.
 
                 // Verify the property exists and is accessible

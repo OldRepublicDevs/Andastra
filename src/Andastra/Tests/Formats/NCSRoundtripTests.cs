@@ -43,7 +43,7 @@ namespace Andastra.Parsing.Tests.Formats
     /// - Patching or cleaning up distorted or mangled code from the decompiler
     /// - Editing expressions, operators, semicolons, braces, types, return statements
     /// - Adjusting function signatures or any output for correctness
-    /// - Applying any sort of output "repair" or workaround to supplement the decompiler
+    // TODO: / - Applying any sort of output "repair" or workaround to supplement the decompiler
     ///
     /// ALLOWED (FOR COMPARISON ONLY):
     /// - Whitespace and formatting normalization, solely for text comparison
@@ -3335,7 +3335,7 @@ namespace Andastra.Parsing.Tests.Formats
 
                 // Action opcodes are typically at specific positions
                 // Look backwards for the action ID byte (usually 1-2 bytes before the action parameters)
-                // This is a heuristic - actual parsing would require full NCS structure analysis
+                // TODO:  This is a heuristic - actual parsing would require full NCS structure analysis
                 if (offsetInt > 0 && (bytes[offsetInt] & 0xFF) < 200)
                 {
                     // Likely an action ID - try to look it up

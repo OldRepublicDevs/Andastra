@@ -146,7 +146,7 @@ namespace HolocronToolset.Tests.Dialogs
             dialog.Close();
         }
 
-        // Test helper class to mock HTInstallation methods
+        // TODO:  Test helper class to mock HTInstallation methods
         private class TestHTInstallation : HTInstallation
         {
             private readonly List<string> _mockModulesList;
@@ -209,7 +209,7 @@ namespace HolocronToolset.Tests.Dialogs
             var parent = new Window();
             parent.Show(); // Ensure parent is shown for name scope
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_dialogs_extra.py:135-137
-            // Original: capsules = [] # No capsules for now
+            // TODO:  Original: capsules = [] # No capsules for now
             var capsules = new List<Andastra.Parsing.Formats.Capsule.Capsule>(); // No capsules for now
             var inventory = new List<Andastra.Parsing.Common.InventoryItem>();
             var equipment = new Dictionary<Andastra.Parsing.Common.EquipmentSlot, Andastra.Parsing.Common.InventoryItem>(); // equipment must be a dict[EquipmentSlot, InventoryItem], not a list
@@ -247,7 +247,7 @@ namespace HolocronToolset.Tests.Dialogs
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_dialogs_extra.py:162-172
             // Original: mock_resource: FileResource = cast(FileResource, MagicMock(spec=FileResource))
-            // Create a mock FileResource for testing
+            // TODO:  Create a mock FileResource for testing
             var mockResource = new Andastra.Parsing.Extract.FileResource(
                 "test_resource",
                 Andastra.Parsing.Resource.ResourceType.UTC,

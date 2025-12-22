@@ -614,7 +614,7 @@ namespace KotorDiff.App
                     try
                     {
                         // Build the tuple expected by AnalyzeTlkStrrefReferences signature
-                        // Here we do not have strref_mappings directly, so pass empty mapping for now
+                        // TODO:  Here we do not have strref_mappings directly, so pass empty mapping for now
                         var strrefMappings = new Dictionary<int, int>();
                         var tlkModTuple = Tuple.Create(tlkMod, strrefMappings);
 

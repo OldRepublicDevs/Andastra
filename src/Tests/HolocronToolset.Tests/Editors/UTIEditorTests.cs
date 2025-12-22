@@ -318,7 +318,7 @@ namespace HolocronToolset.Tests.Editors
                 editor.EditPropertyBtn.Should().NotBeNull();
                 // The actual dialog opening requires user interaction or mocking, but we verify the button exists
                 // Note: In Python test, the dialog opening is not fully tested, just that the button click works
-                // We verify the button exists and can be clicked (TODO: STUB - dialog opening would require mocking ShowDialog)
+                // TODO:  We verify the button exists and can be clicked (TODO: STUB - dialog opening would require mocking ShowDialog)
 
                 // Test remove button
                 // Matching Python: count_before = editor.ui.assignedPropertiesList.count()
@@ -458,7 +458,7 @@ namespace HolocronToolset.Tests.Editors
 
                 // Verify icon label has tooltip
                 // Matching Python: assert editor.ui.iconLabel.toolTip()
-                // FIXME: In Avalonia, we verify that tooltip is set (if iconLabel exists)
+                // TODO:  FIXME: In Avalonia, we verify that tooltip is set (if iconLabel exists)
                 // The actual tooltip implementation may differ from Qt
                 // TODO: For now, just verify the editor doesn't crash and icon updates work
             }
@@ -628,7 +628,7 @@ namespace HolocronToolset.Tests.Editors
             editor.Should().NotBeNull();
 
             // The help dialog opening is an integration test that requires
-            // the help system to be fully implemented. For now, we verify
+            // TODO:  the help system to be fully implemented. For now, we verify
             // the editor is set up correctly.
 
             editor.Close();

@@ -180,7 +180,7 @@ namespace HolocronToolset.Tests.Windows
                 // assert renderer.rotation_snap == 15.0
                 // assert renderer._selected_rooms == []
                 // assert renderer.cursor_component is None
-                // Note: Full implementation will require IndoorMapRenderer class with these properties
+                // TODO:  Note: Full implementation will require IndoorMapRenderer class with these properties
             }
             finally
             {

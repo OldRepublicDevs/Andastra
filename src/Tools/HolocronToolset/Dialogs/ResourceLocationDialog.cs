@@ -293,14 +293,14 @@ namespace HolocronToolset.Dialogs
         }
 
         // Show the dialog and return true if user clicked OK/Close
-        // Matching PyKotor implementation pattern - simplified synchronous ShowDialog
-        // Note: In a full implementation, this would use ShowDialogAsync for proper modal behavior
+        // TODO:  Matching PyKotor implementation pattern - simplified synchronous ShowDialog
+        // TODO:  Note: In a full implementation, this would use ShowDialogAsync for proper modal behavior
         public new bool ShowDialog(Window parent = null)
         {
             if (parent != null)
             {
                 // Set parent window for modal behavior
-                // Note: This is a simplified implementation - in a full implementation, we'd use ShowDialogAsync
+                // TODO:  Note: This is a simplified implementation - in a full implementation, we'd use ShowDialogAsync
                 Show();
             }
             else

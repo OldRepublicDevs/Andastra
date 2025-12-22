@@ -89,10 +89,10 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             _backend = backend;
-            
+
             // Get Metal device from backend
             _device = backend.GetMetalDevice();
-            
+
             if (_device == IntPtr.Zero)
             {
                 throw new InvalidOperationException("Failed to obtain Metal device from backend");
@@ -273,7 +273,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             IntPtr handle = new IntPtr(_nextResourceHandle++);
             var pipeline = new MetalComputePipeline(handle, desc, computePipelineState);
-            _pipelines[handle] = pipeline;
+            _resources[handle] = pipeline;
             return pipeline;
         }
 
@@ -836,20 +836,20 @@ namespace Andastra.Runtime.MonoGame.Backends
         private uint ConvertGeometryFlagsToMetal(GeometryFlags flags)
         {
             uint metalFlags = 0;
-            
+
             // Metal uses MTLAccelerationStructureGeometryOptionOpaque flag
             if ((flags & GeometryFlags.Opaque) != 0)
             {
                 metalFlags |= 1; // MTLAccelerationStructureGeometryOptionOpaque
             }
-            
+
             // Metal uses MTLAccelerationStructureGeometryOptionDuplicateGeometry flag
             if ((flags & GeometryFlags.NoDuplicateAnyHit) == 0)
             {
                 // If NoDuplicateAnyHit is NOT set, geometry can be duplicated
                 // This is the default behavior in Metal
             }
-            
+
             return metalFlags;
         }
 
@@ -1313,7 +1313,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private bool _disposed;
 
         public Interfaces.RaytracingPipelineDesc Desc { get { return _desc; } }
-        
+
         /// <summary>
         /// Gets the native Metal raytracing pipeline state handle.
         /// Internal use for MetalCommandList to set pipeline state during dispatch.
@@ -1655,18 +1655,18 @@ namespace Andastra.Runtime.MonoGame.Backends
         // Resource Operations - delegate to MetalBackend or implement via Metal command encoder
         /// <summary>
         /// Writes data to a GPU buffer using Metal blit command encoder.
-        /// 
+        ///
         /// Implementation strategy:
         /// 1. Create a temporary staging buffer with shared storage mode for CPU access
         /// 2. Write CPU data to staging buffer contents
         /// 3. Use blit command encoder to copy from staging buffer to destination buffer
         /// 4. Release staging buffer
-        /// 
+        ///
         /// Based on Metal API:
         /// - MTLDevice::newBufferWithLength:options: (for staging buffer with StorageModeShared)
         /// - MTLBuffer::contents() (for CPU access to buffer memory)
         /// - MTLBlitCommandEncoder::copyFromBuffer:sourceOffset:toBuffer:destinationOffset:size:
-        /// 
+        ///
         /// Metal API Reference:
         /// https://developer.apple.com/documentation/metal/mtlblitcommandencoder/1400774-copyfrombuffer
         /// https://developer.apple.com/documentation/metal/mtlbuffer/1515376-contents
@@ -1771,11 +1771,11 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         /// <summary>
         /// Writes typed data to a GPU buffer using Metal blit command encoder.
-        /// 
+        ///
         /// This is a convenience method that converts typed arrays to byte arrays and delegates
         /// to the byte array WriteBuffer method. It uses Marshal to convert unmanaged types
         /// to byte arrays for GPU upload.
-        /// 
+        ///
         /// Based on Metal API: Same as WriteBuffer(IBuffer, byte[], int)
         /// </summary>
         /// <typeparam name="T">Unmanaged type (struct, primitive, etc.)</typeparam>
@@ -1823,10 +1823,10 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         /// <summary>
         /// Copies data from a source buffer to a destination buffer using Metal blit command encoder.
-        /// 
+        ///
         /// This performs a GPU-side buffer-to-buffer copy operation, which is efficient for large data transfers.
         /// The copy operation is recorded into the command buffer and executed when the command buffer is committed.
-        /// 
+        ///
         /// Based on Metal API: MTLBlitCommandEncoder::copyFromBuffer:sourceOffset:toBuffer:destinationOffset:size:
         /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlblitcommandencoder/1400756-copyfrombuffer
         /// </summary>
@@ -1908,7 +1908,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// Copies a texture from source to destination using Metal blit command encoder.
         /// Based on Metal API: MTLBlitCommandEncoder::copyFromTexture:sourceSlice:sourceLevel:sourceOrigin:sourceSize:toTexture:destinationSlice:destinationLevel:destinationOrigin:
         /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlblitcommandencoder/1400769-copyfromtexture
-        /// 
+        ///
         /// This implementation copies the entire texture (all mip levels and array slices if applicable).
         /// For 2D textures, it copies from mip level 0, array slice 0 to the same in the destination.
         /// </summary>
@@ -2089,14 +2089,14 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         /// <summary>
         /// Clears a color attachment of a framebuffer to a specific color.
-        /// 
+        ///
         /// Implementation: Uses Metal render pass with Clear load action to clear the texture.
         /// Metal doesn't have a direct "fill texture" operation, so we create a minimal render pass
         /// that clears the attachment and immediately ends it.
-        /// 
+        ///
         /// Note: This method will end any active render pass or blit encoder before clearing,
         /// as Metal allows only one encoder type to be active at a time per command buffer.
-        /// 
+        ///
         /// Based on Metal API:
         /// - MTLRenderPassDescriptor with color attachment loadAction = .clear
         /// - MTLRenderCommandEncoder::endEncoding() to complete the clear operation
@@ -2108,7 +2108,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 return;
             }
-            
+
             // Validate attachment index
             MetalFramebuffer metalFramebuffer = framebuffer as MetalFramebuffer;
             if (metalFramebuffer == null)
@@ -2116,35 +2116,35 @@ namespace Andastra.Runtime.MonoGame.Backends
                 Console.WriteLine("[MetalCommandList] ClearColorAttachment: Framebuffer must be a MetalFramebuffer instance");
                 return;
             }
-            
+
             FramebufferDesc desc = metalFramebuffer.Desc;
             if (desc.ColorAttachments == null || attachmentIndex < 0 || attachmentIndex >= desc.ColorAttachments.Length)
             {
                 Console.WriteLine($"[MetalCommandList] ClearColorAttachment: Invalid attachment index {attachmentIndex}");
                 return;
             }
-            
+
             FramebufferAttachment colorAttachment = desc.ColorAttachments[attachmentIndex];
             if (colorAttachment.Texture == null)
             {
                 Console.WriteLine($"[MetalCommandList] ClearColorAttachment: Color attachment {attachmentIndex} has no texture");
                 return;
             }
-            
+
             MetalTexture metalTexture = colorAttachment.Texture as MetalTexture;
             if (metalTexture == null)
             {
                 Console.WriteLine("[MetalCommandList] ClearColorAttachment: Texture must be a MetalTexture instance");
                 return;
             }
-            
+
             IntPtr colorTexture = metalTexture.NativeHandle;
             if (colorTexture == IntPtr.Zero)
             {
                 Console.WriteLine("[MetalCommandList] ClearColorAttachment: Invalid texture native handle");
                 return;
             }
-            
+
             // Get the current command buffer from the backend
             IntPtr commandBuffer = _backend.GetCurrentCommandBuffer();
             if (commandBuffer == IntPtr.Zero)
@@ -2152,7 +2152,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 Console.WriteLine("[MetalCommandList] ClearColorAttachment: No active command buffer");
                 return;
             }
-            
+
             // End any active encoders before creating render pass for clearing
             // Metal allows only one encoder type to be active at a time per command buffer
             if (_currentRenderCommandEncoder != IntPtr.Zero)
@@ -2160,20 +2160,20 @@ namespace Andastra.Runtime.MonoGame.Backends
                 MetalNative.EndEncoding(_currentRenderCommandEncoder);
                 _currentRenderCommandEncoder = IntPtr.Zero;
             }
-            
+
             if (_currentBlitCommandEncoder != IntPtr.Zero)
             {
                 MetalNative.EndEncoding(_currentBlitCommandEncoder);
                 MetalNative.ReleaseBlitCommandEncoder(_currentBlitCommandEncoder);
                 _currentBlitCommandEncoder = IntPtr.Zero;
             }
-            
+
             if (_currentAccelStructCommandEncoder != IntPtr.Zero)
             {
                 MetalNative.EndAccelerationStructureCommandEncoding(_currentAccelStructCommandEncoder);
                 _currentAccelStructCommandEncoder = IntPtr.Zero;
             }
-            
+
             // Create render pass descriptor for clearing
             IntPtr renderPassDescriptor = MetalNative.CreateRenderPassDescriptor();
             if (renderPassDescriptor == IntPtr.Zero)
@@ -2181,7 +2181,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 Console.WriteLine("[MetalCommandList] ClearColorAttachment: Failed to create render pass descriptor");
                 return;
             }
-            
+
             try
             {
                 // Set color attachment with Clear load action
@@ -2190,7 +2190,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 MetalClearColor clearColor = new MetalClearColor(color.X, color.Y, color.Z, color.W);
                 MetalNative.SetRenderPassColorAttachment(renderPassDescriptor, 0, colorTexture,
                     MetalLoadAction.Clear, MetalStoreAction.Store, clearColor);
-                
+
                 // Begin render pass - this will clear the texture to the specified color
                 IntPtr renderCommandEncoder = MetalNative.BeginRenderPass(commandBuffer, renderPassDescriptor);
                 if (renderCommandEncoder == IntPtr.Zero)
@@ -2198,7 +2198,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     Console.WriteLine("[MetalCommandList] ClearColorAttachment: Failed to begin render pass for clearing");
                     return;
                 }
-                
+
                 // Immediately end the render pass to complete the clear operation
                 // The clear happens when the render pass begins, so ending it immediately completes the clear
                 MetalNative.EndEncoding(renderCommandEncoder);
@@ -2212,13 +2212,13 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         /// <summary>
         /// Clears the depth/stencil attachment of a framebuffer.
-        /// 
+        ///
         /// Implementation: Uses Metal render pass with Clear load action for depth and/or stencil attachments.
         /// Metal clears depth and stencil attachments when a render pass begins with MetalLoadAction.Clear.
-        /// 
+        ///
         /// Based on Metal API: MTLRenderPassDescriptor depthAttachment and stencilAttachment
         /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlrenderpassdescriptor
-        /// 
+        ///
         /// Note: In Metal, depth and stencil can share the same texture (combined format like D24S8),
         /// but they are configured as separate attachments (depthAttachment and stencilAttachment) even when
         /// they reference the same texture. This allows independent load/store actions and clear values.
@@ -2234,7 +2234,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 return;
             }
-            
+
             // Validate framebuffer
             MetalFramebuffer metalFramebuffer = framebuffer as MetalFramebuffer;
             if (metalFramebuffer == null)
@@ -2242,30 +2242,30 @@ namespace Andastra.Runtime.MonoGame.Backends
                 Console.WriteLine("[MetalCommandList] ClearDepthStencilAttachment: Framebuffer must be a MetalFramebuffer instance");
                 return;
             }
-            
+
             FramebufferDesc desc = metalFramebuffer.Desc;
-            
+
             // Check if depth attachment exists
             if (desc.DepthAttachment.Texture == null)
             {
                 Console.WriteLine("[MetalCommandList] ClearDepthStencilAttachment: Framebuffer has no depth/stencil attachment");
                 return;
             }
-            
+
             MetalTexture metalTexture = desc.DepthAttachment.Texture as MetalTexture;
             if (metalTexture == null)
             {
                 Console.WriteLine("[MetalCommandList] ClearDepthStencilAttachment: Depth/stencil texture must be a MetalTexture instance");
                 return;
             }
-            
+
             IntPtr depthStencilTexture = metalTexture.NativeHandle;
             if (depthStencilTexture == IntPtr.Zero)
             {
                 Console.WriteLine("[MetalCommandList] ClearDepthStencilAttachment: Invalid depth/stencil texture native handle");
                 return;
             }
-            
+
             // Get the current command buffer from the backend
             IntPtr commandBuffer = _backend.GetCurrentCommandBuffer();
             if (commandBuffer == IntPtr.Zero)
@@ -2273,7 +2273,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 Console.WriteLine("[MetalCommandList] ClearDepthStencilAttachment: No active command buffer");
                 return;
             }
-            
+
             // End any active encoders before creating render pass for clearing
             // Metal allows only one encoder type to be active at a time per command buffer
             if (_currentRenderCommandEncoder != IntPtr.Zero)
@@ -2281,20 +2281,20 @@ namespace Andastra.Runtime.MonoGame.Backends
                 MetalNative.EndEncoding(_currentRenderCommandEncoder);
                 _currentRenderCommandEncoder = IntPtr.Zero;
             }
-            
+
             if (_currentBlitCommandEncoder != IntPtr.Zero)
             {
                 MetalNative.EndEncoding(_currentBlitCommandEncoder);
                 MetalNative.ReleaseBlitCommandEncoder(_currentBlitCommandEncoder);
                 _currentBlitCommandEncoder = IntPtr.Zero;
             }
-            
+
             if (_currentAccelStructCommandEncoder != IntPtr.Zero)
             {
                 MetalNative.EndAccelerationStructureCommandEncoding(_currentAccelStructCommandEncoder);
                 _currentAccelStructCommandEncoder = IntPtr.Zero;
             }
-            
+
             // Create render pass descriptor for clearing
             IntPtr renderPassDescriptor = MetalNative.CreateRenderPassDescriptor();
             if (renderPassDescriptor == IntPtr.Zero)
@@ -2302,7 +2302,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 Console.WriteLine("[MetalCommandList] ClearDepthStencilAttachment: Failed to create render pass descriptor");
                 return;
             }
-            
+
             try
             {
                 // Set depth attachment with Clear load action if clearing depth
@@ -2319,7 +2319,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     MetalNative.SetRenderPassDepthAttachment(renderPassDescriptor, depthStencilTexture,
                         MetalLoadAction.DontCare, MetalStoreAction.DontCare, (double)depth);
                 }
-                
+
                 // Set stencil attachment with Clear load action if clearing stencil
                 // Note: Even when depth and stencil share the same texture, Metal requires setting both attachments separately
                 if (clearStencil)
@@ -2335,7 +2335,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     MetalNative.SetRenderPassStencilAttachment(renderPassDescriptor, depthStencilTexture,
                         MetalLoadAction.DontCare, MetalStoreAction.DontCare, (uint)stencil);
                 }
-                
+
                 // Begin render pass - this will clear the depth/stencil texture to the specified values
                 IntPtr renderCommandEncoder = MetalNative.BeginRenderPass(commandBuffer, renderPassDescriptor);
                 if (renderCommandEncoder == IntPtr.Zero)
@@ -2343,7 +2343,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     Console.WriteLine("[MetalCommandList] ClearDepthStencilAttachment: Failed to begin render pass for clearing");
                     return;
                 }
-                
+
                 // Immediately end the render pass to complete the clear operation
                 // The clear happens when the render pass begins, so ending it immediately completes the clear
                 MetalNative.EndEncoding(renderCommandEncoder);
@@ -2357,19 +2357,19 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         /// <summary>
         /// Clears an unordered access view (UAV) texture to a float vector value.
-        /// 
+        ///
         /// Implementation: Uses a compute shader to fill the texture with the clear value.
         /// Metal doesn't have a direct "clear UAV" operation like D3D12 or Vulkan, so we use
         /// a compute shader that writes the clear value to each texel.
-        /// 
+        ///
         /// Based on Metal API: MTLComputeCommandEncoder with compute shader
         /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlcomputecommandencoder
-        /// 
+        ///
         /// Note: This requires a compute shader to be available. The compute shader should:
         /// - Take the clear value as a constant buffer parameter
         /// - Write the clear value to each texel in the texture
         /// - Use threadgroup size appropriate for the texture dimensions
-        /// 
+        ///
         /// Metal compute shader implementation for clearing UAV textures.
         /// The compute shader source code (must be compiled into Metal library):
         /// ```
@@ -2380,7 +2380,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         ///     output.write(clearValue, gid);
         /// }
         /// ```
-        /// 
+        ///
         /// Shader compilation: This shader must be compiled into a Metal library (e.g., .metallib file)
         // TODO: / and linked into the application. Runtime shader compilation from source would require
         /// Objective-C interop infrastructure. In practice, shaders are compiled at build time.
@@ -2463,7 +2463,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             // {
             //     output.write(clearValue, gid);
             // }
-            // 
+            //
             // Note: This shader must be compiled into a Metal library and the function
             // "clearUAVFloat" must be available. Shader compilation from source requires
             // Objective-C interop (objc_msgSend) which is complex in C#. In practice, shaders
@@ -2485,12 +2485,12 @@ namespace Andastra.Runtime.MonoGame.Backends
                 {
                     // Shader function not found - try runtime compilation from source
                     Console.WriteLine("[MetalCommandList] ClearUAVFloat: Compute shader function 'clearUAVFloat' not found in library. Attempting runtime compilation from source.");
-                    
+
                     // Metal Shading Language source code for clearUAVFloat compute shader
                     string shaderSource = @"
                         #include <metal_stdlib>
                         using namespace metal;
-                        
+
                         kernel void clearUAVFloat(texture2d<float, access::write> output [[texture(0)]],
                                                   constant float4& clearValue [[buffer(0)]],
                                                   uint2 gid [[thread_position_in_grid]])
@@ -2589,7 +2589,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             // Dispatch compute threads
             MetalNative.DispatchThreadgroups(_currentComputeCommandEncoder, threadGroupCountX, threadGroupCountY, threadGroupCountZ, threadsPerGroupX, threadsPerGroupY, threadsPerGroupZ);
-            
+
             // Note: We do not end the compute encoder here - it may be reused for multiple compute dispatches
             // The compute encoder will be ended when:
             // 1. Another encoder type is started (render/blit/accelStruct)
@@ -2598,14 +2598,14 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         /// <summary>
         /// Clears an unordered access view (UAV) texture to a uint value.
-        /// 
+        ///
         /// Implementation: Uses a compute shader to fill the texture with the clear value.
         /// Metal doesn't have a direct "clear UAV" operation like D3D12 or Vulkan, so we use
         /// a compute shader that writes the clear value to each texel.
-        /// 
+        ///
         /// Based on Metal API: MTLComputeCommandEncoder with compute shader
         /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlcomputecommandencoder
-        /// 
+        ///
         /// Metal compute shader implementation for clearing UAV textures with uint values.
         /// The compute shader source code (must be compiled into Metal library):
         /// ```
@@ -2616,7 +2616,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         ///     output.write(clearValue, gid);
         /// }
         /// ```
-        /// 
+        ///
         /// Shader compilation: This shader is compiled at runtime from source if not found in the default library.
         /// Runtime shader compilation uses Metal's newLibraryWithSource:options:error: API via Objective-C interop.
         /// Falls back to runtime compilation if the shader is not available in pre-compiled libraries.
@@ -2699,7 +2699,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             // {
             //     output.write(clearValue, gid);
             // }
-            // 
+            //
             // Note: This shader is compiled at runtime from source if not found in the default library.
             // Runtime shader compilation uses Metal's newLibraryWithSource:options:error: API.
             if (_clearUAVUintComputePipelineState == IntPtr.Zero)
@@ -2718,12 +2718,12 @@ namespace Andastra.Runtime.MonoGame.Backends
                 {
                     // Shader function not found - try runtime compilation from source
                     Console.WriteLine("[MetalCommandList] ClearUAVUint: Compute shader function 'clearUAVUint' not found in library. Attempting runtime compilation from source.");
-                    
+
                     // Metal Shading Language source code for clearUAVUint compute shader
                     string shaderSource = @"
                         #include <metal_stdlib>
                         using namespace metal;
-                        
+
                         kernel void clearUAVUint(texture2d<uint, access::write> output [[texture(0)]],
                                                  constant uint& clearValue [[buffer(0)]],
                                                  uint2 gid [[thread_position_in_grid]])
@@ -2821,7 +2821,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             // Dispatch compute threads
             MetalNative.DispatchThreadgroups(_currentComputeCommandEncoder, threadGroupCountX, threadGroupCountY, threadGroupCountZ, threadsPerGroupX, threadsPerGroupY, threadsPerGroupZ);
-            
+
             // Note: We do not end the compute encoder here - it may be reused for multiple compute dispatches
             // The compute encoder will be ended when:
             // 1. Another encoder type is started (render/blit/accelStruct)
@@ -2878,10 +2878,10 @@ namespace Andastra.Runtime.MonoGame.Backends
         // Graphics State
         /// <summary>
         /// Sets the complete graphics pipeline state for rendering.
-        /// 
+        ///
         /// This method stores the graphics state which is then used by draw commands
         /// to retrieve primitive type, index buffer, and other rendering parameters.
-        /// 
+        ///
         /// The graphics state includes:
         /// - Graphics pipeline (contains primitive topology)
         /// - Framebuffer (render targets)
@@ -2889,7 +2889,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// - Binding sets (shader resources)
         /// - Vertex buffers
         /// - Index buffer and index format
-        /// 
+        ///
         /// Based on Metal API: Graphics state is managed through render pipeline state objects
         /// and command encoder state. Metal API Reference: https://developer.apple.com/documentation/metal
         /// </summary>
@@ -3080,17 +3080,17 @@ namespace Andastra.Runtime.MonoGame.Backends
         ///   when creating the render pipeline state (MTLRenderPipelineState)
         /// - Unlike Vulkan (vkCmdSetBlendConstants) or D3D12 (OMSetBlendFactor), Metal blend constants
         ///   are fixed at pipeline creation time and cannot be changed dynamically during rendering
-        /// 
+        ///
         /// Metal API Limitation:
         /// - MTLRenderPipelineColorAttachmentDescriptor.blendColor property exists but is ignored
         ///   (Metal documentation states it's reserved for future use)
         /// - Blend factors must use static values (One, Zero, SrcColor, etc.) rather than dynamic constants
-        /// 
+        ///
         // TODO: / Workaround Options:
         /// - Use shader uniforms/constants to pass blend color if dynamic blending is required
         /// - Create separate pipeline states with different blend configurations if needed
         /// - Use pre-multiplied alpha or other static blend modes instead
-        /// 
+        ///
         /// This method stores the blend constant color but does not apply it immediately,
         /// as Metal does not support dynamic blend constant changes.
         /// The stored value may be used when creating pipeline states that require blend constants.
@@ -3106,18 +3106,18 @@ namespace Andastra.Runtime.MonoGame.Backends
             // Blend constants must be specified at pipeline creation time
             // Store the value for potential use in pipeline creation, but cannot apply it dynamically
             // This matches Metal API limitations: blend constants are fixed at MTLRenderPipelineState creation
-            
+
             // Validate color components are in valid range [0.0, 1.0]
             // Clamp values to ensure they're within Metal's expected range
             float r = Math.Max(0.0f, Math.Min(1.0f, color.X));
             float g = Math.Max(0.0f, Math.Min(1.0f, color.Y));
             float b = Math.Max(0.0f, Math.Min(1.0f, color.Z));
             float a = Math.Max(0.0f, Math.Min(1.0f, color.W));
-            
+
             // Note: Metal doesn't have vkCmdSetBlendConstants or OMSetBlendFactor equivalent
             // Blend constants in Metal are part of the pipeline state descriptor, not dynamic state
             // This implementation stores the value but cannot apply it until pipeline creation time
-            // 
+            //
             // If dynamic blend constants are required, consider:
             // 1. Using shader uniforms to pass blend color values
             // 2. Creating multiple pipeline states with different blend configurations
@@ -3637,7 +3637,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             // Dispatch compute work with indirect arguments
             // Based on Metal API: MTLComputeCommandEncoder::dispatchThreadgroupsWithIndirectBuffer:indirectBufferOffset:threadsPerThreadgroup:
             // Metal API Reference: https://developer.apple.com/documentation/metal/mtlcomputecommandencoder/1443154-dispatchthreadgroupswithindire
-            // 
+            //
             // The indirect buffer contains three uint32 values at the specified offset:
             // - groupCountX (4 bytes at offset)
             // - groupCountY (4 bytes at offset + 4)
@@ -3675,13 +3675,13 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// - Shader binding is done via MTLIntersectionFunctionTable and MTLVisibleFunctionTable
         /// - The pipeline state is stored and bound when DispatchRays is called
         /// - Binding sets are stored and applied during ray dispatch
-        /// 
+        ///
         /// Metal API Reference:
         /// https://developer.apple.com/documentation/metal/metal_ray_tracing
         /// https://developer.apple.com/documentation/metal/mtlraytracingpipelinestate
         /// https://developer.apple.com/documentation/metal/mtlintersectionfunctiontable
         /// https://developer.apple.com/documentation/metal/mtlvisiblefunctiontable
-        /// 
+        ///
         /// Implementation Notes:
         /// - State is stored for later use in DispatchRays (similar to D3D12Device pattern)
         /// - Pipeline validation ensures it's a MetalRaytracingPipeline
@@ -3734,12 +3734,12 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// - Shader binding table is provided via ShaderBindingTable structure
         /// - Resources are bound via argument buffers (MTLArgumentEncoder)
         /// - Ray dispatch is performed via compute shader dispatch
-        /// 
+        ///
         /// Metal API Reference:
         /// https://developer.apple.com/documentation/metal/metal_ray_tracing
         /// https://developer.apple.com/documentation/metal/mtlraytracingpipelinestate
         /// https://developer.apple.com/documentation/metal/mtlcomputecommandencoder
-        /// 
+        ///
         /// Implementation follows D3D12Device pattern:
         /// 1. Validate raytracing state is set
         /// 2. Get or create compute command encoder
@@ -4337,7 +4337,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // For TLAS, the descriptor should be of type MTLAccelerationStructureGeometryInstanceDescriptor
                 // which contains the instance buffer reference and instance count
                 AccelStructDesc tlasDesc = metalAccelStruct.Desc;
-                
+
                 // Create the TLAS descriptor - it will be configured with instance buffer reference below
                 // Based on Metal API: MTLAccelerationStructureGeometryInstanceDescriptor
                 // Metal API Reference: https://developer.apple.com/documentation/metal/mtlaccelerationstructuregeometryinstancedescriptor
@@ -4398,7 +4398,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     // For TLAS, scratch size is typically proportional to instance count
                     // A conservative estimate: ~256 bytes per instance + overhead
                     ulong estimatedScratchSize = (ulong)(instanceCount * 256 + 4096); // 256 bytes per instance + 4KB overhead
-                    
+
                     // Create scratch buffer for building
                     // StorageModePrivate is preferred for GPU-only scratch buffers
                     IntPtr scratchBuffer = MetalNative.CreateBufferWithOptions(device, estimatedScratchSize, (uint)MetalResourceOptions.StorageModePrivate);
@@ -4812,7 +4812,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // Metal API: [descriptor setGeometryDescriptors:geometryDescriptors count:count]
                 // For each geometry, we create a MTLAccelerationStructureTriangleGeometryDescriptor
                 // and set its properties using objc_msgSend
-                
+
                 // Create triangle geometry descriptor for this geometry
                 IntPtr triangleGeometryDesc = CreateTriangleGeometryDescriptor();
                 if (triangleGeometryDesc == IntPtr.Zero)
@@ -4825,22 +4825,22 @@ namespace Andastra.Runtime.MonoGame.Backends
                 {
                     // Set vertex buffer and properties
                     SetTriangleGeometryVertexBuffer(triangleGeometryDesc, vertexBuffer, vertexOffset, vertexStride, vertexCount, vertexFormat);
-                    
+
                     // Set index buffer if provided
                     if (indexBuffer != IntPtr.Zero && indexCount > 0)
                     {
                         SetTriangleGeometryIndexBuffer(triangleGeometryDesc, indexBuffer, indexOffset, indexCount, indexFormat);
                     }
-                    
+
                     // Set transform buffer if provided
                     if (transformBuffer != IntPtr.Zero)
                     {
                         SetTriangleGeometryTransformBuffer(triangleGeometryDesc, transformBuffer, transformOffset);
                     }
-                    
+
                     // Set geometry options/flags
                     SetTriangleGeometryOptions(triangleGeometryDesc, geometryFlags);
-                    
+
                     // Add geometry descriptor to acceleration structure descriptor
                     AddGeometryDescriptorToAccelerationStructureDescriptor(descriptor, triangleGeometryDesc, geometryIndex);
                 }
@@ -4919,7 +4919,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         // Helper functions for triangle geometry descriptor manipulation
         // These use Objective-C runtime to interact with MTLAccelerationStructureTriangleGeometryDescriptor
-        
+
         [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr objc_msgSend_void_uint(IntPtr receiver, IntPtr selector, uint value);
 
@@ -4952,7 +4952,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                 IntPtr allocSelector = sel_registerName("alloc");
                 IntPtr allocResult = objc_msgSend_object(triangleGeometryDescClass, allocSelector);
-                
+
                 IntPtr initSelector = sel_registerName("init");
                 return objc_msgSend_object(allocResult, initSelector);
             }
@@ -4992,15 +4992,15 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // Metal API: [triangleDesc setVertexBuffer:vertexBuffer offset:vertexOffset]
                 IntPtr setVertexBufferSelector = sel_registerName("setVertexBuffer:offset:");
                 objc_msgSend_void_uint_ulong(triangleDesc, setVertexBufferSelector, vertexBuffer, vertexOffset);
-                
+
                 // Metal API: [triangleDesc setVertexStride:vertexStride]
                 IntPtr setVertexStrideSelector = sel_registerName("setVertexStride:");
                 objc_msgSend_void_ulong(triangleDesc, setVertexStrideSelector, vertexStride);
-                
+
                 // Metal API: [triangleDesc setVertexCount:vertexCount]
                 IntPtr setVertexCountSelector = sel_registerName("setVertexCount:");
                 objc_msgSend_void_ulong(triangleDesc, setVertexCountSelector, vertexCount);
-                
+
                 // Metal API: [triangleDesc setVertexFormat:vertexFormat]
                 IntPtr setVertexFormatSelector = sel_registerName("setVertexFormat:");
                 objc_msgSend_void_uint(triangleDesc, setVertexFormatSelector, vertexFormat);
@@ -5023,11 +5023,11 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // Metal API: [triangleDesc setIndexBuffer:indexBuffer offset:indexOffset]
                 IntPtr setIndexBufferSelector = sel_registerName("setIndexBuffer:offset:");
                 objc_msgSend_void_uint_ulong(triangleDesc, setIndexBufferSelector, indexBuffer, indexOffset);
-                
+
                 // Metal API: [triangleDesc setIndexCount:indexCount]
                 IntPtr setIndexCountSelector = sel_registerName("setIndexCount:");
                 objc_msgSend_void_ulong(triangleDesc, setIndexCountSelector, indexCount);
-                
+
                 // Metal API: [triangleDesc setIndexType:indexFormat]
                 IntPtr setIndexTypeSelector = sel_registerName("setIndexType:");
                 objc_msgSend_void_uint(triangleDesc, setIndexTypeSelector, indexFormat);
@@ -5090,7 +5090,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // We need to get the geometry descriptors array and set the element at geometryIndex
                 IntPtr getGeometryDescriptorsSelector = sel_registerName("geometryDescriptors");
                 IntPtr geometryDescriptorsArray = objc_msgSend_object(accelStructDesc, getGeometryDescriptorsSelector);
-                
+
                 if (geometryDescriptorsArray != IntPtr.Zero)
                 {
                     // Set the geometry descriptor at the specified index
@@ -5269,7 +5269,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             try
             {
                 IntPtr arrayPtr = arrayHandle.AddrOfPinnedObject();
-                
+
                 // Call setViewports:count: using Objective-C runtime
                 // Signature: - (void)setViewports:(const MTLViewport*)viewports count:(NSUInteger)count
                 IntPtr selector = sel_registerName("setViewports:count:");
@@ -5533,7 +5533,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 // Register selector for copyFromBuffer:sourceOffset:toBuffer:destinationOffset:size:
                 IntPtr selector = sel_registerName("copyFromBuffer:sourceOffset:toBuffer:destinationOffset:size:");
-                
+
                 // Call the method
                 // Note: On 64-bit systems, NSUInteger is 64-bit (ulong)
                 objc_msgSend_copyFromBuffer(blitEncoder, selector, sourceBuffer, sourceOffset, destinationBuffer, destinationOffset, size);

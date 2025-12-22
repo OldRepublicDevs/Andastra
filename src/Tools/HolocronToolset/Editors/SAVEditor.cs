@@ -278,7 +278,7 @@ namespace HolocronToolset.Editors
         // Matching PyKotor implementation: Helper to get party member name
         private string GetPartyMemberName(PartyMemberEntry member)
         {
-            // Simplified - full implementation would resolve from nested capsule
+            // TODO:  Simplified - full implementation would resolve from nested capsule
             if (member.Index == -1)
             {
                 return "PC";

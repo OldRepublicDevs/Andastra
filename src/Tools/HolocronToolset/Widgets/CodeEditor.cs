@@ -556,7 +556,7 @@ namespace HolocronToolset.Widgets
 
             // Note: Ctrl+K, Ctrl+0 and Ctrl+K, Ctrl+J require key sequence handling
             // TODO: STUB - For now, we'll handle them as single key combinations
-            // In a full implementation, you'd track the Ctrl+K press and then handle the second key
+            // TODO:  In a full implementation, you'd track the Ctrl+K press and then handle the second key
             // For simplicity, we'll use alternative shortcuts or handle them in a key sequence manager
             // Ctrl+K Ctrl+0 for fold all (using Ctrl+Shift+0 as alternative)
             if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && e.KeyModifiers.HasFlag(KeyModifiers.Shift) && e.Key == Key.D0)
@@ -1813,7 +1813,7 @@ namespace HolocronToolset.Widgets
             }
 
             // Mark as folded
-            // Note: In a full implementation with a proper code editor control,
+            // TODO:  Note: In a full implementation with a proper code editor control,
             // we would hide the lines here. For TextBox, we maintain state for API compatibility.
             _foldedBlockNumbers.Add(startBlock);
         }
@@ -1842,7 +1842,7 @@ namespace HolocronToolset.Widgets
             }
 
             // Mark as unfolded
-            // Note: In a full implementation with a proper code editor control,
+            // TODO:  Note: In a full implementation with a proper code editor control,
             // we would show the lines here. For TextBox, we maintain state for API compatibility.
             _foldedBlockNumbers.Remove(startBlock);
         }

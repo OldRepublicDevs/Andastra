@@ -96,17 +96,24 @@ namespace Andastra.Parsing.Resource.Generics.GUI
             }
 
             // Load color
+            // Based on PyKotor: COLOR is Vector3 (RGB), ALPHA is separate float field
+            // Original implementation: swkotor.exe/swkotor2.exe stores COLOR as RGB and ALPHA separately
             if (gffStruct.Exists("COLOR"))
             {
                 var vec = gffStruct.GetVector3("COLOR");
+                // Initialize Color with RGB from COLOR field, default alpha 1.0f
                 control.Color = new Color(vec.X, vec.Y, vec.Z, 1.0f);
             }
 
-            // Alpha is stored as a float (0.0-1.0)
-            // Store it in Properties for now since GUIControl doesn't have an Alpha field
+            // Load alpha transparency (0.0-1.0)
+            // Based on PyKotor: ALPHA field updates the Color's alpha channel if COLOR exists
+            // If ALPHA exists, update the Color's alpha channel (or create default white color with alpha)
             if (gffStruct.Exists("ALPHA"))
             {
-                control.Properties["ALPHA"] = gffStruct.GetSingle("ALPHA");
+                float alpha = gffStruct.GetSingle("ALPHA");
+                // Update Color's alpha channel using the Alpha property
+                // This handles both cases: Color exists (updates alpha) or Color is null (creates default white with alpha)
+                control.Alpha = alpha;
             }
 
             // Load border

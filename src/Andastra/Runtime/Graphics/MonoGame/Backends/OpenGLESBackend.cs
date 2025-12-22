@@ -272,7 +272,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             // glViewport(0, 0, width, height)
 
             // For EGL, if surface needs resizing, we may need to recreate it
-            // For now, assume the surface handles resizing automatically
+            // TODO: STUB - For now, assume the surface handles resizing automatically
 
             _settings.Width = width;
             _settings.Height = height;
@@ -752,7 +752,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         {
             // Load OpenGL ES functions via EGL
             // This would typically be done by a loader library like GLAD or similar
-            // For now, we assume functions are available via P/Invoke
+            // TODO: STUB - For now, we assume functions are available via P/Invoke
             return true;
         }
 

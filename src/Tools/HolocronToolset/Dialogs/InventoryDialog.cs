@@ -260,7 +260,7 @@ namespace HolocronToolset.Dialogs
                         // Try to get UTI file information
                         // Matching PyKotor: filepath, name, uti = cast("InventoryEditor", self.window()).get_item(resname, "")
                         // TODO: STUB - For now, we'll use the ResRef as the name if we can't get the actual name
-                        // In a full implementation, this would call a method similar to get_item() to retrieve UTI data
+                        // TODO:  In a full implementation, this would call a method similar to get_item() to retrieve UTI data
                         name = item.ResRef.ToString();
                     }
 
@@ -278,14 +278,14 @@ namespace HolocronToolset.Dialogs
                 {
                     // Matching PyKotor: RobustLogger().error(f"{item.resref}.uti did not exist in the installation", exc_info=True)
                     // TODO: STUB - For now, we'll skip items that don't exist
-                    // In a full implementation, this would log an error
+                    // TODO:  In a full implementation, this would log an error
                     continue;
                 }
                 catch (Exception)
                 {
                     // Matching PyKotor: RobustLogger().error(f"{item.resref}.uti is corrupted", exc_info=True)
                     // TODO: STUB - For now, we'll skip corrupted items
-                    // In a full implementation, this would log an error
+                    // TODO:  In a full implementation, this would log an error
                     continue;
                 }
             }

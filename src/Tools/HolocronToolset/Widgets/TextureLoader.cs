@@ -297,7 +297,7 @@ namespace HolocronToolset.Widgets
             return new TPCMipmap(iconSize, iconSize, TPCTextureFormat.RGBA, rgbaData);
         }
 
-        // Helper method to resize image data (simplified nearest-neighbor)
+        // TODO:  Helper method to resize image data (simplified nearest-neighbor)
         private byte[] ResizeImage(byte[] sourceData, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight)
         {
             byte[] targetData = new byte[targetWidth * targetHeight * 4];

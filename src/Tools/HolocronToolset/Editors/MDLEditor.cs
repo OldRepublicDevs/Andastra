@@ -181,7 +181,7 @@ namespace HolocronToolset.Editors
             {
                 // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/mdl.py:98
                 // Original: self.ui.modelRenderer.set_model(mdl_data, mdx_data)
-                // Note: Python passes data[12:] to skip header, but we'll pass full data for now
+                // TODO:  Note: Python passes data[12:] to skip header, but we'll pass full data for now
                 _modelRenderer.SetModel(mdlData, mdxData);
             }
 

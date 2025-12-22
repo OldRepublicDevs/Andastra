@@ -217,8 +217,8 @@ namespace Andastra.Parsing.Mods
                 string folder = folderGroup.Key;
                 foreach (var installFile in folderGroup)
                 {
-                    string filename = !string.IsNullOrEmpty(installFile.SaveAs) 
-                        ? installFile.SaveAs 
+                    string filename = !string.IsNullOrEmpty(installFile.SaveAs)
+                        ? installFile.SaveAs
                         : installFile.SourceFile;
                     lines.Add($"File{lines.Count - 1}={filename}");
                     lines.Add($"  !Destination={folder}");
@@ -274,24 +274,24 @@ namespace Andastra.Parsing.Mods
             {
                 if (modifier is ChangeRow2DA changeRow)
                 {
-                    string sectionName = !string.IsNullOrEmpty(changeRow.Identifier) 
-                        ? changeRow.Identifier 
+                    string sectionName = !string.IsNullOrEmpty(changeRow.Identifier)
+                        ? changeRow.Identifier
                         : $"{mod2da.SourceFile}_changerow_{modifierIdx}";
                     lines.Add($"ChangeRow{modifierIdx}={sectionName}");
                     modifierIdx++;
                 }
                 else if (modifier is AddRow2DA addRow)
                 {
-                    string sectionName = !string.IsNullOrEmpty(addRow.Identifier) 
-                        ? addRow.Identifier 
+                    string sectionName = !string.IsNullOrEmpty(addRow.Identifier)
+                        ? addRow.Identifier
                         : $"{mod2da.SourceFile}_addrow_{modifierIdx}";
                     lines.Add($"AddRow{modifierIdx}={sectionName}");
                     modifierIdx++;
                 }
                 else if (modifier is AddColumn2DA addColumn)
                 {
-                    string sectionName = !string.IsNullOrEmpty(addColumn.Identifier) 
-                        ? addColumn.Identifier 
+                    string sectionName = !string.IsNullOrEmpty(addColumn.Identifier)
+                        ? addColumn.Identifier
                         : $"{mod2da.SourceFile}_addcol_{modifierIdx}";
                     lines.Add($"AddColumn{modifierIdx}={sectionName}");
                     modifierIdx++;
@@ -689,14 +689,14 @@ namespace Andastra.Parsing.Mods
                         string nestedSection = "";
                         if (nestedMod is AddFieldGFF nestedAddField)
                         {
-                            nestedSection = !string.IsNullOrEmpty(nestedAddField.Identifier) 
-                                ? nestedAddField.Identifier 
+                            nestedSection = !string.IsNullOrEmpty(nestedAddField.Identifier)
+                                ? nestedAddField.Identifier
                                 : $"{sectionName}_nested_{nestedIdx}";
                         }
                         else if (nestedMod is AddStructToListGFF nestedAddStruct)
                         {
-                            nestedSection = !string.IsNullOrEmpty(nestedAddStruct.Identifier) 
-                                ? nestedAddStruct.Identifier 
+                            nestedSection = !string.IsNullOrEmpty(nestedAddStruct.Identifier)
+                                ? nestedAddStruct.Identifier
                                 : $"{sectionName}_nested_{nestedIdx}";
                         }
                         else

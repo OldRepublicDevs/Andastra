@@ -250,7 +250,7 @@ namespace KotorDiff.Resolution
                 if (result is ValueTuple<PatcherModifications, Dictionary<int, int>> tuple)
                 {
                     modifications = tuple.Item1;
-                    // Ignore strref_mappings for now
+                    // TODO:  Ignore strref_mappings for now
                 }
                 else if (result is PatcherModifications mods)
                 {
