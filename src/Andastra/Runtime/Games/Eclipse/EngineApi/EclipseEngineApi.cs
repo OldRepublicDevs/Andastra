@@ -3962,6 +3962,13 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         /// <summary>
         /// Helper method to get spell count
         /// </summary>
+        /// <remarks>
+        /// Based on Eclipse engine: Spell count calculation (daorigins.exe, DragonAge2.exe)
+        /// Located via string references: Spell system uses KnownSpells/KnownTalents/KnownAbilities
+        /// Original implementation: Counts spells from creature's known spells/talents/abilities list
+        /// EclipseStatsComponent.GetKnownSpells() returns all known spells/talents/abilities
+        /// Cross-engine: Common implementation for both daorigins.exe and DragonAge2.exe
+        /// </remarks>
         private int GetSpellCount(Core.Interfaces.IEntity entity, IExecutionContext ctx)
         {
             IStatsComponent stats = entity.GetComponent<IStatsComponent>();
@@ -3970,24 +3977,70 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 return 0;
             }
             
-            // Count spells - would need to iterate through all spell IDs
-            // TODO: STUB - For now, check entity data
+            // Primary method: Use EclipseStatsComponent.GetKnownSpells() to get all known spells
+            // This is the most efficient and accurate method, using the internal HashSet of known spells
+            EclipseStatsComponent eclipseStats = stats as EclipseStatsComponent;
+            if (eclipseStats != null)
+            {
+                // GetKnownSpells() returns IEnumerable<int> of all known spell/talent/ability IDs
+                int count = 0;
+                foreach (int spellId in eclipseStats.GetKnownSpells())
+                {
+                    count++;
+                }
+                return count;
+            }
+            
+            // Fallback method 1: Check entity data for stored spell list
+            // This can happen if entity data was saved/loaded from disk
             List<int> spellList = entity.GetData<List<int>>("SpellList", null);
             if (spellList != null)
             {
                 return spellList.Count;
             }
             
-            // Fallback: count spells by checking HasSpell for common spell IDs
-            int count = 0;
-            for (int i = 0; i < 1000; i++) // Check up to 1000 spell IDs
+            // Fallback method 2: Check for KnownSpells/KnownTalents/KnownAbilities in entity data
+            // Eclipse engine uses these keys to store known spells/talents/abilities
+            object knownSpellsObj = entity.GetData("KnownSpells") ?? entity.GetData("KnownTalents") ?? entity.GetData("KnownAbilities");
+            if (knownSpellsObj != null)
+            {
+                System.Collections.Generic.IEnumerable<int> knownSpells = knownSpellsObj as System.Collections.Generic.IEnumerable<int>;
+                if (knownSpells != null)
+                {
+                    int count = 0;
+                    foreach (int spellId in knownSpells)
+                    {
+                        count++;
+                    }
+                    return count;
+                }
+                
+                // Try as generic IEnumerable (in case it's stored as List<object> or similar)
+                System.Collections.IEnumerable enumerable = knownSpellsObj as System.Collections.IEnumerable;
+                if (enumerable != null)
+                {
+                    int count = 0;
+                    foreach (object spellObj in enumerable)
+                    {
+                        count++;
+                    }
+                    return count;
+                }
+            }
+            
+            // Fallback method 3: Iterate through possible spell IDs and check HasSpell
+            // This is the least efficient method but works as a last resort
+            // In practice, this should rarely be needed since EclipseStatsComponent should be available
+            // Limit to reasonable spell ID range (Eclipse games typically use 0-9999 for spell IDs)
+            int fallbackCount = 0;
+            for (int i = 0; i < 10000; i++) // Check up to 10000 spell IDs (reasonable upper bound for Eclipse games)
             {
                 if (stats.HasSpell(i))
                 {
-                    count++;
+                    fallbackCount++;
                 }
             }
-            return count;
+            return fallbackCount;
         }
         
         /// <summary>
