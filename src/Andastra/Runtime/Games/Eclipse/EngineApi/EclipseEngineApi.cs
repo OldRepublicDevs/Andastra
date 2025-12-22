@@ -2693,13 +2693,42 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 return Variable.Void();
             }
             
+            Core.Interfaces.IEntity caster = ctx.Caller;
             Core.Interfaces.IEntity target = ResolveObject(targetId, ctx);
-            if (target != null)
+            
+            if (caster == null)
             {
-                // Queue spell cast action
-                // TODO:  In full implementation, this would use spell system to cast spell
-                ctx.Caller.SetData("QueuedSpell", spell);
-                ctx.Caller.SetData("QueuedSpellTarget", targetId);
+                return Variable.Void();
+            }
+            
+            // Cast spell on target
+            // Based on daorigins.exe/DragonAge2.exe: CastSpell fires spell cast events and applies spell effects
+            // Original implementation: Casts spell on target, fires OnSpellCastAt event, applies spell effects via spell system
+            // In full implementation, a spell system would:
+            // 1. Validate spell (caster has spell, spell exists, cooldowns, etc.)
+            // 2. Apply spell costs (mana/stamina, cooldowns)
+            // 3. Play spell casting animation
+            // 4. Apply spell effects to target(s) based on spell definition
+            // 5. Fire spell events for script hooks
+            // For now, we fire events and let scripts handle spell effects
+            
+            if (target != null && ctx.World != null && ctx.World.EventBus != null)
+            {
+                // Fire OnSpellCastAt script event for the caster
+                // Based on EclipseEntityFactory: OnSpellCastAt event is mapped from "ScriptSpellAt" field
+                // This allows scripts to react to spell casts and apply custom spell effects
+                ctx.World.EventBus.FireScriptEvent(caster, ScriptEvent.OnSpellCastAt, target);
+                
+                // Also fire OnSpellCastAt on the target so it can react to being targeted
+                // This allows target scripts to react to incoming spells
+                ctx.World.EventBus.FireScriptEvent(target, ScriptEvent.OnSpellCastAt, caster);
+                
+                // Store spell information in entity data for potential later processing
+                // This allows other systems (animations, effects, etc.) to query what spell was cast
+                caster.SetData("LastCastSpell", spell);
+                caster.SetData("LastCastSpellTarget", targetId);
+                target.SetData("LastSpellCastAt", spell);
+                target.SetData("LastSpellCastAtCaster", caster.ObjectId);
             }
             
             return Variable.Void();
@@ -2725,10 +2754,31 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 return Variable.Void();
             }
             
-            // Queue spell cast action at location
-            // TODO:  In full implementation, this would use spell system to cast area spell
-            ctx.Caller.SetData("QueuedSpell", spell);
-            ctx.Caller.SetData("QueuedSpellLocation", target);
+            // Cast spell at location
+            // Based on daorigins.exe/DragonAge2.exe: CastSpellAtLocation fires spell cast events for area spells
+            // Original implementation: Casts area spell at location, fires OnSpellCastAt event, applies area spell effects
+            // In full implementation, a spell system would:
+            // 1. Validate spell (caster has spell, spell exists, cooldowns, etc.)
+            // 2. Apply spell costs (mana/stamina, cooldowns)
+            // 3. Play spell casting animation
+            // 4. Apply spell effects to all entities in spell area of effect
+            // 5. Fire spell events for script hooks
+            // For now, we fire events and let scripts handle spell effects
+            
+            Core.Interfaces.IEntity caster = ctx.Caller;
+            if (caster != null && ctx.World != null && ctx.World.EventBus != null)
+            {
+                // Fire OnSpellCastAt script event for the caster with location
+                // Based on EclipseEntityFactory: OnSpellCastAt event is mapped from "ScriptSpellAt" field
+                // This allows scripts to react to area spell casts and apply custom spell effects
+                // Note: Area spells affect all entities in a radius, scripts can query nearby entities
+                ctx.World.EventBus.FireScriptEvent(caster, ScriptEvent.OnSpellCastAt, null);
+                
+                // Store spell information in entity data for potential later processing
+                // This allows other systems (animations, effects, etc.) to query what spell was cast
+                caster.SetData("LastCastSpell", spell);
+                caster.SetData("LastCastSpellLocation", target);
+            }
             
             return Variable.Void();
         }
