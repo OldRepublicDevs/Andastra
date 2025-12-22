@@ -55,8 +55,13 @@ namespace Andastra.Parsing.Tests.Formats
             fileType.Should().Be("BZF ", "File type should be 'BZF ' (space-padded) as defined in BZF.ksy");
 
             // Validate version
+            // Note: BZF files use "V1  " (space-padded) version string, matching BIF format
+            // BIFBinaryReader accepts "V1  " or "V1.1" but not "V1.0"
+            // BIFBinaryWriter writes BIF.FileVersion which is "V1  "
+            // Based on: src/Andastra/Parsing/Resource/Formats/BIF/BIF.cs (FileVersion = "V1  ")
+            //           src/Andastra/Parsing/Resource/Formats/BIF/BIFBinaryReader.cs (accepts "V1  " or "V1.1")
             string version = System.Text.Encoding.ASCII.GetString(header, 4, 4);
-            version.Should().Be("V1.0", "Version should be 'V1.0' as defined in BZF.ksy");
+            version.Should().Be("V1  ", "Version should be 'V1  ' (space-padded) matching BIF format standard");
         }
 
         [Fact(Timeout = 120000)]
