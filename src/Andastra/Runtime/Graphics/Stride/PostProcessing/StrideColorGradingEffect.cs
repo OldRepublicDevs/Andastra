@@ -3,6 +3,7 @@ using System.Numerics;
 using Stride.Graphics;
 using Stride.Rendering;
 using Stride.Core.Mathematics;
+using Stride.Engine;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.PostProcessing;
 using Andastra.Runtime.Graphics.Common.Rendering;
@@ -31,12 +32,17 @@ namespace Andastra.Runtime.Stride.PostProcessing
         private Texture _temporaryTexture;
         private int _lutSize; // Size of the 3D LUT (16 or 32)
         private bool _effectInitialized;
+        private SpriteBatch _spriteBatch;
+        private SamplerState _linearSampler;
+        private bool _renderingResourcesInitialized;
 
         public StrideColorGradingEffect(GraphicsDevice graphicsDevice)
         {
             _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
             _lutSize = 0;
             _effectInitialized = false;
+            _renderingResourcesInitialized = false;
+            InitializeRenderingResources();
         }
 
         #region BaseColorGradingEffect Implementation
@@ -52,10 +58,50 @@ namespace Andastra.Runtime.Stride.PostProcessing
             _temporaryTexture?.Dispose();
             _temporaryTexture = null;
 
+            _spriteBatch?.Dispose();
+            _spriteBatch = null;
+
+            _linearSampler?.Dispose();
+            _linearSampler = null;
+
             base.OnDispose();
         }
 
         #endregion
+
+        /// <summary>
+        /// Initializes rendering resources needed for GPU color grading.
+        /// Creates SpriteBatch for fullscreen quad rendering and linear sampler for texture sampling.
+        /// </summary>
+        private void InitializeRenderingResources()
+        {
+            if (_renderingResourcesInitialized)
+            {
+                return;
+            }
+
+            try
+            {
+                // Create sprite batch for fullscreen quad rendering
+                _spriteBatch = new SpriteBatch(_graphicsDevice);
+
+                // Create linear sampler for texture sampling
+                _linearSampler = SamplerState.New(_graphicsDevice, new SamplerStateDescription
+                {
+                    Filter = TextureFilter.Linear,
+                    AddressU = TextureAddressMode.Clamp,
+                    AddressV = TextureAddressMode.Clamp,
+                    AddressW = TextureAddressMode.Clamp
+                });
+
+                _renderingResourcesInitialized = true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StrideColorGrading] Failed to initialize rendering resources: {ex.Message}");
+                _renderingResourcesInitialized = false;
+            }
+        }
 
         /// <summary>
         /// Loads a 3D LUT texture for color grading.
@@ -183,12 +229,25 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// </summary>
         private bool TryExecuteColorGradingGpu(Texture input, Texture output)
         {
+            // Ensure rendering resources are initialized
+            if (!_renderingResourcesInitialized)
+            {
+                InitializeRenderingResources();
+            }
+
+            if (_spriteBatch == null || _linearSampler == null)
+            {
+                return false;
+            }
+
             // Initialize effect if needed
             if (!_effectInitialized)
             {
                 InitializeEffect();
             }
 
+            // If we don't have a custom effect, we can still use SpriteBatch for basic rendering
+            // but it won't apply color grading, so we should fall back to CPU
             if (_colorGradingEffect == null)
             {
                 return false;
@@ -202,6 +261,25 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     return false;
                 }
 
+                // Set render target to output
+                commandList.SetRenderTarget(null, output);
+                commandList.SetViewport(new Viewport(0, 0, output.Width, output.Height));
+
+                // Clear render target (optional, but ensures clean output)
+                _graphicsDevice.Clear(output, Color.Transparent);
+
+                // Get viewport dimensions
+                int width = output.Width;
+                int height = output.Height;
+
+                // Begin sprite batch rendering with custom effect
+                // Use SpriteSortMode.Immediate for post-processing effects
+                // BlendStates.Opaque: overwrite pixels (no blending for post-processing)
+                // DepthStencilStates.None: no depth testing needed for fullscreen quad
+                // RasterizerStates.CullNone: render both front and back faces
+                _spriteBatch.Begin(commandList, SpriteSortMode.Immediate, BlendStates.Opaque, _linearSampler,
+                    DepthStencilStates.None, RasterizerStates.CullNone, _colorGradingEffect);
+
                 // Set shader parameters
                 var parameters = _colorGradingEffect.Parameters;
                 if (parameters != null)
@@ -209,11 +287,31 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     // Set input texture
                     try
                     {
-                        parameters.Set("InputTexture", input);
+                        var inputTextureParam = parameters.Get("InputTexture");
+                        if (inputTextureParam != null)
+                        {
+                            inputTextureParam.SetValue(input);
+                        }
+                        else
+                        {
+                            // Try alternative parameter names
+                            var sourceTextureParam = parameters.Get("SourceTexture");
+                            if (sourceTextureParam != null)
+                            {
+                                sourceTextureParam.SetValue(input);
+                            }
+                            else
+                            {
+                                // If we can't set the input texture, the shader won't work
+                                _spriteBatch.End();
+                                return false;
+                            }
+                        }
                     }
-                    catch (ArgumentException)
+                    catch (Exception)
                     {
-                        // Parameter doesn't exist - shader not loaded
+                        // Parameter doesn't exist or can't be set - shader not properly loaded
+                        _spriteBatch.End();
                         return false;
                     }
 
@@ -222,54 +320,103 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     {
                         try
                         {
-                            parameters.Set("LutTexture", _lutTexture);
-                            parameters.Set("LutSize", (float)_lutSize);
+                            var lutTextureParam = parameters.Get("LutTexture");
+                            if (lutTextureParam != null)
+                            {
+                                lutTextureParam.SetValue(_lutTexture);
+                            }
+
+                            var lutSizeParam = parameters.Get("LutSize");
+                            if (lutSizeParam != null)
+                            {
+                                lutSizeParam.SetValue((float)_lutSize);
+                            }
                         }
-                        catch (ArgumentException)
+                        catch (Exception)
                         {
-                            // LUT parameters don't exist
+                            // LUT parameters don't exist - continue without LUT
                         }
                     }
 
                     // Set color grading parameters
                     try
                     {
-                        parameters.Set("Contrast", _contrast);
-                        parameters.Set("Saturation", _saturation);
-                        parameters.Set("Strength", _strength);
+                        var contrastParam = parameters.Get("Contrast");
+                        if (contrastParam != null)
+                        {
+                            contrastParam.SetValue(_contrast);
+                        }
+
+                        var saturationParam = parameters.Get("Saturation");
+                        if (saturationParam != null)
+                        {
+                            saturationParam.SetValue(_saturation);
+                        }
+
+                        var strengthParam = parameters.Get("Strength");
+                        if (strengthParam != null)
+                        {
+                            strengthParam.SetValue(_strength);
+                        }
                     }
-                    catch (ArgumentException)
+                    catch (Exception)
                     {
-                        // Parameters don't exist
+                        // Parameters don't exist - continue with default values
+                    }
+
+                    // Set screen size parameters (useful for UV calculations)
+                    try
+                    {
+                        var screenSizeParam = parameters.Get("ScreenSize");
+                        if (screenSizeParam != null)
+                        {
+                            screenSizeParam.SetValue(new Vector2(width, height));
+                        }
+
+                        var screenSizeInvParam = parameters.Get("ScreenSizeInv");
+                        if (screenSizeInvParam != null)
+                        {
+                            screenSizeInvParam.SetValue(new Vector2(1.0f / width, 1.0f / height));
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // Screen size parameters don't exist - continue
                     }
                 }
 
-                // Set render target
-                commandList.SetRenderTarget(null, output);
-                commandList.SetViewport(new Viewport(0, 0, output.Width, output.Height));
+                // Draw fullscreen quad with input texture
+                // Rectangle covering entire output render target
+                var destinationRect = new RectangleF(0, 0, width, height);
+                _spriteBatch.Draw(input, destinationRect, Color.White);
 
-                // Draw fullscreen quad
-                // Note: This requires a fullscreen quad mesh and proper shader setup
-                // For now, we'll fall back to CPU if the shader isn't fully set up
-                // In a complete implementation, this would use:
-                // - A fullscreen quad vertex/index buffer
-                // - EffectInstance.Apply() to set pipeline state
-                // - commandList.DrawIndexed() to render the quad
+                // End sprite batch rendering
+                _spriteBatch.End();
 
-                // Check if we can actually render (would need fullscreen quad setup)
-                // For now, return false to use CPU fallback
-                return false;
+                // Reset render target (restore previous state)
+                commandList.SetRenderTarget(null, (Texture)null);
+
+                return true;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[StrideColorGrading] GPU shader execution failed: {ex.Message}");
+                // Ensure sprite batch is properly ended even on exception
+                try
+                {
+                    _spriteBatch?.End();
+                }
+                catch
+                {
+                    // Ignore errors during cleanup
+                }
                 return false;
             }
         }
 
         /// <summary>
         /// Initializes the color grading effect instance.
-        /// Attempts to load a shader effect, but gracefully falls back if not available.
+        /// Attempts to load a shader effect from compiled .sdeffect files, but gracefully falls back if not available.
         /// </summary>
         private void InitializeEffect()
         {
@@ -280,14 +427,65 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
             try
             {
-                // Attempt to load color grading shader effect
-                // In a full implementation, this would load from .sdfx file:
-                // Effect effect = Effect.Load(_graphicsDevice, "ColorGradingEffect");
-                // _colorGradingEffect = new EffectInstance(effect);
+                // Strategy 1: Try loading from compiled effect files using Effect.Load()
+                // Effect.Load() searches in standard content paths for compiled .sdeffect files
+                Effect effectBase = null;
+                try
+                {
+                    effectBase = Effect.Load(_graphicsDevice, "ColorGradingEffect");
+                    if (effectBase != null)
+                    {
+                        _colorGradingEffect = new EffectInstance(effectBase);
+                        Console.WriteLine("[StrideColorGrading] Loaded ColorGradingEffect from compiled file");
+                        _effectInitialized = true;
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[StrideColorGrading] Failed to load ColorGradingEffect from compiled file: {ex.Message}");
+                }
 
-                // For now, create a null effect instance (will trigger CPU fallback)
-                // This allows the code structure to be in place for when shaders are added
-                _colorGradingEffect = new EffectInstance(null);
+                // Strategy 2: Try loading from ContentManager if available
+                // Check if GraphicsDevice has access to ContentManager through services
+                try
+                {
+                    var services = _graphicsDevice.Services;
+                    if (services != null)
+                    {
+                        var contentManager = services.GetService<ContentManager>();
+                        if (contentManager != null)
+                        {
+                            try
+                            {
+                                effectBase = contentManager.Load<Effect>("ColorGradingEffect");
+                                if (effectBase != null)
+                                {
+                                    _colorGradingEffect = new EffectInstance(effectBase);
+                                    Console.WriteLine("[StrideColorGrading] Loaded ColorGradingEffect from ContentManager");
+                                    _effectInitialized = true;
+                                    return;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"[StrideColorGrading] Failed to load ColorGradingEffect from ContentManager: {ex.Message}");
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[StrideColorGrading] Failed to access ContentManager: {ex.Message}");
+                }
+
+                // Strategy 3: Create effect programmatically if loading failed
+                // For now, we'll use SpriteBatch's default rendering (no custom shaders)
+                // This allows the code structure to work without requiring pre-compiled shader files
+                // The GPU path will still work using SpriteBatch, but without custom color grading shader
+                // Color grading will fall back to CPU implementation
+                Console.WriteLine("[StrideColorGrading] No ColorGradingEffect shader found. GPU path will use SpriteBatch default rendering (CPU fallback will be used)");
+                _colorGradingEffect = null;
                 _effectInitialized = true;
             }
             catch (Exception ex)
