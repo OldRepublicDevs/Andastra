@@ -20,7 +20,6 @@ using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Graphics.Common.Structs;
-using Andastra.Runtime.Games.Eclipse.Environmental;
 using ResourceType = Andastra.Parsing.Resource.ResourceType;
 using ParsingResourceType = Andastra.Parsing.Resource.ResourceType;
 
@@ -576,7 +575,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 int primitiveCount = indexCount / 3;
                 if (primitiveCount > 0)
                 {
-                    DrawIndexedPrimitiveDirectX9(D3DPT_TRIANGLELIST, 0, 0, indexCount, 0, primitiveCount);
+                    DrawIndexedPrimitiveDirectX9(D3DPT_TRIANGLELIST, 0, 0, (uint)indexCount, 0, primitiveCount);
                 }
             }
         }
@@ -768,39 +767,87 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
 
             // Get particle system from area
             // Based on daorigins.exe: Particle system is accessed from area for rendering
-            EclipseArea eclipseArea = area as EclipseArea;
-            if (eclipseArea?.ParticleSystem == null)
+            // Use reflection to access ParticleSystem property since we can't reference EclipseArea directly
+            if (area == null)
+            {
+                return;
+            }
+            Type areaType = area.GetType();
+            PropertyInfo particleSystemProp = areaType.GetProperty("ParticleSystem");
+            if (particleSystemProp == null)
+            {
+                return;
+            }
+            object particleSystem = particleSystemProp.GetValue(area);
+            if (particleSystem == null)
             {
                 return;
             }
 
             // Iterate through all active particle emitters and render their particles
             // Based on daorigins.exe: Each emitter's particles are rendered as billboard quads or point sprites
-            foreach (var emitter in eclipseArea.ParticleSystem.Emitters)
+            // Use reflection to access Emitters property
+            PropertyInfo emittersProp = particleSystem.GetType().GetProperty("Emitters");
+            if (emittersProp == null)
             {
-                if (!emitter.IsActive)
+                return;
+            }
+            object emitters = emittersProp.GetValue(particleSystem);
+            if (emitters == null)
+            {
+                return;
+            }
+            System.Collections.IEnumerable emittersEnumerable = emitters as System.Collections.IEnumerable;
+            if (emittersEnumerable == null)
+            {
+                return;
+            }
+            foreach (object emitter in emittersEnumerable)
+            {
+                if (emitter == null)
                 {
                     continue;
                 }
+                // Check if emitter is active using reflection
+                PropertyInfo isActiveProp = emitter.GetType().GetProperty("IsActive");
+                if (isActiveProp != null)
+                {
+                    object isActive = isActiveProp.GetValue(emitter);
+                    if (isActive is bool active && !active)
+                    {
+                        continue;
+                    }
+                }
 
-                // Get particles for rendering from emitter
+                // Get particles for rendering from emitter using reflection
                 // Based on daorigins.exe: Particles are accessed from emitter for rendering
-                EclipseParticleEmitter eclipseEmitter = emitter as EclipseParticleEmitter;
-                if (eclipseEmitter == null)
+                MethodInfo getParticlesMethod = emitter.GetType().GetMethod("GetParticlesForRendering");
+                if (getParticlesMethod == null)
+                {
+                    continue;
+                }
+                object particlesObj = getParticlesMethod.Invoke(emitter, null);
+                if (!(particlesObj is List<(Vector3 Position, float Size, float Alpha)> particles) || particles.Count == 0)
                 {
                     continue;
                 }
 
-                List<(Vector3 Position, float Size, float Alpha)> particles = eclipseEmitter.GetParticlesForRendering();
-                if (particles.Count == 0)
+                // Get emitter type using reflection
+                PropertyInfo emitterTypeProp = emitter.GetType().GetProperty("EmitterType");
+                ParticleEmitterType emitterType = ParticleEmitterType.Fire; // Default
+                if (emitterTypeProp != null)
                 {
-                    continue;
+                    object emitterTypeObj = emitterTypeProp.GetValue(emitter);
+                    if (emitterTypeObj is ParticleEmitterType type)
+                    {
+                        emitterType = type;
+                    }
                 }
 
                 // Render particles as billboard quads
                 // Based on daorigins.exe: Particles are rendered as textured quads that always face the camera
                 // Each particle is rendered as a quad with position, size, and alpha
-                RenderParticleEmitter(particles, emitter.EmitterType);
+                RenderParticleEmitter(particles, emitterType, emitter);
             }
         }
 
@@ -810,7 +857,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         /// </summary>
         /// <param name="particles">List of particles to render with position, size, and alpha.</param>
         /// <param name="emitterType">Type of particle emitter (affects texture selection).</param>
-        private unsafe void RenderParticleEmitter(List<(Vector3 Position, float Size, float Alpha)> particles, ParticleEmitterType emitterType)
+        /// <param name="emitter">Emitter object (used to get texture name).</param>
+        private unsafe void RenderParticleEmitter(List<(Vector3 Position, float Size, float Alpha)> particles, ParticleEmitterType emitterType, object emitter)
         {
             if (_d3dDevice == IntPtr.Zero || particles == null || particles.Count == 0)
             {
@@ -831,9 +879,11 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
 
             // Set texture for particles based on emitter type
             // Based on daorigins.exe: Different emitter types use different particle textures
-            // TODO:  For now, we'll use a default texture (would be loaded from game resources in full implementation)
-            // TODO: Load appropriate texture based on emitter type (fire, smoke, magic, etc.)
-            SetTextureDirectX9(0, IntPtr.Zero); // Would be actual texture pointer in full implementation
+            // daorigins.exe: Particle textures are loaded from game resources using texture name from emitter or default texture mapping
+            // Reference: vendor/reone/src/libs/scene/node/emitter.cpp:258 - texture = _resourceSvc.textures.get(emitter->textureName, TextureUsage::MainTex)
+            string textureName = GetParticleTextureName(emitter, emitterType);
+            IntPtr particleTexture = LoadParticleTexture(textureName);
+            SetTextureDirectX9(0, particleTexture);
 
             // Set texture stage states for particle rendering
             SetTextureStageStateDirectX9(0, D3DTSS_ADDRESSU, D3DTADDRESS_CLAMP);
@@ -951,8 +1001,112 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // 2. Calculate billboard orientation for each particle based on camera - COMPLETE (uses view matrix)
             // 3. Set world/view/projection matrices
             // 4. Render all particles in a single DrawPrimitive call for efficiency
-            // 5. Load appropriate textures for each emitter type from game resources
+            // 5. Load appropriate textures for each emitter type from game resources - COMPLETE (uses LoadParticleTexture)
             // Billboard orientation calculation is now fully implemented and functional
+        }
+
+        /// <summary>
+        /// Gets texture name for particle emitter.
+        /// Based on daorigins.exe: Particle textures are stored in emitter objects (MDL emitter texture field).
+        /// Reference: vendor/reone/src/libs/scene/node/emitter.cpp:258 - emitter->textureName
+        /// </summary>
+        /// <param name="emitter">Emitter object (may contain texture name property).</param>
+        /// <param name="emitterType">Emitter type (used for fallback default texture mapping).</param>
+        /// <returns>Texture name (ResRef) for particle texture, or default texture name based on emitter type.</returns>
+        private string GetParticleTextureName(object emitter, ParticleEmitterType emitterType)
+        {
+            if (emitter != null)
+            {
+                // Try to get texture name from emitter object using reflection
+                // Based on MDL emitter structure: texture field contains texture name
+                // Property names may vary: TextureName, TextureResRef, Texture, textureName, etc.
+                Type emitterType_obj = emitter.GetType();
+                
+                // Try common property names for texture name
+                string[] texturePropertyNames = { "TextureName", "TextureResRef", "Texture", "textureName", "texture" };
+                foreach (string propName in texturePropertyNames)
+                {
+                    PropertyInfo textureProp = emitterType_obj.GetProperty(propName);
+                    if (textureProp != null)
+                    {
+                        object textureObj = textureProp.GetValue(emitter);
+                        if (textureObj is string textureName && !string.IsNullOrEmpty(textureName) && textureName.Trim().Length > 0)
+                        {
+                            // Clean up texture name (remove null characters, trim whitespace)
+                            textureName = textureName.Trim('\0', ' ', '\t', '\r', '\n');
+                            if (!string.IsNullOrEmpty(textureName))
+                            {
+                                return textureName;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Fallback: Use default texture mapping based on emitter type
+            // Based on daorigins.exe: Different emitter types use different default particle textures
+            // Common particle texture names in Dragon Age Origins:
+            // - Fire: "fx_fire", "fire", "particle_fire"
+            // - Smoke: "fx_smoke", "smoke", "particle_smoke"
+            // - Magic: "fx_magic", "magic", "particle_magic", "sparkle"
+            // - Explosion: "fx_explosion", "explosion", "particle_explosion"
+            // - Environmental: "fx_dust", "dust", "particle_dust", "leaves"
+            switch (emitterType)
+            {
+                case ParticleEmitterType.Fire:
+                    return "fx_fire";
+                case ParticleEmitterType.Smoke:
+                    return "fx_smoke";
+                case ParticleEmitterType.Magic:
+                    return "fx_magic";
+                case ParticleEmitterType.Explosion:
+                    return "fx_explosion";
+                case ParticleEmitterType.Environmental:
+                    return "fx_dust";
+                default:
+                    return "fx_particle"; // Generic default
+            }
+        }
+
+        /// <summary>
+        /// Loads particle texture from game resources with caching.
+        /// Based on daorigins.exe: Particle textures are loaded from TPC/DDS/TGA files via resource provider.
+        /// Reference: daorigins.exe texture loading - uses LoadEclipseTexture which supports TPC/DDS/TGA formats
+        /// </summary>
+        /// <param name="textureName">Texture resource reference (ResRef) without extension.</param>
+        /// <returns>DirectX 9 texture pointer, or IntPtr.Zero if loading fails.</returns>
+        private IntPtr LoadParticleTexture(string textureName)
+        {
+            if (string.IsNullOrEmpty(textureName))
+            {
+                return IntPtr.Zero;
+            }
+
+            // Check texture cache first (reuse model texture cache since both use texture names)
+            // Based on daorigins.exe: Textures are cached to avoid reloading same textures repeatedly
+            if (_modelTextureCache.TryGetValue(textureName, out IntPtr cachedTexture))
+            {
+                return cachedTexture;
+            }
+
+            // Load texture using LoadEclipseTexture (handles TPC/DDS/TGA formats via resource provider)
+            // Based on daorigins.exe: Particle textures are loaded via same texture loading system as other textures
+            IntPtr texture = LoadEclipseTexture(textureName);
+            
+            if (texture != IntPtr.Zero)
+            {
+                // Cache texture for future use
+                _modelTextureCache[textureName] = texture;
+                System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] LoadParticleTexture: Loaded and cached particle texture '{textureName}' (handle: 0x{texture:X16})");
+            }
+            else
+            {
+                // Cache failure to avoid repeated loading attempts
+                _modelTextureCache[textureName] = IntPtr.Zero;
+                System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] LoadParticleTexture: Failed to load particle texture '{textureName}', caching failure");
+            }
+
+            return texture;
         }
 
         /// <summary>
@@ -1605,7 +1759,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                         // Render player position indicator (small colored dot/arrow)
                         const float indicatorSize = 6.0f;
                         uint playerIndicatorColor = 0xFF00FF00; // Green for player
-                        DrawQuad(minimapPlayerPos.X - (indicatorSize / 2.0f), minimapPlayerPos.Y - (indicatorSize / 2.0f), 
+                        DrawQuad(minimapPlayerPos.X - (indicatorSize / 2.0f), minimapPlayerPos.Y - (indicatorSize / 2.0f),
                             indicatorSize, indicatorSize, playerIndicatorColor, IntPtr.Zero);
                     }
                 }
@@ -1630,7 +1784,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                             // Render party member position indicator (small colored dot)
                             const float indicatorSize = 4.0f;
                             uint partyIndicatorColor = 0xFF00FFFF; // Cyan for party members
-                            DrawQuad(minimapPartyPos.X - (indicatorSize / 2.0f), minimapPartyPos.Y - (indicatorSize / 2.0f), 
+                            DrawQuad(minimapPartyPos.X - (indicatorSize / 2.0f), minimapPartyPos.Y - (indicatorSize / 2.0f),
                                 indicatorSize, indicatorSize, partyIndicatorColor, IntPtr.Zero);
                         }
                     }
@@ -1776,7 +1930,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
 
             // Try to get map data from area (would be stored in ARE file Map structure)
             // For now, use default mapping - full implementation would read from ARE file
-            if (area is EclipseArea eclipseArea)
+            // Use reflection to check if area is EclipseArea type
+            if (area != null && area.GetType().FullName == "Andastra.Runtime.Games.Eclipse.EclipseArea")
             {
                 // EclipseArea would have map data properties from ARE file
                 // MapPt1, MapPt2, WorldPt1, WorldPt2, NorthAxis would be read from ARE
@@ -1785,14 +1940,16 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
 
             // Calculate map texture coordinates
             Vector2 worldPos2D = new Vector2(worldPos.X, worldPos.Z);
-            Vector2 worldDelta = worldPos2D - worldPt1;
-            Vector2 worldRange = worldPt2 - worldPt1;
-            Vector2 mapRange = mapPt2 - mapPt1;
+            Vector2 worldDelta = new Vector2(worldPos2D.X - worldPt1.X, worldPos2D.Y - worldPt1.Y);
+            Vector2 worldRange = new Vector2(worldPt2.X - worldPt1.X, worldPt2.Y - worldPt1.Y);
+            Vector2 mapRange = new Vector2(mapPt2.X - mapPt1.X, mapPt2.Y - mapPt1.Y);
 
             Vector2 mapPos;
             if (worldRange.X != 0.0f && worldRange.Y != 0.0f)
             {
-                mapPos = mapPt1 + (worldDelta / worldRange) * mapRange;
+                Vector2 worldDeltaDivRange = new Vector2(worldDelta.X / worldRange.X, worldDelta.Y / worldRange.Y);
+                Vector2 scaledMapRange = new Vector2(worldDeltaDivRange.X * mapRange.X, worldDeltaDivRange.Y * mapRange.Y);
+                mapPos = new Vector2(mapPt1.X + scaledMapRange.X, mapPt1.Y + scaledMapRange.Y);
             }
             else
             {
@@ -1833,7 +1990,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             {
                 // Load texture from resource provider (TPC format)
                 // Based on daorigins.exe: UI textures are stored as TPC files
-                var textureId = new ResourceIdentifier(textureResRef, ResourceType.TPC);
+                var textureId = new ResourceIdentifier(textureResRef, ParsingResourceType.TPC);
                 Task<bool> existsTask = _resourceProvider.ExistsAsync(textureId, CancellationToken.None);
                 existsTask.Wait();
                 if (!existsTask.Result)
@@ -1915,7 +2072,20 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
 
             // Based on daorigins.exe: Item icons use naming convention "icon_{itemResRef}" or "{itemResRef}_icon"
             // Try multiple naming conventions
-            string itemResRef = item.ResRef ?? item.Tag;
+            // Use reflection to get ResRef property if it exists, otherwise use Tag
+            string itemResRef = null;
+            Type itemType = item.GetType();
+            PropertyInfo resRefProp = itemType.GetProperty("ResRef");
+            if (resRefProp != null)
+            {
+                object resRefObj = resRefProp.GetValue(item);
+                itemResRef = resRefObj as string;
+            }
+            if (string.IsNullOrEmpty(itemResRef))
+            {
+                // Fall back to Tag property from IEntity interface
+                itemResRef = item.Tag;
+            }
             if (string.IsNullOrEmpty(itemResRef))
             {
                 return string.Empty;
@@ -1925,7 +2095,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             string iconResRef = "icon_" + itemResRef;
             if (_resourceProvider != null)
             {
-                var iconId = new ResourceIdentifier(iconResRef, ResourceType.TPC);
+                var iconId = new ResourceIdentifier(iconResRef, ParsingResourceType.TPC);
                 Task<bool> existsTask = _resourceProvider.ExistsAsync(iconId, CancellationToken.None);
                 existsTask.Wait();
                 if (existsTask.Result)
@@ -1938,7 +2108,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             iconResRef = itemResRef + "_icon";
             if (_resourceProvider != null)
             {
-                var iconId = new ResourceIdentifier(iconResRef, ResourceType.TPC);
+                var iconId = new ResourceIdentifier(iconResRef, ParsingResourceType.TPC);
                 Task<bool> existsTask = _resourceProvider.ExistsAsync(iconId, CancellationToken.None);
                 existsTask.Wait();
                 if (existsTask.Result)
@@ -4268,20 +4438,25 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // Based on daorigins.exe: Camera position is accessed from world/camera system
             if (_world != null)
             {
-                // Try to get camera position from world data
+                // Try to get camera position from world using reflection
                 // Camera position may be stored in world or accessed via reflection
-                object cameraPos = _world.GetData("CameraPosition");
-                if (cameraPos is Vector3 cameraPosVec)
+                Type worldTypeForCamera = _world.GetType();
+                PropertyInfo cameraPosProp = worldTypeForCamera.GetProperty("CameraPosition");
+                if (cameraPosProp != null)
                 {
-                    _cameraPosition = cameraPosVec;
-                    return;
+                    object cameraPos = cameraPosProp.GetValue(_world);
+                    if (cameraPos is Vector3 cameraPosVec)
+                    {
+                        _cameraPosition = cameraPosVec;
+                        return;
+                    }
                 }
 
                 // Try alternative: Get camera from world using reflection
                 try
                 {
-                    Type worldType = _world.GetType();
-                    PropertyInfo cameraProp = worldType.GetProperty("Camera");
+                    Type worldTypeReflection = _world.GetType();
+                    PropertyInfo cameraProp = worldTypeReflection.GetProperty("Camera");
                     if (cameraProp != null)
                     {
                         object camera = cameraProp.GetValue(_world);
@@ -4474,6 +4649,115 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // Based on daorigins.exe: Distance calculation uses sqrt for accurate sorting
             // This ensures proper back-to-front ordering for transparent objects
             return (float)Math.Sqrt(dx * dx + dy * dy + dz * dz);
+        }
+
+        /// <summary>
+        /// Creates DirectX 9 texture from DDS data using D3DX.
+        /// Based on daorigins.exe: D3DXCreateTextureFromFileInMemoryEx @ 0x00be5864
+        /// </summary>
+        /// <param name="device">DirectX 9 device (IDirect3DDevice9*).</param>
+        /// <param name="ddsData">DDS file data.</param>
+        /// <returns>IntPtr to IDirect3DTexture9, or IntPtr.Zero on failure.</returns>
+        private unsafe IntPtr CreateTextureFromDDSData(IntPtr device, byte[] ddsData)
+        {
+            if (device == IntPtr.Zero || ddsData == null || ddsData.Length == 0)
+            {
+                return IntPtr.Zero;
+            }
+
+            // Load D3DX9.dll dynamically
+            // Based on daorigins.exe: Uses d3dx9.dll for texture loading utilities
+            IntPtr d3dx9Dll = LoadLibrary("d3dx9_43.dll");
+            if (d3dx9Dll == IntPtr.Zero)
+            {
+                // Try other common versions
+                d3dx9Dll = LoadLibrary("d3dx9_42.dll");
+                if (d3dx9Dll == IntPtr.Zero)
+                {
+                    d3dx9Dll = LoadLibrary("d3dx9_41.dll");
+                    if (d3dx9Dll == IntPtr.Zero)
+                    {
+                        d3dx9Dll = LoadLibrary("d3dx9.dll");
+                    }
+                }
+            }
+
+            if (d3dx9Dll == IntPtr.Zero)
+            {
+                System.Console.WriteLine("[DragonAgeOriginsGraphicsBackend] CreateTextureFromDDSData: Failed to load d3dx9.dll");
+                return IntPtr.Zero;
+            }
+
+            // Get D3DXCreateTextureFromFileInMemoryEx function pointer
+            // Based on daorigins.exe: "D3DXCreateTextureFromFileInMemoryEx" @ 0x00be5864
+            IntPtr funcPtr = GetProcAddress(d3dx9Dll, "D3DXCreateTextureFromFileInMemoryEx");
+            if (funcPtr == IntPtr.Zero)
+            {
+                System.Console.WriteLine("[DragonAgeOriginsGraphicsBackend] CreateTextureFromDDSData: Failed to get D3DXCreateTextureFromFileInMemoryEx address");
+                FreeLibrary(d3dx9Dll);
+                return IntPtr.Zero;
+            }
+
+            // Create delegate for D3DXCreateTextureFromFileInMemoryEx
+            var createTexture = Marshal.GetDelegateForFunctionPointer<D3DXCreateTextureFromFileInMemoryExDelegate>(funcPtr);
+
+            // Allocate memory for texture pointer
+            IntPtr texturePtr = Marshal.AllocHGlobal(IntPtr.Size);
+            try
+            {
+                // Pin DDS data for native access
+                GCHandle dataHandle = GCHandle.Alloc(ddsData, GCHandleType.Pinned);
+                try
+                {
+                    IntPtr dataPtr = dataHandle.AddrOfPinnedObject();
+                    uint dataSize = (uint)ddsData.Length;
+
+                    // Call D3DXCreateTextureFromFileInMemoryEx
+                    int hr = createTexture(
+                        device,                    // pDevice
+                        dataPtr,                   // pSrcData
+                        dataSize,                  // SrcDataSize
+                        0,                         // Width (0 = auto from DDS)
+                        0,                         // Height (0 = auto from DDS)
+                        0,                         // MipLevels (0 = D3DX_DEFAULT, auto from DDS)
+                        0,                         // Usage (0 = no special usage)
+                        0,                         // Format (0 = D3DFMT_UNKNOWN, auto from DDS)
+                        0,                         // Pool (0 = D3DPOOL_DEFAULT)
+                        0,                         // Filter (0 = D3DX_DEFAULT)
+                        0,                         // MipFilter (0 = D3DX_DEFAULT)
+                        0,                         // ColorKey (0 = no color key)
+                        IntPtr.Zero,               // pSrcInfo (null = don't return info)
+                        IntPtr.Zero,               // pPalette (null = no palette)
+                        texturePtr                 // ppTexture (output)
+                    );
+
+                    if (hr < 0)
+                    {
+                        System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] CreateTextureFromDDSData: D3DXCreateTextureFromFileInMemoryEx failed with HRESULT 0x{hr:X8}");
+                        FreeLibrary(d3dx9Dll);
+                        return IntPtr.Zero;
+                    }
+
+                    // Read texture pointer from output parameter
+                    IntPtr texture = Marshal.ReadIntPtr(texturePtr);
+                    FreeLibrary(d3dx9Dll);
+                    return texture;
+                }
+                finally
+                {
+                    dataHandle.Free();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] CreateTextureFromDDSData: Exception - {ex.Message}");
+                FreeLibrary(d3dx9Dll);
+                return IntPtr.Zero;
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(texturePtr);
+            }
         }
 
         #region D3DX P/Invoke Declarations
