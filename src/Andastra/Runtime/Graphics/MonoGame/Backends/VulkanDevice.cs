@@ -627,6 +627,32 @@ namespace Andastra.Runtime.MonoGame.Backends
             public uint baseArrayLayer;
             public uint layerCount;
         }
+        
+        // Vulkan component mapping structure
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkComponentMapping.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkComponentMapping
+        {
+            public VkComponentSwizzle r; // Swizzle for red component
+            public VkComponentSwizzle g; // Swizzle for green component
+            public VkComponentSwizzle b; // Swizzle for blue component
+            public VkComponentSwizzle a; // Swizzle for alpha component
+        }
+        
+        // Vulkan image view create info structure
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkImageViewCreateInfo.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkImageViewCreateInfo
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkImageViewCreateFlags flags;
+            public IntPtr image; // VkImage handle
+            public VkImageViewType viewType;
+            public VkFormat format;
+            public VkComponentMapping components;
+            public VkImageSubresourceRange subresourceRange;
+        }
 
         // Vulkan image aspect flags
         [Flags]
@@ -1037,6 +1063,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO = 34,
             VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET = 35,
             VK_STRUCTURE_TYPE_COPY_DESCRIPTOR_SET = 36,
+            VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO = 10,
             VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO = 37,
             VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO = 38,
             VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO = 39,
@@ -1067,7 +1094,34 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         // Additional Vulkan enums
         private enum VkImageCreateFlags { }
+        private enum VkImageViewCreateFlags { }
         private enum VkImageType { VK_IMAGE_TYPE_2D = 1 }
+        
+        // Vulkan image view type enum
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkImageViewType.html
+        private enum VkImageViewType
+        {
+            VK_IMAGE_VIEW_TYPE_1D = 0,
+            VK_IMAGE_VIEW_TYPE_2D = 1,
+            VK_IMAGE_VIEW_TYPE_3D = 2,
+            VK_IMAGE_VIEW_TYPE_CUBE = 3,
+            VK_IMAGE_VIEW_TYPE_1D_ARRAY = 4,
+            VK_IMAGE_VIEW_TYPE_2D_ARRAY = 5,
+            VK_IMAGE_VIEW_TYPE_CUBE_ARRAY = 6
+        }
+        
+        // Vulkan component swizzle enum
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkComponentSwizzle.html
+        private enum VkComponentSwizzle
+        {
+            VK_COMPONENT_SWIZZLE_IDENTITY = 0,
+            VK_COMPONENT_SWIZZLE_ZERO = 1,
+            VK_COMPONENT_SWIZZLE_ONE = 2,
+            VK_COMPONENT_SWIZZLE_R = 3,
+            VK_COMPONENT_SWIZZLE_G = 4,
+            VK_COMPONENT_SWIZZLE_B = 5,
+            VK_COMPONENT_SWIZZLE_A = 6
+        }
         [Flags]
         private enum VkSampleCountFlagBits
         {
@@ -2019,13 +2073,90 @@ namespace Andastra.Runtime.MonoGame.Backends
             CheckResult(vkBindImageMemory(_device, vkImage, vkMemory, 0), "vkBindImageMemory");
 
             // Create image view if needed
+            // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateImageView.html
+            // Image views are required for textures used as shader resources, render targets, unordered access, or depth/stencil attachments
             IntPtr vkImageView = IntPtr.Zero;
             if ((desc.Usage & TextureUsage.ShaderResource) != 0 ||
                 (desc.Usage & TextureUsage.RenderTarget) != 0 ||
-                (desc.Usage & TextureUsage.UnorderedAccess) != 0)
+                (desc.Usage & TextureUsage.UnorderedAccess) != 0 ||
+                (desc.Usage & TextureUsage.DepthStencil) != 0)
             {
-                // TODO: Create VkImageView - this requires VkImageViewCreateInfo structure
-                // TODO: STUB - For now, we'll skip this and just use the image handle
+                // Determine image aspect mask based on format
+                // Depth/stencil formats need depth/stencil aspects, color formats need color aspect
+                VkImageAspectFlags aspectMask = VkImageAspectFlags.VK_IMAGE_ASPECT_COLOR_BIT;
+                
+                // Check format to determine aspect mask (depth/stencil formats override color aspect)
+                if (vkFormat == VkFormat.VK_FORMAT_D24_UNORM_S8_UINT ||
+                    vkFormat == VkFormat.VK_FORMAT_D32_SFLOAT_S8_UINT)
+                {
+                    // Combined depth/stencil format - both aspects needed
+                    aspectMask = VkImageAspectFlags.VK_IMAGE_ASPECT_DEPTH_BIT | VkImageAspectFlags.VK_IMAGE_ASPECT_STENCIL_BIT;
+                }
+                else if (vkFormat == VkFormat.VK_FORMAT_D32_SFLOAT)
+                {
+                    // Depth-only format
+                    aspectMask = VkImageAspectFlags.VK_IMAGE_ASPECT_DEPTH_BIT;
+                }
+                
+                // Create component mapping with identity swizzle (R=R, G=G, B=B, A=A)
+                // Based on Vulkan API: Identity mapping means components are used as-is
+                VkComponentMapping componentMapping = new VkComponentMapping
+                {
+                    r = VkComponentSwizzle.VK_COMPONENT_SWIZZLE_IDENTITY,
+                    g = VkComponentSwizzle.VK_COMPONENT_SWIZZLE_IDENTITY,
+                    b = VkComponentSwizzle.VK_COMPONENT_SWIZZLE_IDENTITY,
+                    a = VkComponentSwizzle.VK_COMPONENT_SWIZZLE_IDENTITY
+                };
+                
+                // Create subresource range covering all mip levels and array layers
+                VkImageSubresourceRange subresourceRange = new VkImageSubresourceRange
+                {
+                    aspectMask = aspectMask,
+                    baseMipLevel = 0,
+                    levelCount = (uint)desc.MipLevels,
+                    baseArrayLayer = 0,
+                    layerCount = (uint)desc.ArraySize
+                };
+                
+                // Create image view create info structure
+                VkImageViewCreateInfo imageViewCreateInfo = new VkImageViewCreateInfo
+                {
+                    sType = VkStructureType.VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+                    pNext = IntPtr.Zero,
+                    flags = 0, // VkImageViewCreateFlags - no special flags needed
+                    image = vkImage,
+                    viewType = VkImageViewType.VK_IMAGE_VIEW_TYPE_2D, // 2D texture view
+                    format = vkFormat,
+                    components = componentMapping,
+                    subresourceRange = subresourceRange
+                };
+                
+                // Ensure vkCreateImageView function is available (core Vulkan function)
+                if (vkCreateImageView == null)
+                {
+                    throw new InvalidOperationException("vkCreateImageView function is not loaded. Vulkan may not be properly initialized.");
+                }
+                
+                // Marshal structure to unmanaged memory for vkCreateImageView
+                // vkCreateImageView uses IntPtr for pCreateInfo, so we need to marshal the structure
+                int createInfoSize = Marshal.SizeOf(typeof(VkImageViewCreateInfo));
+                IntPtr createInfoPtr = Marshal.AllocHGlobal(createInfoSize);
+                try
+                {
+                    Marshal.StructureToPtr(imageViewCreateInfo, createInfoPtr, false);
+                    
+                    // Create the image view
+                    // Based on Vulkan API: vkCreateImageView creates an image view that describes how to access an image
+                    IntPtr imageViewHandle;
+                    VkResult result = vkCreateImageView(_device, createInfoPtr, IntPtr.Zero, out imageViewHandle);
+                    CheckResult(result, "vkCreateImageView");
+                    
+                    vkImageView = imageViewHandle;
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(createInfoPtr);
+                }
             }
 
             IntPtr handle = new IntPtr(_nextResourceHandle++);
