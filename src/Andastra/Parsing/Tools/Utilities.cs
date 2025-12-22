@@ -809,41 +809,397 @@ namespace Andastra.Parsing.Tools
             return string.Join("\n", lines);
         }
 
-        // TODO:  Simple unified diff generator (simplified version)
+        /// <summary>
+        /// Generates a unified diff between two texts using proper diff algorithm with hunk formatting.
+        /// </summary>
+        /// <param name="text1">First text to compare.</param>
+        /// <param name="text2">Second text to compare.</param>
+        /// <param name="file1Path">Path to first file (for header).</param>
+        /// <param name="file2Path">Path to second file (for header).</param>
+        /// <param name="contextLines">Number of context lines to include around changes.</param>
+        /// <returns>Unified diff string in standard format.</returns>
+        /// <remarks>
+        /// Unified diff format:
+        /// - Header lines: "--- file1" and "+++ file2"
+        /// - Hunk headers: "@@ -start1,count1 +start2,count2 @@"
+        /// - Line prefixes: ' ' (unchanged), '-' (deleted), '+' (added)
+        /// - Groups changes into hunks with context lines around changes
+        /// - Uses LCS (Longest Common Subsequence) algorithm to find optimal diff
+        /// </remarks>
         private static string GenerateUnifiedDiff(string text1, string text2, string file1Path, string file2Path, int contextLines)
         {
             string[] lines1 = text1.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
             string[] lines2 = text2.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
 
+            // Handle empty files
+            if (lines1.Length == 0 && lines2.Length == 0)
+            {
+                return ""; // Files are identical (both empty)
+            }
+
+            // Compute diff operations using LCS algorithm
+            var diffOps = ComputeDiffOperations(lines1, lines2);
+
+            // Handle identical files
+            bool hasChanges = false;
+            foreach (var op in diffOps)
+            {
+                if (op.Type != DiffOperationType.Equal)
+                {
+                    hasChanges = true;
+                    break;
+                }
+            }
+
+            if (!hasChanges)
+            {
+                return ""; // Files are identical
+            }
+
             var result = new StringBuilder();
             result.AppendLine($"--- {file1Path}");
             result.AppendLine($"+++ {file2Path}");
 
-            // Simple line-by-line comparison (full diff algorithm would be more complex)
-            int maxLen = Math.Max(lines1.Length, lines2.Length);
-            for (int i = 0; i < maxLen; i++)
-            {
-                string line1 = i < lines1.Length ? lines1[i] : null;
-                string line2 = i < lines2.Length ? lines2[i] : null;
+            // Group diff operations into hunks with context
+            var hunks = GroupIntoHunks(diffOps, lines1, lines2, contextLines);
 
-                if (line1 == line2)
+            // Output each hunk
+            foreach (var hunk in hunks)
+            {
+                // Write hunk header: @@ -start1,count1 +start2,count2 @@
+                // Line numbers are 1-based in unified diff format
+                result.AppendLine($"@@ -{hunk.Start1 + 1},{hunk.Count1} +{hunk.Start2 + 1},{hunk.Count2} @@");
+
+                // Write hunk lines
+                foreach (var line in hunk.Lines)
                 {
-                    result.AppendLine($" {line1 ?? ""}");
-                }
-                else
-                {
-                    if (line1 != null)
-                    {
-                        result.AppendLine($"-{line1}");
-                    }
-                    if (line2 != null)
-                    {
-                        result.AppendLine($"+{line2}");
-                    }
+                    result.AppendLine(line);
                 }
             }
 
             return result.ToString();
+        }
+
+        /// <summary>
+        /// Diff operation type.
+        /// </summary>
+        private enum DiffOperationType
+        {
+            Equal,      // Lines are identical
+            Delete,     // Line exists only in file1 (deleted)
+            Insert,     // Line exists only in file2 (inserted)
+            Replace     // Lines are different (replaced)
+        }
+
+        /// <summary>
+        /// Represents a single diff operation.
+        /// </summary>
+        private struct DiffOperation
+        {
+            public DiffOperationType Type;
+            public int Length; // Number of lines in this operation
+
+            public DiffOperation(DiffOperationType type, int length)
+            {
+                Type = type;
+                Length = length;
+            }
+        }
+
+        /// <summary>
+        /// Represents a hunk (grouped set of diff operations with context).
+        /// </summary>
+        private struct Hunk
+        {
+            public int Start1;      // Starting line index in file1 (0-based)
+            public int Count1;      // Number of lines in file1 covered by this hunk
+            public int Start2;      // Starting line index in file2 (0-based)
+            public int Count2;      // Number of lines in file2 covered by this hunk
+            public List<string> Lines; // Formatted hunk lines (with prefixes: ' ', '-', '+')
+
+            public Hunk(int start1, int start2)
+            {
+                Start1 = start1;
+                Start2 = start2;
+                Count1 = 0;
+                Count2 = 0;
+                Lines = new List<string>();
+            }
+        }
+
+        /// <summary>
+        /// Computes diff operations using LCS (Longest Common Subsequence) algorithm.
+        /// </summary>
+        private static List<DiffOperation> ComputeDiffOperations(string[] lines1, string[] lines2)
+        {
+            var operations = new List<DiffOperation>();
+
+            // Use dynamic programming to compute LCS and generate diff operations
+            // This is a simplified Myers-like algorithm implementation
+            int n = lines1.Length;
+            int m = lines2.Length;
+
+            // Build LCS table using dynamic programming
+            int[,] lcs = new int[n + 1, m + 1];
+            for (int i = 0; i <= n; i++)
+            {
+                for (int j = 0; j <= m; j++)
+                {
+                    if (i == 0 || j == 0)
+                    {
+                        lcs[i, j] = 0;
+                    }
+                    else if (lines1[i - 1] == lines2[j - 1])
+                    {
+                        lcs[i, j] = lcs[i - 1, j - 1] + 1;
+                    }
+                    else
+                    {
+                        lcs[i, j] = Math.Max(lcs[i - 1, j], lcs[i, j - 1]);
+                    }
+                }
+            }
+
+            // Backtrack to generate diff operations
+            int i2 = n;
+            int j2 = m;
+            while (i2 > 0 || j2 > 0)
+            {
+                if (i2 > 0 && j2 > 0 && lines1[i2 - 1] == lines2[j2 - 1])
+                {
+                    // Lines match - add Equal operation
+                    if (operations.Count > 0 && operations[0].Type == DiffOperationType.Equal)
+                    {
+                        // Extend existing Equal operation
+                        var lastOp = operations[0];
+                        operations[0] = new DiffOperation(DiffOperationType.Equal, lastOp.Length + 1);
+                    }
+                    else
+                    {
+                        // Insert new Equal operation at front (we're building backwards)
+                        operations.Insert(0, new DiffOperation(DiffOperationType.Equal, 1));
+                    }
+                    i2--;
+                    j2--;
+                }
+                else if (j2 > 0 && (i2 == 0 || lcs[i2, j2 - 1] >= lcs[i2 - 1, j2]))
+                {
+                    // Line inserted in file2
+                    if (operations.Count > 0 && operations[0].Type == DiffOperationType.Insert)
+                    {
+                        var lastOp = operations[0];
+                        operations[0] = new DiffOperation(DiffOperationType.Insert, lastOp.Length + 1);
+                    }
+                    else
+                    {
+                        operations.Insert(0, new DiffOperation(DiffOperationType.Insert, 1));
+                    }
+                    j2--;
+                }
+                else if (i2 > 0)
+                {
+                    // Line deleted from file1
+                    if (operations.Count > 0 && operations[0].Type == DiffOperationType.Delete)
+                    {
+                        var lastOp = operations[0];
+                        operations[0] = new DiffOperation(DiffOperationType.Delete, lastOp.Length + 1);
+                    }
+                    else
+                    {
+                        operations.Insert(0, new DiffOperation(DiffOperationType.Delete, 1));
+                    }
+                    i2--;
+                }
+            }
+
+            // Merge adjacent Delete+Insert operations into Replace operations
+            var mergedOperations = new List<DiffOperation>();
+            for (int i = 0; i < operations.Count; i++)
+            {
+                if (i < operations.Count - 1 &&
+                    operations[i].Type == DiffOperationType.Delete &&
+                    operations[i + 1].Type == DiffOperationType.Insert)
+                {
+                    // Merge Delete and Insert into Replace
+                    int replaceLength = Math.Min(operations[i].Length, operations[i + 1].Length);
+                    mergedOperations.Add(new DiffOperation(DiffOperationType.Replace, replaceLength));
+                    if (operations[i].Length > replaceLength)
+                    {
+                        mergedOperations.Add(new DiffOperation(DiffOperationType.Delete, operations[i].Length - replaceLength));
+                    }
+                    if (operations[i + 1].Length > replaceLength)
+                    {
+                        mergedOperations.Add(new DiffOperation(DiffOperationType.Insert, operations[i + 1].Length - replaceLength));
+                    }
+                    i++; // Skip the Insert operation we just merged
+                }
+                else
+                {
+                    mergedOperations.Add(operations[i]);
+                }
+            }
+
+            return mergedOperations;
+        }
+
+        /// <summary>
+        /// Groups diff operations into hunks with context lines.
+        /// </summary>
+        private static List<Hunk> GroupIntoHunks(List<DiffOperation> operations, string[] lines1, string[] lines2, int contextLines)
+        {
+            var hunks = new List<Hunk>();
+            if (operations.Count == 0)
+            {
+                return hunks;
+            }
+
+            // Build list of all line edits with their positions
+            var lineEdits = new List<(DiffOperationType type, int line1, int line2, string lineText1, string lineText2)>();
+            int line1Pos = 0;
+            int line2Pos = 0;
+            foreach (var op in operations)
+            {
+                for (int i = 0; i < op.Length; i++)
+                {
+                    string text1 = null;
+                    string text2 = null;
+                    int l1 = -1;
+                    int l2 = -1;
+
+                    switch (op.Type)
+                    {
+                        case DiffOperationType.Equal:
+                            l1 = line1Pos;
+                            l2 = line2Pos;
+                            if (line1Pos < lines1.Length) text1 = lines1[line1Pos];
+                            if (line2Pos < lines2.Length) text2 = lines2[line2Pos];
+                            line1Pos++;
+                            line2Pos++;
+                            break;
+                        case DiffOperationType.Delete:
+                            l1 = line1Pos;
+                            if (line1Pos < lines1.Length) text1 = lines1[line1Pos];
+                            line1Pos++;
+                            break;
+                        case DiffOperationType.Insert:
+                            l2 = line2Pos;
+                            if (line2Pos < lines2.Length) text2 = lines2[line2Pos];
+                            line2Pos++;
+                            break;
+                        case DiffOperationType.Replace:
+                            l1 = line1Pos;
+                            l2 = line2Pos;
+                            if (line1Pos < lines1.Length) text1 = lines1[line1Pos];
+                            if (line2Pos < lines2.Length) text2 = lines2[line2Pos];
+                            line1Pos++;
+                            line2Pos++;
+                            break;
+                    }
+
+                    lineEdits.Add((op.Type, l1, l2, text1, text2));
+                }
+            }
+
+            // Group into hunks
+            int editIdx = 0;
+            while (editIdx < lineEdits.Count)
+            {
+                // Skip to next change
+                while (editIdx < lineEdits.Count && lineEdits[editIdx].type == DiffOperationType.Equal)
+                {
+                    editIdx++;
+                }
+
+                if (editIdx >= lineEdits.Count) break;
+
+                // Find change region start
+                int changeStart = editIdx;
+                var changeStartEdit = lineEdits[changeStart];
+                int hunkStart1 = changeStartEdit.line1 >= 0 ? changeStartEdit.line1 : 0;
+                int hunkStart2 = changeStartEdit.line2 >= 0 ? changeStartEdit.line2 : 0;
+
+                // Find change region end
+                int changeEnd = changeStart;
+                while (changeEnd < lineEdits.Count && lineEdits[changeEnd].type != DiffOperationType.Equal)
+                {
+                    changeEnd++;
+                }
+
+                // Calculate context before (go backwards from changeStart)
+                int contextBeforeCount = 0;
+                int contextStart = changeStart;
+                while (contextStart > 0 && contextBeforeCount < contextLines)
+                {
+                    contextStart--;
+                    if (lineEdits[contextStart].type == DiffOperationType.Equal)
+                    {
+                        contextBeforeCount++;
+                        var edit = lineEdits[contextStart];
+                        if (edit.line1 >= 0) hunkStart1 = edit.line1;
+                        if (edit.line2 >= 0) hunkStart2 = edit.line2;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                // Calculate context after (go forwards from changeEnd)
+                int contextAfterCount = 0;
+                int contextEnd = changeEnd;
+                while (contextEnd < lineEdits.Count && contextAfterCount < contextLines)
+                {
+                    if (lineEdits[contextEnd].type == DiffOperationType.Equal)
+                    {
+                        contextAfterCount++;
+                        contextEnd++;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                // Build hunk
+                var hunk = new Hunk(hunkStart1, hunkStart2);
+                int hunkLine1 = hunkStart1;
+                int hunkLine2 = hunkStart2;
+
+                for (int i = contextStart; i < contextEnd; i++)
+                {
+                    var edit = lineEdits[i];
+                    switch (edit.type)
+                    {
+                        case DiffOperationType.Equal:
+                            hunk.Lines.Add($" {edit.lineText1 ?? ""}");
+                            hunkLine1++;
+                            hunkLine2++;
+                            break;
+                        case DiffOperationType.Delete:
+                            hunk.Lines.Add($"-{edit.lineText1 ?? ""}");
+                            hunkLine1++;
+                            break;
+                        case DiffOperationType.Insert:
+                            hunk.Lines.Add($"+{edit.lineText2 ?? ""}");
+                            hunkLine2++;
+                            break;
+                        case DiffOperationType.Replace:
+                            hunk.Lines.Add($"-{edit.lineText1 ?? ""}");
+                            hunk.Lines.Add($"+{edit.lineText2 ?? ""}");
+                            hunkLine1++;
+                            hunkLine2++;
+                            break;
+                    }
+                }
+
+                hunk.Count1 = hunkLine1 - hunkStart1;
+                hunk.Count2 = hunkLine2 - hunkStart2;
+                hunks.Add(hunk);
+
+                editIdx = contextEnd;
+            }
+
+            return hunks;
         }
 
         private static bool ContainsBytes(byte[] data, byte[] pattern)
