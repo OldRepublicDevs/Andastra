@@ -168,7 +168,14 @@ namespace Andastra.Runtime.Stride.Camera
         /// Located via string references: "CameraAnimation" @ 0x007c3460
         /// Original implementation: Camera animations are scripted camera movements using camera hooks or predefined angles
         /// Camera animation IDs map to predefined camera movements, hooks, or angles
-        /// Full implementation supports camera hooks for precise positioning from MDL models
+        /// Full implementation supports camera hooks for precise positioning from MDL models:
+        /// - Camera hooks are MDL dummy nodes (NodeType = 1) with names like "camerahook1", "camerahook2", etc.
+        /// - Camera hooks define precise camera positions relative to character models in world space
+        /// - The system automatically detects camera hooks from MDL models when available
+        /// - If camera hooks are found in the speaker/listener models, they are used for precise positioning
+        /// - If no camera hooks are available, the system falls back to predefined camera angles
+        /// Based on swkotor2.exe: FUN_006c6020 @ 0x006c6020 searches MDL node tree for "camerahook" nodes
+        /// Original implementation: Queries MDL model for nodes named "camerahook{N}" and uses their world-space positions
         /// </summary>
         /// <param name="animId">The camera animation ID.</param>
         public void SetAnimation(int animId)
@@ -177,6 +184,8 @@ namespace Andastra.Runtime.Stride.Camera
             if (!_cameraAnimations.TryGetValue(animId, out animation))
             {
                 // Unknown animation ID - fallback to angle-based system for IDs 0-3
+                // Based on swkotor2.exe: Fallback behavior when animation ID is not registered
+                // Original implementation: If animation ID is 0-3, maps to standard camera angles
                 if (animId >= 0 && animId <= 3)
                 {
                     SetAngle(animId);
@@ -191,6 +200,16 @@ namespace Andastra.Runtime.Stride.Camera
                 // Based on swkotor2.exe: Camera hook positioning for dialogue animations
                 // Located via string references: "camerahook" @ 0x007c7dac, "camerahook%d" @ 0x007d0448
                 // Original implementation: Queries MDL model for nodes named "camerahook{N}" and uses their world-space positions
+                // Camera hooks are MDL dummy nodes that define precise camera positions relative to character models
+                // The GetCameraHookPosition method searches MDL node tree recursively for "camerahook{N}" nodes
+                // Based on swkotor2.exe: FUN_006c6020 @ 0x006c6020 searches MDL node tree for "camerahook" nodes
+                // Implementation:
+                //   1. Constructs camera hook node name (format: "camerahook{N}" where N is hookIndex)
+                //   2. Searches MDL model node tree recursively for matching node name
+                //   3. Verifies node is a dummy node (NodeType = 1, NODE_HAS_HEADER flag only)
+                //   4. Transforms node's local position to world space using entity's transform matrix
+                //   5. Returns world-space position of the camera hook node
+                // If camera hook is not found, falls back to approximate position based on entity facing
                 IEntity lookAtEntity = animation.LookAtEntity ?? _currentSpeaker;
                 _cameraController.SetCameraFromHooks(
                     animation.CameraHookEntity,
@@ -201,11 +220,82 @@ namespace Andastra.Runtime.Stride.Camera
             }
             else
             {
-                // Use fallback angle-based system
-                // Based on swkotor2.exe: Fallback to predefined camera angles when hooks are not available
-                // Original implementation: Uses DialogueCameraAngle enum for standard camera positions
-                _cameraController.SetDialogueCameraAngle(animation.FallbackAngle);
+                // Try to automatically detect and use camera hooks from speaker/listener models
+                // Based on swkotor2.exe: Automatic camera hook detection when animation doesn't explicitly specify hooks
+                // Original implementation: If speaker/listener models have camera hooks, use them for precise positioning
+                // This provides automatic camera hook support without requiring manual registration
+                // Based on swkotor2.exe: FUN_006c6020 @ 0x006c6020 searches MDL node tree for "camerahook" nodes
+                // Located via string references: "camerahook" @ 0x007c7dac, "camerahook%d" @ 0x007d0448
+                // Original implementation: Searches MDL model node tree recursively for nodes named "camerahook{N}"
+                bool hooksFound = false;
+                if (_currentSpeaker != null)
+                {
+                    // Try to find camera hook 1 on speaker (common hook index for dialogue cameras)
+                    Vector3 speakerHookPos;
+                    if (_cameraController.GetCameraHookPosition(_currentSpeaker, 1, out speakerHookPos))
+                    {
+                        // Camera hook found on speaker - use it for camera positioning
+                        // Look at listener's head or camera hook if available
+                        Vector3 lookAtPos;
+                        if (_currentListener != null)
+                        {
+                            // Try to find camera hook on listener for look-at target
+                            if (!_cameraController.GetCameraHookPosition(_currentListener, 1, out lookAtPos))
+                            {
+                                // Fallback to listener's head position
+                                lookAtPos = GetEntityHeadPosition(_currentListener);
+                            }
+                        }
+                        else
+                        {
+                            // No listener - look at speaker's head
+                            lookAtPos = GetEntityHeadPosition(_currentSpeaker);
+                        }
+
+                        // Set camera using detected hook
+                        // Based on swkotor2.exe: Camera positioning using detected camera hooks
+                        // Original implementation: Sets camera to cinematic mode with hook-based positions
+                        _cameraController.SetCinematicMode(speakerHookPos, lookAtPos);
+                        hooksFound = true;
+                    }
+                }
+
+                if (!hooksFound)
+                {
+                    // No camera hooks found - use fallback angle-based system
+                    // Based on swkotor2.exe: Fallback to predefined camera angles when hooks are not available
+                    // Original implementation: Uses DialogueCameraAngle enum for standard camera positions
+                    _cameraController.SetDialogueCameraAngle(animation.FallbackAngle);
+                }
             }
+        }
+
+        /// <summary>
+        /// Gets the head position of an entity for camera look-at targeting.
+        /// Based on swkotor2.exe: Entity head position calculation for dialogue cameras
+        /// Original implementation: Head position is typically at entity position + height offset (1.7 units)
+        /// This matches CameraController.GetEntityHeadPosition implementation for consistency
+        /// </summary>
+        /// <param name="entity">The entity to get head position from.</param>
+        /// <returns>World-space head position.</returns>
+        private Vector3 GetEntityHeadPosition(IEntity entity)
+        {
+            if (entity == null)
+            {
+                return Vector3.Zero;
+            }
+
+            Interfaces.Components.ITransformComponent transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
+            if (transform == null)
+            {
+                return Vector3.Zero;
+            }
+
+            // Head position is entity position + height offset
+            // Based on swkotor2.exe: Head position calculation for dialogue cameras
+            // Original implementation: Head position = entity position + up vector * head height (1.7 units)
+            // This matches CameraController.GetEntityHeadPosition implementation (Y-up coordinate system: Y is vertical)
+            return transform.Position + new Vector3(0, 1.7f, 0);
         }
 
         /// <summary>
@@ -237,7 +327,7 @@ namespace Andastra.Runtime.Stride.Camera
             // Based on swkotor2.exe: Player entity lookup for camera reset
             // Original implementation: Retrieves player entity and sets camera to chase mode
             IEntity playerEntity = _cameraController.GetPlayerEntity();
-            
+
             if (playerEntity != null)
             {
                 // Reset to chase mode following player
