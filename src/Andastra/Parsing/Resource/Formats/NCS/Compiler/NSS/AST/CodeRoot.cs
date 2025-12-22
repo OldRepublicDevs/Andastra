@@ -740,33 +740,60 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
                 throw new NSS.CompileError(msg);
             }
 
-            // TODO:  Function has forward declaration, insert the compiled definition after the stub
+            // Function has forward declaration - compile the definition and replace the stub with the actual function body
+            // Based on nwnnsscomp.exe: Forward declarations create a stub (NOP) that is replaced when the definition is compiled
+            // The stub serves as a placeholder for jump targets (JSR/JMP/JZ/JNZ) until the real function is compiled
+            // Implementation: Compile function body into temporary NCS, then replace stub with compiled instructions
             NCS temp = new NCS();
             NCSInstruction retn = new NCSInstruction(NCSInstructionType.RETN);
             Body.Compile(temp, root, null, retn, null, null);
             temp.Instructions.Add(retn);
 
+            if (temp.Instructions.Count == 0)
+            {
+                throw new NSS.CompileError($"Function '{name}' compiled to empty instruction list");
+            }
+
             NCSInstruction stubInstruction = root.FunctionMap[name].Instruction;
+            if (stubInstruction == null)
+            {
+                throw new NSS.CompileError($"Function '{name}' has null stub instruction in FunctionMap");
+            }
+
             int stubIndex = ncs.GetInstructionIndex(stubInstruction);
             if (debug)
             {
-                System.Console.WriteLine($"CompileFunctionWithPrototype for {name}: stubIndex={stubIndex} countBefore={ncs.Instructions.Count}");
+                System.Console.WriteLine($"CompileFunctionWithPrototype for {name}: stubIndex={stubIndex} countBefore={ncs.Instructions.Count} tempInstructions={temp.Instructions.Count}");
             }
             
-            // Store reference to stub before removal - needed for jump redirection
+            // Validate stub index - if forward declaration exists, stub should be in the instruction list
             NCSInstruction removedStub = stubInstruction;
-            
             NCSInstruction newStart;
-            if (stubIndex >= 0)
+            
+            if (stubIndex < 0)
             {
-                ncs.Instructions.RemoveAt(stubIndex);
-                ncs.Instructions.InsertRange(stubIndex, temp.Instructions);
-                newStart = ncs.Instructions[stubIndex];
+                // Stub not found in instruction list - this shouldn't happen for valid forward declarations
+                // But handle gracefully by appending (though this indicates a potential compilation order issue)
+                // Still need to redirect jumps and update FunctionMap
+                if (debug)
+                {
+                    System.Console.WriteLine($"CompileFunctionWithPrototype WARNING: stub not found in instruction list for {name}, appending function body");
+                }
+                ncs.Instructions.AddRange(temp.Instructions);
+                newStart = temp.Instructions[0];
             }
             else
             {
-                ncs.Instructions.AddRange(temp.Instructions);
-                newStart = temp.Instructions[0];
+                // Store reference to stub before removal - needed for jump redirection
+                // All jumps (JSR/JMP/JZ/JNZ) that target the stub must be redirected to the new function start
+                
+                // Replace stub with compiled function body
+                // The stub (NOP) is removed and replaced with the actual function instructions
+                // This ensures the function starts at the correct position and maintains instruction order
+                // Based on nwnnsscomp.exe: Forward declaration stubs are replaced with actual function code
+                ncs.Instructions.RemoveAt(stubIndex);
+                ncs.Instructions.InsertRange(stubIndex, temp.Instructions);
+                newStart = ncs.Instructions[stubIndex];
             }
 
             // Redirect any existing jumps that pointed to the prototype stub to the new function start
