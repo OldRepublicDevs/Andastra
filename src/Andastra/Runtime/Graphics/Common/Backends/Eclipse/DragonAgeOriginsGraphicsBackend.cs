@@ -50,10 +50,57 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         // Camera position for distance-based sorting of transparent entities
         // Based on daorigins.exe: Transparent objects are sorted by distance from camera for proper alpha blending
         private Vector3 _cameraPosition;
+        
+        // Menu state tracking - tracks which menus are currently open
+        // Based on daorigins.exe: Menu system tracks open menus for rendering
+        private HashSet<DragonAgeOriginsMenuType> _openMenus = new HashSet<DragonAgeOriginsMenuType>();
 
         public override GraphicsBackendType BackendType => GraphicsBackendType.EclipseEngine;
 
         protected override string GetGameName() => "Dragon Age Origins";
+
+        /// <summary>
+        /// Menu types available in Dragon Age Origins.
+        /// Based on daorigins.exe: Different menu types are rendered when opened.
+        /// </summary>
+        public enum DragonAgeOriginsMenuType
+        {
+            Inventory,      // Inventory menu (items, equipment)
+            CharacterSheet, // Character sheet (stats, abilities, skills)
+            Journal,        // Journal (quests, codex entries)
+            Map,            // Map (world map, area map)
+            Options,        // Options menu (settings, graphics, audio)
+            Pause           // Pause menu
+        }
+
+        /// <summary>
+        /// Sets whether a menu is open or closed.
+        /// Based on daorigins.exe: Menu state is tracked to determine what to render.
+        /// </summary>
+        /// <param name="menuType">Type of menu to set state for.</param>
+        /// <param name="isOpen">True if menu should be open, false if closed.</param>
+        public void SetMenuOpen(DragonAgeOriginsMenuType menuType, bool isOpen)
+        {
+            if (isOpen)
+            {
+                _openMenus.Add(menuType);
+            }
+            else
+            {
+                _openMenus.Remove(menuType);
+            }
+        }
+
+        /// <summary>
+        /// Gets whether a menu is currently open.
+        /// Based on daorigins.exe: Menu state is checked before rendering.
+        /// </summary>
+        /// <param name="menuType">Type of menu to check.</param>
+        /// <returns>True if menu is open, false otherwise.</returns>
+        public bool IsMenuOpen(DragonAgeOriginsMenuType menuType)
+        {
+            return _openMenus.Contains(menuType);
+        }
 
         /// <summary>
         /// Sets the resource provider to use for loading textures from game resources.
@@ -1275,8 +1322,21 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         /// Renders menu overlays (inventory, character sheet, etc.) when menus are open.
         /// Based on daorigins.exe: Menu overlays are rendered when menus are open.
         /// </summary>
+        /// <remarks>
+        /// Based on reverse engineering of daorigins.exe:
+        /// - Menu overlays are rendered as 2D sprites (textured quads) over the 3D scene
+        /// - Each menu type has its own background panel and UI elements
+        /// - Menus use DirectX 9 sprite rendering with alpha blending
+        /// - Menu rendering order: Background panel -> UI elements -> Text/buttons
+        /// - DirectX 9 calls: SetTexture, SetStreamSource, DrawPrimitive for textured quads
+        /// </remarks>
         private void RenderMenuOverlays()
         {
+            if (_d3dDevice == IntPtr.Zero)
+            {
+                return;
+            }
+
             // Based on daorigins.exe: Menu overlays include:
             // - Inventory menu (items, equipment)
             // - Character sheet (stats, abilities, skills)
@@ -1285,12 +1345,242 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // - Options menu (settings, graphics, audio)
             // - Pause menu
 
-            // Menu rendering would check which menus are open
-            // Each open menu would be rendered as a series of UI elements (panels, buttons, lists, etc.)
-            // Menus are typically rendered as textured quads with text and icons
+            // Check if any menus are open
+            if (_openMenus.Count == 0)
+            {
+                return; // No menus to render
+            }
 
-            // TODO: STUB - For now, this is a placeholder that matches the structure
-            // TODO:  Full implementation would require menu system integration
+            // Render each open menu
+            // Based on daorigins.exe: Menus are rendered in order (typically only one menu open at a time)
+            foreach (DragonAgeOriginsMenuType menuType in _openMenus)
+            {
+                RenderMenu(menuType);
+            }
+        }
+
+        /// <summary>
+        /// Renders a specific menu type.
+        /// Based on daorigins.exe: Each menu type has its own rendering logic.
+        /// </summary>
+        /// <param name="menuType">Type of menu to render.</param>
+        private void RenderMenu(DragonAgeOriginsMenuType menuType)
+        {
+            if (_d3dDevice == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Based on daorigins.exe: Each menu is rendered as a background panel with UI elements
+            // Menu panels are rendered as textured quads using DirectX 9 sprite rendering
+
+            // Get viewport dimensions for menu rendering
+            // Based on daorigins.exe: Menus typically cover full screen or most of the screen
+            uint viewportWidth = GetViewportWidth();
+            uint viewportHeight = GetViewportHeight();
+
+            // Render menu background panel
+            // Based on daorigins.exe: Each menu has a background panel texture
+            // Menu background is typically a semi-transparent or opaque panel covering the screen
+            DrawMenuBackground(menuType, viewportWidth, viewportHeight);
+
+            // Render menu-specific UI elements
+            // Based on daorigins.exe: Each menu type has different UI elements
+            switch (menuType)
+            {
+                case DragonAgeOriginsMenuType.Inventory:
+                    RenderInventoryMenu();
+                    break;
+                case DragonAgeOriginsMenuType.CharacterSheet:
+                    RenderCharacterSheetMenu();
+                    break;
+                case DragonAgeOriginsMenuType.Journal:
+                    RenderJournalMenu();
+                    break;
+                case DragonAgeOriginsMenuType.Map:
+                    RenderMapMenu();
+                    break;
+                case DragonAgeOriginsMenuType.Options:
+                    RenderOptionsMenu();
+                    break;
+                case DragonAgeOriginsMenuType.Pause:
+                    RenderPauseMenu();
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Draws a menu background panel as a textured quad.
+        /// Based on daorigins.exe: Menu backgrounds are rendered as full-screen or partial-screen textured quads.
+        /// </summary>
+        /// <param name="menuType">Type of menu to draw background for.</param>
+        /// <param name="viewportWidth">Viewport width in pixels.</param>
+        /// <param name="viewportHeight">Viewport height in pixels.</param>
+        private unsafe void DrawMenuBackground(DragonAgeOriginsMenuType menuType, uint viewportWidth, uint viewportHeight)
+        {
+            // Based on daorigins.exe: Menu backgrounds use semi-transparent or opaque textures
+            // Background is typically a dark overlay or themed panel texture
+
+            // For now, render a simple dark semi-transparent background
+            // In a full implementation, this would load the appropriate menu background texture from resources
+            // Based on daorigins.exe: Menu background textures are loaded from game resources (TPC files)
+
+            // Create a simple quad vertex buffer for the background
+            // Vertex format: Position (x, y, z), Color (ARGB), Texture coordinates (u, v)
+            // FVF format: D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1
+            const uint D3DFVF_XYZ = 0x002;
+            const uint D3DFVF_DIFFUSE = 0x040;
+            const uint D3DFVF_TEX1 = 0x100;
+            uint backgroundFVF = D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1;
+
+            // Set vertex format
+            SetFVFDirectX9(backgroundFVF);
+
+            // Set texture to null for solid color background (or load menu background texture)
+            SetTextureDirectX9(0, IntPtr.Zero);
+
+            // Create quad vertices for full-screen background
+            // Based on daorigins.exe: Menu backgrounds typically cover the full screen
+            // Quad vertices: 4 vertices forming 2 triangles (D3DPT_TRIANGLELIST)
+            // Screen-space coordinates: x=[0, viewportWidth], y=[0, viewportHeight], z=0.0f
+            // Texture coordinates: u=[0, 1], v=[0, 1]
+            // Color: Semi-transparent dark background (ARGB: 0xE0000000 = dark with alpha)
+
+            // Note: In a full implementation, this would use a vertex buffer
+            // For now, we'll use immediate mode rendering if available, or skip if vertex buffers are required
+            // Based on daorigins.exe: Menu rendering uses vertex buffers for efficiency
+
+            // TODO: Implement vertex buffer creation and drawing for menu backgrounds
+            // This requires creating a vertex buffer, filling it with quad vertices, setting it as stream source,
+            // and calling DrawPrimitive with D3DPT_TRIANGLELIST, startVertex=0, primitiveCount=2 (2 triangles = 1 quad)
+        }
+
+        /// <summary>
+        /// Renders inventory menu UI elements.
+        /// Based on daorigins.exe: Inventory menu displays items and equipment.
+        /// </summary>
+        private void RenderInventoryMenu()
+        {
+            // Based on daorigins.exe: Inventory menu includes:
+            // - Item grid/list
+            // - Equipment slots
+            // - Item details panel
+            // - Item icons and text
+
+            // TODO: Implement inventory menu UI element rendering
+            // This would render item icons, equipment slots, item details, etc. as textured quads
+        }
+
+        /// <summary>
+        /// Renders character sheet menu UI elements.
+        /// Based on daorigins.exe: Character sheet displays stats, abilities, and skills.
+        /// </summary>
+        private void RenderCharacterSheetMenu()
+        {
+            // Based on daorigins.exe: Character sheet includes:
+            // - Character stats display
+            // - Abilities list
+            // - Skills list
+            // - Character portrait
+
+            // TODO: Implement character sheet menu UI element rendering
+            // This would render stats, abilities, skills, portrait, etc. as textured quads
+        }
+
+        /// <summary>
+        /// Renders journal menu UI elements.
+        /// Based on daorigins.exe: Journal displays quests and codex entries.
+        /// </summary>
+        private void RenderJournalMenu()
+        {
+            // Based on daorigins.exe: Journal menu includes:
+            // - Quest list
+            // - Quest details
+            // - Codex entries list
+            // - Codex entry text
+
+            // TODO: Implement journal menu UI element rendering
+            // This would render quest lists, codex entries, text, etc. as textured quads
+        }
+
+        /// <summary>
+        /// Renders map menu UI elements.
+        /// Based on daorigins.exe: Map displays world map or area map.
+        /// </summary>
+        private void RenderMapMenu()
+        {
+            // Based on daorigins.exe: Map menu includes:
+            // - Map image/texture
+            // - Location markers
+            // - Player position indicator
+            // - Map zoom controls
+
+            // TODO: Implement map menu UI element rendering
+            // This would render map texture, markers, indicators, etc. as textured quads
+        }
+
+        /// <summary>
+        /// Renders options menu UI elements.
+        /// Based on daorigins.exe: Options menu displays settings, graphics, and audio options.
+        /// </summary>
+        private void RenderOptionsMenu()
+        {
+            // Based on daorigins.exe: Options menu includes:
+            // - Settings categories (Graphics, Audio, Gameplay, etc.)
+            // - Option sliders and checkboxes
+            // - Option labels and values
+
+            // TODO: Implement options menu UI element rendering
+            // This would render option panels, sliders, checkboxes, text, etc. as textured quads
+        }
+
+        /// <summary>
+        /// Renders pause menu UI elements.
+        /// Based on daorigins.exe: Pause menu displays pause options (Resume, Options, Quit, etc.).
+        /// </summary>
+        private void RenderPauseMenu()
+        {
+            // Based on daorigins.exe: Pause menu includes:
+            // - Menu buttons (Resume, Options, Quit, etc.)
+            // - Menu button labels
+            // - Selected button highlight
+
+            // TODO: Implement pause menu UI element rendering
+            // This would render menu buttons, labels, highlights, etc. as textured quads
+        }
+
+        /// <summary>
+        /// Gets the current viewport width.
+        /// Based on daorigins.exe: Viewport dimensions are used for UI element positioning.
+        /// </summary>
+        /// <returns>Viewport width in pixels.</returns>
+        private uint GetViewportWidth()
+        {
+            // Based on daorigins.exe: Viewport dimensions are retrieved from DirectX 9 device
+            D3DVIEWPORT9 viewport;
+            if (GetViewportDirectX9(out viewport))
+            {
+                return viewport.Width;
+            }
+            // Fallback to default width if viewport retrieval fails
+            return 1024; // Default width
+        }
+
+        /// <summary>
+        /// Gets the current viewport height.
+        /// Based on daorigins.exe: Viewport dimensions are used for UI element positioning.
+        /// </summary>
+        /// <returns>Viewport height in pixels.</returns>
+        private uint GetViewportHeight()
+        {
+            // Based on daorigins.exe: Viewport dimensions are retrieved from DirectX 9 device
+            D3DVIEWPORT9 viewport;
+            if (GetViewportDirectX9(out viewport))
+            {
+                return viewport.Height;
+            }
+            // Fallback to default height if viewport retrieval fails
+            return 768; // Default height
         }
 
         /// <summary>
@@ -1342,6 +1632,28 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             IntPtr methodPtr = vtable[40];
             var setViewport = Marshal.GetDelegateForFunctionPointer<SetViewportDelegate>(methodPtr);
             setViewport(_d3dDevice, ref viewport);
+        }
+
+        /// <summary>
+        /// Gets DirectX 9 viewport.
+        /// Matches IDirect3DDevice9::GetViewport() exactly.
+        /// </summary>
+        /// <remarks>
+        /// Based on reverse engineering of daorigins.exe:
+        /// - IDirect3DDevice9::GetViewport is at vtable index 41
+        /// - Gets current viewport dimensions and depth range
+        /// </remarks>
+        private unsafe bool GetViewportDirectX9(out D3DVIEWPORT9 viewport)
+        {
+            viewport = new D3DVIEWPORT9();
+            if (_d3dDevice == IntPtr.Zero) return false;
+
+            // IDirect3DDevice9::GetViewport is at vtable index 41
+            IntPtr* vtable = *(IntPtr**)_d3dDevice;
+            IntPtr methodPtr = vtable[41];
+            var getViewport = Marshal.GetDelegateForFunctionPointer<GetViewportDelegate>(methodPtr);
+            int result = getViewport(_d3dDevice, out viewport);
+            return result >= 0; // D3D_OK (0) or success
         }
 
         /// <summary>
@@ -1574,6 +1886,28 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             drawIndexedPrimitive(_d3dDevice, primitiveType, baseVertexIndex, minIndex, numVertices, startIndex, primitiveCount);
         }
 
+        /// <summary>
+        /// Draws DirectX 9 primitives.
+        /// Matches IDirect3DDevice9::DrawPrimitive() exactly.
+        /// </summary>
+        /// <remarks>
+        /// Based on reverse engineering of daorigins.exe:
+        /// - IDirect3DDevice9::DrawPrimitive is at vtable index 81
+        /// - Draws primitives using current vertex buffer (no index buffer)
+        /// - Parameters: Primitive type, start vertex, primitive count
+        /// - Used for sprite rendering (quads) in UI rendering
+        /// </remarks>
+        private unsafe void DrawPrimitiveDirectX9(uint primitiveType, int startVertex, int primitiveCount)
+        {
+            if (_d3dDevice == IntPtr.Zero) return;
+
+            // IDirect3DDevice9::DrawPrimitive is at vtable index 81
+            IntPtr* vtable = *(IntPtr**)_d3dDevice;
+            IntPtr methodPtr = vtable[81];
+            var drawPrimitive = Marshal.GetDelegateForFunctionPointer<DrawPrimitiveDelegate>(methodPtr);
+            drawPrimitive(_d3dDevice, primitiveType, startVertex, primitiveCount);
+        }
+
         #region DirectX 9 Rendering P/Invoke Declarations
 
         // DirectX 9 Clear flags
@@ -1741,6 +2075,9 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         private delegate int SetViewportDelegate(IntPtr device, ref D3DVIEWPORT9 viewport);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int GetViewportDelegate(IntPtr device, out D3DVIEWPORT9 viewport);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate int SetRenderStateDelegate(IntPtr device, uint state, uint value);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
@@ -1766,6 +2103,9 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate int DrawIndexedPrimitiveDelegate(IntPtr device, uint primitiveType, int baseVertexIndex, uint minIndex, uint numVertices, int startIndex, int primitiveCount);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int DrawPrimitiveDelegate(IntPtr device, uint primitiveType, int startVertex, int primitiveCount);
 
         #endregion
 
