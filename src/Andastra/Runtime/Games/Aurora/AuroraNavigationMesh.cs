@@ -54,7 +54,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// Based on nwmain.exe: Tile surface material lookup from tileset data.
         /// Surface materials determine walkability, sound effects, and movement costs.
         /// Default value is 0 (Undefined) for tiles without material data.
-        /// 
+        ///
         /// Common Aurora surface materials (from surfacemat.2da):
         /// - 0: Undefined/NotDefined
         /// - 1: Dirt (walkable)
@@ -161,20 +161,20 @@ namespace Andastra.Runtime.Games.Aurora
         /// Based on Aurora tile-based walkmesh system.
         /// Checks tile validity and walkable surfaces within tiles.
         /// More complex than Odyssey due to tile boundaries.
-        /// 
+        ///
         /// Algorithm:
         /// 1. Convert world coordinates to tile coordinates using GetTileCoordinates
         /// 2. Validate tile is loaded and exists using IsTileValid
         /// 3. Check if tile has walkable surfaces using IsWalkable property
         /// 4. Handle boundary cases: points on tile edges check the containing tile
-        /// 
+        ///
         /// Based on reverse engineering of:
         /// - nwmain.exe: CNWSArea::GetTile @ 0x14035edc0 - Converts world coordinates to tile coordinates
         /// - nwmain.exe: CNWTile walkability checks - Tiles have walkable surface flags
         /// - Tile size constant: DAT_140dc2df4 (10.0f units per tile)
         /// - Tile validation: Checks if tile is loaded and has valid tile ID
         /// - Walkability: Tiles with IsWalkable flag set to true are walkable
-        /// 
+        ///
         /// Note: Unlike Odyssey's face-based system, Aurora uses tile-based walkability.
         /// Each tile represents a walkable surface area, and points are tested against
         /// the containing tile's walkability flag.
@@ -227,13 +227,13 @@ namespace Andastra.Runtime.Games.Aurora
         /// Based on Aurora walkmesh projection with tile awareness.
         /// Projects to nearest walkable surface across tile boundaries.
         /// Handles height transitions between tiles.
-        /// 
+        ///
         /// Based on reverse engineering of:
         /// - nwmain.exe: CNWSArea::GetTile @ 0x14035edc0 - Converts world coordinates to tile coordinates
         /// - nwmain.exe: CNWTile walkmesh projection - Projects points to walkable tile surfaces
         /// - Tile-based projection: Unlike Odyssey's triangle-based walkmesh, Aurora uses tile-based surfaces
         /// - Height sampling: Uses GetHeightAtPoint to sample terrain height at projection point
-        /// 
+        ///
         /// Algorithm:
         /// 1. Find containing tile using GetTileCoordinates
         /// 2. Validate tile is loaded and walkable
@@ -241,12 +241,12 @@ namespace Andastra.Runtime.Games.Aurora
         /// 4. If point is not on walkable tile, search adjacent tiles for nearest walkable surface
         /// 5. Project point to sampled height (preserve X and Z, update Y to sampled height)
         /// 6. Handle edge cases: points outside tile grid, unloaded tiles, non-walkable areas
-        /// 
+        ///
         /// Tile boundary handling:
         /// - Points on tile boundaries check adjacent tiles for walkability
         /// - Height is interpolated from multiple tiles for smooth transitions
         /// - Non-walkable tiles are skipped when searching for projection surface
-        /// 
+        ///
         /// Note: Aurora's tile-based system is simpler than Odyssey's triangle-based walkmesh.
         /// Each tile represents a walkable surface area, and projection involves finding
         /// the height at the point's X/Z coordinates within the containing tile.
@@ -351,12 +351,12 @@ namespace Andastra.Runtime.Games.Aurora
         /// Aurora pathfinding works across tile boundaries.
         /// Uses hierarchical pathfinding: tile-level then within-tile.
         /// More sophisticated than Odyssey's single-mesh approach.
-        /// 
+        ///
         /// Based on nwmain.exe: CNWSArea::PlotGridPath @ 0x14036f510
         /// - Grid-based A* pathfinding over tile grid
         /// - Uses tile centers as waypoints
         /// - Applies path smoothing for natural movement
-        /// 
+        ///
         /// Algorithm:
         /// 1. Convert start and end to tile coordinates
         /// 2. Validate both positions are on valid, walkable tiles
@@ -431,23 +431,23 @@ namespace Andastra.Runtime.Games.Aurora
         /// <remarks>
         /// Samples height from tile-based terrain data.
         /// Handles tile boundary interpolation.
-        /// 
+        ///
         /// Based on reverse engineering of:
         /// - nwmain.exe: CNWSArea::GetTile @ 0x14035edc0 - Converts world coordinates to tile coordinates
         /// - nwmain.exe: CNWTile height sampling - Tiles store height transition data
         /// - Tile height transitions: Tile.Height property indicates number of height transitions
         /// - Height interpolation: For tile boundaries, interpolate between adjacent tile heights
-        /// 
+        ///
         /// Algorithm:
         /// 1. Find containing tile using GetTileCoordinates
         /// 2. If tile is valid and loaded, sample height from tile
         /// 3. For tile boundaries, check adjacent tiles and interpolate heights
         /// 4. Handle edge cases: points outside tile grid, unloaded tiles, non-walkable tiles
-        /// 
+        ///
         /// Note: Aurora tiles have height transition data stored per-tile.
         /// The Tile.Height property indicates the number of height transitions, but actual
         /// height values are sampled from tile geometry data (walkmesh) when available.
-        /// 
+        ///
         /// Implementation details:
         /// - Samples height at the actual position within the tile using GetTileHeightAtPosition
         /// - For tile boundaries, interpolates heights from adjacent tiles for smooth transitions
@@ -540,7 +540,7 @@ namespace Andastra.Runtime.Games.Aurora
                             // For tiles below (dy = 1), position is at top edge (normalizedZ - 1.0)
                             float neighborNormX = normalizedX;
                             float neighborNormZ = normalizedZ;
-                            
+
                             if (dx[i] < 0) // Left neighbor
                             {
                                 neighborNormX = 1.0f + normalizedX; // Position extends into left tile
@@ -549,7 +549,7 @@ namespace Andastra.Runtime.Games.Aurora
                             {
                                 neighborNormX = normalizedX - 1.0f; // Position extends into right tile
                             }
-                            
+
                             if (dy[i] < 0) // Up neighbor (negative Y)
                             {
                                 neighborNormZ = 1.0f + normalizedZ; // Position extends into up tile
@@ -558,11 +558,11 @@ namespace Andastra.Runtime.Games.Aurora
                             {
                                 neighborNormZ = normalizedZ - 1.0f; // Position extends into down tile
                             }
-                            
+
                             // Clamp to valid range [0.0, 1.0]
                             neighborNormX = Math.Max(0.0f, Math.Min(1.0f, neighborNormX));
                             neighborNormZ = Math.Max(0.0f, Math.Min(1.0f, neighborNormZ));
-                            
+
                             // Sample height at the corresponding position in the adjacent tile
                             float neighborHeight = GetTileHeightAtPosition(neighborX, neighborY, neighborNormX, neighborNormZ);
                             if (neighborHeight != float.MinValue)
@@ -608,11 +608,11 @@ namespace Andastra.Runtime.Games.Aurora
         /// Based on nwmain.exe: CNWTile height data access (CNWTileSurfaceMesh::GetHeightAtPoint @ 0x1402bedf0)
         /// Tiles store height transition data that indicates terrain elevation.
         /// The Tile.Height property indicates the number of height transitions.
-        /// 
+        ///
         /// Implementation:
         /// 1. If tileset loader and tileset resref are available, samples height from actual walkmesh geometry
         /// 2. Otherwise, falls back to simplified model based on height transitions with bilinear interpolation
-        /// 
+        ///
         /// Walkmesh sampling:
         /// - Loads tile model from tileset using TileId
         /// - Loads walkmesh (WOK file) for the tile model
@@ -636,13 +636,13 @@ namespace Andastra.Runtime.Games.Aurora
         /// <remarks>
         /// Based on nwmain.exe: Tile corner height calculation considers adjacent tiles.
         /// For smooth height transitions, corner heights are averaged from the tile and its adjacent tiles.
-        /// 
+        ///
         /// Algorithm:
         /// 1. Start with the base tile's height
         /// 2. Check adjacent tiles in the corner direction (cornerDx, cornerDz)
         /// 3. Average heights from valid adjacent tiles for smooth transitions
         /// 4. Return the calculated corner height
-        /// 
+        ///
         /// Corner directions:
         /// - (-1, -1): Top-left corner (checks left and top neighbors)
         /// - (1, -1): Top-right corner (checks right and top neighbors)
@@ -652,14 +652,14 @@ namespace Andastra.Runtime.Games.Aurora
         private float CalculateCornerHeight(int tileX, int tileY, float baseHeight, int cornerDx, int cornerDz)
         {
             float heightPerTransition = 0.5f; // Based on nwmain.exe: Standard height transition value
-            
+
             // Start with the base tile's height
             float totalHeight = baseHeight;
             int tileCount = 1;
-            
+
             // Check adjacent tiles in the corner direction for smooth transitions
             // For a corner, we check the tile itself and up to 3 adjacent tiles (horizontal, vertical, and diagonal)
-            
+
             // Check horizontal neighbor (left or right)
             if (cornerDx != 0)
             {
@@ -676,7 +676,7 @@ namespace Andastra.Runtime.Games.Aurora
                     }
                 }
             }
-            
+
             // Check vertical neighbor (top or bottom)
             if (cornerDz != 0)
             {
@@ -693,7 +693,7 @@ namespace Andastra.Runtime.Games.Aurora
                     }
                 }
             }
-            
+
             // Check diagonal neighbor (if both cornerDx and cornerDz are non-zero)
             if (cornerDx != 0 && cornerDz != 0)
             {
@@ -710,7 +710,7 @@ namespace Andastra.Runtime.Games.Aurora
                     }
                 }
             }
-            
+
             // Average the heights from all valid tiles for smooth transitions
             return totalHeight / tileCount;
         }
@@ -726,17 +726,17 @@ namespace Andastra.Runtime.Games.Aurora
         /// <remarks>
         /// Based on nwmain.exe: CNWTileSurfaceMesh::GetHeightAtPoint @ 0x1402bedf0
         /// Samples height from walkmesh geometry at the specified normalized position within the tile.
-        /// 
+        ///
         /// Implementation:
         /// 1. If tileset loader and tileset resref are available, samples height from actual walkmesh geometry at the specified position
         /// 2. Otherwise, falls back to simplified model based on height transitions with bilinear interpolation
-        /// 
+        ///
         /// Walkmesh sampling:
         /// - Loads tile model from tileset using TileId
         /// - Loads walkmesh (WOK file) for the tile model
         /// - Samples height at the specified normalized position using barycentric interpolation
         /// - Falls back to average face height if point is not within any face
-        /// 
+        ///
         /// This method provides accurate height sampling at any point within the tile, not just the center.
         /// </remarks>
         private float GetTileHeightAtPosition(int tileX, int tileY, float normalizedX, float normalizedZ)
@@ -762,7 +762,8 @@ namespace Andastra.Runtime.Games.Aurora
                 // Sample height at the specified normalized position within the tile
                 // Based on nwmain.exe: CNWTileSurfaceMesh::GetHeightAtPoint @ 0x1402bedf0
                 // Uses barycentric interpolation to get accurate height at any point within the tile
-                float walkmeshHeight = _tilesetLoader.GetTileHeight(_tilesetResRef, tile.TileId, normalizedX, normalizedZ);
+                // Pass tile's Height property for fallback height transition model if walkmesh unavailable
+                float walkmeshHeight = _tilesetLoader.GetTileHeight(_tilesetResRef, tile.TileId, normalizedX, normalizedZ, tile.Height);
                 if (walkmeshHeight != float.MinValue)
                 {
                     return walkmeshHeight;
@@ -775,31 +776,31 @@ namespace Andastra.Runtime.Games.Aurora
             // Height transitions correspond to elevation changes
             // Each height transition typically represents a 0.5 unit elevation change
             // This is a reasonable approximation when walkmesh data is not available
-            
+
             // Calculate corner heights using bilinear interpolation model
             // Based on nwmain.exe: Tile height transitions are stored per-tile
             // The height at any point within the tile is interpolated from corner heights
             // Corner heights are calculated from the tile's height transitions and adjacent tiles
-            
+
             float heightPerTransition = 0.5f; // Based on nwmain.exe: Standard height transition value
             float baseHeight = 0.0f;
-            
+
             // Calculate base height for this tile
             float tileBaseHeight = baseHeight + (tile.Height * heightPerTransition);
-            
+
             // Calculate corner heights by considering adjacent tiles for smooth transitions
             // Top-left corner (normalizedX=0, normalizedZ=0)
             float topLeftHeight = CalculateCornerHeight(tileX, tileY, tileBaseHeight, -1, -1);
-            
+
             // Top-right corner (normalizedX=1, normalizedZ=0)
             float topRightHeight = CalculateCornerHeight(tileX, tileY, tileBaseHeight, 1, -1);
-            
+
             // Bottom-left corner (normalizedX=0, normalizedZ=1)
             float bottomLeftHeight = CalculateCornerHeight(tileX, tileY, tileBaseHeight, -1, 1);
-            
+
             // Bottom-right corner (normalizedX=1, normalizedZ=1)
             float bottomRightHeight = CalculateCornerHeight(tileX, tileY, tileBaseHeight, 1, 1);
-            
+
             // Bilinear interpolation to get height at the specified normalized position
             // Based on standard bilinear interpolation formula:
             // h(x,z) = (1-x)(1-z)*h00 + x(1-z)*h10 + (1-x)z*h01 + xz*h11
@@ -808,12 +809,12 @@ namespace Andastra.Runtime.Games.Aurora
             float h10 = topRightHeight;
             float h01 = bottomLeftHeight;
             float h11 = bottomRightHeight;
-            
+
             float height = (1.0f - normalizedX) * (1.0f - normalizedZ) * h00 +
                           normalizedX * (1.0f - normalizedZ) * h10 +
                           (1.0f - normalizedX) * normalizedZ * h01 +
                           normalizedX * normalizedZ * h11;
-            
+
             return height;
         }
 
@@ -825,14 +826,14 @@ namespace Andastra.Runtime.Games.Aurora
         /// Aurora line of sight works across tile boundaries.
         /// Checks visibility through tile portals and terrain.
         /// More complex than Odyssey due to tile-based geometry.
-        /// 
+        ///
         /// Algorithm:
         /// 1. Handle edge case: same point (always has line of sight)
         /// 2. Perform raycast from start to end
         /// 3. If raycast hits something, check if hit is close to destination (within tolerance)
         /// 4. If hit is at destination or very close, line of sight is clear
         /// 5. If hit blocks the path, line of sight is obstructed
-        /// 
+        ///
         /// This implementation matches the behavior used by:
         /// - Perception system for AI visibility checks
         /// - Projectile collision detection
@@ -1018,7 +1019,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// - Grid-based A* pathfinding over tile grid
         /// - Uses tile centers as waypoints
         /// - Applies path smoothing for natural movement
-        /// 
+        ///
         /// Algorithm:
         /// 1. Convert start and goal to tile coordinates
         /// 2. Validate both positions are on valid, walkable tiles
@@ -1175,7 +1176,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// - Uses tile-based A* pathfinding (not face-based like Odyssey)
         /// - Blocks tiles that contain obstacles
         /// - Similar algorithm to Odyssey but operates on tiles instead of faces
-        /// 
+        ///
         /// Algorithm:
         /// 1. Convert start/goal positions to tile coordinates
         /// 2. Validate both positions are on valid, walkable tiles
@@ -1183,7 +1184,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// 4. Run A* pathfinding on tile grid, skipping blocked tiles
         /// 5. Convert tile path back to world coordinates
         /// 6. Apply path smoothing using line-of-sight checks
-        /// 
+        ///
         /// Based on reverse engineering of:
         /// - nwmain.exe: CNWSArea::PlotGridPath @ 0x14036f510 - grid-based pathfinding
         /// - nwmain.exe: CNWSArea::InterTileDFSSoundPath @ 0x14036e260 - tile neighbor traversal
@@ -1266,7 +1267,7 @@ namespace Andastra.Runtime.Games.Aurora
 
             // A* pathfinding over tile grid (using shared implementation)
             IList<Vector3> path = FindPathInternal(start, goal, startTileX, startTileY, goalTileX, goalTileY, blockedTiles);
-            
+
             // If no path found, try with expanded obstacle radius
             if (path == null && obstacles != null && obstacles.Count > 0)
             {
@@ -1440,7 +1441,7 @@ namespace Andastra.Runtime.Games.Aurora
         {
             int dx = toX - fromX;
             int dy = toY - fromY;
-            
+
             // Diagonal movement costs more
             if (dx != 0 && dy != 0)
             {
@@ -1571,19 +1572,19 @@ namespace Andastra.Runtime.Games.Aurora
         /// Aurora uses a tile-based navigation system where each tile represents a walkable surface.
         /// Unlike Odyssey's triangle-based walkmesh, Aurora maps positions to tiles and uses tile coordinates
         /// as face indices for interface compatibility.
-        /// 
+        ///
         /// Algorithm:
         /// 1. Convert world position to tile coordinates using GetTileCoordinates
         /// 2. Validate tile is loaded and walkable
         /// 3. Calculate face index from tile coordinates: faceIndex = tileY * tileWidth + tileX
         /// 4. Return face index if valid, -1 if position is not on a valid walkable tile
-        /// 
+        ///
         /// Based on reverse engineering of:
         /// - nwmain.exe: CNWSArea::GetTile @ 0x14035edc0 - Converts world coordinates to tile coordinates
         /// - nwmain.exe: CNWTile::GetLocation @ 0x1402c55a0 - Gets tile grid coordinates
         /// - Tile size constant: DAT_140dc2df4 (10.0f units per tile)
         /// - Tile validation: Checks if tile is loaded and has walkable surfaces
-        /// 
+        ///
         /// Note: In Aurora, "faces" are conceptual mappings to tiles rather than explicit triangle faces.
         /// Each tile can be considered a single walkable face for navigation purposes.
         /// If tiles contain walkmesh data (via GetWalkMesh), this could be extended to support
@@ -1645,14 +1646,14 @@ namespace Andastra.Runtime.Games.Aurora
         /// Based on nwmain.exe: Aurora tile-based face center calculation.
         /// In Aurora, faces map to tiles in the tile grid. Each face index corresponds to a unique tile.
         /// The face center is the center point of the corresponding tile.
-        /// 
+        ///
         /// Algorithm:
         /// 1. Validate face index is within expected range (0 to tileHeight * tileWidth - 1)
         /// 2. Convert face index to tile coordinates: tileY = faceIndex / tileWidth, tileX = faceIndex % tileWidth
         /// 3. Validate tile coordinates are within bounds
         /// 4. Use GetTileCenter to get the tile center point (world coordinates)
         /// 5. Return Vector3.Zero for invalid face indices
-        /// 
+        ///
         /// Based on reverse engineering of:
         /// - nwmain.exe: CNWSArea::GetTile @ 0x14035edc0 - Converts world coordinates to tile coordinates
         /// - nwmain.exe: CNWTile::GetLocation @ 0x1402c55a0 - Gets tile grid coordinates (X, Y) from tile structure
@@ -1660,12 +1661,12 @@ namespace Andastra.Runtime.Games.Aurora
         /// - Tile size constant: DAT_140dc2df4 (10.0f units per tile)
         /// - Face index calculation: faceIndex = tileY * tileWidth + tileX (from FindFaceAt)
         /// - Tile array indexing pattern: width * y + x (matches face index calculation)
-        /// 
+        ///
         /// Tile center calculation (from GetTileCenter):
         /// - X coordinate: (tileX + 0.5) * TileSize (center of tile in X direction)
         /// - Z coordinate: (tileY + 0.5) * TileSize (center of tile in Z direction)
         /// - Y coordinate: Sampled from tile height data using GetTileHeight
-        /// 
+        ///
         /// Note: Unlike Odyssey's triangle-based walkmesh where faces are actual triangles and the center
         /// is the centroid of the three vertices, Aurora uses a tile-based system where each face index
         /// maps to a tile in the grid. The face center is simply the center point of the corresponding tile,
@@ -1717,7 +1718,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// Based on nwmain.exe: Aurora tile-based adjacent face finding.
         /// In Aurora, faces map to tiles in the tile grid. Each face index corresponds to a unique tile.
         /// Adjacent faces are determined by finding adjacent tiles in the 8-directional grid (N, S, E, W, NE, NW, SE, SW).
-        /// 
+        ///
         /// Algorithm:
         /// 1. Validate face index is within expected range (0 to tileHeight * tileWidth - 1)
         /// 2. Convert face index to tile coordinates: tileY = faceIndex / tileWidth, tileX = faceIndex % tileWidth
@@ -1725,23 +1726,23 @@ namespace Andastra.Runtime.Games.Aurora
         /// 4. Use GetTileNeighbors to find adjacent walkable tiles
         /// 5. Convert each neighbor tile back to a face index: faceIndex = tileY * tileWidth + tileX
         /// 6. Return only walkable faces (GetTileNeighbors already filters for walkable tiles)
-        /// 
+        ///
         /// Based on reverse engineering of:
         /// - nwmain.exe: CNWSArea::InterTileDFSSoundPath @ 0x14036e260 - Tile neighbor traversal
         /// - nwmain.exe: CNWSArea::PlotGridPath @ 0x14036f510 - Grid-based pathfinding uses adjacent tiles
         /// - nwmain.exe: CNWSArea::GetTile @ 0x14035edc0 - Tile coordinate conversion and validation
         /// - Face index calculation: faceIndex = tileY * tileWidth + tileX (from FindFaceAt)
         /// - Tile array indexing pattern: width * y + x (matches face index calculation)
-        /// 
+        ///
         /// Tile neighbor directions (8-directional):
         /// - Cardinal: North (0, 1), South (0, -1), East (1, 0), West (-1, 0)
         /// - Diagonal: Northeast (1, 1), Northwest (-1, 1), Southeast (1, -1), Southwest (-1, -1)
-        /// 
+        ///
         /// Note: Unlike Odyssey's triangle-based walkmesh where faces are actual triangles with explicit
         /// adjacency data, Aurora uses a tile-based system where each face index maps to a tile in the grid.
         /// Adjacent faces are determined by grid adjacency (8-directional neighbors), and only walkable
         /// tiles are considered valid adjacent faces.
-        /// 
+        ///
         /// The GetTileNeighbors method already filters for valid, loaded, and walkable tiles, so all
         /// returned face indices will be walkable. This matches the behavior expected by pathfinding
         /// algorithms that use GetAdjacentFaces to traverse the navigation mesh.
@@ -1819,19 +1820,19 @@ namespace Andastra.Runtime.Games.Aurora
         /// <remarks>
         /// Based on nwmain.exe: Aurora tile-based face walkability check.
         /// In Aurora, faces map to tiles in the tile grid. Each face index corresponds to a unique tile.
-        /// 
+        ///
         /// Algorithm:
         /// 1. Convert face index to tile coordinates: tileY = faceIndex / tileWidth, tileX = faceIndex % tileWidth
         /// 2. Validate tile coordinates are within bounds
         /// 3. Check if tile is valid using IsTileValid
         /// 4. Check if tile is loaded and has walkable surfaces
-        /// 
+        ///
         /// Based on reverse engineering of:
         /// - nwmain.exe: CNWSArea::GetTile @ 0x14035edc0 - Tile coordinate conversion and validation
         /// - nwmain.exe: CNWTile walkability checks - Tiles have walkable surface flags
         /// - Face index calculation: faceIndex = tileY * tileWidth + tileX (from FindFaceAt)
         /// - Tile array indexing pattern: width * y + x (matches face index calculation)
-        /// 
+        ///
         /// Note: Unlike Odyssey's triangle-based walkmesh where faces are actual triangles,
         /// Aurora uses a tile-based system where each face index maps to a tile in the grid.
         /// Walkability is determined by the tile's IsWalkable flag, which indicates whether
@@ -1900,7 +1901,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// Based on nwmain.exe: Aurora tile-based surface material lookup.
         /// In Aurora, faces map to tiles in the tile grid. Each face index corresponds to a unique tile.
         /// Surface materials are stored per-tile and correspond to entries in surfacemat.2da.
-        /// 
+        ///
         /// Algorithm:
         /// 1. Validate face index is within expected range (0 to tileHeight * tileWidth - 1)
         /// 2. Convert face index to tile coordinates: tileY = faceIndex / tileWidth, tileX = faceIndex % tileWidth
@@ -1908,13 +1909,13 @@ namespace Andastra.Runtime.Games.Aurora
         /// 4. Check if tile is valid (loaded and has valid tile ID)
         /// 5. Return tile's SurfaceMaterial property
         /// 6. Return 0 (Undefined) for invalid face indices or unloaded tiles
-        /// 
+        ///
         /// Based on reverse engineering of:
         /// - nwmain.exe: CNWSArea::GetTile @ 0x14035edc0 - Tile coordinate conversion and validation
         /// - nwmain.exe: CNWTileSet::GetTileData() - Tile surface material lookup from tileset
         /// - Face index calculation: faceIndex = tileY * tileWidth + tileX (from FindFaceAt)
         /// - Tile array indexing pattern: width * y + x (matches face index calculation)
-        /// 
+        ///
         /// Surface material values (0-30) correspond to surfacemat.2da entries:
         /// - 0: Undefined/NotDefined (non-walkable)
         /// - 1: Dirt (walkable)
@@ -1923,7 +1924,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// - 7: NonWalk (non-walkable)
         /// - 15: Lava (non-walkable)
         /// - 17: DeepWater (non-walkable)
-        /// 
+        ///
         /// Note: Unlike Odyssey's triangle-based walkmesh where faces are actual triangles with per-face materials,
         /// Aurora uses a tile-based system where each face index maps to a tile in the grid.
         /// Surface materials are determined by the tile's material from the tileset data.
@@ -1996,7 +1997,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// Based on nwmain.exe: Aurora tile-based raycast implementation.
         /// Uses Digital Differential Analyzer (DDA) algorithm to traverse tiles along the ray.
         /// Checks each tile the ray passes through for walkability and occlusion.
-        /// 
+        ///
         /// Algorithm:
         /// 1. Normalize direction vector
         /// 2. Convert origin to tile coordinates
@@ -2006,14 +2007,14 @@ namespace Andastra.Runtime.Games.Aurora
         ///    b. If walkmesh test hits a non-walkable face, return the hit point
         ///    c. Otherwise, fall back to tile walkability flag check
         /// 5. Return first blocking tile/walkmesh face or end point if no obstruction
-        /// 
+        ///
         /// Implementation:
         /// - Tests against per-tile walkmesh geometry when available (via TilesetLoader)
         /// - Uses BWM.Raycast to test ray against walkmesh triangles
         /// - Only non-walkable faces block the ray (walkable faces allow it to pass through)
         /// - Falls back to simplified tile walkability flag check when walkmesh data is unavailable
         /// - Handles tile orientation (0-3 rotations) by transforming ray to tile-local coordinates
-        /// 
+        ///
         /// Based on nwmain.exe: CNWTileSurfaceMesh raycast implementation
         /// </remarks>
         public bool Raycast(Vector3 origin, Vector3 direction, float maxDistance, out Vector3 hitPoint, out int hitFace)
@@ -2112,7 +2113,7 @@ namespace Andastra.Runtime.Games.Aurora
                     if (IsTileValid(currentTileX, currentTileY))
                     {
                         AuroraTile tile = _tiles[currentTileY, currentTileX];
-                        
+
                         // Try to test against per-tile walkmesh geometry if available
                         if (_tilesetLoader != null && !string.IsNullOrEmpty(_tilesetResRef))
                         {
@@ -2125,7 +2126,7 @@ namespace Andastra.Runtime.Games.Aurora
                                 return true;
                             }
                         }
-                        
+
                         // Fallback: If tile is not walkable, it blocks the ray
                         if (!tile.IsWalkable)
                         {
@@ -2146,7 +2147,7 @@ namespace Andastra.Runtime.Games.Aurora
                 if (IsTileValid(currentTileX, currentTileY))
                 {
                     AuroraTile tile = _tiles[currentTileY, currentTileX];
-                    
+
                     // Try to test against per-tile walkmesh geometry if available
                     if (_tilesetLoader != null && !string.IsNullOrEmpty(_tilesetResRef))
                     {
@@ -2159,7 +2160,7 @@ namespace Andastra.Runtime.Games.Aurora
                             return true;
                         }
                     }
-                    
+
                     // Fallback: Non-walkable tiles block the ray (simplified check)
                     if (!tile.IsWalkable)
                     {
@@ -2254,7 +2255,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// Based on nwmain.exe: CNWTileSurfaceMesh raycast testing against walkmesh geometry.
         /// Tests the ray against the walkmesh triangles for this tile to find blocking faces.
         /// Only non-walkable faces block the ray (walkable faces allow the ray to pass through).
-        /// 
+        ///
         /// Algorithm:
         /// 1. Load walkmesh (WOK file) for the tile using TilesetLoader
         /// 2. Transform ray origin to tile-local coordinates (accounting for tile position and orientation)
@@ -2262,7 +2263,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// 4. Filter hits to only non-walkable materials (blocking faces)
         /// 5. Transform hit point back to world coordinates
         /// 6. Return true if a blocking face is hit
-        /// 
+        ///
         /// Tile orientation is handled by transforming the ray to tile-local space:
         /// - Tile position: (tileX * TileSize, 0, tileY * TileSize) in world coordinates
         /// - Tile orientation: 0-3 rotations (0°, 90°, 180°, 270° counterclockwise)
@@ -2306,12 +2307,12 @@ namespace Andastra.Runtime.Games.Aurora
                 float angleRad = -(tile.Orientation * 90.0f) * (float)(Math.PI / 180.0);
                 float cosAngle = (float)Math.Cos(angleRad);
                 float sinAngle = (float)Math.Sin(angleRad);
-                
+
                 // Rotate around Y axis: (x', z') = (x*cos - z*sin, x*sin + z*cos)
                 float rotatedX = localOrigin.X * cosAngle - localOrigin.Z * sinAngle;
                 float rotatedZ = localOrigin.X * sinAngle + localOrigin.Z * cosAngle;
                 localOrigin = new Vector3(rotatedX, localOrigin.Y, rotatedZ);
-                
+
                 float rotatedDirX = localDirection.X * cosAngle - localDirection.Z * sinAngle;
                 float rotatedDirZ = localDirection.X * sinAngle + localDirection.Z * cosAngle;
                 localDirection = new Vector3(rotatedDirX, localDirection.Y, rotatedDirZ);
@@ -2343,7 +2344,7 @@ namespace Andastra.Runtime.Games.Aurora
                     float angleRad = (tile.Orientation * 90.0f) * (float)(Math.PI / 180.0);
                     float cosAngle = (float)Math.Cos(angleRad);
                     float sinAngle = (float)Math.Sin(angleRad);
-                    
+
                     float rotatedX = localHitPoint.X * cosAngle - localHitPoint.Z * sinAngle;
                     float rotatedZ = localHitPoint.X * sinAngle + localHitPoint.Z * cosAngle;
                     localHitPoint = new Vector3(rotatedX, localHitPoint.Y, rotatedZ);
