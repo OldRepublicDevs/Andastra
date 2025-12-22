@@ -2605,8 +2605,8 @@ namespace Andastra.Runtime.MonoGame.Backends
                 maxAnisotropy = desc.MaxAnisotropy,
                 compareEnable = desc.CompareFunc != CompareFunc.Never ? VkBool32.VK_TRUE : VkBool32.VK_FALSE,
                 compareOp = vkCompareOp,
-                minLod = desc.MinLOD,
-                maxLod = desc.MaxLOD,
+                minLod = desc.MinLod,
+                maxLod = desc.MaxLod,
                 borderColor = VkBorderColor.VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK,
                 unnormalizedCoordinates = VkBool32.VK_FALSE
             };
