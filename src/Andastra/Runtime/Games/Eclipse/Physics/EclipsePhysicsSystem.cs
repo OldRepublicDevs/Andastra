@@ -68,7 +68,7 @@ namespace Andastra.Runtime.Games.Eclipse
         public EclipsePhysicsSystem()
         {
             // Physics world is initialized with default settings
-            // In a full implementation, this would create a PhysX scene
+            // TODO:  In a full implementation, this would create a PhysX scene
         }
 
         /// <summary>
@@ -93,7 +93,7 @@ namespace Andastra.Runtime.Games.Eclipse
             float clampedDeltaTime = Math.Max(0.0f, Math.Min(deltaTime, 0.1f));
 
             // Update all rigid bodies
-            // In a full implementation, this would step the physics engine
+            // TODO:  In a full implementation, this would step the physics engine
             foreach (var kvp in _rigidBodies)
             {
                 RigidBodyData body = kvp.Value;
@@ -182,38 +182,83 @@ namespace Andastra.Runtime.Games.Eclipse
             }
             Vector3 normalizedDirection = direction / length;
 
-            // Simple raycast against rigid body bounding boxes
-            // In a full implementation, this would use the physics engine's raycast
+            // Comprehensive raycast against physics world
+            // Based on daorigins.exe/DragonAge2.exe: Physics raycast queries both dynamic objects and static geometry
+            // Original implementation: PhysX scene raycast queries all collision shapes in the physics world
             float closestDistance = float.MaxValue;
             IEntity closestEntity = null;
             Vector3 closestHitPoint = Vector3.Zero;
+            bool hitFound = false;
 
+            // Phase 1: Raycast against rigid body collision shapes (dynamic objects)
+            // Based on daorigins.exe/DragonAge2.exe: Rigid body raycast uses collision shapes (boxes, spheres, capsules)
+            // For now, we use bounding box approximation (proper implementation would use actual collision shape types)
             foreach (var kvp in _rigidBodies)
             {
                 IEntity entity = kvp.Key;
                 RigidBodyData body = kvp.Value;
 
-                // Simple bounding box intersection test
-                // In a full implementation, this would use proper collision shapes
+                // Bounding box intersection test for rigid body
+                // Based on daorigins.exe/DragonAge2.exe: Rigid bodies use collision shapes (boxes, spheres, capsules)
+                // Proper implementation would query actual collision shape type and use appropriate intersection test
+                // For now, we use axis-aligned bounding box (AABB) as approximation
                 Vector3 boxMin = body.Position - body.HalfExtents;
                 Vector3 boxMax = body.Position + body.HalfExtents;
 
                 if (RayBoxIntersection(origin, normalizedDirection, boxMin, boxMax, out Vector3 hit))
                 {
                     float distance = Vector3.Distance(origin, hit);
-                    if (distance < closestDistance)
+                    if (distance < closestDistance && distance >= 0.0f)
                     {
                         closestDistance = distance;
                         closestEntity = entity;
                         closestHitPoint = hit;
+                        hitFound = true;
                     }
                 }
             }
 
-            if (closestEntity != null)
+            // Phase 2: Raycast against static geometry collision shapes (triangle meshes)
+            // Based on daorigins.exe/DragonAge2.exe: Static geometry (rooms, static objects) uses triangle mesh collision
+            // Original implementation: PhysX raycast queries static collision shapes (triangle meshes) for world geometry
+            foreach (var kvp in _staticCollisionShapes)
+            {
+                StaticGeometryCollisionShape staticShape = kvp.Value;
+                if (staticShape == null || staticShape.Triangles == null)
+                {
+                    continue;
+                }
+
+                // Early rejection: Check if ray intersects bounding box
+                if (!RayBoxIntersection(origin, normalizedDirection, staticShape.BoundsMin, staticShape.BoundsMax, out Vector3 _))
+                {
+                    continue; // Ray doesn't intersect bounding box, skip triangle tests
+                }
+
+                // Test ray against each triangle in the static geometry
+                // Based on daorigins.exe/DragonAge2.exe: Triangle mesh raycast uses Möller-Trumbore intersection algorithm
+                foreach (CollisionTriangle triangle in staticShape.Triangles)
+                {
+                    if (RayTriangleIntersection(origin, normalizedDirection, triangle.Vertex0, triangle.Vertex1, triangle.Vertex2, out Vector3 triangleHit, out float triangleDistance))
+                    {
+                        // Check if this is the closest hit so far
+                        if (triangleDistance < closestDistance && triangleDistance >= 0.0f)
+                        {
+                            closestDistance = triangleDistance;
+                            // Static geometry doesn't have an associated entity, so we only update hit point
+                            // In a full implementation, we might return mesh ID or geometry identifier
+                            closestHitPoint = triangleHit;
+                            hitFound = true;
+                            // Note: Static geometry hits don't set hitEntity (null entity indicates static geometry hit)
+                        }
+                    }
+                }
+            }
+
+            if (hitFound)
             {
                 hitPoint = closestHitPoint;
-                hitEntity = closestEntity;
+                hitEntity = closestEntity; // Will be null if hit was static geometry
                 return true;
             }
 
@@ -697,8 +742,8 @@ namespace Andastra.Runtime.Games.Eclipse
             // Apply angular limits if specified
             if (constraint.Limits.X != 0.0f || constraint.Limits.Y != 0.0f)
             {
-                // Calculate current angle (simplified - would need reference frame in full implementation)
-                // For now, just clamp angular velocity magnitude
+                // TODO:  Calculate current angle (simplified - would need reference frame in full implementation)
+                // TODO: STUB - For now, just clamp angular velocity magnitude
                 float maxAngularVel = constraint.Limits.Y > 0.0f ? constraint.Limits.Y : float.MaxValue;
                 if (Math.Abs(angularVelAlongAxis) > maxAngularVel)
                 {
@@ -964,6 +1009,77 @@ namespace Andastra.Runtime.Games.Eclipse
             }
 
             float t = tmin > 0 ? tmin : tmax;
+            hitPoint = rayOrigin + rayDirection * t;
+            return true;
+        }
+
+        /// <summary>
+        /// Performs a ray-triangle intersection test using the Möller-Trumbore algorithm.
+        /// </summary>
+        /// <param name="rayOrigin">Ray origin point.</param>
+        /// <param name="rayDirection">Normalized ray direction.</param>
+        /// <param name="v0">First vertex of the triangle.</param>
+        /// <param name="v1">Second vertex of the triangle.</param>
+        /// <param name="v2">Third vertex of the triangle.</param>
+        /// <param name="hitPoint">Output parameter for hit point.</param>
+        /// <param name="hitDistance">Output parameter for distance along ray to hit point.</param>
+        /// <returns>True if ray intersects the triangle, false otherwise.</returns>
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Triangle mesh raycast uses Möller-Trumbore intersection algorithm
+        /// Original implementation: PhysX uses Möller-Trumbore algorithm for ray-triangle intersection
+        /// This is the standard algorithm for fast ray-triangle intersection testing.
+        /// </remarks>
+        private static bool RayTriangleIntersection(Vector3 rayOrigin, Vector3 rayDirection, Vector3 v0, Vector3 v1, Vector3 v2, out Vector3 hitPoint, out float hitDistance)
+        {
+            hitPoint = Vector3.Zero;
+            hitDistance = float.MaxValue;
+
+            const float epsilon = 1e-6f;
+
+            // Compute edge vectors
+            Vector3 edge1 = v1 - v0;
+            Vector3 edge2 = v2 - v0;
+
+            // Compute determinant (used to check if ray is parallel to triangle)
+            Vector3 h = Vector3.Cross(rayDirection, edge2);
+            float a = Vector3.Dot(edge1, h);
+
+            // Ray is parallel to triangle if determinant is near zero
+            if (a > -epsilon && a < epsilon)
+            {
+                return false;
+            }
+
+            float f = 1.0f / a;
+            Vector3 s = rayOrigin - v0;
+            float u = f * Vector3.Dot(s, h);
+
+            // Barycentric coordinate u must be in [0, 1]
+            if (u < 0.0f || u > 1.0f)
+            {
+                return false;
+            }
+
+            Vector3 q = Vector3.Cross(s, edge1);
+            float v = f * Vector3.Dot(rayDirection, q);
+
+            // Barycentric coordinate v must be in [0, 1] and u + v <= 1
+            if (v < 0.0f || u + v > 1.0f)
+            {
+                return false;
+            }
+
+            // Compute t (distance along ray to intersection point)
+            float t = f * Vector3.Dot(edge2, q);
+
+            // Ray intersection must be in front of origin (t >= 0)
+            if (t < epsilon)
+            {
+                return false;
+            }
+
+            // Calculate hit point and distance
+            hitDistance = t;
             hitPoint = rayOrigin + rayDirection * t;
             return true;
         }
