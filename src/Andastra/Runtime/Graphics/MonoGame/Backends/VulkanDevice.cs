@@ -1317,6 +1317,8 @@ namespace Andastra.Runtime.MonoGame.Backends
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate VkResult vkCreateRenderPassDelegate(IntPtr device, ref VkRenderPassCreateInfo pCreateInfo, IntPtr pAllocator, out IntPtr pRenderPass);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkCreateFramebufferDelegate(IntPtr device, ref VkFramebufferCreateInfo pCreateInfo, IntPtr pAllocator, out IntPtr pFramebuffer);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate VkResult vkDestroyFramebufferDelegate(IntPtr device, IntPtr framebuffer, IntPtr pAllocator);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate VkResult vkDestroyRenderPassDelegate(IntPtr device, IntPtr renderPass, IntPtr pAllocator);
@@ -1477,6 +1479,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static vkCreateCommandPoolDelegate vkCreateCommandPool;
         private static vkDestroyCommandPoolDelegate vkDestroyCommandPool;
         private static vkCreateRenderPassDelegate _vkCreateRenderPass;
+        private static vkCreateFramebufferDelegate vkCreateFramebuffer;
         private static vkDestroyFramebufferDelegate vkDestroyFramebuffer;
         private static vkDestroyRenderPassDelegate vkDestroyRenderPass;
         private static vkAllocateCommandBuffersDelegate vkAllocateCommandBuffers;
@@ -2832,7 +2835,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             // Process depth attachment
             if (desc.DepthAttachment.Texture != null)
             {
-                VkFormat depthFormat = ConvertTextureFormatToVkFormat(desc.DepthAttachment.Texture.Desc.Format);
+                VkFormat depthFormat = ConvertToVkFormat(desc.DepthAttachment.Texture.Desc.Format);
                 VkSampleCountFlagBits depthSamples = ConvertToVkSampleCount(desc.DepthAttachment.Texture.Desc.SampleCount);
 
                 attachments.Add(new VkAttachmentDescription
@@ -3113,7 +3116,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // Process depth attachment
                 if (desc.DepthAttachment.Texture != null)
                 {
-                    VkFormat depthFormat = ConvertTextureFormatToVkFormat(desc.DepthAttachment.Texture.Desc.Format);
+                    VkFormat depthFormat = ConvertToVkFormat(desc.DepthAttachment.Texture.Desc.Format);
                     VkSampleCountFlagBits depthSamples = ConvertToVkSampleCount(desc.DepthAttachment.Texture.Desc.SampleCount);
                     
                     attachments.Add(new VkAttachmentDescription
