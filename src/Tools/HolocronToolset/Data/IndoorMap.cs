@@ -965,21 +965,12 @@ namespace HolocronToolset.Data
         // Original: def remap_transitions(self, bwm: BWM, dummy_index: int, actual_index: int | None):
         private void RemapTransitions(BWM bwm, int dummyIndex, int? actualIndex)
         {
-            foreach (var face in bwm.Faces)
-            {
-                if (face.Trans1 == dummyIndex)
-                {
-                    face.Trans1 = actualIndex ?? -1;
-                }
-                if (face.Trans2 == dummyIndex)
-                {
-                    face.Trans2 = actualIndex ?? -1;
-                }
-                if (face.Trans3 == dummyIndex)
-                {
-                    face.Trans3 = actualIndex ?? -1;
-                }
-            }
+            // Call the BWM method to perform the remapping
+            // Note: The PyKotor version preserves None (null), but we convert null to -1 here
+            // because -1 is the standard "no connection" value used in the game engine.
+            // The game engine expects -1 for "no connection" rather than null when serializing.
+            int? remapValue = actualIndex ?? -1;
+            bwm.RemapTransitions(dummyIndex, remapValue);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:449-454
@@ -2575,7 +2566,7 @@ namespace HolocronToolset.Data
         ///
         /// STEP 1: Create Root Dictionary
         /// - module_id: Module identifier
-        /// - name: Module name as string (simplified, not full localized string)
+        // TODO: / - name: Module name as string (simplified, not full localized string)
         /// - lighting: RGB color dictionary
         /// - skybox: Skybox name
         /// - warp_point: Warp point coordinates dictionary
@@ -2584,7 +2575,7 @@ namespace HolocronToolset.Data
         /// - Call Serialize() on each room
         /// - Rooms are serialized as dictionaries with position, rotation, flip, component info
         ///
-        /// NOTE: This is a simplified serialization. For full serialization including walkmesh
+        // TODO: / NOTE: This is a simplified serialization. For full serialization including walkmesh
         /// overrides, use Write() which produces JSON bytes.
         ///
         /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:1024-1042
@@ -3104,7 +3095,7 @@ namespace HolocronToolset.Data
         /// - flip_y: Whether room is flipped vertically
         /// - runtime_id: Hash code of room (for reference)
         ///
-        /// NOTE: This is a simplified serialization. Walkmesh overrides are not included here.
+        // TODO: / NOTE: This is a simplified serialization. Walkmesh overrides are not included here.
         /// For full serialization including walkmesh overrides, the parent IndoorMap.Write()
         /// method handles that separately.
         ///
