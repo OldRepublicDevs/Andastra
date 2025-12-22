@@ -22,6 +22,7 @@ using Process = System.Diagnostics.Process;
 using Thread = System.Threading.Thread;
 using Throwable = System.Exception;
 using Andastra.Parsing.Common;
+using UtilsType = Andastra.Parsing.Formats.NCS.NCSDecomp.Utils.Type;
 
 namespace Andastra.Parsing.Formats.NCS.NCSDecomp
 {
@@ -3057,6 +3058,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
 
                                 // Attempt 2: Create SubScriptState directly from SubroutineState
                                 // This creates a minimal stub with just the function signature
+                                // This bypasses MainPass entirely and creates the state directly
                                 try
                                 {
                                     LocalVarStack minimalStack = new LocalVarStack();
@@ -3069,32 +3071,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                                 catch (Exception e3)
                                 {
                                     Debug("Direct SubScriptState creation failed: " + e3.Message);
-
-                                    // Attempt 3: Create absolute minimal stub with just signature info
-                                    // Extract function signature from SubroutineState
-                                    try
-                                    {
-                                        UtilsType returnType = mainState.Type();
-                                        int paramCount = mainState.GetParamCount();
-                                        byte subId = mainState.GetId();
-                                        int startPos = mainState.GetStart();
-                                        int endPos = mainState.GetEnd();
-
-                                        // Create minimal stack with just return type and parameters
-                                        LocalVarStack absoluteMinimalStack = new LocalVarStack();
-                                        mainState.InitStack(absoluteMinimalStack);
-
-                                        // Create SubScriptState with minimal information
-                                        minimalMain = new SubScriptState(nodedata, subdata, absoluteMinimalStack, mainState, this.actions, FileDecompiler.preferSwitches);
-                                        minimalMain.IsMain(true);
-                                        data.AddSub(minimalMain);
-                                        Debug("Created absolute minimal main subroutine stub with signature only.");
-                                    }
-                                    catch (Exception e4)
-                                    {
-                                        Debug("Absolute minimal stub creation failed: " + e4.Message);
-                                        Debug("All attempts to create minimal main stub failed. Main function will be missing from decompiled output.");
-                                    }
+                                    Debug("All attempts to create minimal main stub failed. Main function will be missing from decompiled output.");
                                 }
                             }
                         }
@@ -3943,6 +3920,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
 
                                 // Attempt 2: Create SubScriptState directly from SubroutineState
                                 // This creates a minimal stub with just the function signature
+                                // This bypasses MainPass entirely and creates the state directly
                                 try
                                 {
                                     LocalVarStack minimalStack = new LocalVarStack();
@@ -3955,32 +3933,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                                 catch (Exception e3)
                                 {
                                     Debug("Direct SubScriptState creation failed: " + e3.Message);
-
-                                    // Attempt 3: Create absolute minimal stub with just signature info
-                                    // Extract function signature from SubroutineState
-                                    try
-                                    {
-                                        UtilsType returnType = mainState.Type();
-                                        int paramCount = mainState.GetParamCount();
-                                        byte subId = mainState.GetId();
-                                        int startPos = mainState.GetStart();
-                                        int endPos = mainState.GetEnd();
-
-                                        // Create minimal stack with just return type and parameters
-                                        LocalVarStack absoluteMinimalStack = new LocalVarStack();
-                                        mainState.InitStack(absoluteMinimalStack);
-
-                                        // Create SubScriptState with minimal information
-                                        minimalMain = new SubScriptState(nodedata, subdata, absoluteMinimalStack, mainState, this.actions, FileDecompiler.preferSwitches);
-                                        minimalMain.IsMain(true);
-                                        data.AddSub(minimalMain);
-                                        Debug("Created absolute minimal main subroutine stub with signature only.");
-                                    }
-                                    catch (Exception e4)
-                                    {
-                                        Debug("Absolute minimal stub creation failed: " + e4.Message);
-                                        Debug("All attempts to create minimal main stub failed. Main function will be missing from decompiled output.");
-                                    }
+                                    Debug("All attempts to create minimal main stub failed. Main function will be missing from decompiled output.");
                                 }
                             }
                         }
