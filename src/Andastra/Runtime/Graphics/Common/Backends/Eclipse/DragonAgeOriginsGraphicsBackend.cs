@@ -14,6 +14,8 @@ using Andastra.Parsing.Formats.MDLData;
 using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Resource;
 using Andastra.Runtime.Content.Interfaces;
+using Andastra.Runtime.Content.MDL;
+using Andastra.Runtime.Core.MDL;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Parsing.Formats.TwoDA;
@@ -2109,21 +2111,394 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
 
             try
             {
-                // TODO: STUB - Implement model loading from MDL files
-                // Based on daorigins.exe: Model loading should:
-                // 1. Load MDL file from modelResRef using _resourceProvider
-                // 2. Extract vertex and index data from MDL
-                // 3. Create DirectX 9 vertex and index buffers
-                // 4. Store buffers in entity data dictionary
-                // 5. Store vertex stride and index count in entity data
-                //
-                // This is a placeholder implementation that returns false
-                // Full implementation requires MDL parsing and buffer creation
+                // Step 1: Load MDL file from modelResRef using _resourceProvider
+                // Based on daorigins.exe: Model loading reads MDL and MDX files from game resources
+                // daorigins.exe: Model loading uses Eclipse engine resource manager to access MDL/MDX files
+                ResourceIdentifier mdlId = new ResourceIdentifier(modelResRef, ResourceType.MDL);
+                ResourceIdentifier mdxId = new ResourceIdentifier(modelResRef, ResourceType.MDX);
+
+                byte[] mdlData = _resourceProvider.GetResourceBytes(mdlId);
+                if (mdlData == null || mdlData.Length == 0)
+                {
+                    return false;
+                }
+
+                byte[] mdxData = _resourceProvider.GetResourceBytes(mdxId);
+                if (mdxData == null || mdxData.Length == 0)
+                {
+                    return false;
+                }
+
+                // Step 2: Parse MDL/MDX files using MDLLoader
+                // Based on daorigins.exe: MDL parser extracts geometry data from binary format
+                // daorigins.exe: MDL parser reads vertex positions, normals, texture coordinates, and indices
+                Andastra.Runtime.Core.MDL.MDLModel mdlModel;
+                using (var reader = new Andastra.Runtime.Content.MDL.MDLOptimizedReader(mdlData, mdxData))
+                {
+                    mdlModel = reader.Load();
+                }
+
+                if (mdlModel == null || mdlModel.RootNode == null)
+                {
+                    return false;
+                }
+
+                // Step 3: Extract vertex and index data from MDL by traversing node hierarchy
+                // Based on daorigins.exe: Model geometry is stored in mesh nodes within the node hierarchy
+                // daorigins.exe: Vertex data includes position, normal, and texture coordinates
+                System.Collections.Generic.List<ModelVertex> vertices = new System.Collections.Generic.List<ModelVertex>();
+                System.Collections.Generic.List<ushort> indices = new System.Collections.Generic.List<ushort>();
+
+                ExtractModelGeometry(mdlModel.RootNode, System.Numerics.Matrix4x4.Identity, vertices, indices);
+
+                if (vertices.Count == 0 || indices.Count == 0)
+                {
+                    return false;
+                }
+
+                // Step 4: Create DirectX 9 vertex buffer
+                // Based on daorigins.exe: CreateVertexBuffer creates vertex buffer in video memory
+                // daorigins.exe: Vertex format is D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_TEX1 (32-byte stride)
+                // Vertex structure: position (12 bytes) + normal (12 bytes) + texture coordinates (8 bytes) = 32 bytes
+                const uint vertexStride = 32; // 12 (position) + 12 (normal) + 8 (texcoord)
+                const uint fvf = D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_TEX1;
+                uint vertexBufferSize = vertexStride * (uint)vertices.Count;
+
+                IntPtr vertexBufferPtr = IntPtr.Zero;
+                int createResult = CreateVertexBufferDirectX9(vertexBufferSize, D3DUSAGE_WRITEONLY, fvf, D3DPOOL.D3DPOOL_MANAGED, ref vertexBufferPtr);
+                if (createResult < 0 || vertexBufferPtr == IntPtr.Zero)
+                {
+                    return false;
+                }
+
+                // Lock vertex buffer and copy vertex data
+                IntPtr vertexDataPtr = IntPtr.Zero;
+                int lockResult = LockVertexBufferDirectX9(vertexBufferPtr, 0, vertexBufferSize, ref vertexDataPtr, 0);
+                if (lockResult >= 0 && vertexDataPtr != IntPtr.Zero)
+                {
+                    unsafe
+                    {
+                        float* vertexData = (float*)vertexDataPtr;
+                        int vertexIndex = 0;
+                        for (int i = 0; i < vertices.Count; i++)
+                        {
+                            ModelVertex vertex = vertices[i];
+                            // Position (3 floats)
+                            vertexData[vertexIndex++] = vertex.Position.X;
+                            vertexData[vertexIndex++] = vertex.Position.Y;
+                            vertexData[vertexIndex++] = vertex.Position.Z;
+                            // Normal (3 floats)
+                            vertexData[vertexIndex++] = vertex.Normal.X;
+                            vertexData[vertexIndex++] = vertex.Normal.Y;
+                            vertexData[vertexIndex++] = vertex.Normal.Z;
+                            // Texture coordinates (2 floats)
+                            vertexData[vertexIndex++] = vertex.TexCoord.X;
+                            vertexData[vertexIndex++] = vertex.TexCoord.Y;
+                        }
+                    }
+
+                    UnlockVertexBufferDirectX9(vertexBufferPtr);
+                }
+                else
+                {
+                    // Lock failed - release buffer
+                    ReleaseDirectX9Object(vertexBufferPtr);
+                    return false;
+                }
+
+                // Step 5: Create DirectX 9 index buffer
+                // Based on daorigins.exe: CreateIndexBuffer creates index buffer in video memory
+                // daorigins.exe: Index format is 16-bit (D3DFMT_INDEX16) for most models
+                uint indexBufferSize = (uint)(indices.Count * 2); // 2 bytes per 16-bit index
+                const uint indexFormat = 0x64u; // D3DFMT_INDEX16
+
+                IntPtr indexBufferPtr = IntPtr.Zero;
+                IntPtr device = _d3dDevice;
+                if (device == IntPtr.Zero)
+                {
+                    ReleaseDirectX9Object(vertexBufferPtr);
+                    return false;
+                }
+
+                unsafe
+                {
+                    IntPtr* vtablePtr = (IntPtr*)device;
+                    IntPtr createIbPtr = vtablePtr[39]; // CreateIndexBuffer is at vtable index 39
+                    CreateIndexBufferDelegate createIb = Marshal.GetDelegateForFunctionPointer<CreateIndexBufferDelegate>(createIbPtr);
+                    uint pool = (uint)D3DPOOL.D3DPOOL_MANAGED;
+                    int createIbResult = createIb(device, indexBufferSize, D3DUSAGE_WRITEONLY, indexFormat, pool, ref indexBufferPtr);
+                    if (createIbResult < 0 || indexBufferPtr == IntPtr.Zero)
+                    {
+                        ReleaseDirectX9Object(vertexBufferPtr);
+                        return false;
+                    }
+                }
+
+                // Lock index buffer and copy index data
+                IntPtr indexDataPtr = IntPtr.Zero;
+                int lockIbResult = LockIndexBufferDirectX9(indexBufferPtr, 0, indexBufferSize, ref indexDataPtr, 0);
+                if (lockIbResult >= 0 && indexDataPtr != IntPtr.Zero)
+                {
+                    unsafe
+                    {
+                        ushort* indexData = (ushort*)indexDataPtr;
+                        for (int i = 0; i < indices.Count; i++)
+                        {
+                            indexData[i] = indices[i];
+                        }
+                    }
+
+                    UnlockIndexBufferDirectX9(indexBufferPtr);
+                }
+                else
+                {
+                    // Lock failed - release buffers
+                    ReleaseDirectX9Object(vertexBufferPtr);
+                    ReleaseDirectX9Object(indexBufferPtr);
+                    return false;
+                }
+
+                // Step 6: Store buffers and metadata in entity data dictionary
+                // Based on daorigins.exe: Entity rendering retrieves buffers from entity data for rendering
+                entity.SetData("VertexBuffer", vertexBufferPtr);
+                entity.SetData("IndexBuffer", indexBufferPtr);
+                entity.SetData("VertexStride", (int)vertexStride);
+                entity.SetData("IndexCount", indices.Count);
+
+                return true;
+            }
+            catch (System.Exception ex)
+            {
+                System.Console.WriteLine("[DragonAgeOriginsGraphicsBackend] LoadModelDataForEntity failed for '" + modelResRef + "': " + ex.Message);
                 return false;
             }
-            catch
+        }
+
+        /// <summary>
+        /// Vertex structure for model geometry (position, normal, texture coordinates).
+        /// Based on daorigins.exe: Model vertices use D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_TEX1 format.
+        /// </summary>
+        private struct ModelVertex
+        {
+            public System.Numerics.Vector3 Position;
+            public System.Numerics.Vector3 Normal;
+            public System.Numerics.Vector2 TexCoord;
+        }
+
+        /// <summary>
+        /// Extracts geometry from MDL model by traversing node hierarchy recursively.
+        /// Based on daorigins.exe: Model geometry is stored in mesh nodes within the node tree.
+        /// </summary>
+        /// <param name="node">Current node to process</param>
+        /// <param name="parentTransform">Transform matrix from parent nodes</param>
+        /// <param name="vertices">Output list of vertices</param>
+        /// <param name="indices">Output list of indices</param>
+        private void ExtractModelGeometry(
+            Andastra.Runtime.Core.MDL.MDLNodeData node,
+            System.Numerics.Matrix4x4 parentTransform,
+            System.Collections.Generic.List<ModelVertex> vertices,
+            System.Collections.Generic.List<ushort> indices)
+        {
+            if (node == null)
             {
-                return false;
+                return;
+            }
+
+            // Build node transform matrix
+            // Based on daorigins.exe: Node transforms combine position, orientation (quaternion), and scale
+            // Transform order: Translation * Rotation * Scale
+            System.Numerics.Vector3 translation = new System.Numerics.Vector3(
+                node.Position.X,
+                node.Position.Y,
+                node.Position.Z
+            );
+
+            System.Numerics.Quaternion rotation;
+            if (node.Orientation.W == 0.0f && node.Orientation.X == 0.0f && node.Orientation.Y == 0.0f && node.Orientation.Z == 0.0f)
+            {
+                rotation = System.Numerics.Quaternion.Identity;
+            }
+            else
+            {
+                // MDL quaternions are stored as (W, X, Y, Z)
+                rotation = new System.Numerics.Quaternion(
+                    node.Orientation.X,
+                    node.Orientation.Y,
+                    node.Orientation.Z,
+                    node.Orientation.W
+                );
+            }
+
+            System.Numerics.Matrix4x4 rotationMatrix = System.Numerics.Matrix4x4.CreateFromQuaternion(rotation);
+            System.Numerics.Matrix4x4 translationMatrix = System.Numerics.Matrix4x4.CreateTranslation(translation);
+            System.Numerics.Matrix4x4 nodeTransform = System.Numerics.Matrix4x4.Multiply(translationMatrix, rotationMatrix);
+            System.Numerics.Matrix4x4 finalTransform = System.Numerics.Matrix4x4.Multiply(nodeTransform, parentTransform);
+
+            // Extract mesh geometry if present
+            if (node.Mesh != null)
+            {
+                ExtractMeshGeometry(node.Mesh, finalTransform, vertices, indices);
+            }
+
+            // Process children recursively
+            if (node.Children != null)
+            {
+                for (int i = 0; i < node.Children.Length; i++)
+                {
+                    ExtractModelGeometry(node.Children[i], finalTransform, vertices, indices);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Extracts vertex and index data from an MDL mesh.
+        /// Based on daorigins.exe: Mesh data includes positions, normals, texture coordinates, and indices.
+        /// </summary>
+        /// <param name="mesh">Mesh to extract geometry from</param>
+        /// <param name="transform">Transform matrix to apply to vertices</param>
+        /// <param name="vertices">Output list of vertices</param>
+        /// <param name="indices">Output list of indices</param>
+        private void ExtractMeshGeometry(
+            Andastra.Runtime.Core.MDL.MDLMeshData mesh,
+            System.Numerics.Matrix4x4 transform,
+            System.Collections.Generic.List<ModelVertex> vertices,
+            System.Collections.Generic.List<ushort> indices)
+        {
+            if (mesh == null || mesh.Positions == null || mesh.Indices == null || mesh.Positions.Length == 0 || mesh.Indices.Length == 0)
+            {
+                return;
+            }
+
+            // Get texture coordinates (use TexCoords0 as primary texture coordinates)
+            System.Collections.Generic.List<Andastra.Runtime.Core.MDL.Vector2Data> texCoords;
+            if (mesh.TexCoords0 != null && mesh.TexCoords0.Length == mesh.Positions.Length)
+            {
+                texCoords = new System.Collections.Generic.List<Andastra.Runtime.Core.MDL.Vector2Data>(mesh.TexCoords0);
+            }
+            else
+            {
+                // No texture coordinates - use default (0, 0)
+                texCoords = new System.Collections.Generic.List<Andastra.Runtime.Core.MDL.Vector2Data>(mesh.Positions.Length);
+                for (int i = 0; i < mesh.Positions.Length; i++)
+                {
+                    texCoords.Add(new Andastra.Runtime.Core.MDL.Vector2Data(0.0f, 0.0f));
+                }
+            }
+
+            // Get normals (calculate if missing)
+            System.Collections.Generic.List<Andastra.Runtime.Core.MDL.Vector3Data> normals;
+            if (mesh.Normals != null && mesh.Normals.Length == mesh.Positions.Length)
+            {
+                normals = new System.Collections.Generic.List<Andastra.Runtime.Core.MDL.Vector3Data>(mesh.Normals);
+            }
+            else
+            {
+                // Calculate normals from face data if available
+                normals = new System.Collections.Generic.List<Andastra.Runtime.Core.MDL.Vector3Data>(mesh.Positions.Length);
+                for (int i = 0; i < mesh.Positions.Length; i++)
+                {
+                    normals.Add(new Andastra.Runtime.Core.MDL.Vector3Data(0.0f, 0.0f, 1.0f)); // Default normal
+                }
+
+                // Calculate face normals and average them per vertex
+                if (mesh.Faces != null && mesh.Faces.Length > 0)
+                {
+                    // Initialize vertex normals to zero
+                    System.Numerics.Vector3[] vertexNormals = new System.Numerics.Vector3[mesh.Positions.Length];
+
+                    for (int i = 0; i < mesh.Faces.Length; i++)
+                    {
+                        Andastra.Runtime.Core.MDL.MDLFaceData face = mesh.Faces[i];
+                        ushort v0 = (ushort)face.Vertex0;
+                        ushort v1 = (ushort)face.Vertex1;
+                        ushort v2 = (ushort)face.Vertex2;
+
+                        if (v0 < mesh.Positions.Length && v1 < mesh.Positions.Length && v2 < mesh.Positions.Length)
+                        {
+                            Andastra.Runtime.Core.MDL.Vector3Data p0 = mesh.Positions[v0];
+                            Andastra.Runtime.Core.MDL.Vector3Data p1 = mesh.Positions[v1];
+                            Andastra.Runtime.Core.MDL.Vector3Data p2 = mesh.Positions[v2];
+
+                            // Calculate face normal
+                            System.Numerics.Vector3 edge1 = new System.Numerics.Vector3(p1.X - p0.X, p1.Y - p0.Y, p1.Z - p0.Z);
+                            System.Numerics.Vector3 edge2 = new System.Numerics.Vector3(p2.X - p0.X, p2.Y - p0.Y, p2.Z - p0.Z);
+                            System.Numerics.Vector3 faceNormal = System.Numerics.Vector3.Cross(edge1, edge2);
+                            float length = faceNormal.Length();
+                            if (length > 0.0001f)
+                            {
+                                faceNormal = System.Numerics.Vector3.Normalize(faceNormal);
+
+                                // Add face normal to vertex normals
+                                vertexNormals[v0] = System.Numerics.Vector3.Add(vertexNormals[v0], faceNormal);
+                                vertexNormals[v1] = System.Numerics.Vector3.Add(vertexNormals[v1], faceNormal);
+                                vertexNormals[v2] = System.Numerics.Vector3.Add(vertexNormals[v2], faceNormal);
+                            }
+                        }
+                    }
+
+                    // Normalize vertex normals
+                    for (int i = 0; i < vertexNormals.Length; i++)
+                    {
+                        float length = vertexNormals[i].Length();
+                        if (length > 0.0001f)
+                        {
+                            vertexNormals[i] = System.Numerics.Vector3.Normalize(vertexNormals[i]);
+                        }
+                        else
+                        {
+                            vertexNormals[i] = new System.Numerics.Vector3(0.0f, 0.0f, 1.0f); // Default normal
+                        }
+                        normals[i] = new Andastra.Runtime.Core.MDL.Vector3Data(vertexNormals[i].X, vertexNormals[i].Y, vertexNormals[i].Z);
+                    }
+                }
+            }
+
+            // Store base vertex index before adding vertices
+            int baseVertexIndex = vertices.Count;
+
+            // Transform and add vertices
+            for (int i = 0; i < mesh.Positions.Length; i++)
+            {
+                Andastra.Runtime.Core.MDL.Vector3Data pos = mesh.Positions[i];
+                Andastra.Runtime.Core.MDL.Vector3Data normal = normals[i];
+                Andastra.Runtime.Core.MDL.Vector2Data texCoord = texCoords[i];
+
+                // Transform position
+                System.Numerics.Vector3 position = new System.Numerics.Vector3(pos.X, pos.Y, pos.Z);
+                System.Numerics.Vector3 transformedPosition = System.Numerics.Vector3.Transform(position, transform);
+
+                // Transform normal (use 3x3 rotation part of transform)
+                System.Numerics.Vector3 normalVec = new System.Numerics.Vector3(normal.X, normal.Y, normal.Z);
+                System.Numerics.Matrix4x4 rotationTransform = transform;
+                rotationTransform.M41 = 0.0f;
+                rotationTransform.M42 = 0.0f;
+                rotationTransform.M43 = 0.0f;
+                rotationTransform.M44 = 1.0f;
+                System.Numerics.Vector3 transformedNormal = System.Numerics.Vector3.TransformNormal(normalVec, rotationTransform);
+                float normalLength = transformedNormal.Length();
+                if (normalLength > 0.0001f)
+                {
+                    transformedNormal = System.Numerics.Vector3.Normalize(transformedNormal);
+                }
+                else
+                {
+                    transformedNormal = new System.Numerics.Vector3(0.0f, 0.0f, 1.0f);
+                }
+
+                ModelVertex vertex = new ModelVertex
+                {
+                    Position = transformedPosition,
+                    Normal = transformedNormal,
+                    TexCoord = new System.Numerics.Vector2(texCoord.X, texCoord.Y)
+                };
+                vertices.Add(vertex);
+            }
+
+            // Add indices (offset by base vertex index)
+            for (int i = 0; i < mesh.Indices.Length; i++)
+            {
+                ushort index = mesh.Indices[i];
+                indices.Add((ushort)(baseVertexIndex + index));
             }
         }
 
