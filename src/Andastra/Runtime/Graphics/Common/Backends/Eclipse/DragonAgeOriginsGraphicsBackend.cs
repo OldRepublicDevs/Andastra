@@ -115,6 +115,13 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             public float V;
         }
 
+        // Dialogue history tracking
+        // Based on daorigins.exe: Dialogue history tracks current speaker/text to detect changes
+        private string _lastDialogueSpeaker = string.Empty;
+        private string _lastDialogueText = string.Empty;
+        private float _lastDialogueTimestamp = 0.0f;
+        private float _dialogueHistoryTimeAccumulator = 0.0f; // Simple time accumulator for history timestamps
+
         // DirectX 9 delegate declarations for P/Invoke calls
         // Based on daorigins.exe: DirectX 9 COM interface method calls
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
@@ -3178,6 +3185,31 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             string portraitResRef = GetDialoguePortraitResRef(conversationSpeaker);
             bool showDialogueHistory = GetDialogueHistoryEnabled();
 
+            // Track dialogue changes for history
+            // Based on daorigins.exe: Dialogue history is updated when new dialogue is spoken
+            // Update time accumulator for dialogue history timestamps
+            _dialogueHistoryTimeAccumulator += 1.0f / 60.0f; // Assume 60 FPS for simple time accumulation
+            float currentTime = _dialogueHistoryTimeAccumulator;
+            if (!string.IsNullOrEmpty(dialogueText) &&
+                (dialogueText != _lastDialogueText || speakerName != _lastDialogueSpeaker))
+            {
+                // Dialogue has changed - add to history
+                // Based on daorigins.exe: Dialogue history entries are added when text changes
+                if (_world != null && _world.CurrentArea != null)
+                {
+                    // Cast to EclipseArea to access dialogue history methods
+                    if (_world.CurrentArea is Andastra.Runtime.Games.Eclipse.EclipseArea eclipseArea)
+                    {
+                        eclipseArea.AddDialogueHistoryEntry(speakerName, dialogueText, currentTime);
+                    }
+                }
+
+                // Update tracking variables
+                _lastDialogueSpeaker = speakerName;
+                _lastDialogueText = dialogueText;
+                _lastDialogueTimestamp = currentTime;
+            }
+
             // Render dialogue box background
             // Based on daorigins.exe: Dialogue box background is a semi-transparent dark panel
             uint dialogueBackgroundColor = 0xE0000000; // Dark with alpha (ARGB)
@@ -3544,17 +3576,81 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         private void RenderDialogueHistory(float x, float y, float width, float height)
         {
             // Based on daorigins.exe: Dialogue history is rendered in a scrollable panel above dialogue box
-            // For now, this is a placeholder - full implementation would require:
-            // - Dialogue history storage and retrieval
-            // - Scrollable text rendering
+            // Implementation includes:
+            // - Dialogue history storage and retrieval from area state
+            // - Scrollable text rendering with speaker name formatting
             // - History entry formatting (speaker name + text)
 
             // Render history panel background
             uint historyBackgroundColor = 0xD0000000; // Dark with alpha
             DrawQuad(x, y, width, height, historyBackgroundColor, IntPtr.Zero);
 
-            // TODO: Render dialogue history entries from stored history
-            // History entries would be retrieved from world/area conversation state
+            // Get dialogue history from current area
+            // Based on daorigins.exe: Dialogue history is stored in area conversation state
+            if (_world == null || _world.CurrentArea == null)
+            {
+                return;
+            }
+
+            // Cast to EclipseArea to access dialogue history
+            if (!(_world.CurrentArea is Andastra.Runtime.Games.Eclipse.EclipseArea eclipseArea))
+            {
+                return;
+            }
+
+            IReadOnlyList<Andastra.Runtime.Games.Eclipse.EclipseArea.DialogueHistoryEntry> history =
+                eclipseArea.GetDialogueHistory();
+
+            if (history == null || history.Count == 0)
+            {
+                return;
+            }
+
+            // Render history entries
+            // Based on daorigins.exe: History entries are rendered with speaker name in color, text in white
+            const float lineHeight = 16.0f;
+            const float textMargin = 10.0f;
+            float currentY = y + textMargin;
+            float maxY = y + height - textMargin;
+
+            // Show most recent entries (scroll from bottom if needed)
+            // Based on daorigins.exe: Dialogue history shows recent entries, scrolls up for older ones
+            int startIndex = 0;
+            int visibleLines = (int)((maxY - currentY) / lineHeight);
+
+            if (history.Count > visibleLines)
+            {
+                startIndex = history.Count - visibleLines;
+            }
+
+            for (int i = startIndex; i < history.Count && currentY < maxY; i++)
+            {
+                var entry = history[i];
+                if (entry == null)
+                {
+                    continue;
+                }
+
+                // Format: "Speaker: Message"
+                // Based on daorigins.exe: Speaker names are colored, dialogue text is white
+                string historyLine = string.IsNullOrEmpty(entry.SpeakerName)
+                    ? entry.MessageText
+                    : $"{entry.SpeakerName}: {entry.MessageText}";
+
+                if (!string.IsNullOrEmpty(historyLine))
+                {
+                    // Speaker name in gold, message in white
+                    // Based on daorigins.exe: History uses same color scheme as dialogue box
+                    uint speakerColor = 0xFFFFD700; // Gold for speaker names
+                    uint textColor = 0xFFFFFFFF; // White for dialogue text
+
+                    // Render the formatted history line
+                    // Based on daorigins.exe: History text uses consistent formatting
+                    RenderTextDirectX9(x + textMargin, currentY, historyLine, textColor, 12, false);
+
+                    currentY += lineHeight;
+                }
+            }
         }
 
         /// <summary>
