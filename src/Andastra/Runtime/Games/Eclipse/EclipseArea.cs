@@ -7751,14 +7751,6 @@ namespace Andastra.Runtime.Games.Eclipse
                 // Based on daorigins.exe: Particles use XYZ position, diffuse color, and single texture coordinate
                 // Vertex format: Position (Vector3), Color (Color), Texture coordinates (Vector2)
                 ParticleVertexData[] vertices = new ParticleVertexData[vertexCount];
-
-                // Build vertex and index data for all particles
-                // Each particle = 4 vertices (quad) = 2 triangles = 6 indices
-                int particleCount = particles.Count;
-                int vertexCount = particleCount * 4; // 4 vertices per particle
-                int indexCount = particleCount * 6;  // 6 indices per particle (2 triangles)
-
-                ParticleVertex[] vertices = new ParticleVertex[vertexCount];
                 int[] indices = new int[indexCount];
 
                 // Calculate particle color based on emitter type
