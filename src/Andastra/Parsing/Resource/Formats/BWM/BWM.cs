@@ -14,7 +14,7 @@ namespace Andastra.Parsing.Formats.BWM
     ///
     /// WHAT IS A BWM FILE?
     ///
-    // TODO: / A BWM file is a file format used by BioWare games to store walkmesh data. A walkmesh is a simplified
+    /// A BWM file is a file format used by BioWare games to store walkmesh data. A walkmesh is a simplified
     /// 3D model made of triangles that defines where characters can walk, where they cannot walk, and how
     /// high the ground is at different locations.
     ///
