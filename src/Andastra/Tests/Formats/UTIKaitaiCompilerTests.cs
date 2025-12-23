@@ -255,8 +255,83 @@ namespace Andastra.Parsing.Tests.Formats
             string[] pythonFiles = Directory.GetFiles(langOutputDir, "*.py", SearchOption.AllDirectories);
             pythonFiles.Should().NotBeEmpty("Python parser files should be generated");
 
-            // TODO:  Note: Actually using the generated parser would require Python runtime and kaitaistruct library
-            // This test validates that compilation succeeds and generates expected files
+            // Actually use the generated parser to parse the test UTI file
+            string pythonExe = FindPythonExecutable();
+            if (string.IsNullOrEmpty(pythonExe))
+            {
+                // Skip if Python not available
+                return;
+            }
+
+            // Check/install kaitaistruct library
+            bool kaitaiAvailable = CheckKaitaiStructLibrary(pythonExe);
+            if (!kaitaiAvailable)
+            {
+                // Try to install kaitaistruct
+                bool installed = InstallKaitaiStructLibrary(pythonExe);
+                if (!installed)
+                {
+                    // Skip if kaitaistruct not available and couldn't be installed
+                    return;
+                }
+            }
+
+            // Find the main UTI parser file
+            string utiParserFile = pythonFiles.FirstOrDefault(f =>
+                Path.GetFileName(f).ToLowerInvariant().Contains("uti") &&
+                !Path.GetFileName(f).ToLowerInvariant().Contains("test"));
+
+            if (string.IsNullOrEmpty(utiParserFile))
+            {
+                // Try to find any .py file that looks like the main parser
+                utiParserFile = pythonFiles.FirstOrDefault();
+            }
+
+            utiParserFile.Should().NotBeNullOrEmpty("Should find generated UTI parser file");
+
+            // Create Python script to parse the UTI file
+            string testScriptPath = Path.Combine(Path.GetTempPath(), "test_uti_parser_" + Guid.NewGuid().ToString("N") + ".py");
+            CreatePythonParserScript(testScriptPath, utiParserFile, TestUtiFile, langOutputDir);
+
+            try
+            {
+                // Execute Python script
+                var parseResult = ExecutePythonScript(pythonExe, testScriptPath, langOutputDir);
+
+                // Validate parser executed successfully
+                parseResult.ExitCode.Should().Be(0,
+                    $"Python parser should parse UTI file successfully. STDOUT: {parseResult.Output}, STDERR: {parseResult.Error}");
+
+                // Validate parsed output contains expected fields
+                // The Python script outputs JSON first, then human-readable text
+                string combinedOutput = parseResult.Output + parseResult.Error;
+                
+                // Check for successful parsing indicators
+                combinedOutput.Should().Contain("parser_loaded", "Parsed output should indicate parser was loaded");
+                combinedOutput.Should().Contain("file_parsed", "Parsed output should indicate file was parsed");
+                
+                // Check for file type signature (UTI files should have "UTI " as file type)
+                combinedOutput.Should().Contain("UTI", "Parsed output should contain UTI file type signature");
+                
+                // Check for file_type field (either in JSON or text output)
+                bool hasFileType = combinedOutput.Contains("file_type") || combinedOutput.Contains("File type:");
+                hasFileType.Should().BeTrue("Parsed output should contain file_type information");
+            }
+            finally
+            {
+                // Clean up test script
+                if (File.Exists(testScriptPath))
+                {
+                    try
+                    {
+                        File.Delete(testScriptPath);
+                    }
+                    catch
+                    {
+                        // Ignore cleanup errors
+                    }
+                }
+            }
         }
 
         [Fact(Timeout = 300000)]
@@ -1004,6 +1079,321 @@ namespace Andastra.Parsing.Tests.Formats
             byte[] data = UTIHelpers.BytesUti(uti, BioWareGame.K2);
             Directory.CreateDirectory(Path.GetDirectoryName(path));
             File.WriteAllBytes(path, data);
+        }
+
+        /// <summary>
+        /// Finds Python executable by checking common locations and PATH.
+        /// Returns null if Python is not found.
+        /// </summary>
+        private static string FindPythonExecutable()
+        {
+            // Try common Python command names
+            string[] pythonCommands = new[]
+            {
+                "python3",
+                "python",
+                "py"
+            };
+
+            foreach (string cmd in pythonCommands)
+            {
+                try
+                {
+                    var result = RunCommand(cmd, "--version");
+                    if (result.ExitCode == 0)
+                    {
+                        // Try to get full path
+                        var pathResult = RunCommand(cmd, "-c \"import sys; print(sys.executable)\"");
+                        if (pathResult.ExitCode == 0 && !string.IsNullOrWhiteSpace(pathResult.Output))
+                        {
+                            return pathResult.Output.Trim();
+                        }
+                        return cmd; // Return command name if we can't get full path
+                    }
+                }
+                catch
+                {
+                    // Continue searching
+                }
+            }
+
+            // Try common Windows locations
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            {
+                string[] windowsPaths = new[]
+                {
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Python311", "python.exe"),
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Python312", "python.exe"),
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Python313", "python.exe"),
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Python", "Python311", "python.exe"),
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Python", "Python312", "python.exe"),
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Python", "Python313", "python.exe"),
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "AppData", "Local", "Programs", "Python", "Python311", "python.exe"),
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "AppData", "Local", "Programs", "Python", "Python312", "python.exe"),
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "AppData", "Local", "Programs", "Python", "Python313", "python.exe")
+                };
+
+                foreach (string path in windowsPaths)
+                {
+                    if (File.Exists(path))
+                    {
+                        var result = RunCommand(path, "--version");
+                        if (result.ExitCode == 0)
+                        {
+                            return path;
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Checks if kaitaistruct library is available in Python.
+        /// </summary>
+        private static bool CheckKaitaiStructLibrary(string pythonExe)
+        {
+            try
+            {
+                var result = RunCommand(pythonExe, "-c \"import kaitaistruct; print('ok')\"");
+                return result.ExitCode == 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Attempts to install kaitaistruct library using pip.
+        /// </summary>
+        private static bool InstallKaitaiStructLibrary(string pythonExe)
+        {
+            try
+            {
+                // Try pip3 first, then pip
+                string[] pipCommands = new[] { "pip3", "pip" };
+                string pipExe = null;
+
+                foreach (string cmd in pipCommands)
+                {
+                    try
+                    {
+                        var pipResult = RunCommand(cmd, "--version");
+                        if (pipResult.ExitCode == 0)
+                        {
+                            pipExe = cmd;
+                            break;
+                        }
+                    }
+                    catch
+                    {
+                        // Continue
+                    }
+                }
+
+                // If pip not found, try python -m pip
+                if (string.IsNullOrEmpty(pipExe))
+                {
+                    var pipResult = RunCommand(pythonExe, "-m pip --version");
+                    if (pipResult.ExitCode == 0)
+                    {
+                        // Use python -m pip
+                        var installResult = RunCommand(pythonExe, "-m pip install kaitaistruct --quiet");
+                        return installResult.ExitCode == 0;
+                    }
+                }
+                else
+                {
+                    var installResult = RunCommand(pipExe, "install kaitaistruct --quiet");
+                    return installResult.ExitCode == 0;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Creates a Python script that uses the generated Kaitai parser to parse a UTI file.
+        /// Kaitai Struct parsers are classes that can be instantiated with from_bytes() or from_io().
+        /// </summary>
+        private static void CreatePythonParserScript(string scriptPath, string parserFile, string utiFilePath, string parserDir)
+        {
+            // Get module name from parser file (remove .py extension)
+            string moduleName = Path.GetFileNameWithoutExtension(parserFile);
+
+            // Normalize paths for Python (use raw strings with forward slashes or escaped backslashes)
+            string parserDirNormalized = Path.GetDirectoryName(parserFile).Replace("\\", "/");
+            string utiFilePathNormalized = utiFilePath.Replace("\\", "/");
+
+            // Create Python script that:
+            // 1. Adds parser directory to sys.path
+            // 2. Imports the generated parser module
+            // 3. Parses the UTI file using Kaitai Struct API
+            // 4. Outputs key fields for validation
+            string script = $@"import sys
+import os
+import json
+import io
+
+# Add parser directory to path
+parser_dir = r""{parserDirNormalized}""
+if parser_dir not in sys.path:
+    sys.path.insert(0, parser_dir)
+
+try:
+    # Import the generated parser module
+    # Kaitai Struct generates a module with a class of the same name
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(""{moduleName}"", r""{parserFile.Replace("\\", "/")}"")
+    if spec is None or spec.loader is None:
+        raise ImportError(f""Failed to load module from {parserFile}"")
+
+    parser_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(parser_module)
+
+    # Get the parser class (usually same name as module, but could be Uti or UTI)
+    ParserClass = None
+    for attr_name in [""{moduleName}"", ""Uti"", ""UTI"", ""Uti_"", ""UtiKaitai""]:
+        if hasattr(parser_module, attr_name):
+            ParserClass = getattr(parser_module, attr_name)
+            if isinstance(ParserClass, type):
+                break
+
+    if ParserClass is None:
+        # Try to find any class in the module
+        for attr_name in dir(parser_module):
+            attr = getattr(parser_module, attr_name)
+            if isinstance(attr, type) and attr_name[0].isupper():
+                ParserClass = attr
+                break
+
+    if ParserClass is None:
+        raise ImportError(f""Could not find parser class in {moduleName} module"")
+
+    # Parse the UTI file
+    with open(r""{utiFilePathNormalized}"", ""rb"") as f:
+        data = f.read()
+
+    # Kaitai Struct parsers use from_bytes() or from_io()
+    if hasattr(ParserClass, 'from_bytes'):
+        uti = ParserClass.from_bytes(data)
+    elif hasattr(ParserClass, 'from_io'):
+        uti = ParserClass.from_io(io.BytesIO(data))
+    else:
+        # Try direct instantiation
+        uti = ParserClass(io.BytesIO(data))
+
+    # Output key fields for validation
+    output = {{}}
+    output['parser_loaded'] = True
+    output['file_parsed'] = True
+
+    # GFF Header fields - Kaitai Struct exposes fields as attributes
+    if hasattr(uti, 'gff_header'):
+        header = uti.gff_header
+        if hasattr(header, 'file_type'):
+            file_type = header.file_type
+            # Convert bytes/bytearray to string if needed
+            if isinstance(file_type, (bytes, bytearray)):
+                file_type_str = file_type.decode('ascii', errors='ignore').strip()
+                output['file_type'] = file_type_str
+                output['file_type_bytes'] = list(file_type)
+            else:
+                output['file_type'] = str(file_type)
+
+        if hasattr(header, 'file_version'):
+            output['file_version'] = str(header.file_version)
+
+        if hasattr(header, 'struct_array_offset'):
+            output['struct_array_offset'] = header.struct_array_offset
+
+        if hasattr(header, 'field_array_offset'):
+            output['field_array_offset'] = header.field_array_offset
+
+    # Try to access root structure if available
+    if hasattr(uti, 'root'):
+        output['has_root'] = True
+        root = uti.root
+        if hasattr(root, 'structs'):
+            structs = root.structs
+            if hasattr(structs, '__len__'):
+                output['struct_count'] = len(structs)
+
+    # Print JSON output for easy parsing
+    print(json.dumps(output, indent=2, default=str))
+
+    # Also print key info for validation (human-readable)
+    print(""\\n=== Parser Validation ==="")
+    print(f""Parser class: {{ParserClass.__name__}}"")
+    print(f""File type: {{output.get('file_type', 'N/A')}}"")
+    print(f""File version: {{output.get('file_version', 'N/A')}}"")
+    print(f""Parser loaded successfully: {{output.get('parser_loaded', False)}}"")
+    print(f""File parsed successfully: {{output.get('file_parsed', False)}}"")
+
+    # Validate file type signature
+    file_type = output.get('file_type', '')
+    if 'UTI' in file_type.upper():
+        print(""✓ File type signature validated: Contains 'UTI'"")
+    else:
+        print(f""⚠ Warning: File type signature may be invalid: {{file_type}}"")
+
+except ImportError as e:
+    print(f""IMPORT_ERROR: {{str(e)}}"")
+    import traceback
+    traceback.print_exc()
+    sys.exit(1)
+except Exception as e:
+    print(f""ERROR: {{str(e)}}"")
+    import traceback
+    traceback.print_exc()
+    sys.exit(1)
+";
+
+            File.WriteAllText(scriptPath, script);
+        }
+
+        /// <summary>
+        /// Executes a Python script and returns the result.
+        /// </summary>
+        private static (int ExitCode, string Output, string Error) ExecutePythonScript(string pythonExe, string scriptPath, string workingDirectory)
+        {
+            try
+            {
+                var processStartInfo = new ProcessStartInfo
+                {
+                    FileName = pythonExe,
+                    Arguments = $"\"{scriptPath}\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    WorkingDirectory = workingDirectory ?? Path.GetDirectoryName(scriptPath)
+                };
+
+                using (var process = Process.Start(processStartInfo))
+                {
+                    if (process == null)
+                    {
+                        return (-1, "", $"Failed to start Python process: {pythonExe}");
+                    }
+
+                    var output = process.StandardOutput.ReadToEnd();
+                    var error = process.StandardError.ReadToEnd();
+                    process.WaitForExit(60000); // 60 second timeout
+
+                    return (process.ExitCode, output, error);
+                }
+            }
+            catch (Exception ex)
+            {
+                return (-1, "", ex.Message);
+            }
         }
     }
 }
