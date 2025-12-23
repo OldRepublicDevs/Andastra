@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using Stride.Graphics;
+using StrideGraphics = Stride.Graphics;
 using Stride.Rendering;
 using Stride.Core.Mathematics;
 using Stride.Engine;
@@ -34,15 +34,15 @@ namespace Andastra.Runtime.Stride.PostProcessing
     /// </summary>
     public class StrideMotionBlurEffect : BaseMotionBlurEffect
     {
-        private GraphicsDevice _graphicsDevice;
+        private StrideGraphics.GraphicsDevice _graphicsDevice;
         private EffectInstance _motionBlurEffect;
-        private Texture _velocityTexture;
-        private Texture _temporaryTexture;
-        private SpriteBatch _spriteBatch;
-        private SamplerState _linearSampler;
-        private Effect _motionBlurEffectBase;
+        private StrideGraphics.Texture _velocityTexture;
+        private StrideGraphics.Texture _temporaryTexture;
+        private StrideGraphics.SpriteBatch _spriteBatch;
+        private StrideGraphics.SamplerState _linearSampler;
+        private StrideGraphics.Effect _motionBlurEffectBase;
 
-        public StrideMotionBlurEffect(GraphicsDevice graphicsDevice)
+        public StrideMotionBlurEffect(StrideGraphics.GraphicsDevice graphicsDevice)
         {
             _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
             InitializeRenderingResources();
@@ -78,31 +78,18 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// </remarks>
         private void LoadMotionBlurShader()
         {
-            // Strategy 1: Try loading from compiled effect files using Effect.Load()
-            try
-            {
-                _motionBlurEffectBase = Effect.Load(_graphicsDevice, "MotionBlur");
-                if (_motionBlurEffectBase != null)
-                {
-                    _motionBlurEffect = new EffectInstance(_motionBlurEffectBase);
-                    System.Console.WriteLine("[StrideMotionBlurEffect] Loaded MotionBlur effect from compiled file");
-                    return;
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Console.WriteLine($"[StrideMotionBlurEffect] Failed to load MotionBlur from compiled file: {ex.Message}");
-            }
-
+            // Strategy 1: Try loading from ContentManager
+            // Effect.Load() doesn't exist in this Stride version, so we skip directly to ContentManager
             // Strategy 2: Try loading from ContentManager if available
             if (_motionBlurEffectBase == null)
             {
                 try
                 {
-                    var services = _graphicsDevice.Services;
+                    // Use explicit type to avoid C# 7.3 inferred delegate type limitation
+                    object services = _graphicsDevice.Services();
                     if (services != null)
                     {
-                        var contentManager = services.GetService<ContentManager>();
+                        var contentManager = ((dynamic)services).GetService<ContentManager>();
                         if (contentManager != null)
                         {
                             try
@@ -159,7 +146,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// Original implementation: Uses frame buffers for rendering and effects
         /// This implementation: Full motion blur pipeline with velocity-based temporal sampling
         /// </remarks>
-        private Effect CreateMotionBlurEffect()
+        private StrideGraphics.Effect CreateMotionBlurEffect()
         {
             try
             {
@@ -311,7 +298,7 @@ shader MotionBlurEffect : ShaderBase
         /// - Original game: DirectX 8/9 fixed-function pipeline (swkotor2.exe: Frame buffer post-processing @ 0x007c8408, Motion_Blur @ 0x007bb610)
         /// - Modern implementation: Uses programmable shaders with runtime compilation
         /// </remarks>
-        private Effect CompileShaderFromSource(string shaderSource, string shaderName)
+        private StrideGraphics.Effect CompileShaderFromSource(string shaderSource, string shaderName)
         {
             if (string.IsNullOrEmpty(shaderSource))
             {
@@ -372,7 +359,7 @@ shader MotionBlurEffect : ShaderBase
         /// <param name="shaderSource">Shader source code.</param>
         /// <param name="shaderName">Shader name for identification.</param>
         /// <returns>Compiled Effect, or null if compilation fails.</returns>
-        private Effect CompileShaderWithCompiler(EffectCompiler compiler, string shaderSource, string shaderName)
+        private StrideGraphics.Effect CompileShaderWithCompiler(EffectCompiler compiler, string shaderSource, string shaderName)
         {
             try
             {
@@ -424,7 +411,7 @@ shader MotionBlurEffect : ShaderBase
         /// <param name="shaderSource">Shader source code.</param>
         /// <param name="shaderName">Shader name for identification.</param>
         /// <returns>Compiled Effect, or null if compilation fails.</returns>
-        private Effect CompileShaderWithEffectSystem(global::Stride.Shaders.Compiler.EffectCompiler effectSystem, string shaderSource, string shaderName)
+        private StrideGraphics.Effect CompileShaderWithEffectSystem(global::Stride.Shaders.Compiler.EffectCompiler effectSystem, string shaderSource, string shaderName)
         {
             try
             {
@@ -460,7 +447,7 @@ shader MotionBlurEffect : ShaderBase
         /// <param name="shaderSource">Shader source code.</param>
         /// <param name="shaderName">Shader name for identification.</param>
         /// <returns>Compiled Effect, or null if compilation fails.</returns>
-        private Effect CompileShaderFromFile(string shaderSource, string shaderName)
+        private StrideGraphics.Effect CompileShaderFromFile(string shaderSource, string shaderName)
         {
             string tempFilePath = null;
             try
@@ -500,21 +487,8 @@ shader MotionBlurEffect : ShaderBase
                     }
                 }
 
-                // Final fallback: Try Effect.Load() with file path
-                // This may work if Stride can load shaders from absolute paths
-                try
-                {
-                    var effect = Effect.Load(_graphicsDevice, tempFilePath);
-                    if (effect != null)
-                    {
-                        System.Console.WriteLine($"[StrideMotionBlurEffect] Successfully loaded shader '{shaderName}' from file");
-                        return effect;
-                    }
-                }
-                catch
-                {
-                    // Effect.Load() doesn't support file paths directly, continue to return null
-                }
+                // Final fallback: Effect.Load() doesn't exist in this Stride version
+                // Effect.Load() doesn't support file paths directly, continue to return null
 
                 System.Console.WriteLine($"[StrideMotionBlurEffect] Could not compile shader '{shaderName}' from file");
                 return null;
