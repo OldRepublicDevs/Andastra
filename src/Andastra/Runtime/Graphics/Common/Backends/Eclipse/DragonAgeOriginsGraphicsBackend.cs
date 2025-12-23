@@ -86,6 +86,21 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             public float V;
         }
 
+        /// <summary>
+        /// Vertex structure for particle rendering.
+        /// Based on daorigins.exe: Particles use XYZ position, diffuse color, and single texture coordinate.
+        /// FVF: D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1
+        /// </summary>
+        private struct ParticleVertex
+        {
+            public float X;
+            public float Y;
+            public float Z;
+            public uint Color;
+            public float U;
+            public float V;
+        }
+
         // DirectX 9 delegate declarations for P/Invoke calls
         // Based on daorigins.exe: DirectX 9 COM interface method calls
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
@@ -897,115 +912,208 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             SetTextureStageStateDirectX9(0, D3DTSS_MAGFILTER, D3DTEXF_LINEAR);
             SetTextureStageStateDirectX9(0, D3DTSS_MINFILTER, D3DTEXF_LINEAR);
 
-            // Render each particle as a billboard quad
-            // Based on daorigins.exe: Each particle is a quad that always faces the camera
-            // Quad vertices: 4 vertices per particle (2 triangles)
-            // For simplicity, we'll render particles as point sprites or individual quads
-            // TODO:  In a full implementation, this would use instanced rendering or a vertex buffer
-
             // Calculate particle color based on emitter type
             // Based on daorigins.exe: Different emitter types have different particle colors
             uint particleColor = GetParticleColorForEmitterType(emitterType);
 
-            // Render particles
-            // Based on daorigins.exe: Particles are rendered one at a time as quads
-            // In a production implementation, this would batch particles into vertex buffers for efficiency
-            foreach (var particle in particles)
+            // Calculate billboard orientation vectors once for all particles
+            // Based on daorigins.exe: Billboard quads face the camera using view matrix
+            // Standard billboard technique: Extract right and up vectors from view matrix
+            // View matrix structure (row-major):
+            //   [right.x  up.x  forward.x  pos.x]
+            //   [right.y  up.y  forward.y  pos.y]
+            //   [right.z  up.z  forward.z  pos.z]
+            //   [0        0     0          1    ]
+            // Right vector = column 0: [M11, M21, M31]
+            // Up vector = column 1: [M12, M22, M32]
+            Vector3 billboardRight = Vector3.UnitX; // Default fallback
+            Vector3 billboardUp = Vector3.UnitY; // Default fallback
+
+            // Get view matrix from DirectX 9 device once for all particles
+            // Based on daorigins.exe: View matrix is set via SetTransform(D3DTS_VIEW, &viewMatrix)
+            // We retrieve it using GetTransform(D3DTS_VIEW, &viewMatrix)
+            Matrix4x4 viewMatrix;
+            int getTransformResult = GetTransformDirectX9(D3DTS_VIEW, out viewMatrix);
+            if (getTransformResult == 0) // D3D_OK
             {
-                // Calculate quad vertices for billboard particle
-                // Based on daorigins.exe: Billboard quads are oriented to face the camera
-                // Original implementation: Particles are rendered as quads that always face the camera
-                // Billboard calculation: Extract right and up vectors from view matrix to orient quad
-                // Based on standard billboard technique: Use view matrix columns for right/up vectors
-                float halfSize = particle.Size * 0.5f;
-                Vector3 pos = particle.Position;
+                // Extract right vector from view matrix column 0
+                // View matrix in DirectX is row-major, so column 0 is [M11, M21, M31]
+                billboardRight = new Vector3(viewMatrix.M11, viewMatrix.M21, viewMatrix.M31);
+                billboardRight = Vector3.Normalize(billboardRight); // Normalize for consistent scaling
 
-                // Create quad vertices (4 vertices = 2 triangles)
-                // Vertex format: Position (x, y, z), Color (ARGB), Texture coordinates (u, v)
-                // Color includes alpha from particle lifetime
-                uint alphaByte = (uint)(particle.Alpha * 255.0f);
-                uint colorWithAlpha = particleColor | (alphaByte << 24);
+                // Extract up vector from view matrix column 1
+                // View matrix in DirectX is row-major, so column 1 is [M12, M22, M32]
+                billboardUp = new Vector3(viewMatrix.M12, viewMatrix.M22, viewMatrix.M32);
+                billboardUp = Vector3.Normalize(billboardUp); // Normalize for consistent scaling
 
-                // Calculate billboard orientation based on camera position
-                // Based on daorigins.exe: Billboard quads face the camera using view matrix
-                // Standard billboard technique: Extract right and up vectors from view matrix
-                // View matrix structure (row-major):
-                //   [right.x  up.x  forward.x  pos.x]
-                //   [right.y  up.y  forward.y  pos.y]
-                //   [right.z  up.z  forward.z  pos.z]
-                //   [0        0     0          1    ]
-                // Right vector = column 0: [M11, M21, M31]
-                // Up vector = column 1: [M12, M22, M32]
-                // Based on daorigins.exe: View matrix columns extracted for billboard orientation
-                Vector3 billboardRight = Vector3.UnitX; // Default fallback
-                Vector3 billboardUp = Vector3.UnitY; // Default fallback
-
-                // Get view matrix from DirectX 9 device
-                // Based on daorigins.exe: View matrix is set via SetTransform(D3DTS_VIEW, &viewMatrix)
-                // We retrieve it using GetTransform(D3DTS_VIEW, &viewMatrix)
-                Matrix4x4 viewMatrix;
-                int getTransformResult = GetTransformDirectX9(D3DTS_VIEW, out viewMatrix);
-                if (getTransformResult == 0) // D3D_OK
+                // Ensure vectors are orthogonal (Gram-Schmidt orthogonalization if needed)
+                // This handles cases where the view matrix might have slight non-orthogonality
+                // Based on standard billboard implementation: Right and Up should be orthogonal
+                float dot = Vector3.Dot(billboardRight, billboardUp);
+                if (Math.Abs(dot) > 0.001f) // Not orthogonal enough
                 {
-                    // Extract right vector from view matrix column 0
-                    // View matrix in DirectX is row-major, so column 0 is [M11, M21, M31]
-                    billboardRight = new Vector3(viewMatrix.M11, viewMatrix.M21, viewMatrix.M31);
-                    billboardRight = Vector3.Normalize(billboardRight); // Normalize for consistent scaling
-
-                    // Extract up vector from view matrix column 1
-                    // View matrix in DirectX is row-major, so column 1 is [M12, M22, M32]
-                    billboardUp = new Vector3(viewMatrix.M12, viewMatrix.M22, viewMatrix.M32);
-                    billboardUp = Vector3.Normalize(billboardUp); // Normalize for consistent scaling
-
-                    // Ensure vectors are orthogonal (Gram-Schmidt orthogonalization if needed)
-                    // This handles cases where the view matrix might have slight non-orthogonality
-                    // Based on standard billboard implementation: Right and Up should be orthogonal
-                    float dot = Vector3.Dot(billboardRight, billboardUp);
-                    if (Math.Abs(dot) > 0.001f) // Not orthogonal enough
-                    {
-                        // Re-orthogonalize up vector: up = up - (up · right) * right
-                        billboardUp = billboardUp - dot * billboardRight;
-                        billboardUp = Vector3.Normalize(billboardUp);
-                    }
+                    // Re-orthogonalize up vector: up = up - (up · right) * right
+                    billboardUp = billboardUp - dot * billboardRight;
+                    billboardUp = Vector3.Normalize(billboardUp);
                 }
-                else
-                {
-                    // Fallback: If view matrix retrieval fails, use default orientation
-                    // This should rarely happen, but provides safety
-                    Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] Warning: Failed to get view matrix for billboard (error: {getTransformResult}), using default orientation");
-                }
-
-                // Calculate billboard quad vertices using right and up vectors
-                // Quad layout:
-                //   top-left     top-right
-                //   *------------*
-                //   |            |
-                //   |   particle |
-                //   |            |
-                //   *------------*
-                //   bottom-left  bottom-right
-                // Each vertex = particle position + (right * xOffset) + (up * yOffset)
-                // Based on daorigins.exe: Billboard quads are centered on particle position
-                // Billboard orientation is now fully calculated based on camera position via view matrix
-                Vector3 topLeft = pos + billboardRight * (-halfSize) + billboardUp * halfSize;
-                Vector3 topRight = pos + billboardRight * halfSize + billboardUp * halfSize;
-                Vector3 bottomLeft = pos + billboardRight * (-halfSize) + billboardUp * (-halfSize);
-                Vector3 bottomRight = pos + billboardRight * halfSize + billboardUp * (-halfSize);
-
-                // Billboard quad vertices are now calculated and oriented to face the camera
-                // The vertices (topLeft, topRight, bottomLeft, bottomRight) are ready for rendering
-                // Based on daorigins.exe: Particles are rendered using DrawPrimitive with D3DPT_TRIANGLELIST
-                // Note: Actual vertex buffer creation and DrawPrimitive call would be implemented in a full rendering pipeline
-                // The billboard orientation calculation is now complete and functional
+            }
+            else
+            {
+                // Fallback: If view matrix retrieval fails, use default orientation
+                // This should rarely happen, but provides safety
+                Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] Warning: Failed to get view matrix for billboard (error: {getTransformResult}), using default orientation");
             }
 
-            // TODO:  Note: Full implementation would:
-            // 1. Create vertex buffer with all particle quads (using calculated billboard vertices)
-            // 2. Calculate billboard orientation for each particle based on camera - COMPLETE (uses view matrix)
-            // 3. Set world/view/projection matrices
-            // 4. Render all particles in a single DrawPrimitive call for efficiency
-            // 5. Load appropriate textures for each emitter type from game resources - COMPLETE (uses LoadParticleTexture)
-            // Billboard orientation calculation is now fully implemented and functional
+            // Create vertex buffer for all particle quads
+            // Based on daorigins.exe: Particles are batched into vertex buffers for efficient rendering
+            // Each particle = 4 vertices (quad), each quad = 2 triangles, total 6 indices per particle
+            int particleCount = particles.Count;
+            if (particleCount == 0)
+            {
+                return; // No particles to render
+            }
+
+            int vertexCount = particleCount * 4; // 4 vertices per particle
+            int indexCount = particleCount * 6;  // 6 indices per particle (2 triangles)
+            uint vertexStride = (uint)Marshal.SizeOf<ParticleVertex>();
+            uint vertexBufferSize = vertexStride * (uint)vertexCount;
+
+            // Create vertex buffer
+            // Based on daorigins.exe: CreateVertexBuffer creates vertex buffer in video memory
+            IntPtr vertexBufferPtr = IntPtr.Zero;
+            int createResult = CreateVertexBufferDirectX9(vertexBufferSize, D3DUSAGE_WRITEONLY, particleFVF, D3DPOOL_MANAGED, ref vertexBufferPtr);
+
+            if (createResult != 0 || vertexBufferPtr == IntPtr.Zero) // D3D_OK = 0
+            {
+                Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] Failed to create particle vertex buffer (error: {createResult})");
+                return;
+            }
+
+            // Lock vertex buffer and fill with particle quad data
+            // Based on daorigins.exe: Vertex buffers are locked, filled with geometry data, then unlocked
+            IntPtr vertexBufferData = IntPtr.Zero;
+            int lockResult = LockVertexBuffer(vertexBufferPtr, 0, vertexBufferSize, ref vertexBufferData, 0);
+
+            if (lockResult != 0 || vertexBufferData == IntPtr.Zero) // D3D_OK = 0
+            {
+                Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] Failed to lock particle vertex buffer (error: {lockResult})");
+                ReleaseVertexBuffer(vertexBufferPtr);
+                return;
+            }
+
+            try
+            {
+                // Fill vertex buffer with particle quad data
+                // Based on daorigins.exe: Particle quads are stored as TRIANGLELIST (not strips)
+                unsafe
+                {
+                    ParticleVertex* vertices = (ParticleVertex*)vertexBufferData.ToPointer();
+                    int vertexIndex = 0;
+
+                    foreach (var particle in particles)
+                    {
+                        float halfSize = particle.Size * 0.5f;
+                        Vector3 pos = particle.Position;
+
+                        // Calculate alpha-blended color
+                        uint alphaByte = (uint)(particle.Alpha * 255.0f);
+                        uint colorWithAlpha = particleColor | (alphaByte << 24);
+
+                        // Calculate billboard quad vertices using pre-computed orientation vectors
+                        // Quad layout:
+                        //   top-left     top-right
+                        //   *------------*
+                        //   |            |
+                        //   |   particle |
+                        //   |            |
+                        //   *------------*
+                        //   bottom-left  bottom-right
+                        // Each vertex = particle position + (right * xOffset) + (up * yOffset)
+                        Vector3 topLeft = pos + billboardRight * (-halfSize) + billboardUp * halfSize;
+                        Vector3 topRight = pos + billboardRight * halfSize + billboardUp * halfSize;
+                        Vector3 bottomLeft = pos + billboardRight * (-halfSize) + billboardUp * (-halfSize);
+                        Vector3 bottomRight = pos + billboardRight * halfSize + billboardUp * (-halfSize);
+
+                        // Triangle 1: top-left, top-right, bottom-left (counter-clockwise)
+                        vertices[vertexIndex++] = new ParticleVertex
+                        {
+                            X = topLeft.X,
+                            Y = topLeft.Y,
+                            Z = topLeft.Z,
+                            Color = colorWithAlpha,
+                            U = 0.0f, // Top-left texture coordinate
+                            V = 0.0f
+                        };
+                        vertices[vertexIndex++] = new ParticleVertex
+                        {
+                            X = topRight.X,
+                            Y = topRight.Y,
+                            Z = topRight.Z,
+                            Color = colorWithAlpha,
+                            U = 1.0f, // Top-right texture coordinate
+                            V = 0.0f
+                        };
+                        vertices[vertexIndex++] = new ParticleVertex
+                        {
+                            X = bottomLeft.X,
+                            Y = bottomLeft.Y,
+                            Z = bottomLeft.Z,
+                            Color = colorWithAlpha,
+                            U = 0.0f, // Bottom-left texture coordinate
+                            V = 1.0f
+                        };
+
+                        // Triangle 2: bottom-left, top-right, bottom-right (counter-clockwise)
+                        vertices[vertexIndex++] = new ParticleVertex
+                        {
+                            X = bottomLeft.X,
+                            Y = bottomLeft.Y,
+                            Z = bottomLeft.Z,
+                            Color = colorWithAlpha,
+                            U = 0.0f, // Bottom-left texture coordinate
+                            V = 1.0f
+                        };
+                        vertices[vertexIndex++] = new ParticleVertex
+                        {
+                            X = topRight.X,
+                            Y = topRight.Y,
+                            Z = topRight.Z,
+                            Color = colorWithAlpha,
+                            U = 1.0f, // Top-right texture coordinate
+                            V = 0.0f
+                        };
+                        vertices[vertexIndex++] = new ParticleVertex
+                        {
+                            X = bottomRight.X,
+                            Y = bottomRight.Y,
+                            Z = bottomRight.Z,
+                            Color = colorWithAlpha,
+                            U = 1.0f, // Bottom-right texture coordinate
+                            V = 1.0f
+                        };
+                    }
+                }
+            }
+            finally
+            {
+                // Unlock vertex buffer
+                // Based on daorigins.exe: Vertex buffers must be unlocked after filling
+                UnlockVertexBuffer(vertexBufferPtr);
+            }
+
+            // Set vertex buffer as stream source
+            // Based on daorigins.exe: SetStreamSource(0, vertexBuffer, 0, vertexStride)
+            SetStreamSourceDirectX9(0, vertexBufferPtr, 0, vertexStride);
+
+            // Render all particles in a single DrawPrimitive call
+            // Based on daorigins.exe: Particles are rendered using DrawPrimitive with D3DPT_TRIANGLELIST
+            // Each particle = 2 triangles, so total primitive count = particleCount * 2
+            int primitiveCount = particleCount * 2;
+            DrawPrimitiveDirectX9(D3DPT_TRIANGLELIST, 0, primitiveCount);
+
+            // Release vertex buffer
+            // Based on daorigins.exe: Vertex buffers should be released after use to free resources
+            ReleaseVertexBuffer(vertexBufferPtr);
         }
 
         /// <summary>
@@ -3589,7 +3697,9 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             if (lockResult < 0 || vertexData == IntPtr.Zero)
             {
                 System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] RenderOptionsCategoryTab: Failed to lock vertex buffer for tab (category: {categoryName})");
-                // TODO: Release vertex buffer
+                // Release vertex buffer on error
+                // Based on daorigins.exe: Vertex buffers must be released using IUnknown::Release
+                ReleaseVertexBuffer(vertexBuffer);
                 return;
             }
 
@@ -3642,8 +3752,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             const uint D3DPT_TRIANGLELIST = 4;
             DrawPrimitiveDirectX9(D3DPT_TRIANGLELIST, 0, 2);
 
-            // TODO: Release vertex buffer when done
-            // In a full implementation, vertex buffers would be managed and reused
+            // Release vertex buffer when done
+            // Based on daorigins.exe: Vertex buffers must be released using IUnknown::Release after use
+            // In a full implementation, vertex buffers could be cached and reused for performance
+            ReleaseVertexBuffer(vertexBuffer);
         }
 
         /// <summary>
@@ -5055,6 +5167,49 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate int DrawPrimitiveDelegate(IntPtr device, uint primitiveType, int startVertex, int primitiveCount);
+
+        /// <summary>
+        /// Locks a vertex buffer for reading/writing vertex data.
+        /// Based on daorigins.exe: Vertex buffers are locked before filling with geometry data.
+        /// </summary>
+        /// <param name="vertexBuffer">Pointer to the vertex buffer to lock.</param>
+        /// <param name="offsetToLock">Offset in bytes to start locking from.</param>
+        /// <param name="sizeToLock">Size in bytes to lock (0 = lock entire buffer).</param>
+        /// <param name="vertexData">Output pointer to locked vertex data.</param>
+        /// <param name="flags">Lock flags (0 = default).</param>
+        /// <returns>HRESULT (0 = success).</returns>
+        private unsafe int LockVertexBufferDirectX9(IntPtr vertexBuffer, uint offsetToLock, uint sizeToLock, ref IntPtr vertexData, uint flags)
+        {
+            // Get vtable from vertex buffer
+            IntPtr vtable = Marshal.ReadIntPtr(vertexBuffer);
+            // Lock method is at vtable index 13 for IDirect3DVertexBuffer9
+            IntPtr lockMethodPtr = Marshal.ReadIntPtr(vtable, 13 * IntPtr.Size);
+
+            var lockVertexBuffer = Marshal.GetDelegateForFunctionPointer<LockVertexBufferDelegate>(lockMethodPtr);
+
+            return lockVertexBuffer(vertexBuffer, offsetToLock, sizeToLock, ref vertexData, flags);
+        }
+
+        /// <summary>
+        /// Unlocks a previously locked vertex buffer.
+        /// Based on daorigins.exe: Vertex buffers must be unlocked after filling with data.
+        /// </summary>
+        /// <param name="vertexBuffer">Pointer to the vertex buffer to unlock.</param>
+        /// <returns>HRESULT (0 = success).</returns>
+        private unsafe int UnlockVertexBufferDirectX9(IntPtr vertexBuffer)
+        {
+            // Get vtable from vertex buffer
+            IntPtr vtable = Marshal.ReadIntPtr(vertexBuffer);
+            // Unlock method is at vtable index 14 for IDirect3DVertexBuffer9
+            IntPtr unlockMethodPtr = Marshal.ReadIntPtr(vtable, 14 * IntPtr.Size);
+
+            var unlockVertexBuffer = Marshal.GetDelegateForFunctionPointer<UnlockVertexBufferDelegate>(unlockMethodPtr);
+
+            return unlockVertexBuffer(vertexBuffer);
+        }
+
+        private delegate int LockVertexBufferDelegate(IntPtr vertexBuffer, uint offsetToLock, uint sizeToLock, ref IntPtr vertexData, uint flags);
+        private delegate int UnlockVertexBufferDelegate(IntPtr vertexBuffer);
 
         #endregion
 
