@@ -14,11 +14,23 @@ namespace Andastra.Runtime.Stride.Graphics
     {
         private readonly StrideGraphics.GraphicsDevice _device;
         private readonly StrideGraphics.CommandList _graphicsContext;
+        private RasterizerStateDescription _currentRasterizerState;
+        private DepthStencilStateDescription _currentDepthStencilState;
+        private BlendStateDescription _currentBlendState;
+        private SamplerStateDescription[] _currentSamplerStates;
 
         public StrideGraphicsDevice(StrideGraphics.GraphicsDevice device, StrideGraphics.CommandList graphicsContext = null)
         {
             _device = device ?? throw new ArgumentNullException(nameof(device));
             _graphicsContext = graphicsContext;
+            _currentRasterizerState = RasterizerStateDescription.Default;
+            _currentDepthStencilState = DepthStencilStateDescription.Default;
+            _currentBlendState = BlendStateDescription.Default;
+            _currentSamplerStates = new SamplerStateDescription[16];
+            for (int i = 0; i < _currentSamplerStates.Length; i++)
+            {
+                _currentSamplerStates[i] = SamplerStateDescription.Default;
+            }
         }
 
         /// <summary>
@@ -101,7 +113,7 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public ITexture2D CreateTexture2D(int width, int height, byte[] data)
         {
-            var texture = Texture2D.New2D(_device, width, height, PixelFormat.R8G8B8A8_UNorm);
+            var texture = StrideGraphics.Texture2D.New2D(_device, width, height, StrideGraphics.PixelFormat.R8G8B8A8_UNorm);
             if (data != null)
             {
                 var colorData = new Stride.Core.Mathematics.Color[data.Length / 4];
@@ -121,8 +133,8 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public IRenderTarget CreateRenderTarget(int width, int height, bool hasDepthStencil = true)
         {
-            var rt = Texture2D.New2D(_device, width, height, PixelFormat.R8G8B8A8_UNorm, TextureFlags.RenderTarget);
-            var depthBuffer = hasDepthStencil ? Texture2D.New2D(_device, width, height, PixelFormat.D24_UNorm_S8_UInt, TextureFlags.DepthStencil) : null;
+            var rt = StrideGraphics.Texture2D.New2D(_device, width, height, StrideGraphics.PixelFormat.R8G8B8A8_UNorm, StrideGraphics.TextureFlags.RenderTarget);
+            var depthBuffer = hasDepthStencil ? StrideGraphics.Texture2D.New2D(_device, width, height, StrideGraphics.PixelFormat.D24_UNorm_S8_UInt, StrideGraphics.TextureFlags.DepthStencil) : null;
             return new StrideRenderTarget(rt, depthBuffer, _graphicsContext);
         }
 
@@ -216,11 +228,17 @@ namespace Andastra.Runtime.Stride.Graphics
                 throw new InvalidOperationException("CommandList is required for DrawIndexedPrimitives");
             }
 
+            // Set primitive topology
+            _graphicsContext.SetPrimitiveTopology(ConvertPrimitiveType(primitiveType));
+
+            // Calculate index count based on primitive type
+            int verticesPerPrimitive = GetVerticesPerPrimitive(primitiveType);
+            int indexCount = primitiveCount * verticesPerPrimitive;
+
             _graphicsContext.DrawIndexed(
-                ConvertPrimitiveType(primitiveType),
+                indexCount,
                 startIndex,
-                baseVertex,
-                primitiveCount
+                baseVertex
             );
         }
 
@@ -231,95 +249,94 @@ namespace Andastra.Runtime.Stride.Graphics
                 throw new InvalidOperationException("CommandList is required for DrawPrimitives");
             }
 
+            // Set primitive topology
+            _graphicsContext.SetPrimitiveTopology(ConvertPrimitiveType(primitiveType));
+
+            // Calculate vertex count based on primitive type
+            int verticesPerPrimitive = GetVerticesPerPrimitive(primitiveType);
+            int vertexCount = primitiveCount * verticesPerPrimitive;
+
             _graphicsContext.Draw(
-                ConvertPrimitiveType(primitiveType),
-                vertexOffset,
-                primitiveCount
+                vertexCount,
+                vertexOffset
             );
         }
 
         public void SetRasterizerState(IRasterizerState rasterizerState)
         {
-            if (_graphicsContext == null)
-            {
-                throw new InvalidOperationException("CommandList is required for SetRasterizerState");
-            }
-
             if (rasterizerState == null)
             {
-                _graphicsContext.SetRasterizerState(RasterizerStateDescription.Default);
+                _currentRasterizerState = RasterizerStateDescription.Default;
             }
             else if (rasterizerState is StrideRasterizerState strideRs)
             {
-                _graphicsContext.SetRasterizerState(strideRs.Description);
+                _currentRasterizerState = strideRs.Description;
             }
             else
             {
                 throw new ArgumentException("Rasterizer state must be a StrideRasterizerState", nameof(rasterizerState));
             }
+            // TODO: STUB - In Stride, state is applied through PipelineState, not directly on CommandList
+            // The state is stored and will be applied when a PipelineState is created
         }
 
         public void SetDepthStencilState(IDepthStencilState depthStencilState)
         {
-            if (_graphicsContext == null)
-            {
-                throw new InvalidOperationException("CommandList is required for SetDepthStencilState");
-            }
-
             if (depthStencilState == null)
             {
-                _graphicsContext.SetDepthStencilState(DepthStencilStateDescription.Default);
+                _currentDepthStencilState = DepthStencilStateDescription.Default;
             }
             else if (depthStencilState is StrideDepthStencilState strideDs)
             {
-                _graphicsContext.SetDepthStencilState(strideDs.Description);
+                _currentDepthStencilState = strideDs.Description;
             }
             else
             {
                 throw new ArgumentException("Depth-stencil state must be a StrideDepthStencilState", nameof(depthStencilState));
             }
+            // TODO: STUB - In Stride, state is applied through PipelineState, not directly on CommandList
+            // The state is stored and will be applied when a PipelineState is created
         }
 
         public void SetBlendState(IBlendState blendState)
         {
-            if (_graphicsContext == null)
-            {
-                throw new InvalidOperationException("CommandList is required for SetBlendState");
-            }
-
             if (blendState == null)
             {
-                _graphicsContext.SetBlendState(BlendStateDescription.Default);
+                _currentBlendState = BlendStateDescription.Default;
             }
             else if (blendState is StrideBlendState strideBs)
             {
-                _graphicsContext.SetBlendState(strideBs.Description);
+                _currentBlendState = strideBs.Description;
             }
             else
             {
                 throw new ArgumentException("Blend state must be a StrideBlendState", nameof(blendState));
             }
+            // TODO: STUB - In Stride, state is applied through PipelineState, not directly on CommandList
+            // The state is stored and will be applied when a PipelineState is created
         }
 
         public void SetSamplerState(int index, ISamplerState samplerState)
         {
-            if (_graphicsContext == null)
+            if (index < 0 || index >= _currentSamplerStates.Length)
             {
-                throw new InvalidOperationException("CommandList is required for SetSamplerState");
+                throw new ArgumentOutOfRangeException(nameof(index), "Sampler state index must be between 0 and " + (_currentSamplerStates.Length - 1));
             }
 
             if (samplerState == null)
             {
-                _graphicsContext.SetSamplerState(index, SamplerStateDescription.Default);
+                _currentSamplerStates[index] = SamplerStateDescription.Default;
             }
             else if (samplerState is StrideSamplerState strideSs)
             {
-                _graphicsContext.SetSamplerState(index, strideSs.Description);
+                _currentSamplerStates[index] = strideSs.Description;
             }
             else
             {
                 throw new ArgumentException("Sampler state must be a StrideSamplerState", nameof(samplerState));
             }
+            // TODO: STUB - In Stride, state is applied through PipelineState, not directly on CommandList
+            // The state is stored and will be applied when a PipelineState is created
         }
 
         public IBasicEffect CreateBasicEffect()
@@ -368,6 +385,23 @@ namespace Andastra.Runtime.Stride.Graphics
                     return StrideGraphics.PrimitiveType.PointList;
                 default:
                     return StrideGraphics.PrimitiveType.TriangleList;
+            }
+        }
+
+        private static int GetVerticesPerPrimitive(Andastra.Runtime.Graphics.PrimitiveType type)
+        {
+            switch (type)
+            {
+                case Andastra.Runtime.Graphics.PrimitiveType.TriangleList:
+                case Andastra.Runtime.Graphics.PrimitiveType.TriangleStrip:
+                    return 3;
+                case Andastra.Runtime.Graphics.PrimitiveType.LineList:
+                case Andastra.Runtime.Graphics.PrimitiveType.LineStrip:
+                    return 2;
+                case Andastra.Runtime.Graphics.PrimitiveType.PointList:
+                    return 1;
+                default:
+                    return 3;
             }
         }
     }
