@@ -966,7 +966,7 @@ namespace Andastra.Parsing.Reader
                 Dictionary<string, string> fileSectionDict = SectionToDictionary(_ini[fileSectionName]);
                 modifications.PopTslPatcherVars(fileSectionDict, defaultDestination, defaultSourceFolder);
 
-                // TODO:  Parse all hack entries for this file
+                // Parse all hack entries for this file
                 ParseNCSHackEntries(fileSectionDict, modifications);
 
                 // Add the completed modifications to config
@@ -1025,6 +1025,16 @@ namespace Andastra.Parsing.Reader
                 {
                     throw new OverflowException($"Offset value was either too large or too small for an Int32: '{offsetStr}'", ex);
                 }
+                catch (FormatException ex)
+                {
+                    throw new FormatException($"Invalid offset format: '{offsetStr}'. Expected decimal number or hex number with 0x prefix.", ex);
+                }
+
+                // Validate offset is non-negative (byte offsets cannot be negative)
+                if (offset < 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(offsetStr), offsetStr, $"Offset must be non-negative, but got {offset}");
+                }
 
                 // Parse type specifier and value
                 // Based on PyKotor: type_specifier = "u16" (default), parsed_value = value_str
@@ -1050,7 +1060,17 @@ namespace Andastra.Parsing.Reader
                     // StrRef token reference
                     // Based on PyKotor: Always use STRREF32 for compatibility (handles both 16-bit and 32-bit cases)
                     // TSLPatcher HACKList syntax: "StrRef# tokens are automatically handled as 32-bit values"
-                    tokenIdOrValue = ParseIntValue(parsedValue.Substring(6).Trim());
+                    // Extract numeric suffix after "strref" (case-insensitive, minimum 6 chars: "strref")
+                    if (parsedValue.Length < 6)
+                    {
+                        throw new FormatException($"Invalid StrRef token format: '{parsedValue}'. Expected 'StrRef#' where # is a number.");
+                    }
+                    string suffix = parsedValue.Substring(6).Trim();
+                    if (string.IsNullOrEmpty(suffix))
+                    {
+                        throw new FormatException($"Invalid StrRef token format: '{parsedValue}'. Expected 'StrRef#' where # is a number, but no number found.");
+                    }
+                    tokenIdOrValue = ParseIntValue(suffix);
                     tokenType = NCSTokenType.STRREF32;
                 }
                 else if (lowerValue.StartsWith("2damemory"))
@@ -1058,7 +1078,17 @@ namespace Andastra.Parsing.Reader
                     // 2DA memory token reference
                     // Based on PyKotor: Always use MEMORY_2DA32 for compatibility (handles both 16-bit and 32-bit cases)
                     // TSLPatcher HACKList syntax: "2DAMEMORY# tokens are automatically handled as 32-bit values"
-                    tokenIdOrValue = ParseIntValue(parsedValue.Substring(9).Trim());
+                    // Extract numeric suffix after "2damemory" (case-insensitive, minimum 9 chars: "2damemory")
+                    if (parsedValue.Length < 9)
+                    {
+                        throw new FormatException($"Invalid 2DAMEMORY token format: '{parsedValue}'. Expected '2DAMEMORY#' where # is a number.");
+                    }
+                    string suffix = parsedValue.Substring(9).Trim();
+                    if (string.IsNullOrEmpty(suffix))
+                    {
+                        throw new FormatException($"Invalid 2DAMEMORY token format: '{parsedValue}'. Expected '2DAMEMORY#' where # is a number, but no number found.");
+                    }
+                    tokenIdOrValue = ParseIntValue(suffix);
                     tokenType = NCSTokenType.MEMORY_2DA32;
                 }
                 else
