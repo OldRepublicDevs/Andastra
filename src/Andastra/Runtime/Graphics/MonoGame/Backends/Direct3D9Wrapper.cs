@@ -712,7 +712,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 AutoDepthStencilFormat = 0x0000004B, // D3DFMT_D24S8
                 Flags = 0,
                 FullScreenRefreshRateInHz = 0,
-                PresentationInterval = _settings.VSync ? 0x00000001u : 0x80000000u // D3DPRESENT_INTERVAL_ONE or D3DPRESENT_INTERVAL_IMMEDIATE
+                PresentationInterval = (_settings.VSync != 0) ? 0x00000001u : 0x80000000u // D3DPRESENT_INTERVAL_ONE or D3DPRESENT_INTERVAL_IMMEDIATE
             };
 
             // Marshal present parameters

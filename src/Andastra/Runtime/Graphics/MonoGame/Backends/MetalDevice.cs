@@ -273,7 +273,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             IntPtr handle = new IntPtr(_nextResourceHandle++);
             var pipeline = new MetalComputePipeline(handle, desc, computePipelineState);
-            _resources[handle] = pipeline;
+            // Note: MetalComputePipeline is not tracked in a dictionary as it's not a standard resource type
             return pipeline;
         }
 
@@ -653,21 +653,18 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         private TextureUsage ConvertTextureUsage(TextureUsage usage)
         {
-            TextureUsage result = TextureUsage.None;
-            if ((usage & TextureUsage.ShaderResource) != 0) result |= Andastra.Runtime.MonoGame.Rendering.TextureUsage.ShaderResource;
-            if ((usage & TextureUsage.RenderTarget) != 0) result |= Andastra.Runtime.MonoGame.Rendering.TextureUsage.RenderTarget;
-            if ((usage & TextureUsage.DepthStencil) != 0) result |= Andastra.Runtime.MonoGame.Rendering.TextureUsage.DepthStencil;
-            if ((usage & TextureUsage.UnorderedAccess) != 0) result |= Andastra.Runtime.MonoGame.Rendering.TextureUsage.UnorderedAccess;
-            return result;
+            // TextureUsage is already the correct type from Interfaces namespace
+            // This is a pass-through conversion
+            return usage;
         }
 
         private BufferUsage ConvertBufferUsage(BufferUsageFlags usage)
         {
-            BufferUsage result = BufferUsage.None;
-            if ((usage & BufferUsageFlags.VertexBuffer) != 0) result |= Andastra.Runtime.MonoGame.Rendering.BufferUsage.Vertex;
-            if ((usage & BufferUsageFlags.IndexBuffer) != 0) result |= Andastra.Runtime.MonoGame.Rendering.BufferUsage.Index;
-            if ((usage & BufferUsageFlags.ConstantBuffer) != 0) result |= Andastra.Runtime.MonoGame.Rendering.BufferUsage.Constant;
-            if ((usage & BufferUsageFlags.UnorderedAccess) != 0) result |= Andastra.Runtime.MonoGame.Rendering.BufferUsage.UnorderedAccess;
+            BufferUsage result = 0;
+            if ((usage & BufferUsageFlags.VertexBuffer) != 0) result |= BufferUsage.Vertex;
+            if ((usage & BufferUsageFlags.IndexBuffer) != 0) result |= BufferUsage.Index;
+            if ((usage & BufferUsageFlags.ConstantBuffer) != 0) result |= BufferUsage.Constant;
+            if ((usage & BufferUsageFlags.UnorderedAccess) != 0) result |= BufferUsage.Structured;
             return result;
         }
 
@@ -788,7 +785,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// Based on Metal API: MTLAccelerationStructureTriangleGeometryDescriptor vertex format
         /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlaccelerationstructuretrianglegeometrydescriptor
         /// </summary>
-        private uint ConvertVertexFormatToMetal(TextureFormat format)
+        internal static uint ConvertVertexFormatToMetal(TextureFormat format)
         {
             // Metal supports float3, float2, and half3, half2 vertex formats for raytracing
             // Map common vertex formats to Metal equivalents
@@ -813,7 +810,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// Based on Metal API: MTLAccelerationStructureTriangleGeometryDescriptor index format
         /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlaccelerationstructuretrianglegeometrydescriptor
         /// </summary>
-        private uint ConvertIndexFormatToMetal(TextureFormat format)
+        internal static uint ConvertIndexFormatToMetal(TextureFormat format)
         {
             // Metal supports UInt16 and UInt32 index formats for raytracing
             switch (format)
@@ -833,7 +830,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// Based on Metal API: MTLAccelerationStructureGeometryDescriptor options
         /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlaccelerationstructuregeometrydescriptor
         /// </summary>
-        private uint ConvertGeometryFlagsToMetal(GeometryFlags flags)
+        internal static uint ConvertGeometryFlagsToMetal(GeometryFlags flags)
         {
             uint metalFlags = 0;
 
@@ -943,27 +940,47 @@ namespace Andastra.Runtime.MonoGame.Backends
         }
 
         /// <summary>
-        /// Gets the primitive type from the current graphics state.
+        /// Gets the primitive type from a graphics pipeline.
         /// Retrieves PrimitiveTopology from the pipeline descriptor and converts it to MetalPrimitiveType.
         /// Returns MetalPrimitiveType.Triangle as default if pipeline is not set.
         /// </summary>
-        private MetalPrimitiveType GetPrimitiveTypeFromGraphicsState()
+        internal static MetalPrimitiveType GetPrimitiveTypeFromPipeline(IGraphicsPipeline pipeline)
         {
             // Default to Triangle if pipeline is not set (most common case)
             MetalPrimitiveType primitiveType = MetalPrimitiveType.Triangle;
 
-            // Get primitive type from current graphics state pipeline
-            if (_currentGraphicsState.Pipeline != null)
+            // Get primitive type from pipeline
+            if (pipeline != null)
             {
-                var metalPipeline = _currentGraphicsState.Pipeline as MetalPipeline;
+                var metalPipeline = pipeline as MetalPipeline;
                 if (metalPipeline != null)
                 {
                     PrimitiveTopology topology = metalPipeline.Desc.PrimitiveTopology;
-                    primitiveType = ConvertPrimitiveTopologyToMetal(topology);
+                    primitiveType = ConvertPrimitiveTopologyToMetalStatic(topology);
                 }
             }
 
             return primitiveType;
+        }
+
+        /// <summary>
+        /// Static helper to convert PrimitiveTopology to MetalPrimitiveType.
+        /// </summary>
+        private static MetalPrimitiveType ConvertPrimitiveTopologyToMetalStatic(PrimitiveTopology topology)
+        {
+            switch (topology)
+            {
+                case PrimitiveTopology.PointList:
+                    return MetalPrimitiveType.Point;
+                case PrimitiveTopology.LineList:
+                case PrimitiveTopology.LineStrip:
+                    return MetalPrimitiveType.Line;
+                case PrimitiveTopology.TriangleList:
+                case PrimitiveTopology.TriangleStrip:
+                    return MetalPrimitiveType.Triangle;
+                default:
+                    return MetalPrimitiveType.Triangle;
+            }
         }
 
         private BlendState ConvertBlendState(BlendStateDesc state)
@@ -985,27 +1002,27 @@ namespace Andastra.Runtime.MonoGame.Backends
             switch (factor)
             {
                 case BlendFactor.Zero:
-                    return Andastra.Runtime.MonoGame.Rendering.BlendFactor.Zero;
+                    return BlendFactor.Zero;
                 case BlendFactor.One:
-                    return Andastra.Runtime.MonoGame.Rendering.BlendFactor.One;
+                    return BlendFactor.One;
                 case BlendFactor.SrcColor:
-                    return Andastra.Runtime.MonoGame.Rendering.BlendFactor.SrcColor;
+                    return BlendFactor.SrcColor;
                 case BlendFactor.InvSrcColor:
-                    return Andastra.Runtime.MonoGame.Rendering.BlendFactor.InvSrcColor;
+                    return BlendFactor.InvSrcColor;
                 case BlendFactor.SrcAlpha:
-                    return Andastra.Runtime.MonoGame.Rendering.BlendFactor.SrcAlpha;
+                    return BlendFactor.SrcAlpha;
                 case BlendFactor.InvSrcAlpha:
-                    return Andastra.Runtime.MonoGame.Rendering.BlendFactor.InvSrcAlpha;
+                    return BlendFactor.InvSrcAlpha;
                 case BlendFactor.DstAlpha:
-                    return Andastra.Runtime.MonoGame.Rendering.BlendFactor.DstAlpha;
+                    return BlendFactor.DstAlpha;
                 case BlendFactor.InvDstAlpha:
-                    return Andastra.Runtime.MonoGame.Rendering.BlendFactor.InvDstAlpha;
+                    return BlendFactor.InvDstAlpha;
                 case BlendFactor.DstColor:
-                    return Andastra.Runtime.MonoGame.Rendering.BlendFactor.DstColor;
+                    return BlendFactor.DstColor;
                 case BlendFactor.InvDstColor:
-                    return Andastra.Runtime.MonoGame.Rendering.BlendFactor.InvDstColor;
+                    return BlendFactor.InvDstColor;
                 default:
-                    return Andastra.Runtime.MonoGame.Rendering.BlendFactor.One;
+                    return BlendFactor.One;
             }
         }
 
@@ -1014,17 +1031,17 @@ namespace Andastra.Runtime.MonoGame.Backends
             switch (op)
             {
                 case BlendOp.Add:
-                    return Andastra.Runtime.MonoGame.Rendering.BlendOp.Add;
+                    return BlendOp.Add;
                 case BlendOp.Subtract:
-                    return Andastra.Runtime.MonoGame.Rendering.BlendOp.Subtract;
+                    return BlendOp.Subtract;
                 case BlendOp.ReverseSubtract:
-                    return Andastra.Runtime.MonoGame.Rendering.BlendOp.ReverseSubtract;
+                    return BlendOp.ReverseSubtract;
                 case BlendOp.Min:
-                    return Andastra.Runtime.MonoGame.Rendering.BlendOp.Min;
+                    return BlendOp.Min;
                 case BlendOp.Max:
-                    return Andastra.Runtime.MonoGame.Rendering.BlendOp.Max;
+                    return BlendOp.Max;
                 default:
-                    return Andastra.Runtime.MonoGame.Rendering.BlendOp.Add;
+                    return BlendOp.Add;
             }
         }
 
@@ -1045,13 +1062,13 @@ namespace Andastra.Runtime.MonoGame.Backends
             switch (mode)
             {
                 case CullMode.None:
-                    return Andastra.Runtime.MonoGame.Rendering.CullMode.None;
+                    return CullMode.None;
                 case CullMode.Front:
-                    return Andastra.Runtime.MonoGame.Rendering.CullMode.Front;
+                    return CullMode.Front;
                 case CullMode.Back:
-                    return Andastra.Runtime.MonoGame.Rendering.CullMode.Back;
+                    return CullMode.Back;
                 default:
-                    return Andastra.Runtime.MonoGame.Rendering.CullMode.Back;
+                    return CullMode.Back;
             }
         }
 
@@ -2408,7 +2425,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             // Get texture dimensions for compute shader dispatch
-            TextureDescription desc = texture.Desc;
+            TextureDesc desc = texture.Desc;
             if (desc.Width == 0 || desc.Height == 0)
             {
                 Console.WriteLine("[MetalCommandList] ClearUAVFloat: Invalid texture dimensions");
@@ -2644,7 +2661,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             // Get texture dimensions for compute shader dispatch
-            TextureDescription desc = texture.Desc;
+            TextureDesc desc = texture.Desc;
             if (desc.Width == 0 || desc.Height == 0)
             {
                 Console.WriteLine("[MetalCommandList] ClearUAVUint: Invalid texture dimensions");
@@ -3175,7 +3192,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             // Get current primitive type from graphics state
-            MetalPrimitiveType primitiveType = GetPrimitiveTypeFromGraphicsState();
+            MetalPrimitiveType primitiveType = MetalDevice.GetPrimitiveTypeFromPipeline(_currentGraphicsState.Pipeline);
 
             // Extract draw parameters from DrawArguments
             int vertexStart = args.StartVertexLocation;
@@ -3320,7 +3337,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             // Get current primitive type from graphics state
-            MetalPrimitiveType primitiveType = GetPrimitiveTypeFromGraphicsState();
+            MetalPrimitiveType primitiveType = MetalDevice.GetPrimitiveTypeFromPipeline(_currentGraphicsState.Pipeline);
 
             // Metal's drawPrimitives:indirectBuffer:indirectBufferOffset: method draws a single indirect command
             // For multi-draw indirect, we need to loop and call the method multiple times with stride-based offsets
@@ -4141,14 +4158,14 @@ namespace Andastra.Runtime.MonoGame.Backends
                             (ulong)triangles.VertexOffset,
                             (uint)triangles.VertexStride,
                             (uint)triangles.VertexCount,
-                            ConvertVertexFormatToMetal(triangles.VertexFormat),
+                            MetalDevice.ConvertVertexFormatToMetal(triangles.VertexFormat),
                             indexBuffer,
                             (ulong)(hasIndexBuffer ? triangles.IndexOffset : 0),
                             indexCount,
-                            ConvertIndexFormatToMetal(triangles.IndexFormat),
+                            MetalDevice.ConvertIndexFormatToMetal(triangles.IndexFormat),
                             triangles.TransformBuffer != null ? ((MetalBuffer)triangles.TransformBuffer).NativeHandle : IntPtr.Zero,
                             (ulong)(triangles.TransformBuffer != null ? triangles.TransformOffset : 0),
-                            ConvertGeometryFlagsToMetal(geometry.Flags));
+                            MetalDevice.ConvertGeometryFlagsToMetal(geometry.Flags));
                     }
 
                     // Set geometry count on descriptor

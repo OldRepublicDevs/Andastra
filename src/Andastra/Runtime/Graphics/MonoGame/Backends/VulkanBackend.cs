@@ -64,27 +64,62 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             _settings = settings;
 
-            // TODO: STUB - Initialize Vulkan device and query capabilities
-            // This should create a VulkanDevice instance, initialize it, and query capabilities
-            _device = new VulkanDevice();
-            
-            // Initialize capabilities with default values
-            _capabilities = new GraphicsCapabilities
-            {
-                MaxTextureSize = 8192,
-                MaxRenderTargets = 8,
-                MaxAnisotropy = 16,
-                SupportsComputeShaders = true,
-                SupportsGeometryShaders = true,
-                SupportsTessellation = true,
-                SupportsRaytracing = false, // TODO: Query from device
-                SupportsMeshShaders = false,
-                SupportsVariableRateShading = false,
-                DeviceName = "Vulkan Device",
-                VendorName = "Unknown",
-                ActiveBackend = GraphicsBackend.Vulkan
-            };
+            // Create Vulkan instance and select physical device
+            IntPtr instance;
+            IntPtr physicalDevice;
+            uint graphicsQueueFamilyIndex;
+            uint computeQueueFamilyIndex;
+            uint transferQueueFamilyIndex;
+            GraphicsCapabilities capabilities;
 
+            if (!VulkanDevice.CreateVulkanInstance(
+                out instance,
+                out physicalDevice,
+                out graphicsQueueFamilyIndex,
+                out computeQueueFamilyIndex,
+                out transferQueueFamilyIndex,
+                out capabilities))
+            {
+                return false;
+            }
+
+            // Create logical device
+            IntPtr device;
+            IntPtr graphicsQueue;
+            IntPtr computeQueue;
+            IntPtr transferQueue;
+
+            if (!CreateVulkanDevice(
+                instance,
+                physicalDevice,
+                graphicsQueueFamilyIndex,
+                computeQueueFamilyIndex,
+                transferQueueFamilyIndex,
+                out device,
+                out graphicsQueue,
+                out computeQueue,
+                out transferQueue,
+                ref capabilities))
+            {
+                // Cleanup instance
+                if (instance != IntPtr.Zero)
+                {
+                    // vkDestroyInstance will be called in VulkanDevice cleanup
+                }
+                return false;
+            }
+
+            // Create VulkanDevice wrapper
+            _device = new VulkanDevice(
+                device,
+                instance,
+                physicalDevice,
+                graphicsQueue,
+                computeQueue,
+                transferQueue,
+                capabilities);
+
+            _capabilities = capabilities;
             _initialized = true;
             return true;
         }
@@ -200,6 +235,70 @@ namespace Andastra.Runtime.MonoGame.Backends
         public void Dispose()
         {
             Shutdown();
+        }
+
+        /// <summary>
+        /// Creates a Vulkan logical device and retrieves queue handles.
+        /// Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateDevice.html
+        /// </summary>
+        private bool CreateVulkanDevice(
+            IntPtr instance,
+            IntPtr physicalDevice,
+            uint graphicsQueueFamilyIndex,
+            uint computeQueueFamilyIndex,
+            uint transferQueueFamilyIndex,
+            out IntPtr device,
+            out IntPtr graphicsQueue,
+            out IntPtr computeQueue,
+            out IntPtr transferQueue,
+            ref GraphicsCapabilities capabilities)
+        {
+            device = IntPtr.Zero;
+            graphicsQueue = IntPtr.Zero;
+            computeQueue = IntPtr.Zero;
+            transferQueue = IntPtr.Zero;
+
+            try
+            {
+                // Get required function pointers from VulkanDevice
+                // These should already be loaded by CreateVulkanInstance
+                System.Reflection.FieldInfo vkCreateDeviceField = typeof(VulkanDevice).GetField("vkCreateDevice", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+                System.Reflection.FieldInfo vkGetDeviceQueueField = typeof(VulkanDevice).GetField("vkGetDeviceQueue", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+                System.Reflection.FieldInfo vkGetPhysicalDeviceFeaturesField = typeof(VulkanDevice).GetField("vkGetPhysicalDeviceFeatures", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+                System.Reflection.FieldInfo vkEnumerateDeviceExtensionPropertiesField = typeof(VulkanDevice).GetField("vkEnumerateDeviceExtensionProperties", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+
+                if (vkCreateDeviceField == null || vkGetDeviceQueueField == null || vkGetPhysicalDeviceFeaturesField == null)
+                {
+                    return false;
+                }
+
+                // Get function delegates
+                object vkCreateDeviceObj = vkCreateDeviceField.GetValue(null);
+                object vkGetDeviceQueueObj = vkGetDeviceQueueField.GetValue(null);
+                object vkGetPhysicalDeviceFeaturesObj = vkGetPhysicalDeviceFeaturesField.GetValue(null);
+
+                if (vkCreateDeviceObj == null || vkGetDeviceQueueObj == null || vkGetPhysicalDeviceFeaturesObj == null)
+                {
+                    return false;
+                }
+
+                // Call public static method in VulkanDevice
+                return VulkanDevice.CreateVulkanDeviceInternal(
+                    instance,
+                    physicalDevice,
+                    graphicsQueueFamilyIndex,
+                    computeQueueFamilyIndex,
+                    transferQueueFamilyIndex,
+                    out device,
+                    out graphicsQueue,
+                    out computeQueue,
+                    out transferQueue,
+                    ref capabilities);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
     }
 }

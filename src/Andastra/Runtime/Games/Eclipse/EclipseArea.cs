@@ -4682,14 +4682,14 @@ namespace Andastra.Runtime.Games.Eclipse
             // Based on daorigins.exe: Shadow map frustum is calculated to cover camera view frustum
             // DragonAge2.exe: Enhanced frustum calculation with cascaded shadow map support
             Vector3 lightDirection = Vector3.Normalize(light.Direction);
-            
+
             // Calculate shadow map center (focus on camera position or scene center)
             Vector3 shadowMapCenter = cameraPosition;
-            
+
             // Calculate shadow map size based on camera view distance
             // Use a reasonable default size that covers most scenes
             float shadowMapSize = 100.0f; // Half-size (total coverage is 200x200 units)
-            
+
             // For better quality, we could calculate the exact frustum bounds
             // For now, use a fixed size that works well for most scenarios
             // Full implementation would:
@@ -4697,15 +4697,15 @@ namespace Andastra.Runtime.Games.Eclipse
             // 2. Transform corners to light space
             // 3. Calculate bounding box in light space
             // 4. Use bounding box extents for shadow map size
-            
+
             // Calculate light position (positioned far enough to cover the scene)
             // Directional lights are positioned at a distance along the negative light direction
             Vector3 lightPosition = shadowMapCenter - lightDirection * shadowMapFar * 0.5f;
             Vector3 targetPosition = shadowMapCenter; // Look at center of shadow map area
-            
+
             // Calculate up vector for view matrix
             Vector3 upVector = Vector3.UnitY; // Use Y-up
-            
+
             // If light direction is nearly parallel to up vector, use alternative up
             float dotUp = Math.Abs(Vector3.Dot(lightDirection, upVector));
             if (dotUp > 0.9f)

@@ -107,6 +107,10 @@ namespace Andastra.Runtime.MonoGame.Backends
             VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_MINMAX_BIT = 0x00010000,
         }
 
+        // Vulkan maximum update buffer size (65536 bytes = 64 KB)
+        // Based on Vulkan specification: vkCmdUpdateBuffer has a maximum size limit of 65536 bytes
+        private const uint VK_MAX_UPDATE_BUFFER_SIZE = 65536;
+
         // Vulkan format properties structure
         // Based on Vulkan API: https://docs.vulkan.org/spec/latest/chapters/formats.html#VkFormatProperties
         [StructLayout(LayoutKind.Sequential)]
@@ -568,6 +572,19 @@ namespace Andastra.Runtime.MonoGame.Backends
             public ulong srcOffset;  // VkDeviceSize
             public ulong dstOffset;  // VkDeviceSize
             public ulong size;       // VkDeviceSize
+        }
+
+        // Vulkan buffer-to-image copy structure (for vkCmdCopyBufferToImage)
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkBufferImageCopy.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkBufferImageCopy
+        {
+            public ulong bufferOffset;        // VkDeviceSize
+            public uint bufferRowLength;      // Specifies the number of texels between rows
+            public uint bufferImageHeight;    // Specifies the number of texels between array layers
+            public VkImageSubresourceLayers imageSubresource;
+            public VkOffset3D imageOffset;
+            public VkExtent3D imageExtent;
         }
 
         // Vulkan offset 3D structure
@@ -1092,6 +1109,335 @@ namespace Andastra.Runtime.MonoGame.Backends
             VK_STRUCTURE_TYPE_COPY_ACCELERATION_STRUCTURE_INFO_KHR = 1000150001
         }
 
+        // Vulkan instance and device creation structures
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkApplicationInfo.html
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        private struct VkApplicationInfo
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            [MarshalAs(UnmanagedType.LPStr)]
+            public string pApplicationName;
+            public uint applicationVersion;
+            [MarshalAs(UnmanagedType.LPStr)]
+            public string pEngineName;
+            public uint engineVersion;
+            public uint apiVersion;
+        }
+
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkInstanceCreateInfo.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkInstanceCreateInfo
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkInstanceCreateFlags flags;
+            public IntPtr pApplicationInfo; // Pointer to VkApplicationInfo
+            public uint enabledLayerCount;
+            public IntPtr ppEnabledLayerNames; // Array of const char*
+            public uint enabledExtensionCount;
+            public IntPtr ppEnabledExtensionNames; // Array of const char*
+        }
+
+        [Flags]
+        private enum VkInstanceCreateFlags
+        {
+            VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR = 0x00000001
+        }
+
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkPhysicalDeviceProperties.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkPhysicalDeviceProperties
+        {
+            public uint apiVersion;
+            public uint driverVersion;
+            public uint vendorID;
+            public uint deviceID;
+            public VkPhysicalDeviceType deviceType;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 256)]
+            public byte[] deviceName; // VK_MAX_PHYSICAL_DEVICE_NAME_SIZE = 256
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
+            public byte[] pipelineCacheUUID; // VK_UUID_SIZE = 16
+            public VkPhysicalDeviceLimits limits;
+            public VkPhysicalDeviceSparseProperties sparseProperties;
+        }
+
+        private enum VkPhysicalDeviceType
+        {
+            VK_PHYSICAL_DEVICE_TYPE_OTHER = 0,
+            VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU = 1,
+            VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU = 2,
+            VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU = 3,
+            VK_PHYSICAL_DEVICE_TYPE_CPU = 4
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkPhysicalDeviceLimits
+        {
+            public uint maxImageDimension1D;
+            public uint maxImageDimension2D;
+            public uint maxImageDimension3D;
+            public uint maxImageDimensionCube;
+            public uint maxImageArrayLayers;
+            public uint maxTexelBufferElements;
+            public uint maxUniformBufferRange;
+            public uint maxStorageBufferRange;
+            public uint maxPushConstantsSize;
+            public uint maxMemoryAllocationCount;
+            public uint maxSamplerAllocationCount;
+            public ulong bufferImageGranularity;
+            public ulong sparseAddressSpaceSize;
+            public uint maxBoundDescriptorSets;
+            public uint maxPerStageDescriptorSamplers;
+            public uint maxPerStageDescriptorUniformBuffers;
+            public uint maxPerStageDescriptorStorageBuffers;
+            public uint maxPerStageDescriptorSampledImages;
+            public uint maxPerStageDescriptorStorageImages;
+            public uint maxPerStageDescriptorInputAttachments;
+            public uint maxPerStageResources;
+            public uint maxDescriptorSetSamplers;
+            public uint maxDescriptorSetUniformBuffers;
+            public uint maxDescriptorSetUniformBuffersDynamic;
+            public uint maxDescriptorSetStorageBuffers;
+            public uint maxDescriptorSetStorageBuffersDynamic;
+            public uint maxDescriptorSetSampledImages;
+            public uint maxDescriptorSetStorageImages;
+            public uint maxDescriptorSetInputAttachments;
+            public uint maxVertexInputAttributes;
+            public uint maxVertexInputBindings;
+            public uint maxVertexInputAttributeOffset;
+            public uint maxVertexInputBindingStride;
+            public uint maxVertexOutputComponents;
+            public uint maxTessellationGenerationLevel;
+            public uint maxTessellationPatchSize;
+            public uint maxTessellationControlPerVertexInputComponents;
+            public uint maxTessellationControlPerVertexOutputComponents;
+            public uint maxTessellationControlPerPatchOutputComponents;
+            public uint maxTessellationControlTotalOutputComponents;
+            public uint maxTessellationEvaluationInputComponents;
+            public uint maxTessellationEvaluationOutputComponents;
+            public uint maxGeometryShaderInvocations;
+            public uint maxGeometryInputComponents;
+            public uint maxGeometryOutputComponents;
+            public uint maxGeometryOutputVertices;
+            public uint maxGeometryTotalOutputComponents;
+            public uint maxFragmentInputComponents;
+            public uint maxFragmentOutputAttachments;
+            public uint maxFragmentDualSrcAttachments;
+            public uint maxFragmentCombinedOutputResources;
+            public uint maxComputeSharedMemorySize;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
+            public uint[] maxComputeWorkGroupCount;
+            public uint maxComputeWorkGroupInvocations;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
+            public uint[] maxComputeWorkGroupSize;
+            public uint subPixelPrecisionBits;
+            public uint subTexelPrecisionBits;
+            public uint mipmapPrecisionBits;
+            public uint maxDrawIndexedIndexValue;
+            public uint maxDrawIndirectCount;
+            public float maxSamplerLodBias;
+            public float maxSamplerAnisotropy;
+            public uint maxViewports;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            public uint[] maxViewportDimensions;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            public float[] viewportBoundsRange;
+            public uint viewportSubPixelBits;
+            public ulong minMemoryMapAlignment;
+            public ulong minTexelBufferOffsetAlignment;
+            public ulong minUniformBufferOffsetAlignment;
+            public ulong minStorageBufferOffsetAlignment;
+            public int minTexelOffset;
+            public uint maxTexelOffset;
+            public int minTexelGatherOffset;
+            public uint maxTexelGatherOffset;
+            public float minInterpolationOffset;
+            public float maxInterpolationOffset;
+            public uint subPixelInterpolationOffsetBits;
+            public uint maxFramebufferWidth;
+            public uint maxFramebufferHeight;
+            public uint maxFramebufferLayers;
+            public VkSampleCountFlags framebufferColorSampleCounts;
+            public VkSampleCountFlags framebufferDepthSampleCounts;
+            public VkSampleCountFlags framebufferStencilSampleCounts;
+            public VkSampleCountFlags framebufferNoAttachmentsSampleCounts;
+            public uint maxColorAttachments;
+            public VkSampleCountFlags sampledImageColorSampleCounts;
+            public VkSampleCountFlags sampledImageIntegerSampleCounts;
+            public VkSampleCountFlags sampledImageDepthSampleCounts;
+            public VkSampleCountFlags sampledImageStencilSampleCounts;
+            public VkSampleCountFlags storageImageSampleCounts;
+            public uint maxSampleMaskWords;
+            public uint timestampComputeAndGraphics;
+            public float timestampPeriod;
+            public uint maxClipDistances;
+            public uint maxCullDistances;
+            public uint maxCombinedClipAndCullDistances;
+            public uint discreteQueuePriorities;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            public float[] pointSizeRange;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+            public float[] lineWidthRange;
+            public float pointSizeGranularity;
+            public float lineWidthGranularity;
+            public uint strictLines;
+            public uint standardSampleLocations;
+            public ulong optimalBufferCopyOffsetAlignment;
+            public ulong optimalBufferCopyRowPitchAlignment;
+            public ulong nonCoherentAtomSize;
+        }
+
+        [Flags]
+        private enum VkSampleCountFlags
+        {
+            VK_SAMPLE_COUNT_1_BIT = 0x00000001,
+            VK_SAMPLE_COUNT_2_BIT = 0x00000002,
+            VK_SAMPLE_COUNT_4_BIT = 0x00000004,
+            VK_SAMPLE_COUNT_8_BIT = 0x00000008,
+            VK_SAMPLE_COUNT_16_BIT = 0x00000010,
+            VK_SAMPLE_COUNT_32_BIT = 0x00000020,
+            VK_SAMPLE_COUNT_64_BIT = 0x00000040
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkPhysicalDeviceSparseProperties
+        {
+            public uint residencyStandard2DBlockShape;
+            public uint residencyStandard2DMultisampleBlockShape;
+            public uint residencyStandard3DBlockShape;
+            public uint residencyAlignedMipSize;
+            public uint residencyNonResidentStrict;
+        }
+
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkPhysicalDeviceFeatures.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkPhysicalDeviceFeatures
+        {
+            public uint robustBufferAccess;
+            public uint fullDrawIndexUint32;
+            public uint imageCubeArray;
+            public uint independentBlend;
+            public uint geometryShader;
+            public uint tessellationShader;
+            public uint sampleRateShading;
+            public uint dualSrcBlend;
+            public uint logicOp;
+            public uint multiDrawIndirect;
+            public uint drawIndirectFirstInstance;
+            public uint depthClamp;
+            public uint depthBiasClamp;
+            public uint fillModeNonSolid;
+            public uint depthBounds;
+            public uint wideLines;
+            public uint largePoints;
+            public uint alphaToOne;
+            public uint multiViewport;
+            public uint samplerAnisotropy;
+            public uint textureCompressionETC2;
+            public uint textureCompressionASTC_LDR;
+            public uint textureCompressionBC;
+            public uint occlusionQueryPrecise;
+            public uint pipelineStatisticsQuery;
+            public uint vertexPipelineStoresAndAtomics;
+            public uint fragmentStoresAndAtomics;
+            public uint shaderTessellationAndGeometryPointSize;
+            public uint shaderImageGatherExtended;
+            public uint shaderStorageImageExtendedFormats;
+            public uint shaderStorageImageMultisample;
+            public uint shaderStorageImageReadWithoutFormat;
+            public uint shaderStorageImageWriteWithoutFormat;
+            public uint shaderUniformBufferArrayDynamicIndexing;
+            public uint shaderSampledImageArrayDynamicIndexing;
+            public uint shaderStorageBufferArrayDynamicIndexing;
+            public uint shaderStorageImageArrayDynamicIndexing;
+            public uint shaderClipDistance;
+            public uint shaderCullDistance;
+            public uint shaderFloat64;
+            public uint shaderInt64;
+            public uint shaderInt16;
+            public uint shaderResourceResidency;
+            public uint shaderResourceMinLod;
+            public uint sparseBinding;
+            public uint sparseResidencyBuffer;
+            public uint sparseResidencyImage2D;
+            public uint sparseResidencyImage3D;
+            public uint sparseResidency2Samples;
+            public uint sparseResidency4Samples;
+            public uint sparseResidency8Samples;
+            public uint sparseResidency16Samples;
+            public uint sparseResidencyAliased;
+            public uint variableMultisampleRate;
+            public uint inheritedQueries;
+        }
+
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkQueueFamilyProperties.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkQueueFamilyProperties
+        {
+            public VkQueueFlags queueFlags;
+            public uint queueCount;
+            public uint timestampValidBits;
+            public VkExtent3D minImageTransferGranularity;
+        }
+
+        [Flags]
+        private enum VkQueueFlags
+        {
+            VK_QUEUE_GRAPHICS_BIT = 0x00000001,
+            VK_QUEUE_COMPUTE_BIT = 0x00000002,
+            VK_QUEUE_TRANSFER_BIT = 0x00000004,
+            VK_QUEUE_SPARSE_BINDING_BIT = 0x00000008
+        }
+
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkDeviceQueueCreateInfo.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkDeviceQueueCreateInfo
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkDeviceQueueCreateFlags flags;
+            public uint queueFamilyIndex;
+            public uint queueCount;
+            public IntPtr pQueuePriorities; // Array of float
+        }
+
+        [Flags]
+        private enum VkDeviceQueueCreateFlags
+        {
+            VK_DEVICE_QUEUE_CREATE_PROTECTED_BIT = 0x00000001
+        }
+
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkDeviceCreateInfo.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkDeviceCreateInfo
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkDeviceCreateFlags flags;
+            public uint queueCreateInfoCount;
+            public IntPtr pQueueCreateInfos; // Array of VkDeviceQueueCreateInfo
+            public uint enabledLayerCount;
+            public IntPtr ppEnabledLayerNames; // Array of const char*
+            public uint enabledExtensionCount;
+            public IntPtr ppEnabledExtensionNames; // Array of const char*
+            public IntPtr pEnabledFeatures; // Pointer to VkPhysicalDeviceFeatures
+        }
+
+        [Flags]
+        private enum VkDeviceCreateFlags
+        {
+        }
+
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkExtensionProperties.html
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        private struct VkExtensionProperties
+        {
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 256)]
+            public byte[] extensionName; // VK_MAX_EXTENSION_NAME_SIZE = 256
+            public uint specificationVersion;
+        }
+
         // Additional Vulkan enums
         private enum VkImageCreateFlags { }
         private enum VkImageViewCreateFlags { }
@@ -1237,6 +1583,33 @@ namespace Andastra.Runtime.MonoGame.Backends
             VK_DEPENDENCY_DEVICE_GROUP_BIT = 0x00000004,
             VK_DEPENDENCY_VIEW_LOCAL_BIT = 0x00000002
         }
+
+        // Vulkan instance and device creation function delegates
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateInstance.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkCreateInstanceDelegate(ref VkInstanceCreateInfo pCreateInfo, IntPtr pAllocator, out IntPtr pInstance);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkDestroyInstanceDelegate(IntPtr instance, IntPtr pAllocator);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkEnumeratePhysicalDevicesDelegate(IntPtr instance, ref uint pPhysicalDeviceCount, IntPtr pPhysicalDevices);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkGetPhysicalDevicePropertiesDelegate(IntPtr physicalDevice, out VkPhysicalDeviceProperties pProperties);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkGetPhysicalDeviceFeaturesDelegate(IntPtr physicalDevice, out VkPhysicalDeviceFeatures pFeatures);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkGetPhysicalDeviceQueueFamilyPropertiesDelegate(IntPtr physicalDevice, ref uint pQueueFamilyPropertyCount, IntPtr pQueueFamilyProperties);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkCreateDeviceDelegate(IntPtr physicalDevice, ref VkDeviceCreateInfo pCreateInfo, IntPtr pAllocator, out IntPtr pDevice);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkDestroyDeviceDelegate(IntPtr device, IntPtr pAllocator);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkGetDeviceQueueDelegate(IntPtr device, uint queueFamilyIndex, uint queueIndex, out IntPtr pQueue);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkEnumerateInstanceExtensionPropertiesDelegate(IntPtr pLayerName, ref uint pPropertyCount, IntPtr pProperties);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkEnumerateDeviceExtensionPropertiesDelegate(IntPtr physicalDevice, IntPtr pLayerName, ref uint pPropertyCount, IntPtr pProperties);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Ansi)]
+        private delegate IntPtr vkGetInstanceProcAddrDelegate(IntPtr instance, string pName);
 
         // Vulkan function pointers
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
@@ -1555,7 +1928,23 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         // Core Vulkan function pointers for descriptor sets
         private static vkAllocateDescriptorSetsDelegate vkAllocateDescriptorSets;
+        private static vkDestroyDescriptorPoolDelegate vkDestroyDescriptorPool;
+        private static vkMapMemoryDelegate vkMapMemory;
+        private static vkUnmapMemoryDelegate vkUnmapMemory;
         private static vkUpdateDescriptorSetsDelegate vkUpdateDescriptorSets;
+
+        // Instance and device creation function pointers (loaded from Vulkan loader)
+        private static vkCreateInstanceDelegate vkCreateInstance;
+        private static vkDestroyInstanceDelegate vkDestroyInstance;
+        private static vkEnumeratePhysicalDevicesDelegate vkEnumeratePhysicalDevices;
+        private static vkGetPhysicalDevicePropertiesDelegate vkGetPhysicalDeviceProperties;
+        private static vkGetPhysicalDeviceFeaturesDelegate vkGetPhysicalDeviceFeatures;
+        private static vkGetPhysicalDeviceQueueFamilyPropertiesDelegate vkGetPhysicalDeviceQueueFamilyProperties;
+        private static vkCreateDeviceDelegate vkCreateDevice;
+        private static vkDestroyDeviceDelegate vkDestroyDevice;
+        private static vkGetDeviceQueueDelegate vkGetDeviceQueue;
+        private static vkEnumerateInstanceExtensionPropertiesDelegate vkEnumerateInstanceExtensionProperties;
+        private static vkEnumerateDeviceExtensionPropertiesDelegate vkEnumerateDeviceExtensionProperties;
 
         // VK_KHR_ray_tracing_pipeline extension function pointers (loaded via vkGetDeviceProcAddr)
         // Based on Vulkan specification: VK_KHR_ray_tracing_pipeline extension functions must be loaded via vkGetDeviceProcAddr
@@ -1576,9 +1965,56 @@ namespace Andastra.Runtime.MonoGame.Backends
         // Helper methods for Vulkan interop
         private static void InitializeVulkanFunctions(IntPtr device)
         {
-            // Load Vulkan functions - in a real implementation, these would be loaded via vkGetDeviceProcAddr
-            // For this example, we'll assume they're available through P/Invoke
-            // TODO:  This is a simplified version - real implementation would need proper function loading
+            if (device == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                // Load vkGetDeviceProcAddr from Vulkan loader library
+                IntPtr vulkanLib = NativeMethods.LoadLibrary(VulkanLibrary);
+                if (vulkanLib == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                IntPtr vkGetDeviceProcAddrPtr = NativeMethods.GetProcAddress(vulkanLib, "vkGetDeviceProcAddr");
+                if (vkGetDeviceProcAddrPtr == IntPtr.Zero)
+                {
+                    NativeMethods.FreeLibrary(vulkanLib);
+                    return;
+                }
+
+                // Convert vkGetDeviceProcAddr function pointer to delegate
+                vkGetDeviceProcAddrDelegate vkGetDeviceProcAddr = (vkGetDeviceProcAddrDelegate)Marshal.GetDelegateForFunctionPointer(vkGetDeviceProcAddrPtr, typeof(vkGetDeviceProcAddrDelegate));
+
+                // Load core Vulkan functions
+                IntPtr vkDestroyDescriptorPoolPtr = vkGetDeviceProcAddr(device, "vkDestroyDescriptorPool");
+                if (vkDestroyDescriptorPoolPtr != IntPtr.Zero)
+                {
+                    vkDestroyDescriptorPool = (vkDestroyDescriptorPoolDelegate)Marshal.GetDelegateForFunctionPointer(vkDestroyDescriptorPoolPtr, typeof(vkDestroyDescriptorPoolDelegate));
+                }
+
+                IntPtr vkMapMemoryPtr = vkGetDeviceProcAddr(device, "vkMapMemory");
+                if (vkMapMemoryPtr != IntPtr.Zero)
+                {
+                    vkMapMemory = (vkMapMemoryDelegate)Marshal.GetDelegateForFunctionPointer(vkMapMemoryPtr, typeof(vkMapMemoryDelegate));
+                }
+
+                IntPtr vkUnmapMemoryPtr = vkGetDeviceProcAddr(device, "vkUnmapMemory");
+                if (vkUnmapMemoryPtr != IntPtr.Zero)
+                {
+                    vkUnmapMemory = (vkUnmapMemoryDelegate)Marshal.GetDelegateForFunctionPointer(vkUnmapMemoryPtr, typeof(vkUnmapMemoryDelegate));
+                }
+
+                // Free the library handle (function pointers remain valid)
+                NativeMethods.FreeLibrary(vulkanLib);
+            }
+            catch (Exception)
+            {
+                // If loading fails, function pointers will remain null
+            }
 
             // Load VK_KHR_acceleration_structure extension functions if available
             LoadAccelerationStructureExtensionFunctions(device);
@@ -1999,6 +2435,744 @@ namespace Andastra.Runtime.MonoGame.Backends
         public bool IsValid
         {
             get { return !_disposed && _device != IntPtr.Zero; }
+        }
+
+        /// <summary>
+        /// Loads instance-level Vulkan functions from the Vulkan loader library.
+        /// These functions must be loaded before creating an instance.
+        /// Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetInstanceProcAddr.html
+        /// </summary>
+        private static void LoadInstanceFunctions()
+        {
+            if (vkCreateInstance != null)
+            {
+                // Already loaded
+                return;
+            }
+
+            try
+            {
+                IntPtr vulkanLib = NativeMethods.LoadLibrary(VulkanLibrary);
+                if (vulkanLib == IntPtr.Zero)
+                {
+                    throw new NotSupportedException($"Failed to load Vulkan library: {VulkanLibrary}. Ensure Vulkan runtime is installed.");
+                }
+
+                // Load vkGetInstanceProcAddr first (this is the only function we can load directly)
+                IntPtr vkGetInstanceProcAddrPtr = NativeMethods.GetProcAddress(vulkanLib, "vkGetInstanceProcAddr");
+                if (vkGetInstanceProcAddrPtr == IntPtr.Zero)
+                {
+                    NativeMethods.FreeLibrary(vulkanLib);
+                    throw new NotSupportedException("vkGetInstanceProcAddr not found in Vulkan library. This indicates a corrupted or incompatible Vulkan installation.");
+                }
+
+                // Convert to delegate
+                vkGetInstanceProcAddrDelegate vkGetInstanceProcAddr = (vkGetInstanceProcAddrDelegate)Marshal.GetDelegateForFunctionPointer(vkGetInstanceProcAddrPtr, typeof(vkGetInstanceProcAddrDelegate));
+
+                // Load instance-level functions (can be called with null instance)
+                IntPtr ptr;
+
+                ptr = vkGetInstanceProcAddr(IntPtr.Zero, "vkCreateInstance");
+                if (ptr != IntPtr.Zero)
+                {
+                    vkCreateInstance = (vkCreateInstanceDelegate)Marshal.GetDelegateForFunctionPointer(ptr, typeof(vkCreateInstanceDelegate));
+                }
+
+                ptr = vkGetInstanceProcAddr(IntPtr.Zero, "vkEnumerateInstanceExtensionProperties");
+                if (ptr != IntPtr.Zero)
+                {
+                    vkEnumerateInstanceExtensionProperties = (vkEnumerateInstanceExtensionPropertiesDelegate)Marshal.GetDelegateForFunctionPointer(ptr, typeof(vkEnumerateInstanceExtensionPropertiesDelegate));
+                }
+
+                // After instance is created, we can load other instance-level functions
+                // These will be loaded in InitializeVulkanInstanceFunctions
+
+                NativeMethods.FreeLibrary(vulkanLib);
+            }
+            catch (Exception ex)
+            {
+                throw new NotSupportedException($"Failed to load Vulkan instance functions: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Loads instance-level Vulkan functions that require a valid instance.
+        /// </summary>
+        private static void LoadInstanceFunctions(IntPtr instance)
+        {
+            if (instance == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                IntPtr vulkanLib = NativeMethods.LoadLibrary(VulkanLibrary);
+                if (vulkanLib == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                IntPtr vkGetInstanceProcAddrPtr = NativeMethods.GetProcAddress(vulkanLib, "vkGetInstanceProcAddr");
+                if (vkGetInstanceProcAddrPtr == IntPtr.Zero)
+                {
+                    NativeMethods.FreeLibrary(vulkanLib);
+                    return;
+                }
+
+                vkGetInstanceProcAddrDelegate vkGetInstanceProcAddr = (vkGetInstanceProcAddrDelegate)Marshal.GetDelegateForFunctionPointer(vkGetInstanceProcAddrPtr, typeof(vkGetInstanceProcAddrDelegate));
+
+                IntPtr ptr;
+
+                ptr = vkGetInstanceProcAddr(instance, "vkDestroyInstance");
+                if (ptr != IntPtr.Zero)
+                {
+                    vkDestroyInstance = (vkDestroyInstanceDelegate)Marshal.GetDelegateForFunctionPointer(ptr, typeof(vkDestroyInstanceDelegate));
+                }
+
+                ptr = vkGetInstanceProcAddr(instance, "vkEnumeratePhysicalDevices");
+                if (ptr != IntPtr.Zero)
+                {
+                    vkEnumeratePhysicalDevices = (vkEnumeratePhysicalDevicesDelegate)Marshal.GetDelegateForFunctionPointer(ptr, typeof(vkEnumeratePhysicalDevicesDelegate));
+                }
+
+                ptr = vkGetInstanceProcAddr(instance, "vkGetPhysicalDeviceProperties");
+                if (ptr != IntPtr.Zero)
+                {
+                    vkGetPhysicalDeviceProperties = (vkGetPhysicalDevicePropertiesDelegate)Marshal.GetDelegateForFunctionPointer(ptr, typeof(vkGetPhysicalDevicePropertiesDelegate));
+                }
+
+                ptr = vkGetInstanceProcAddr(instance, "vkGetPhysicalDeviceFeatures");
+                if (ptr != IntPtr.Zero)
+                {
+                    vkGetPhysicalDeviceFeatures = (vkGetPhysicalDeviceFeaturesDelegate)Marshal.GetDelegateForFunctionPointer(ptr, typeof(vkGetPhysicalDeviceFeaturesDelegate));
+                }
+
+                ptr = vkGetInstanceProcAddr(instance, "vkGetPhysicalDeviceQueueFamilyProperties");
+                if (ptr != IntPtr.Zero)
+                {
+                    vkGetPhysicalDeviceQueueFamilyProperties = (vkGetPhysicalDeviceQueueFamilyPropertiesDelegate)Marshal.GetDelegateForFunctionPointer(ptr, typeof(vkGetPhysicalDeviceQueueFamilyPropertiesDelegate));
+                }
+
+                ptr = vkGetInstanceProcAddr(instance, "vkCreateDevice");
+                if (ptr != IntPtr.Zero)
+                {
+                    vkCreateDevice = (vkCreateDeviceDelegate)Marshal.GetDelegateForFunctionPointer(ptr, typeof(vkCreateDeviceDelegate));
+                }
+
+                ptr = vkGetInstanceProcAddr(instance, "vkEnumerateDeviceExtensionProperties");
+                if (ptr != IntPtr.Zero)
+                {
+                    vkEnumerateDeviceExtensionProperties = (vkEnumerateDeviceExtensionPropertiesDelegate)Marshal.GetDelegateForFunctionPointer(ptr, typeof(vkEnumerateDeviceExtensionPropertiesDelegate));
+                }
+
+                NativeMethods.FreeLibrary(vulkanLib);
+            }
+            catch (Exception)
+            {
+                // If loading fails, function pointers will remain null
+            }
+        }
+
+        /// <summary>
+        /// Creates a Vulkan instance and selects a physical device.
+        /// Returns the instance, physical device, and queue family indices.
+        /// Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateInstance.html
+        /// </summary>
+        public static bool CreateVulkanInstance(
+            out IntPtr instance,
+            out IntPtr physicalDevice,
+            out uint graphicsQueueFamilyIndex,
+            out uint computeQueueFamilyIndex,
+            out uint transferQueueFamilyIndex,
+            out GraphicsCapabilities capabilities)
+        {
+            instance = IntPtr.Zero;
+            physicalDevice = IntPtr.Zero;
+            graphicsQueueFamilyIndex = uint.MaxValue;
+            computeQueueFamilyIndex = uint.MaxValue;
+            transferQueueFamilyIndex = uint.MaxValue;
+            capabilities = new GraphicsCapabilities();
+
+            try
+            {
+                // Load instance-level functions
+                LoadInstanceFunctions();
+
+                if (vkCreateInstance == null)
+                {
+                    throw new NotSupportedException("vkCreateInstance not available. Vulkan runtime may not be installed.");
+                }
+
+                // Create application info
+                VkApplicationInfo appInfo = new VkApplicationInfo
+                {
+                    sType = VkStructureType.VK_STRUCTURE_TYPE_APPLICATION_INFO,
+                    pNext = IntPtr.Zero,
+                    pApplicationName = "Andastra",
+                    applicationVersion = VK_MAKE_VERSION(1, 0, 0),
+                    pEngineName = "Andastra Engine",
+                    engineVersion = VK_MAKE_VERSION(1, 0, 0),
+                    apiVersion = VK_MAKE_VERSION(1, 3, 0) // Vulkan 1.3
+                };
+
+                // Create instance create info
+                VkInstanceCreateInfo createInfo = new VkInstanceCreateInfo
+                {
+                    sType = VkStructureType.VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+                    pNext = IntPtr.Zero,
+                    flags = 0,
+                    pApplicationInfo = IntPtr.Zero, // Will be set after marshalling
+                    enabledLayerCount = 0,
+                    ppEnabledLayerNames = IntPtr.Zero,
+                    enabledExtensionCount = 0,
+                    ppEnabledExtensionNames = IntPtr.Zero
+                };
+
+                // Marshal application info
+                int appInfoSize = Marshal.SizeOf(typeof(VkApplicationInfo));
+                IntPtr appInfoPtr = Marshal.AllocHGlobal(appInfoSize);
+                try
+                {
+                    Marshal.StructureToPtr(appInfo, appInfoPtr, false);
+                    createInfo.pApplicationInfo = appInfoPtr;
+
+                    // Marshal instance create info
+                    int createInfoSize = Marshal.SizeOf(typeof(VkInstanceCreateInfo));
+                    IntPtr createInfoPtr = Marshal.AllocHGlobal(createInfoSize);
+                    try
+                    {
+                        Marshal.StructureToPtr(createInfo, createInfoPtr, false);
+
+                        // Create instance
+                        VkResult result = vkCreateInstance(ref createInfo, IntPtr.Zero, out instance);
+                        if (result != VkResult.VK_SUCCESS)
+                        {
+                            throw new InvalidOperationException($"vkCreateInstance failed with result: {result}");
+                        }
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(createInfoPtr);
+                    }
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(appInfoPtr);
+                }
+
+                // Load instance functions that require a valid instance
+                LoadInstanceFunctions(instance);
+
+                if (vkEnumeratePhysicalDevices == null || vkGetPhysicalDeviceProperties == null ||
+                    vkGetPhysicalDeviceFeatures == null || vkGetPhysicalDeviceQueueFamilyProperties == null ||
+                    vkCreateDevice == null)
+                {
+                    if (vkDestroyInstance != null)
+                    {
+                        vkDestroyInstance(instance, IntPtr.Zero);
+                    }
+                    throw new NotSupportedException("Required Vulkan instance functions not available.");
+                }
+
+                // Enumerate physical devices
+                uint physicalDeviceCount = 0;
+                VkResult result2 = vkEnumeratePhysicalDevices(instance, ref physicalDeviceCount, IntPtr.Zero);
+                if (result2 != VkResult.VK_SUCCESS || physicalDeviceCount == 0)
+                {
+                    if (vkDestroyInstance != null)
+                    {
+                        vkDestroyInstance(instance, IntPtr.Zero);
+                    }
+                    throw new NotSupportedException("No Vulkan-compatible physical devices found.");
+                }
+
+                // Allocate array for physical device handles
+                int deviceHandleSize = Marshal.SizeOf(typeof(IntPtr));
+                IntPtr physicalDevicesPtr = Marshal.AllocHGlobal((int)(physicalDeviceCount * deviceHandleSize));
+                try
+                {
+                    result2 = vkEnumeratePhysicalDevices(instance, ref physicalDeviceCount, physicalDevicesPtr);
+                    if (result2 != VkResult.VK_SUCCESS)
+                    {
+                        if (vkDestroyInstance != null)
+                        {
+                            vkDestroyInstance(instance, IntPtr.Zero);
+                        }
+                        throw new InvalidOperationException($"vkEnumeratePhysicalDevices failed with result: {result2}");
+                    }
+
+                    // Select first discrete GPU, or first device if no discrete GPU available
+                    IntPtr selectedDevice = IntPtr.Zero;
+                    VkPhysicalDeviceType selectedDeviceType = VkPhysicalDeviceType.VK_PHYSICAL_DEVICE_TYPE_OTHER;
+                    VkPhysicalDeviceProperties selectedProperties = new VkPhysicalDeviceProperties();
+
+                    for (uint i = 0; i < physicalDeviceCount; i++)
+                    {
+                        IntPtr deviceHandle = Marshal.ReadIntPtr(physicalDevicesPtr, (int)(i * deviceHandleSize));
+                        VkPhysicalDeviceProperties props;
+                        vkGetPhysicalDeviceProperties(deviceHandle, out props);
+
+                        // Prefer discrete GPU
+                        if (props.deviceType == VkPhysicalDeviceType.VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+                        {
+                            selectedDevice = deviceHandle;
+                            selectedDeviceType = props.deviceType;
+                            selectedProperties = props;
+                            break;
+                        }
+                        else if (selectedDevice == IntPtr.Zero)
+                        {
+                            selectedDevice = deviceHandle;
+                            selectedDeviceType = props.deviceType;
+                            selectedProperties = props;
+                        }
+                    }
+
+                    if (selectedDevice == IntPtr.Zero)
+                    {
+                        if (vkDestroyInstance != null)
+                        {
+                            vkDestroyInstance(instance, IntPtr.Zero);
+                        }
+                        throw new NotSupportedException("No suitable Vulkan physical device found.");
+                    }
+
+                    physicalDevice = selectedDevice;
+
+                    // Get queue family properties
+                    uint queueFamilyCount = 0;
+                    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, ref queueFamilyCount, IntPtr.Zero);
+                    if (queueFamilyCount == 0)
+                    {
+                        if (vkDestroyInstance != null)
+                        {
+                            vkDestroyInstance(instance, IntPtr.Zero);
+                        }
+                        throw new NotSupportedException("Physical device has no queue families.");
+                    }
+
+                    int queueFamilySize = Marshal.SizeOf(typeof(VkQueueFamilyProperties));
+                    IntPtr queueFamiliesPtr = Marshal.AllocHGlobal((int)(queueFamilyCount * queueFamilySize));
+                    try
+                    {
+                        vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, ref queueFamilyCount, queueFamiliesPtr);
+
+                        // Find queue family indices
+                        for (uint i = 0; i < queueFamilyCount; i++)
+                        {
+                            VkQueueFamilyProperties queueFamily = (VkQueueFamilyProperties)Marshal.PtrToStructure(
+                                new IntPtr(queueFamiliesPtr.ToInt64() + i * queueFamilySize),
+                                typeof(VkQueueFamilyProperties));
+
+                            // Graphics queue (must support graphics)
+                            if (graphicsQueueFamilyIndex == uint.MaxValue &&
+                                (queueFamily.queueFlags & VkQueueFlags.VK_QUEUE_GRAPHICS_BIT) != 0)
+                            {
+                                graphicsQueueFamilyIndex = i;
+                            }
+
+                            // Compute queue (prefer dedicated compute, but can use graphics queue)
+                            if (computeQueueFamilyIndex == uint.MaxValue &&
+                                (queueFamily.queueFlags & VkQueueFlags.VK_QUEUE_COMPUTE_BIT) != 0)
+                            {
+                                computeQueueFamilyIndex = i;
+                            }
+
+                            // Transfer queue (prefer dedicated transfer, but can use graphics/compute queue)
+                            if (transferQueueFamilyIndex == uint.MaxValue &&
+                                (queueFamily.queueFlags & VkQueueFlags.VK_QUEUE_TRANSFER_BIT) != 0)
+                            {
+                                transferQueueFamilyIndex = i;
+                            }
+                        }
+
+                        // Fallback: use graphics queue for compute and transfer if dedicated queues not found
+                        if (graphicsQueueFamilyIndex != uint.MaxValue)
+                        {
+                            if (computeQueueFamilyIndex == uint.MaxValue)
+                            {
+                                computeQueueFamilyIndex = graphicsQueueFamilyIndex;
+                            }
+                            if (transferQueueFamilyIndex == uint.MaxValue)
+                            {
+                                transferQueueFamilyIndex = graphicsQueueFamilyIndex;
+                            }
+                        }
+
+                        if (graphicsQueueFamilyIndex == uint.MaxValue)
+                        {
+                            if (vkDestroyInstance != null)
+                            {
+                                vkDestroyInstance(instance, IntPtr.Zero);
+                            }
+                            throw new NotSupportedException("No graphics queue family found on physical device.");
+                        }
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(queueFamiliesPtr);
+                    }
+
+                    // Query device capabilities
+                    VkPhysicalDeviceFeatures features;
+                    vkGetPhysicalDeviceFeatures(physicalDevice, out features);
+
+                    // Convert device name from byte array to string
+                    string deviceName = "";
+                    if (selectedProperties.deviceName != null && selectedProperties.deviceName.Length > 0)
+                    {
+                        int nameLength = 0;
+                        while (nameLength < selectedProperties.deviceName.Length && selectedProperties.deviceName[nameLength] != 0)
+                        {
+                            nameLength++;
+                        }
+                        deviceName = System.Text.Encoding.ASCII.GetString(selectedProperties.deviceName, 0, nameLength);
+                    }
+
+                    // Determine vendor name from vendor ID
+                    string vendorName = "Unknown";
+                    switch (selectedProperties.vendorID)
+                    {
+                        case 0x10DE: // NVIDIA
+                            vendorName = "NVIDIA";
+                            break;
+                        case 0x1002: // AMD
+                            vendorName = "AMD";
+                            break;
+                        case 0x8086: // Intel
+                            vendorName = "Intel";
+                            break;
+                    }
+
+                    capabilities = new GraphicsCapabilities
+                    {
+                        MaxTextureSize = (int)selectedProperties.limits.maxImageDimension2D,
+                        MaxRenderTargets = (int)selectedProperties.limits.maxColorAttachments,
+                        MaxAnisotropy = (int)selectedProperties.limits.maxSamplerAnisotropy,
+                        SupportsComputeShaders = true, // Vulkan always supports compute shaders
+                        SupportsGeometryShaders = features.geometryShader != 0,
+                        SupportsTessellation = features.tessellationShader != 0,
+                        SupportsRaytracing = false, // Will be checked when creating device
+                        SupportsMeshShaders = false, // Requires VK_EXT_mesh_shader extension
+                        SupportsVariableRateShading = false, // Requires VK_KHR_fragment_shading_rate extension
+                        DedicatedVideoMemory = 0, // Will be queried from memory properties
+                        SharedSystemMemory = 0,
+                        VendorName = vendorName,
+                        DeviceName = deviceName,
+                        DriverVersion = selectedProperties.driverVersion.ToString(),
+                        ActiveBackend = GraphicsBackend.Vulkan,
+                        ShaderModelVersion = 6.0f, // Vulkan 1.3 supports SM 6.0+
+                        RemixAvailable = false,
+                        DlssAvailable = false,
+                        FsrAvailable = false
+                    };
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(physicalDevicesPtr);
+                }
+
+                return true;
+            }
+            catch (Exception)
+            {
+                if (instance != IntPtr.Zero && vkDestroyInstance != null)
+                {
+                    vkDestroyInstance(instance, IntPtr.Zero);
+                }
+                return false;
+            }
+        }
+
+        // Helper macro for version encoding
+        private static uint VK_MAKE_VERSION(uint major, uint minor, uint patch)
+        {
+            return (major << 22) | (minor << 12) | patch;
+        }
+
+        /// <summary>
+        /// Creates a Vulkan logical device and retrieves queue handles.
+        /// This is a public static method to allow VulkanBackend to create the device.
+        /// Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateDevice.html
+        /// </summary>
+        public static bool CreateVulkanDeviceInternal(
+            IntPtr instance,
+            IntPtr physicalDevice,
+            uint graphicsQueueFamilyIndex,
+            uint computeQueueFamilyIndex,
+            uint transferQueueFamilyIndex,
+            out IntPtr device,
+            out IntPtr graphicsQueue,
+            out IntPtr computeQueue,
+            out IntPtr transferQueue,
+            ref GraphicsCapabilities capabilities)
+        {
+            device = IntPtr.Zero;
+            graphicsQueue = IntPtr.Zero;
+            computeQueue = IntPtr.Zero;
+            transferQueue = IntPtr.Zero;
+
+            try
+            {
+                if (vkCreateDevice == null || vkGetDeviceQueue == null || vkGetPhysicalDeviceFeatures == null)
+                {
+                    return false;
+                }
+
+                // Get physical device features
+                VkPhysicalDeviceFeatures features;
+                vkGetPhysicalDeviceFeatures(physicalDevice, out features);
+
+                // Check for raytracing extensions
+                bool hasRaytracingPipeline = false;
+                bool hasAccelerationStructure = false;
+
+                if (vkEnumerateDeviceExtensionProperties != null)
+                {
+                    uint extensionCount = 0;
+                    vkEnumerateDeviceExtensionProperties(physicalDevice, IntPtr.Zero, ref extensionCount, IntPtr.Zero);
+                    if (extensionCount > 0)
+                    {
+                        int extPropsSize = Marshal.SizeOf(typeof(VkExtensionProperties));
+                        IntPtr extensionsPtr = Marshal.AllocHGlobal((int)(extensionCount * extPropsSize));
+                        try
+                        {
+                            vkEnumerateDeviceExtensionProperties(physicalDevice, IntPtr.Zero, ref extensionCount, extensionsPtr);
+                            for (uint i = 0; i < extensionCount; i++)
+                            {
+                                VkExtensionProperties extProps = (VkExtensionProperties)Marshal.PtrToStructure(
+                                    new IntPtr(extensionsPtr.ToInt64() + i * extPropsSize),
+                                    typeof(VkExtensionProperties));
+
+                                int nameLength = 0;
+                                while (nameLength < extProps.extensionName.Length && extProps.extensionName[nameLength] != 0)
+                                {
+                                    nameLength++;
+                                }
+                                string extName = System.Text.Encoding.ASCII.GetString(extProps.extensionName, 0, nameLength);
+
+                                if (extName == "VK_KHR_ray_tracing_pipeline")
+                                {
+                                    hasRaytracingPipeline = true;
+                                }
+                                if (extName == "VK_KHR_acceleration_structure")
+                                {
+                                    hasAccelerationStructure = true;
+                                }
+                            }
+                        }
+                        finally
+                        {
+                            Marshal.FreeHGlobal(extensionsPtr);
+                        }
+                    }
+                }
+
+                // Build list of required extensions
+                System.Collections.Generic.List<string> requiredExtensions = new System.Collections.Generic.List<string>();
+                if (hasRaytracingPipeline && hasAccelerationStructure)
+                {
+                    requiredExtensions.Add("VK_KHR_ray_tracing_pipeline");
+                    requiredExtensions.Add("VK_KHR_acceleration_structure");
+                    requiredExtensions.Add("VK_KHR_deferred_host_operations");
+                    capabilities.SupportsRaytracing = true;
+                }
+
+                // Collect unique queue family indices
+                System.Collections.Generic.HashSet<uint> uniqueQueueFamilies = new System.Collections.Generic.HashSet<uint>();
+                uniqueQueueFamilies.Add(graphicsQueueFamilyIndex);
+                uniqueQueueFamilies.Add(computeQueueFamilyIndex);
+                uniqueQueueFamilies.Add(transferQueueFamilyIndex);
+
+                // Create queue create infos
+                int queueCreateInfoSize = Marshal.SizeOf(typeof(VkDeviceQueueCreateInfo));
+                IntPtr queueCreateInfosPtr = Marshal.AllocHGlobal((int)(uniqueQueueFamilies.Count * queueCreateInfoSize));
+                try
+                {
+                    // Priority for queues (1.0 = highest)
+                    float queuePriority = 1.0f;
+                    int queuePrioritySize = Marshal.SizeOf(typeof(float));
+                    IntPtr queuePriorityPtr = Marshal.AllocHGlobal(queuePrioritySize);
+                    try
+                    {
+                        Marshal.StructureToPtr(queuePriority, queuePriorityPtr, false);
+
+                        int index = 0;
+                        foreach (uint queueFamilyIndex in uniqueQueueFamilies)
+                        {
+                            VkDeviceQueueCreateInfo queueCreateInfo = new VkDeviceQueueCreateInfo
+                            {
+                                sType = VkStructureType.VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+                                pNext = IntPtr.Zero,
+                                flags = 0,
+                                queueFamilyIndex = queueFamilyIndex,
+                                queueCount = 1,
+                                pQueuePriorities = queuePriorityPtr
+                            };
+
+                            Marshal.StructureToPtr(queueCreateInfo,
+                                new IntPtr(queueCreateInfosPtr.ToInt64() + index * queueCreateInfoSize),
+                                false);
+                            index++;
+                        }
+
+                        // Marshal device features
+                        int featuresSize = Marshal.SizeOf(typeof(VkPhysicalDeviceFeatures));
+                        IntPtr featuresPtr = Marshal.AllocHGlobal(featuresSize);
+                        try
+                        {
+                            Marshal.StructureToPtr(features, featuresPtr, false);
+
+                            // Marshal extension names
+                            IntPtr extensionNamesPtr = IntPtr.Zero;
+                            if (requiredExtensions.Count > 0)
+                            {
+                                int totalSize = 0;
+                                System.Collections.Generic.List<IntPtr> stringPtrs = new System.Collections.Generic.List<IntPtr>();
+                                foreach (string extName in requiredExtensions)
+                                {
+                                    byte[] extNameBytes = System.Text.Encoding.ASCII.GetBytes(extName + "\0");
+                                    IntPtr extNamePtr = Marshal.AllocHGlobal(extNameBytes.Length);
+                                    Marshal.Copy(extNameBytes, 0, extNamePtr, extNameBytes.Length);
+                                    stringPtrs.Add(extNamePtr);
+                                }
+
+                                // Allocate array of pointers
+                                int ptrArraySize = requiredExtensions.Count * Marshal.SizeOf(typeof(IntPtr));
+                                extensionNamesPtr = Marshal.AllocHGlobal(ptrArraySize);
+                                for (int i = 0; i < stringPtrs.Count; i++)
+                                {
+                                    Marshal.WriteIntPtr(extensionNamesPtr, i * Marshal.SizeOf(typeof(IntPtr)), stringPtrs[i]);
+                                }
+
+                                try
+                                {
+                                    // Create device create info
+                                    VkDeviceCreateInfo deviceCreateInfo = new VkDeviceCreateInfo
+                                    {
+                                        sType = VkStructureType.VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+                                        pNext = IntPtr.Zero,
+                                        flags = 0,
+                                        queueCreateInfoCount = (uint)uniqueQueueFamilies.Count,
+                                        pQueueCreateInfos = queueCreateInfosPtr,
+                                        enabledLayerCount = 0,
+                                        ppEnabledLayerNames = IntPtr.Zero,
+                                        enabledExtensionCount = (uint)requiredExtensions.Count,
+                                        ppEnabledExtensionNames = extensionNamesPtr,
+                                        pEnabledFeatures = featuresPtr
+                                    };
+
+                                    int deviceCreateInfoSize = Marshal.SizeOf(typeof(VkDeviceCreateInfo));
+                                    IntPtr deviceCreateInfoPtr = Marshal.AllocHGlobal(deviceCreateInfoSize);
+                                    try
+                                    {
+                                        Marshal.StructureToPtr(deviceCreateInfo, deviceCreateInfoPtr, false);
+
+                                        // Create device
+                                        VkResult result = vkCreateDevice(physicalDevice, ref deviceCreateInfo, IntPtr.Zero, out device);
+                                        if (result != VkResult.VK_SUCCESS)
+                                        {
+                                            return false;
+                                        }
+                                    }
+                                    finally
+                                    {
+                                        Marshal.FreeHGlobal(deviceCreateInfoPtr);
+                                    }
+                                }
+                                finally
+                                {
+                                    // Free extension name strings
+                                    foreach (IntPtr stringPtr in stringPtrs)
+                                    {
+                                        Marshal.FreeHGlobal(stringPtr);
+                                    }
+                                    if (extensionNamesPtr != IntPtr.Zero)
+                                    {
+                                        Marshal.FreeHGlobal(extensionNamesPtr);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                // No extensions
+                                VkDeviceCreateInfo deviceCreateInfo = new VkDeviceCreateInfo
+                                {
+                                    sType = VkStructureType.VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+                                    pNext = IntPtr.Zero,
+                                    flags = 0,
+                                    queueCreateInfoCount = (uint)uniqueQueueFamilies.Count,
+                                    pQueueCreateInfos = queueCreateInfosPtr,
+                                    enabledLayerCount = 0,
+                                    ppEnabledLayerNames = IntPtr.Zero,
+                                    enabledExtensionCount = 0,
+                                    ppEnabledExtensionNames = IntPtr.Zero,
+                                    pEnabledFeatures = featuresPtr
+                                };
+
+                                int deviceCreateInfoSize = Marshal.SizeOf(typeof(VkDeviceCreateInfo));
+                                IntPtr deviceCreateInfoPtr = Marshal.AllocHGlobal(deviceCreateInfoSize);
+                                try
+                                {
+                                    Marshal.StructureToPtr(deviceCreateInfo, deviceCreateInfoPtr, false);
+
+                                    VkResult result = vkCreateDevice(physicalDevice, ref deviceCreateInfo, IntPtr.Zero, out device);
+                                    if (result != VkResult.VK_SUCCESS)
+                                    {
+                                        return false;
+                                    }
+                                }
+                                finally
+                                {
+                                    Marshal.FreeHGlobal(deviceCreateInfoPtr);
+                                }
+                            }
+                        }
+                        finally
+                        {
+                            Marshal.FreeHGlobal(featuresPtr);
+                        }
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(queuePriorityPtr);
+                    }
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(queueCreateInfosPtr);
+                }
+
+                // Get queue handles
+                vkGetDeviceQueue(device, graphicsQueueFamilyIndex, 0, out graphicsQueue);
+                if (computeQueueFamilyIndex != graphicsQueueFamilyIndex)
+                {
+                    vkGetDeviceQueue(device, computeQueueFamilyIndex, 0, out computeQueue);
+                }
+                else
+                {
+                    computeQueue = graphicsQueue; // Same queue
+                }
+                if (transferQueueFamilyIndex != graphicsQueueFamilyIndex && transferQueueFamilyIndex != computeQueueFamilyIndex)
+                {
+                    vkGetDeviceQueue(device, transferQueueFamilyIndex, 0, out transferQueue);
+                }
+                else
+                {
+                    transferQueue = graphicsQueue; // Same queue
+                }
+
+                return true;
+            }
+            catch (Exception)
+            {
+                if (device != IntPtr.Zero && vkDestroyDevice != null)
+                {
+                    vkDestroyDevice(device, IntPtr.Zero);
+                }
+                return false;
+            }
         }
 
         internal VulkanDevice(
@@ -5292,22 +6466,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkQueueSubmit.html
                     // vkQueueSubmit signature: VkResult vkQueueSubmit(VkQueue queue, uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence)
                     // The fence will be signaled when the command buffer completes execution
-                    VkSubmitInfo submitInfo = new VkSubmitInfo
-                    {
-                        sType = VkStructureType.VK_STRUCTURE_TYPE_SUBMIT_INFO,
-                        pNext = IntPtr.Zero,
-                        waitSemaphoreCount = 0,
-                        pWaitSemaphores = IntPtr.Zero,
-                        pWaitDstStageMask = IntPtr.Zero,
-                        commandBufferCount = 1,
-                        pCommandBuffers = MarshalArray(new[] { vkCommandBuffer }),
-                        signalSemaphoreCount = 0,
-                        pSignalSemaphores = IntPtr.Zero
-                    };
-
-                    // Submit command buffer with fence
-                    // The fence parameter in vkQueueSubmit will be signaled when the command buffer completes
-                    CheckResult(vkQueueSubmit(_graphicsQueue, 1, ref submitInfo, vkFence), "vkQueueSubmit");
+                    IntPtr pCommandBuffers = MarshalArray(new[] { vkCommandBuffer }); VkSubmitInfo submitInfo = new VkSubmitInfo { sType = VkStructureType.VK_STRUCTURE_TYPE_SUBMIT_INFO, pNext = IntPtr.Zero, waitSemaphoreCount = 0, pWaitSemaphores = IntPtr.Zero, pWaitDstStageMask = IntPtr.Zero, commandBufferCount = 1, pCommandBuffers = pCommandBuffers, signalSemaphoreCount = 0, pSignalSemaphores = IntPtr.Zero }; IntPtr submitInfoPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(VkSubmitInfo))); try { Marshal.StructureToPtr(submitInfo, submitInfoPtr, false); CheckResult(vkQueueSubmit(_graphicsQueue, 1, submitInfoPtr, vkFence), "vkQueueSubmit"); } finally { Marshal.DestroyStructure(submitInfoPtr, typeof(VkSubmitInfo)); Marshal.FreeHGlobal(submitInfoPtr); }
 
                     // Free the marshalled array
                     if (submitInfo.pCommandBuffers != IntPtr.Zero)
@@ -5425,7 +6584,13 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // Load vkGetDeviceProcAddr first (if not already available)
                 // vkGetDeviceProcAddr signature: PFN_vkGetDeviceProcAddr(device, "functionName")
                 // For core functions like vkWaitForFences, vkGetDeviceProcAddr will return the function pointer
-                IntPtr funcPtr = VulkanLoaderHelper.GetProcAddress(VulkanLoaderHelper.LoadLibrary(VulkanLibrary), "vkWaitForFences");
+                // Load vkWaitForFences using NativeMethods
+                IntPtr hModule = NativeMethods.LoadLibrary(VulkanLibrary);
+                if (hModule == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException($"Failed to load Vulkan library: {VulkanLibrary}");
+                }
+                IntPtr funcPtr = NativeMethods.GetProcAddress(hModule, "vkWaitForFences");
                 if (funcPtr == IntPtr.Zero)
                 {
                     // Fallback: Try loading via instance proc address (some implementations require this)
@@ -5438,12 +6603,22 @@ namespace Andastra.Runtime.MonoGame.Backends
             // Call vkWaitForFences
             // waitAll = VK_TRUE to wait for all fences (we only have one fence, so this doesn't matter)
             // timeout = UINT64_MAX (0xFFFFFFFFFFFFFFFF) to wait indefinitely
-            VkResult result = vkWaitForFences(_device, 1, new IntPtr(&vkFence), VkBool32.VK_TRUE, 0xFFFFFFFFFFFFFFFFUL);
-
-            // Check result
-            if (result != VkResult.VK_SUCCESS && result != VkResult.VK_TIMEOUT)
+            // Allocate memory for fence handle array (vkWaitForFences expects array of VkFence handles)
+            IntPtr fenceArrayPtr = Marshal.AllocHGlobal(IntPtr.Size);
+            try
             {
-                throw new InvalidOperationException($"vkWaitForFences failed with result: {result}");
+                Marshal.WriteIntPtr(fenceArrayPtr, vkFence);
+                VkResult result = vkWaitForFences(_device, 1, fenceArrayPtr, VkBool32.VK_TRUE, 0xFFFFFFFFFFFFFFFFUL);
+
+                // Check result
+                if (result != VkResult.VK_SUCCESS && result != VkResult.VK_TIMEOUT)
+                {
+                    throw new InvalidOperationException($"vkWaitForFences failed with result: {result}");
+                }
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(fenceArrayPtr);
             }
         }
 
@@ -5544,9 +6719,9 @@ namespace Andastra.Runtime.MonoGame.Backends
             if ((usage & TextureUsage.RenderTarget) != 0)
             {
                 // Determine if this is a depth/stencil format or color format
-                bool isDepthStencilFormat = format == TextureFormat.D24_UNORM_S8_UINT ||
-                                           format == TextureFormat.D32_FLOAT ||
-                                           format == TextureFormat.D32_FLOAT_S8_UINT;
+                bool isDepthStencilFormat = format == TextureFormat.D24_UNorm_S8_UInt ||
+                                           format == TextureFormat.D32_Float ||
+                                           format == TextureFormat.D32_Float_S8_UInt;
 
                 if (isDepthStencilFormat)
                 {
@@ -5597,17 +6772,17 @@ namespace Andastra.Runtime.MonoGame.Backends
             // Fallback: assume common formats are supported for common usages
             switch (format)
             {
-                case TextureFormat.RGBA8_UNORM:
-                case TextureFormat.RGBA8_SRGB:
+                case TextureFormat.R8G8B8A8_UNORM:
+                case TextureFormat.R8G8B8A8_UNORM_SRGB:
                     return (usage & (TextureUsage.ShaderResource | TextureUsage.RenderTarget)) != 0;
 
-                case TextureFormat.RGBA16_FLOAT:
-                case TextureFormat.RGBA32_FLOAT:
+                case TextureFormat.R16G16B16A16_FLOAT:
+                case TextureFormat.R32G32B32A32_FLOAT:
                     return (usage & (TextureUsage.ShaderResource | TextureUsage.RenderTarget | TextureUsage.UnorderedAccess)) != 0;
 
-                case TextureFormat.D24_UNORM_S8_UINT:
-                case TextureFormat.D32_FLOAT:
-                case TextureFormat.D32_FLOAT_S8_UINT:
+                case TextureFormat.D24_UNorm_S8_UInt:
+                case TextureFormat.D32_Float:
+                case TextureFormat.D32_Float_S8_UInt:
                     return (usage & TextureUsage.DepthStencil) != 0;
 
                 default:
@@ -6925,17 +8100,17 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 switch (format)
                 {
-                    case TextureFormat.R8_UNORM:
+                    case TextureFormat.R8_UNorm:
                         return 1;
-                    case TextureFormat.R8G8_UNORM:
+                    case TextureFormat.R8G8_UNorm:
                         return 2;
-                    case TextureFormat.R8G8B8A8_UNORM:
-                    case TextureFormat.R8G8B8A8_SRGB:
-                    case TextureFormat.B8G8R8A8_UNORM:
+                    case TextureFormat.R8G8B8A8_UNorm:
+                    case TextureFormat.R8G8B8A8_UNorm_SRGB:
+                    case TextureFormat.B8G8R8A8_UNorm:
                         return 4;
-                    case TextureFormat.R16G16B16A16_FLOAT:
+                    case TextureFormat.R16G16B16A16_Float:
                         return 8;
-                    case TextureFormat.R32G32B32A32_FLOAT:
+                    case TextureFormat.R32G32B32A32_Float:
                         return 16;
                     default:
                         // Default to 4 bytes per pixel for unknown formats
@@ -7531,8 +8706,8 @@ namespace Andastra.Runtime.MonoGame.Backends
                     // Only include stencil aspect if format supports it
                     switch (textureDesc.Format)
                     {
-                        case TextureFormat.D24_UNORM_S8_UINT:
-                        case TextureFormat.D32_FLOAT_S8X24_UINT:
+                        case TextureFormat.D24_UNorm_S8_UInt:
+                        case TextureFormat.D32_Float_S8_UInt:
                             aspectMask |= VkImageAspectFlags.VK_IMAGE_ASPECT_STENCIL_BIT;
                             break;
                     }
@@ -10551,4 +11726,5 @@ namespace Andastra.Runtime.MonoGame.Backends
         #endregion
     }
 }
+
 

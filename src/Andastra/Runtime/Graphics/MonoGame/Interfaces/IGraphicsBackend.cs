@@ -301,6 +301,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         R16_UInt,
         R16_SInt,
         R16G16_Float,
+        R16G16_UNorm,
         R16G16_UInt,
         R16G16_SInt,
         R16G16B16A16_Float,
@@ -314,6 +315,8 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         R32G32_UInt,
         R32G32_SInt,
         R32G32B32_Float,
+        R32G32B32_UInt,
+        R32G32B32_SInt,
         R32G32B32A32_Float,
         R32G32B32A32_UInt,
         R32G32B32A32_SInt,
@@ -362,7 +365,9 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         ShaderResource = 1 << 0,
         RenderTarget = 1 << 1,
         DepthStencil = 1 << 2,
-        UnorderedAccess = 1 << 3
+        UnorderedAccess = 1 << 3,
+        CopyDest = 1 << 4,
+        Storage = 1 << 5
     }
 
     /// <summary>
