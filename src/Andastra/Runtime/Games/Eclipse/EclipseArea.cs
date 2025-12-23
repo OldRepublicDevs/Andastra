@@ -11644,30 +11644,31 @@ technique ColorGrading
             // Update physics collision shapes if geometry was modified
             if (_modificationType == GeometryModificationType.Destroyed || _modificationType == GeometryModificationType.Deformed)
             {
-                UpdatePhysicsCollisionShapes();
+                area.UpdatePhysicsCollisionShapes();
             }
         }
+    }
 
-        /// <summary>
-        /// Updates physics collision shapes for modified geometry.
-        /// </summary>
-        /// <remarks>
-        /// Based on daorigins.exe/DragonAge2.exe: Physics collision shapes are updated when geometry is modified.
-        ///
-        /// Implementation details:
-        /// - daorigins.exe: 0x008f12a0 - Static geometry collision shape update function
-        /// - DragonAge2.exe: 0x009a45b0 - Enhanced collision shape rebuild for destructible geometry
-        ///
-        /// When geometry is modified (destroyed/deformed):
-        /// 1. Gets modified mesh data from geometry modification tracker
-        /// 2. Retrieves original mesh geometry (vertices, indices) from cached mesh data
-        /// 3. Builds destroyed face indices set and modified vertex positions dictionary
-        /// 4. Rebuilds collision shapes in physics system with updated geometry
-        /// 5. Recalculates collision bounds for efficient spatial queries
-        /// </remarks>
-        private void UpdatePhysicsCollisionShapes()
-        {
-            if (_physicsSystem == null || _geometryModificationTracker == null)
+    /// <summary>
+    /// Updates physics collision shapes for modified geometry.
+    /// </summary>
+    /// <remarks>
+    /// Based on daorigins.exe/DragonAge2.exe: Physics collision shapes are updated when geometry is modified.
+    ///
+    /// Implementation details:
+    /// - daorigins.exe: 0x008f12a0 - Static geometry collision shape update function
+    /// - DragonAge2.exe: 0x009a45b0 - Enhanced collision shape rebuild for destructible geometry
+    ///
+    /// When geometry is modified (destroyed/deformed):
+    /// 1. Gets modified mesh data from geometry modification tracker
+    /// 2. Retrieves original mesh geometry (vertices, indices) from cached mesh data
+    /// 3. Builds destroyed face indices set and modified vertex positions dictionary
+    /// 4. Rebuilds collision shapes in physics system with updated geometry
+    /// 5. Recalculates collision bounds for efficient spatial queries
+    /// </remarks>
+    private void UpdatePhysicsCollisionShapes()
+    {
+        if (_physicsSystem == null || _geometryModificationTracker == null)
             {
                 return;
             }
