@@ -438,12 +438,32 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Constraint creation functions
         /// - DragonAge2.exe: Enhanced constraint system
+        ///
+        /// Stores reference frame for hinge constraints to enable proper angle limit calculations.
         /// </remarks>
         public void AddConstraint(PhysicsConstraint constraint)
         {
             if (_disposed || constraint == null || constraint.EntityA == null)
             {
                 return;
+            }
+
+            // Store reference frame for angle calculations (for hinge constraints)
+            // Based on daorigins.exe/DragonAge2.exe: Reference frame is stored when constraint is created
+            if (constraint.Type == ConstraintType.Hinge && _rigidBodies.TryGetValue(constraint.EntityA, out RigidBodyData bodyA))
+            {
+                // Use bodyB's rotation as reference if it exists, otherwise use bodyA's current rotation
+                if (constraint.EntityB != null && _rigidBodies.TryGetValue(constraint.EntityB, out RigidBodyData bodyB))
+                {
+                    // Reference frame is the relative rotation from bodyB to bodyA at constraint creation
+                    // q_ref = q_B^-1 * q_A (rotation from B's frame to A's frame)
+                    constraint.ReferenceFrame = Quaternion.Multiply(Quaternion.Inverse(bodyB.Rotation), bodyA.Rotation);
+                }
+                else
+                {
+                    // World constraint: use bodyA's current rotation as reference
+                    constraint.ReferenceFrame = bodyA.Rotation;
+                }
             }
 
             if (!_entityConstraints.ContainsKey(constraint.EntityA))
@@ -1220,6 +1240,133 @@ namespace Andastra.Runtime.Games.Eclipse
         }
 
         /// <summary>
+        /// Calculates the current angle of rotation around the hinge axis from the reference frame.
+        /// </summary>
+        /// <param name="constraint">The hinge constraint.</param>
+        /// <param name="bodyA">First rigid body.</param>
+        /// <param name="bodyB">Second rigid body (null for world constraints).</param>
+        /// <param name="hingeAxis">Normalized hinge axis vector.</param>
+        /// <returns>Current angle in radians around the hinge axis.</returns>
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Hinge angle calculation from reference frame.
+        /// Calculates the angle by:
+        /// 1. Getting the current relative rotation between bodyA and reference frame
+        /// 2. Using a reference vector perpendicular to the hinge axis
+        /// 3. Measuring the angle between the reference vector transformed by reference rotation and current rotation
+        ///
+        /// For constraints with bodyB, the angle is measured relative to bodyB's rotation.
+        /// For world constraints, the angle is measured relative to the stored reference frame.
+        ///
+        /// daorigins.exe: 0x008e55f0 - Hinge constraint angle calculation
+        /// DragonAge2.exe: Enhanced angle calculation with proper reference frame handling
+        /// </remarks>
+        private float CalculateHingeAngle(PhysicsConstraint constraint, RigidBodyData bodyA, RigidBodyData bodyB, Vector3 hingeAxis)
+        {
+            // Get current relative rotation
+            Quaternion currentRelativeRotation;
+            if (bodyB != null && bodyB.IsDynamic)
+            {
+                // Relative rotation from bodyB to bodyA: q_rel = q_B^-1 * q_A
+                currentRelativeRotation = Quaternion.Multiply(Quaternion.Inverse(bodyB.Rotation), bodyA.Rotation);
+            }
+            else
+            {
+                // World constraint: use bodyA's current rotation
+                currentRelativeRotation = bodyA.Rotation;
+            }
+
+            // Get reference relative rotation (stored when constraint was created)
+            Quaternion referenceRelativeRotation = constraint.ReferenceFrame;
+
+            // Calculate rotation error: q_error = q_ref^-1 * q_current
+            // This gives us the rotation from reference to current
+            Quaternion rotationError = Quaternion.Multiply(Quaternion.Inverse(referenceRelativeRotation), currentRelativeRotation);
+
+            // Convert quaternion to axis-angle representation
+            // q = [x*sin(θ/2), y*sin(θ/2), z*sin(θ/2), cos(θ/2)]
+            // where (x,y,z) is the normalized rotation axis and θ is the angle
+            float w = Math.Max(-1.0f, Math.Min(1.0f, rotationError.W));
+            float angle = 2.0f * (float)Math.Acos(Math.Abs(w));
+            
+            // If angle is very small, return 0 (no rotation)
+            if (angle < 0.0001f)
+            {
+                return 0.0f;
+            }
+
+            // Extract rotation axis from quaternion
+            float s = (float)Math.Sqrt(1.0f - w * w);
+            if (s < 0.0001f)
+            {
+                return 0.0f; // No rotation
+            }
+
+            Vector3 rotationAxis = new Vector3(rotationError.X / s, rotationError.Y / s, rotationError.Z / s);
+            rotationAxis = Vector3.Normalize(rotationAxis);
+
+            // Check if rotation axis aligns with hinge axis
+            float axisAlignment = Vector3.Dot(rotationAxis, hingeAxis);
+            float absAlignment = Math.Abs(axisAlignment);
+
+            // If rotation axis is aligned with hinge axis (within tolerance), use full angle
+            if (absAlignment > 0.9999f)
+            {
+                // Determine sign: positive if rotation axis points in same direction as hinge axis
+                float sign = axisAlignment >= 0.0f ? 1.0f : -1.0f;
+                return angle * sign;
+            }
+
+            // Rotation axis is not aligned with hinge axis
+            // Project the rotation onto the hinge axis
+            // The component of rotation around the hinge axis is: angle * cos(α)
+            // where α is the angle between rotation axis and hinge axis
+            float projectedAngle = angle * axisAlignment;
+
+            // For more accurate calculation, use a reference vector method
+            // Create a reference vector perpendicular to hinge axis
+            Vector3 referenceVector;
+            if (Math.Abs(Vector3.Dot(hingeAxis, Vector3.UnitX)) < 0.9f)
+            {
+                referenceVector = Vector3.Normalize(Vector3.Cross(hingeAxis, Vector3.UnitX));
+            }
+            else
+            {
+                referenceVector = Vector3.Normalize(Vector3.Cross(hingeAxis, Vector3.UnitY));
+            }
+
+            // Transform reference vector by reference rotation and current rotation
+            Vector3 refTransformed = Vector3.Transform(referenceVector, referenceRelativeRotation);
+            Vector3 currentTransformed = Vector3.Transform(referenceVector, currentRelativeRotation);
+
+            // Project both vectors onto plane perpendicular to hinge axis
+            Vector3 refProjected = refTransformed - hingeAxis * Vector3.Dot(refTransformed, hingeAxis);
+            Vector3 currentProjected = currentTransformed - hingeAxis * Vector3.Dot(currentTransformed, hingeAxis);
+
+            // Normalize projected vectors
+            float refLen = refProjected.Length();
+            float currentLen = currentProjected.Length();
+            if (refLen < 0.0001f || currentLen < 0.0001f)
+            {
+                // Fallback to projected angle
+                return projectedAngle;
+            }
+
+            refProjected = refProjected / refLen;
+            currentProjected = currentProjected / currentLen;
+
+            // Calculate angle between projected vectors
+            float dot = Vector3.Dot(refProjected, currentProjected);
+            dot = Math.Max(-1.0f, Math.Min(1.0f, dot));
+            float angleBetween = (float)Math.Acos(dot);
+
+            // Determine sign using cross product (right-hand rule)
+            Vector3 cross = Vector3.Cross(refProjected, currentProjected);
+            float sign = Vector3.Dot(cross, hingeAxis) >= 0.0f ? 1.0f : -1.0f;
+
+            return angleBetween * sign;
+        }
+
+        /// <summary>
         /// Solves a hinge constraint (rotation around axis only).
         /// </summary>
         /// <param name="constraint">The hinge constraint.</param>
@@ -1231,6 +1378,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// daorigins.exe: Hinge constraint implementation
         /// Allows rotation around constraint direction axis only.
+        /// Based on daorigins.exe/DragonAge2.exe: Complete hinge constraint with angle limit enforcement.
         /// </remarks>
         private void SolveHingeConstraint(PhysicsConstraint constraint, RigidBodyData bodyA, RigidBodyData bodyB, Vector3 worldAnchorA, Vector3 worldAnchorB, float deltaTime)
         {
@@ -1286,15 +1434,27 @@ namespace Andastra.Runtime.Games.Eclipse
             }
 
             // Apply angular limits if specified
+            // Based on daorigins.exe/DragonAge2.exe: Hinge constraint angle limits are enforced based on current angle from reference frame
             if (constraint.Limits.X != 0.0f || constraint.Limits.Y != 0.0f)
             {
-                // TODO:  Calculate current angle (simplified - would need reference frame in full implementation)
-                // TODO: STUB - For now, just clamp angular velocity magnitude
-                float maxAngularVel = constraint.Limits.Y > 0.0f ? constraint.Limits.Y : float.MaxValue;
-                if (Math.Abs(angularVelAlongAxis) > maxAngularVel)
+                float currentAngle = CalculateHingeAngle(constraint, bodyA, bodyB, hingeAxis);
+                float minAngle = constraint.Limits.X;
+                float maxAngle = constraint.Limits.Y;
+
+                // Clamp angle to limits and apply corrective angular velocity
+                if (currentAngle < minAngle)
                 {
-                    float clampedVel = Math.Sign(angularVelAlongAxis) * maxAngularVel;
-                    bodyA.AngularVelocity = hingeAxis * clampedVel;
+                    float angleError = minAngle - currentAngle;
+                    float constraintBias = constraint.Stiffness > 0.0f ? constraint.Stiffness : 1000.0f;
+                    float correctionAngularVel = angleError * constraintBias / deltaTime;
+                    bodyA.AngularVelocity += hingeAxis * correctionAngularVel;
+                }
+                else if (currentAngle > maxAngle)
+                {
+                    float angleError = currentAngle - maxAngle;
+                    float constraintBias = constraint.Stiffness > 0.0f ? constraint.Stiffness : 1000.0f;
+                    float correctionAngularVel = -angleError * constraintBias / deltaTime;
+                    bodyA.AngularVelocity += hingeAxis * correctionAngularVel;
                 }
             }
         }
