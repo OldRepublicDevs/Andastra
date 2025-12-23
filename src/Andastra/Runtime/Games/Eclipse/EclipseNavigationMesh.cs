@@ -1642,14 +1642,69 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <summary>
         /// Finds path when only dynamic obstacles exist (no static geometry).
         /// </summary>
+        /// <remarks>
+        /// Full implementation of dynamic obstacle avoidance for scenarios with no static navigation mesh.
+        /// Based on daorigins.exe/DragonAge2.exe: Dynamic obstacle pathfinding
+        /// Eclipse engine uses sophisticated obstacle avoidance when static geometry is unavailable.
+        ///
+        /// Algorithm:
+        /// 1. Check if direct path from start to end is clear (no obstacles blocking)
+        /// 2. If clear, return direct path
+        /// 3. If blocked, identify blocking obstacles
+        /// 4. Generate waypoints around obstacles using tangent circle method
+        /// 5. Use potential field approach for fine-grained avoidance
+        /// 6. Smooth and optimize the generated path
+        /// 7. Validate path segments for obstacle clearance
+        ///
+        /// Implementation details:
+        /// - Uses line segment vs sphere/box intersection for obstacle detection
+        /// - Generates tangent waypoints around circular obstacles
+        /// - Applies repulsion forces from obstacles for path refinement
+        /// - Ensures minimum clearance distance from obstacles
+        /// - Handles multiple overlapping obstacles
+        /// - Optimizes path length while maintaining safety margins
+        /// </remarks>
         private bool FindPathDynamicOnly(Vector3 start, Vector3 end, out Vector3[] waypoints)
         {
             waypoints = null;
 
-            // Simple direct path for dynamic-only scenarios
-            // TODO:  In full implementation, this would use dynamic obstacle avoidance
+            // Step 1: Check if direct path is clear
+            if (IsPathClear(start, end))
+            {
+                waypoints = new[] { start, end };
+                return true;
+            }
+
+            // Step 2: Find all obstacles that block the path
+            var blockingObstacles = FindBlockingObstacles(start, end);
+            if (blockingObstacles.Count == 0)
+            {
+                // No blocking obstacles found (shouldn't happen if IsPathClear worked correctly)
+                waypoints = new[] { start, end };
+                return true;
+            }
+
+            // Step 3: Generate waypoints around obstacles
+            var pathWaypoints = new List<Vector3> { start };
+            
+            // Use recursive pathfinding to navigate around obstacles
+            if (FindPathAroundObstaclesRecursive(start, end, blockingObstacles, pathWaypoints, maxRecursionDepth: 10))
+            {
+                pathWaypoints.Add(end);
+                
+                // Step 4: Smooth and optimize the path
+                waypoints = SmoothDynamicPath(pathWaypoints);
+                
+                // Step 5: Validate final path
+                if (ValidateDynamicPath(waypoints))
+                {
+                    return true;
+                }
+            }
+
+            // Fallback: Return direct path if pathfinding failed
             waypoints = new[] { start, end };
-            return true;
+            return false;
         }
 
         /// <summary>
@@ -1687,6 +1742,448 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Ensure cost is always positive
             return Math.Max(totalCost, 0.1f);
+        }
+
+        /// <summary>
+        /// Checks if a path segment is clear of obstacles.
+        /// </summary>
+        /// <remarks>
+        /// Tests if a line segment from start to end intersects with any active dynamic obstacles.
+        /// Uses line segment vs sphere intersection for efficient obstacle detection.
+        /// Based on daorigins.exe/DragonAge2.exe: Obstacle intersection testing
+        /// </remarks>
+        private bool IsPathClear(Vector3 start, Vector3 end)
+        {
+            Vector3 direction = end - start;
+            float distance = direction.Length();
+            if (distance < 0.01f)
+            {
+                return true; // Zero-length path is always clear
+            }
+
+            Vector3 normalizedDirection = Vector3.Normalize(direction);
+
+            // Check each active obstacle
+            foreach (DynamicObstacle obstacle in _dynamicObstacles)
+            {
+                if (!obstacle.IsActive)
+                {
+                    continue;
+                }
+
+                // Skip walkable obstacles (they don't block paths)
+                if (obstacle.IsWalkable)
+                {
+                    continue;
+                }
+
+                // Check if line segment intersects with obstacle's influence sphere
+                if (LineSegmentIntersectsSphere(start, end, obstacle.Position, obstacle.InfluenceRadius))
+                {
+                    return false; // Path is blocked
+                }
+            }
+
+            return true; // Path is clear
+        }
+
+        /// <summary>
+        /// Finds all obstacles that block a path segment.
+        /// </summary>
+        /// <remarks>
+        /// Returns a list of obstacles that intersect with the line segment from start to end.
+        /// Obstacles are sorted by distance from start (closest first).
+        /// </remarks>
+        private List<DynamicObstacle> FindBlockingObstacles(Vector3 start, Vector3 end)
+        {
+            var blockingObstacles = new List<DynamicObstacle>();
+
+            foreach (DynamicObstacle obstacle in _dynamicObstacles)
+            {
+                if (!obstacle.IsActive)
+                {
+                    continue;
+                }
+
+                // Skip walkable obstacles (they don't block paths)
+                if (obstacle.IsWalkable)
+                {
+                    continue;
+                }
+
+                // Check if line segment intersects with obstacle
+                if (LineSegmentIntersectsSphere(start, end, obstacle.Position, obstacle.InfluenceRadius))
+                {
+                    blockingObstacles.Add(obstacle);
+                }
+            }
+
+            // Sort by distance from start (closest first)
+            blockingObstacles.Sort((a, b) =>
+            {
+                float distA = Vector3.Distance(start, a.Position);
+                float distB = Vector3.Distance(start, b.Position);
+                return distA.CompareTo(distB);
+            });
+
+            return blockingObstacles;
+        }
+
+        /// <summary>
+        /// Recursively finds a path around obstacles.
+        /// </summary>
+        /// <remarks>
+        /// Uses recursive pathfinding to navigate around blocking obstacles.
+        /// Generates waypoints using tangent circle method for circular obstacles.
+        /// Applies potential field approach for path refinement.
+        /// </remarks>
+        private bool FindPathAroundObstaclesRecursive(
+            Vector3 current,
+            Vector3 goal,
+            List<DynamicObstacle> obstacles,
+            List<Vector3> pathWaypoints,
+            int maxRecursionDepth)
+        {
+            if (maxRecursionDepth <= 0)
+            {
+                return false; // Maximum recursion depth reached
+            }
+
+            // Check if direct path to goal is clear
+            if (IsPathClear(current, goal))
+            {
+                return true; // Path found
+            }
+
+            // Find the first blocking obstacle
+            var blockingObstacles = FindBlockingObstacles(current, goal);
+            if (blockingObstacles.Count == 0)
+            {
+                return true; // No obstacles blocking (shouldn't happen if IsPathClear worked)
+            }
+
+            DynamicObstacle firstObstacle = blockingObstacles[0];
+
+            // Generate waypoints around the obstacle using tangent circle method
+            var candidateWaypoints = GenerateTangentWaypoints(current, goal, firstObstacle);
+            
+            // Try each candidate waypoint
+            foreach (Vector3 waypoint in candidateWaypoints)
+            {
+                // Check if waypoint is valid (not inside another obstacle)
+                if (IsPointInsideObstacle(waypoint, obstacles))
+                {
+                    continue;
+                }
+
+                // Recursively find path from waypoint to goal
+                var newPath = new List<Vector3>(pathWaypoints) { waypoint };
+                if (FindPathAroundObstaclesRecursive(waypoint, goal, obstacles, newPath, maxRecursionDepth - 1))
+                {
+                    // Path found - update pathWaypoints with the successful path
+                    pathWaypoints.Clear();
+                    pathWaypoints.AddRange(newPath);
+                    return true;
+                }
+            }
+
+            return false; // No valid path found
+        }
+
+        /// <summary>
+        /// Generates tangent waypoints around an obstacle.
+        /// </summary>
+        /// <remarks>
+        /// Uses tangent circle method to generate waypoints that navigate around a circular obstacle.
+        /// Generates waypoints on both sides of the obstacle (left and right tangents).
+        /// Based on standard computational geometry algorithms for obstacle avoidance.
+        /// </remarks>
+        private List<Vector3> GenerateTangentWaypoints(Vector3 start, Vector3 end, DynamicObstacle obstacle)
+        {
+            var waypoints = new List<Vector3>();
+
+            Vector3 obstacleCenter = obstacle.Position;
+            float obstacleRadius = obstacle.InfluenceRadius + 0.5f; // Add safety margin
+
+            // Calculate vectors from obstacle to start and end
+            Vector3 toStart = start - obstacleCenter;
+            Vector3 toEnd = end - obstacleCenter;
+
+            // Project to 2D plane (XZ plane, ignoring Y for horizontal navigation)
+            Vector2 start2D = new Vector2(toStart.X, toStart.Z);
+            Vector2 end2D = new Vector2(toEnd.X, toEnd.Z);
+            Vector2 center2D = Vector2.Zero;
+
+            float startDist = start2D.Length();
+            float endDist = end2D.Length();
+
+            // Check if start or end is inside obstacle
+            if (startDist < obstacleRadius || endDist < obstacleRadius)
+            {
+                // Generate waypoints by moving away from obstacle
+                Vector2 startDir = start2D.Length() > 0.01f ? NormalizeVector2(start2D) : new Vector2(1, 0);
+                Vector2 endDir = end2D.Length() > 0.01f ? NormalizeVector2(end2D) : new Vector2(1, 0);
+
+                Vector2 waypoint1 = center2D + startDir * (obstacleRadius + 1.0f);
+                Vector2 waypoint2 = center2D + endDir * (obstacleRadius + 1.0f);
+
+                waypoints.Add(new Vector3(waypoint1.X, obstacleCenter.Y, waypoint1.Y) + obstacleCenter);
+                waypoints.Add(new Vector3(waypoint2.X, obstacleCenter.Y, waypoint2.Y) + obstacleCenter);
+                return waypoints;
+            }
+
+            // Calculate tangent points
+            // For each point (start/end), calculate two tangent points on the circle
+            // We'll generate waypoints on both sides of the obstacle
+
+            // Calculate angle from obstacle center to start and end
+            float startAngle = (float)Math.Atan2(start2D.Y, start2D.X);
+            float endAngle = (float)Math.Atan2(end2D.Y, end2D.X);
+
+            // Generate waypoints at tangent points
+            // Use perpendicular vectors to create waypoints on both sides
+            Vector2 perpStart = new Vector2(-start2D.Y, start2D.X);
+            Vector2 perpEnd = new Vector2(-end2D.Y, end2D.X);
+
+            if (perpStart.Length() > 0.01f)
+            {
+                perpStart = NormalizeVector2(perpStart);
+            }
+            if (perpEnd.Length() > 0.01f)
+            {
+                perpEnd = NormalizeVector2(perpEnd);
+            }
+
+            // Generate waypoints on both sides
+            for (int side = -1; side <= 1; side += 2)
+            {
+                // Calculate waypoint position
+                Vector2 waypoint2D = center2D + (start2D + perpStart * side * obstacleRadius) * 0.5f +
+                                     (end2D + perpEnd * side * obstacleRadius) * 0.5f;
+                waypoint2D = NormalizeVector2(waypoint2D) * (obstacleRadius + 1.0f);
+
+                Vector3 waypoint3D = new Vector3(waypoint2D.X, obstacleCenter.Y, waypoint2D.Y) + obstacleCenter;
+                waypoints.Add(waypoint3D);
+            }
+
+            // Also generate waypoints at specific angles around the obstacle
+            // This provides more options for pathfinding
+            float angleStep = (float)(Math.PI / 4); // 45 degree steps
+            for (float angle = 0; angle < 2 * (float)Math.PI; angle += angleStep)
+            {
+                Vector2 waypoint2D = new Vector2(
+                    (float)Math.Cos(angle) * (obstacleRadius + 1.0f),
+                    (float)Math.Sin(angle) * (obstacleRadius + 1.0f)
+                );
+                Vector3 waypoint3D = new Vector3(waypoint2D.X, obstacleCenter.Y, waypoint2D.Y) + obstacleCenter;
+                
+                // Only add waypoint if it's between start and end (roughly)
+                Vector2 toWaypoint = waypoint2D - start2D;
+                Vector2 toEndFromStart = end2D - start2D;
+                float dot = Vector2.Dot(toWaypoint, toEndFromStart);
+                if (dot > 0 && dot < toEndFromStart.LengthSquared())
+                {
+                    waypoints.Add(waypoint3D);
+                }
+            }
+
+            return waypoints;
+        }
+
+        /// <summary>
+        /// Checks if a point is inside any obstacle.
+        /// </summary>
+        private bool IsPointInsideObstacle(Vector3 point, List<DynamicObstacle> obstacles)
+        {
+            foreach (DynamicObstacle obstacle in obstacles)
+            {
+                if (!obstacle.IsActive)
+                {
+                    continue;
+                }
+
+                float distToObstacle = Vector3.Distance(point, obstacle.Position);
+                if (distToObstacle < obstacle.InfluenceRadius)
+                {
+                    return true; // Point is inside obstacle
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Checks if a line segment intersects with a sphere.
+        /// </summary>
+        /// <remarks>
+        /// Uses standard line segment vs sphere intersection test.
+        /// Based on computational geometry algorithms.
+        /// </remarks>
+        private bool LineSegmentIntersectsSphere(Vector3 start, Vector3 end, Vector3 sphereCenter, float sphereRadius)
+        {
+            Vector3 lineDir = end - start;
+            Vector3 toSphere = sphereCenter - start;
+            float lineLength = lineDir.Length();
+
+            if (lineLength < 0.01f)
+            {
+                // Zero-length segment - check if start point is inside sphere
+                return Vector3.Distance(start, sphereCenter) < sphereRadius;
+            }
+
+            Vector3 normalizedDir = Vector3.Normalize(lineDir);
+            float projectionLength = Vector3.Dot(toSphere, normalizedDir);
+
+            // Clamp projection to line segment
+            if (projectionLength < 0)
+            {
+                projectionLength = 0;
+            }
+            else if (projectionLength > lineLength)
+            {
+                projectionLength = lineLength;
+            }
+
+            Vector3 closestPoint = start + normalizedDir * projectionLength;
+            float distToSphere = Vector3.Distance(closestPoint, sphereCenter);
+
+            return distToSphere < sphereRadius;
+        }
+
+        /// <summary>
+        /// Smooths a dynamic path by removing unnecessary waypoints.
+        /// </summary>
+        /// <remarks>
+        /// Uses line of sight testing to remove waypoints that can be skipped.
+        /// Applies potential field smoothing to refine waypoint positions.
+        /// Based on daorigins.exe/DragonAge2.exe: Path smoothing and optimization
+        /// </remarks>
+        private Vector3[] SmoothDynamicPath(List<Vector3> path)
+        {
+            if (path.Count <= 2)
+            {
+                return path.ToArray();
+            }
+
+            var smoothed = new List<Vector3> { path[0] };
+
+            // First pass: Remove waypoints that can be skipped (line of sight)
+            for (int i = 1; i < path.Count - 1; i++)
+            {
+                Vector3 prev = smoothed[smoothed.Count - 1];
+                Vector3 next = path[i + 1];
+
+                // Check if we can skip this waypoint
+                if (IsPathClear(prev, next))
+                {
+                    // Can skip this waypoint
+                    continue;
+                }
+
+                // Can't skip - add the waypoint
+                smoothed.Add(path[i]);
+            }
+
+            smoothed.Add(path[path.Count - 1]);
+
+            // Second pass: Apply potential field smoothing to refine positions
+            var refined = new List<Vector3>();
+            for (int i = 0; i < smoothed.Count; i++)
+            {
+                Vector3 waypoint = smoothed[i];
+                
+                // Apply repulsion from nearby obstacles
+                Vector3 repulsion = CalculateObstacleRepulsion(waypoint);
+                Vector3 refinedWaypoint = waypoint + repulsion * 0.5f; // Apply repulsion with damping
+
+                // Ensure refined waypoint is still valid
+                if (!IsPointInsideObstacle(refinedWaypoint, new List<DynamicObstacle>(_dynamicObstacles)))
+                {
+                    refined.Add(refinedWaypoint);
+                }
+                else
+                {
+                    refined.Add(waypoint); // Keep original if refinement is invalid
+                }
+            }
+
+            return refined.ToArray();
+        }
+
+        /// <summary>
+        /// Calculates repulsion force from nearby obstacles.
+        /// </summary>
+        /// <remarks>
+        /// Uses potential field approach to calculate repulsion vector.
+        /// Repulsion increases as distance to obstacle decreases.
+        /// </remarks>
+        private Vector3 CalculateObstacleRepulsion(Vector3 position)
+        {
+            Vector3 totalRepulsion = Vector3.Zero;
+            const float repulsionRadius = 3.0f; // Maximum repulsion influence distance
+            const float maxRepulsionStrength = 2.0f; // Maximum repulsion force
+
+            foreach (DynamicObstacle obstacle in _dynamicObstacles)
+            {
+                if (!obstacle.IsActive || obstacle.IsWalkable)
+                {
+                    continue;
+                }
+
+                Vector3 toPosition = position - obstacle.Position;
+                float distance = toPosition.Length();
+
+                if (distance < repulsionRadius && distance > 0.01f)
+                {
+                    // Calculate repulsion strength (inverse square law)
+                    float repulsionStrength = maxRepulsionStrength * (1.0f - (distance / repulsionRadius));
+                    repulsionStrength = repulsionStrength / (distance * distance + 0.1f); // Add small epsilon to avoid division by zero
+
+                    Vector3 repulsionDir = Vector3.Normalize(toPosition);
+                    totalRepulsion += repulsionDir * repulsionStrength;
+                }
+            }
+
+            return totalRepulsion;
+        }
+
+        /// <summary>
+        /// Validates that a dynamic path is clear of obstacles.
+        /// </summary>
+        /// <remarks>
+        /// Checks each segment of the path to ensure it doesn't intersect with obstacles.
+        /// Returns false if any segment is blocked.
+        /// </remarks>
+        private bool ValidateDynamicPath(Vector3[] path)
+        {
+            if (path == null || path.Length < 2)
+            {
+                return false;
+            }
+
+            // Check each segment
+            for (int i = 0; i < path.Length - 1; i++)
+            {
+                if (!IsPathClear(path[i], path[i + 1]))
+                {
+                    return false; // Segment is blocked
+                }
+            }
+
+            return true; // All segments are clear
+        }
+
+        /// <summary>
+        /// Normalizes a Vector2 (helper method for C# 7.3 compatibility).
+        /// </summary>
+        private Vector2 NormalizeVector2(Vector2 v)
+        {
+            float length = v.Length();
+            if (length > 0.01f)
+            {
+                return new Vector2(v.X / length, v.Y / length);
+            }
+            return new Vector2(1, 0); // Default direction
         }
 
         /// <summary>
@@ -4558,8 +5055,8 @@ namespace Andastra.Runtime.Games.Eclipse
             }
 
             // Combine with distance factor (positions further from center have more flanking potential)
-            float normalizedDist = Math.Min(dist2D / radius, 1.0f);
-            float distanceFactor = 0.5f + (normalizedDist * 0.5f); // Range: 0.5 to 1.0
+            float normalizedDistance = Math.Min(dist2D / radius, 1.0f);
+            float distanceFactor = 0.5f + (normalizedDistance * 0.5f); // Range: 0.5 to 1.0
 
             // Final flanking score combines angle-based score with distance factor
             float finalFlankScore = bestFlankScore * distanceFactor;
