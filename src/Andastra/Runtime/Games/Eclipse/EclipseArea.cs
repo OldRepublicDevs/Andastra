@@ -11705,9 +11705,9 @@ technique ColorGrading
     private void UpdatePhysicsCollisionShapes()
     {
         if (_physicsSystem == null || _geometryModificationTracker == null)
-            {
-                return;
-            }
+        {
+            return;
+        }
 
             EclipsePhysicsSystem physicsSystem = _physicsSystem as EclipsePhysicsSystem;
             if (physicsSystem == null)
