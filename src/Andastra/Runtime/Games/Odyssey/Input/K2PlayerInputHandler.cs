@@ -5,6 +5,7 @@ using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Core.Party;
 using Andastra.Runtime.Core.Movement;
+using Andastra.Runtime.Core.Enums;
 
 namespace Andastra.Runtime.Games.Odyssey.Input
 {
@@ -65,17 +66,99 @@ namespace Andastra.Runtime.Games.Odyssey.Input
         /// Based on swkotor2.exe reverse engineering:
         /// - K2 has Combat Forms which can affect cursor display (attack cursor variations)
         /// - FUN_005226d0 @ 0x005226d0 processes input and determines cursor mode
-        /// - K2-specific: Combat forms (Juyo, Makashi, etc.) may affect cursor appearance
-        /// - Otherwise similar to K1 cursor mode determination
-        // TODO: / - Uses base class implementation for now, can be extended for combat form-specific cursor modes
+        /// - K2-specific: Combat forms (Juyo, Makashi, etc.) affect cursor appearance when hovering over hostile targets
+        /// - Combat forms are stored as "ActiveCombatForm" in entity data (int value matching CombatForm enum)
+        /// - Lightsaber forms (258-264) affect attack cursor display
+        /// - Force forms (265-268) do not affect cursor display (use standard Attack cursor)
+        /// - Based on swkotor2.exe: Combat forms are tracked in entity stats/combat state
+        /// - Original implementation: swkotor2.exe checks active combat form when determining attack cursor
         /// </remarks>
         protected override CursorMode DetermineCursorMode(IEntity hoveredEntity)
         {
-            // Use base implementation for common cases
-            // K2-specific: Future enhancement could check for combat forms that affect cursor
-            // Combat forms in K2 can modify attack cursor appearance
-            // Based on swkotor2.exe: Combat forms are tracked in entity stats/combat state
-            return base.DetermineCursorMode(hoveredEntity);
+            // Get base cursor mode from parent implementation
+            CursorMode baseMode = base.DetermineCursorMode(hoveredEntity);
+
+            // Only apply combat form-specific cursors for attack mode
+            if (baseMode != CursorMode.Attack)
+            {
+                return baseMode;
+            }
+
+            // Get active combat form from party leader
+            CombatForm activeForm = GetActiveCombatForm();
+            if (activeForm == CombatForm.None)
+            {
+                return baseMode; // No form active, use standard attack cursor
+            }
+
+            // Map lightsaber combat forms to form-specific attack cursors
+            // Force forms do not affect cursor display (use standard Attack cursor)
+            switch (activeForm)
+            {
+                case CombatForm.ShiiCho:
+                    return CursorMode.AttackShiiCho;
+
+                case CombatForm.Makashi:
+                    return CursorMode.AttackMakashi;
+
+                case CombatForm.Soresu:
+                    return CursorMode.AttackSoresu;
+
+                case CombatForm.Ataru:
+                    return CursorMode.AttackAtaru;
+
+                case CombatForm.Shien:
+                    return CursorMode.AttackShien;
+
+                case CombatForm.Niman:
+                    return CursorMode.AttackNiman;
+
+                case CombatForm.Juyo:
+                    return CursorMode.AttackJuyo;
+
+                // Force forms (ForceFocus, ForcePotency, ForceAffinity, ForceMastery) use standard attack cursor
+                default:
+                    return baseMode;
+            }
+        }
+
+        /// <summary>
+        /// Gets the active combat form from the party leader.
+        /// </summary>
+        /// <returns>The active combat form, or None if no form is active or leader is not available.</returns>
+        /// <remarks>
+        /// Based on swkotor2.exe reverse engineering:
+        /// - Combat forms are stored as "ActiveCombatForm" in entity data
+        /// - GetIsFormActive NWScript function checks if specific form is active
+        /// - Form values match CombatForm enum constants (258-268 for lightsaber/force forms)
+        /// - Original implementation: swkotor2.exe stores active form in creature data structure
+        /// - Form activation: Set via SetIsFormActive NWScript function or combat form selection UI
+        /// </remarks>
+        private CombatForm GetActiveCombatForm()
+        {
+            // Get current party leader
+            var leader = (IEntity)(_partySystem?.Leader);
+            if (leader == null)
+            {
+                return CombatForm.None;
+            }
+
+            // Get active combat form from entity data (stored as "ActiveCombatForm")
+            // Based on swkotor2.exe: ActiveCombatForm is stored as int in entity data
+            // Located via string references: GetIsFormActive function checks "ActiveCombatForm" data
+            if (leader.HasData("ActiveCombatForm"))
+            {
+                int activeFormValue = leader.GetData<int>("ActiveCombatForm", 0);
+
+                // Convert int value to CombatForm enum
+                // Combat form values: 258-268 for lightsaber/force forms, 0 for none
+                if (Enum.IsDefined(typeof(CombatForm), activeFormValue))
+                {
+                    return (CombatForm)activeFormValue;
+                }
+            }
+
+            return CombatForm.None;
         }
 
         /// <summary>

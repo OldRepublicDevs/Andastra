@@ -153,6 +153,13 @@ namespace Andastra.Runtime.Core.Movement
                     break;
 
                 case CursorMode.Attack:
+                case CursorMode.AttackShiiCho:
+                case CursorMode.AttackMakashi:
+                case CursorMode.AttackSoresu:
+                case CursorMode.AttackAtaru:
+                case CursorMode.AttackShien:
+                case CursorMode.AttackNiman:
+                case CursorMode.AttackJuyo:
                     if (HoveredEntity != null)
                     {
                         IssueAttackCommand(HoveredEntity);
@@ -630,6 +637,41 @@ namespace Andastra.Runtime.Core.Movement
         /// Attack cursor (hostile target).
         /// </summary>
         Attack,
+
+        /// <summary>
+        /// Attack cursor with Shii-Cho form (Form I).
+        /// </summary>
+        AttackShiiCho,
+
+        /// <summary>
+        /// Attack cursor with Makashi form (Form II).
+        /// </summary>
+        AttackMakashi,
+
+        /// <summary>
+        /// Attack cursor with Soresu form (Form III).
+        /// </summary>
+        AttackSoresu,
+
+        /// <summary>
+        /// Attack cursor with Ataru form (Form IV).
+        /// </summary>
+        AttackAtaru,
+
+        /// <summary>
+        /// Attack cursor with Shien form (Form V).
+        /// </summary>
+        AttackShien,
+
+        /// <summary>
+        /// Attack cursor with Niman form (Form VI).
+        /// </summary>
+        AttackNiman,
+
+        /// <summary>
+        /// Attack cursor with Juyo form (Form VII).
+        /// </summary>
+        AttackJuyo,
 
         /// <summary>
         /// Talk cursor (friendly NPC).
