@@ -7591,7 +7591,11 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             // Barrier tracking
             private readonly List<PendingBufferBarrier> _pendingBufferBarriers;
+            private readonly List<PendingImageBarrier> _pendingImageBarriers;
             private readonly Dictionary<object, ResourceState> _resourceStates;
+            // Image layout tracking: maps VkImage handle (IntPtr) to current VkImageLayout
+            // This allows us to track the actual current layout of each image for proper transitions
+            private readonly Dictionary<IntPtr, VkImageLayout> _imageLayouts;
 
             // Scratch buffer tracking for acceleration structure builds
             private readonly List<IBuffer> _scratchBuffers;
@@ -7612,6 +7616,19 @@ namespace Andastra.Runtime.MonoGame.Backends
                 public VkPipelineStageFlags DstStageMask;
             }
 
+            // Pending barrier entry for images/textures
+            private struct PendingImageBarrier
+            {
+                public IntPtr Image;
+                public VkImageLayout OldLayout;
+                public VkImageLayout NewLayout;
+                public VkAccessFlags SrcAccessMask;
+                public VkAccessFlags DstAccessMask;
+                public VkPipelineStageFlags SrcStageMask;
+                public VkPipelineStageFlags DstStageMask;
+                public VkImageSubresourceRange SubresourceRange;
+            }
+
             public VulkanCommandList(IntPtr handle, CommandListType type, VulkanDevice device)
                 : this(handle, type, device, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero)
             {
@@ -7627,7 +7644,9 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _vkDevice = vkDevice;
                 _isOpen = false;
                 _pendingBufferBarriers = new List<PendingBufferBarrier>();
+                _pendingImageBarriers = new List<PendingImageBarrier>();
                 _resourceStates = new Dictionary<object, ResourceState>();
+                _imageLayouts = new Dictionary<IntPtr, VkImageLayout>();
                 _scratchBuffers = new List<IBuffer>();
             }
 
@@ -8220,6 +8239,45 @@ namespace Andastra.Runtime.MonoGame.Backends
                 return _device.FindMemoryType(typeFilter, properties);
             }
 
+            /// <summary>
+            /// Gets the current tracked layout for an image.
+            /// If the image is not tracked, returns VK_IMAGE_LAYOUT_UNDEFINED (indicating unknown/initial state).
+            /// </summary>
+            /// <param name="image">VkImage handle (IntPtr)</param>
+            /// <returns>Current tracked layout, or VK_IMAGE_LAYOUT_UNDEFINED if not tracked</returns>
+            private VkImageLayout GetImageLayout(IntPtr image)
+            {
+                if (image == IntPtr.Zero)
+                {
+                    return VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED;
+                }
+
+                VkImageLayout layout;
+                if (_imageLayouts.TryGetValue(image, out layout))
+                {
+                    return layout;
+                }
+
+                // Image not tracked yet - assume UNDEFINED (initial state for new images)
+                return VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED;
+            }
+
+            /// <summary>
+            /// Sets the tracked layout for an image after a transition.
+            /// This should be called after successfully transitioning an image layout.
+            /// </summary>
+            /// <param name="image">VkImage handle (IntPtr)</param>
+            /// <param name="layout">The new layout to track</param>
+            private void SetImageLayout(IntPtr image, VkImageLayout layout)
+            {
+                if (image == IntPtr.Zero)
+                {
+                    return; // Cannot track invalid image handle
+                }
+
+                _imageLayouts[image] = layout;
+            }
+
             // Overloaded TransitionImageLayout to support specific mip level and array slice
             private void TransitionImageLayout(IntPtr image, VkImageLayout oldLayout, VkImageLayout newLayout, TextureDesc desc, int mipLevel, int arraySlice)
             {
@@ -8478,6 +8536,22 @@ namespace Andastra.Runtime.MonoGame.Backends
                     return; // Cannot transition without pipeline barrier
                 }
 
+                // If oldLayout is UNDEFINED, query the actual current layout from tracking
+                // UNDEFINED is used as a sentinel value meaning "unknown/query current"
+                VkImageLayout actualOldLayout = oldLayout;
+                if (oldLayout == VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED)
+                {
+                    actualOldLayout = GetImageLayout(image);
+                    // If still UNDEFINED after query, it means this is a new image (first transition)
+                    // UNDEFINED is valid for the first transition from initial state
+                }
+
+                // Skip transition if already in target layout (optimization)
+                if (actualOldLayout == newLayout)
+                {
+                    return; // Already in target layout, no transition needed
+                }
+
                 VkImageAspectFlags aspectMask = GetImageAspectFlags(desc.Format);
 
                 VkImageSubresourceRange subresourceRange = new VkImageSubresourceRange
@@ -8493,9 +8567,9 @@ namespace Andastra.Runtime.MonoGame.Backends
                 {
                     sType = VkStructureType.VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
                     pNext = IntPtr.Zero,
-                    srcAccessMask = GetAccessFlagsForLayout(oldLayout),
+                    srcAccessMask = GetAccessFlagsForLayout(actualOldLayout),
                     dstAccessMask = GetAccessFlagsForLayout(newLayout),
-                    oldLayout = oldLayout,
+                    oldLayout = actualOldLayout,
                     newLayout = newLayout,
                     srcQueueFamilyIndex = 0xFFFFFFFF, // VK_QUEUE_FAMILY_IGNORED
                     dstQueueFamilyIndex = 0xFFFFFFFF, // VK_QUEUE_FAMILY_IGNORED
@@ -8525,6 +8599,9 @@ namespace Andastra.Runtime.MonoGame.Backends
                 {
                     Marshal.FreeHGlobal(barrierPtr);
                 }
+
+                // Update tracked layout after successful transition
+                SetImageLayout(image, newLayout);
             }
 
             // Helper to determine image aspect flags from texture format
@@ -8629,9 +8706,15 @@ namespace Andastra.Runtime.MonoGame.Backends
                     case VkImageLayout.VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
                         return VkAccessFlags.VK_ACCESS_SHADER_READ_BIT;
                     case VkImageLayout.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
-                        return VkAccessFlags.VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+                        return VkAccessFlags.VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VkAccessFlags.VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
                     case VkImageLayout.VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
-                        return VkAccessFlags.VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+                        return VkAccessFlags.VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VkAccessFlags.VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+                    case VkImageLayout.VK_IMAGE_LAYOUT_GENERAL:
+                        // GENERAL layout supports both read and write access for storage images
+                        return VkAccessFlags.VK_ACCESS_SHADER_READ_BIT | VkAccessFlags.VK_ACCESS_SHADER_WRITE_BIT;
+                    case VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED:
+                        // UNDEFINED layout has no access (used for initial layout)
+                        return 0;
                     default:
                         return 0;
                 }
@@ -8693,9 +8776,8 @@ namespace Andastra.Runtime.MonoGame.Backends
                 }
 
                 // Transition image to TRANSFER_DST_OPTIMAL layout for clearing
-                // Note: For clearing operations, we assume the image might be in UNDEFINED layout (newly created)
-                // or COLOR_ATTACHMENT_OPTIMAL (already used as attachment)
-                // Transitioning from UNDEFINED is safe for initialization/clearing operations
+                // TransitionImageLayout will query the actual current layout from tracking
+                // For new images (not tracked yet), it will use UNDEFINED as the initial layout
                 TransitionImageLayout(image, VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED, VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, textureDesc, attachment.MipLevel, attachment.ArraySlice);
 
                 // Create clear color value structure
@@ -8820,9 +8902,8 @@ namespace Andastra.Runtime.MonoGame.Backends
                 }
 
                 // Transition image to TRANSFER_DST_OPTIMAL layout for clearing
-                // Note: For clearing operations, we assume the image might be in UNDEFINED layout (newly created)
-                // or DEPTH_STENCIL_ATTACHMENT_OPTIMAL (already used as attachment)
-                // Transitioning from UNDEFINED is safe for initialization/clearing operations
+                // TransitionImageLayout will query the actual current layout from tracking
+                // For new images (not tracked yet), it will use UNDEFINED as the initial layout
                 TransitionImageLayout(image, VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED, VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, textureDesc, desc.DepthAttachment.MipLevel, desc.DepthAttachment.ArraySlice);
 
                 // Create clear value structure
@@ -8918,10 +8999,8 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                 // Transition image to GENERAL layout if not already in it
                 // GENERAL is the standard layout for UAVs (storage images) in Vulkan
-                // We check current layout from resource state tracking, but for simplicity
-                // we transition from UNDEFINED or current layout to GENERAL
-                // TODO:  Note: In a full implementation, we would track the current layout per texture
-                // TODO: STUB - For now, we transition assuming the texture might be in UNDEFINED or GENERAL layout
+                // TransitionImageLayout will query the actual current layout from tracking and transition accordingly
+                // If the image is not tracked yet (new image), it will use UNDEFINED as the initial layout
                 TransitionImageLayout(image, VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED, VkImageLayout.VK_IMAGE_LAYOUT_GENERAL, textureDesc, 0, 0);
 
                 // Create clear color value structure
@@ -9102,11 +9181,117 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // GENERAL layout is required for storage images accessed by compute/graphics shaders
                 TransitionImageLayout(vkImage, VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VkImageLayout.VK_IMAGE_LAYOUT_GENERAL, textureDesc);
             }
+            /// <summary>
+            /// Transitions a texture to a new resource state.
+            ///
+            /// Implements texture state transitions using Vulkan image memory barriers (vkCmdPipelineBarrier).
+            /// Texture barriers require image layout transitions which are more complex than buffer barriers
+            /// because images can be in different layouts (UNDEFINED, SHADER_READ_ONLY_OPTIMAL, COLOR_ATTACHMENT_OPTIMAL, etc.)
+            ///
+            /// Based on Vulkan API: vkCmdPipelineBarrier with VkImageMemoryBarrier
+            /// Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdPipelineBarrier.html
+            ///
+            /// The method:
+            /// 1. Tracks current texture state and image layout
+            /// 2. Determines if a transition is needed
+            /// 3. Maps ResourceState to appropriate VkImageLayout
+            /// 4. Queues an image memory barrier (committed on CommitBarriers)
+            /// 5. Updates tracked state and layout
+            /// </summary>
+            /// <param name="texture">Texture to transition.</param>
+            /// <param name="state">Target resource state.</param>
             public void SetTextureState(ITexture texture, ResourceState state)
             {
-                // TODO: STUB - Implement texture state transitions with vkCmdPipelineBarrier (VkImageMemoryBarrier)
-                // Texture barriers require image layout transitions which are more complex than buffer barriers
-                // TODO:  This is left as a stub for future implementation
+                if (texture == null)
+                {
+                    return;
+                }
+
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                // Get native image handle from texture
+                IntPtr imageHandle = texture.NativeHandle;
+                if (imageHandle == IntPtr.Zero)
+                {
+                    return; // Invalid texture
+                }
+
+                // Determine current state and layout
+                ResourceState currentState;
+                if (!_resourceStates.TryGetValue(texture, out currentState))
+                {
+                    // First time we see this texture - assume it starts in Common state
+                    currentState = ResourceState.Common;
+                }
+
+                // Get current layout from tracking (using image handle as key)
+                VkImageLayout currentLayout = GetImageLayout(imageHandle);
+
+                // Check if transition is needed
+                if (currentState == state)
+                {
+                    // State hasn't changed, but we should verify layout matches
+                    VkImageLayout targetLayout = MapResourceStateToVulkanImageLayout(state, texture.Desc.Format);
+                    if (currentLayout == targetLayout)
+                    {
+                        return; // Already in target state and layout, no barrier needed
+                    }
+                    // Layout mismatch - need to transition layout even though state is the same
+                }
+
+                // Map target state to Vulkan image layout
+                VkImageLayout targetLayout = MapResourceStateToVulkanImageLayout(state, texture.Desc.Format);
+
+                // If layout is the same, no barrier needed (unless access patterns changed)
+                if (currentLayout == targetLayout && currentState == state)
+                {
+                    return; // No transition needed
+                }
+
+                // Map states to Vulkan access flags and pipeline stages
+                // For images, we use layout-based access flags (more accurate than state-based)
+                VkAccessFlags srcAccessMask = GetAccessFlagsForLayout(currentLayout);
+                VkAccessFlags dstAccessMask = GetAccessFlagsForLayout(targetLayout);
+
+                // Determine pipeline stage masks based on target state
+                // Images are typically accessed in fragment shader (for render targets),
+                // compute shader (for storage images), or transfer stage (for copy operations)
+                VkPipelineStageFlags srcStageMask = GetPipelineStageForImageLayout(currentLayout);
+                VkPipelineStageFlags dstStageMask = GetPipelineStageForImageLayout(targetLayout);
+
+                // Determine image aspect based on format
+                VkImageAspectFlags aspectMask = GetImageAspectFlags(texture.Desc.Format);
+
+                // Create subresource range covering all mip levels and array layers
+                // For SetTextureState, we transition the entire texture
+                VkImageSubresourceRange subresourceRange = new VkImageSubresourceRange
+                {
+                    aspectMask = aspectMask,
+                    baseMipLevel = 0,
+                    levelCount = unchecked((uint)Math.Max(1, texture.Desc.MipLevels)),
+                    baseArrayLayer = 0,
+                    layerCount = unchecked((uint)Math.Max(1, texture.Desc.ArraySize))
+                };
+
+                // Queue image barrier (will be flushed on CommitBarriers)
+                _pendingImageBarriers.Add(new PendingImageBarrier
+                {
+                    Image = imageHandle,
+                    OldLayout = currentLayout,
+                    NewLayout = targetLayout,
+                    SrcAccessMask = srcAccessMask,
+                    DstAccessMask = dstAccessMask,
+                    SrcStageMask = srcStageMask,
+                    DstStageMask = dstStageMask,
+                    SubresourceRange = subresourceRange
+                });
+
+                // Update tracked state and layout
+                _resourceStates[texture] = state;
+                SetImageLayout(imageHandle, targetLayout);
             }
 
             public void SetBufferState(IBuffer buffer, ResourceState state)
