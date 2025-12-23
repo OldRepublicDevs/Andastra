@@ -484,32 +484,42 @@ namespace Andastra.Runtime.Games.Aurora.Components
         /// Original implementation:
         /// 1. Checks if creature has class that grants shield proficiency
         /// 2. Checks if creature has shield equipped in slot 0x20 (32)
-        /// 3. For classes with light armor only (Ranger): Also checks armor AC <= 3
+        /// 3. For classes with light armor only (Ranger/Rogue): Also checks armor AC <= 3
+        ///    - If creature has a class that only allows light armor (AC <= 3), they can only use shields while wearing light armor
+        ///    - This check applies regardless of whether the class grants shield proficiency (Ranger grants it, Rogue doesn't)
         /// 4. If no shield equipped, returns true if class grants proficiency (can use shields)
         /// nwmain.exe: GetItemInSlot(..., 0x20) gets shield from slot 32, checks base item ID for shield types
         /// nwmain.exe: Shield base item IDs: 0xe (14), 0x38 (56), 0x39 (57)
+        /// nwmain.exe: For classes with light armor only, armor AC check prevents shield use with heavy/medium armor
         /// </remarks>
         private bool CheckShieldProficiency()
         {
             // Check if creature has class that grants shield proficiency
+            // Based on nwmain.exe: CNWSCreatureStats::HasFeat checks class list for shield proficiency
             bool hasShieldProficiency = HasClassWithShieldProficiency();
-            bool hasLightOnly = HasClassWithLightArmorProficiencyOnly();
 
-            if (!hasShieldProficiency && !hasLightOnly)
+            if (!hasShieldProficiency)
             {
-                // No class grants shield proficiency
+                // No class grants shield proficiency - creature cannot use shields
+                // Based on nwmain.exe: Returns false if no class grants shield proficiency
                 return false;
             }
 
-            // For classes with light armor only (Ranger), check armor AC <= 3
-            // Based on nwmain.exe: Class 7 (Ranger) grants shield proficiency but requires light armor only
-            if (hasLightOnly && !hasShieldProficiency)
+            // Creature has shield proficiency - check armor restrictions for light armor only classes
+            // Based on nwmain.exe: For classes with light armor only (like Ranger), armor AC must be <= 3 to use shields
+            bool hasLightOnly = HasClassWithLightArmorProficiencyOnly();
+            if (hasLightOnly)
             {
-                // Ranger (7) grants shield proficiency but requires light armor
+                // Get equipped armor AC to check if creature is wearing light armor only
+                // Based on nwmain.exe: GetItemInSlot(..., 2) gets armor, ComputeArmorClass gets AC from baseitems.2da
                 int armorAC = GetEquippedArmorAC();
+
+                // If creature is wearing heavy/medium armor (AC > 3), they cannot use shields
+                // Based on nwmain.exe: Classes with light armor only (AC <= 3) can only use shields while wearing light armor
                 if (armorAC > 3)
                 {
                     // Heavy/medium armor prevents shield use for light armor only classes
+                    // Based on nwmain.exe: Armor AC check for classes with light armor proficiency only
                     return false;
                 }
             }
@@ -520,12 +530,15 @@ namespace Andastra.Runtime.Games.Aurora.Components
 
             // If no shield equipped, creature has proficiency (can use shields)
             // Based on nwmain.exe: If shield item is null, returns true if class grants proficiency
+            // This indicates the creature has the ability to use shields, even if not currently using one
             if (!hasShield)
             {
                 return true;
             }
 
-            // If shield is equipped and creature has proficiency, return true
+            // If shield is equipped and creature has proficiency and armor restrictions are met, return true
+            // Based on nwmain.exe: Shield proficiency check passes if class grants it and armor restrictions are satisfied
+            // (Armor AC check already performed above for light armor only classes)
             return true;
         }
 
