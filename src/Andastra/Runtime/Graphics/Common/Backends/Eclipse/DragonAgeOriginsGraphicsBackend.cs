@@ -4641,6 +4641,9 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         /// <summary>
         /// Renders navigation hints for the options menu.
         /// Based on daorigins.exe: Menu displays keyboard controls at the bottom.
+        /// daorigins.exe: Hint text is rendered at the bottom center of the screen with semi-transparent background.
+        /// daorigins.exe: Hint text uses small font size (10pt) and light gray color for visibility.
+        /// daorigins.exe: Hint text background is a dark semi-transparent panel for better readability.
         /// </summary>
         /// <param name="viewportWidth">Viewport width in pixels.</param>
         /// <param name="viewportHeight">Viewport height in pixels.</param>
@@ -4657,13 +4660,46 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 hintsText = "Arrow Keys: Navigate | A/D: Change Values | Enter: Edit Numbers | Escape: Back";
             }
 
-            // TODO: Implement text rendering for hints
-            // For now, this is a placeholder - would use DirectX 9 font rendering
-            float hintsX = viewportWidth / 2.0f;
-            float hintsY = viewportHeight - 30.0f;
-            uint hintsColor = 0xFFCCCCCC; // Light gray
+            // Based on daorigins.exe: Hint text uses small font size (10pt) for compact display
+            const int fontSize = 10;
+            
+            // Measure text to calculate proper centering and background size
+            // Based on daorigins.exe: Text measurement uses ID3DXFont::DrawText with DT_CALCRECT
+            System.Numerics.Vector2 textSize = MeasureTextDirectX9(hintsText, fontSize);
+            if (textSize.X <= 0.0f || textSize.Y <= 0.0f)
+            {
+                // If measurement fails, use fallback dimensions
+                textSize = new System.Numerics.Vector2(hintsText.Length * fontSize * 0.6f, fontSize * 1.5f);
+            }
 
-            RenderTextDirectX9(hintsX, hintsY, hintsText, hintsColor);
+            // Based on daorigins.exe: Hint text is positioned at bottom center with padding
+            // Padding: 10 pixels from bottom, 20 pixels horizontal padding for background
+            const float bottomPadding = 10.0f;
+            const float horizontalPadding = 20.0f;
+            const float verticalPadding = 8.0f;
+            
+            // Calculate text position (centered horizontally, positioned from bottom)
+            float hintsX = viewportWidth / 2.0f;
+            float hintsY = viewportHeight - bottomPadding - (textSize.Y / 2.0f);
+
+            // Based on daorigins.exe: Hint text background is a dark semi-transparent panel
+            // Background provides better visibility against varying menu backgrounds
+            float backgroundX = hintsX - (textSize.X / 2.0f) - horizontalPadding;
+            float backgroundY = hintsY - (textSize.Y / 2.0f) - verticalPadding;
+            float backgroundWidth = textSize.X + (horizontalPadding * 2.0f);
+            float backgroundHeight = textSize.Y + (verticalPadding * 2.0f);
+            
+            // Render semi-transparent background panel for hint text
+            // Based on daorigins.exe: Background uses dark color with 70% alpha for visibility
+            uint backgroundColor = 0xB2000000; // Black with ~70% alpha (0xB2 = 178/255)
+            DrawQuad(backgroundX, backgroundY, backgroundWidth, backgroundHeight, backgroundColor, IntPtr.Zero);
+
+            // Based on daorigins.exe: Hint text color is light gray for good contrast
+            uint hintsColor = 0xFFCCCCCC; // Light gray (ARGB)
+
+            // Render hint text centered at calculated position
+            // Based on daorigins.exe: Text rendering uses ID3DXFont::DrawText with DT_CENTER for centering
+            RenderTextDirectX9(hintsX, hintsY, hintsText, hintsColor, fontSize, centered: true, rightAligned: false);
         }
 
         /// <summary>
