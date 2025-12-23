@@ -764,14 +764,16 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         /// 1. Generate texture name (glGenTextures)
         /// 2. Bind texture (glBindTexture)
         /// 3. Set texture parameters (glTexParameteri)
-        /// 4. Load texture data (glTexImage2D)
+        /// 4. Allocate texture storage (glTexImage2D with NULL data)
+        /// 5. Data loading is done separately via UploadOpenGLTextureData
         /// </summary>
         /// <remarks>
         /// Based on reverse engineering of swkotor.exe: FUN_00427c90:
         /// - Uses glGenTextures(1, &textureId) to generate texture names
         /// - Uses glBindTexture(GL_TEXTURE_2D, textureId) to bind textures
         /// - Uses glTexParameteri for texture filtering and wrapping
-        /// - Uses glTexImage2D to load texture data
+        /// - Uses glTexImage2D to allocate texture storage (initially with NULL data)
+        /// - Data upload happens separately to match original engine's two-phase approach
         /// </remarks>
         protected virtual ResourceInfo CreateOpenGLTexture(TextureDescription desc, IntPtr handle)
         {
@@ -827,10 +829,12 @@ namespace Andastra.Runtime.Graphics.Common.Backends
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
 
-            // Step 4: Load texture data (matching swkotor.exe: FUN_00427c90)
-            // TODO:  Note: For now, we create an empty texture. Actual data loading should be done separately.
+            // Step 4: Allocate texture storage (matching swkotor.exe: FUN_00427c90)
+            // Allocate storage without data - data loading is done separately
             uint format = ConvertTextureFormatToOpenGL(desc.Format);
-            glTexImage2D(GL_TEXTURE_2D, 0, (int)format, desc.Width, desc.Height, 0, format, GL_UNSIGNED_BYTE, IntPtr.Zero);
+            uint dataFormat = ConvertTextureFormatToOpenGLDataFormat(desc.Format);
+            uint dataType = ConvertTextureFormatToOpenGLDataType(desc.Format);
+            glTexImage2D(GL_TEXTURE_2D, 0, (int)format, desc.Width, desc.Height, 0, dataFormat, dataType, IntPtr.Zero);
 
             // Unbind texture
             glBindTexture(GL_TEXTURE_2D, 0);
@@ -1050,6 +1054,144 @@ namespace Andastra.Runtime.Graphics.Common.Backends
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Uploads texture data to an OpenGL texture.
+        /// Matches original engine's OpenGL texture data upload pattern exactly.
+        ///
+        /// This function implements the exact OpenGL texture data upload sequence:
+        /// 1. Ensure OpenGL context is current
+        /// 2. Get texture ID from stored resource info
+        /// 3. Bind texture to GL_TEXTURE_2D target
+        /// 4. For each mipmap level: call glTexImage2D with actual pixel data
+        /// 5. Handle BGRA to RGBA conversion for OpenGL compatibility
+        /// 6. Unbind texture
+        ///
+        /// Matches swkotor.exe: FUN_00427c90 texture upload pattern (glTexImage2D with actual data pointer).
+        /// Based on original engine behavior: textures are created empty, then data is uploaded separately.
+        /// </summary>
+        /// <param name="handle">Texture handle returned from CreateTexture.</param>
+        /// <param name="mipmapData">Array of mipmap data, ordered from base level (0) to highest mip level.</param>
+        /// <param name="textureFormat">Texture format (must match format used in CreateTexture).</param>
+        /// <returns>True if upload succeeded, false otherwise.</returns>
+        protected virtual bool UploadOpenGLTextureData(IntPtr handle, OpenGLTextureMipmapData[] mipmapData, TextureFormat textureFormat)
+        {
+            if (_glContext == IntPtr.Zero || _glDevice == IntPtr.Zero)
+            {
+                Console.WriteLine("[OriginalEngine] OpenGL context not initialized");
+                return false;
+            }
+
+            if (handle == IntPtr.Zero || mipmapData == null || mipmapData.Length == 0)
+            {
+                Console.WriteLine("[OriginalEngine] UploadOpenGLTextureData: Invalid parameters");
+                return false;
+            }
+
+            // Get resource info
+            if (!_originalResources.TryGetValue(handle, out var originalInfo))
+            {
+                Console.WriteLine("[OriginalEngine] UploadOpenGLTextureData: Invalid texture handle");
+                return false;
+            }
+
+            if (originalInfo.ResourceType != OriginalEngineResourceType.OpenGLTexture)
+            {
+                Console.WriteLine("[OriginalEngine] UploadOpenGLTextureData: Handle is not an OpenGL texture");
+                return false;
+            }
+
+            // Ensure OpenGL context is current
+            if (wglGetCurrentContext() != _glContext)
+            {
+                if (!wglMakeCurrent(_glDevice, _glContext))
+                {
+                    Console.WriteLine("[OriginalEngine] UploadOpenGLTextureData: Failed to make OpenGL context current");
+                    return false;
+                }
+            }
+
+            uint textureId = (uint)originalInfo.NativeHandle.ToInt32();
+
+            // Bind texture
+            glBindTexture(GL_TEXTURE_2D, textureId);
+
+            try
+            {
+                // Get OpenGL format conversions
+                uint internalFormat = ConvertTextureFormatToOpenGL(textureFormat);
+                uint dataFormat = ConvertTextureFormatToOpenGLDataFormat(textureFormat);
+                uint dataType = ConvertTextureFormatToOpenGLDataType(textureFormat);
+
+                // Upload each mipmap level
+                for (int i = 0; i < mipmapData.Length; i++)
+                {
+                    OpenGLTextureMipmapData mipmap = mipmapData[i];
+
+                    // Validate mipmap data
+                    if (mipmap.Data == null || mipmap.Data.Length == 0)
+                    {
+                        Console.WriteLine($"[OriginalEngine] UploadOpenGLTextureData: Mipmap {i} has no data");
+                        glBindTexture(GL_TEXTURE_2D, 0);
+                        return false;
+                    }
+
+                    // Validate mipmap dimensions
+                    if (mipmap.Width <= 0 || mipmap.Height <= 0)
+                    {
+                        Console.WriteLine($"[OriginalEngine] UploadOpenGLTextureData: Invalid mipmap dimensions {mipmap.Width}x{mipmap.Height} for mipmap {i}");
+                        glBindTexture(GL_TEXTURE_2D, 0);
+                        return false;
+                    }
+
+                    // Prepare data for upload (handle BGRA conversion if needed)
+                    byte[] uploadData = mipmap.Data;
+                    uint uploadFormat = dataFormat;
+
+                    // Convert BGRA to RGBA for OpenGL compatibility (matches original engine behavior)
+                    if (textureFormat == TextureFormat.B8G8R8A8_UNorm || textureFormat == TextureFormat.B8G8R8A8_UNorm_SRGB)
+                    {
+                        uploadData = ConvertBGRAToRGBA(mipmap.Data);
+                        uploadFormat = GL_RGBA;
+                    }
+
+                    // Pin data for P/Invoke
+                    GCHandle pinnedData = GCHandle.Alloc(uploadData, GCHandleType.Pinned);
+                    try
+                    {
+                        IntPtr dataPtr = pinnedData.AddrOfPinnedObject();
+
+                        // Upload texture data using glTexImage2D
+                        // Matches swkotor.exe: FUN_00427c90 @ 0x00427c90 texture upload pattern
+                        glTexImage2D(GL_TEXTURE_2D, mipmap.Level, (int)internalFormat, mipmap.Width, mipmap.Height, 0, uploadFormat, dataType, dataPtr);
+
+                        // Check for OpenGL errors
+                        uint error = glGetError();
+                        if (error != GL_NO_ERROR)
+                        {
+                            string errorName = GetGLErrorName(error);
+                            Console.WriteLine($"[OriginalEngine] UploadOpenGLTextureData: OpenGL error {errorName} (0x{error:X}) uploading mipmap {i}");
+                            glBindTexture(GL_TEXTURE_2D, 0);
+                            return false;
+                        }
+
+                        Console.WriteLine($"[OriginalEngine] Uploaded mipmap {i} ({mipmap.Width}x{mipmap.Height}) to OpenGL texture {textureId}");
+                    }
+                    finally
+                    {
+                        pinnedData.Free();
+                    }
+                }
+
+                Console.WriteLine($"[OriginalEngine] Successfully uploaded {mipmapData.Length} mipmap levels to OpenGL texture {textureId}");
+                return true;
+            }
+            finally
+            {
+                // Unbind texture
+                glBindTexture(GL_TEXTURE_2D, 0);
+            }
         }
 
         // OpenGL buffer functions
@@ -1292,6 +1434,65 @@ namespace Andastra.Runtime.Graphics.Common.Backends
                 case TextureFormat.R16G16B16A16_Float: return 8;
                 case TextureFormat.R32G32B32A32_Float: return 16;
                 default: return 4;
+            }
+        }
+
+        /// <summary>
+        /// Converts BGRA byte array to RGBA format for OpenGL compatibility.
+        /// Matches original engine's BGRA to RGBA conversion (swkotor.exe: texture loading).
+        /// </summary>
+        /// <param name="bgraData">BGRA pixel data.</param>
+        /// <returns>RGBA pixel data.</returns>
+        protected virtual byte[] ConvertBGRAToRGBA(byte[] bgraData)
+        {
+            if (bgraData == null || bgraData.Length == 0 || bgraData.Length % 4 != 0)
+            {
+                return bgraData; // Return as-is if invalid
+            }
+
+            byte[] rgbaData = new byte[bgraData.Length];
+            for (int i = 0; i < bgraData.Length; i += 4)
+            {
+                // BGRA to RGBA: swap B and R components
+                rgbaData[i] = bgraData[i + 2];     // R = B
+                rgbaData[i + 1] = bgraData[i + 1]; // G = G
+                rgbaData[i + 2] = bgraData[i];     // B = R
+                rgbaData[i + 3] = bgraData[i + 3]; // A = A
+            }
+            return rgbaData;
+        }
+
+        /// <summary>
+        /// Gets the OpenGL data format for a texture format.
+        /// </summary>
+        protected virtual uint GetOpenGLDataFormat(TextureFormat format)
+        {
+            return ConvertTextureFormatToOpenGLDataFormat(format);
+        }
+
+        /// <summary>
+        /// Gets the OpenGL data type for a texture format.
+        /// </summary>
+        protected virtual uint GetOpenGLDataType(TextureFormat format)
+        {
+            return ConvertTextureFormatToOpenGLDataType(format);
+        }
+
+        /// <summary>
+        /// Gets a human-readable name for an OpenGL error code.
+        /// </summary>
+        protected virtual string GetGLErrorName(uint error)
+        {
+            switch (error)
+            {
+                case 0x0500: return "GL_INVALID_ENUM";
+                case 0x0501: return "GL_INVALID_VALUE";
+                case 0x0502: return "GL_INVALID_OPERATION";
+                case 0x0503: return "GL_STACK_OVERFLOW";
+                case 0x0504: return "GL_STACK_UNDERFLOW";
+                case 0x0505: return "GL_OUT_OF_MEMORY";
+                case 0x0506: return "GL_INVALID_FRAMEBUFFER_OPERATION";
+                default: return $"GL_ERROR_0x{error:X}";
             }
         }
 
@@ -1596,6 +1797,21 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         private const uint GL_TEXTURE_2D = 0x0DE1;
         private const uint GL_RGBA = 0x1908;
         private const uint GL_RGBA8 = 0x8058;
+        private const uint GL_R8 = 0x8229;
+        private const uint GL_RG8 = 0x822B;
+        private const uint GL_SRGB8_ALPHA8 = 0x8C43;
+        private const uint GL_RGBA16F = 0x881A;
+        private const uint GL_RGBA32F = 0x8814;
+        private const uint GL_DEPTH24_STENCIL8 = 0x88F0;
+        private const uint GL_DEPTH_COMPONENT32F = 0x8CAC;
+        private const uint GL_RED = 0x1903;
+        private const uint GL_RG = 0x8227;
+        private const uint GL_BGRA = 0x80E1;
+        private const uint GL_DEPTH_STENCIL = 0x84F9;
+        private const uint GL_DEPTH_COMPONENT = 0x1902;
+        private const uint GL_HALF_FLOAT = 0x140B;
+        private const uint GL_FLOAT = 0x1406;
+        private const uint GL_UNSIGNED_INT_24_8 = 0x84FA;
         private const uint GL_UNSIGNED_BYTE = 0x1401;
         private const uint GL_TEXTURE_WRAP_S = 0x2802;
         private const uint GL_TEXTURE_WRAP_T = 0x2803;
@@ -1603,6 +1819,23 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         private const uint GL_TEXTURE_MAG_FILTER = 0x2800;
         private const uint GL_CLAMP_TO_EDGE = 0x812F;
         private const uint GL_LINEAR = 0x2601;
+        private const uint GL_NO_ERROR = 0;
+        private const uint GL_INVALID_ENUM = 0x0500;
+        private const uint GL_INVALID_VALUE = 0x0501;
+        private const uint GL_INVALID_OPERATION = 0x0502;
+        private const uint GL_STACK_OVERFLOW = 0x0503;
+        private const uint GL_STACK_UNDERFLOW = 0x0504;
+        private const uint GL_OUT_OF_MEMORY = 0x0505;
+        private const uint GL_INVALID_FRAMEBUFFER_OPERATION = 0x0506;
+        private const uint GL_RGBA = 0x1908;
+        private const uint GL_BGRA = 0x80E1;
+        private const uint GL_RED = 0x1903;
+        private const uint GL_RG = 0x8227;
+        private const uint GL_DEPTH_STENCIL = 0x84F9;
+        private const uint GL_DEPTH_COMPONENT = 0x1902;
+        private const uint GL_HALF_FLOAT = 0x140B;
+        private const uint GL_FLOAT = 0x1406;
+        private const uint GL_UNSIGNED_INT_24_8 = 0x84FA;
 
         // PIXELFORMATDESCRIPTOR flags
         private const uint PFD_DRAW_TO_WINDOW = 0x00000004;
@@ -1692,24 +1925,179 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         private static extern bool SwapBuffers(IntPtr hdc);
 
         /// <summary>
-        /// Converts TextureFormat to OpenGL format.
+        /// Converts TextureFormat to OpenGL internal format.
         /// </summary>
         protected virtual uint ConvertTextureFormatToOpenGL(TextureFormat format)
         {
             switch (format)
             {
+                case TextureFormat.R8_UNorm:
+                    return GL_R8;
+                case TextureFormat.R8G8_UNorm:
+                    return GL_RG8;
+                case TextureFormat.R8G8B8A8_UNorm:
+                    return GL_RGBA8;
+                case TextureFormat.R8G8B8A8_UNorm_SRGB:
+                    return GL_SRGB8_ALPHA8;
+                case TextureFormat.B8G8R8A8_UNorm:
+                    return GL_RGBA8;
+                case TextureFormat.R16G16B16A16_Float:
+                    return GL_RGBA16F;
+                case TextureFormat.R32G32B32A32_Float:
+                    return GL_RGBA32F;
+                case TextureFormat.D24_UNorm_S8_UInt:
+                    return GL_DEPTH24_STENCIL8;
+                case TextureFormat.D32_Float:
+                    return GL_DEPTH_COMPONENT32F;
+                default:
+                    return GL_RGBA8;
+            }
+        }
+
+        /// <summary>
+        /// Converts TextureFormat to OpenGL data format (format parameter for glTexImage2D/glTexSubImage2D).
+        /// </summary>
+        protected virtual uint ConvertTextureFormatToOpenGLDataFormat(TextureFormat format)
+        {
+            switch (format)
+            {
+                case TextureFormat.R8_UNorm:
+                    return GL_RED;
+                case TextureFormat.R8G8_UNorm:
+                    return GL_RG;
+                case TextureFormat.R8G8B8A8_UNorm:
+                case TextureFormat.R8G8B8A8_UNorm_SRGB:
+                    return GL_RGBA;
+                case TextureFormat.B8G8R8A8_UNorm:
+                    return GL_BGRA;
+                case TextureFormat.R16G16B16A16_Float:
+                    return GL_RGBA;
+                case TextureFormat.R32G32B32A32_Float:
+                    return GL_RGBA;
+                case TextureFormat.D24_UNorm_S8_UInt:
+                    return GL_DEPTH_STENCIL;
+                case TextureFormat.D32_Float:
+                    return GL_DEPTH_COMPONENT;
+                default:
+                    return GL_RGBA;
+            }
+        }
+
+        /// <summary>
+        /// Converts TextureFormat to OpenGL data type (type parameter for glTexImage2D/glTexSubImage2D).
+        /// </summary>
+        protected virtual uint ConvertTextureFormatToOpenGLDataType(TextureFormat format)
+        {
+            switch (format)
+            {
+                case TextureFormat.R8_UNorm:
+                case TextureFormat.R8G8_UNorm:
                 case TextureFormat.R8G8B8A8_UNorm:
                 case TextureFormat.R8G8B8A8_UNorm_SRGB:
                 case TextureFormat.B8G8R8A8_UNorm:
-                    return GL_RGBA8;
+                    return GL_UNSIGNED_BYTE;
+                case TextureFormat.R16G16B16A16_Float:
+                    return GL_HALF_FLOAT;
+                case TextureFormat.R32G32B32A32_Float:
+                    return GL_FLOAT;
+                case TextureFormat.D24_UNorm_S8_UInt:
+                    return GL_UNSIGNED_INT_24_8;
+                case TextureFormat.D32_Float:
+                    return GL_FLOAT;
                 default:
-                    return GL_RGBA8;
+                    return GL_UNSIGNED_BYTE;
+            }
+        }
+
+        /// <summary>
+        /// Converts BGRA pixel data to RGBA format for OpenGL compatibility.
+        /// Matches original engine behavior: swkotor.exe performs BGRA->RGBA conversion.
+        /// </summary>
+        protected virtual byte[] ConvertBGRAToRGBA(byte[] bgraData)
+        {
+            if (bgraData == null || bgraData.Length == 0)
+            {
+                return bgraData;
+            }
+
+            if (bgraData.Length % 4 != 0)
+            {
+                Console.WriteLine($"[OriginalEngine] ConvertBGRAToRGBA: Warning - data length {bgraData.Length} is not a multiple of 4. This may indicate invalid BGRA texture data.");
+            }
+
+            byte[] rgbaData = new byte[bgraData.Length];
+            for (int i = 0; i < bgraData.Length; i += 4)
+            {
+                // BGRA -> RGBA: swap B and R components
+                rgbaData[i] = bgraData[i + 2];     // R <- B
+                rgbaData[i + 1] = bgraData[i + 1]; // G <- G
+                rgbaData[i + 2] = bgraData[i];     // B <- R
+                rgbaData[i + 3] = bgraData[i + 3]; // A <- A
+            }
+
+            int remainingBytes = bgraData.Length % 4;
+            if (remainingBytes > 0)
+            {
+                Console.WriteLine($"[OriginalEngine] ConvertBGRAToRGBA: Warning - {remainingBytes} leftover bytes copied without conversion. This may indicate invalid BGRA texture data.");
+                // Copy remaining bytes as-is
+                for (int i = bgraData.Length - remainingBytes; i < bgraData.Length; i++)
+                {
+                    rgbaData[i] = bgraData[i];
+                }
+            }
+
+            return rgbaData;
+        }
+
+        /// <summary>
+        /// Gets a human-readable name for an OpenGL error code.
+        /// </summary>
+        protected virtual string GetGLErrorName(uint error)
+        {
+            switch (error)
+            {
+                case GL_NO_ERROR: return "GL_NO_ERROR";
+                case GL_INVALID_ENUM: return "GL_INVALID_ENUM";
+                case GL_INVALID_VALUE: return "GL_INVALID_VALUE";
+                case GL_INVALID_OPERATION: return "GL_INVALID_OPERATION";
+                case GL_STACK_OVERFLOW: return "GL_STACK_OVERFLOW";
+                case GL_STACK_UNDERFLOW: return "GL_STACK_UNDERFLOW";
+                case GL_OUT_OF_MEMORY: return "GL_OUT_OF_MEMORY";
+                case GL_INVALID_FRAMEBUFFER_OPERATION: return "GL_INVALID_FRAMEBUFFER_OPERATION";
+                default: return $"GL_UNKNOWN_ERROR(0x{error:X})";
             }
         }
 
         #endregion
 
         #region Original Engine Resource Tracking
+
+        /// <summary>
+        /// Texture mipmap data for OpenGL texture uploads.
+        /// Contains pixel data for a single mipmap level.
+        /// </summary>
+        protected struct OpenGLTextureMipmapData
+        {
+            /// <summary>
+            /// Mipmap level (0 = base level).
+            /// </summary>
+            public int Level;
+
+            /// <summary>
+            /// Width of this mipmap level in pixels.
+            /// </summary>
+            public int Width;
+
+            /// <summary>
+            /// Height of this mipmap level in pixels.
+            /// </summary>
+            public int Height;
+
+            /// <summary>
+            /// Pixel data for this mipmap level (format depends on texture format).
+            /// </summary>
+            public byte[] Data;
+        }
 
         /// <summary>
         /// Information about an original engine resource.
