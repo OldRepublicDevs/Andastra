@@ -29,8 +29,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
     public class StrideBloomEffect : BaseBloomEffect
     {
         private StrideGraphics.GraphicsDevice _graphicsDevice;
-        private StrideGraphics.Texture _brightPassTarget;
-        private StrideGraphics.Texture[] _blurTargets;
+        private StrideGraphics.StrideGraphics.Texture _brightPassTarget;
+        private StrideGraphics.StrideGraphics.Texture[] _blurTargets;
         private StrideGraphics.SpriteBatch _spriteBatch;
         private StrideGraphics.SamplerState _linearSampler;
         private StrideGraphics.SamplerState _pointSampler;
@@ -50,7 +50,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             // Create sprite batch for fullscreen quad rendering
             _spriteBatch = new SpriteBatch(_graphicsDevice);
 
-            // Create samplers for texture sampling
+            // Create samplers for StrideGraphics.Texture sampling
             _linearSampler = SamplerState.New(_graphicsDevice, new global::Stride.Graphics.SamplerStateDescription
             {
                 Filter = TextureFilter.Linear,
@@ -346,7 +346,7 @@ shader BlurEffect : ShaderBase
         /// <summary>
         /// Applies bloom effect to the input texture.
         /// </summary>
-        public StrideGraphics.Texture Apply(StrideGraphics.Texture hdrInput, RenderContext context)
+        public StrideGraphics.StrideGraphics.Texture Apply(StrideGraphics.StrideGraphics.Texture hdrInput, RenderContext context)
         {
             if (!_enabled || hdrInput == null) return hdrInput;
 
@@ -356,7 +356,7 @@ shader BlurEffect : ShaderBase
             ExtractBrightAreas(hdrInput, _brightPassTarget, context);
 
             // Step 2: Multi-pass blur
-            StrideGraphics.Texture blurSource = _brightPassTarget;
+            StrideGraphics.StrideGraphics.Texture blurSource = _brightPassTarget;
             for (int i = 0; i < _blurPasses; i++)
             {
                 ApplyGaussianBlur(blurSource, _blurTargets[i], i % 2 == 0, context);
@@ -367,7 +367,7 @@ shader BlurEffect : ShaderBase
             return _blurTargets[_blurPasses - 1] ?? hdrInput;
         }
 
-        private void EnsureRenderTargets(int width, int height, StrideGraphics.PixelFormat format)
+        private void EnsureRenderTargets(int width, int height, StrideGraphics.StrideGraphics.PixelFormat format)
         {
             bool needsRecreate = _brightPassTarget == null ||
                                  _brightPassTarget.Width != width ||
@@ -393,7 +393,7 @@ shader BlurEffect : ShaderBase
                 format, StrideGraphics.TextureFlags.RenderTarget | StrideGraphics.TextureFlags.ShaderResource);
 
             // Create blur targets (at progressively lower resolutions for performance)
-            _blurTargets = new StrideGraphics.Texture[_blurPasses];
+            _blurTargets = new StrideGraphics.StrideGraphics.Texture[_blurPasses];
             int blurWidth = width / 2;
             int blurHeight = height / 2;
 
@@ -412,7 +412,7 @@ shader BlurEffect : ShaderBase
             _initialized = true;
         }
 
-        private void ExtractBrightAreas(StrideGraphics.Texture source, StrideGraphics.Texture destination, RenderContext context)
+        private void ExtractBrightAreas(StrideGraphics.StrideGraphics.Texture source, StrideGraphics.StrideGraphics.Texture destination, RenderContext context)
         {
             // Apply threshold-based bright pass shader
             // Pixels above threshold are kept, others are set to black
@@ -425,7 +425,7 @@ shader BlurEffect : ShaderBase
 
             // Get command list for rendering operations
             // Use explicit type to avoid C# 7.3 inferred delegate type limitation
-            CommandList commandList = _graphicsDevice.ImmediateContext();
+            StrideGraphics.CommandList StrideGraphics.CommandList = _graphicsDevice.ImmediateContext();
             if (commandList == null)
             {
                 return;
@@ -445,7 +445,7 @@ shader BlurEffect : ShaderBase
 
             // Begin sprite batch rendering
             // Use SpriteSortMode.Immediate for post-processing effects
-            _spriteBatch.Begin(commandList, SpriteSortMode.Immediate, BlendStates.Opaque, _linearSampler,
+            _spriteBatch.Begin(StrideGraphics.CommandList, SpriteSortMode.Immediate, BlendStates.Opaque, _linearSampler,
                 DepthStencilStates.None, RasterizerStates.CullNone, _brightPassEffect);
 
             // If we have a custom bright pass effect, set its parameters
@@ -458,7 +458,7 @@ shader BlurEffect : ShaderBase
                     thresholdParam.SetValue(_threshold);
                 }
 
-                // Set source texture parameter
+                // Set source StrideGraphics.Texture parameter
                 var sourceTextureParam = _brightPassEffect.Parameters.Get("SourceTexture");
                 if (sourceTextureParam != null)
                 {
@@ -479,7 +479,7 @@ shader BlurEffect : ShaderBase
                 }
             }
 
-            // Draw full-screen quad with source texture
+            // Draw full-screen quad with source StrideGraphics.Texture
             // Rectangle covering entire destination render target
             var destinationRect = new RectangleF(0, 0, width, height);
             _spriteBatch.Draw(source, destinationRect, Color.White);
@@ -488,10 +488,10 @@ shader BlurEffect : ShaderBase
             _spriteBatch.End();
 
             // Reset render target (restore previous state)
-            commandList.SetRenderTarget(null, (StrideGraphics.Texture)null);
+            commandList.SetRenderTarget(null, (StrideGraphics.StrideGraphics.Texture)null);
         }
 
-        private void ApplyGaussianBlur(StrideGraphics.Texture source, StrideGraphics.Texture destination, bool horizontal, RenderContext context)
+        private void ApplyGaussianBlur(StrideGraphics.StrideGraphics.Texture source, StrideGraphics.StrideGraphics.Texture destination, bool horizontal, RenderContext context)
         {
             // Apply separable Gaussian blur
             // horizontal: blur in X direction
@@ -504,7 +504,7 @@ shader BlurEffect : ShaderBase
 
             // Get command list for rendering operations
             // Use explicit type to avoid C# 7.3 inferred delegate type limitation
-            CommandList commandList = _graphicsDevice.ImmediateContext();
+            StrideGraphics.CommandList StrideGraphics.CommandList = _graphicsDevice.ImmediateContext();
             if (commandList == null)
             {
                 return;
@@ -528,7 +528,7 @@ shader BlurEffect : ShaderBase
 
             // Begin sprite batch rendering
             // Use SpriteSortMode.Immediate for post-processing effects
-            _spriteBatch.Begin(commandList, SpriteSortMode.Immediate, BlendStates.Opaque, _linearSampler,
+            _spriteBatch.Begin(StrideGraphics.CommandList, SpriteSortMode.Immediate, BlendStates.Opaque, _linearSampler,
                 DepthStencilStates.None, RasterizerStates.CullNone, _blurEffect);
 
             // If we have a custom blur effect, set its parameters
@@ -551,7 +551,7 @@ shader BlurEffect : ShaderBase
                     blurRadiusParam.SetValue(blurRadius);
                 }
 
-                // Set source texture parameter
+                // Set source StrideGraphics.Texture parameter
                 var sourceTextureParam = _blurEffect.Parameters.Get("SourceTexture");
                 if (sourceTextureParam != null)
                 {
@@ -572,7 +572,7 @@ shader BlurEffect : ShaderBase
                 }
             }
 
-            // Draw full-screen quad with source texture
+            // Draw full-screen quad with source StrideGraphics.Texture
             // Rectangle covering entire destination render target
             var destinationRect = new RectangleF(0, 0, width, height);
             _spriteBatch.Draw(source, destinationRect, Color.White);
@@ -581,7 +581,7 @@ shader BlurEffect : ShaderBase
             _spriteBatch.End();
 
             // Reset render target (restore previous state)
-            commandList.SetRenderTarget(null, (StrideGraphics.Texture)null);
+            commandList.SetRenderTarget(null, (StrideGraphics.StrideGraphics.Texture)null);
         }
 
         /// <summary>
@@ -685,7 +685,7 @@ shader BlurEffect : ShaderBase
                 {
                     // Create Effect from compiled bytecode
                     // Based on Stride API: Effect constructor accepts compiled bytecode
-                    var effect = new Effect(_graphicsDevice, compilationResult.Bytecode);
+                    var effect = new Stride.Rendering.Effect(_graphicsDevice, compilationResult.Bytecode);
                     System.Console.WriteLine($"[StrideBloomEffect] Successfully compiled shader '{shaderName}' using EffectCompiler");
                     return effect;
                 }
@@ -784,7 +784,7 @@ shader BlurEffect : ShaderBase
 
                         if (compilationResult != null && compilationResult.Bytecode != null && compilationResult.Bytecode.Length > 0)
                         {
-                            var effect = new Effect(_graphicsDevice, compilationResult.Bytecode);
+                            var effect = new Stride.Rendering.Effect(_graphicsDevice, compilationResult.Bytecode);
                             System.Console.WriteLine($"[StrideBloomEffect] Successfully compiled shader '{shaderName}' from file");
                             return effect;
                         }

@@ -45,7 +45,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         private StrideGraphics.GraphicsDevice _graphicsDevice;
         private EffectInstance _toneMappingEffect;
         private TonemapOperator _operator;
-        private StrideGraphics.Texture _temporaryTexture;
+        private StrideGraphics.StrideGraphics.Texture _temporaryTexture;
         private StrideGraphics.SpriteBatch _spriteBatch;
         private StrideGraphics.SamplerState _linearSampler;
         private bool _renderingResourcesInitialized;
@@ -103,7 +103,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
         /// <summary>
         /// Initializes rendering resources needed for GPU tone mapping.
-        /// Creates SpriteBatch for fullscreen quad rendering and linear sampler for texture sampling.
+        /// Creates SpriteBatch for fullscreen quad rendering and linear sampler for StrideGraphics.Texture sampling.
         /// </summary>
         private void InitializeRenderingResources()
         {
@@ -117,7 +117,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 // Create sprite batch for fullscreen quad rendering
                 _spriteBatch = new SpriteBatch(_graphicsDevice);
 
-                // Create linear sampler for texture sampling
+                // Create linear sampler for StrideGraphics.Texture sampling
                 _linearSampler = SamplerState.New(_graphicsDevice, new SamplerStateDescription
                 {
                     Filter = TextureFilter.Linear,
@@ -143,7 +143,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// <param name="width">Render width.</param>
         /// <param name="height">Render height.</param>
         /// <returns>Output LDR texture.</returns>
-        public Texture Apply(Texture input, float? exposure, int width, int height)
+        public StrideGraphics.Texture Apply(StrideGraphics.Texture input, float? exposure, int width, int height)
         {
             if (!_enabled || input == null)
             {
@@ -152,7 +152,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
             var effectiveExposure = exposure ?? _exposure;
 
-            // Ensure output texture exists and matches dimensions
+            // Ensure output StrideGraphics.Texture exists and matches dimensions
             EnsureOutputTexture(width, height, input.Format);
 
             // Tone Mapping Process:
@@ -168,9 +168,9 @@ namespace Andastra.Runtime.Stride.PostProcessing
         }
 
         /// <summary>
-        /// Ensures the output texture exists and matches the required dimensions and format.
+        /// Ensures the output StrideGraphics.Texture exists and matches the required dimensions and format.
         /// </summary>
-        private void EnsureOutputTexture(int width, int height, PixelFormat format)
+        private void EnsureOutputTexture(int width, int height, StrideGraphics.PixelFormat format)
         {
             if (_temporaryTexture != null &&
                 _temporaryTexture.Width == width &&
@@ -191,7 +191,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// <summary>
         /// Executes tone mapping using GPU shader path or CPU fallback.
         /// </summary>
-        private void ExecuteToneMapping(Texture input, float exposure, Texture output)
+        private void ExecuteToneMapping(StrideGraphics.Texture input, float exposure, StrideGraphics.Texture output)
         {
             // Tone Mapping Shader Execution:
             // - Input: HDR color buffer
@@ -213,7 +213,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// Attempts to execute tone mapping using GPU shader.
         /// Returns true if successful, false if CPU fallback is needed.
         /// </summary>
-        private bool TryExecuteToneMappingGpu(Texture input, float exposure, Texture output)
+        private bool TryExecuteToneMappingGpu(StrideGraphics.Texture input, float exposure, StrideGraphics.Texture output)
         {
             // Ensure rendering resources are initialized
             if (!_renderingResourcesInitialized)
@@ -241,7 +241,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             try
             {
                 // Use explicit type to avoid C# 7.3 inferred delegate type limitation
-                CommandList commandList = _graphicsDevice.ImmediateContext();
+                StrideGraphics.CommandList StrideGraphics.CommandList = _graphicsDevice.ImmediateContext();
                 if (commandList == null)
                 {
                     return false;
@@ -259,14 +259,14 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 int height = output.Height;
 
                 // Begin sprite batch rendering with custom effect
-                _spriteBatch.Begin(commandList, SpriteSortMode.Immediate, BlendStates.Opaque, _linearSampler,
+                _spriteBatch.Begin(StrideGraphics.CommandList, SpriteSortMode.Immediate, BlendStates.Opaque, _linearSampler,
                     DepthStencilStates.None, RasterizerStates.CullNone, _toneMappingEffect);
 
                 // Set shader parameters
                 var parameters = _toneMappingEffect.Parameters;
                 if (parameters != null)
                 {
-                    // Set input texture
+                    // Set input StrideGraphics.Texture
                     try
                     {
                         var inputTextureParam = parameters.Get("InputTexture");
@@ -358,7 +358,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     }
                 }
 
-                // Draw fullscreen quad with input texture
+                // Draw fullscreen quad with input StrideGraphics.Texture
                 var destinationRect = new RectangleF(0, 0, width, height);
                 _spriteBatch.Draw(input, destinationRect, Color.White);
 
@@ -366,7 +366,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 _spriteBatch.End();
 
                 // Reset render target
-                commandList.SetRenderTarget(null, (Texture)null);
+                commandList.SetRenderTarget(null, (StrideGraphics.Texture)null);
 
                 return true;
             }
@@ -399,7 +399,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             try
             {
                 // Strategy 1: Try loading from compiled effect files using Effect.Load()
-                Effect effectBase = null;
+                Stride.Rendering.Effect effectBase = null;
                 try
                 {
                     effectBase = Effect.Load(_graphicsDevice, "ToneMappingEffect");
@@ -469,7 +469,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// Implements the complete tone mapping algorithm matching GPU shader behavior.
         /// Based on industry-standard tone mapping algorithms.
         /// </summary>
-        private void ExecuteToneMappingCpu(Texture input, float exposure, Texture output)
+        private void ExecuteToneMappingCpu(StrideGraphics.Texture input, float exposure, StrideGraphics.Texture output)
         {
             if (input == null || output == null || _graphicsDevice == null)
             {
@@ -482,18 +482,18 @@ namespace Andastra.Runtime.Stride.PostProcessing
             try
             {
                 // Use explicit type to avoid C# 7.3 inferred delegate type limitation
-                CommandList commandList = _graphicsDevice.ImmediateContext();
+                StrideGraphics.CommandList StrideGraphics.CommandList = _graphicsDevice.ImmediateContext();
                 if (commandList == null)
                 {
                     Console.WriteLine("[StrideToneMapping] ImmediateContext not available");
                     return;
                 }
 
-                // Read input texture data
+                // Read input StrideGraphics.Texture data
                 Vector4[] inputData = ReadTextureData(input);
                 if (inputData == null || inputData.Length != width * height)
                 {
-                    Console.WriteLine("[StrideToneMapping] Failed to read input texture data");
+                    Console.WriteLine("[StrideToneMapping] Failed to read input StrideGraphics.Texture data");
                     return;
                 }
 
@@ -537,7 +537,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     }
                 }
 
-                // Write output data back to texture
+                // Write output data back to StrideGraphics.Texture
                 WriteTextureData(output, outputData, width, height);
             }
             catch (Exception ex)
@@ -771,13 +771,13 @@ namespace Andastra.Runtime.Stride.PostProcessing
         }
 
         /// <summary>
-        /// Reads texture data from GPU to CPU memory.
-        /// Implements proper texture readback using Stride's GetData API.
+        /// Reads StrideGraphics.Texture data from GPU to CPU memory.
+        /// Implements proper StrideGraphics.Texture readback using Stride's GetData API.
         /// This is expensive and should only be used as CPU fallback when GPU shaders are not available.
         /// </summary>
-        private Vector4[] ReadTextureData(Texture texture)
+        private Vector4[] ReadTextureData(StrideGraphics.Texture StrideGraphics.Texture)
         {
-            if (texture == null || _graphicsDevice == null)
+            if (StrideGraphics.Texture == null || _graphicsDevice == null)
             {
                 return null;
             }
@@ -790,16 +790,16 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 Vector4[] data = new Vector4[size];
 
                 // Use explicit type to avoid C# 7.3 inferred delegate type limitation
-                CommandList commandList = _graphicsDevice.ImmediateContext();
+                StrideGraphics.CommandList StrideGraphics.CommandList = _graphicsDevice.ImmediateContext();
                 if (commandList == null)
                 {
                     Console.WriteLine("[StrideToneMapping] ReadTextureData: ImmediateContext not available");
                     return data;
                 }
 
-                PixelFormat format = texture.Format;
+                StrideGraphics.PixelFormat format = texture.Format;
 
-                // Handle different texture formats
+                // Handle different StrideGraphics.Texture formats
                 if (format == PixelFormat.R8G8B8A8_UNorm ||
                     format == PixelFormat.R8G8B8A8_UNorm_SRgb ||
                     format == PixelFormat.R32G32B32A32_Float ||
@@ -808,7 +808,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     format == PixelFormat.B8G8R8A8_UNorm_SRgb)
                 {
                     var colorData = new Color[size];
-                    texture.GetData(commandList, colorData);
+                    texture.GetData(StrideGraphics.CommandList, colorData);
 
                     for (int i = 0; i < size; i++)
                     {
@@ -826,7 +826,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 else if (format == PixelFormat.R16G16B16A16_Float)
                 {
                     var colorData = new Color[size];
-                    texture.GetData(commandList, colorData);
+                    texture.GetData(StrideGraphics.CommandList, colorData);
                     for (int i = 0; i < size; i++)
                     {
                         var color = colorData[i];
@@ -838,7 +838,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     try
                     {
                         var colorData = new Color[size];
-                        texture.GetData(commandList, colorData);
+                        texture.GetData(StrideGraphics.CommandList, colorData);
                         for (int i = 0; i < size; i++)
                         {
                             var color = colorData[i];
@@ -855,19 +855,19 @@ namespace Andastra.Runtime.Stride.PostProcessing
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[StrideToneMapping] ReadTextureData: Exception during texture readback: {ex.Message}");
+                Console.WriteLine($"[StrideToneMapping] ReadTextureData: Exception during StrideGraphics.Texture readback: {ex.Message}");
                 return new Vector4[texture.Width * texture.Height];
             }
         }
 
         /// <summary>
-        /// Writes texture data from CPU memory to GPU texture.
-        /// Implements proper texture upload using Stride's SetData API.
+        /// Writes StrideGraphics.Texture data from CPU memory to GPU texture.
+        /// Implements proper StrideGraphics.Texture upload using Stride's SetData API.
         /// This is expensive and should only be used as CPU fallback when GPU shaders are not available.
         /// </summary>
-        private void WriteTextureData(Texture texture, Vector4[] data, int width, int height)
+        private void WriteTextureData(StrideGraphics.Texture StrideGraphics.Texture, Vector4[] data, int width, int height)
         {
-            if (texture == null || data == null || _graphicsDevice == null)
+            if (StrideGraphics.Texture == null || data == null || _graphicsDevice == null)
             {
                 return;
             }
@@ -876,7 +876,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             {
                 if (texture.Width != width || texture.Height != height)
                 {
-                    Console.WriteLine($"[StrideToneMapping] WriteTextureData: Texture dimensions mismatch. Texture: {texture.Width}x{texture.Height}, Data: {width}x{height}");
+                    Console.WriteLine($"[StrideToneMapping] WriteTextureData: StrideGraphics.Texture dimensions mismatch. StrideGraphics.Texture: {texture.Width}x{texture.Height}, Data: {width}x{height}");
                     return;
                 }
 
@@ -888,14 +888,14 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 }
 
                 // Use explicit type to avoid C# 7.3 inferred delegate type limitation
-                CommandList commandList = _graphicsDevice.ImmediateContext();
+                StrideGraphics.CommandList StrideGraphics.CommandList = _graphicsDevice.ImmediateContext();
                 if (commandList == null)
                 {
                     Console.WriteLine("[StrideToneMapping] WriteTextureData: ImmediateContext not available");
                     return;
                 }
 
-                PixelFormat format = texture.Format;
+                StrideGraphics.PixelFormat format = texture.Format;
 
                 // Convert Vector4[] to Color[] based on format
                 if (format == PixelFormat.R8G8B8A8_UNorm ||
@@ -919,7 +919,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                             (byte)(a * 255.0f)
                         );
                     }
-                    texture.SetData(commandList, colorData);
+                    texture.SetData(StrideGraphics.CommandList, colorData);
                 }
                 else if (format == PixelFormat.R32G32B32A32_Float)
                 {
@@ -929,7 +929,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                         var v = data[i];
                         colorData[i] = new Color(v.X, v.Y, v.Z, v.W);
                     }
-                    texture.SetData(commandList, colorData);
+                    texture.SetData(StrideGraphics.CommandList, colorData);
                 }
                 else if (format == PixelFormat.R16G16B16A16_Float)
                 {
@@ -939,7 +939,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                         var v = data[i];
                         colorData[i] = new Color(v.X, v.Y, v.Z, v.W);
                     }
-                    texture.SetData(commandList, colorData);
+                    texture.SetData(StrideGraphics.CommandList, colorData);
                 }
                 else
                 {
@@ -960,7 +960,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                             (byte)(a * 255.0f)
                         );
                     }
-                    texture.SetData(commandList, colorData);
+                    texture.SetData(StrideGraphics.CommandList, colorData);
                 }
             }
             catch (Exception ex)
