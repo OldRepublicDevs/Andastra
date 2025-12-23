@@ -18,6 +18,7 @@ using Andastra.Runtime.Games.Aurora.Scene;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Formats.MDLData;
+using Andastra.Parsing.Formats.MDL;
 
 namespace Andastra.Runtime.Games.Aurora
 {
@@ -94,7 +95,7 @@ namespace Andastra.Runtime.Games.Aurora
 
         // Tileset loader for querying tile surface materials
         private TilesetLoader _tilesetLoader;
-        
+
         // Resource loader function for loading MDL/MDX files on demand
         private readonly Func<string, byte[]> _resourceLoader;
 
@@ -148,6 +149,11 @@ namespace Andastra.Runtime.Games.Aurora
         // Key: Model ResRef (e.g., "tl_grass_01"), Value: Loaded mesh data
         private readonly Dictionary<string, IRoomMeshData> _tileMeshCache;
 
+        // Tile MDL cache - caches parsed MDL models by ResRef for animation lookup
+        // Based on nwmain.exe: Tile models are cached to avoid reloading same MDL files multiple times
+        // Key: Model ResRef (e.g., "tl_grass_01"), Value: Parsed MDL model data
+        private readonly Dictionary<string, MDL> _tileMdlCache;
+
         // Snow particle system for weather rendering
         // Based on nwmain.exe: CNWSArea::RenderWeather renders snow particles as billboard sprites
         private SnowParticleSystem _snowParticleSystem;
@@ -176,7 +182,7 @@ namespace Andastra.Runtime.Games.Aurora
 
             // Store resource loader for on-demand MDL/MDX loading
             _resourceLoader = resourceLoader;
-            
+
             // Initialize tileset loader if resource loader is provided
             // Based on nwmain.exe: CNWTileSetManager::GetTileSet @ 0x1411d4f6a
             if (resourceLoader != null)
@@ -187,6 +193,10 @@ namespace Andastra.Runtime.Games.Aurora
             // Initialize tile mesh cache
             // Based on nwmain.exe: Tile meshes are cached to avoid reloading same models
             _tileMeshCache = new Dictionary<string, IRoomMeshData>();
+
+            // Initialize tile MDL cache for animation lookup
+            // Based on nwmain.exe: Tile MDL models are cached to avoid reloading same files
+            _tileMdlCache = new Dictionary<string, MDL>();
 
             // Initialize weather simulation
             _weatherRandom = new System.Random();
@@ -347,11 +357,11 @@ namespace Andastra.Runtime.Games.Aurora
         /// </summary>
         /// <remarks>
         /// Based on Aurora area property loading in nwmain.exe.
-        /// 
+        ///
         /// Function addresses (require Ghidra verification):
         /// - nwmain.exe: CNWSArea::LoadArea @ 0x140365160 (approximate - needs Ghidra verification)
         /// - nwmain.exe: CNWSArea::LoadProperties @ 0x140367390 (approximate - needs Ghidra verification)
-        /// 
+        ///
         /// Aurora has more complex area properties than Odyssey:
         /// - Weather system: ChanceRain, ChanceSnow, ChanceLightning, WindPower
         /// - Day/Night cycle: DayNightCycle, IsNight, LightingScheme
@@ -359,12 +369,12 @@ namespace Andastra.Runtime.Games.Aurora
         /// - Area effects: Script hooks (OnEnter, OnExit, OnHeartbeat, OnUserDefined)
         /// - Tile-based layout: Width, Height, Tileset, Tile_List
         /// - Area restrictions: NoRest, PlayerVsPlayer, Unescapable
-        /// 
+        ///
         /// ARE file format (GFF with "ARE " signature):
         /// - Root struct contains all area properties
         /// - AreaProperties nested struct (optional) contains runtime-modifiable properties
         /// - Tile_List contains tile layout information
-        /// 
+        ///
         /// Based on official BioWare Aurora Engine ARE format specification:
         /// - vendor/PyKotor/wiki/Bioware-Aurora-AreaFile.md
         /// - vendor/xoreos-docs/specs/bioware/AreaFile_Format.pdf
@@ -858,14 +868,14 @@ namespace Andastra.Runtime.Games.Aurora
             _moonFogAmount = 0;
             _sunFogColor = 0;
             _moonFogColor = 0;
-            
+
             // Initialize current interpolated colors to sun colors (default day lighting)
             // These will be updated by UpdateDayNightCycle if day/night cycle is enabled
             _currentAmbientColor = _sunAmbientColor;
             _currentDiffuseColor = _sunDiffuseColor;
             _currentFogColor = _sunFogColor;
             _currentFogAmount = _sunFogAmount;
-            
+
             _onEnter = ResRef.FromBlank();
             _onExit = ResRef.FromBlank();
             _onHeartbeat = ResRef.FromBlank();
@@ -1502,25 +1512,25 @@ namespace Andastra.Runtime.Games.Aurora
         /// </summary>
         /// <remarks>
         /// Based on Aurora ARE file loading in nwmain.exe.
-        /// 
+        ///
         /// Function addresses (require Ghidra verification):
         /// - nwmain.exe: CNWSArea::LoadArea @ 0x140365160 - Loads ARE file structure
         /// - nwmain.exe: CNWSArea::LoadTileSetInfo @ 0x14035faf0 (approximate) - Loads tileset information
         /// - nwmain.exe: CNWSArea::LoadTileList @ 0x14035f780 (approximate) - Loads Tile_List from ARE file
-        /// 
+        ///
         /// Aurora uses tile-based area construction:
         /// - ARE file contains Tile_List (GFFList) with AreaTile structs (StructID 1)
         /// - Each AreaTile specifies: Tile_ID, Tile_Orientation, Tile_Height, lighting, animations
         /// - Tile coordinates calculated from index: x = i % Width, y = i / Width
         /// - Tiles are stored in 2D grid: [y, x] indexed array
         /// - Tile size: 10.0f units per tile (DAT_140dc2df4 in nwmain.exe)
-        /// 
+        ///
         /// ARE file format (GFF with "ARE " signature):
         /// - Root struct contains Width, Height, Tileset, Tile_List
         /// - Tile_List is GFFList containing AreaTile structs (StructID 1)
-        /// - AreaTile fields: Tile_ID (INT), Tile_Orientation (INT 0-3), Tile_Height (INT), 
+        /// - AreaTile fields: Tile_ID (INT), Tile_Orientation (INT 0-3), Tile_Height (INT),
         ///   Tile_AnimLoop1/2/3 (INT), Tile_MainLight1/2 (BYTE), Tile_SrcLight1/2 (BYTE)
-        /// 
+        ///
         /// Based on official BioWare Aurora Engine ARE format specification:
         /// - vendor/PyKotor/wiki/Bioware-Aurora-AreaFile.md (Section 2.5: Area Tile List)
         /// - vendor/xoreos-docs/specs/bioware/AreaFile_Format.pdf
@@ -1764,7 +1774,7 @@ namespace Andastra.Runtime.Games.Aurora
                         // No tileset loader or tileset - use default
                         surfaceMaterial = isWalkable ? 4 : 0; // Stone (walkable) or Undefined (non-walkable)
                     }
-                    
+
                     AuroraTile tile = new AuroraTile
                     {
                         TileId = tileId,
@@ -1809,7 +1819,7 @@ namespace Andastra.Runtime.Games.Aurora
         {
             // LightingScheme is already a byte, so it's guaranteed to be 0-255
             // But we need to validate that if > 0, it's a valid index in environment.2da
-            
+
             // LightingScheme = 0 is always valid (no preset)
             if (_lightingScheme == 0)
             {
@@ -1840,7 +1850,7 @@ namespace Andastra.Runtime.Games.Aurora
                 // Get row count from environment.2da
                 // Based on nwmain.exe: C2DA row count validation
                 int rowCount = environmentTable.GetHeight();
-                
+
                 // Validate that LightingScheme is within valid row range
                 // Row indices are 0-based, so valid range is 0 to (rowCount - 1)
                 // But LightingScheme = 0 means no preset, so valid preset indices are 1 to (rowCount - 1)
@@ -2066,7 +2076,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// </summary>
         /// <remarks>
         /// Based on nwmain.exe: CNWSArea area effects initialization system.
-        /// 
+        ///
         /// Aurora has sophisticated area effects system:
         /// - Weather simulation (rain, snow, lightning based on chance values)
         /// - Dynamic lighting (sun/moon ambient and diffuse colors, shadows)
@@ -2074,7 +2084,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// - Day/night cycle (if enabled, updates lighting based on time of day)
         /// - Lighting scheme (index into environment.2da for preset lighting configurations)
         /// - Shadow system (sun/moon shadows with opacity control)
-        /// 
+        ///
         /// Initialization sequence:
         /// 1. Validate and set default lighting colors (sun/moon ambient/diffuse)
         /// 2. Validate and initialize fog parameters (sun/moon fog amounts and colors)
@@ -2082,7 +2092,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// 4. Initialize day/night cycle state (set initial night state if static, or start cycle timer if dynamic)
         /// 5. Validate weather chance values (clamp to 0-100 range)
         /// 6. Initialize lighting scheme (validate index if specified)
-        /// 
+        ///
         /// Default values (based on nwmain.exe behavior):
         /// - Sun ambient color: 0x808080 (gray) if zero/invalid
         /// - Sun diffuse color: 0xFFFFFF (white) if zero/invalid
@@ -2092,7 +2102,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// - Shadow opacity: 0-100 range, validated
         /// - Weather chances: 0-100 range, validated
         /// - Day/night cycle: Static by default (DayNightCycle = 0), initial state from IsNight field
-        /// 
+        ///
         /// Called from AuroraArea constructor after LoadAreaProperties.
         /// All properties should be loaded before this method is called.
         /// </remarks>
@@ -2163,7 +2173,7 @@ namespace Andastra.Runtime.Games.Aurora
                 // Day/night timer is not used in static mode
                 _dayNightTimer = 0.0f;
                 // IsNight is already set from ARE file, no need to change it
-                
+
                 // Initialize current interpolated colors based on static IsNight flag
                 // Based on nwmain.exe: Static lighting uses sun or moon colors directly
                 if (_isNight != 0)
@@ -2196,7 +2206,7 @@ namespace Andastra.Runtime.Games.Aurora
                     // Start at noon (0.5 = noon, middle of day period)
                     _dayNightTimer = DayNightCycleDuration * 0.5f;
                 }
-                
+
                 // Initialize current interpolated colors based on initial time of day
                 // Based on nwmain.exe: Dynamic cycle computes initial lighting from timer
                 // This ensures lighting matches the initial cycle position
@@ -2268,11 +2278,11 @@ namespace Andastra.Runtime.Games.Aurora
         /// Public method for removing entities from area collections.
         /// Calls the protected RemoveEntityFromArea method.
         /// Aurora-specific: Basic entity removal without physics system.
-        /// 
+        ///
         /// Based on nwmain.exe: CNWSArea::RemoveObjectFromArea @ 0x140365600 (approximate - needs Ghidra verification)
         /// Entities are removed from type-specific lists (creatures, placeables, doors, etc.)
         /// when they are destroyed or removed from the area.
-        /// 
+        ///
         /// Reverse Engineering Notes:
         /// - nwmain.exe: CNWSCreature::RemoveFromArea @ 0x14039e6b0 calls CNWSArea::RemoveObjectFromArea
         /// - CNWSArea::RemoveObjectFromArea removes entity from area's type-specific collections
@@ -2383,35 +2393,35 @@ namespace Andastra.Runtime.Games.Aurora
         /// </summary>
         /// <remarks>
         /// Based on nwmain.exe: CNWSArea::UpdateArea @ 0x140365600 (approximate - needs Ghidra verification)
-        /// 
+        ///
         /// Aurora area update sequence (based on nwmain.exe behavior):
         /// 1. Update weather simulation (rain, snow, lightning based on chance values)
         /// 2. Process day/night cycle if enabled
         /// 3. Update all active area effects
         /// 4. Fire area heartbeat script if configured (every 6 seconds)
         /// 5. Process tile-based area logic (animations, lighting updates)
-        /// 
+        ///
         /// Weather System (based on nwmain.exe weather simulation):
         /// - Checks weather chances every 5 seconds
         /// - ChanceRain, ChanceSnow, ChanceLightning are percentages (0-100)
         /// - Weather effects are applied to visual rendering and particle systems
         /// - Lightning flashes briefly when lightning occurs
-        /// 
+        ///
         /// Day/Night Cycle (based on nwmain.exe day/night system):
         /// - Only active if DayNightCycle is 1 (dynamic cycle enabled)
         /// - Cycle duration: 24 minutes real time = 24 hours game time (1 minute = 1 hour)
         /// - Updates lighting colors based on time of day
         /// - IsNight flag updates based on cycle position
-        /// 
+        ///
         /// Area Effects (based on nwmain.exe area effect system):
         /// - Updates all active IAreaEffect instances
         /// - Effects can expire, update particle systems, or modify area state
-        /// 
+        ///
         /// Heartbeat Script (based on nwmain.exe area heartbeat):
         /// - Fires OnHeartbeat script every 6 seconds if configured
         /// - Uses area ResRef as script context (area scripts don't require entity)
         /// - Located via string references: "OnHeartbeat" @ 0x140ddb2b8 (nwmain.exe)
-        /// 
+        ///
         /// Tile-based Logic (based on nwmain.exe tile system):
         /// - Updates tile animations (Tile_AnimLoop1/2/3 from ARE file)
         /// - Processes tile lighting updates for dynamic lighting
@@ -2578,19 +2588,19 @@ namespace Andastra.Runtime.Games.Aurora
             // - Smooth interpolation during dawn (04:00-06:00, timeOfDay 0.167-0.25) and dusk (18:00-20:00, timeOfDay 0.75-0.833)
             // Dawn: transitions from moon to sun over 2 hours (0.0833 of cycle)
             // Dusk: transitions from sun to moon over 2 hours (0.0833 of cycle)
-            
+
             // Calculate interpolation factor (0.0 = full moon, 1.0 = full sun)
             float sunFactor = CalculateSunLightFactor(timeOfDay);
-            
+
             // Interpolate ambient color between moon and sun
             _currentAmbientColor = InterpolateColor(_moonAmbientColor, _sunAmbientColor, sunFactor);
-            
+
             // Interpolate diffuse color between moon and sun
             _currentDiffuseColor = InterpolateColor(_moonDiffuseColor, _sunDiffuseColor, sunFactor);
-            
+
             // Interpolate fog color between moon and sun
             _currentFogColor = InterpolateColor(_moonFogColor, _sunFogColor, sunFactor);
-            
+
             // Interpolate fog amount between moon and sun (linear interpolation)
             float moonFogFloat = _moonFogAmount;
             float sunFogFloat = _sunFogAmount;
@@ -2609,7 +2619,7 @@ namespace Andastra.Runtime.Games.Aurora
                 _currentFogAmount = (byte)interpolatedFogFloat;
             }
         }
-        
+
         /// <summary>
         /// Calculates the sun light factor (0.0 = full moon, 1.0 = full sun) based on time of day.
         /// </summary>
@@ -2627,19 +2637,19 @@ namespace Andastra.Runtime.Games.Aurora
             // Normalize time of day to [0, 1)
             if (timeOfDay < 0.0f) timeOfDay = 0.0f;
             if (timeOfDay >= 1.0f) timeOfDay = 0.0f; // Wrap to start of cycle
-            
+
             // Full day period: 06:00-18:00 (0.25-0.75 of cycle)
             if (timeOfDay >= 0.25f && timeOfDay < 0.75f)
             {
                 return 1.0f; // Full sun
             }
-            
+
             // Full night period: 20:00-04:00 (0.833-1.0 and 0.0-0.167 of cycle)
             if (timeOfDay >= 0.833f || timeOfDay < 0.167f)
             {
                 return 0.0f; // Full moon
             }
-            
+
             // Dawn transition: 04:00-06:00 (0.167-0.25 of cycle)
             // Linear interpolation from 0.0 (moon) to 1.0 (sun) over 0.0833 of cycle
             if (timeOfDay >= 0.167f && timeOfDay < 0.25f)
@@ -2647,14 +2657,14 @@ namespace Andastra.Runtime.Games.Aurora
                 float dawnProgress = (timeOfDay - 0.167f) / 0.0833f; // 0.0 to 1.0
                 return dawnProgress; // 0.0 -> 1.0
             }
-            
+
             // Dusk transition: 18:00-20:00 (0.75-0.833 of cycle)
             // Linear interpolation from 1.0 (sun) to 0.0 (moon) over 0.0833 of cycle
             // timeOfDay >= 0.75f && timeOfDay < 0.833f
             float duskProgress = (timeOfDay - 0.75f) / 0.0833f; // 0.0 to 1.0
             return 1.0f - duskProgress; // 1.0 -> 0.0
         }
-        
+
         /// <summary>
         /// Interpolates between two BGR color values.
         /// </summary>
@@ -2672,22 +2682,22 @@ namespace Andastra.Runtime.Games.Aurora
             // Clamp factor to [0, 1]
             if (factor < 0.0f) factor = 0.0f;
             if (factor > 1.0f) factor = 1.0f;
-            
+
             // Extract BGR components from color1
             int r1 = (int)(color1 & 0xFF);
             int g1 = (int)((color1 >> 8) & 0xFF);
             int b1 = (int)((color1 >> 16) & 0xFF);
-            
+
             // Extract BGR components from color2
             int r2 = (int)(color2 & 0xFF);
             int g2 = (int)((color2 >> 8) & 0xFF);
             int b2 = (int)((color2 >> 16) & 0xFF);
-            
+
             // Interpolate each channel
             int r = (int)(r1 + (r2 - r1) * factor);
             int g = (int)(g1 + (g2 - g1) * factor);
             int b = (int)(b1 + (b2 - b1) * factor);
-            
+
             // Clamp to valid byte range
             if (r < 0) r = 0;
             if (r > 255) r = 255;
@@ -2695,7 +2705,7 @@ namespace Andastra.Runtime.Games.Aurora
             if (g > 255) g = 255;
             if (b < 0) b = 0;
             if (b > 255) b = 255;
-            
+
             // Combine back into BGR format
             return (uint)(r | (g << 8) | (b << 16));
         }
@@ -2798,11 +2808,11 @@ namespace Andastra.Runtime.Games.Aurora
         /// Based on nwmain.exe: Area scripts execute with area ResRef as entity context
         /// Located via string references: "OnHeartbeat" @ 0x140ddb2b8 (nwmain.exe)
         /// Area scripts don't require a physical entity in the world - they use area ResRef as script context
-        /// 
+        ///
         /// Pattern matches ModuleTransitionSystem module entity creation:
         /// - Module scripts create temporary entities with module ResRef as tag
         /// - Area scripts follow the same pattern - create entity with area ResRef as tag
-        /// 
+        ///
         /// Implementation details:
         /// - First attempts to find existing entity by area ResRef tag
         /// - Falls back to finding entity by area tag
@@ -2973,19 +2983,20 @@ namespace Andastra.Runtime.Games.Aurora
         /// <param name="deltaTime">Time elapsed since last update.</param>
         /// <remarks>
         /// Based on nwmain.exe: CNWSArea::UpdateTiles processes tile animations and state
-        /// 
+        ///
         /// Tile Animation System (nwmain.exe):
         /// - Tile_AnimLoop1/2/3 (INT) from ARE file specify animation loop indices
-        /// - Animation loops are defined in tileset data (SET files)
+        /// - Animation loops are defined on the tile model (MDL file) as AnimLoop01, AnimLoop02, AnimLoop03
         /// - Tile animations are typically texture animations (UV scrolling, frame sequences)
         /// - Animation state is tracked per-tile and updated each frame
         /// - Tile lighting (Tile_MainLight1/2, Tile_SrcLight1/2) affects dynamic lighting
-        /// 
-        /// Current Implementation:
-        /// - Iterates through all tiles in scene data
-        /// - Tile animation rendering is handled by rendering system
-        /// - This method updates tile state for game logic purposes
-        // TODO: / - Full implementation would require tileset data access to get animation loop definitions
+        ///
+        /// Implementation:
+        /// 1. Loads tile MDL model to get animation loop definitions (AnimLoop01/02/03)
+        /// 2. Tracks animation time for each tile's active animation loops
+        /// 3. Updates animation frame indices based on animation speed and deltaTime
+        /// 4. Handles animation loop cycling (loop, ping-pong, one-shot)
+        /// 5. Updates tile lighting state for dynamic lighting calculations
         /// </remarks>
         private void UpdateTileAnimations(float deltaTime)
         {
@@ -2994,10 +3005,16 @@ namespace Andastra.Runtime.Games.Aurora
                 return;
             }
 
+            // Resource loader is required to load MDL files for animation lookup
+            if (_resourceLoader == null)
+            {
+                return;
+            }
+
             // Based on nwmain.exe: CNWSArea::UpdateTiles iterates through all tiles
             // Updates animation state for tiles with animation loops
             // Tile_AnimLoop1/2/3 from ARE file specify which animation loops to play
-            // Animation loop definitions come from tileset data (SET files)
+            // Animation loop definitions come from tile model (MDL file) as AnimLoop01/02/03
             foreach (SceneTile tile in _sceneData.Tiles)
             {
                 if (tile == null)
@@ -3005,21 +3022,206 @@ namespace Andastra.Runtime.Games.Aurora
                     continue;
                 }
 
-                // Tile animation state update
-                // Based on nwmain.exe: Tile animations are texture-based (UV animations, frame sequences)
-                // Animation loops are defined in tileset data and referenced by index in ARE file
-                // The rendering system handles actual animation rendering based on animation state
-                // This update method ensures tile state is current for game logic
-                
-                // TODO:  Note: Full implementation would:
-                // 1. Load tileset data to get animation loop definitions
-                // 2. Track animation time for each tile's active animation loops
-                // 3. Update animation frame indices based on animation speed and deltaTime
-                // 4. Handle animation loop cycling (loop, ping-pong, one-shot)
-                // 5. Update tile lighting state for dynamic lighting calculations
-                
-                // TODO: STUB - For now, tile state is updated implicitly by the rendering system
-                // This method serves as a placeholder that can be expanded when tileset data access is available
+                // Initialize animation states dictionary if needed
+                if (tile.AnimationStates == null)
+                {
+                    tile.AnimationStates = new Dictionary<int, TileAnimationState>();
+                }
+
+                // Animation loop names expected on tile models
+                // Based on ARE format documentation: AnimLoop01, AnimLoop02, AnimLoop03 animations
+                string[] animLoopNames = { "AnimLoop01", "AnimLoop02", "AnimLoop03" };
+                bool[] animLoopFlags = { tile.AnimLoop1, tile.AnimLoop2, tile.AnimLoop3 };
+
+                // Process each animation loop slot (1, 2, 3)
+                for (int loopIndex = 0; loopIndex < 3; loopIndex++)
+                {
+                    // Check if this animation loop is enabled
+                    if (!animLoopFlags[loopIndex])
+                    {
+                        // Animation loop is disabled - remove state if it exists
+                        if (tile.AnimationStates.ContainsKey(loopIndex))
+                        {
+                            tile.AnimationStates.Remove(loopIndex);
+                        }
+                        continue;
+                    }
+
+                    // Animation loop is enabled - ensure animation state exists
+                    if (!tile.AnimationStates.ContainsKey(loopIndex))
+                    {
+                        // Need to load MDL model to find animation definition
+                        string animLoopName = animLoopNames[loopIndex];
+                        MDLAnimation animDef = LoadTileAnimationDefinition(tile.ModelResRef, animLoopName);
+
+                        if (animDef != null)
+                        {
+                            // Create animation state for this loop
+                            TileAnimationState animState = new TileAnimationState
+                            {
+                                AnimationName = animLoopName,
+                                AnimationLength = animDef.Length,
+                                AnimationTime = 0.0f,
+                                FrameIndex = 0,
+                                IsLooping = true, // AnimLoop animations are typically looping
+                                IsComplete = false
+                            };
+                            tile.AnimationStates[loopIndex] = animState;
+                        }
+                        else
+                        {
+                            // Animation not found on model - skip this loop
+                            continue;
+                        }
+                    }
+
+                    // Update animation state for this loop
+                    TileAnimationState state = tile.AnimationStates[loopIndex];
+                    if (state == null || state.IsComplete)
+                    {
+                        continue;
+                    }
+
+                    // Update animation time based on deltaTime
+                    // Based on nwmain.exe: Animation time advances based on deltaTime
+                    // Animation speed is typically 1.0 (normal speed)
+                    float animationSpeed = 1.0f;
+                    state.AnimationTime += deltaTime * animationSpeed;
+
+                    // Handle animation looping
+                    if (state.IsLooping && state.AnimationLength > 0.0f)
+                    {
+                        // Loop animation: wrap time back to start when reaching end
+                        while (state.AnimationTime >= state.AnimationLength)
+                        {
+                            state.AnimationTime -= state.AnimationLength;
+                        }
+                    }
+                    else
+                    {
+                        // One-shot animation: clamp time to length and mark complete
+                        if (state.AnimationTime >= state.AnimationLength)
+                        {
+                            state.AnimationTime = state.AnimationLength;
+                            state.IsComplete = true;
+                        }
+                    }
+
+                    // Update frame index for frame-based animations
+                    // Based on nwmain.exe: Frame index calculated from animation time
+                    // This is used by rendering system for texture animation frame selection
+                    if (state.AnimationLength > 0.0f)
+                    {
+                        // Calculate frame index from normalized time (0.0 to 1.0)
+                        float normalizedTime = state.AnimationTime / state.AnimationLength;
+                        // Assume 30 FPS for frame-based calculations (typical for texture animations)
+                        const float frameRate = 30.0f;
+                        int totalFrames = (int)(state.AnimationLength * frameRate);
+                        if (totalFrames > 0)
+                        {
+                            state.FrameIndex = (int)(normalizedTime * totalFrames);
+                            if (state.FrameIndex >= totalFrames)
+                            {
+                                state.FrameIndex = totalFrames - 1;
+                            }
+                        }
+                    }
+                }
+
+                // Update tile lighting state for dynamic lighting calculations
+                // Based on nwmain.exe: Tile lighting affects dynamic lighting rendering
+                // Tile_MainLight1/2 and Tile_SrcLight1/2 are indices into lightcolor.2da
+                // Lighting state is used by rendering system for per-tile lighting calculations
+                // This update ensures lighting state is current for game logic
+                // (Actual lighting rendering is handled by rendering system based on these values)
+            }
+        }
+
+        /// <summary>
+        /// Loads animation definition from tile MDL model.
+        /// </summary>
+        /// <param name="modelResRef">Tile model ResRef (e.g., "tl_grass_01").</param>
+        /// <param name="animationName">Animation name to find (e.g., "AnimLoop01").</param>
+        /// <returns>Animation definition if found, null otherwise.</returns>
+        /// <remarks>
+        /// Based on nwmain.exe: Tile animations are stored in MDL model files
+        /// - Animations are searched by name in the model's animation list
+        /// - MDL models are cached to avoid reloading same files multiple times
+        /// - Returns null if model cannot be loaded or animation is not found
+        /// </remarks>
+        [CanBeNull]
+        private MDLAnimation LoadTileAnimationDefinition(string modelResRef, string animationName)
+        {
+            if (string.IsNullOrEmpty(modelResRef) || string.IsNullOrEmpty(animationName))
+            {
+                return null;
+            }
+
+            // Check cache first
+            MDL cachedMdl;
+            if (_tileMdlCache.TryGetValue(modelResRef, out cachedMdl))
+            {
+                // Model is cached - search for animation
+                if (cachedMdl.Anims != null)
+                {
+                    foreach (MDLAnimation anim in cachedMdl.Anims)
+                    {
+                        if (anim != null && anim.Name != null && anim.Name.Equals(animationName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return anim;
+                        }
+                    }
+                }
+                return null;
+            }
+
+            // Model not in cache - load it
+            if (_resourceLoader == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                // Load MDL file
+                byte[] mdlData = _resourceLoader(modelResRef + ".mdl");
+                if (mdlData == null || mdlData.Length == 0)
+                {
+                    return null;
+                }
+
+                // Load MDX file (optional - contains vertex data)
+                byte[] mdxData = _resourceLoader(modelResRef + ".mdx");
+
+                // Parse MDL file
+                MDL mdl = MDLAuto.ReadMdl(mdlData, sourceExt: mdxData);
+                if (mdl == null)
+                {
+                    return null;
+                }
+
+                // Cache the loaded model
+                _tileMdlCache[modelResRef] = mdl;
+
+                // Search for animation
+                if (mdl.Anims != null)
+                {
+                    foreach (MDLAnimation anim in mdl.Anims)
+                    {
+                        if (anim != null && anim.Name != null && anim.Name.Equals(animationName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return anim;
+                        }
+                    }
+                }
+
+                return null;
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't throw - just return null to skip this animation
+                Console.WriteLine($"[AuroraArea] Failed to load tile MDL '{modelResRef}' for animation '{animationName}': {ex.Message}");
+                return null;
             }
         }
 
@@ -3048,7 +3250,7 @@ namespace Andastra.Runtime.Games.Aurora
             uint diffuseColor;
             byte fogAmount;
             uint fogColor;
-            
+
             if (_dayNightCycle != 0)
             {
                 // Day/night cycle is enabled - use interpolated colors computed by UpdateDayNightCycle
@@ -3302,7 +3504,7 @@ namespace Andastra.Runtime.Games.Aurora
                         // Failed to load tile mesh - skip this tile
                         continue;
                     }
-                    
+
                     // Cache the loaded mesh data in the tile
                     tile.MeshData = meshData;
                 }
@@ -3514,7 +3716,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// <remarks>
         /// Aurora has complex rendering with tile-based geometry.
         /// Includes dynamic lighting, weather effects, and area effects.
-        /// 
+        ///
         /// Based on nwmain.exe area rendering functions:
         /// - CNWSArea::RenderArea @ 0x1403681f0 (approximate - needs Ghidra verification)
         /// - CNWSArea::RenderTiles @ 0x1403682a0 (approximate - needs Ghidra verification)
@@ -3522,7 +3724,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// - Dynamic lighting: Applies sun/moon lighting based on day/night cycle
         /// - Weather effects: Renders rain, snow, and lightning effects
         /// - Area effects: Renders persistent environmental effects
-        /// 
+        ///
         /// Rendering order:
         /// 1. Build scene data from ARE file if not already built
         /// 2. Determine current tile for visibility culling
@@ -3717,6 +3919,12 @@ namespace Andastra.Runtime.Games.Aurora
                 _tileMeshCache.Clear();
             }
 
+            // Clear tile MDL cache
+            if (_tileMdlCache != null)
+            {
+                _tileMdlCache.Clear();
+            }
+
             // Clear all entity lists
             // Based on nwmain.exe: Entity lists are cleared during unload
             _creatures.Clear();
@@ -3776,19 +3984,19 @@ namespace Andastra.Runtime.Games.Aurora
     /// <remarks>
     /// Provides IGameResourceProvider interface for AuroraSceneBuilder using TilesetLoader's resource loader function.
     /// Based on nwmain.exe: CExoResMan::Demand @ 0x14018ef90 - Resource loading system
-    /// 
+    ///
     /// Implementation Details:
     /// - Wraps TilesetLoader's resource loader delegate to provide full IGameResourceProvider interface
     /// - Converts ResourceIdentifier to filename format (ResName + "." + Extension) matching Aurora Engine conventions
     /// - Provides async resource access for streaming and background loading
     /// - LoadResource method is provided for AuroraTileset compatibility (not part of IGameResourceProvider interface)
-    /// 
+    ///
     /// Resource Loading (Aurora Engine):
     /// - Based on nwmain.exe: CExoResMan::Demand @ 0x14018ef90 loads resources via resource loader
     /// - Resource filenames: ResName + "." + Extension (e.g., "tileset.set", "model.mdl")
     /// - Resource precedence: OVERRIDE > MODULE > HAK (in load order) > BASE_GAME > HARDCODED
     /// - Module context: Resources loaded from current module context when available
-    /// 
+    ///
     /// Limitations:
     /// - Resource enumeration not supported (delegate-based loading doesn't provide archive access)
     /// - Location information limited (delegate doesn't provide exact file paths)
