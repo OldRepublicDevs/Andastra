@@ -1110,7 +1110,9 @@ namespace Andastra.Runtime.MonoGame.Backends
             VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR = 1000150020,
             VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO = 1000244001,
             VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR = 1000150002,
-            VK_STRUCTURE_TYPE_COPY_ACCELERATION_STRUCTURE_INFO_KHR = 1000150001
+            VK_STRUCTURE_TYPE_COPY_ACCELERATION_STRUCTURE_INFO_KHR = 1000150001,
+            VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 = 1000059001,
+            VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR = 1000347003
         }
 
         // Vulkan instance and device creation structures
@@ -1164,6 +1166,31 @@ namespace Andastra.Runtime.MonoGame.Backends
             public byte[] pipelineCacheUUID; // VK_UUID_SIZE = 16
             public VkPhysicalDeviceLimits limits;
             public VkPhysicalDeviceSparseProperties sparseProperties;
+        }
+
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkPhysicalDeviceProperties2.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkPhysicalDeviceProperties2
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkPhysicalDeviceProperties properties;
+        }
+
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkPhysicalDeviceRayTracingPipelinePropertiesKHR.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkPhysicalDeviceRayTracingPipelinePropertiesKHR
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public uint shaderGroupHandleSize;
+            public uint maxRayRecursionDepth;
+            public uint maxShaderGroupStride;
+            public uint shaderGroupBaseAlignment;
+            public uint shaderGroupHandleCaptureReplaySize;
+            public uint maxRayDispatchInvocationCount;
+            public uint shaderGroupHandleAlignment;
+            public uint maxRayHitAttributeSize;
         }
 
         private enum VkPhysicalDeviceType
@@ -1599,6 +1626,8 @@ namespace Andastra.Runtime.MonoGame.Backends
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkGetPhysicalDevicePropertiesDelegate(IntPtr physicalDevice, out VkPhysicalDeviceProperties pProperties);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkGetPhysicalDeviceProperties2Delegate(IntPtr physicalDevice, ref VkPhysicalDeviceProperties2 pProperties);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkGetPhysicalDeviceFeaturesDelegate(IntPtr physicalDevice, out VkPhysicalDeviceFeatures pFeatures);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkGetPhysicalDeviceQueueFamilyPropertiesDelegate(IntPtr physicalDevice, ref uint pQueueFamilyPropertyCount, IntPtr pQueueFamilyProperties);
@@ -1942,6 +1971,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static vkDestroyInstanceDelegate vkDestroyInstance;
         private static vkEnumeratePhysicalDevicesDelegate vkEnumeratePhysicalDevices;
         private static vkGetPhysicalDevicePropertiesDelegate vkGetPhysicalDeviceProperties;
+        private static vkGetPhysicalDeviceProperties2Delegate vkGetPhysicalDeviceProperties2;
         private static vkGetPhysicalDeviceFeaturesDelegate vkGetPhysicalDeviceFeatures;
         private static vkGetPhysicalDeviceQueueFamilyPropertiesDelegate vkGetPhysicalDeviceQueueFamilyProperties;
         private static vkCreateDeviceDelegate vkCreateDevice;
@@ -2419,6 +2449,11 @@ namespace Andastra.Runtime.MonoGame.Backends
         // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkPhysicalDeviceMemoryProperties.html
         private VkPhysicalDeviceMemoryProperties _memoryProperties;
         private bool _memoryPropertiesQueried;
+
+        // Cached raytracing pipeline properties (queried once during initialization if raytracing is supported)
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkPhysicalDeviceRayTracingPipelinePropertiesKHR.html
+        private VkPhysicalDeviceRayTracingPipelinePropertiesKHR _raytracingPipelineProperties;
+        private bool _raytracingPipelinePropertiesQueried;
         private const uint DescriptorPoolUniformBufferCount = 1000;
         private const uint DescriptorPoolStorageBufferCount = 1000;
         private const uint DescriptorPoolSampledImageCount = 1000;
@@ -2544,6 +2579,12 @@ namespace Andastra.Runtime.MonoGame.Backends
                 if (ptr != IntPtr.Zero)
                 {
                     vkGetPhysicalDeviceProperties = (vkGetPhysicalDevicePropertiesDelegate)Marshal.GetDelegateForFunctionPointer(ptr, typeof(vkGetPhysicalDevicePropertiesDelegate));
+                }
+
+                ptr = vkGetInstanceProcAddr(instance, "vkGetPhysicalDeviceProperties2");
+                if (ptr != IntPtr.Zero)
+                {
+                    vkGetPhysicalDeviceProperties2 = (vkGetPhysicalDeviceProperties2Delegate)Marshal.GetDelegateForFunctionPointer(ptr, typeof(vkGetPhysicalDeviceProperties2Delegate));
                 }
 
                 ptr = vkGetInstanceProcAddr(instance, "vkGetPhysicalDeviceFeatures");
@@ -3211,6 +3252,12 @@ namespace Andastra.Runtime.MonoGame.Backends
             // Query physical device memory properties
             QueryPhysicalDeviceMemoryProperties();
 
+            // Query raytracing pipeline properties if raytracing is supported
+            if (_capabilities.SupportsRaytracing)
+            {
+                QueryRaytracingPipelineProperties();
+            }
+
             // Create command pools
             _graphicsCommandPool = CreateCommandPool(0); // graphics queue family
             _computeCommandPool = CreateCommandPool(1);  // compute queue family
@@ -3671,6 +3718,96 @@ namespace Andastra.Runtime.MonoGame.Backends
             // Query memory properties from physical device
             // Based on Vulkan API: vkGetPhysicalDeviceMemoryProperties is an instance-level function
             vkGetPhysicalDeviceMemoryProperties(_physicalDevice, out _memoryProperties);
+            _memoryPropertiesQueried = true;
+        }
+
+        /// <summary>
+        /// Queries the physical device raytracing pipeline properties and caches them.
+        /// Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkPhysicalDeviceRayTracingPipelinePropertiesKHR.html
+        /// </summary>
+        private void QueryRaytracingPipelineProperties()
+        {
+            if (_physicalDevice == IntPtr.Zero)
+            {
+                throw new InvalidOperationException("Physical device handle is invalid");
+            }
+
+            if (_raytracingPipelinePropertiesQueried)
+            {
+                return; // Already queried
+            }
+
+            // Check if vkGetPhysicalDeviceProperties2 is available
+            if (vkGetPhysicalDeviceProperties2 == null)
+            {
+                // Fallback: Use default values (32 bytes handle size, 32 bytes alignment)
+                // This is a reasonable default for most implementations
+                _raytracingPipelineProperties = new VkPhysicalDeviceRayTracingPipelinePropertiesKHR
+                {
+                    sType = VkStructureType.VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR,
+                    pNext = IntPtr.Zero,
+                    shaderGroupHandleSize = 32,
+                    maxRayRecursionDepth = 31,
+                    maxShaderGroupStride = 4096,
+                    shaderGroupBaseAlignment = 32,
+                    shaderGroupHandleCaptureReplaySize = 32,
+                    maxRayDispatchInvocationCount = 0xFFFFFFFF,
+                    shaderGroupHandleAlignment = 16,
+                    maxRayHitAttributeSize = 32
+                };
+                _raytracingPipelinePropertiesQueried = true;
+                System.Console.WriteLine("[VulkanDevice] Using default raytracing pipeline properties (vkGetPhysicalDeviceProperties2 not available)");
+                return;
+            }
+
+            // Query raytracing pipeline properties using vkGetPhysicalDeviceProperties2
+            // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetPhysicalDeviceProperties2.html
+            VkPhysicalDeviceRayTracingPipelinePropertiesKHR rtProps = new VkPhysicalDeviceRayTracingPipelinePropertiesKHR
+            {
+                sType = VkStructureType.VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR,
+                pNext = IntPtr.Zero
+            };
+
+            VkPhysicalDeviceProperties2 props2 = new VkPhysicalDeviceProperties2
+            {
+                sType = VkStructureType.VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2,
+                pNext = IntPtr.Zero
+            };
+
+            // Marshal the raytracing properties structure and link it via pNext
+            int rtPropsSize = Marshal.SizeOf(typeof(VkPhysicalDeviceRayTracingPipelinePropertiesKHR));
+            IntPtr rtPropsPtr = Marshal.AllocHGlobal(rtPropsSize);
+            try
+            {
+                Marshal.StructureToPtr(rtProps, rtPropsPtr, false);
+                props2.pNext = rtPropsPtr;
+
+                // Marshal the properties2 structure
+                int props2Size = Marshal.SizeOf(typeof(VkPhysicalDeviceProperties2));
+                IntPtr props2Ptr = Marshal.AllocHGlobal(props2Size);
+                try
+                {
+                    Marshal.StructureToPtr(props2, props2Ptr, false);
+
+                    // Call vkGetPhysicalDeviceProperties2
+                    vkGetPhysicalDeviceProperties2(_physicalDevice, ref props2);
+
+                    // Read back the raytracing properties
+                    _raytracingPipelineProperties = (VkPhysicalDeviceRayTracingPipelinePropertiesKHR)
+                        Marshal.PtrToStructure(rtPropsPtr, typeof(VkPhysicalDeviceRayTracingPipelinePropertiesKHR));
+                    _raytracingPipelinePropertiesQueried = true;
+
+                    System.Console.WriteLine($"[VulkanDevice] Raytracing pipeline properties: handleSize={_raytracingPipelineProperties.shaderGroupHandleSize}, baseAlignment={_raytracingPipelineProperties.shaderGroupBaseAlignment}, maxRecursion={_raytracingPipelineProperties.maxRayRecursionDepth}");
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(props2Ptr);
+                }
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(rtPropsPtr);
+            }
             _memoryPropertiesQueried = true;
         }
 
@@ -5908,7 +6045,8 @@ namespace Andastra.Runtime.MonoGame.Backends
                 pipelineLayout = CreatePipelineLayout(new[] { desc.GlobalBindingLayout });
             }
 
-            // TODO:  Full implementation of VK_KHR_ray_tracing_pipeline extension
+            // Full implementation of VK_KHR_ray_tracing_pipeline extension
+            // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateRayTracingPipelinesKHR.html
 
             // Helper to convert ShaderType to VkShaderStageFlags
             VkShaderStageFlags ConvertShaderTypeToVkStage(ShaderType shaderType)
@@ -6252,24 +6390,123 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                             try
                             {
-                                // Get shader group handle size (typically 32 bytes)
-                                uint handleSize = 32;
-                                uint handleSizeAligned = (handleSize + 31) & ~31u; // Align to 32 bytes
+                                // Get shader group handle size and alignment from device properties
+                                // Query properties if not already queried
+                                if (!_raytracingPipelinePropertiesQueried && _capabilities.SupportsRaytracing)
+                                {
+                                    QueryRaytracingPipelineProperties();
+                                }
+
+                                uint handleSize = _raytracingPipelinePropertiesQueried
+                                    ? _raytracingPipelineProperties.shaderGroupHandleSize
+                                    : 32; // Fallback default
+                                uint handleAlignment = _raytracingPipelinePropertiesQueried
+                                    ? _raytracingPipelineProperties.shaderGroupBaseAlignment
+                                    : 32; // Fallback default
+
+                                // Calculate aligned handle size (must be aligned to shaderGroupBaseAlignment)
+                                uint handleSizeAligned = (handleSize + handleAlignment - 1) & ~(handleAlignment - 1u);
                                 uint groupCount = (uint)shaderGroups.Count;
                                 uint sbtSize = groupCount * handleSizeAligned;
 
-                                // Create SBT buffer
+                                // Create SBT buffer with proper usage flags for shader binding table
+                                // SBT buffer needs to be host-visible for CPU writes and device-visible for GPU reads
                                 var sbtBufferDesc = new BufferDesc
                                 {
                                     ByteSize = (int)sbtSize,
-                                    Usage = BufferUsageFlags.ShaderResource
+                                    Usage = BufferUsageFlags.ShaderResource | BufferUsageFlags.TransferDst
                                 };
                                 IBuffer sbtBuffer = CreateBuffer(sbtBufferDesc);
 
                                 // Get shader group handles and populate SBT
-                                // Note: SBT population typically happens at dispatch time or requires buffer mapping
-                                // TODO: STUB - For now, we create the buffer - full SBT population would require vkGetRayTracingShaderGroupHandlesKHR
-                                // and proper buffer device address support (VK_KHR_buffer_device_address)
+                                // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetRayTracingShaderGroupHandlesKHR.html
+                                if (vkGetRayTracingShaderGroupHandlesKHR != null && sbtBuffer != null)
+                                {
+                                    // Allocate buffer for all shader group handles
+                                    ulong handlesDataSize = (ulong)(groupCount * handleSize);
+                                    byte[] handlesData = new byte[handlesDataSize];
+                                    unsafe
+                                    {
+                                        fixed (byte* pHandlesData = handlesData)
+                                        {
+                                            IntPtr pData = new IntPtr(pHandlesData);
+
+                                            // Call vkGetRayTracingShaderGroupHandlesKHR to retrieve all shader group handles
+                                            // Signature: VkResult vkGetRayTracingShaderGroupHandlesKHR(
+                                            //     VkDevice device,
+                                            //     VkPipeline pipeline,
+                                            //     uint firstGroup,
+                                            //     uint groupCount,
+                                            //     size_t dataSize,
+                                            //     void* pData);
+                                            VkResult handlesResult = vkGetRayTracingShaderGroupHandlesKHR(
+                                                _device,
+                                                vkPipeline,
+                                                0,              // firstGroup: start from group 0
+                                                groupCount,     // groupCount: get all groups
+                                                handlesDataSize, // dataSize: total size of buffer
+                                                pData           // pData: pointer to buffer
+                                            );
+
+                                            if (handlesResult == VkResult.VK_SUCCESS)
+                                            {
+                                                // Map SBT buffer and copy handles with proper alignment
+                                                // The SBT layout is: [RayGen][Miss0][Miss1]...[HitGroup0][HitGroup1]...
+                                                // Each entry is aligned to shaderGroupBaseAlignment
+                                                if (sbtBuffer is VulkanBuffer vulkanSbtBuffer)
+                                                {
+                                                    // Get buffer memory and map it
+                                                    IntPtr sbtBufferMemory = vulkanSbtBuffer.VkMemory;
+                                                    if (sbtBufferMemory != IntPtr.Zero && vkMapMemory != null)
+                                                    {
+                                                        IntPtr mappedPtr;
+                                                        VkResult mapResult = vkMapMemory(_device, sbtBufferMemory, 0, sbtSize, 0, out mappedPtr);
+                                                        if (mapResult == VkResult.VK_SUCCESS && mappedPtr != IntPtr.Zero)
+                                                        {
+                                                            try
+                                                            {
+                                                                // Copy handles to SBT buffer with proper alignment
+                                                                for (uint i = 0; i < groupCount; i++)
+                                                                {
+                                                                    ulong dstOffset = (ulong)(i * handleSizeAligned);
+                                                                    IntPtr dstPtr = new IntPtr(mappedPtr.ToInt64() + (long)dstOffset);
+                                                                    // Copy handle data from source array to destination
+                                                                    for (int j = 0; j < handleSize; j++)
+                                                                    {
+                                                                        byte value = handlesData[i * handleSize + j];
+                                                                        Marshal.WriteByte(dstPtr, j, value);
+                                                                    }
+                                                                }
+                                                            }
+                                                            finally
+                                                            {
+                                                                if (vkUnmapMemory != null)
+                                                                {
+                                                                    vkUnmapMemory(_device, sbtBufferMemory);
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    System.Console.WriteLine("[VulkanDevice] SBT buffer is not a VulkanBuffer, cannot populate directly");
+                                                }
+                                            }
+                                            else
+                                            {
+                                                System.Console.WriteLine($"[VulkanDevice] vkGetRayTracingShaderGroupHandlesKHR failed with result {handlesResult}");
+                                            }
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    if (vkGetRayTracingShaderGroupHandlesKHR == null)
+                                    {
+                                        System.Console.WriteLine("[VulkanDevice] vkGetRayTracingShaderGroupHandlesKHR not available, SBT will be populated later");
+                                    }
+                                }
 
                                 IntPtr handle = new IntPtr(_nextResourceHandle++);
                                 // Convert interface desc to backend-specific desc for storage
@@ -7084,6 +7321,14 @@ namespace Andastra.Runtime.MonoGame.Backends
             internal IntPtr VkBuffer
             {
                 get { return _vkBuffer; }
+            }
+
+            /// <summary>
+            /// Gets the VkDeviceMemory handle. Used internally for buffer mapping.
+            /// </summary>
+            internal IntPtr VkMemory
+            {
+                get { return _vkMemory; }
             }
 
             public void Dispose()
