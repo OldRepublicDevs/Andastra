@@ -4,6 +4,9 @@ using Microsoft.Xna.Framework;
 using XnaVector2 = Microsoft.Xna.Framework.Vector2;
 using XnaRectangle = Microsoft.Xna.Framework.Rectangle;
 using XnaColor = Microsoft.Xna.Framework.Color;
+using GraphicsVector2 = Andastra.Runtime.Graphics.Vector2;
+using GraphicsRectangle = Andastra.Runtime.Graphics.Rectangle;
+using GraphicsColor = Andastra.Runtime.Graphics.Color;
 
 namespace Andastra.Runtime.Game.GUI
 {
@@ -122,20 +125,20 @@ namespace Andastra.Runtime.Game.GUI
             if (screenWidth <= 0) screenWidth = 1280;
             if (screenHeight <= 0) screenHeight = 720;
 
-            _screenCenter = new Vector2(screenWidth * 0.5f, screenHeight * 0.5f);
+            _screenCenter = new XnaVector2(screenWidth * 0.5f, screenHeight * 0.5f);
 
             // Main panel - 600x400, centered
             int panelWidth = 600;
             int panelHeight = 400;
             int panelX = (int)(_screenCenter.X - panelWidth * 0.5f);
             int panelY = (int)(_screenCenter.Y - panelHeight * 0.5f);
-            _mainPanelRect = new Rectangle(panelX, panelY, panelWidth, panelHeight);
+            _mainPanelRect = new XnaRectangle(panelX, panelY, panelWidth, panelHeight);
 
             Console.WriteLine($"[MenuRenderer] Layout calculated: Screen={screenWidth}x{screenHeight}, Panel={panelX},{panelY},{panelWidth}x{panelHeight}");
 
             // Header - golden bar at top of panel
             int headerHeight = 80;
-            _headerRect = new Rectangle(panelX + 30, panelY + 10, panelWidth - 60, headerHeight);
+            _headerRect = new XnaRectangle(panelX + 30, panelY + 10, panelWidth - 60, headerHeight);
 
             // Buttons - evenly spaced below header
             int buttonWidth = panelWidth - 100;
@@ -146,7 +149,7 @@ namespace Andastra.Runtime.Game.GUI
 
             // Start Game button (green)
             _menuButtons[0] = new MenuButton(
-                new Rectangle(buttonX, startY, buttonWidth, buttonHeight),
+                new XnaRectangle(buttonX, startY, buttonWidth, buttonHeight),
                 _buttonStartColor,
                 _buttonStartSelectedColor,
                 "Start Game"
@@ -154,7 +157,7 @@ namespace Andastra.Runtime.Game.GUI
 
             // Options button (blue)
             _menuButtons[1] = new MenuButton(
-                new Rectangle(buttonX, startY + buttonHeight + buttonSpacing, buttonWidth, buttonHeight),
+                new XnaRectangle(buttonX, startY + buttonHeight + buttonSpacing, buttonWidth, buttonHeight),
                 _buttonOptionsColor,
                 _buttonOptionsSelectedColor,
                 "Options"
@@ -162,7 +165,7 @@ namespace Andastra.Runtime.Game.GUI
 
             // Exit button (red)
             _menuButtons[2] = new MenuButton(
-                new Rectangle(buttonX, startY + (buttonHeight + buttonSpacing) * 2, buttonWidth, buttonHeight),
+                new XnaRectangle(buttonX, startY + (buttonHeight + buttonSpacing) * 2, buttonWidth, buttonHeight),
                 _buttonExitColor,
                 _buttonExitSelectedColor,
                 "Exit"
@@ -342,18 +345,22 @@ namespace Andastra.Runtime.Game.GUI
 
             // Draw background (full screen dark blue)
             _spriteBatch.Draw(_whiteTexture,
-                new Rectangle(0, 0, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height),
-                _backgroundColor);
+                new GraphicsRectangle(0, 0, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height),
+                new GraphicsColor(_backgroundColor.R, _backgroundColor.G, _backgroundColor.B, _backgroundColor.A));
 
             // Draw main panel background
-            _spriteBatch.Draw(_whiteTexture, _mainPanelRect, _panelBackgroundColor);
+            _spriteBatch.Draw(_whiteTexture, 
+                new GraphicsRectangle(_mainPanelRect.X, _mainPanelRect.Y, _mainPanelRect.Width, _mainPanelRect.Height), 
+                new GraphicsColor(_panelBackgroundColor.R, _panelBackgroundColor.G, _panelBackgroundColor.B, _panelBackgroundColor.A));
 
             // Draw panel border
             int borderThickness = 6;
             DrawBorder(_spriteBatch, _mainPanelRect, borderThickness, _borderColor);
 
             // Draw header (golden bar)
-            _spriteBatch.Draw(_whiteTexture, _headerRect, _headerColor);
+            _spriteBatch.Draw(_whiteTexture, 
+                new GraphicsRectangle(_headerRect.X, _headerRect.Y, _headerRect.Width, _headerRect.Height), 
+                new GraphicsColor(_headerColor.R, _headerColor.G, _headerColor.B, _headerColor.A));
             DrawBorder(_spriteBatch, _headerRect, 4, _borderColor);
 
             // Draw menu buttons
@@ -363,7 +370,9 @@ namespace Andastra.Runtime.Game.GUI
                 XnaColor color = (i == _selectedIndex) ? button.SelectedColor : button.NormalColor;
 
                 // Button background
-                _spriteBatch.Draw(_whiteTexture, button.Rect, color);
+                _spriteBatch.Draw(_whiteTexture, 
+                    new GraphicsRectangle(button.Rect.X, button.Rect.Y, button.Rect.Width, button.Rect.Height), 
+                    new GraphicsColor(color.R, color.G, color.B, color.A));
 
                 // Button border (thicker when selected)
                 int btnBorderThickness = (i == _selectedIndex) ? 6 : 4;
@@ -372,12 +381,12 @@ namespace Andastra.Runtime.Game.GUI
                 // Draw button text (if font is available)
                 if (_font != null)
                 {
-                    XnaVector2 textSize = _font.MeasureString(button.Label);
-                    XnaVector2 textPosition = new Vector2(
+                    GraphicsVector2 textSize = _font.MeasureString(button.Label);
+                    GraphicsVector2 textPosition = new GraphicsVector2(
                         button.Rect.X + (button.Rect.Width - textSize.X) * 0.5f,
                         button.Rect.Y + (button.Rect.Height - textSize.Y) * 0.5f
                     );
-                    _spriteBatch.DrawString(_font, button.Label, textPosition, new Color(255, 255, 255, 255));
+                    _spriteBatch.DrawString(_font, button.Label, textPosition, new GraphicsColor(255, 255, 255, 255));
                 }
                 else
                 {
@@ -393,17 +402,17 @@ namespace Andastra.Runtime.Game.GUI
                     {
                         // Draw a filled circle (approximated as a square with rounded appearance)
                         _spriteBatch.Draw(_whiteTexture,
-                            new Rectangle(indicatorX, indicatorY, indicatorSize, indicatorSize),
-                            new Color(255, 255, 255, 255));
+                            new GraphicsRectangle(indicatorX, indicatorY, indicatorSize, indicatorSize),
+                            new GraphicsColor(255, 255, 255, 255));
                     }
                     else if (i == 1) // Options - blue square with border
                     {
                         // Draw a square
                         _spriteBatch.Draw(_whiteTexture,
-                            new Rectangle(indicatorX, indicatorY, indicatorSize, indicatorSize),
-                            new Color(255, 255, 255, 255));
+                            new GraphicsRectangle(indicatorX, indicatorY, indicatorSize, indicatorSize),
+                            new GraphicsColor(255, 255, 255, 255));
                         // Draw border
-                        DrawBorder(_spriteBatch, new Rectangle(indicatorX, indicatorY, indicatorSize, indicatorSize), 2, new Color(0, 0, 0, 255));
+                        DrawBorder(_spriteBatch, new XnaRectangle(indicatorX, indicatorY, indicatorSize, indicatorSize), 2, new XnaColor(0, 0, 0, 255));
                     }
                     else if (i == 2) // Exit - red X shape
                     {
@@ -412,12 +421,12 @@ namespace Andastra.Runtime.Game.GUI
                         int xSize = indicatorSize;
                         // Diagonal line 1
                         _spriteBatch.Draw(_whiteTexture,
-                            new Rectangle(indicatorX + xSize / 2 - xThickness / 2, indicatorY, xThickness, xSize),
-                            new Color(255, 255, 255, 255));
+                            new GraphicsRectangle(indicatorX + xSize / 2 - xThickness / 2, indicatorY, xThickness, xSize),
+                            new GraphicsColor(255, 255, 255, 255));
                         // Diagonal line 2 (rotated - approximate with offset)
                         _spriteBatch.Draw(_whiteTexture,
-                            new Rectangle(indicatorX, indicatorY + xSize / 2 - xThickness / 2, xSize, xThickness),
-                            new Color(255, 255, 255, 255));
+                            new GraphicsRectangle(indicatorX, indicatorY + xSize / 2 - xThickness / 2, xSize, xThickness),
+                            new GraphicsColor(255, 255, 255, 255));
                     }
                 }
             }
@@ -428,22 +437,24 @@ namespace Andastra.Runtime.Game.GUI
 
         private void DrawBorder(ISpriteBatch spriteBatch, XnaRectangle rect, int thickness, XnaColor color)
         {
+            GraphicsRectangle graphicsRect = new GraphicsRectangle(rect.X, rect.Y, rect.Width, rect.Height);
+            GraphicsColor graphicsColor = new GraphicsColor(color.R, color.G, color.B, color.A);
             // Top border
             spriteBatch.Draw(_whiteTexture,
-                new Rectangle(rect.X, rect.Y, rect.Width, thickness),
-                color);
+                new GraphicsRectangle(graphicsRect.X, graphicsRect.Y, graphicsRect.Width, thickness),
+                graphicsColor);
             // Bottom border
             spriteBatch.Draw(_whiteTexture,
-                new Rectangle(rect.X, rect.Y + rect.Height - thickness, rect.Width, thickness),
-                color);
+                new GraphicsRectangle(graphicsRect.X, graphicsRect.Y + graphicsRect.Height - thickness, graphicsRect.Width, thickness),
+                graphicsColor);
             // Left border
             spriteBatch.Draw(_whiteTexture,
-                new Rectangle(rect.X, rect.Y, thickness, rect.Height),
-                color);
+                new GraphicsRectangle(graphicsRect.X, graphicsRect.Y, thickness, graphicsRect.Height),
+                graphicsColor);
             // Right border
             spriteBatch.Draw(_whiteTexture,
-                new Rectangle(rect.X + rect.Width - thickness, rect.Y, thickness, rect.Height),
-                color);
+                new GraphicsRectangle(graphicsRect.X + graphicsRect.Width - thickness, graphicsRect.Y, thickness, graphicsRect.Height),
+                graphicsColor);
         }
 
         public void SetVisible(bool visible)
