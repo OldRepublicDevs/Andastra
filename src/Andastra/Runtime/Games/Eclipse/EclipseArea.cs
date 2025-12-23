@@ -15068,7 +15068,7 @@ technique ColorGrading
         /// <remarks>
         /// Based on daorigins.exe/DragonAge2.exe: Debris pieces are physics objects created from destroyed geometry.
         /// </remarks>
-        public class DebrisPiece
+        public class DebrisPieceData
         {
             /// <summary>
             /// Mesh identifier (model name/resref) this debris came from.
