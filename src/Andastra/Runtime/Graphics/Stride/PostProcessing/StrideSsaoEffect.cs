@@ -322,54 +322,54 @@ namespace Andastra.Runtime.Stride.PostProcessing
             if (_gtaoEffect != null && _gtaoEffect.Parameters != null)
             {
                 // Set SSAO parameters
-                var radiusParam = _gtaoEffect.Parameters.Get("Radius");
+                var radiusParam = _gtaoEffect.Parameters.Get<object>("Radius");
                 if (radiusParam != null)
                 {
-                    radiusParam.SetValue(_radius);
+                    ((dynamic)radiusParam).SetValue(_radius);
                 }
 
-                var powerParam = _gtaoEffect.Parameters.Get("Power");
+                var powerParam = _gtaoEffect.Parameters.Get<object>("Power");
                 if (powerParam != null)
                 {
-                    powerParam.SetValue(_power);
+                    ((dynamic)powerParam).SetValue(_power);
                 }
 
-                var sampleCountParam = _gtaoEffect.Parameters.Get("SampleCount");
+                var sampleCountParam = _gtaoEffect.Parameters.Get<object>("SampleCount");
                 if (sampleCountParam != null)
                 {
-                    sampleCountParam.SetValue(_sampleCount);
+                    ((dynamic)sampleCountParam).SetValue(_sampleCount);
                 }
 
                 // Set texture parameters
-                var depthTextureParam = _gtaoEffect.Parameters.Get("DepthTexture");
+                var depthTextureParam = _gtaoEffect.Parameters.Get<object>("DepthTexture");
                 if (depthTextureParam != null)
                 {
-                    depthTextureParam.SetValue(depthBuffer);
+                    ((dynamic)depthTextureParam).SetValue(depthBuffer);
                 }
 
-                var normalTextureParam = _gtaoEffect.Parameters.Get("NormalTexture");
+                var normalTextureParam = _gtaoEffect.Parameters.Get<object>("NormalTexture");
                 if (normalTextureParam != null && normalBuffer != null)
                 {
-                    normalTextureParam.SetValue(normalBuffer);
+                    ((dynamic)normalTextureParam).SetValue(normalBuffer);
                 }
 
-                var noiseTextureParam = _gtaoEffect.Parameters.Get("NoiseTexture");
+                var noiseTextureParam = _gtaoEffect.Parameters.Get<object>("NoiseTexture");
                 if (noiseTextureParam != null && _noiseTexture != null)
                 {
-                    noiseTextureParam.SetValue(_noiseTexture);
+                    ((dynamic)noiseTextureParam).SetValue(_noiseTexture);
                 }
 
                 // Set screen size parameters for UV calculations
-                var screenSizeParam = _gtaoEffect.Parameters.Get("ScreenSize");
+                var screenSizeParam = _gtaoEffect.Parameters.Get<object>("ScreenSize");
                 if (screenSizeParam != null)
                 {
-                    screenSizeParam.SetValue(new Vector2(width, height));
+                    ((dynamic)screenSizeParam).SetValue(new Vector2(width, height));
                 }
 
-                var screenSizeInvParam = _gtaoEffect.Parameters.Get("ScreenSizeInv");
+                var screenSizeInvParam = _gtaoEffect.Parameters.Get<object>("ScreenSizeInv");
                 if (screenSizeInvParam != null)
                 {
-                    screenSizeInvParam.SetValue(new Vector2(1.0f / width, 1.0f / height));
+                    ((dynamic)screenSizeInvParam).SetValue(new Vector2(1.0f / width, 1.0f / height));
                 }
 
                 // Set projection matrix parameters for depth reconstruction
@@ -392,18 +392,18 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     projectionMatrixInv = Matrix.Invert(projectionMatrix);
                 }
                 
-                var projMatrixParam = _gtaoEffect.Parameters.Get("ProjectionMatrix");
+                var projMatrixParam = _gtaoEffect.Parameters.Get<object>("ProjectionMatrix");
                 if (projMatrixParam != null)
                 {
                     // Set projection matrix from camera (used for depth reconstruction in SSAO shader)
-                    projMatrixParam.SetValue(projectionMatrix);
+                    ((dynamic)projMatrixParam).SetValue(projectionMatrix);
                 }
 
-                var projMatrixInvParam = _gtaoEffect.Parameters.Get("ProjectionMatrixInv");
+                var projMatrixInvParam = _gtaoEffect.Parameters.Get<object>("ProjectionMatrixInv");
                 if (projMatrixInvParam != null)
                 {
                     // Set inverse projection matrix (used for converting clip space to view space)
-                    projMatrixInvParam.SetValue(projectionMatrixInv);
+                    ((dynamic)projMatrixInvParam).SetValue(projectionMatrixInv);
                 }
             }
 
@@ -482,51 +482,51 @@ namespace Andastra.Runtime.Stride.PostProcessing
             if (_bilateralBlurEffect != null && _bilateralBlurEffect.Parameters != null)
             {
                 // Set blur direction (horizontal = true means blur in X direction)
-                var horizontalParam = _bilateralBlurEffect.Parameters.Get("Horizontal");
+                var horizontalParam = _bilateralBlurEffect.Parameters.Get<object>("Horizontal");
                 if (horizontalParam != null)
                 {
-                    horizontalParam.SetValue(horizontal);
+                    ((dynamic)horizontalParam).SetValue(horizontal);
                 }
 
                 // Set blur radius (typically 4-8 pixels for SSAO)
-                var blurRadiusParam = _bilateralBlurEffect.Parameters.Get("BlurRadius");
+                var blurRadiusParam = _bilateralBlurEffect.Parameters.Get<object>("BlurRadius");
                 if (blurRadiusParam != null)
                 {
-                    blurRadiusParam.SetValue(4.0f); // Standard blur radius for SSAO
+                    ((dynamic)blurRadiusParam).SetValue(4.0f); // Standard blur radius for SSAO
                 }
 
                 // Set depth threshold for edge detection
                 // Samples with depth difference > threshold are not blurred together
-                var depthThresholdParam = _bilateralBlurEffect.Parameters.Get("DepthThreshold");
+                var depthThresholdParam = _bilateralBlurEffect.Parameters.Get<object>("DepthThreshold");
                 if (depthThresholdParam != null)
                 {
-                    depthThresholdParam.SetValue(0.01f); // Threshold for depth discontinuity detection
+                    ((dynamic)depthThresholdParam).SetValue(0.01f); // Threshold for depth discontinuity detection
                 }
 
                 // Set texture parameters
-                var sourceTextureParam = _bilateralBlurEffect.Parameters.Get("SourceTexture");
+                var sourceTextureParam = _bilateralBlurEffect.Parameters.Get<object>("SourceTexture");
                 if (sourceTextureParam != null)
                 {
-                    sourceTextureParam.SetValue(source);
+                    ((dynamic)sourceTextureParam).SetValue(source);
                 }
 
-                var depthTextureParam = _bilateralBlurEffect.Parameters.Get("DepthTexture");
+                var depthTextureParam = _bilateralBlurEffect.Parameters.Get<object>("DepthTexture");
                 if (depthTextureParam != null)
                 {
-                    depthTextureParam.SetValue(depthBuffer);
+                    ((dynamic)depthTextureParam).SetValue(depthBuffer);
                 }
 
                 // Set screen size parameters for UV calculations
-                var screenSizeParam = _bilateralBlurEffect.Parameters.Get("ScreenSize");
+                var screenSizeParam = _bilateralBlurEffect.Parameters.Get<object>("ScreenSize");
                 if (screenSizeParam != null)
                 {
-                    screenSizeParam.SetValue(new Vector2(width, height));
+                    ((dynamic)screenSizeParam).SetValue(new Vector2(width, height));
                 }
 
-                var screenSizeInvParam = _bilateralBlurEffect.Parameters.Get("ScreenSizeInv");
+                var screenSizeInvParam = _bilateralBlurEffect.Parameters.Get<object>("ScreenSizeInv");
                 if (screenSizeInvParam != null)
                 {
-                    screenSizeInvParam.SetValue(new Vector2(1.0f / width, 1.0f / height));
+                    ((dynamic)screenSizeInvParam).SetValue(new Vector2(1.0f / width, 1.0f / height));
                 }
             }
 
