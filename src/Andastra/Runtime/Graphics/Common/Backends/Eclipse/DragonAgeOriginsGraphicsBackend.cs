@@ -264,16 +264,125 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         }
 
         /// <summary>
+        /// Measures text width and height using DirectX 9 font system.
+        /// Based on daorigins.exe: ID3DXFont::DrawText with DT_CALCRECT flag for text measurement.
+        /// </summary>
+        /// <param name="text">Text to measure.</param>
+        /// <param name="fontSize">Font size in points (default 12).</param>
+        /// <returns>Text size (width, height) in pixels, or (0, 0) on failure.</returns>
+        private System.Numerics.Vector2 MeasureTextDirectX9(string text, int fontSize = 12)
+        {
+            if (_d3dDevice == IntPtr.Zero || string.IsNullOrEmpty(text) || _d3dx9Dll == IntPtr.Zero)
+            {
+                return System.Numerics.Vector2.Zero;
+            }
+
+            // Ensure we're on Windows (DirectX 9 is Windows-only)
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return System.Numerics.Vector2.Zero;
+            }
+
+            try
+            {
+                // Create font cache key
+                string fontKey = $"Arial_{fontSize}";
+                IntPtr fontPtr = IntPtr.Zero;
+
+                // Check font cache first
+                if (_fontCache.TryGetValue(fontKey, out fontPtr))
+                {
+                    // Font already exists
+                }
+                else
+                {
+                    // Create new font
+                    fontPtr = CreateFontDirectX9(fontSize, "Arial");
+                    if (fontPtr != IntPtr.Zero)
+                    {
+                        _fontCache[fontKey] = fontPtr;
+                    }
+                    else
+                    {
+                        System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] MeasureTextDirectX9: Failed to create font {fontKey}");
+                        return System.Numerics.Vector2.Zero;
+                    }
+                }
+
+                // Create a rectangle for measurement
+                // DT_CALCRECT calculates the text dimensions without drawing
+                RECT measureRect;
+                measureRect.left = 0;
+                measureRect.top = 0;
+                measureRect.right = 0;
+                measureRect.bottom = 0;
+
+                // Allocate RECT structure
+                IntPtr rectPtr = Marshal.AllocHGlobal(Marshal.SizeOf<RECT>());
+                try
+                {
+                    Marshal.StructureToPtr(measureRect, rectPtr, false);
+
+                    // Get the DrawText method from the font vtable
+                    // ID3DXFont vtable: index 3 = DrawTextW
+                    IntPtr vtable = Marshal.ReadIntPtr(fontPtr);
+                    IntPtr drawTextPtr = Marshal.ReadIntPtr(vtable, 3 * IntPtr.Size);
+
+                    // Create delegate for DrawText
+                    var drawText = Marshal.GetDelegateForFunctionPointer<ID3DXFontDrawTextDelegate>(drawTextPtr);
+
+                    // Call DrawText with DT_CALCRECT flag (0x400) to measure text without drawing
+                    // DT_CALCRECT calculates the text rectangle dimensions
+                    int format = 0x400; // DT_CALCRECT
+                    int hr = drawText(
+                        fontPtr,        // pFont (this pointer)
+                        IntPtr.Zero,    // pSprite (null)
+                        text,           // pString
+                        -1,             // Count (-1 = null terminated)
+                        rectPtr,        // pRect (input/output - will be modified with text dimensions)
+                        format,         // Format (DT_CALCRECT)
+                        0               // Color (ignored when DT_CALCRECT is used)
+                    );
+
+                    if (hr < 0)
+                    {
+                        System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] MeasureTextDirectX9: DrawText failed with HRESULT 0x{hr:X8}");
+                        return System.Numerics.Vector2.Zero;
+                    }
+
+                    // Read the modified rectangle
+                    measureRect = Marshal.PtrToStructure<RECT>(rectPtr);
+
+                    // Calculate text dimensions
+                    int textWidth = measureRect.right - measureRect.left;
+                    int textHeight = measureRect.bottom - measureRect.top;
+
+                    return new System.Numerics.Vector2(textWidth, textHeight);
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(rectPtr);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] MeasureTextDirectX9: Exception - {ex.Message}");
+                return System.Numerics.Vector2.Zero;
+            }
+        }
+
+        /// <summary>
         /// Renders text using DirectX 9 font system.
         /// Based on daorigins.exe: ID3DXFont::DrawText with proper centering and color.
         /// </summary>
-        /// <param name="x">X position for text (center point for centered text).</param>
+        /// <param name="x">X position for text (center point for centered text, left edge for left-aligned, right edge for right-aligned).</param>
         /// <param name="y">Y position for text (center point for centered text).</param>
         /// <param name="text">Text to render.</param>
         /// <param name="color">Text color as ARGB (e.g., 0xFFFFFFFF for white).</param>
         /// <param name="fontSize">Font size in points (default 12).</param>
         /// <param name="centered">Whether to center text at the given position.</param>
-        private void RenderTextDirectX9(float x, float y, string text, uint color, int fontSize = 12, bool centered = true)
+        /// <param name="rightAligned">Whether to right-align text at the given position.</param>
+        private void RenderTextDirectX9(float x, float y, string text, uint color, int fontSize = 12, bool centered = true, bool rightAligned = false)
         {
             if (_d3dDevice == IntPtr.Zero || string.IsNullOrEmpty(text) || _d3dx9Dll == IntPtr.Zero)
             {
@@ -313,6 +422,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 }
 
                 // Calculate text rectangle
+                // Based on daorigins.exe: Text rectangle is calculated based on alignment
                 RECT textRect;
                 if (centered)
                 {
@@ -326,6 +436,15 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                     textRect.right = (int)(x + textWidth / 2);
                     textRect.bottom = (int)(y + textHeight / 2);
                 }
+                else if (rightAligned)
+                {
+                    // For right-aligned text, x is the right edge
+                    // Create a rectangle with x as the right edge
+                    textRect.left = (int)x - 1000; // Large width to the left
+                    textRect.top = (int)y;
+                    textRect.right = (int)x; // Right edge at x
+                    textRect.bottom = (int)y + fontSize * 2;
+                }
                 else
                 {
                     // For left-aligned text, position at (x,y)
@@ -336,8 +455,16 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 }
 
                 // Draw the text
-                // Based on daorigins.exe: ID3DXFont::DrawText with DT_CENTER for centered text
-                int format = centered ? 0x1 : 0x0; // DT_CENTER = 0x1, DT_LEFT = 0x0
+                // Based on daorigins.exe: ID3DXFont::DrawText with DT_CENTER for centered text, DT_RIGHT for right-aligned
+                int format = 0x0; // DT_LEFT = 0x0 (default)
+                if (centered)
+                {
+                    format = 0x1; // DT_CENTER = 0x1
+                }
+                else if (rightAligned)
+                {
+                    format = 0x2; // DT_RIGHT = 0x2
+                }
 
                 DrawTextDirectX9(fontPtr, text, textRect, format, color);
             }
@@ -5869,16 +5996,20 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 valueText += "_"; // Simple cursor representation
             }
 
-            // Calculate text position
+            // Calculate text position with proper right-alignment
             // Based on daorigins.exe: Value text is right-aligned in option area
-            // In a full implementation, this would use font metrics for proper alignment
+            // Text rendering uses DirectX 9 font rendering with proper alignment using font metrics
             float textX = x;
             float textY = y;
 
-            // TODO: Implement actual text rendering using DirectX 9 font system
-            // Text rendering would use ID3DXFont::DrawText or similar DirectX 9 text rendering API
-            // TODO: STUB - For now, this is a placeholder - text rendering would require font loading and text rendering pipeline
-            // Based on daorigins.exe: Text rendering uses DirectX 9 font rendering with proper alignment
+            // Measure text to calculate proper right-alignment position
+            // Based on daorigins.exe: Text alignment uses font metrics for accurate positioning
+            System.Numerics.Vector2 textSize = MeasureTextDirectX9(valueText, fontSize: 12);
+            if (textSize.X > 0.0f)
+            {
+                // Right-align: x is the right edge, so subtract text width
+                textX = x - textSize.X;
+            }
 
             // Determine text color based on state
             // Based on daorigins.exe: Selected items use different colors, editing uses special colors
@@ -5896,8 +6027,9 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 textColor = 0xFFCCCCCC; // Light gray for unselected
             }
 
-            RenderTextDirectX9(textX, textY, valueText, textColor);
-            // Note: Text rendering now implemented using DirectX 9 font system
+            // Render text with right-alignment
+            // Based on daorigins.exe: Text rendering uses DirectX 9 font system with proper alignment
+            RenderTextDirectX9(textX, textY, valueText, textColor, fontSize: 12, centered: false, rightAligned: true);
         }
 
         // Options menu helper structures
