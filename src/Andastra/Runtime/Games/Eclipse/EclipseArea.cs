@@ -14376,10 +14376,10 @@ technique ColorGrading
     /// Based on daorigins.exe: TPC format conversion to DirectX 9 compatible format.
     /// daorigins.exe: 0x00400000 - TPC texture format conversion and decompression
     /// </summary>
-    /// <param name="tpc">Parsed TPC texture object.</param>
-    /// <param name="width">Texture width.</param>
-    /// <param name="height">Texture height.</param>
-    /// <returns>RGBA pixel data as byte array, or null on failure.</returns>
+        /// <param name="tpc">Parsed TPC texture object.</param>
+        /// <param name="width">Texture width.</param>
+        /// <param name="height">Texture height.</param>
+        /// <returns>RGBA pixel data as byte array, or null on failure.</returns>
         private static byte[] ConvertTPCToRGBA(TPC tpc, int width, int height)
         {
             if (tpc == null || tpc.Layers.Count == 0 || tpc.Layers[0].Mipmaps.Count == 0)
@@ -14474,7 +14474,7 @@ technique ColorGrading
         /// <param name="height">Output texture height.</param>
         /// <param name="hasAlpha">Output whether texture has alpha channel.</param>
         /// <returns>True if header parsed successfully, false otherwise.</returns>
-            private static bool TryParseDDSHeader(byte[] ddsData, out int width, out int height, out bool hasAlpha)
+        private static bool TryParseDDSHeader(byte[] ddsData, out int width, out int height, out bool hasAlpha)
         {
             width = 0;
             height = 0;
@@ -14518,18 +14518,18 @@ technique ColorGrading
             return width > 0 && height > 0;
         }
 
-    /// <summary>
-    /// Extracts pixel data from DDS format to RGBA.
-    /// Based on daorigins.exe: DDS pixel data extraction and conversion.
-    /// daorigins.exe: 0x00400000 - DDS texture decompression for DirectX 9 compatibility
-    /// </summary>
-    /// <param name="ddsData">DDS file data.</param>
-    /// <param name="width">Texture width.</param>
-    /// <param name="height">Texture height.</param>
-    /// <param name="hasAlpha">Whether texture has alpha channel.</param>
-    /// <returns>RGBA pixel data as byte array, or null on failure.</returns>
-    private static byte[] ExtractDDSDataToRGBA(byte[] ddsData, int width, int height, bool hasAlpha)
-    {
+        /// <summary>
+        /// Extracts pixel data from DDS format to RGBA.
+        /// Based on daorigins.exe: DDS pixel data extraction and conversion.
+        /// daorigins.exe: 0x00400000 - DDS texture decompression for DirectX 9 compatibility
+        /// </summary>
+        /// <param name="ddsData">DDS file data.</param>
+        /// <param name="width">Texture width.</param>
+        /// <param name="height">Texture height.</param>
+        /// <param name="hasAlpha">Whether texture has alpha channel.</param>
+        /// <returns>RGBA pixel data as byte array, or null on failure.</returns>
+        private static byte[] ExtractDDSDataToRGBA(byte[] ddsData, int width, int height, bool hasAlpha)
+        {
             if (ddsData == null || ddsData.Length < 128)
             {
                 return null;
@@ -14964,11 +14964,11 @@ technique ColorGrading
     /// Converts BGRA pixel data to RGBA format.
     /// Based on daorigins.exe: BGRA to RGBA conversion for DirectX 9 compatibility.
     /// </summary>
-    /// <param name="input">Input BGRA data.</param>
-    /// <param name="output">Output RGBA buffer.</param>
-    /// <param name="width">Texture width.</param>
-    /// <param name="height">Texture height.</param>
-    private static void ConvertBgraToRgba(byte[] input, byte[] output, int width, int height)
+        /// <param name="input">Input BGRA data.</param>
+        /// <param name="output">Output RGBA buffer.</param>
+        /// <param name="width">Texture width.</param>
+        /// <param name="height">Texture height.</param>
+        private static void ConvertBgraToRgba(byte[] input, byte[] output, int width, int height)
     {
             int pixelCount = width * height;
             for (int i = 0; i < pixelCount; i++)
@@ -14989,11 +14989,11 @@ technique ColorGrading
     /// Converts RGB pixel data to RGBA format (adds alpha channel).
     /// Based on daorigins.exe: RGB to RGBA conversion.
     /// </summary>
-    /// <param name="input">Input RGB data.</param>
-    /// <param name="output">Output RGBA buffer.</param>
-    /// <param name="width">Texture width.</param>
-    /// <param name="height">Texture height.</param>
-    private static void ConvertRgbToRgba(byte[] input, byte[] output, int width, int height)
+        /// <param name="input">Input RGB data.</param>
+        /// <param name="output">Output RGBA buffer.</param>
+        /// <param name="width">Texture width.</param>
+        /// <param name="height">Texture height.</param>
+        private static void ConvertRgbToRgba(byte[] input, byte[] output, int width, int height)
     {
             int pixelCount = width * height;
             for (int i = 0; i < pixelCount; i++)
@@ -15014,11 +15014,11 @@ technique ColorGrading
     /// Converts BGR pixel data to RGBA format (swaps R and B, adds alpha channel).
     /// Based on daorigins.exe: BGR to RGBA conversion for DirectX 9 compatibility.
     /// </summary>
-    /// <param name="input">Input BGR data.</param>
-    /// <param name="output">Output RGBA buffer.</param>
-    /// <param name="width">Texture width.</param>
-    /// <param name="height">Texture height.</param>
-    private static void ConvertBgrToRgba(byte[] input, byte[] output, int width, int height)
+        /// <param name="input">Input BGR data.</param>
+        /// <param name="output">Output RGBA buffer.</param>
+        /// <param name="width">Texture width.</param>
+        /// <param name="height">Texture height.</param>
+        private static void ConvertBgrToRgba(byte[] input, byte[] output, int width, int height)
     {
             int pixelCount = width * height;
             for (int i = 0; i < pixelCount; i++)
@@ -15039,11 +15039,11 @@ technique ColorGrading
     /// Converts greyscale pixel data to RGBA format (replicates to all channels).
     /// Based on daorigins.exe: Greyscale to RGBA conversion.
     /// </summary>
-    /// <param name="input">Input greyscale data.</param>
-    /// <param name="output">Output RGBA buffer.</param>
-    /// <param name="width">Texture width.</param>
-    /// <param name="height">Texture height.</param>
-    private static void ConvertGreyscaleToRgba(byte[] input, byte[] output, int width, int height)
+        /// <param name="input">Input greyscale data.</param>
+        /// <param name="output">Output RGBA buffer.</param>
+        /// <param name="width">Texture width.</param>
+        /// <param name="height">Texture height.</param>
+        private static void ConvertGreyscaleToRgba(byte[] input, byte[] output, int width, int height)
     {
             int pixelCount = width * height;
             for (int i = 0; i < pixelCount; i++)
@@ -15061,7 +15061,7 @@ technique ColorGrading
             }
         }
 
-    #endregion
+        #endregion
 
         /// <summary>
         /// Represents a debris piece generated from destroyed geometry.
