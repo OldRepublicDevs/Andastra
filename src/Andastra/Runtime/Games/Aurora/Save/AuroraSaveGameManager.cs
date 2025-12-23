@@ -115,17 +115,17 @@ namespace Andastra.Runtime.Games.Aurora.Save
                 {
                     saveData.AreaStates.TryGetValue(currentAreaResRef, out currentAreaState);
                 }
-                
+
                 // If no current area state, try to get first area state
                 if (currentAreaState == null && saveData.AreaStates != null && saveData.AreaStates.Count > 0)
                 {
                     currentAreaState = saveData.AreaStates.Values.FirstOrDefault();
                 }
-                
-                GIT git = currentAreaState != null 
-                    ? ConvertAreaStateToGIT(currentAreaState) 
+
+                GIT git = currentAreaState != null
+                    ? ConvertAreaStateToGIT(currentAreaState)
                     : new GIT();
-                
+
                 // Write game.git GFF file
                 // Use BioWareGame.NWN for Aurora engine (Neverwinter Nights)
                 string gameGitPath = Path.Combine(saveDir, "game.git");
@@ -186,7 +186,7 @@ namespace Andastra.Runtime.Games.Aurora.Save
                 // Try formatted name first (original engine format)
                 // Uses common parsing logic from BaseSaveGameManager
                 string saveDir = Path.Combine(_savesDirectory, saveName);
-                
+
                 // If formatted name doesn't exist, try to find it by parsing existing directories
                 // This handles backward compatibility with saves created before this fix
                 if (!Directory.Exists(saveDir))
@@ -197,9 +197,9 @@ namespace Andastra.Runtime.Games.Aurora.Save
                     {
                         foreach (string dir in Directory.GetDirectories(_savesDirectory))
                         {
-                            string dirName = Path.GetFileName(dir);
-                            string parsedName = ParseSaveNameFromDirectory(dirName);
-                            if (parsedName == namePart || dirName == saveName)
+                            string currentDirName = Path.GetFileName(dir);
+                            string parsedName = ParseSaveNameFromDirectory(currentDirName);
+                            if (parsedName == namePart || currentDirName == saveName)
                             {
                                 saveDir = dir;
                                 if (Directory.Exists(saveDir))
@@ -242,13 +242,13 @@ namespace Andastra.Runtime.Games.Aurora.Save
                 {
                     try
                     {
-                        GFF gitGff = GFFAuto.ReadGff(gameGitPath);
+                        GFF gitGff = GFFAuto.ReadGff(gameGitPath, 0, null);
                         GIT git = GITHelpers.ConstructGit(gitGff);
-                        
+
                         // Convert GIT to AreaState
                         string areaResRef = saveData.CurrentModule ?? "default_area";
                         AreaState areaState = ConvertGITToAreaState(git, areaResRef);
-                        
+
                         if (saveData.AreaStates == null)
                         {
                             saveData.AreaStates = new Dictionary<string, AreaState>();
@@ -585,7 +585,7 @@ namespace Andastra.Runtime.Games.Aurora.Save
 
                     // Determine type based on ObjectType
                     ResRef resRef = ResRef.FromString(spawnedEntity.BlueprintResRef ?? spawnedEntity.TemplateResRef ?? "");
-                    
+
                     if ((spawnedEntity.ObjectType & ObjectType.Creature) != 0)
                     {
                         var gitCreature = new GITCreature
@@ -779,7 +779,7 @@ namespace Andastra.Runtime.Games.Aurora.Save
             {
                 gam.GameTimeHour = saveData.GameTime.Hour;
                 gam.GameTimeMinute = saveData.GameTime.Minute;
-                gam.GameTimeSecond = saveData.GameTime.Second;
+                gam.GameTimeSecond = 0; // GameTime doesn't have Second property
                 gam.GameTimeMillisecond = 0; // GameTime doesn't have milliseconds
             }
 
@@ -801,7 +801,7 @@ namespace Andastra.Runtime.Games.Aurora.Save
             if (saveData.PartyState != null && saveData.PartyState.PlayerCharacter != null)
             {
                 ResRef playerCharacterResRef = ResRef.FromBlank();
-                
+
                 // First, try to use the template ResRef (the character blueprint/template)
                 // This is the proper ResRef that identifies the character's template
                 if (!string.IsNullOrEmpty(saveData.PartyState.PlayerCharacter.TemplateResRef))
@@ -820,7 +820,7 @@ namespace Andastra.Runtime.Games.Aurora.Save
                 {
                     playerCharacterResRef = ResRef.FromString(saveData.PlayerName);
                 }
-                
+
                 // Only set if we have a valid ResRef
                 if (!playerCharacterResRef.IsBlank())
                 {
@@ -919,7 +919,7 @@ namespace Andastra.Runtime.Games.Aurora.Save
             {
                 string playerCharacterResRef = gam.PlayerCharacter.ToString();
                 saveData.PlayerName = playerCharacterResRef;
-                
+
                 // Also populate PartyState.PlayerCharacter.TemplateResRef for proper data structure
                 // This ensures the ResRef is available when saving again
                 if (saveData.PartyState == null)

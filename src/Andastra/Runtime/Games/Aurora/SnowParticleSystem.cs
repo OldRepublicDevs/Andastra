@@ -10,14 +10,14 @@ namespace Andastra.Runtime.Games.Aurora
     /// </summary>
     /// <remarks>
     /// Based on nwmain.exe: CNWSArea::RenderWeather renders snow particles as billboard sprites.
-    /// 
+    ///
     /// Snow particle behavior (based on original engine):
     /// - Particles fall downward with gravity
     /// - Wind affects horizontal movement (based on WindPower: 0=None, 1=Light, 2=Heavy)
     /// - Particles drift slightly for natural movement
     /// - Particles spawn above view area and despawn below
     /// - Rendering uses billboard sprites (always face camera)
-    /// 
+    ///
     /// Particle properties:
     /// - Position: World space coordinates
     /// - Velocity: Movement vector (affected by wind and gravity)
@@ -328,15 +328,18 @@ namespace Andastra.Runtime.Games.Aurora
             graphicsDevice.SetIndexBuffer(indexBuffer);
 
             // Apply effect and render
-            basicEffect.Apply();
-            graphicsDevice.DrawIndexedPrimitives(
-                PrimitiveType.TriangleList,
-                0, // baseVertex
-                0, // minVertexIndex
-                vertices.Length, // numVertices
-                0, // startIndex
-                indices.Length / 3 // primitiveCount (triangles)
-            );
+            foreach (IEffectPass pass in basicEffect.CurrentTechnique.Passes)
+            {
+                pass.Apply();
+                graphicsDevice.DrawIndexedPrimitives(
+                    PrimitiveType.TriangleList,
+                    0, // baseVertex
+                    0, // minVertexIndex
+                    vertices.Length, // numVertices
+                    0, // startIndex
+                    indices.Length / 3 // primitiveCount (triangles)
+                );
+            }
 
             // Clean up buffers
             vertexBuffer?.Dispose();

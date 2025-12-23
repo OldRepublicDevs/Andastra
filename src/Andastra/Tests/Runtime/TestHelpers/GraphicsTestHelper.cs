@@ -390,10 +390,10 @@ namespace Andastra.Tests.Runtime.TestHelpers
             mockInstallation.Setup(i => i.Locations(
                 It.IsAny<List<ResourceIdentifier>>(),
                 It.IsAny<SearchLocation[]>(),
-                It.IsAny<List<LazyCapsule>>(),
+                It.IsAny<List<ExtractLazyCapsule>>(),
                 It.IsAny<List<string>>(),
                 It.IsAny<string>()))
-                .Returns((List<ResourceIdentifier> queries, SearchLocation[] order, List<LazyCapsule> capsules, List<string> folders, string moduleRoot) =>
+                .Returns((List<ResourceIdentifier> queries, SearchLocation[] order, List<ExtractLazyCapsule> capsules, List<string> folders, string moduleRoot) =>
                 {
                     var results = new Dictionary<ResourceIdentifier, List<LocationResult>>();
                     if (queries != null)
@@ -457,7 +457,7 @@ namespace Andastra.Tests.Runtime.TestHelpers
             {
                 // Create a minimal Game instance for testing
                 // Stride Game constructor initializes GraphicsDevice automatically
-                var game = new Stride.Engine.Game();
+                var game = new global::Stride.Engine.Game();
 
                 // Set window properties for headless/minimal testing
                 game.Window.ClientSize = new Int2(1280, 720);
