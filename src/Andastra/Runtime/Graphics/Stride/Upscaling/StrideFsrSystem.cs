@@ -140,22 +140,27 @@ namespace Andastra.Runtime.Stride.Upscaling
                 }
 
                 // Strategy 2: Try to get GraphicsContext from GraphicsDevice
-                // Stride GraphicsDevice may have ImmediateContext or GraphicsContext property
+                // Stride GraphicsDevice may have GraphicsContext property (separate from ImmediateContext)
                 try
                 {
-                    var deviceGraphicsContext = _graphicsDevice.ImmediateContext as GraphicsContext;
-                    if (deviceGraphicsContext != null)
+                    var graphicsDeviceType = _graphicsDevice.GetType();
+                    var graphicsContextProp = graphicsDeviceType.GetProperty("GraphicsContext");
+                    if (graphicsContextProp != null)
                     {
-                        // Update effect parameters first
-                        effectInstance.UpdateEffect(deviceGraphicsContext);
-                        // Then apply (this sets pipeline state and resource sets)
-                        effectInstance.Apply(deviceGraphicsContext);
-                        return;
+                        var deviceGraphicsContext = graphicsContextProp.GetValue(_graphicsDevice) as GraphicsContext;
+                        if (deviceGraphicsContext != null)
+                        {
+                            // Update effect parameters first
+                            effectInstance.UpdateEffect(deviceGraphicsContext);
+                            // Then apply (this sets pipeline state and resource sets)
+                            effectInstance.Apply(deviceGraphicsContext);
+                            return;
+                        }
                     }
                 }
                 catch
                 {
-                    // GraphicsDevice.ImmediateContext might not be GraphicsContext, continue to Strategy 3
+                    // GraphicsDevice might not have GraphicsContext property, continue to Strategy 3
                 }
 
                 // Strategy 3: Manually update resource sets and set pipeline state
@@ -696,10 +701,9 @@ namespace Andastra.Runtime.Stride.Upscaling
             _fsrEasuEffect.Parameters.Set(FsrShaderKeys.InputColor, input);
             _fsrEasuEffect.Parameters.Set(FsrShaderKeys.FsrConstants, _fsrConstants);
 
-            // Apply effect parameters to graphics context
-            // TODO: STUB - EffectInstance.Apply expects GraphicsContext, but we have CommandList
-            // In newer Stride versions, effects are applied differently. Need to update this.
-            // _fsrEasuEffect.Apply(graphicsContext);
+            // Apply effect parameters to command list
+            // This updates resource sets and sets compute pipeline state for compute shader execution
+            ApplyEffectInstanceToCommandList(_fsrEasuEffect, commandList);
 
             // Calculate dispatch dimensions (EASU operates at output resolution)
             int dispatchX = (output.Width + FSR_THREAD_GROUP_SIZE_X - 1) / FSR_THREAD_GROUP_SIZE_X;
@@ -723,10 +727,9 @@ namespace Andastra.Runtime.Stride.Upscaling
             _fsrRcasEffect.Parameters.Set(FsrShaderKeys.InputColor, input);
             _fsrRcasEffect.Parameters.Set(FsrShaderKeys.FsrConstants, _fsrConstants);
 
-            // Apply effect parameters to graphics context
-            // TODO: STUB - EffectInstance.Apply expects GraphicsContext, but we have CommandList
-            // In newer Stride versions, effects are applied differently. Need to update this.
-            // _fsrRcasEffect.Apply(graphicsContext);
+            // Apply effect parameters to command list
+            // This updates resource sets and sets compute pipeline state for compute shader execution
+            ApplyEffectInstanceToCommandList(_fsrRcasEffect, commandList);
 
             // Calculate dispatch dimensions (RCAS operates at output resolution)
             int dispatchX = (output.Width + FSR_THREAD_GROUP_SIZE_X - 1) / FSR_THREAD_GROUP_SIZE_X;
