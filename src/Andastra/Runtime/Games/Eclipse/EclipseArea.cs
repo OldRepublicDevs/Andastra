@@ -20,6 +20,7 @@ using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.BWM;
 using Andastra.Parsing.Formats.MDLData;
+using Andastra.Parsing.Formats.MDL;
 using Andastra.Parsing.Tools;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
@@ -64,6 +65,13 @@ using GraphicsBlendFunction = Andastra.Runtime.Graphics.BlendFunction;
 using GraphicsColorWriteChannels = Andastra.Runtime.Graphics.ColorWriteChannels;
 using GraphicsColor = Andastra.Runtime.Graphics.Color;
 using ParsingColor = Andastra.Parsing.Common.Color;
+using GraphicsSpriteSortMode = Andastra.Runtime.Graphics.SpriteSortMode;
+using GraphicsBlendState = Andastra.Runtime.Graphics.BlendState;
+using GraphicsRectangle = Andastra.Runtime.Graphics.Rectangle;
+using MonoGameBlendState = Andastra.Runtime.MonoGame.Interfaces.BlendState;
+using MonoGameRectangle = Andastra.Runtime.MonoGame.Interfaces.Rectangle;
+using GraphicsViewport = Andastra.Runtime.Graphics.Viewport;
+using MonoGameViewport = Andastra.Runtime.MonoGame.Interfaces.Viewport;
 
 namespace Andastra.Runtime.Games.Eclipse
 {
@@ -8776,8 +8784,8 @@ namespace Andastra.Runtime.Games.Eclipse
                             else
                             {
                                 // Fallback: Use sprite batch without shader if texture type doesn't match
-                                spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
-                                Rectangle destinationRect = new Rectangle(0, 0, output.Width, output.Height);
+                                spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.Opaque);
+                                Rectangle destinationRect = new GraphicsRectangle(0, 0, output.Width, output.Height);
                                 spriteBatch.Draw(hdrInput.ColorTexture, destinationRect, GraphicsColor.White);
                                 spriteBatch.End();
                             }
@@ -8785,8 +8793,8 @@ namespace Andastra.Runtime.Games.Eclipse
                         else
                         {
                             // Fallback: Use sprite batch without shader if not MonoGame backend
-                            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
-                            Rectangle destinationRect = new Rectangle(0, 0, output.Width, output.Height);
+                            spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.Opaque);
+                            Rectangle destinationRect = new GraphicsRectangle(0, 0, output.Width, output.Height);
                             spriteBatch.Draw(hdrInput.ColorTexture, destinationRect, GraphicsColor.White);
                             spriteBatch.End();
                         }
@@ -8794,8 +8802,8 @@ namespace Andastra.Runtime.Games.Eclipse
                     else
                     {
                         // Fallback: Use sprite batch without shader if compilation failed
-                        spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
-                        Rectangle destinationRect = new Rectangle(0, 0, output.Width, output.Height);
+                        spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.Opaque);
+                        Rectangle destinationRect = new GraphicsRectangle(0, 0, output.Width, output.Height);
                         spriteBatch.Draw(hdrInput.ColorTexture, destinationRect, GraphicsColor.White);
                         spriteBatch.End();
                     }
@@ -8850,8 +8858,8 @@ namespace Andastra.Runtime.Games.Eclipse
                 ISpriteBatch spriteBatch = graphicsDevice.CreateSpriteBatch();
                 if (spriteBatch != null && input.ColorTexture != null)
                 {
-                    spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
-                    Rectangle destinationRect = new Rectangle(0, 0, output.Width, output.Height);
+                    spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.Opaque);
+                    Rectangle destinationRect = new GraphicsRectangle(0, 0, output.Width, output.Height);
                     // Copy input to output (Gaussian blur would be done in shader with multiple passes)
                     spriteBatch.Draw(input.ColorTexture, destinationRect, GraphicsColor.White);
                     spriteBatch.End();
@@ -8901,7 +8909,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 ISpriteBatch spriteBatch = graphicsDevice.CreateSpriteBatch();
                 if (spriteBatch != null && hdrScene.ColorTexture != null && bloom.ColorTexture != null)
                 {
-                    Rectangle destinationRect = new Rectangle(0, 0, output.Width, output.Height);
+                    Rectangle destinationRect = new GraphicsRectangle(0, 0, output.Width, output.Height);
 
                     // Try to use shader-based compositing for accurate intensity control
                     // Get or compile bloom compositing shader
@@ -8958,11 +8966,11 @@ namespace Andastra.Runtime.Games.Eclipse
                             else
                             {
                                 // Fallback: Use sprite batch without shader
-                    spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
+                    spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.Opaque);
                     spriteBatch.Draw(hdrScene.ColorTexture, destinationRect, GraphicsColor.White);
                     spriteBatch.End();
 
-                    spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AdditiveBlend);
+                    spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.AdditiveBlend);
                                 byte intensityByte = (byte)(Math.Min(255, intensity * 255));
                                 Color bloomColor = new Color(intensityByte, intensityByte, intensityByte, intensityByte);
                                 spriteBatch.Draw(bloom.ColorTexture, destinationRect, bloomColor);
@@ -8972,11 +8980,11 @@ namespace Andastra.Runtime.Games.Eclipse
                         else
                         {
                             // Fallback: Use sprite batch without shader (less accurate intensity)
-                            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
+                            spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.Opaque);
                             spriteBatch.Draw(hdrScene.ColorTexture, destinationRect, GraphicsColor.White);
                             spriteBatch.End();
 
-                            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AdditiveBlend);
+                            spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.AdditiveBlend);
                             // Approximate intensity by scaling color (not as accurate as shader)
                             byte intensityByte = (byte)(Math.Min(255, intensity * 255));
                             Color bloomColor = new Color(intensityByte, intensityByte, intensityByte, intensityByte);
@@ -8987,11 +8995,11 @@ namespace Andastra.Runtime.Games.Eclipse
                     else
                     {
                         // Fallback: Use sprite batch without shader
-                        spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
+                        spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.Opaque);
                         spriteBatch.Draw(hdrScene.ColorTexture, destinationRect, GraphicsColor.White);
                         spriteBatch.End();
 
-                        spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AdditiveBlend);
+                        spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.AdditiveBlend);
                         // Approximate intensity by scaling color (not as accurate as shader)
                         byte intensityByte = (byte)(Math.Min(255, intensity * 255));
                         Color bloomColor = new Color(intensityByte, intensityByte, intensityByte, intensityByte);
@@ -9564,8 +9572,8 @@ technique ColorGrading
                             else
                             {
                                 // Fallback: Use sprite batch without shader if texture type doesn't match
-                                spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
-                                Rectangle destinationRect = new Rectangle(0, 0, output.Width, output.Height);
+                                spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.Opaque);
+                                Rectangle destinationRect = new GraphicsRectangle(0, 0, output.Width, output.Height);
                                 spriteBatch.Draw(hdrInput.ColorTexture, destinationRect, GraphicsColor.White);
                                 spriteBatch.End();
                             }
@@ -9573,8 +9581,8 @@ technique ColorGrading
                         else
                         {
                             // Fallback: Use sprite batch without shader if not MonoGame backend
-                            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
-                            Rectangle destinationRect = new Rectangle(0, 0, output.Width, output.Height);
+                            spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.Opaque);
+                            Rectangle destinationRect = new GraphicsRectangle(0, 0, output.Width, output.Height);
                             spriteBatch.Draw(hdrInput.ColorTexture, destinationRect, GraphicsColor.White);
                             spriteBatch.End();
                         }
@@ -9582,8 +9590,8 @@ technique ColorGrading
                     else
                     {
                         // Fallback: Use sprite batch without shader if compilation failed
-                        spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
-                        Rectangle destinationRect = new Rectangle(0, 0, output.Width, output.Height);
+                        spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.Opaque);
+                        Rectangle destinationRect = new GraphicsRectangle(0, 0, output.Width, output.Height);
                         spriteBatch.Draw(hdrInput.ColorTexture, destinationRect, GraphicsColor.White);
                         spriteBatch.End();
                     }
@@ -9684,8 +9692,8 @@ technique ColorGrading
                             else
                             {
                                 // Fallback: Use sprite batch without shader if texture type doesn't match
-                                spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
-                                Rectangle destinationRect = new Rectangle(0, 0, output.Width, output.Height);
+                                spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.Opaque);
+                                Rectangle destinationRect = new GraphicsRectangle(0, 0, output.Width, output.Height);
                                 spriteBatch.Draw(input.ColorTexture, destinationRect, GraphicsColor.White);
                                 spriteBatch.End();
                             }
@@ -9693,8 +9701,8 @@ technique ColorGrading
                         else
                         {
                             // Fallback: Use sprite batch without shader if not MonoGame backend
-                            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
-                            Rectangle destinationRect = new Rectangle(0, 0, output.Width, output.Height);
+                            spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.Opaque);
+                            Rectangle destinationRect = new GraphicsRectangle(0, 0, output.Width, output.Height);
                             spriteBatch.Draw(input.ColorTexture, destinationRect, GraphicsColor.White);
                             spriteBatch.End();
                         }
@@ -9702,8 +9710,8 @@ technique ColorGrading
                     else
                     {
                         // Fallback: Use sprite batch without shader if compilation failed
-                        spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
-                        Rectangle destinationRect = new Rectangle(0, 0, output.Width, output.Height);
+                        spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.Opaque);
+                        Rectangle destinationRect = new GraphicsRectangle(0, 0, output.Width, output.Height);
                         spriteBatch.Draw(input.ColorTexture, destinationRect, GraphicsColor.White);
                         spriteBatch.End();
                     }
@@ -11636,7 +11644,7 @@ technique ColorGrading
             // Update physics collision shapes if geometry was modified
             if (_modificationType == GeometryModificationType.Destroyed || _modificationType == GeometryModificationType.Deformed)
             {
-                UpdatePhysicsCollisionShapes(area);
+                UpdatePhysicsCollisionShapes();
             }
         }
 
@@ -11657,14 +11665,14 @@ technique ColorGrading
         /// 4. Rebuilds collision shapes in physics system with updated geometry
         /// 5. Recalculates collision bounds for efficient spatial queries
         /// </remarks>
-        private void UpdatePhysicsCollisionShapes(EclipseArea area)
+        private void UpdatePhysicsCollisionShapes()
         {
-            if (area == null || area.PhysicsSystem == null || area._geometryModificationTracker == null)
+            if (_physicsSystem == null || _geometryModificationTracker == null)
             {
                 return;
             }
 
-            EclipsePhysicsSystem physicsSystem = area.PhysicsSystem as EclipsePhysicsSystem;
+            EclipsePhysicsSystem physicsSystem = _physicsSystem as EclipsePhysicsSystem;
             if (physicsSystem == null)
             {
                 return;
@@ -11672,7 +11680,7 @@ technique ColorGrading
 
             // Get all modified meshes from tracker
             // Based on daorigins.exe: Collision shapes are updated for all modified meshes
-            Dictionary<string, ModifiedMesh> modifiedMeshes = area._geometryModificationTracker.GetModifiedMeshes();
+            Dictionary<string, ModifiedMesh> modifiedMeshes = _geometryModificationTracker.GetModifiedMeshes();
             if (modifiedMeshes == null || modifiedMeshes.Count == 0)
             {
                 return; // No modifications to process
@@ -11691,11 +11699,11 @@ technique ColorGrading
 
                 // Get original mesh data (from cached room or static object meshes)
                 IRoomMeshData originalMeshData = null;
-                if (area._cachedRoomMeshes.TryGetValue(meshId, out originalMeshData))
+                if (_cachedRoomMeshes.TryGetValue(meshId, out originalMeshData))
                 {
                     // Mesh is a room mesh
                 }
-                else if (area._cachedStaticObjectMeshes.TryGetValue(meshId, out originalMeshData))
+                else if (_cachedStaticObjectMeshes.TryGetValue(meshId, out originalMeshData))
                 {
                     // Mesh is a static object mesh
                 }
@@ -11883,31 +11891,29 @@ technique ColorGrading
                 return;
             }
 
-            // Extract geometry from this node's meshes
-            if (node.Meshes != null)
+            // Extract geometry from this node's mesh
+            if (node.Mesh != null)
             {
-                foreach (var mesh in node.Meshes)
+                var mesh = node.Mesh;
+                if (mesh.Vertices != null && mesh.Faces != null)
                 {
-                    if (mesh.Vertices != null && mesh.Faces != null)
+                    // Get current vertex offset (number of vertices already added)
+                    int vertexOffset = vertices.Count;
+
+                    // Add vertices from this mesh
+                    foreach (var vertex in mesh.Vertices)
                     {
-                        // Get current vertex offset (number of vertices already added)
-                        int vertexOffset = vertices.Count;
+                        vertices.Add(new Vector3(vertex.X, vertex.Y, vertex.Z));
+                    }
 
-                        // Add vertices from this mesh
-                        foreach (var vertex in mesh.Vertices)
-                        {
-                            vertices.Add(new Vector3(vertex.X, vertex.Y, vertex.Z));
-                        }
-
-                        // Add faces (triangles) from this mesh
-                        foreach (var face in mesh.Faces)
-                        {
-                            // MDL faces are triangles with vertex indices V1, V2, V3
-                            // Adjust indices by vertex offset to account for previous meshes
-                            indices.Add(vertexOffset + face.V1);
-                            indices.Add(vertexOffset + face.V2);
-                            indices.Add(vertexOffset + face.V3);
-                        }
+                    // Add faces (triangles) from this mesh
+                    foreach (var face in mesh.Faces)
+                    {
+                        // MDL faces are triangles with vertex indices V1, V2, V3
+                        // Adjust indices by vertex offset to account for previous meshes
+                        indices.Add(vertexOffset + face.V1);
+                        indices.Add(vertexOffset + face.V2);
+                        indices.Add(vertexOffset + face.V3);
                     }
                 }
             }

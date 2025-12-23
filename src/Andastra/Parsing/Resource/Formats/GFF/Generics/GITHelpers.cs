@@ -140,7 +140,7 @@ namespace Andastra.Parsing.Resource.Generics
                 {
                     // Engine default: 0 (not explicitly verified, but consistent with color defaults)
                     int tweakColorInt = doorStruct.Acquire<int>("TweakColor", 0);
-                    door.TweakColor = Color.FromBgrInteger(tweakColorInt);
+                    door.TweakColor = new Color(ParsingColor.FromBgrInteger(tweakColorInt));
                 }
                 git.Doors.Add(door);
             }
@@ -160,7 +160,7 @@ namespace Andastra.Parsing.Resource.Generics
                 encounter.Position = new Vector3(x, y, z);
                 // Engine default: "" (not explicitly verified, but consistent with other ResRef fields)
                 encounter.ResRef = encounterStruct.Acquire<ResRef>("TemplateResRef", ResRef.FromBlank());
-                
+
                 // Extract geometry if present - geometry points default to 0.0
                 // NOTE: Geometry is required for encounters - if missing or empty, engine creates default triangle
                 if (encounterStruct.Exists("Geometry"))
@@ -206,7 +206,7 @@ namespace Andastra.Parsing.Resource.Generics
                     spawn.Orientation = spawnStruct.Acquire<float>("Orientation", 0.0f);
                     encounter.SpawnPoints.Add(spawn);
                 }
-                
+
                 git.Encounters.Add(encounter);
             }
 
@@ -233,7 +233,7 @@ namespace Andastra.Parsing.Resource.Generics
                 {
                     // Engine default: 0 (not explicitly verified, but consistent with color defaults)
                     int tweakColorInt = placeableStruct.Acquire<int>("TweakColor", 0);
-                    placeable.TweakColor = Color.FromBgrInteger(tweakColorInt);
+                    placeable.TweakColor = new Color(ParsingColor.FromBgrInteger(tweakColorInt));
                 }
                 git.Placeables.Add(placeable);
             }
