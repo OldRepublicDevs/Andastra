@@ -4542,23 +4542,56 @@ namespace Andastra.Runtime.Games.Eclipse
             //    c. Render scene geometry to shadow map (depth-only pass)
             //    d. Store shadow map texture for use during lighting pass
             // 3. Shadow maps are applied during lighting calculations in RenderStaticGeometry/RenderEntities
+            // Based on daorigins.exe/DragonAge2.exe: Shadow mapping system for dynamic lighting and shadows
 
-            // TODO:  Note: Full implementation requires:
-            // - Shadow map texture creation via IGraphicsDevice.CreateTexture with depth format
-            // - Shadow rendering shaders (depth-only vertex/pixel shaders)
-            // - Shadow map sampling shaders (for applying shadows during lighting)
-            // - Integration with lighting system to get shadow-casting light information
-            // - Cascaded shadow maps for directional lights (better quality at different distances)
-            // - Cube shadow maps for point lights (6 faces for omni-directional shadows)
+            // Get all active lights from lighting system
+            IDynamicLight[] activeLights = _lightingSystem.GetActiveLights();
+            if (activeLights == null || activeLights.Length == 0)
+            {
+                return; // No lights to cast shadows
+            }
 
-            // TODO: STUB - For now, shadow mapping infrastructure is in place but requires:
-            // 1. Lighting system integration to query shadow-casting lights
-            // 2. Shadow map texture creation and management
-            // 3. Shadow rendering shader implementation
-            // 4. Shadow application during lighting pass
+            // Filter to shadow-casting lights only
+            List<IDynamicLight> shadowCastingLights = new List<IDynamicLight>();
+            foreach (IDynamicLight light in activeLights)
+            {
+                if (light != null && light.Enabled && light.CastShadows && light.ShadowResolution > 0)
+                {
+                    shadowCastingLights.Add(light);
+                }
+            }
 
-            // This method provides the structure and documentation for shadow mapping implementation
-            // Actual shadow map rendering will be added when shadow rendering shaders and lighting system integration are complete
+            if (shadowCastingLights.Count == 0)
+            {
+                return; // No shadow-casting lights
+            }
+
+            // Get underlying MonoGame GraphicsDevice for shadow map rendering
+            // Based on daorigins.exe/DragonAge2.exe: Shadow maps use depth render targets
+            MonoGameGraphicsDevice mgGraphicsDevice = graphicsDevice as MonoGameGraphicsDevice;
+            if (mgGraphicsDevice == null)
+            {
+                return; // Shadow mapping requires MonoGame graphics device
+            }
+
+            Microsoft.Xna.Framework.Graphics.GraphicsDevice mgDevice = mgGraphicsDevice.Device;
+
+            // Render shadow maps for each shadow-casting light
+            foreach (IDynamicLight light in shadowCastingLights)
+            {
+                if (light.Type == LightType.Directional)
+                {
+                    // Directional lights: Single orthographic shadow map
+                    RenderDirectionalLightShadowMap(mgDevice, graphicsDevice, basicEffect, light, cameraPosition);
+                }
+                else if (light.Type == LightType.Point)
+                {
+                    // Point lights: Cube shadow map (6 faces)
+                    RenderPointLightShadowMap(mgDevice, graphicsDevice, basicEffect, light, cameraPosition);
+                }
+                // Spot lights can also cast shadows, but use perspective projection (similar to directional but with perspective)
+                // For now, we focus on directional and point lights as specified in the TODO
+            }
         }
 
         /// <summary>
