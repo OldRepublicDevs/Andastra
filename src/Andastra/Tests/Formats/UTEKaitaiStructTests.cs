@@ -737,24 +737,24 @@ sys.path.insert(0, r'{Path.GetDirectoryName(mainParser).Replace("\\", "\\\\")}')
 from {Path.GetFileNameWithoutExtension(mainParser)} import *
 with open(r'{testFile.Replace("\\", "\\\\")}', 'rb') as f:
     data = Ute.from_bytes(f.read())
-    
+
     # Extract root struct (GFF root)
     root = data.root_struct if hasattr(data, 'root_struct') else None
-    
+
     # Build output dictionary
     output = {{
         'FileType': data.file_type if hasattr(data, 'file_type') else '',
         'FileVersion': data.file_version if hasattr(data, 'file_version') else '',
     }}
-    
+
     # Extract fields from root struct if available
     if root:
         # Try to extract common UTE fields
-        field_names = ['Tag', 'TemplateResRef', 'Active', 'DifficultyIndex', 'Difficulty', 
+        field_names = ['Tag', 'TemplateResRef', 'Active', 'DifficultyIndex', 'Difficulty',
                       'Faction', 'MaxCreatures', 'RecCreatures', 'Respawns', 'SpawnOption',
-                      'Reset', 'ResetTime', 'PlayerOnly', 'OnEntered', 'OnExit', 
+                      'Reset', 'ResetTime', 'PlayerOnly', 'OnEntered', 'OnExit',
                       'OnExhausted', 'OnHeartbeat', 'OnUserDefined', 'Comment', 'PaletteID']
-        
+
         for field_name in field_names:
             try:
                 if hasattr(root, field_name.lower()):
@@ -765,13 +765,13 @@ with open(r'{testFile.Replace("\\", "\\\\")}', 'rb') as f:
                         output[field_name] = str(field_value)
             except:
                 pass
-        
+
         # Extract creature list
         if hasattr(root, 'creature_list') or hasattr(root, 'creaturelist'):
             creature_list = getattr(root, 'creature_list', None) or getattr(root, 'creaturelist', None)
             if creature_list:
                 output['CreatureCount'] = len(creature_list) if hasattr(creature_list, '__len__') else 0
-    
+
     print('SUCCESS')
     print(json.dumps(output))
 ";
@@ -878,7 +878,7 @@ if (root) {{
                        'Faction', 'MaxCreatures', 'RecCreatures', 'Respawns', 'SpawnOption',
                        'Reset', 'ResetTime', 'PlayerOnly', 'OnEntered', 'OnExit',
                        'OnExhausted', 'OnHeartbeat', 'OnUserDefined', 'Comment', 'PaletteID'];
-    
+
     fieldNames.forEach(fieldName => {{
         const fieldNameLower = fieldName.charAt(0).toLowerCase() + fieldName.slice(1);
         if (root[fieldName] !== undefined) {{
@@ -887,7 +887,7 @@ if (root) {{
             output[fieldName] = root[fieldNameLower];
         }}
     }});
-    
+
     // Extract creature list
     const creatureList = root.creatureList || root.creature_list || null;
     if (creatureList && Array.isArray(creatureList)) {{
@@ -1031,28 +1031,28 @@ public class {testClassName} {{
             byte[] data = new byte[(int)file.length()];
             fis.read(data);
             fis.close();
-            
+
             {(string.IsNullOrEmpty(parserPackage) ? parserClassName : $"{parserPackage}.{parserClassName}")} ute = new {(string.IsNullOrEmpty(parserPackage) ? parserClassName : $"{parserPackage}.{parserClassName}")}(new io.kaitai.struct.ByteBufferKaitaiStream(data));
-            
+
             // Build output map
             Map<String, Object> output = new HashMap<>();
             output.put(""FileType"", ute.fileType() != null ? ute.fileType() : """");
             output.put(""FileVersion"", ute.fileVersion() != null ? ute.fileVersion() : """");
-            
+
             // Try to extract root struct
             try {{
                 Object rootStruct = ute.rootStruct();
                 if (rootStruct == null) {{
                     rootStruct = ute.root_struct();
                 }}
-                
+
                 if (rootStruct != null) {{
                     // Extract common UTE fields using reflection
                     String[] fieldNames = {{""Tag"", ""TemplateResRef"", ""Active"", ""DifficultyIndex"", ""Difficulty"",
                                           ""Faction"", ""MaxCreatures"", ""RecCreatures"", ""Respawns"", ""SpawnOption"",
                                           ""Reset"", ""ResetTime"", ""PlayerOnly"", ""OnEntered"", ""OnExit"",
                                           ""OnExhausted"", ""OnHeartbeat"", ""OnUserDefined"", ""Comment"", ""PaletteID""}};
-                    
+
                     for (String fieldName : fieldNames) {{
                         try {{
                             java.lang.reflect.Method method = rootStruct.getClass().getMethod(fieldName);
@@ -1074,7 +1074,7 @@ public class {testClassName} {{
                             }}
                         }}
                     }}
-                    
+
                     // Extract creature list
                     try {{
                         Object creatureList = rootStruct.getClass().getMethod(""creatureList"").invoke(rootStruct);
@@ -1091,7 +1091,7 @@ public class {testClassName} {{
             }} catch (Exception e) {{
                 // Root struct extraction failed, continue with basic fields
             }}
-            
+
             System.out.println(""SUCCESS"");
             // Output as JSON-like format
             System.out.print(""{{"");
