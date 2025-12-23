@@ -24,6 +24,11 @@ namespace Andastra.Parsing.Formats.TwoDA
 
         public Dictionary<string, string> GetData() => new Dictionary<string, string>(_data);
 
+        public List<string> GetColumnNames()
+        {
+            return new List<string>(_data.Keys);
+        }
+
         public void UpdateValues(Dictionary<string, string> values)
         {
             foreach ((string column, string cell) in values)

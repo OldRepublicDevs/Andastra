@@ -1,43 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFrameworks>net9.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
-
   <ItemGroup>
-    <ProjectReference Include="..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
-    <ProjectReference Include="Cli\Cli.csproj" />
+    <ProjectReference Include="..\..\Andastra\Andastra.csproj" />
+    <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
   </ItemGroup>
-
-  <!-- Exclude subdirectories that are separate projects -->
-  <ItemGroup>
-    <Compile Remove="App\**" />
-    <Compile Remove="Cli\**" />
-    <Compile Remove="Cache\**" />
-    <Compile Remove="Diff\**" />
-    <Compile Remove="Differ\**" />
-    <Compile Remove="Formatters\**" />
-    <Compile Remove="Logger\**" />
-    <Compile Remove="Resolution\**" />
-    <EmbeddedResource Remove="App\**" />
-    <EmbeddedResource Remove="Cli\**" />
-    <EmbeddedResource Remove="Cache\**" />
-    <EmbeddedResource Remove="Diff\**" />
-    <EmbeddedResource Remove="Differ\**" />
-    <EmbeddedResource Remove="Formatters\**" />
-    <EmbeddedResource Remove="Logger\**" />
-    <EmbeddedResource Remove="Resolution\**" />
-    <None Remove="App\**" />
-    <None Remove="Cli\**" />
-    <None Remove="Cache\**" />
-    <None Remove="Diff\**" />
-    <None Remove="Differ\**" />
-    <None Remove="Formatters\**" />
-    <None Remove="Logger\**" />
-    <None Remove="Resolution\**" />
-  </ItemGroup>
-
 </Project>

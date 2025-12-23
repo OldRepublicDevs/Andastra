@@ -1,5 +1,5 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net9.0</TargetFrameworks>
@@ -8,9 +8,7 @@
     <Nullable>disable</Nullable>
     <AssemblyName>nsscomp</AssemblyName>
   </PropertyGroup>
-
   <ItemGroup>
-    <ProjectReference Include="..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
+    <ProjectReference Include="..\..\Andastra\Andastra.csproj" />
   </ItemGroup>
-
 </Project>
