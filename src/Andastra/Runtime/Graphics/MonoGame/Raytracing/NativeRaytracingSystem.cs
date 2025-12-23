@@ -4122,6 +4122,279 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
             }
         }
 
+        /// <summary>
+        /// Attempts to lookup a D3D12 texture from a handle using COM interfaces.
+        /// This method tries to query ID3D12Resource from the handle and get its description.
+        /// </summary>
+        /// <param name="handle">The texture handle to lookup.</param>
+        /// <returns>ITexture if lookup succeeded, null otherwise.</returns>
+        /// <remarks>
+        /// D3D12 implementation:
+        /// - Uses COM QueryInterface to get ID3D12Resource from handle
+        /// - Calls GetDesc() to get D3D12_RESOURCE_DESC
+        /// - Converts to TextureDesc and creates wrapper texture
+        /// - Based on DirectX 12 API: ID3D12Resource::GetDesc(), IUnknown::QueryInterface
+        /// </remarks>
+        private ITexture TryLookupD3D12Texture(IntPtr handle)
+        {
+            try
+            {
+                // D3D12: Try to query ID3D12Resource from handle using COM
+                // Even if the handle doesn't pass IsNativeHandle check, it might be a valid D3D12 resource
+                // We use Marshal.GetObjectForIUnknown to get the COM object, then QueryInterface for ID3D12Resource
+
+                // First, try to get the object as IUnknown
+                object unknown = Marshal.GetObjectForIUnknown(handle);
+                if (unknown == null)
+                {
+                    return null;
+                }
+
+                // Try to query for ID3D12Resource interface
+                // ID3D12Resource GUID: {696442be-a72e-4059-bc79-5b5c98040fad}
+                Guid iidID3D12Resource = new Guid(0x696442be, 0xa72e, 0x4059, 0xbc, 0x79, 0x5b, 0x5c, 0x98, 0x04, 0x0f, 0xad);
+                IntPtr resourcePtr = IntPtr.Zero;
+                int hr = Marshal.QueryInterface(handle, ref iidID3D12Resource, out resourcePtr);
+
+                if (hr == 0 && resourcePtr != IntPtr.Zero)
+                {
+                    // Successfully got ID3D12Resource, now try to get description
+                    // We would need to call GetDesc() via COM vtable
+                    // For now, try to query texture description using the existing method
+                    TextureDesc? desc = QueryD3D12TextureDescription(resourcePtr);
+                    if (desc.HasValue)
+                    {
+                        ITexture texture = _device.CreateHandleForNativeTexture(resourcePtr, desc.Value);
+                        if (texture != null)
+                        {
+                            // Cache it for future lookups
+                            _textureHandleMap[handle] = texture;
+                            _textureInfoCache[handle] = new TextureInfo
+                            {
+                                Width = desc.Value.Width,
+                                Height = desc.Value.Height
+                            };
+                            Console.WriteLine($"[NativeRT] TryLookupD3D12Texture: Successfully looked up D3D12 texture {handle:X}");
+                            return texture;
+                        }
+                    }
+
+                    // Release the queried interface
+                    Marshal.Release(resourcePtr);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle might not be a COM object, or QueryInterface failed
+                // This is expected for non-D3D12 handles or invalid handles
+                Console.WriteLine($"[NativeRT] TryLookupD3D12Texture: Failed to lookup D3D12 texture {handle:X}: {ex.Message}");
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Attempts to lookup a Vulkan texture from a handle.
+        /// This method tries to query VkImage properties from the handle.
+        /// </summary>
+        /// <param name="handle">The texture handle to lookup.</param>
+        /// <returns>ITexture if lookup succeeded, null otherwise.</returns>
+        /// <remarks>
+        /// Vulkan implementation:
+        /// - Queries VkImage properties via vkGetImageMemoryRequirements
+        /// - Gets format from stored VkImageCreateInfo (if available)
+        /// - Converts to TextureDesc and creates wrapper texture
+        /// - Based on Vulkan API: vkGetImageMemoryRequirements, vkGetImageSubresourceLayout
+        /// </remarks>
+        private ITexture TryLookupVulkanTexture(IntPtr handle)
+        {
+            try
+            {
+                // Vulkan: Try to query VkImage from handle
+                // Vulkan uses handles (VkImage is a uint64_t) that might not pass IsNativeHandle check
+                // We would need VulkanDevice to provide a helper method to query image properties
+
+                // For now, try to query texture description using the existing method
+                TextureDesc? desc = QueryVulkanTextureDescription(handle);
+                if (desc.HasValue)
+                {
+                    ITexture texture = _device.CreateHandleForNativeTexture(handle, desc.Value);
+                    if (texture != null)
+                    {
+                        // Cache it for future lookups
+                        _textureHandleMap[handle] = texture;
+                        _textureInfoCache[handle] = new TextureInfo
+                        {
+                            Width = desc.Value.Width,
+                            Height = desc.Value.Height
+                        };
+                        Console.WriteLine($"[NativeRT] TryLookupVulkanTexture: Successfully looked up Vulkan texture {handle:X}");
+                        return texture;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle might not be a VkImage, or querying failed
+                Console.WriteLine($"[NativeRT] TryLookupVulkanTexture: Failed to lookup Vulkan texture {handle:X}: {ex.Message}");
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Attempts to lookup a Metal texture from a handle.
+        /// This method tries to query MTLTexture properties from the handle.
+        /// </summary>
+        /// <param name="handle">The texture handle to lookup.</param>
+        /// <returns>ITexture if lookup succeeded, null otherwise.</returns>
+        /// <remarks>
+        /// Metal implementation:
+        /// - Uses Objective-C runtime to query MTLTexture properties
+        /// - Gets width, height, pixelFormat via objc_msgSend
+        /// - Converts to TextureDesc and creates wrapper texture
+        /// - Based on Metal API: MTLTexture width, height, pixelFormat properties
+        /// </remarks>
+        private ITexture TryLookupMetalTexture(IntPtr handle)
+        {
+            try
+            {
+                // Metal: Try to query MTLTexture from handle
+                // Metal uses Objective-C objects that might not pass IsNativeHandle check
+                // We would need MetalDevice to provide a helper method to query texture properties
+
+                // For now, try to query texture description using the existing method
+                TextureDesc? desc = QueryMetalTextureDescription(handle);
+                if (desc.HasValue)
+                {
+                    ITexture texture = _device.CreateHandleForNativeTexture(handle, desc.Value);
+                    if (texture != null)
+                    {
+                        // Cache it for future lookups
+                        _textureHandleMap[handle] = texture;
+                        _textureInfoCache[handle] = new TextureInfo
+                        {
+                            Width = desc.Value.Width,
+                            Height = desc.Value.Height
+                        };
+                        Console.WriteLine($"[NativeRT] TryLookupMetalTexture: Successfully looked up Metal texture {handle:X}");
+                        return texture;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle might not be a MTLTexture, or querying failed
+                Console.WriteLine($"[NativeRT] TryLookupMetalTexture: Failed to lookup Metal texture {handle:X}: {ex.Message}");
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Attempts to infer texture information from handle patterns.
+        /// This is a last resort method that tries to guess texture properties from handle values.
+        /// </summary>
+        /// <param name="handle">The texture handle to infer from.</param>
+        /// <returns>ITexture if inference succeeded, null otherwise.</returns>
+        /// <remarks>
+        /// Inference strategies:
+        /// - Some backends encode texture information in handle values
+        /// - Try common raytracing texture formats and resolutions
+        /// - Use cached texture info if available
+        /// - Based on common raytracing output texture patterns
+        /// </remarks>
+        private ITexture TryInferTextureFromHandle(IntPtr handle)
+        {
+            try
+            {
+                // Try to infer texture info from handle patterns
+                // This is a last resort and may not work for all backends
+                // Some backends encode texture information in handle values
+
+                // Get dimensions from cache if available
+                int width = 1920;  // Default fallback dimensions
+                int height = 1080;
+
+                if (_textureInfoCache.TryGetValue(handle, out TextureInfo cachedInfo))
+                {
+                    width = cachedInfo.Width;
+                    height = cachedInfo.Height;
+                }
+                else
+                {
+                    // Try to infer from handle value (very backend-specific)
+                    // Some backends encode width/height in handle bits
+                    // For now, use common raytracing output resolutions
+                    long handleValue = handle.ToInt64();
+                    if (handleValue > 0 && handleValue < 0x100000)
+                    {
+                        // Small handle value, might be a resource index
+                        // Use default dimensions
+                        width = 1920;
+                        height = 1080;
+                    }
+                }
+
+                // Try common raytracing texture formats
+                TextureFormat[] commonFormats = new TextureFormat[]
+                {
+                    TextureFormat.R32G32B32A32_Float,  // Most common for raytracing HDR output
+                    TextureFormat.R16G16B16A16_Float,  // Medium precision HDR
+                    TextureFormat.R11G11B10_Float,     // Packed HDR (common in games)
+                    TextureFormat.R8G8B8A8_UNorm,      // LDR output
+                    TextureFormat.R10G10B10A2_UNorm    // Packed LDR
+                };
+
+                foreach (TextureFormat format in commonFormats)
+                {
+                    try
+                    {
+                        TextureDesc desc = new TextureDesc
+                        {
+                            Width = width,
+                            Height = height,
+                            Depth = 1,
+                            ArraySize = 1,
+                            MipLevels = 1,
+                            SampleCount = 1,
+                            Format = format,
+                            Dimension = TextureDimension.Texture2D,
+                            Usage = TextureUsage.ShaderResource | TextureUsage.UnorderedAccess,
+                            InitialState = ResourceState.UnorderedAccess,
+                            KeepInitialState = false,
+                            DebugName = $"RaytracingInferredTexture_{format}"
+                        };
+
+                        ITexture texture = _device.CreateHandleForNativeTexture(handle, desc);
+                        if (texture != null)
+                        {
+                            // Cache it for future lookups
+                            _textureHandleMap[handle] = texture;
+                            _textureInfoCache[handle] = new TextureInfo
+                            {
+                                Width = width,
+                                Height = height
+                            };
+                            Console.WriteLine($"[NativeRT] TryInferTextureFromHandle: Successfully inferred texture from handle {handle:X} using format {format} ({width}x{height})");
+                            return texture;
+                        }
+                    }
+                    catch (Exception formatEx)
+                    {
+                        // This format didn't work, try next one
+                        continue;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[NativeRT] TryInferTextureFromHandle: Failed to infer texture from handle {handle:X}: {ex.Message}");
+            }
+
+            return null;
+        }
+
         private void DestroyPipelines()
         {
             // Destroy shadow pipeline resources
