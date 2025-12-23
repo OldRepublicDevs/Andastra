@@ -10,6 +10,7 @@ using Microsoft.Xna.Framework.Graphics;
 using DynamicLight = Andastra.Runtime.MonoGame.Lighting.DynamicLight;
 using EclipseILightingSystem = Andastra.Runtime.Games.Eclipse.ILightingSystem;
 using EclipseIUpdatable = Andastra.Runtime.Games.Eclipse.IUpdatable;
+using IDynamicLight = Andastra.Runtime.MonoGame.Interfaces.IDynamicLight;
 
 namespace Andastra.Runtime.Games.Eclipse.Lighting
 {
@@ -748,7 +749,21 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
                 return;
             }
 
-            var dynamicLight = light as DynamicLight;
+            DynamicLight dynamicLight = null;
+            var directLight = light as DynamicLight;
+            if (directLight != null)
+            {
+                dynamicLight = directLight;
+            }
+            else
+            {
+                var adapter = light as DynamicLightAdapter;
+                if (adapter != null)
+                {
+                    dynamicLight = adapter.Light;
+                }
+            }
+
             if (dynamicLight != null)
             {
                 if (!_lights.Contains(dynamicLight))
@@ -777,7 +792,21 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
                 return;
             }
 
-            var dynamicLight = light as DynamicLight;
+            DynamicLight dynamicLight = null;
+            var directLight = light as DynamicLight;
+            if (directLight != null)
+            {
+                dynamicLight = directLight;
+            }
+            else
+            {
+                var adapter = light as DynamicLightAdapter;
+                if (adapter != null)
+                {
+                    dynamicLight = adapter.Light;
+                }
+            }
+
             if (dynamicLight != null)
             {
                 _lights.Remove(dynamicLight);
@@ -1331,25 +1360,168 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
     }
 
     /// <summary>
-    /// Adapter to bridge MonoGame.DynamicLight to Eclipse.IDynamicLight interface.
+    /// Adapter to bridge MonoGame.DynamicLight to MonoGame.Interfaces.IDynamicLight interface.
     /// </summary>
-    internal class DynamicLightAdapter : IDynamicLight
+    internal class DynamicLightAdapter : Andastra.Runtime.MonoGame.Interfaces.IDynamicLight
     {
         private readonly DynamicLight _light;
+        private bool _disposed;
 
         public DynamicLightAdapter(DynamicLight light)
         {
             _light = light ?? throw new ArgumentNullException(nameof(light));
         }
 
-        public Vector3 Position => _light.Position;
-        public Vector3 Color => _light.Color;
-        public float Intensity => _light.Intensity;
-        public float Range => _light.Radius;
+        public uint LightId => _light.LightId;
+        public LightType Type => _light.Type;
+        public bool Enabled
+        {
+            get { return _light.Enabled; }
+            set { _light.Enabled = value; }
+        }
+        public Vector3 Position
+        {
+            get { return _light.Position; }
+            set { _light.Position = value; }
+        }
+        public Vector3 Direction
+        {
+            get { return _light.Direction; }
+            set { _light.Direction = value; }
+        }
+        public Vector3 Color
+        {
+            get { return _light.Color; }
+            set { _light.Color = value; }
+        }
+        public float Intensity
+        {
+            get { return _light.Intensity; }
+            set { _light.Intensity = value; }
+        }
+        public float Radius
+        {
+            get { return _light.Radius; }
+            set { _light.Radius = value; }
+        }
+        public float InnerConeAngle
+        {
+            get { return _light.InnerConeAngle; }
+            set { _light.InnerConeAngle = value; }
+        }
+        public float OuterConeAngle
+        {
+            get { return _light.OuterConeAngle; }
+            set { _light.OuterConeAngle = value; }
+        }
+        public float AreaWidth
+        {
+            get { return _light.AreaWidth; }
+            set { _light.AreaWidth = value; }
+        }
+        public float AreaHeight
+        {
+            get { return _light.AreaHeight; }
+            set { _light.AreaHeight = value; }
+        }
+        public bool CastShadows
+        {
+            get { return _light.CastShadows; }
+            set { _light.CastShadows = value; }
+        }
+        public int ShadowResolution
+        {
+            get { return _light.ShadowResolution; }
+            set { _light.ShadowResolution = value; }
+        }
+        public float ShadowBias
+        {
+            get { return _light.ShadowBias; }
+            set { _light.ShadowBias = value; }
+        }
+        public float ShadowNormalBias
+        {
+            get { return _light.ShadowNormalBias; }
+            set { _light.ShadowNormalBias = value; }
+        }
+        public float ShadowNearPlane
+        {
+            get { return _light.ShadowNearPlane; }
+            set { _light.ShadowNearPlane = value; }
+        }
+        public float ShadowSoftness
+        {
+            get { return _light.ShadowSoftness; }
+            set { _light.ShadowSoftness = value; }
+        }
+        public bool RaytracedShadows
+        {
+            get { return _light.RaytracedShadows; }
+            set { _light.RaytracedShadows = value; }
+        }
+        public bool Volumetric
+        {
+            get { return _light.Volumetric; }
+            set { _light.Volumetric = value; }
+        }
+        public float VolumetricIntensity
+        {
+            get { return _light.VolumetricIntensity; }
+            set { _light.VolumetricIntensity = value; }
+        }
+        public float Temperature
+        {
+            get { return _light.Temperature; }
+            set { _light.Temperature = value; }
+        }
+        public bool UseTemperature
+        {
+            get { return _light.UseTemperature; }
+            set { _light.UseTemperature = value; }
+        }
+        public IntPtr IesProfile
+        {
+            get { return _light.IesProfile; }
+            set { _light.IesProfile = value; }
+        }
+        public IntPtr CookieTexture
+        {
+            get { return _light.CookieTexture; }
+            set { _light.CookieTexture = value; }
+        }
+        public bool AffectsSpecular
+        {
+            get { return _light.AffectsSpecular; }
+            set { _light.AffectsSpecular = value; }
+        }
+        public uint CullingMask
+        {
+            get { return _light.CullingMask; }
+            set { _light.CullingMask = value; }
+        }
+
+        public void UpdateTransform(System.Numerics.Matrix4x4 worldMatrix)
+        {
+            _light.UpdateTransform(worldMatrix);
+        }
+
+        public void UpdateGpuData()
+        {
+            _light.UpdateGpuData();
+        }
 
         /// <summary>
         /// Gets the underlying DynamicLight instance.
         /// </summary>
         public DynamicLight Light => _light;
+
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                _light.Dispose();
+                _disposed = true;
+            }
+        }
     }
 }
