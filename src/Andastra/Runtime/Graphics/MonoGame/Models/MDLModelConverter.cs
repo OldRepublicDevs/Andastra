@@ -293,13 +293,47 @@ namespace Andastra.Runtime.MonoGame.Models
 
         private Matrix CreateNodeTransform(MDLNodeData node)
         {
-            // Create rotation from quaternion (W, X, Y, Z stored in node)
-            Quaternion rotation = new Quaternion(
-                node.Orientation.X,
-                node.Orientation.Y,
-                node.Orientation.Z,
-                node.Orientation.W
-            );
+            // Based on swkotor2.exe: FUN_006f8590 @ 0x006f8590
+            // The headconjure and handconjure dummy nodes must have identity orientation (0,0,0,1)
+            // Otherwise spell visuals will not be correct
+            // Original engine checks: if (node->GetNode("headconjure") && orientation != identity) -> error
+            // Original engine checks: if (node->GetNode("handconjure") && orientation != identity) -> error
+            // Fix: Force identity orientation for these nodes to match original engine behavior
+            // Error messages:
+            // - "CSWCAnimBase::LoadModel(): The headconjure dummy has an orientation....It shouldn't!!  The %s model needs to be fixed or else the spell visuals will not be correct." @ 0x007ce278
+            // - "CSWCAnimBase::LoadModel(): The handconjure dummy has an orientation....It shouldn't!!  The %s model needs to be fixed or else the spell visuals will not be correct." @ 0x007ce320
+            Quaternion rotation;
+            if (!string.IsNullOrEmpty(node.Name))
+            {
+                string nodeNameLower = node.Name.ToLowerInvariant();
+                if (nodeNameLower == "headconjure" || nodeNameLower == "handconjure")
+                {
+                    // Force identity orientation for spell visual attachment points
+                    // These dummy nodes should not have any rotation - they're just attachment points
+                    // swkotor2.exe: FUN_006f8590 validates that these nodes have identity quaternion (0,0,0,1)
+                    rotation = Quaternion.Identity;
+                }
+                else
+                {
+                    // Use node's orientation for all other nodes (W, X, Y, Z stored in node)
+                    rotation = new Quaternion(
+                        node.Orientation.X,
+                        node.Orientation.Y,
+                        node.Orientation.Z,
+                        node.Orientation.W
+                    );
+                }
+            }
+            else
+            {
+                // Use node's orientation if name is empty
+                rotation = new Quaternion(
+                    node.Orientation.X,
+                    node.Orientation.Y,
+                    node.Orientation.Z,
+                    node.Orientation.W
+                );
+            }
 
             // Create translation
             Vector3 translation = new Vector3(
