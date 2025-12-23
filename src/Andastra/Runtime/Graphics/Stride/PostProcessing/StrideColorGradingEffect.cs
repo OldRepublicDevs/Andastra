@@ -31,8 +31,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
     {
         private GraphicsDevice _graphicsDevice;
         private EffectInstance _colorGradingEffect;
-        private new Texture _lutTexture;
-        private Texture _temporaryTexture;
+        private new StrideGraphics.Texture _lutTexture;
+        private StrideGraphics.Texture _temporaryTexture;
         private int _lutSize; // Size of the 3D LUT (16 or 32)
         private bool _effectInitialized;
         private SpriteBatch _spriteBatch;
@@ -55,7 +55,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             _colorGradingEffect?.Dispose();
             _colorGradingEffect = null;
 
-            // Note: Don't dispose LUT texture here if it's managed externally
+            // Note: Don't dispose LUT StrideGraphics.Texture here if it's managed externally
             // Only dispose if we created it ourselves
 
             _temporaryTexture?.Dispose();
@@ -74,7 +74,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
         /// <summary>
         /// Initializes rendering resources needed for GPU color grading.
-        /// Creates SpriteBatch for fullscreen quad rendering and linear sampler for texture sampling.
+        /// Creates SpriteBatch for fullscreen quad rendering and linear sampler for StrideGraphics.Texture sampling.
         /// </summary>
         private void InitializeRenderingResources()
         {
@@ -88,7 +88,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 // Create sprite batch for fullscreen quad rendering
                 _spriteBatch = new SpriteBatch(_graphicsDevice);
 
-                // Create linear sampler for texture sampling
+                // Create linear sampler for StrideGraphics.Texture sampling
                 _linearSampler = SamplerState.New(_graphicsDevice, new SamplerStateDescription
                 {
                     Filter = TextureFilter.Linear,
@@ -107,10 +107,10 @@ namespace Andastra.Runtime.Stride.PostProcessing
         }
 
         /// <summary>
-        /// Loads a 3D LUT texture for color grading.
+        /// Loads a 3D LUT StrideGraphics.Texture for color grading.
         /// </summary>
-        /// <param name="lutTexture">3D texture (16x16x16 or 32x32x32) containing color transform.</param>
-        public void LoadLut(Texture lutTexture)
+        /// <param name="lutTexture">3D StrideGraphics.Texture (16x16x16 or 32x32x32) containing color transform.</param>
+        public void LoadLut(StrideGraphics.Texture lutTexture)
         {
             if (lutTexture == null)
             {
@@ -121,10 +121,10 @@ namespace Andastra.Runtime.Stride.PostProcessing
             // Common sizes: 16x16x16 (256x16) or 32x32x32 (1024x32) flattened to 2D
             if (lutTexture.Dimension != TextureDimension.Texture2D)
             {
-                throw new ArgumentException("LUT must be a 2D texture (flattened 3D)", nameof(lutTexture));
+                throw new ArgumentException("LUT must be a 2D StrideGraphics.Texture (flattened 3D)", nameof(lutTexture));
             }
 
-            // Determine LUT size from texture dimensions
+            // Determine LUT size from StrideGraphics.Texture dimensions
             // 16x16x16 LUT: 256x16 (16 slices of 16x16)
             // 32x32x32 LUT: 1024x32 (32 slices of 32x32)
             int width = lutTexture.Width;
@@ -163,8 +163,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// <param name="input">LDR color buffer (after tone mapping).</param>
         /// <param name="width">Render width.</param>
         /// <param name="height">Render height.</param>
-        /// <returns>Output texture with color grading applied.</returns>
-        public Texture Apply(Texture input, int width, int height)
+        /// <returns>Output StrideGraphics.Texture with color grading applied.</returns>
+        public StrideGraphics.Texture Apply(StrideGraphics.Texture input, int width, int height)
         {
             if (!_enabled || input == null)
             {
@@ -191,7 +191,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             return _temporaryTexture ?? input;
         }
 
-        private void EnsureTextures(int width, int height, PixelFormat format)
+        private void EnsureTextures(int width, int height, StrideGraphics.PixelFormat format)
         {
             if (_temporaryTexture != null &&
                 _temporaryTexture.Width == width &&
@@ -208,11 +208,11 @@ namespace Andastra.Runtime.Stride.PostProcessing
             _temporaryTexture = Texture.New(_graphicsDevice, desc);
         }
 
-        private void ExecuteColorGrading(Texture input, Texture output)
+        private void ExecuteColorGrading(StrideGraphics.Texture input, StrideGraphics.Texture output)
         {
             // Color Grading Shader Execution:
             // - Input: LDR color buffer [0, 1]
-            // - Parameters: contrast, saturation, LUT texture, LUT strength
+            // - Parameters: contrast, saturation, LUT StrideGraphics.Texture, LUT strength
             // - Process: Adjust contrast/saturation -> Sample LUT -> Blend
             // - Output: Color-graded LDR buffer
 
@@ -230,7 +230,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// Attempts to execute color grading using GPU shader.
         /// Returns true if successful, false if CPU fallback is needed.
         /// </summary>
-        private bool TryExecuteColorGradingGpu(Texture input, Texture output)
+        private bool TryExecuteColorGradingGpu(StrideGraphics.Texture input, StrideGraphics.Texture output)
         {
             // Ensure rendering resources are initialized
             if (!_renderingResourcesInitialized)
@@ -280,14 +280,14 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 // BlendStates.Opaque: overwrite pixels (no blending for post-processing)
                 // DepthStencilStates.None: no depth testing needed for fullscreen quad
                 // RasterizerStates.CullNone: render both front and back faces
-                _spriteBatch.Begin(commandList, SpriteSortMode.Immediate, BlendStates.Opaque, _linearSampler,
+                _spriteBatch.Begin(StrideGraphics.CommandList, SpriteSortMode.Immediate, BlendStates.Opaque, _linearSampler,
                     DepthStencilStates.None, RasterizerStates.CullNone, _colorGradingEffect);
 
                 // Set shader parameters
                 var parameters = _colorGradingEffect.Parameters;
                 if (parameters != null)
                 {
-                    // Set input texture
+                    // Set input StrideGraphics.Texture
                     try
                     {
                         var inputTextureParam = parameters.Get<object>("InputTexture");
@@ -305,7 +305,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                             }
                             else
                             {
-                                // If we can't set the input texture, the shader won't work
+                                // If we can't set the input StrideGraphics.Texture, the shader won't work
                                 _spriteBatch.End();
                                 return false;
                             }
@@ -318,7 +318,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                         return false;
                     }
 
-                    // Set LUT texture if available
+                    // Set LUT StrideGraphics.Texture if available
                     if (_lutTexture != null)
                     {
                         try
@@ -388,7 +388,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     }
                 }
 
-                // Draw fullscreen quad with input texture
+                // Draw fullscreen quad with input StrideGraphics.Texture
                 // Rectangle covering entire output render target
                 var destinationRect = new RectangleF(0, 0, width, height);
                 _spriteBatch.Draw(input, destinationRect, Color.White);
@@ -397,7 +397,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 _spriteBatch.End();
 
                 // Reset render target (restore previous state)
-                commandList.SetRenderTarget(null, (Texture)null);
+                commandList.SetRenderTarget(null, (StrideGraphics.Texture)null);
 
                 return true;
             }
@@ -432,7 +432,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             {
                 // Strategy 1: Try loading from compiled effect files using Effect.Load()
                 // Effect.Load() searches in standard content paths for compiled .sdeffect files
-                Effect effectBase = null;
+                Stride.Rendering.Effect effectBase = null;
                 try
                 {
                     effectBase = Effect.Load(_graphicsDevice, "ColorGradingEffect");
@@ -504,7 +504,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// Implements the complete color grading algorithm matching GPU shader behavior.
         /// Based on industry-standard color grading algorithms and LUT sampling techniques.
         /// </summary>
-        private void ExecuteColorGradingCpu(Texture input, Texture output)
+        private void ExecuteColorGradingCpu(StrideGraphics.Texture input, StrideGraphics.Texture output)
         {
             if (input == null || output == null || _graphicsDevice == null)
             {
@@ -523,22 +523,22 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     return;
                 }
 
-                // Read input texture data
+                // Read input StrideGraphics.Texture data
                 Vector4[] inputData = ReadTextureData(input);
                 if (inputData == null || inputData.Length != width * height)
                 {
-                    Console.WriteLine("[StrideColorGrading] Failed to read input texture data");
+                    Console.WriteLine("[StrideColorGrading] Failed to read input StrideGraphics.Texture data");
                     return;
                 }
 
-                // Read LUT texture data if available
+                // Read LUT StrideGraphics.Texture data if available
                 Vector4[] lutData = null;
                 if (_lutTexture != null && _lutSize > 0)
                 {
                     lutData = ReadTextureData(_lutTexture);
                     if (lutData == null)
                     {
-                        Console.WriteLine("[StrideColorGrading] Failed to read LUT texture data");
+                        Console.WriteLine("[StrideColorGrading] Failed to read LUT StrideGraphics.Texture data");
                         // Continue without LUT
                     }
                 }
@@ -601,7 +601,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     }
                 }
 
-                // Write output data back to texture
+                // Write output data back to StrideGraphics.Texture
                 WriteTextureData(output, outputData, width, height);
             }
             catch (Exception ex)
@@ -616,10 +616,10 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// Based on industry-standard LUT sampling techniques.
         /// </summary>
         /// <param name="rgb">Input RGB color in [0, 1] range</param>
-        /// <param name="lutData">LUT texture data as Vector4 array</param>
+        /// <param name="lutData">LUT StrideGraphics.Texture data as Vector4 array</param>
         /// <param name="lutSize">Size of the 3D LUT (16 or 32)</param>
-        /// <param name="lutWidth">Width of the flattened 2D LUT texture</param>
-        /// <param name="lutHeight">Height of the flattened 2D LUT texture</param>
+        /// <param name="lutWidth">Width of the flattened 2D LUT StrideGraphics.Texture</param>
+        /// <param name="lutHeight">Height of the flattened 2D LUT StrideGraphics.Texture</param>
         /// <returns>Sampled color from LUT</returns>
         private Vector3 SampleLut3D(Vector3 rgb, Vector4[] lutData, int lutSize, int lutWidth, int lutHeight)
         {
@@ -651,13 +651,13 @@ namespace Andastra.Runtime.Stride.PostProcessing
             float uv2X = r;
             float uv2Y = gOffset + b2;
 
-            // Clamp UV coordinates to valid texture range
+            // Clamp UV coordinates to valid StrideGraphics.Texture range
             uv1X = Math.Max(0.0f, Math.Min(1.0f, uv1X));
             uv1Y = Math.Max(0.0f, Math.Min(1.0f, uv1Y));
             uv2X = Math.Max(0.0f, Math.Min(1.0f, uv2X));
             uv2Y = Math.Max(0.0f, Math.Min(1.0f, uv2Y));
 
-            // Sample from LUT texture
+            // Sample from LUT StrideGraphics.Texture
             Vector3 sample1 = SampleLutTexture(lutData, uv1X, uv1Y, lutWidth, lutHeight);
             Vector3 sample2 = SampleLutTexture(lutData, uv2X, uv2Y, lutWidth, lutHeight);
 
@@ -666,7 +666,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         }
 
         /// <summary>
-        /// Samples a 2D LUT texture at the given UV coordinates using bilinear filtering.
+        /// Samples a 2D LUT StrideGraphics.Texture at the given UV coordinates using bilinear filtering.
         /// </summary>
         private Vector3 SampleLutTexture(Vector4[] lutData, float u, float v, int width, int height)
         {
@@ -697,7 +697,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         }
 
         /// <summary>
-        /// Gets a pixel from the LUT texture data.
+        /// Gets a pixel from the LUT StrideGraphics.Texture data.
         /// </summary>
         private Vector3 GetLutPixel(Vector4[] lutData, int x, int y, int width)
         {
@@ -711,13 +711,13 @@ namespace Andastra.Runtime.Stride.PostProcessing
         }
 
         /// <summary>
-        /// Reads texture data from GPU to CPU memory.
-        /// Implements proper texture readback using Stride's GetData API.
+        /// Reads StrideGraphics.Texture data from GPU to CPU memory.
+        /// Implements proper StrideGraphics.Texture readback using Stride's GetData API.
         /// This is expensive and should only be used as CPU fallback when GPU shaders are not available.
         /// </summary>
-        private Vector4[] ReadTextureData(Texture texture)
+        private Vector4[] ReadTextureData(StrideGraphics.Texture StrideGraphics.Texture)
         {
-            if (texture == null || _graphicsDevice == null)
+            if (StrideGraphics.Texture == null || _graphicsDevice == null)
             {
                 return null;
             }
@@ -729,7 +729,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 int size = width * height;
                 Vector4[] data = new Vector4[size];
 
-                // Get ImmediateContext (CommandList) from GraphicsDevice
+                // Get ImmediateContext (StrideGraphics.CommandList) from GraphicsDevice
                 var commandList = _graphicsDevice.ImmediateContext;
                 if (commandList == null)
                 {
@@ -737,9 +737,9 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     return data; // Return zero-initialized data
                 }
 
-                PixelFormat format = texture.Format;
+                StrideGraphics.PixelFormat format = texture.Format;
 
-                // Handle different texture formats
+                // Handle different StrideGraphics.Texture formats
                 if (format == PixelFormat.R8G8B8A8_UNorm ||
                     format == PixelFormat.R8G8B8A8_UNorm_SRgb ||
                     format == PixelFormat.R32G32B32A32_Float ||
@@ -749,7 +749,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 {
                     // Read as Color array
                     var colorData = new Color[size];
-                    texture.GetData(commandList, colorData);
+                    texture.GetData(StrideGraphics.CommandList, colorData);
 
                     // Convert Color[] to Vector4[]
                     for (int i = 0; i < size; i++)
@@ -771,7 +771,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 {
                     // Half-precision float format
                     var colorData = new Color[size];
-                    texture.GetData(commandList, colorData);
+                    texture.GetData(StrideGraphics.CommandList, colorData);
                     for (int i = 0; i < size; i++)
                     {
                         var color = colorData[i];
@@ -784,7 +784,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     try
                     {
                         var colorData = new Color[size];
-                        texture.GetData(commandList, colorData);
+                        texture.GetData(StrideGraphics.CommandList, colorData);
                         for (int i = 0; i < size; i++)
                         {
                             var color = colorData[i];
@@ -802,20 +802,20 @@ namespace Andastra.Runtime.Stride.PostProcessing
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[StrideColorGrading] ReadTextureData: Exception during texture readback: {ex.Message}");
+                Console.WriteLine($"[StrideColorGrading] ReadTextureData: Exception during StrideGraphics.Texture readback: {ex.Message}");
                 // Return zero-initialized data on failure
                 return new Vector4[texture.Width * texture.Height];
             }
         }
 
         /// <summary>
-        /// Writes texture data from CPU memory to GPU texture.
-        /// Implements proper texture upload using Stride's SetData API.
+        /// Writes StrideGraphics.Texture data from CPU memory to GPU texture.
+        /// Implements proper StrideGraphics.Texture upload using Stride's SetData API.
         /// This is expensive and should only be used as CPU fallback when GPU shaders are not available.
         /// </summary>
-        private void WriteTextureData(Texture texture, Vector4[] data, int width, int height)
+        private void WriteTextureData(StrideGraphics.Texture StrideGraphics.Texture, Vector4[] data, int width, int height)
         {
-            if (texture == null || data == null || _graphicsDevice == null)
+            if (StrideGraphics.Texture == null || data == null || _graphicsDevice == null)
             {
                 return;
             }
@@ -824,7 +824,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             {
                 if (texture.Width != width || texture.Height != height)
                 {
-                    Console.WriteLine($"[StrideColorGrading] WriteTextureData: Texture dimensions mismatch. Texture: {texture.Width}x{texture.Height}, Data: {width}x{height}");
+                    Console.WriteLine($"[StrideColorGrading] WriteTextureData: StrideGraphics.Texture dimensions mismatch. StrideGraphics.Texture: {texture.Width}x{texture.Height}, Data: {width}x{height}");
                     return;
                 }
 
@@ -835,7 +835,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     return;
                 }
 
-                // Get ImmediateContext (CommandList) from GraphicsDevice
+                // Get ImmediateContext (StrideGraphics.CommandList) from GraphicsDevice
                 var commandList = _graphicsDevice.ImmediateContext;
                 if (commandList == null)
                 {
@@ -843,7 +843,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     return;
                 }
 
-                PixelFormat format = texture.Format;
+                StrideGraphics.PixelFormat format = texture.Format;
 
                 // Convert Vector4[] to Color[] based on format
                 if (format == PixelFormat.R8G8B8A8_UNorm ||
@@ -867,7 +867,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                             (byte)(a * 255.0f)
                         );
                     }
-                    texture.SetData(commandList, colorData);
+                    texture.SetData(StrideGraphics.CommandList, colorData);
                 }
                 else if (format == PixelFormat.R32G32B32A32_Float)
                 {
@@ -877,7 +877,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                         var v = data[i];
                         colorData[i] = new Color(v.X, v.Y, v.Z, v.W);
                     }
-                    texture.SetData(commandList, colorData);
+                    texture.SetData(StrideGraphics.CommandList, colorData);
                 }
                 else if (format == PixelFormat.R16G16B16A16_Float)
                 {
@@ -887,7 +887,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                         var v = data[i];
                         colorData[i] = new Color(v.X, v.Y, v.Z, v.W);
                     }
-                    texture.SetData(commandList, colorData);
+                    texture.SetData(StrideGraphics.CommandList, colorData);
                 }
                 else
                 {
@@ -908,7 +908,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                             (byte)(a * 255.0f)
                         );
                     }
-                    texture.SetData(commandList, colorData);
+                    texture.SetData(StrideGraphics.CommandList, colorData);
                 }
             }
             catch (Exception ex)

@@ -24,9 +24,9 @@ namespace Andastra.Runtime.Stride.PostProcessing
     public class StrideSsaoEffect : BaseSsaoEffect
     {
         private GraphicsDevice _graphicsDevice;
-        private Texture _aoTarget;
-        private Texture _blurTarget;
-        private Texture _noiseTexture;
+        private StrideGraphics.Texture _aoTarget;
+        private StrideGraphics.Texture _blurTarget;
+        private StrideGraphics.Texture _noiseTexture;
         private SpriteBatch _spriteBatch;
         private SamplerState _linearSampler;
         private SamplerState _pointSampler;
@@ -34,7 +34,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         private EffectInstance _bilateralBlurEffect;
         private Effect _gtaoEffectBase;
         private Effect _bilateralBlurEffectBase;
-        private Texture _tempBlurTarget;
+        private StrideGraphics.Texture _tempBlurTarget;
 
         public StrideSsaoEffect(GraphicsDevice graphicsDevice)
         {
@@ -47,7 +47,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             // Create sprite batch for fullscreen quad rendering
             _spriteBatch = new SpriteBatch(_graphicsDevice);
 
-            // Create samplers for texture sampling
+            // Create samplers for StrideGraphics.Texture sampling
             _linearSampler = SamplerState.New(_graphicsDevice, new SamplerStateDescription
             {
                 Filter = TextureFilter.Linear,
@@ -207,7 +207,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// <summary>
         /// Applies SSAO effect using depth and normal buffers.
         /// </summary>
-        public Texture Apply(Texture depthBuffer, Texture normalBuffer, RenderContext context)
+        public StrideGraphics.Texture Apply(StrideGraphics.Texture depthBuffer, StrideGraphics.Texture normalBuffer, RenderContext context)
         {
             if (!_enabled || depthBuffer == null) return null;
 
@@ -254,7 +254,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 PixelFormat.R8_UNorm,
                 TextureFlags.RenderTarget | TextureFlags.ShaderResource);
 
-            // Create noise texture for sample randomization
+            // Create noise StrideGraphics.Texture for sample randomization
             CreateNoiseTexture();
 
             _initialized = true;
@@ -262,7 +262,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
         private void CreateNoiseTexture()
         {
-            // Create 4x4 random rotation texture for sample jittering
+            // Create 4x4 random rotation StrideGraphics.Texture for sample jittering
             const int noiseSize = 4;
             var noiseData = new byte[noiseSize * noiseSize * 4];
             var random = new Random(42); // Deterministic seed for consistency
@@ -281,8 +281,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 PixelFormat.R8G8B8A8_UNorm, noiseData);
         }
 
-        private void ComputeAmbientOcclusion(Texture depthBuffer, Texture normalBuffer,
-            Texture destination, RenderContext context)
+        private void ComputeAmbientOcclusion(StrideGraphics.Texture depthBuffer, StrideGraphics.Texture normalBuffer,
+            StrideGraphics.Texture destination, RenderContext context)
         {
             // GTAO implementation:
             // 1. Reconstruct view-space position from depth
@@ -315,7 +315,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
             // Begin sprite batch rendering
             // Use SpriteSortMode.Immediate for post-processing effects
-            _spriteBatch.Begin(commandList, SpriteSortMode.Immediate, BlendStates.Opaque, _linearSampler,
+            _spriteBatch.Begin(StrideGraphics.CommandList, SpriteSortMode.Immediate, BlendStates.Opaque, _linearSampler,
                 DepthStencilStates.None, RasterizerStates.CullNone, _gtaoEffect);
 
             // If we have a custom GTAO effect, set its parameters
@@ -340,7 +340,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     ((dynamic)sampleCountParam).SetValue(_sampleCount);
                 }
 
-                // Set texture parameters
+                // Set StrideGraphics.Texture parameters
                 var depthTextureParam = _gtaoEffect.Parameters.Get<object>("DepthTexture");
                 if (depthTextureParam != null)
                 {
@@ -422,11 +422,11 @@ namespace Andastra.Runtime.Stride.PostProcessing
             _spriteBatch.End();
 
             // Reset render target (restore previous state)
-            commandList.SetRenderTarget(null, (Texture)null);
+            commandList.SetRenderTarget(null, (StrideGraphics.Texture)null);
         }
 
-        private void ApplyBilateralBlur(Texture source, Texture destination,
-            Texture depthBuffer, RenderContext context)
+        private void ApplyBilateralBlur(StrideGraphics.Texture source, StrideGraphics.Texture destination,
+            StrideGraphics.Texture depthBuffer, RenderContext context)
         {
             // Edge-preserving blur using depth as guide
             // Prevents blurring across depth discontinuities
@@ -450,14 +450,14 @@ namespace Andastra.Runtime.Stride.PostProcessing
             var destinationRect = new RectangleF(0, 0, width, height);
 
             // Pass 1: Horizontal blur
-            ApplyBilateralBlurPass(source, _tempBlurTarget, depthBuffer, true, width, height, commandList);
+            ApplyBilateralBlurPass(source, _tempBlurTarget, depthBuffer, true, width, height, StrideGraphics.CommandList);
 
             // Pass 2: Vertical blur (from temp to final destination)
-            ApplyBilateralBlurPass(_tempBlurTarget, destination, depthBuffer, false, width, height, commandList);
+            ApplyBilateralBlurPass(_tempBlurTarget, destination, depthBuffer, false, width, height, StrideGraphics.CommandList);
         }
 
-        private void ApplyBilateralBlurPass(Texture source, Texture destination, Texture depthBuffer,
-            bool horizontal, int width, int height, CommandList commandList)
+        private void ApplyBilateralBlurPass(StrideGraphics.Texture source, StrideGraphics.Texture destination, StrideGraphics.Texture depthBuffer,
+            bool horizontal, int width, int height, StrideGraphics.CommandList StrideGraphics.CommandList)
         {
             // Apply one pass of bilateral blur (either horizontal or vertical)
             // Bilateral blur weights samples by both spatial distance and depth difference
@@ -475,7 +475,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             commandList.Clear(destination, Color.Black);
 
             // Begin sprite batch rendering
-            _spriteBatch.Begin(commandList, SpriteSortMode.Immediate, BlendStates.Opaque, _linearSampler,
+            _spriteBatch.Begin(StrideGraphics.CommandList, SpriteSortMode.Immediate, BlendStates.Opaque, _linearSampler,
                 DepthStencilStates.None, RasterizerStates.CullNone, _bilateralBlurEffect);
 
             // If we have a custom bilateral blur effect, set its parameters
@@ -503,7 +503,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     ((dynamic)depthThresholdParam).SetValue(0.01f); // Threshold for depth discontinuity detection
                 }
 
-                // Set texture parameters
+                // Set StrideGraphics.Texture parameters
                 var sourceTextureParam = _bilateralBlurEffect.Parameters.Get<object>("SourceTexture");
                 if (sourceTextureParam != null)
                 {
@@ -530,7 +530,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 }
             }
 
-            // Draw full-screen quad with source texture
+            // Draw full-screen quad with source StrideGraphics.Texture
             var destinationRect = new RectangleF(0, 0, width, height);
             _spriteBatch.Draw(source, destinationRect, Color.White);
 
@@ -538,7 +538,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             _spriteBatch.End();
 
             // Reset render target (restore previous state)
-            commandList.SetRenderTarget(null, (Texture)null);
+            commandList.SetRenderTarget(null, (StrideGraphics.Texture)null);
         }
 
         protected override void OnDispose()
