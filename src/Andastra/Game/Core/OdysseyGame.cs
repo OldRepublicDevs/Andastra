@@ -128,6 +128,8 @@ namespace Andastra.Runtime.Game.Core
         private int _selectedOptionsItemIndex = 0;
         private bool _isEditingOptionValue = false;
         private string _editingOptionValue = string.Empty;
+        private bool _isRebindingKey = false;
+        private string _rebindingActionName = string.Empty;
 
         // Main menu 3D model rendering
         private MDL _mainMenuModel;
@@ -5076,6 +5078,8 @@ namespace Andastra.Runtime.Game.Core
                 _selectedOptionsItemIndex,
                 _isEditingOptionValue,
                 _editingOptionValue,
+                _isRebindingKey,
+                _rebindingActionName,
                 _optionsByCategory);
         }
 
@@ -5696,9 +5700,24 @@ namespace Andastra.Runtime.Game.Core
                     writer.WriteLine();
 
                     // [Controls] Section - Input and control settings
+                    // Based on swkotor.exe and swkotor2.exe controls system
+                    // Located via string references: "Mouse Sensitivity" @ 0x007c85cc, "keymap" @ 0x007c4cbc
                     writer.WriteLine("[Controls]");
                     writer.WriteLine($"MouseSensitivity={_settings.MouseSensitivity:F3}");
                     writer.WriteLine($"InvertMouseY={(_settings.InvertMouseY ? 1 : 0)}");
+                    if (_settings.Controls != null)
+                    {
+                        // Save key bindings
+                        foreach (var kvp in _settings.Controls.KeyBindings)
+                        {
+                            writer.WriteLine($"Key_{kvp.Key}={kvp.Value}");
+                        }
+                        // Save mouse button bindings
+                        foreach (var kvp in _settings.Controls.MouseButtonBindings)
+                        {
+                            writer.WriteLine($"Mouse_{kvp.Key}={kvp.Value}");
+                        }
+                    }
                     writer.WriteLine();
 
                     // [Gameplay] Section - Gameplay settings
@@ -5928,6 +5947,8 @@ namespace Andastra.Runtime.Game.Core
             _selectedOptionsItemIndex = 0;
             _isEditingOptionValue = false;
             _editingOptionValue = string.Empty;
+            _isRebindingKey = false;
+            _rebindingActionName = string.Empty;
 
             Console.WriteLine("[Odyssey] Options menu opened");
         }
@@ -5953,6 +5974,8 @@ namespace Andastra.Runtime.Game.Core
             _selectedOptionsItemIndex = 0;
             _isEditingOptionValue = false;
             _editingOptionValue = string.Empty;
+            _isRebindingKey = false;
+            _rebindingActionName = string.Empty;
 
             Console.WriteLine("[Odyssey] Options menu closed");
         }
@@ -5989,6 +6012,8 @@ namespace Andastra.Runtime.Game.Core
                 ref _selectedOptionsItemIndex,
                 ref _isEditingOptionValue,
                 ref _editingOptionValue,
+                ref _isRebindingKey,
+                ref _rebindingActionName,
                 _settings,
                 _optionsByCategory,
                 (settings) => ApplyOptionsSettings(), // Apply callback
