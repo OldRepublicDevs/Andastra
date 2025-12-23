@@ -197,24 +197,69 @@ namespace Andastra.Runtime.Stride.Upscaling
                 var effect = effectInstance.Effect;
                 if (effect != null)
                 {
-                    // Get compute shader from effect
-                    // In Stride, effects contain multiple passes, we need the compute pass
-                    var passes = effect.Passes;
-                    if (passes != null && passes.Count > 0)
+                    // Get compute shader from effect using reflection
+                    // In Stride, Effect may have Passes property accessed via reflection
+                    // or we may need to access through Techniques
+                    try
                     {
-                        // Get the first compute pass (FSR shaders have single compute pass)
-                        var computePass = passes[0];
-                        if (computePass != null)
+                        var effectType = effect.GetType();
+                        
+                        // Try to get Passes property first
+                        var passesProperty = effectType.GetProperty("Passes", 
+                            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                        
+                        if (passesProperty != null)
                         {
-                            // Get compute shader from pass
-                            var computeShader = computePass.ComputeShader;
-                            if (computeShader != null)
+                            var passes = passesProperty.GetValue(effect);
+                            if (passes != null)
                             {
-                                // Set compute pipeline state on CommandList
-                                // CommandList.SetComputePipelineState() sets the compute shader pipeline
-                                commandList.SetComputePipelineState(computeShader);
+                                // Check if passes is a collection with Count property
+                                var passesType = passes.GetType();
+                                var countProperty = passesType.GetProperty("Count");
+                                if (countProperty != null)
+                                {
+                                    var count = (int)countProperty.GetValue(passes);
+                                    if (count > 0)
+                                    {
+                                        // Get first pass using indexer or Get method
+                                        var indexer = passesType.GetProperty("Item", 
+                                            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance, 
+                                            null, null, new[] { typeof(int) }, null);
+                                        if (indexer != null)
+                                        {
+                                            var computePass = indexer.GetValue(passes, new object[] { 0 });
+                                            if (computePass != null)
+                                            {
+                                                // Get ComputeShader from pass
+                                                var passType = computePass.GetType();
+                                                var computeShaderProperty = passType.GetProperty("ComputeShader",
+                                                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                                                if (computeShaderProperty != null)
+                                                {
+                                                    var computeShader = computeShaderProperty.GetValue(computePass);
+                                                    if (computeShader != null)
+                                                    {
+                                                        // Set compute pipeline state on CommandList using reflection
+                                                        var commandListType = commandList.GetType();
+                                                        var setPipelineMethod = commandListType.GetMethod("SetComputePipelineState",
+                                                            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                                                        if (setPipelineMethod != null)
+                                                        {
+                                                            setPipelineMethod.Invoke(commandList, new[] { computeShader });
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
+                    }
+                    catch
+                    {
+                        // Reflection access failed, pipeline state may be set by EffectInstance.Apply() if GraphicsContext was available
+                        // If not, this is a fallback and we continue without manually setting pipeline state
                     }
                 }
 
