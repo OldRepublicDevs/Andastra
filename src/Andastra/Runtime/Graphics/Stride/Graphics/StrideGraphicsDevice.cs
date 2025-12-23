@@ -159,18 +159,18 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public void Clear(Andastra.Runtime.Graphics.Color color)
         {
-            var strideColor = new Stride.Core.Mathematics.Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
+            var strideColor = new global::Stride.Core.Mathematics.Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
             _device.Clear(strideColor);
         }
 
         public void ClearDepth(float depth)
         {
-            _device.Clear(Stride.Core.Mathematics.Color4.Black, ClearOptions.DepthBuffer, depth, 0);
+            _device.Clear(global::Stride.Core.Mathematics.Color4.Black, ClearOptions.DepthBuffer, depth, 0);
         }
 
         public void ClearStencil(int stencil)
         {
-            _device.Clear(Stride.Core.Mathematics.Color4.Black, ClearOptions.Stencil, 1.0f, stencil);
+            _device.Clear(global::Stride.Core.Mathematics.Color4.Black, ClearOptions.Stencil, 1.0f, stencil);
         }
 
         public ITexture2D CreateTexture2D(int width, int height, byte[] data)
@@ -178,11 +178,11 @@ namespace Andastra.Runtime.Stride.Graphics
             var texture = StrideGraphics.Texture.New2D(_device, width, height, StrideGraphics.PixelFormat.R8G8B8A8_UNorm);
             if (data != null)
             {
-                var colorData = new Stride.Core.Mathematics.Color[data.Length / 4];
+                var colorData = new global::Stride.Core.Mathematics.Color[data.Length / 4];
                 for (int i = 0; i < colorData.Length; i++)
                 {
                     int offset = i * 4;
-                    colorData[i] = new Stride.Core.Mathematics.Color(data[offset], data[offset + 1], data[offset + 2], data[offset + 3]);
+                    colorData[i] = new global::Stride.Core.Mathematics.Color(data[offset], data[offset + 1], data[offset + 2], data[offset + 3]);
                 }
                 var graphicsContext = this.ImmediateContext;
                 if (graphicsContext != null)
