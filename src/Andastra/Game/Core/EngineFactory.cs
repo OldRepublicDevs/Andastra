@@ -54,28 +54,28 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Gets the engine family for the specified BioWare game.
         /// </summary>
-        public static Andastra.Runtime.Games.Common.EngineFamily GetEngineFamily(BioWareGame bioWareGame)
+        public static Andastra.Runtime.Engines.Common.EngineFamily GetEngineFamily(BioWareGame bioWareGame)
         {
             if (bioWareGame.IsOdyssey())
             {
-                return Andastra.Runtime.Games.Common.EngineFamily.Odyssey;
+                return Andastra.Runtime.Engines.Common.EngineFamily.Odyssey;
             }
             else if (bioWareGame.IsEclipse())
             {
-                return Andastra.Runtime.Games.Common.EngineFamily.Eclipse;
+                return Andastra.Runtime.Engines.Common.EngineFamily.Eclipse;
             }
             else if (bioWareGame.IsAurora())
             {
-                return Andastra.Runtime.Games.Common.EngineFamily.Aurora;
+                return Andastra.Runtime.Engines.Common.EngineFamily.Aurora;
             }
             else if (bioWareGame.IsInfinity())
             {
                 // Infinity Engine support is not yet implemented
-                return Andastra.Runtime.Games.Common.EngineFamily.Unknown;
+                return Andastra.Runtime.Engines.Common.EngineFamily.Unknown;
             }
             else
             {
-                return Andastra.Runtime.Games.Common.EngineFamily.Unknown;
+                return Andastra.Runtime.Engines.Common.EngineFamily.Unknown;
             }
         }
 
