@@ -91,9 +91,9 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// <remarks>
         /// Based on Stride Engine shader loading:
         /// - Compiled .sdsl files are stored as .sdeffect files in content
-        /// - Effect.Load() loads from default content paths
+        /// - StrideGraphics.Effect.Load() loads from default content paths (if available)
         /// - ContentManager.Load&lt;Effect&gt;() loads from content manager
-        /// - EffectSystem can compile shaders at runtime from source
+        /// - EffectCompiler can compile shaders at runtime from source
         ///
         /// Algorithm based on vendor/reone/glsl/f_pbr_ssr.glsl for 1:1 parity with original game.
         /// </remarks>
@@ -101,17 +101,27 @@ namespace Andastra.Runtime.Stride.PostProcessing
         {
             // Strategy 1: Try loading from compiled effect files using Effect.Load()
             // Effect.Load() searches in standard content paths for compiled .sdeffect files
-            // TODO: FIXME - Effect.Load() doesn't exist in newer Stride versions
-            // Need to use ContentManager or EffectSystem to load effects instead
-            // For now, skip this strategy and fall through to ContentManager loading
+            // Note: Effect.Load() may not exist in all Stride versions, so we catch exceptions and fall through
             try
             {
-                // Effect.Load() is not available in current Stride version
-                // Skip this strategy and use ContentManager or compile from source instead
-                _fullscreenEffect = null;
+                // Try to use Effect.Load() with correct namespace (StrideGraphics.Effect)
+                // This matches the pattern used in StrideTemporalAaEffect and other Stride post-processing effects
+                _fullscreenEffect = StrideGraphics.Effect.Load(_graphicsDevice, "SSREffect");
+                if (_fullscreenEffect != null)
+                {
+                    _ssrEffect = new EffectInstance(_fullscreenEffect);
+                    System.Console.WriteLine("[StrideSSR] Loaded SSREffect from compiled file using Effect.Load()");
+                    return;
+                }
+            }
+            catch (MissingMethodException)
+            {
+                // Effect.Load() doesn't exist in this Stride version, fall through to ContentManager
+                System.Console.WriteLine("[StrideSSR] Effect.Load() not available in this Stride version, trying ContentManager");
             }
             catch (Exception ex)
             {
+                // Other exceptions (file not found, etc.) - fall through to ContentManager
                 System.Console.WriteLine($"[StrideSSR] Failed to load SSREffect from compiled file: {ex.Message}");
             }
 
@@ -205,9 +215,9 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 // Load SSR effect shaders from compiled .sdsl files
                 // Based on Stride Engine: Effects are loaded from compiled .sdeffect files (compiled from .sdsl source)
                 // Loading order:
-                // 1. Try Effect.Load() - standard Stride method for loading compiled effects
+                // 1. Try StrideGraphics.Effect.Load() - standard Stride method for loading compiled effects (if available)
                 // 2. Try ContentManager if available through GraphicsDevice services
-                // 3. Fallback to programmatically created shaders if loading fails
+                // 3. Fallback to programmatically created shaders using EffectCompiler if loading fails
                 LoadSsrShaders();
 
                 _effectInitialized = true;
@@ -1493,21 +1503,9 @@ shader SSREffect : ShaderBase
                     }
                 }
 
-                // Final fallback: Try Effect.Load() with file path
-                // This may work if Stride can load shaders from absolute paths
-                try
-                {
-                    var effect = Effect.Load(_graphicsDevice, tempFilePath);
-                    if (effect != null)
-                    {
-                        System.Console.WriteLine($"[StrideSSR] Successfully loaded shader '{shaderName}' from file");
-                        return effect;
-                    }
-                }
-                catch
-                {
-                    // Effect.Load() doesn't support file paths directly, continue to return null
-                }
+                // Note: Effect.Load() doesn't support loading from file paths directly
+                // It only works with effect names from content paths, so we skip this fallback
+                // If we reach here, compilation has failed and we return null
 
                 System.Console.WriteLine($"[StrideSSR] Could not compile shader '{shaderName}' from file");
                 return null;
