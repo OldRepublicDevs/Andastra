@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using Andastra.Parsing;
@@ -413,10 +414,14 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 string code = data.GetCode();
                 if (code == null || code.Trim().Length == 0)
                 {
-                    // TODO:  If code generation failed, provide comprehensive fallback stub
-                    Debug("Warning: Generated code is empty, creating fallback stub.");
-                    string fallback = this.GenerateComprehensiveFallbackStub(file, "Code generation - empty output", null,
-                        "The decompilation process completed but generated no source code. This may indicate the file contains no executable code or all code was marked as dead/unreachable.");
+                    // If code generation failed, provide comprehensive fallback stub with all extracted information
+                    Debug("Warning: Generated code is empty, creating comprehensive fallback stub with extracted information.");
+                    string fallback = this.GenerateComprehensiveFallbackStubFromFileScriptData(
+                        file,
+                        data,
+                        "Code generation - empty output",
+                        null,
+                        "The decompilation process completed but generated no source code. This may indicate the file contains no executable code or all code was marked as dead/unreachable. However, subroutine signatures, globals, and struct declarations may have been successfully extracted and are included below.");
                     data.SetCode(fallback);
                     return PARTIAL_COMPILE;
                 }
@@ -1390,6 +1395,518 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             stub.Append("}").Append(newline);
 
             return stub.ToString();
+        }
+
+        /// <summary>
+        /// Generates a comprehensive fallback stub by extracting all available information from FileScriptData.
+        /// This method is used when code generation succeeds but returns empty output, allowing us to extract
+        /// subroutine signatures, globals, struct declarations, and other information that was successfully
+        /// parsed but couldn't be converted to source code.
+        /// </summary>
+        /// <param name="file">The NCS file being decompiled</param>
+        /// <param name="data">The FileScriptData object containing parsed information</param>
+        /// <param name="errorStage">Stage where the error occurred</param>
+        /// <param name="exception">Exception that occurred (if any)</param>
+        /// <param name="additionalInfo">Additional error information</param>
+        /// <returns>Comprehensive fallback stub with all extracted information</returns>
+        private string GenerateComprehensiveFallbackStubFromFileScriptData(
+            NcsFile file,
+            Utils.FileScriptData data,
+            string errorStage,
+            Exception exception,
+            string additionalInfo)
+        {
+            StringBuilder stub = new StringBuilder();
+            string newline = Environment.NewLine;
+
+            // Start with standard comprehensive stub header
+            string baseStub = this.GenerateComprehensiveFallbackStub(file, errorStage, exception, additionalInfo);
+
+            // Remove the minimal fallback function from the base stub (we'll replace it with extracted information)
+            int minimalFuncIndex = baseStub.LastIndexOf("// Minimal valid NSS stub");
+            if (minimalFuncIndex >= 0)
+            {
+                baseStub = baseStub.Substring(0, minimalFuncIndex);
+            }
+
+            stub.Append(baseStub);
+            stub.Append(newline);
+
+            // Extract and include struct declarations if available
+            string structDecls = "";
+            if (data != null)
+            {
+                try
+                {
+                    // Use reflection or a method to access subdata if available
+                    // Since subdata is private, we'll try to extract struct declarations through available methods
+                    // Check if we can get struct declarations through subdata
+                    var subdataField = typeof(Utils.FileScriptData).GetField("subdata", 
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (subdataField != null)
+                    {
+                        var subdata = subdataField.GetValue(data);
+                        if (subdata != null)
+                        {
+                            var getStructDeclsMethod = subdata.GetType().GetMethod("GetStructDeclarations");
+                            if (getStructDeclsMethod != null)
+                            {
+                                try
+                                {
+                                    structDecls = (string)getStructDeclsMethod.Invoke(subdata, null);
+                                    if (!string.IsNullOrEmpty(structDecls))
+                                    {
+                                        stub.Append("// ========================================").Append(newline);
+                                        stub.Append("// STRUCT DECLARATIONS (EXTRACTED)").Append(newline);
+                                        stub.Append("// ========================================").Append(newline);
+                                        stub.Append("// The following struct declarations were successfully extracted from the bytecode.").Append(newline);
+                                        stub.Append("// These structures were detected but full decompilation failed.").Append(newline);
+                                        stub.Append(newline);
+                                        stub.Append(structDecls).Append(newline);
+                                        stub.Append(newline);
+                                    }
+                                }
+                                catch (Exception e)
+                                {
+                                    Debug("Error extracting struct declarations: " + e.Message);
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug("Error accessing subdata for struct declarations: " + e.Message);
+                }
+            }
+
+            // Extract and include globals if available
+            string globalsCode = "";
+            if (data != null)
+            {
+                try
+                {
+                    // Access globals through reflection
+                    var globalsField = typeof(Utils.FileScriptData).GetField("globals",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (globalsField != null)
+                    {
+                        var globals = globalsField.GetValue(data);
+                        if (globals != null)
+                        {
+                            var toStringGlobalsMethod = globals.GetType().GetMethod("ToStringGlobals");
+                            if (toStringGlobalsMethod != null)
+                            {
+                                try
+                                {
+                                    string globalsStr = (string)toStringGlobalsMethod.Invoke(globals, null);
+                                    if (!string.IsNullOrEmpty(globalsStr))
+                                    {
+                                        globalsCode = globalsStr;
+                                    }
+                                }
+                                catch (Exception e)
+                                {
+                                    Debug("Error extracting globals: " + e.Message);
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug("Error accessing globals: " + e.Message);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(globalsCode))
+            {
+                stub.Append("// ========================================").Append(newline);
+                stub.Append("// GLOBAL VARIABLES (EXTRACTED)").Append(newline);
+                stub.Append("// ========================================").Append(newline);
+                stub.Append("// The following global variables were successfully extracted from the bytecode.").Append(newline);
+                stub.Append("// These globals were detected but full decompilation failed.").Append(newline);
+                stub.Append(newline);
+                stub.Append("// Globals").Append(newline);
+                stub.Append(globalsCode).Append(newline);
+                stub.Append(newline);
+            }
+
+            // Extract subroutine information
+            List<ExtractedSubroutineInfo> extractedSubs = new List<ExtractedSubroutineInfo>();
+            if (data != null)
+            {
+                try
+                {
+                    // Access subs list through reflection
+                    var subsField = typeof(Utils.FileScriptData).GetField("subs",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (subsField != null)
+                    {
+                        var subs = subsField.GetValue(data);
+                        if (subs is System.Collections.IList subsList && subsList.Count > 0)
+                        {
+                            stub.Append("// ========================================").Append(newline);
+                            stub.Append("// SUBROUTINE INFORMATION (EXTRACTED)").Append(newline);
+                            stub.Append("// ========================================").Append(newline);
+                            stub.Append("// The following subroutine information was successfully extracted from the bytecode.").Append(newline);
+                            stub.Append("// Subroutine signatures were detected but full decompilation failed.").Append(newline);
+                            stub.Append(newline);
+
+                            // Extract information from each subroutine
+                            foreach (var subObj in subsList)
+                            {
+                                if (subObj == null)
+                                {
+                                    continue;
+                                }
+
+                                ExtractedSubroutineInfo subInfo = new ExtractedSubroutineInfo();
+                                bool hasInfo = false;
+
+                                try
+                                {
+                                    // Try to get subroutine name
+                                    var getNameMethod = subObj.GetType().GetMethod("GetName");
+                                    if (getNameMethod != null)
+                                    {
+                                        string name = (string)getNameMethod.Invoke(subObj, null);
+                                        if (!string.IsNullOrEmpty(name))
+                                        {
+                                            subInfo.Name = name;
+                                            hasInfo = true;
+                                        }
+                                    }
+                                }
+                                catch (Exception e)
+                                {
+                                    Debug("Error getting subroutine name: " + e.Message);
+                                }
+
+                                try
+                                {
+                                    // Try to get subroutine prototype
+                                    var getProtoMethod = subObj.GetType().GetMethod("GetProto");
+                                    if (getProtoMethod != null)
+                                    {
+                                        string proto = (string)getProtoMethod.Invoke(subObj, null);
+                                        if (!string.IsNullOrEmpty(proto))
+                                        {
+                                            subInfo.Signature = proto;
+                                            hasInfo = true;
+
+                                            // Try to parse return type and parameters from prototype
+                                            ParseSignatureForReturnTypeAndParams(proto, subInfo);
+                                        }
+                                    }
+                                }
+                                catch (Exception e)
+                                {
+                                    Debug("Error getting subroutine prototype: " + e.Message);
+                                }
+
+                                try
+                                {
+                                    // Check if this is the main function
+                                    var isMainMethod = subObj.GetType().GetMethod("IsMain");
+                                    if (isMainMethod != null)
+                                    {
+                                        bool isMain = (bool)isMainMethod.Invoke(subObj, null);
+                                        if (isMain && string.IsNullOrEmpty(subInfo.Name))
+                                        {
+                                            subInfo.Name = "main";
+                                            hasInfo = true;
+                                        }
+                                    }
+                                }
+                                catch (Exception e)
+                                {
+                                    Debug("Error checking if subroutine is main: " + e.Message);
+                                }
+
+                                if (hasInfo)
+                                {
+                                    extractedSubs.Add(subInfo);
+                                }
+                            }
+
+                            // Generate prototypes for non-main functions
+                            bool hasMain = false;
+                            foreach (ExtractedSubroutineInfo subInfo in extractedSubs)
+                            {
+                                bool isMain = subInfo.Name != null &&
+                                             (subInfo.Name.Equals("main", StringComparison.OrdinalIgnoreCase) ||
+                                              subInfo.Name.Equals("StartingConditional", StringComparison.OrdinalIgnoreCase));
+
+                                if (isMain)
+                                {
+                                    hasMain = true;
+                                }
+                                else if (!string.IsNullOrEmpty(subInfo.Signature))
+                                {
+                                    stub.Append(subInfo.Signature).Append(";").Append(newline);
+                                }
+                            }
+
+                            stub.Append(newline);
+
+                            // Generate function implementations
+                            foreach (ExtractedSubroutineInfo subInfo in extractedSubs)
+                            {
+                                bool isMain = subInfo.Name != null &&
+                                             (subInfo.Name.Equals("main", StringComparison.OrdinalIgnoreCase) ||
+                                              subInfo.Name.Equals("StartingConditional", StringComparison.OrdinalIgnoreCase));
+
+                                // Generate function signature
+                                if (!string.IsNullOrEmpty(subInfo.Signature))
+                                {
+                                    stub.Append(subInfo.Signature).Append(newline);
+                                }
+                                else if (!string.IsNullOrEmpty(subInfo.Name))
+                                {
+                                    // Generate minimal signature if we only have the name
+                                    string returnType = !string.IsNullOrEmpty(subInfo.ReturnType) ? subInfo.ReturnType : "void";
+                                    stub.Append(returnType).Append(" ").Append(subInfo.Name).Append("()").Append(newline);
+                                }
+                                else
+                                {
+                                    continue; // Skip if we have no information
+                                }
+
+                                stub.Append("{").Append(newline);
+                                stub.Append("    // Function signature extracted from FileScriptData").Append(newline);
+                                stub.Append("    // Code generation failed - function body could not be recovered").Append(newline);
+
+                                if (isMain)
+                                {
+                                    stub.Append("    // This is the main entry point function").Append(newline);
+                                }
+
+                                if (subInfo.ParameterCount > 0)
+                                {
+                                    stub.Append("    // Parameters: ").Append(subInfo.ParameterCount).Append(" detected").Append(newline);
+                                }
+
+                                if (!string.IsNullOrEmpty(subInfo.ReturnType) && subInfo.ReturnType != "void")
+                                {
+                                    stub.Append("    // Return type: ").Append(subInfo.ReturnType).Append(newline);
+                                    string returnValue = GetDefaultReturnValue(subInfo.ReturnType);
+                                    if (!string.IsNullOrEmpty(returnValue))
+                                    {
+                                        stub.Append("    return ").Append(returnValue).Append(";").Append(newline);
+                                    }
+                                }
+
+                                stub.Append("}").Append(newline);
+                                stub.Append(newline);
+                            }
+
+                            // If no main function was found, add a default one
+                            if (!hasMain && extractedSubs.Count > 0)
+                            {
+                                stub.Append("// Note: No main() or StartingConditional() function was detected.").Append(newline);
+                                stub.Append("// Adding default main() stub:").Append(newline);
+                                stub.Append("void main()").Append(newline);
+                                stub.Append("{").Append(newline);
+                                stub.Append("    // Main function stub - no entry point detected").Append(newline);
+                                stub.Append("}").Append(newline);
+                            }
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug("Error extracting subroutine information: " + e.Message);
+                }
+            }
+
+            // Include original bytecode if available
+            if (data != null)
+            {
+                try
+                {
+                    string originalByteCode = data.GetOriginalByteCode();
+                    if (!string.IsNullOrEmpty(originalByteCode))
+                    {
+                        stub.Append("// ========================================").Append(newline);
+                        stub.Append("// ORIGINAL BYTECODE (PRESERVED)").Append(newline);
+                        stub.Append("// ========================================").Append(newline);
+                        stub.Append("// The original bytecode is preserved below for reference.").Append(newline);
+                        stub.Append("// This may be useful for manual recovery or future analysis.").Append(newline);
+                        stub.Append(newline);
+
+                        // Split bytecode into lines and add as comments
+                        string[] bytecodeLines = originalByteCode.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                        foreach (string line in bytecodeLines)
+                        {
+                            if (!string.IsNullOrEmpty(line))
+                            {
+                                stub.Append("// ").Append(line).Append(newline);
+                            }
+                        }
+                        stub.Append(newline);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug("Error including original bytecode: " + e.Message);
+                }
+            }
+
+            // Add diagnostic information about what was extracted
+            stub.Append("// ========================================").Append(newline);
+            stub.Append("// EXTRACTION SUMMARY").Append(newline);
+            stub.Append("// ========================================").Append(newline);
+            if (data != null)
+            {
+                try
+                {
+                    var subsField = typeof(Utils.FileScriptData).GetField("subs",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (subsField != null)
+                    {
+                        var subs = subsField.GetValue(data);
+                        if (subs is System.Collections.IList subsList)
+                        {
+                            stub.Append("// Subroutines detected: ").Append(subsList.Count).Append(newline);
+                            stub.Append("// Subroutines extracted: ").Append(extractedSubs.Count).Append(newline);
+                        }
+                    }
+
+                    var globalsField = typeof(Utils.FileScriptData).GetField("globals",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (globalsField != null)
+                    {
+                        var globals = globalsField.GetValue(data);
+                        stub.Append("// Globals detected: ").Append(globals != null ? "Yes" : "No").Append(newline);
+                    }
+
+                    var subdataField = typeof(Utils.FileScriptData).GetField("subdata",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (subdataField != null)
+                    {
+                        var subdata = subdataField.GetValue(data);
+                        if (subdata != null)
+                        {
+                            try
+                            {
+                                var numSubsMethod = subdata.GetType().GetMethod("NumSubs");
+                                if (numSubsMethod != null)
+                                {
+                                    int numSubs = (int)numSubsMethod.Invoke(subdata, null);
+                                    stub.Append("// Total subroutines in analysis data: ").Append(numSubs).Append(newline);
+                                }
+
+                                var countSubsDoneMethod = subdata.GetType().GetMethod("CountSubsDone");
+                                if (countSubsDoneMethod != null)
+                                {
+                                    int countDone = (int)countSubsDoneMethod.Invoke(subdata, null);
+                                    stub.Append("// Subroutines fully processed: ").Append(countDone).Append(newline);
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                Debug("Error getting analysis data summary: " + e.Message);
+                            }
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug("Error generating extraction summary: " + e.Message);
+                }
+            }
+            stub.Append(newline);
+
+            // If we extracted nothing, add a minimal fallback function
+            if (extractedSubs.Count == 0 && string.IsNullOrEmpty(structDecls) && string.IsNullOrEmpty(globalsCode))
+            {
+                stub.Append("// Minimal fallback function:").Append(newline);
+                stub.Append("void main()").Append(newline);
+                stub.Append("{").Append(newline);
+                stub.Append("    // Code generation failed at stage: ").Append(errorStage != null ? errorStage : "Unknown").Append(newline);
+                if (exception != null && exception.Message != null)
+                {
+                    stub.Append("    // Error: ").Append(exception.Message.Replace("\n", " ").Replace("\r", "")).Append(newline);
+                }
+                stub.Append("    // No information could be extracted from FileScriptData").Append(newline);
+                stub.Append("}").Append(newline);
+            }
+
+            return stub.ToString();
+        }
+
+        /// <summary>
+        /// Parses a function signature string to extract return type and parameter information.
+        /// </summary>
+        /// <param name="signature">Function signature string (e.g., "int MyFunction(int param1, string param2)")</param>
+        /// <param name="subInfo">ExtractedSubroutineInfo object to populate</param>
+        private void ParseSignatureForReturnTypeAndParams(string signature, ExtractedSubroutineInfo subInfo)
+        {
+            if (string.IsNullOrEmpty(signature))
+            {
+                return;
+            }
+
+            try
+            {
+                // Remove any leading/trailing whitespace
+                signature = signature.Trim();
+
+                // Find the opening parenthesis
+                int openParen = signature.IndexOf('(');
+                if (openParen < 0)
+                {
+                    return; // Invalid signature
+                }
+
+                // Extract return type and function name (everything before the opening parenthesis)
+                string returnTypeAndName = signature.Substring(0, openParen).Trim();
+                int lastSpace = returnTypeAndName.LastIndexOf(' ');
+                if (lastSpace >= 0)
+                {
+                    subInfo.ReturnType = returnTypeAndName.Substring(0, lastSpace).Trim();
+                }
+                else
+                {
+                    subInfo.ReturnType = "void"; // Default if no return type specified
+                }
+
+                // Extract parameters (everything between parentheses)
+                int closeParen = signature.IndexOf(')', openParen);
+                if (closeParen > openParen)
+                {
+                    string paramsStr = signature.Substring(openParen + 1, closeParen - openParen - 1).Trim();
+                    if (!string.IsNullOrEmpty(paramsStr))
+                    {
+                        // Split parameters by comma
+                        string[] paramParts = paramsStr.Split(',');
+                        subInfo.ParameterCount = paramParts.Length;
+                        foreach (string paramPart in paramParts)
+                        {
+                            string trimmedParam = paramPart.Trim();
+                            if (!string.IsNullOrEmpty(trimmedParam))
+                            {
+                                // Extract parameter type (first word)
+                                int spaceIdx = trimmedParam.IndexOf(' ');
+                                if (spaceIdx > 0)
+                                {
+                                    string paramType = trimmedParam.Substring(0, spaceIdx).Trim();
+                                    subInfo.ParameterTypes.Add(paramType);
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        subInfo.ParameterCount = 0;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Debug("Error parsing signature: " + e.Message);
+            }
         }
 
         /// <summary>
