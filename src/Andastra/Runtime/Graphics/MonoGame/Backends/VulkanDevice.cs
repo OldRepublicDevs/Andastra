@@ -11305,7 +11305,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 BufferDesc instanceBufferDesc = new BufferDesc
                 {
                     ByteSize = instanceBufferSize,
-                    Usage = BufferUsageFlags.AccelStructStorage | BufferUsageFlags.AccelStructBuildInput,
+                    Usage = BufferUsageFlags.AccelStructStorage,
                     InitialState = ResourceState.AccelStructBuildInput,
                     IsAccelStructBuildInput = true,
                     DebugName = "TLAS_InstanceBuffer"

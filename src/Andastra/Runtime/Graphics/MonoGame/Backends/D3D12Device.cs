@@ -317,7 +317,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // On non-Windows platforms, return a texture with zero handle
                 // The application should use VulkanDevice for cross-platform support
                 IntPtr handle = new IntPtr(_nextResourceHandle++);
-                var texture = new D3D12Texture(handle, desc, IntPtr.Zero, IntPtr.Zero, _device);
+                var texture = new D3D12Texture(handle, desc, IntPtr.Zero, IntPtr.Zero, _device, this);
                 _resources[handle] = texture;
                 return texture;
             }
@@ -477,7 +477,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                 // Create texture wrapper
                 IntPtr handle = new IntPtr(_nextResourceHandle++);
-                var texture = new D3D12Texture(handle, desc, d3d12Resource, srvHandle, _device);
+                var texture = new D3D12Texture(handle, desc, d3d12Resource, srvHandle, _device, this);
                 _resources[handle] = texture;
 
                 return texture;
@@ -522,7 +522,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // On non-Windows platforms, return a buffer with zero handle
                 // The application should use VulkanDevice for cross-platform support
             IntPtr handle = new IntPtr(_nextResourceHandle++);
-            var buffer = new D3D12Buffer(handle, desc, IntPtr.Zero, _device);
+            var buffer = new D3D12Buffer(handle, desc, IntPtr.Zero, _device, this);
             _resources[handle] = buffer;
                 return buffer;
             }
@@ -613,7 +613,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                 // Create buffer wrapper
                 IntPtr handle = new IntPtr(_nextResourceHandle++);
-                var buffer = new D3D12Buffer(handle, desc, d3d12Resource, _device);
+                var buffer = new D3D12Buffer(handle, desc, d3d12Resource, _device, this);
                 _resources[handle] = buffer;
 
             return buffer;
@@ -6571,19 +6571,21 @@ namespace Andastra.Runtime.MonoGame.Backends
             private readonly IntPtr _d3d12Resource;
             private readonly IntPtr _srvHandle;
             private readonly IntPtr _device;
+            private readonly D3D12Device _parentDevice;
 
             public D3D12Texture(IntPtr handle, TextureDesc desc, IntPtr nativeHandle = default(IntPtr))
-                : this(handle, desc, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, nativeHandle)
+                : this(handle, desc, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, null, nativeHandle)
             {
             }
 
-            public D3D12Texture(IntPtr handle, TextureDesc desc, IntPtr d3d12Resource, IntPtr srvHandle, IntPtr device, IntPtr nativeHandle = default(IntPtr))
+            public D3D12Texture(IntPtr handle, TextureDesc desc, IntPtr d3d12Resource, IntPtr srvHandle, IntPtr device, D3D12Device parentDevice, IntPtr nativeHandle = default(IntPtr))
             {
                 _internalHandle = handle;
                 Desc = desc;
                 _d3d12Resource = d3d12Resource;
                 _srvHandle = srvHandle;
                 _device = device;
+                _parentDevice = parentDevice;
                 NativeHandle = nativeHandle != IntPtr.Zero ? nativeHandle : (_d3d12Resource != IntPtr.Zero ? _d3d12Resource : handle);
             }
 
@@ -6592,9 +6594,9 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // Release D3D12 resource if valid
                 // ID3D12Resource is a COM object that must be released via IUnknown::Release()
                 // Based on DirectX 12 Resource Management: https://docs.microsoft.com/en-us/windows/win32/direct3d12/managing-resource-lifetime
-                if (_d3d12Resource != IntPtr.Zero)
+                if (_d3d12Resource != IntPtr.Zero && _parentDevice != null)
                 {
-                    ReleaseComObject(_d3d12Resource);
+                    _parentDevice.ReleaseComObject(_d3d12Resource);
                 }
 
                 // Note: Descriptor handles (_srvHandle) are typically just offsets into a descriptor heap
@@ -6822,13 +6824,15 @@ namespace Andastra.Runtime.MonoGame.Backends
             private readonly IntPtr _internalHandle;
             private readonly IntPtr _d3d12Resource;
             private readonly IntPtr _device;
+            private readonly D3D12Device _parentDevice;
 
-            public D3D12Buffer(IntPtr handle, BufferDesc desc, IntPtr d3d12Resource, IntPtr device)
+            public D3D12Buffer(IntPtr handle, BufferDesc desc, IntPtr d3d12Resource, IntPtr device, D3D12Device parentDevice)
             {
                 _internalHandle = handle;
                 Desc = desc;
                 _d3d12Resource = d3d12Resource;
                 _device = device;
+                _parentDevice = parentDevice;
                 NativeHandle = _d3d12Resource != IntPtr.Zero ? _d3d12Resource : handle;
             }
 
@@ -6837,9 +6841,9 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // Release D3D12 resource if valid
                 // ID3D12Resource is a COM object that must be released via IUnknown::Release()
                 // Based on DirectX 12 Resource Management: https://docs.microsoft.com/en-us/windows/win32/direct3d12/managing-resource-lifetime
-                if (_d3d12Resource != IntPtr.Zero)
+                if (_d3d12Resource != IntPtr.Zero && _parentDevice != null)
                 {
-                    ReleaseComObject(_d3d12Resource);
+                    _parentDevice.ReleaseComObject(_d3d12Resource);
                 }
             }
         }
@@ -7001,7 +7005,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 {
                     try
                     {
-                        ReleaseComObject(_d3d12PipelineState);
+                        _parentDevice.ReleaseComObject(_d3d12PipelineState);
                     }
                     catch (Exception ex)
                     {
@@ -7017,7 +7021,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 {
                     try
                     {
-                        ReleaseComObject(_rootSignature);
+                        _parentDevice.ReleaseComObject(_rootSignature);
                     }
                     catch (Exception ex)
                     {
@@ -7267,7 +7271,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 BufferDesc scratchBufferDesc = new BufferDesc
                 {
                     ByteSize = (int)requiredSize,
-                    Usage = BufferUsageFlags.AccelStructStorage | BufferUsageFlags.AccelStructBuildInput,
+                    Usage = BufferUsageFlags.AccelStructStorage,
                     InitialState = ResourceState.AccelStructBuildInput,
                     IsAccelStructBuildInput = true,
                     DebugName = IsTopLevel ? "TLAS_ScratchBuffer" : "BLAS_ScratchBuffer"
@@ -8064,7 +8068,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                     // Map the staging buffer and copy data with exact row pitch from GetCopyableFootprints
                     // For upload heaps, we can map and write directly
-                    IntPtr mappedData = MapStagingBufferResource(stagingBufferResource, 0, unchecked((int)totalBytes));
+                    IntPtr mappedData = MapStagingBufferResource(stagingBufferResource, 0, totalBytes);
                     if (mappedData == IntPtr.Zero)
                     {
                         throw new InvalidOperationException("Failed to map staging buffer");
@@ -8101,7 +8105,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     }
                     finally
                     {
-                        UnmapStagingBufferResource(stagingBufferResource, 0, unchecked((int)totalBytes));
+                        UnmapStagingBufferResource(stagingBufferResource, 0, totalBytes);
                     }
 
                     // Transition texture to COPY_DEST state
@@ -11839,7 +11843,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                         BufferDesc instanceBufferDesc = new BufferDesc
                         {
                             ByteSize = instanceDescSize * instances.Length,
-                            Usage = BufferUsageFlags.AccelStructStorage | BufferUsageFlags.AccelStructBuildInput,
+                            Usage = BufferUsageFlags.AccelStructStorage,
                             InitialState = ResourceState.AccelStructBuildInput,
                             IsAccelStructBuildInput = true,
                             DebugName = "TLAS_InstanceBuffer"
