@@ -67,7 +67,6 @@
     <Content Remove="Demo\**" />
     <EmbeddedResource Remove="Demo\**" />
     <None Remove="Demo\**" />
-    <Compile Remove="Game\Program.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Game\Program.cs" />
