@@ -671,7 +671,7 @@ namespace Andastra.Runtime.Stride.Graphics
                     AddressV = samplerDesc.AddressV,
                     AddressW = samplerDesc.AddressW,
                     MaxAnisotropy = samplerDesc.MaxAnisotropy,
-                    MaxMipLevels = samplerDesc.MaxMipLevel,
+                    MaxMipLevel = samplerDesc.MaxMipLevel,
                     MipMapLevelOfDetailBias = (float)samplerDesc.MipMapLevelOfDetailBias
                 };
 
