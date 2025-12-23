@@ -61,6 +61,107 @@ namespace Andastra.Runtime.MonoGame.Backends
         // Frame statistics
         private FrameStatistics _lastFrameStats;
 
+        // OpenGL ES function delegates (loaded dynamically via eglGetProcAddress)
+        private delegate void GlGenTexturesDelegate(int n, ref uint textures);
+        private delegate void GlBindTextureDelegate(uint target, uint texture);
+        private delegate void GlTexImage2DDelegate(uint target, int level, int internalformat, int width, int height, int border, uint format, uint type, IntPtr pixels);
+        private delegate void GlCompressedTexImage2DDelegate(uint target, int level, uint internalformat, int width, int height, int border, int imageSize, IntPtr data);
+        private delegate void GlTexParameteriDelegate(uint target, uint pname, int param);
+        private delegate uint GlGetErrorDelegate();
+        private delegate void GlDeleteTexturesDelegate(int n, ref uint textures);
+        private delegate void GlViewportDelegate(int x, int y, int width, int height);
+        private delegate void GlGetIntegervDelegate(uint pname, ref int data);
+        private delegate IntPtr GlGetStringDelegate(uint name);
+        private delegate void GlClearColorDelegate(float red, float green, float blue, float alpha);
+        private delegate void GlClearDelegate(uint mask);
+        private delegate void GlEnableDelegate(uint cap);
+        private delegate void GlDisableDelegate(uint cap);
+        private delegate void GlDepthFuncDelegate(uint func);
+        private delegate void GlCullFaceDelegate(uint mode);
+        private delegate void GlFrontFaceDelegate(uint mode);
+        private delegate void GlBlendFuncDelegate(uint sfactor, uint dfactor);
+        private delegate void GlGenBuffersDelegate(int n, ref uint buffers);
+        private delegate void GlBindBufferDelegate(uint target, uint buffer);
+        private delegate void GlBufferDataDelegate(uint target, int size, IntPtr data, uint usage);
+        private delegate void GlDeleteBuffersDelegate(int n, ref uint buffers);
+        private delegate uint GlCreateShaderDelegate(uint shaderType);
+        private delegate void GlShaderSourceDelegate(uint shader, int count, IntPtr source, IntPtr length);
+        private delegate void GlCompileShaderDelegate(uint shader);
+        private delegate void GlGetShaderivDelegate(uint shader, uint pname, ref int param);
+        private delegate void GlGetShaderInfoLogDelegate(uint shader, int bufSize, ref int length, System.Text.StringBuilder infoLog);
+        private delegate void GlDeleteShaderDelegate(uint shader);
+        private delegate uint GlCreateProgramDelegate();
+        private delegate void GlAttachShaderDelegate(uint program, uint shader);
+        private delegate void GlLinkProgramDelegate(uint program);
+        private delegate void GlGetProgramivDelegate(uint program, uint pname, ref int param);
+        private delegate void GlGetProgramInfoLogDelegate(uint program, int bufSize, ref int length, System.Text.StringBuilder infoLog);
+        private delegate void GlDeleteProgramDelegate(uint program);
+        private delegate void GlUseProgramDelegate(uint program);
+        private delegate void GlGenVertexArraysDelegate(int n, ref uint arrays);
+        private delegate void GlBindVertexArrayDelegate(uint array);
+        private delegate void GlDeleteVertexArraysDelegate(int n, ref uint arrays);
+        private delegate void GlVertexAttribPointerDelegate(uint index, int size, uint type, bool normalized, int stride, IntPtr pointer);
+        private delegate void GlEnableVertexAttribArrayDelegate(uint index);
+        private delegate void GlBindFramebufferDelegate(uint target, uint framebuffer);
+        private delegate void GlGenFramebuffersDelegate(int n, ref uint framebuffers);
+        private delegate void GlDeleteFramebuffersDelegate(int n, ref uint framebuffers);
+        private delegate void GlFramebufferTexture2DDelegate(uint target, uint attachment, uint textarget, uint texture, int level);
+        private delegate uint GlCheckFramebufferStatusDelegate(uint target);
+        private delegate void GlGenerateMipmapDelegate(uint target);
+        private delegate int GlGetStringiDelegate(uint name, uint index);
+
+        // Loaded function delegates
+        private GlGenTexturesDelegate _glGenTextures;
+        private GlBindTextureDelegate _glBindTexture;
+        private GlTexImage2DDelegate _glTexImage2D;
+        private GlCompressedTexImage2DDelegate _glCompressedTexImage2D;
+        private GlTexParameteriDelegate _glTexParameteri;
+        private GlGetErrorDelegate _glGetError;
+        private GlDeleteTexturesDelegate _glDeleteTextures;
+        private GlViewportDelegate _glViewport;
+        private GlGetIntegervDelegate _glGetIntegerv;
+        private GlGetStringDelegate _glGetString;
+        private GlClearColorDelegate _glClearColor;
+        private GlClearDelegate _glClear;
+        private GlEnableDelegate _glEnable;
+        private GlDisableDelegate _glDisable;
+        private GlDepthFuncDelegate _glDepthFunc;
+        private GlCullFaceDelegate _glCullFace;
+        private GlFrontFaceDelegate _glFrontFace;
+        private GlBlendFuncDelegate _glBlendFunc;
+        private GlGenBuffersDelegate _glGenBuffers;
+        private GlBindBufferDelegate _glBindBuffer;
+        private GlBufferDataDelegate _glBufferData;
+        private GlDeleteBuffersDelegate _glDeleteBuffers;
+        private GlCreateShaderDelegate _glCreateShader;
+        private GlShaderSourceDelegate _glShaderSource;
+        private GlCompileShaderDelegate _glCompileShader;
+        private GlGetShaderivDelegate _glGetShaderiv;
+        private GlGetShaderInfoLogDelegate _glGetShaderInfoLog;
+        private GlDeleteShaderDelegate _glDeleteShader;
+        private GlCreateProgramDelegate _glCreateProgram;
+        private GlAttachShaderDelegate _glAttachShader;
+        private GlLinkProgramDelegate _glLinkProgram;
+        private GlGetProgramivDelegate _glGetProgramiv;
+        private GlGetProgramInfoLogDelegate _glGetProgramInfoLog;
+        private GlDeleteProgramDelegate _glDeleteProgram;
+        private GlUseProgramDelegate _glUseProgram;
+        private GlGenVertexArraysDelegate _glGenVertexArrays;
+        private GlBindVertexArrayDelegate _glBindVertexArray;
+        private GlDeleteVertexArraysDelegate _glDeleteVertexArrays;
+        private GlVertexAttribPointerDelegate _glVertexAttribPointer;
+        private GlEnableVertexAttribArrayDelegate _glEnableVertexAttribArray;
+        private GlBindFramebufferDelegate _glBindFramebuffer;
+        private GlGenFramebuffersDelegate _glGenFramebuffers;
+        private GlDeleteFramebuffersDelegate _glDeleteFramebuffers;
+        private GlFramebufferTexture2DDelegate _glFramebufferTexture2D;
+        private GlCheckFramebufferStatusDelegate _glCheckFramebufferStatus;
+        private GlGenerateMipmapDelegate _glGenerateMipmap;
+        private GlGetStringiDelegate _glGetStringi;
+
+        // Platform-specific library handle
+        private IntPtr _glesLibraryHandle;
+
         public GraphicsBackend BackendType
         {
             get { return GraphicsBackend.OpenGLES; }
@@ -217,6 +318,67 @@ namespace Andastra.Runtime.MonoGame.Backends
             // Cleanup EGL
             CleanupEGL();
 
+            // Unload OpenGL ES library if loaded
+            if (_glesLibraryHandle != IntPtr.Zero)
+            {
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    // FreeLibrary on Windows
+                    FreeLibrary(_glesLibraryHandle);
+                }
+                // On Linux/OSX, dlclose would be needed but we don't typically unload libraries
+                _glesLibraryHandle = IntPtr.Zero;
+            }
+
+            // Clear function delegates
+            _glGenTextures = null;
+            _glBindTexture = null;
+            _glTexImage2D = null;
+            _glCompressedTexImage2D = null;
+            _glTexParameteri = null;
+            _glGetError = null;
+            _glDeleteTextures = null;
+            _glViewport = null;
+            _glGetIntegerv = null;
+            _glGetString = null;
+            _glClearColor = null;
+            _glClear = null;
+            _glEnable = null;
+            _glDisable = null;
+            _glDepthFunc = null;
+            _glCullFace = null;
+            _glFrontFace = null;
+            _glBlendFunc = null;
+            _glGenBuffers = null;
+            _glBindBuffer = null;
+            _glBufferData = null;
+            _glDeleteBuffers = null;
+            _glCreateShader = null;
+            _glShaderSource = null;
+            _glCompileShader = null;
+            _glGetShaderiv = null;
+            _glGetShaderInfoLog = null;
+            _glDeleteShader = null;
+            _glCreateProgram = null;
+            _glAttachShader = null;
+            _glLinkProgram = null;
+            _glGetProgramiv = null;
+            _glGetProgramInfoLog = null;
+            _glDeleteProgram = null;
+            _glUseProgram = null;
+            _glGenVertexArrays = null;
+            _glBindVertexArray = null;
+            _glDeleteVertexArrays = null;
+            _glVertexAttribPointer = null;
+            _glEnableVertexAttribArray = null;
+            _glBindFramebuffer = null;
+            _glGenFramebuffers = null;
+            _glDeleteFramebuffers = null;
+            _glFramebufferTexture2D = null;
+            _glCheckFramebufferStatus = null;
+            _glGenerateMipmap = null;
+            _glGetStringi = null;
+
             _initialized = false;
             Console.WriteLine("[OpenGLESBackend] Shutdown complete");
         }
@@ -236,11 +398,21 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             // Bind default framebuffer (0 for window rendering in ES)
-            // glBindFramebuffer(GL_FRAMEBUFFER, _defaultFramebuffer)
+            if (_glBindFramebuffer != null)
+            {
+                const uint GL_FRAMEBUFFER = 0x8D40;
+                _glBindFramebuffer(GL_FRAMEBUFFER, _defaultFramebuffer);
+            }
 
             // Clear buffers
-            // glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
-            // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT)
+            if (_glClearColor != null && _glClear != null)
+            {
+                _glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+                const uint GL_COLOR_BUFFER_BIT = 0x00004000;
+                const uint GL_DEPTH_BUFFER_BIT = 0x00000100;
+                const uint GL_STENCIL_BUFFER_BIT = 0x00000400;
+                _glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+            }
 
             _lastFrameStats = new FrameStatistics();
         }
@@ -259,17 +431,24 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             // Check for GL errors in debug builds
-            // GLenum error = glGetError()
+            if (_glGetError != null)
+            {
+                uint error = _glGetError();
+                if (error != GL_NO_ERROR)
+                {
+                    Console.WriteLine($"[OpenGLESBackend] EndFrame: OpenGL ES error {GetGLESErrorName(error)} (0x{error:X})");
+                }
+            }
         }
 
         /// <summary>
         /// Resizes the rendering surface and updates the viewport.
-        /// 
+        ///
         /// For EGL window surfaces: The native window typically handles resizing automatically,
         /// but we query the actual surface size and update the viewport accordingly.
         /// For EGL pbuffer surfaces: The surface must be destroyed and recreated with new dimensions
         /// since pbuffers have fixed sizes.
-        /// 
+        ///
         /// Based on EGL 1.5 specification and OpenGL ES 3.2 surface management requirements.
         /// </summary>
         public void Resize(int width, int height)
@@ -377,10 +556,13 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             // Update OpenGL ES viewport to match new surface size
-            glViewport(0, 0, width, height);
+            if (_glViewport != null)
+            {
+                _glViewport(0, 0, width, height);
+            }
 
             // Check for OpenGL ES errors
-            uint glError = glGetError();
+            uint glError = (_glGetError != null) ? _glGetError() : GL_NO_ERROR;
             if (glError != GL_NO_ERROR)
             {
                 string errorName = GetGLESErrorName(glError);
@@ -453,8 +635,13 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // Generate texture if not already created
                 if (info.GLHandle == 0)
                 {
+                    if (_glGenTextures == null)
+                    {
+                        Console.WriteLine("[OpenGLESBackend] UploadTextureData: glGenTextures not loaded");
+                        return false;
+                    }
                     uint textureId = 0;
-                    glGenTextures(1, ref textureId);
+                    _glGenTextures(1, ref textureId);
                     if (textureId == 0)
                     {
                         Console.WriteLine($"[OpenGLESBackend] UploadTextureData: glGenTextures failed for texture {info.DebugName}");
@@ -464,7 +651,12 @@ namespace Andastra.Runtime.MonoGame.Backends
                 }
 
                 // Bind texture
-                glBindTexture(GL_TEXTURE_2D, info.GLHandle);
+                if (_glBindTexture == null)
+                {
+                    Console.WriteLine("[OpenGLESBackend] UploadTextureData: glBindTexture not loaded");
+                    return false;
+                }
+                _glBindTexture(GL_TEXTURE_2D, info.GLHandle);
 
                 // Get format conversions (OpenGL ES has limited format support)
                 uint format = ConvertTextureFormatToGLES(data.Format);
@@ -476,7 +668,10 @@ namespace Andastra.Runtime.MonoGame.Backends
                 if (info.TextureDesc.Format != data.Format)
                 {
                     Console.WriteLine($"[OpenGLESBackend] UploadTextureData: Texture format mismatch. Expected {info.TextureDesc.Format}, got {data.Format}");
-                    glBindTexture(GL_TEXTURE_2D, 0);
+                    if (_glBindTexture != null)
+                    {
+                        _glBindTexture(GL_TEXTURE_2D, 0);
+                    }
                     return false;
                 }
 
@@ -488,21 +683,30 @@ namespace Andastra.Runtime.MonoGame.Backends
                     if (mipmap.Data == null || mipmap.Data.Length == 0)
                     {
                         Console.WriteLine($"[OpenGLESBackend] UploadTextureData: Mipmap {i} has no data for texture {info.DebugName}");
-                        glBindTexture(GL_TEXTURE_2D, 0);
+                        if (_glBindTexture != null)
+                        {
+                            _glBindTexture(GL_TEXTURE_2D, 0);
+                        }
                         return false;
                     }
 
                     if (mipmap.Width <= 0 || mipmap.Height <= 0)
                     {
                         Console.WriteLine($"[OpenGLESBackend] UploadTextureData: Invalid mipmap dimensions {mipmap.Width}x{mipmap.Height} for mipmap {i}");
-                        glBindTexture(GL_TEXTURE_2D, 0);
+                        if (_glBindTexture != null)
+                        {
+                            _glBindTexture(GL_TEXTURE_2D, 0);
+                        }
                         return false;
                     }
 
                     if (mipmap.Level != i)
                     {
                         Console.WriteLine($"[OpenGLESBackend] UploadTextureData: Mipmap level mismatch. Expected {i}, got {mipmap.Level}");
-                        glBindTexture(GL_TEXTURE_2D, 0);
+                        if (_glBindTexture != null)
+                        {
+                            _glBindTexture(GL_TEXTURE_2D, 0);
+                        }
                         return false;
                     }
 
@@ -524,34 +728,64 @@ namespace Andastra.Runtime.MonoGame.Backends
                     {
                         IntPtr dataPtr = pinnedData.AddrOfPinnedObject();
 
-                        if (isCompressed)
+                    if (isCompressed)
+                    {
+                        // Upload compressed texture data
+                        int expectedSize = CalculateCompressedTextureSize(data.Format, mipmap.Width, mipmap.Height);
+                        if (uploadData.Length < expectedSize)
                         {
-                            // Upload compressed texture data
-                            int expectedSize = CalculateCompressedTextureSize(data.Format, mipmap.Width, mipmap.Height);
-                            if (uploadData.Length < expectedSize)
+                            Console.WriteLine($"[OpenGLESBackend] UploadTextureData: Compressed mipmap {i} data size mismatch. Expected {expectedSize} bytes, got {uploadData.Length}");
+                            if (_glBindTexture != null)
                             {
-                                Console.WriteLine($"[OpenGLESBackend] UploadTextureData: Compressed mipmap {i} data size mismatch. Expected {expectedSize} bytes, got {uploadData.Length}");
-                                glBindTexture(GL_TEXTURE_2D, 0);
-                                return false;
+                                _glBindTexture(GL_TEXTURE_2D, 0);
                             }
+                            return false;
+                        }
 
-                            glCompressedTexImage2D(GL_TEXTURE_2D, mipmap.Level, internalFormat, mipmap.Width, mipmap.Height, 0, expectedSize, dataPtr);
+                        if (_glCompressedTexImage2D != null)
+                        {
+                            _glCompressedTexImage2D(GL_TEXTURE_2D, mipmap.Level, internalFormat, mipmap.Width, mipmap.Height, 0, expectedSize, dataPtr);
                         }
                         else
                         {
-                            // Upload uncompressed texture data
-                            glTexImage2D(GL_TEXTURE_2D, mipmap.Level, (int)internalFormat, mipmap.Width, mipmap.Height, 0, uploadFormat, dataType, dataPtr);
-                        }
-
-                        // Check for OpenGL ES errors
-                        uint error = glGetError();
-                        if (error != GL_NO_ERROR)
-                        {
-                            string errorName = GetGLESErrorName(error);
-                            Console.WriteLine($"[OpenGLESBackend] UploadTextureData: OpenGL ES error {errorName} (0x{error:X}) uploading mipmap {i} for texture {info.DebugName}");
-                            glBindTexture(GL_TEXTURE_2D, 0);
+                            Console.WriteLine("[OpenGLESBackend] UploadTextureData: glCompressedTexImage2D not loaded");
+                            if (_glBindTexture != null)
+                            {
+                                _glBindTexture(GL_TEXTURE_2D, 0);
+                            }
                             return false;
                         }
+                    }
+                    else
+                    {
+                        // Upload uncompressed texture data
+                        if (_glTexImage2D != null)
+                        {
+                            _glTexImage2D(GL_TEXTURE_2D, mipmap.Level, (int)internalFormat, mipmap.Width, mipmap.Height, 0, uploadFormat, dataType, dataPtr);
+                        }
+                        else
+                        {
+                            Console.WriteLine("[OpenGLESBackend] UploadTextureData: glTexImage2D not loaded");
+                            if (_glBindTexture != null)
+                            {
+                                _glBindTexture(GL_TEXTURE_2D, 0);
+                            }
+                            return false;
+                        }
+                    }
+
+                    // Check for OpenGL ES errors
+                    uint error = (_glGetError != null) ? _glGetError() : GL_NO_ERROR;
+                    if (error != GL_NO_ERROR)
+                    {
+                        string errorName = GetGLESErrorName(error);
+                        Console.WriteLine($"[OpenGLESBackend] UploadTextureData: OpenGL ES error {errorName} (0x{error:X}) uploading mipmap {i} for texture {info.DebugName}");
+                        if (_glBindTexture != null)
+                        {
+                            _glBindTexture(GL_TEXTURE_2D, 0);
+                        }
+                        return false;
+                    }
                     }
                     finally
                     {
@@ -560,20 +794,26 @@ namespace Andastra.Runtime.MonoGame.Backends
                 }
 
                 // Set texture parameters
-                if (data.Mipmaps.Length > 1)
+                if (_glTexParameteri != null)
                 {
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR_MIPMAP_LINEAR);
+                    if (data.Mipmaps.Length > 1)
+                    {
+                        _glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR_MIPMAP_LINEAR);
+                    }
+                    else
+                    {
+                        _glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+                    }
+                    _glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
+                    _glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP_TO_EDGE);
+                    _glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP_TO_EDGE);
                 }
-                else
-                {
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
-                }
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP_TO_EDGE);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP_TO_EDGE);
 
                 // Unbind texture
-                glBindTexture(GL_TEXTURE_2D, 0);
+                if (_glBindTexture != null)
+                {
+                    _glBindTexture(GL_TEXTURE_2D, 0);
+                }
 
                 // Store upload data for reference
                 info.UploadData = data;
@@ -863,13 +1103,162 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         /// <summary>
         /// Initializes OpenGL ES function loader.
+        /// Dynamically loads all OpenGL ES functions using eglGetProcAddress.
+        /// This is required because OpenGL ES functions must be loaded at runtime,
+        /// and extension functions are only available after context creation.
         /// </summary>
         private bool InitializeGLESLoader()
         {
-            // Load OpenGL ES functions via EGL
-            // This would typically be done by a loader library like GLAD or similar
-            // TODO: STUB - For now, we assume functions are available via P/Invoke
+            // Ensure EGL context is current before loading functions
+            if (_eglContext == IntPtr.Zero || _eglDisplay == IntPtr.Zero)
+            {
+                Console.WriteLine("[OpenGLESBackend] InitializeGLESLoader: EGL context not created");
+                return false;
+            }
+
+            // Load platform-specific OpenGL ES library
+            if (!LoadGLESLibrary())
+            {
+                Console.WriteLine("[OpenGLESBackend] InitializeGLESLoader: Failed to load OpenGL ES library");
+                return false;
+            }
+
+            // Load core OpenGL ES 3.2 functions
+            // Core functions that are always available in ES 3.2
+            _glGenTextures = LoadFunction<GlGenTexturesDelegate>("glGenTextures");
+            _glBindTexture = LoadFunction<GlBindTextureDelegate>("glBindTexture");
+            _glTexImage2D = LoadFunction<GlTexImage2DDelegate>("glTexImage2D");
+            _glCompressedTexImage2D = LoadFunction<GlCompressedTexImage2DDelegate>("glCompressedTexImage2D");
+            _glTexParameteri = LoadFunction<GlTexParameteriDelegate>("glTexParameteri");
+            _glGetError = LoadFunction<GlGetErrorDelegate>("glGetError");
+            _glDeleteTextures = LoadFunction<GlDeleteTexturesDelegate>("glDeleteTextures");
+            _glViewport = LoadFunction<GlViewportDelegate>("glViewport");
+            _glGetIntegerv = LoadFunction<GlGetIntegervDelegate>("glGetIntegerv");
+            _glGetString = LoadFunction<GlGetStringDelegate>("glGetString");
+            _glClearColor = LoadFunction<GlClearColorDelegate>("glClearColor");
+            _glClear = LoadFunction<GlClearDelegate>("glClear");
+            _glEnable = LoadFunction<GlEnableDelegate>("glEnable");
+            _glDisable = LoadFunction<GlDisableDelegate>("glDisable");
+            _glDepthFunc = LoadFunction<GlDepthFuncDelegate>("glDepthFunc");
+            _glCullFace = LoadFunction<GlCullFaceDelegate>("glCullFace");
+            _glFrontFace = LoadFunction<GlFrontFaceDelegate>("glFrontFace");
+            _glBlendFunc = LoadFunction<GlBlendFuncDelegate>("glBlendFunc");
+            _glGenBuffers = LoadFunction<GlGenBuffersDelegate>("glGenBuffers");
+            _glBindBuffer = LoadFunction<GlBindBufferDelegate>("glBindBuffer");
+            _glBufferData = LoadFunction<GlBufferDataDelegate>("glBufferData");
+            _glDeleteBuffers = LoadFunction<GlDeleteBuffersDelegate>("glDeleteBuffers");
+            _glCreateShader = LoadFunction<GlCreateShaderDelegate>("glCreateShader");
+            _glShaderSource = LoadFunction<GlShaderSourceDelegate>("glShaderSource");
+            _glCompileShader = LoadFunction<GlCompileShaderDelegate>("glCompileShader");
+            _glGetShaderiv = LoadFunction<GlGetShaderivDelegate>("glGetShaderiv");
+            _glGetShaderInfoLog = LoadFunction<GlGetShaderInfoLogDelegate>("glGetShaderInfoLog");
+            _glDeleteShader = LoadFunction<GlDeleteShaderDelegate>("glDeleteShader");
+            _glCreateProgram = LoadFunction<GlCreateProgramDelegate>("glCreateProgram");
+            _glAttachShader = LoadFunction<GlAttachShaderDelegate>("glAttachShader");
+            _glLinkProgram = LoadFunction<GlLinkProgramDelegate>("glLinkProgram");
+            _glGetProgramiv = LoadFunction<GlGetProgramivDelegate>("glGetProgramiv");
+            _glGetProgramInfoLog = LoadFunction<GlGetProgramInfoLogDelegate>("glGetProgramInfoLog");
+            _glDeleteProgram = LoadFunction<GlDeleteProgramDelegate>("glDeleteProgram");
+            _glUseProgram = LoadFunction<GlUseProgramDelegate>("glUseProgram");
+            _glGenVertexArrays = LoadFunction<GlGenVertexArraysDelegate>("glGenVertexArrays");
+            _glBindVertexArray = LoadFunction<GlBindVertexArrayDelegate>("glBindVertexArray");
+            _glDeleteVertexArrays = LoadFunction<GlDeleteVertexArraysDelegate>("glDeleteVertexArrays");
+            _glVertexAttribPointer = LoadFunction<GlVertexAttribPointerDelegate>("glVertexAttribPointer");
+            _glEnableVertexAttribArray = LoadFunction<GlEnableVertexAttribArrayDelegate>("glEnableVertexAttribArray");
+            _glBindFramebuffer = LoadFunction<GlBindFramebufferDelegate>("glBindFramebuffer");
+            _glGenFramebuffers = LoadFunction<GlGenFramebuffersDelegate>("glGenFramebuffers");
+            _glDeleteFramebuffers = LoadFunction<GlDeleteFramebuffersDelegate>("glDeleteFramebuffers");
+            _glFramebufferTexture2D = LoadFunction<GlFramebufferTexture2DDelegate>("glFramebufferTexture2D");
+            _glCheckFramebufferStatus = LoadFunction<GlCheckFramebufferStatusDelegate>("glCheckFramebufferStatus");
+            _glGenerateMipmap = LoadFunction<GlGenerateMipmapDelegate>("glGenerateMipmap");
+            _glGetStringi = LoadFunction<GlGetStringiDelegate>("glGetStringi");
+
+            // Validate that all critical functions were loaded
+            if (_glGetError == null || _glGetString == null || _glGetIntegerv == null)
+            {
+                Console.WriteLine("[OpenGLESBackend] InitializeGLESLoader: Failed to load critical OpenGL ES functions");
+                return false;
+            }
+
+            // Test that functions work by checking for errors
+            uint error = _glGetError();
+            if (error != GL_NO_ERROR)
+            {
+                Console.WriteLine($"[OpenGLESBackend] InitializeGLESLoader: OpenGL ES error detected during initialization: 0x{error:X}");
+            }
+
+            Console.WriteLine("[OpenGLESBackend] InitializeGLESLoader: Successfully loaded OpenGL ES functions");
             return true;
+        }
+
+        /// <summary>
+        /// Loads a function pointer from OpenGL ES using eglGetProcAddress.
+        /// </summary>
+        private T LoadFunction<T>(string functionName) where T : class
+        {
+            IntPtr procAddress = eglGetProcAddress(functionName);
+            if (procAddress == IntPtr.Zero || procAddress == new IntPtr(-1))
+            {
+                // Try loading from static library as fallback (for core functions on some platforms)
+                procAddress = GetProcAddress(_glesLibraryHandle, functionName);
+                if (procAddress == IntPtr.Zero)
+                {
+                    Console.WriteLine($"[OpenGLESBackend] LoadFunction: Failed to load {functionName}");
+                    return null;
+                }
+            }
+
+            try
+            {
+                return Marshal.GetDelegateForFunctionPointer<T>(procAddress);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[OpenGLESBackend] LoadFunction: Exception loading {functionName}: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Loads the platform-specific OpenGL ES library.
+        /// </summary>
+        private bool LoadGLESLibrary()
+        {
+            // Platform-specific library names
+            string[] libraryNames;
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                libraryNames = new string[] { "libGLESv2.dll", "GLESv2.dll" };
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                libraryNames = new string[] { "libGLESv2.so.2", "libGLESv2.so" };
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                libraryNames = new string[] { "libGLESv2.dylib" };
+            }
+            else
+            {
+                Console.WriteLine("[OpenGLESBackend] LoadGLESLibrary: Unsupported platform");
+                return false;
+            }
+
+            // Try to load library
+            foreach (string libName in libraryNames)
+            {
+                _glesLibraryHandle = LoadLibrary(libName);
+                if (_glesLibraryHandle != IntPtr.Zero)
+                {
+                    Console.WriteLine($"[OpenGLESBackend] LoadGLESLibrary: Loaded {libName}");
+                    return true;
+                }
+            }
+
+            // Library loading is optional - functions can be loaded via eglGetProcAddress alone
+            // Some platforms (like Android) don't require explicit library loading
+            Console.WriteLine("[OpenGLESBackend] LoadGLESLibrary: Could not load OpenGL ES library, will use eglGetProcAddress only");
+            return true; // Continue anyway - eglGetProcAddress may work without explicit library load
         }
 
         /// <summary>
@@ -877,14 +1266,46 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// </summary>
         private void QueryGLESVersion()
         {
-            // glGetIntegerv(GL_MAJOR_VERSION, &_majorVersion)
-            // glGetIntegerv(GL_MINOR_VERSION, &_minorVersion)
-            // const char* glslVersion = glGetString(GL_SHADING_LANGUAGE_VERSION)
+            if (_glGetIntegerv == null || _glGetString == null)
+            {
+                Console.WriteLine("[OpenGLESBackend] QueryGLESVersion: Functions not loaded, using defaults");
+                _majorVersion = 3;
+                _minorVersion = 2;
+                _glslVersion = "320 es";
+                return;
+            }
 
-            // Default to ES 3.2 if query fails
-            _majorVersion = 3;
-            _minorVersion = 2;
-            _glslVersion = "320 es";
+            // Query major version (OpenGL ES 3.0+)
+            const uint GL_MAJOR_VERSION = 0x821B;
+            _majorVersion = 0;
+            _glGetIntegerv(GL_MAJOR_VERSION, ref _majorVersion);
+
+            // Query minor version (OpenGL ES 3.0+)
+            const uint GL_MINOR_VERSION = 0x821C;
+            _minorVersion = 0;
+            _glGetIntegerv(GL_MINOR_VERSION, ref _minorVersion);
+
+            // Query GLSL ES version string
+            const uint GL_SHADING_LANGUAGE_VERSION = 0x8B8C;
+            IntPtr glslVersionPtr = _glGetString(GL_SHADING_LANGUAGE_VERSION);
+            if (glslVersionPtr != IntPtr.Zero)
+            {
+                _glslVersion = Marshal.PtrToStringAnsi(glslVersionPtr);
+            }
+            else
+            {
+                // Fallback: construct version string from major/minor
+                _glslVersion = _majorVersion + "" + _minorVersion + "0 es";
+            }
+
+            // Validate version
+            if (_majorVersion == 0)
+            {
+                Console.WriteLine("[OpenGLESBackend] QueryGLESVersion: Failed to query version, using defaults");
+                _majorVersion = 3;
+                _minorVersion = 2;
+                _glslVersion = "320 es";
+            }
         }
 
         /// <summary>
@@ -892,10 +1313,68 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// </summary>
         private bool CheckRequiredExtensions()
         {
+            if (_glGetString == null || _glGetIntegerv == null)
+            {
+                Console.WriteLine("[OpenGLESBackend] CheckRequiredExtensions: Functions not loaded");
+                return false;
+            }
+
             // OpenGL ES 3.2 core features should be available
+            // Check that we have at least ES 3.0 (required for our features)
+            if (_majorVersion < 3)
+            {
+                Console.WriteLine($"[OpenGLESBackend] CheckRequiredExtensions: OpenGL ES version {_majorVersion}.{_minorVersion} is too old, requires ES 3.0+");
+                return false;
+            }
+
             // Check for optional extensions that we might use
-            // const char* extensions = glGetString(GL_EXTENSIONS)
-            // or use glGetStringi for ES 3.0+
+            // For ES 3.0+, we can use glGetStringi to query extensions
+            if (_glGetStringi != null && _majorVersion >= 3)
+            {
+                const uint GL_NUM_EXTENSIONS = 0x821D;
+                int numExtensions = 0;
+                _glGetIntegerv(GL_NUM_EXTENSIONS, ref numExtensions);
+
+                // Check for specific extensions we might need
+                const uint GL_EXTENSIONS = 0x1F03;
+                bool hasCompressedTextures = false;
+                bool hasTextureRG = false;
+
+                for (uint i = 0; i < numExtensions; i++)
+                {
+                    IntPtr extPtr = _glGetStringi(GL_EXTENSIONS, i);
+                    if (extPtr != IntPtr.Zero)
+                    {
+                        string ext = Marshal.PtrToStringAnsi(extPtr);
+                        if (ext != null)
+                        {
+                            if (ext.Contains("GL_EXT_texture_compression_s3tc") || ext.Contains("GL_OES_texture_compression_S3TC"))
+                            {
+                                hasCompressedTextures = true;
+                            }
+                            if (ext.Contains("GL_EXT_texture_rg") || _majorVersion >= 3)
+                            {
+                                hasTextureRG = true; // Core in ES 3.0+
+                            }
+                        }
+                    }
+                }
+
+                // Log extension availability
+                Console.WriteLine($"[OpenGLESBackend] CheckRequiredExtensions: Found {numExtensions} extensions");
+                Console.WriteLine($"[OpenGLESBackend] CheckRequiredExtensions: Compressed textures: {hasCompressedTextures}, Texture RG: {hasTextureRG}");
+            }
+            else
+            {
+                // Fallback for ES 2.0: use glGetString(GL_EXTENSIONS)
+                const uint GL_EXTENSIONS = 0x1F03;
+                IntPtr extensionsPtr = _glGetString(GL_EXTENSIONS);
+                if (extensionsPtr != IntPtr.Zero)
+                {
+                    string extensions = Marshal.PtrToStringAnsi(extensionsPtr);
+                    Console.WriteLine($"[OpenGLESBackend] CheckRequiredExtensions: Extensions: {extensions}");
+                }
+            }
 
             return true;
         }
@@ -905,35 +1384,95 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// </summary>
         private void QueryCapabilities()
         {
-            // GLint maxTextureSize;
-            // glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextureSize)
+            if (_glGetIntegerv == null || _glGetString == null)
+            {
+                Console.WriteLine("[OpenGLESBackend] QueryCapabilities: Functions not loaded, using defaults");
+                bool supportsCompute = _majorVersion > 3 || (_majorVersion == 3 && _minorVersion >= 1);
+                _capabilities = new GraphicsCapabilities
+                {
+                    MaxTextureSize = 4096,
+                    MaxRenderTargets = 4,
+                    MaxAnisotropy = 16,
+                    SupportsComputeShaders = supportsCompute,
+                    SupportsGeometryShaders = false,
+                    SupportsTessellation = false,
+                    SupportsRaytracing = false,
+                    SupportsMeshShaders = false,
+                    SupportsVariableRateShading = false,
+                    DedicatedVideoMemory = 0,
+                    SharedSystemMemory = 0,
+                    VendorName = "Unknown",
+                    DeviceName = "OpenGL ES Renderer",
+                    DriverVersion = GLVersion,
+                    ActiveBackend = GraphicsBackend.OpenGLES,
+                    ShaderModelVersion = 3.2f,
+                    RemixAvailable = false,
+                    DlssAvailable = false,
+                    FsrAvailable = supportsCompute
+                };
+                return;
+            }
 
-            // GLint maxColorAttachments;
-            // glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments)
+            // Query maximum texture size
+            const uint GL_MAX_TEXTURE_SIZE = 0x0D33;
+            int maxTextureSize = 4096; // Default
+            _glGetIntegerv(GL_MAX_TEXTURE_SIZE, ref maxTextureSize);
 
-            // const char* renderer = glGetString(GL_RENDERER)
-            // const char* vendor = glGetString(GL_VENDOR)
+            // Query maximum color attachments (ES 3.0+)
+            const uint GL_MAX_COLOR_ATTACHMENTS = 0x8CDF;
+            int maxColorAttachments = 4; // Default for ES 3.0+
+            if (_majorVersion >= 3)
+            {
+                _glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, ref maxColorAttachments);
+            }
 
+            // Query renderer string
+            const uint GL_RENDERER = 0x1F01;
+            IntPtr rendererPtr = _glGetString(GL_RENDERER);
+            string deviceName = "OpenGL ES Renderer";
+            if (rendererPtr != IntPtr.Zero)
+            {
+                deviceName = Marshal.PtrToStringAnsi(rendererPtr);
+                if (string.IsNullOrEmpty(deviceName))
+                {
+                    deviceName = "OpenGL ES Renderer";
+                }
+            }
+
+            // Query vendor string
+            const uint GL_VENDOR = 0x1F00;
+            IntPtr vendorPtr = _glGetString(GL_VENDOR);
+            string vendorName = "Unknown";
+            if (vendorPtr != IntPtr.Zero)
+            {
+                vendorName = Marshal.PtrToStringAnsi(vendorPtr);
+                if (string.IsNullOrEmpty(vendorName))
+                {
+                    vendorName = "Unknown";
+                }
+            }
+
+            // Determine feature support based on version
             bool supportsCompute = _majorVersion > 3 || (_majorVersion == 3 && _minorVersion >= 1);
 
             _capabilities = new GraphicsCapabilities
             {
-                MaxTextureSize = 4096, // Typical ES limit, query actual value
-                MaxRenderTargets = 4, // ES 3.0+ supports multiple render targets
-                MaxAnisotropy = 16,
+                MaxTextureSize = maxTextureSize,
+                MaxRenderTargets = maxColorAttachments,
+                MaxAnisotropy = 16, // Typical ES limit, could query GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT if extension available
                 SupportsComputeShaders = supportsCompute, // ES 3.1+
                 SupportsGeometryShaders = false, // ES does not support geometry shaders
                 SupportsTessellation = false, // ES does not support tessellation
                 SupportsRaytracing = false,
                 SupportsMeshShaders = false,
                 SupportsVariableRateShading = false,
-                DedicatedVideoMemory = 0,
+                DedicatedVideoMemory = 0, // ES doesn't expose memory info
                 SharedSystemMemory = 0,
-                VendorName = "Unknown",
-                DeviceName = "OpenGL ES Renderer",
+                VendorName = vendorName,
+                DeviceName = deviceName,
                 DriverVersion = GLVersion,
                 ActiveBackend = GraphicsBackend.OpenGLES,
-                ShaderModelVersion = 3.2f,
+                ShaderModelVersion = _majorVersion + _minorVersion * 0.1f, // e.g., 3.2
                 RemixAvailable = false,
                 DlssAvailable = false,
                 FsrAvailable = supportsCompute // FSR can work via compute shaders in ES 3.1+
@@ -955,13 +1494,46 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// </summary>
         private void SetDefaultState()
         {
-            // glEnable(GL_DEPTH_TEST)
-            // glDepthFunc(GL_LESS)
-            // glEnable(GL_CULL_FACE)
-            // glCullFace(GL_BACK)
-            // glFrontFace(GL_CCW)
-            // glEnable(GL_BLEND)
-            // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+            if (_glEnable == null || _glDepthFunc == null || _glCullFace == null || 
+                _glFrontFace == null || _glBlendFunc == null || _glClearColor == null)
+            {
+                Console.WriteLine("[OpenGLESBackend] SetDefaultState: Functions not loaded, skipping state setup");
+                return;
+            }
+
+            // Enable depth testing
+            const uint GL_DEPTH_TEST = 0x0B71;
+            _glEnable(GL_DEPTH_TEST);
+            const uint GL_LESS = 0x0201;
+            _glDepthFunc(GL_LESS);
+
+            // Enable face culling
+            const uint GL_CULL_FACE = 0x0B44;
+            _glEnable(GL_CULL_FACE);
+            const uint GL_BACK = 0x0405;
+            _glCullFace(GL_BACK);
+            const uint GL_CCW = 0x0901;
+            _glFrontFace(GL_CCW);
+
+            // Enable blending
+            const uint GL_BLEND = 0x0BE2;
+            _glEnable(GL_BLEND);
+            const uint GL_SRC_ALPHA = 0x0302;
+            const uint GL_ONE_MINUS_SRC_ALPHA = 0x0303;
+            _glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            // Set clear color to black
+            _glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+            // Check for errors
+            if (_glGetError != null)
+            {
+                uint error = _glGetError();
+                if (error != GL_NO_ERROR)
+                {
+                    Console.WriteLine($"[OpenGLESBackend] SetDefaultState: OpenGL ES error {GetGLESErrorName(error)} (0x{error:X})");
+                }
+            }
         }
 
         #endregion
@@ -1211,11 +1783,11 @@ namespace Andastra.Runtime.MonoGame.Backends
             switch (info.Type)
             {
                 case ResourceType.Texture:
-                    if (info.GLHandle != 0)
+                    if (info.GLHandle != 0 && _glDeleteTextures != null)
                     {
                         uint textureId = info.GLHandle;
-                        glDeleteTextures(1, ref textureId);
-                        uint error = glGetError();
+                        _glDeleteTextures(1, ref textureId);
+                        uint error = (_glGetError != null) ? _glGetError() : GL_NO_ERROR;
                         if (error != GL_NO_ERROR)
                         {
                             Console.WriteLine($"[OpenGLESBackend] DestroyResourceInternal: OpenGL ES error {GetGLESErrorName(error)} deleting texture {info.DebugName}");
@@ -1335,9 +1907,66 @@ namespace Andastra.Runtime.MonoGame.Backends
         [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool eglQuerySurface(IntPtr display, IntPtr surface, int attribute, ref int value);
 
+        [DllImport("libEGL.dll", EntryPoint = "eglGetProcAddress")]
+        private static extern IntPtr eglGetProcAddress(string procname);
+
         #endregion
 
-        #region OpenGL ES P/Invoke Declarations
+        #region Platform-Specific Library Loading
+
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        private static extern IntPtr LoadLibraryWindows(string lpFileName);
+
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Ansi, ExactSpelling = true)]
+        private static extern IntPtr GetProcAddressWindows(IntPtr hModule, string lpProcName);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool FreeLibrary(IntPtr hModule);
+
+        [DllImport("libdl.so.2", EntryPoint = "dlopen")]
+        private static extern IntPtr dlopen(string filename, int flags);
+
+        [DllImport("libdl.so.2", EntryPoint = "dlsym")]
+        private static extern IntPtr dlsym(IntPtr handle, string symbol);
+
+        // Cross-platform LoadLibrary wrapper
+        private static IntPtr LoadLibrary(string libraryName)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return LoadLibraryWindows(libraryName);
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                // RTLD_LAZY = 1, RTLD_NOW = 2
+                return dlopen(libraryName, 1); // RTLD_LAZY
+            }
+            return IntPtr.Zero;
+        }
+
+        // Cross-platform GetProcAddress wrapper
+        private static IntPtr GetProcAddress(IntPtr libraryHandle, string functionName)
+        {
+            if (libraryHandle == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return GetProcAddressWindows(libraryHandle, functionName);
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                return dlsym(libraryHandle, functionName);
+            }
+            return IntPtr.Zero;
+        }
+
+        #endregion
+
+        #region OpenGL ES P/Invoke Declarations (Legacy - kept for fallback)
 
         // OpenGL ES texture functions
         [DllImport("libGLESv2.dll", EntryPoint = "glGenTextures")]
