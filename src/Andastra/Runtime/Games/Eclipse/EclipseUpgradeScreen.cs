@@ -2394,12 +2394,65 @@ namespace Andastra.Runtime.Games.Eclipse
             // Store available upgrades for this slot so we can retrieve ResRef by index
             _availableUpgradesPerSlot[slot] = availableUpgrades;
 
-            // Note: In the actual GUI format, list box items are typically stored as children (ProtoItem controls)
-            // TODO: STUB - For now, we store the available upgrades and use CurrentValue to track selection
-            // The actual GUI rendering system would use this data to populate visible list items
-            // CurrentValue represents the selected index in the available upgrades list
+            // Clear existing list box items (children represent list items)
+            // Based on Eclipse upgrade system: List boxes use ProtoItem children to display items
+            // Based on OdysseyUpgradeScreenBase.cs: UpdateListBoxItems() clears children before populating
+            listBox.Children.Clear();
+
+            // Add each upgrade as a list box item (ProtoItem control)
+            // Based on Eclipse upgrade system: List boxes display available upgrades for a slot
+            // Based on OdysseyUpgradeScreenBase.cs: UpdateListBoxItems() creates GUIProtoItem for each upgrade
+            foreach (string upgradeResRef in availableUpgrades)
+            {
+                // Create a proto item for each upgrade
+                GUIProtoItem listItem = new GUIProtoItem();
+                listItem.Tag = upgradeResRef; // Store ResRef in tag for retrieval
+
+                // Load upgrade UTI template to get display name
+                // Based on Eclipse upgrade system: UTI templates contain LocalizedName field
+                // Based on OdysseyUpgradeScreenBase.cs: LoadUpgradeUTITemplate() loads UTI and extracts name
+                UTI upgradeUTI = LoadUpgradeUTITemplate(upgradeResRef);
+                if (upgradeUTI != null && upgradeUTI.Name != null)
+                {
+                    // Set display text to upgrade name (LocalizedString.ToString() returns English text or StringRef)
+                    // Based on Eclipse upgrade system: UTI.Name is a LocalizedString that can be converted to string
+                    // Based on OdysseyUpgradeScreenBase.cs: upgradeUTI.Name.ToString() gets display name
+                    if (listItem.GuiText == null)
+                    {
+                        listItem.GuiText = new GUIText();
+                    }
+                    string displayName = upgradeUTI.Name.ToString();
+                    if (!string.IsNullOrEmpty(displayName))
+                    {
+                        listItem.GuiText.Text = displayName;
+                    }
+                    else
+                    {
+                        // Fallback to ResRef if name is empty
+                        listItem.GuiText.Text = upgradeResRef;
+                    }
+                }
+                else
+                {
+                    // Fallback to ResRef if UTI not loaded or name not available
+                    // Based on Eclipse upgrade system: If UTI cannot be loaded, use ResRef as display name
+                    // Based on OdysseyUpgradeScreenBase.cs: Fallback to ResRef when UTI loading fails
+                    if (listItem.GuiText == null)
+                    {
+                        listItem.GuiText = new GUIText();
+                    }
+                    listItem.GuiText.Text = upgradeResRef;
+                }
+
+                // Add proto item as child to list box
+                // Based on Eclipse upgrade system: List box children are ProtoItem controls representing list items
+                // Based on OdysseyUpgradeScreenBase.cs: listBox.Children.Add(listItem) adds item to list box
+                listBox.Children.Add(listItem);
+            }
 
             // Reset selection if list box was just populated
+            // Based on Eclipse upgrade system: CurrentValue tracks selected index in the list box
+            // Based on OdysseyUpgradeScreenBase.cs: CurrentValue is set to 0 for first item or -1 if empty
             if (control.CurrentValue.HasValue && control.CurrentValue.Value >= availableUpgrades.Count)
             {
                 control.CurrentValue = availableUpgrades.Count > 0 ? 0 : -1;
