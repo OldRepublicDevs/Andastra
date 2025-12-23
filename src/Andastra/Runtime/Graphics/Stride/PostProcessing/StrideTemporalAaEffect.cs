@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Numerics;
-using Stride.Graphics;
+using StrideGraphics = Stride.Graphics;
 using Stride.Rendering;
 using Stride.Core.Mathematics;
 using Stride.Engine;
@@ -28,20 +28,20 @@ namespace Andastra.Runtime.Stride.PostProcessing
     /// </summary>
     public class StrideTemporalAaEffect : BaseTemporalAaEffect
     {
-        private GraphicsDevice _graphicsDevice;
-        private Texture _historyBuffer;
-        private Texture _outputBuffer;
+        private StrideGraphics.GraphicsDevice _graphicsDevice;
+        private StrideGraphics.Texture _historyBuffer;
+        private StrideGraphics.Texture _outputBuffer;
         private int _frameIndex;
         private global::Stride.Core.Mathematics.Vector2[] _jitterSequence;
         private Matrix4x4 _previousViewProjection;
-        private SpriteBatch _spriteBatch;
+        private StrideGraphics.SpriteBatch _spriteBatch;
         private EffectInstance _taaEffect;
-        private Effect _taaEffectBase;
-        private SamplerState _linearSampler;
-        private SamplerState _pointSampler;
+        private StrideGraphics.Effect _taaEffectBase;
+        private StrideGraphics.SamplerState _linearSampler;
+        private StrideGraphics.SamplerState _pointSampler;
         private bool _effectInitialized;
 
-        public StrideTemporalAaEffect(GraphicsDevice graphicsDevice)
+        public StrideTemporalAaEffect(StrideGraphics.GraphicsDevice graphicsDevice)
         {
             _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
             _effectInitialized = false;
@@ -228,7 +228,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// Original implementation: Uses frame buffers for rendering and effects
         /// This implementation: Full TAA pipeline with temporal accumulation and ghosting reduction
         /// </remarks>
-        private Effect CreateTaaEffect()
+        private StrideGraphics.Effect CreateTaaEffect()
         {
             try
             {
@@ -483,7 +483,7 @@ shader TemporalAAEffect : ShaderBase
         /// - Original game: DirectX 8/9 fixed-function pipeline (swkotor2.exe: Frame buffer post-processing @ 0x007c8408)
         /// - Modern implementation: Uses programmable shaders with runtime compilation
         /// </remarks>
-        private Effect CompileShaderFromSource(string shaderSource, string shaderName)
+        private StrideGraphics.Effect CompileShaderFromSource(string shaderSource, string shaderName)
         {
             if (string.IsNullOrEmpty(shaderSource))
             {
@@ -536,7 +536,7 @@ shader TemporalAAEffect : ShaderBase
         /// <param name="shaderSource">Shader source code.</param>
         /// <param name="shaderName">Shader name for identification.</param>
         /// <returns>Compiled Effect, or null if compilation fails.</returns>
-        private Effect CompileShaderWithCompiler(EffectCompiler compiler, string shaderSource, string shaderName)
+        private StrideGraphics.Effect CompileShaderWithCompiler(EffectCompiler compiler, string shaderSource, string shaderName)
         {
             try
             {
@@ -585,7 +585,7 @@ shader TemporalAAEffect : ShaderBase
         /// <param name="shaderSource">Shader source code.</param>
         /// <param name="shaderName">Shader name for identification.</param>
         /// <returns>Compiled Effect, or null if compilation fails.</returns>
-        private Effect CompileShaderWithEffectSystem(global::Stride.Shaders.Compiler.EffectCompiler effectSystem, string shaderSource, string shaderName)
+        private StrideGraphics.Effect CompileShaderWithEffectSystem(global::Stride.Shaders.Compiler.EffectCompiler effectSystem, string shaderSource, string shaderName)
         {
             try
             {
@@ -616,7 +616,7 @@ shader TemporalAAEffect : ShaderBase
         /// <param name="shaderSource">Shader source code.</param>
         /// <param name="shaderName">Shader name for identification.</param>
         /// <returns>Compiled Effect, or null if compilation fails.</returns>
-        private Effect CompileShaderFromFile(string shaderSource, string shaderName)
+        private StrideGraphics.Effect CompileShaderFromFile(string shaderSource, string shaderName)
         {
             string tempFilePath = null;
             try

@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Stride.Graphics;
+using StrideGraphics = Stride.Graphics;
 using Stride.Rendering;
 using Stride.Core.Mathematics;
 using Stride.Shaders;
@@ -25,23 +25,23 @@ namespace Andastra.Runtime.Stride.Upscaling
     /// </summary>
     public class StrideFsrSystem : BaseFsrSystem
     {
-        private GraphicsDevice _graphicsDevice;
+        private StrideGraphics.GraphicsDevice _graphicsDevice;
         private CommandList _graphicsContext;
         private IntPtr _fsrContext;
-        private Texture _outputTexture;
+        private StrideGraphics.Texture _outputTexture;
 
         // FSR 2.x compute shaders
         private EffectInstance _fsrEasuEffect;
         private EffectInstance _fsrRcasEffect;
         private EffectInstance _fsrTemporalEffect;
-        private Effect _fsrEasuEffectBase;
-        private Effect _fsrRcasEffectBase;
-        private Effect _fsrTemporalEffectBase;
+        private StrideGraphics.Effect _fsrEasuEffectBase;
+        private StrideGraphics.Effect _fsrRcasEffectBase;
+        private StrideGraphics.Effect _fsrTemporalEffectBase;
 
         // FSR internal textures for temporal accumulation
-        private Texture _fsrHistoryTexture;
-        private Texture _fsrLockTexture;
-        private Texture _fsrExposureTexture;
+        private StrideGraphics.Texture _fsrHistoryTexture;
+        private StrideGraphics.Texture _fsrLockTexture;
+        private StrideGraphics.Texture _fsrExposureTexture;
 
         // FSR parameters
         private FsrConstants _fsrConstants;
@@ -83,7 +83,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         public override int FsrVersion => 2; // FSR 2.x
         public override bool FrameGenerationAvailable => CheckFrameGenerationSupport();
 
-        public StrideFsrSystem(GraphicsDevice graphicsDevice, CommandList graphicsContext = null)
+        public StrideFsrSystem(StrideGraphics.GraphicsDevice graphicsDevice, CommandList graphicsContext = null)
         {
             _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
             _graphicsContext = graphicsContext;
@@ -860,7 +860,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// Creates FSR EASU compute shader programmatically.
         /// Based on AMD FidelityFX FSR EASU algorithm.
         /// </summary>
-        private Effect CreateFsrEasuShader()
+        private StrideGraphics.Effect CreateFsrEasuShader()
         {
             // EASU (Edge-Adaptive Spatial Upsampling) shader source
             // This is a simplified version - full implementation would include the complete EASU algorithm
@@ -916,7 +916,7 @@ shader FSREASU : ComputeShaderBase
         /// Creates FSR RCAS compute shader programmatically.
         /// Based on AMD FidelityFX FSR RCAS algorithm.
         /// </summary>
-        private Effect CreateFsrRcasShader()
+        private StrideGraphics.Effect CreateFsrRcasShader()
         {
             // RCAS (Robust Contrast Adaptive Sharpening) shader source
             string shaderSource = @"
@@ -984,7 +984,7 @@ shader FSRRCAS : ComputeShaderBase
         /// Creates FSR Temporal compute shader programmatically.
         /// Based on AMD FidelityFX FSR 2.x temporal accumulation algorithm.
         /// </summary>
-        private Effect CreateFsrTemporalShader()
+        private StrideGraphics.Effect CreateFsrTemporalShader()
         {
             // FSR 2.x Temporal accumulation shader source
             string shaderSource = @"
@@ -1062,7 +1062,7 @@ shader FSRTemporal : ComputeShaderBase
         /// <summary>
         /// Compiles an FSR shader from source code.
         /// </summary>
-        private Effect CompileFsrShader(string shaderSource, string shaderName)
+        private StrideGraphics.Effect CompileFsrShader(string shaderSource, string shaderName)
         {
             try
             {
