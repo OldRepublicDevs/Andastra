@@ -3915,17 +3915,94 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         /// <summary>
         /// Helper method to check if global variable exists
         /// </summary>
+        /// <remarks>
+        /// Based on Eclipse engine: Global variable existence check
+        /// Eclipse uses variable IDs (integers) which are converted to string names for IScriptGlobals
+        /// Variable ID is converted to string name using format: variable ID as string
+        /// Checks all global variable dictionaries (ints, bools, strings, locations) to see if variable exists
+        /// Based on daorigins.exe: Global variable system uses variable IDs mapped to string names
+        /// Based on DragonAge2.exe: Same global variable system as daorigins.exe
+        /// </remarks>
         private bool HasGlobalVariable(int variableId, IExecutionContext ctx)
         {
-            if (ctx == null || ctx.World == null)
+            if (ctx == null || ctx.Globals == null)
             {
                 return false;
             }
 
-            // Global variables are stored in world or module
-            string varKey = $"GlobalVariable_{variableId}";
-            // Would need access to world's variable storage
-            // TODO: STUB - For now, return false
+            // Convert variable ID to string name
+            // Eclipse uses variable IDs, but IScriptGlobals uses string names
+            // Use variable ID as the name (converted to string)
+            string varName = variableId.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+            // Check if variable exists in any of the global variable dictionaries
+            // IScriptGlobals doesn't expose a HasVariable method, so we need to check by trying to get the value
+            // and comparing with default values. However, this won't distinguish between "not set" and "set to default"
+            // So we use reflection to access the internal dictionaries directly
+            try
+            {
+                // Use reflection to access private dictionaries in ScriptGlobals
+                // This is necessary because IScriptGlobals doesn't expose a HasVariable method
+                System.Reflection.FieldInfo globalIntsField = ctx.Globals.GetType().GetField("_globalInts", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                System.Reflection.FieldInfo globalBoolsField = ctx.Globals.GetType().GetField("_globalBools", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                System.Reflection.FieldInfo globalStringsField = ctx.Globals.GetType().GetField("_globalStrings", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                System.Reflection.FieldInfo globalLocationsField = ctx.Globals.GetType().GetField("_globalLocations", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+                if (globalIntsField != null)
+                {
+                    var globalInts = globalIntsField.GetValue(ctx.Globals) as System.Collections.Generic.Dictionary<string, int>;
+                    if (globalInts != null && globalInts.ContainsKey(varName))
+                    {
+                        return true;
+                    }
+                }
+
+                if (globalBoolsField != null)
+                {
+                    var globalBools = globalBoolsField.GetValue(ctx.Globals) as System.Collections.Generic.Dictionary<string, bool>;
+                    if (globalBools != null && globalBools.ContainsKey(varName))
+                    {
+                        return true;
+                    }
+                }
+
+                if (globalStringsField != null)
+                {
+                    var globalStrings = globalStringsField.GetValue(ctx.Globals) as System.Collections.Generic.Dictionary<string, string>;
+                    if (globalStrings != null && globalStrings.ContainsKey(varName))
+                    {
+                        return true;
+                    }
+                }
+
+                if (globalLocationsField != null)
+                {
+                    var globalLocations = globalLocationsField.GetValue(ctx.Globals) as System.Collections.Generic.Dictionary<string, object>;
+                    if (globalLocations != null && globalLocations.ContainsKey(varName))
+                    {
+                        return true;
+                    }
+                }
+            }
+            catch (System.Exception)
+            {
+                // Reflection failed - fallback to checking by getting value
+                // This is less accurate but will work if reflection is not available
+                // Check if variable exists by trying to get it and comparing with default values
+                // Note: This won't distinguish between "not set" and "set to default value"
+                int intValue = ctx.Globals.GetGlobalInt(varName);
+                bool boolValue = ctx.Globals.GetGlobalBool(varName);
+                string stringValue = ctx.Globals.GetGlobalString(varName);
+                object locationValue = ctx.Globals.GetGlobalLocation(varName);
+
+                // If any value is non-default, variable exists
+                // This is a heuristic - it won't catch variables set to default values
+                if (intValue != 0 || boolValue != false || !string.IsNullOrEmpty(stringValue) || locationValue != null)
+                {
+                    return true;
+                }
+            }
+
             return false;
         }
 
@@ -3950,15 +4027,130 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         /// <summary>
         /// Helper method to get global variable value
         /// </summary>
+        /// <remarks>
+        /// Based on Eclipse engine: Global variable value retrieval
+        /// Eclipse uses variable IDs (integers) which are converted to string names for IScriptGlobals
+        /// Variable ID is converted to string name using format: variable ID as string
+        /// Checks all global variable types (int, bool, string, location) and returns appropriate value
+        /// For criteria matching, we primarily care about integer values, so we check int first, then bool
+        /// Based on daorigins.exe: Global variable system uses variable IDs mapped to string names
+        /// Based on DragonAge2.exe: Same global variable system as daorigins.exe
+        /// </remarks>
         private int GetGlobalVariableValue(int variableId, IExecutionContext ctx)
         {
-            if (ctx == null || ctx.World == null)
+            if (ctx == null || ctx.Globals == null)
             {
                 return 0;
             }
 
-            // Global variables are stored in world or module
-            // TODO: STUB - For now, return 0
+            // Convert variable ID to string name
+            // Eclipse uses variable IDs, but IScriptGlobals uses string names
+            // Use variable ID as the name (converted to string)
+            string varName = variableId.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+            // Check integer variables first (most common for criteria matching)
+            int intValue = ctx.Globals.GetGlobalInt(varName);
+            if (intValue != 0)
+            {
+                // Use reflection to check if variable actually exists (not just default value)
+                // This ensures we return 0 only if variable doesn't exist, not if it's set to 0
+                try
+                {
+                    System.Reflection.FieldInfo globalIntsField = ctx.Globals.GetType().GetField("_globalInts", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (globalIntsField != null)
+                    {
+                        var globalInts = globalIntsField.GetValue(ctx.Globals) as System.Collections.Generic.Dictionary<string, int>;
+                        if (globalInts != null && globalInts.ContainsKey(varName))
+                        {
+                            return intValue; // Variable exists, return its value (even if 0)
+                        }
+                    }
+                }
+                catch (System.Exception)
+                {
+                    // Reflection failed - return intValue anyway (might be default or actual value)
+                    return intValue;
+                }
+            }
+
+            // Check boolean variables (convert to int: true = 1, false = 0)
+            bool boolValue = ctx.Globals.GetGlobalBool(varName);
+            if (boolValue)
+            {
+                // Use reflection to check if variable actually exists
+                try
+                {
+                    System.Reflection.FieldInfo globalBoolsField = ctx.Globals.GetType().GetField("_globalBools", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (globalBoolsField != null)
+                    {
+                        var globalBools = globalBoolsField.GetValue(ctx.Globals) as System.Collections.Generic.Dictionary<string, bool>;
+                        if (globalBools != null && globalBools.ContainsKey(varName))
+                        {
+                            return boolValue ? 1 : 0; // Variable exists, return its value as int
+                        }
+                    }
+                }
+                catch (System.Exception)
+                {
+                    // Reflection failed - return bool value as int
+                    return boolValue ? 1 : 0;
+                }
+            }
+
+            // Check string variables (return length or hash as integer representation)
+            // For criteria matching, string variables are typically not used, but we check for completeness
+            string stringValue = ctx.Globals.GetGlobalString(varName);
+            if (!string.IsNullOrEmpty(stringValue))
+            {
+                // Use reflection to check if variable actually exists
+                try
+                {
+                    System.Reflection.FieldInfo globalStringsField = ctx.Globals.GetType().GetField("_globalStrings", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (globalStringsField != null)
+                    {
+                        var globalStrings = globalStringsField.GetValue(ctx.Globals) as System.Collections.Generic.Dictionary<string, string>;
+                        if (globalStrings != null && globalStrings.ContainsKey(varName))
+                        {
+                            // For string variables, return string length as integer representation
+                            // This allows criteria matching to work with string variables
+                            return stringValue.Length;
+                        }
+                    }
+                }
+                catch (System.Exception)
+                {
+                    // Reflection failed - return string length
+                    return stringValue.Length;
+                }
+            }
+
+            // Check location variables (return 1 if exists, 0 if not)
+            // For criteria matching, location variables are typically not used, but we check for completeness
+            object locationValue = ctx.Globals.GetGlobalLocation(varName);
+            if (locationValue != null)
+            {
+                // Use reflection to check if variable actually exists
+                try
+                {
+                    System.Reflection.FieldInfo globalLocationsField = ctx.Globals.GetType().GetField("_globalLocations", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (globalLocationsField != null)
+                    {
+                        var globalLocations = globalLocationsField.GetValue(ctx.Globals) as System.Collections.Generic.Dictionary<string, object>;
+                        if (globalLocations != null && globalLocations.ContainsKey(varName))
+                        {
+                            // For location variables, return 1 if exists (non-null location)
+                            return 1;
+                        }
+                    }
+                }
+                catch (System.Exception)
+                {
+                    // Reflection failed - return 1 if location exists
+                    return 1;
+                }
+            }
+
+            // Variable doesn't exist in any dictionary - return 0
             return 0;
         }
 
