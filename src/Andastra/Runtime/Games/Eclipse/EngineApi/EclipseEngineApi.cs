@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Common.Script;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Enums;
+using Andastra.Runtime.Games.Eclipse;
 using Andastra.Runtime.Games.Eclipse.Components;
+using Andastra.Runtime.Games.Eclipse.Loading;
 using Andastra.Runtime.Scripting.EngineApi;
 using Andastra.Runtime.Scripting.Interfaces;
 
@@ -466,24 +469,53 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 return Variable.FromObject(ObjectInvalid);
             }
 
-            // Convert facing from degrees to radians for IWorld.CreateEntity
+            // Convert facing from degrees to radians for template factory
             float facingRadians = (float)(facing * Math.PI / 180.0);
 
-            // Create creature entity using IWorld.CreateEntity
-            // Note: Eclipse uses template-based spawning, but IWorld.CreateEntity uses ObjectType
-            // TODO: STUB - For now, create as ObjectType.Creature - template loading would need IEntityTemplate system
-            Core.Interfaces.IEntity creature = ctx.World.CreateEntity(Core.Enums.ObjectType.Creature, position, facingRadians);
+            // Get module from world for template loading
+            // Based on daorigins.exe and DragonAge2.exe: Template loading requires module for UTC GFF access
+            // Located via string references: "TemplateResRef" @ 0x00af4f00 (daorigins.exe), "TemplateResRef" @ 0x00bf2538 (DragonAge2.exe)
+            // Original implementation: Module provides access to UTC template files (creature templates)
+            Module module = ctx.World.CurrentModule as Module;
+            if (module == null)
+            {
+                // No module loaded, cannot load templates
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            // Create EclipseEntityFactory for template loading
+            // Based on daorigins.exe and DragonAge2.exe: EclipseEntityFactory loads UTC GFF templates
+            // Located via string references: "TemplateResRef" @ 0x00af4f00 (daorigins.exe), "TemplateResRef" @ 0x00bf2538 (DragonAge2.exe)
+            // Original implementation: EclipseEntityFactory.CreateCreatureFromTemplate loads UTC GFF and creates entity
+            // EclipseEntityFactory can be created without TLK tables (TLK is optional for basic template loading)
+            EclipseEntityFactory entityFactory = new EclipseEntityFactory();
+
+            // Create EclipseEntityTemplateFactory to provide IEntityTemplateFactory interface
+            // Based on Eclipse engine: EclipseEntityTemplateFactory wraps EclipseEntityFactory for Core compatibility
+            // This allows Func_SpawnCreature to use the standard IEntityTemplateFactory interface
+            EclipseEntityTemplateFactory templateFactory = new EclipseEntityTemplateFactory(entityFactory, module);
+
+            // Create creature from template using template factory
+            // Based on daorigins.exe and DragonAge2.exe: SpawnCreature loads UTC template and creates entity
+            // Located via string references: "TemplateResRef" @ 0x00af4f00 (daorigins.exe), "TemplateResRef" @ 0x00bf2538 (DragonAge2.exe)
+            // Original implementation: Loads UTC GFF template, creates EclipseEntity with all template data applied
+            // Template data includes: Tag, FirstName, LastName, Appearance_Type, FactionID, HP, Attributes, Scripts, etc.
+            Core.Interfaces.IEntity creature = templateFactory.CreateCreatureFromTemplate(template, position, facingRadians);
             if (creature != null)
             {
-                // Set template tag if provided (for later template loading)
-                if (!string.IsNullOrEmpty(template))
+                // Register entity with world if not already registered
+                // Based on swkotor2.exe: Entities created from templates must be registered with world
+                // Located via string references: Entity registration system
+                // Original implementation: World.RegisterEntity adds entity to world's entity collection
+                if (ctx.World.GetEntity(creature.ObjectId) == null)
                 {
-                    creature.SetData("TemplateResRef", template);
+                    ctx.World.RegisterEntity(creature);
                 }
 
                 return Variable.FromObject(creature.ObjectId);
             }
 
+            // Template not found or creation failed
             return Variable.FromObject(ObjectInvalid);
         }
 
