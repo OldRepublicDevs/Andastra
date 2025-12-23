@@ -5596,7 +5596,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     );
 
                     // Transform center to world space
-                    Vector3 worldSpaceCenter = Vector3.Transform(modelSpaceCenter, worldMatrix);
+                    Vector3 worldSpaceCenter = Vector3.Transform(modelSpaceCenter, frustumWorldMatrix);
 
                     // Use the larger of MDL radius or computed radius from bounding box for conservative culling
                     Vector3 boundingBoxSize = boundingVolume.BMax - boundingVolume.BMin;
@@ -14289,10 +14289,9 @@ technique ColorGrading
                 RemainingLifeTime = 0.0f;
             }
         }
-    }
 
-    /// <summary>
-    /// Represents a modified mesh with all its modifications.
+        /// <summary>
+        /// Represents a modified mesh with all its modifications.
     /// </summary>
     /// <remarks>
     /// Based on daorigins.exe/DragonAge2.exe: Modified mesh data structure.
@@ -14371,17 +14370,17 @@ technique ColorGrading
         }
     }
 
-        /// <summary>
-        /// Converts TPC texture data to RGBA format for MonoGame.
-        /// Based on daorigins.exe: TPC format conversion to DirectX 9 compatible format.
-        /// daorigins.exe: 0x00400000 - TPC texture format conversion and decompression
-        /// </summary>
-        /// <param name="tpc">Parsed TPC texture object.</param>
-        /// <param name="width">Texture width.</param>
-        /// <param name="height">Texture height.</param>
-        /// <returns>RGBA pixel data as byte array, or null on failure.</returns>
-        private static byte[] ConvertTPCToRGBA(TPC tpc, int width, int height)
-        {
+    /// <summary>
+    /// Converts TPC texture data to RGBA format for MonoGame.
+    /// Based on daorigins.exe: TPC format conversion to DirectX 9 compatible format.
+    /// daorigins.exe: 0x00400000 - TPC texture format conversion and decompression
+    /// </summary>
+    /// <param name="tpc">Parsed TPC texture object.</param>
+    /// <param name="width">Texture width.</param>
+    /// <param name="height">Texture height.</param>
+    /// <returns>RGBA pixel data as byte array, or null on failure.</returns>
+    private static byte[] ConvertTPCToRGBA(TPC tpc, int width, int height)
+    {
             if (tpc == null || tpc.Layers.Count == 0 || tpc.Layers[0].Mipmaps.Count == 0)
             {
                 return null;
@@ -14649,11 +14648,11 @@ technique ColorGrading
 
         #region DXT Decompression
 
-        /// <summary>
-        /// Decompresses DXT1 (BC1) compressed texture data to RGBA.
-        /// Based on daorigins.exe: DXT1 decompression using S3TC algorithm.
-        /// DXT1 format: 8 bytes per 4x4 pixel block, 1-bit alpha support.
-        /// </summary>
+    /// <summary>
+    /// Decompresses DXT1 (BC1) compressed texture data to RGBA.
+    /// Based on daorigins.exe: DXT1 decompression using S3TC algorithm.
+    /// DXT1 format: 8 bytes per 4x4 pixel block, 1-bit alpha support.
+    /// </summary>
         /// <param name="input">Compressed DXT1 data.</param>
         /// <param name="output">Output RGBA buffer (must be width * height * 4 bytes).</param>
         /// <param name="width">Texture width.</param>
@@ -15063,14 +15062,14 @@ technique ColorGrading
 
         #endregion
 
-    /// <summary>
-    /// Represents a debris piece generated from destroyed geometry.
-    /// </summary>
-    /// <remarks>
-    /// Based on daorigins.exe/DragonAge2.exe: Debris pieces are physics objects created from destroyed geometry.
-    /// </remarks>
-    public class DebrisPiece
-    {
+        /// <summary>
+        /// Represents a debris piece generated from destroyed geometry.
+        /// </summary>
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Debris pieces are physics objects created from destroyed geometry.
+        /// </remarks>
+        public class DebrisPiece
+        {
             /// <summary>
             /// Mesh identifier (model name/resref) this debris came from.
             /// </summary>
@@ -15110,6 +15109,7 @@ technique ColorGrading
             /// Remaining lifetime of the debris piece in seconds.
             /// </summary>
             public float RemainingLifeTime { get; set; }
+        }
         }
     }
 
