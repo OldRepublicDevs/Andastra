@@ -51,6 +51,16 @@ namespace Andastra.Parsing.Resource.Generics.UTM
             utm.CanBuy = (buySellFlag & 1) != 0;
             utm.CanSell = (buySellFlag & 2) != 0;
 
+            // Extract store properties (StoreGold, IdentifyPrice, MaxBuyPrice)
+            // Based on Bioware Aurora Engine Store Format documentation - these fields are in all Store Structs
+            // Based on nwmain.exe: CNWSStore::LoadStore @ 0x1404fbbf0
+            // - Line 63: StoreGold = ReadFieldINT("StoreGold", -1) - default -1 (unlimited)
+            utm.StoreGold = root.Acquire<int>("StoreGold", -1);
+            // - Line 65: IdentifyPrice = ReadFieldINT("IdentifyPrice", 100) - default 100
+            utm.IdentifyPrice = root.Acquire<int>("IdentifyPrice", 100);
+            // - Line 67: MaxBuyPrice = ReadFieldINT("MaxBuyPrice", -1) - default -1 (no limit)
+            utm.MaxBuyPrice = root.Acquire<int>("MaxBuyPrice", -1);
+
             // Extract inventory
             // Matching PyKotor implementation: item_list: GFFList = root.acquire("ItemList", GFFList())
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utm.py:147-154
@@ -96,6 +106,13 @@ namespace Andastra.Parsing.Resource.Generics.UTM
             // Matching PyKotor implementation: root.set_uint8("BuySellFlag", utm.can_buy + utm.can_sell * 2)
             int buySellFlag = (utm.CanBuy ? 1 : 0) + (utm.CanSell ? 2 : 0);
             root.SetUInt8("BuySellFlag", (byte)buySellFlag);
+
+            // Set store properties (StoreGold, IdentifyPrice, MaxBuyPrice)
+            // Based on Bioware Aurora Engine Store Format documentation - these fields are in all Store Structs
+            // Based on nwmain.exe: CNWSStore::LoadStore @ 0x1404fbbf0
+            root.SetInt32("StoreGold", utm.StoreGold);
+            root.SetInt32("IdentifyPrice", utm.IdentifyPrice);
+            root.SetInt32("MaxBuyPrice", utm.MaxBuyPrice);
 
             // Set deprecated ID field if useDeprecated is true
             // Matching PyKotor implementation: if use_deprecated: root.set_uint8("ID", utm.id)
