@@ -2364,21 +2364,10 @@ namespace Andastra.Runtime.Stride.Backends
         // For cross-platform support (Linux/macOS), use StrideVulkanBackend instead
         // This backend should only be instantiated on Windows via StrideBackendFactory
 
-        // DirectX 12 Descriptor Heap Types
-        private const uint D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER = 4;
+        // DirectX 12 Descriptor Heap Types (removed duplicate - see line 2580)
 
-        // DirectX 12 Descriptor Heap Flags
-        private const uint D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE = 0x1;
-
-        // D3D12_DESCRIPTOR_HEAP_DESC structure
-        [StructLayout(LayoutKind.Sequential)]
-        private struct D3D12_DESCRIPTOR_HEAP_DESC
-        {
-            public uint Type;           // D3D12_DESCRIPTOR_HEAP_TYPE
-            public uint NumDescriptors; // UINT
-            public uint Flags;          // D3D12_DESCRIPTOR_HEAP_FLAGS
-            public uint NodeMask;       // UINT
-        }
+        // DirectX 12 Descriptor Heap Flags (removed duplicate - see line 2586)
+        // D3D12_DESCRIPTOR_HEAP_DESC structure (removed duplicate - see line 2601)
 
         // ID3D12Device::CreateDescriptorHeap
         // HRESULT CreateDescriptorHeap(
@@ -2717,7 +2706,7 @@ namespace Andastra.Runtime.Stride.Backends
         /// VTable index 27 for ID3D12Device.
         /// Platform: Windows only (x64/x86) - DirectX 12 COM is Windows-specific
         /// </summary>
-        private unsafe int CreateDescriptorHeap(IntPtr device, IntPtr pDescriptorHeapDesc, ref Guid riid, IntPtr ppvHeap)
+        private unsafe int CreateDescriptorHeapVTable(IntPtr device, IntPtr pDescriptorHeapDesc, ref Guid riid, IntPtr ppvHeap)
         {
             // Platform check: DirectX 12 COM is Windows-only
             if (Environment.OSVersion.Platform != PlatformID.Win32NT)
@@ -2744,7 +2733,7 @@ namespace Andastra.Runtime.Stride.Backends
         /// VTable index 9 for ID3D12DescriptorHeap.
         /// Platform: Windows only (x64/x86) - DirectX 12 COM is Windows-specific
         /// </summary>
-        private unsafe IntPtr GetDescriptorHeapStartHandle(IntPtr descriptorHeap)
+        private unsafe IntPtr GetDescriptorHeapStartHandleVTable(IntPtr descriptorHeap)
         {
             // Platform check: DirectX 12 COM is Windows-only
             if (Environment.OSVersion.Platform != PlatformID.Win32NT)
@@ -2771,7 +2760,7 @@ namespace Andastra.Runtime.Stride.Backends
         /// VTable index 10 for ID3D12DescriptorHeap.
         /// Platform: Windows only (x64/x86) - DirectX 12 COM is Windows-specific
         /// </summary>
-        private unsafe IntPtr GetDescriptorHeapStartHandleGpu(IntPtr descriptorHeap)
+        private unsafe IntPtr GetDescriptorHeapStartHandleGpuVTable(IntPtr descriptorHeap)
         {
             // Platform check: DirectX 12 COM is Windows-only
             if (Environment.OSVersion.Platform != PlatformID.Win32NT)
@@ -2798,7 +2787,7 @@ namespace Andastra.Runtime.Stride.Backends
         /// VTable index 28 for ID3D12Device.
         /// Platform: Windows only (x64/x86) - DirectX 12 COM is Windows-specific
         /// </summary>
-        private unsafe uint GetDescriptorHandleIncrementSize(IntPtr device, uint DescriptorHeapType)
+        private unsafe uint GetDescriptorHandleIncrementSizeVTable(IntPtr device, uint DescriptorHeapType)
         {
             // Platform check: DirectX 12 COM is Windows-only
             if (Environment.OSVersion.Platform != PlatformID.Win32NT)

@@ -471,32 +471,6 @@ namespace Andastra.Runtime.Stride.Audio
                     byte[] silenceBuffer = new byte[bufferSizeBytes];
                     FillBuffer(silenceBuffer, bufferSizeBytes, AudioLayer.BufferType.EndOfStream);
                 }
-
-                public override int MaxNumberOfBuffers => 1;
-
-                public override void SetLooped(bool looped)
-                {
-                    // Dummy source doesn't loop
-                }
-
-                /// <summary>
-                /// Extracts and fills audio data into buffers with silence (zero bytes).
-                /// This is called by Stride's audio system to fill audio buffers.
-                /// Since this is a dummy source used only for initialization, we provide silence.
-                /// </summary>
-                /// <remarks>
-                /// Based on Stride API: DynamicSoundSource.ExtractAndFillData() abstract method
-                /// https://doc.stride3d.net/latest/en/api/Stride.Audio.DynamicSoundSource.html#Stride_Audio_DynamicSoundSource_ExtractAndFillData
-                /// </remarks>
-                protected override void ExtractAndFillData()
-                {
-                    if (!CanFill)
-                    {
-                        return;
-                    }
-
-                    // Calculate buffer size for mono 16-bit audio at 44100 Hz
-                    // Standard buffer size: 4096 samples * 2 bytes per sample * 1 channel (mono)
                     int bytesPerSample = 2; // 16-bit audio = 2 bytes per sample
                     int samplesPerChannel = 4096; // Standard buffer size in samples
                     int bufferSizeBytes = samplesPerChannel * bytesPerSample * 1; // 1 channel (mono)
