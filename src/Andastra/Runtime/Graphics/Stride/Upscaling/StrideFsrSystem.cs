@@ -950,15 +950,15 @@ shader FSRTemporal : ComputeShaderBase
     /// </summary>
     internal static class FsrShaderKeys
     {
-        public static readonly ParameterKey<Texture> InputColor = ParameterKeys.New<Texture>();
-        public static readonly ParameterKey<Texture> InputMotionVectors = ParameterKeys.New<Texture>();
-        public static readonly ParameterKey<Texture> InputDepth = ParameterKeys.New<Texture>();
-        public static readonly ParameterKey<Texture> InputReactiveMask = ParameterKeys.New<Texture>();
-        public static readonly ParameterKey<Texture> InputLock = ParameterKeys.New<Texture>();
-        public static readonly ParameterKey<Texture> InputHistory = ParameterKeys.New<Texture>();
-        public static readonly ParameterKey<Texture> OutputColor = ParameterKeys.New<Texture>();
-        public static readonly ParameterKey<Texture> OutputLock = ParameterKeys.New<Texture>();
-        public static readonly ParameterKey<StrideFsrSystem.FsrConstants> FsrConstants = ParameterKeys.New<StrideFsrSystem.FsrConstants>();
+        public static readonly ObjectParameterKey<Texture> InputColor = new ObjectParameterKey<Texture>("InputColor");
+        public static readonly ObjectParameterKey<Texture> InputMotionVectors = new ObjectParameterKey<Texture>("InputMotionVectors");
+        public static readonly ObjectParameterKey<Texture> InputDepth = new ObjectParameterKey<Texture>("InputDepth");
+        public static readonly ObjectParameterKey<Texture> InputReactiveMask = new ObjectParameterKey<Texture>("InputReactiveMask");
+        public static readonly ObjectParameterKey<Texture> InputLock = new ObjectParameterKey<Texture>("InputLock");
+        public static readonly ObjectParameterKey<Texture> InputHistory = new ObjectParameterKey<Texture>("InputHistory");
+        public static readonly ObjectParameterKey<Texture> OutputColor = new ObjectParameterKey<Texture>("OutputColor");
+        public static readonly ObjectParameterKey<Texture> OutputLock = new ObjectParameterKey<Texture>("OutputLock");
+        public static readonly ValueParameterKey<StrideFsrSystem.FsrConstants> FsrConstants = new ValueParameterKey<StrideFsrSystem.FsrConstants>("FsrConstants");
     }
 }
 
