@@ -290,24 +290,78 @@ namespace Andastra.Runtime.Core.Module
         }
 
         /// <summary>
-        /// Advances time by the specified minutes.
+        /// Gets the number of days in the specified month for the specified year.
         /// </summary>
+        /// <param name="month">Month number (1-12).</param>
+        /// <param name="year">Year number.</param>
+        /// <returns>Number of days in the month (28-31).</returns>
+        /// <remarks>
+        /// Based on swkotor2.exe calendar system.
+        /// Uses standard calendar with variable days per month:
+        /// - Months 1, 3, 5, 7, 8, 10, 12: 31 days
+        /// - Months 4, 6, 9, 11: 30 days
+        /// - Month 2: 28 days (no leap year support in game calendar)
+        /// </remarks>
+        private int GetDaysInMonth(int month, int year)
+        {
+            // Validate month range
+            if (month < 1 || month > 12)
+            {
+                return 30; // Default fallback
+            }
+
+            // Days per month lookup table (1-indexed: [0] unused, [1-12] used)
+            // Standard calendar: Jan=31, Feb=28, Mar=31, Apr=30, May=31, Jun=30,
+            //                   Jul=31, Aug=31, Sep=30, Oct=31, Nov=30, Dec=31
+            int[] daysPerMonth = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+
+            return daysPerMonth[month];
+        }
+
+        /// <summary>
+        /// Advances time by the specified minutes.
+        /// Handles day/month/year overflow correctly with variable days per month.
+        /// </summary>
+        /// <param name="minutes">Number of minutes to advance.</param>
+        /// <remarks>
+        /// Based on swkotor2.exe time advancement system.
+        /// Properly handles:
+        /// - Day overflow into next month (respects days per month)
+        /// - Month overflow into next year (12 months per year)
+        /// - Year increment on year overflow
+        /// </remarks>
         public void AdvanceTime(int minutes)
         {
             MinutesPastMidnight += minutes;
-            while (MinutesPastMidnight >= 1440) // 24 * 60
+            
+            // Handle day overflow (1440 minutes = 24 hours)
+            while (MinutesPastMidnight >= 1440)
             {
                 MinutesPastMidnight -= 1440;
                 Day++;
-                // TODO:  Handle month/year overflow (simplified - assume 30 days/month, 12 months/year)
-                if (Day > 30)
+                
+                // Get days in current month
+                int daysInCurrentMonth = GetDaysInMonth(Month, Year);
+                
+                // Handle day overflow into next month
+                if (Day > daysInCurrentMonth)
                 {
                     Day = 1;
                     Month++;
+                    
+                    // Handle month overflow into next year
                     if (Month > 12)
                     {
                         Month = 1;
                         Year++;
+                        
+                        // Year overflow protection (prevent integer overflow)
+                        // Game calendar uses years like 3951, so this should never happen in practice
+                        // but we add protection for safety
+                        if (Year < 0)
+                        {
+                            Year = 1; // Reset to year 1 if overflow occurs
+                        }
                     }
                 }
             }
