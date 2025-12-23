@@ -81,7 +81,7 @@ namespace Andastra.Runtime.Games.Eclipse
     /// </summary>
     /// <remarks>
     /// Eclipse Area Implementation:
-        /// - Based on daorigins.exe, DragonAge2.exe
+    /// - Based on daorigins.exe, DragonAge2.exe
     /// - Most advanced area system of the BioWare engines
     /// - Complex lighting, physics, and environmental simulation
     /// - Real-time area effects and dynamic weather
@@ -101,7 +101,7 @@ namespace Andastra.Runtime.Games.Eclipse
     /// </remarks>
     [PublicAPI]
     public class EclipseArea : BaseArea, IDialogueHistoryArea
-        {
+    {
         private readonly List<IEntity> _creatures = new List<IEntity>();
         private readonly List<IEntity> _placeables = new List<IEntity>();
         private readonly List<IEntity> _doors = new List<IEntity>();
@@ -5111,7 +5111,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                                 directionalLight = mgEffect.DirectionalLight2;
                                                 break;
                                             default:
-                                                continue; // Should not happen
+                                                break; // Should not happen - use break in switch, not continue
                                         }
 
                                         // Configure directional light based on light type
@@ -6709,7 +6709,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                                 directionalLight = mgEffect.DirectionalLight2;
                                                 break;
                                             default:
-                                                continue; // Should not happen
+                                                break; // Should not happen - use break in switch, not continue
                                         }
 
                                         // Configure directional light based on light type
@@ -8006,7 +8006,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                                 directionalLight = mgEffect.DirectionalLight2;
                                                 break;
                                             default:
-                                                continue; // Should not happen
+                                                break; // Should not happen - use break in switch, not continue
                                         }
 
                                         // Configure directional light based on light type
@@ -9490,15 +9490,15 @@ namespace Andastra.Runtime.Games.Eclipse
                             else
                             {
                                 // Fallback: Use sprite batch without shader
-                    spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.Opaque);
-                    spriteBatch.Draw(hdrScene.ColorTexture, destinationRect, GraphicsColor.White);
-                    spriteBatch.End();
+                                spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.Opaque);
+                                spriteBatch.Draw(hdrScene.ColorTexture, destinationRect, GraphicsColor.White);
+                                spriteBatch.End();
 
-                    spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.AdditiveBlend);
+                                spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.AdditiveBlend);
                                 byte intensityByte = (byte)(Math.Min(255, intensity * 255));
                                 GraphicsColor bloomColor = new GraphicsColor(intensityByte, intensityByte, intensityByte, intensityByte);
                                 spriteBatch.Draw(bloom.ColorTexture, destinationRect, bloomColor);
-                    spriteBatch.End();
+                                spriteBatch.End();
                             }
                         }
                         else
@@ -11206,7 +11206,7 @@ technique ColorGrading
     /// Interface for dynamic area effects in Eclipse engine.
     /// </summary>
     public interface IDynamicAreaEffect : IUpdatable
-        {
+    {
         /// <summary>
         /// Gets whether the effect is still active.
         /// </summary>
@@ -11226,7 +11226,7 @@ technique ColorGrading
     /// Based on daorigins.exe, DragonAge2.exe: Effects can provide custom rendering.
     /// </remarks>
     public interface IRenderableEffect
-        {
+    {
         /// <summary>
         /// Renders the effect.
         /// </summary>
@@ -11246,7 +11246,7 @@ technique ColorGrading
     /// Based on daorigins.exe, DragonAge2.exe: Particle effects use particle emitters.
     /// </remarks>
     public interface IParticleEffect : IDynamicAreaEffect
-        {
+    {
         /// <summary>
         /// Gets the particle emitters for this effect.
         /// </summary>
@@ -11261,7 +11261,7 @@ technique ColorGrading
     /// Based on daorigins.exe, DragonAge2.exe: Weather effects render rain, snow, fog.
     /// </remarks>
     public interface IWeatherEffect : IDynamicAreaEffect
-        {
+    {
         /// <summary>
         /// Gets the weather type for this effect.
         /// </summary>
@@ -11281,7 +11281,7 @@ technique ColorGrading
     /// Based on daorigins.exe, DragonAge2.exe: Environmental effects use particle systems.
     /// </remarks>
     public interface IEnvironmentalEffect : IDynamicAreaEffect
-        {
+    {
         /// <summary>
         /// Gets the particle emitters for this environmental effect (optional).
         /// </summary>
@@ -11300,7 +11300,7 @@ technique ColorGrading
     /// - Transition duration: How long the weather transition takes (smooth fade in/out)
     /// </remarks>
     internal class WeatherTransitionTrigger
-        {
+    {
         /// <summary>
         /// Trigger type (time-based or script-based).
         /// </summary>
@@ -11539,7 +11539,7 @@ technique ColorGrading
     /// Weather transition trigger type.
     /// </summary>
     internal enum WeatherTransitionTriggerType
-        {
+    {
         /// <summary>
         /// Time-based trigger (weather changes at specific time or intervals).
         /// </summary>
@@ -11559,7 +11559,7 @@ technique ColorGrading
     /// Based on Eclipse engine's dynamic area modification system.
     /// </remarks>
     public interface IAreaModification
-        {
+    {
         /// <summary>
         /// Applies the modification to an area.
         /// </summary>
@@ -11591,7 +11591,7 @@ technique ColorGrading
     /// - DragonAge2.exe: Enhanced lighting system with ambient color and intensity properties
     /// </remarks>
     public interface ILightingSystem : IUpdatable
-        {
+    {
         /// <summary>
         /// Gets or sets the ambient light color.
         /// </summary>
@@ -11643,7 +11643,7 @@ technique ColorGrading
     /// - DragonAge2.exe: Enhanced physics system with constraint support
     /// </remarks>
     public interface IPhysicsSystem
-        {
+    {
         /// <summary>
         /// Steps the physics simulation.
         /// </summary>
@@ -11691,7 +11691,7 @@ technique ColorGrading
     /// Interface for updatable objects.
     /// </summary>
     public interface IUpdatable
-        {
+    {
         void Update(float deltaTime);
     }
 
@@ -11703,7 +11703,7 @@ technique ColorGrading
     /// Used for spawning creatures, placeables, triggers, and other objects.
     /// </remarks>
     public class AddEntityModification : IAreaModification
-        {
+    {
         private readonly IEntity _entity;
 
         /// <summary>
@@ -11756,7 +11756,7 @@ technique ColorGrading
     /// Used for despawning, destruction, and cleanup.
     /// </remarks>
     public class RemoveEntityModification : IAreaModification
-        {
+    {
         private readonly IEntity _entity;
 
         /// <summary>
@@ -11807,7 +11807,7 @@ technique ColorGrading
     /// Based on Eclipse engine: Dynamic lights can be added at runtime for effects, explosions, etc.
     /// </remarks>
     public class AddLightModification : IAreaModification
-        {
+    {
         private readonly IDynamicLight _light;
 
         /// <summary>
@@ -11855,7 +11855,7 @@ technique ColorGrading
     /// Based on Eclipse engine: Dynamic lights can be removed at runtime.
     /// </remarks>
     public class RemoveLightModification : IAreaModification
-        {
+    {
         private readonly IDynamicLight _light;
 
         /// <summary>
@@ -11904,7 +11904,7 @@ technique ColorGrading
     /// Used for explosions, destruction, and environmental changes.
     /// </remarks>
     public class CreateWalkmeshHoleModification : IAreaModification
-        {
+    {
         private readonly Vector3 _center;
         private readonly float _radius;
 
@@ -11978,7 +11978,7 @@ technique ColorGrading
     /// Includes weather, particle effects, audio zones, and environmental changes.
     /// </remarks>
     public class AddAreaEffectModification : IAreaModification
-        {
+    {
         private readonly IDynamicAreaEffect _effect;
 
         /// <summary>
@@ -12027,7 +12027,7 @@ technique ColorGrading
     /// Based on Eclipse engine: Dynamic area effects can be removed at runtime.
     /// </remarks>
     public class RemoveAreaEffectModification : IAreaModification
-        {
+    {
         private readonly IDynamicAreaEffect _effect;
 
         /// <summary>
@@ -12077,7 +12077,7 @@ technique ColorGrading
     /// Includes unescapable flag, display name, tag, and other properties.
     /// </remarks>
     public class ChangeAreaPropertyModification : IAreaModification
-        {
+    {
         private readonly string _propertyName;
         private readonly object _propertyValue;
 
@@ -12160,7 +12160,7 @@ technique ColorGrading
     /// Creates physics debris, modifies walkmesh, and updates navigation.
     /// </remarks>
     public class DestroyDestructibleObjectModification : IAreaModification
-        {
+    {
         private readonly IEntity _destructibleEntity;
         private readonly Vector3 _explosionCenter;
         private readonly float _explosionRadius;
@@ -12406,67 +12406,67 @@ technique ColorGrading
                     // Mark entity as having physics
                     debrisEntity.SetData("HasPhysics", true);
                 }
+            }
         }
-    }
-
-    /// <summary>
-    /// Type of geometry modification.
-    /// </summary>
-    /// <remarks>
-    /// Based on daorigins.exe/DragonAge2.exe: Different modification types for destructible geometry.
-    /// </remarks>
-    public enum GeometryModificationType
-    {
-        /// <summary>
-        /// Geometry is destroyed (faces are removed, non-rendered, non-collidable).
-        /// </summary>
-        Destroyed = 0,
 
         /// <summary>
-        /// Geometry is deformed (vertices are displaced, faces are distorted).
+        /// Type of geometry modification.
         /// </summary>
-        Deformed = 1,
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Different modification types for destructible geometry.
+        /// </remarks>
+        public enum GeometryModificationType
+        {
+            /// <summary>
+            /// Geometry is destroyed (faces are removed, non-rendered, non-collidable).
+            /// </summary>
+            Destroyed = 0,
+
+            /// <summary>
+            /// Geometry is deformed (vertices are displaced, faces are distorted).
+            /// </summary>
+            Deformed = 1,
+
+            /// <summary>
+            /// Geometry generates debris (destroyed pieces become physics objects).
+            /// </summary>
+            Debris = 2
+        }
 
         /// <summary>
-        /// Geometry generates debris (destroyed pieces become physics objects).
+        /// Modified vertex data for geometry deformation.
         /// </summary>
-        Debris = 2
-    }
-
-    /// <summary>
-    /// Modified vertex data for geometry deformation.
-    /// </summary>
-    /// <remarks>
-    /// Based on daorigins.exe/DragonAge2.exe: Vertex modifications store position changes and displacements.
-    /// </remarks>
-    /// <summary>
-    /// Represents a modified vertex in destructible geometry.
-    /// </summary>
-    /// <remarks>
-    /// Based on daorigins.exe/DragonAge2.exe: Vertex modifications track position changes for deformed geometry.
-    /// </remarks>
-    public struct ModifiedVertex
-    {
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Vertex modifications store position changes and displacements.
+        /// </remarks>
         /// <summary>
-        /// Original vertex index in the mesh.
+        /// Represents a modified vertex in destructible geometry.
         /// </summary>
-        public int VertexIndex { get; set; }
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Vertex modifications track position changes for deformed geometry.
+        /// </remarks>
+        public struct ModifiedVertex
+        {
+            /// <summary>
+            /// Original vertex index in the mesh.
+            /// </summary>
+            public int VertexIndex { get; set; }
 
-        /// <summary>
-        /// Modified vertex position (displacement from original).
-        /// </summary>
-        public Vector3 ModifiedPosition { get; set; }
+            /// <summary>
+            /// Modified vertex position (displacement from original).
+            /// </summary>
+            public Vector3 ModifiedPosition { get; set; }
 
-        /// <summary>
-        /// Displacement vector (direction and magnitude of deformation).
-        /// </summary>
-        public Vector3 Displacement { get; set; }
+            /// <summary>
+            /// Displacement vector (direction and magnitude of deformation).
+            /// </summary>
+            public Vector3 Displacement { get; set; }
 
-        /// <summary>
-        /// Time of modification (for animation/deformation effects).
-        /// </summary>
-        public float ModificationTime { get; set; }
-    }
+            /// <summary>
+            /// Time of modification (for animation/deformation effects).
+            /// </summary>
+            public float ModificationTime { get; set; }
+        }
 
         /// <summary>
         /// Extracts vertex positions and indices from MDL model.
@@ -12984,67 +12984,6 @@ technique ColorGrading
     }
 
     /// <summary>
-    /// Type of geometry modification.
-    /// </summary>
-    /// <remarks>
-    /// Based on daorigins.exe/DragonAge2.exe: Different modification types for destructible geometry.
-    /// </remarks>
-    public enum GeometryModificationType
-    {
-        /// <summary>
-        /// Geometry is destroyed (faces are removed, non-rendered, non-collidable).
-        /// </summary>
-        Destroyed = 0,
-
-        /// <summary>
-        /// Geometry is deformed (vertices are displaced, faces are distorted).
-        /// </summary>
-        Deformed = 1,
-
-        /// <summary>
-        /// Geometry generates debris (destroyed pieces become physics objects).
-        /// </summary>
-        Debris = 2
-    }
-
-    /// <summary>
-    /// Represents a modified vertex in destructible geometry.
-    /// </summary>
-    /// <remarks>
-    /// Based on daorigins.exe/DragonAge2.exe: Vertex modifications track position changes for deformed geometry.
-    /// </remarks>
-    public struct ModifiedVertex
-    {
-        /// <summary>
-        /// Original vertex index in the mesh.
-        /// </summary>
-        public int VertexIndex { get; set; }
-
-        /// <summary>
-        /// Modified vertex position (displacement from original).
-        /// </summary>
-        public Vector3 ModifiedPosition { get; set; }
-
-        /// <summary>
-        /// Displacement vector (direction and magnitude of deformation).
-        /// </summary>
-        public Vector3 Displacement { get; set; }
-
-        /// <summary>
-        /// Time of modification (for animation/deformation effects).
-        /// </summary>
-        public float ModificationTime { get; set; }
-
-        public ModifiedVertex(int vertexIndex, Vector3 modifiedPosition, Vector3 displacement, float modificationTime)
-        {
-            VertexIndex = vertexIndex;
-            ModifiedPosition = modifiedPosition;
-            Displacement = displacement;
-            ModificationTime = modificationTime;
-        }
-    }
-
-    /// <summary>
     /// Tracks modifications to destructible geometry for rendering and physics updates.
     /// </summary>
     /// <remarks>
@@ -13063,7 +13002,7 @@ technique ColorGrading
     /// - Generates debris physics objects from destroyed faces
     /// </remarks>
     internal class DestructibleGeometryModificationTracker
-        {
+    {
         // Modified mesh data by mesh ID (model name/resref)
         // Based on daorigins.exe: Modifications are tracked per mesh/model
         private readonly Dictionary<string, ModifiedMesh> _modifiedMeshes;
@@ -13458,6 +13397,7 @@ technique ColorGrading
 
             return connectedFaces;
         }
+    }
 
     /// <summary>
     /// Represents a modified mesh with all its modifications.
@@ -13540,576 +13480,239 @@ technique ColorGrading
     }
 
     /// <summary>
-    /// Loads a texture from DDS format data.
-    /// Based on daorigins.exe: DDS texture loading for DirectX 9 compatibility.
+    /// Loads a texture from TPC format data.
+    /// Based on daorigins.exe: TPC texture loading and conversion to graphics API format.
     /// </summary>
-    /// <param name="ddsData">DDS file data as byte array.</param>
+    /// <param name="tpcData">TPC file data as byte array.</param>
     /// <param name="textureName">Texture name for error reporting.</param>
     /// <returns>ITexture2D instance or null on failure.</returns>
-    private ITexture2D LoadTextureFromDDSData(byte[] ddsData, string textureName)
-    {
-        if (_renderContext?.GraphicsDevice == null)
+    private ITexture2D LoadTextureFromTPCData(byte[] tpcData, string textureName)
         {
-            return null;
-        }
-
-        try
-        {
-            // Parse DDS header to get dimensions and format
-            // Based on daorigins.exe: DDS header parsing for texture information
-            if (!TryParseDDSHeader(ddsData, out int width, out int height, out bool hasAlpha))
+            if (_renderContext?.GraphicsDevice == null)
             {
-                System.Console.WriteLine($"[EclipseArea] LoadTextureFromDDSData: Failed to parse DDS header for texture '{textureName}'");
                 return null;
             }
 
-            // Extract pixel data from DDS
-            // Based on daorigins.exe: DDS pixel data extraction for DirectX 9
-            byte[] rgbaData = ExtractDDSDataToRGBA(ddsData, width, height, hasAlpha);
-            if (rgbaData == null)
+            try
             {
-                System.Console.WriteLine($"[EclipseArea] LoadTextureFromDDSData: Failed to extract DDS data for texture '{textureName}'");
+                // Parse TPC file using existing parser
+                // Based on daorigins.exe: TPC file parsing for texture data extraction
+                var tpc = TPCAuto.ReadTpc(tpcData);
+                if (tpc == null || tpc.Layers.Count == 0 || tpc.Layers[0].Mipmaps.Count == 0)
+                {
+                    System.Console.WriteLine($"[EclipseArea] LoadTextureFromTPCData: Failed to parse TPC texture '{textureName}'");
+                    return null;
+                }
+
+                // Get first mipmap (largest mip level)
+                // Based on daorigins.exe: Uses largest mipmap for texture creation
+                var mipmap = tpc.Layers[0].Mipmaps[0];
+                if (mipmap.Data == null || mipmap.Data.Length == 0)
+                {
+                    System.Console.WriteLine($"[EclipseArea] LoadTextureFromTPCData: TPC texture '{textureName}' has no mipmap data");
+                    return null;
+                }
+
+                // Convert TPC format to RGBA data for MonoGame
+                // Based on daorigins.exe: TPC formats converted to RGBA for DirectX 9
+                byte[] rgbaData = ConvertTPCToRGBA(tpc, mipmap.Width, mipmap.Height);
+                if (rgbaData == null)
+                {
+                    System.Console.WriteLine($"[EclipseArea] LoadTextureFromTPCData: Failed to convert TPC texture '{textureName}' to RGBA");
+                    return null;
+                }
+
+                // Create MonoGame texture from RGBA data
+                // Based on daorigins.exe: Texture creation from converted pixel data
+                var texture = _renderContext.GraphicsDevice.CreateTexture2D(mipmap.Width, mipmap.Height, rgbaData);
+                System.Console.WriteLine($"[EclipseArea] LoadTextureFromTPCData: Successfully loaded TPC texture '{textureName}' ({mipmap.Width}x{mipmap.Height})");
+                return texture;
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"[EclipseArea] LoadTextureFromTPCData: Exception loading TPC texture '{textureName}': {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Loads a texture from DDS format data.
+        /// Based on daorigins.exe: DDS texture loading for DirectX 9 compatibility.
+        /// </summary>
+        /// <param name="ddsData">DDS file data as byte array.</param>
+        /// <param name="textureName">Texture name for error reporting.</param>
+        /// <returns>ITexture2D instance or null on failure.</returns>
+        private ITexture2D LoadTextureFromDDSData(byte[] ddsData, string textureName)
+        {
+            if (_renderContext?.GraphicsDevice == null)
+            {
                 return null;
             }
 
-            // Create MonoGame texture from RGBA data
-            // Based on daorigins.exe: Texture creation from DDS pixel data
-            var texture = _renderContext.GraphicsDevice.CreateTexture2D(width, height, rgbaData);
-            System.Console.WriteLine($"[EclipseArea] LoadTextureFromDDSData: Successfully loaded DDS texture '{textureName}' ({width}x{height})");
-            return texture;
-        }
-        catch (Exception ex)
-        {
-            System.Console.WriteLine($"[EclipseArea] LoadTextureFromDDSData: Exception loading DDS texture '{textureName}': {ex.Message}");
-            return null;
-        }
-    }
+            try
+            {
+                // Parse DDS header to get dimensions and format
+                // Based on daorigins.exe: DDS header parsing for texture information
+                if (!TryParseDDSHeader(ddsData, out int width, out int height, out bool hasAlpha))
+                {
+                    System.Console.WriteLine($"[EclipseArea] LoadTextureFromDDSData: Failed to parse DDS header for texture '{textureName}'");
+                    return null;
+                }
 
-    /// <summary>
-    /// Converts TPC texture data to RGBA format for MonoGame.
-    /// Based on daorigins.exe: TPC format conversion to DirectX 9 compatible format.
-    /// </summary>
-    /// <param name="tpc">Parsed TPC texture object.</param>
-    /// <param name="width">Texture width.</param>
-    /// <param name="height">Texture height.</param>
-    /// <returns>RGBA pixel data as byte array, or null on failure.</returns>
-    private byte[] ConvertTPCToRGBA(TPC tpc, int width, int height)
-    {
-        if (tpc == null || tpc.Layers.Count == 0 || tpc.Layers[0].Mipmaps.Count == 0)
-        {
-            return null;
-        }
+                // Extract pixel data from DDS
+                // Based on daorigins.exe: DDS pixel data extraction for DirectX 9
+                byte[] rgbaData = ExtractDDSDataToRGBA(ddsData, width, height, hasAlpha);
+                if (rgbaData == null)
+                {
+                    System.Console.WriteLine($"[EclipseArea] LoadTextureFromDDSData: Failed to extract DDS data for texture '{textureName}'");
+                    return null;
+                }
 
-        var format = tpc.Format();
-        var mipmap = tpc.Layers[0].Mipmaps[0];
-        var compressedData = mipmap.Data;
-
-        // Handle different TPC formats
-        // Based on daorigins.exe: TPC format conversion for different compression types
-        switch (format)
-        {
-            case TPCTextureFormat.DXT1:
-                // DXT1: 4x4 blocks, 8 bytes per block (RGB, 1-bit alpha)
-                return DecompressDXT1(compressedData, width, height);
-
-            case TPCTextureFormat.DXT3:
-                // DXT3: 4x4 blocks, 16 bytes per block (RGB, explicit alpha)
-                return DecompressDXT3(compressedData, width, height);
-
-            case TPCTextureFormat.DXT5:
-                // DXT5: 4x4 blocks, 16 bytes per block (RGB, interpolated alpha)
-                return DecompressDXT5(compressedData, width, height);
-
-            case TPCTextureFormat.RGB:
-                // RGB: 24-bit RGB, no alpha
-                return ConvertRGBToRGBA(compressedData, width, height);
-
-            case TPCTextureFormat.RGBA:
-                // RGBA: 32-bit RGBA, already in correct format
-                return compressedData;
-
-            case TPCTextureFormat.Grayscale:
-                // Grayscale: 8-bit grayscale, convert to RGBA
-                return ConvertGrayscaleToRGBA(compressedData, width, height);
-
-            default:
-                System.Console.WriteLine($"[EclipseArea] ConvertTPCToRGBA: Unsupported TPC format {format}");
+                // Create MonoGame texture from RGBA data
+                // Based on daorigins.exe: Texture creation from DDS pixel data
+                var texture = _renderContext.GraphicsDevice.CreateTexture2D(width, height, rgbaData);
+                System.Console.WriteLine($"[EclipseArea] LoadTextureFromDDSData: Successfully loaded DDS texture '{textureName}' ({width}x{height})");
+                return texture;
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"[EclipseArea] LoadTextureFromDDSData: Exception loading DDS texture '{textureName}': {ex.Message}");
                 return null;
+            }
         }
-    }
 
-    /// <summary>
-    /// Attempts to parse DDS header to extract texture information.
-    /// Based on daorigins.exe: DDS header parsing for texture dimensions and format.
-    /// </summary>
-    /// <param name="ddsData">DDS file data.</param>
-    /// <param name="width">Output texture width.</param>
-    /// <param name="height">Output texture height.</param>
-    /// <param name="hasAlpha">Output whether texture has alpha channel.</param>
-    /// <returns>True if header parsed successfully, false otherwise.</returns>
-    private bool TryParseDDSHeader(byte[] ddsData, out int width, out int height, out bool hasAlpha)
-    {
-        width = 0;
-        height = 0;
-        hasAlpha = false;
-
-        if (ddsData == null || ddsData.Length < 128)
+        /// <summary>
+        /// Converts TPC texture data to RGBA format for MonoGame.
+        /// Based on daorigins.exe: TPC format conversion to DirectX 9 compatible format.
+        /// </summary>
+        /// <param name="tpc">Parsed TPC texture object.</param>
+        /// <param name="width">Texture width.</param>
+        /// <param name="height">Texture height.</param>
+        /// <returns>RGBA pixel data as byte array, or null on failure.</returns>
+        private byte[] ConvertTPCToRGBA(TPC tpc, int width, int height)
         {
-            return false;
+            if (tpc == null || tpc.Layers.Count == 0 || tpc.Layers[0].Mipmaps.Count == 0)
+            {
+                return null;
+            }
+
+            var format = tpc.Format();
+            var mipmap = tpc.Layers[0].Mipmaps[0];
+            var compressedData = mipmap.Data;
+
+            // Handle different TPC formats
+            // Based on daorigins.exe: TPC format conversion for different compression types
+            switch (format)
+            {
+                case TPCTextureFormat.DXT1:
+                    // DXT1: 4x4 blocks, 8 bytes per block (RGB, 1-bit alpha)
+                    return DecompressDXT1(compressedData, width, height);
+
+                case TPCTextureFormat.DXT3:
+                    // DXT3: 4x4 blocks, 16 bytes per block (RGB, explicit alpha)
+                    return DecompressDXT3(compressedData, width, height);
+
+                case TPCTextureFormat.DXT5:
+                    // DXT5: 4x4 blocks, 16 bytes per block (RGB, interpolated alpha)
+                    return DecompressDXT5(compressedData, width, height);
+
+                case TPCTextureFormat.RGB:
+                    // RGB: 24-bit RGB, no alpha
+                    return ConvertRGBToRGBA(compressedData, width, height);
+
+                case TPCTextureFormat.RGBA:
+                    // RGBA: 32-bit RGBA, already in correct format
+                    return compressedData;
+
+                case TPCTextureFormat.Grayscale:
+                    // Grayscale: 8-bit grayscale, convert to RGBA
+                    return ConvertGrayscaleToRGBA(compressedData, width, height);
+
+                default:
+                    System.Console.WriteLine($"[EclipseArea] ConvertTPCToRGBA: Unsupported TPC format {format}");
+                    return null;
+            }
         }
 
-        // Check DDS magic number
-        if (ddsData[0] != 'D' || ddsData[1] != 'D' || ddsData[2] != 'S' || ddsData[3] != ' ')
+        /// <summary>
+        /// Attempts to parse DDS header to extract texture information.
+        /// Based on daorigins.exe: DDS header parsing for texture dimensions and format.
+        /// </summary>
+        /// <param name="ddsData">DDS file data.</param>
+        /// <param name="width">Output texture width.</param>
+        /// <param name="height">Output texture height.</param>
+        /// <param name="hasAlpha">Output whether texture has alpha channel.</param>
+        /// <returns>True if header parsed successfully, false otherwise.</returns>
+        private bool TryParseDDSHeader(byte[] ddsData, out int width, out int height, out bool hasAlpha)
         {
-            return false;
+            width = 0;
+            height = 0;
+            hasAlpha = false;
+
+            if (ddsData == null || ddsData.Length < 128)
+            {
+                return false;
+            }
+
+            // Check DDS magic number
+            if (ddsData[0] != 'D' || ddsData[1] != 'D' || ddsData[2] != 'S' || ddsData[3] != ' ')
+            {
+                return false;
+            }
+
+            // Parse DDS header (little-endian)
+            // Based on daorigins.exe: DDS header parsing for DirectX 9 texture creation
+            height = BitConverter.ToInt32(ddsData, 12);
+            width = BitConverter.ToInt32(ddsData, 16);
+
+            // Check pixel format (offset 80-111 in header)
+            uint pixelFormatFlags = BitConverter.ToUInt32(ddsData, 80);
+            uint fourCC = BitConverter.ToUInt32(ddsData, 84);
+
+            // Determine if texture has alpha
+            // Based on daorigins.exe: DDS format detection for alpha channel support
+            if ((pixelFormatFlags & 0x4) != 0) // DDPF_ALPHAPIXELS
+            {
+                hasAlpha = true;
+            }
+            else if (fourCC == 0x31545844) // "DXT1"
+            {
+                hasAlpha = false; // DXT1 has 1-bit alpha but we treat as opaque for simplicity
+            }
+            else if (fourCC == 0x33545844 || fourCC == 0x35545844) // "DXT3" or "DXT5"
+            {
+                hasAlpha = true; // DXT3/DXT5 have alpha
+            }
+
+            return width > 0 && height > 0;
         }
 
-        // Parse DDS header (little-endian)
-        // Based on daorigins.exe: DDS header parsing for DirectX 9 texture creation
-        height = BitConverter.ToInt32(ddsData, 12);
-        width = BitConverter.ToInt32(ddsData, 16);
-
-        // Check pixel format (offset 80-111 in header)
-        uint pixelFormatFlags = BitConverter.ToUInt32(ddsData, 80);
-        uint fourCC = BitConverter.ToUInt32(ddsData, 84);
-
-        // Determine if texture has alpha
-        // Based on daorigins.exe: DDS format detection for alpha channel support
-        if ((pixelFormatFlags & 0x4) != 0) // DDPF_ALPHAPIXELS
+        /// <summary>
+        /// Extracts pixel data from DDS format to RGBA.
+        /// Based on daorigins.exe: DDS pixel data extraction and conversion.
+        /// </summary>
+        /// <param name="ddsData">DDS file data.</param>
+        /// <param name="width">Texture width.</param>
+        /// <param name="height">Texture height.</param>
+        /// <param name="hasAlpha">Whether texture has alpha channel.</param>
+        /// <returns>RGBA pixel data as byte array, or null on failure.</returns>
+        private byte[] ExtractDDSDataToRGBA(byte[] ddsData, int width, int height, bool hasAlpha)
         {
-            hasAlpha = true;
-        }
-        else if (fourCC == 0x31545844) // "DXT1"
-        {
-            hasAlpha = false; // DXT1 has 1-bit alpha but we treat as opaque for simplicity
-        }
-        else if (fourCC == 0x33545844 || fourCC == 0x35545844) // "DXT3" or "DXT5"
-        {
-            hasAlpha = true; // DXT3/DXT5 have alpha
-        }
-
-        return width > 0 && height > 0;
-    }
-
-    /// <summary>
-    /// Extracts pixel data from DDS format to RGBA.
-    /// Based on daorigins.exe: DDS pixel data extraction and conversion.
-    /// </summary>
-    /// <param name="ddsData">DDS file data.</param>
-    /// <param name="width">Texture width.</param>
-    /// <param name="height">Texture height.</param>
-    /// <param name="hasAlpha">Whether texture has alpha channel.</param>
-    /// <returns>RGBA pixel data as byte array, or null on failure.</returns>
-    private byte[] ExtractDDSDataToRGBA(byte[] ddsData, int width, int height, bool hasAlpha)
-    {
-        if (ddsData == null || ddsData.Length < 128)
-        {
-            return null;
-        }
+            if (ddsData == null || ddsData.Length < 128)
+            {
+                return null;
+            }
 
         // For this implementation, we'll use a simplified approach
         // In a full implementation, this would decompress DXT formats
         // Based on daorigins.exe: DDS decompression for DirectX 9 compatibility
 
-        // Check if it's an uncompressed DDS (A8R8G8B8 format)
-        uint fourCC = BitConverter.ToUInt32(ddsData, 84);
-        if (fourCC == 0) // Uncompressed
-        {
-            // Extract BGRA data and convert to RGBA
-            int pixelDataOffset = 128; // DDS header is 128 bytes
-            int pixelCount = width * height;
-            int expectedSize = pixelDataOffset + pixelCount * 4;
-
-            if (ddsData.Length < expectedSize)
-            {
-                return null;
-            }
-
-            byte[] rgbaData = new byte[pixelCount * 4];
-            for (int i = 0; i < pixelCount; i++)
-            {
-                int srcOffset = pixelDataOffset + i * 4;
-                int dstOffset = i * 4;
-
-                // DDS BGRA to RGBA conversion
-                rgbaData[dstOffset] = ddsData[srcOffset + 2];     // R <- B
-                rgbaData[dstOffset + 1] = ddsData[srcOffset + 1]; // G <- G
-                rgbaData[dstOffset + 2] = ddsData[srcOffset];     // B <- R
-                rgbaData[dstOffset + 3] = ddsData[srcOffset + 3]; // A <- A
-            }
-
-            return rgbaData;
-        }
-        else
-        {
-            // For compressed formats (DXT1, DXT3, DXT5), we'd need decompression
-            // For now, return a placeholder (this would need proper DXT decompression)
-            // Based on daorigins.exe: DXT decompression for compressed DDS textures
-            System.Console.WriteLine($"[EclipseArea] ExtractDDSDataToRGBA: Compressed DDS format 0x{fourCC:X8} not fully implemented yet");
-            return null;
-        }
-    }
-
-    /// <summary>
-    /// Decompresses DXT1 compressed texture data to RGBA.
-    /// Based on daorigins.exe: DXT1 decompression for DirectX 9 texture loading.
-    /// </summary>
-    /// <param name="compressedData">DXT1 compressed data.</param>
-    /// <param name="width">Texture width.</param>
-    /// <param name="height">Texture height.</param>
-    /// <returns>RGBA pixel data as byte array.</returns>
-    private byte[] DecompressDXT1(byte[] compressedData, int width, int height)
-    {
-        // DXT1 decompression implementation
-        // Based on daorigins.exe: DXT1 texture decompression algorithm
-        // This is a simplified implementation - a full implementation would handle all edge cases
-
-        int blockCountX = (width + 3) / 4;
-        int blockCountY = (height + 3) / 4;
-        int blockCount = blockCountX * blockCountY;
-
-        byte[] rgbaData = new byte[width * height * 4];
-
-        for (int blockY = 0; blockY < blockCountY; blockY++)
-        {
-            for (int blockX = 0; blockX < blockCountX; blockX++)
-            {
-                int blockIndex = blockY * blockCountX + blockX;
-                int dataOffset = blockIndex * 8; // 8 bytes per DXT1 block
-
-                if (dataOffset + 8 > compressedData.Length)
-                {
-                    continue;
-                }
-
-                // Extract color palette (16-bit RGB)
-                ushort color0 = BitConverter.ToUInt16(compressedData, dataOffset);
-                ushort color1 = BitConverter.ToUInt16(compressedData, dataOffset + 2);
-                uint indices = BitConverter.ToUInt32(compressedData, dataOffset + 4);
-
-                // Convert 16-bit colors to 24-bit RGB
-                byte[] palette = new byte[12]; // 4 colors * 3 bytes (RGB)
-                DecodeRGB565ToRGB888(color0, palette, 0);
-                DecodeRGB565ToRGB888(color1, palette, 3);
-
-                // Interpolate colors 2 and 3
-                if (color0 > color1)
-                {
-                    // 4-color palette
-                    for (int i = 0; i < 3; i++)
-                    {
-                        palette[6 + i] = (byte)((2 * palette[i] + palette[3 + i]) / 3);
-                        palette[9 + i] = (byte)((palette[i] + 2 * palette[3 + i]) / 3);
-                    }
-                }
-                else
-                {
-                    // 3-color palette + transparent
-                    for (int i = 0; i < 3; i++)
-                    {
-                        palette[6 + i] = (byte)((palette[i] + palette[3 + i]) / 2);
-                        palette[9 + i] = 0; // Transparent
-                    }
-                }
-
-                // Decode 4x4 block
-                for (int y = 0; y < 4; y++)
-                {
-                    for (int x = 0; x < 4; x++)
-                    {
-                        int pixelIndex = y * 4 + x;
-                        int colorIndex = (int)((indices >> (pixelIndex * 2)) & 0x3);
-
-                        int pixelX = blockX * 4 + x;
-                        int pixelY = blockY * 4 + y;
-
-                        if (pixelX < width && pixelY < height)
-                        {
-                            int dstOffset = (pixelY * width + pixelX) * 4;
-                            int srcOffset = colorIndex * 3;
-
-                            rgbaData[dstOffset] = palette[srcOffset];     // R
-                            rgbaData[dstOffset + 1] = palette[srcOffset + 1]; // G
-                            rgbaData[dstOffset + 2] = palette[srcOffset + 2]; // B
-                            rgbaData[dstOffset + 3] = (colorIndex == 3 && color0 <= color1) ? (byte)0 : (byte)255; // A
-                        }
-                    }
-                }
-            }
-        }
-
-        return rgbaData;
-    }
-
-    /// <summary>
-    /// Decompresses DXT3 compressed texture data to RGBA.
-    /// Based on daorigins.exe: DXT3 decompression for DirectX 9 texture loading.
-    /// </summary>
-    /// <param name="compressedData">DXT3 compressed data.</param>
-    /// <param name="width">Texture width.</param>
-    /// <param name="height">Texture height.</param>
-    /// <returns>RGBA pixel data as byte array.</returns>
-    private byte[] DecompressDXT3(byte[] compressedData, int width, int height)
-    {
-        // DXT3 decompression implementation
-        // Based on daorigins.exe: DXT3 texture decompression algorithm
-        // DXT3 = DXT1 + explicit 4-bit alpha per pixel
-
-        int blockCountX = (width + 3) / 4;
-        int blockCountY = (height + 3) / 4;
-
-        byte[] rgbaData = new byte[width * height * 4];
-
-        for (int blockY = 0; blockY < blockCountY; blockY++)
-        {
-            for (int blockX = 0; blockX < blockCountX; blockX++)
-            {
-                int blockIndex = blockY * blockCountX + blockX;
-                int dataOffset = blockIndex * 16; // 16 bytes per DXT3 block
-
-                if (dataOffset + 16 > compressedData.Length)
-                {
-                    continue;
-                }
-
-                // Extract alpha values (8 bytes, 4 bits per pixel)
-                ulong alphaData = BitConverter.ToUInt64(compressedData, dataOffset);
-
-                // Extract colors (same as DXT1)
-                ushort color0 = BitConverter.ToUInt16(compressedData, dataOffset + 8);
-                ushort color1 = BitConverter.ToUInt16(compressedData, dataOffset + 10);
-                uint indices = BitConverter.ToUInt32(compressedData, dataOffset + 12);
-
-                // Decode color palette
-                byte[] palette = new byte[12];
-                DecodeRGB565ToRGB888(color0, palette, 0);
-                DecodeRGB565ToRGB888(color1, palette, 3);
-
-                for (int i = 0; i < 3; i++)
-                {
-                    palette[6 + i] = (byte)((2 * palette[i] + palette[3 + i]) / 3);
-                    palette[9 + i] = (byte)((palette[i] + 2 * palette[3 + i]) / 3);
-                }
-
-                // Decode 4x4 block
-                for (int y = 0; y < 4; y++)
-                {
-                    for (int x = 0; x < 4; x++)
-                    {
-                        int pixelIndex = y * 4 + x;
-                        int colorIndex = (int)((indices >> (pixelIndex * 2)) & 0x3);
-                        int alphaIndex = pixelIndex;
-                        int alphaValue = (int)((alphaData >> (alphaIndex * 4)) & 0xF);
-                        alphaValue = (alphaValue << 4) | alphaValue; // Expand 4-bit to 8-bit
-
-                        int pixelX = blockX * 4 + x;
-                        int pixelY = blockY * 4 + y;
-
-                        if (pixelX < width && pixelY < height)
-                        {
-                            int dstOffset = (pixelY * width + pixelX) * 4;
-                            int srcOffset = colorIndex * 3;
-
-                            rgbaData[dstOffset] = palette[srcOffset];
-                            rgbaData[dstOffset + 1] = palette[srcOffset + 1];
-                            rgbaData[dstOffset + 2] = palette[srcOffset + 2];
-                            rgbaData[dstOffset + 3] = (byte)alphaValue;
-                        }
-                    }
-                }
-            }
-        }
-
-        return rgbaData;
-    }
-
-    /// <summary>
-    /// Decompresses DXT5 compressed texture data to RGBA.
-    /// Based on daorigins.exe: DXT5 decompression for DirectX 9 texture loading.
-    /// </summary>
-    /// <param name="compressedData">DXT5 compressed data.</param>
-    /// <param name="width">Texture width.</param>
-    /// <param name="height">Texture height.</param>
-    /// <returns>RGBA pixel data as byte array.</returns>
-    private byte[] DecompressDXT5(byte[] compressedData, int width, int height)
-    {
-        // DXT5 decompression implementation
-        // Based on daorigins.exe: DXT5 texture decompression algorithm
-        // DXT5 = DXT1 + interpolated 8-bit alpha
-
-        int blockCountX = (width + 3) / 4;
-        int blockCountY = (height + 3) / 4;
-
-        byte[] rgbaData = new byte[width * height * 4];
-
-        for (int blockY = 0; blockY < blockCountY; blockY++)
-        {
-            for (int blockX = 0; blockX < blockCountX; blockX++)
-            {
-                int blockIndex = blockY * blockCountX + blockX;
-                int dataOffset = blockIndex * 16; // 16 bytes per DXT5 block
-
-                if (dataOffset + 16 > compressedData.Length)
-                {
-                    continue;
-                }
-
-                // Extract alpha values (8 bytes)
-                byte alpha0 = compressedData[dataOffset];
-                byte alpha1 = compressedData[dataOffset + 1];
-                ulong alphaIndices = BitConverter.ToUInt64(compressedData, dataOffset) >> 16;
-
-                // Build alpha palette
-                byte[] alphaPalette = new byte[8];
-                alphaPalette[0] = alpha0;
-                alphaPalette[1] = alpha1;
-
-                if (alpha0 > alpha1)
-                {
-                    // 8 alpha values
-                    for (int i = 2; i < 8; i++)
-                    {
-                        alphaPalette[i] = (byte)(( (8 - i) * alpha0 + (i - 1) * alpha1 ) / 7);
-                    }
-                }
-                else
-                {
-                    // 6 alpha values + 0 + 255
-                    for (int i = 2; i < 6; i++)
-                    {
-                        alphaPalette[i] = (byte)(( (6 - i) * alpha0 + (i - 1) * alpha1 ) / 5);
-                    }
-                    alphaPalette[6] = 0;
-                    alphaPalette[7] = 255;
-                }
-
-                // Extract colors (same as DXT1/DXT3)
-                ushort color0 = BitConverter.ToUInt16(compressedData, dataOffset + 8);
-                ushort color1 = BitConverter.ToUInt16(compressedData, dataOffset + 10);
-                uint colorIndices = BitConverter.ToUInt32(compressedData, dataOffset + 12);
-
-                // Decode color palette
-                byte[] colorPalette = new byte[12];
-                DecodeRGB565ToRGB888(color0, colorPalette, 0);
-                DecodeRGB565ToRGB888(color1, colorPalette, 3);
-
-                for (int i = 0; i < 3; i++)
-                {
-                    colorPalette[6 + i] = (byte)((2 * colorPalette[i] + colorPalette[3 + i]) / 3);
-                    colorPalette[9 + i] = (byte)((colorPalette[i] + 2 * colorPalette[3 + i]) / 3);
-                }
-
-                // Decode 4x4 block
-                for (int y = 0; y < 4; y++)
-                {
-                    for (int x = 0; x < 4; x++)
-                    {
-                        int pixelIndex = y * 4 + x;
-                        int colorIndex = (int)((colorIndices >> (pixelIndex * 2)) & 0x3);
-                        int alphaIndex = (int)((alphaIndices >> (pixelIndex * 3)) & 0x7);
-
-                        int pixelX = blockX * 4 + x;
-                        int pixelY = blockY * 4 + y;
-
-                        if (pixelX < width && pixelY < height)
-                        {
-                            int dstOffset = (pixelY * width + pixelX) * 4;
-                            int srcOffset = colorIndex * 3;
-
-                            rgbaData[dstOffset] = colorPalette[srcOffset];
-                            rgbaData[dstOffset + 1] = colorPalette[srcOffset + 1];
-                            rgbaData[dstOffset + 2] = colorPalette[srcOffset + 2];
-                            rgbaData[dstOffset + 3] = alphaPalette[alphaIndex];
-                        }
-                    }
-                }
-            }
-        }
-
-        return rgbaData;
-    }
-
-    /// <summary>
-    /// Converts 24-bit RGB data to 32-bit RGBA.
-    /// Based on daorigins.exe: RGB to RGBA conversion for texture loading.
-    /// </summary>
-    /// <param name="rgbData">24-bit RGB pixel data.</param>
-    /// <param name="width">Texture width.</param>
-    /// <param name="height">Texture height.</param>
-    /// <returns>32-bit RGBA pixel data.</returns>
-    private byte[] ConvertRGBToRGBA(byte[] rgbData, int width, int height)
-    {
-        int pixelCount = width * height;
-        byte[] rgbaData = new byte[pixelCount * 4];
-
-        for (int i = 0; i < pixelCount; i++)
-        {
-            int srcOffset = i * 3;
-            int dstOffset = i * 4;
-
-            rgbaData[dstOffset] = rgbData[srcOffset];     // R
-            rgbaData[dstOffset + 1] = rgbData[srcOffset + 1]; // G
-            rgbaData[dstOffset + 2] = rgbData[srcOffset + 2]; // B
-            rgbaData[dstOffset + 3] = 255;               // A (opaque)
-        }
-
-        return rgbaData;
-    }
-
-    /// <summary>
-    /// Converts 8-bit grayscale data to 32-bit RGBA.
-    /// Based on daorigins.exe: Grayscale to RGBA conversion for texture loading.
-    /// </summary>
-    /// <param name="grayscaleData">8-bit grayscale pixel data.</param>
-    /// <param name="width">Texture width.</param>
-    /// <param name="height">Texture height.</param>
-    /// <returns>32-bit RGBA pixel data.</returns>
-    private byte[] ConvertGrayscaleToRGBA(byte[] grayscaleData, int width, int height)
-    {
-        int pixelCount = width * height;
-        byte[] rgbaData = new byte[pixelCount * 4];
-
-        for (int i = 0; i < pixelCount; i++)
-        {
-            byte gray = grayscaleData[i];
-            int dstOffset = i * 4;
-
-            rgbaData[dstOffset] = gray;     // R
-            rgbaData[dstOffset + 1] = gray; // G
-            rgbaData[dstOffset + 2] = gray; // B
-            rgbaData[dstOffset + 3] = 255;  // A (opaque)
-        }
-
-        return rgbaData;
-    }
-
-    /// <summary>
-    /// Decodes RGB565 color to RGB888.
-    /// Based on daorigins.exe: RGB565 to RGB888 color conversion for DXT decompression.
-    /// </summary>
-    /// <param name="rgb565">16-bit RGB565 color value.</param>
-    /// <param name="rgb888">Output array for 24-bit RGB888 color.</param>
-    /// <param name="offset">Offset into output array.</param>
-    private void DecodeRGB565ToRGB888(ushort rgb565, byte[] rgb888, int offset)
-    {
-        // Extract 5-bit red, 6-bit green, 5-bit blue
-        int r5 = (rgb565 >> 11) & 0x1F;
-        int g6 = (rgb565 >> 5) & 0x3F;
-        int b5 = rgb565 & 0x1F;
-
-        // Convert to 8-bit (scale up)
-        rgb888[offset] = (byte)((r5 * 255) / 31);     // Red
-        rgb888[offset + 1] = (byte)((g6 * 255) / 63); // Green
-        rgb888[offset + 2] = (byte)((b5 * 255) / 31); // Blue
-    }
-    }
-
-    /// <summary>
-    /// Represents a debris piece generated from destroyed geometry.
-    /// </summary>
-    /// <remarks>
-    /// Based on daorigins.exe/DragonAge2.exe: Debris physics objects.
-    /// </remarks>
+            /// <summary>
+            /// Represents a debris piece generated from destroyed geometry.
+            /// </summary>
+            /// <remarks>
+            /// Based on daorigins.exe/DragonAge2.exe: Debris physics objects.
+            /// </remarks>
     public class DebrisPiece
     {
         /// <summary>
@@ -14163,7 +13766,6 @@ technique ColorGrading
             LifeTime = 30.0f;
             RemainingLifeTime = 30.0f;
         }
-    }
     }
 }
 
