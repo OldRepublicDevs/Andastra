@@ -202,115 +202,38 @@ namespace Andastra.Runtime.Games.Odyssey
                     // Reflection failed - try next method
                 }
 
-                // Priority 2: Try ModuleAreaMappings if we have Core.SaveGameData
-                // ModuleAreaMappings is only available on Core.SaveGameData, not Common.SaveGameData
-                if (coreSaveData != null && string.IsNullOrEmpty(lastModule))
+                // Priority 2: Try ModuleAreaMappings if available
+                if (string.IsNullOrEmpty(lastModule) && saveData.ModuleAreaMappings != null && saveData.ModuleAreaMappings.Count > 0)
                 {
-                    try
+                    string areaResRef = saveData.CurrentAreaInstance.ResRef;
+                    if (!string.IsNullOrEmpty(areaResRef))
                     {
-                        // Use reflection to access ModuleAreaMappings property if it exists
-                        var moduleAreaMappingsProperty = coreSaveData.GetType().GetProperty("ModuleAreaMappings");
-                        if (moduleAreaMappingsProperty != null)
+                        foreach (var kvp in saveData.ModuleAreaMappings)
                         {
-                            var moduleAreaMappings = moduleAreaMappingsProperty.GetValue(coreSaveData);
-                            if (moduleAreaMappings != null)
+                            string moduleResRef = kvp.Key;
+                            List<string> areaList = kvp.Value;
+                            if (areaList != null && areaList.Contains(areaResRef, StringComparer.OrdinalIgnoreCase))
                             {
-                                string areaResRef = saveData.CurrentAreaInstance.ResRef;
-                                if (!string.IsNullOrEmpty(areaResRef))
-                                {
-                                    // Use reflection to iterate over the dictionary
-                                    var getEnumeratorMethod = moduleAreaMappings.GetType().GetMethod("GetEnumerator");
-                                    if (getEnumeratorMethod != null)
-                                    {
-                                        var enumerator = getEnumeratorMethod.Invoke(moduleAreaMappings, null);
-                                        var moveNextMethod = enumerator.GetType().GetMethod("MoveNext");
-                                        var currentProperty = enumerator.GetType().GetProperty("Current");
-
-                                        while ((bool)moveNextMethod.Invoke(enumerator, null))
-                                        {
-                                            var current = currentProperty.GetValue(enumerator);
-                                            var keyProperty = current.GetType().GetProperty("Key");
-                                            var valueProperty = current.GetType().GetProperty("Value");
-
-                                            string moduleResRef = keyProperty.GetValue(current).ToString();
-                                            object areaListObj = valueProperty.GetValue(current);
-
-                                            if (areaListObj != null)
-                                            {
-                                                var containsMethod = areaListObj.GetType().GetMethod("Contains", new[] { typeof(string) });
-                                                if (containsMethod != null)
-                                                {
-                                                    bool contains = (bool)containsMethod.Invoke(areaListObj, new object[] { areaResRef });
-                                                    if (contains)
-                                                    {
-                                                        lastModule = moduleResRef;
-                                                        break;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+                                lastModule = moduleResRef;
+                                break;
                             }
                         }
-                    }
-                    catch
-                    {
-                        // Reflection failed - continue to next method
                     }
                 }
             }
 
-            // Priority 3: Try to infer from CurrentArea string if CurrentAreaInstance is null and we have Core.SaveGameData
-            if (string.IsNullOrEmpty(lastModule) && !string.IsNullOrEmpty(saveData.CurrentArea) && coreSaveData != null)
+            // Priority 3: Try to infer from CurrentArea string if CurrentAreaInstance is null
+            if (string.IsNullOrEmpty(lastModule) && !string.IsNullOrEmpty(saveData.CurrentArea) && saveData.ModuleAreaMappings != null && saveData.ModuleAreaMappings.Count > 0)
             {
-                try
+                foreach (var kvp in saveData.ModuleAreaMappings)
                 {
-                    // Use reflection to access ModuleAreaMappings property if it exists
-                    var moduleAreaMappingsProperty = coreSaveData.GetType().GetProperty("ModuleAreaMappings");
-                    if (moduleAreaMappingsProperty != null)
+                    string moduleResRef = kvp.Key;
+                    List<string> areaList = kvp.Value;
+                    if (areaList != null && areaList.Contains(saveData.CurrentArea, StringComparer.OrdinalIgnoreCase))
                     {
-                        var moduleAreaMappings = moduleAreaMappingsProperty.GetValue(coreSaveData);
-                        if (moduleAreaMappings != null)
-                        {
-                            // Use reflection to iterate over the dictionary
-                            var getEnumeratorMethod = moduleAreaMappings.GetType().GetMethod("GetEnumerator");
-                            if (getEnumeratorMethod != null)
-                            {
-                                var enumerator = getEnumeratorMethod.Invoke(moduleAreaMappings, null);
-                                var moveNextMethod = enumerator.GetType().GetMethod("MoveNext");
-                                var currentProperty = enumerator.GetType().GetProperty("Current");
-
-                                while ((bool)moveNextMethod.Invoke(enumerator, null))
-                                {
-                                    var current = currentProperty.GetValue(enumerator);
-                                    var keyProperty = current.GetType().GetProperty("Key");
-                                    var valueProperty = current.GetType().GetProperty("Value");
-
-                                    string moduleResRef = keyProperty.GetValue(current).ToString();
-                                    object areaListObj = valueProperty.GetValue(current);
-
-                                    if (areaListObj != null)
-                                    {
-                                        var containsMethod = areaListObj.GetType().GetMethod("Contains", new[] { typeof(string) });
-                                        if (containsMethod != null)
-                                        {
-                                            bool contains = (bool)containsMethod.Invoke(areaListObj, new object[] { saveData.CurrentArea });
-                                            if (contains)
-                                            {
-                                                lastModule = moduleResRef;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        lastModule = moduleResRef;
+                        break;
                     }
-                }
-                catch
-                {
-                    // Reflection failed - continue
                 }
             }
 
@@ -2938,7 +2861,7 @@ namespace Andastra.Runtime.Games.Odyssey
 
             // Area-level local variables
             // Based on swkotor2.exe: Area local variables are stored in area's variable system
-            if (areaState.LocalVariables != null && areaState.LocalVariables.Count > 0)
+            if (areaState.LocalVariables != null && GetLocalVariableSetCount(areaState.LocalVariables) > 0)
             {
                 var localVarStruct = new GFFStruct();
                 root.SetStruct("LocalVariables", localVarStruct);
@@ -3035,6 +2958,24 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <summary>
         /// Serializes LocalVariableSet to GFF struct.
         /// </summary>
+        /// <summary>
+        /// Gets the total count of variables in a LocalVariableSet by summing all dictionary counts.
+        /// </summary>
+        private int GetLocalVariableSetCount(LocalVariableSet localVariables)
+        {
+            if (localVariables == null)
+            {
+                return 0;
+            }
+            int count = 0;
+            if (localVariables.Ints != null) count += localVariables.Ints.Count;
+            if (localVariables.Floats != null) count += localVariables.Floats.Count;
+            if (localVariables.Strings != null) count += localVariables.Strings.Count;
+            if (localVariables.Objects != null) count += localVariables.Objects.Count;
+            if (localVariables.Locations != null) count += localVariables.Locations.Count;
+            return count;
+        }
+
         private void SerializeLocalVariableSet(GFFStruct localVarStruct, LocalVariableSet localVariables)
         {
             if (localVarStruct == null || localVariables == null)
@@ -3280,7 +3221,7 @@ namespace Andastra.Runtime.Games.Odyssey
 
             // 4. Apply area-level local variables
             // Based on swkotor2.exe: Area local variables are stored in area's variable system
-            if (areaState.LocalVariables != null && areaState.LocalVariables.Count > 0)
+            if (areaState.LocalVariables != null && GetLocalVariableSetCount(areaState.LocalVariables) > 0)
             {
                 ApplyAreaLocalVariables(areaState.LocalVariables, odysseyArea);
             }
