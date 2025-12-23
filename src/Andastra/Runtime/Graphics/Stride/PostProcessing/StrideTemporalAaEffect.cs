@@ -29,8 +29,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
     public class StrideTemporalAaEffect : BaseTemporalAaEffect
     {
         private StrideGraphics.GraphicsDevice _graphicsDevice;
-        private StrideGraphics.StrideGraphics.Texture _historyBuffer;
-        private StrideGraphics.StrideGraphics.Texture _outputBuffer;
+        private StrideGraphics.Texture _historyBuffer;
+        private StrideGraphics.Texture _outputBuffer;
         private int _frameIndex;
         private global::Stride.Core.Mathematics.Vector2[] _jitterSequence;
         private Matrix4x4 _previousViewProjection;

@@ -38,8 +38,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
     {
         private StrideGraphics.GraphicsDevice _graphicsDevice;
         private EffectInstance _ssrEffect;
-        private StrideGraphics.StrideGraphics.Texture _historyTexture;
-        private StrideGraphics.StrideGraphics.Texture _temporaryTexture;
+        private StrideGraphics.Texture _historyTexture;
+        private StrideGraphics.Texture _temporaryTexture;
         private StrideGraphics.SpriteBatch _spriteBatch;
         private StrideGraphics.Effect _fullscreenEffect;
         private StrideGraphics.Buffer _ssrConstants;
@@ -275,9 +275,9 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// <param name="height">Render height.</param>
         /// <param name="lightmap">Optional lightmap StrideGraphics.Texture for reflection color modulation (matches GLSL sLightmap).</param>
         /// <returns>Output StrideGraphics.Texture with reflections applied.</returns>
-        public StrideGraphics.StrideGraphics.Texture Apply(StrideGraphics.StrideGraphics.Texture input, StrideGraphics.StrideGraphics.Texture depth, StrideGraphics.StrideGraphics.Texture normal, StrideGraphics.StrideGraphics.Texture roughness,
+        public StrideGraphics.Texture Apply(StrideGraphics.Texture input, StrideGraphics.Texture depth, StrideGraphics.Texture normal, StrideGraphics.Texture roughness,
             System.Numerics.Matrix4x4 viewMatrix, System.Numerics.Matrix4x4 projectionMatrix,
-            int width, int height, StrideGraphics.StrideGraphics.Texture lightmap = null)
+            int width, int height, StrideGraphics.Texture lightmap = null)
         {
             if (!_enabled || input == null || depth == null || normal == null)
             {
@@ -314,7 +314,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             return _temporaryTexture ?? input;
         }
 
-        private void EnsureTextures(int width, int height, StrideGraphics.StrideGraphics.PixelFormat format)
+        private void EnsureTextures(int width, int height, StrideGraphics.PixelFormat format)
         {
             if (_historyTexture != null &&
                 _historyTexture.Width == width &&
@@ -338,9 +338,9 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// Implements the complete algorithm from vendor/reone/glsl/f_pbr_ssr.glsl
         /// for 1:1 parity with original game behavior.
         /// </summary>
-        private void ExecuteSsr(StrideGraphics.StrideGraphics.Texture input, StrideGraphics.StrideGraphics.Texture depth, StrideGraphics.StrideGraphics.Texture normal, StrideGraphics.StrideGraphics.Texture roughness,
-            StrideGraphics.StrideGraphics.Texture lightmap, System.Numerics.Matrix4x4 viewMatrix, System.Numerics.Matrix4x4 projectionMatrix,
-            StrideGraphics.StrideGraphics.Texture output, int width, int height)
+        private void ExecuteSsr(StrideGraphics.Texture input, StrideGraphics.Texture depth, StrideGraphics.Texture normal, StrideGraphics.Texture roughness,
+            StrideGraphics.Texture lightmap, System.Numerics.Matrix4x4 viewMatrix, System.Numerics.Matrix4x4 projectionMatrix,
+            StrideGraphics.Texture output, int width, int height)
         {
             if (!_effectInitialized || output == null)
             {
@@ -376,8 +376,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// GPU-based SSR execution using shader effect.
         /// Implements complete GPU rendering matching vendor/reone/glsl/f_pbr_ssr.glsl.
         /// </summary>
-        private void ExecuteSsrGpu(StrideGraphics.StrideGraphics.Texture input, StrideGraphics.StrideGraphics.Texture depth, StrideGraphics.StrideGraphics.Texture normal, StrideGraphics.StrideGraphics.Texture roughness,
-            StrideGraphics.StrideGraphics.Texture lightmap, StrideGraphics.StrideGraphics.Texture output, StrideGraphics.StrideGraphics.CommandList StrideGraphics.CommandList)
+        private void ExecuteSsrGpu(StrideGraphics.Texture input, StrideGraphics.Texture depth, StrideGraphics.Texture normal, StrideGraphics.Texture roughness,
+            StrideGraphics.Texture lightmap, StrideGraphics.Texture output, StrideGraphics.CommandList StrideGraphics.CommandList)
         {
             if (_ssrEffect == null || _fullscreenEffect == null || commandList == null)
             {
@@ -462,8 +462,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// Implements the complete ray marching algorithm matching vendor/reone/glsl/f_pbr_ssr.glsl
         /// for 1:1 parity with original game behavior.
         /// </summary>
-        private void ExecuteSsrCpu(StrideGraphics.StrideGraphics.Texture input, StrideGraphics.StrideGraphics.Texture depth, StrideGraphics.StrideGraphics.Texture normal, StrideGraphics.StrideGraphics.Texture roughness,
-            StrideGraphics.StrideGraphics.Texture lightmap, StrideGraphics.StrideGraphics.Texture output, int width, int height)
+        private void ExecuteSsrCpu(StrideGraphics.Texture input, StrideGraphics.Texture depth, StrideGraphics.Texture normal, StrideGraphics.Texture roughness,
+            StrideGraphics.Texture lightmap, StrideGraphics.Texture output, int width, int height)
         {
             // Read StrideGraphics.Texture data
             var inputData = ReadTextureData(input);
@@ -741,7 +741,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// Implements proper StrideGraphics.Texture readback using Stride's GetData API.
         /// This is expensive and should only be used as CPU fallback when GPU shaders are not available.
         /// </summary>
-        private Vector4[] ReadTextureData(global::Stride.Graphics.StrideGraphics.Texture StrideGraphics.Texture)
+        private Vector4[] ReadTextureData(global::Stride.Graphics.StrideGraphics.Texture texture)
         {
             if (StrideGraphics.Texture == null || _graphicsDevice == null)
             {
@@ -865,7 +865,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// Implements proper StrideGraphics.Texture upload using Stride's SetData API.
         /// This is expensive and should only be used as CPU fallback when GPU shaders are not available.
         /// </summary>
-        private void WriteTextureData(global::Stride.Graphics.StrideGraphics.Texture StrideGraphics.Texture, Vector4[] data, int width, int height)
+        private void WriteTextureData(global::Stride.Graphics.StrideGraphics.Texture texture, Vector4[] data, int width, int height)
         {
             if (StrideGraphics.Texture == null || data == null || _graphicsDevice == null)
             {

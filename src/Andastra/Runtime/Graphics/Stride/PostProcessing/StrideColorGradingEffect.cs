@@ -715,7 +715,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// Implements proper StrideGraphics.Texture readback using Stride's GetData API.
         /// This is expensive and should only be used as CPU fallback when GPU shaders are not available.
         /// </summary>
-        private Vector4[] ReadTextureData(StrideGraphics.Texture StrideGraphics.Texture)
+        private Vector4[] ReadTextureData(StrideGraphics.Texture texture)
         {
             if (StrideGraphics.Texture == null || _graphicsDevice == null)
             {
@@ -813,7 +813,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// Implements proper StrideGraphics.Texture upload using Stride's SetData API.
         /// This is expensive and should only be used as CPU fallback when GPU shaders are not available.
         /// </summary>
-        private void WriteTextureData(StrideGraphics.Texture StrideGraphics.Texture, Vector4[] data, int width, int height)
+        private void WriteTextureData(StrideGraphics.Texture texture, Vector4[] data, int width, int height)
         {
             if (StrideGraphics.Texture == null || data == null || _graphicsDevice == null)
             {
