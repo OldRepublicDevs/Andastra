@@ -1258,19 +1258,18 @@ namespace Andastra.Runtime.Game.Core
                         _gui3DRoomLoaded = true;
                         Console.WriteLine("[Odyssey] gui3D_room model loaded successfully");
 
-                            // Determine menu variant based on gui3D_room condition (K2 only)
-                            // Based on swkotor2.exe FUN_006d2350:120-150: Menu variant selection based on gui3D_room condition
-                            if (_settings.Game == Andastra.Runtime.Core.KotorGame.K2)
-                            {
-                                _menuVariant = DetermineMenuVariant(_gui3DRoomModel);
-                                Console.WriteLine($"[Odyssey] Menu variant determined: {_menuVariant} (K2)");
-                            }
-                            else
-                            {
-                                // K1 uses single "mainmenu" panel (no variants)
-                                _menuVariant = "mainmenu";
-                                Console.WriteLine("[Odyssey] Using single mainmenu panel (K1)");
-                            }
+                        // Determine menu variant based on gui3D_room condition (K2 only)
+                        // Based on swkotor2.exe FUN_006d2350:120-150: Menu variant selection based on gui3D_room condition
+                        if (_settings.Game == Andastra.Runtime.Core.KotorGame.K2)
+                        {
+                            _menuVariant = DetermineMenuVariant(_gui3DRoomModel);
+                            Console.WriteLine($"[Odyssey] Menu variant determined: {_menuVariant} (K2)");
+                        }
+                        else
+                        {
+                            // K1 uses single "mainmenu" panel (no variants)
+                            _menuVariant = "mainmenu";
+                            Console.WriteLine("[Odyssey] Using single mainmenu panel (K1)");
                         }
                     }
                     else
