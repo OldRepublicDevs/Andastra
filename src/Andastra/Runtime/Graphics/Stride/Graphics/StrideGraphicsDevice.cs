@@ -175,7 +175,7 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public ITexture2D CreateTexture2D(int width, int height, byte[] data)
         {
-            var texture = StrideGraphics.Texture2D.New2D(_device, width, height, StrideGraphics.PixelFormat.R8G8B8A8_UNorm);
+            var texture = StrideGraphics.Texture.New2D(_device, width, height, StrideGraphics.PixelFormat.R8G8B8A8_UNorm);
             if (data != null)
             {
                 var colorData = new Stride.Core.Mathematics.Color[data.Length / 4];
@@ -195,8 +195,8 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public IRenderTarget CreateRenderTarget(int width, int height, bool hasDepthStencil = true)
         {
-            var rt = StrideGraphics.Texture2D.New2D(_device, width, height, StrideGraphics.PixelFormat.R8G8B8A8_UNorm, StrideGraphics.TextureFlags.RenderTarget);
-            var depthBuffer = hasDepthStencil ? StrideGraphics.Texture2D.New2D(_device, width, height, StrideGraphics.PixelFormat.D24_UNorm_S8_UInt, StrideGraphics.TextureFlags.DepthStencil) : null;
+            var rt = StrideGraphics.Texture.New2D(_device, width, height, StrideGraphics.PixelFormat.R8G8B8A8_UNorm, StrideGraphics.TextureFlags.RenderTarget);
+            var depthBuffer = hasDepthStencil ? StrideGraphics.Texture.New2D(_device, width, height, StrideGraphics.PixelFormat.D24_UNorm_S8_UInt, StrideGraphics.TextureFlags.DepthStencil) : null;
             return new StrideRenderTarget(rt, depthBuffer, _graphicsContext);
         }
 
