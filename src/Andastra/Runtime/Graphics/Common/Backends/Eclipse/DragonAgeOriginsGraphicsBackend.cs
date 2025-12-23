@@ -3155,9 +3155,42 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // Render cooldown overlay covering the icon from top
             DrawQuad(x, y, width, overlayHeight, cooldownOverlayColor, IntPtr.Zero);
 
-            // Optionally render cooldown time text (if text rendering is available)
+            // Render cooldown time text overlay
             // Based on daorigins.exe: Some versions show cooldown time in seconds as text overlay
-            // TODO: STUB -  For now, visual overlay only - text rendering would require font system
+            // Text is rendered centered on the action bar slot for visibility
+            // Format: Show 1 decimal place for cooldowns < 10 seconds, whole seconds for >= 10 seconds
+            // Example: "5.2s" for 5.2 seconds, "15s" for 15 seconds
+            if (cooldownRemaining > 0.1f) // Only show text if cooldown is significant (> 0.1 seconds)
+            {
+                string cooldownText;
+                if (cooldownRemaining < 10.0f)
+                {
+                    // Show 1 decimal place for short cooldowns (< 10 seconds)
+                    cooldownText = string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:F1}s", cooldownRemaining);
+                }
+                else
+                {
+                    // Show whole seconds for longer cooldowns (>= 10 seconds)
+                    cooldownText = string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:F0}s", cooldownRemaining);
+                }
+
+                // Calculate text position: centered on the action bar slot
+                // Based on daorigins.exe: Cooldown text is centered horizontally and vertically on the slot
+                float textX = x + (width / 2.0f);
+                float textY = y + (height / 2.0f);
+
+                // Text color: White (0xFFFFFFFF) for maximum visibility against dark overlay
+                // Based on daorigins.exe: Cooldown text uses white/yellow color for visibility
+                uint textColor = 0xFFFFFFFF; // White with full alpha
+
+                // Font size: Small (10pt) for compact display, similar to hotkey labels
+                // Based on daorigins.exe: Cooldown text uses small font size to fit within action bar slots
+                const int fontSize = 10;
+
+                // Render text centered on the slot
+                // Based on daorigins.exe: ID3DXFont::DrawText with DT_CENTER for centered text
+                RenderTextDirectX9(textX, textY, cooldownText, textColor, fontSize, centered: true, rightAligned: false);
+            }
         }
 
         /// <summary>
@@ -5221,7 +5254,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // Create vertex data for quad using TRIANGLELIST format (6 vertices for 2 triangles)
             // Based on daorigins.exe: UI rendering uses D3DPT_TRIANGLELIST with 6 vertices
             UIVertex[] vertices = new UIVertex[6];
-            
+
             // Triangle 1: Top-left, Top-right, Bottom-left
             vertices[0] = new UIVertex { X = x, Y = y, Z = 0.0f, Color = buttonColor, U = 0.0f, V = 0.0f }; // Top-left
             vertices[1] = new UIVertex { X = x + width, Y = y, Z = 0.0f, Color = buttonColor, U = 1.0f, V = 0.0f }; // Top-right
@@ -6291,7 +6324,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 float centerX = x + (width / 2.0f);
                 float centerY = y + (height / 2.0f);
                 string arrowText = isLeft ? "<" : ">";
-                
+
                 // Render arrow as text character (simple fallback)
                 // Based on daorigins.exe: Text rendering provides simple fallback when textures unavailable
                 // Render text on top of the background quad
