@@ -1,0 +1,32 @@
+# Extract KOTOR2 font data from Ghidra hex dump
+$hexStr = "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 18 18 00 00 18 18 18 18 18 18 18 00 00 00 00 00 00 00 00 00 36 36 36 36 00 00 00 66 66 FF 66 66 FF 66 66 00 00 00 00 18 7E FF 1B 1F 7E F8 D8 FF 7E 18 00 00 0E 1B DB 6E 30 18 0C 76 DB D8 70 00 00 7F C6 CF D8 70 70 D8 CC CC 6C 38 00 00 00 00 00 00 00 00 00 18 1C 0C 0E 00 00 0C 18 30 30 30 30 30 30 30 18 0C 00 00 30 18 0C 0C 0C 0C 0C 0C 0C 18 30 00 00 00 00 99 5A 3C FF 3C 5A 99 00 00 00 00 00 18 18 18 FF FF 18 18 18 00 00 00 00 30 18 1C 1C 00 00 00 00 00 00 00 00 00 00 00 00 00 FF FF 00 00 00 00 00 00 00 00 38 38 00 00 00 00 00 00 00 00 00 60 60 30 30 18 18 0C 0C 06 06 03 03 00 00 3C 66 C3 E3 F3 DB CF C7 C3 66 3C 00 00 7E 18 18 18 18 18 18 18 78 38 18 00 00 FF C0 C0 60 30 18 0C 06 03 E7 7E 00 00 7E E7 03 03 07 7E 07 03 03 E7 7E 00 00 0C 0C 0C 0C 0C FF CC 6C 3C 1C 0C 00 00 7E E7 03 03 07 FE C0 C0 C0 C0 FF 00 00 7E E7 C3 C3 C7 FE C0 C0 C0 E7 7E 00 00 30 30 30 30 18 0C 06 03 03 03 FF 00 00 7E E7 C3 C3 E7 7E E7 C3 C3 E7 7E 00 00 7E E7 03 03 03 7F E7 C3 C3 E7 7E 00 00 00 38 38 00 00 38 38 00 00 00 00 00 00 30 18 1C 1C 00 00 1C 1C 00 00 00 00 00 06 0C 18 30 60 C0 60 30 18 0C 06 00 00 00 00 FF FF 00 FF FF 00 00 00 00 00 00 60 30 18 0C 06 03 06 0C 18 30 60 00 00 18 00 00 18 18 0C 06 03 C3 C3 7E 00 00 3F 60 CF DB D3 DD C3 7E 00 00 00 00 00 C3 C3 C3 C3 FF C3 C3 C3 66 3C 18 00 00 FE C7 C3 C3 C7 FE C7 C3 C3 C7 FE 00 00 7E E7 C0 C0 C0 C0 C0 C0 C0 E7 7E 00 00 FC CE C7 C3 C3 C3 C3 C3 C7 CE FC 00 00 FF C0 C0 C0 C0 FC C0 C0 C0 C0 FF 00 00 C0 C0 C0 C0 C0 C0 FC C0 C0 C0 FF 00 00 7E E7 C3 C3 CF C0 C0 C0 C0 E7 7E 00 00 C3 C3 C3 C3 C3 FF C3 C3 C3 C3 C3 00 00 7E 18 18 18 18 18 18 18 18 18 7E 00 00 7C EE C6 06 06 06 06 06 06 06 06 00 00 C3 C6 CC D8 F0 E0 F0 D8 CC C6 C3 00 00 FF C0 C0 C0 C0 C0 C0 C0 C0 C0 C0 00 00 C3 C3 C3 C3 C3 C3 DB FF FF E7 C3 00 00 C7 C7 CF CF DF DB FB F3 F3 E3 E3 00 00 7E E7 C3 C3 C3 C3 C3 C3 C3 E7 7E 00 00 C0 C0 C0 C0 C0 FE C7 C3 C3 C7 FE 00 00 3F 6E DF DB C3 C3 C3 C3 C3 66 3C 00 00 C3 C6 CC D8 F0 FE C7 C3 C3 C7 FE 00 00 7E E7 03 03 07 7E E0 C0 C0 E7 7E 00 00 18 18 18 18 18 18 18 18 18 18 FF 00 00 7E E7 C3 C3 C3 C3 C3 C3 C3 C3 C3 00 00 18 3C 3C 66 66 C3 C3 C3 C3 C3 C3 00 00 C3 E7 FF FF DB DB C3 C3 C3 C3 C3 00 00 C3 66 66 3C 3C 18 3C 3C 66 66 C3 00 00 18 18 18 18 18 18 3C 3C 66 66 C3 00 00 FF C0 C0 60 30 7E 0C 06 03 03 FF 00 00 3C 30 30 30 30 30 30 30 30 30 3C 00 03 03 06 06 0C 0C 18 18 30 30 60 60 00 00 3C 0C 0C 0C 0C 0C 0C 0C 0C 0C 3C 00 00 00 00 00 00 00 00 00 C3 66 3C 18 FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 18 38 30 70 00 00 7F C3 C3 7F 03 C3 7E 00 00 00 00 00 00 FE C3 C3 C3 C3 FE C0 C0 C0 C0 C0 00 00 7E C3 C0 C0 C0 C3 7E 00 00 00 00 00 00 7F C3 C3 C3 C3 7F 03 03 03 03 03 00 00 7F C0 C0 FE C3 C3 7E 00 00 00 00 00 00 30 30 30 30 30 FC 30 30 30 33 1E 7E C3 03 03 7F C3 C3 C3 7E 00 00 00 00 00 00 C3 C3 C3 C3 C3 C3 FE C0 C0 C0 C0 00 00 18 18 18 18 18 18 18 00 00 18 00 38 6C 0C 0C 0C 0C 0C 0C 0C 00 00 0C 00 00 00 C6 CC F8 F0 D8 CC C6 C0 C0 C0 C0 00 00 7E 18 18 18 18 18 18 18 18 18 78 00 00 DB DB DB DB DB DB FE 00 00 00 00 00 00 C6 C6 C6 C6 C6 C6 FC 00 00 00 00 00 00 7C C6 C6 C6 C6 C6 7C 00 00 00 00 C0 C0 C0 FE C3 C3 C3 C3 FE 00 00 00 00 03 03 03 7F C3 C3 C3 C3 7F 00 00 00 00 00 00 C0 C0 C0 C0 C0 E0 FE 00 00 00 00 00 00 FE 03 03 7E C0 C0 7F 00 00 00 00 00 00 1C 36 30 30 30 30 FC 30 30 30 00 00 00 7E C6 C6 C6 C6 C6 C6 00 00 00 00 00 00 18 3C 3C 66 66 C3 C3 00 00 00 00 00 00 C3 E7 FF DB C3 C3 C3 00 00 00 00 00 00 C3 66 3C 18 3C 66 C3 00 00 00 00 C0 60 60 30 18 3C 66 66 C3 00 00 00 00 00 00 FF 60 30 18 0C 06 FF 00 00 00 00 00 00 0F 18 18 18 38 F0 38 18 18 18 0F 18 18 18 18 18 18 18 18 18 18 18 18 18 00 00 F0 18 18 18 1C 0F 1C 18 18 18 F0 00 00 00 00 00 00 06 8F F1 60 00 00 00"
+
+$bytes = $hexStr -split ' ' | ForEach-Object { [Convert]::ToByte($_, 16) }
+# Extract 1235 bytes (95 * 13) - the font data starts at byte 0
+$fontData = $bytes[0..1234]
+
+$chars = @(' ', '!', '"', '#', '$', '%', '&', "'", '(', ')', '*', '+', ',', '-', '.', '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', ';', '<', '=', '>', '?', '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '[', '\', ']', '^', '_', '`', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '{', '|', '}', '~')
+
+$output = @()
+$output += "// Font glyph bitmap data extracted from swkotor2.exe: DAT_0080c4a0 @ 0x0080c4a0"
+$output += "// Source: FUN_00461180 @ 0x00461180 (called by FUN_00461200 @ 0x00461200)"
+$output += "// Format: 95 characters (ASCII 0x20 ' ' to 0x7E '~'), each 8x13 pixels = 13 bytes"
+$output += "// Total size: 95 * 13 = 1235 bytes"
+$output += "byte[] fontGlyphData = new byte[]"
+$output += "{"
+
+for ($i = 0; $i -lt 95; $i++) {
+    $start = $i * 13
+    $charBytes = $fontData[$start..($start+12)]
+    $hexStr = ($charBytes | ForEach-Object { "0x{0:x2}" -f $_ }) -join ', '
+    $charCode = 0x20 + $i
+    $char = $chars[$i]
+    $output += "    // Character 0x{0:x2} '{1}' - 13 bytes" -f $charCode, $char
+    $output += "    $hexStr,"
+}
+
+$output += "};"
+
+$output | Out-File -FilePath "kotor2_font_data.txt" -Encoding utf8
+Write-Host "Font data written to kotor2_font_data.txt ($($fontData.Length) bytes)"
+
