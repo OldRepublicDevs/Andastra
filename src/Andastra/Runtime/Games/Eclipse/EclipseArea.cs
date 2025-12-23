@@ -11647,6 +11647,42 @@ technique ColorGrading
                 area.UpdatePhysicsCollisionShapes();
             }
         }
+
+        /// <summary>
+        /// Gets whether this modification requires navigation mesh updates.
+        /// </summary>
+        public bool RequiresNavigationMeshUpdate
+        {
+            get
+            {
+                // Geometry modifications may affect navigation if they destroy or significantly deform terrain
+                return _modificationType == GeometryModificationType.Destroyed;
+            }
+        }
+
+        /// <summary>
+        /// Gets whether this modification requires physics system updates.
+        /// </summary>
+        public bool RequiresPhysicsUpdate
+        {
+            get
+            {
+                // All geometry modifications require physics updates
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Gets whether this modification requires lighting system updates.
+        /// </summary>
+        public bool RequiresLightingUpdate
+        {
+            get
+            {
+                // Geometry modifications don't typically require lighting updates unless they affect light sources
+                return false;
+            }
+        }
     }
 
     /// <summary>
