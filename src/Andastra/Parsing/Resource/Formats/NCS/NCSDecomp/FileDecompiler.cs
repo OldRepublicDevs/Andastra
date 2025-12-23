@@ -3573,7 +3573,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 }
                 catch (Exception e2)
                 {
-                    // TODO:  Last resort: create a minimal stub so we always return something
+                    // Last resort: create a comprehensive stub so we always return something
                     Debug("CRITICAL: Both decompilation paths threw exceptions, creating emergency fallback stub");
                     Debug("  First exception: " + e.GetType().Name + " - " + e.Message);
                     Debug("  Second exception: " + e2.GetType().Name + " - " + e2.Message);
@@ -3776,7 +3776,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 {
                     Debug("DEBUG decompileNcs: decode FAILED - " + decodeEx.Message);
                     Debug("Error during bytecode decoding: " + decodeEx.Message);
-                    // TODO:  Create comprehensive fallback stub for decoding errors
+                    // Create comprehensive fallback stub for decoding errors
                     long fileSize = file.Exists() ? file.Length : -1;
                     string fileInfo = "File size: " + fileSize + " bytes";
                     if (fileSize > 0)
