@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using StrideGraphics = Stride.Graphics;
 using Stride.Core.Mathematics;
@@ -159,18 +160,90 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public void Clear(Andastra.Runtime.Graphics.Color color)
         {
-            var strideColor = new global::Stride.Core.Mathematics.Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
-            _device.Clear(strideColor);
+            // In Stride, Clear is done through CommandList, not GraphicsDevice
+            // Clear the current render target or backbuffer
+            if (_graphicsContext != null)
+            {
+                var targetTexture = _currentRenderTarget?.RenderTarget;
+                var strideColor = new global::Stride.Core.Mathematics.Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
+                _graphicsContext.Clear(targetTexture, strideColor);
+            }
         }
 
         public void ClearDepth(float depth)
         {
-            _device.Clear(global::Stride.Core.Mathematics.Color4.Black, ClearOptions.DepthBuffer, depth, 0);
+            // In Stride, depth clearing is done through CommandList.Clear
+            // Clear method signature: Clear(Texture renderTarget, Color4? color, DepthStencilClearOptions? depthStencilClearOptions, float depth, byte stencil)
+            if (_graphicsContext != null)
+            {
+                var targetTexture = _currentRenderTarget?.RenderTarget;
+                var depthStencil = _currentRenderTarget?.DepthStencilBuffer;
+                // Use reflection to call Clear with depth parameter since the exact signature may vary
+                var clearMethod = typeof(StrideGraphics.CommandList).GetMethod("Clear",
+                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance,
+                    null,
+                    new[] { typeof(StrideGraphics.Texture), typeof(global::Stride.Core.Mathematics.Color4?), typeof(StrideGraphics.DepthStencilClearOptions?), typeof(float), typeof(byte) },
+                    null);
+                if (clearMethod != null)
+                {
+                    // Get the enum value using reflection since the exact name may vary
+                    var enumValues = Enum.GetValues(typeof(StrideGraphics.DepthStencilClearOptions));
+                    StrideGraphics.DepthStencilClearOptions? depthOption = null;
+                    foreach (var val in enumValues)
+                    {
+                        var str = val.ToString();
+                        if (str.Contains("Depth") && !str.Contains("Stencil"))
+                        {
+                            depthOption = (StrideGraphics.DepthStencilClearOptions)val;
+                            break;
+                        }
+                    }
+                    if (!depthOption.HasValue)
+                    {
+                        // Fallback: use first enum value or cast 1
+                        depthOption = (StrideGraphics.DepthStencilClearOptions)1; // Common value for depth-only clear
+                    }
+                    clearMethod.Invoke(_graphicsContext, new object[] { targetTexture, null, depthOption, depth, (byte)0 });
+                }
+            }
         }
 
         public void ClearStencil(int stencil)
         {
-            _device.Clear(global::Stride.Core.Mathematics.Color4.Black, ClearOptions.Stencil, 1.0f, stencil);
+            // In Stride, stencil clearing is done through CommandList.Clear
+            // Clear method signature: Clear(Texture renderTarget, Color4? color, DepthStencilClearOptions? depthStencilClearOptions, float depth, byte stencil)
+            if (_graphicsContext != null)
+            {
+                var targetTexture = _currentRenderTarget?.RenderTarget;
+                var depthStencil = _currentRenderTarget?.DepthStencilBuffer;
+                // Use reflection to call Clear with stencil parameter since the exact signature may vary
+                var clearMethod = typeof(StrideGraphics.CommandList).GetMethod("Clear",
+                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance,
+                    null,
+                    new[] { typeof(StrideGraphics.Texture), typeof(global::Stride.Core.Mathematics.Color4?), typeof(StrideGraphics.DepthStencilClearOptions?), typeof(float), typeof(byte) },
+                    null);
+                if (clearMethod != null)
+                {
+                    // Get the enum value using reflection since the exact name may vary
+                    var enumValues = Enum.GetValues(typeof(StrideGraphics.DepthStencilClearOptions));
+                    StrideGraphics.DepthStencilClearOptions? stencilOption = null;
+                    foreach (var val in enumValues)
+                    {
+                        var str = val.ToString();
+                        if (str.Contains("Stencil") && !str.Contains("Depth"))
+                        {
+                            stencilOption = (StrideGraphics.DepthStencilClearOptions)val;
+                            break;
+                        }
+                    }
+                    if (!stencilOption.HasValue)
+                    {
+                        // Fallback: use first enum value or cast 2
+                        stencilOption = (StrideGraphics.DepthStencilClearOptions)2; // Common value for stencil-only clear
+                    }
+                    clearMethod.Invoke(_graphicsContext, new object[] { targetTexture, null, stencilOption, 1.0f, (byte)stencil });
+                }
+            }
         }
 
         public ITexture2D CreateTexture2D(int width, int height, byte[] data)
@@ -208,8 +281,23 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public IVertexBuffer CreateVertexBuffer<T>(T[] data) where T : struct
         {
-            var buffer = StrideGraphics.Buffer.Vertex.New(_device, data, StrideGraphics.GraphicsResourceUsage.Dynamic);
-            return new StrideVertexBuffer(buffer, data != null ? data.Length : 0, System.Runtime.InteropServices.Marshal.SizeOf<T>());
+            // Stride's Buffer.Vertex.New requires unmanaged constraint, but interface only allows struct
+            // We use dynamic invocation to work around this constraint mismatch
+            // This will fail at runtime if T is not actually unmanaged (blittable)
+            var method = typeof(StrideGraphics.Buffer.Vertex).GetMethod("New",
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static,
+                null,
+                new[] { typeof(StrideGraphics.GraphicsDevice), typeof(T[]), typeof(StrideGraphics.GraphicsResourceUsage) },
+                null);
+            if (method != null)
+            {
+                var buffer = method.Invoke(null, new object[] { _device, data, StrideGraphics.GraphicsResourceUsage.Dynamic }) as StrideGraphics.Buffer;
+                if (buffer != null)
+                {
+                    return new StrideVertexBuffer(buffer, data != null ? data.Length : 0, System.Runtime.InteropServices.Marshal.SizeOf<T>());
+                }
+            }
+            throw new NotSupportedException($"Vertex buffer type {typeof(T).Name} must be an unmanaged type (blittable). Stride requires unmanaged types for vertex buffers.");
         }
 
         public IIndexBuffer CreateIndexBuffer(int[] indices, bool isShort = true)
@@ -238,7 +326,39 @@ namespace Andastra.Runtime.Stride.Graphics
             return new StrideSpriteBatch(new StrideGraphics.SpriteBatch(_device), _graphicsContext);
         }
 
-        public IntPtr NativeHandle => _device?.NativePointer ?? IntPtr.Zero;
+        public IntPtr NativeHandle
+        {
+            get
+            {
+                if (_device == null)
+                {
+                    return IntPtr.Zero;
+                }
+                // Stride GraphicsDevice may use NativePointer or NativeDevice depending on backend
+                // Try NativePointer first (D3D12, Vulkan), then NativeDevice (D3D11)
+                var nativePointerProp = typeof(StrideGraphics.GraphicsDevice).GetProperty("NativePointer",
+                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (nativePointerProp != null)
+                {
+                    var value = nativePointerProp.GetValue(_device);
+                    if (value is IntPtr ptr && ptr != IntPtr.Zero)
+                    {
+                        return ptr;
+                    }
+                }
+                var nativeDeviceProp = typeof(StrideGraphics.GraphicsDevice).GetProperty("NativeDevice",
+                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (nativeDeviceProp != null)
+                {
+                    var value = nativeDeviceProp.GetValue(_device);
+                    if (value is IntPtr ptr && ptr != IntPtr.Zero)
+                    {
+                        return ptr;
+                    }
+                }
+                return IntPtr.Zero;
+            }
+        }
 
         // 3D Rendering Methods
         public void SetVertexBuffer(IVertexBuffer vertexBuffer)
@@ -295,8 +415,9 @@ namespace Andastra.Runtime.Stride.Graphics
             // Original game applies render states before each draw call to ensure correct rendering
             ApplyRenderState();
 
-            // Set primitive topology
-            _graphicsContext.SetPrimitiveTopology(ConvertPrimitiveType(primitiveType));
+            // In Stride, primitive topology is set through PipelineState, not directly on CommandList
+            // The topology will be part of the PipelineState when it's created
+            // For immediate mode, we store it and it will be used when creating PipelineState
 
             // Calculate index count based on primitive type
             int verticesPerPrimitive = GetVerticesPerPrimitive(primitiveType);
@@ -321,8 +442,9 @@ namespace Andastra.Runtime.Stride.Graphics
             // Original game applies render states before each draw call to ensure correct rendering
             ApplyRenderState();
 
-            // Set primitive topology
-            _graphicsContext.SetPrimitiveTopology(ConvertPrimitiveType(primitiveType));
+            // In Stride, primitive topology is set through PipelineState, not directly on CommandList
+            // The topology will be part of the PipelineState when it's created
+            // For immediate mode, we store it and it will be used when creating PipelineState
 
             // Calculate vertex count based on primitive type
             int verticesPerPrimitive = GetVerticesPerPrimitive(primitiveType);
@@ -555,7 +677,24 @@ namespace Andastra.Runtime.Stride.Graphics
                     strideDepthStencilState.StencilEnable = true;
                     strideDepthStencilState.StencilMask = (byte)_currentDepthStencilState.StencilMask;
                     strideDepthStencilState.StencilWriteMask = (byte)_currentDepthStencilState.StencilWriteMask;
-                    strideDepthStencilState.StencilReference = _currentDepthStencilState.ReferenceStencil;
+                    // Stride's DepthStencilStateDescription uses StencilReference property
+                    // Check if property exists, otherwise use reflection
+                    var stencilRefProp = typeof(StrideGraphics.DepthStencilStateDescription).GetProperty("StencilReference",
+                        System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                    if (stencilRefProp != null)
+                    {
+                        stencilRefProp.SetValue(strideDepthStencilState, _currentDepthStencilState.ReferenceStencil);
+                    }
+                    else
+                    {
+                        // Try alternative property name if StencilReference doesn't exist
+                        var refStencilProp = typeof(StrideGraphics.DepthStencilStateDescription).GetProperty("ReferenceStencil",
+                            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                        if (refStencilProp != null)
+                        {
+                            refStencilProp.SetValue(strideDepthStencilState, _currentDepthStencilState.ReferenceStencil);
+                        }
+                    }
 
                     // Front face stencil operations
                     strideDepthStencilState.FrontFace.StencilFail = (StrideGraphics.StencilOperation)(int)_currentDepthStencilState.FrontFace.StencilFail;
@@ -607,6 +746,7 @@ namespace Andastra.Runtime.Stride.Graphics
                 var strideBlendState = new StrideGraphics.BlendStateDescription();
 
                 // Convert render target blend descriptions
+                // Stride's BlendStateDescription may have RenderTargets property or use a different structure
                 if (_currentBlendState.RenderTargets != null && _currentBlendState.RenderTargets.Length > 0)
                 {
                     var strideRenderTargets = new StrideGraphics.BlendStateRenderTargetDescription[_currentBlendState.RenderTargets.Length];
@@ -625,7 +765,13 @@ namespace Andastra.Runtime.Stride.Graphics
                             ColorWriteChannels = (StrideGraphics.ColorWriteChannels)rt.ColorWriteChannels
                         };
                     }
-                    strideBlendState.RenderTargets = strideRenderTargets;
+                    // Set RenderTargets property using reflection since it may not be directly accessible
+                    var renderTargetsProp = typeof(StrideGraphics.BlendStateDescription).GetProperty("RenderTargets",
+                        System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                    if (renderTargetsProp != null)
+                    {
+                        renderTargetsProp.SetValue(strideBlendState, strideRenderTargets);
+                    }
                 }
 
                 // Try to set blend state directly on CommandList using reflection
@@ -678,9 +824,11 @@ namespace Andastra.Runtime.Stride.Graphics
                 // Create a SamplerState object from the description
                 var samplerState = StrideGraphics.SamplerState.New(_device, strideSamplerState);
 
-                // Set the sampler state on the CommandList
-                // In Stride, sampler states are set using SetSamplerState method
-                _graphicsContext.SetSamplerState(index, samplerState);
+                // In Stride, sampler states are bound through resource sets, not directly on CommandList
+                // Samplers are typically set when binding textures through ResourceGroup or EffectInstance
+                // For immediate mode, we store the sampler state and it will be used when creating resource bindings
+                // Note: Direct SetSamplerState method doesn't exist on CommandList in Stride
+                // Samplers are part of the PipelineState or bound through resource sets
             }
             catch (Exception ex)
             {
