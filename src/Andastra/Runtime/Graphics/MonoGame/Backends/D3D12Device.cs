@@ -5934,7 +5934,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 // Can't round up - use the maximum available size aligned down to 256-byte boundary
                 alignedSize = (maxAvailableSize / constantBufferAlignment) * constantBufferAlignment;
-                
+
                 // If the available size is less than 256 bytes, we can't create a valid CBV
                 // (D3D12 requires constant buffers to be at least 256 bytes)
                 if (alignedSize < constantBufferAlignment)
