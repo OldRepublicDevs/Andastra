@@ -1,5 +1,6 @@
 using System;
 using StrideGraphics = global::Stride.Graphics;
+using Stride.Engine;
 using Andastra.Runtime.Graphics;
 
 namespace Andastra.Runtime.Stride.Graphics
@@ -10,12 +11,14 @@ namespace Andastra.Runtime.Stride.Graphics
     public class StrideTexture2D : ITexture2D
     {
         private readonly global::Stride.Graphics.Texture _texture;
+        private readonly global::Stride.Graphics.CommandList _graphicsContext;
 
         internal global::Stride.Graphics.Texture Texture => _texture;
 
-        public StrideTexture2D(global::Stride.Graphics.Texture texture)
+        public StrideTexture2D(global::Stride.Graphics.Texture texture, global::Stride.Graphics.CommandList graphicsContext = null)
         {
             _texture = texture ?? throw new ArgumentNullException(nameof(texture));
+            _graphicsContext = graphicsContext;
         }
 
         public int Width => _texture.Width;
@@ -38,13 +41,21 @@ namespace Andastra.Runtime.Stride.Graphics
                 colorData[i] = new Stride.Core.Mathematics.Color(data[offset], data[offset + 1], data[offset + 2], data[offset + 3]);
             }
 
-            _texture.SetData(_texture.GraphicsDevice.ImmediateContext, colorData);
+            if (_graphicsContext == null || _graphicsContext.CommandList == null)
+            {
+                throw new InvalidOperationException("GraphicsContext is required for Texture.SetData() but is not available. StrideTexture2D must be created with a valid GraphicsContext.");
+            }
+            _texture.SetData(_graphicsContext.CommandList, colorData);
         }
 
         public byte[] GetData()
         {
             var colorData = new Stride.Core.Mathematics.Color[_texture.Width * _texture.Height];
-            _texture.GetData(_texture.GraphicsDevice.ImmediateContext, colorData);
+            if (_graphicsContext == null || _graphicsContext.CommandList == null)
+            {
+                throw new InvalidOperationException("GraphicsContext is required for Texture.GetData() but is not available. StrideTexture2D must be created with a valid GraphicsContext.");
+            }
+            _texture.GetData(_graphicsContext.CommandList, colorData);
 
             var byteData = new byte[colorData.Length * 4];
             for (int i = 0; i < colorData.Length; i++)

@@ -10,18 +10,20 @@ namespace Andastra.Runtime.Stride.Graphics
     {
         internal readonly global::Stride.Graphics.Texture RenderTarget;
         private readonly global::Stride.Graphics.Texture _depthBuffer;
+        private readonly Stride.Rendering.GraphicsContext _graphicsContext;
 
-        public StrideRenderTarget(global::Stride.Graphics.Texture renderTarget, global::Stride.Graphics.Texture depthBuffer = null)
+        public StrideRenderTarget(global::Stride.Graphics.Texture renderTarget, global::Stride.Graphics.Texture depthBuffer = null, Stride.Rendering.GraphicsContext graphicsContext = null)
         {
             RenderTarget = renderTarget ?? throw new ArgumentNullException(nameof(renderTarget));
             _depthBuffer = depthBuffer;
+            _graphicsContext = graphicsContext;
         }
 
         public int Width => RenderTarget.Width;
 
         public int Height => RenderTarget.Height;
 
-        public ITexture2D ColorTexture => new StrideTexture2D(RenderTarget);
+        public ITexture2D ColorTexture => new StrideTexture2D(RenderTarget, _graphicsContext);
 
         public IDepthStencilBuffer DepthStencilBuffer
         {
