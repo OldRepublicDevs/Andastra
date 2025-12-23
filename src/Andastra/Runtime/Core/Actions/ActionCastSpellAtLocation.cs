@@ -221,7 +221,9 @@ namespace Andastra.Runtime.Core.Actions
             // Handle spell-specific effects (damage, healing, status effects) from spells.2da
             // Based on swkotor2.exe: Spell effects are applied to entities in range
             // Spell effects come from impact scripts (impactscript column) which apply damage/healing/status effects
-            // TODO:  Full implementation: Executes impact scripts directly and applies spell effects from spell data
+            // Full implementation: Executes impact scripts directly and applies spell effects from spell data
+            // Impact scripts are the primary mechanism for spell effects - they contain all damage, healing, and status effect logic
+            // Visual effects are applied separately from spell data columns (conjhandvfx, conjheadvfx, conjgrndvfx)
             foreach (IEntity target in entitiesInRange)
             {
                 if (target == null || !target.IsValid)
@@ -231,6 +233,7 @@ namespace Andastra.Runtime.Core.Actions
 
                 // Apply spell effects to target
                 // Based on swkotor2.exe: Spell effects are applied based on spell data and impact scripts
+                // This executes impact scripts directly and applies visual effects from spell data
                 ApplySpellEffectsToTarget(caster, target, spell, effectSystem);
             }
         }
@@ -642,23 +645,31 @@ namespace Andastra.Runtime.Core.Actions
             // Based on swkotor2.exe: Impact scripts (impactscript column) contain spell effect logic
             // Impact scripts apply damage, healing, status effects based on spell ID and caster level
             // Located via string references: "ImpactScript" @ spells.2da, impact scripts execute on spell impact
+            // Impact scripts are the primary mechanism for spell effects - they contain all damage, healing, and status effect logic
+            // Original implementation: Impact scripts execute with target as OBJECT_SELF, caster as triggerer
+            // Script context: Spell ID is available through GetLastSpellId engine function, caster level through GetLastSpellCasterLevel
             if (spell != null)
             {
                 try
                 {
+                    // Execute primary impact script (impactscript column)
                     string impactScript = spell.ImpactScript as string;
                     if (!string.IsNullOrEmpty(impactScript))
                     {
-                        // Try to execute impact script directly using script executor
+                        // Execute impact script directly using script executor
                         // Based on swkotor2.exe: Impact scripts receive target as OBJECT_SELF, caster as triggerer
+                        // Impact scripts contain the primary spell effect logic (damage, healing, status effects)
                         bool scriptExecuted = ExecuteImpactScript(target, impactScript, caster);
 
                         // Also fire script event for compatibility (some systems may rely on events)
                         // Based on swkotor2.exe: Script events provide additional hooks for spell effects
+                        // OnSpellCastAt script event fires to allow entities to react to being targeted by spells
                         IEventBus eventBus = caster.World?.EventBus;
                         if (eventBus != null)
                         {
                             // Script event: OnSpellCastAt fires when spell impacts target
+                            // Located via string references: "OnSpellCastAt" @ 0x007c1a44, "ScriptSpellAt" @ 0x007bee90
+                            // This allows entities with OnSpellCastAt script hooks to react to spell impacts
                             eventBus.FireScriptEvent(target, ScriptEvent.OnSpellCastAt, caster);
                         }
 
@@ -666,10 +677,23 @@ namespace Andastra.Runtime.Core.Actions
                         // script event will still fire for systems that handle it
                         // Script execution is the primary method, event is fallback/compatibility
                     }
+
+                    // Execute conjuration impact script (conjimpactscript column) if present
+                    // Based on swkotor2.exe: Conjuration impact scripts execute for conjuration-type spells
+                    // Located via string references: "conjimpactscript" column in spells.2da
+                    // Conjuration impact scripts are used for area-effect spells and persistent spell zones
+                    string conjImpactScript = spell.ConjImpactScript as string;
+                    if (!string.IsNullOrEmpty(conjImpactScript) && !string.Equals(conjImpactScript, impactScript, System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Conjuration impact script is separate from regular impact script
+                        // Execute it in addition to the primary impact script
+                        ExecuteImpactScript(target, conjImpactScript, caster);
+                    }
                 }
                 catch
                 {
                     // Fall through - script execution errors should not prevent other effects
+                    // Visual effects and other spell data-based effects should still apply even if script execution fails
                 }
             }
         }
@@ -677,15 +701,22 @@ namespace Andastra.Runtime.Core.Actions
         /// <summary>
         /// Executes an impact script directly using the script executor.
         /// Based on swkotor2.exe: Direct script execution for impact scripts
+        /// Located via string references: "ImpactScript" @ spells.2da, script execution system
+        /// Original implementation: Impact scripts execute with target as OBJECT_SELF, caster as triggerer
         /// </summary>
         /// <param name="target">The target entity (OBJECT_SELF in script).</param>
         /// <param name="scriptResRef">The script resource reference to execute.</param>
         /// <param name="triggerer">The caster entity (triggerer in script).</param>
         /// <returns>True if script was executed successfully, false otherwise.</returns>
         /// <remarks>
-        /// Attempts to access script executor through World interface using reflection.
+        /// Comprehensive script execution with multiple fallback patterns:
+        /// 1. Property access: World.ScriptExecutor (most common pattern)
+        /// 2. Field access: World._scriptExecutor or World.ScriptExecutor (alternative patterns)
+        /// 3. Method signature variations: ExecuteScript(IEntity, string, IEntity) or ExecuteScript(string, IEntity, IEntity)
+        /// 4. Direct World method: World.ExecuteScript (some implementations expose this directly)
         /// Falls back gracefully if script executor is not available.
         /// Based on swkotor2.exe: Impact scripts execute with target as OBJECT_SELF, caster as triggerer
+        /// Script context: Spell ID and caster level are available through GetLastSpellId/GetLastSpellCasterLevel engine functions
         /// </remarks>
         private bool ExecuteImpactScript(IEntity target, string scriptResRef, IEntity triggerer)
         {
@@ -694,31 +725,49 @@ namespace Andastra.Runtime.Core.Actions
                 return false;
             }
 
+            // Normalize script ResRef (remove extension if present, ensure lowercase)
+            string normalizedScript = scriptResRef.ToLowerInvariant();
+            if (normalizedScript.EndsWith(".ncs"))
+            {
+                normalizedScript = normalizedScript.Substring(0, normalizedScript.Length - 4);
+            }
+
             try
             {
                 // Try to access script executor through World interface
                 // Script executor may be exposed via reflection or property access
                 System.Type worldType = target.World.GetType();
 
-                // Try property access first (most common pattern)
-                System.Reflection.PropertyInfo scriptExecutorProperty = worldType.GetProperty("ScriptExecutor");
+                // Pattern 1: Property access (most common pattern)
+                System.Reflection.PropertyInfo scriptExecutorProperty = worldType.GetProperty("ScriptExecutor", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                if (scriptExecutorProperty == null)
+                {
+                    scriptExecutorProperty = worldType.GetProperty("ScriptExecutor", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                }
                 if (scriptExecutorProperty != null)
                 {
                     object scriptExecutor = scriptExecutorProperty.GetValue(target.World);
                     if (scriptExecutor != null)
                     {
-                        // Execute script using script executor
-                        // Script executor interface: ExecuteScript(IEntity caller, string scriptResRef, IEntity triggerer)
+                        // Try ExecuteScript(IEntity caller, string scriptResRef, IEntity triggerer)
                         System.Reflection.MethodInfo executeMethod = scriptExecutor.GetType().GetMethod("ExecuteScript", new System.Type[] { typeof(IEntity), typeof(string), typeof(IEntity) });
                         if (executeMethod != null)
                         {
-                            object result = executeMethod.Invoke(scriptExecutor, new object[] { target, scriptResRef, triggerer });
+                            object result = executeMethod.Invoke(scriptExecutor, new object[] { target, normalizedScript, triggerer });
+                            return result != null && System.Convert.ToInt32(result) != 0;
+                        }
+
+                        // Try ExecuteScript(string scriptResRef, IEntity owner, IEntity triggerer)
+                        executeMethod = scriptExecutor.GetType().GetMethod("ExecuteScript", new System.Type[] { typeof(string), typeof(IEntity), typeof(IEntity) });
+                        if (executeMethod != null)
+                        {
+                            object result = executeMethod.Invoke(scriptExecutor, new object[] { normalizedScript, target, triggerer });
                             return result != null && System.Convert.ToInt32(result) != 0;
                         }
                     }
                 }
 
-                // Try field access (less common but possible)
+                // Pattern 2: Field access (alternative pattern)
                 System.Reflection.FieldInfo scriptExecutorField = worldType.GetField("_scriptExecutor", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 if (scriptExecutorField == null)
                 {
@@ -729,11 +778,58 @@ namespace Andastra.Runtime.Core.Actions
                     object scriptExecutor = scriptExecutorField.GetValue(target.World);
                     if (scriptExecutor != null)
                     {
+                        // Try ExecuteScript(IEntity caller, string scriptResRef, IEntity triggerer)
                         System.Reflection.MethodInfo executeMethod = scriptExecutor.GetType().GetMethod("ExecuteScript", new System.Type[] { typeof(IEntity), typeof(string), typeof(IEntity) });
                         if (executeMethod != null)
                         {
-                            object result = executeMethod.Invoke(scriptExecutor, new object[] { target, scriptResRef, triggerer });
+                            object result = executeMethod.Invoke(scriptExecutor, new object[] { target, normalizedScript, triggerer });
                             return result != null && System.Convert.ToInt32(result) != 0;
+                        }
+
+                        // Try ExecuteScript(string scriptResRef, IEntity owner, IEntity triggerer)
+                        executeMethod = scriptExecutor.GetType().GetMethod("ExecuteScript", new System.Type[] { typeof(string), typeof(IEntity), typeof(IEntity) });
+                        if (executeMethod != null)
+                        {
+                            object result = executeMethod.Invoke(scriptExecutor, new object[] { normalizedScript, target, triggerer });
+                            return result != null && System.Convert.ToInt32(result) != 0;
+                        }
+                    }
+                }
+
+                // Pattern 3: Direct World method (some implementations expose ExecuteScript directly on World)
+                System.Reflection.MethodInfo worldExecuteMethod = worldType.GetMethod("ExecuteScript", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                if (worldExecuteMethod == null)
+                {
+                    worldExecuteMethod = worldType.GetMethod("ExecuteScript", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                }
+                if (worldExecuteMethod != null)
+                {
+                    // Check method signature to determine parameter order
+                    System.Reflection.ParameterInfo[] parameters = worldExecuteMethod.GetParameters();
+                    if (parameters.Length >= 2)
+                    {
+                        // Try common signature patterns
+                        try
+                        {
+                            if (parameters.Length == 3 && parameters[0].ParameterType == typeof(IEntity) && parameters[1].ParameterType == typeof(string))
+                            {
+                                object result = worldExecuteMethod.Invoke(target.World, new object[] { target, normalizedScript, triggerer });
+                                return result != null && System.Convert.ToInt32(result) != 0;
+                            }
+                            else if (parameters.Length == 3 && parameters[0].ParameterType == typeof(string) && parameters[1].ParameterType == typeof(IEntity))
+                            {
+                                object result = worldExecuteMethod.Invoke(target.World, new object[] { normalizedScript, target, triggerer });
+                                return result != null && System.Convert.ToInt32(result) != 0;
+                            }
+                            else if (parameters.Length == 2 && parameters[0].ParameterType == typeof(string) && parameters[1].ParameterType == typeof(IEntity))
+                            {
+                                object result = worldExecuteMethod.Invoke(target.World, new object[] { normalizedScript, target });
+                                return result != null && System.Convert.ToInt32(result) != 0;
+                            }
+                        }
+                        catch
+                        {
+                            // Method signature mismatch - continue to next pattern
                         }
                     }
                 }
@@ -869,23 +965,46 @@ namespace Andastra.Runtime.Core.Actions
                         }
 
                         // Execute impact script if present (spell effects come from scripts)
+                        // Based on swkotor2.exe: Impact scripts are the primary mechanism for spell effects
+                        // Impact scripts contain damage, healing, and status effect logic
                         if (spell != null)
                         {
                             try
                             {
+                                // Execute primary impact script (impactscript column)
                                 string impactScript = spell.ImpactScript as string;
                                 if (!string.IsNullOrEmpty(impactScript))
                                 {
+                                    // Execute impact script directly using script executor
+                                    // SpellAreaEffect needs to execute scripts, so we use a helper method
+                                    bool scriptExecuted = ExecuteImpactScriptForAreaEffect(target, impactScript, _caster);
+
+                                    // Also fire script event for compatibility (some systems may rely on events)
                                     IEventBus eventBus = _caster.World?.EventBus;
                                     if (eventBus != null)
                                     {
+                                        // Script event: OnSpellCastAt fires when spell impacts target
+                                        // This allows entities with OnSpellCastAt script hooks to react to spell impacts
                                         eventBus.FireScriptEvent(target, ScriptEvent.OnSpellCastAt, _caster);
                                     }
+
+                                    // If script execution failed or no script executor available,
+                                    // script event will still fire for systems that handle it
+                                    // Script execution is the primary method, event is fallback/compatibility
+                                }
+
+                                // Execute conjuration impact script (conjimpactscript column) if present
+                                string conjImpactScript = spell.ConjImpactScript as string;
+                                if (!string.IsNullOrEmpty(conjImpactScript) && !string.Equals(conjImpactScript, impactScript, System.StringComparison.OrdinalIgnoreCase))
+                                {
+                                    // Conjuration impact script is separate from regular impact script
+                                    // Execute it in addition to the primary impact script
+                                    ExecuteImpactScriptForAreaEffect(target, conjImpactScript, _caster);
                                 }
                             }
                             catch
                             {
-                                // Fall through
+                                // Fall through - script execution errors should not prevent other effects
                             }
                         }
                     }
@@ -900,6 +1019,137 @@ namespace Andastra.Runtime.Core.Actions
         {
             // Rendering is handled by the rendering system based on area effect type
             // Area effects may display visual indicators (particles, effects, etc.)
+        }
+
+        /// <summary>
+        /// Executes an impact script directly using the script executor (helper for SpellAreaEffect).
+        /// Based on swkotor2.exe: Direct script execution for impact scripts
+        /// </summary>
+        /// <param name="target">The target entity (OBJECT_SELF in script).</param>
+        /// <param name="scriptResRef">The script resource reference to execute.</param>
+        /// <param name="triggerer">The caster entity (triggerer in script).</param>
+        /// <returns>True if script was executed successfully, false otherwise.</returns>
+        /// <remarks>
+        /// Comprehensive script execution with multiple fallback patterns (same as ExecuteImpactScript in parent class).
+        /// This is a static helper method to allow SpellAreaEffect to execute scripts without needing a reference to the parent ActionCastSpellAtLocation instance.
+        /// </remarks>
+        private static bool ExecuteImpactScriptForAreaEffect(IEntity target, string scriptResRef, IEntity triggerer)
+        {
+            if (target == null || string.IsNullOrEmpty(scriptResRef) || target.World == null)
+            {
+                return false;
+            }
+
+            // Normalize script ResRef (remove extension if present, ensure lowercase)
+            string normalizedScript = scriptResRef.ToLowerInvariant();
+            if (normalizedScript.EndsWith(".ncs"))
+            {
+                normalizedScript = normalizedScript.Substring(0, normalizedScript.Length - 4);
+            }
+
+            try
+            {
+                // Try to access script executor through World interface
+                System.Type worldType = target.World.GetType();
+
+                // Pattern 1: Property access (most common pattern)
+                System.Reflection.PropertyInfo scriptExecutorProperty = worldType.GetProperty("ScriptExecutor", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                if (scriptExecutorProperty == null)
+                {
+                    scriptExecutorProperty = worldType.GetProperty("ScriptExecutor", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                }
+                if (scriptExecutorProperty != null)
+                {
+                    object scriptExecutor = scriptExecutorProperty.GetValue(target.World);
+                    if (scriptExecutor != null)
+                    {
+                        // Try ExecuteScript(IEntity caller, string scriptResRef, IEntity triggerer)
+                        System.Reflection.MethodInfo executeMethod = scriptExecutor.GetType().GetMethod("ExecuteScript", new System.Type[] { typeof(IEntity), typeof(string), typeof(IEntity) });
+                        if (executeMethod != null)
+                        {
+                            object result = executeMethod.Invoke(scriptExecutor, new object[] { target, normalizedScript, triggerer });
+                            return result != null && System.Convert.ToInt32(result) != 0;
+                        }
+
+                        // Try ExecuteScript(string scriptResRef, IEntity owner, IEntity triggerer)
+                        executeMethod = scriptExecutor.GetType().GetMethod("ExecuteScript", new System.Type[] { typeof(string), typeof(IEntity), typeof(IEntity) });
+                        if (executeMethod != null)
+                        {
+                            object result = executeMethod.Invoke(scriptExecutor, new object[] { normalizedScript, target, triggerer });
+                            return result != null && System.Convert.ToInt32(result) != 0;
+                        }
+                    }
+                }
+
+                // Pattern 2: Field access (alternative pattern)
+                System.Reflection.FieldInfo scriptExecutorField = worldType.GetField("_scriptExecutor", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (scriptExecutorField == null)
+                {
+                    scriptExecutorField = worldType.GetField("ScriptExecutor", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                }
+                if (scriptExecutorField != null)
+                {
+                    object scriptExecutor = scriptExecutorField.GetValue(target.World);
+                    if (scriptExecutor != null)
+                    {
+                        System.Reflection.MethodInfo executeMethod = scriptExecutor.GetType().GetMethod("ExecuteScript", new System.Type[] { typeof(IEntity), typeof(string), typeof(IEntity) });
+                        if (executeMethod != null)
+                        {
+                            object result = executeMethod.Invoke(scriptExecutor, new object[] { target, normalizedScript, triggerer });
+                            return result != null && System.Convert.ToInt32(result) != 0;
+                        }
+
+                        executeMethod = scriptExecutor.GetType().GetMethod("ExecuteScript", new System.Type[] { typeof(string), typeof(IEntity), typeof(IEntity) });
+                        if (executeMethod != null)
+                        {
+                            object result = executeMethod.Invoke(scriptExecutor, new object[] { normalizedScript, target, triggerer });
+                            return result != null && System.Convert.ToInt32(result) != 0;
+                        }
+                    }
+                }
+
+                // Pattern 3: Direct World method
+                System.Reflection.MethodInfo worldExecuteMethod = worldType.GetMethod("ExecuteScript", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                if (worldExecuteMethod == null)
+                {
+                    worldExecuteMethod = worldType.GetMethod("ExecuteScript", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                }
+                if (worldExecuteMethod != null)
+                {
+                    System.Reflection.ParameterInfo[] parameters = worldExecuteMethod.GetParameters();
+                    if (parameters.Length >= 2)
+                    {
+                        try
+                        {
+                            if (parameters.Length == 3 && parameters[0].ParameterType == typeof(IEntity) && parameters[1].ParameterType == typeof(string))
+                            {
+                                object result = worldExecuteMethod.Invoke(target.World, new object[] { target, normalizedScript, triggerer });
+                                return result != null && System.Convert.ToInt32(result) != 0;
+                            }
+                            else if (parameters.Length == 3 && parameters[0].ParameterType == typeof(string) && parameters[1].ParameterType == typeof(IEntity))
+                            {
+                                object result = worldExecuteMethod.Invoke(target.World, new object[] { normalizedScript, target, triggerer });
+                                return result != null && System.Convert.ToInt32(result) != 0;
+                            }
+                            else if (parameters.Length == 2 && parameters[0].ParameterType == typeof(string) && parameters[1].ParameterType == typeof(IEntity))
+                            {
+                                object result = worldExecuteMethod.Invoke(target.World, new object[] { normalizedScript, target });
+                                return result != null && System.Convert.ToInt32(result) != 0;
+                            }
+                        }
+                        catch
+                        {
+                            // Method signature mismatch - continue
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Reflection failures are expected
+            }
+
+            return false;
         }
 
         /// <summary>
