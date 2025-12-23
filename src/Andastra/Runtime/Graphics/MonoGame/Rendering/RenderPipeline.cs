@@ -679,11 +679,15 @@ namespace Andastra.Runtime.MonoGame.Rendering
                 return true;
             }
 
-            // Check if tone mapping is enabled (non-default operator indicates active tone mapping)
-            // Note: Tonemapper default is ACES, which is an active tone mapping operator
-            // If we want to check for "disabled" tone mapping, we'd need a None operator
-            // TODO: STUB - For now, assume any tone mapper setting means post-processing is enabled
-            // (In practice, tone mapping is always applied in HDR pipelines)
+            // Check if tone mapping is enabled
+            // Tone mapping is enabled when the operator is not None
+            // Based on swkotor2.exe: Original engine used LDR rendering with gamma correction (gamma @ 0x007b6fcc)
+            // Modern enhancement: HDR rendering with tone mapping operators (Reinhard, ACES, Uncharted2, etc.)
+            // The None operator indicates tone mapping is disabled
+            if (_settings.Tonemapper != TonemapOperator.None)
+            {
+                return true;
+            }
 
             // Check if color grading LUT is provided
             if (!string.IsNullOrEmpty(_settings.ColorGradingLut))
