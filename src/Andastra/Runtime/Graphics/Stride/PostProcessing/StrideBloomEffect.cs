@@ -9,6 +9,7 @@ using Stride.Shaders.Compiler;
 using Andastra.Runtime.Graphics.Common.PostProcessing;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Stride.Graphics;
+using Stride.Core.Serialization.Contents;
 
 namespace Andastra.Runtime.Stride.PostProcessing
 {
@@ -50,7 +51,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             _spriteBatch = new SpriteBatch(_graphicsDevice);
 
             // Create samplers for texture sampling
-            _linearSampler = SamplerState.New(_graphicsDevice, new SamplerStateDescription
+            _linearSampler = SamplerState.New(_graphicsDevice, new global::Stride.Graphics.SamplerStateDescription
             {
                 Filter = TextureFilter.Linear,
                 AddressU = TextureAddressMode.Clamp,
@@ -58,7 +59,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 AddressW = TextureAddressMode.Clamp
             });
 
-            _pointSampler = SamplerState.New(_graphicsDevice, new SamplerStateDescription
+            _pointSampler = SamplerState.New(_graphicsDevice, new global::Stride.Graphics.SamplerStateDescription
             {
                 Filter = TextureFilter.Point,
                 AddressU = TextureAddressMode.Clamp,
@@ -87,36 +88,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// </remarks>
         private void LoadBloomShaders()
         {
-            // Strategy 1: Try loading from compiled effect files using Effect.Load()
-            // Effect.Load() searches in standard content paths for compiled .sdeffect files
-            try
-            {
-                _brightPassEffectBase = Effect.Load(_graphicsDevice, "BloomBrightPass");
-                if (_brightPassEffectBase != null)
-                {
-                    _brightPassEffect = new EffectInstance(_brightPassEffectBase);
-                    System.Console.WriteLine("[StrideBloomEffect] Loaded BloomBrightPass effect from compiled file");
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Console.WriteLine($"[StrideBloomEffect] Failed to load BloomBrightPass from compiled file: {ex.Message}");
-            }
-
-            try
-            {
-                _blurEffectBase = Effect.Load(_graphicsDevice, "BloomBlur");
-                if (_blurEffectBase != null)
-                {
-                    _blurEffect = new EffectInstance(_blurEffectBase);
-                    System.Console.WriteLine("[StrideBloomEffect] Loaded BloomBlur effect from compiled file");
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Console.WriteLine($"[StrideBloomEffect] Failed to load BloomBlur from compiled file: {ex.Message}");
-            }
-
+            // Strategy 1: Try loading from ContentManager
+            // Effect.Load() doesn't exist in this Stride version, so we skip directly to ContentManager
             // Strategy 2: Try loading from ContentManager if available
             // Check if GraphicsDevice has access to ContentManager through services
             if (_brightPassEffectBase == null || _blurEffectBase == null)
@@ -125,7 +98,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 {
                     // Try to get ContentManager from GraphicsDevice services
                     // Stride GraphicsDevice may have Services property that provides ContentManager
-                    var services = _graphicsDevice.Services;
+                    var services = _graphicsDevice.Services();
                     if (services != null)
                     {
                         var contentManager = services.GetService<ContentManager>();
@@ -139,12 +112,12 @@ namespace Andastra.Runtime.Stride.PostProcessing
                                     if (_brightPassEffectBase != null)
                                     {
                                         _brightPassEffect = new EffectInstance(_brightPassEffectBase);
-                                        System.Console.WriteLine("[StrideBloomEffect] Loaded BloomBrightPass from ContentManager");
+                                        Console.WriteLine("[StrideBloomEffect] Loaded BloomBrightPass from ContentManager");
                                     }
                                 }
                                 catch (Exception ex)
                                 {
-                                    System.Console.WriteLine($"[StrideBloomEffect] Failed to load BloomBrightPass from ContentManager: {ex.Message}");
+                                    Console.WriteLine($"[StrideBloomEffect] Failed to load BloomBrightPass from ContentManager: {ex.Message}");
                                 }
                             }
 
@@ -156,12 +129,12 @@ namespace Andastra.Runtime.Stride.PostProcessing
                                     if (_blurEffectBase != null)
                                     {
                                         _blurEffect = new EffectInstance(_blurEffectBase);
-                                        System.Console.WriteLine("[StrideBloomEffect] Loaded BloomBlur from ContentManager");
+                                        Console.WriteLine("[StrideBloomEffect] Loaded BloomBlur from ContentManager");
                                     }
                                 }
                                 catch (Exception ex)
                                 {
-                                    System.Console.WriteLine($"[StrideBloomEffect] Failed to load BloomBlur from ContentManager: {ex.Message}");
+                                    Console.WriteLine($"[StrideBloomEffect] Failed to load BloomBlur from ContentManager: {ex.Message}");
                                 }
                             }
                         }
@@ -811,21 +784,8 @@ shader BlurEffect : ShaderBase
                     }
                 }
 
-                // Final fallback: Try Effect.Load() with file path
-                // This may work if Stride can load shaders from absolute paths
-                try
-                {
-                    var effect = Effect.Load(_graphicsDevice, tempFilePath);
-                    if (effect != null)
-                    {
-                        System.Console.WriteLine($"[StrideBloomEffect] Successfully loaded shader '{shaderName}' from file");
-                        return effect;
-                    }
-                }
-                catch
-                {
-                    // Effect.Load() doesn't support file paths directly, continue to return null
-                }
+                // Final fallback: Effect.Load() doesn't exist in this Stride version
+                // Effect.Load() doesn't support file paths directly, continue to return null
 
                 System.Console.WriteLine($"[StrideBloomEffect] Could not compile shader '{shaderName}' from file");
                 return null;
