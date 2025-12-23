@@ -84,7 +84,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         ///   5. Adds upgrade to slot array (offset 0x3d54)
         ///   6. Applies upgrade properties to item (FUN_0055e160 @ 0x0055e160)
         /// - Stack count check: param_1[0xb3] - item stack size
-        /// - Character from: DAT_008283d4
+        /// - Character from: DAT_008283d4 @ 0x008283d4 (global structure storing current player character pointer)
         /// </remarks>
         public override bool ApplyUpgrade(IEntity item, int upgradeSlot, string upgradeResRef)
         {
@@ -279,6 +279,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         ///   4. Updates item stats (removes upgrade bonuses via FUN_0055e160)
         ///   5. Recalculates item stats
         /// - Removal: FUN_00431ec0 @ 0x00431ec0 - removes from array
+        /// - Character from: DAT_008283d4 @ 0x008283d4 (global structure storing current player character pointer)
         /// </remarks>
         public override bool RemoveUpgrade(IEntity item, int upgradeSlot)
         {

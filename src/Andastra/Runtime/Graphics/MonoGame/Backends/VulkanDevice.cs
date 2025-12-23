@@ -6009,8 +6009,9 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ArgumentException("No valid shaders provided for raytracing pipeline", nameof(desc));
             }
 
-            // Build shader groups
+            // Build shader groups and export name to group index mapping
             var shaderGroups = new List<VkRayTracingShaderGroupCreateInfoKHR>();
+            var exportNameToGroupIndex = new Dictionary<string, uint>();
 
             // Add ray generation shader as a general group
             bool hasRayGen = false;
@@ -6037,6 +6038,18 @@ namespace Andastra.Runtime.MonoGame.Backends
                             pShaderGroupCaptureReplayHandle = IntPtr.Zero
                         };
                         shaderGroups.Add(group);
+                        // Map export name to group index for GetShaderIdentifier
+                        // Use DebugName if available, otherwise use EntryPoint, otherwise use default name
+                        string exportName = desc.Shaders[i].Desc.DebugName;
+                        if (string.IsNullOrEmpty(exportName))
+                        {
+                            exportName = desc.Shaders[i].Desc.EntryPoint;
+                        }
+                        if (string.IsNullOrEmpty(exportName))
+                        {
+                            exportName = "RayGen";
+                        }
+                        exportNameToGroupIndex[exportName] = (uint)(shaderGroups.Count - 1);
                         hasRayGen = true;
                     }
                     break;
@@ -6080,6 +6093,18 @@ namespace Andastra.Runtime.MonoGame.Backends
                             pShaderGroupCaptureReplayHandle = IntPtr.Zero
                         };
                         shaderGroups.Add(group);
+                        // Map export name to group index for GetShaderIdentifier
+                        // Use DebugName if available, otherwise use EntryPoint, otherwise use default name with index
+                        string exportName = desc.Shaders[i].Desc.DebugName;
+                        if (string.IsNullOrEmpty(exportName))
+                        {
+                            exportName = desc.Shaders[i].Desc.EntryPoint;
+                        }
+                        if (string.IsNullOrEmpty(exportName))
+                        {
+                            exportName = $"Miss{shaderGroups.Count - 1}";
+                        }
+                        exportNameToGroupIndex[exportName] = (uint)(shaderGroups.Count - 1);
                     }
                 }
             }
@@ -6148,6 +6173,14 @@ namespace Andastra.Runtime.MonoGame.Backends
                         pShaderGroupCaptureReplayHandle = IntPtr.Zero
                     };
                     shaderGroups.Add(group);
+                    // Map hit group name to group index for GetShaderIdentifier
+                    // Use hit group Name if available, otherwise use default name with index
+                    string exportName = hitGroup.Name;
+                    if (string.IsNullOrEmpty(exportName))
+                    {
+                        exportName = $"HitGroup{shaderGroups.Count - 1}";
+                    }
+                    exportNameToGroupIndex[exportName] = (uint)(shaderGroups.Count - 1);
                 }
             }
 
@@ -6262,7 +6295,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                     GlobalBindingLayout = desc.GlobalBindingLayout,
                                     DebugName = backendDesc.DebugName
                                 };
-                                var pipeline = new VulkanRaytracingPipeline(handle, interfaceDesc, vkPipeline, pipelineLayout, sbtBuffer, _device);
+                                var pipeline = new VulkanRaytracingPipeline(handle, interfaceDesc, vkPipeline, pipelineLayout, sbtBuffer, _device, exportNameToGroupIndex, handleSize);
                                 _resources[handle] = pipeline;
 
                                 return pipeline;
@@ -7522,13 +7555,17 @@ namespace Andastra.Runtime.MonoGame.Backends
             private readonly IntPtr _vkPipelineLayout;
             private readonly IBuffer _sbtBuffer;
             private readonly IntPtr _device;
+            // Mapping from export names to shader group indices for GetShaderIdentifier
+            private readonly Dictionary<string, uint> _exportNameToGroupIndex;
+            // Size of shader group handles in bytes (typically 32, but can vary by implementation)
+            private readonly uint _shaderGroupHandleSize;
 
             public VulkanRaytracingPipeline(IntPtr handle, Interfaces.RaytracingPipelineDesc desc)
-                : this(handle, desc, IntPtr.Zero, IntPtr.Zero, null, IntPtr.Zero)
+                : this(handle, desc, IntPtr.Zero, IntPtr.Zero, null, IntPtr.Zero, null, 32)
             {
             }
 
-            public VulkanRaytracingPipeline(IntPtr handle, Interfaces.RaytracingPipelineDesc desc, IntPtr vkPipeline, IntPtr vkPipelineLayout, IBuffer sbtBuffer, IntPtr device)
+            public VulkanRaytracingPipeline(IntPtr handle, Interfaces.RaytracingPipelineDesc desc, IntPtr vkPipeline, IntPtr vkPipelineLayout, IBuffer sbtBuffer, IntPtr device, Dictionary<string, uint> exportNameToGroupIndex, uint shaderGroupHandleSize)
             {
                 _handle = handle;
                 Desc = desc;
@@ -7536,6 +7573,8 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _vkPipelineLayout = vkPipelineLayout;
                 _sbtBuffer = sbtBuffer;
                 _device = device;
+                _exportNameToGroupIndex = exportNameToGroupIndex ?? new Dictionary<string, uint>();
+                _shaderGroupHandleSize = shaderGroupHandleSize;
             }
 
             /// <summary>
@@ -7570,16 +7609,75 @@ namespace Andastra.Runtime.MonoGame.Backends
             /// <summary>
             /// Gets the shader identifier for a shader or hit group in the pipeline.
             /// Shader identifiers are opaque handles used in the shader binding table.
+            /// Based on Vulkan API: vkGetRayTracingShaderGroupHandlesKHR
+            /// https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetRayTracingShaderGroupHandlesKHR.html
             /// </summary>
             /// <param name="exportName">The export name of the shader or hit group (e.g., "ShadowRayGen", "ShadowMiss", "ShadowHitGroup").</param>
             /// <returns>Shader identifier bytes (typically 32 bytes for D3D12, variable for Vulkan). Returns null if the export name is not found.</returns>
             public byte[] GetShaderIdentifier(string exportName)
             {
-                // TODO: STUB - Implement Vulkan shader identifier retrieval
-                // Vulkan API: vkGetRayTracingShaderGroupHandlesKHR
-                // This requires calling vkGetRayTracingShaderGroupHandlesKHR to get shader group handles
-                // For now, return null to indicate not implemented
-                return null;
+                if (string.IsNullOrEmpty(exportName))
+                {
+                    return null;
+                }
+
+                if (_vkPipeline == IntPtr.Zero || _device == IntPtr.Zero)
+                {
+                    return null;
+                }
+
+                // Check if vkGetRayTracingShaderGroupHandlesKHR is available
+                if (vkGetRayTracingShaderGroupHandlesKHR == null)
+                {
+                    Console.WriteLine("[VulkanRaytracingPipeline] GetShaderIdentifier: vkGetRayTracingShaderGroupHandlesKHR is not available");
+                    return null;
+                }
+
+                // Look up the export name to get the shader group index
+                if (!_exportNameToGroupIndex.ContainsKey(exportName))
+                {
+                    Console.WriteLine($"[VulkanRaytracingPipeline] GetShaderIdentifier: Export name '{exportName}' not found in pipeline");
+                    return null;
+                }
+
+                uint groupIndex = _exportNameToGroupIndex[exportName];
+
+                // Allocate buffer for shader group handle
+                // Shader group handle size is typically 32 bytes but can vary by implementation
+                // We use the stored handle size which should match the actual implementation
+                byte[] handleData = new byte[_shaderGroupHandleSize];
+                unsafe
+                {
+                    fixed (byte* pHandleData = handleData)
+                    {
+                        IntPtr pData = new IntPtr(pHandleData);
+
+                        // Call vkGetRayTracingShaderGroupHandlesKHR to retrieve the shader group handle
+                        // Signature: VkResult vkGetRayTracingShaderGroupHandlesKHR(
+                        //     VkDevice device,
+                        //     VkPipeline pipeline,
+                        //     uint firstGroup,
+                        //     uint groupCount,
+                        //     size_t dataSize,
+                        //     void* pData);
+                        VkResult result = vkGetRayTracingShaderGroupHandlesKHR(
+                            _device,
+                            _vkPipeline,
+                            groupIndex,      // firstGroup: index of the group to retrieve
+                            1,               // groupCount: retrieve one group
+                            _shaderGroupHandleSize,  // dataSize: size of the buffer
+                            pData            // pData: pointer to buffer to receive the handle
+                        );
+
+                        if (result != VkResult.VK_SUCCESS)
+                        {
+                            Console.WriteLine($"[VulkanRaytracingPipeline] GetShaderIdentifier: vkGetRayTracingShaderGroupHandlesKHR failed with result {result}");
+                            return null;
+                        }
+                    }
+                }
+
+                return handleData;
             }
         }
 
