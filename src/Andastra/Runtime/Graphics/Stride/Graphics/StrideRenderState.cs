@@ -1,5 +1,6 @@
 using System;
 using StrideGraphics = Stride.Graphics;
+using Stride.Core.Mathematics;
 using Andastra.Runtime.Graphics;
 
 namespace Andastra.Runtime.Stride.Graphics
@@ -100,30 +101,30 @@ namespace Andastra.Runtime.Stride.Graphics
 
         internal RasterizerStateDescription Description => _description;
 
-        private static StrideGraphics.CullFaceMode ConvertCullMode(Andastra.Runtime.Graphics.CullMode mode)
+        private static global::Stride.Graphics.CullFaceMode ConvertCullMode(Andastra.Runtime.Graphics.CullMode mode)
         {
             switch (mode)
             {
                 case Andastra.Runtime.Graphics.CullMode.None:
-                    return StrideGraphics.CullFaceMode.None;
+                    return global::Stride.Graphics.CullFaceMode.None;
                 case Andastra.Runtime.Graphics.CullMode.CullClockwiseFace:
-                    return StrideGraphics.CullFaceMode.Front;
+                    return global::Stride.Graphics.CullFaceMode.Front;
                 case Andastra.Runtime.Graphics.CullMode.CullCounterClockwiseFace:
-                    return StrideGraphics.CullFaceMode.Back;
+                    return global::Stride.Graphics.CullFaceMode.Back;
                 default:
-                    return StrideGraphics.CullFaceMode.Back;
+                    return global::Stride.Graphics.CullFaceMode.Back;
             }
         }
 
-        private static Andastra.Runtime.Graphics.CullMode ConvertCullMode(StrideGraphics.CullFaceMode mode)
+        private static Andastra.Runtime.Graphics.CullMode ConvertCullMode(global::Stride.Graphics.CullFaceMode mode)
         {
             switch (mode)
             {
-                case StrideGraphics.CullFaceMode.None:
+                case global::Stride.Graphics.CullFaceMode.None:
                     return Andastra.Runtime.Graphics.CullMode.None;
-                case StrideGraphics.CullFaceMode.Front:
+                case global::Stride.Graphics.CullFaceMode.Front:
                     return Andastra.Runtime.Graphics.CullMode.CullClockwiseFace;
-                case StrideGraphics.CullFaceMode.Back:
+                case global::Stride.Graphics.CullFaceMode.Back:
                     return Andastra.Runtime.Graphics.CullMode.CullCounterClockwiseFace;
                 default:
                     return Andastra.Runtime.Graphics.CullMode.CullCounterClockwiseFace;
@@ -566,12 +567,12 @@ namespace Andastra.Runtime.Stride.Graphics
             return (Andastra.Runtime.Graphics.ColorWriteChannels)(int)channels;
         }
 
-        private static Stride.Core.Mathematics.Color4 ConvertColor(Andastra.Runtime.Graphics.Color color)
+        private static global::Stride.Core.Mathematics.Color4 ConvertColor(Andastra.Runtime.Graphics.Color color)
         {
-            return new Stride.Core.Mathematics.Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
+            return new global::Stride.Core.Mathematics.Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
         }
 
-        private static Andastra.Runtime.Graphics.Color ConvertColor(Stride.Core.Mathematics.Color4 color)
+        private static Andastra.Runtime.Graphics.Color ConvertColor(global::Stride.Core.Mathematics.Color4 color)
         {
             return new Andastra.Runtime.Graphics.Color((byte)(color.R * 255), (byte)(color.G * 255), (byte)(color.B * 255), (byte)(color.A * 255));
         }

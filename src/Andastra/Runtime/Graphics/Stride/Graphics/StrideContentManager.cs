@@ -1,6 +1,6 @@
 using System;
-using StrideEngine = Stride.Engine;
-using StrideGraphics = Stride.Graphics;
+using StrideEngine = global::Stride.Engine;
+using StrideGraphics = global::Stride.Graphics;
 using Andastra.Runtime.Graphics;
 
 namespace Andastra.Runtime.Stride.Graphics
@@ -10,11 +10,11 @@ namespace Andastra.Runtime.Stride.Graphics
     /// </summary>
     public class StrideContentManager : IContentManager
     {
-        private readonly StrideEngine.ContentManager _contentManager;
+        private readonly global::Stride.Engine.ContentManager _contentManager;
 
-        internal StrideEngine.ContentManager ContentManager => _contentManager;
+        internal global::Stride.Engine.ContentManager ContentManager => _contentManager;
 
-        public StrideContentManager(StrideEngine.ContentManager contentManager)
+        public StrideContentManager(global::Stride.Engine.ContentManager contentManager)
         {
             _contentManager = contentManager ?? throw new ArgumentNullException(nameof(contentManager));
         }
@@ -81,7 +81,7 @@ namespace Andastra.Runtime.Stride.Graphics
                 _contentManager.Load<StrideGraphics.Texture2D>(assetName);
                 return true; // Asset exists and can be loaded as Texture2D
             }
-            catch (StrideEngine.Content.ContentManagerException)
+            catch (global::Stride.Engine.Content.ContentManagerException)
             {
                 // ContentManagerException is thrown when asset is not found
                 // This is the primary indicator that the asset doesn't exist
