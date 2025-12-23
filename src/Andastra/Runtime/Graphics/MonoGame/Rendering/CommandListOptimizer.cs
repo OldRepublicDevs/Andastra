@@ -4,6 +4,7 @@ using System.Reflection;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using Andastra.Runtime.Graphics;
+using XnaPrimitiveType = Microsoft.Xna.Framework.Graphics.PrimitiveType;
 
 namespace Andastra.Runtime.MonoGame.Rendering
 {
@@ -33,7 +34,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
         /// </summary>
         private struct DrawIndexedCommandData
         {
-            public PrimitiveType PrimitiveType;
+            public XnaPrimitiveType PrimitiveType;
             public int BaseVertex;
             public int MinVertexIndex;
             public int NumVertices;
@@ -43,7 +44,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             public object IndexBuffer;  // IndexBuffer or equivalent
             public Matrix? WorldMatrix; // Optional world transform matrix for instancing conversion
 
-            public DrawIndexedCommandData(PrimitiveType primitiveType, int baseVertex, int minVertexIndex, int numVertices, int startIndex, int primitiveCount, object vertexBuffer, object indexBuffer)
+            public DrawIndexedCommandData(XnaPrimitiveType primitiveType, int baseVertex, int minVertexIndex, int numVertices, int startIndex, int primitiveCount, object vertexBuffer, object indexBuffer)
             {
                 PrimitiveType = primitiveType;
                 BaseVertex = baseVertex;
@@ -56,7 +57,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
                 WorldMatrix = null;
             }
 
-            public DrawIndexedCommandData(PrimitiveType primitiveType, int baseVertex, int minVertexIndex, int numVertices, int startIndex, int primitiveCount, object vertexBuffer, object indexBuffer, Matrix? worldMatrix)
+            public DrawIndexedCommandData(XnaPrimitiveType primitiveType, int baseVertex, int minVertexIndex, int numVertices, int startIndex, int primitiveCount, object vertexBuffer, object indexBuffer, Matrix? worldMatrix)
             {
                 PrimitiveType = primitiveType;
                 BaseVertex = baseVertex;
@@ -76,12 +77,12 @@ namespace Andastra.Runtime.MonoGame.Rendering
         /// </summary>
         private struct DrawCommandData
         {
-            public PrimitiveType PrimitiveType;
+            public XnaPrimitiveType PrimitiveType;
             public int VertexStart;
             public int PrimitiveCount;
             public object VertexBuffer; // VertexBuffer or equivalent
 
-            public DrawCommandData(PrimitiveType primitiveType, int vertexStart, int primitiveCount, object vertexBuffer)
+            public DrawCommandData(XnaPrimitiveType primitiveType, int vertexStart, int primitiveCount, object vertexBuffer)
             {
                 PrimitiveType = primitiveType;
                 VertexStart = vertexStart;
@@ -96,7 +97,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
         /// </summary>
         private struct DrawInstancedCommandData
         {
-            public PrimitiveType PrimitiveType;
+            public XnaPrimitiveType PrimitiveType;
             public int BaseVertex;
             public int MinVertexIndex;
             public int NumVertices;
@@ -107,7 +108,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             public object VertexBuffer; // VertexBuffer or equivalent
             public object IndexBuffer;  // IndexBuffer or equivalent
 
-            public DrawInstancedCommandData(PrimitiveType primitiveType, int baseVertex, int minVertexIndex, int numVertices, int startIndex, int primitiveCountPerInstance, int instanceCount, int startInstanceLocation, object vertexBuffer, object indexBuffer)
+            public DrawInstancedCommandData(XnaPrimitiveType primitiveType, int baseVertex, int minVertexIndex, int numVertices, int startIndex, int primitiveCountPerInstance, int instanceCount, int startInstanceLocation, object vertexBuffer, object indexBuffer)
             {
                 PrimitiveType = primitiveType;
                 BaseVertex = baseVertex;
@@ -914,9 +915,9 @@ namespace Andastra.Runtime.MonoGame.Rendering
             // Check if primitive type supports instancing
             // Instancing is typically supported for TriangleList, LineList, PointList
             // TriangleStrip and LineStrip can be instanced but require special handling
-            if (firstData.PrimitiveType != PrimitiveType.TriangleList &&
-                firstData.PrimitiveType != PrimitiveType.LineList &&
-                firstData.PrimitiveType != PrimitiveType.PointList)
+            if (firstData.PrimitiveType != XnaPrimitiveType.TriangleList &&
+                firstData.PrimitiveType != XnaPrimitiveType.LineList &&
+                firstData.PrimitiveType != XnaPrimitiveType.PointList)
             {
                 // TriangleStrip and LineStrip can be instanced but require careful handling
                 // For now, we only support TriangleList, LineList, and PointList
@@ -1006,7 +1007,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
         /// <summary>
         /// Gets the number of indices per primitive for a given primitive type.
         /// </summary>
-        private int GetIndicesPerPrimitive(PrimitiveType primitiveType)
+        private int GetIndicesPerPrimitive(XnaPrimitiveType primitiveType)
         {
             switch (primitiveType)
             {
@@ -1028,7 +1029,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
         /// <summary>
         /// Gets the number of vertices per primitive for a given primitive type.
         /// </summary>
-        private int GetVerticesPerPrimitive(PrimitiveType primitiveType)
+        private int GetVerticesPerPrimitive(XnaPrimitiveType primitiveType)
         {
             switch (primitiveType)
             {
