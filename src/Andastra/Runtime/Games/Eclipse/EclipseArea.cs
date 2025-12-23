@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Numerics;
 using System.Linq;
 using System.Reflection;
@@ -2858,7 +2859,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 // Based on daorigins.exe: Weather transitions can be scripted or time-based
                 // This would typically be configured in area data or module scripts
                 // TODO: STUB - For now, we mark the area as supporting weather transitions
-                SetData("SupportsWeatherTransitions", true);
+                // Note: Weather transition support is determined by area properties, not stored as entity data
             }
 
             // 5. Create particle emitters for interactive elements (torches, fires, etc.)
@@ -4134,8 +4135,8 @@ namespace Andastra.Runtime.Games.Eclipse
             // Based on daorigins.exe/DragonAge2.exe: Frustum culling uses view-projection matrix to extract frustum planes
             // Original implementation: Extracts 6 frustum planes (left, right, bottom, top, near, far) from view-projection matrix
             // Gribb/Hartmann method: Efficiently extracts planes directly from combined matrix
-            Matrix viewMatrixXna = ConvertMatrix4x4ToXnaMatrix(viewMatrix);
-            Matrix projectionMatrixXna = ConvertMatrix4x4ToXnaMatrix(projectionMatrix);
+            XnaMatrix viewMatrixXna = ConvertMatrix4x4ToXnaMatrix(viewMatrix);
+            XnaMatrix projectionMatrixXna = ConvertMatrix4x4ToXnaMatrix(projectionMatrix);
             _frustum.UpdateFromMatrices(viewMatrixXna, projectionMatrixXna);
 
             // Check if rooms are available for rendering
@@ -4168,10 +4169,10 @@ namespace Andastra.Runtime.Games.Eclipse
                     // Use cached bounding volume from MDL for frustum test
                     // Transform bounding sphere center from model space to world space
                     // Based on daorigins.exe/DragonAge2.exe: Bounding volumes are in model space, must be transformed to world space
-                    float rotationRadians = (float)(room.Rotation * Math.PI / 180.0);
-                    Matrix4x4 rotationMatrix = Matrix4x4.CreateRotationY(rotationRadians);
-                    Matrix4x4 translationMatrix = Matrix4x4.CreateTranslation(room.Position);
-                    Matrix4x4 worldMatrix = rotationMatrix * translationMatrix;
+                    float frustumRotationRadians = (float)(room.Rotation * Math.PI / 180.0);
+                    Matrix4x4 frustumRotationMatrix = Matrix4x4.CreateRotationY(frustumRotationRadians);
+                    Matrix4x4 frustumTranslationMatrix = Matrix4x4.CreateTranslation(room.Position);
+                    Matrix4x4 frustumWorldMatrix = frustumRotationMatrix * frustumTranslationMatrix;
 
                     // Calculate bounding sphere center in model space (center of bounding box)
                     Vector3 modelSpaceCenter = new Vector3(
@@ -5735,8 +5736,8 @@ namespace Andastra.Runtime.Games.Eclipse
             // Based on daorigins.exe/DragonAge2.exe: Frustum culling uses view-projection matrix to extract frustum planes
             // Note: Frustum is already updated in RenderStaticGeometry, but we update it here for consistency
             // in case this method is called independently
-            Matrix viewMatrixXna = ConvertMatrix4x4ToXnaMatrix(viewMatrix);
-            Matrix projectionMatrixXna = ConvertMatrix4x4ToXnaMatrix(projectionMatrix);
+            XnaMatrix viewMatrixXna = ConvertMatrix4x4ToXnaMatrix(viewMatrix);
+            XnaMatrix projectionMatrixXna = ConvertMatrix4x4ToXnaMatrix(projectionMatrix);
             _frustum.UpdateFromMatrices(viewMatrixXna, projectionMatrixXna);
 
             // Render each static object's geometry
