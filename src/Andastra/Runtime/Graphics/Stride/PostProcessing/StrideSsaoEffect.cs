@@ -315,7 +315,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
             // Begin sprite batch rendering
             // Use SpriteSortMode.Immediate for post-processing effects
-            _spriteBatch.Begin(StrideGraphics.CommandList, SpriteSortMode.Immediate, BlendStates.Opaque, _linearSampler,
+            _spriteBatch.Begin(commandList, SpriteSortMode.Immediate, BlendStates.Opaque, _linearSampler,
                 DepthStencilStates.None, RasterizerStates.CullNone, _gtaoEffect);
 
             // If we have a custom GTAO effect, set its parameters
@@ -450,14 +450,14 @@ namespace Andastra.Runtime.Stride.PostProcessing
             var destinationRect = new RectangleF(0, 0, width, height);
 
             // Pass 1: Horizontal blur
-            ApplyBilateralBlurPass(source, _tempBlurTarget, depthBuffer, true, width, height, StrideGraphics.CommandList);
+            ApplyBilateralBlurPass(source, _tempBlurTarget, depthBuffer, true, width, height, commandList);
 
             // Pass 2: Vertical blur (from temp to final destination)
-            ApplyBilateralBlurPass(_tempBlurTarget, destination, depthBuffer, false, width, height, StrideGraphics.CommandList);
+            ApplyBilateralBlurPass(_tempBlurTarget, destination, depthBuffer, false, width, height, commandList);
         }
 
         private void ApplyBilateralBlurPass(StrideGraphics.Texture source, StrideGraphics.Texture destination, StrideGraphics.Texture depthBuffer,
-            bool horizontal, int width, int height, StrideGraphics.CommandList StrideGraphics.CommandList)
+            bool horizontal, int width, int height, CommandList commandList)
         {
             // Apply one pass of bilateral blur (either horizontal or vertical)
             // Bilateral blur weights samples by both spatial distance and depth difference
@@ -475,7 +475,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             commandList.Clear(destination, Color.Black);
 
             // Begin sprite batch rendering
-            _spriteBatch.Begin(StrideGraphics.CommandList, SpriteSortMode.Immediate, BlendStates.Opaque, _linearSampler,
+            _spriteBatch.Begin(commandList, SpriteSortMode.Immediate, BlendStates.Opaque, _linearSampler,
                 DepthStencilStates.None, RasterizerStates.CullNone, _bilateralBlurEffect);
 
             // If we have a custom bilateral blur effect, set its parameters
