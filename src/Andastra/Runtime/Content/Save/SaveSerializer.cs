@@ -305,12 +305,12 @@ namespace Andastra.Runtime.Content.Save
         /// Based on swkotor2.exe: FUN_00708990 @ 0x00708990
         /// Original implementation constructs path as "SAVES:\{saveName}\"
         /// Save name format: "%06d - %s" (6-digit number - name) from string @ 0x007be298
-        /// 
+        ///
         /// Path construction:
         /// 1. Uses savesDirectory if provided (via SetSavesDirectory or parameter)
         /// 2. Sanitizes save name for filesystem compatibility
         /// 3. Combines savesDirectory + sanitized save name
-        /// 
+        ///
         /// Returns null if saves directory is not available or save name is invalid.
         /// </remarks>
         private string GetSavePathFromData(SaveGameData saveData, string savesDirectory = null)
@@ -2127,7 +2127,7 @@ namespace Andastra.Runtime.Content.Save
             // - FactionGlobal (uint/word): Global effect flag (1 if all members of this faction immediately change reputation)
             // Based on vendor/xoreos/src/engines/nwn2/faction.cpp:179-198
             GFFList factionList = new GFFList();
-            
+
             // Create RepList - list of Reputation structs
             // Each Reputation struct contains:
             // - FactionID1 (uint): Index into FactionList (source faction)
@@ -2167,10 +2167,10 @@ namespace Andastra.Runtime.Content.Save
                 foreach (int factionId in sortedFactionIds)
                 {
                     GFFStruct factionStruct = factionList.Add();
-                    
+
                     // Get faction name from FactionReputation.FactionNames if available
                     string factionName = string.Empty;
-                    if (saveData.FactionReputation.FactionNames != null && 
+                    if (saveData.FactionReputation.FactionNames != null &&
                         saveData.FactionReputation.FactionNames.TryGetValue(factionId, out factionName))
                     {
                         factionStruct.SetString("FactionName", factionName);
@@ -2184,7 +2184,7 @@ namespace Andastra.Runtime.Content.Save
 
                     // Get FactionGlobal flag from FactionReputation.FactionGlobal if available
                     uint factionGlobal = 0;
-                    if (saveData.FactionReputation.FactionGlobal != null && 
+                    if (saveData.FactionReputation.FactionGlobal != null &&
                         saveData.FactionReputation.FactionGlobal.TryGetValue(factionId, out bool globalFlag))
                     {
                         factionGlobal = globalFlag ? (uint)1 : (uint)0;
@@ -2236,7 +2236,7 @@ namespace Andastra.Runtime.Content.Save
             }
             // If FactionReputation is null or empty, create empty lists which is a valid FAC file structure
             // (empty = no custom factions, engine will fall back to repute.2da for default faction relationships)
-            
+
             // Set lists in root struct
             root.SetList("FactionList", factionList);
             root.SetList("RepList", repList);
@@ -2395,17 +2395,57 @@ namespace Andastra.Runtime.Content.Save
 
             // Set feats from KnownFeats
             // KnownFeats is List<string>, but UTC expects List<int>
-            // Try to parse as integers, skip if not parseable
+            // Try to parse as integers, or look up by label in feat.2da if not numeric
+            // Based on swkotor2.exe: feat.2da system
+            // Located via string reference: "CSWClass::LoadFeatTable: Can't load feat.2da" @ 0x007c4720
+            // Original implementation: feat.2da row index = feat ID, row label = feat label
+            // The engine uses feat IDs (row indices) to store feats in UTC structures
             if (creatureState.KnownFeats != null)
             {
                 foreach (string featStr in creatureState.KnownFeats)
                 {
+                    bool featAdded = false;
+
+                    // Try to parse as integer (most common case - feat IDs are typically numeric strings)
                     if (int.TryParse(featStr, out int featId))
                     {
                         utc.Feats.Add(featId);
+                        featAdded = true;
                     }
-                    // If featStr is not a numeric string, we skip it
-                    // TODO:  In a full implementation, we would look up the feat ID from feat.2da
+                    else
+                    {
+                        // If featStr is not numeric, try to look it up by label in feat.2da
+                        // This allows loading saves that contain feat labels instead of IDs
+                        if (_gameDataManager != null)
+                        {
+                            try
+                            {
+                                // Use dynamic to call GetTable without referencing Odyssey.Kotor
+                                dynamic gameDataManager = _gameDataManager;
+                                Andastra.Parsing.Formats.TwoDA.TwoDA featTable = gameDataManager.GetTable("feat");
+                                if (featTable != null)
+                                {
+                                    // Get row index by label - in feat.2da, row index IS the feat ID
+                                    // swkotor2.exe: feat.2da structure where row index directly corresponds to feat ID
+                                    int featRowIndex = featTable.GetRowIndex(featStr);
+                                    utc.Feats.Add(featRowIndex);
+                                    featAdded = true;
+                                }
+                            }
+                            catch (System.Collections.Generic.KeyNotFoundException)
+                            {
+                                // Feat label not found in feat.2da, skip it (matches original behavior when label doesn't exist)
+                            }
+                            catch
+                            {
+                                // Any other error (table not available, etc.), skip this feat
+                                // This matches the original behavior of skipping invalid feats
+                            }
+                        }
+                    }
+
+                    // If feat was not added (either invalid ID or lookup failed), it's silently skipped
+                    // This matches the original engine behavior of ignoring invalid feat references
                 }
             }
 
