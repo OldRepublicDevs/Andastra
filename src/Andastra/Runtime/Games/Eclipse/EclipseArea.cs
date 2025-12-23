@@ -8945,20 +8945,17 @@ namespace Andastra.Runtime.Games.Eclipse
                         textureSizeParam.SetValue(textureSize);
                     }
 
-                    // Current source and destination for ping-pong blur
+                    // Current source for blur passes (ping-pongs between input/output)
                     IRenderTarget currentSource = input;
-                    IRenderTarget currentDestination = intermediateTarget;
-                    IRenderTarget finalDestination = output;
 
                     // Apply multiple blur passes
                     // Each pass consists of: horizontal blur -> vertical blur
+                    // For each pass: horizontal (source -> intermediate) -> vertical (intermediate -> destination)
+                    // Destination alternates between output and intermediate for ping-pong (last pass always goes to output)
                     for (int pass = 0; pass < passes; pass++)
                     {
-                        // Determine destination: for last pass, use final output; otherwise ping-pong
-                        if (pass == passes - 1)
-                        {
-                            currentDestination = finalDestination;
-                        }
+                        // Determine destination: for last pass, always use output; otherwise ping-pong
+                        IRenderTarget currentDestination = (pass == passes - 1) ? output : intermediateTarget;
 
                         // Access MonoGame SpriteBatch directly to use Effect parameter
                         if (spriteBatch is Andastra.Runtime.MonoGame.Graphics.MonoGameSpriteBatch mgSpriteBatch)
@@ -8966,16 +8963,14 @@ namespace Andastra.Runtime.Games.Eclipse
                             // Get MonoGame texture from current source
                             if (currentSource.ColorTexture is MonoGameTexture2D mgSourceTexture)
                             {
-                                GraphicsRectangle destinationRect = new GraphicsRectangle(0, 0, currentDestination.Width, currentDestination.Height);
-
-                                // Pass 1: Horizontal blur (blurDirection = (1.0, 0.0))
+                                // Step 1: Horizontal blur (source -> intermediate)
                                 graphicsDevice.RenderTarget = intermediateTarget;
                                 graphicsDevice.Clear(new GraphicsColor(0, 0, 0, 0));
 
                                 EffectParameter blurDirectionParam = blurEffect.Parameters["BlurDirection"];
                                 if (blurDirectionParam != null)
                                 {
-                                    blurDirectionParam.SetValue(new float2(1.0f, 0.0f)); // Horizontal blur
+                                    blurDirectionParam.SetValue(new Microsoft.Xna.Framework.Vector2(1.0f, 0.0f)); // Horizontal blur
                                 }
 
                                 mgSpriteBatch.SpriteBatch.Begin(
@@ -8993,14 +8988,14 @@ namespace Andastra.Runtime.Games.Eclipse
 
                                 mgSpriteBatch.SpriteBatch.End();
 
-                                // Pass 2: Vertical blur (blurDirection = (0.0, 1.0))
+                                // Step 2: Vertical blur (intermediate -> destination)
                                 // Blur the horizontally-blurred result vertically to complete 2D Gaussian blur
                                 graphicsDevice.RenderTarget = currentDestination;
                                 graphicsDevice.Clear(new GraphicsColor(0, 0, 0, 0));
 
                                 if (blurDirectionParam != null)
                                 {
-                                    blurDirectionParam.SetValue(new float2(0.0f, 1.0f)); // Vertical blur
+                                    blurDirectionParam.SetValue(new Microsoft.Xna.Framework.Vector2(0.0f, 1.0f)); // Vertical blur
                                 }
 
                                 // Get intermediate texture for vertical blur pass
@@ -9045,12 +9040,10 @@ namespace Andastra.Runtime.Games.Eclipse
                         }
 
                         // For next pass, use current destination as source (ping-pong)
-                        // Only ping-pong if we have more passes remaining
+                        // If we wrote to output, next pass uses output as source; otherwise use intermediate
                         if (pass < passes - 1)
                         {
                             currentSource = currentDestination;
-                            // Alternate between intermediate and output for ping-pong
-                            currentDestination = (currentDestination == intermediateTarget) ? finalDestination : intermediateTarget;
                         }
                     }
                 }
