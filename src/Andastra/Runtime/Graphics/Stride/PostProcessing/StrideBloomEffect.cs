@@ -412,7 +412,7 @@ shader BlurEffect : ShaderBase
             _initialized = true;
         }
 
-        private void ExtractBrightAreas(Texture source, Texture destination, RenderContext context)
+        private void ExtractBrightAreas(StrideGraphics.Texture source, StrideGraphics.Texture destination, RenderContext context)
         {
             // Apply threshold-based bright pass shader
             // Pixels above threshold are kept, others are set to black
