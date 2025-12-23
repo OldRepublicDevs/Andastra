@@ -8934,7 +8934,7 @@ namespace Andastra.Runtime.Games.Eclipse
                         // Our implementation: Uses sprite batch abstraction for cross-platform compatibility
                         using (ISpriteBatch spriteBatch = graphicsDevice.CreateSpriteBatch())
                         {
-                            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque);
+                            spriteBatch.Begin(Andastra.Runtime.Graphics.SpriteSortMode.Deferred, Andastra.Runtime.Graphics.BlendState.Opaque);
 
                             // Draw final texture fullscreen to back buffer
                             // daorigins.exe: Final texture matches viewport dimensions, blitted 1:1 to back buffer
