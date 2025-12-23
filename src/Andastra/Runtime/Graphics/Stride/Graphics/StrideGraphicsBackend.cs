@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using Stride.Engine;
 using Stride.Graphics;
 using Stride.Core.Mathematics;
@@ -18,6 +19,7 @@ namespace Andastra.Runtime.Stride.Graphics
         private StrideWindow _window;
         private StrideInputManager _inputManager;
         private bool _isInitialized;
+        private bool? _desiredVSyncState;
 
         public GraphicsBackendType BackendType => GraphicsBackendType.Stride;
 
@@ -81,6 +83,14 @@ namespace Andastra.Runtime.Stride.Graphics
                 if (_game.GraphicsDevice != null && _game.GraphicsContext != null && _game.GraphicsContext.CommandList != null)
                 {
                     GraphicsDeviceExtensions.RegisterCommandList(_game.GraphicsDevice, _game.GraphicsContext.CommandList);
+                }
+
+                // Apply VSync state if it was set before graphics device was initialized
+                // Based on swkotor2.exe: VSync controlled via DirectX Present parameters (PresentationInterval)
+                // Stride equivalent: GraphicsDevice.Presenter.VSyncMode
+                if (_desiredVSyncState.HasValue)
+                {
+                    ApplyVSyncState(_desiredVSyncState.Value);
                 }
             }
 
@@ -191,6 +201,8 @@ namespace Andastra.Runtime.Stride.Graphics
         /// VSync Implementation:
         /// - Based on Stride GraphicsDevice.Presenter.VSyncMode
         /// - Original game: VSync controlled via DirectX Present parameters (swkotor2.exe: DirectX device presentation)
+        ///   - VSync enabled: D3DPRESENT_INTERVAL_ONE (0x00000001) - synchronize with vertical refresh
+        ///   - VSync disabled: D3DPRESENT_INTERVAL_IMMEDIATE (0x80000000) - present immediately
         /// - Stride uses GraphicsDevice.Presenter to control VSync
         /// - Changes are applied immediately to the swap chain
         /// - VSync synchronizes frame rendering with monitor refresh rate to prevent screen tearing
@@ -198,40 +210,130 @@ namespace Andastra.Runtime.Stride.Graphics
         /// </remarks>
         public void SetVSync(bool enabled)
         {
+            // Store desired VSync state for later application if graphics device is not yet initialized
+            _desiredVSyncState = enabled;
+
             if (!_isInitialized || _graphicsDevice == null || _game?.GraphicsDevice == null)
             {
-                Console.WriteLine("[Stride] WARNING: Cannot set VSync - backend not initialized");
+                // Graphics device not yet initialized - state will be applied when it becomes available
+                Console.WriteLine($"[Stride] VSync {(enabled ? "enabled" : "disabled")} requested (will be applied when graphics device is initialized)");
                 return;
             }
 
+            // Apply VSync state immediately if graphics device is available
+            ApplyVSyncState(enabled);
+        }
+
+        /// <summary>
+        /// Attempts to parse an enum value with multiple fallback names.
+        /// C# 7.3 compatible - uses Enum.Parse instead of Enum.TryParse.
+        /// </summary>
+        /// <param name="enumType">The enum type to parse.</param>
+        /// <param name="names">Array of enum value names to try in order.</param>
+        /// <returns>The parsed enum value, or null if all names failed.</returns>
+        private object TryParseEnumValue(Type enumType, params string[] names)
+        {
+            foreach (var name in names)
+            {
+                try
+                {
+                    return Enum.Parse(enumType, name, true);
+                }
+                catch (ArgumentException)
+                {
+                    // Try next name
+                    continue;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Applies VSync state to the Stride GraphicsDevice.Presenter.
+        /// Based on swkotor2.exe: DirectX Present parameters control VSync via PresentationInterval
+        /// </summary>
+        /// <param name="enabled">True to enable VSync, false to disable it.</param>
+        private void ApplyVSyncState(bool enabled)
+        {
             try
             {
-                var presenter = _game.GraphicsDevice.Presenter;
+                var presenter = _game.GraphicsDevice?.Presenter;
                 if (presenter == null)
                 {
-                    Console.WriteLine("[Stride] WARNING: Cannot set VSync - Presenter not available");
+                    Console.WriteLine("[Stride] WARNING: Cannot apply VSync - Presenter not available");
                     return;
                 }
 
-                // Set VSync state via GraphicsDevice.Presenter
-                // Based on Stride API: GraphicsDevice.Presenter.Desynchronized
-                // Desynchronized = false means VSync enabled, true means VSync disabled
-                if (enabled)
+                // Apply VSync via GraphicsDevice.Presenter
+                // Based on Stride 4.2 API: GraphicsPresenter controls VSync through PresentMode or VSyncMode property
+                // Original game equivalent (swkotor2.exe DirectX Present parameters):
+                //   - VSync enabled: D3DPRESENT_INTERVAL_ONE (0x00000001) - synchronize with vertical refresh
+                //   - VSync disabled: D3DPRESENT_INTERVAL_IMMEDIATE (0x80000000) - present immediately
+                
+                // Try to find and set VSyncMode property first (preferred in Stride 4.2)
+                var vsyncModeProperty = typeof(GraphicsPresenter).GetProperty("VSyncMode", BindingFlags.Public | BindingFlags.Instance);
+                if (vsyncModeProperty != null && vsyncModeProperty.CanWrite)
                 {
-                    // Enable VSync (synchronize with vertical refresh)
-                    presenter.Desynchronized = false;
-                    Console.WriteLine("[Stride] VSync enabled");
+                    var enumType = vsyncModeProperty.PropertyType;
+                    object enumValue = null;
+
+                    // Try to parse enum values - Stride uses PresentMode enum with values: None, VerticalSync, Adaptive
+                    // Original game equivalent:
+                    //   - VSync enabled: D3DPRESENT_INTERVAL_ONE (0x00000001)
+                    //   - VSync disabled: D3DPRESENT_INTERVAL_IMMEDIATE (0x80000000)
+                    if (enabled)
+                    {
+                        enumValue = TryParseEnumValue(enumType, "VerticalSync", "VSync", "Sync");
+                    }
+                    else
+                    {
+                        enumValue = TryParseEnumValue(enumType, "None", "Immediate", "Unlimited");
+                    }
+
+                    if (enumValue != null)
+                    {
+                        vsyncModeProperty.SetValue(presenter, enumValue);
+                        Console.WriteLine($"[Stride] VSync {(enabled ? "enabled" : "disabled")} via VSyncMode property");
+                        return;
+                    }
                 }
-                else
+
+                // Fallback: Try PresentMode property (some Stride versions use this)
+                var presentModeProperty = typeof(GraphicsPresenter).GetProperty("PresentMode", BindingFlags.Public | BindingFlags.Instance);
+                if (presentModeProperty != null && presentModeProperty.CanWrite)
                 {
-                    // Disable VSync (desynchronize from vertical refresh)
-                    presenter.Desynchronized = true;
-                    Console.WriteLine("[Stride] VSync disabled");
+                    var enumType = presentModeProperty.PropertyType;
+                    object enumValue = null;
+
+                    // Try to parse enum values with fallback names
+                    if (enabled)
+                    {
+                        enumValue = TryParseEnumValue(enumType, "VerticalSync", "VSync", "Sync");
+                    }
+                    else
+                    {
+                        enumValue = TryParseEnumValue(enumType, "Immediate", "None", "Unlimited");
+                    }
+
+                    if (enumValue != null)
+                    {
+                        presentModeProperty.SetValue(presenter, enumValue);
+                        Console.WriteLine($"[Stride] VSync {(enabled ? "enabled" : "disabled")} via PresentMode property");
+                        return;
+                    }
                 }
+
+                // If we reach here, neither property was found or enum parsing failed
+                Console.WriteLine("[Stride] WARNING: Cannot find VSyncMode or PresentMode property on GraphicsPresenter, or enum values are not recognized");
+                Console.WriteLine($"[Stride] VSync state requested: {(enabled ? "enabled" : "disabled")} (not applied)");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[Stride] ERROR: Failed to set VSync: {ex.Message}");
+                Console.WriteLine($"[Stride] ERROR: Failed to apply VSync state: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"[Stride] Inner exception: {ex.InnerException.Message}");
+                }
             }
         }
 
