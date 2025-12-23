@@ -1258,12 +1258,12 @@ namespace Andastra.Runtime.Games.Aurora
                     var doorComponent = entity.GetComponent<IDoorComponent>();
                     if (doorComponent != null)
                     {
-                        doorComponent.LinkedToModule = door.LinkedToModule != null && !door.LinkedToModule.IsBlank ? door.LinkedToModule.ToString() : string.Empty;
+                        doorComponent.LinkedToModule = door.LinkedToModule != null && !door.LinkedToModule.IsBlank() ? door.LinkedToModule.ToString() : string.Empty;
                         doorComponent.LinkedTo = door.LinkedTo ?? string.Empty;
                     }
 
                     // Store template ResRef for later template loading
-                    if (door.ResRef != null && !door.ResRef.IsBlank)
+                    if (door.ResRef != null && !door.ResRef.IsBlank())
                     {
                         entity.SetData("TemplateResRef", door.ResRef.ToString());
                     }
@@ -1277,7 +1277,7 @@ namespace Andastra.Runtime.Games.Aurora
                 {
                     uint objectId = nextObjectId++;
                     // Placeables don't have explicit Tag in GIT, use TemplateResRef as tag
-                    string tag = placeable.ResRef != null && !placeable.ResRef.IsBlank ? placeable.ResRef.ToString() : string.Empty;
+                    string tag = placeable.ResRef != null && !placeable.ResRef.IsBlank() ? placeable.ResRef.ToString() : string.Empty;
                     var entity = new AuroraEntity(objectId, ObjectType.Placeable, tag);
 
                     // Set position and orientation from GIT
@@ -1290,7 +1290,7 @@ namespace Andastra.Runtime.Games.Aurora
                     }
 
                     // Store template ResRef for later template loading
-                    if (placeable.ResRef != null && !placeable.ResRef.IsBlank)
+                    if (placeable.ResRef != null && !placeable.ResRef.IsBlank())
                     {
                         entity.SetData("TemplateResRef", placeable.ResRef.ToString());
                     }
@@ -1325,12 +1325,12 @@ namespace Andastra.Runtime.Games.Aurora
                             geometryList.Add(point);
                         }
                         triggerComponent.Geometry = geometryList;
-                        triggerComponent.LinkedToModule = trigger.LinkedToModule != null && !trigger.LinkedToModule.IsBlank ? trigger.LinkedToModule.ToString() : string.Empty;
+                        triggerComponent.LinkedToModule = trigger.LinkedToModule != null && !trigger.LinkedToModule.IsBlank() ? trigger.LinkedToModule.ToString() : string.Empty;
                         triggerComponent.LinkedTo = trigger.LinkedTo ?? string.Empty;
                     }
 
                     // Store template ResRef for later template loading
-                    if (trigger.ResRef != null && !trigger.ResRef.IsBlank)
+                    if (trigger.ResRef != null && !trigger.ResRef.IsBlank())
                     {
                         entity.SetData("TemplateResRef", trigger.ResRef.ToString());
                     }
@@ -1379,7 +1379,7 @@ namespace Andastra.Runtime.Games.Aurora
                     }
 
                     // Store template ResRef for later template loading
-                    if (waypoint.ResRef != null && !waypoint.ResRef.IsBlank)
+                    if (waypoint.ResRef != null && !waypoint.ResRef.IsBlank())
                     {
                         entity.SetData("TemplateResRef", waypoint.ResRef.ToString());
                     }
@@ -1393,7 +1393,7 @@ namespace Andastra.Runtime.Games.Aurora
                 {
                     uint objectId = nextObjectId++;
                     // Sounds don't have explicit Tag in GIT, use TemplateResRef as tag
-                    string tag = sound.ResRef != null && !sound.ResRef.IsBlank ? sound.ResRef.ToString() : string.Empty;
+                    string tag = sound.ResRef != null && !sound.ResRef.IsBlank() ? sound.ResRef.ToString() : string.Empty;
                     var entity = new AuroraEntity(objectId, ObjectType.Sound, tag);
 
                     // Set position from GIT
@@ -1405,7 +1405,7 @@ namespace Andastra.Runtime.Games.Aurora
                     }
 
                     // Store template ResRef for later template loading
-                    if (sound.ResRef != null && !sound.ResRef.IsBlank)
+                    if (sound.ResRef != null && !sound.ResRef.IsBlank())
                     {
                         entity.SetData("TemplateResRef", sound.ResRef.ToString());
                     }
@@ -1419,7 +1419,7 @@ namespace Andastra.Runtime.Games.Aurora
                 {
                     uint objectId = nextObjectId++;
                     // Stores don't have explicit Tag in GIT, use ResRef as tag
-                    string tag = store.ResRef != null && !store.ResRef.IsBlank ? store.ResRef.ToString() : string.Empty;
+                    string tag = store.ResRef != null && !store.ResRef.IsBlank() ? store.ResRef.ToString() : string.Empty;
                     // Stores are represented as Placeable entities in Aurora engine
                     var entity = new AuroraEntity(objectId, ObjectType.Placeable, tag);
 
@@ -1437,7 +1437,7 @@ namespace Andastra.Runtime.Games.Aurora
                     entity.SetData("IsStore", true);
 
                     // Store template ResRef for later template loading
-                    if (store.ResRef != null && !store.ResRef.IsBlank)
+                    if (store.ResRef != null && !store.ResRef.IsBlank())
                     {
                         entity.SetData("TemplateResRef", store.ResRef.ToString());
                     }
@@ -1451,7 +1451,7 @@ namespace Andastra.Runtime.Games.Aurora
                 {
                     uint objectId = nextObjectId++;
                     // Encounters don't have explicit Tag in GIT, use TemplateResRef as tag
-                    string tag = encounter.ResRef != null && !encounter.ResRef.IsBlank ? encounter.ResRef.ToString() : string.Empty;
+                    string tag = encounter.ResRef != null && !encounter.ResRef.IsBlank() ? encounter.ResRef.ToString() : string.Empty;
                     // Encounters are represented as Trigger entities in Aurora engine
                     var entity = new AuroraEntity(objectId, ObjectType.Trigger, tag);
 
@@ -1493,7 +1493,7 @@ namespace Andastra.Runtime.Games.Aurora
                     entity.SetData("IsEncounter", true);
 
                     // Store template ResRef for later template loading
-                    if (encounter.ResRef != null && !encounter.ResRef.IsBlank)
+                    if (encounter.ResRef != null && !encounter.ResRef.IsBlank())
                     {
                         entity.SetData("TemplateResRef", encounter.ResRef.ToString());
                     }
@@ -1611,7 +1611,7 @@ namespace Andastra.Runtime.Games.Aurora
                 {
                     // No tiles - create empty navigation mesh with correct dimensions
                     AuroraTile[,] emptyTiles = new AuroraTile[height, width];
-                    string tilesetResRef = _tileset != null && !_tileset.IsBlank ? _tileset.ToString() : null;
+                    string tilesetResRef = _tileset != null && !_tileset.IsBlank() ? _tileset.ToString() : null;
                     _navigationMesh = new AuroraNavigationMesh(emptyTiles, width, height, _tilesetLoader, tilesetResRef);
                     return;
                 }
@@ -1705,7 +1705,7 @@ namespace Andastra.Runtime.Games.Aurora
                     // - A tile is walkable if at least one face has a walkable material
                     bool isLoaded = (tileId >= 0);
                     bool isWalkable = false; // Default: not walkable
-                    if (isLoaded && _tilesetLoader != null && !_tileset.IsBlank)
+                    if (isLoaded && _tilesetLoader != null && !_tileset.IsBlank())
                     {
                         string tilesetResRef = _tileset.ToString();
                         if (!string.IsNullOrEmpty(tilesetResRef))
@@ -1744,7 +1744,7 @@ namespace Andastra.Runtime.Games.Aurora
                     // - Extracts most common surface material from walkmesh faces
                     // - Falls back to default (Stone for walkable, Undefined for non-walkable) if walkmesh can't be loaded
                     int surfaceMaterial = 0; // Default: Undefined
-                    if (isLoaded && _tilesetLoader != null && !_tileset.IsBlank)
+                    if (isLoaded && _tilesetLoader != null && !_tileset.IsBlank())
                     {
                         string tilesetResRef = _tileset.ToString();
                         if (!string.IsNullOrEmpty(tilesetResRef))
@@ -1794,7 +1794,7 @@ namespace Andastra.Runtime.Games.Aurora
                 // Create AuroraNavigationMesh from parsed tile data
                 // Based on nwmain.exe: CNWSArea tile storage structure
                 // Pass tileset loader and tileset resref for walkmesh-based height sampling
-                string tilesetResRef = _tileset != null && !_tileset.IsBlank ? _tileset.ToString() : null;
+                string tilesetResRef = _tileset != null && !_tileset.IsBlank() ? _tileset.ToString() : null;
                 _navigationMesh = new AuroraNavigationMesh(tiles, width, height, _tilesetLoader, tilesetResRef);
             }
             catch (Exception)
@@ -2774,7 +2774,7 @@ namespace Andastra.Runtime.Games.Aurora
         private void UpdateAreaHeartbeat(float deltaTime)
         {
             // Check if area has heartbeat script configured
-            if (_onHeartbeat == null || _onHeartbeat.IsBlank)
+            if (_onHeartbeat == null || _onHeartbeat.IsBlank())
             {
                 return; // No heartbeat script configured
             }

@@ -5232,9 +5232,9 @@ namespace Andastra.Runtime.Games.Odyssey
                 string moduleName = null;
 
                 // Priority 1: Use CurrentModule if available (most direct)
-                if (!string.IsNullOrEmpty(saveData.CurrentModule))
+                if (coreSaveData != null && !string.IsNullOrEmpty(coreSaveData.CurrentModule))
                 {
-                    moduleName = saveData.CurrentModule;
+                    moduleName = coreSaveData.CurrentModule;
                 }
                 // Priority 2: Try to get module name from area instance via reflection
                 else

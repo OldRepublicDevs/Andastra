@@ -124,7 +124,7 @@ namespace Andastra.Runtime.Games.Aurora.Scene
 
             // Verify GFF content type is ARE (defensive check)
             // Some ARE files may have incorrect content type, so we parse anyway
-            if (gff.ContentType != GFFContent.ARE)
+            if (gff.Content != GFFContent.ARE)
             {
                 // Try to parse anyway - some ARE files may have incorrect content type
                 // This is a defensive measure for compatibility
@@ -165,7 +165,7 @@ namespace Andastra.Runtime.Games.Aurora.Scene
             if (root.Exists("TileSet"))
             {
                 ResRef tilesetObj = root.GetResRef("TileSet");
-                if (tilesetObj != null && !tilesetObj.IsBlank)
+                if (tilesetObj != null && !tilesetObj.IsBlank())
                 {
                     tileset = tilesetObj;
                 }
@@ -563,7 +563,7 @@ namespace Andastra.Runtime.Games.Aurora.Scene
             // Skip lookup if tileset is blank
             // Based on nwmain.exe: CNWTileSet::GetTileData returns null if tileset not loaded
             // Fallback ensures scene building continues even with invalid tileset reference
-            if (tileset == null || tileset.IsBlank)
+            if (tileset == null || tileset.IsBlank())
             {
                 // Fallback to simplified format: tileset_TileID (with 2-digit padding)
                 // Format: "unknown_00", "unknown_01", etc. if tileset is null
@@ -599,7 +599,7 @@ namespace Andastra.Runtime.Games.Aurora.Scene
                 // Return Model ResRef if valid, otherwise fallback to simplified format
                 // Based on nwmain.exe: If GetTileData returns null, tile data is null (no fallback in original)
                 // C# implementation needs string return value, so we provide fallback for compatibility
-                if (modelResRef != null && !modelResRef.IsBlank)
+                if (modelResRef != null && !modelResRef.IsBlank())
                 {
                     return modelResRef.ToString();
                 }
