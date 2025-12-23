@@ -503,30 +503,89 @@ namespace Andastra.Runtime.Stride.Backends
                     return false;
                 }
 
-                // Attempt to load D3D12RaytracingFallback.dll
-                // The fallback layer library should be available if:
-                // - DirectX 12 runtime is installed
-                // - Windows 10 SDK with raytracing support is present
-                IntPtr fallbackLibrary = LoadLibrary("D3D12RaytracingFallback.dll");
-                if (fallbackLibrary == IntPtr.Zero)
+                // Verify compute shader support (required for DXR fallback layer)
+                if (_featureLevel < D3D11FeatureLevel.Level_11_0)
                 {
-                    // Fallback layer DLL not found, but this doesn't necessarily mean failure
-                    // The library might be delay-loaded or available through other means
-                    // TODO: STUB - For now, we'll assume it's available if we meet the OS requirements
-                    // and have a valid D3D11 device with compute shader support
-
-                    // Check if we can at least use compute shaders (required for software raytracing)
-                    if (_featureLevel >= D3D11FeatureLevel.Level_11_0)
-                    {
-                        // Software-based fallback via compute shaders is possible
-                        // even without the official fallback layer DLL
-                        return true;
-                    }
-
+                    Console.WriteLine("[StrideDX11] DXR fallback layer requires DirectX 11.0+ feature level (current: {0})", _featureLevel);
                     return false;
                 }
 
-                FreeLibrary(fallbackLibrary);
+                // Attempt to load D3D12RaytracingFallback.dll from multiple locations
+                // The fallback layer library should be available if:
+                // - DirectX 12 runtime is installed
+                // - Windows 10 SDK with raytracing support is present
+                // - The library is in a system directory or the current application directory
+                IntPtr fallbackLibrary = IntPtr.Zero;
+                bool libraryLoadedByUs = false; // Track if we loaded it (need to free) vs already loaded (don't free)
+
+                // Try loading from current directory or system search path first
+                fallbackLibrary = LoadLibrary("D3D12RaytracingFallback.dll");
+                if (fallbackLibrary != IntPtr.Zero)
+                {
+                    libraryLoadedByUs = true;
+                }
+
+                if (fallbackLibrary == IntPtr.Zero)
+                {
+                    // Try loading from System32 directory (64-bit processes)
+                    string system32Path = Environment.GetFolderPath(Environment.SpecialFolder.System);
+                    string system32DllPath = System.IO.Path.Combine(system32Path, "D3D12RaytracingFallback.dll");
+                    fallbackLibrary = LoadLibrary(system32DllPath);
+                    if (fallbackLibrary != IntPtr.Zero)
+                    {
+                        libraryLoadedByUs = true;
+                    }
+                }
+
+                if (fallbackLibrary == IntPtr.Zero)
+                {
+                    // Try loading from SysWOW64 directory (32-bit processes on 64-bit Windows)
+                    string syswow64Path = Environment.GetFolderPath(Environment.SpecialFolder.SystemX86);
+                    string syswow64DllPath = System.IO.Path.Combine(syswow64Path, "D3D12RaytracingFallback.dll");
+                    fallbackLibrary = LoadLibrary(syswow64DllPath);
+                    if (fallbackLibrary != IntPtr.Zero)
+                    {
+                        libraryLoadedByUs = true;
+                    }
+                }
+
+                if (fallbackLibrary == IntPtr.Zero)
+                {
+                    // Try checking if the DLL is already loaded in the process
+                    // GetModuleHandle doesn't increment reference count and doesn't require freeing
+                    fallbackLibrary = GetModuleHandle("D3D12RaytracingFallback.dll");
+                    // Don't set libraryLoadedByUs = true here because GetModuleHandle doesn't require freeing
+                }
+
+                if (fallbackLibrary == IntPtr.Zero)
+                {
+                    // DLL not found in any location and not already loaded
+                    Console.WriteLine("[StrideDX11] DXR fallback layer DLL (D3D12RaytracingFallback.dll) not found. The library may not be installed, or DirectX 12 runtime with raytracing support may be missing.");
+                    return false;
+                }
+
+                // Verify that the key function (D3D12CreateRaytracingFallbackDevice) is available
+                // This ensures the DLL is not corrupted or an incompatible version
+                IntPtr createFallbackDeviceFunc = GetProcAddress(fallbackLibrary, "D3D12CreateRaytracingFallbackDevice");
+                if (createFallbackDeviceFunc == IntPtr.Zero)
+                {
+                    // DLL is loaded but required function is missing - likely wrong version or corrupted
+                    Console.WriteLine("[StrideDX11] DXR fallback layer DLL found but required function D3D12CreateRaytracingFallbackDevice is not available. The DLL may be corrupted or an incompatible version.");
+                    // Only free library if we loaded it via LoadLibrary (not if it was already loaded via GetModuleHandle)
+                    if (libraryLoadedByUs && fallbackLibrary != IntPtr.Zero)
+                    {
+                        FreeLibrary(fallbackLibrary);
+                    }
+                    return false;
+                }
+
+                // Successfully verified DLL and function availability
+                // Only free the library if we loaded it via LoadLibrary (not if it was already loaded via GetModuleHandle)
+                if (libraryLoadedByUs && fallbackLibrary != IntPtr.Zero)
+                {
+                    FreeLibrary(fallbackLibrary);
+                }
+
                 return true;
             }
             catch
@@ -2385,6 +2444,26 @@ namespace Andastra.Runtime.Stride.Backends
         [DllImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool FreeLibrary(IntPtr hModule);
+
+        /// <summary>
+        /// Retrieves a module handle for the specified module if it has been loaded into the address space
+        /// of the calling process. Unlike LoadLibrary, this does not increment the module reference count.
+        /// Used to check if D3D12RaytracingFallback.dll is already loaded.
+        /// </summary>
+        /// <param name="lpModuleName">The name of the loaded module (DLL)</param>
+        /// <returns>Handle to the module if loaded, or IntPtr.Zero if the module is not loaded</returns>
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        private static extern IntPtr GetModuleHandle(string lpModuleName);
+
+        /// <summary>
+        /// Retrieves the address of an exported function or variable from the specified dynamic-link library (DLL).
+        /// Used to verify that required DXR fallback layer functions are available in the loaded DLL.
+        /// </summary>
+        /// <param name="hModule">Handle to the DLL module that contains the function</param>
+        /// <param name="lpProcName">The function or variable name, or the function's ordinal value</param>
+        /// <returns>Address of the exported function, or IntPtr.Zero if the function is not found</returns>
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Ansi, ExactSpelling = true)]
+        private static extern IntPtr GetProcAddress(IntPtr hModule, string lpProcName);
 
         /// <summary>
         /// Gets prebuild information for a raytracing acceleration structure.
