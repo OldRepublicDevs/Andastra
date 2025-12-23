@@ -1190,7 +1190,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// - nwmain.exe: CNWSArea::InterTileDFSSoundPath @ 0x14036e260 - tile neighbor traversal
         /// - nwmain.exe: CPathfindInformation class - pathfinding context and obstacle data
         /// </remarks>
-        public override IList<Vector3> FindPathAroundObstacles(Vector3 start, Vector3 goal, IList<Andastra.Runtime.Core.Interfaces.ObstacleInfo> obstacles)
+        public override IList<Vector3> FindPathAroundObstacles(Vector3 start, Vector3 goal, IList<ObstacleInfo> obstacles)
         {
             // Handle empty tile grid
             if (_tileWidth <= 0 || _tileHeight <= 0 || _tiles == null || _tiles.Length == 0)

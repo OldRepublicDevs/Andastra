@@ -483,7 +483,7 @@ namespace Andastra.Runtime.Stride.Remix
         /// <summary>
         /// Submits Stride light for Remix path tracing.
         /// </summary>
-        public void SubmitStrideLight(Stride.Engine.LightComponent light)
+        public void SubmitStrideLight(global::Stride.Engine.LightComponent light)
         {
             if (!IsActive || light == null) return;
 
