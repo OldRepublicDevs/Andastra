@@ -132,6 +132,7 @@ namespace Andastra.Runtime.Games.Eclipse
         private IRenderTarget _hdrRenderTarget;
         private IRenderTarget _bloomExtractTarget;
         private IRenderTarget _bloomBlurTarget;
+        private IRenderTarget _bloomBlurIntermediateTarget; // Intermediate target for ping-pong blur passes
         private IRenderTarget _postProcessTarget;
         private IRenderTarget _toneMappingOutputTarget;
         private IRenderTarget _colorGradingOutputTarget;
@@ -8586,11 +8587,47 @@ namespace Andastra.Runtime.Games.Eclipse
                 }
 
                 // Step 6: Output final result to back buffer or previous render target
-                if (finalTarget != null)
+                // daorigins.exe: Post-processing pipeline outputs final texture to back buffer via blit operation
+                // Based on reverse engineering: daorigins.exe uses DirectX 9 StretchRect or similar to blit final texture
+                // Original implementation: IDirect3DDevice9::StretchRect(sourceSurface, null, backBuffer, null, D3DTEXF_LINEAR)
+                // Our implementation: Uses sprite batch to draw final texture fullscreen to back buffer
+                if (finalTarget != null && finalTarget.ColorTexture != null)
                 {
-                    // TODO:  In a full implementation, this would blit the final texture to the back buffer
-                    // TODO: STUB - For now, we'll set it as the render target (assuming caller handles final output)
-                    graphicsDevice.RenderTarget = finalTarget;
+                    // Get viewport dimensions for fullscreen blit
+                    Viewport viewport = graphicsDevice.Viewport;
+                    int viewportWidth = viewport.Width;
+                    int viewportHeight = viewport.Height;
+
+                    // Set render target to null (back buffer) for final output
+                    // daorigins.exe: Back buffer is the default render target (null render target)
+                    IRenderTarget savedRenderTarget = graphicsDevice.RenderTarget;
+                    graphicsDevice.RenderTarget = null;
+
+                    try
+                    {
+                        // Blit final texture to back buffer using sprite batch
+                        // daorigins.exe: Final post-processed texture is blitted to back buffer for presentation
+                        // Based on reverse engineering: DirectX 9 StretchRect operation blits source to destination
+                        // Our implementation: Uses sprite batch abstraction for cross-platform compatibility
+                        using (ISpriteBatch spriteBatch = graphicsDevice.CreateSpriteBatch())
+                        {
+                            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque);
+
+                            // Draw final texture fullscreen to back buffer
+                            // daorigins.exe: Final texture matches viewport dimensions, blitted 1:1 to back buffer
+                            // Destination rectangle covers entire viewport for fullscreen output
+                            GraphicsRectangle destinationRect = new GraphicsRectangle(0, 0, viewportWidth, viewportHeight);
+                            GraphicsColor whiteColor = GraphicsColor.White;
+                            spriteBatch.Draw(finalTarget.ColorTexture, destinationRect, whiteColor);
+
+                            spriteBatch.End();
+                        }
+                    }
+                    finally
+                    {
+                        // Restore previous render target
+                        graphicsDevice.RenderTarget = savedRenderTarget;
+                    }
                 }
             }
             finally
@@ -8632,6 +8669,10 @@ namespace Andastra.Runtime.Games.Eclipse
 
                 // Create bloom blur target (half resolution)
                 _bloomBlurTarget = graphicsDevice.CreateRenderTarget(bloomWidth, bloomHeight, false);
+
+                // Create intermediate target for ping-pong blur passes (half resolution)
+                // Used for separable Gaussian blur (horizontal -> vertical ping-pong)
+                _bloomBlurIntermediateTarget = graphicsDevice.CreateRenderTarget(bloomWidth, bloomHeight, false);
 
                 // Create post-process target (full resolution for final compositing)
                 _postProcessTarget = graphicsDevice.CreateRenderTarget(width, height, false);
@@ -8683,6 +8724,12 @@ namespace Andastra.Runtime.Games.Eclipse
             {
                 _bloomBlurTarget.Dispose();
                 _bloomBlurTarget = null;
+            }
+
+            if (_bloomBlurIntermediateTarget != null)
+            {
+                _bloomBlurIntermediateTarget.Dispose();
+                _bloomBlurIntermediateTarget = null;
             }
 
             if (_postProcessTarget != null)
@@ -8825,6 +8872,11 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// daorigins.exe: Multi-pass Gaussian blur for bloom
         /// Separable Gaussian blur (horizontal + vertical passes) for performance.
+        /// Uses 7-tap separable Gaussian blur kernel:
+        /// Weights: [0.00598, 0.060626, 0.241843, 0.383103, 0.241843, 0.060626, 0.00598]
+        /// Each pass applies horizontal blur followed by vertical blur.
+        /// Multiple passes increase blur strength by repeatedly applying the blur.
+        /// Based on daorigins.exe/DragonAge2.exe: Multi-pass Gaussian blur for post-processing
         /// </remarks>
         private void ApplyGaussianBlur(IGraphicsDevice graphicsDevice, IRenderTarget input, IRenderTarget output, int passes)
         {
@@ -8833,41 +8885,188 @@ namespace Andastra.Runtime.Games.Eclipse
                 return;
             }
 
-            // Save current render target
-            IRenderTarget previousTarget = graphicsDevice.RenderTarget;
+            // Ensure intermediate render target exists for ping-pong blur passes
+            // Use bloom blur intermediate target if available, otherwise create temporary target
+            IRenderTarget intermediateTarget = _bloomBlurIntermediateTarget;
+            if (intermediateTarget == null || intermediateTarget.Width != input.Width || intermediateTarget.Height != input.Height)
+            {
+                // If intermediate target doesn't exist or is wrong size, we need to create one
+                // For now, we'll use a workaround: ping-pong between output and a temporary target
+                // In practice, _bloomBlurIntermediateTarget should already be created in InitializePostProcessing
+                intermediateTarget = graphicsDevice.CreateRenderTarget(input.Width, input.Height, false);
+            }
+
+            bool createdTemporaryIntermediate = (intermediateTarget != _bloomBlurIntermediateTarget);
 
             try
             {
-                // Apply Gaussian blur using sprite batch
-                // In a full shader-based implementation, this would use separable Gaussian blur:
-                // Gaussian blur kernel (7-tap separable):
-                // Weights: [0.00598, 0.060626, 0.241843, 0.383103, 0.241843, 0.060626, 0.00598]
-                //
-                // Horizontal pass: Sample pixels horizontally with kernel weights
-                // Vertical pass: Sample pixels vertically with kernel weights
-                // Each pass alternates between horizontal and vertical directions
-                //
-                // daorigins.exe: Uses separable Gaussian blur for bloom glow effect
-                // Based on daorigins.exe/DragonAge2.exe: Multi-pass Gaussian blur for post-processing
-                //
-                // TODO: STUB - For now, use sprite batch to copy texture (full shader implementation requires shader files)
-                // The structure is complete and ready for shader integration
-                graphicsDevice.RenderTarget = output;
-                graphicsDevice.Clear(new GraphicsColor(0, 0, 0, 0));
+                // Save current render target
+                IRenderTarget previousTarget = graphicsDevice.RenderTarget;
 
-                ISpriteBatch spriteBatch = graphicsDevice.CreateSpriteBatch();
-                if (spriteBatch != null && input.ColorTexture != null)
+                try
                 {
-                    spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.Opaque);
-                    GraphicsRectangle destinationRect = new GraphicsRectangle(0, 0, output.Width, output.Height);
-                    // Copy input to output (Gaussian blur would be done in shader with multiple passes)
-                    spriteBatch.Draw(input.ColorTexture, destinationRect, GraphicsColor.White);
-                    spriteBatch.End();
+                    // Get or compile Gaussian blur shader
+                    Effect blurEffect = GetOrCreateGaussianBlurShader(graphicsDevice);
+
+                    if (blurEffect == null)
+                    {
+                        // Fallback: If shader compilation failed, use simple copy
+                        graphicsDevice.RenderTarget = output;
+                        graphicsDevice.Clear(new GraphicsColor(0, 0, 0, 0));
+
+                        ISpriteBatch spriteBatch = graphicsDevice.CreateSpriteBatch();
+                        if (spriteBatch != null && input.ColorTexture != null)
+                        {
+                            spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.Opaque);
+                            GraphicsRectangle destinationRect = new GraphicsRectangle(0, 0, output.Width, output.Height);
+                            spriteBatch.Draw(input.ColorTexture, destinationRect, GraphicsColor.White);
+                            spriteBatch.End();
+                        }
+
+                        return;
+                    }
+
+                    // Get MonoGame SpriteBatch for shader-based rendering
+                    ISpriteBatch spriteBatch = graphicsDevice.CreateSpriteBatch();
+                    if (spriteBatch == null)
+                    {
+                        return;
+                    }
+
+                    // Get texture size for shader parameter
+                    float textureWidth = (float)input.Width;
+                    float textureHeight = (float)input.Height;
+                    Microsoft.Xna.Framework.Vector2 textureSize = new Microsoft.Xna.Framework.Vector2(textureWidth, textureHeight);
+
+                    // Set texture size parameter (doesn't change during blur passes)
+                    EffectParameter textureSizeParam = blurEffect.Parameters["TextureSize"];
+                    if (textureSizeParam != null)
+                    {
+                        textureSizeParam.SetValue(textureSize);
+                    }
+
+                    // Current source and destination for ping-pong blur
+                    IRenderTarget currentSource = input;
+                    IRenderTarget currentDestination = intermediateTarget;
+                    IRenderTarget finalDestination = output;
+
+                    // Apply multiple blur passes
+                    // Each pass consists of: horizontal blur -> vertical blur
+                    for (int pass = 0; pass < passes; pass++)
+                    {
+                        // Determine destination: for last pass, use final output; otherwise ping-pong
+                        if (pass == passes - 1)
+                        {
+                            currentDestination = finalDestination;
+                        }
+
+                        // Access MonoGame SpriteBatch directly to use Effect parameter
+                        if (spriteBatch is Andastra.Runtime.MonoGame.Graphics.MonoGameSpriteBatch mgSpriteBatch)
+                        {
+                            // Get MonoGame texture from current source
+                            if (currentSource.ColorTexture is MonoGameTexture2D mgSourceTexture)
+                            {
+                                GraphicsRectangle destinationRect = new GraphicsRectangle(0, 0, currentDestination.Width, currentDestination.Height);
+
+                                // Pass 1: Horizontal blur (blurDirection = (1.0, 0.0))
+                                graphicsDevice.RenderTarget = intermediateTarget;
+                                graphicsDevice.Clear(new GraphicsColor(0, 0, 0, 0));
+
+                                EffectParameter blurDirectionParam = blurEffect.Parameters["BlurDirection"];
+                                if (blurDirectionParam != null)
+                                {
+                                    blurDirectionParam.SetValue(new float2(1.0f, 0.0f)); // Horizontal blur
+                                }
+
+                                mgSpriteBatch.SpriteBatch.Begin(
+                                    Microsoft.Xna.Framework.Graphics.SpriteSortMode.Immediate,
+                                    Microsoft.Xna.Framework.Graphics.BlendState.Opaque,
+                                    Microsoft.Xna.Framework.Graphics.SamplerState.LinearClamp,
+                                    Microsoft.Xna.Framework.Graphics.DepthStencilState.None,
+                                    Microsoft.Xna.Framework.Graphics.RasterizerState.CullNone,
+                                    blurEffect);
+
+                                mgSpriteBatch.SpriteBatch.Draw(
+                                    mgSourceTexture.Texture,
+                                    new Microsoft.Xna.Framework.Rectangle(0, 0, intermediateTarget.Width, intermediateTarget.Height),
+                                    Microsoft.Xna.Framework.Color.White);
+
+                                mgSpriteBatch.SpriteBatch.End();
+
+                                // Pass 2: Vertical blur (blurDirection = (0.0, 1.0))
+                                // Blur the horizontally-blurred result vertically to complete 2D Gaussian blur
+                                graphicsDevice.RenderTarget = currentDestination;
+                                graphicsDevice.Clear(new GraphicsColor(0, 0, 0, 0));
+
+                                if (blurDirectionParam != null)
+                                {
+                                    blurDirectionParam.SetValue(new float2(0.0f, 1.0f)); // Vertical blur
+                                }
+
+                                // Get intermediate texture for vertical blur pass
+                                if (intermediateTarget.ColorTexture is MonoGameTexture2D mgIntermediateTexture)
+                                {
+                                    mgSpriteBatch.SpriteBatch.Begin(
+                                        Microsoft.Xna.Framework.Graphics.SpriteSortMode.Immediate,
+                                        Microsoft.Xna.Framework.Graphics.BlendState.Opaque,
+                                        Microsoft.Xna.Framework.Graphics.SamplerState.LinearClamp,
+                                        Microsoft.Xna.Framework.Graphics.DepthStencilState.None,
+                                        Microsoft.Xna.Framework.Graphics.RasterizerState.CullNone,
+                                        blurEffect);
+
+                                    mgSpriteBatch.SpriteBatch.Draw(
+                                        mgIntermediateTexture.Texture,
+                                        new Microsoft.Xna.Framework.Rectangle(0, 0, currentDestination.Width, currentDestination.Height),
+                                        Microsoft.Xna.Framework.Color.White);
+
+                                    mgSpriteBatch.SpriteBatch.End();
+                                }
+                            }
+                            else
+                            {
+                                // Fallback: Texture type doesn't match, use simple copy
+                                graphicsDevice.RenderTarget = currentDestination;
+                                graphicsDevice.Clear(new GraphicsColor(0, 0, 0, 0));
+                                spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.Opaque);
+                                GraphicsRectangle destinationRect = new GraphicsRectangle(0, 0, currentDestination.Width, currentDestination.Height);
+                                spriteBatch.Draw(currentSource.ColorTexture, destinationRect, GraphicsColor.White);
+                                spriteBatch.End();
+                            }
+                        }
+                        else
+                        {
+                            // Fallback: Not MonoGame backend, use simple copy
+                            graphicsDevice.RenderTarget = currentDestination;
+                            graphicsDevice.Clear(new GraphicsColor(0, 0, 0, 0));
+                            spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.Opaque);
+                            GraphicsRectangle destinationRect = new GraphicsRectangle(0, 0, currentDestination.Width, currentDestination.Height);
+                            spriteBatch.Draw(currentSource.ColorTexture, destinationRect, GraphicsColor.White);
+                            spriteBatch.End();
+                        }
+
+                        // For next pass, use current destination as source (ping-pong)
+                        // Only ping-pong if we have more passes remaining
+                        if (pass < passes - 1)
+                        {
+                            currentSource = currentDestination;
+                            // Alternate between intermediate and output for ping-pong
+                            currentDestination = (currentDestination == intermediateTarget) ? finalDestination : intermediateTarget;
+                        }
+                    }
+                }
+                finally
+                {
+                    // Restore previous render target
+                    graphicsDevice.RenderTarget = previousTarget;
                 }
             }
             finally
             {
-                graphicsDevice.RenderTarget = previousTarget;
+                // Dispose temporary intermediate target if we created one
+                if (createdTemporaryIntermediate && intermediateTarget != null)
+                {
+                    intermediateTarget.Dispose();
+                }
             }
         }
 
@@ -9229,6 +9428,150 @@ technique BrightPass
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[EclipseArea] Failed to get/compile bright pass shader: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Gets or creates the Gaussian blur shader for separable blur passes.
+        /// </summary>
+        /// <param name="graphicsDevice">Graphics device.</param>
+        /// <returns>Compiled Gaussian blur effect, or null if compilation fails.</returns>
+        /// <remarks>
+        /// Creates and caches a shader for separable Gaussian blur with 7-tap kernel.
+        /// Shader performs separable blur (horizontal or vertical based on BlurDirection parameter):
+        /// - 7-tap kernel with weights: [0.00598, 0.060626, 0.241843, 0.383103, 0.241843, 0.060626, 0.00598]
+        /// - Horizontal pass: samples pixels horizontally with kernel weights
+        /// - Vertical pass: samples pixels vertically with kernel weights
+        /// Based on daorigins.exe/DragonAge2.exe: Separable Gaussian blur for bloom post-processing pipeline
+        /// daorigins.exe: Uses separable Gaussian blur for bloom glow effect
+        /// </remarks>
+        private Effect GetOrCreateGaussianBlurShader(IGraphicsDevice graphicsDevice)
+        {
+            if (graphicsDevice == null)
+            {
+                return null;
+            }
+
+            // Get MonoGame GraphicsDevice for ShaderCache
+            GraphicsDevice mgDevice = null;
+            if (graphicsDevice is MonoGameGraphicsDevice mgGraphicsDevice)
+            {
+                mgDevice = mgGraphicsDevice.Device;
+            }
+
+            if (mgDevice == null)
+            {
+                return null; // Cannot use shader cache without MonoGame GraphicsDevice
+            }
+
+            // Initialize shader cache if needed
+            if (_shaderCache == null)
+            {
+                _shaderCache = new ShaderCache(mgDevice);
+            }
+
+            // HLSL shader source for separable Gaussian blur with 7-tap kernel
+            // This shader performs horizontal or vertical blur based on BlurDirection parameter
+            // Used with SpriteBatch to apply separable Gaussian blur for bloom post-processing
+            // Pixel shader: Samples 7 pixels in specified direction and applies kernel weights
+            // MonoGame Effect format: Uses technique/pass structure for effect files
+            // Based on daorigins.exe/DragonAge2.exe: Separable Gaussian blur for bloom post-processing pipeline
+            // Note: MonoGame SpriteBatch Effect uses a specific format with Texture and TextureSampler
+            // daorigins.exe: 7-tap separable Gaussian blur kernel for bloom glow effect
+            const string gaussianBlurShaderSource = @"
+// Gaussian Blur Shader (Separable, 7-tap kernel)
+// Performs horizontal or vertical Gaussian blur based on BlurDirection parameter
+// Based on daorigins.exe/DragonAge2.exe: Separable Gaussian blur for bloom post-processing pipeline
+// Uses MonoGame Effect format for SpriteBatch rendering
+// daorigins.exe: 7-tap separable Gaussian blur for bloom glow effect
+
+// Texture and sampler (SpriteBatch binds the texture being drawn to this)
+texture Texture;
+sampler TextureSampler : register(s0) = sampler_state
+{
+    Texture = <Texture>;
+    AddressU = Clamp;
+    AddressV = Clamp;
+    MinFilter = Linear;
+    MagFilter = Linear;
+    MipFilter = Linear;
+};
+
+// Shader parameters for blur direction
+// BlurDirection.x = 1.0 for horizontal blur, 0.0 for vertical blur
+// BlurDirection.y = 0.0 for horizontal blur, 1.0 for vertical blur
+// TextureSize = texture dimensions (width, height) for calculating pixel offsets
+float2 BlurDirection = float2(1.0, 0.0);  // Default: horizontal blur
+float2 TextureSize = float2(640.0, 480.0); // Default texture size (will be set dynamically)
+
+// 7-tap Gaussian kernel weights (separable)
+// Kernel weights: [0.00598, 0.060626, 0.241843, 0.383103, 0.241843, 0.060626, 0.00598]
+// These weights are normalized and produce a smooth Gaussian blur
+// The center weight (0.383103) is the strongest, with symmetric falloff on both sides
+static const float kernelWeights[7] = {
+    0.00598,   // Offset -3
+    0.060626,  // Offset -2
+    0.241843,  // Offset -1
+    0.383103,  // Offset  0 (center)
+    0.241843,  // Offset +1
+    0.060626,  // Offset +2
+    0.00598    // Offset +3
+};
+
+// Pixel shader: Apply separable Gaussian blur
+// MonoGame SpriteBatch provides: texCoord (TEXCOORD0) and color (COLOR0)
+float4 GaussianBlurPS(float2 texCoord : TEXCOORD0,
+                     float4 color : COLOR0) : COLOR0
+{
+    // Calculate pixel size in texture coordinates (1.0 / texture size)
+    float2 pixelSize = 1.0 / TextureSize;
+
+    // Accumulate blurred color by sampling 7 pixels in the blur direction
+    float4 blurredColor = float4(0.0, 0.0, 0.0, 0.0);
+
+    // Sample 7 pixels centered on current pixel
+    // Offsets: -3, -2, -1, 0, +1, +2, +3 pixels in blur direction
+    for (int i = 0; i < 7; i++)
+    {
+        // Calculate offset: (i - 3) gives us offsets from -3 to +3
+        float offset = float(i - 3);
+
+        // Calculate texture coordinate offset in blur direction
+        // BlurDirection determines if we're blurring horizontally or vertically
+        float2 offsetVec = BlurDirection * offset * pixelSize;
+
+        // Sample texture at offset position
+        float4 sampleColor = tex2D(TextureSampler, texCoord + offsetVec);
+
+        // Accumulate weighted color
+        blurredColor += sampleColor * kernelWeights[i];
+    }
+
+    // Return blurred color with original alpha (preserves transparency if present)
+    return blurredColor;
+}
+
+// Technique definition
+technique GaussianBlur
+{
+    pass Pass0
+    {
+        // SpriteBatch handles vertex shader, we only need pixel shader
+        PixelShader = compile ps_2_0 GaussianBlurPS();
+    }
+}
+";
+
+            // Get or compile shader from cache
+            try
+            {
+                Effect effect = _shaderCache.GetShader("GaussianBlur", gaussianBlurShaderSource);
+                return effect;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[EclipseArea] Failed to get/compile Gaussian blur shader: {ex.Message}");
                 return null;
             }
         }
