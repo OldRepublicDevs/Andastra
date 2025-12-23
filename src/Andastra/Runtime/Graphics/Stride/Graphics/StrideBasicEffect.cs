@@ -148,18 +148,18 @@ namespace Andastra.Runtime.Stride.Graphics
             parameterCollection.Set(LightingKeys.AmbientLightColor, new Color3(_ambientLightColor.X, _ambientLightColor.Y, _ambientLightColor.Z));
             
             // Feature flags - custom BasicEffect parameters
-            parameterCollection.Set(ParameterKeys.NewValue<bool>("VertexColorEnabled"), _vertexColorEnabled);
-            parameterCollection.Set(ParameterKeys.NewValue<bool>("LightingEnabled"), _lightingEnabled);
-            parameterCollection.Set(ParameterKeys.NewValue<bool>("TextureEnabled"), _textureEnabled);
+            parameterCollection.Set(ParameterKeys.New<bool>("VertexColorEnabled"), _vertexColorEnabled);
+            parameterCollection.Set(ParameterKeys.New<bool>("LightingEnabled"), _lightingEnabled);
+            parameterCollection.Set(ParameterKeys.New<bool>("TextureEnabled"), _textureEnabled);
             
             // Fog parameters - custom BasicEffect parameters
-            parameterCollection.Set(ParameterKeys.NewValue<bool>("FogEnabled"), _fogEnabled);
-            parameterCollection.Set(ParameterKeys.NewValue<Color3>("FogColor"), new Color3(_fogColor.X, _fogColor.Y, _fogColor.Z));
-            parameterCollection.Set(ParameterKeys.NewValue<float>("FogStart"), _fogStart);
-            parameterCollection.Set(ParameterKeys.NewValue<float>("FogEnd"), _fogEnd);
+            parameterCollection.Set(ParameterKeys.New<bool>("FogEnabled"), _fogEnabled);
+            parameterCollection.Set(ParameterKeys.New<Color3>("FogColor"), new Color3(_fogColor.X, _fogColor.Y, _fogColor.Z));
+            parameterCollection.Set(ParameterKeys.New<float>("FogStart"), _fogStart);
+            parameterCollection.Set(ParameterKeys.New<float>("FogEnd"), _fogEnd);
             
             // Alpha parameter
-            parameterCollection.Set(ParameterKeys.NewValue<float>("Alpha"), _alpha);
+            parameterCollection.Set(ParameterKeys.New<float>("Alpha"), _alpha);
         }
         
         /// <summary>
@@ -201,11 +201,19 @@ namespace Andastra.Runtime.Stride.Graphics
                     if (materialPasses != null && materialPasses.Count > 0)
                     {
                         // Get the first pass's EffectInstance (main rendering pass)
-                        // Based on Stride API: MaterialPass.EffectInstance property
+                        // Based on Stride API: MaterialPass has Parameters property (ParameterCollection)
+                        // EffectInstance needs to be obtained from Material or created separately
                         var firstPass = materialPasses[0];
-                        if (firstPass != null && firstPass.EffectInstance != null)
+                        if (firstPass != null && firstPass.Parameters != null)
                         {
-                            effectInstance = firstPass.EffectInstance;
+                            // MaterialPass doesn't directly expose EffectInstance
+                            // We'll synchronize parameters with the pass's ParameterCollection
+                            // The EffectInstance will be available when Material is built by the rendering system
+                            if (parameterCollection != null)
+                            {
+                                // Copy parameters to MaterialPass's ParameterCollection
+                                CopyParametersToParameterCollection(parameterCollection, firstPass.Parameters);
+                            }
                             
                             // Copy parameters from our collection to the Material's EffectInstance
                             if (effectInstance.Parameters != null && parameterCollection != null)
@@ -287,6 +295,99 @@ namespace Andastra.Runtime.Stride.Graphics
             catch (Exception ex)
             {
                 Console.WriteLine($"[StrideBasicEffect] Error copying parameters to EffectInstance: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// Copies parameters from one ParameterCollection to another.
+        /// </summary>
+        /// <param name="source">Source parameter collection.</param>
+        /// <param name="target">Target parameter collection.</param>
+        private void CopyParametersToParameterCollection(ParameterCollection source, ParameterCollection target)
+        {
+            if (source == null || target == null)
+            {
+                return;
+            }
+            
+            try
+            {
+                // Copy all parameters from source to target
+                foreach (var keyInfo in source.ParameterKeyInfos)
+                {
+                    try
+                    {
+                        var value = source.Get(keyInfo.Key);
+                        if (value != null)
+                        {
+                            // Copy parameter value to target collection
+                            SetParameterByTypeInCollection(target, keyInfo.Key, value);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Some parameters may not be copyable
+                        Console.WriteLine($"[StrideBasicEffect] Error copying parameter '{keyInfo.Key.Name}': {ex.Message}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StrideBasicEffect] Error copying parameters to ParameterCollection: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// Sets a parameter in a ParameterCollection by type.
+        /// </summary>
+        private void SetParameterByTypeInCollection(ParameterCollection collection, ParameterKey key, object value)
+        {
+            if (collection == null || key == null || value == null)
+            {
+                return;
+            }
+            
+            try
+            {
+                // Use type-specific setters based on parameter key type
+                if (key is ParameterKey<MatrixStride> matrixKey && value is MatrixStride matrixValue)
+                {
+                    collection.Set(matrixKey, matrixValue);
+                }
+                else if (key is ParameterKey<Vector3Stride> vector3Key && value is Vector3Stride vector3Value)
+                {
+                    collection.Set(vector3Key, vector3Value);
+                }
+                else if (key is ParameterKey<Color3> color3Key && value is Color3 color3Value)
+                {
+                    collection.Set(color3Key, color3Value);
+                }
+                else if (key is ParameterKey<Color4> color4Key && value is Color4 color4Value)
+                {
+                    collection.Set(color4Key, color4Value);
+                }
+                else if (key is ParameterKey<float> floatKey && value is float floatValue)
+                {
+                    collection.Set(floatKey, floatValue);
+                }
+                else if (key is ParameterKey<bool> boolKey && value is bool boolValue)
+                {
+                    collection.Set(boolKey, boolValue);
+                }
+                else if (key is ParameterKey<Texture> textureKey && value is Texture textureValue)
+                {
+                    // Texture is a reference type, use SetObject or MaterialKeys
+                    // For now, only handle if it's a known MaterialKey like DiffuseMap
+                    if (textureKey == MaterialKeys.DiffuseMap)
+                    {
+                        collection.Set(textureKey, textureValue);
+                    }
+                    // For other texture keys, skip as they require ObjectParameterKey
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StrideBasicEffect] Error setting parameter '{key.Name}' in ParameterCollection: {ex.Message}");
             }
         }
         
@@ -599,7 +700,7 @@ namespace Andastra.Runtime.Stride.Graphics
                 else
                 {
                     // Use custom parameter key for non-standard matrices
-                    parameterKey = ParameterKeys.NewValue<MatrixStride>(name);
+                    parameterKey = ParameterKeys.New<MatrixStride>(name);
                 }
 
                 // Set parameter in both the parameter collection and effect instance
@@ -672,13 +773,13 @@ namespace Andastra.Runtime.Stride.Graphics
                 else if (name == "FogColor")
                 {
                     // Custom parameter for fog color
-                    parameterKey = ParameterKeys.NewValue<Color3>(name);
+                    parameterKey = ParameterKeys.New<Color3>(name);
                     parameterValue = color3Value;
                 }
                 else
                 {
                     // Use custom parameter key for other Vector3 parameters
-                    parameterKey = ParameterKeys.NewValue<Vector3Stride>(name);
+                    parameterKey = ParameterKeys.New<Vector3Stride>(name);
                     parameterValue = strideVector;
                 }
 
@@ -753,15 +854,15 @@ namespace Andastra.Runtime.Stride.Graphics
                 {
                     // Alpha is part of Color4 in Stride, handled with diffuse color
                     // But we can also store it separately for shader use
-                    parameterKey = ParameterKeys.NewValue<float>(name);
+                    parameterKey = ParameterKeys.New<float>(name);
                 }
                 else if (name == "FogStart" || name == "FogEnd")
                 {
-                    parameterKey = ParameterKeys.NewValue<float>(name);
+                    parameterKey = ParameterKeys.New<float>(name);
                 }
                 else
                 {
-                    parameterKey = ParameterKeys.NewValue<float>(name);
+                    parameterKey = ParameterKeys.New<float>(name);
                 }
 
                 // Set parameter in both the parameter collection and effect instance
@@ -803,7 +904,7 @@ namespace Andastra.Runtime.Stride.Graphics
             try
             {
                 // Create parameter key for boolean feature flags
-                var parameterKey = ParameterKeys.NewValue<bool>(name);
+                var parameterKey = ParameterKeys.New<bool>(name);
                 
                 // Set parameter in both the parameter collection and effect instance
                 _parameterCollection.Set(parameterKey, value);
@@ -873,23 +974,11 @@ namespace Andastra.Runtime.Stride.Graphics
                 }
                 else
                 {
-                    // Use custom parameter key for other texture parameters
-                    var textureKey = ParameterKeys.NewValue<Texture>(name);
-                    
-                    if (texture != null)
-                    {
-                        _parameterCollection.Set(textureKey, texture);
-                        
-                        var parameter = _effectInstance.Parameters;
-                        if (parameter != null)
-                        {
-                            try
-                            {
-                                parameter.Set(textureKey, texture);
-                            }
-                            catch (ArgumentException) { }
-                        }
-                    }
+                    // For other texture parameters, use MaterialKeys or skip custom texture keys
+                    // Texture is a reference type and requires ObjectParameterKey, not ValueParameterKey
+                    // For now, we'll only support the main "Texture" parameter via MaterialKeys.DiffuseMap
+                    // Additional texture parameters would need to use MaterialKeys or ObjectParameterKey
+                    Console.WriteLine($"[StrideBasicEffect] Custom texture parameter '{name}' not supported, use MaterialKeys instead");
                 }
             }
             catch (Exception ex)
@@ -936,7 +1025,7 @@ namespace Andastra.Runtime.Stride.Graphics
                     _emissiveColor.Z
                 );
                 materialDescriptor.Attributes.Emissive = new MaterialEmissiveMapFeature(
-                    new ComputeColor(emissiveColor)
+                    new ComputeColor(new Color4(emissiveColor, 1.0f))
                 );
 
                 // Update material specular properties (if lighting enabled)
@@ -948,9 +1037,9 @@ namespace Andastra.Runtime.Stride.Graphics
                         _specularColor.Z
                     );
                     materialDescriptor.Attributes.Specular = new MaterialSpecularMapFeature(
-                        new ComputeColor(specularColor),
-                        new ComputeFloat(_specularPower)
+                        new ComputeColor(new Color4(specularColor, 1.0f))
                     );
+                    materialDescriptor.Attributes.SpecularIntensity = new ComputeFloat(_specularPower);
                 }
                 
                 // Update texture if enabled
@@ -986,15 +1075,13 @@ namespace Andastra.Runtime.Stride.Graphics
                     try
                     {
                         var firstPass = _material.Passes[0];
-                        if (firstPass != null && firstPass.EffectInstance != null)
+                        if (firstPass != null && firstPass.Parameters != null)
                         {
-                            // Update EffectInstance reference if Material was built
-                            _effectInstance = firstPass.EffectInstance;
-                            
-                            // Synchronize parameters from ParameterCollection to Material's EffectInstance
+                            // MaterialPass has Parameters property (ParameterCollection)
+                            // Synchronize parameters from our collection to MaterialPass's ParameterCollection
                             if (_parameterCollection != null)
                             {
-                                CopyParametersToEffectInstance(_parameterCollection, _effectInstance);
+                                CopyParametersToParameterCollection(_parameterCollection, firstPass.Parameters);
                             }
                         }
                     }
@@ -1041,7 +1128,7 @@ namespace Andastra.Runtime.Stride.Graphics
             _technique = null;
             _effectInstance?.Dispose();
             _effectInstance = null;
-            _material?.Dispose();
+            // Material doesn't implement IDisposable in Stride
             _material = null;
             base.OnDispose();
         }
