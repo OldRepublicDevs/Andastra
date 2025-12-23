@@ -5,6 +5,7 @@ using System.Numerics;
 using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
+using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Games.Common;
 
 namespace Andastra.Runtime.Games.Eclipse
@@ -1794,7 +1795,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 // Pre-filter entities that are in combat to reduce threat assessment overhead
                 // This optimization is particularly effective when combat is active and most entities are non-combatants
                 activeCombatantIds = new HashSet<uint>();
-                
+
                 // Iterate through nearby entities and collect those in combat
                 // This allows us to skip IsEntityThreat checks for entities not in combat (early exit optimization)
                 foreach (IEntity entity in nearbyEntities)
@@ -1863,7 +1864,7 @@ namespace Andastra.Runtime.Games.Eclipse
                         continue;
                     }
                 }
-                
+
                 bool isThreat = IsEntityThreat(entity, start, end);
                 if (!isThreat)
                 {
@@ -2020,17 +2021,9 @@ namespace Andastra.Runtime.Games.Eclipse
             if (entityFaction != null && _world != null)
             {
                 // Try to find player entity to check hostility
-                // In Eclipse, player entity typically has tag "Player" or is of type Player
+                // In Eclipse, player entity typically has tag "Player"
                 IEntity playerEntity = _world.GetEntityByTag("Player");
-                if (playerEntity == null)
-                {
-                    // Try to find any player-type entity
-                    foreach (IEntity potentialPlayer in _world.GetEntitiesOfType(ObjectType.Player))
-                    {
-                        playerEntity = potentialPlayer;
-                        break; // Use first player entity found
-                    }
-                }
+                // Note: Player entities are typically Creature type, so we use tag-based lookup only
 
                 // Check if entity is hostile to player
                 if (playerEntity != null && playerEntity.IsValid)
@@ -2047,7 +2040,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 Vector3 pathCenter = (start + end) * 0.5f;
                 float checkRadius = Vector3.Distance(start, end) * 0.5f + 10.0f; // Check radius around path
 
-                foreach (IEntity nearbyEntity in _world.GetEntitiesInRadius(pathCenter, checkRadius, ObjectType.Creature | ObjectType.Player))
+                foreach (IEntity nearbyEntity in _world.GetEntitiesInRadius(pathCenter, checkRadius, ObjectType.Creature))
                 {
                     if (nearbyEntity == null || !nearbyEntity.IsValid || nearbyEntity == entity)
                     {
@@ -2457,7 +2450,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 normalizedDistance = Math.Max(0.0f, Math.Min(1.0f, normalizedDistance));
 
                 // Exponential decay: closer threats have much more influence
-                float distanceFactor = (float)Math.Pow(1.0 - normalizedDistance, 1.0 / distanceDecayFactor);
+                float distanceFactorLoS = (float)Math.Pow(1.0 - normalizedDistance, 1.0 / distanceDecayFactor);
 
                 // Check if position has cover from this threat
                 float coverProtection = CalculateCoverProtection(position, threatPosition);
@@ -2466,7 +2459,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 float exposureFactor = 1.0f - coverProtection;
 
                 // Apply modifier
-                totalModifier += baseThreatCost * distanceFactor * exposureFactor;
+                totalModifier += baseThreatCost * distanceFactorLoS * exposureFactor;
             }
 
             return totalModifier;
@@ -4377,13 +4370,103 @@ namespace Andastra.Runtime.Games.Eclipse
         }
 
         /// <summary>
-        /// Calculates flanking angle score (0.0 to 1.0).
+        /// Gathers threats with their facing directions near the center position.
+        /// Returns a list of threat data containing position and facing angle.
+        /// Based on daorigins.exe: Threat detection for tactical positioning
+        /// Based on DragonAge2.exe: Enhanced threat assessment with facing direction
         /// </summary>
+        private List<ThreatData> GatherThreatsWithFacing(Vector3 center, float searchRadius)
+        {
+            var threats = new List<ThreatData>();
+
+            if (_world == null)
+            {
+                return threats;
+            }
+
+            // Query for entities in threat range
+            var nearbyEntities = _world.GetEntitiesInRadius(center, searchRadius);
+            if (nearbyEntities == null)
+            {
+                return threats;
+            }
+
+            // Use a dummy start/end for threat checking (not used for tactical positioning)
+            Vector3 dummyStart = center;
+            Vector3 dummyEnd = center;
+
+            // Check each entity as potential threat
+            foreach (IEntity entity in nearbyEntities)
+            {
+                if (entity == null || !entity.IsValid)
+                {
+                    continue;
+                }
+
+                // Get entity transform
+                ITransformComponent transform = entity.GetComponent<ITransformComponent>();
+                if (transform == null)
+                {
+                    continue;
+                }
+
+                Vector3 threatPosition = transform.Position;
+                float distanceToThreat = Vector3.Distance(center, threatPosition);
+
+                // Skip threats that are too far away (beyond search radius)
+                if (distanceToThreat > searchRadius)
+                {
+                    continue;
+                }
+
+                // Check if entity is a threat
+                bool isThreat = IsEntityThreat(entity, dummyStart, dummyEnd);
+                if (isThreat)
+                {
+                    // Get threat facing direction (angle in radians)
+                    float threatFacing = transform.Facing;
+
+                    threats.Add(new ThreatData
+                    {
+                        Position = threatPosition,
+                        Facing = threatFacing
+                    });
+                }
+            }
+
+            return threats;
+        }
+
+        /// <summary>
+        /// Threat data containing position and facing direction.
+        /// </summary>
+        private struct ThreatData
+        {
+            public Vector3 Position;
+            public float Facing; // Facing angle in radians
+        }
+
+        /// <summary>
+        /// Calculates flanking angle score (0.0 to 1.0).
+        /// Higher scores indicate better flanking positions (side or rear of threats).
+        /// Based on daorigins.exe: Tactical flanking calculation for combat positioning
+        /// Based on DragonAge2.exe: Enhanced flanking assessment with threat facing direction
+        /// </summary>
+        /// <remarks>
+        /// Flanking calculation algorithm:
+        /// 1. Find all threats near the center position
+        /// 2. For each threat, calculate the angle between:
+        ///    - Threat's facing direction (where the threat is looking)
+        ///    - Direction from threat to candidate position
+        /// 3. Ideal flanking positions are:
+        ///    - 90 degrees (sides) - maximum score
+        ///    - 180 degrees (rear) - high score
+        ///    - 0 degrees (front) - minimum score
+        /// 4. Aggregate scores across all threats (weighted by proximity)
+        /// 5. Combine with distance factor (positions further from center have more flanking potential)
+        /// </remarks>
         private float CalculateFlankingAngle(Vector3 position, Vector3 center, float radius)
         {
-            // For flanking, we want positions that are to the side or rear of the center
-            // TODO:  This is a simplified calculation - in full implementation, would consider actual threat positions
-
             Vector3 toCenter = center - position;
             float dist2D = Vector3Extensions.Distance2D(position, center);
 
@@ -4392,15 +4475,97 @@ namespace Andastra.Runtime.Games.Eclipse
                 return 0.0f; // Too close to center
             }
 
-            // Ideal flanking positions are at 90 degrees (sides) or 180 degrees (rear)
-            // TODO: STUB - This is a placeholder - would need actual threat direction in full implementation
-            float flankScore = 0.5f; // Default moderate score
+            // Gather threats with their facing directions near the center
+            const float threatSearchRadius = 30.0f; // Search radius for threats (typically combat range)
+            List<ThreatData> threats = GatherThreatsWithFacing(center, threatSearchRadius);
 
-            // Positions further from center have more flanking potential
+            // If no threats found, use distance-based fallback score
+            if (threats.Count == 0)
+            {
+                // Fallback: positions further from center have more flanking potential
+                float normalizedDist = Math.Min(dist2D / radius, 1.0f);
+                return normalizedDist * 0.3f; // Lower score when no threats available
+            }
+
+            // Calculate flanking score based on threat facing directions
+            float bestFlankScore = 0.0f;
+
+            foreach (ThreatData threat in threats)
+            {
+                // Calculate direction from threat to candidate position
+                Vector3 fromThreatToPosition = position - threat.Position;
+                float distToThreat = fromThreatToPosition.Length();
+
+                // Skip if position is too close to threat (not a valid flanking position)
+                if (distToThreat < 2.0f)
+                {
+                    continue;
+                }
+
+                // Normalize direction vector (2D only - ignore Z for angle calculation)
+                Vector3 direction2D = new Vector3(fromThreatToPosition.X, fromThreatToPosition.Y, 0.0f);
+                if (direction2D.Length() < 0.001f)
+                {
+                    continue; // Too close, skip
+                }
+                direction2D = Vector3.Normalize(direction2D);
+
+                // Calculate angle of direction from threat to position (in radians)
+                float directionAngle = (float)Math.Atan2(direction2D.Y, direction2D.X);
+
+                // Calculate angle difference between threat facing and direction to position
+                float angleDiff = directionAngle - threat.Facing;
+
+                // Normalize angle difference to [-π, π] range
+                while (angleDiff > Math.PI)
+                {
+                    angleDiff -= (float)(2.0 * Math.PI);
+                }
+                while (angleDiff < -Math.PI)
+                {
+                    angleDiff += (float)(2.0 * Math.PI);
+                }
+
+                // Convert to absolute angle difference [0, π]
+                float absAngleDiff = Math.Abs(angleDiff);
+
+                // Calculate flanking score based on angle:
+                // - 0 degrees (front): score = 0.0
+                // - 90 degrees (side): score = 1.0 (optimal)
+                // - 180 degrees (rear): score = 0.8 (good, but not as optimal as side)
+                // Use a function that peaks at 90 degrees: score = sin(angle) for angles in [0, π]
+                float flankScoreFromAngle = (float)Math.Sin(absAngleDiff);
+
+                // Boost score for rear positions (150-180 degrees) slightly
+                // Rear positions are also good for flanking, but sides are slightly better
+                if (absAngleDiff > (150.0f * Math.PI / 180.0f))
+                {
+                    flankScoreFromAngle = Math.Max(flankScoreFromAngle, 0.8f);
+                }
+
+                // Weight by proximity to threat (closer threats have more influence on score)
+                // Closer threats are more relevant for flanking calculation
+                float proximityWeight = 1.0f / (1.0f + distToThreat * 0.1f); // Decay with distance
+
+                // Combine angle-based score with proximity weight
+                float weightedScore = flankScoreFromAngle * proximityWeight;
+
+                // Keep the best (maximum) flanking score across all threats
+                if (weightedScore > bestFlankScore)
+                {
+                    bestFlankScore = weightedScore;
+                }
+            }
+
+            // Combine with distance factor (positions further from center have more flanking potential)
             float normalizedDist = Math.Min(dist2D / radius, 1.0f);
-            flankScore *= normalizedDist;
+            float distanceFactor = 0.5f + (normalizedDist * 0.5f); // Range: 0.5 to 1.0
 
-            return flankScore;
+            // Final flanking score combines angle-based score with distance factor
+            float finalFlankScore = bestFlankScore * distanceFactor;
+
+            // Clamp to [0.0, 1.0] range
+            return Math.Max(0.0f, Math.Min(1.0f, finalFlankScore));
         }
 
         /// <summary>
