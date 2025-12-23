@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Text;
+using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Tests.Common;
@@ -862,31 +865,554 @@ namespace Andastra.Parsing.Tests.Formats
 
         private static void CreateTestGuiFile(string path)
         {
-            // Create a minimal valid GFF file with "GUI " signature
-            // TODO:  This is a simplified test file - a real GUI file would have actual control structures
+            // Create a comprehensive valid GFF file with "GUI " signature
+            // This test file includes all control types with complete control structures
+            // Based on PyKotor GUI format documentation: vendor/PyKotor/wiki/GFF-GUI.md
+            // swkotor2.exe GUI loading: FUN_0070a2e0 @ 0x0070a2e0 - GUI file structure parsing
             var gff = new GFF(GFFContent.GUI);
             gff.Root.SetString("Tag", "TestGUI");
+            gff.Root.SetString("Comment", "Comprehensive test GUI file with all control types");
 
-            // Create a simple control list
+            // Create controls list with multiple control types
             var controlsList = new GFFList();
-            var controlStruct = controlsList.Add(6); // Struct type
-            controlStruct.SetInt32("CONTROLTYPE", 6); // Button
-            controlStruct.SetInt32("ID", 1);
-            controlStruct.SetString("TAG", "TestButton");
 
-            // Create EXTENT struct
-            var extentStruct = new GFFStruct();
-            extentStruct.SetInt32("LEFT", 10);
-            extentStruct.SetInt32("TOP", 20);
-            extentStruct.SetInt32("WIDTH", 100);
-            extentStruct.SetInt32("HEIGHT", 30);
-            controlStruct.SetStruct("EXTENT", extentStruct);
+            // 1. Panel control (type 2) - Root container panel
+            var panelControl = CreatePanelControl(1, "ROOT_PANEL", 0, 0, 640, 480);
+            controlsList.Add(panelControl);
+
+            // 2. Button control (type 6)
+            var buttonControl = CreateButtonControl(2, "TEST_BUTTON", 50, 50, 150, 40);
+            controlsList.Add(buttonControl);
+
+            // 3. Label control (type 5)
+            var labelControl = CreateLabelControl(3, "TEST_LABEL", 50, 100, 200, 30);
+            controlsList.Add(labelControl);
+
+            // 4. CheckBox control (type 7)
+            var checkboxControl = CreateCheckBoxControl(4, "TEST_CHECKBOX", 50, 140, 150, 30);
+            controlsList.Add(checkboxControl);
+
+            // 5. Slider control (type 8)
+            var sliderControl = CreateSliderControl(5, "TEST_SLIDER", 50, 180, 200, 30);
+            controlsList.Add(sliderControl);
+
+            // 6. ScrollBar control (type 9)
+            var scrollbarControl = CreateScrollBarControl(6, "TEST_SCROLLBAR", 300, 50, 20, 200);
+            controlsList.Add(scrollbarControl);
+
+            // 7. ProgressBar control (type 10)
+            var progressControl = CreateProgressBarControl(7, "TEST_PROGRESS", 50, 220, 250, 25);
+            controlsList.Add(progressControl);
+
+            // 8. ListBox control (type 11) with ProtoItem template
+            var listboxControl = CreateListBoxControl(8, "TEST_LISTBOX", 300, 300, 300, 150);
+            controlsList.Add(listboxControl);
 
             gff.Root.SetList("CONTROLS", controlsList);
 
             // Write GFF file
             Directory.CreateDirectory(Path.GetDirectoryName(path));
             GFFAuto.WriteGff(gff, path, ResourceType.GUI);
+        }
+
+        /// <summary>
+        /// Creates a Panel control with complete properties.
+        /// Panel type: 2
+        /// </summary>
+        private static GFFStruct CreatePanelControl(int id, string tag, int left, int top, int width, int height)
+        {
+            var control = new GFFStruct(2);
+            control.SetInt32("CONTROLTYPE", 2); // Panel
+            control.SetInt32("ID", id);
+            control.SetString("TAG", tag);
+
+            // EXTENT struct
+            var extent = new GFFStruct();
+            extent.SetInt32("LEFT", left);
+            extent.SetInt32("TOP", top);
+            extent.SetInt32("WIDTH", width);
+            extent.SetInt32("HEIGHT", height);
+            control.SetStruct("EXTENT", extent);
+
+            // BORDER struct with all properties
+            var border = new GFFStruct();
+            border.SetResRef("CORNER", new ResRef("uipnl_corner"));
+            border.SetResRef("EDGE", new ResRef("uipnl_edge"));
+            border.SetResRef("FILL", new ResRef("uipnl_fill"));
+            border.SetInt32("FILLSTYLE", 2); // Texture fill
+            border.SetInt32("DIMENSION", 4);
+            border.SetInt32("INNEROFFSET", 2);
+            border.SetInt32("INNEROFFSETY", 2);
+            border.SetVector3("COLOR", new Vector3(1.0f, 1.0f, 1.0f)); // White
+            border.SetUInt8("PULSING", 0);
+            control.SetStruct("BORDER", border);
+
+            // COLOR and ALPHA
+            control.SetVector3("COLOR", new Vector3(0.8f, 0.8f, 0.9f)); // Light blue tint
+            control.SetSingle("ALPHA", 1.0f); // Fully opaque
+
+            // Child controls list (Panel can contain children)
+            var childControls = new GFFList();
+            var childButton = CreateButtonControl(id * 100 + 1, "CHILD_BUTTON", 10, 10, 100, 30);
+            childControls.Add(childButton);
+            control.SetList("CONTROLS", childControls);
+
+            return control;
+        }
+
+        /// <summary>
+        /// Creates a Button control with complete properties.
+        /// Button type: 6
+        /// </summary>
+        private static GFFStruct CreateButtonControl(int id, string tag, int left, int top, int width, int height)
+        {
+            var control = new GFFStruct(6);
+            control.SetInt32("CONTROLTYPE", 6); // Button
+            control.SetInt32("ID", id);
+            control.SetString("TAG", tag);
+
+            // EXTENT struct
+            var extent = new GFFStruct();
+            extent.SetInt32("LEFT", left);
+            extent.SetInt32("TOP", top);
+            extent.SetInt32("WIDTH", width);
+            extent.SetInt32("HEIGHT", height);
+            control.SetStruct("EXTENT", extent);
+
+            // BORDER struct
+            var border = new GFFStruct();
+            border.SetResRef("CORNER", new ResRef("uibtn_corner"));
+            border.SetResRef("EDGE", new ResRef("uibtn_edge"));
+            border.SetResRef("FILL", new ResRef("uibtn_fill"));
+            border.SetInt32("FILLSTYLE", 2); // Texture
+            border.SetInt32("DIMENSION", 2);
+            border.SetVector3("COLOR", new Vector3(1.0f, 1.0f, 1.0f));
+            control.SetStruct("BORDER", border);
+
+            // HILIGHT struct (hover state)
+            var hilight = new GFFStruct();
+            hilight.SetResRef("CORNER", new ResRef("uibtn_hcorner"));
+            hilight.SetResRef("EDGE", new ResRef("uibtn_hedge"));
+            hilight.SetResRef("FILL", new ResRef("uibtn_hfill"));
+            hilight.SetInt32("FILLSTYLE", 2);
+            hilight.SetInt32("DIMENSION", 2);
+            hilight.SetVector3("COLOR", new Vector3(1.0f, 1.0f, 0.5f)); // Yellow tint for highlight
+            hilight.SetUInt8("PULSING", 0);
+            control.SetStruct("HILIGHT", hilight);
+
+            // TEXT struct
+            var text = new GFFStruct();
+            text.SetString("TEXT", "Test Button");
+            text.SetUInt32("STRREF", 0xFFFFFFFF); // No string reference
+            text.SetResRef("FONT", new ResRef("fnt_d16x16"));
+            text.SetUInt32("ALIGNMENT", 18); // Center alignment
+            text.SetVector3("COLOR", new Vector3(0.0f, 0.659f, 0.980f)); // KotOR cyan
+            text.SetUInt8("PULSING", 0);
+            control.SetStruct("TEXT", text);
+
+            // MOVETO struct (navigation)
+            var moveto = new GFFStruct();
+            moveto.SetInt32("UP", -1); // No navigation up
+            moveto.SetInt32("DOWN", id + 1); // Navigate to next control
+            moveto.SetInt32("LEFT", -1);
+            moveto.SetInt32("RIGHT", id + 1);
+            control.SetStruct("MOVETO", moveto);
+
+            // COLOR and ALPHA
+            control.SetVector3("COLOR", new Vector3(1.0f, 1.0f, 1.0f));
+            control.SetSingle("ALPHA", 1.0f);
+            control.SetUInt8("PULSING", 0); // Button-level pulsing
+
+            return control;
+        }
+
+        /// <summary>
+        /// Creates a Label control with complete properties.
+        /// Label type: 5
+        /// </summary>
+        private static GFFStruct CreateLabelControl(int id, string tag, int left, int top, int width, int height)
+        {
+            var control = new GFFStruct(5);
+            control.SetInt32("CONTROLTYPE", 5); // Label
+            control.SetInt32("ID", id);
+            control.SetString("TAG", tag);
+
+            // EXTENT struct
+            var extent = new GFFStruct();
+            extent.SetInt32("LEFT", left);
+            extent.SetInt32("TOP", top);
+            extent.SetInt32("WIDTH", width);
+            extent.SetInt32("HEIGHT", height);
+            control.SetStruct("EXTENT", extent);
+
+            // TEXT struct
+            var text = new GFFStruct();
+            text.SetString("TEXT", "Test Label Text");
+            text.SetUInt32("STRREF", 0xFFFFFFFF);
+            text.SetResRef("FONT", new ResRef("fnt_d16x16"));
+            text.SetUInt32("ALIGNMENT", 1); // Top-Left alignment
+            text.SetVector3("COLOR", new Vector3(1.0f, 1.0f, 1.0f)); // White
+            text.SetUInt8("PULSING", 0);
+            control.SetStruct("TEXT", text);
+
+            // COLOR and ALPHA
+            control.SetVector3("COLOR", new Vector3(1.0f, 1.0f, 1.0f));
+            control.SetSingle("ALPHA", 1.0f);
+
+            return control;
+        }
+
+        /// <summary>
+        /// Creates a CheckBox control with complete properties.
+        /// CheckBox type: 7
+        /// </summary>
+        private static GFFStruct CreateCheckBoxControl(int id, string tag, int left, int top, int width, int height)
+        {
+            var control = new GFFStruct(7);
+            control.SetInt32("CONTROLTYPE", 7); // CheckBox
+            control.SetInt32("ID", id);
+            control.SetString("TAG", tag);
+
+            // EXTENT struct
+            var extent = new GFFStruct();
+            extent.SetInt32("LEFT", left);
+            extent.SetInt32("TOP", top);
+            extent.SetInt32("WIDTH", width);
+            extent.SetInt32("HEIGHT", height);
+            control.SetStruct("EXTENT", extent);
+
+            // BORDER struct
+            var border = new GFFStruct();
+            border.SetResRef("CORNER", new ResRef("uichk_corner"));
+            border.SetResRef("EDGE", new ResRef("uichk_edge"));
+            border.SetResRef("FILL", new ResRef("uichk_fill"));
+            border.SetInt32("FILLSTYLE", 2);
+            border.SetInt32("DIMENSION", 2);
+            border.SetVector3("COLOR", new Vector3(1.0f, 1.0f, 1.0f));
+            control.SetStruct("BORDER", border);
+
+            // SELECTED struct (checked state)
+            var selected = new GFFStruct();
+            selected.SetResRef("CORNER", new ResRef("uichk_scorner"));
+            selected.SetResRef("EDGE", new ResRef("uichk_sedge"));
+            selected.SetResRef("FILL", new ResRef("uichk_sfill"));
+            selected.SetInt32("FILLSTYLE", 2);
+            selected.SetInt32("DIMENSION", 2);
+            selected.SetVector3("COLOR", new Vector3(0.5f, 1.0f, 0.5f)); // Green tint when selected
+            selected.SetUInt8("PULSING", 0);
+            control.SetStruct("SELECTED", selected);
+
+            // HILIGHTSELECTED struct (checked and hovered state)
+            var hilightSelected = new GFFStruct();
+            hilightSelected.SetResRef("CORNER", new ResRef("uichk_hscorner"));
+            hilightSelected.SetResRef("EDGE", new ResRef("uichk_hsedge"));
+            hilightSelected.SetResRef("FILL", new ResRef("uichk_hsfill"));
+            hilightSelected.SetInt32("FILLSTYLE", 2);
+            hilightSelected.SetInt32("DIMENSION", 2);
+            hilightSelected.SetVector3("COLOR", new Vector3(0.7f, 1.0f, 0.7f)); // Brighter green
+            hilightSelected.SetUInt8("PULSING", 0);
+            control.SetStruct("HILIGHTSELECTED", hilightSelected);
+
+            // ISSELECTED - initial state (0 = unchecked, 1 = checked)
+            control.SetUInt8("ISSELECTED", 0);
+
+            // COLOR and ALPHA
+            control.SetVector3("COLOR", new Vector3(1.0f, 1.0f, 1.0f));
+            control.SetSingle("ALPHA", 1.0f);
+
+            return control;
+        }
+
+        /// <summary>
+        /// Creates a Slider control with complete properties.
+        /// Slider type: 8
+        /// </summary>
+        private static GFFStruct CreateSliderControl(int id, string tag, int left, int top, int width, int height)
+        {
+            var control = new GFFStruct(8);
+            control.SetInt32("CONTROLTYPE", 8); // Slider
+            control.SetInt32("ID", id);
+            control.SetString("TAG", tag);
+
+            // EXTENT struct
+            var extent = new GFFStruct();
+            extent.SetInt32("LEFT", left);
+            extent.SetInt32("TOP", top);
+            extent.SetInt32("WIDTH", width);
+            extent.SetInt32("HEIGHT", height);
+            control.SetStruct("EXTENT", extent);
+
+            // Slider-specific properties
+            control.SetInt32("MAXVALUE", 100);
+            control.SetInt32("CURVALUE", 50); // Current value (50%)
+            control.SetInt32("DIRECTION", 0); // 0 = horizontal, 1 = vertical
+
+            // THUMB struct
+            var thumb = new GFFStruct();
+            thumb.SetResRef("IMAGE", new ResRef("uislider_thumb"));
+            thumb.SetInt32("ALIGNMENT", 18); // Center
+            thumb.SetInt32("DRAWSTYLE", 0);
+            thumb.SetInt32("FLIPSTYLE", 0);
+            thumb.SetSingle("ROTATE", 0.0f);
+            control.SetStruct("THUMB", thumb);
+
+            // BORDER struct (track appearance)
+            var border = new GFFStruct();
+            border.SetResRef("CORNER", new ResRef("uislider_corner"));
+            border.SetResRef("EDGE", new ResRef("uislider_edge"));
+            border.SetResRef("FILL", new ResRef("uislider_fill"));
+            border.SetInt32("FILLSTYLE", 2);
+            border.SetInt32("DIMENSION", 2);
+            border.SetVector3("COLOR", new Vector3(0.5f, 0.5f, 0.5f)); // Gray track
+            control.SetStruct("BORDER", border);
+
+            // COLOR and ALPHA
+            control.SetVector3("COLOR", new Vector3(1.0f, 1.0f, 1.0f));
+            control.SetSingle("ALPHA", 1.0f);
+
+            return control;
+        }
+
+        /// <summary>
+        /// Creates a ScrollBar control with complete properties.
+        /// ScrollBar type: 9
+        /// </summary>
+        private static GFFStruct CreateScrollBarControl(int id, string tag, int left, int top, int width, int height)
+        {
+            var control = new GFFStruct(9);
+            control.SetInt32("CONTROLTYPE", 9); // ScrollBar
+            control.SetInt32("ID", id);
+            control.SetString("TAG", tag);
+
+            // EXTENT struct
+            var extent = new GFFStruct();
+            extent.SetInt32("LEFT", left);
+            extent.SetInt32("TOP", top);
+            extent.SetInt32("WIDTH", width);
+            extent.SetInt32("HEIGHT", height);
+            control.SetStruct("EXTENT", extent);
+
+            // ScrollBar-specific properties
+            control.SetInt32("MAXVALUE", 100);
+            control.SetInt32("VISIBLEVALUE", 10); // Number of visible items
+            control.SetInt32("CURVALUE", 0); // Current scroll position
+            control.SetUInt8("DRAWMODE", 0); // Normal draw mode
+
+            // DIR struct (direction arrow buttons)
+            var dir = new GFFStruct();
+            dir.SetResRef("IMAGE", new ResRef("uiscroll_dir"));
+            dir.SetInt32("ALIGNMENT", 18); // Center
+            control.SetStruct("DIR", dir);
+
+            // THUMB struct
+            var thumb = new GFFStruct();
+            thumb.SetResRef("IMAGE", new ResRef("uiscroll_thumb"));
+            thumb.SetInt32("ALIGNMENT", 18);
+            thumb.SetInt32("DRAWSTYLE", 0);
+            thumb.SetInt32("FLIPSTYLE", 0);
+            thumb.SetSingle("ROTATE", 0.0f);
+            control.SetStruct("THUMB", thumb);
+
+            // BORDER struct (track)
+            var border = new GFFStruct();
+            border.SetResRef("CORNER", new ResRef("uiscroll_corner"));
+            border.SetResRef("EDGE", new ResRef("uiscroll_edge"));
+            border.SetResRef("FILL", new ResRef("uiscroll_fill"));
+            border.SetInt32("FILLSTYLE", 1); // Solid fill
+            border.SetInt32("DIMENSION", 2);
+            border.SetVector3("COLOR", new Vector3(0.3f, 0.3f, 0.3f));
+            control.SetStruct("BORDER", border);
+
+            // COLOR and ALPHA
+            control.SetVector3("COLOR", new Vector3(1.0f, 1.0f, 1.0f));
+            control.SetSingle("ALPHA", 1.0f);
+
+            return control;
+        }
+
+        /// <summary>
+        /// Creates a ProgressBar control with complete properties.
+        /// ProgressBar type: 10
+        /// </summary>
+        private static GFFStruct CreateProgressBarControl(int id, string tag, int left, int top, int width, int height)
+        {
+            var control = new GFFStruct(10);
+            control.SetInt32("CONTROLTYPE", 10); // ProgressBar
+            control.SetInt32("ID", id);
+            control.SetString("TAG", tag);
+
+            // EXTENT struct
+            var extent = new GFFStruct();
+            extent.SetInt32("LEFT", left);
+            extent.SetInt32("TOP", top);
+            extent.SetInt32("WIDTH", width);
+            extent.SetInt32("HEIGHT", height);
+            control.SetStruct("EXTENT", extent);
+
+            // ProgressBar-specific properties
+            control.SetInt32("MAXVALUE", 100);
+            control.SetInt32("CURVALUE", 75); // 75% progress
+            control.SetInt32("STARTFROMLEFT", 1); // Fill from left (1) or right (0)
+
+            // PROGRESS struct (progress fill appearance)
+            var progress = new GFFStruct();
+            progress.SetResRef("CORNER", new ResRef("uiprog_corner"));
+            progress.SetResRef("EDGE", new ResRef("uiprog_edge"));
+            progress.SetResRef("FILL", new ResRef("uiprog_fill"));
+            progress.SetInt32("FILLSTYLE", 2); // Texture
+            progress.SetInt32("DIMENSION", 2);
+            progress.SetInt32("INNEROFFSET", 0);
+            progress.SetVector3("COLOR", new Vector3(0.0f, 1.0f, 0.0f)); // Green progress fill
+            progress.SetUInt8("PULSING", 0);
+            control.SetStruct("PROGRESS", progress);
+
+            // BORDER struct (background/track)
+            var border = new GFFStruct();
+            border.SetResRef("CORNER", new ResRef("uiprog_bcorner"));
+            border.SetResRef("EDGE", new ResRef("uiprog_bedge"));
+            border.SetResRef("FILL", new ResRef("uiprog_bfill"));
+            border.SetInt32("FILLSTYLE", 1); // Solid
+            border.SetInt32("DIMENSION", 2);
+            border.SetVector3("COLOR", new Vector3(0.2f, 0.2f, 0.2f)); // Dark background
+            control.SetStruct("BORDER", border);
+
+            // COLOR and ALPHA
+            control.SetVector3("COLOR", new Vector3(1.0f, 1.0f, 1.0f));
+            control.SetSingle("ALPHA", 1.0f);
+
+            return control;
+        }
+
+        /// <summary>
+        /// Creates a ListBox control with complete properties including ProtoItem template.
+        /// ListBox type: 11
+        /// </summary>
+        private static GFFStruct CreateListBoxControl(int id, string tag, int left, int top, int width, int height)
+        {
+            var control = new GFFStruct(11);
+            control.SetInt32("CONTROLTYPE", 11); // ListBox
+            control.SetInt32("ID", id);
+            control.SetString("TAG", tag);
+
+            // EXTENT struct
+            var extent = new GFFStruct();
+            extent.SetInt32("LEFT", left);
+            extent.SetInt32("TOP", top);
+            extent.SetInt32("WIDTH", width);
+            extent.SetInt32("HEIGHT", height);
+            control.SetStruct("EXTENT", extent);
+
+            // ListBox-specific properties
+            control.SetInt32("PADDING", 5); // Spacing between items
+            control.SetUInt8("LOOPING", 1); // Enable looping scroll
+            control.SetInt32("MAXVALUE", 20); // Maximum scroll value
+            control.SetInt32("LEFTSCROLLBAR", 0); // Scrollbar on right (0) or left (1)
+
+            // PROTOITEM struct (template for list items)
+            var protoItem = new GFFStruct(4); // ProtoItem type
+            protoItem.SetInt32("CONTROLTYPE", 4); // ProtoItem
+            protoItem.SetInt32("ID", 0); // Template doesn't need ID
+            protoItem.SetString("TAG", "LISTITEM");
+
+            // ProtoItem EXTENT
+            var protoExtent = new GFFStruct();
+            protoExtent.SetInt32("LEFT", 0);
+            protoExtent.SetInt32("TOP", 0);
+            protoExtent.SetInt32("WIDTH", width - 25); // Account for scrollbar
+            protoExtent.SetInt32("HEIGHT", 30); // Item height
+            protoItem.SetStruct("EXTENT", protoExtent);
+
+            // ProtoItem BORDER
+            var protoBorder = new GFFStruct();
+            protoBorder.SetResRef("CORNER", new ResRef("uilist_corner"));
+            protoBorder.SetResRef("EDGE", new ResRef("uilist_edge"));
+            protoBorder.SetResRef("FILL", new ResRef("uilist_fill"));
+            protoBorder.SetInt32("FILLSTYLE", 0); // Empty fill
+            protoBorder.SetInt32("DIMENSION", 1);
+            protoBorder.SetVector3("COLOR", new Vector3(0.2f, 0.2f, 0.3f));
+            protoItem.SetStruct("BORDER", protoBorder);
+
+            // ProtoItem HILIGHT
+            var protoHilight = new GFFStruct();
+            protoHilight.SetResRef("CORNER", new ResRef("uilist_hcorner"));
+            protoHilight.SetResRef("EDGE", new ResRef("uilist_hedge"));
+            protoHilight.SetResRef("FILL", new ResRef("uilist_hfill"));
+            protoHilight.SetInt32("FILLSTYLE", 1); // Solid fill for highlight
+            protoHilight.SetInt32("DIMENSION", 1);
+            protoHilight.SetVector3("COLOR", new Vector3(0.4f, 0.4f, 0.6f));
+            protoItem.SetStruct("HILIGHT", protoHilight);
+
+            // ProtoItem SELECTED
+            var protoSelected = new GFFStruct();
+            protoSelected.SetResRef("CORNER", new ResRef("uilist_scorner"));
+            protoSelected.SetResRef("EDGE", new ResRef("uilist_sedge"));
+            protoSelected.SetResRef("FILL", new ResRef("uilist_sfill"));
+            protoSelected.SetInt32("FILLSTYLE", 1);
+            protoSelected.SetInt32("DIMENSION", 1);
+            protoSelected.SetVector3("COLOR", new Vector3(0.2f, 0.6f, 0.2f)); // Green when selected
+            protoItem.SetStruct("SELECTED", protoSelected);
+
+            // ProtoItem HILIGHTSELECTED
+            var protoHilightSelected = new GFFStruct();
+            protoHilightSelected.SetResRef("CORNER", new ResRef("uilist_hscorner"));
+            protoHilightSelected.SetResRef("EDGE", new ResRef("uilist_hsedge"));
+            protoHilightSelected.SetResRef("FILL", new ResRef("uilist_hsfill"));
+            protoHilightSelected.SetInt32("FILLSTYLE", 1);
+            protoHilightSelected.SetInt32("DIMENSION", 1);
+            protoHilightSelected.SetVector3("COLOR", new Vector3(0.3f, 0.7f, 0.3f));
+            protoItem.SetStruct("HILIGHTSELECTED", protoHilightSelected);
+
+            // ProtoItem TEXT
+            var protoText = new GFFStruct();
+            protoText.SetString("TEXT", "List Item");
+            protoText.SetUInt32("STRREF", 0xFFFFFFFF);
+            protoText.SetResRef("FONT", new ResRef("fnt_d16x16"));
+            protoText.SetUInt32("ALIGNMENT", 1); // Top-Left
+            protoText.SetVector3("COLOR", new Vector3(1.0f, 1.0f, 1.0f));
+            protoItem.SetStruct("TEXT", protoText);
+
+            protoItem.SetUInt8("ISSELECTED", 0);
+            protoItem.SetUInt8("PULSING", 0);
+            control.SetStruct("PROTOITEM", protoItem);
+
+            // SCROLLBAR struct (embedded scrollbar)
+            var scrollbar = new GFFStruct();
+            scrollbar.SetInt32("MAXVALUE", 20);
+            scrollbar.SetInt32("VISIBLEVALUE", 5); // 5 visible items
+            scrollbar.SetInt32("CURVALUE", 0);
+
+            // Scrollbar DIR
+            var scrollbarDir = new GFFStruct();
+            scrollbarDir.SetResRef("IMAGE", new ResRef("uiscroll_dir"));
+            scrollbarDir.SetInt32("ALIGNMENT", 18);
+            scrollbar.SetStruct("DIR", scrollbarDir);
+
+            // Scrollbar THUMB
+            var scrollbarThumb = new GFFStruct();
+            scrollbarThumb.SetResRef("IMAGE", new ResRef("uiscroll_thumb"));
+            scrollbarThumb.SetInt32("ALIGNMENT", 18);
+            scrollbarThumb.SetInt32("DRAWSTYLE", 0);
+            scrollbarThumb.SetInt32("FLIPSTYLE", 0);
+            scrollbarThumb.SetSingle("ROTATE", 0.0f);
+            scrollbar.SetStruct("THUMB", scrollbarThumb);
+
+            control.SetStruct("SCROLLBAR", scrollbar);
+
+            // BORDER struct (ListBox background)
+            var border = new GFFStruct();
+            border.SetResRef("CORNER", new ResRef("uilistbox_corner"));
+            border.SetResRef("EDGE", new ResRef("uilistbox_edge"));
+            border.SetResRef("FILL", new ResRef("uilistbox_fill"));
+            border.SetInt32("FILLSTYLE", 1); // Solid
+            border.SetInt32("DIMENSION", 2);
+            border.SetVector3("COLOR", new Vector3(0.1f, 0.1f, 0.1f)); // Very dark background
+            control.SetStruct("BORDER", border);
+
+            // COLOR and ALPHA
+            control.SetVector3("COLOR", new Vector3(1.0f, 1.0f, 1.0f));
+            control.SetSingle("ALPHA", 1.0f);
+
+            return control;
         }
 
         private static string FindPythonRuntime()
