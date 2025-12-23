@@ -13944,6 +13944,7 @@ technique ColorGrading
         /// <summary>
         /// Converts TPC texture data to RGBA format for MonoGame.
         /// Based on daorigins.exe: TPC format conversion to DirectX 9 compatible format.
+        /// daorigins.exe: 0x00400000 - TPC texture format conversion and decompression
         /// </summary>
         /// <param name="tpc">Parsed TPC texture object.</param>
         /// <param name="width">Texture width.</param>
@@ -13962,10 +13963,76 @@ technique ColorGrading
                 return null;
             }
 
-            // TODO: STUB - Full TPC format conversion not implemented
             // Based on daorigins.exe: TPC formats (DXT1, DXT5, etc.) are converted to RGBA
-            // For now, return null to indicate conversion is not yet implemented
-            return null;
+            // daorigins.exe: 0x00400000 - Format detection and conversion dispatch
+            byte[] data = mipmap.Data;
+            TPCTextureFormat format = mipmap.TpcFormat;
+            byte[] output = new byte[width * height * 4];
+
+            switch (format)
+            {
+                case TPCTextureFormat.RGBA:
+                    // Direct copy - already in RGBA format
+                    // Based on daorigins.exe: Direct pixel data copy for uncompressed formats
+                    Array.Copy(data, output, Math.Min(data.Length, output.Length));
+                    break;
+
+                case TPCTextureFormat.BGRA:
+                    // Convert BGRA to RGBA (swap R and B channels)
+                    // Based on daorigins.exe: BGRA to RGBA conversion for DirectX 9
+                    ConvertBgraToRgba(data, output, width, height);
+                    break;
+
+                case TPCTextureFormat.RGB:
+                    // Convert RGB to RGBA (add alpha channel)
+                    // Based on daorigins.exe: RGB to RGBA conversion with full alpha
+                    ConvertRgbToRgba(data, output, width, height);
+                    break;
+
+                case TPCTextureFormat.BGR:
+                    // Convert BGR to RGBA (swap R and B, add alpha)
+                    // Based on daorigins.exe: BGR to RGBA conversion for DirectX 9
+                    ConvertBgrToRgba(data, output, width, height);
+                    break;
+
+                case TPCTextureFormat.Greyscale:
+                    // Convert greyscale to RGBA (replicate to all channels)
+                    // Based on daorigins.exe: Greyscale to RGBA conversion
+                    ConvertGreyscaleToRgba(data, output, width, height);
+                    break;
+
+                case TPCTextureFormat.DXT1:
+                    // Decompress DXT1 (BC1) to RGBA
+                    // Based on daorigins.exe: DXT1 decompression using S3TC algorithm
+                    DecompressDxt1(data, output, width, height);
+                    break;
+
+                case TPCTextureFormat.DXT3:
+                    // Decompress DXT3 (BC2) to RGBA
+                    // Based on daorigins.exe: DXT3 decompression with explicit alpha
+                    DecompressDxt3(data, output, width, height);
+                    break;
+
+                case TPCTextureFormat.DXT5:
+                    // Decompress DXT5 (BC3) to RGBA
+                    // Based on daorigins.exe: DXT5 decompression with interpolated alpha
+                    DecompressDxt5(data, output, width, height);
+                    break;
+
+                default:
+                    // Unknown format - fill with magenta to indicate error
+                    // Based on daorigins.exe: Error handling for unsupported formats
+                    for (int i = 0; i < output.Length; i += 4)
+                    {
+                        output[i] = 255;     // R
+                        output[i + 1] = 0;   // G
+                        output[i + 2] = 255; // B
+                        output[i + 3] = 255; // A
+                    }
+                    break;
+            }
+
+            return output;
         }
 
         /// <summary>
