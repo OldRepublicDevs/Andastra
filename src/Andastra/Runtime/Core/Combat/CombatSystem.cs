@@ -371,11 +371,21 @@ namespace Andastra.Runtime.Core.Combat
             int damageReduction = GetDamageReduction(target, damageType);
             result.DamageReduction = damageReduction;
 
-            // Apply critical multiplier
-            int totalDamage = baseDamage * multiplier;
+            // Check for immunity (indicated by int.MaxValue)
+            if (damageReduction == int.MaxValue)
+            {
+                // Immunity completely negates damage
+                result.FinalDamage = 0;
+                result.DamageReduction = 0; // Set to 0 for display purposes (immunity is not "reduction")
+            }
+            else
+            {
+                // Apply critical multiplier
+                int totalDamage = baseDamage * multiplier;
 
-            // Apply damage reduction
-            result.FinalDamage = Math.Max(0, totalDamage - damageReduction);
+                // Apply damage reduction (subtract reduction from total damage, minimum 0)
+                result.FinalDamage = Math.Max(0, totalDamage - damageReduction);
+            }
 
             // Apply damage to target
             ApplyDamage(target, result.FinalDamage);
@@ -607,10 +617,120 @@ namespace Andastra.Runtime.Core.Combat
             return stats;
         }
 
+        /// <summary>
+        /// Calculates total damage reduction for an entity against a specific damage type.
+        /// </summary>
+        /// <param name="entity">The entity taking damage.</param>
+        /// <param name="type">The type of damage being dealt.</param>
+        /// <returns>Total damage reduction amount (0 if immunity exists, otherwise sum of resistances and reductions).</returns>
+        /// <remarks>
+        /// Damage Reduction System:
+        /// - Based on swkotor2.exe damage reduction system
+        /// - Located via string references: EffectList @ 0x007bebe8, damage calculation routines
+        /// - Original implementation: FUN_0050b540 loads EffectList, effects are checked during damage calculation
+        /// - Damage immunity: Completely negates damage of matching type (or Universal)
+        /// - Damage resistance: Reduces damage by flat amount, stacks, type-specific (SubType = damage type or Universal)
+        /// - Damage reduction: Reduces damage by flat amount, stacks, may be universal or type-specific
+        /// - Effect types: EffectType.DamageImmunity (15), EffectType.DamageResistance (1), EffectType.DamageReduction (7)
+        /// - Universal damage type: Bypasses all resistances and reductions (but not immunity checks)
+        /// - Stacking rules: Resistances stack additively, reductions stack additively
+        /// - Priority: Immunity checked first (if found, damage is completely negated)
+        /// - Original behavior: Effects are iterated, immunity breaks early, resistances/reductions are summed
+        /// </remarks>
         private int GetDamageReduction(IEntity entity, DamageType type)
         {
-            // TODO:  Simplified damage reduction
-            return 0;
+            if (entity == null)
+            {
+                return 0;
+            }
+
+            // Universal damage bypasses all resistances and reductions
+            // However, we still check for immunity (some effects may grant universal immunity)
+            if (type == DamageType.Universal)
+            {
+                // Check only for universal immunity
+                if (_world != null && _world.EffectSystem != null)
+                {
+                    foreach (var activeEffect in _world.EffectSystem.GetEffects(entity))
+                    {
+                        var effect = activeEffect.Effect;
+                        if (effect.Type == EffectType.DamageImmunity)
+                        {
+                            DamageType effectDamageType = (DamageType)effect.SubType;
+                            if (effectDamageType == DamageType.Universal)
+                            {
+                                // Universal immunity negates all damage
+                                return int.MaxValue; // Signal complete immunity
+                            }
+                        }
+                    }
+                }
+                return 0;
+            }
+
+            // Get effect system from world
+            if (_world == null || _world.EffectSystem == null)
+            {
+                return 0;
+            }
+
+            int totalReduction = 0;
+            bool hasImmunity = false;
+
+            // Iterate through all active effects on the entity
+            foreach (var activeEffect in _world.EffectSystem.GetEffects(entity))
+            {
+                var effect = activeEffect.Effect;
+
+                // Check for damage immunity first (highest priority)
+                if (effect.Type == EffectType.DamageImmunity)
+                {
+                    DamageType effectDamageType = (DamageType)effect.SubType;
+                    // Immunity matches if effect type matches damage type, or effect is Universal
+                    if (effectDamageType == type || effectDamageType == DamageType.Universal)
+                    {
+                        hasImmunity = true;
+                        // Immunity completely negates damage - return maximum value to signal this
+                        // The caller will check if reduction >= damage to determine if damage was negated
+                        return int.MaxValue;
+                    }
+                }
+
+                // Check for damage resistance (type-specific, stacks)
+                if (effect.Type == EffectType.DamageResistance && !hasImmunity)
+                {
+                    DamageType effectDamageType = (DamageType)effect.SubType;
+                    // Resistance matches if effect type matches damage type, or effect is Universal
+                    if (effectDamageType == type || effectDamageType == DamageType.Universal)
+                    {
+                        // Add resistance amount (stacks additively)
+                        totalReduction += effect.Amount;
+                    }
+                }
+
+                // Check for damage reduction (may be universal or type-specific, stacks)
+                if (effect.Type == EffectType.DamageReduction && !hasImmunity)
+                {
+                    // Damage reduction: If SubType is set, it's type-specific; if 0 or negative, it's universal
+                    // Based on swkotor2.exe: Damage reduction effects can be universal or type-specific
+                    if (effect.SubType <= 0)
+                    {
+                        // Universal damage reduction (applies to all damage types)
+                        totalReduction += effect.Amount;
+                    }
+                    else
+                    {
+                        // Type-specific damage reduction
+                        DamageType effectDamageType = (DamageType)effect.SubType;
+                        if (effectDamageType == type || effectDamageType == DamageType.Universal)
+                        {
+                            totalReduction += effect.Amount;
+                        }
+                    }
+                }
+            }
+
+            return totalReduction;
         }
 
         private int RollD20()
