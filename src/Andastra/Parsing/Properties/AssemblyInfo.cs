@@ -10,4 +10,3 @@ using System.Runtime.Versioning;
 [assembly: AssemblyProduct("Andastra.Parsing")]
 [assembly: AssemblyTitle("Andastra.Parsing")]
 [assembly: AssemblyVersion("2.0.0.0")]
-[assembly: TargetFramework(".NETCoreApp,Version=v9.0", FrameworkDisplayName = "")]

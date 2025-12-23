@@ -11,7 +11,6 @@ using Andastra.Runtime.Graphics;
 using Andastra.Runtime.MonoGame.Graphics;
 using Moq;
 using JetBrains.Annotations;
-#
 using Stride.Engine;
 using StrideGraphics = Stride.Graphics;
 using Stride.Core.Mathematics;
