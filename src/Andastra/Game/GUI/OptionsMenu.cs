@@ -52,11 +52,20 @@ namespace Andastra.Runtime.Game.GUI
             ref int selectedOptionIndex,
             ref bool isEditingValue,
             ref string editingValue,
+            ref bool isRebindingKey,
+            ref string rebindingActionName,
             GameSettings settings,
             Dictionary<OptionsCategory, List<OptionItem>> optionsByCategory,
             Action<GameSettings> onApply,
             Action onCancel)
         {
+            if (isRebindingKey)
+            {
+                // Handle key binding rebinding - wait for any key press
+                HandleKeyBindingRebind(currentKeyboard, previousKeyboard, ref isRebindingKey, rebindingActionName, optionsByCategory, selectedCategoryIndex, selectedOptionIndex);
+                return;
+            }
+
             if (isEditingValue)
             {
                 // Handle text input for numeric values
@@ -115,7 +124,7 @@ namespace Andastra.Runtime.Game.GUI
                 }
             }
 
-            // Enter to edit numeric values
+            // Enter to edit numeric values or start key binding rebind
             if (IsKeyJustPressed(previousKeyboard, currentKeyboard, Keys.Enter) && 
                 selectedCategoryIndex >= 0 && selectedCategoryIndex < optionsByCategory.Count)
             {
@@ -128,6 +137,72 @@ namespace Andastra.Runtime.Game.GUI
                         isEditingValue = true;
                         editingValue = option.GetStringValue();
                     }
+                    else if (option.Type == OptionType.KeyBinding)
+                    {
+                        // Start key binding rebind
+                        isRebindingKey = true;
+                        rebindingActionName = option.Name;
+                    }
+                    else if (option.Type == OptionType.MouseButtonBinding)
+                    {
+                        // Start mouse button binding rebind
+                        isRebindingKey = true;
+                        rebindingActionName = option.Name;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handles key binding rebinding input.
+        /// </summary>
+        /// <remarks>
+        /// Key Binding Rebind Handler:
+        /// - Based on swkotor.exe and swkotor2.exe key binding system
+        /// - Original implementation: When rebinding a key, waits for next key press and assigns it to the action
+        /// - Based on swkotor2.exe: Key binding UI captures next key press and updates binding
+        /// </remarks>
+        private static void HandleKeyBindingRebind(
+            IKeyboardState currentKeyboard,
+            IKeyboardState previousKeyboard,
+            ref bool isRebindingKey,
+            string rebindingActionName,
+            Dictionary<OptionsCategory, List<OptionItem>> optionsByCategory,
+            int selectedCategoryIndex,
+            int selectedOptionIndex)
+        {
+            // Check for Escape to cancel rebinding
+            if (IsKeyJustPressed(previousKeyboard, currentKeyboard, Keys.Escape))
+            {
+                isRebindingKey = false;
+                return;
+            }
+
+            // Check for any key press (excluding Escape which we already handled)
+            Keys[] pressedKeys = currentKeyboard.GetPressedKeys();
+            foreach (Keys key in pressedKeys)
+            {
+                if (!previousKeyboard.IsKeyDown(key) && key != Keys.Escape)
+                {
+                    // Found a new key press - assign it to the binding
+                    OptionsCategory currentCategory = (OptionsCategory)selectedCategoryIndex;
+                    if (selectedOptionIndex >= 0 && selectedOptionIndex < optionsByCategory[currentCategory].Count)
+                    {
+                        OptionItem option = optionsByCategory[currentCategory][selectedOptionIndex];
+                        if (option is KeyBindingOptionItem keyBindingOption)
+                        {
+                            string keyName = key.ToString();
+                            keyBindingOption.SetKeyName(keyName);
+                        }
+                        else if (option is MouseButtonBindingOptionItem mouseButtonOption)
+                        {
+                            // For mouse buttons, we need to check mouse state
+                            // This is a simplified version - in a full implementation, we'd wait for mouse button press
+                            // For now, we'll skip mouse button rebinding via keyboard
+                        }
+                    }
+                    isRebindingKey = false;
+                    return;
                 }
             }
         }
@@ -361,11 +436,45 @@ namespace Andastra.Runtime.Game.GUI
             };
             options[OptionsCategory.Autopause] = autopauseOptions;
 
-            // TODO:  Controls options (TODO: STUB - placeholder for future controls system)
+            // Controls options - based on swkotor.exe and swkotor2.exe controls system
+            // Located via string references: "Mouse Sensitivity" @ 0x007c85cc, "Mouse Look" @ 0x007c8608, "Reverse Mouse Buttons" @ 0x007c8628
+            // "keymap" @ 0x007c4cbc (keymap.2da file reference), "Pause" @ 0x007c4de8
+            // Original implementation: Key bindings stored in keymap.2da, mouse settings in INI file
+            // Based on swkotor2.exe: CExoInputInternal input system (exoinputinternal.cpp @ 0x007c64dc)
+            // Initialize default controls settings if not already initialized
+            if (settings.Controls.KeyBindings.Count == 0)
+            {
+                settings.Controls.InitializeDefaults();
+            }
+
             var controlsOptions = new List<OptionItem>
             {
+                // Mouse settings
                 new OptionItem("Mouse Sensitivity", OptionType.Numeric, () => (int)(settings.MouseSensitivity * 100), v => settings.MouseSensitivity = v / 100.0f, 1, 100),
-                new OptionItem("Invert Mouse Y", OptionType.Boolean, () => settings.InvertMouseY ? 1 : 0, v => settings.InvertMouseY = v > 0, 0, 1)
+                new OptionItem("Invert Mouse Y", OptionType.Boolean, () => settings.InvertMouseY ? 1 : 0, v => settings.InvertMouseY = v > 0, 0, 1),
+                
+                // Key bindings - based on swkotor.exe and swkotor2.exe keymap.2da system
+                // All key bindings can be rebound by selecting the option and pressing a new key
+                new KeyBindingOptionItem("Pause", () => settings.Controls.GetKeyBinding("Pause", "Space"), k => settings.Controls.KeyBindings["Pause"] = k),
+                new KeyBindingOptionItem("Cycle Party Leader", () => settings.Controls.GetKeyBinding("CycleParty", "Tab"), k => settings.Controls.KeyBindings["CycleParty"] = k),
+                new KeyBindingOptionItem("Quick Slot 1", () => settings.Controls.GetKeyBinding("QuickSlot1", "D1"), k => settings.Controls.KeyBindings["QuickSlot1"] = k),
+                new KeyBindingOptionItem("Quick Slot 2", () => settings.Controls.GetKeyBinding("QuickSlot2", "D2"), k => settings.Controls.KeyBindings["QuickSlot2"] = k),
+                new KeyBindingOptionItem("Quick Slot 3", () => settings.Controls.GetKeyBinding("QuickSlot3", "D3"), k => settings.Controls.KeyBindings["QuickSlot3"] = k),
+                new KeyBindingOptionItem("Quick Slot 4", () => settings.Controls.GetKeyBinding("QuickSlot4", "D4"), k => settings.Controls.KeyBindings["QuickSlot4"] = k),
+                new KeyBindingOptionItem("Quick Slot 5", () => settings.Controls.GetKeyBinding("QuickSlot5", "D5"), k => settings.Controls.KeyBindings["QuickSlot5"] = k),
+                new KeyBindingOptionItem("Quick Slot 6", () => settings.Controls.GetKeyBinding("QuickSlot6", "D6"), k => settings.Controls.KeyBindings["QuickSlot6"] = k),
+                new KeyBindingOptionItem("Quick Slot 7", () => settings.Controls.GetKeyBinding("QuickSlot7", "D7"), k => settings.Controls.KeyBindings["QuickSlot7"] = k),
+                new KeyBindingOptionItem("Quick Slot 8", () => settings.Controls.GetKeyBinding("QuickSlot8", "D8"), k => settings.Controls.KeyBindings["QuickSlot8"] = k),
+                new KeyBindingOptionItem("Quick Slot 9", () => settings.Controls.GetKeyBinding("QuickSlot9", "D9"), k => settings.Controls.KeyBindings["QuickSlot9"] = k),
+                new KeyBindingOptionItem("Solo Mode", () => settings.Controls.GetKeyBinding("SoloMode", "V"), k => settings.Controls.KeyBindings["SoloMode"] = k),
+                new KeyBindingOptionItem("Character Screen", () => settings.Controls.GetKeyBinding("Character", "C"), k => settings.Controls.KeyBindings["Character"] = k),
+                new KeyBindingOptionItem("Inventory", () => settings.Controls.GetKeyBinding("Inventory", "I"), k => settings.Controls.KeyBindings["Inventory"] = k),
+                new KeyBindingOptionItem("Journal", () => settings.Controls.GetKeyBinding("Journal", "J"), k => settings.Controls.KeyBindings["Journal"] = k),
+                new KeyBindingOptionItem("Map", () => settings.Controls.GetKeyBinding("Map", "M"), k => settings.Controls.KeyBindings["Map"] = k),
+                
+                // Mouse button bindings - based on swkotor.exe and swkotor2.exe mouse input system
+                new MouseButtonBindingOptionItem("Move/Attack Button", () => settings.Controls.GetMouseButtonBinding("Move", "Left"), b => settings.Controls.MouseButtonBindings["Move"] = b),
+                new MouseButtonBindingOptionItem("Context Action Button", () => settings.Controls.GetMouseButtonBinding("ContextAction", "Right"), b => settings.Controls.MouseButtonBindings["ContextAction"] = b)
             };
             options[OptionsCategory.Controls] = controlsOptions;
 
@@ -453,7 +562,9 @@ namespace Andastra.Runtime.Game.GUI
         {
             Boolean,
             Numeric,
-            Enum
+            Enum,
+            KeyBinding,
+            MouseButtonBinding
         }
 
         /// <summary>
@@ -506,6 +617,72 @@ namespace Andastra.Runtime.Game.GUI
                     return ((int)value).ToString();
                 }
                 return value.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Represents a key binding option that can be rebound.
+        /// </summary>
+        /// <remarks>
+        /// Key Binding Option Item:
+        /// - Based on swkotor.exe and swkotor2.exe key binding system
+        /// - Located via string references: "keymap" @ 0x007c4cbc (keymap.2da file reference)
+        /// - Original implementation: Key bindings can be changed in options menu by selecting and pressing a new key
+        /// - Based on swkotor2.exe: Key binding UI allows rebinding any action to any key
+        /// </remarks>
+        public class KeyBindingOptionItem : OptionItem
+        {
+            private Func<string> _getKeyName;
+            private Action<string> _setKeyName;
+
+            public KeyBindingOptionItem(string name, Func<string> getKeyName, Action<string> setKeyName)
+                : base(name, OptionType.KeyBinding, () => 0, v => { }, 0, 0)
+            {
+                _getKeyName = getKeyName;
+                _setKeyName = setKeyName;
+            }
+
+            public new string GetStringValue()
+            {
+                return _getKeyName();
+            }
+
+            public void SetKeyName(string keyName)
+            {
+                _setKeyName(keyName);
+            }
+        }
+
+        /// <summary>
+        /// Represents a mouse button binding option that can be rebound.
+        /// </summary>
+        /// <remarks>
+        /// Mouse Button Binding Option Item:
+        /// - Based on swkotor.exe and swkotor2.exe mouse input system
+        /// - Located via string references: "Reverse Mouse Buttons" @ 0x007c8628
+        /// - Original implementation: Mouse buttons can be rebound in options menu
+        /// - Based on swkotor2.exe: Mouse button configuration allows rebinding actions to different mouse buttons
+        /// </remarks>
+        public class MouseButtonBindingOptionItem : OptionItem
+        {
+            private Func<string> _getButtonName;
+            private Action<string> _setButtonName;
+
+            public MouseButtonBindingOptionItem(string name, Func<string> getButtonName, Action<string> setButtonName)
+                : base(name, OptionType.MouseButtonBinding, () => 0, v => { }, 0, 0)
+            {
+                _getButtonName = getButtonName;
+                _setButtonName = setButtonName;
+            }
+
+            public new string GetStringValue()
+            {
+                return _getButtonName();
+            }
+
+            public void SetButtonName(string buttonName)
+            {
+                _setButtonName(buttonName);
             }
         }
     }

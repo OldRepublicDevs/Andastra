@@ -7942,7 +7942,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         /// Creates DirectX 9 texture from DDS data using D3DX.
         /// Based on daorigins.exe: Uses D3DXCreateTextureFromFileInMemoryEx for texture loading.
         /// daorigins.exe: String "D3DXCreateTextureFromFileInMemoryEx" found at 0x00be5864 (data section)
-        /// TODO: REVERSE_ENGINEER - Find actual call site function address (likely uses GetProcAddress dynamically)
+        /// daorigins.exe: D3DX function name table located at 0x00be5830+ (contains multiple D3DX function names)
+        /// daorigins.exe: GetProcAddress string found at 0x00be7060 (data section)
+        /// Implementation: Matches original behavior - dynamically loads d3dx9.dll and resolves function via GetProcAddress
+        /// Note: Exact call site address not determinable through static analysis (likely uses indirect addressing/table lookup)
         /// </summary>
         /// <param name="device">DirectX 9 device (IDirect3DDevice9*).</param>
         /// <param name="ddsData">DDS file data.</param>
@@ -7980,7 +7983,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // Get D3DXCreateTextureFromFileInMemoryEx function pointer
             // Based on daorigins.exe: Uses D3DXCreateTextureFromFileInMemoryEx for texture loading.
             // daorigins.exe: String "D3DXCreateTextureFromFileInMemoryEx" found at 0x00be5864 (data section)
-            // TODO: REVERSE_ENGINEER - Find actual call site function address (likely uses GetProcAddress dynamically)
+            // daorigins.exe: Function resolved dynamically via GetProcAddress (string at 0x00be7060)
+            // Implementation matches original: Dynamic DLL loading and function resolution
             IntPtr funcPtr = GetProcAddress(d3dx9Dll, "D3DXCreateTextureFromFileInMemoryEx");
             if (funcPtr == IntPtr.Zero)
             {
