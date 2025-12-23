@@ -8,6 +8,10 @@ using Stride.Shaders;
 using Andastra.Runtime.Graphics.Common.PostProcessing;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Stride.Graphics;
+using RectangleF = Stride.Core.Mathematics.RectangleF;
+using Color = Stride.Core.Mathematics.Color;
+using Vector2 = Stride.Core.Mathematics.Vector2;
+using Matrix = Stride.Core.Mathematics.Matrix;
 
 namespace Andastra.Runtime.Stride.PostProcessing
 {
@@ -26,6 +30,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
     public class StrideSsaoEffect : BaseSsaoEffect
     {
         private StrideGraphics.GraphicsDevice _graphicsDevice;
+        private global::Stride.Graphics.GraphicsContext _graphicsContext;
         private StrideGraphics.Texture _aoTarget;
         private StrideGraphics.Texture _blurTarget;
         private StrideGraphics.Texture _noiseTexture;
@@ -38,9 +43,10 @@ namespace Andastra.Runtime.Stride.PostProcessing
         private StrideGraphics.Effect _bilateralBlurEffectBase;
         private StrideGraphics.Texture _tempBlurTarget;
 
-        public StrideSsaoEffect(StrideGraphics.GraphicsDevice graphicsDevice)
+        public StrideSsaoEffect(StrideGraphics.GraphicsDevice graphicsDevice, global::Stride.Graphics.GraphicsContext graphicsContext = null)
         {
             _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
+            _graphicsContext = graphicsContext;
             InitializeRenderingResources();
         }
 
@@ -218,10 +224,11 @@ namespace Andastra.Runtime.Stride.PostProcessing
             }
 
             // Get command list for rendering operations
-            // Use dynamic to handle ImmediateContext (may be property or method depending on Stride version)
-            dynamic graphicsDeviceDynamic = _graphicsDevice;
-            dynamic graphicsContextDynamic = graphicsDeviceDynamic.ImmediateContext;
-            StrideGraphics.CommandList commandList = graphicsContextDynamic as StrideGraphics.CommandList;
+            if (_graphicsContext == null)
+            {
+                return;
+            }
+            StrideGraphics.CommandList commandList = _graphicsContext.CommandList;
             if (commandList == null)
             {
                 return;
@@ -236,12 +243,10 @@ namespace Andastra.Runtime.Stride.PostProcessing
             // Get viewport dimensions
             int width = destination.Width;
             int height = destination.Height;
-            var viewport = new StrideGraphics.Viewport(0, 0, width, height);
 
             // Begin sprite batch rendering
             // Use SpriteSortMode.Immediate for post-processing effects
-            // Note: SpriteBatch.Begin expects GraphicsContext, but CommandList should be compatible
-            _spriteBatch.Begin(graphicsContextDynamic, StrideGraphics.SpriteSortMode.Immediate, StrideGraphics.BlendStates.Opaque, _linearSampler,
+            _spriteBatch.Begin(_graphicsContext, StrideGraphics.SpriteSortMode.Immediate, StrideGraphics.BlendStates.Opaque, _linearSampler,
                 StrideGraphics.DepthStencilStates.None, StrideGraphics.RasterizerStates.CullNone, _gtaoEffect);
 
             // If we have a custom GTAO effect, set its parameters
@@ -325,10 +330,11 @@ namespace Andastra.Runtime.Stride.PostProcessing
             }
 
             // Get command list for rendering operations
-            // Use dynamic to handle ImmediateContext (may be property or method depending on Stride version)
-            dynamic graphicsDeviceDynamic = _graphicsDevice;
-            dynamic graphicsContextDynamic = graphicsDeviceDynamic.ImmediateContext;
-            StrideGraphics.CommandList commandList = graphicsContextDynamic as StrideGraphics.CommandList;
+            if (_graphicsContext == null)
+            {
+                return;
+            }
+            StrideGraphics.CommandList commandList = _graphicsContext.CommandList;
             if (commandList == null)
             {
                 return;
@@ -339,20 +345,20 @@ namespace Andastra.Runtime.Stride.PostProcessing
             var destinationRect = new RectangleF(0, 0, width, height);
 
             // Pass 1: Horizontal blur
-            ApplyBilateralBlurPass(source, _tempBlurTarget, depthBuffer, true, width, height, commandList, graphicsContextDynamic);
+            ApplyBilateralBlurPass(source, _tempBlurTarget, depthBuffer, true, width, height, commandList);
 
             // Pass 2: Vertical blur (from temp to final destination)
-            ApplyBilateralBlurPass(_tempBlurTarget, destination, depthBuffer, false, width, height, commandList, graphicsContextDynamic);
+            ApplyBilateralBlurPass(_tempBlurTarget, destination, depthBuffer, false, width, height, commandList);
         }
 
         private void ApplyBilateralBlurPass(StrideGraphics.Texture source, StrideGraphics.Texture destination, StrideGraphics.Texture depthBuffer,
-            bool horizontal, int width, int height, StrideGraphics.CommandList commandList, dynamic graphicsContext)
+            bool horizontal, int width, int height, StrideGraphics.CommandList commandList)
         {
             // Apply one pass of bilateral blur (either horizontal or vertical)
             // Bilateral blur weights samples by both spatial distance and depth difference
             // This preserves edges at depth discontinuities
 
-            if (source == null || destination == null || depthBuffer == null)
+            if (source == null || destination == null || depthBuffer == null || _graphicsContext == null)
             {
                 return;
             }
@@ -364,8 +370,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             commandList.Clear(destination, Color.Black);
 
             // Begin sprite batch rendering
-            // Note: SpriteBatch.Begin expects GraphicsContext, use dynamic to handle type compatibility
-            _spriteBatch.Begin(graphicsContext, StrideGraphics.SpriteSortMode.Immediate, StrideGraphics.BlendStates.Opaque, _linearSampler,
+            _spriteBatch.Begin(_graphicsContext, StrideGraphics.SpriteSortMode.Immediate, StrideGraphics.BlendStates.Opaque, _linearSampler,
                 StrideGraphics.DepthStencilStates.None, StrideGraphics.RasterizerStates.CullNone, _bilateralBlurEffect);
 
             // If we have a custom bilateral blur effect, set its parameters
