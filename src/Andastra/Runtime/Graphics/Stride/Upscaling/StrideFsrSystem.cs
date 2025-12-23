@@ -142,8 +142,13 @@ namespace Andastra.Runtime.Stride.Upscaling
                         {
                             // Apply effect (this updates resource sets from Parameters and sets pipeline state)
                             // EffectInstance.Apply() handles both updating parameters and applying the effect
-                            effectInstance.Apply(deviceGraphicsContext);
-                            return;
+                            // Try to cast to GraphicsContext if available, otherwise skip this strategy
+                            var graphicsContext = deviceGraphicsContext as StrideGraphics.GraphicsContext;
+                            if (graphicsContext != null)
+                            {
+                                effectInstance.Apply(graphicsContext);
+                                return;
+                            }
                         }
                     }
                 }
