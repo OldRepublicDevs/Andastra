@@ -5,6 +5,9 @@ using System.Runtime.InteropServices;
 using Microsoft.Xna.Framework;
 using Andastra.Runtime.MonoGame.Interfaces;
 using Andastra.Runtime.MonoGame.Enums;
+using Vector3 = System.Numerics.Vector3;
+using Vector4 = System.Numerics.Vector4;
+using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace Andastra.Runtime.MonoGame.Rendering
 {
@@ -226,7 +229,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             // Upload object data to GPU buffer
             ICommandList commandList = _device.CreateCommandList(CommandListType.Copy);
             commandList.Open();
-            
+
             // Convert ObjectData array to byte array for upload
             int objectDataSize = Marshal.SizeOf(typeof(ObjectData));
             byte[] objectDataBytes = new byte[objects.Length * objectDataSize];
@@ -377,7 +380,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
                 Viewport = new ViewportState
                 {
                     Viewports = new Viewport[] { viewport },
-                    Scissors = new Rectangle[] { new Rectangle { X = (int)viewport.X, Y = (int)viewport.Y, Width = (int)viewport.Width, Height = (int)viewport.Height } }
+                    Scissors = new Andastra.Runtime.MonoGame.Interfaces.Rectangle[] { new Andastra.Runtime.MonoGame.Interfaces.Rectangle { X = (int)viewport.X, Y = (int)viewport.Y, Width = (int)viewport.Width, Height = (int)viewport.Height } }
                 },
                 IndexBuffer = indexBuffer
             };
@@ -411,19 +414,19 @@ namespace Andastra.Runtime.MonoGame.Rendering
 
             // Try to load compute shader bytecode
             byte[] shaderBytecode = LoadComputeShaderBytecode("IndirectRendererCulling");
-            
+
             if (shaderBytecode == null || shaderBytecode.Length == 0)
             {
                 // Generate minimal placeholder compute shader bytecode
                 // In production, this should be replaced with actual compiled shader bytecode
                 shaderBytecode = GeneratePlaceholderComputeShaderBytecode();
-                
+
                 if (shaderBytecode == null || shaderBytecode.Length == 0)
                 {
                     Console.WriteLine("[IndirectRenderer] Warning: Could not load or generate compute shader bytecode. GPU culling will not function.");
                     return;
                 }
-                
+
                 Console.WriteLine("[IndirectRenderer] Warning: Using placeholder compute shader bytecode. For production, provide pre-compiled shader bytecode.");
             }
 
@@ -548,7 +551,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             // 3. Calculate distance from camera for LOD selection
             // 4. Write indirect draw command if visible
             // 5. Compact visible objects into culled buffer
-            
+
             // For now, return empty array - actual implementation requires compiled shader bytecode
             // Shader source would be in HLSL/GLSL and compiled offline
             return new byte[0];

@@ -5,6 +5,11 @@ using System.Runtime.InteropServices;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Andastra.Runtime.MonoGame.Interfaces;
+using Andastra.Runtime.MonoGame.Enums;
+using Vector3 = System.Numerics.Vector3;
+using Vector4 = System.Numerics.Vector4;
+using Matrix4x4 = System.Numerics.Matrix4x4;
+using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace Andastra.Runtime.MonoGame.Lighting
 {
@@ -47,13 +52,13 @@ namespace Andastra.Runtime.MonoGame.Lighting
         /// <param name="shadowMap">Optional shadow map for soft shadow calculations (null if not available)</param>
         /// <param name="lightSpaceMatrix">Light space transformation matrix for shadow mapping</param>
         /// <returns>Lighting contribution (diffuse + specular) from the area light</returns>
-        public static Vector3 CalculateAreaLightContribution(
+        public static System.Numerics.Vector3 CalculateAreaLightContribution(
             IDynamicLight light,
-            Vector3 surfacePosition,
-            Vector3 surfaceNormal,
-            Vector3 viewDirection,
+            System.Numerics.Vector3 surfacePosition,
+            System.Numerics.Vector3 surfaceNormal,
+            System.Numerics.Vector3 viewDirection,
             IntPtr shadowMap,
-            Matrix4x4 lightSpaceMatrix)
+            System.Numerics.Matrix4x4 lightSpaceMatrix)
         {
             if (light == null || light.Type != LightType.Area || !light.Enabled)
             {

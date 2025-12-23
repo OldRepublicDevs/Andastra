@@ -2,15 +2,16 @@ using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Andastra.Runtime.MonoGame.Rendering;
+using Andastra.Runtime.MonoGame.Graphics;
 
 namespace Andastra.Runtime.MonoGame.Particles
 {
     /// <summary>
     /// GPU-based particle system using compute shaders.
-    /// 
+    ///
     /// GPU particles offload all particle simulation to the GPU,
     /// enabling massive particle counts (millions) with minimal CPU overhead.
-    /// 
+    ///
     /// Features:
     /// - Compute shader-based simulation
     /// - GPU-side spawning and updating
@@ -57,8 +58,8 @@ namespace Andastra.Runtime.MonoGame.Particles
         }
 
         private readonly GraphicsDevice _graphicsDevice;
-        private GraphicsBuffer _particleBuffer;
-        private GraphicsBuffer _spawnBuffer;
+        private MonoGameGraphicsBuffer _particleBuffer;
+        private MonoGameGraphicsBuffer _spawnBuffer;
         private int _maxParticles;
         private int _currentParticleCount;
 
