@@ -30,6 +30,7 @@ using Andastra.Runtime.Scripting.VM;
 using Andastra.Runtime.Core.Audio;
 using GraphicsVector2 = Andastra.Runtime.Graphics.Vector2;
 using GraphicsColor = Andastra.Runtime.Graphics.Color;
+using GraphicsRectangle = Andastra.Runtime.Graphics.Rectangle;
 
 namespace Andastra.Runtime.Game.Core
 {
@@ -781,6 +782,11 @@ namespace Andastra.Runtime.Game.Core
             int buttonHeight = 60;
             int buttonSpacing = 15;
             int titleOffset = 180;
+
+            // Get current input states
+            var inputManager = _graphicsBackend.InputManager;
+            var currentKeyboardState = inputManager.KeyboardState;
+            var currentMouseState = inputManager.MouseState;
 
             // Track mouse hover
             _hoveredMenuIndex = -1;
@@ -2166,7 +2172,7 @@ namespace Andastra.Runtime.Game.Core
 
                         GraphicsVector2 textPos = new GraphicsVector2(itemRect.X + 10, itemRect.Y + (itemRect.Height - textSize.Y) / 2);
                         _spriteBatch.DrawString(_font, pathText, textPos + new GraphicsVector2(1, 1), new GraphicsColor(0, 0, 0, 200));
-                        _spriteBatch.DrawString(_font, pathText, textPos, isSelected ? Color.White : new GraphicsColor(180, 180, 200, 255));
+                        _spriteBatch.DrawString(_font, pathText, textPos, isSelected ? GraphicsColor.White : new GraphicsColor(180, 180, 200, 255));
                     }
                 }
 
@@ -2615,7 +2621,7 @@ namespace Andastra.Runtime.Game.Core
 
             // Ground plane color: Neutral brown (RGB: 139, 69, 19) matching typical ground appearance
             // This provides a visual reference when area geometry is not available
-            Color groundColor = new GraphicsColor(139, 69, 19, 255); // Brown color
+            GraphicsColor groundColor = new GraphicsColor(139, 69, 19, 255); // Brown color
 
             // Create ground plane vertices (4 corners of a quad)
             // Vertices are positioned in XZ plane (Y is constant at ground level)
@@ -2818,7 +2824,7 @@ namespace Andastra.Runtime.Game.Core
                 }
                 if (_font != null)
                 {
-                    _spriteBatch.DrawString(_font, statusText, new GraphicsVector2(10, 10), Microsoft.Xna.Framework.Color.White);
+                    _spriteBatch.DrawString(_font, statusText, new GraphicsVector2(10, 10), GraphicsColor.White);
                 }
             }
             // If no font, we just skip text rendering - the 3D scene is still visible
@@ -2963,14 +2969,14 @@ namespace Andastra.Runtime.Game.Core
             }
 
             // Fallback: Draw as simple colored box
-            Color entityColor = Color.Gray;
+            GraphicsColor entityColor = GraphicsColor.Gray;
             float entityHeight = 1f;
             float entityWidth = 0.5f;
 
             switch (entity.ObjectType)
             {
                 case Andastra.Runtime.Core.Enums.ObjectType.Creature:
-                    entityColor = Color.Green;
+                    entityColor = GraphicsColor.Green;
                     entityHeight = 2f;
                     entityWidth = 0.5f;
                     break;
@@ -3110,15 +3116,15 @@ namespace Andastra.Runtime.Game.Core
             var playerVertices = new VertexPositionColor[]
             {
                 // Bottom face
-                new VertexPositionColor(new Vector3(-0.5f, -0.5f, 0), Microsoft.Xna.Framework.Color.Blue),
-                new VertexPositionColor(new Vector3(0.5f, -0.5f, 0), Microsoft.Xna.Framework.Color.Blue),
-                new VertexPositionColor(new Vector3(0.5f, 0.5f, 0), Microsoft.Xna.Framework.Color.Blue),
-                new VertexPositionColor(new Vector3(-0.5f, 0.5f, 0), Microsoft.Xna.Framework.Color.Blue),
+                new VertexPositionColor(new Vector3(-0.5f, -0.5f, 0), GraphicsColor.Blue),
+                new VertexPositionColor(new Vector3(0.5f, -0.5f, 0), GraphicsColor.Blue),
+                new VertexPositionColor(new Vector3(0.5f, 0.5f, 0), GraphicsColor.Blue),
+                new VertexPositionColor(new Vector3(-0.5f, 0.5f, 0), GraphicsColor.Blue),
                 // Top face
-                new VertexPositionColor(new Vector3(-0.5f, -0.5f, 2), Microsoft.Xna.Framework.Color.Blue),
-                new VertexPositionColor(new Vector3(0.5f, -0.5f, 2), Microsoft.Xna.Framework.Color.Blue),
-                new VertexPositionColor(new Vector3(0.5f, 0.5f, 2), Microsoft.Xna.Framework.Color.Blue),
-                new VertexPositionColor(new Vector3(-0.5f, 0.5f, 2), Microsoft.Xna.Framework.Color.Blue)
+                new VertexPositionColor(new Vector3(-0.5f, -0.5f, 2), GraphicsColor.Blue),
+                new VertexPositionColor(new Vector3(0.5f, -0.5f, 2), GraphicsColor.Blue),
+                new VertexPositionColor(new Vector3(0.5f, 0.5f, 2), GraphicsColor.Blue),
+                new VertexPositionColor(new Vector3(-0.5f, 0.5f, 2), GraphicsColor.Blue)
             };
 
             short[] playerIndices = new short[]
@@ -3316,7 +3322,7 @@ namespace Andastra.Runtime.Game.Core
             {
                 // Create installation from game path if needed
                 var installation = new Andastra.Parsing.Installation.Installation(_settings.GamePath);
-                
+
                 // Use installation resource manager to find the MDL file
                 var resourceResult = installation.Resources.LookupResource(modelName, ResourceType.MDL);
                 if (resourceResult == null)
@@ -4525,7 +4531,7 @@ namespace Andastra.Runtime.Game.Core
                 {
                     // Word wrap dialogue text (simple implementation)
                     GraphicsVector2 textPos = new GraphicsVector2(padding, dialogueBoxY + padding);
-                    _spriteBatch.DrawString(_font, dialogueText, textPos, Color.White);
+                    _spriteBatch.DrawString(_font, dialogueText, textPos, GraphicsColor.White);
                 }
             }
 
@@ -4550,7 +4556,7 @@ namespace Andastra.Runtime.Game.Core
                 // Draw instruction text
                 string instructionText = "Press 1-9 to select reply, ESC to abort";
                 GraphicsVector2 instructionPos = new GraphicsVector2(padding, dialogueBoxY + dialogueBoxHeight - 20);
-                _spriteBatch.DrawString(_font, instructionText, instructionPos, Color.Gray);
+                _spriteBatch.DrawString(_font, instructionText, instructionPos, GraphicsColor.Gray);
             }
         }
 
@@ -4939,7 +4945,7 @@ namespace Andastra.Runtime.Game.Core
             {
                 int y = startY + (i - startIdx) * (itemHeight + itemSpacing);
                 bool isSelected = (i == _selectedSaveIndex);
-                Color bgColor = isSelected ? new GraphicsColor(100, 100, 150) : new GraphicsColor(50, 50, 70);
+                GraphicsColor bgColor = isSelected ? new GraphicsColor(100, 100, 150) : new GraphicsColor(50, 50, 70);
 
                 Rectangle itemRect = new GraphicsRectangle(100, y, viewportWidth - 200, itemHeight);
                 _spriteBatch.Draw(_menuTexture, itemRect, bgColor);
@@ -5064,7 +5070,7 @@ namespace Andastra.Runtime.Game.Core
             {
                 int y = startY + (i - startIdx) * (itemHeight + itemSpacing);
                 bool isSelected = (i == _selectedSaveIndex);
-                Color bgColor = isSelected ? new GraphicsColor(100, 100, 150) : new GraphicsColor(50, 50, 70);
+                GraphicsColor bgColor = isSelected ? new GraphicsColor(100, 100, 150) : new GraphicsColor(50, 50, 70);
 
                 Rectangle itemRect = new GraphicsRectangle(100, y, viewportWidth - 200, itemHeight);
                 _spriteBatch.Draw(_menuTexture, itemRect, bgColor);
@@ -5417,7 +5423,7 @@ namespace Andastra.Runtime.Game.Core
                 {
                     int y = startY + (i - startIdx) * (itemHeight + itemSpacing);
                     bool isSelected = (i == _selectedMovieIndex);
-                    Color bgColor = isSelected ? new GraphicsColor(100, 100, 150) : new GraphicsColor(50, 50, 70);
+                    GraphicsColor bgColor = isSelected ? new GraphicsColor(100, 100, 150) : new GraphicsColor(50, 50, 70);
 
                     Rectangle itemRect = new GraphicsRectangle(100, y, viewportWidth - 200, itemHeight);
                     _spriteBatch.Draw(_menuTexture, itemRect, bgColor);
