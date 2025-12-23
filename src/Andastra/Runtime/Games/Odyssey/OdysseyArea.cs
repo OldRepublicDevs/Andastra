@@ -2027,20 +2027,44 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // Move each entity to target area
+            // Based on swkotor2.exe: Area transition system (FUN_004e3ff0 @ 0x004e3ff0)
+            // Full transition flow: Remove from current area -> Project position -> Add to target area -> Update AreaId
             foreach (IEntity entity in entitiesToTransition)
             {
                 if (entity != null && entity.IsValid)
                 {
-                    // Update entity's AreaId
+                    // Step 1: Remove entity from current area (this area)
+                    // Based on swkotor2.exe: RemoveEntityFromArea removes entity from type-specific lists
+                    RemoveEntityFromArea(entity);
+                    Console.WriteLine($"[OdysseyArea] HandleDirectAreaTransition: Removed entity {entity.Tag ?? "null"} ({entity.ObjectId}) from current area {this.ResRef}");
+
+                    // Step 2: Engine-specific pre-transition hook (save state if needed)
+                    // Odyssey: No-op by default (no physics state to save)
+                    OnBeforeTransition(entity, this);
+
+                    // Step 3: Project entity position to target area walkmesh
+                    // Based on swkotor2.exe: Walkmesh projection system (FUN_004f5070 @ 0x004f5070)
+                    // Projects position to walkable surface for accurate positioning
+                    ProjectEntityToTargetArea(entity, targetArea);
+
+                    // Step 4: Engine-specific post-transition hook (restore state if needed)
+                    // Odyssey: No-op by default (no physics state to restore)
+                    OnAfterTransition(entity, targetArea, this);
+
+                    // Step 5: Add entity to target area
+                    // Based on swkotor2.exe: AddEntityToArea adds entity to type-specific lists
+                    AddEntityToTargetArea(entity, targetArea);
+                    Console.WriteLine($"[OdysseyArea] HandleDirectAreaTransition: Added entity {entity.Tag ?? "null"} ({entity.ObjectId}) to target area {targetAreaResRef}");
+
+                    // Step 6: Update entity's AreaId
+                    // Based on swkotor2.exe: Entity AreaId is updated after successful area transition
                     uint targetAreaId = world.GetAreaId(targetArea);
                     if (targetAreaId != 0)
                     {
                         entity.AreaId = targetAreaId;
                     }
 
-                    // Remove from current area and add to target area
-                    // TODO:  Note: This is simplified - full implementation would use area's AddEntity/RemoveEntity methods
-                    Console.WriteLine($"[OdysseyArea] HandleDirectAreaTransition: Moved entity {entity.Tag ?? "null"} ({entity.ObjectId}) to area {targetAreaResRef}");
+                    Console.WriteLine($"[OdysseyArea] HandleDirectAreaTransition: Successfully transitioned entity {entity.Tag ?? "null"} ({entity.ObjectId}) from area {this.ResRef} to area {targetAreaResRef}");
                 }
             }
         }
