@@ -1438,31 +1438,6 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         }
 
         /// <summary>
-        /// Converts BGRA byte array to RGBA format for OpenGL compatibility.
-        /// Matches original engine's BGRA to RGBA conversion (swkotor.exe: texture loading).
-        /// </summary>
-        /// <param name="bgraData">BGRA pixel data.</param>
-        /// <returns>RGBA pixel data.</returns>
-        protected virtual byte[] ConvertBGRAToRGBA(byte[] bgraData)
-        {
-            if (bgraData == null || bgraData.Length == 0 || bgraData.Length % 4 != 0)
-            {
-                return bgraData; // Return as-is if invalid
-            }
-
-            byte[] rgbaData = new byte[bgraData.Length];
-            for (int i = 0; i < bgraData.Length; i += 4)
-            {
-                // BGRA to RGBA: swap B and R components
-                rgbaData[i] = bgraData[i + 2];     // R = B
-                rgbaData[i + 1] = bgraData[i + 1]; // G = G
-                rgbaData[i + 2] = bgraData[i];     // B = R
-                rgbaData[i + 3] = bgraData[i + 3]; // A = A
-            }
-            return rgbaData;
-        }
-
-        /// <summary>
         /// Gets the OpenGL data format for a texture format.
         /// </summary>
         protected virtual uint GetOpenGLDataFormat(TextureFormat format)
@@ -1476,24 +1451,6 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         protected virtual uint GetOpenGLDataType(TextureFormat format)
         {
             return ConvertTextureFormatToOpenGLDataType(format);
-        }
-
-        /// <summary>
-        /// Gets a human-readable name for an OpenGL error code.
-        /// </summary>
-        protected virtual string GetGLErrorName(uint error)
-        {
-            switch (error)
-            {
-                case 0x0500: return "GL_INVALID_ENUM";
-                case 0x0501: return "GL_INVALID_VALUE";
-                case 0x0502: return "GL_INVALID_OPERATION";
-                case 0x0503: return "GL_STACK_OVERFLOW";
-                case 0x0504: return "GL_STACK_UNDERFLOW";
-                case 0x0505: return "GL_OUT_OF_MEMORY";
-                case 0x0506: return "GL_INVALID_FRAMEBUFFER_OPERATION";
-                default: return $"GL_ERROR_0x{error:X}";
-            }
         }
 
         #endregion
@@ -1827,15 +1784,6 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         private const uint GL_STACK_UNDERFLOW = 0x0504;
         private const uint GL_OUT_OF_MEMORY = 0x0505;
         private const uint GL_INVALID_FRAMEBUFFER_OPERATION = 0x0506;
-        private const uint GL_RGBA = 0x1908;
-        private const uint GL_BGRA = 0x80E1;
-        private const uint GL_RED = 0x1903;
-        private const uint GL_RG = 0x8227;
-        private const uint GL_DEPTH_STENCIL = 0x84F9;
-        private const uint GL_DEPTH_COMPONENT = 0x1902;
-        private const uint GL_HALF_FLOAT = 0x140B;
-        private const uint GL_FLOAT = 0x1406;
-        private const uint GL_UNSIGNED_INT_24_8 = 0x84FA;
 
         // PIXELFORMATDESCRIPTOR flags
         private const uint PFD_DRAW_TO_WINDOW = 0x00000004;
@@ -1920,6 +1868,9 @@ namespace Andastra.Runtime.Graphics.Common.Backends
 
         [DllImport("opengl32.dll", EntryPoint = "glTexParameteri")]
         private static extern void glTexParameteri(uint target, uint pname, int param);
+
+        [DllImport("opengl32.dll", EntryPoint = "glGetError")]
+        private static extern uint glGetError();
 
         [DllImport("gdi32.dll")]
         private static extern bool SwapBuffers(IntPtr hdc);
@@ -2009,64 +1960,6 @@ namespace Andastra.Runtime.Graphics.Common.Backends
             }
         }
 
-        /// <summary>
-        /// Converts BGRA pixel data to RGBA format for OpenGL compatibility.
-        /// Matches original engine behavior: swkotor.exe performs BGRA->RGBA conversion.
-        /// </summary>
-        protected virtual byte[] ConvertBGRAToRGBA(byte[] bgraData)
-        {
-            if (bgraData == null || bgraData.Length == 0)
-            {
-                return bgraData;
-            }
-
-            if (bgraData.Length % 4 != 0)
-            {
-                Console.WriteLine($"[OriginalEngine] ConvertBGRAToRGBA: Warning - data length {bgraData.Length} is not a multiple of 4. This may indicate invalid BGRA texture data.");
-            }
-
-            byte[] rgbaData = new byte[bgraData.Length];
-            for (int i = 0; i < bgraData.Length; i += 4)
-            {
-                // BGRA -> RGBA: swap B and R components
-                rgbaData[i] = bgraData[i + 2];     // R <- B
-                rgbaData[i + 1] = bgraData[i + 1]; // G <- G
-                rgbaData[i + 2] = bgraData[i];     // B <- R
-                rgbaData[i + 3] = bgraData[i + 3]; // A <- A
-            }
-
-            int remainingBytes = bgraData.Length % 4;
-            if (remainingBytes > 0)
-            {
-                Console.WriteLine($"[OriginalEngine] ConvertBGRAToRGBA: Warning - {remainingBytes} leftover bytes copied without conversion. This may indicate invalid BGRA texture data.");
-                // Copy remaining bytes as-is
-                for (int i = bgraData.Length - remainingBytes; i < bgraData.Length; i++)
-                {
-                    rgbaData[i] = bgraData[i];
-                }
-            }
-
-            return rgbaData;
-        }
-
-        /// <summary>
-        /// Gets a human-readable name for an OpenGL error code.
-        /// </summary>
-        protected virtual string GetGLErrorName(uint error)
-        {
-            switch (error)
-            {
-                case GL_NO_ERROR: return "GL_NO_ERROR";
-                case GL_INVALID_ENUM: return "GL_INVALID_ENUM";
-                case GL_INVALID_VALUE: return "GL_INVALID_VALUE";
-                case GL_INVALID_OPERATION: return "GL_INVALID_OPERATION";
-                case GL_STACK_OVERFLOW: return "GL_STACK_OVERFLOW";
-                case GL_STACK_UNDERFLOW: return "GL_STACK_UNDERFLOW";
-                case GL_OUT_OF_MEMORY: return "GL_OUT_OF_MEMORY";
-                case GL_INVALID_FRAMEBUFFER_OPERATION: return "GL_INVALID_FRAMEBUFFER_OPERATION";
-                default: return $"GL_UNKNOWN_ERROR(0x{error:X})";
-            }
-        }
 
         #endregion
 
