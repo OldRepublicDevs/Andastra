@@ -11647,9 +11647,10 @@ technique ColorGrading
                 area.UpdatePhysicsCollisionShapes();
             }
         }
+    }
 
-        /// <summary>
-        /// Updates physics collision shapes for modified geometry.
+    /// <summary>
+    /// Updates physics collision shapes for modified geometry.
     /// </summary>
     /// <remarks>
     /// Based on daorigins.exe/DragonAge2.exe: Physics collision shapes are updated when geometry is modified.
@@ -12135,7 +12136,6 @@ technique ColorGrading
             return new List<int>();
         }
 
-        /// <summary>
         /// <summary>
         /// Modifying geometry requires navigation mesh updates if walkable areas are affected.
         /// </summary>
