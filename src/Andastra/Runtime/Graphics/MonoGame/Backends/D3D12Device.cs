@@ -2804,6 +2804,18 @@ namespace Andastra.Runtime.MonoGame.Backends
             public IntPtr pResource; // ID3D12Resource*
         }
 
+        /// <summary>
+        /// D3D12_RANGE structure for resource mapping operations.
+        /// Specifies a memory range for Map/Unmap operations on ID3D12Resource.
+        /// Based on DirectX 12 Range: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_range
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_RANGE
+        {
+            public ulong Begin; // SIZE_T - Start of the range (in bytes)
+            public ulong End; // SIZE_T - End of the range (in bytes, exclusive)
+        }
+
         // DirectX 12 Feature constants (D3D12_FEATURE)
         private const uint D3D12_FEATURE_FORMAT_SUPPORT_ENUM = 0;
 
@@ -3204,6 +3216,8 @@ namespace Andastra.Runtime.MonoGame.Backends
         private delegate void ExecuteCommandListsDelegate(IntPtr commandQueue, uint NumCommandLists, IntPtr ppCommandLists);
 
         // COM interface method delegate for Unmap (ID3D12Resource::Unmap)
+        // Signature: void Unmap(UINT Subresource, const D3D12_RANGE *pWrittenRange)
+        // pWrittenRange can be NULL to unmap the entire resource
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void UnmapResourceDelegate(IntPtr resource, uint subresource, IntPtr pWrittenRange);
 
@@ -3221,6 +3235,9 @@ namespace Andastra.Runtime.MonoGame.Backends
         private delegate int SetEventOnCompletionDelegate(IntPtr fence, ulong value, IntPtr hEvent);
 
         // COM interface method delegate for Map (ID3D12Resource::Map)
+        // Signature: HRESULT Map(UINT Subresource, const D3D12_RANGE *pReadRange, void **ppData)
+        // pReadRange can be NULL to map the entire resource (typical for upload/readback heaps)
+        // ppData is an output parameter that receives the mapped memory pointer
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate int MapResourceDelegateInternal(IntPtr resource, uint subresource, IntPtr pReadRange, out IntPtr ppData);
 
@@ -10802,13 +10819,21 @@ namespace Andastra.Runtime.MonoGame.Backends
             /// <summary>
             /// Maps a staging buffer resource for CPU access.
             /// Based on DirectX 12 Resource Mapping: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12resource-map
+            ///
+            /// This method maps the entire buffer resource by passing NULL for pReadRange.
+            /// For partial mapping, a D3D12_RANGE structure would be allocated and passed.
             /// </summary>
             private unsafe IntPtr MapStagingBufferResource(IntPtr resource, ulong subresource, ulong size)
             {
                 // ID3D12Resource::Map signature:
                 // HRESULT Map(UINT Subresource, const D3D12_RANGE *pReadRange, void **ppData)
-                // For upload heaps, pReadRange can be NULL to map the entire resource
+                // For upload/readback heaps, pReadRange can be NULL to map the entire resource
                 // Subresource is 0 for buffers
+                //
+                // D3D12_RANGE structure:
+                //   Begin: Start offset in bytes (inclusive)
+                //   End: End offset in bytes (exclusive)
+                // When pReadRange is NULL, the entire resource is mapped
 
                 // Platform check: DirectX 12 COM is Windows-only
                 if (Environment.OSVersion.Platform != PlatformID.Win32NT)
@@ -10821,19 +10846,54 @@ namespace Andastra.Runtime.MonoGame.Backends
                     return IntPtr.Zero;
                 }
 
-                // Get vtable pointer
+                // Validate subresource (must be 0 for buffers)
+                if (subresource != 0)
+                {
+                    return IntPtr.Zero;
+                }
+
+                // Get vtable pointer (first field of COM object)
                 IntPtr* vtable = *(IntPtr**)resource;
+                if (vtable == null)
+                {
+                    return IntPtr.Zero;
+                }
+
                 // Map is at index 8 in ID3D12Resource vtable
+                // ID3D12Resource vtable layout:
+                //   0: QueryInterface (IUnknown)
+                //   1: AddRef (IUnknown)
+                //   2: Release (IUnknown)
+                //   3: GetPrivateData
+                //   4: SetPrivateData
+                //   5: SetPrivateDataInterface
+                //   6: SetName
+                //   7: GetDevice
+                //   8: Map
                 IntPtr methodPtr = vtable[8];
+                if (methodPtr == IntPtr.Zero)
+                {
+                    return IntPtr.Zero;
+                }
 
                 // Create delegate from function pointer
-                // Note: Using Marshal.GetDelegateForFunctionPointer with a type defined elsewhere
-                // TODO: STUB - For now, use a simpler approach with a local delegate type
+                // Using proper COM interop pattern with UnmanagedFunctionPointer delegate
                 MapResourceDelegateInternal mapResource = (MapResourceDelegateInternal)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(MapResourceDelegateInternal));
 
+                // Map the entire resource by passing NULL for pReadRange
+                // For buffers in upload/readback heaps, this is the standard approach
+                // If partial mapping were needed, we would allocate and marshal a D3D12_RANGE structure here
                 IntPtr mappedData;
                 int hr = mapResource(resource, unchecked((uint)subresource), IntPtr.Zero, out mappedData);
+
+                // Check for failure (HRESULT < 0 indicates error)
                 if (hr < 0)
+                {
+                    return IntPtr.Zero;
+                }
+
+                // Validate that we received a valid mapped pointer
+                if (mappedData == IntPtr.Zero)
                 {
                     return IntPtr.Zero;
                 }
@@ -10844,13 +10904,22 @@ namespace Andastra.Runtime.MonoGame.Backends
             /// <summary>
             /// Unmaps a staging buffer resource.
             /// Based on DirectX 12 Resource Unmapping: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12resource-unmap
+            ///
+            /// This method unmaps the entire buffer resource by passing NULL for pWrittenRange.
+            /// For partial unmapping, a D3D12_RANGE structure would be allocated and passed.
             /// </summary>
             private unsafe void UnmapStagingBufferResource(IntPtr resource, ulong subresource, ulong size)
             {
                 // ID3D12Resource::Unmap signature:
                 // void Unmap(UINT Subresource, const D3D12_RANGE *pWrittenRange)
-                // For upload heaps, pWrittenRange can be NULL to unmap the entire resource
+                // For upload/readback heaps, pWrittenRange can be NULL to unmap the entire resource
                 // Subresource is 0 for buffers
+                //
+                // D3D12_RANGE structure:
+                //   Begin: Start offset in bytes (inclusive)
+                //   End: End offset in bytes (exclusive)
+                // When pWrittenRange is NULL, the entire resource is unmapped
+                // pWrittenRange should match the range used in Map, or be NULL if Map used NULL
 
                 // Platform check: DirectX 12 COM is Windows-only
                 if (Environment.OSVersion.Platform != PlatformID.Win32NT)
@@ -10863,14 +10932,45 @@ namespace Andastra.Runtime.MonoGame.Backends
                     return;
                 }
 
-                // Get vtable pointer
+                // Validate subresource (must be 0 for buffers)
+                if (subresource != 0)
+                {
+                    return;
+                }
+
+                // Get vtable pointer (first field of COM object)
                 IntPtr* vtable = *(IntPtr**)resource;
+                if (vtable == null)
+                {
+                    return;
+                }
+
                 // Unmap is at index 9 in ID3D12Resource vtable
+                // ID3D12Resource vtable layout:
+                //   0: QueryInterface (IUnknown)
+                //   1: AddRef (IUnknown)
+                //   2: Release (IUnknown)
+                //   3: GetPrivateData
+                //   4: SetPrivateData
+                //   5: SetPrivateDataInterface
+                //   6: SetName
+                //   7: GetDevice
+                //   8: Map
+                //   9: Unmap
                 IntPtr methodPtr = vtable[9];
+                if (methodPtr == IntPtr.Zero)
+                {
+                    return;
+                }
 
                 // Create delegate from function pointer
+                // Using proper COM interop pattern with UnmanagedFunctionPointer delegate
                 UnmapResourceDelegate unmapResource = (UnmapResourceDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(UnmapResourceDelegate));
 
+                // Unmap the entire resource by passing NULL for pWrittenRange
+                // For buffers in upload/readback heaps, this is the standard approach
+                // If partial unmapping were needed, we would allocate and marshal a D3D12_RANGE structure here
+                // The range should match what was used in Map, or be NULL if Map used NULL
                 unmapResource(resource, unchecked((uint)subresource), IntPtr.Zero);
             }
 
