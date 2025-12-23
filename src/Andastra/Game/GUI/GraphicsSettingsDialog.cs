@@ -1263,11 +1263,11 @@ namespace Andastra.Game.GUI
                 switch (key)
                 {
                     case "RasterizerCullMode":
-                        if (Enum.TryParse<CullMode>(value, out var cullMode))
+                        if (Enum.TryParse<Andastra.Runtime.Graphics.Common.Enums.CullMode>(value, out var cullMode))
                             _settings.RasterizerCullMode = cullMode;
                         break;
                     case "RasterizerFillMode":
-                        if (Enum.TryParse<FillMode>(value, out var fillMode))
+                        if (Enum.TryParse<Andastra.Runtime.Graphics.Common.Enums.FillMode>(value, out var fillMode))
                             _settings.RasterizerFillMode = fillMode;
                         break;
                     case "DepthStencilDepthBufferFunction":
