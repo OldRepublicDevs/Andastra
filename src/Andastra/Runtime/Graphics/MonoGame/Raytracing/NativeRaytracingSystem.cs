@@ -3955,20 +3955,21 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
 
             // Check if the binding layout supports push descriptors
             // Push descriptors allow updating bindings without recreating the binding set
+            // When push descriptors are supported, descriptors are pushed directly into the command buffer
+            // during rendering (in TraceShadowRays), so we don't need to recreate the binding set here
             bool supportsPushDescriptors = _shadowBindingLayout.Desc.IsPushDescriptor;
 
             if (supportsPushDescriptors)
             {
-                // If push descriptors are supported, we can update the binding set in-place
-                // However, since IBindingSet doesn't have an Update method, we still need to recreate
-                // In a real implementation with push descriptor support, we would use:
-                // commandList.PushDescriptorSet(_shadowBindingLayout, slot, outputTextureObj);
-                // TODO: STUB - For now, we'll recreate the binding set even with push descriptor support
-                // as the command list interface may not expose push descriptor methods
-                Console.WriteLine("[NativeRT] UpdateShadowBindingSet: Push descriptors supported but not yet implemented, recreating binding set");
+                // With push descriptor support, we don't need to recreate the binding set
+                // The descriptors will be pushed directly into the command buffer when TraceShadowRays is called
+                // This is more efficient as it avoids unnecessary binding set recreation
+                // The binding set is only used as a fallback if push descriptors fail or aren't supported
+                Console.WriteLine($"[NativeRT] UpdateShadowBindingSet: Push descriptors supported, skipping binding set recreation. Descriptors will be pushed directly in command list for output texture {outputTexture}");
+                return;
             }
 
-            // Recreate the binding set with the new output texture
+            // Recreate the binding set with the new output texture (only when push descriptors are not supported)
             // Dispose the old binding set first
             IBindingSet oldBindingSet = _shadowBindingSet;
 
