@@ -5,6 +5,7 @@ using Andastra.Runtime.Graphics.Common.Backends;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Rendering;
+using Andastra.Runtime.Stride.Graphics;
 
 namespace Andastra.Runtime.Stride.Backends
 {
@@ -101,17 +102,21 @@ namespace Andastra.Runtime.Stride.Backends
         {
             Console.WriteLine($"[StrideBackendFactory] Creating {backendType} backend");
 
+            // Create a Stride.Engine.Game instance for the backends
+            // The backends need a game instance, not the BioWareGame enum
+            var strideGame = new StrideGameWrapper();
+
             switch (backendType)
             {
                 case GraphicsBackendType.Direct3D12:
-                    return new StrideDirect3D12Backend(game);
+                    return new StrideDirect3D12Backend(strideGame);
 
                 case GraphicsBackendType.Vulkan:
-                    return new StrideVulkanBackend(game);
+                    return new StrideVulkanBackend(strideGame);
 
                 case GraphicsBackendType.Direct3D11:
                 default:
-                    return new StrideDirect3D11Backend(game);
+                    return new StrideDirect3D11Backend(strideGame);
             }
         }
 
