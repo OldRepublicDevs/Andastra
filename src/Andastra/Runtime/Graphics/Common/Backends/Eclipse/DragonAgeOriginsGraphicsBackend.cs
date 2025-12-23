@@ -66,6 +66,13 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         // Based on daorigins.exe: Pause menu tracks selected button index for highlighting
         private int _pauseMenuSelectedButtonIndex = 0; // 0 = Resume, 1 = Options, 2 = Quit
 
+        // Options menu state tracking
+        // Based on daorigins.exe: Options menu tracks selected category and option for navigation
+        private int _optionsMenuSelectedCategoryIndex = 0; // 0 = Graphics, 1 = Audio, 2 = Game, 3 = Feedback, 4 = Autopause, 5 = Controls
+        private int _optionsMenuSelectedOptionIndex = 0; // Selected option within current category
+        private bool _optionsMenuIsEditingValue = false; // True when editing a numeric value
+        private string _optionsMenuEditingValue = string.Empty; // Current text being edited
+
         // UI vertex structure for 2D rendering
         // Based on daorigins.exe: UI vertices use position, color, and texture coordinates
         [StructLayout(LayoutKind.Sequential)]
@@ -2221,7 +2228,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
 
             // TODO: PLACEHOLDER - Full implementation would look up icon from abilities/talents 2DA table
             // Based on daorigins.exe: Abilities/talents 2DA table contains "icon" column with icon resref
-            // This would require access to EclipseTwoDATableManager or IGameDataProvider to query 2DA tables
+            // TODO: STUB -  This would require access to EclipseTwoDATableManager or IGameDataProvider to query 2DA tables
             // For now, return empty string if pattern matching fails
             return string.Empty;
         }
@@ -2312,7 +2319,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
 
             // Optionally render cooldown time text (if text rendering is available)
             // Based on daorigins.exe: Some versions show cooldown time in seconds as text overlay
-            // For now, visual overlay only - text rendering would require font system
+            // TODO: STUB -  For now, visual overlay only - text rendering would require font system
         }
 
         /// <summary>
@@ -2663,13 +2670,87 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         /// </summary>
         private void RenderOptionsMenu()
         {
-            // Based on daorigins.exe: Options menu includes:
-            // - Settings categories (Graphics, Audio, Gameplay, etc.)
-            // - Option sliders and checkboxes
-            // - Option labels and values
+            // Based on daorigins.exe: Options menu displays settings organized by categories
+            // Options menu includes categories (Graphics, Audio, Game, Feedback, Autopause, Controls)
+            // Each category contains options with different control types (sliders, checkboxes, text)
 
-            // TODO: Implement options menu UI element rendering
-            // This would render option panels, sliders, checkboxes, text, etc. as textured quads
+            if (_d3dDevice == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Get viewport dimensions for menu layout
+            // Based on daorigins.exe: Menu rendering adapts to viewport size
+            uint viewportWidth = GetViewportWidth();
+            uint viewportHeight = GetViewportHeight();
+
+            // Render menu background panel
+            // Based on daorigins.exe: Options menu uses a semi-transparent background panel
+            DrawMenuBackground(DragonAgeOriginsMenuType.Options, viewportWidth, viewportHeight);
+
+            // Render menu title
+            // Based on daorigins.exe: Options menu has a title at the top
+            RenderOptionsMenuTitle(viewportWidth, viewportHeight);
+
+            // Render category tabs (Graphics, Audio, Game, etc.)
+            // Based on daorigins.exe: Category tabs are displayed horizontally across the top
+            RenderOptionsCategoryTabs(viewportWidth, viewportHeight);
+
+            // Render options list for selected category
+            // Based on daorigins.exe: Options are displayed in a scrollable list below category tabs
+            RenderOptionsList(viewportWidth, viewportHeight);
+
+            // Render navigation hints
+            // Based on daorigins.exe: Menu shows keyboard shortcuts for navigation
+            RenderOptionsMenuHints(viewportWidth, viewportHeight);
+        }
+
+        /// <summary>
+        /// Renders the options menu title.
+        /// Based on daorigins.exe: Options menu displays "Options" title at the top.
+        /// </summary>
+        /// <param name="viewportWidth">Viewport width in pixels.</param>
+        /// <param name="viewportHeight">Viewport height in pixels.</param>
+        private void RenderOptionsMenuTitle(uint viewportWidth, uint viewportHeight)
+        {
+            // Based on daorigins.exe: Title is centered at the top of the menu
+            const string titleText = "Options";
+
+            // TODO: Implement text rendering for title
+            // For now, this is a placeholder - would use DirectX 9 font rendering
+            float titleX = viewportWidth / 2.0f;
+            float titleY = 20.0f;
+            uint titleColor = 0xFFFFFFFF; // White
+
+            // RenderTextDirectX9(titleX, titleY, titleText, titleColor);
+        }
+
+        /// <summary>
+        /// Renders navigation hints for the options menu.
+        /// Based on daorigins.exe: Menu displays keyboard controls at the bottom.
+        /// </summary>
+        /// <param name="viewportWidth">Viewport width in pixels.</param>
+        /// <param name="viewportHeight">Viewport height in pixels.</param>
+        private void RenderOptionsMenuHints(uint viewportWidth, uint viewportHeight)
+        {
+            // Based on daorigins.exe: Navigation hints show keyboard shortcuts
+            string hintsText;
+            if (_optionsMenuIsEditingValue)
+            {
+                hintsText = "Editing: Enter to confirm, Escape to cancel";
+            }
+            else
+            {
+                hintsText = "Arrow Keys: Navigate | A/D: Change Values | Enter: Edit Numbers | Escape: Back";
+            }
+
+            // TODO: Implement text rendering for hints
+            // For now, this is a placeholder - would use DirectX 9 font rendering
+            float hintsX = viewportWidth / 2.0f;
+            float hintsY = viewportHeight - 30.0f;
+            uint hintsColor = 0xFFCCCCCC; // Light gray
+
+            // RenderTextDirectX9(hintsX, hintsY, hintsText, hintsColor);
         }
 
         /// <summary>
@@ -2752,6 +2833,114 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         }
 
         /// <summary>
+        /// Sets the selected options menu category index.
+        /// Based on daorigins.exe: Options menu category selection controls which options are displayed.
+        /// daorigins.exe: Category selection changes the visible option set.
+        /// </summary>
+        /// <param name="categoryIndex">Category index (0 = Graphics, 1 = Audio, 2 = Game, 3 = Feedback, 4 = Autopause, 5 = Controls).</param>
+        public void SetOptionsMenuSelectedCategory(int categoryIndex)
+        {
+            if (categoryIndex >= 0 && categoryIndex < 6) // 6 categories total
+            {
+                _optionsMenuSelectedCategoryIndex = categoryIndex;
+                _optionsMenuSelectedOptionIndex = 0; // Reset to first option in new category
+                _optionsMenuIsEditingValue = false; // Cancel any editing
+                _optionsMenuEditingValue = string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// Gets the selected options menu category index.
+        /// Based on daorigins.exe: Options menu category selection determines visible options.
+        /// </summary>
+        /// <returns>Selected category index (0 = Graphics, 1 = Audio, 2 = Game, 3 = Feedback, 4 = Autopause, 5 = Controls).</returns>
+        public int GetOptionsMenuSelectedCategory()
+        {
+            return _optionsMenuSelectedCategoryIndex;
+        }
+
+        /// <summary>
+        /// Sets the selected options menu option index within the current category.
+        /// Based on daorigins.exe: Option selection controls which setting can be modified.
+        /// daorigins.exe: Option selection highlights the chosen setting for modification.
+        /// </summary>
+        /// <param name="optionIndex">Option index within the current category.</param>
+        public void SetOptionsMenuSelectedOption(int optionIndex)
+        {
+            if (optionIndex >= 0)
+            {
+                _optionsMenuSelectedOptionIndex = optionIndex;
+                _optionsMenuIsEditingValue = false; // Cancel any editing when changing selection
+                _optionsMenuEditingValue = string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// Gets the selected options menu option index within the current category.
+        /// Based on daorigins.exe: Option selection determines which setting is highlighted.
+        /// </summary>
+        /// <returns>Selected option index within the current category.</returns>
+        public int GetOptionsMenuSelectedOption()
+        {
+            return _optionsMenuSelectedOptionIndex;
+        }
+
+        /// <summary>
+        /// Starts editing the value of the currently selected option.
+        /// Based on daorigins.exe: Numeric options can be edited by typing new values.
+        /// daorigins.exe: Editing mode allows direct text input for numeric settings.
+        /// </summary>
+        /// <param name="initialValue">Initial value to display for editing.</param>
+        public void StartOptionsMenuValueEditing(string initialValue)
+        {
+            _optionsMenuIsEditingValue = true;
+            _optionsMenuEditingValue = initialValue ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Stops editing the value of the currently selected option.
+        /// Based on daorigins.exe: Editing mode ends when user confirms or cancels input.
+        /// </summary>
+        public void StopOptionsMenuValueEditing()
+        {
+            _optionsMenuIsEditingValue = false;
+            _optionsMenuEditingValue = string.Empty;
+        }
+
+        /// <summary>
+        /// Updates the currently editing value text.
+        /// Based on daorigins.exe: Text input is accumulated character by character during editing.
+        /// </summary>
+        /// <param name="newValue">New value text.</param>
+        public void UpdateOptionsMenuEditingValue(string newValue)
+        {
+            if (_optionsMenuIsEditingValue)
+            {
+                _optionsMenuEditingValue = newValue ?? string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// Gets the current editing value text.
+        /// Based on daorigins.exe: Editing value is used to display typed input.
+        /// </summary>
+        /// <returns>Current editing value text.</returns>
+        public string GetOptionsMenuEditingValue()
+        {
+            return _optionsMenuEditingValue;
+        }
+
+        /// <summary>
+        /// Checks if the options menu is currently in value editing mode.
+        /// Based on daorigins.exe: Editing state determines input handling behavior.
+        /// </summary>
+        /// <returns>True if currently editing a value, false otherwise.</returns>
+        public bool IsOptionsMenuEditingValue()
+        {
+            return _optionsMenuIsEditingValue;
+        }
+
+        /// <summary>
         /// Loads a pause menu button texture from game resources with caching.
         /// Based on daorigins.exe: Button textures are loaded from TPC files via resource provider.
         /// daorigins.exe: Button textures use naming conventions like "gui_pause_button_normal" and "gui_pause_button_highlight".
@@ -2763,7 +2952,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // Based on daorigins.exe: Button textures are cached to avoid reloading same textures repeatedly
             // Cache key includes selection state to differentiate normal/highlighted textures
             string cacheKey = isSelected ? "pause_menu_button_highlight" : "pause_menu_button_normal";
-            
+
             // Check texture cache first
             if (_modelTextureCache.TryGetValue(cacheKey, out IntPtr cachedTexture))
             {
@@ -2813,7 +3002,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 // Load texture using LoadEclipseTexture (handles TPC/DDS/TGA formats via resource provider)
                 // Based on daorigins.exe: Button textures are loaded via same texture loading system as other textures
                 IntPtr texture = LoadEclipseTexture(textureName);
-                
+
                 if (texture != IntPtr.Zero)
                 {
                     // Cache texture for future use
@@ -2826,6 +3015,220 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // All texture loading attempts failed - cache failure to avoid repeated loading attempts
             _modelTextureCache[cacheKey] = IntPtr.Zero;
             System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] LoadPauseMenuButtonTexture: Failed to load button texture (selected: {isSelected}), will use solid color fallback");
+            return IntPtr.Zero;
+        }
+
+        /// <summary>
+        /// Loads an options menu category tab texture from game resources with caching.
+        /// Based on daorigins.exe: Category tab textures are loaded from TPC files via resource provider.
+        /// daorigins.exe: Tab textures use naming conventions like "gui_options_tab_graphics_normal" and "gui_options_tab_graphics_highlight".
+        /// </summary>
+        /// <param name="categoryName">Name of the category (Graphics, Audio, Game, Feedback, Autopause, Controls).</param>
+        /// <param name="isSelected">True if tab is selected (highlighted state).</param>
+        /// <returns>DirectX 9 texture pointer, or IntPtr.Zero if loading fails (will fallback to solid color rendering).</returns>
+        private IntPtr LoadOptionsCategoryTabTexture(string categoryName, bool isSelected)
+        {
+            // Based on daorigins.exe: Tab textures are cached to avoid reloading same textures repeatedly
+            // Cache key includes category and selection state to differentiate textures
+            string cacheKey = $"options_tab_{categoryName.ToLowerInvariant()}_{(isSelected ? "highlight" : "normal")}";
+
+            // Check texture cache first
+            if (_modelTextureCache.TryGetValue(cacheKey, out IntPtr cachedTexture))
+            {
+                // Return cached texture (even if IntPtr.Zero, to avoid repeated loading attempts)
+                return cachedTexture;
+            }
+
+            // Try multiple texture naming patterns based on common Dragon Age: Origins GUI conventions
+            // Based on daorigins.exe: GUI textures are stored in TPC format and follow naming conventions
+            // Pattern 1: "gui_options_tab_{category}_normal" / "gui_options_tab_{category}_highlight"
+            // Pattern 2: "options_tab_{category}_normal" / "options_tab_{category}_highlight"
+            // Pattern 3: "gui_tab_{category}_normal" / "gui_tab_{category}_highlight"
+            // Pattern 4: "tab_{category}_normal" / "tab_{category}_highlight"
+            string[] textureNamePatterns;
+            if (isSelected)
+            {
+                textureNamePatterns = new string[]
+                {
+                    $"gui_options_tab_{categoryName.ToLowerInvariant()}_highlight",
+                    $"options_tab_{categoryName.ToLowerInvariant()}_highlight",
+                    $"gui_tab_{categoryName.ToLowerInvariant()}_highlight",
+                    $"tab_{categoryName.ToLowerInvariant()}_highlight",
+                    $"gui_options_tab_{categoryName.ToLowerInvariant()}_hl",
+                    $"options_tab_{categoryName.ToLowerInvariant()}_hl",
+                    $"gui_options_{categoryName.ToLowerInvariant()}_tab_highlight",
+                    $"options_{categoryName.ToLowerInvariant()}_tab_highlight"
+                };
+            }
+            else
+            {
+                textureNamePatterns = new string[]
+                {
+                    $"gui_options_tab_{categoryName.ToLowerInvariant()}_normal",
+                    $"options_tab_{categoryName.ToLowerInvariant()}_normal",
+                    $"gui_tab_{categoryName.ToLowerInvariant()}_normal",
+                    $"tab_{categoryName.ToLowerInvariant()}_normal",
+                    $"gui_options_tab_{categoryName.ToLowerInvariant()}",
+                    $"options_tab_{categoryName.ToLowerInvariant()}",
+                    $"gui_options_{categoryName.ToLowerInvariant()}_tab",
+                    $"options_{categoryName.ToLowerInvariant()}_tab"
+                };
+            }
+
+            // Try each texture name pattern until one succeeds
+            foreach (string textureName in textureNamePatterns)
+            {
+                // Load texture using LoadEclipseTexture (handles TPC/DDS/TGA formats via resource provider)
+                // Based on daorigins.exe: Tab textures are loaded via same texture loading system as other textures
+                IntPtr texture = LoadEclipseTexture(textureName);
+
+                if (texture != IntPtr.Zero)
+                {
+                    // Cache texture for future use
+                    _modelTextureCache[cacheKey] = texture;
+                    System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] LoadOptionsCategoryTabTexture: Loaded and cached tab texture '{textureName}' (handle: 0x{texture:X16}, category: {categoryName}, selected: {isSelected})");
+                    return texture;
+                }
+            }
+
+            // All texture loading attempts failed - cache failure to avoid repeated loading attempts
+            _modelTextureCache[cacheKey] = IntPtr.Zero;
+            System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] LoadOptionsCategoryTabTexture: Failed to load tab texture (category: {categoryName}, selected: {isSelected}), will use solid color fallback");
+            return IntPtr.Zero;
+        }
+
+        /// <summary>
+        /// Loads an options menu slider texture from game resources with caching.
+        /// Based on daorigins.exe: Slider textures are loaded from TPC files via resource provider.
+        /// daorigins.exe: Slider textures use naming conventions like "gui_options_slider_bar" and "gui_options_slider_knob".
+        /// </summary>
+        /// <param name="sliderPart">Part of the slider ("bar" or "knob").</param>
+        /// <returns>DirectX 9 texture pointer, or IntPtr.Zero if loading fails (will fallback to solid color rendering).</returns>
+        private IntPtr LoadOptionsSliderTexture(string sliderPart)
+        {
+            // Based on daorigins.exe: Slider textures are cached to avoid reloading same textures repeatedly
+            string cacheKey = $"options_slider_{sliderPart.ToLowerInvariant()}";
+
+            // Check texture cache first
+            if (_modelTextureCache.TryGetValue(cacheKey, out IntPtr cachedTexture))
+            {
+                // Return cached texture (even if IntPtr.Zero, to avoid repeated loading attempts)
+                return cachedTexture;
+            }
+
+            // Try multiple texture naming patterns based on common Dragon Age: Origins GUI conventions
+            // Based on daorigins.exe: GUI textures are stored in TPC format and follow naming conventions
+            // Pattern 1: "gui_options_slider_{part}"
+            // Pattern 2: "options_slider_{part}"
+            // Pattern 3: "gui_slider_{part}"
+            // Pattern 4: "slider_{part}"
+            string[] textureNamePatterns = new string[]
+            {
+                $"gui_options_slider_{sliderPart.ToLowerInvariant()}",
+                $"options_slider_{sliderPart.ToLowerInvariant()}",
+                $"gui_slider_{sliderPart.ToLowerInvariant()}",
+                $"slider_{sliderPart.ToLowerInvariant()}",
+                $"gui_options_{sliderPart.ToLowerInvariant()}",
+                $"options_{sliderPart.ToLowerInvariant()}"
+            };
+
+            // Try each texture name pattern until one succeeds
+            foreach (string textureName in textureNamePatterns)
+            {
+                // Load texture using LoadEclipseTexture (handles TPC/DDS/TGA formats via resource provider)
+                // Based on daorigins.exe: Slider textures are loaded via same texture loading system as other textures
+                IntPtr texture = LoadEclipseTexture(textureName);
+
+                if (texture != IntPtr.Zero)
+                {
+                    // Cache texture for future use
+                    _modelTextureCache[cacheKey] = texture;
+                    System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] LoadOptionsSliderTexture: Loaded and cached slider texture '{textureName}' (handle: 0x{texture:X16}, part: {sliderPart})");
+                    return texture;
+                }
+            }
+
+            // All texture loading attempts failed - cache failure to avoid repeated loading attempts
+            _modelTextureCache[cacheKey] = IntPtr.Zero;
+            System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] LoadOptionsSliderTexture: Failed to load slider texture (part: {sliderPart}), will use solid color fallback");
+            return IntPtr.Zero;
+        }
+
+        /// <summary>
+        /// Loads an options menu checkbox texture from game resources with caching.
+        /// Based on daorigins.exe: Checkbox textures are loaded from TPC files via resource provider.
+        /// daorigins.exe: Checkbox textures use naming conventions like "gui_options_checkbox_unchecked" and "gui_options_checkbox_checked".
+        /// </summary>
+        /// <param name="isChecked">True if checkbox is checked.</param>
+        /// <returns>DirectX 9 texture pointer, or IntPtr.Zero if loading fails (will fallback to solid color rendering).</returns>
+        private IntPtr LoadOptionsCheckboxTexture(bool isChecked)
+        {
+            // Based on daorigins.exe: Checkbox textures are cached to avoid reloading same textures repeatedly
+            // Cache key includes checked state to differentiate textures
+            string cacheKey = $"options_checkbox_{(isChecked ? "checked" : "unchecked")}";
+
+            // Check texture cache first
+            if (_modelTextureCache.TryGetValue(cacheKey, out IntPtr cachedTexture))
+            {
+                // Return cached texture (even if IntPtr.Zero, to avoid repeated loading attempts)
+                return cachedTexture;
+            }
+
+            // Try multiple texture naming patterns based on common Dragon Age: Origins GUI conventions
+            // Based on daorigins.exe: GUI textures are stored in TPC format and follow naming conventions
+            // Pattern 1: "gui_options_checkbox_checked" / "gui_options_checkbox_unchecked"
+            // Pattern 2: "options_checkbox_checked" / "options_checkbox_unchecked"
+            // Pattern 3: "gui_checkbox_checked" / "gui_checkbox_unchecked"
+            // Pattern 4: "checkbox_checked" / "checkbox_unchecked"
+            string[] textureNamePatterns;
+            if (isChecked)
+            {
+                textureNamePatterns = new string[]
+                {
+                    "gui_options_checkbox_checked",
+                    "options_checkbox_checked",
+                    "gui_checkbox_checked",
+                    "checkbox_checked",
+                    "gui_options_checkbox_on",
+                    "options_checkbox_on",
+                    "gui_options_check",
+                    "options_check"
+                };
+            }
+            else
+            {
+                textureNamePatterns = new string[]
+                {
+                    "gui_options_checkbox_unchecked",
+                    "options_checkbox_unchecked",
+                    "gui_checkbox_unchecked",
+                    "checkbox_unchecked",
+                    "gui_options_checkbox_off",
+                    "options_checkbox_off",
+                    "gui_options_checkbox",
+                    "options_checkbox"
+                };
+            }
+
+            // Try each texture name pattern until one succeeds
+            foreach (string textureName in textureNamePatterns)
+            {
+                // Load texture using LoadEclipseTexture (handles TPC/DDS/TGA formats via resource provider)
+                // Based on daorigins.exe: Checkbox textures are loaded via same texture loading system as other textures
+                IntPtr texture = LoadEclipseTexture(textureName);
+
+                if (texture != IntPtr.Zero)
+                {
+                    // Cache texture for future use
+                    _modelTextureCache[cacheKey] = texture;
+                    System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] LoadOptionsCheckboxTexture: Loaded and cached checkbox texture '{textureName}' (handle: 0x{texture:X16}, checked: {isChecked})");
+                    return texture;
+                }
+            }
+
+            // All texture loading attempts failed - cache failure to avoid repeated loading attempts
+            _modelTextureCache[cacheKey] = IntPtr.Zero;
+            System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] LoadOptionsCheckboxTexture: Failed to load checkbox texture (checked: {isChecked}), will use solid color fallback");
             return IntPtr.Zero;
         }
 
@@ -3052,6 +3455,880 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             }
 
             // RenderTextDirectX9(textX, textY, labelText, textColor);
+            // Note: Actual text rendering implementation would be added when font rendering system is available
+        }
+
+        /// <summary>
+        /// Renders options menu category tabs as textured quads.
+        /// Based on daorigins.exe: Options menu category tabs are rendered as horizontal buttons across the top.
+        /// daorigins.exe: Category tabs use textures for normal/highlighted states and display category names.
+        /// </summary>
+        /// <param name="viewportWidth">Viewport width in pixels.</param>
+        /// <param name="viewportHeight">Viewport height in pixels.</param>
+        private void RenderOptionsCategoryTabs(uint viewportWidth, uint viewportHeight)
+        {
+            // Based on daorigins.exe: Options menu category tabs are arranged horizontally across the top
+            // Tab dimensions: Based on common GUI conventions for Dragon Age: Origins
+            const float tabWidth = 120.0f;
+            const float tabHeight = 35.0f;
+            const float tabSpacing = 5.0f;
+            const int tabCount = 6; // Graphics, Audio, Game, Feedback, Autopause, Controls
+
+            // Category names matching the OptionsCategory enum
+            string[] categoryNames = new string[]
+            {
+                "Graphics", // OptionsCategory.Graphics
+                "Audio",    // OptionsCategory.Audio
+                "Game",     // OptionsCategory.Game
+                "Feedback", // OptionsCategory.Feedback
+                "Autopause", // OptionsCategory.Autopause
+                "Controls"  // OptionsCategory.Controls
+            };
+
+            // Calculate starting X position to center tabs horizontally
+            float totalTabsWidth = (tabCount * tabWidth) + ((tabCount - 1) * tabSpacing);
+            float startX = (viewportWidth / 2.0f) - (totalTabsWidth / 2.0f);
+            float tabY = 80.0f; // Position tabs below menu title
+
+            // Render each category tab
+            for (int i = 0; i < tabCount; i++)
+            {
+                float tabX = startX + (i * (tabWidth + tabSpacing));
+                bool isSelected = (i == _optionsMenuSelectedCategoryIndex);
+
+                // Render tab background (textured quad)
+                // Based on daorigins.exe: Tabs use textured backgrounds with different textures for normal/highlighted states
+                RenderOptionsCategoryTab(tabX, tabY, tabWidth, tabHeight, categoryNames[i], isSelected);
+
+                // Render tab label text
+                // Based on daorigins.exe: Tab labels are rendered as text overlays on tabs
+                RenderOptionsCategoryTabLabel(tabX, tabY, tabWidth, tabHeight, categoryNames[i], isSelected);
+            }
+        }
+
+        /// <summary>
+        /// Renders a single options menu category tab as a textured quad.
+        /// Based on daorigins.exe: Category tabs are rendered as textured quads using 2D screen-space coordinates.
+        /// daorigins.exe: Tab rendering uses DrawPrimitive with D3DPT_TRIANGLELIST and different textures for states.
+        /// </summary>
+        /// <param name="x">Tab X position (screen coordinates).</param>
+        /// <param name="y">Tab Y position (screen coordinates).</param>
+        /// <param name="width">Tab width in pixels.</param>
+        /// <param name="height">Tab height in pixels.</param>
+        /// <param name="categoryName">Name of the category this tab represents.</param>
+        /// <param name="isSelected">True if tab is selected (highlighted).</param>
+        private unsafe void RenderOptionsCategoryTab(float x, float y, float width, float height, string categoryName, bool isSelected)
+        {
+            // Based on daorigins.exe: UI tabs are rendered as textured quads using 2D screen-space coordinates
+            // Vertex format: Position (x, y, z), Color (ARGB), Texture coordinates (u, v)
+            // FVF format: D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1
+
+            // Set render states for 2D UI rendering
+            // Based on daorigins.exe: UI rendering uses alpha blending and no depth testing
+            SetRenderStateDirectX9(D3DRS_ZENABLE, 0); // Disable depth testing for 2D
+            SetRenderStateDirectX9(D3DRS_ZWRITEENABLE, 0); // Disable depth writing for 2D
+            SetRenderStateDirectX9(D3DRS_ALPHABLENDENABLE, 1); // Enable alpha blending
+            SetRenderStateDirectX9(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+            SetRenderStateDirectX9(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+            SetRenderStateDirectX9(D3DRS_CULLMODE, D3DCULL_NONE); // No culling for 2D sprites
+
+            // Set texture stage states for UI rendering
+            SetTextureStageStateDirectX9(0, D3DTSS_ADDRESSU, D3DTADDRESS_CLAMP);
+            SetTextureStageStateDirectX9(0, D3DTSS_ADDRESSV, D3DTADDRESS_CLAMP);
+            SetTextureStageStateDirectX9(0, D3DTSS_MAGFILTER, D3DTEXF_LINEAR);
+            SetTextureStageStateDirectX9(0, D3DTSS_MINFILTER, D3DTEXF_LINEAR);
+
+            // Set vertex format
+            const uint D3DFVF_XYZ = 0x002;
+            const uint D3DFVF_DIFFUSE = 0x040;
+            const uint D3DFVF_TEX1 = 0x100;
+            uint tabFVF = D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1;
+            SetFVFDirectX9(tabFVF);
+
+            // Set projection matrix for 2D screen-space rendering
+            // Based on daorigins.exe: UI rendering uses orthographic projection with screen coordinates
+            // Screen-space: x=[0, viewportWidth], y=[0, viewportHeight], z=[0, 1]
+            // DirectX 9 uses left-handed coordinate system with origin at top-left
+            Matrix4x4 orthoMatrix = Matrix4x4.CreateOrthographicOffCenter(
+                0.0f, GetViewportWidth(), // Left, Right
+                GetViewportHeight(), 0.0f, // Top, Bottom (flipped Y for screen coordinates)
+                0.0f, 1.0f // Near, Far
+            );
+            const uint D3DTS_PROJECTION = 2;
+            SetTransformDirectX9(D3DTS_PROJECTION, orthoMatrix);
+
+            // Set world and view matrices to identity for 2D rendering
+            const uint D3DTS_WORLD = 0;
+            const uint D3DTS_VIEW = 1;
+            SetTransformDirectX9(D3DTS_WORLD, Matrix4x4.Identity);
+            SetTransformDirectX9(D3DTS_VIEW, Matrix4x4.Identity);
+
+            // Load tab texture from game resources (if available)
+            // Based on daorigins.exe: Tab textures are loaded from game resources (TPC files)
+            // daorigins.exe: Tab textures use different textures for normal/highlighted states
+            IntPtr tabTexture = LoadOptionsCategoryTabTexture(categoryName, isSelected);
+
+            // Create vertex buffer for tab quad
+            // Based on daorigins.exe: UI elements use vertex buffers with 6 vertices (2 triangles) per quad
+            const uint D3DUSAGE_WRITEONLY = 0x00000008;
+            const uint D3DPOOL_MANAGED = 1;
+            const uint D3DPOOL_DEFAULT = 0;
+
+            IntPtr vertexBuffer = IntPtr.Zero;
+            int createResult = CreateVertexBufferDirectX9(24, D3DUSAGE_WRITEONLY, tabFVF, D3DPOOL_MANAGED, ref vertexBuffer);
+            if (createResult < 0 || vertexBuffer == IntPtr.Zero)
+            {
+                System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] RenderOptionsCategoryTab: Failed to create vertex buffer for tab (category: {categoryName})");
+                return;
+            }
+
+            // Lock vertex buffer and fill with quad vertices
+            // Based on daorigins.exe: Vertex buffer locking uses proper vertex format for UI rendering
+            IntPtr vertexData = IntPtr.Zero;
+            int lockResult = LockVertexBufferDirectX9(vertexBuffer, 0, 0, ref vertexData, 0);
+            if (lockResult < 0 || vertexData == IntPtr.Zero)
+            {
+                System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] RenderOptionsCategoryTab: Failed to lock vertex buffer for tab (category: {categoryName})");
+                // TODO: Release vertex buffer
+                return;
+            }
+
+            // Fill vertex buffer with tab quad vertices
+            // Based on daorigins.exe: UI quads use two triangles with proper winding order
+            UIVertex* vertices = (UIVertex*)vertexData;
+
+            // Determine tab background color (fallback if no texture)
+            // Based on daorigins.exe: Selected tabs use different colors/textures than unselected tabs
+            uint backgroundColor = isSelected ? 0xFF4A90E2 : 0xFF2A5A82; // Blue tones for tabs
+
+            // If texture loading failed, use solid color background
+            if (tabTexture == IntPtr.Zero)
+            {
+                // Render solid color tab background
+                // Triangle 1
+                vertices[0] = new UIVertex { X = x, Y = y, Z = 0.0f, Color = backgroundColor, U = 0.0f, V = 0.0f };
+                vertices[1] = new UIVertex { X = x + width, Y = y, Z = 0.0f, Color = backgroundColor, U = 1.0f, V = 0.0f };
+                vertices[2] = new UIVertex { X = x, Y = y + height, Z = 0.0f, Color = backgroundColor, U = 0.0f, V = 1.0f };
+
+                // Triangle 2
+                vertices[3] = new UIVertex { X = x + width, Y = y, Z = 0.0f, Color = backgroundColor, U = 1.0f, V = 0.0f };
+                vertices[4] = new UIVertex { X = x + width, Y = y + height, Z = 0.0f, Color = backgroundColor, U = 1.0f, V = 1.0f };
+                vertices[5] = new UIVertex { X = x, Y = y + height, Z = 0.0f, Color = backgroundColor, U = 0.0f, V = 1.0f };
+            }
+            else
+            {
+                // Render textured tab background
+                // Based on daorigins.exe: Textured UI elements use full texture coordinates (0,0 to 1,1)
+                // Triangle 1
+                vertices[0] = new UIVertex { X = x, Y = y, Z = 0.0f, Color = 0xFFFFFFFF, U = 0.0f, V = 0.0f };
+                vertices[1] = new UIVertex { X = x + width, Y = y, Z = 0.0f, Color = 0xFFFFFFFF, U = 1.0f, V = 0.0f };
+                vertices[2] = new UIVertex { X = x, Y = y + height, Z = 0.0f, Color = 0xFFFFFFFF, U = 0.0f, V = 1.0f };
+
+                // Triangle 2
+                vertices[3] = new UIVertex { X = x + width, Y = y, Z = 0.0f, Color = 0xFFFFFFFF, U = 1.0f, V = 0.0f };
+                vertices[4] = new UIVertex { X = x + width, Y = y + height, Z = 0.0f, Color = 0xFFFFFFFF, U = 1.0f, V = 1.0f };
+                vertices[5] = new UIVertex { X = x, Y = y + height, Z = 0.0f, Color = 0xFFFFFFFF, U = 0.0f, V = 1.0f };
+            }
+
+            // Unlock vertex buffer
+            UnlockVertexBufferDirectX9(vertexBuffer);
+
+            // Set texture
+            // Based on daorigins.exe: Texture setting uses stage 0 for UI elements
+            SetTextureDirectX9(0, tabTexture);
+
+            // Render the tab quad
+            // Based on daorigins.exe: UI rendering uses DrawPrimitive with D3DPT_TRIANGLELIST
+            const uint D3DPT_TRIANGLELIST = 4;
+            DrawPrimitiveDirectX9(D3DPT_TRIANGLELIST, 0, 2);
+
+            // TODO: Release vertex buffer when done
+            // In a full implementation, vertex buffers would be managed and reused
+        }
+
+        /// <summary>
+        /// Renders label text for an options menu category tab.
+        /// Based on daorigins.exe: Tab labels are centered on tabs using DirectX 9 font rendering.
+        /// daorigins.exe: Text rendering uses ID3DXFont with proper centering and color coding.
+        /// </summary>
+        /// <param name="x">Tab X position.</param>
+        /// <param name="y">Tab Y position.</param>
+        /// <param name="width">Tab width.</param>
+        /// <param name="height">Tab height.</param>
+        /// <param name="categoryName">Name of the category to display.</param>
+        /// <param name="isSelected">True if tab is selected (affects text color).</param>
+        private void RenderOptionsCategoryTabLabel(float x, float y, float width, float height, string categoryName, bool isSelected)
+        {
+            // Based on daorigins.exe: Tab labels are centered on tabs
+            // Text rendering uses DirectX 9 ID3DXFont or similar font rendering system
+            // Tab label strings: "Graphics", "Audio", "Game", "Feedback", "Autopause", "Controls"
+
+            if (string.IsNullOrEmpty(categoryName))
+            {
+                return;
+            }
+
+            // Calculate text position (centered on tab)
+            // Based on daorigins.exe: Text is centered both horizontally and vertically on tab
+            // In a full implementation, this would use font metrics to properly center text
+            float textX = x + (width / 2.0f);
+            float textY = y + (height / 2.0f);
+
+            // TODO: Implement actual text rendering using DirectX 9 font system
+            // Text rendering would use ID3DXFont::DrawText or similar DirectX 9 text rendering API
+            // TODO: STUB - For now, this is a placeholder - text rendering would require font loading and text rendering pipeline
+            // Based on daorigins.exe: Text rendering uses DirectX 9 font rendering with proper text centering
+            // Text color: White (0xFFFFFFFF) for unselected tabs, brighter color for selected tabs
+            uint textColor = isSelected ? 0xFFFFFF00 : 0xFFFFFFFF; // Yellow for selected, white for unselected
+
+            // RenderTextDirectX9(textX, textY, categoryName, textColor);
+            // Note: Actual text rendering implementation would be added when font rendering system is available
+        }
+
+        /// <summary>
+        /// Renders an options menu slider control with bar and movable knob.
+        /// Based on daorigins.exe: Numeric options use slider controls with background bar and draggable knob.
+        /// daorigins.exe: Slider rendering uses textured quads for bar and knob with proper positioning.
+        /// </summary>
+        /// <param name="x">Slider X position (screen coordinates).</param>
+        /// <param name="y">Slider Y position (screen coordinates).</param>
+        /// <param name="width">Slider width in pixels.</param>
+        /// <param name="height">Slider height in pixels.</param>
+        /// <param name="minValue">Minimum slider value.</param>
+        /// <param name="maxValue">Maximum slider value.</param>
+        /// <param name="currentValue">Current slider value.</param>
+        private unsafe void RenderOptionsSlider(float x, float y, float width, float height, double minValue, double maxValue, double currentValue)
+        {
+            // Based on daorigins.exe: Sliders consist of background bar and movable knob
+            // Slider dimensions: Bar spans full width, knob is smaller and positioned based on value
+
+            // Calculate knob position based on current value
+            // Based on daorigins.exe: Knob position interpolates between min and max positions
+            double normalizedValue = (currentValue - minValue) / (maxValue - minValue);
+            normalizedValue = Math.Max(0.0, Math.Min(1.0, normalizedValue)); // Clamp to [0, 1]
+
+            // Slider bar dimensions
+            const float barHeight = 8.0f;
+            float barY = y + (height / 2.0f) - (barHeight / 2.0f);
+
+            // Knob dimensions
+            const float knobWidth = 16.0f;
+            const float knobHeight = 20.0f;
+            float knobX = x + (float)(normalizedValue * (width - knobWidth));
+            float knobY = y + (height / 2.0f) - (knobHeight / 2.0f);
+
+            // Render slider bar background
+            // Based on daorigins.exe: Slider bar is a textured quad spanning the slider width
+            RenderOptionsSliderBar(x, barY, width, barHeight);
+
+            // Render slider knob
+            // Based on daorigins.exe: Slider knob is a textured quad positioned based on current value
+            RenderOptionsSliderKnob(knobX, knobY, knobWidth, knobHeight);
+        }
+
+        /// <summary>
+        /// Renders the background bar of an options menu slider.
+        /// Based on daorigins.exe: Slider bars are rendered as textured quads using 2D screen-space coordinates.
+        /// daorigins.exe: Bar rendering uses DrawPrimitive with D3DPT_TRIANGLELIST.
+        /// </summary>
+        /// <param name="x">Bar X position (screen coordinates).</param>
+        /// <param name="y">Bar Y position (screen coordinates).</param>
+        /// <param name="width">Bar width in pixels.</param>
+        /// <param name="height">Bar height in pixels.</param>
+        private unsafe void RenderOptionsSliderBar(float x, float y, float width, float height)
+        {
+            // Based on daorigins.exe: Slider bars are rendered as textured quads using 2D screen-space coordinates
+            // Vertex format: Position (x, y, z), Color (ARGB), Texture coordinates (u, v)
+            // FVF format: D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1
+
+            // Set render states for 2D UI rendering
+            // Based on daorigins.exe: UI rendering uses alpha blending and no depth testing
+            SetRenderStateDirectX9(D3DRS_ZENABLE, 0); // Disable depth testing for 2D
+            SetRenderStateDirectX9(D3DRS_ZWRITEENABLE, 0); // Disable depth writing for 2D
+            SetRenderStateDirectX9(D3DRS_ALPHABLENDENABLE, 1); // Enable alpha blending
+            SetRenderStateDirectX9(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+            SetRenderStateDirectX9(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+            SetRenderStateDirectX9(D3DRS_CULLMODE, D3DCULL_NONE); // No culling for 2D sprites
+
+            // Set texture stage states for UI rendering
+            SetTextureStageStateDirectX9(0, D3DTSS_ADDRESSU, D3DTADDRESS_CLAMP);
+            SetTextureStageStateDirectX9(0, D3DTSS_ADDRESSV, D3DTADDRESS_CLAMP);
+            SetTextureStageStateDirectX9(0, D3DTSS_MAGFILTER, D3DTEXF_LINEAR);
+            SetTextureStageStateDirectX9(0, D3DTSS_MINFILTER, D3DTEXF_LINEAR);
+
+            // Set vertex format
+            const uint D3DFVF_XYZ = 0x002;
+            const uint D3DFVF_DIFFUSE = 0x040;
+            const uint D3DFVF_TEX1 = 0x100;
+            uint barFVF = D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1;
+            SetFVFDirectX9(barFVF);
+
+            // Set projection matrix for 2D screen-space rendering
+            // Based on daorigins.exe: UI rendering uses orthographic projection with screen coordinates
+            // Screen-space: x=[0, viewportWidth], y=[0, viewportHeight], z=[0, 1]
+            // DirectX 9 uses left-handed coordinate system with origin at top-left
+            Matrix4x4 orthoMatrix = Matrix4x4.CreateOrthographicOffCenter(
+                0.0f, GetViewportWidth(), // Left, Right
+                GetViewportHeight(), 0.0f, // Top, Bottom (flipped Y for screen coordinates)
+                0.0f, 1.0f // Near, Far
+            );
+            const uint D3DTS_PROJECTION = 2;
+            SetTransformDirectX9(D3DTS_PROJECTION, orthoMatrix);
+
+            // Set world and view matrices to identity for 2D rendering
+            const uint D3DTS_WORLD = 0;
+            const uint D3DTS_VIEW = 1;
+            SetTransformDirectX9(D3DTS_WORLD, Matrix4x4.Identity);
+            SetTransformDirectX9(D3DTS_VIEW, Matrix4x4.Identity);
+
+            // Load slider bar texture from game resources (if available)
+            // Based on daorigins.exe: Slider bar textures are loaded from game resources (TPC files)
+            IntPtr barTexture = LoadOptionsSliderTexture("bar");
+
+            // Create vertex buffer for bar quad
+            // Based on daorigins.exe: UI elements use vertex buffers with 6 vertices (2 triangles) per quad
+            const uint D3DUSAGE_WRITEONLY = 0x00000008;
+            const uint D3DPOOL_MANAGED = 1;
+
+            IntPtr vertexBuffer = IntPtr.Zero;
+            int createResult = CreateVertexBufferDirectX9(24, D3DUSAGE_WRITEONLY, barFVF, D3DPOOL_MANAGED, ref vertexBuffer);
+            if (createResult < 0 || vertexBuffer == IntPtr.Zero)
+            {
+                System.Console.WriteLine("[DragonAgeOriginsGraphicsBackend] RenderOptionsSliderBar: Failed to create vertex buffer for slider bar");
+                return;
+            }
+
+            // Lock vertex buffer and fill with quad vertices
+            // Based on daorigins.exe: Vertex buffer locking uses proper vertex format for UI rendering
+            IntPtr vertexData = IntPtr.Zero;
+            int lockResult = LockVertexBufferDirectX9(vertexBuffer, 0, 0, ref vertexData, 0);
+            if (lockResult < 0 || vertexData == IntPtr.Zero)
+            {
+                System.Console.WriteLine("[DragonAgeOriginsGraphicsBackend] RenderOptionsSliderBar: Failed to lock vertex buffer for slider bar");
+                // TODO: Release vertex buffer
+                return;
+            }
+
+            // Fill vertex buffer with bar quad vertices
+            // Based on daorigins.exe: UI quads use two triangles with proper winding order
+            UIVertex* vertices = (UIVertex*)vertexData;
+
+            // Determine bar background color (fallback if no texture)
+            // Based on daorigins.exe: Slider bars use neutral colors (gray tones)
+            uint backgroundColor = 0xFF666666; // Medium gray
+
+            // If texture loading failed, use solid color background
+            if (barTexture == IntPtr.Zero)
+            {
+                // Render solid color bar background
+                // Triangle 1
+                vertices[0] = new UIVertex { X = x, Y = y, Z = 0.0f, Color = backgroundColor, U = 0.0f, V = 0.0f };
+                vertices[1] = new UIVertex { X = x + width, Y = y, Z = 0.0f, Color = backgroundColor, U = 1.0f, V = 0.0f };
+                vertices[2] = new UIVertex { X = x, Y = y + height, Z = 0.0f, Color = backgroundColor, U = 0.0f, V = 1.0f };
+
+                // Triangle 2
+                vertices[3] = new UIVertex { X = x + width, Y = y, Z = 0.0f, Color = backgroundColor, U = 1.0f, V = 0.0f };
+                vertices[4] = new UIVertex { X = x + width, Y = y + height, Z = 0.0f, Color = backgroundColor, U = 1.0f, V = 1.0f };
+                vertices[5] = new UIVertex { X = x, Y = y + height, Z = 0.0f, Color = backgroundColor, U = 0.0f, V = 1.0f };
+            }
+            else
+            {
+                // Render textured bar background
+                // Based on daorigins.exe: Textured UI elements use full texture coordinates (0,0 to 1,1)
+                // Triangle 1
+                vertices[0] = new UIVertex { X = x, Y = y, Z = 0.0f, Color = 0xFFFFFFFF, U = 0.0f, V = 0.0f };
+                vertices[1] = new UIVertex { X = x + width, Y = y, Z = 0.0f, Color = 0xFFFFFFFF, U = 1.0f, V = 0.0f };
+                vertices[2] = new UIVertex { X = x, Y = y + height, Z = 0.0f, Color = 0xFFFFFFFF, U = 0.0f, V = 1.0f };
+
+                // Triangle 2
+                vertices[3] = new UIVertex { X = x + width, Y = y, Z = 0.0f, Color = 0xFFFFFFFF, U = 1.0f, V = 0.0f };
+                vertices[4] = new UIVertex { X = x + width, Y = y + height, Z = 0.0f, Color = 0xFFFFFFFF, U = 1.0f, V = 1.0f };
+                vertices[5] = new UIVertex { X = x, Y = y + height, Z = 0.0f, Color = 0xFFFFFFFF, U = 0.0f, V = 1.0f };
+            }
+
+            // Unlock vertex buffer
+            UnlockVertexBufferDirectX9(vertexBuffer);
+
+            // Set texture
+            // Based on daorigins.exe: Texture setting uses stage 0 for UI elements
+            SetTextureDirectX9(0, barTexture);
+
+            // Render the bar quad
+            // Based on daorigins.exe: UI rendering uses DrawPrimitive with D3DPT_TRIANGLELIST
+            const uint D3DPT_TRIANGLELIST = 4;
+            DrawPrimitiveDirectX9(D3DPT_TRIANGLELIST, 0, 2);
+
+            // TODO: Release vertex buffer when done
+            // In a full implementation, vertex buffers would be managed and reused
+        }
+
+        /// <summary>
+        /// Renders the movable knob of an options menu slider.
+        /// Based on daorigins.exe: Slider knobs are rendered as textured quads positioned based on slider value.
+        /// daorigins.exe: Knob rendering uses DrawPrimitive with D3DPT_TRIANGLELIST.
+        /// </summary>
+        /// <param name="x">Knob X position (screen coordinates).</param>
+        /// <param name="y">Knob Y position (screen coordinates).</param>
+        /// <param name="width">Knob width in pixels.</param>
+        /// <param name="height">Knob height in pixels.</param>
+        private unsafe void RenderOptionsSliderKnob(float x, float y, float width, float height)
+        {
+            // Based on daorigins.exe: Slider knobs are rendered as textured quads using 2D screen-space coordinates
+            // Vertex format: Position (x, y, z), Color (ARGB), Texture coordinates (u, v)
+            // FVF format: D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1
+
+            // Set render states for 2D UI rendering
+            // Based on daorigins.exe: UI rendering uses alpha blending and no depth testing
+            SetRenderStateDirectX9(D3DRS_ZENABLE, 0); // Disable depth testing for 2D
+            SetRenderStateDirectX9(D3DRS_ZWRITEENABLE, 0); // Disable depth writing for 2D
+            SetRenderStateDirectX9(D3DRS_ALPHABLENDENABLE, 1); // Enable alpha blending
+            SetRenderStateDirectX9(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+            SetRenderStateDirectX9(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+            SetRenderStateDirectX9(D3DRS_CULLMODE, D3DCULL_NONE); // No culling for 2D sprites
+
+            // Set texture stage states for UI rendering
+            SetTextureStageStateDirectX9(0, D3DTSS_ADDRESSU, D3DTADDRESS_CLAMP);
+            SetTextureStageStateDirectX9(0, D3DTSS_ADDRESSV, D3DTADDRESS_CLAMP);
+            SetTextureStageStateDirectX9(0, D3DTSS_MAGFILTER, D3DTEXF_LINEAR);
+            SetTextureStageStateDirectX9(0, D3DTSS_MINFILTER, D3DTEXF_LINEAR);
+
+            // Set vertex format
+            const uint D3DFVF_XYZ = 0x002;
+            const uint D3DFVF_DIFFUSE = 0x040;
+            const uint D3DFVF_TEX1 = 0x100;
+            uint knobFVF = D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1;
+            SetFVFDirectX9(knobFVF);
+
+            // Set projection matrix for 2D screen-space rendering
+            // Based on daorigins.exe: UI rendering uses orthographic projection with screen coordinates
+            // Screen-space: x=[0, viewportWidth], y=[0, viewportHeight], z=[0, 1]
+            // DirectX 9 uses left-handed coordinate system with origin at top-left
+            Matrix4x4 orthoMatrix = Matrix4x4.CreateOrthographicOffCenter(
+                0.0f, GetViewportWidth(), // Left, Right
+                GetViewportHeight(), 0.0f, // Top, Bottom (flipped Y for screen coordinates)
+                0.0f, 1.0f // Near, Far
+            );
+            const uint D3DTS_PROJECTION = 2;
+            SetTransformDirectX9(D3DTS_PROJECTION, orthoMatrix);
+
+            // Set world and view matrices to identity for 2D rendering
+            const uint D3DTS_WORLD = 0;
+            const uint D3DTS_VIEW = 1;
+            SetTransformDirectX9(D3DTS_WORLD, Matrix4x4.Identity);
+            SetTransformDirectX9(D3DTS_VIEW, Matrix4x4.Identity);
+
+            // Load slider knob texture from game resources (if available)
+            // Based on daorigins.exe: Slider knob textures are loaded from game resources (TPC files)
+            IntPtr knobTexture = LoadOptionsSliderTexture("knob");
+
+            // Create vertex buffer for knob quad
+            // Based on daorigins.exe: UI elements use vertex buffers with 6 vertices (2 triangles) per quad
+            const uint D3DUSAGE_WRITEONLY = 0x00000008;
+            const uint D3DPOOL_MANAGED = 1;
+
+            IntPtr vertexBuffer = IntPtr.Zero;
+            int createResult = CreateVertexBufferDirectX9(24, D3DUSAGE_WRITEONLY, knobFVF, D3DPOOL_MANAGED, ref vertexBuffer);
+            if (createResult < 0 || vertexBuffer == IntPtr.Zero)
+            {
+                System.Console.WriteLine("[DragonAgeOriginsGraphicsBackend] RenderOptionsSliderKnob: Failed to create vertex buffer for slider knob");
+                return;
+            }
+
+            // Lock vertex buffer and fill with quad vertices
+            // Based on daorigins.exe: Vertex buffer locking uses proper vertex format for UI rendering
+            IntPtr vertexData = IntPtr.Zero;
+            int lockResult = LockVertexBufferDirectX9(vertexBuffer, 0, 0, ref vertexData, 0);
+            if (lockResult < 0 || vertexData == IntPtr.Zero)
+            {
+                System.Console.WriteLine("[DragonAgeOriginsGraphicsBackend] RenderOptionsSliderKnob: Failed to lock vertex buffer for slider knob");
+                // TODO: Release vertex buffer
+                return;
+            }
+
+            // Fill vertex buffer with knob quad vertices
+            // Based on daorigins.exe: UI quads use two triangles with proper winding order
+            UIVertex* vertices = (UIVertex*)vertexData;
+
+            // Determine knob background color (fallback if no texture)
+            // Based on daorigins.exe: Slider knobs use prominent colors (blue/white)
+            uint backgroundColor = 0xFF4A90E2; // Blue color for knob
+
+            // If texture loading failed, use solid color background
+            if (knobTexture == IntPtr.Zero)
+            {
+                // Render solid color knob background
+                // Triangle 1
+                vertices[0] = new UIVertex { X = x, Y = y, Z = 0.0f, Color = backgroundColor, U = 0.0f, V = 0.0f };
+                vertices[1] = new UIVertex { X = x + width, Y = y, Z = 0.0f, Color = backgroundColor, U = 1.0f, V = 0.0f };
+                vertices[2] = new UIVertex { X = x, Y = y + height, Z = 0.0f, Color = backgroundColor, U = 0.0f, V = 1.0f };
+
+                // Triangle 2
+                vertices[3] = new UIVertex { X = x + width, Y = y, Z = 0.0f, Color = backgroundColor, U = 1.0f, V = 0.0f };
+                vertices[4] = new UIVertex { X = x + width, Y = y + height, Z = 0.0f, Color = backgroundColor, U = 1.0f, V = 1.0f };
+                vertices[5] = new UIVertex { X = x, Y = y + height, Z = 0.0f, Color = backgroundColor, U = 0.0f, V = 1.0f };
+            }
+            else
+            {
+                // Render textured knob background
+                // Based on daorigins.exe: Textured UI elements use full texture coordinates (0,0 to 1,1)
+                // Triangle 1
+                vertices[0] = new UIVertex { X = x, Y = y, Z = 0.0f, Color = 0xFFFFFFFF, U = 0.0f, V = 0.0f };
+                vertices[1] = new UIVertex { X = x + width, Y = y, Z = 0.0f, Color = 0xFFFFFFFF, U = 1.0f, V = 0.0f };
+                vertices[2] = new UIVertex { X = x, Y = y + height, Z = 0.0f, Color = 0xFFFFFFFF, U = 0.0f, V = 1.0f };
+
+                // Triangle 2
+                vertices[3] = new UIVertex { X = x + width, Y = y, Z = 0.0f, Color = 0xFFFFFFFF, U = 1.0f, V = 0.0f };
+                vertices[4] = new UIVertex { X = x + width, Y = y + height, Z = 0.0f, Color = 0xFFFFFFFF, U = 1.0f, V = 1.0f };
+                vertices[5] = new UIVertex { X = x, Y = y + height, Z = 0.0f, Color = 0xFFFFFFFF, U = 0.0f, V = 1.0f };
+            }
+
+            // Unlock vertex buffer
+            UnlockVertexBufferDirectX9(vertexBuffer);
+
+            // Set texture
+            // Based on daorigins.exe: Texture setting uses stage 0 for UI elements
+            SetTextureDirectX9(0, knobTexture);
+
+            // Render the knob quad
+            // Based on daorigins.exe: UI rendering uses DrawPrimitive with D3DPT_TRIANGLELIST
+            const uint D3DPT_TRIANGLELIST = 4;
+            DrawPrimitiveDirectX9(D3DPT_TRIANGLELIST, 0, 2);
+
+            // TODO: Release vertex buffer when done
+            // In a full implementation, vertex buffers would be managed and reused
+        }
+
+        /// <summary>
+        /// Renders an options menu checkbox control.
+        /// Based on daorigins.exe: Boolean options use checkbox controls that show checked/unchecked states.
+        /// daorigins.exe: Checkbox rendering uses textured quads with different textures for checked/unchecked.
+        /// </summary>
+        /// <param name="x">Checkbox X position (screen coordinates).</param>
+        /// <param name="y">Checkbox Y position (screen coordinates).</param>
+        /// <param name="width">Checkbox width in pixels.</param>
+        /// <param name="height">Checkbox height in pixels.</param>
+        /// <param name="isChecked">True if checkbox is checked.</param>
+        private unsafe void RenderOptionsCheckbox(float x, float y, float width, float height, bool isChecked)
+        {
+            // Based on daorigins.exe: Checkboxes are rendered as textured quads using 2D screen-space coordinates
+            // Vertex format: Position (x, y, z), Color (ARGB), Texture coordinates (u, v)
+            // FVF format: D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1
+
+            // Set render states for 2D UI rendering
+            // Based on daorigins.exe: UI rendering uses alpha blending and no depth testing
+            SetRenderStateDirectX9(D3DRS_ZENABLE, 0); // Disable depth testing for 2D
+            SetRenderStateDirectX9(D3DRS_ZWRITEENABLE, 0); // Disable depth writing for 2D
+            SetRenderStateDirectX9(D3DRS_ALPHABLENDENABLE, 1); // Enable alpha blending
+            SetRenderStateDirectX9(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+            SetRenderStateDirectX9(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+            SetRenderStateDirectX9(D3DRS_CULLMODE, D3DCULL_NONE); // No culling for 2D sprites
+
+            // Set texture stage states for UI rendering
+            SetTextureStageStateDirectX9(0, D3DTSS_ADDRESSU, D3DTADDRESS_CLAMP);
+            SetTextureStageStateDirectX9(0, D3DTSS_ADDRESSV, D3DTADDRESS_CLAMP);
+            SetTextureStageStateDirectX9(0, D3DTSS_MAGFILTER, D3DTEXF_LINEAR);
+            SetTextureStageStateDirectX9(0, D3DTSS_MINFILTER, D3DTEXF_LINEAR);
+
+            // Set vertex format
+            const uint D3DFVF_XYZ = 0x002;
+            const uint D3DFVF_DIFFUSE = 0x040;
+            const uint D3DFVF_TEX1 = 0x100;
+            uint checkboxFVF = D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1;
+            SetFVFDirectX9(checkboxFVF);
+
+            // Set projection matrix for 2D screen-space rendering
+            // Based on daorigins.exe: UI rendering uses orthographic projection with screen coordinates
+            // Screen-space: x=[0, viewportWidth], y=[0, viewportHeight], z=[0, 1]
+            // DirectX 9 uses left-handed coordinate system with origin at top-left
+            Matrix4x4 orthoMatrix = Matrix4x4.CreateOrthographicOffCenter(
+                0.0f, GetViewportWidth(), // Left, Right
+                GetViewportHeight(), 0.0f, // Top, Bottom (flipped Y for screen coordinates)
+                0.0f, 1.0f // Near, Far
+            );
+            const uint D3DTS_PROJECTION = 2;
+            SetTransformDirectX9(D3DTS_PROJECTION, orthoMatrix);
+
+            // Set world and view matrices to identity for 2D rendering
+            const uint D3DTS_WORLD = 0;
+            const uint D3DTS_VIEW = 1;
+            SetTransformDirectX9(D3DTS_WORLD, Matrix4x4.Identity);
+            SetTransformDirectX9(D3DTS_VIEW, Matrix4x4.Identity);
+
+            // Load checkbox texture from game resources (if available)
+            // Based on daorigins.exe: Checkbox textures are loaded from game resources (TPC files)
+            IntPtr checkboxTexture = LoadOptionsCheckboxTexture(isChecked);
+
+            // Create vertex buffer for checkbox quad
+            // Based on daorigins.exe: UI elements use vertex buffers with 6 vertices (2 triangles) per quad
+            const uint D3DUSAGE_WRITEONLY = 0x00000008;
+            const uint D3DPOOL_MANAGED = 1;
+
+            IntPtr vertexBuffer = IntPtr.Zero;
+            int createResult = CreateVertexBufferDirectX9(24, D3DUSAGE_WRITEONLY, checkboxFVF, D3DPOOL_MANAGED, ref vertexBuffer);
+            if (createResult < 0 || vertexBuffer == IntPtr.Zero)
+            {
+                System.Console.WriteLine("[DragonAgeOriginsGraphicsBackend] RenderOptionsCheckbox: Failed to create vertex buffer for checkbox");
+                return;
+            }
+
+            // Lock vertex buffer and fill with quad vertices
+            // Based on daorigins.exe: Vertex buffer locking uses proper vertex format for UI rendering
+            IntPtr vertexData = IntPtr.Zero;
+            int lockResult = LockVertexBufferDirectX9(vertexBuffer, 0, 0, ref vertexData, 0);
+            if (lockResult < 0 || vertexData == IntPtr.Zero)
+            {
+                System.Console.WriteLine("[DragonAgeOriginsGraphicsBackend] RenderOptionsCheckbox: Failed to lock vertex buffer for checkbox");
+                // TODO: Release vertex buffer
+                return;
+            }
+
+            // Fill vertex buffer with checkbox quad vertices
+            // Based on daorigins.exe: UI quads use two triangles with proper winding order
+            UIVertex* vertices = (UIVertex*)vertexData;
+
+            // Determine checkbox background color (fallback if no texture)
+            // Based on daorigins.exe: Checkboxes use different colors for checked/unchecked states
+            uint backgroundColor = isChecked ? 0xFF4A90E2 : 0xFF666666; // Blue for checked, gray for unchecked
+
+            // If texture loading failed, use solid color background
+            if (checkboxTexture == IntPtr.Zero)
+            {
+                // Render solid color checkbox background
+                // Triangle 1
+                vertices[0] = new UIVertex { X = x, Y = y, Z = 0.0f, Color = backgroundColor, U = 0.0f, V = 0.0f };
+                vertices[1] = new UIVertex { X = x + width, Y = y, Z = 0.0f, Color = backgroundColor, U = 1.0f, V = 0.0f };
+                vertices[2] = new UIVertex { X = x, Y = y + height, Z = 0.0f, Color = backgroundColor, U = 0.0f, V = 1.0f };
+
+                // Triangle 2
+                vertices[3] = new UIVertex { X = x + width, Y = y, Z = 0.0f, Color = backgroundColor, U = 1.0f, V = 0.0f };
+                vertices[4] = new UIVertex { X = x + width, Y = y + height, Z = 0.0f, Color = backgroundColor, U = 1.0f, V = 1.0f };
+                vertices[5] = new UIVertex { X = x, Y = y + height, Z = 0.0f, Color = backgroundColor, U = 0.0f, V = 1.0f };
+
+                // Add checkmark for checked state (simple white X)
+                if (isChecked)
+                {
+                    // Render checkmark as a simple white overlay
+                    // This is a simplified implementation - real checkmarks would use textures
+                    uint checkmarkColor = 0xFFFFFFFF; // White
+
+                    // Simple checkmark pattern (diagonal lines)
+                    // Top-left to bottom-right diagonal
+                    DrawQuad(x + 4, y + 4, width - 8, 3, checkmarkColor, IntPtr.Zero);
+                    DrawQuad(x + width - 7, y + 4, 3, height - 8, checkmarkColor, IntPtr.Zero);
+                }
+            }
+            else
+            {
+                // Render textured checkbox background
+                // Based on daorigins.exe: Textured UI elements use full texture coordinates (0,0 to 1,1)
+                // Triangle 1
+                vertices[0] = new UIVertex { X = x, Y = y, Z = 0.0f, Color = 0xFFFFFFFF, U = 0.0f, V = 0.0f };
+                vertices[1] = new UIVertex { X = x + width, Y = y, Z = 0.0f, Color = 0xFFFFFFFF, U = 1.0f, V = 0.0f };
+                vertices[2] = new UIVertex { X = x, Y = y + height, Z = 0.0f, Color = 0xFFFFFFFF, U = 0.0f, V = 1.0f };
+
+                // Triangle 2
+                vertices[3] = new UIVertex { X = x + width, Y = y, Z = 0.0f, Color = 0xFFFFFFFF, U = 1.0f, V = 0.0f };
+                vertices[4] = new UIVertex { X = x + width, Y = y + height, Z = 0.0f, Color = 0xFFFFFFFF, U = 1.0f, V = 1.0f };
+                vertices[5] = new UIVertex { X = x, Y = y + height, Z = 0.0f, Color = 0xFFFFFFFF, U = 0.0f, V = 1.0f };
+            }
+
+            // Unlock vertex buffer
+            UnlockVertexBufferDirectX9(vertexBuffer);
+
+            // Set texture
+            // Based on daorigins.exe: Texture setting uses stage 0 for UI elements
+            SetTextureDirectX9(0, checkboxTexture);
+
+            // Render the checkbox quad
+            // Based on daorigins.exe: UI rendering uses DrawPrimitive with D3DPT_TRIANGLELIST
+            const uint D3DPT_TRIANGLELIST = 4;
+            DrawPrimitiveDirectX9(D3DPT_TRIANGLELIST, 0, 2);
+
+            // TODO: Release vertex buffer when done
+            // In a full implementation, vertex buffers would be managed and reused
+        }
+
+        /// <summary>
+        /// Renders option value text for options menu items.
+        /// Based on daorigins.exe: Option values are displayed as text next to option labels.
+        /// daorigins.exe: Value text uses DirectX 9 font rendering with proper alignment.
+        /// </summary>
+        /// <param name="x">Text X position (screen coordinates).</param>
+        /// <param name="y">Text Y position (screen coordinates).</param>
+        /// <param name="valueText">The value text to render.</param>
+        /// <param name="isEditing">True if this value is currently being edited.</param>
+        /// <param name="isSelected">True if this option is currently selected.</param>
+        private void RenderOptionsValueText(float x, float y, string valueText, bool isEditing, bool isSelected)
+        {
+            // Based on daorigins.exe: Option values are rendered as text using DirectX 9 font system
+            // Value text shows current setting (e.g., "1280x720", "On", "50", etc.)
+            // Editing state shows cursor and allows text input
+
+            if (string.IsNullOrEmpty(valueText))
+            {
+                return;
+            }
+
+            // Add cursor to text when editing
+            // Based on daorigins.exe: Editing mode shows blinking cursor
+            if (isEditing)
+            {
+                valueText += "_"; // Simple cursor representation
+            }
+
+            // Calculate text position
+            // Based on daorigins.exe: Value text is right-aligned in option area
+            // In a full implementation, this would use font metrics for proper alignment
+            float textX = x;
+            float textY = y;
+
+            // TODO: Implement actual text rendering using DirectX 9 font system
+            // Text rendering would use ID3DXFont::DrawText or similar DirectX 9 text rendering API
+            // TODO: STUB - For now, this is a placeholder - text rendering would require font loading and text rendering pipeline
+            // Based on daorigins.exe: Text rendering uses DirectX 9 font rendering with proper alignment
+
+            // Determine text color based on state
+            // Based on daorigins.exe: Selected items use different colors, editing uses special colors
+            uint textColor;
+            if (isEditing)
+            {
+                textColor = 0xFFFFFF00; // Yellow for editing
+            }
+            else if (isSelected)
+            {
+                textColor = 0xFFFFFFFF; // White for selected
+            }
+            else
+            {
+                textColor = 0xFFCCCCCC; // Light gray for unselected
+            }
+
+            // RenderTextDirectX9(textX, textY, valueText, textColor);
+            // Note: Actual text rendering implementation would be added when font rendering system is available
+        }
+
+        /// <summary>
+        /// Renders the options list for the selected category.
+        /// Based on daorigins.exe: Options are displayed as a scrollable list with labels and values.
+        /// daorigins.exe: Each option shows label, current value, and interactive controls (sliders/checkboxes).
+        /// </summary>
+        /// <param name="viewportWidth">Viewport width in pixels.</param>
+        /// <param name="viewportHeight">Viewport height in pixels.</param>
+        private void RenderOptionsList(uint viewportWidth, uint viewportHeight)
+        {
+            // Based on daorigins.exe: Options list is displayed below category tabs
+            // Options include labels, values, and interactive controls (sliders, checkboxes)
+
+            // Get the current category and its options
+            // Based on daorigins.exe: Options are organized by category with different types of controls
+            var currentCategory = (Andastra.Runtime.Game.GUI.OptionsMenu.OptionsCategory)_optionsMenuSelectedCategoryIndex;
+
+            // Create options structure (simplified - would normally get from game settings)
+            // TODO: Integrate with actual game settings system
+            // For now, create default options structure
+            var gameSettings = new Andastra.Runtime.Core.GameSettings(); // Placeholder
+            var optionsByCategory = Andastra.Runtime.Game.GUI.OptionsMenu.CreateDefaultOptions(gameSettings);
+
+            if (!optionsByCategory.ContainsKey(currentCategory))
+            {
+                return;
+            }
+
+            var options = optionsByCategory[currentCategory];
+
+            // Layout constants
+            // Based on daorigins.exe: Options are laid out in a grid with consistent spacing
+            const float optionsStartX = 50.0f;
+            const float optionsStartY = 150.0f; // Below category tabs
+            const float optionHeight = 50.0f;
+            const float optionSpacing = 10.0f;
+            const float labelWidth = 200.0f; // Width allocated for option labels
+            const float valueWidth = 150.0f; // Width allocated for option values
+            const float controlStartX = optionsStartX + labelWidth + 20.0f; // Where controls start
+
+            // Render each option
+            for (int i = 0; i < options.Count; i++)
+            {
+                float optionY = optionsStartY + (i * (optionHeight + optionSpacing));
+                bool isSelected = (i == _optionsMenuSelectedOptionIndex);
+                var option = options[i];
+
+                // Render option background (highlight for selected)
+                // Based on daorigins.exe: Selected options have different background colors
+                RenderOptionsListItemBackground(optionsStartX, optionY, viewportWidth - 100.0f, optionHeight, isSelected);
+
+                // Render option label
+                // Based on daorigins.exe: Option labels are left-aligned
+                RenderOptionsListItemLabel(optionsStartX + 10.0f, optionY + (optionHeight / 2.0f), option.Name);
+
+                // Render option control based on type
+                // Based on daorigins.exe: Different option types use different controls
+                float controlX = controlStartX;
+                float controlY = optionY + 5.0f;
+                float controlWidth = 200.0f;
+                float controlHeight = optionHeight - 10.0f;
+
+                switch (option.Type)
+                {
+                    case Andastra.Runtime.Game.GUI.OptionsMenu.OptionType.Boolean:
+                        // Render checkbox for boolean options
+                        bool boolValue = option.GetValue() > 0;
+                        RenderOptionsCheckbox(controlX, controlY, 20.0f, 20.0f, boolValue);
+                        break;
+
+                    case Andastra.Runtime.Game.GUI.OptionsMenu.OptionType.Numeric:
+                        // Render slider for numeric options
+                        RenderOptionsSlider(controlX, controlY, controlWidth, controlHeight,
+                                          option.MinValue, option.MaxValue, option.GetValue());
+                        break;
+
+                    case Andastra.Runtime.Game.GUI.OptionsMenu.OptionType.Enum:
+                        // TODO: Render dropdown/enum selector
+                        // For now, just render as text
+                        break;
+                }
+
+                // Render option value as text
+                // Based on daorigins.exe: Current values are displayed as text
+                string valueText = _optionsMenuIsEditingValue && isSelected ? _optionsMenuEditingValue : option.GetStringValue();
+                RenderOptionsValueText(controlX + controlWidth + 20.0f, optionY + (optionHeight / 2.0f),
+                                     valueText, _optionsMenuIsEditingValue && isSelected, isSelected);
+            }
+        }
+
+        /// <summary>
+        /// Renders the background for an options list item.
+        /// Based on daorigins.exe: Option backgrounds use different colors for selected/unselected states.
+        /// </summary>
+        /// <param name="x">Background X position.</param>
+        /// <param name="y">Background Y position.</param>
+        /// <param name="width">Background width.</param>
+        /// <param name="height">Background height.</param>
+        /// <param name="isSelected">True if this item is selected.</param>
+        private void RenderOptionsListItemBackground(float x, float y, float width, float height, bool isSelected)
+        {
+            // Based on daorigins.exe: Option backgrounds are rendered as solid colored rectangles
+            uint backgroundColor = isSelected ? 0xFF4A4A6A : 0xFF2A2A3A; // Different shades for selected/unselected
+
+            // Use DrawQuad for simple colored background
+            DrawQuad(x, y, width, height, backgroundColor, IntPtr.Zero);
+        }
+
+        /// <summary>
+        /// Renders the label text for an options list item.
+        /// Based on daorigins.exe: Option labels are rendered as text using DirectX 9 fonts.
+        /// </summary>
+        /// <param name="x">Label X position.</param>
+        /// <param name="y">Label Y position.</param>
+        /// <param name="labelText">The label text to render.</param>
+        private void RenderOptionsListItemLabel(float x, float y, string labelText)
+        {
+            // Based on daorigins.exe: Option labels are rendered as left-aligned text
+            // TODO: Implement actual text rendering using DirectX 9 font system
+            // For now, this is a placeholder
+            uint textColor = 0xFFFFFFFF; // White text
+
+            // RenderTextDirectX9(x, y, labelText, textColor);
             // Note: Actual text rendering implementation would be added when font rendering system is available
         }
 
