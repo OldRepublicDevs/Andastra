@@ -1335,7 +1335,7 @@ shader SSREffect : ShaderBase
 
                     // Try to get EffectSystem from services (EffectCompiler may be accessed through it)
                     // Based on Stride architecture: EffectSystem manages effect compilation
-                    var effectSystem = services.GetService<IEffectSystem>();
+                    var effectSystem = services.GetService<Stride.Shaders.Compiler.EffectCompiler>();
                     if (effectSystem != null)
                     {
                         // EffectSystem may provide access to EffectCompiler
@@ -1416,7 +1416,7 @@ shader SSREffect : ShaderBase
         /// <param name="shaderSource">Shader source code.</param>
         /// <param name="shaderName">Shader name for identification.</param>
         /// <returns>Compiled Effect, or null if compilation fails.</returns>
-        private Effect CompileShaderWithEffectSystem(IEffectSystem effectSystem, string shaderSource, string shaderName)
+        private Effect CompileShaderWithEffectSystem(Stride.Shaders.Compiler.EffectCompiler effectSystem, string shaderSource, string shaderName)
         {
             try
             {
@@ -1541,6 +1541,32 @@ shader SSREffect : ShaderBase
         {
             public string Name { get; set; }
             public string SourceCode { get; set; }
+
+            public override int GetHashCode()
+            {
+                int hash = 17;
+                hash = hash * 31 + (Name?.GetHashCode() ?? 0);
+                hash = hash * 31 + (SourceCode?.GetHashCode() ?? 0);
+                return hash;
+            }
+
+            public override ShaderSource Clone()
+            {
+                return new ShaderSourceClass
+                {
+                    Name = Name,
+                    SourceCode = SourceCode
+                };
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (obj == null || !(obj is ShaderSourceClass other))
+                {
+                    return false;
+                }
+                return Name == other.Name && SourceCode == other.SourceCode;
+            }
         }
 
         /// <summary>
@@ -1595,4 +1621,7 @@ shader SSREffect : ShaderBase
         {
             _clipNear = near;
             _clipFar = far;
-       
+        }
+    }
+}
+
