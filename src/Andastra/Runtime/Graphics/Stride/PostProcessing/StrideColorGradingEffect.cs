@@ -30,7 +30,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
     {
         private GraphicsDevice _graphicsDevice;
         private EffectInstance _colorGradingEffect;
-        private Texture _lutTexture;
+        private new Texture _lutTexture;
         private Texture _temporaryTexture;
         private int _lutSize; // Size of the 3D LUT (16 or 32)
         private bool _effectInitialized;

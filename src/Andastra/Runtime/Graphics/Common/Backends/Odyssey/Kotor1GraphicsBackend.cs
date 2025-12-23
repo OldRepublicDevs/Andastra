@@ -356,7 +356,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         // KOTOR1-specific function pointer delegate types (matching swkotor.exe function pointers)
         // Note: These differ from KOTOR2 in that they use IntPtr for params instead of arrays
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate void GlEnableDisableDelegate(bool enable);
+        private new delegate void GlEnableDisableDelegate(bool enable);
         
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void GlGenVertexArraysDelegate(int n, ref uint arrays);
@@ -370,13 +370,13 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         // Vertex program function pointer delegates (matching swkotor.exe: FUN_00436490)
         // Note: KOTOR1 uses IntPtr for params, while KOTOR2 uses float[]/double[]
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate void GlProgramEnvParameter4fvArbDelegate(uint target, uint index, IntPtr params_);
+        private new delegate void GlProgramEnvParameter4fvArbDelegate(uint target, uint index, IntPtr params_);
         
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate void GlProgramLocalParameter4fvArbDelegate(uint target, uint index, IntPtr params_);
+        private new delegate void GlProgramLocalParameter4fvArbDelegate(uint target, uint index, IntPtr params_);
         
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate void GlProgramLocalParameter4dvArbDelegate(uint target, uint index, IntPtr params_);
+        private new delegate void GlProgramLocalParameter4dvArbDelegate(uint target, uint index, IntPtr params_);
         
         // WGL extension function pointer delegates (matching swkotor.exe: FUN_00436490)
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]

@@ -119,7 +119,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        private StrideGraphics.Texture2D GetStrideTexture(ITexture2D texture)
+        private global::Stride.Graphics.Texture2D GetStrideTexture(ITexture2D texture)
         {
             if (texture is StrideTexture2D strideTexture)
             {

@@ -667,7 +667,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         // KOTOR1 uses base class implementation - no override needed
         // Method removed to avoid hiding warning - switch statement calls base.Func_GetDistanceToObject
 
-        private Variable Func_GetObjectType(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        private new Variable Func_GetObjectType(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             IEntity entity = ResolveObject(objectId, ctx);
