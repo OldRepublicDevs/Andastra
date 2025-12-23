@@ -5,6 +5,7 @@ using Andastra.Runtime.Game.Core;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Core;
 using Andastra.Runtime.Graphics.Common.Enums;
+using Core = Andastra.Runtime.Game.Core;
 
 namespace Andastra.Runtime.Game
 {
@@ -54,7 +55,7 @@ namespace Andastra.Runtime.Game
             {
                 // Initialize Eto.Forms application (cross-platform)
                 var app = new Application(Eto.Platform.Detect);
-                
+
                 // Show launcher UI
                 using (var launcher = new Andastra.Game.GUI.GameLauncher())
                 {
@@ -68,37 +69,36 @@ namespace Andastra.Runtime.Game
                     selectedGame = launcher.SelectedGame;
                     gamePath = launcher.SelectedPath;
                 }
-                
+
                 app.Dispose();
 
-                // Convert Game enum to KotorGame for settings
-                KotorGame kotorGame = KotorGame.K1;
-                if (selectedGame == BioWareGame.K2)
+                // Check if this is a KOTOR game or another BioWare game
+                if (selectedGame.IsOdyssey())
                 {
-                    kotorGame = KotorGame.K2;
-                }
-                else if (selectedGame != BioWareGame.K1)
-                {
-                    // For non-KOTOR games, we'll need to handle differently
-                    // TODO: STUB - For now, show error
-                    var errorApp = new Application(Eto.Platform.Detect);
-                    MessageBox.Show(
-                        $"Game {selectedGame} is not yet fully supported. Only KotOR 1 and KotOR 2 are currently supported.",
-                        "Unsupported Game",
-                        MessageBoxType.Warning);
-                    errorApp.Dispose();
-                    return 1;
-                }
+                    // Convert BioWareGame to KotorGame for Odyssey/KOTOR games
+                    KotorGame kotorGame = KotorGame.K1;
+                    if (selectedGame.IsK2())
+                    {
+                        kotorGame = KotorGame.K2;
+                    }
 
-                settings = new GameSettings
+                    settings = new GameSettings
+                    {
+                        Game = kotorGame,
+                        GamePath = gamePath
+                    };
+                }
+                else
                 {
-                    Game = kotorGame,
-                    GamePath = gamePath
-                };
+                    // For non-KOTOR games, use unified launcher
+                    // GameSettings is only for KOTOR games, so we'll handle non-KOTOR games separately
+                    settings = null;
+                }
             }
             else
             {
                 // Parse command line arguments (legacy mode)
+                // Note: Command-line mode currently only supports KOTOR games
                 settings = GameSettingsExtensions.FromCommandLine(args);
 
                 // Detect KOTOR installation if not specified
@@ -112,6 +112,10 @@ namespace Andastra.Runtime.Game
                         return 1;
                     }
                 }
+
+                // Set selectedGame based on KotorGame for command-line mode
+                selectedGame = settings.Game == KotorGame.K2 ? BioWareGame.K2 : BioWareGame.K1;
+                gamePath = settings.GamePath;
             }
 
             // Determine graphics backend (default to MonoGame, can be overridden via command line)
@@ -138,10 +142,33 @@ namespace Andastra.Runtime.Game
                 // Create graphics backend
                 IGraphicsBackend graphicsBackend = Core.GraphicsBackendFactory.CreateBackend(backendType);
 
-                // Create and run the game using abstraction layer
-                using (var game = new OdysseyGame(settings, graphicsBackend))
+                // Check if this is a KOTOR game (uses OdysseyGame) or another BioWare game (uses UnifiedGameLauncher)
+                // For command-line mode, settings will always be set and will be for KOTOR games
+                // For launcher UI mode, check if it's an Odyssey game
+                if ((selectedGame.IsOdyssey() || settings != null) && settings != null)
                 {
-                    game.Run();
+                    // Use OdysseyGame for KOTOR games
+                    using (var game = new OdysseyGame(settings, graphicsBackend))
+                    {
+                        game.Run();
+                    }
+                }
+                else
+                {
+                    // Use UnifiedGameLauncher for other BioWare games (Aurora, Eclipse, Infinity)
+                    // Get game path from settings or use the path from launcher
+                    string gamePathForLauncher = settings != null ? settings.GamePath : gamePath;
+
+                    if (string.IsNullOrEmpty(gamePathForLauncher))
+                    {
+                        throw new InvalidOperationException($"Game path is required for {selectedGame}");
+                    }
+
+                    using (var launcher = new UnifiedGameLauncher(selectedGame, gamePathForLauncher, graphicsBackend, settings))
+                    {
+                        launcher.Initialize();
+                        launcher.Run();
+                    }
                 }
 
                 return 0;
