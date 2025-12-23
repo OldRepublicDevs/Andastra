@@ -55,8 +55,33 @@ namespace Andastra.Runtime.Stride.Backends
 
             _strideDevice = _game.GraphicsDevice;
 
-            // Get native D3D11 handles from Stride
-            _device = _strideDevice.NativeDevice;
+            // Get native D3D11 handles from Stride using reflection
+            // Stride GraphicsDevice may use NativePointer or NativeDevice depending on backend
+            _device = IntPtr.Zero;
+            var nativeDeviceProp = typeof(GraphicsDevice).GetProperty("NativeDevice",
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (nativeDeviceProp != null)
+            {
+                var value = nativeDeviceProp.GetValue(_strideDevice);
+                if (value is IntPtr ptr && ptr != IntPtr.Zero)
+                {
+                    _device = ptr;
+                }
+            }
+            // If NativeDevice not found, try NativePointer
+            if (_device == IntPtr.Zero)
+            {
+                var nativePointerProp = typeof(GraphicsDevice).GetProperty("NativePointer",
+                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (nativePointerProp != null)
+                {
+                    var value = nativePointerProp.GetValue(_strideDevice);
+                    if (value is IntPtr ptr && ptr != IntPtr.Zero)
+                    {
+                        _device = ptr;
+                    }
+                }
+            }
             _immediateContext = IntPtr.Zero; // Stride manages context internally
 
             // Determine feature level based on Stride device
