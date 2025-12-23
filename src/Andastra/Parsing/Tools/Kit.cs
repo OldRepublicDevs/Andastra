@@ -1833,6 +1833,7 @@ namespace Andastra.Parsing.Tools
                                      materialValue == 6 || materialValue == 9 || materialValue == 10 || materialValue == 11 || 
                                      materialValue == 12 || materialValue == 13 || materialValue == 14 || materialValue == 16 || 
                                      materialValue == 18 || materialValue == 20 || materialValue == 21 || materialValue == 22;
+                    ParsingColor parsingColor = isWalkable ? ParsingColor.WHITE : new ParsingColor(0.5f, 0.5f, 0.5f);
                     System.Drawing.Color color = isWalkable ? System.Drawing.Color.White : System.Drawing.Color.Gray;
 
                     // Get face vertices
