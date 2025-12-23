@@ -1206,6 +1206,70 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             return true;
         }
 
+        /// <summary>
+        /// Gets the character entity for upgrade operations (common to K1 and K2).
+        /// </summary>
+        /// <returns>Character entity, or null if not found.</returns>
+        /// <remarks>
+        /// Character Retrieval Logic (Odyssey Engine - K1 and K2):
+        /// - Based on swkotor.exe: DAT_007a39fc - global structure storing current player character pointer
+        /// - Based on swkotor2.exe: DAT_008283d4 - global structure storing current player character pointer
+        /// - Original implementation: Both games use a global structure to store the current player character
+        /// - The upgrade screen accesses the character from this global structure
+        /// - Common pattern: Get character from stored _character field, or find player entity from world
+        /// </remarks>
+        protected IEntity GetCharacterEntity()
+        {
+            // First, try to use stored character
+            if (_character != null)
+            {
+                return _character;
+            }
+
+            // Get player character from world
+            // Based on swkotor.exe: Player entity is tagged "Player"
+            // Based on swkotor2.exe: Player entity is tagged "Player"
+            // Located via string references: "Player" @ 0x007be628 (swkotor2.exe), "Mod_PlayerList" @ 0x007be060 (swkotor2.exe)
+            IEntity character = _world.GetEntityByTag("Player", 0);
+
+            if (character == null)
+            {
+                // Fallback: Search through all entities for one marked as player
+                // Based on swkotor.exe: Player entity has IsPlayer data flag set to true
+                // Based on swkotor2.exe: Player entity has IsPlayer data flag set to true
+                // Original implementation: Player entity is marked with IsPlayer flag during creation
+                foreach (IEntity entity in _world.GetAllEntities())
+                {
+                    if (entity == null)
+                    {
+                        continue;
+                    }
+
+                    // Check tag-based identification
+                    string tag = entity.Tag;
+                    if (!string.IsNullOrEmpty(tag))
+                    {
+                        if (string.Equals(tag, "Player", StringComparison.OrdinalIgnoreCase) ||
+                            string.Equals(tag, "player", StringComparison.OrdinalIgnoreCase))
+                        {
+                            character = entity;
+                            break;
+                        }
+                    }
+
+                    // Check IsPlayer data flag
+                    object isPlayerData = entity.GetData("IsPlayer");
+                    if (isPlayerData is bool && (bool)isPlayerData)
+                    {
+                        character = entity;
+                        break;
+                    }
+                }
+            }
+
+            return character;
+        }
+
     }
 }
 
