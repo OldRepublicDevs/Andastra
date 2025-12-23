@@ -141,7 +141,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         /// Based on swkotor.exe: Action system
         /// Original implementation: Pushes action onto target's action queue
         /// </remarks>
-        protected Variable Func_AssignCommand(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        protected new Variable Func_AssignCommand(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             IAction action = args.Count > 1 ? args[1].ComplexValue as IAction : null;
@@ -167,7 +167,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         /// Original implementation: NCS VM uses STORE_STATE opcode to save stack/local state, then schedules
         /// action execution after delay. Delay wheel processes delayed commands each frame.
         /// </remarks>
-        protected Variable Func_DelayCommand(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        protected new Variable Func_DelayCommand(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             float delay = args.Count > 0 ? args[0].AsFloat() : 0f;
             IAction action = args.Count > 1 ? args[1].ComplexValue as IAction : null;
@@ -187,7 +187,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         /// Based on swkotor.exe: Script execution system
         /// Original implementation: Loads and executes NCS script on target entity
         /// </remarks>
-        protected Variable Func_ExecuteScript(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        protected new Variable Func_ExecuteScript(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string scriptName = args.Count > 0 ? args[0].AsString() : string.Empty;
             uint targetId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
@@ -252,7 +252,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         /// Based on swkotor.exe: Action queue system
         /// Original implementation: Clears action queue for caller entity
         /// </remarks>
-        protected Variable Func_ClearAllActions(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        protected new Variable Func_ClearAllActions(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             IEntity caller = ctx.Caller;
             if (caller != null)
@@ -273,7 +273,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         /// Based on swkotor.exe: Transform system
         /// Original implementation: Sets entity facing angle (degrees, anticlockwise from East)
         /// </remarks>
-        protected Variable Func_SetFacing(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        protected new Variable Func_SetFacing(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             float facing = args.Count > 0 ? args[0].AsFloat() : 0f;
             if (ctx.Caller != null)

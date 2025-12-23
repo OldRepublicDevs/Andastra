@@ -28,7 +28,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         private enum NVSDK_NGX_Result
         {
             NVSDK_NGX_Result_Success = (int)0x1,
-            NVSDK_NGX_Result_Fail = 0xBAD00000,
+            NVSDK_NGX_Result_Fail = unchecked((int)0xBAD00000),
             NVSDK_NGX_Result_FAIL_FeatureNotSupported = NVSDK_NGX_Result_Fail | 1,
             NVSDK_NGX_Result_FAIL_PlatformError = NVSDK_NGX_Result_Fail | 2,
             NVSDK_NGX_Result_FAIL_FeatureAlreadyExists = NVSDK_NGX_Result_Fail | 3,

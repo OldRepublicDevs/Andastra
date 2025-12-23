@@ -1248,7 +1248,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Uses the slab method for efficient AABB-ray intersection testing.
         /// Based on standard ray-AABB intersection algorithm used in swkotor2.exe.
         /// </remarks>
-        private bool RayAabbIntersect(Vector3 origin, Vector3 direction, Vector3 bbMin, Vector3 bbMax, float maxDist)
+        private new bool RayAabbIntersect(Vector3 origin, Vector3 direction, Vector3 bbMin, Vector3 bbMax, float maxDist)
         {
             // Avoid division by zero
             float invDirX = direction.X != 0f ? 1f / direction.X : float.MaxValue;
