@@ -10,13 +10,13 @@ namespace Andastra.Runtime.Graphics.Common.Backends
 {
     /// <summary>
     /// Abstract base class for original game engine graphics backends.
-    /// 
+    ///
     /// This backend system matches the original game engine rendering implementations exactly 1:1,
     /// using the same DirectX/OpenGL APIs and rendering pipelines as the original games.
-    /// 
+    ///
     /// Unlike MonoGame/Stride backends which are modern abstractions, this backend directly
     /// implements the original engine's rendering code as reverse-engineered from the game executables.
-    /// 
+    ///
     /// Engine families:
     /// - Eclipse: Dragon Age Origins, Dragon Age 2
     /// - Odyssey: KOTOR 1, KOTOR 2
@@ -606,7 +606,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         /// <summary>
         /// Creates OpenGL device using original engine's method.
         /// Matches swkotor.exe: FUN_0044dab0 @ 0x0044dab0 exactly.
-        /// 
+        ///
         /// This function implements the exact OpenGL initialization sequence:
         /// 1. Get device context (GetDC) - if hdc is not provided
         /// 2. Choose pixel format (ChoosePixelFormat or wglChoosePixelFormatARB) - if pixelFormat is 0
@@ -759,7 +759,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         /// <summary>
         /// Creates an OpenGL texture using original engine's method.
         /// Matches swkotor.exe: FUN_00427c90 @ 0x00427c90 texture creation pattern.
-        /// 
+        ///
         /// This function implements the exact OpenGL texture creation sequence:
         /// 1. Generate texture name (glGenTextures)
         /// 2. Bind texture (glBindTexture)
@@ -861,7 +861,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         /// <summary>
         /// Creates an OpenGL buffer using original engine's method.
         /// Matches original engine's OpenGL buffer creation pattern.
-        /// 
+        ///
         /// This function implements the exact OpenGL buffer creation sequence:
         /// 1. Generate buffer name (glGenBuffers)
         /// 2. Bind buffer (glBindBuffer)
@@ -952,14 +952,14 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         /// <summary>
         /// Uploads data to an OpenGL buffer.
         /// Matches original engine's OpenGL buffer data upload pattern.
-        /// 
+        ///
         /// This function implements the exact OpenGL buffer data upload sequence:
         /// 1. Ensure OpenGL context is current
         /// 2. Get buffer target (GL_ARRAY_BUFFER or GL_ELEMENT_ARRAY_BUFFER)
         /// 3. Bind buffer
         /// 4. Upload data using glBufferData (full buffer) or glBufferSubData (partial update)
         /// 5. Unbind buffer
-        /// 
+        ///
         /// Matches swkotor.exe: FUN_00427c90 buffer upload pattern (glBufferData with actual data pointer).
         /// Based on original engine behavior: buffers are created empty, then data is uploaded separately.
         /// </summary>
@@ -1006,7 +1006,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
             }
 
             uint bufferId = (uint)originalInfo.NativeHandle.ToInt32();
-            
+
             // Get buffer target from stored info (set during buffer creation)
             uint target = originalInfo.OpenGLBufferTarget;
             if (target == 0)
@@ -1016,7 +1016,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
                 target = GL_ARRAY_BUFFER;
                 Console.WriteLine("[OriginalEngine] UploadOpenGLBufferData: Buffer target not stored, using GL_ARRAY_BUFFER as fallback");
             }
-            
+
             // Bind buffer
             glBindBuffer(target, bufferId);
 
@@ -1310,7 +1310,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         private const uint D3DFMT_A8R8G8B8 = 21; // D3DFMT_A8R8G8B8
         private const uint D3DFMT_INDEX16 = 101; // D3DFMT_INDEX16
         private const uint D3DFMT_INDEX32 = 102; // D3DFMT_INDEX32
-        private const uint D3DPOOL_DEFAULT = 0;
+        protected const uint D3DPOOL_DEFAULT = 0;
         private const uint D3DUSAGE_WRITEONLY = 0x00000008;
         protected const uint D3DPRESENT_INTERVAL_ONE = 0x00000001;
 
