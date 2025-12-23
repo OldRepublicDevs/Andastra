@@ -15,6 +15,7 @@ using Andastra.Parsing.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
+using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
@@ -801,8 +802,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                     // Attempt buffer conversion to DirectX 9 format
                     // This handles cases where buffers are not native DirectX 9 buffers
                     // Conversion is needed when working with cross-API buffer data
-                    vertexBufferPtr = ConvertToDirectX9VertexBuffer(vertexBuffer, roomMesh);
-                    indexBufferPtr = ConvertToDirectX9IndexBuffer(indexBuffer, roomMesh);
+                    vertexBufferPtr = ConvertToDirectX9VertexBuffer(vertexBuffer, roomMeshData);
+                    indexBufferPtr = ConvertToDirectX9IndexBuffer(indexBuffer, roomMeshData);
 
                     if (vertexBufferPtr == IntPtr.Zero || indexBufferPtr == IntPtr.Zero)
                     {
@@ -2711,9 +2712,44 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 }
             }
 
-            // TODO: PLACEHOLDER - Full implementation would look up icon from abilities/talents 2DA table
+            // Full implementation: Look up icon from abilities/talents 2DA table
             // Based on daorigins.exe: Abilities/talents 2DA table contains "icon" column with icon resref
-            // TODO: STUB -  This would require access to EclipseTwoDATableManager or IGameDataProvider to query 2DA tables
+            // Dragon Age Origins uses "talents" 2DA table for ability/talent data
+            if (_world?.GameDataProvider != null)
+            {
+                try
+                {
+                    // Get the talents 2DA table from game data provider
+                    var talentsTable = _world.GameDataProvider.GetTable("talents");
+                    if (talentsTable != null && abilityId < talentsTable.RowCount)
+                    {
+                        // Look up the ability row by ID (abilityId should match row index)
+                        var abilityRow = talentsTable.GetRow(abilityId);
+                        if (abilityRow != null)
+                        {
+                            // Get the "icon" column value (contains icon resource reference)
+                            string iconResRef = abilityRow.GetString("icon");
+                            if (!string.IsNullOrEmpty(iconResRef))
+                            {
+                                // Verify the icon resource exists before returning
+                                var iconId = new ResourceIdentifier(iconResRef, ParsingResourceType.TPC);
+                                Task<bool> existsTask = _resourceProvider?.ExistsAsync(iconId, CancellationToken.None);
+                                existsTask?.Wait();
+                                if (existsTask?.Result == true)
+                                {
+                                    return iconResRef;
+                                }
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // Table lookup failed - fall back to pattern matching
+                }
+            }
+
+            // Fallback: Use pattern matching if 2DA lookup fails
             // For now, return empty string if pattern matching fails
             return string.Empty;
         }
