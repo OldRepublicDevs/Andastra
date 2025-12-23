@@ -10,10 +10,10 @@ namespace Andastra.Runtime.MonoGame.Rendering
 {
     /// <summary>
     /// Unified render pipeline orchestrating all rendering systems.
-    /// 
+    ///
     /// The render pipeline coordinates all rendering optimizations and
     /// systems into a cohesive, efficient rendering flow.
-    /// 
+    ///
     /// Features:
     /// - Unified rendering flow
     /// - Automatic optimization application
@@ -111,11 +111,11 @@ namespace Andastra.Runtime.MonoGame.Rendering
 
         /// <summary>
         /// Builds the frame graph from render queue commands.
-        /// 
+        ///
         /// Analyzes the render queue and constructs a frame graph with proper pass dependencies,
         /// resource management, and execution order. This ensures optimal rendering performance
         /// by managing resource lifetimes and pass ordering.
-        /// 
+        ///
         /// Based on swkotor2.exe rendering system architecture:
         /// - Original implementation: Render order sorting by material/shader (swkotor2.exe: "renderorder" @ 0x007bab50)
         /// - Original rendering: Single-pass rendering with depth testing (no explicit frame graph)
@@ -422,10 +422,10 @@ namespace Andastra.Runtime.MonoGame.Rendering
 
         /// <summary>
         /// Executes all rendering passes with optimizations.
-        /// 
+        ///
         /// Executes the frame graph that was built by BuildFrameGraph(), which ensures
         /// all passes execute in the correct order with proper resource management.
-        /// 
+        ///
         /// Rendering pass order (as determined by frame graph):
         /// 1. Depth pre-pass (for early-Z rejection) - if enabled
         /// 2. Shadow maps (cascaded shadow maps) - if shadow-casting lights exist
@@ -436,7 +436,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
         /// 7. Transparent pass (transparent geometry, back-to-front)
         /// 8. Post-processing pass (tone mapping, bloom, TAA, etc.) - if enabled
         /// 9. Overlay/UI pass (UI elements rendered on top)
-        /// 
+        ///
         /// Based on swkotor2.exe rendering system:
         /// - Original implementation: Single-pass rendering with render order sorting (swkotor2.exe: "renderorder" @ 0x007bab50)
         /// - Modern enhancement: Frame graph system for advanced pass scheduling and resource management
@@ -511,7 +511,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
                 _telemetry.RecordMetric("DrawCalls", stats.DrawCalls);
                 _telemetry.RecordMetric("TrianglesRendered", stats.TrianglesRendered);
                 _telemetry.RecordMetric("ObjectsCulled", stats.ObjectsCulled);
-                
+
                 // Frame time would be measured externally and passed in
                 // This is where it would be recorded if available
             }
@@ -520,17 +520,17 @@ namespace Andastra.Runtime.MonoGame.Rendering
         /// <summary>
         /// <summary>
         /// Checks if deferred rendering is enabled based on render settings.
-        /// 
+        ///
         /// Deferred rendering is enabled when one or more of the following conditions are met:
         /// - MaxDynamicLights exceeds threshold (typically > 8, as forward rendering handles up to 8 lights efficiently)
         /// - Global illumination mode requires deferred rendering (e.g., certain raytraced GI modes benefit from deferred)
         /// - Quality preset indicates deferred rendering should be used (High/Ultra presets)
-        /// 
+        ///
         /// Deferred rendering benefits:
         /// - Efficiently handles many lights (decouples geometry complexity from light count)
         /// - Enables advanced lighting techniques (SSAO, SSR, etc.)
         /// - Better performance for complex scenes with many dynamic lights
-        /// 
+        ///
         /// Based on RenderSettings configuration.
         /// If RenderSettings is not provided, returns false (forward rendering).
         /// </summary>
@@ -562,12 +562,12 @@ namespace Andastra.Runtime.MonoGame.Rendering
 
             // Check quality preset - High and Ultra presets typically use deferred rendering
             // for better visual quality with many lights and advanced effects
-            if (_settings.Quality == RenderQuality.High || _settings.Quality == RenderQuality.Ultra)
+            if (_settings.Quality == Enums.RenderQuality.High || _settings.Quality == Enums.RenderQuality.Ultra)
             {
                 // For High/Ultra quality, enable deferred if dynamic lighting is enabled
                 // Forward rendering is still acceptable for High quality, but deferred provides better scalability
                 // Only enable deferred for Ultra quality by default, High can use either
-                if (_settings.Quality == RenderQuality.Ultra && _settings.DynamicLighting)
+                if (_settings.Quality == Enums.RenderQuality.Ultra && _settings.DynamicLighting)
                 {
                     return true;
                 }
@@ -579,13 +579,13 @@ namespace Andastra.Runtime.MonoGame.Rendering
 
         /// <summary>
         /// Checks if there are any active shadow-casting lights in the lighting system.
-        /// 
+        ///
         /// Queries the lighting system for all active lights and checks if any of them
         /// have shadow casting enabled (CastShadows property). Only enabled lights are
         /// considered, as disabled lights do not contribute to rendering.
-        /// 
+        ///
         /// If no lighting system is provided, returns false (no shadow-casting lights).
-        /// 
+        ///
         /// Based on swkotor2.exe shadow system:
         /// - Original implementation: "SunShadows" @ 0x007bd5d8, "MoonShadows" @ 0x007bd628
         /// - Original behavior: KOTOR 2 checked sun/moon light shadow casting flags
@@ -633,7 +633,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
         /// - Vignette (Vignette)
         /// - Tone mapping (Tonemapper is not default/disabled)
         /// - Color grading LUT (ColorGradingLut is not null)
-        /// 
+        ///
         /// Based on RenderSettings post-processing configuration.
         /// If RenderSettings is not provided, returns false (no post-processing).
         /// </summary>

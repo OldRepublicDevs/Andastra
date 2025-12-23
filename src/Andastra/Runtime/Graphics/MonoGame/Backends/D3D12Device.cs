@@ -218,6 +218,14 @@ namespace Andastra.Runtime.MonoGame.Backends
         private int _dsvHeapCapacity;
         private int _dsvHeapNextIndex;
         private const int DefaultDsvHeapCapacity = 1024;
+
+        // RTV descriptor heap management
+        private IntPtr _rtvDescriptorHeap;
+        private IntPtr _rtvHeapCpuStartHandle;
+        private uint _rtvHeapDescriptorIncrementSize;
+        private int _rtvHeapCapacity;
+        private int _rtvHeapNextIndex;
+        private const int DefaultRtvHeapCapacity = 1024;
         private readonly Dictionary<IntPtr, IntPtr> _textureDsvHandles; // Cache of texture -> DSV handle mappings
         private readonly Dictionary<IntPtr, IntPtr> _textureRtvHandles; // Cache of texture -> RTV handle mappings
 
@@ -2910,10 +2918,10 @@ namespace Andastra.Runtime.MonoGame.Backends
         // Based on DirectX 12 Command Allocator Reset: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12commandallocator-reset
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate int CommandAllocatorResetDelegate(IntPtr commandAllocator);
-        
+
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate int CreateCommandAllocatorDelegate(IntPtr device, uint type, ref Guid riid, IntPtr ppCommandAllocator);
-        
+
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate int CreateCommandListDelegate(IntPtr device, uint nodeMask, uint type, IntPtr pCommandAllocator, IntPtr pInitialState, ref Guid riid, IntPtr ppCommandList);
 
@@ -3380,6 +3388,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private const uint D3D12_DESCRIPTOR_HEAP_TYPE_DSV = 3;
 
         // DirectX 12 Descriptor Heap Flags
+        private const uint D3D12_DESCRIPTOR_HEAP_FLAG_NONE = 0x0;
         private const uint D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE = 0x1;
 
         // DirectX 12 Filter Types
@@ -3627,6 +3636,33 @@ namespace Andastra.Runtime.MonoGame.Backends
             public uint AlignedByteOffset; // UINT
             public uint InputSlotClass; // D3D12_INPUT_CLASSIFICATION
             public uint InstanceDataStepRate; // UINT
+        }
+
+        /// <summary>
+        /// D3D12_DRAW_ARGUMENTS structure for indirect draw commands.
+        /// Based on DirectX 12 API: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_draw_arguments
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_DRAW_ARGUMENTS
+        {
+            public uint VertexCountPerInstance;
+            public uint InstanceCount;
+            public uint StartVertexLocation;
+            public uint StartInstanceLocation;
+        }
+
+        /// <summary>
+        /// D3D12_DRAW_INDEXED_ARGUMENTS structure for indirect indexed draw commands.
+        /// Based on DirectX 12 API: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_draw_indexed_arguments
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_DRAW_INDEXED_ARGUMENTS
+        {
+            public uint IndexCountPerInstance;
+            public uint InstanceCount;
+            public uint StartIndexLocation;
+            public int BaseVertexLocation;
+            public uint StartInstanceLocation;
         }
 
         /// <summary>
@@ -5027,11 +5063,11 @@ namespace Andastra.Runtime.MonoGame.Backends
         {
             switch (format)
             {
-                case TextureFormat.D24_UNORM_S8_UINT:
+                case TextureFormat.D24_UNorm_S8_UInt:
                     return 45; // DXGI_FORMAT_D24_UNORM_S8_UINT
-                case TextureFormat.D32_FLOAT:
+                case TextureFormat.D32_Float:
                     return 40; // DXGI_FORMAT_D32_FLOAT
-                case TextureFormat.D32_FLOAT_S8_UINT:
+                case TextureFormat.D32_Float_S8_UInt:
                     return 20; // DXGI_FORMAT_D32_FLOAT_S8X24_UINT (closest match, though not exact)
                 default:
                     return 0; // DXGI_FORMAT_UNKNOWN
@@ -13497,6 +13533,290 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         // Note: ConvertAccelStructBuildFlagsToD3D12, ConvertGeometryFlagsToD3D12, ConvertIndexFormatToD3D12, and ConvertVertexFormatToD3D12
         // are already defined above. These duplicate methods were removed.
+
+        /// <summary>
+        /// Converts BlendStateDesc to D3D12_BLEND_DESC structure.
+        /// Based on DirectX 12 Blend State: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_blend_desc
+        /// </summary>
+        private D3D12_BLEND_DESC ConvertBlendStateDescToD3D12(BlendStateDesc blendStateDesc)
+        {
+            var d3d12BlendDesc = new D3D12_BLEND_DESC();
+            d3d12BlendDesc.AlphaToCoverageEnable = blendStateDesc.AlphaToCoverage ? (byte)1 : (byte)0;
+            d3d12BlendDesc.IndependentBlendEnable = (blendStateDesc.RenderTargets != null && blendStateDesc.RenderTargets.Length > 1) ? (byte)1 : (byte)0;
+
+            // Get render target blend desc (use first render target or default)
+            RenderTargetBlendDesc rtBlend = (blendStateDesc.RenderTargets != null && blendStateDesc.RenderTargets.Length > 0)
+                ? blendStateDesc.RenderTargets[0]
+                : default(RenderTargetBlendDesc);
+
+            // Convert blend state for render target 0
+            var rtBlendDesc = new D3D12_RENDER_TARGET_BLEND_DESC();
+            rtBlendDesc.BlendEnable = rtBlend.BlendEnable ? (byte)1 : (byte)0;
+            rtBlendDesc.LogicOpEnable = 0; // BOOL - logic operations not used
+            rtBlendDesc.SrcBlend = ConvertBlendFactorToD3D12(rtBlend.SrcBlend);
+            rtBlendDesc.DestBlend = ConvertBlendFactorToD3D12(rtBlend.DestBlend);
+            rtBlendDesc.BlendOp = ConvertBlendOpToD3D12(rtBlend.BlendOp);
+            rtBlendDesc.SrcBlendAlpha = ConvertBlendFactorToD3D12(rtBlend.SrcBlendAlpha);
+            rtBlendDesc.DestBlendAlpha = ConvertBlendFactorToD3D12(rtBlend.DestBlendAlpha);
+            rtBlendDesc.BlendOpAlpha = ConvertBlendOpToD3D12(rtBlend.BlendOpAlpha);
+            rtBlendDesc.LogicOp = 0; // D3D12_LOGIC_OP - not used
+            rtBlendDesc.RenderTargetWriteMask = rtBlend.WriteMask;
+
+            // Set same blend state for all render targets
+            d3d12BlendDesc.RenderTarget0 = rtBlendDesc;
+            d3d12BlendDesc.RenderTarget1 = rtBlendDesc;
+            d3d12BlendDesc.RenderTarget2 = rtBlendDesc;
+            d3d12BlendDesc.RenderTarget3 = rtBlendDesc;
+            d3d12BlendDesc.RenderTarget4 = rtBlendDesc;
+            d3d12BlendDesc.RenderTarget5 = rtBlendDesc;
+            d3d12BlendDesc.RenderTarget6 = rtBlendDesc;
+            d3d12BlendDesc.RenderTarget7 = rtBlendDesc;
+
+            return d3d12BlendDesc;
+        }
+
+        /// <summary>
+        /// Converts BlendFactor to D3D12_BLEND value.
+        /// </summary>
+        private uint ConvertBlendFactorToD3D12(BlendFactor factor)
+        {
+            // D3D12_BLEND constants
+            const uint D3D12_BLEND_ZERO = 1;
+            const uint D3D12_BLEND_ONE = 2;
+            const uint D3D12_BLEND_SRC_COLOR = 3;
+            const uint D3D12_BLEND_INV_SRC_COLOR = 4;
+            const uint D3D12_BLEND_SRC_ALPHA = 5;
+            const uint D3D12_BLEND_INV_SRC_ALPHA = 6;
+            const uint D3D12_BLEND_DEST_ALPHA = 7;
+            const uint D3D12_BLEND_INV_DEST_ALPHA = 8;
+            const uint D3D12_BLEND_DEST_COLOR = 9;
+            const uint D3D12_BLEND_INV_DEST_COLOR = 10;
+
+            switch (factor)
+            {
+                case BlendFactor.Zero: return D3D12_BLEND_ZERO;
+                case BlendFactor.One: return D3D12_BLEND_ONE;
+                case BlendFactor.SrcColor: return D3D12_BLEND_SRC_COLOR;
+                case BlendFactor.InvSrcColor: return D3D12_BLEND_INV_SRC_COLOR;
+                case BlendFactor.SrcAlpha: return D3D12_BLEND_SRC_ALPHA;
+                case BlendFactor.InvSrcAlpha: return D3D12_BLEND_INV_SRC_ALPHA;
+                case BlendFactor.DstAlpha: return D3D12_BLEND_DEST_ALPHA;
+                case BlendFactor.InvDstAlpha: return D3D12_BLEND_INV_DEST_ALPHA;
+                case BlendFactor.DstColor: return D3D12_BLEND_DEST_COLOR;
+                case BlendFactor.InvDstColor: return D3D12_BLEND_INV_DEST_COLOR;
+                default: return D3D12_BLEND_ONE;
+            }
+        }
+
+        /// <summary>
+        /// Converts BlendOp to D3D12_BLEND_OP value.
+        /// </summary>
+        private uint ConvertBlendOpToD3D12(BlendOp op)
+        {
+            // D3D12_BLEND_OP constants
+            const uint D3D12_BLEND_OP_ADD = 1;
+            const uint D3D12_BLEND_OP_SUBTRACT = 2;
+            const uint D3D12_BLEND_OP_REV_SUBTRACT = 3;
+            const uint D3D12_BLEND_OP_MIN = 4;
+            const uint D3D12_BLEND_OP_MAX = 5;
+
+            switch (op)
+            {
+                case BlendOp.Add: return D3D12_BLEND_OP_ADD;
+                case BlendOp.Subtract: return D3D12_BLEND_OP_SUBTRACT;
+                case BlendOp.ReverseSubtract: return D3D12_BLEND_OP_REV_SUBTRACT;
+                case BlendOp.Min: return D3D12_BLEND_OP_MIN;
+                case BlendOp.Max: return D3D12_BLEND_OP_MAX;
+                default: return D3D12_BLEND_OP_ADD;
+            }
+        }
+
+        /// <summary>
+        /// Converts RasterStateDesc to D3D12_RASTERIZER_DESC structure.
+        /// Based on DirectX 12 Rasterizer State: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_rasterizer_desc
+        /// </summary>
+        private D3D12_RASTERIZER_DESC ConvertRasterStateDescToD3D12(RasterStateDesc rasterStateDesc)
+        {
+            var d3d12RasterDesc = new D3D12_RASTERIZER_DESC();
+            d3d12RasterDesc.FillMode = ConvertFillModeToD3D12(rasterStateDesc.FillMode);
+            d3d12RasterDesc.CullMode = ConvertCullModeToD3D12(rasterStateDesc.CullMode);
+            d3d12RasterDesc.FrontCounterClockwise = rasterStateDesc.FrontCCW ? (byte)1 : (byte)0;
+            d3d12RasterDesc.DepthBias = rasterStateDesc.DepthBias;
+            d3d12RasterDesc.DepthBiasClamp = rasterStateDesc.DepthBiasClamp;
+            d3d12RasterDesc.SlopeScaledDepthBias = rasterStateDesc.SlopeScaledDepthBias;
+            d3d12RasterDesc.DepthClipEnable = rasterStateDesc.DepthClipEnable ? (byte)1 : (byte)0;
+            d3d12RasterDesc.MultisampleEnable = rasterStateDesc.MultisampleEnable ? (byte)1 : (byte)0;
+            d3d12RasterDesc.AntialiasedLineEnable = rasterStateDesc.AntialiasedLineEnable ? (byte)1 : (byte)0;
+            d3d12RasterDesc.ForcedSampleCount = 0; // UINT - no forced sample count
+            d3d12RasterDesc.ConservativeRaster = rasterStateDesc.ConservativeRaster ? 1u : 0u; // D3D12_CONSERVATIVE_RASTERIZATION_MODE
+            return d3d12RasterDesc;
+        }
+
+        /// <summary>
+        /// Converts FillMode to D3D12_FILL_MODE value.
+        /// </summary>
+        private uint ConvertFillModeToD3D12(FillMode fillMode)
+        {
+            // D3D12_FILL_MODE constants
+            const uint D3D12_FILL_MODE_WIREFRAME = 2;
+            const uint D3D12_FILL_MODE_SOLID = 3;
+
+            switch (fillMode)
+            {
+                case FillMode.Wireframe: return D3D12_FILL_MODE_WIREFRAME;
+                case FillMode.Solid: return D3D12_FILL_MODE_SOLID;
+                default: return D3D12_FILL_MODE_SOLID;
+            }
+        }
+
+        /// <summary>
+        /// Converts CullMode to D3D12_CULL_MODE value.
+        /// </summary>
+        private uint ConvertCullModeToD3D12(CullMode cullMode)
+        {
+            // D3D12_CULL_MODE constants
+            const uint D3D12_CULL_MODE_NONE = 1;
+            const uint D3D12_CULL_MODE_FRONT = 2;
+            const uint D3D12_CULL_MODE_BACK = 3;
+
+            switch (cullMode)
+            {
+                case CullMode.None: return D3D12_CULL_MODE_NONE;
+                case CullMode.Front: return D3D12_CULL_MODE_FRONT;
+                case CullMode.Back: return D3D12_CULL_MODE_BACK;
+                default: return D3D12_CULL_MODE_BACK;
+            }
+        }
+
+        /// <summary>
+        /// Converts DepthStencilStateDesc to D3D12_DEPTH_STENCIL_DESC structure.
+        /// Based on DirectX 12 Depth-Stencil State: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_depth_stencil_desc
+        /// </summary>
+        private D3D12_DEPTH_STENCIL_DESC ConvertDepthStencilStateDescToD3D12(DepthStencilStateDesc depthStencilStateDesc)
+        {
+            var d3d12DepthStencilDesc = new D3D12_DEPTH_STENCIL_DESC();
+            d3d12DepthStencilDesc.DepthEnable = depthStencilStateDesc.DepthTestEnable ? (byte)1 : (byte)0;
+            d3d12DepthStencilDesc.DepthWriteMask = depthStencilStateDesc.DepthWriteEnable ? (byte)1 : (byte)0; // D3D12_DEPTH_WRITE_MASK_ALL = 1, D3D12_DEPTH_WRITE_MASK_ZERO = 0
+            d3d12DepthStencilDesc.DepthFunc = ConvertCompareFuncToD3D12(depthStencilStateDesc.DepthFunc);
+            d3d12DepthStencilDesc.StencilEnable = depthStencilStateDesc.StencilEnable ? (byte)1 : (byte)0;
+            d3d12DepthStencilDesc.StencilReadMask = depthStencilStateDesc.StencilReadMask;
+            d3d12DepthStencilDesc.StencilWriteMask = depthStencilStateDesc.StencilWriteMask;
+
+            // Convert stencil operations for front and back faces
+            var frontStencilOp = new D3D12_DEPTH_STENCILOP_DESC();
+            frontStencilOp.StencilFailOp = ConvertStencilOpToD3D12(depthStencilStateDesc.FrontFace.StencilFailOp);
+            frontStencilOp.StencilDepthFailOp = ConvertStencilOpToD3D12(depthStencilStateDesc.FrontFace.DepthFailOp);
+            frontStencilOp.StencilPassOp = ConvertStencilOpToD3D12(depthStencilStateDesc.FrontFace.PassOp);
+            frontStencilOp.StencilFunc = ConvertCompareFuncToD3D12(depthStencilStateDesc.FrontFace.StencilFunc);
+            d3d12DepthStencilDesc.FrontFace = frontStencilOp;
+
+            var backStencilOp = new D3D12_DEPTH_STENCILOP_DESC();
+            backStencilOp.StencilFailOp = ConvertStencilOpToD3D12(depthStencilStateDesc.BackFace.StencilFailOp);
+            backStencilOp.StencilDepthFailOp = ConvertStencilOpToD3D12(depthStencilStateDesc.BackFace.DepthFailOp);
+            backStencilOp.StencilPassOp = ConvertStencilOpToD3D12(depthStencilStateDesc.BackFace.PassOp);
+            backStencilOp.StencilFunc = ConvertCompareFuncToD3D12(depthStencilStateDesc.BackFace.StencilFunc);
+            d3d12DepthStencilDesc.BackFace = backStencilOp;
+
+            return d3d12DepthStencilDesc;
+        }
+
+        /// <summary>
+        /// Converts StencilOp to D3D12_STENCIL_OP value.
+        /// </summary>
+        private uint ConvertStencilOpToD3D12(StencilOp op)
+        {
+            // D3D12_STENCIL_OP constants
+            const uint D3D12_STENCIL_OP_KEEP = 1;
+            const uint D3D12_STENCIL_OP_ZERO = 2;
+            const uint D3D12_STENCIL_OP_REPLACE = 3;
+            const uint D3D12_STENCIL_OP_INCR_SAT = 4;
+            const uint D3D12_STENCIL_OP_DECR_SAT = 5;
+            const uint D3D12_STENCIL_OP_INVERT = 6;
+            const uint D3D12_STENCIL_OP_INCR = 7;
+            const uint D3D12_STENCIL_OP_DECR = 8;
+
+            switch (op)
+            {
+                case StencilOp.Keep: return D3D12_STENCIL_OP_KEEP;
+                case StencilOp.Zero: return D3D12_STENCIL_OP_ZERO;
+                case StencilOp.Replace: return D3D12_STENCIL_OP_REPLACE;
+                case StencilOp.IncrSat: return D3D12_STENCIL_OP_INCR_SAT;
+                case StencilOp.DecrSat: return D3D12_STENCIL_OP_DECR_SAT;
+                case StencilOp.Invert: return D3D12_STENCIL_OP_INVERT;
+                case StencilOp.Incr: return D3D12_STENCIL_OP_INCR;
+                case StencilOp.Decr: return D3D12_STENCIL_OP_DECR;
+                default: return D3D12_STENCIL_OP_KEEP;
+            }
+        }
+
+        /// <summary>
+        /// Marshals VertexAttributeDesc array to D3D12_INPUT_ELEMENT_DESC array.
+        /// </summary>
+        private IntPtr MarshalInputElementDescs(VertexAttributeDesc[] attributes)
+        {
+            if (attributes == null || attributes.Length == 0)
+            {
+                return IntPtr.Zero;
+            }
+
+            int elementSize = Marshal.SizeOf<D3D12_INPUT_ELEMENT_DESC>();
+            int totalSize = elementSize * attributes.Length;
+            IntPtr elementsPtr = Marshal.AllocHGlobal(totalSize);
+
+            for (int i = 0; i < attributes.Length; i++)
+            {
+                var attribute = attributes[i];
+                var d3d12Element = new D3D12_INPUT_ELEMENT_DESC();
+
+                // Marshal semantic name string
+                if (!string.IsNullOrEmpty(attribute.SemanticName))
+                {
+                    byte[] semanticNameBytes = System.Text.Encoding.ASCII.GetBytes(attribute.SemanticName + "\0");
+                    IntPtr semanticNamePtr = Marshal.AllocHGlobal(semanticNameBytes.Length);
+                    Marshal.Copy(semanticNameBytes, 0, semanticNamePtr, semanticNameBytes.Length);
+                    d3d12Element.SemanticName = semanticNamePtr;
+                }
+                else
+                {
+                    d3d12Element.SemanticName = IntPtr.Zero;
+                }
+
+                d3d12Element.SemanticIndex = unchecked((uint)attribute.SemanticIndex);
+                d3d12Element.Format = ConvertTextureFormatToDxgiFormat(attribute.Format);
+                d3d12Element.InputSlot = unchecked((uint)attribute.Slot);
+                d3d12Element.AlignedByteOffset = unchecked((uint)attribute.Offset);
+                d3d12Element.InputSlotClass = attribute.PerInstance ? 1u : 0u; // D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA = 1, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA = 0
+                d3d12Element.InstanceDataStepRate = unchecked((uint)attribute.InstanceStepRate);
+
+                IntPtr elementPtr = new IntPtr(elementsPtr.ToInt64() + (i * elementSize));
+                Marshal.StructureToPtr(d3d12Element, elementPtr, false);
+            }
+
+            return elementsPtr;
+        }
+
+        /// <summary>
+        /// Converts PrimitiveTopology to D3D12_PRIMITIVE_TOPOLOGY_TYPE value.
+        /// </summary>
+        private uint ConvertPrimitiveTopologyToD3D12(PrimitiveTopology topology)
+        {
+            // D3D12_PRIMITIVE_TOPOLOGY_TYPE constants
+            const uint D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED = 0;
+            const uint D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT = 1;
+            const uint D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE = 2;
+            const uint D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE = 3;
+            const uint D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH = 4;
+
+            switch (topology)
+            {
+                case PrimitiveTopology.PointList: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
+                case PrimitiveTopology.LineList:
+                case PrimitiveTopology.LineStrip: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
+                case PrimitiveTopology.TriangleList:
+                case PrimitiveTopology.TriangleStrip: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+                default: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+            }
+        }
 
         #endregion
     }

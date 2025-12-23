@@ -156,7 +156,7 @@ namespace Andastra.Runtime.MonoGame.Remix
 
         /// <summary>
         /// Generates a Remix-compatible material hash from texture path.
-        /// 
+        ///
         /// RTX Remix uses XXHash64 for material identification. The hash is computed
         /// from the texture path (case-insensitive) and returned as a 16-character
         /// hexadecimal string representing the 64-bit hash value.
@@ -172,6 +172,7 @@ namespace Andastra.Runtime.MonoGame.Remix
             // Remix uses XXHash64 for material identification
             // Normalize the path to lowercase for consistent hashing
             string normalizedPath = texturePath.ToLowerInvariant();
+            // Use fully qualified name to resolve XXHash64 conflict between Andastra.Parsing and Utility
             return global::Andastra.Utility.XXHash64.ComputeHashString(normalizedPath);
         }
 

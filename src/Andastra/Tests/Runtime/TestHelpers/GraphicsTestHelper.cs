@@ -50,14 +50,14 @@ namespace Andastra.Tests.Runtime.TestHelpers
         /// including LookupResource, LocateResource, ClearCache, ReloadModule, GetChitinResources,
         /// and GetPatchErfResources. All Installation properties (Path, Game, Resources) are properly
         /// configured. Based on swkotor2.exe resource management system (CExoKeyTable, CExoResMan).
-        /// 
+        ///
         /// Ghidra References:
         /// - swkotor2.exe: 0x007c14d4 - "Resource" string reference
         /// - swkotor2.exe: 0x0041d1e0 - FUN_0041d1e0 (resource lookup function, CExoKeyTable lookup)
         /// - swkotor2.exe: 0x006e69a0 - FUN_006e69a0 (uses "Resource" string for lookup)
         /// - swkotor2.exe: 0x007b6078 - "CExoKeyTable::DestroyTable: Resource %s still in demand during table deletion"
         /// - swkotor2.exe: 0x007b6124 - "CExoKeyTable::AddKey: Duplicate Resource "
-        /// 
+        ///
         /// Original Engine Behavior:
         /// - Resource lookup searches in precedence order: OVERRIDE > MODULES > CHITIN > TEXTUREPACKS > STREAM
         /// - Returns null if resource name is null/whitespace (matches InstallationResourceManager.LookupResource line 44-45)
@@ -219,14 +219,14 @@ namespace Andastra.Tests.Runtime.TestHelpers
         /// Provides a fully functional mock that returns the specified resource when looked up,
         /// while all other resources return null. All InstallationResourceManager methods are
         /// properly configured. Based on swkotor2.exe resource management system.
-        /// 
+        ///
         /// Ghidra References:
         /// - swkotor2.exe: 0x007c14d4 - "Resource" string reference
         /// - swkotor2.exe: 0x0041d1e0 - FUN_0041d1e0 (resource lookup function, CExoKeyTable lookup)
         /// - swkotor2.exe: 0x006e69a0 - FUN_006e69a0 (uses "Resource" string for lookup)
         /// - swkotor2.exe: 0x007b6078 - "CExoKeyTable::DestroyTable: Resource %s still in demand during table deletion"
         /// - swkotor2.exe: 0x007b6124 - "CExoKeyTable::AddKey: Duplicate Resource "
-        /// 
+        ///
         /// Original Engine Behavior:
         /// - Resource lookup searches in precedence order: OVERRIDE > MODULES > CHITIN > TEXTUREPACKS > STREAM
         /// - Returns ResourceResult with data if found, null otherwise
