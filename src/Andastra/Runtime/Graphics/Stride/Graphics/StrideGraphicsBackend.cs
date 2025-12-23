@@ -71,8 +71,8 @@ namespace Andastra.Runtime.Stride.Graphics
             // Initialize graphics components when game starts
             if (_graphicsDevice == null)
             {
-                _graphicsDevice = new StrideGraphicsDevice(_game.GraphicsDevice);
-                _contentManager = new StrideContentManager(_game.Content);
+                _graphicsDevice = new StrideGraphicsDevice(_game.GraphicsDevice, _game.GraphicsContext);
+                _contentManager = new StrideContentManager(_game.Content, _game.GraphicsContext);
                 _window = new StrideWindow(_game.Window);
                 _inputManager = new StrideInputManager(_game.Input);
             }

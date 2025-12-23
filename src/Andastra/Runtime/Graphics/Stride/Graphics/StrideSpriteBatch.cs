@@ -1,5 +1,6 @@
 using StrideGraphics = Stride.Graphics;
 using Stride.Core.Mathematics;
+using Stride.Engine;
 using Andastra.Runtime.Graphics;
 using System.Numerics;
 
@@ -11,12 +12,12 @@ namespace Andastra.Runtime.Stride.Graphics
     public class StrideSpriteBatch : ISpriteBatch
     {
         private readonly StrideGraphics.SpriteBatch _spriteBatch;
-        private readonly Stride.Rendering.GraphicsContext _graphicsContext;
+        private readonly StrideGraphics.CommandList _graphicsContext;
         private bool _isBegun;
 
         internal StrideGraphics.SpriteBatch SpriteBatch => _spriteBatch;
 
-        public StrideSpriteBatch(StrideGraphics.SpriteBatch spriteBatch, Stride.Rendering.GraphicsContext graphicsContext = null)
+        public StrideSpriteBatch(StrideGraphics.SpriteBatch spriteBatch, StrideGraphics.CommandList graphicsContext = null)
         {
             _spriteBatch = spriteBatch ?? throw new System.ArgumentNullException(nameof(spriteBatch));
             _graphicsContext = graphicsContext;

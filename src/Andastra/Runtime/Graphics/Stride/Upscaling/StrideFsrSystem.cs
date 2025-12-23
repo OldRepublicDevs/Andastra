@@ -25,6 +25,7 @@ namespace Andastra.Runtime.Stride.Upscaling
     public class StrideFsrSystem : BaseFsrSystem
     {
         private GraphicsDevice _graphicsDevice;
+        private GraphicsContext _graphicsContext;
         private IntPtr _fsrContext;
         private Texture _outputTexture;
 
@@ -81,9 +82,24 @@ namespace Andastra.Runtime.Stride.Upscaling
         public override int FsrVersion => 2; // FSR 2.x
         public override bool FrameGenerationAvailable => CheckFrameGenerationSupport();
 
-        public StrideFsrSystem(GraphicsDevice graphicsDevice)
+        public StrideFsrSystem(GraphicsDevice graphicsDevice, GraphicsContext graphicsContext = null)
         {
             _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
+            _graphicsContext = graphicsContext;
+        }
+
+        private CommandList GetCommandList()
+        {
+            if (_graphicsContext != null)
+            {
+                return _graphicsContext.CommandList;
+            }
+            return null;
+        }
+
+        private GraphicsContext GetGraphicsContext()
+        {
+            return _graphicsContext;
         }
 
         #region BaseUpscalingSystem Implementation
@@ -195,10 +211,10 @@ namespace Andastra.Runtime.Stride.Upscaling
             // 4. Temporal accumulation: Combines current frame with history
             // 5. RCAS sharpening: Applies final sharpening pass
 
-            var commandList = _graphicsDevice.ImmediateContext;
-            if (commandList == null)
+            var graphicsContext = GetGraphicsContext();
+            if (graphicsContext == null)
             {
-                Console.WriteLine("[StrideFSR] Error: Command list not available");
+                Console.WriteLine("[StrideFSR] Error: Graphics context not available");
                 return;
             }
 
@@ -212,41 +228,41 @@ namespace Andastra.Runtime.Stride.Upscaling
             // This pass identifies areas where temporal accumulation should be reduced
             if (_fsrTemporalEffect != null)
             {
-                ExecuteFsrLockPass(commandList, input, depth, motionVectors, _fsrLockTexture);
+                ExecuteFsrLockPass(graphicsContext, input, depth, motionVectors, _fsrLockTexture);
             }
 
             // Pass 2: Depth clip pass
             // Clips depth values to improve temporal stability
             if (_fsrTemporalEffect != null)
             {
-                ExecuteFsrDepthClipPass(commandList, depth, _fsrLockTexture);
+                ExecuteFsrDepthClipPass(graphicsContext, depth, _fsrLockTexture);
             }
 
             // Pass 3: Reactive mask processing (if provided)
             // Processes the reactivity mask to identify areas needing less temporal accumulation
             if (reactivityMask != null && _fsrTemporalEffect != null)
             {
-                ExecuteFsrReactiveMaskPass(commandList, reactivityMask, _fsrLockTexture);
+                ExecuteFsrReactiveMaskPass(graphicsContext, reactivityMask, _fsrLockTexture);
             }
 
             // Pass 4: Temporal accumulation (main upscaling pass)
             // Combines current frame with history buffer using motion vectors
             if (_fsrTemporalEffect != null)
             {
-                ExecuteFsrTemporalPass(commandList, input, motionVectors, depth, _fsrLockTexture,
+                ExecuteFsrTemporalPass(graphicsContext, input, motionVectors, depth, _fsrLockTexture,
                     reactivityMask, _fsrHistoryTexture, output);
             }
             else
             {
                 // Fallback: Use EASU for spatial-only upscaling if temporal shader not available
-                ExecuteFsrEasuPass(commandList, input, output);
+                ExecuteFsrEasuPass(graphicsContext, input, output);
             }
 
             // Pass 5: RCAS sharpening (final pass)
             // Applies robust contrast adaptive sharpening
             if (_fsrRcasEffect != null)
             {
-                ExecuteFsrRcasPass(commandList, output, output);
+                ExecuteFsrRcasPass(graphicsContext, output, output);
             }
 
             // Update history texture for next frame
@@ -277,17 +293,17 @@ namespace Andastra.Runtime.Stride.Upscaling
             // Pass 1: EASU - edge-adaptive spatial upsampling
             // Pass 2: RCAS - robust contrast adaptive sharpening
 
-            var commandList = _graphicsDevice.ImmediateContext;
-            if (commandList == null)
+            var graphicsContext = GetGraphicsContext();
+            if (graphicsContext == null)
             {
-                Console.WriteLine("[StrideFSR] Error: Command list not available");
+                Console.WriteLine("[StrideFSR] Error: Graphics context not available");
                 return;
             }
 
             // Pass 1: EASU upscaling
             if (_fsrEasuEffect != null)
             {
-                ExecuteFsrEasuPass(commandList, input, output);
+                ExecuteFsrEasuPass(graphicsContext, input, output);
             }
             else
             {
@@ -298,7 +314,7 @@ namespace Andastra.Runtime.Stride.Upscaling
             // Pass 2: RCAS sharpening
             if (_fsrRcasEffect != null)
             {
-                ExecuteFsrRcasPass(commandList, output, output);
+                ExecuteFsrRcasPass(graphicsContext, output, output);
             }
 
             Console.WriteLine($"[StrideFSR] Executed FSR 1.0 (spatial): {input.Width}x{input.Height} -> {output.Width}x{output.Height}");
@@ -417,10 +433,13 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// <summary>
         /// Executes FSR Lock pass: Detects disocclusions and areas needing special handling.
         /// </summary>
-        private void ExecuteFsrLockPass(CommandList commandList, Texture input, Texture depth,
+        private void ExecuteFsrLockPass(GraphicsContext graphicsContext, Texture input, Texture depth,
             Texture motionVectors, Texture lockOutput)
         {
-            if (_fsrTemporalEffect == null) return;
+            if (_fsrTemporalEffect == null || graphicsContext == null) return;
+
+            var commandList = graphicsContext.CommandList;
+            if (commandList == null) return;
 
             // Bind resources through EffectInstance.Parameters
             _fsrTemporalEffect.Parameters.Set(FsrShaderKeys.InputColor, input);
@@ -429,8 +448,8 @@ namespace Andastra.Runtime.Stride.Upscaling
             _fsrTemporalEffect.Parameters.Set(FsrShaderKeys.OutputLock, lockOutput);
             _fsrTemporalEffect.Parameters.Set(FsrShaderKeys.FsrConstants, _fsrConstants);
 
-            // Apply effect parameters to command list
-            _fsrTemporalEffect.Apply(commandList);
+            // Apply effect parameters to graphics context
+            _fsrTemporalEffect.Apply(graphicsContext);
 
             // Calculate dispatch dimensions (lock pass operates at output resolution)
             int dispatchX = (lockOutput.Width + FSR_THREAD_GROUP_SIZE_X - 1) / FSR_THREAD_GROUP_SIZE_X;
@@ -443,17 +462,20 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// <summary>
         /// Executes FSR Depth Clip pass: Clips depth values for better temporal stability.
         /// </summary>
-        private void ExecuteFsrDepthClipPass(CommandList commandList, Texture depth, Texture lockTexture)
+        private void ExecuteFsrDepthClipPass(GraphicsContext graphicsContext, Texture depth, Texture lockTexture)
         {
-            if (_fsrTemporalEffect == null || depth == null) return;
+            if (_fsrTemporalEffect == null || depth == null || graphicsContext == null) return;
+
+            var commandList = graphicsContext.CommandList;
+            if (commandList == null) return;
 
             // Bind resources
             _fsrTemporalEffect.Parameters.Set(FsrShaderKeys.InputDepth, depth);
             _fsrTemporalEffect.Parameters.Set(FsrShaderKeys.InputLock, lockTexture);
             _fsrTemporalEffect.Parameters.Set(FsrShaderKeys.FsrConstants, _fsrConstants);
 
-            // Apply effect parameters to command list
-            _fsrTemporalEffect.Apply(commandList);
+            // Apply effect parameters to graphics context
+            _fsrTemporalEffect.Apply(graphicsContext);
 
             // Calculate dispatch dimensions
             int dispatchX = (depth.Width + FSR_THREAD_GROUP_SIZE_X - 1) / FSR_THREAD_GROUP_SIZE_X;
@@ -466,17 +488,20 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// <summary>
         /// Executes FSR Reactive Mask pass: Processes reactivity mask.
         /// </summary>
-        private void ExecuteFsrReactiveMaskPass(CommandList commandList, Texture reactivityMask, Texture lockTexture)
+        private void ExecuteFsrReactiveMaskPass(GraphicsContext graphicsContext, Texture reactivityMask, Texture lockTexture)
         {
-            if (_fsrTemporalEffect == null || reactivityMask == null) return;
+            if (_fsrTemporalEffect == null || reactivityMask == null || graphicsContext == null) return;
+
+            var commandList = graphicsContext.CommandList;
+            if (commandList == null) return;
 
             // Bind resources
             _fsrTemporalEffect.Parameters.Set(FsrShaderKeys.InputReactiveMask, reactivityMask);
             _fsrTemporalEffect.Parameters.Set(FsrShaderKeys.InputLock, lockTexture);
             _fsrTemporalEffect.Parameters.Set(FsrShaderKeys.FsrConstants, _fsrConstants);
 
-            // Apply effect parameters to command list
-            _fsrTemporalEffect.Apply(commandList);
+            // Apply effect parameters to graphics context
+            _fsrTemporalEffect.Apply(graphicsContext);
 
             // Calculate dispatch dimensions
             int dispatchX = (reactivityMask.Width + FSR_THREAD_GROUP_SIZE_X - 1) / FSR_THREAD_GROUP_SIZE_X;
@@ -489,10 +514,13 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// <summary>
         /// Executes FSR Temporal accumulation pass: Main upscaling pass using temporal data.
         /// </summary>
-        private void ExecuteFsrTemporalPass(CommandList commandList, Texture input, Texture motionVectors,
+        private void ExecuteFsrTemporalPass(GraphicsContext graphicsContext, Texture input, Texture motionVectors,
             Texture depth, Texture lockTexture, Texture reactivityMask, Texture historyTexture, Texture output)
         {
-            if (_fsrTemporalEffect == null) return;
+            if (_fsrTemporalEffect == null || graphicsContext == null) return;
+
+            var commandList = graphicsContext.CommandList;
+            if (commandList == null) return;
 
             // Bind input resources
             _fsrTemporalEffect.Parameters.Set(FsrShaderKeys.InputColor, input);
@@ -506,8 +534,8 @@ namespace Andastra.Runtime.Stride.Upscaling
             }
             _fsrTemporalEffect.Parameters.Set(FsrShaderKeys.FsrConstants, _fsrConstants);
 
-            // Apply effect parameters to command list
-            _fsrTemporalEffect.Apply(commandList);
+            // Apply effect parameters to graphics context
+            _fsrTemporalEffect.Apply(graphicsContext);
 
             // Calculate dispatch dimensions (temporal pass operates at output resolution)
             int dispatchX = (output.Width + FSR_THREAD_GROUP_SIZE_X - 1) / FSR_THREAD_GROUP_SIZE_X;
@@ -520,16 +548,19 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// <summary>
         /// Executes FSR EASU pass: Edge-adaptive spatial upsampling (FSR 1.0).
         /// </summary>
-        private void ExecuteFsrEasuPass(CommandList commandList, Texture input, Texture output)
+        private void ExecuteFsrEasuPass(GraphicsContext graphicsContext, Texture input, Texture output)
         {
-            if (_fsrEasuEffect == null) return;
+            if (_fsrEasuEffect == null || graphicsContext == null) return;
+
+            var commandList = graphicsContext.CommandList;
+            if (commandList == null) return;
 
             // Bind resources
             _fsrEasuEffect.Parameters.Set(FsrShaderKeys.InputColor, input);
             _fsrEasuEffect.Parameters.Set(FsrShaderKeys.FsrConstants, _fsrConstants);
 
-            // Apply effect parameters to command list
-            _fsrEasuEffect.Apply(commandList);
+            // Apply effect parameters to graphics context
+            _fsrEasuEffect.Apply(graphicsContext);
 
             // Calculate dispatch dimensions (EASU operates at output resolution)
             int dispatchX = (output.Width + FSR_THREAD_GROUP_SIZE_X - 1) / FSR_THREAD_GROUP_SIZE_X;
@@ -542,16 +573,19 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// <summary>
         /// Executes FSR RCAS pass: Robust contrast adaptive sharpening.
         /// </summary>
-        private void ExecuteFsrRcasPass(CommandList commandList, Texture input, Texture output)
+        private void ExecuteFsrRcasPass(GraphicsContext graphicsContext, Texture input, Texture output)
         {
-            if (_fsrRcasEffect == null) return;
+            if (_fsrRcasEffect == null || graphicsContext == null) return;
+
+            var commandList = graphicsContext.CommandList;
+            if (commandList == null) return;
 
             // Bind resources
             _fsrRcasEffect.Parameters.Set(FsrShaderKeys.InputColor, input);
             _fsrRcasEffect.Parameters.Set(FsrShaderKeys.FsrConstants, _fsrConstants);
 
-            // Apply effect parameters to command list
-            _fsrRcasEffect.Apply(commandList);
+            // Apply effect parameters to graphics context
+            _fsrRcasEffect.Apply(graphicsContext);
 
             // Calculate dispatch dimensions (RCAS operates at output resolution)
             int dispatchX = (output.Width + FSR_THREAD_GROUP_SIZE_X - 1) / FSR_THREAD_GROUP_SIZE_X;
@@ -568,7 +602,10 @@ namespace Andastra.Runtime.Stride.Upscaling
         {
             if (currentFrame == null || historyTexture == null) return;
 
-            var commandList = _graphicsDevice.ImmediateContext;
+            var graphicsContext = GetGraphicsContext();
+            if (graphicsContext == null) return;
+
+            var commandList = graphicsContext.CommandList;
             if (commandList == null) return;
 
             // Copy current frame to history texture for next frame

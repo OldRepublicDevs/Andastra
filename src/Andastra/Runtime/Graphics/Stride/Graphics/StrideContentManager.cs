@@ -10,12 +10,14 @@ namespace Andastra.Runtime.Stride.Graphics
     public class StrideContentManager : IContentManager
     {
         private readonly dynamic _contentManager;
+        private readonly global::Stride.Graphics.CommandList _graphicsContext;
 
         internal dynamic ContentManager => _contentManager;
 
-        public StrideContentManager(dynamic contentManager)
+        public StrideContentManager(dynamic contentManager, global::Stride.Graphics.CommandList graphicsContext = null)
         {
             _contentManager = contentManager ?? throw new ArgumentNullException(nameof(contentManager));
+            _graphicsContext = graphicsContext;
         }
 
         public string RootDirectory
@@ -34,7 +36,7 @@ namespace Andastra.Runtime.Stride.Graphics
             else if (typeof(ITexture2D).IsAssignableFrom(typeof(T)))
             {
                 var texture = _contentManager.Load<global::Stride.Graphics.Texture>(assetName);
-                return new StrideTexture2D(texture) as T;
+                return new StrideTexture2D(texture, _graphicsContext) as T;
             }
             else
             {
