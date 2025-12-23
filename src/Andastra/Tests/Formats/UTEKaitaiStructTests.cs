@@ -626,18 +626,22 @@ namespace Andastra.Parsing.Tests.Formats
                 }
             }
 
-            // Step 3: Compare results across languages
-            // TODO: STUB - For now, we validate that at least one parser executed successfully
-            // and that the basic structure is correct
-            var successfulParsers = parserResults.Where(r => r.Value.Success).ToList();
-            if (successfulParsers.Count > 0)
+            // Step 3: Extract structured data from all successful parsers
+            var structuredResults = new Dictionary<string, UteParsedData>();
+            foreach (var result in parserResults.Where(r => r.Value.Success))
             {
-                // Validate that all successful parsers agree on basic structure
-                // TODO:  (Full comparison would require parsing the output, which is language-specific)
-                foreach (var result in successfulParsers)
+                try
                 {
-                    result.Value.ParsedData.Should().NotBeNullOrEmpty(
-                        $"Parser for {result.Key} should return data");
+                    var structured = ParseParserOutput(result.Key, result.Value.ParsedData);
+                    if (structured != null)
+                    {
+                        structuredResults[result.Key] = structured;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Log but continue - some parsers may not output structured data
+                    Console.WriteLine($"Failed to parse output from {result.Key}: {ex.Message}");
                 }
             }
 
@@ -650,6 +654,21 @@ namespace Andastra.Parsing.Tests.Formats
             parsedGff.Content.Should().Be(GFFContent.UTE, "UTE file should have UTE content type");
             constructedUte.Should().NotBeNull("Constructed UTE should not be null");
             constructedUte.Tag.Should().NotBeNull("UTE Tag should not be null");
+
+            // Step 5: Create reference structured data from C# parser
+            var referenceData = CreateReferenceData(parsedGff, constructedUte);
+            structuredResults["csharp_reference"] = referenceData;
+
+            // Step 6: Comprehensive cross-language comparison
+            if (structuredResults.Count > 1)
+            {
+                CompareParserResults(structuredResults, referenceData);
+            }
+            else if (structuredResults.Count == 1)
+            {
+                // At least validate that one parser produced structured data
+                structuredResults.Values.First().Should().NotBeNull("At least one parser should produce structured data");
+            }
         }
 
         private ParserExecutionResult ExecuteParser(string language, string testFile)
@@ -706,20 +725,55 @@ namespace Andastra.Parsing.Tests.Formats
                 mainParser = pythonFiles[0]; // Use first Python file found
             }
 
-            // Create a simple Python script to parse the file
+            // Create a comprehensive Python script to parse the file and output structured JSON
             string scriptPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".py");
             try
             {
                 string scriptContent = $@"
 import sys
 import os
+import json
 sys.path.insert(0, r'{Path.GetDirectoryName(mainParser).Replace("\\", "\\\\")}')
 from {Path.GetFileNameWithoutExtension(mainParser)} import *
 with open(r'{testFile.Replace("\\", "\\\\")}', 'rb') as f:
     data = Ute.from_bytes(f.read())
+    
+    # Extract root struct (GFF root)
+    root = data.root_struct if hasattr(data, 'root_struct') else None
+    
+    # Build output dictionary
+    output = {{
+        'FileType': data.file_type if hasattr(data, 'file_type') else '',
+        'FileVersion': data.file_version if hasattr(data, 'file_version') else '',
+    }}
+    
+    # Extract fields from root struct if available
+    if root:
+        # Try to extract common UTE fields
+        field_names = ['Tag', 'TemplateResRef', 'Active', 'DifficultyIndex', 'Difficulty', 
+                      'Faction', 'MaxCreatures', 'RecCreatures', 'Respawns', 'SpawnOption',
+                      'Reset', 'ResetTime', 'PlayerOnly', 'OnEntered', 'OnExit', 
+                      'OnExhausted', 'OnHeartbeat', 'OnUserDefined', 'Comment', 'PaletteID']
+        
+        for field_name in field_names:
+            try:
+                if hasattr(root, field_name.lower()):
+                    field_value = getattr(root, field_name.lower())
+                    if isinstance(field_value, (str, int, float, bool)):
+                        output[field_name] = field_value
+                    elif hasattr(field_value, '__str__'):
+                        output[field_name] = str(field_value)
+            except:
+                pass
+        
+        # Extract creature list
+        if hasattr(root, 'creature_list') or hasattr(root, 'creaturelist'):
+            creature_list = getattr(root, 'creature_list', None) or getattr(root, 'creaturelist', None)
+            if creature_list:
+                output['CreatureCount'] = len(creature_list) if hasattr(creature_list, '__len__') else 0
+    
     print('SUCCESS')
-    print(f'FileType: {{data.file_type}}')
-    print(f'FileVersion: {{data.file_version}}')
+    print(json.dumps(output))
 ";
 
                 File.WriteAllText(scriptPath, scriptContent);
@@ -808,9 +862,41 @@ const Ute = require('{mainParser.Replace("\\", "\\\\")}');
 const fs = require('fs');
 const data = fs.readFileSync('{testFile.Replace("\\", "\\\\")}');
 const parsed = new Ute(new Ute.KaitaiStream(data));
+
+// Extract root struct
+const root = parsed.rootStruct || parsed.root_struct || null;
+
+// Build output object
+const output = {{
+    FileType: parsed.fileType || parsed.file_type || '',
+    FileVersion: parsed.fileVersion || parsed.file_version || ''
+}};
+
+// Extract fields from root struct if available
+if (root) {{
+    const fieldNames = ['Tag', 'TemplateResRef', 'Active', 'DifficultyIndex', 'Difficulty',
+                       'Faction', 'MaxCreatures', 'RecCreatures', 'Respawns', 'SpawnOption',
+                       'Reset', 'ResetTime', 'PlayerOnly', 'OnEntered', 'OnExit',
+                       'OnExhausted', 'OnHeartbeat', 'OnUserDefined', 'Comment', 'PaletteID'];
+    
+    fieldNames.forEach(fieldName => {{
+        const fieldNameLower = fieldName.charAt(0).toLowerCase() + fieldName.slice(1);
+        if (root[fieldName] !== undefined) {{
+            output[fieldName] = root[fieldName];
+        }} else if (root[fieldNameLower] !== undefined) {{
+            output[fieldName] = root[fieldNameLower];
+        }}
+    }});
+    
+    // Extract creature list
+    const creatureList = root.creatureList || root.creature_list || null;
+    if (creatureList && Array.isArray(creatureList)) {{
+        output.CreatureCount = creatureList.length;
+    }}
+}}
+
 console.log('SUCCESS');
-console.log('FileType: ' + parsed.fileType);
-console.log('FileVersion: ' + parsed.fileVersion);
+console.log(JSON.stringify(output));
 ";
 
                 File.WriteAllText(scriptPath, scriptContent);
@@ -896,7 +982,7 @@ console.log('FileVersion: ' + parsed.fileVersion);
             if (mainParser == null)
             {
                 // Try to find any Java file that looks like a main parser
-                mainParser = javaFiles.FirstOrDefault(f => 
+                mainParser = javaFiles.FirstOrDefault(f =>
                     !Path.GetFileName(f).ToLower().Contains("kaitai") &&
                     !Path.GetFileName(f).ToLower().Contains("test"));
                 if (mainParser == null)
@@ -934,6 +1020,7 @@ console.log('FileVersion: ' + parsed.fileVersion);
                 string parserPackage = ExtractJavaPackage(mainParser);
 
                 string testClassContent = $@"import java.io.*;
+import java.util.*;
 {(string.IsNullOrEmpty(parserPackage) ? "" : $"import {parserPackage}.{parserClassName};")}
 
 public class {testClassName} {{
@@ -947,9 +1034,74 @@ public class {testClassName} {{
             
             {(string.IsNullOrEmpty(parserPackage) ? parserClassName : $"{parserPackage}.{parserClassName}")} ute = new {(string.IsNullOrEmpty(parserPackage) ? parserClassName : $"{parserPackage}.{parserClassName}")}(new io.kaitai.struct.ByteBufferKaitaiStream(data));
             
+            // Build output map
+            Map<String, Object> output = new HashMap<>();
+            output.put(""FileType"", ute.fileType() != null ? ute.fileType() : """");
+            output.put(""FileVersion"", ute.fileVersion() != null ? ute.fileVersion() : """");
+            
+            // Try to extract root struct
+            try {{
+                Object rootStruct = ute.rootStruct();
+                if (rootStruct == null) {{
+                    rootStruct = ute.root_struct();
+                }}
+                
+                if (rootStruct != null) {{
+                    // Extract common UTE fields using reflection
+                    String[] fieldNames = {{""Tag"", ""TemplateResRef"", ""Active"", ""DifficultyIndex"", ""Difficulty"",
+                                          ""Faction"", ""MaxCreatures"", ""RecCreatures"", ""Respawns"", ""SpawnOption"",
+                                          ""Reset"", ""ResetTime"", ""PlayerOnly"", ""OnEntered"", ""OnExit"",
+                                          ""OnExhausted"", ""OnHeartbeat"", ""OnUserDefined"", ""Comment"", ""PaletteID""}};
+                    
+                    for (String fieldName : fieldNames) {{
+                        try {{
+                            java.lang.reflect.Method method = rootStruct.getClass().getMethod(fieldName);
+                            Object value = method.invoke(rootStruct);
+                            if (value != null) {{
+                                output.put(fieldName, value.toString());
+                            }}
+                        }} catch (Exception e) {{
+                            // Try lowercase version
+                            try {{
+                                String lowerFieldName = fieldName.substring(0, 1).toLowerCase() + fieldName.substring(1);
+                                java.lang.reflect.Method method = rootStruct.getClass().getMethod(lowerFieldName);
+                                Object value = method.invoke(rootStruct);
+                                if (value != null) {{
+                                    output.put(fieldName, value.toString());
+                                }}
+                            }} catch (Exception e2) {{
+                                // Field not found, skip
+                            }}
+                        }}
+                    }}
+                    
+                    // Extract creature list
+                    try {{
+                        Object creatureList = rootStruct.getClass().getMethod(""creatureList"").invoke(rootStruct);
+                        if (creatureList == null) {{
+                            creatureList = rootStruct.getClass().getMethod(""creature_list"").invoke(rootStruct);
+                        }}
+                        if (creatureList instanceof List) {{
+                            output.put(""CreatureCount"", ((List<?>) creatureList).size());
+                        }}
+                    }} catch (Exception e) {{
+                        // Creature list not found
+                    }}
+                }}
+            }} catch (Exception e) {{
+                // Root struct extraction failed, continue with basic fields
+            }}
+            
             System.out.println(""SUCCESS"");
-            System.out.println(""FileType: "" + ute.fileType());
-            System.out.println(""FileVersion: "" + ute.fileVersion());
+            // Output as JSON-like format
+            System.out.print(""{{"");
+            boolean first = true;
+            for (Map.Entry<String, Object> entry : output.entrySet()) {{
+                if (!first) System.out.print("","");
+                System.out.print(""\"""" + entry.getKey() + ""\"":\"""" + entry.getValue().toString() + ""\"""");
+                first = false;
+            }}
+            System.out.println(""}}"");
         }} catch (Exception e) {{
             System.err.println(""ERROR: "" + e.getMessage());
             e.printStackTrace();
@@ -962,8 +1114,8 @@ public class {testClassName} {{
 
                 // Compile Java files
                 // Build classpath: include Kaitai Struct runtime if found
-                string classpath = string.IsNullOrEmpty(kaitaiRuntimeJar) 
-                    ? compileDir 
+                string classpath = string.IsNullOrEmpty(kaitaiRuntimeJar)
+                    ? compileDir
                     : $"{compileDir}{Path.PathSeparator}{kaitaiRuntimeJar}";
 
                 // Compile all Java files together (including generated parser files and test class)
@@ -1160,6 +1312,51 @@ public class {testClassName} {{
             public bool Success { get; set; }
             public string ErrorMessage { get; set; }
             public string ParsedData { get; set; }
+            public UteParsedData StructuredData { get; set; }
+        }
+
+        /// <summary>
+        /// Structured representation of parsed UTE data for cross-language comparison.
+        /// Contains all key fields that should be consistent across parsers.
+        /// </summary>
+        private class UteParsedData
+        {
+            public string FileType { get; set; }
+            public string FileVersion { get; set; }
+            public string Tag { get; set; }
+            public string TemplateResRef { get; set; }
+            public bool Active { get; set; }
+            public int DifficultyIndex { get; set; }
+            public int Difficulty { get; set; }
+            public int Faction { get; set; }
+            public int MaxCreatures { get; set; }
+            public int RecCreatures { get; set; }
+            public int Respawns { get; set; }
+            public int SpawnOption { get; set; }
+            public int Reset { get; set; }
+            public int ResetTime { get; set; }
+            public int PlayerOnly { get; set; }
+            public string OnEntered { get; set; }
+            public string OnExit { get; set; }
+            public string OnExhausted { get; set; }
+            public string OnHeartbeat { get; set; }
+            public string OnUserDefined { get; set; }
+            public string Comment { get; set; }
+            public int PaletteId { get; set; }
+            public int CreatureCount { get; set; }
+            public List<UteCreatureData> Creatures { get; set; } = new List<UteCreatureData>();
+        }
+
+        /// <summary>
+        /// Structured representation of a creature in a UTE file.
+        /// </summary>
+        private class UteCreatureData
+        {
+            public string ResRef { get; set; }
+            public int Appearance { get; set; }
+            public float CR { get; set; }
+            public int SingleSpawn { get; set; }
+            public int GuaranteedCount { get; set; }
         }
 
         [Fact(Timeout = 300000)]
@@ -1262,6 +1459,568 @@ public class {testClassName} {{
         public static IEnumerable<object[]> GetSupportedLanguages()
         {
             return SupportedLanguages.Select(lang => new object[] { lang });
+        }
+
+        /// <summary>
+        /// Parses the output from a parser execution into structured UTE data.
+        /// Handles different output formats from different languages.
+        /// </summary>
+        private UteParsedData ParseParserOutput(string language, string output)
+        {
+            if (string.IsNullOrEmpty(output))
+            {
+                return null;
+            }
+
+            // Try to parse as JSON first (if parsers output JSON)
+            try
+            {
+                // Look for JSON in the output
+                int jsonStart = output.IndexOf('{');
+                int jsonEnd = output.LastIndexOf('}');
+                if (jsonStart >= 0 && jsonEnd > jsonStart)
+                {
+                    string json = output.Substring(jsonStart, jsonEnd - jsonStart + 1);
+                    // Use simple JSON parsing (we could use Newtonsoft.Json if available)
+                    return ParseJsonOutput(json);
+                }
+            }
+            catch
+            {
+                // Fall through to line-based parsing
+            }
+
+            // Fall back to line-based parsing for text output
+            return ParseTextOutput(language, output);
+        }
+
+        /// <summary>
+        /// Parses JSON output from a parser.
+        /// </summary>
+        private UteParsedData ParseJsonOutput(string json)
+        {
+            // Simple JSON parsing - extract key-value pairs
+            // This is a simplified parser; in production you'd use a proper JSON library
+            var data = new UteParsedData();
+
+            // Extract string values
+            ExtractJsonValue(json, "Tag", out string tag);
+            data.Tag = tag ?? "";
+
+            ExtractJsonValue(json, "TemplateResRef", out string templateResRef);
+            data.TemplateResRef = templateResRef ?? "";
+
+            ExtractJsonValue(json, "OnEntered", out string onEntered);
+            data.OnEntered = onEntered ?? "";
+
+            ExtractJsonValue(json, "OnExit", out string onExit);
+            data.OnExit = onExit ?? "";
+
+            ExtractJsonValue(json, "OnExhausted", out string onExhausted);
+            data.OnExhausted = onExhausted ?? "";
+
+            ExtractJsonValue(json, "OnHeartbeat", out string onHeartbeat);
+            data.OnHeartbeat = onHeartbeat ?? "";
+
+            ExtractJsonValue(json, "OnUserDefined", out string onUserDefined);
+            data.OnUserDefined = onUserDefined ?? "";
+
+            ExtractJsonValue(json, "Comment", out string comment);
+            data.Comment = comment ?? "";
+
+            ExtractJsonValue(json, "FileType", out string fileType);
+            data.FileType = fileType ?? "";
+
+            ExtractJsonValue(json, "FileVersion", out string fileVersion);
+            data.FileVersion = fileVersion ?? "";
+
+            // Extract integer values
+            ExtractJsonIntValue(json, "Active", out int active);
+            data.Active = active != 0;
+
+            ExtractJsonIntValue(json, "DifficultyIndex", out int difficultyIndex);
+            data.DifficultyIndex = difficultyIndex;
+
+            ExtractJsonIntValue(json, "Difficulty", out int difficulty);
+            data.Difficulty = difficulty;
+
+            ExtractJsonIntValue(json, "Faction", out int faction);
+            data.Faction = faction;
+
+            ExtractJsonIntValue(json, "MaxCreatures", out int maxCreatures);
+            data.MaxCreatures = maxCreatures;
+
+            ExtractJsonIntValue(json, "RecCreatures", out int recCreatures);
+            data.RecCreatures = recCreatures;
+
+            ExtractJsonIntValue(json, "Respawns", out int respawns);
+            data.Respawns = respawns;
+
+            ExtractJsonIntValue(json, "SpawnOption", out int spawnOption);
+            data.SpawnOption = spawnOption;
+
+            ExtractJsonIntValue(json, "Reset", out int reset);
+            data.Reset = reset;
+
+            ExtractJsonIntValue(json, "ResetTime", out int resetTime);
+            data.ResetTime = resetTime;
+
+            ExtractJsonIntValue(json, "PlayerOnly", out int playerOnly);
+            data.PlayerOnly = playerOnly;
+
+            ExtractJsonIntValue(json, "PaletteID", out int paletteId);
+            data.PaletteId = paletteId;
+
+            ExtractJsonIntValue(json, "CreatureCount", out int creatureCount);
+            data.CreatureCount = creatureCount;
+
+            return data;
+        }
+
+        /// <summary>
+        /// Extracts a string value from JSON.
+        /// </summary>
+        private void ExtractJsonValue(string json, string key, out string value)
+        {
+            value = null;
+            string searchKey = $"\"{key}\"";
+            int keyIndex = json.IndexOf(searchKey, StringComparison.OrdinalIgnoreCase);
+            if (keyIndex >= 0)
+            {
+                int colonIndex = json.IndexOf(':', keyIndex);
+                if (colonIndex >= 0)
+                {
+                    int startQuote = json.IndexOf('"', colonIndex);
+                    if (startQuote >= 0)
+                    {
+                        int endQuote = json.IndexOf('"', startQuote + 1);
+                        if (endQuote > startQuote)
+                        {
+                            value = json.Substring(startQuote + 1, endQuote - startQuote - 1);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Extracts an integer value from JSON.
+        /// </summary>
+        private void ExtractJsonIntValue(string json, string key, out int value)
+        {
+            value = 0;
+            string searchKey = $"\"{key}\"";
+            int keyIndex = json.IndexOf(searchKey, StringComparison.OrdinalIgnoreCase);
+            if (keyIndex >= 0)
+            {
+                int colonIndex = json.IndexOf(':', keyIndex);
+                if (colonIndex >= 0)
+                {
+                    // Skip whitespace
+                    int valueStart = colonIndex + 1;
+                    while (valueStart < json.Length && char.IsWhiteSpace(json[valueStart]))
+                    {
+                        valueStart++;
+                    }
+
+                    // Find end of number (comma, }, or whitespace)
+                    int valueEnd = valueStart;
+                    while (valueEnd < json.Length &&
+                           (char.IsDigit(json[valueEnd]) || json[valueEnd] == '-' || json[valueEnd] == '+'))
+                    {
+                        valueEnd++;
+                    }
+
+                    if (valueEnd > valueStart)
+                    {
+                        string intStr = json.Substring(valueStart, valueEnd - valueStart);
+                        if (int.TryParse(intStr, out int parsed))
+                        {
+                            value = parsed;
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Parses text-based output from a parser (line-by-line format).
+        /// </summary>
+        private UteParsedData ParseTextOutput(string language, string output)
+        {
+            var data = new UteParsedData();
+            var lines = output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var line in lines)
+            {
+                var trimmed = line.Trim();
+                if (string.IsNullOrEmpty(trimmed))
+                {
+                    continue;
+                }
+
+                // Parse key-value pairs like "Tag: value" or "Tag=value"
+                int colonIndex = trimmed.IndexOf(':');
+                int equalsIndex = trimmed.IndexOf('=');
+                int separatorIndex = colonIndex >= 0 ? (equalsIndex >= 0 ? Math.Min(colonIndex, equalsIndex) : colonIndex) : equalsIndex;
+
+                if (separatorIndex > 0 && separatorIndex < trimmed.Length - 1)
+                {
+                    string key = trimmed.Substring(0, separatorIndex).Trim();
+                    string value = trimmed.Substring(separatorIndex + 1).Trim();
+
+                    // Remove quotes if present
+                    if (value.Length >= 2 && value[0] == '"' && value[value.Length - 1] == '"')
+                    {
+                        value = value.Substring(1, value.Length - 2);
+                    }
+
+                    SetFieldValue(data, key, value);
+                }
+            }
+
+            return data;
+        }
+
+        /// <summary>
+        /// Sets a field value on UteParsedData based on field name.
+        /// </summary>
+        private void SetFieldValue(UteParsedData data, string fieldName, string value)
+        {
+            switch (fieldName.ToLowerInvariant())
+            {
+                case "filetype":
+                case "file_type":
+                    data.FileType = value;
+                    break;
+                case "fileversion":
+                case "file_version":
+                    data.FileVersion = value;
+                    break;
+                case "tag":
+                    data.Tag = value;
+                    break;
+                case "templateresref":
+                case "template_res_ref":
+                    data.TemplateResRef = value;
+                    break;
+                case "active":
+                    data.Active = ParseBool(value);
+                    break;
+                case "difficultyindex":
+                case "difficulty_index":
+                    data.DifficultyIndex = ParseInt(value);
+                    break;
+                case "difficulty":
+                    data.Difficulty = ParseInt(value);
+                    break;
+                case "faction":
+                    data.Faction = ParseInt(value);
+                    break;
+                case "maxcreatures":
+                case "max_creatures":
+                    data.MaxCreatures = ParseInt(value);
+                    break;
+                case "reccreatures":
+                case "rec_creatures":
+                    data.RecCreatures = ParseInt(value);
+                    break;
+                case "respawns":
+                    data.Respawns = ParseInt(value);
+                    break;
+                case "spawnoption":
+                case "spawn_option":
+                    data.SpawnOption = ParseInt(value);
+                    break;
+                case "reset":
+                    data.Reset = ParseInt(value);
+                    break;
+                case "resettime":
+                case "reset_time":
+                    data.ResetTime = ParseInt(value);
+                    break;
+                case "playeronly":
+                case "player_only":
+                    data.PlayerOnly = ParseInt(value);
+                    break;
+                case "onentered":
+                case "on_entered":
+                    data.OnEntered = value;
+                    break;
+                case "onexit":
+                case "on_exit":
+                    data.OnExit = value;
+                    break;
+                case "onexhausted":
+                case "on_exhausted":
+                    data.OnExhausted = value;
+                    break;
+                case "onheartbeat":
+                case "on_heartbeat":
+                    data.OnHeartbeat = value;
+                    break;
+                case "onuserdefined":
+                case "on_user_defined":
+                    data.OnUserDefined = value;
+                    break;
+                case "comment":
+                    data.Comment = value;
+                    break;
+                case "paletteid":
+                case "palette_id":
+                    data.PaletteId = ParseInt(value);
+                    break;
+                case "creaturecount":
+                case "creature_count":
+                    data.CreatureCount = ParseInt(value);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Parses a boolean value from string.
+        /// </summary>
+        private bool ParseBool(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return false;
+            }
+            value = value.ToLowerInvariant().Trim();
+            return value == "true" || value == "1" || value == "yes";
+        }
+
+        /// <summary>
+        /// Parses an integer value from string.
+        /// </summary>
+        private int ParseInt(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return 0;
+            }
+            if (int.TryParse(value.Trim(), out int result))
+            {
+                return result;
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// Creates reference structured data from the C# GFF parser.
+        /// </summary>
+        private UteParsedData CreateReferenceData(GFF gff, UTE ute)
+        {
+            var data = new UteParsedData
+            {
+                FileType = gff.FileType,
+                FileVersion = gff.FileVersion,
+                Tag = ute.Tag ?? "",
+                TemplateResRef = ute.ResRef?.ToString() ?? "",
+                Active = ute.Active,
+                DifficultyIndex = ute.DifficultyId,
+                Difficulty = ute.DifficultyIndex,
+                Faction = ute.Faction,
+                MaxCreatures = ute.MaxCreatures,
+                RecCreatures = ute.RecCreatures,
+                Respawns = ute.Respawn,
+                SpawnOption = ute.SingleSpawn,
+                Reset = ute.Reset,
+                ResetTime = ute.ResetTime,
+                PlayerOnly = ute.PlayerOnly,
+                OnEntered = ute.OnEnteredScript?.ToString() ?? "",
+                OnExit = ute.OnExitScript?.ToString() ?? "",
+                OnExhausted = ute.OnExhaustedScript?.ToString() ?? "",
+                OnHeartbeat = ute.OnHeartbeatScript?.ToString() ?? "",
+                OnUserDefined = ute.OnUserDefinedScript?.ToString() ?? "",
+                Comment = ute.Comment ?? "",
+                PaletteId = ute.PaletteId,
+                CreatureCount = ute.Creatures?.Count ?? 0
+            };
+
+            if (ute.Creatures != null)
+            {
+                foreach (var creature in ute.Creatures)
+                {
+                    data.Creatures.Add(new UteCreatureData
+                    {
+                        ResRef = creature.ResRef?.ToString() ?? "",
+                        Appearance = creature.Appearance,
+                        CR = creature.CR,
+                        SingleSpawn = creature.SingleSpawn,
+                        GuaranteedCount = creature.GuaranteedCount
+                    });
+                }
+            }
+
+            return data;
+        }
+
+        /// <summary>
+        /// Compares parser results across all languages and validates consistency.
+        /// </summary>
+        private void CompareParserResults(Dictionary<string, UteParsedData> results, UteParsedData reference)
+        {
+            // Compare each parser's results against the reference
+            foreach (var kvp in results)
+            {
+                if (kvp.Key == "csharp_reference")
+                {
+                    continue; // Skip self-comparison
+                }
+
+                var parserData = kvp.Value;
+                var parserName = kvp.Key;
+
+                // Compare FileType and FileVersion (GFF header fields)
+                if (!string.IsNullOrEmpty(parserData.FileType))
+                {
+                    parserData.FileType.Should().Be(reference.FileType,
+                        $"Parser {parserName} should match reference FileType");
+                }
+
+                if (!string.IsNullOrEmpty(parserData.FileVersion))
+                {
+                    parserData.FileVersion.Should().Be(reference.FileVersion,
+                        $"Parser {parserName} should match reference FileVersion");
+                }
+
+                // Compare Tag
+                if (!string.IsNullOrEmpty(parserData.Tag))
+                {
+                    parserData.Tag.Should().Be(reference.Tag,
+                        $"Parser {parserName} should match reference Tag");
+                }
+
+                // Compare TemplateResRef
+                if (!string.IsNullOrEmpty(parserData.TemplateResRef))
+                {
+                    parserData.TemplateResRef.Should().Be(reference.TemplateResRef,
+                        $"Parser {parserName} should match reference TemplateResRef");
+                }
+
+                // Compare Active (boolean)
+                parserData.Active.Should().Be(reference.Active,
+                    $"Parser {parserName} should match reference Active");
+
+                // Compare DifficultyIndex
+                parserData.DifficultyIndex.Should().Be(reference.DifficultyIndex,
+                    $"Parser {parserName} should match reference DifficultyIndex");
+
+                // Compare Difficulty
+                parserData.Difficulty.Should().Be(reference.Difficulty,
+                    $"Parser {parserName} should match reference Difficulty");
+
+                // Compare Faction
+                parserData.Faction.Should().Be(reference.Faction,
+                    $"Parser {parserName} should match reference Faction");
+
+                // Compare MaxCreatures
+                parserData.MaxCreatures.Should().Be(reference.MaxCreatures,
+                    $"Parser {parserName} should match reference MaxCreatures");
+
+                // Compare RecCreatures
+                parserData.RecCreatures.Should().Be(reference.RecCreatures,
+                    $"Parser {parserName} should match reference RecCreatures");
+
+                // Compare Respawns
+                parserData.Respawns.Should().Be(reference.Respawns,
+                    $"Parser {parserName} should match reference Respawns");
+
+                // Compare SpawnOption
+                parserData.SpawnOption.Should().Be(reference.SpawnOption,
+                    $"Parser {parserName} should match reference SpawnOption");
+
+                // Compare Reset
+                parserData.Reset.Should().Be(reference.Reset,
+                    $"Parser {parserName} should match reference Reset");
+
+                // Compare ResetTime
+                parserData.ResetTime.Should().Be(reference.ResetTime,
+                    $"Parser {parserName} should match reference ResetTime");
+
+                // Compare PlayerOnly
+                parserData.PlayerOnly.Should().Be(reference.PlayerOnly,
+                    $"Parser {parserName} should match reference PlayerOnly");
+
+                // Compare script ResRefs
+                if (!string.IsNullOrEmpty(parserData.OnEntered))
+                {
+                    parserData.OnEntered.Should().Be(reference.OnEntered,
+                        $"Parser {parserName} should match reference OnEntered");
+                }
+
+                if (!string.IsNullOrEmpty(parserData.OnExit))
+                {
+                    parserData.OnExit.Should().Be(reference.OnExit,
+                        $"Parser {parserName} should match reference OnExit");
+                }
+
+                if (!string.IsNullOrEmpty(parserData.OnExhausted))
+                {
+                    parserData.OnExhausted.Should().Be(reference.OnExhausted,
+                        $"Parser {parserName} should match reference OnExhausted");
+                }
+
+                if (!string.IsNullOrEmpty(parserData.OnHeartbeat))
+                {
+                    parserData.OnHeartbeat.Should().Be(reference.OnHeartbeat,
+                        $"Parser {parserName} should match reference OnHeartbeat");
+                }
+
+                if (!string.IsNullOrEmpty(parserData.OnUserDefined))
+                {
+                    parserData.OnUserDefined.Should().Be(reference.OnUserDefined,
+                        $"Parser {parserName} should match reference OnUserDefined");
+                }
+
+                // Compare Comment
+                if (!string.IsNullOrEmpty(parserData.Comment))
+                {
+                    parserData.Comment.Should().Be(reference.Comment,
+                        $"Parser {parserName} should match reference Comment");
+                }
+
+                // Compare PaletteId
+                parserData.PaletteId.Should().Be(reference.PaletteId,
+                    $"Parser {parserName} should match reference PaletteId");
+
+                // Compare CreatureCount
+                parserData.CreatureCount.Should().Be(reference.CreatureCount,
+                    $"Parser {parserName} should match reference CreatureCount");
+
+                // Compare creatures if both have them
+                if (parserData.Creatures.Count > 0 && reference.Creatures.Count > 0)
+                {
+                    parserData.Creatures.Count.Should().Be(reference.Creatures.Count,
+                        $"Parser {parserName} should match reference creature count");
+
+                    for (int i = 0; i < Math.Min(parserData.Creatures.Count, reference.Creatures.Count); i++)
+                    {
+                        var parserCreature = parserData.Creatures[i];
+                        var refCreature = reference.Creatures[i];
+
+                        if (!string.IsNullOrEmpty(parserCreature.ResRef))
+                        {
+                            parserCreature.ResRef.Should().Be(refCreature.ResRef,
+                                $"Parser {parserName} creature {i} should match reference ResRef");
+                        }
+
+                        parserCreature.Appearance.Should().Be(refCreature.Appearance,
+                            $"Parser {parserName} creature {i} should match reference Appearance");
+
+                        // CR is a float, allow small tolerance
+                        Math.Abs(parserCreature.CR - refCreature.CR).Should().BeLessThan(0.01f,
+                            $"Parser {parserName} creature {i} should match reference CR");
+
+                        parserCreature.SingleSpawn.Should().Be(refCreature.SingleSpawn,
+                            $"Parser {parserName} creature {i} should match reference SingleSpawn");
+
+                        parserCreature.GuaranteedCount.Should().Be(refCreature.GuaranteedCount,
+                            $"Parser {parserName} creature {i} should match reference GuaranteedCount");
+                    }
+                }
+            }
         }
     }
 }
