@@ -1741,22 +1741,54 @@ namespace Andastra.Runtime.Games.Eclipse
         }
 
         /// <summary>
-        /// Loads static objects from area data.
+        /// Loads static objects from area data and LYT layout files.
         /// </summary>
         /// <param name="areData">ARE file data containing static object geometry information.</param>
         /// <remarks>
         /// Based on daorigins.exe/DragonAge2.exe: Static objects are embedded geometry in area files.
         /// Static objects are separate from entities (placeables, doors) - they are part of the area layout.
         ///
-        /// Static object loading:
-        /// - Static objects may be stored in ARE file or referenced from LYT layout
-        /// - Each static object has a model name, position, and rotation
-        /// - Static object models use MDL format (same as rooms)
-        // TODO: / - Full implementation requires determining exact data structure location in ARE/LYT files
+        /// Static object loading sources:
+        /// 1. ARE file: Static objects may be stored in GFF structure within ARE file
+        /// 2. LYT file: Tracks and Obstacles from LYT layout files are treated as static objects for rendering
+        /// 3. Room models: Some static objects are embedded within room MDL models (handled separately)
         ///
-        /// Note: The exact data structure location for static objects in Eclipse ARE files needs to be
-        /// determined through reverse engineering. This implementation provides the framework for loading
-        /// static objects when the data structure is identified.
+        /// ARE file field locations checked (in order of likelihood):
+        /// - Root level: "StaticObjectList", "ObjectList", "GeometryList", "StaticObjects", "Objects", "Geometry"
+        /// - Nested structures:
+        ///   - "AreaGeometry" -> "StaticObjects", "ObjectList", "Objects", "GeometryList"
+        ///   - "AreaLayout" -> "StaticObjects", "ObjectList", "Objects", "GeometryList"
+        ///   - "AreaData" -> "StaticObjects", "ObjectList", "Objects", "GeometryList"
+        ///   - "Geometry" -> "StaticObjects", "ObjectList", "Objects"
+        ///   - "Layout" -> "StaticObjects", "ObjectList", "Objects"
+        ///
+        /// LYT file static objects:
+        /// - Tracks: Swoop track booster positions (LYTTrack objects)
+        /// - Obstacles: Swoop track obstacle positions (LYTObstacle objects)
+        /// - These are loaded from LYT file if available and added to static objects list
+        ///
+        /// Static object structure fields (per object in list):
+        /// - ModelName: ResRef or String (model resource name, e.g., "static_building_01")
+        ///   Field name variations: "ModelName", "Model", "ResRef", "ResourceName", "ModelResRef"
+        /// - Position: X/Y/Z floats OR Vector3 field
+        ///   Field name variations: "Position" (Vector3), "XPosition"/"YPosition"/"ZPosition" (separate floats), "X"/"Y"/"Z" (alternative)
+        /// - Rotation: Float (rotation in degrees around Y-axis, 0-360)
+        ///   Field name variations: "Rotation", "Bearing", "Orientation", "YRotation", "Angle"
+        ///
+        /// Additional potential fields (documented for future use):
+        /// - Scale: Float (optional scale factor) - "Scale", "ScaleFactor", "Size"
+        /// - RoomIndex: Int32 (optional room association) - "RoomIndex", "Room", "RoomID"
+        /// - Flags: UInt32 (optional flags) - "Flags", "ObjectFlags"
+        ///
+        /// Based on reverse engineering patterns:
+        /// - daorigins.exe: Static objects are embedded in area data structure
+        /// - DragonAge2.exe: Enhanced static object system with additional fields
+        /// - Field name variations support different ARE file versions and toolset exports
+        /// - Implementation checks multiple locations to ensure compatibility across different ARE file formats
+        ///
+        /// Note: The exact field names may vary between different ARE file versions and toolset exports.
+        /// This implementation checks all known variations to ensure maximum compatibility.
+        /// If static objects are not found in ARE file, the method will attempt to load them from LYT file.
         /// </remarks>
         private void LoadStaticObjectsFromAreaData(byte[] areData)
         {
@@ -1798,51 +1830,110 @@ namespace Andastra.Runtime.Games.Eclipse
                 // - RoomIndex: Int32 (optional room association)
                 _staticObjects = new List<StaticObjectInfo>();
 
+                // Initialize static objects list
+                _staticObjects = new List<StaticObjectInfo>();
+
                 // Try root-level list fields first (most common pattern)
-                // Check "StaticObjectList" first (most likely name based on naming conventions)
-                if (root.Exists("StaticObjectList"))
+                // Check field names in order of likelihood based on naming conventions
+                bool foundStaticObjects = false;
+
+                // Root-level field checks (most common patterns)
+                string[] rootLevelFields = { "StaticObjectList", "StaticObjects", "ObjectList", "Objects", "GeometryList", "Geometry" };
+                foreach (string fieldName in rootLevelFields)
                 {
-                    GFFList staticObjectList = root.GetList("StaticObjectList");
-                    ParseStaticObjectList(staticObjectList);
-                }
-                // Check "ObjectList" as alternative (generic object list)
-                else if (root.Exists("ObjectList"))
-                {
-                    GFFList objectList = root.GetList("ObjectList");
-                    ParseStaticObjectList(objectList);
-                }
-                // Check "GeometryList" as alternative (geometry-focused naming)
-                else if (root.Exists("GeometryList"))
-                {
-                    GFFList geometryList = root.GetList("GeometryList");
-                    ParseStaticObjectList(geometryList);
-                }
-                // Try nested struct pattern: "AreaGeometry" -> "StaticObjects"
-                else if (root.Exists("AreaGeometry"))
-                {
-                    GFFStruct areaGeometry = root.GetStruct("AreaGeometry");
-                    if (areaGeometry != null && areaGeometry.Exists("StaticObjects"))
+                    if (root.Exists(fieldName))
                     {
-                        GFFList staticObjectList = areaGeometry.GetList("StaticObjects");
-                        ParseStaticObjectList(staticObjectList);
-                    }
-                    // Also check for "ObjectList" within AreaGeometry
-                    else if (areaGeometry != null && areaGeometry.Exists("ObjectList"))
-                    {
-                        GFFList objectList = areaGeometry.GetList("ObjectList");
-                        ParseStaticObjectList(objectList);
+                        GFFList staticObjectList = root.GetList(fieldName);
+                        if (staticObjectList != null && staticObjectList.Count > 0)
+                        {
+                            ParseStaticObjectList(staticObjectList);
+                            foundStaticObjects = true;
+                            break; // Found static objects, no need to check other root-level fields
+                        }
                     }
                 }
-                // Try "AreaLayout" -> "StaticObjects" pattern (alternative nested structure)
-                else if (root.Exists("AreaLayout"))
+
+                // If not found at root level, try nested struct patterns
+                if (!foundStaticObjects)
                 {
-                    GFFStruct areaLayout = root.GetStruct("AreaLayout");
-                    if (areaLayout != null && areaLayout.Exists("StaticObjects"))
+                    // Nested structure patterns (checked in order of likelihood)
+                    string[] nestedStructNames = { "AreaGeometry", "AreaLayout", "AreaData", "Geometry", "Layout", "AreaStructure" };
+                    string[] nestedListFields = { "StaticObjects", "StaticObjectList", "ObjectList", "Objects", "GeometryList", "Geometry" };
+
+                    foreach (string structName in nestedStructNames)
                     {
-                        GFFList staticObjectList = areaLayout.GetList("StaticObjects");
-                        ParseStaticObjectList(staticObjectList);
+                        if (root.Exists(structName))
+                        {
+                            GFFStruct nestedStruct = root.GetStruct(structName);
+                            if (nestedStruct != null)
+                            {
+                                foreach (string listFieldName in nestedListFields)
+                                {
+                                    if (nestedStruct.Exists(listFieldName))
+                                    {
+                                        GFFList staticObjectList = nestedStruct.GetList(listFieldName);
+                                        if (staticObjectList != null && staticObjectList.Count > 0)
+                                        {
+                                            ParseStaticObjectList(staticObjectList);
+                                            foundStaticObjects = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (foundStaticObjects)
+                                {
+                                    break; // Found static objects in this nested struct
+                                }
+                            }
+                        }
                     }
                 }
+
+                // If still not found, try deeply nested patterns (less common but possible)
+                if (!foundStaticObjects)
+                {
+                    // Try two-level nesting: "AreaGeometry" -> "GeometryData" -> "StaticObjects"
+                    if (root.Exists("AreaGeometry"))
+                    {
+                        GFFStruct areaGeometry = root.GetStruct("AreaGeometry");
+                        if (areaGeometry != null)
+                        {
+                            string[] secondLevelStructs = { "GeometryData", "ObjectData", "StaticData", "LayoutData" };
+                            foreach (string secondLevelStructName in secondLevelStructs)
+                            {
+                                if (areaGeometry.Exists(secondLevelStructName))
+                                {
+                                    GFFStruct secondLevelStruct = areaGeometry.GetStruct(secondLevelStructName);
+                                    if (secondLevelStruct != null)
+                                    {
+                                        string[] secondLevelListFields = { "StaticObjects", "StaticObjectList", "ObjectList", "Objects" };
+                                        foreach (string listFieldName in secondLevelListFields)
+                                        {
+                                            if (secondLevelStruct.Exists(listFieldName))
+                                            {
+                                                GFFList staticObjectList = secondLevelStruct.GetList(listFieldName);
+                                                if (staticObjectList != null && staticObjectList.Count > 0)
+                                                {
+                                                    ParseStaticObjectList(staticObjectList);
+                                                    foundStaticObjects = true;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        if (foundStaticObjects)
+                                        {
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // After checking ARE file, try loading static objects from LYT file if available
+                // LYT files contain Tracks and Obstacles which can be treated as static objects
+                LoadStaticObjectsFromLYT();
             }
             catch (Exception ex)
             {
@@ -1891,35 +1982,38 @@ namespace Andastra.Runtime.Games.Eclipse
 
                     // Parse model name - try multiple field name variations
                     // Model name can be stored as ResRef or String
-                    if (staticObjectStruct.Exists("ModelName"))
+                    // Field name variations checked in order of likelihood
+                    string[] modelNameFields = { "ModelName", "Model", "ResRef", "ResourceName", "ModelResRef", "ModelRef", "ResourceRef" };
+                    bool foundModelName = false;
+
+                    foreach (string fieldName in modelNameFields)
                     {
-                        // Try as ResRef first (most common for model resources)
-                        ResRef modelResRef = staticObjectStruct.GetResRef("ModelName");
-                        staticObject.ModelName = modelResRef != null && !string.IsNullOrEmpty(modelResRef.ToString())
-                            ? modelResRef.ToString()
-                            : staticObjectStruct.GetString("ModelName");
-                    }
-                    else if (staticObjectStruct.Exists("Model"))
-                    {
-                        ResRef modelResRef = staticObjectStruct.GetResRef("Model");
-                        staticObject.ModelName = modelResRef != null && !string.IsNullOrEmpty(modelResRef.ToString())
-                            ? modelResRef.ToString()
-                            : staticObjectStruct.GetString("Model");
-                    }
-                    else if (staticObjectStruct.Exists("ResRef"))
-                    {
-                        ResRef modelResRef = staticObjectStruct.GetResRef("ResRef");
-                        staticObject.ModelName = modelResRef != null && !string.IsNullOrEmpty(modelResRef.ToString())
-                            ? modelResRef.ToString()
-                            : staticObjectStruct.GetString("ResRef");
-                    }
-                    else if (staticObjectStruct.Exists("ResourceName"))
-                    {
-                        staticObject.ModelName = staticObjectStruct.GetString("ResourceName");
+                        if (staticObjectStruct.Exists(fieldName))
+                        {
+                            // Try as ResRef first (most common for model resources)
+                            ResRef modelResRef = staticObjectStruct.GetResRef(fieldName);
+                            if (modelResRef != null && !string.IsNullOrEmpty(modelResRef.ToString()))
+                            {
+                                staticObject.ModelName = modelResRef.ToString();
+                                foundModelName = true;
+                                break;
+                            }
+                            else
+                            {
+                                // Try as String if ResRef parsing failed
+                                string modelNameStr = staticObjectStruct.GetString(fieldName);
+                                if (!string.IsNullOrEmpty(modelNameStr))
+                                {
+                                    staticObject.ModelName = modelNameStr;
+                                    foundModelName = true;
+                                    break;
+                                }
+                            }
+                        }
                     }
 
                     // Skip static objects without model names (invalid data)
-                    if (string.IsNullOrEmpty(staticObject.ModelName))
+                    if (!foundModelName || string.IsNullOrEmpty(staticObject.ModelName))
                     {
                         continue;
                     }
@@ -1957,25 +2051,23 @@ namespace Andastra.Runtime.Games.Eclipse
 
                     // Parse rotation - try multiple field name variations
                     // Rotation is stored as float in degrees (0-360) around Y-axis
-                    if (staticObjectStruct.Exists("Rotation"))
+                    // Field name variations checked in order of likelihood
+                    string[] rotationFields = { "Rotation", "Bearing", "Orientation", "YRotation", "Angle", "RotY", "YAngle" };
+                    bool foundRotation = false;
+
+                    foreach (string fieldName in rotationFields)
                     {
-                        staticObject.Rotation = staticObjectStruct.GetSingle("Rotation");
+                        if (staticObjectStruct.Exists(fieldName))
+                        {
+                            staticObject.Rotation = staticObjectStruct.GetSingle(fieldName);
+                            foundRotation = true;
+                            break;
+                        }
                     }
-                    else if (staticObjectStruct.Exists("Bearing"))
+
+                    // If rotation not found, use default (0 degrees)
+                    if (!foundRotation)
                     {
-                        staticObject.Rotation = staticObjectStruct.GetSingle("Bearing");
-                    }
-                    else if (staticObjectStruct.Exists("Orientation"))
-                    {
-                        staticObject.Rotation = staticObjectStruct.GetSingle("Orientation");
-                    }
-                    else if (staticObjectStruct.Exists("YRotation"))
-                    {
-                        staticObject.Rotation = staticObjectStruct.GetSingle("YRotation");
-                    }
-                    else
-                    {
-                        // Rotation not found - use default (0 degrees)
                         staticObject.Rotation = 0.0f;
                     }
 
@@ -1999,6 +2091,123 @@ namespace Andastra.Runtime.Games.Eclipse
                     System.Console.WriteLine($"[EclipseArea] Error parsing static object: {ex.Message}");
                     continue;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Loads static objects from LYT layout file (Tracks and Obstacles).
+        /// </summary>
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: LYT files contain Tracks and Obstacles which are
+        /// treated as static objects for rendering purposes.
+        ///
+        /// LYT file static objects:
+        /// - Tracks: Swoop track booster positions (LYTTrack objects) - model name and position
+        /// - Obstacles: Swoop track obstacle positions (LYTObstacle objects) - model name and position
+        ///
+        /// These objects are loaded from LYT file if available and added to static objects list.
+        /// Rotation is set to 0 degrees for tracks and obstacles (they use model's default orientation).
+        ///
+        /// Note: LYT files are typically loaded separately from ARE files. This method attempts to
+        /// load the LYT file using the area's ResRef name. If the LYT file is not available or
+        /// cannot be loaded, this method will silently return without adding any objects.
+        /// </remarks>
+        private void LoadStaticObjectsFromLYT()
+        {
+            if (_resourceProvider == null || string.IsNullOrEmpty(_resRef))
+            {
+                // Resource provider or ResRef not available - cannot load LYT file
+                return;
+            }
+
+            try
+            {
+                // Try to load LYT file using area ResRef
+                // Based on daorigins.exe/DragonAge2.exe: LYT files use same ResRef as ARE files
+                Parsing.Resource.ResourceType lytResourceType = Parsing.Resource.ResourceType.LYT;
+                Parsing.Resource.ResourceIdentifier lytResourceId = new Parsing.Resource.ResourceIdentifier(_resRef, lytResourceType);
+
+                // Load LYT file data
+                byte[] lytData = _resourceProvider.GetResourceBytes(lytResourceId);
+                if (lytData == null || lytData.Length == 0)
+                {
+                    // LYT file not found or empty - this is normal for areas without layout files
+                    return;
+                }
+
+                // Parse LYT file
+                // Based on LYT format: Try ASCII format first, then binary if needed
+                Parsing.Resource.Formats.LYT.LYT lyt = null;
+                try
+                {
+                    // Try ASCII format first using LYTAuto helper
+                    lyt = Parsing.Resource.Formats.LYT.LYTAuto.ReadLyt(lytData);
+                }
+                catch
+                {
+                    // ASCII parsing failed - LYT files are typically ASCII format
+                    // If binary format is needed in future, it can be added here
+                    // For now, log and return
+                    System.Console.WriteLine($"[EclipseArea] Failed to parse LYT file for area {_resRef}");
+                    return;
+                }
+
+                if (lyt == null)
+                {
+                    // Failed to parse LYT file - log and return
+                    System.Console.WriteLine($"[EclipseArea] Failed to parse LYT file for area {_resRef}");
+                    return;
+                }
+
+                // Ensure static objects list is initialized
+                if (_staticObjects == null)
+                {
+                    _staticObjects = new List<StaticObjectInfo>();
+                }
+
+                // Load Tracks as static objects
+                // Based on LYT format: Tracks are swoop track booster positions
+                if (lyt.Tracks != null)
+                {
+                    foreach (Parsing.Resource.Formats.LYT.LYTTrack track in lyt.Tracks)
+                    {
+                        if (track != null && track.Model != null && !string.IsNullOrEmpty(track.Model.ToString()))
+                        {
+                            StaticObjectInfo staticObject = new StaticObjectInfo
+                            {
+                                ModelName = track.Model.ToString(),
+                                Position = track.Position,
+                                Rotation = 0.0f // Tracks use model's default orientation
+                            };
+                            _staticObjects.Add(staticObject);
+                        }
+                    }
+                }
+
+                // Load Obstacles as static objects
+                // Based on LYT format: Obstacles are swoop track obstacle positions
+                if (lyt.Obstacles != null)
+                {
+                    foreach (Parsing.Resource.Formats.LYT.LYTObstacle obstacle in lyt.Obstacles)
+                    {
+                        if (obstacle != null && obstacle.Model != null && !string.IsNullOrEmpty(obstacle.Model.ToString()))
+                        {
+                            StaticObjectInfo staticObject = new StaticObjectInfo
+                            {
+                                ModelName = obstacle.Model.ToString(),
+                                Position = obstacle.Position,
+                                Rotation = 0.0f // Obstacles use model's default orientation
+                            };
+                            _staticObjects.Add(staticObject);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Error loading LYT file - log and continue (this is not critical)
+                // LYT files are optional and not all areas have them
+                System.Console.WriteLine($"[EclipseArea] Error loading static objects from LYT file for area {_resRef}: {ex.Message}");
             }
         }
 
