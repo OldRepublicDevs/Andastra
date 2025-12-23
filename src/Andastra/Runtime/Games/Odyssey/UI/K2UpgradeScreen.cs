@@ -150,67 +150,12 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             // Based on swkotor2.exe: FUN_00729640 @ 0x00729640 line 24 - gets character from DAT_008283d4
             // DAT_008283d4 is a global structure that stores the current player character pointer
             // The function accesses the character at offset 0x18a8 within the upgrade screen object structure
-            // Character retrieval follows the same pattern as GetCharacterInventoryResRefs in BaseUpgradeScreen
-            IEntity character = _character;
+            // Character retrieval uses common base class method
+            IEntity character = base.GetCharacterEntity();
             if (character == null)
             {
-                // Get player character from world using multiple fallback strategies
-                // Based on swkotor2.exe: Player entity lookup patterns from multiple functions
-                // Strategy 1: Try to find entity by tag "Player" (Odyssey engine pattern)
-                // Based on swkotor2.exe: Player entity is tagged "Player" @ 0x007be628
-                // Located via string references: "Player" @ 0x007be628, "Mod_PlayerList" @ 0x007be060
-                // Original implementation: Player entity is stored in module player list and tagged "Player"
-                character = _world.GetEntityByTag("Player", 0);
-
-                if (character == null)
-                {
-                    // Strategy 2: Try to find entity by tag "PlayerCharacter" (Eclipse engine pattern, fallback)
-                    // Based on daorigins.exe/DragonAge2.exe: Player entity tagged "PlayerCharacter"
-                    // This is a cross-engine compatibility fallback
-                    character = _world.GetEntityByTag("PlayerCharacter", 0);
-                }
-
-                if (character == null)
-                {
-                    // Strategy 3: Search through all entities for one marked as player
-                    // Based on swkotor2.exe: Player entity has IsPlayer data flag set to true
-                    // Original implementation: Player entity is marked with IsPlayer flag during creation
-                    // This matches the pattern used in CameraController.GetPlayerEntity() and BaseUpgradeScreen.GetCharacterInventoryResRefs()
-                    foreach (IEntity entity in _world.GetAllEntities())
-                    {
-                        if (entity == null)
-                        {
-                            continue;
-                        }
-
-                        // Check tag-based identification
-                        string tag = entity.Tag;
-                        if (!string.IsNullOrEmpty(tag))
-                        {
-                            if (string.Equals(tag, "Player", StringComparison.OrdinalIgnoreCase) ||
-                                string.Equals(tag, "PlayerCharacter", StringComparison.OrdinalIgnoreCase) ||
-                                string.Equals(tag, "player", StringComparison.OrdinalIgnoreCase))
-                            {
-                                character = entity;
-                                break;
-                            }
-                        }
-
-                        // Check IsPlayer data flag
-                        object isPlayerData = entity.GetData("IsPlayer");
-                        if (isPlayerData is bool && (bool)isPlayerData)
-                        {
-                            character = entity;
-                            break;
-                        }
-                    }
-                }
-
-                // If still no character found, cannot proceed with upgrade
-                if (character == null)
-                {
-                    return false;
-                }
+                // Character not found - cannot proceed with upgrade
+                return false;
             }
 
             IInventoryComponent characterInventory = character.GetComponent<IInventoryComponent>();
@@ -417,56 +362,16 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             // This matches the implementation in OdysseyUpgradeScreenBase.CreateItemFromTemplateAndAddToInventory
             if (!string.IsNullOrEmpty(upgradeResRef))
             {
-                // Get character entity (use stored character or find player)
-                IEntity character = _character;
-                if (character == null)
-                {
-                    // Get player character from world using multiple fallback strategies
-                    // Based on swkotor2.exe: Player entity lookup patterns from multiple functions
-                    character = _world.GetEntityByTag("Player", 0);
-
-                    if (character == null)
-                    {
-                        character = _world.GetEntityByTag("PlayerCharacter", 0);
-                    }
-
-                    if (character == null)
-                    {
-                        foreach (IEntity entity in _world.GetAllEntities())
-                        {
-                            if (entity == null)
-                            {
-                                continue;
-                            }
-
-                            string tag = entity.Tag;
-                            if (!string.IsNullOrEmpty(tag))
-                            {
-                                if (string.Equals(tag, "Player", StringComparison.OrdinalIgnoreCase) ||
-                                    string.Equals(tag, "PlayerCharacter", StringComparison.OrdinalIgnoreCase) ||
-                                    string.Equals(tag, "player", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    character = entity;
-                                    break;
-                                }
-                            }
-
-                            object isPlayerData = entity.GetData("IsPlayer");
-                            if (isPlayerData is bool && (bool)isPlayerData)
-                            {
-                                character = entity;
-                                break;
-                            }
-                        }
-                    }
-                }
+                // Get character entity using common base class method
+                // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 - gets character from upgrade screen object
+                IEntity character = base.GetCharacterEntity();
 
                 // Create upgrade item entity and add to inventory
                 // Based on swkotor2.exe: FUN_00567ce0 @ 0x00567ce0 - creates item and adds to inventory
                 // Uses base class method which implements the full creation and inventory addition logic
                 if (character != null)
                 {
-                    CreateItemFromTemplateAndAddToInventory(upgradeResRef, character);
+                    base.CreateItemFromTemplateAndAddToInventory(upgradeResRef, character);
                 }
             }
 
