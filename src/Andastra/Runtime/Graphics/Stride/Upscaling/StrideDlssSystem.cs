@@ -609,9 +609,9 @@ namespace Andastra.Runtime.Stride.Upscaling
             {
                 // Use reflection to access native device pointer (property may not be public)
                 var deviceType = graphicsDevice.GetType();
-                
+
                 // Try NativePointer first (used by D3D12 and Vulkan backends)
-                var nativePointerProperty = deviceType.GetProperty("NativePointer", 
+                var nativePointerProperty = deviceType.GetProperty("NativePointer",
                     System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 if (nativePointerProperty != null)
                 {
@@ -808,8 +808,8 @@ namespace Andastra.Runtime.Stride.Upscaling
             if (_graphicsDevice == null)
                 return IntPtr.Zero;
 
-            // Stride's ImmediateContext provides access to the command list
-            global::Stride.Graphics.CommandList immediateContext = _graphicsDevice.ImmediateContext;
+            // Stride's ImmediateContext() extension method provides access to the command list
+            global::Stride.Graphics.CommandList immediateContext = _graphicsDevice.ImmediateContext();
             if (immediateContext != null)
             {
                 // Stride CommandList.NativeCommandList provides the native D3D12 command list pointer
