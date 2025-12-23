@@ -3445,11 +3445,11 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
 
                     // Render item border
                     uint borderColor = 0xFF606060;
-                    const float borderWidth = 1.0f;
-                    DrawQuad(itemX, itemY, itemSize, borderWidth, borderColor, IntPtr.Zero);
-                    DrawQuad(itemX, itemY + itemSize - borderWidth, itemSize, borderWidth, borderColor, IntPtr.Zero);
-                    DrawQuad(itemX, itemY, borderWidth, itemSize, borderColor, IntPtr.Zero);
-                    DrawQuad(itemX + itemSize - borderWidth, itemY, borderWidth, itemSize, borderColor, IntPtr.Zero);
+                    const float itemBorderWidth = 1.0f;
+                    DrawQuad(itemX, itemY, itemSize, itemBorderWidth, borderColor, IntPtr.Zero);
+                    DrawQuad(itemX, itemY + itemSize - itemBorderWidth, itemSize, itemBorderWidth, borderColor, IntPtr.Zero);
+                    DrawQuad(itemX, itemY, itemBorderWidth, itemSize, borderColor, IntPtr.Zero);
+                    DrawQuad(itemX + itemSize - itemBorderWidth, itemY, itemBorderWidth, itemSize, borderColor, IntPtr.Zero);
 
                     // Get item at this slot
                     IEntity item = inventory.GetItemInSlot(itemIndex);
@@ -3826,7 +3826,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
 
             // Render map controls/legend
             // Based on daorigins.exe: Map shows controls and legend at the bottom
-            const float legendY = mapY + mapHeight + 10.0f;
+            float legendY = mapY + mapHeight + 10.0f;
             RenderTextDirectX9(mapX, legendY, "Legend: Red = Location, Green = Player", 0xFFCCCCCC, fontSize: 10, centered: false);
 
             // Render map title
@@ -6457,7 +6457,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 IntPtr dx9IndexBuffer = IntPtr.Zero;
                 uint bufferSize = (uint)(indexCount * indexSize);
                 uint usage = D3DUSAGE_WRITEONLY;
-                uint format = is32BitIndices ? 0x65 : 0x64; // D3DFMT_INDEX32 or D3DFMT_INDEX16
+                uint format = is32BitIndices ? 0x65u : 0x64u; // D3DFMT_INDEX32 or D3DFMT_INDEX16
                 uint pool = (uint)D3DPOOL.D3DPOOL_MANAGED;
 
                 // Use reflection to call CreateIndexBuffer on the base class
@@ -6466,20 +6466,20 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 if (createIbMethod != null)
                 {
                     // Try base class method first
-                    object result = createIbMethod.Invoke(this, new object[] { indexData, is32BitIndices });
-                    if (result != null)
+                    object invokeResult = createIbMethod.Invoke(this, new object[] { indexData, is32BitIndices });
+                    if (invokeResult != null)
                     {
                         // Extract native pointer from result
-                        PropertyInfo handleProp = result.GetType().GetProperty("Handle");
+                        PropertyInfo handleProp = invokeResult.GetType().GetProperty("Handle");
                         if (handleProp != null)
                         {
-                            return (IntPtr)handleProp.GetValue(result);
+                            return (IntPtr)handleProp.GetValue(invokeResult);
                         }
                     }
                 }
 
                 // Fallback: Direct DirectX 9 creation
-                IntPtr device = GetDirectX9Device();
+                IntPtr device = _d3dDevice;
                 if (device == IntPtr.Zero)
                 {
                     return IntPtr.Zero;

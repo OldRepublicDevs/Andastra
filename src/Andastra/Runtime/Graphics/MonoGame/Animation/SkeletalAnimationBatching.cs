@@ -3,15 +3,16 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Andastra.Runtime.MonoGame.Rendering;
+using Andastra.Runtime.MonoGame.Graphics;
 
 namespace Andastra.Runtime.MonoGame.Animation
 {
     /// <summary>
     /// Skeletal animation batching for efficient character rendering.
-    /// 
+    ///
     /// Batches multiple animated characters with different bone matrices
     /// into efficient GPU instanced draws, reducing draw calls for crowds.
-    /// 
+    ///
     /// Features:
     /// - Bone matrix batching
     /// - Per-instance animation state
@@ -43,7 +44,7 @@ namespace Andastra.Runtime.MonoGame.Animation
 
         private readonly GraphicsDevice _graphicsDevice;
         private readonly Dictionary<uint, AnimatedInstance> _instances;
-        private GraphicsBuffer _boneMatrixBuffer;
+        private MonoGameGraphicsBuffer _boneMatrixBuffer;
         private int _maxBonesPerCharacter;
         private int _maxCharacters;
 
