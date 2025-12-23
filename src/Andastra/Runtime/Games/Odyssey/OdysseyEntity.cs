@@ -245,15 +245,15 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <remarks>
         /// Creatures have stats, inventory, combat capabilities, etc.
         /// Based on creature component structure in swkotor.exe and swkotor2.exe.
-        /// 
+        ///
         /// Component attachment pattern:
         /// - Based on swkotor.exe and swkotor2.exe: Creature components are attached during entity creation from UTC templates
         /// - ComponentInitializer also handles this, but we ensure it's attached here for consistency
-        /// - Component provides: Stats (HP, abilities, skills, saves), Inventory (equipped items and inventory bag), 
+        /// - Component provides: Stats (HP, abilities, skills, saves), Inventory (equipped items and inventory bag),
         ///   Faction (hostility relationships), QuickSlots (quick-use items/abilities), Creature (appearance, classes, feats, force powers)
         /// - Odyssey-specific: Uses CreatureComponent, StatsComponent, InventoryComponent, QuickSlotComponent, OdysseyFactionComponent
         /// - Component initialization: Properties loaded from entity template files (UTC) and can be modified at runtime
-        /// 
+        ///
         /// Based on reverse engineering of:
         /// - swkotor.exe: Creature initialization (FUN_004af630 @ 0x004af630 handles creature events)
         /// - swkotor2.exe: FUN_005261b0 @ 0x005261b0 loads creature from UTC template
@@ -264,7 +264,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// - Located via string references: "Creature List" @ 0x007bd01c (swkotor2.exe), "CreatureList" @ 0x007c0c80 (swkotor2.exe)
         /// - Component attachment: Components are attached during entity creation from GIT instances and UTC templates
         /// - ComponentInitializer @ Odyssey/Systems/ComponentInitializer.cs attaches these components
-        /// 
+        ///
         /// Cross-engine analysis:
         /// - Odyssey (swkotor.exe, swkotor2.exe): Uses CreatureComponent, StatsComponent, InventoryComponent, QuickSlotComponent, OdysseyFactionComponent
         /// - Aurora (nwmain.exe, nwn2main.exe): Similar component structure with AuroraCreatureComponent, StatsComponent, InventoryComponent, AuroraFactionComponent
@@ -379,7 +379,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// - Lock system: KeyRequired flag, KeyName tag, LockDC difficulty class (checked via Security skill)
         /// - Use distance: ~2.0 units (InteractRange), checked before OnUsed script fires
         /// - Odyssey-specific: Fort/Will/Ref saves, BodyBag, Plot flag, FactionId, AppearanceType, trap system
-        /// 
+        ///
         /// Component attachment pattern:
         /// - Based on swkotor2.exe: Placeable components are attached during entity creation from GIT templates
         /// - ComponentInitializer also handles this, but we ensure it's attached here for consistency
@@ -495,7 +495,7 @@ namespace Andastra.Runtime.Games.Odyssey
             {
                 var soundComponent = new Components.SoundComponent();
                 soundComponent.Owner = this;
-                
+
                 // Initialize sound component properties from entity data if available (loaded from GIT)
                 // Based on EntityFactory.CreateSoundFromGit: Sound properties are stored in entity data
                 if (GetData("Active") is bool active)
@@ -542,7 +542,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 {
                     soundComponent.SoundFiles = sounds;
                 }
-                
+
                 AddComponent<ISoundComponent>(soundComponent);
             }
         }
@@ -554,7 +554,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Updates all attached components.
         /// Processes any pending script events.
         /// Handles component interactions.
-        /// 
+        ///
         /// Based on swkotor2.exe: Entity update loop processes components in dependency order.
         /// Component update order:
         /// 1. TransformComponent (position, orientation updates)
@@ -562,7 +562,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// 3. StatsComponent (HP regeneration, stat updates)
         /// 4. PerceptionComponent (perception checks, uses transform position)
         /// 5. Other components (in arbitrary order)
-        /// 
+        ///
         /// Component interactions:
         /// - Transform changes trigger perception updates
         /// - HP changes trigger death state updates
@@ -607,9 +607,9 @@ namespace Andastra.Runtime.Games.Odyssey
             foreach (var component in GetAllComponents())
             {
                 // Skip already-updated components
-                if (component == transformComponent || 
-                    component == actionQueueComponent || 
-                    component == statsComponent || 
+                if (component == transformComponent ||
+                    component == actionQueueComponent ||
+                    component == statsComponent ||
                     component == perceptionComponent)
                 {
                     continue;
@@ -636,22 +636,22 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Removes from world and area systems.
         /// Cleans up all components and resources.
         /// Marks entity as invalid.
-        /// 
+        ///
         /// Entity Destruction Sequence (Odyssey):
         /// 1. Mark entity as invalid (prevents further use)
         /// 2. Remove from area collections (if area is available)
         /// 3. Unregister from world collections (ObjectId, Tag, ObjectType indices)
         /// 4. Dispose all components that implement IDisposable
         /// 5. Clear all component references
-        /// 
+        ///
         /// Based on swkotor2.exe: Entity destruction pattern
         /// - Located via string references: "EVENT_DESTROY_OBJECT" @ 0x00744b10 (destroy object event)
         /// - Original implementation: Entities are removed from all lookup indices when destroyed
         /// - World maintains indices: ObjectId dictionary, Tag dictionary, ObjectType dictionary, AllEntities list
         /// - Areas maintain indices: Type-specific lists (Creatures, Placeables, Doors, etc.), Tag dictionary
         /// - Entity cleanup: Components are disposed, resources freed, entity marked invalid
-        /// 
-        /// Note: World.DestroyEntity calls UnregisterEntity before calling entity.Destroy(), 
+        ///
+        /// Note: World.DestroyEntity calls UnregisterEntity before calling entity.Destroy(),
         /// but this method handles unregistration directly for safety and completeness.
         /// </remarks>
         public override void Destroy()
@@ -1106,18 +1106,20 @@ namespace Andastra.Runtime.Games.Odyssey
 
             // Deserialize Transform component
             // Based on swkotor2.exe: Position stored as X, Y, Z in GFF
+            // Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 loads entity data from GFF
+            // Transform component is always present on all entities (created in Initialize() or AttachCommonComponents())
+            // If missing (edge case during deserialization), create it to match original engine behavior
             if (root.Exists("X") && root.Exists("Y") && root.Exists("Z"))
             {
                 var transformComponent = GetComponent<ITransformComponent>();
                 if (transformComponent == null)
                 {
-                    // Transform component should already exist from Initialize(), but ensure it's present
-                    transformComponent = GetComponent<ITransformComponent>();
-                    if (transformComponent == null)
-                    {
-                        // TODO:  Use reflection or create via factory - for now, assume it exists from Initialize()
-                        throw new InvalidOperationException("Transform component not found and cannot be created automatically");
-                    }
+                    // Transform component should already exist from Initialize(), but create it if missing
+                    // Based on swkotor2.exe: All entities have transform data, so component must exist
+                    // Component creation pattern matches AttachCommonComponents() and ComponentInitializer.InitializeComponents()
+                    // Located via string references: "XPosition" @ 0x007bd000, "YPosition" @ 0x007bcff4, "ZPosition" @ 0x007bcfe8 (swkotor2.exe)
+                    transformComponent = new TransformComponent();
+                    AddComponent<ITransformComponent>(transformComponent);
                 }
 
                 float x = root.GetSingle("X");
