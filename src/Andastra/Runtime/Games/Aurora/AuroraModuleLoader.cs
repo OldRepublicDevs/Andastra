@@ -2065,13 +2065,21 @@ namespace Andastra.Runtime.Games.Aurora
                     }
                 }
 
-                // Note: Additional properties from GIT (StoreGold, IdentifyPrice, MaxBuyPrice, BlackMarket, BM_MarkDown, WillNotBuy, WillOnlyBuy)
-                // are not in the UTM format for Odyssey, but may be in Aurora UTM format or loaded from GIT store struct
-                // TODO: STUB - For now, we set defaults matching nwmain.exe behavior:
-                // - StoreGold: -1 (unlimited, default from nwmain.exe line 63)
-                // - IdentifyPrice: 100 (default from nwmain.exe line 65)
-                // - MaxBuyPrice: -1 (no limit, default from nwmain.exe line 67)
-                // These can be overridden if Aurora UTM format includes them or if loaded from GIT store struct
+                // Load store properties from UTM template
+                // Based on nwmain.exe: CNWSStore::LoadStore @ 0x1404fbbf0
+                // - Line 63: StoreGold = ReadFieldINT("StoreGold", -1) - default -1 (unlimited)
+                storeComponent.Gold = utm.StoreGold;
+                // - Line 65: IdentifyPrice = ReadFieldINT("IdentifyPrice", 100) - default 100
+                // Based on Bioware Aurora Store Format: IdentifyPrice -1 = store will not identify items, 0+ = price to identify
+                storeComponent.IdentifyPrice = utm.IdentifyPrice;
+                storeComponent.CanIdentify = utm.IdentifyPrice >= 0;
+                // - Line 67: MaxBuyPrice = ReadFieldINT("MaxBuyPrice", -1) - default -1 (no limit)
+                storeComponent.MaxBuyPrice = utm.MaxBuyPrice;
+
+                // Note: Additional properties from GIT (BlackMarket, BM_MarkDown, WillNotBuy, WillOnlyBuy)
+                // may be loaded from GIT store struct in the future to override UTM defaults
+                // For now, these are loaded from UTM only (BlackMarket and BM_MarkDown are not in Odyssey UTM format)
+                // WillNotBuy and WillOnlyBuy are item type restrictions that would need to be loaded separately
             }
             catch
             {
