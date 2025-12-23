@@ -31,6 +31,7 @@ using Andastra.Runtime.Games.Eclipse.Physics;
 using Andastra.Runtime.MonoGame.Enums;
 // Type aliases to resolve ambiguity between XNA and System.Numerics types
 using XnaMatrix = Microsoft.Xna.Framework.Matrix;
+using GraphicsVector2 = Andastra.Runtime.Graphics.Vector2;
 using Andastra.Runtime.MonoGame.Interfaces;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.MonoGame.Converters;
@@ -77,7 +78,7 @@ namespace Andastra.Runtime.Games.Eclipse
     /// - Destructible environments and interactive objects
     /// </remarks>
     [PublicAPI]
-    public class EclipseArea : BaseArea
+    public class EclipseArea : BaseArea, IDialogueHistoryArea
     {
         private readonly List<IEntity> _creatures = new List<IEntity>();
         private readonly List<IEntity> _placeables = new List<IEntity>();
@@ -129,36 +130,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
         // Dialogue history (Eclipse-specific)
         // Based on daorigins.exe: Dialogue history is stored in area state for persistence
-        private readonly List<DialogueHistoryEntry> _dialogueHistory = new List<DialogueHistoryEntry>();
-
-        /// <summary>
-        /// Represents a single entry in the dialogue history.
-        /// Based on daorigins.exe: Dialogue history entries contain speaker and message data.
-        /// </summary>
-        public class DialogueHistoryEntry
-        {
-            /// <summary>
-            /// The name of the entity who spoke this line.
-            /// </summary>
-            public string SpeakerName { get; set; }
-
-            /// <summary>
-            /// The dialogue text that was spoken.
-            /// </summary>
-            public string MessageText { get; set; }
-
-            /// <summary>
-            /// Timestamp when this dialogue occurred (for ordering).
-            /// </summary>
-            public float Timestamp { get; set; }
-
-            public DialogueHistoryEntry(string speakerName, string messageText, float timestamp)
-            {
-                SpeakerName = speakerName ?? string.Empty;
-                MessageText = messageText ?? string.Empty;
-                Timestamp = timestamp;
-            }
-        }
+        private readonly List<Andastra.Runtime.Core.Interfaces.DialogueHistoryEntry> _dialogueHistory = new List<Andastra.Runtime.Core.Interfaces.DialogueHistoryEntry>();
 
         // Shader cache for post-processing effects (lazy-initialized)
         private ShaderCache _shaderCache;
@@ -230,7 +202,7 @@ namespace Andastra.Runtime.Games.Eclipse
         {
             public Vector3 Position;
             public Graphics.Color Color;
-            public Vector2 TextureCoordinate;
+            public GraphicsVector2 TextureCoordinate;
         }
 
         /// <summary>
@@ -7792,25 +7764,25 @@ namespace Andastra.Runtime.Games.Eclipse
                     {
                         Position = corner0,
                         Color = particleColor,
-                        TextureCoordinate = new Vector2(0.0f, 1.0f) // Bottom-left
+                        TextureCoordinate = new GraphicsVector2(0.0f, 1.0f) // Bottom-left
                     };
                     vertices[vertexIndex + 1] = new ParticleVertexData
                     {
                         Position = corner1,
                         Color = particleColor,
-                        TextureCoordinate = new Vector2(1.0f, 1.0f) // Bottom-right
+                        TextureCoordinate = new GraphicsVector2(1.0f, 1.0f) // Bottom-right
                     };
                     vertices[vertexIndex + 2] = new ParticleVertexData
                     {
                         Position = corner2,
                         Color = particleColor,
-                        TextureCoordinate = new Vector2(1.0f, 0.0f) // Top-right
+                        TextureCoordinate = new GraphicsVector2(1.0f, 0.0f) // Top-right
                     };
                     vertices[vertexIndex + 3] = new ParticleVertexData
                     {
                         Position = corner3,
                         Color = particleColor,
-                        TextureCoordinate = new Vector2(0.0f, 0.0f) // Top-left
+                        TextureCoordinate = new GraphicsVector2(0.0f, 0.0f) // Top-left
                     };
 
                     // Create quad indices (2 triangles: 0-1-2 and 2-3-0)
@@ -9898,7 +9870,7 @@ technique ColorGrading
                 return;
             }
 
-            _dialogueHistory.Add(new DialogueHistoryEntry(speakerName, messageText, timestamp));
+            _dialogueHistory.Add(new Andastra.Runtime.Core.Interfaces.DialogueHistoryEntry(speakerName, messageText, timestamp));
         }
 
         /// <summary>
@@ -9912,7 +9884,7 @@ technique ColorGrading
         /// - Used by dialogue rendering system to display history panel
         /// - History entries contain speaker names and message text
         /// </remarks>
-        public IReadOnlyList<DialogueHistoryEntry> GetDialogueHistory()
+        public IReadOnlyList<Andastra.Runtime.Core.Interfaces.DialogueHistoryEntry> GetDialogueHistory()
         {
             // Sort by timestamp to ensure chronological order
             return _dialogueHistory.OrderBy(entry => entry.Timestamp).ToList();
