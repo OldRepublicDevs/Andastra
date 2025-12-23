@@ -1,13 +1,13 @@
 namespace Andastra.Parsing.Common
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/misc.py:250-285
-    // Original: class Game(IntEnum):
+    // Original: class BioWareGame(IntEnum):
     // Extended to support all BioWare engine games: Odyssey (KOTOR), Aurora (NWN), Eclipse (DA/ME), Infinity (BG/IWD/PST)
     // This enum is kept in Andastra.Parsing for backward compatibility with patcher tools (HoloPatcher.NET, HolocronToolset, NCSDecomp, KotorDiff)
     /// <summary>
-    /// Represents which BioWare engine game / platform variant.
+    /// Represents which BioWare engine BioWareGame / platform variant.
     /// </summary>
-    public enum Game
+    public enum BioWareGame
     {
         // Odyssey Engine
         K1 = 1,
@@ -47,136 +47,136 @@ namespace Andastra.Parsing.Common
 
     public static class GameExtensions
     {
-        public static bool IsK1(this Game game)
+        public static bool IsK1(this BioWareGame BioWareGame)
         {
-            return ((int)game) % 2 != 0 && game >= Game.K1 && game <= Game.K2_ANDROID;
+            return ((int)BioWareGame) % 2 != 0 && BioWareGame >= BioWareGame.K1 && BioWareGame <= BioWareGame.K2_ANDROID;
         }
 
-        public static bool IsK2(this Game game)
+        public static bool IsK2(this BioWareGame BioWareGame)
         {
-            return ((int)game) % 2 == 0 && game >= Game.K1 && game <= Game.K2_ANDROID;
+            return ((int)BioWareGame) % 2 == 0 && BioWareGame >= BioWareGame.K1 && BioWareGame <= BioWareGame.K2_ANDROID;
         }
 
-        public static bool IsTSL(this Game game)
+        public static bool IsTSL(this BioWareGame BioWareGame)
         {
-            return game == Game.K2;
+            return BioWareGame == BioWareGame.K2;
         }
 
-        public static bool IsXbox(this Game game)
+        public static bool IsXbox(this BioWareGame BioWareGame)
         {
-            return game == Game.K1_XBOX || game == Game.K2_XBOX;
+            return BioWareGame == BioWareGame.K1_XBOX || BioWareGame == BioWareGame.K2_XBOX;
         }
 
-        public static bool IsPc(this Game game)
+        public static bool IsPc(this BioWareGame BioWareGame)
         {
-            return game == Game.K1 || game == Game.K2;
+            return BioWareGame == BioWareGame.K1 || BioWareGame == BioWareGame.K2;
         }
 
-        public static bool IsMobile(this Game game)
+        public static bool IsMobile(this BioWareGame BioWareGame)
         {
-            return game == Game.K1_IOS || game == Game.K2_IOS || game == Game.K1_ANDROID || game == Game.K2_ANDROID;
+            return BioWareGame == BioWareGame.K1_IOS || BioWareGame == BioWareGame.K2_IOS || BioWareGame == BioWareGame.K1_ANDROID || BioWareGame == BioWareGame.K2_ANDROID;
         }
 
-        public static bool IsAndroid(this Game game)
+        public static bool IsAndroid(this BioWareGame BioWareGame)
         {
-            return game == Game.K1_ANDROID || game == Game.K2_ANDROID;
+            return BioWareGame == BioWareGame.K1_ANDROID || BioWareGame == BioWareGame.K2_ANDROID;
         }
 
-        public static bool IsIOS(this Game game)
+        public static bool IsIOS(this BioWareGame BioWareGame)
         {
-            return game == Game.K1_IOS || game == Game.K2_IOS;
+            return BioWareGame == BioWareGame.K1_IOS || BioWareGame == BioWareGame.K2_IOS;
         }
 
         // Eclipse Engine
-        public static bool IsDragonAge(this Game game)
+        public static bool IsDragonAge(this BioWareGame BioWareGame)
         {
-            return game == Game.DA || game == Game.DA_ORIGINS || game == Game.DA2 || game == Game.DRAGON_AGE_2;
+            return BioWareGame == BioWareGame.DA || BioWareGame == BioWareGame.DA_ORIGINS || BioWareGame == BioWareGame.DA2 || BioWareGame == BioWareGame.DRAGON_AGE_2;
         }
 
-        public static bool IsDragonAgeOrigins(this Game game)
+        public static bool IsDragonAgeOrigins(this BioWareGame BioWareGame)
         {
-            return game == Game.DA || game == Game.DA_ORIGINS;
+            return BioWareGame == BioWareGame.DA || BioWareGame == BioWareGame.DA_ORIGINS;
         }
 
-        public static bool IsDragonAge2(this Game game)
+        public static bool IsDragonAge2(this BioWareGame BioWareGame)
         {
-            return game == Game.DA2 || game == Game.DRAGON_AGE_2;
+            return BioWareGame == BioWareGame.DA2 || BioWareGame == BioWareGame.DRAGON_AGE_2;
         }
 
         // Aurora Engine
-        public static bool IsNeverwinterNights(this Game game)
+        public static bool IsNeverwinterNights(this BioWareGame BioWareGame)
         {
-            return game == Game.NWN || game == Game.NEVERWINTER_NIGHTS ||
-                   game == Game.NWN2 || game == Game.NEVERWINTER_NIGHTS_2;
+            return BioWareGame == BioWareGame.NWN || BioWareGame == BioWareGame.NEVERWINTER_NIGHTS ||
+                   BioWareGame == BioWareGame.NWN2 || BioWareGame == BioWareGame.NEVERWINTER_NIGHTS_2;
         }
 
-        public static bool IsNWN1(this Game game)
+        public static bool IsNWN1(this BioWareGame BioWareGame)
         {
-            return game == Game.NWN || game == Game.NEVERWINTER_NIGHTS;
+            return BioWareGame == BioWareGame.NWN || BioWareGame == BioWareGame.NEVERWINTER_NIGHTS;
         }
 
-        public static bool IsNWN2(this Game game)
+        public static bool IsNWN2(this BioWareGame BioWareGame)
         {
-            return game == Game.NWN2 || game == Game.NEVERWINTER_NIGHTS_2;
+            return BioWareGame == BioWareGame.NWN2 || BioWareGame == BioWareGame.NEVERWINTER_NIGHTS_2;
         }
 
         // Engine family checks
-        public static bool IsOdyssey(this Game game)
+        public static bool IsOdyssey(this BioWareGame BioWareGame)
         {
-            return game >= Game.K1 && game <= Game.K2_ANDROID;
+            return BioWareGame >= BioWareGame.K1 && BioWareGame <= BioWareGame.K2_ANDROID;
         }
 
-        public static bool IsEclipse(this Game game)
+        public static bool IsEclipse(this BioWareGame BioWareGame)
         {
-            return IsDragonAge(game);
+            return IsDragonAge(BioWareGame);
         }
 
-        public static bool IsAurora(this Game game)
+        public static bool IsAurora(this BioWareGame BioWareGame)
         {
-            return IsNeverwinterNights(game);
+            return IsNeverwinterNights(BioWareGame);
         }
 
         // Infinity Engine
-        public static bool IsBaldursGate(this Game game)
+        public static bool IsBaldursGate(this BioWareGame BioWareGame)
         {
-            return game == Game.BG1 || game == Game.BALDURS_GATE ||
-                   game == Game.BG2 || game == Game.BALDURS_GATE_2;
+            return BioWareGame == BioWareGame.BG1 || BioWareGame == BioWareGame.BALDURS_GATE ||
+                   BioWareGame == BioWareGame.BG2 || BioWareGame == BioWareGame.BALDURS_GATE_2;
         }
 
-        public static bool IsBaldursGate1(this Game game)
+        public static bool IsBaldursGate1(this BioWareGame BioWareGame)
         {
-            return game == Game.BG1 || game == Game.BALDURS_GATE;
+            return BioWareGame == BioWareGame.BG1 || BioWareGame == BioWareGame.BALDURS_GATE;
         }
 
-        public static bool IsBaldursGate2(this Game game)
+        public static bool IsBaldursGate2(this BioWareGame BioWareGame)
         {
-            return game == Game.BG2 || game == Game.BALDURS_GATE_2;
+            return BioWareGame == BioWareGame.BG2 || BioWareGame == BioWareGame.BALDURS_GATE_2;
         }
 
-        public static bool IsIcewindDale(this Game game)
+        public static bool IsIcewindDale(this BioWareGame BioWareGame)
         {
-            return game == Game.IWD || game == Game.ICEWIND_DALE ||
-                   game == Game.IWD2 || game == Game.ICEWIND_DALE_2;
+            return BioWareGame == BioWareGame.IWD || BioWareGame == BioWareGame.ICEWIND_DALE ||
+                   BioWareGame == BioWareGame.IWD2 || BioWareGame == BioWareGame.ICEWIND_DALE_2;
         }
 
-        public static bool IsIcewindDale1(this Game game)
+        public static bool IsIcewindDale1(this BioWareGame BioWareGame)
         {
-            return game == Game.IWD || game == Game.ICEWIND_DALE;
+            return BioWareGame == BioWareGame.IWD || BioWareGame == BioWareGame.ICEWIND_DALE;
         }
 
-        public static bool IsIcewindDale2(this Game game)
+        public static bool IsIcewindDale2(this BioWareGame BioWareGame)
         {
-            return game == Game.IWD2 || game == Game.ICEWIND_DALE_2;
+            return BioWareGame == BioWareGame.IWD2 || BioWareGame == BioWareGame.ICEWIND_DALE_2;
         }
 
-        public static bool IsPlanescapeTorment(this Game game)
+        public static bool IsPlanescapeTorment(this BioWareGame BioWareGame)
         {
-            return game == Game.PST || game == Game.PLANESCAPE_TORMENT;
+            return BioWareGame == BioWareGame.PST || BioWareGame == BioWareGame.PLANESCAPE_TORMENT;
         }
 
-        public static bool IsInfinity(this Game game)
+        public static bool IsInfinity(this BioWareGame BioWareGame)
         {
-            return game >= Game.BG1 && game <= Game.PLANESCAPE_TORMENT;
+            return BioWareGame >= BioWareGame.BG1 && BioWareGame <= BioWareGame.PLANESCAPE_TORMENT;
         }
     }
 }
