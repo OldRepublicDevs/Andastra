@@ -180,6 +180,37 @@ namespace Andastra.Runtime.Games.Eclipse
         // When geometry is modified (destroyed/deformed), collision shapes are rebuilt from this cached data
         private readonly Dictionary<string, CachedMeshGeometry> _cachedMeshGeometry = new Dictionary<string, CachedMeshGeometry>(StringComparer.OrdinalIgnoreCase);
 
+        /// <summary>
+        /// Cached mesh geometry data for collision shape updates.
+        /// </summary>
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Original geometry data is cached for physics collision shape generation.
+        /// </remarks>
+        private class CachedMeshGeometry
+        {
+            /// <summary>
+            /// Mesh identifier (model name/resref).
+            /// </summary>
+            public string MeshId { get; set; }
+
+            /// <summary>
+            /// Cached vertex positions (world space).
+            /// </summary>
+            public List<Vector3> Vertices { get; set; }
+
+            /// <summary>
+            /// Cached triangle indices (3 indices per triangle).
+            /// </summary>
+            public List<int> Indices { get; set; }
+
+            public CachedMeshGeometry()
+            {
+                MeshId = string.Empty;
+                Vertices = new List<Vector3>();
+                Indices = new List<int>();
+            }
+        }
+
         // Cached debris mesh data (generated from destroyed faces)
         // Based on daorigins.exe/DragonAge2.exe: Debris meshes are cached to avoid regenerating every frame
         // Key: Debris piece identifier (meshId + face indices hash), Value: Generated mesh data
@@ -10967,36 +10998,6 @@ technique ColorGrading
         }
 
         /// <summary>
-        /// Cached mesh geometry data for collision shape updates.
-        /// </summary>
-        /// <remarks>
-        /// Based on daorigins.exe/DragonAge2.exe: Original geometry data is cached for physics collision shape generation.
-        /// </remarks>
-        private class CachedMeshGeometry
-        {
-            /// <summary>
-            /// Mesh identifier (model name/resref).
-            /// </summary>
-            public string MeshId { get; set; }
-
-            /// <summary>
-            /// Cached vertex positions (world space).
-            /// </summary>
-            public List<Vector3> Vertices { get; set; }
-
-            /// <summary>
-            /// Cached triangle indices (3 indices per triangle).
-            /// </summary>
-            public List<int> Indices { get; set; }
-
-            public CachedMeshGeometry()
-            {
-                MeshId = string.Empty;
-                Vertices = new List<Vector3>();
-                Indices = new List<int>();
-            }
-        }
-
         /// <summary>
         /// Modifying geometry requires navigation mesh updates if walkable areas are affected.
         /// </summary>
