@@ -490,11 +490,11 @@ namespace Andastra.Tests.Runtime.TestHelpers
         /// - Returns null if initialization fails (allows tests to skip gracefully)
         /// - Caller is responsible for disposing the Game instance
         /// </remarks>
-        public static Stride.Engine.Game CreateTestStrideGame()
+        public static global::Stride.Engine.Game CreateTestStrideGame()
         {
             try
             {
-                var game = new Stride.Engine.Game();
+                var game = new global::Stride.Engine.Game();
                 game.Window.ClientSize = new Int2(1280, 720);
                 game.Window.Title = "Stride Test";
                 game.Window.IsFullscreen = false;
@@ -524,7 +524,7 @@ namespace Andastra.Tests.Runtime.TestHelpers
         /// - Disposes the Game instance which will clean up all graphics resources
         /// - Handles disposal errors gracefully for test robustness
         /// </remarks>
-        public static void CleanupTestStrideGame(Stride.Engine.Game game)
+        public static void CleanupTestStrideGame(global::Stride.Engine.Game game)
         {
             if (game != null)
             {
