@@ -75,14 +75,11 @@ namespace Andastra.Runtime.Game.Core
             // Create NCS VM for script execution
             _vm = new NcsVm();
 
-            // Create script globals
-            // TODO: STUB - Script globals factory should be created based on game type
-            // Full implementation would require:
-            // 1. K1ScriptGlobals for KOTOR 1
-            // 2. K2ScriptGlobals for KOTOR 2
-            // 3. Factory pattern to create appropriate globals based on GameSettings.Game
-            // For now, we'll use a placeholder - this needs to be implemented properly
-            _globals = CreateScriptGlobals(_settings.Game);
+            // Create script globals using factory pattern based on game type
+            // Based on swkotor.exe and swkotor2.exe: Script globals system initializes global variables
+            // Original implementation: Global variables initialized at game start based on game type
+            // Factory pattern ensures correct globals instance is created (K1ScriptGlobals for K1, K2ScriptGlobals for K2)
+            _globals = ScriptGlobalsFactory.Create(_settings.Game);
 
             // Create game session with all required dependencies
             _gameSession = new GameSession(_settings, _world, _vm, _globals);
@@ -101,25 +98,6 @@ namespace Andastra.Runtime.Game.Core
             _initialized = true;
         }
 
-        /// <summary>
-        /// Creates script globals for the specified game type.
-        /// </summary>
-        /// <param name="game">The KOTOR game type (K1 or K2).</param>
-        /// <returns>Script globals instance.</returns>
-        /// <remarks>
-        /// Script Globals Creation:
-        /// - Based on swkotor2.exe: Script globals system initializes global variables
-        /// - Original implementation: Global variables persist across saves, initialized at game start
-        /// - ScriptGlobals class provides implementation of IScriptGlobals interface
-        /// - Game-specific initialization (K1 vs K2) can be added here if needed
-        /// </remarks>
-        private IScriptGlobals CreateScriptGlobals(KotorGame game)
-        {
-            // Create script globals instance
-            // ScriptGlobals is a concrete implementation that works for both K1 and K2
-            // Game-specific global variable initialization can be added here if needed
-            return new ScriptGlobals();
-        }
 
         /// <summary>
         /// Runs the game loop (blocks until game exits).
