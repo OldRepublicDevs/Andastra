@@ -244,7 +244,10 @@ namespace Andastra.Runtime.Stride.Backends
 
         protected override void OnSetViewport(int x, int y, int w, int h, float minD, float maxD)
         {
-            _commandList?.SetViewport(new Viewport(x, y, w, h, minD, maxD));
+            var viewport = new Viewport(x, y, w, h);
+            viewport.MinDepth = minD;
+            viewport.MaxDepth = maxD;
+            _commandList?.SetViewport(viewport);
         }
 
         protected override void OnSetPrimitiveTopology(PrimitiveTopology topology)
@@ -1657,13 +1660,13 @@ namespace Andastra.Runtime.Stride.Backends
                 // -Fo: Output file
                 StringBuilder arguments = new StringBuilder();
                 arguments.Append("-link ");
-                
+
                 // Add all input files
                 foreach (string inputFile in tempInputFiles)
                 {
                     arguments.AppendFormat("\"{0}\" ", inputFile);
                 }
-                
+
                 arguments.AppendFormat("-Fo \"{0}\"", tempOutputFile);
 
                 ProcessStartInfo startInfo = new ProcessStartInfo
