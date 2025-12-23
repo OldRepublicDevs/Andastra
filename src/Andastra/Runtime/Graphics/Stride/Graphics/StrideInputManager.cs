@@ -1,7 +1,5 @@
 using Stride.Input;
-using Stride.Core.Mathematics;
 using Andastra.Runtime.Graphics;
-using System.Numerics;
 using GraphicsKeys = Andastra.Runtime.Graphics.Keys;
 using GraphicsVector2 = Andastra.Runtime.Graphics.Vector2;
 
@@ -66,7 +64,8 @@ namespace Andastra.Runtime.Stride.Graphics
         public bool IsKeyUp(GraphicsKeys key)
         {
             var strideKey = ConvertKey(key);
-            return _inputManager.IsKeyUp(strideKey);
+            // Stride InputManager doesn't have IsKeyUp, use !IsKeyDown instead
+            return !_inputManager.IsKeyDown(strideKey);
         }
 
         public GraphicsKeys[] GetPressedKeys()
