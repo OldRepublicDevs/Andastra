@@ -25,7 +25,7 @@ namespace Andastra.Runtime.Stride.Upscaling
     public class StrideFsrSystem : BaseFsrSystem
     {
         private GraphicsDevice _graphicsDevice;
-        private GraphicsContext _graphicsContext;
+        private CommandList _graphicsContext;
         private IntPtr _fsrContext;
         private Texture _outputTexture;
 
@@ -82,7 +82,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         public override int FsrVersion => 2; // FSR 2.x
         public override bool FrameGenerationAvailable => CheckFrameGenerationSupport();
 
-        public StrideFsrSystem(GraphicsDevice graphicsDevice, GraphicsContext graphicsContext = null)
+        public StrideFsrSystem(GraphicsDevice graphicsDevice, CommandList graphicsContext = null)
         {
             _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
             _graphicsContext = graphicsContext;
@@ -97,7 +97,7 @@ namespace Andastra.Runtime.Stride.Upscaling
             return null;
         }
 
-        private GraphicsContext GetGraphicsContext()
+        private CommandList GetGraphicsContext()
         {
             return _graphicsContext;
         }
@@ -433,7 +433,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// <summary>
         /// Executes FSR Lock pass: Detects disocclusions and areas needing special handling.
         /// </summary>
-        private void ExecuteFsrLockPass(GraphicsContext graphicsContext, Texture input, Texture depth,
+        private void ExecuteFsrLockPass(CommandList graphicsContext, Texture input, Texture depth,
             Texture motionVectors, Texture lockOutput)
         {
             if (_fsrTemporalEffect == null || graphicsContext == null) return;
@@ -462,7 +462,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// <summary>
         /// Executes FSR Depth Clip pass: Clips depth values for better temporal stability.
         /// </summary>
-        private void ExecuteFsrDepthClipPass(GraphicsContext graphicsContext, Texture depth, Texture lockTexture)
+        private void ExecuteFsrDepthClipPass(CommandList graphicsContext, Texture depth, Texture lockTexture)
         {
             if (_fsrTemporalEffect == null || depth == null || graphicsContext == null) return;
 
@@ -488,7 +488,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// <summary>
         /// Executes FSR Reactive Mask pass: Processes reactivity mask.
         /// </summary>
-        private void ExecuteFsrReactiveMaskPass(GraphicsContext graphicsContext, Texture reactivityMask, Texture lockTexture)
+        private void ExecuteFsrReactiveMaskPass(CommandList graphicsContext, Texture reactivityMask, Texture lockTexture)
         {
             if (_fsrTemporalEffect == null || reactivityMask == null || graphicsContext == null) return;
 
@@ -514,7 +514,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// <summary>
         /// Executes FSR Temporal accumulation pass: Main upscaling pass using temporal data.
         /// </summary>
-        private void ExecuteFsrTemporalPass(GraphicsContext graphicsContext, Texture input, Texture motionVectors,
+        private void ExecuteFsrTemporalPass(CommandList graphicsContext, Texture input, Texture motionVectors,
             Texture depth, Texture lockTexture, Texture reactivityMask, Texture historyTexture, Texture output)
         {
             if (_fsrTemporalEffect == null || graphicsContext == null) return;
@@ -548,7 +548,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// <summary>
         /// Executes FSR EASU pass: Edge-adaptive spatial upsampling (FSR 1.0).
         /// </summary>
-        private void ExecuteFsrEasuPass(GraphicsContext graphicsContext, Texture input, Texture output)
+        private void ExecuteFsrEasuPass(CommandList graphicsContext, Texture input, Texture output)
         {
             if (_fsrEasuEffect == null || graphicsContext == null) return;
 
@@ -573,7 +573,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// <summary>
         /// Executes FSR RCAS pass: Robust contrast adaptive sharpening.
         /// </summary>
-        private void ExecuteFsrRcasPass(GraphicsContext graphicsContext, Texture input, Texture output)
+        private void ExecuteFsrRcasPass(CommandList graphicsContext, Texture input, Texture output)
         {
             if (_fsrRcasEffect == null || graphicsContext == null) return;
 
