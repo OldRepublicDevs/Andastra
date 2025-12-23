@@ -2,37 +2,126 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Andastra.Parsing.Formats.TXI;
+using Andastra.Parsing.Resource;
 
 namespace Andastra.Parsing.Formats.TPC
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/tpc_data.py:317-529
-    // TODO:  Simplified: core fields and equality for texture container
+    // swkotor.exe/swkotor2.exe: TPC texture container with full feature set
     public class TPC : IEquatable<TPC>
     {
+        public static readonly ResourceType BINARY_TYPE = ResourceType.TPC;
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/tpc_data.py:476-486
+        // Original: BLANK_LAYER = TPCLayer([...])
+        public static readonly TPCLayer BLANK_LAYER = new TPCLayer
+        {
+            Mipmaps = new List<TPCMipmap>
+            {
+                new TPCMipmap(256, 256, TPCTextureFormat.RGBA, new byte[256 * 256 * 4]),
+                new TPCMipmap(128, 128, TPCTextureFormat.RGBA, new byte[128 * 128 * 4]),
+                new TPCMipmap(64, 64, TPCTextureFormat.RGBA, new byte[64 * 64 * 4]),
+                new TPCMipmap(32, 32, TPCTextureFormat.RGBA, new byte[32 * 32 * 4]),
+                new TPCMipmap(16, 16, TPCTextureFormat.RGBA, new byte[16 * 16 * 4]),
+                new TPCMipmap(8, 8, TPCTextureFormat.RGBA, new byte[8 * 8 * 4]),
+                new TPCMipmap(4, 4, TPCTextureFormat.RGBA, new byte[4 * 4 * 4]),
+                new TPCMipmap(2, 2, TPCTextureFormat.RGBA, new byte[2 * 2 * 4]),
+                new TPCMipmap(1, 1, TPCTextureFormat.RGBA, new byte[1 * 1 * 4])
+            }
+        };
+
         public float AlphaTest { get; set; }
         public bool IsCubeMap { get; set; }
         public bool IsAnimated { get; set; }
-        public string Txi { get; set; }
-        public TXI.TXI TxiObject { get; set; }
+        private TXI.TXI _txi;
         public List<TPCLayer> Layers { get; set; }
         internal TPCTextureFormat _format;
 
-        public TPC()
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/tpc_data.py:504-512
+        // Original: @property def txi(self) -> str: ... @txi.setter def txi(self, value: str): ...
+        public string Txi
         {
-            AlphaTest = 0.0f;
-            IsCubeMap = false;
-            IsAnimated = false;
-            Txi = string.Empty;
-            TxiObject = new TXI.TXI();
-            Layers = new List<TPCLayer>();
-            _format = TPCTextureFormat.Invalid;
+            get
+            {
+                return _txi != null ? _txi.ToString() : string.Empty;
+            }
+            set
+            {
+                if (_txi == null)
+                {
+                    _txi = new TXI.TXI();
+                }
+                if (!string.IsNullOrEmpty(value))
+                {
+                    _txi.Load(value);
+                }
+            }
         }
 
+        public TXI.TXI TxiObject
+        {
+            get
+            {
+                if (_txi == null)
+                {
+                    _txi = new TXI.TXI();
+                }
+                return _txi;
+            }
+            set
+            {
+                _txi = value ?? new TXI.TXI();
+            }
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/tpc_data.py:488-494
+        // Original: def __init__(self)
+        public TPC()
+        {
+            _txi = new TXI.TXI();
+            _format = TPCTextureFormat.Invalid;
+            Layers = new List<TPCLayer>();
+            IsAnimated = false;
+            IsCubeMap = false;
+            AlphaTest = 1.0f;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/tpc_data.py:496-502
+        // Original: @classmethod def from_blank(cls) -> Self
+        public static TPC FromBlank()
+        {
+            TPC instance = new TPC();
+            instance.Layers = new List<TPCLayer> { BLANK_LAYER };
+            instance._format = TPCTextureFormat.RGBA;
+            return instance;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/tpc_data.py:514-518
+        // Original: def format(self) -> TPCTextureFormat
         public TPCTextureFormat Format()
         {
             return _format;
         }
 
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/tpc_data.py:520-524
+        // Original: def is_compressed(self) -> bool
+        public bool IsCompressed()
+        {
+            return _format == TPCTextureFormat.DXT1 ||
+                   _format == TPCTextureFormat.DXT3 ||
+                   _format == TPCTextureFormat.DXT5;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/tpc_data.py:526-529
+        // Original: def mipmap_size(self, layer: int, mipmap: int) -> tuple[int, int]
+        public (int width, int height) MipmapSize(int layer, int mipmap)
+        {
+            TPCMipmap mm = Layers[layer].Mipmaps[mipmap];
+            return (mm.Width, mm.Height);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/tpc_data.py:531-537
+        // Original: def dimensions(self) -> tuple[int, int]
         public (int width, int height) Dimensions()
         {
             if (Layers.Count == 0 || Layers[0].Mipmaps.Count == 0)
@@ -40,6 +129,13 @@ namespace Andastra.Parsing.Formats.TPC
                 return (0, 0);
             }
             return (Layers[0].Mipmaps[0].Width, Layers[0].Mipmaps[0].Height);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/tpc_data.py:539-545
+        // Original: def get(self, layer: int = 0, mipmap: int = 0) -> TPCMipmap
+        public TPCMipmap Get(int layer = 0, int mipmap = 0)
+        {
+            return Layers[layer].Mipmaps[mipmap];
         }
 
         public override bool Equals(object obj)
@@ -1574,23 +1670,15 @@ namespace Andastra.Parsing.Formats.TPC
             }
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/tpc_data.py
-        // Original: def copy(self) -> TPC:
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/tpc_data.py:632-640
+        // Original: def copy(self) -> Self
         /// <summary>
         /// Creates a deep copy of this TPC texture.
         /// </summary>
         public TPC Copy()
         {
-            var copy = new TPC
-            {
-                AlphaTest = AlphaTest,
-                IsCubeMap = IsCubeMap,
-                IsAnimated = IsAnimated,
-                Txi = Txi,
-                TxiObject = TxiObject,
-                _format = _format
-            };
-
+            TPC instance = FromBlank();
+            instance.Layers.Clear();
             foreach (var layer in Layers)
             {
                 var layerCopy = new TPCLayer();
@@ -1604,11 +1692,509 @@ namespace Andastra.Parsing.Formats.TPC
                     );
                     layerCopy.Mipmaps.Add(mipmapCopy);
                 }
-                copy.Layers.Add(layerCopy);
+                instance.Layers.Add(layerCopy);
+            }
+            instance._format = _format;
+            instance.IsAnimated = IsAnimated;
+            instance.IsCubeMap = IsCubeMap;
+            instance._txi = _txi;
+            return instance;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/tpc_data.py:555-574
+        // Original: def rotate90(self, times: int) -> None
+        /// <summary>
+        /// Rotates all mipmaps in 90° steps, clockwise for positive times, counter-clockwise for negative times.
+        /// </summary>
+        /// <param name="times">Number of 90° rotations (positive for clockwise, negative for counter-clockwise).</param>
+        public void Rotate90(int times)
+        {
+            times = times % 4; // Normalize rotation to 0-3
+            if (times == 0)
+            {
+                return; // No rotation needed
             }
 
-            return copy;
+            foreach (var layer in Layers)
+            {
+                foreach (var mipmap in layer.Mipmaps)
+                {
+                    if (_format == TPCTextureFormat.DXT1)
+                    {
+                        mipmap.Data = RotateDxt1(mipmap.Data, mipmap.Width, mipmap.Height, times);
+                    }
+                    else if (_format == TPCTextureFormat.DXT5)
+                    {
+                        mipmap.Data = RotateDxt5(mipmap.Data, mipmap.Width, mipmap.Height, times);
+                    }
+                    else if (!_format.IsDxt())
+                    {
+                        mipmap.Data = RotateRgbRgba(mipmap.Data, mipmap.Width, mipmap.Height, _format.BytesPerPixel(), times);
+                    }
+                    else
+                    {
+                        throw new ArgumentException($"Unsupported format for rotation: {_format}");
+                    }
+
+                    // Swap width and height for 90° or 270° rotations
+                    if (times % 2 != 0)
+                    {
+                        int temp = mipmap.Width;
+                        mipmap.Width = mipmap.Height;
+                        mipmap.Height = temp;
+                    }
+                }
+            }
         }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/tpc_data.py:576-583
+        // Original: def flip_vertically(self) -> None
+        /// <summary>
+        /// Flips all mipmaps vertically.
+        /// </summary>
+        public void FlipVertically()
+        {
+            foreach (var layer in Layers)
+            {
+                foreach (var mipmap in layer.Mipmaps)
+                {
+                    if (_format.IsDxt())
+                    {
+                        mipmap.Data = FlipVerticallyDxt(mipmap.Data, mipmap.Width, mipmap.Height, _format.BytesPerBlock());
+                    }
+                    else
+                    {
+                        mipmap.Data = FlipVerticallyRgbRgba(mipmap.Data, mipmap.Width, mipmap.Height, _format.BytesPerPixel());
+                    }
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/tpc_data.py:585-592
+        // Original: def flip_horizontally(self) -> None
+        /// <summary>
+        /// Flips all mipmaps horizontally.
+        /// </summary>
+        public void FlipHorizontally()
+        {
+            foreach (var layer in Layers)
+            {
+                foreach (var mipmap in layer.Mipmaps)
+                {
+                    if (_format.IsDxt())
+                    {
+                        mipmap.Data = FlipHorizontallyDxt(mipmap.Data, mipmap.Width, mipmap.Height, _format.BytesPerBlock());
+                    }
+                    else
+                    {
+                        mipmap.Data = FlipHorizontallyRgbRgba(mipmap.Data, mipmap.Width, mipmap.Height, _format.BytesPerPixel());
+                    }
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/tpc_data.py:605-610
+        // Original: def decode(self)
+        /// <summary>
+        /// Decodes compressed formats to their uncompressed equivalents.
+        /// </summary>
+        public void Decode()
+        {
+            if (_format == TPCTextureFormat.BGR || _format == TPCTextureFormat.DXT1 || _format == TPCTextureFormat.Greyscale)
+            {
+                Convert(TPCTextureFormat.RGB);
+            }
+            else if (_format == TPCTextureFormat.BGRA || _format == TPCTextureFormat.DXT3 || _format == TPCTextureFormat.DXT5)
+            {
+                Convert(TPCTextureFormat.RGBA);
+            }
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/tpc_data.py:612-617
+        // Original: def encode(self)
+        /// <summary>
+        /// Encodes uncompressed formats to their compressed equivalents.
+        /// </summary>
+        public void Encode()
+        {
+            if (_format == TPCTextureFormat.RGB || _format == TPCTextureFormat.BGR || _format == TPCTextureFormat.Greyscale)
+            {
+                Convert(TPCTextureFormat.DXT1);
+            }
+            else if (_format == TPCTextureFormat.RGBA || _format == TPCTextureFormat.BGRA)
+            {
+                Convert(TPCTextureFormat.DXT5);
+            }
+        }
+
+        #region Rotation and Flip Helper Methods
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/manipulate/rotate.py:4-35
+        // Original: def rotate_rgb_rgba(data: bytearray, width: int, height: int, bytes_per_pixel: int, times: int) -> bytearray
+        private static byte[] RotateRgbRgba(byte[] data, int width, int height, int bytesPerPixel, int times)
+        {
+            times = times % 4; // Normalize to 0-3 range
+            if (times == 0)
+            {
+                return data;
+            }
+
+            byte[] newData = new byte[data.Length];
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    int srcIdx = (y * width + x) * bytesPerPixel;
+                    int dstIdx;
+                    if (times == 1 || times == -3)
+                    {
+                        dstIdx = ((width - 1 - x) * height + y) * bytesPerPixel;
+                    }
+                    else if (times == 2 || times == -2)
+                    {
+                        dstIdx = ((height - 1 - y) * width + (width - 1 - x)) * bytesPerPixel;
+                    }
+                    else if (times == 3 || times == -1)
+                    {
+                        dstIdx = (x * height + (height - 1 - y)) * bytesPerPixel;
+                    }
+                    else
+                    {
+                        dstIdx = srcIdx;
+                    }
+
+                    for (int i = 0; i < bytesPerPixel; i++)
+                    {
+                        newData[dstIdx + i] = data[srcIdx + i];
+                    }
+                }
+            }
+
+            return newData;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/manipulate/dxt_manipulate.py:4-59
+        // Original: def rotate_dxt1(data: bytearray, width: int, height: int, times: int) -> bytearray
+        private static byte[] RotateDxt1(byte[] data, int width, int height, int times)
+        {
+            times = times % 4;
+            if (times == 0)
+            {
+                return data;
+            }
+
+            int blocksX = width / 4;
+            int blocksY = height / 4;
+            byte[] newData = new byte[data.Length];
+
+            for (int by = 0; by < blocksY; by++)
+            {
+                for (int bx = 0; bx < blocksX; bx++)
+                {
+                    int srcBlockIdx = (by * blocksX + bx) * 8;
+                    int dstBlockIdx = srcBlockIdx;
+                    if (times == 1 || times == -3)
+                    {
+                        dstBlockIdx = ((blocksX - 1 - bx) * blocksY + by) * 8;
+                    }
+                    else if (times == 2 || times == -2)
+                    {
+                        dstBlockIdx = ((blocksY - 1 - by) * blocksX + (blocksX - 1 - bx)) * 8;
+                    }
+                    else if (times == 3 || times == -1)
+                    {
+                        dstBlockIdx = (bx * blocksY + (blocksY - 1 - by)) * 8;
+                    }
+
+                    // Copy color data
+                    Array.Copy(data, srcBlockIdx, newData, dstBlockIdx, 4);
+
+                    // Rotate pixel indices
+                    uint pixels = (uint)(data[srcBlockIdx + 4] | (data[srcBlockIdx + 5] << 8) |
+                                        (data[srcBlockIdx + 6] << 16) | (data[srcBlockIdx + 7] << 24));
+                    uint rotatedPixels = 0;
+                    for (int i = 0; i < 16; i++)
+                    {
+                        uint srcPixel = (pixels >> (i * 2)) & 0b11;
+                        int dstPixel;
+                        if (times == 1 || times == -3)
+                        {
+                            dstPixel = ((i % 4) * 4 + (3 - i / 4)) * 2;
+                        }
+                        else if (times == 2 || times == -2)
+                        {
+                            dstPixel = (15 - i) * 2;
+                        }
+                        else if (times == 3 || times == -1)
+                        {
+                            dstPixel = ((3 - i % 4) * 4 + (i / 4)) * 2;
+                        }
+                        else
+                        {
+                            dstPixel = i * 2;
+                        }
+                        rotatedPixels |= srcPixel << dstPixel;
+                    }
+
+                    newData[dstBlockIdx + 4] = (byte)(rotatedPixels & 0xFF);
+                    newData[dstBlockIdx + 5] = (byte)((rotatedPixels >> 8) & 0xFF);
+                    newData[dstBlockIdx + 6] = (byte)((rotatedPixels >> 16) & 0xFF);
+                    newData[dstBlockIdx + 7] = (byte)((rotatedPixels >> 24) & 0xFF);
+                }
+            }
+
+            return newData;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/manipulate/dxt_manipulate.py:62-137
+        // Original: def rotate_dxt5(data: bytearray, width: int, height: int, times: int) -> bytearray
+        private static byte[] RotateDxt5(byte[] data, int width, int height, int times)
+        {
+            times = times % 4;
+            if (times == 0)
+            {
+                return data;
+            }
+
+            int blocksX = width / 4;
+            int blocksY = height / 4;
+            byte[] newData = new byte[data.Length];
+
+            for (int by = 0; by < blocksY; by++)
+            {
+                for (int bx = 0; bx < blocksX; bx++)
+                {
+                    int srcBlockIdx = (by * blocksX + bx) * 16;
+                    int dstBlockIdx = srcBlockIdx;
+                    if (times == 1 || times == -3)
+                    {
+                        dstBlockIdx = ((blocksX - 1 - bx) * blocksY + by) * 16;
+                    }
+                    else if (times == 2 || times == -2)
+                    {
+                        dstBlockIdx = ((blocksY - 1 - by) * blocksX + (blocksX - 1 - bx)) * 16;
+                    }
+                    else if (times == 3 || times == -1)
+                    {
+                        dstBlockIdx = (bx * blocksY + (blocksY - 1 - by)) * 16;
+                    }
+
+                    // Copy alpha min/max
+                    newData[dstBlockIdx] = data[srcBlockIdx];
+                    newData[dstBlockIdx + 1] = data[srcBlockIdx + 1];
+
+                    // Rotate alpha indices
+                    ulong alphaIndices = 0;
+                    for (int i = 0; i < 6; i++)
+                    {
+                        alphaIndices |= (ulong)data[srcBlockIdx + 2 + i] << (i * 8);
+                    }
+                    ulong rotatedAlpha = 0;
+                    for (int i = 0; i < 16; i++)
+                    {
+                        ulong srcAlpha = (alphaIndices >> (i * 3)) & 0b111;
+                        int dstAlpha;
+                        if (times == 1 || times == -3)
+                        {
+                            dstAlpha = ((i % 4) * 4 + (3 - i / 4)) * 3;
+                        }
+                        else if (times == 2 || times == -2)
+                        {
+                            dstAlpha = (15 - i) * 3;
+                        }
+                        else if (times == 3 || times == -1)
+                        {
+                            dstAlpha = ((3 - i % 4) * 4 + (i / 4)) * 3;
+                        }
+                        else
+                        {
+                            dstAlpha = i * 3;
+                        }
+                        rotatedAlpha |= srcAlpha << dstAlpha;
+                    }
+
+                    for (int i = 0; i < 6; i++)
+                    {
+                        newData[dstBlockIdx + 2 + i] = (byte)((rotatedAlpha >> (i * 8)) & 0xFF);
+                    }
+
+                    // Copy color data
+                    Array.Copy(data, srcBlockIdx + 8, newData, dstBlockIdx + 8, 4);
+
+                    // Rotate color indices (same as DXT1)
+                    uint pixels = (uint)(data[srcBlockIdx + 12] | (data[srcBlockIdx + 13] << 8) |
+                                        (data[srcBlockIdx + 14] << 16) | (data[srcBlockIdx + 15] << 24));
+                    uint rotatedPixels = 0;
+                    for (int i = 0; i < 16; i++)
+                    {
+                        uint srcPixel = (pixels >> (i * 2)) & 0b11;
+                        int dstPixel;
+                        if (times == 1 || times == -3)
+                        {
+                            dstPixel = ((i % 4) * 4 + (3 - i / 4)) * 2;
+                        }
+                        else if (times == 2 || times == -2)
+                        {
+                            dstPixel = (15 - i) * 2;
+                        }
+                        else if (times == 3 || times == -1)
+                        {
+                            dstPixel = ((3 - i % 4) * 4 + (i / 4)) * 2;
+                        }
+                        else
+                        {
+                            dstPixel = i * 2;
+                        }
+                        rotatedPixels |= srcPixel << dstPixel;
+                    }
+
+                    newData[dstBlockIdx + 12] = (byte)(rotatedPixels & 0xFF);
+                    newData[dstBlockIdx + 13] = (byte)((rotatedPixels >> 8) & 0xFF);
+                    newData[dstBlockIdx + 14] = (byte)((rotatedPixels >> 16) & 0xFF);
+                    newData[dstBlockIdx + 15] = (byte)((rotatedPixels >> 24) & 0xFF);
+                }
+            }
+
+            return newData;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/manipulate/rotate.py:37-54
+        // Original: def flip_vertically_rgb_rgba(data: bytearray, width: int, height: int, bytes_per_pixel: int) -> bytearray
+        private static byte[] FlipVerticallyRgbRgba(byte[] data, int width, int height, int bytesPerPixel)
+        {
+            byte[] newData = new byte[data.Length];
+            int rowSize = width * bytesPerPixel;
+
+            for (int y = 0; y < height; y++)
+            {
+                int srcRowStart = y * rowSize;
+                int dstRowStart = (height - 1 - y) * rowSize;
+                Array.Copy(data, srcRowStart, newData, dstRowStart, rowSize);
+            }
+
+            return newData;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/manipulate/rotate.py:56-76
+        // Original: def flip_horizontally_rgb_rgba(data: bytearray, width: int, height: int, bytes_per_pixel: int) -> bytearray
+        private static byte[] FlipHorizontallyRgbRgba(byte[] data, int width, int height, int bytesPerPixel)
+        {
+            byte[] newData = new byte[data.Length];
+            int rowSize = width * bytesPerPixel;
+
+            for (int y = 0; y < height; y++)
+            {
+                int rowStart = y * rowSize;
+                for (int x = 0; x < width; x++)
+                {
+                    int srcPixelStart = rowStart + x * bytesPerPixel;
+                    int dstPixelStart = rowStart + (width - 1 - x) * bytesPerPixel;
+                    for (int i = 0; i < bytesPerPixel; i++)
+                    {
+                        newData[dstPixelStart + i] = data[srcPixelStart + i];
+                    }
+                }
+            }
+
+            return newData;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/manipulate/dxt_manipulate.py:140-163
+        // Original: def flip_vertically_dxt(data: bytearray, width: int, height: int, block_size: int) -> bytearray
+        private static byte[] FlipVerticallyDxt(byte[] data, int width, int height, int blockSize)
+        {
+            int blocksX = width / 4;
+            int blocksY = height / 4;
+            byte[] newData = new byte[data.Length];
+
+            for (int by = 0; by < blocksY; by++)
+            {
+                int srcRowStart = by * blocksX * blockSize;
+                int dstRowStart = (blocksY - 1 - by) * blocksX * blockSize;
+                Array.Copy(data, srcRowStart, newData, dstRowStart, blocksX * blockSize);
+            }
+
+            return newData;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/manipulate/dxt_manipulate.py:166-220
+        // Original: def flip_horizontally_dxt(data: bytearray, width: int, height: int, bytes_per_block: int) -> bytearray
+        private static byte[] FlipHorizontallyDxt(byte[] data, int width, int height, int bytesPerBlock)
+        {
+            int blocksX = width / 4;
+            int blocksY = height / 4;
+            byte[] newData = new byte[data.Length];
+
+            for (int by = 0; by < blocksY; by++)
+            {
+                for (int bx = 0; bx < blocksX; bx++)
+                {
+                    int srcBlockIdx = (by * blocksX + bx) * bytesPerBlock;
+                    int dstBlockIdx = (by * blocksX + (blocksX - 1 - bx)) * bytesPerBlock;
+
+                    // Copy block data
+                    Array.Copy(data, srcBlockIdx, newData, dstBlockIdx, bytesPerBlock);
+
+                    // Flip pixel indices horizontally
+                    if (bytesPerBlock == 8) // DXT1
+                    {
+                        uint pixels = (uint)(newData[dstBlockIdx + 4] | (newData[dstBlockIdx + 5] << 8) |
+                                            (newData[dstBlockIdx + 6] << 16) | (newData[dstBlockIdx + 7] << 24));
+                        uint flippedPixels = 0;
+                        for (int i = 0; i < 4; i++)
+                        {
+                            uint row = (pixels >> (i * 8)) & 0xFF;
+                            uint flippedRow = ((row & 0b11) << 6) | ((row & 0b1100) << 2) | ((row & 0b110000) >> 2) | ((row & 0b11000000) >> 6);
+                            flippedPixels |= flippedRow << (i * 8);
+                        }
+                        newData[dstBlockIdx + 4] = (byte)(flippedPixels & 0xFF);
+                        newData[dstBlockIdx + 5] = (byte)((flippedPixels >> 8) & 0xFF);
+                        newData[dstBlockIdx + 6] = (byte)((flippedPixels >> 16) & 0xFF);
+                        newData[dstBlockIdx + 7] = (byte)((flippedPixels >> 24) & 0xFF);
+                    }
+                    else if (bytesPerBlock == 16) // DXT5
+                    {
+                        // Flip alpha indices
+                        ulong alphaIndices = 0;
+                        for (int i = 0; i < 6; i++)
+                        {
+                            alphaIndices |= (ulong)newData[dstBlockIdx + 2 + i] << (i * 8);
+                        }
+                        ulong flippedAlpha = 0;
+                        for (int i = 0; i < 4; i++)
+                        {
+                            ulong row = (alphaIndices >> (i * 12)) & 0xFFF;
+                            ulong flippedRow = ((row & 0b111) << 9) | ((row & 0b111000) << 3) | ((row & 0b111000000) >> 3) | ((row & 0b111000000000) >> 9);
+                            flippedAlpha |= flippedRow << (i * 12);
+                        }
+                        for (int i = 0; i < 6; i++)
+                        {
+                            newData[dstBlockIdx + 2 + i] = (byte)((flippedAlpha >> (i * 8)) & 0xFF);
+                        }
+
+                        // Flip color indices (same as DXT1)
+                        uint pixels = (uint)(newData[dstBlockIdx + 12] | (newData[dstBlockIdx + 13] << 8) |
+                                            (newData[dstBlockIdx + 14] << 16) | (newData[dstBlockIdx + 15] << 24));
+                        uint flippedPixels = 0;
+                        for (int i = 0; i < 4; i++)
+                        {
+                            uint row = (pixels >> (i * 8)) & 0xFF;
+                            uint flippedRow = ((row & 0b11) << 6) | ((row & 0b1100) << 2) | ((row & 0b110000) >> 2) | ((row & 0b11000000) >> 6);
+                            flippedPixels |= flippedRow << (i * 8);
+                        }
+                        newData[dstBlockIdx + 12] = (byte)(flippedPixels & 0xFF);
+                        newData[dstBlockIdx + 13] = (byte)((flippedPixels >> 8) & 0xFF);
+                        newData[dstBlockIdx + 14] = (byte)((flippedPixels >> 16) & 0xFF);
+                        newData[dstBlockIdx + 15] = (byte)((flippedPixels >> 24) & 0xFF);
+                    }
+                }
+            }
+
+            return newData;
+        }
+
+        #endregion
     }
 }
 
