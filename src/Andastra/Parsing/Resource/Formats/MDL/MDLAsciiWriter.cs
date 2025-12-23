@@ -519,10 +519,17 @@ namespace Andastra.Parsing.Formats.MDL
             }
 
             // Write animation nodes
-            // TODO:  Animation nodes are written as "node dummy <node_name>" with controllers
+            // Animation nodes should match the type of the corresponding model node
             // Build a mapping from animation nodes to their parents for parent writing
             var parentMap = new Dictionary<string, MDLNode>();
             BuildAnimationParentMap(anim.Root, null, parentMap);
+
+            // Build a mapping from node names to model nodes for type lookup
+            var modelNodeMap = new Dictionary<string, MDLNode>();
+            if (_mdl.Root != null)
+            {
+                BuildModelNodeMap(_mdl.Root, modelNodeMap);
+            }
 
             // Write all animation nodes (sorted by name to match MDLOps behavior)
             var allAnimNodes = anim.AllNodes();
@@ -533,7 +540,8 @@ namespace Andastra.Parsing.Formats.MDL
                 if (!string.IsNullOrEmpty(node.Name))  // Skip root if it has no name
                 {
                     parentMap.TryGetValue(node.Name, out var parent);
-                    WriteAnimationNode(1, node, parent);
+                    modelNodeMap.TryGetValue(node.Name, out var modelNode);
+                    WriteAnimationNode(1, node, parent, modelNode);
                 }
             }
 
@@ -553,10 +561,39 @@ namespace Andastra.Parsing.Formats.MDL
             }
         }
 
-        private void WriteAnimationNode(int indent, MDLNode node, MDLNode parent)
+        private void BuildModelNodeMap(MDLNode node, Dictionary<string, MDLNode> nodeMap)
         {
-            // TODO:  Animation nodes are always written as "dummy" type
-            WriteLine(indent, $"node dummy {node.Name}");
+            if (!string.IsNullOrEmpty(node.Name))
+            {
+                nodeMap[node.Name] = node;
+            }
+            if (node.Children != null)
+            {
+                foreach (var child in node.Children)
+                {
+                    BuildModelNodeMap(child, nodeMap);
+                }
+            }
+        }
+
+        private void WriteAnimationNode(int indent, MDLNode node, MDLNode parent, MDLNode modelNode)
+        {
+            // Animation nodes should match the type of the corresponding model node
+            // Look up the model node by name and use its type, defaulting to dummy if not found
+            MDLNodeType nodeType = MDLNodeType.DUMMY;
+            if (modelNode != null)
+            {
+                nodeType = modelNode.NodeType;
+            }
+
+            // Convert node type to string (matching WriteNode behavior)
+            var nodeTypeName = nodeType.ToString().ToLowerInvariant();
+            if (nodeTypeName == "saber")
+            {
+                nodeTypeName = "lightsaber";
+            }
+
+            WriteLine(indent, $"node {nodeTypeName} {node.Name}");
 
             // Write parent if this node has one
             // In MDLOps, parent is a model node index, but we use the parent node's name
