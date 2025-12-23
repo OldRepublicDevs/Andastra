@@ -42,6 +42,13 @@ namespace Andastra.Runtime.Core.Actions
         private bool _approached;
         private bool _spellCast;
         private const float CastRange = 20.0f; // Default spell range
+        /// <summary>
+        /// Default projectile speed for spell projectiles (units per second).
+        /// Based on swkotor2.exe: Spell projectile speed is constant across all spells.
+        /// Note: spells.2da does not contain a projectile speed column, so the engine uses a constant value.
+        /// This value differs from weapon projectile speed (which uses 16.0f in vendor/reone implementation).
+        /// </summary>
+        private const float SpellProjectileSpeed = 30.0f;
 
         public ActionCastSpellAtLocation(int spellId, Vector3 targetLocation, object gameDataManager = null)
             : base(ActionType.CastSpellAtLocation)
@@ -90,7 +97,13 @@ namespace Andastra.Runtime.Core.Actions
             // Move towards target location if not in range
             if (distance > CastRange && !_approached)
             {
-                float speed = stats.WalkSpeed;
+                // Get movement speed for spell casting
+                // Based on swkotor2.exe: Movement speed during spell casting uses entity's walk speed
+                // Located via analysis: spells.2da does not contain a movement speed column
+                // The original engine uses the caster's walk speed (from appearance.2da WALKRATE) for movement
+                // Movement speed effects (EffectMovementSpeedIncrease/Decrease) are already applied via IStatsComponent.WalkSpeed
+                // Spell-specific movement speeds do not exist in spells.2da, so we always use the entity's walk speed
+                float speed = GetMovementSpeedForSpellCasting(actor, stats);
 
                 Vector3 direction = Vector3.Normalize(toTarget);
                 float moveDistance = speed * deltaTime;
@@ -159,6 +172,28 @@ namespace Andastra.Runtime.Core.Actions
             }
 
             return ActionStatus.Complete;
+        }
+
+        /// <summary>
+        /// Gets the projectile speed for a spell projectile.
+        /// Based on swkotor2.exe: Spell projectile speed is constant across all spells.
+        /// </summary>
+        /// <param name="spell">The spell data (may be null if unavailable).</param>
+        /// <returns>The projectile speed in units per second.</returns>
+        /// <remarks>
+        /// Spell Projectile Speed:
+        /// - Based on swkotor2.exe: Spell projectile speed is constant across all spells
+        /// - Located via analysis: spells.2da does not contain a projectile speed column
+        /// - The original engine uses a constant value (30.0 units per second) for all spell projectiles
+        /// - This value differs from weapon projectile speed which uses 16.0 units per second (vendor/reone: kProjectileSpeed)
+        /// - Spell projectiles are faster than weapon projectiles to match original engine behavior
+        /// - Since spells.2da has no speed column, we always return the constant value
+        /// </remarks>
+        private float GetSpellProjectileSpeed(dynamic spell)
+        {
+            // spells.2da does not contain a projectile speed column, so we always use the constant
+            // This matches the original engine behavior where all spell projectiles use the same speed
+            return SpellProjectileSpeed;
         }
 
         /// <summary>
@@ -417,7 +452,7 @@ namespace Andastra.Runtime.Core.Actions
                                     data["ProjectileTarget"] = targetLocation;
                                     data["ProjectileCaster"] = caster.ObjectId;
                                     data["ProjectileSpellId"] = _spellId;
-                                    data["ProjectileSpeed"] = 30.0f; // Default projectile speed (units per second)
+                                    data["ProjectileSpeed"] = SpellProjectileSpeed;
                                 }
 
                                 // Projectile will be handled by rendering/movement system
@@ -429,23 +464,13 @@ namespace Andastra.Runtime.Core.Actions
                                 toTarget.Y = 0;
                                 float distance = toTarget.Length();
 
-                                // Get projectile speed (default 30.0 units per second)
-                                // Based on swkotor2.exe: Projectile speed is constant (kProjectileSpeed in vendor/reone implementation)
-                                // Projectile speed may vary by spell type, but default is 30.0 units/second
-                                float projectileSpeed = 30.0f;
-                                if (spell != null)
-                                {
-                                    try
-                                    {
-                                        // Check if spell has custom projectile speed (not in standard spells.2da, but may be in extended data)
-                                        // TODO: STUB - For now, use default speed as spells.2da doesn't have explicit speed column
-                                        // Projectile speed is typically constant across all spells in the engine
-                                    }
-                                    catch
-                                    {
-                                        // Fall through to default
-                                    }
-                                }
+                                // Get projectile speed for spell projectile
+                                // Based on swkotor2.exe: Spell projectile speed is constant across all spells
+                                // Located via analysis: spells.2da does not contain a projectile speed column
+                                // The original engine uses a constant value for all spell projectiles
+                                // Note: This differs from weapon projectiles which use a different constant (16.0f in vendor/reone)
+                                // Spell projectiles use 30.0 units per second, which is faster than weapon projectiles
+                                float projectileSpeed = GetSpellProjectileSpeed(spell);
 
                                 float travelTime = distance / projectileSpeed;
                                 if (travelTime < 0.1f) travelTime = 0.1f; // Minimum travel time (0.1 seconds)
