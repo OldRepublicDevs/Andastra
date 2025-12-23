@@ -4494,7 +4494,7 @@ namespace Andastra.Runtime.Games.Eclipse
         {
             public Vector3 Position;
             public Vector3 Normal;
-            public Vector2 TexCoord;
+            public System.Numerics.Vector2 TexCoord;
         }
 
         // VertexPositionColor: Position + Color (16 bytes: 3 floats + 4 bytes color)
@@ -4509,7 +4509,7 @@ namespace Andastra.Runtime.Games.Eclipse
         {
             public Vector3 Position;
             public uint Color; // Packed color as uint
-            public Vector2 TexCoord;
+            public System.Numerics.Vector2 TexCoord;
         }
 
         // VertexPositionNormalTextureColor: Position + Normal + TextureCoordinate + Color (36 bytes)
@@ -4517,7 +4517,7 @@ namespace Andastra.Runtime.Games.Eclipse
         {
             public Vector3 Position;
             public Vector3 Normal;
-            public Vector2 TexCoord;
+            public System.Numerics.Vector2 TexCoord;
             public uint Color; // Packed color as uint
         }
 
