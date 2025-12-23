@@ -1052,7 +1052,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 }
 
                 // Update buffer using SetData
-                _ssrConstants.SetData(StrideGraphics.CommandList, data);
+                _ssrConstants.SetData(commandList, data);
             }
         }
 
