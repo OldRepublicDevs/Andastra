@@ -271,6 +271,60 @@ namespace Andastra.Runtime.Games.Aurora.Scene
                 // Based on nwmain.exe: CNWSArea::LoadTileSetInfo @ 0x140362700 calls GetTileData for each tile
                 string modelResRef = GetTileModelResRef(tileset, tileId);
 
+                // Read Tile_AnimLoop1/2/3 (animation loop flags)
+                // Based on ARE format: Tile_AnimLoop1/2/3 are INT (0 = disabled, 1 = enabled)
+                // Based on nwmain.exe: CNWSArea::LoadTileList reads Tile_AnimLoop1/2/3 @ vendor/xoreos/src/engines/nwn/area.cpp:401-403
+                bool animLoop1 = false;
+                if (tileStruct.Exists("Tile_AnimLoop1"))
+                {
+                    int animLoop1Value = tileStruct.GetInt32("Tile_AnimLoop1");
+                    animLoop1 = animLoop1Value != 0;
+                }
+
+                bool animLoop2 = false;
+                if (tileStruct.Exists("Tile_AnimLoop2"))
+                {
+                    int animLoop2Value = tileStruct.GetInt32("Tile_AnimLoop2");
+                    animLoop2 = animLoop2Value != 0;
+                }
+
+                bool animLoop3 = false;
+                if (tileStruct.Exists("Tile_AnimLoop3"))
+                {
+                    int animLoop3Value = tileStruct.GetInt32("Tile_AnimLoop3");
+                    animLoop3 = animLoop3Value != 0;
+                }
+
+                // Read Tile_MainLight1/2 (main light indices)
+                // Based on ARE format: Tile_MainLight1/2 are BYTE (0 = disabled, 1-255 = lightcolor.2da index)
+                // Based on nwmain.exe: CNWSArea::LoadTileList reads Tile_MainLight1/2 @ vendor/xoreos/src/engines/nwn/area.cpp:393-394
+                byte mainLight1 = 0;
+                if (tileStruct.Exists("Tile_MainLight1"))
+                {
+                    mainLight1 = tileStruct.GetUInt8("Tile_MainLight1");
+                }
+
+                byte mainLight2 = 0;
+                if (tileStruct.Exists("Tile_MainLight2"))
+                {
+                    mainLight2 = tileStruct.GetUInt8("Tile_MainLight2");
+                }
+
+                // Read Tile_SrcLight1/2 (source light indices)
+                // Based on ARE format: Tile_SrcLight1/2 are BYTE (0 = off, 1-15 = color/animation index)
+                // Based on nwmain.exe: CNWSArea::LoadTileList reads Tile_SrcLight1/2 @ vendor/xoreos/src/engines/nwn/area.cpp:396-397
+                byte srcLight1 = 0;
+                if (tileStruct.Exists("Tile_SrcLight1"))
+                {
+                    srcLight1 = tileStruct.GetUInt8("Tile_SrcLight1");
+                }
+
+                byte srcLight2 = 0;
+                if (tileStruct.Exists("Tile_SrcLight2"))
+                {
+                    srcLight2 = tileStruct.GetUInt8("Tile_SrcLight2");
+                }
+
                 // Generate tile identifier (format: "tile_X_Y")
                 // Based on nwmain.exe: Tile identifiers used for area transitions and visibility culling
                 string tileIdentifier = string.Format("tile_{0}_{1}", tileX, tileY);
@@ -286,7 +340,15 @@ namespace Andastra.Runtime.Games.Aurora.Scene
                     Orientation = orientation,
                     Height = tileHeight,
                     IsVisible = true, // All tiles visible initially, visibility updated by SetCurrentArea
-                    MeshData = null // Mesh data loaded on demand by graphics backend
+                    MeshData = null, // Mesh data loaded on demand by graphics backend
+                    AnimLoop1 = animLoop1,
+                    AnimLoop2 = animLoop2,
+                    AnimLoop3 = animLoop3,
+                    MainLight1 = mainLight1,
+                    MainLight2 = mainLight2,
+                    SrcLight1 = srcLight1,
+                    SrcLight2 = srcLight2,
+                    AnimationStates = new Dictionary<int, TileAnimationState>() // Initialize animation state tracking
                 };
 
                 // Add tile to scene
@@ -655,6 +717,95 @@ namespace Andastra.Runtime.Games.Aurora.Scene
         /// </summary>
         [CanBeNull]
         public IRoomMeshData MeshData { get; set; }
+
+        /// <summary>
+        /// Gets or sets whether animation loop 1 (AnimLoop01) should play.
+        /// Based on ARE format: Tile_AnimLoop1 is INT (0 = disabled, 1 = enabled).
+        /// </summary>
+        public bool AnimLoop1 { get; set; }
+
+        /// <summary>
+        /// Gets or sets whether animation loop 2 (AnimLoop02) should play.
+        /// Based on ARE format: Tile_AnimLoop2 is INT (0 = disabled, 1 = enabled).
+        /// </summary>
+        public bool AnimLoop2 { get; set; }
+
+        /// <summary>
+        /// Gets or sets whether animation loop 3 (AnimLoop03) should play.
+        /// Based on ARE format: Tile_AnimLoop3 is INT (0 = disabled, 1 = enabled).
+        /// </summary>
+        public bool AnimLoop3 { get; set; }
+
+        /// <summary>
+        /// Gets or sets the main light 1 index (index into lightcolor.2da).
+        /// Based on ARE format: Tile_MainLight1 is BYTE (0 = disabled, 1-255 = light color index).
+        /// </summary>
+        public byte MainLight1 { get; set; }
+
+        /// <summary>
+        /// Gets or sets the main light 2 index (index into lightcolor.2da).
+        /// Based on ARE format: Tile_MainLight2 is BYTE (0 = disabled, 1-255 = light color index).
+        /// </summary>
+        public byte MainLight2 { get; set; }
+
+        /// <summary>
+        /// Gets or sets the source light 1 index (0 = off, 1-15 = color/animation index).
+        /// Based on ARE format: Tile_SrcLight1 is BYTE (0 = off, 1-15 = color/animation index).
+        /// </summary>
+        public byte SrcLight1 { get; set; }
+
+        /// <summary>
+        /// Gets or sets the source light 2 index (0 = off, 1-15 = color/animation index).
+        /// Based on ARE format: Tile_SrcLight2 is BYTE (0 = off, 1-15 = color/animation index).
+        /// </summary>
+        public byte SrcLight2 { get; set; }
+
+        /// <summary>
+        /// Animation state tracking for this tile's active animation loops.
+        /// Tracks animation time and frame indices for each active animation loop.
+        /// Key: Animation loop index (0 = AnimLoop01, 1 = AnimLoop02, 2 = AnimLoop03).
+        /// Value: Animation state (time, frame index, etc.).
+        /// </summary>
+        [CanBeNull]
+        public Dictionary<int, TileAnimationState> AnimationStates { get; set; }
+    }
+
+    /// <summary>
+    /// Tile animation state for tracking animation playback.
+    /// Based on nwmain.exe: Tile animations track time and frame indices for texture animations.
+    /// </summary>
+    public class TileAnimationState
+    {
+        /// <summary>
+        /// Current animation time in seconds.
+        /// </summary>
+        public float AnimationTime { get; set; }
+
+        /// <summary>
+        /// Animation duration in seconds (from MDL animation data).
+        /// </summary>
+        public float AnimationLength { get; set; }
+
+        /// <summary>
+        /// Current animation frame index (for frame-based animations).
+        /// </summary>
+        public int FrameIndex { get; set; }
+
+        /// <summary>
+        /// Animation loop mode: true = loop, false = one-shot.
+        /// Based on MDL animation data: AnimLoop animations are typically looping.
+        /// </summary>
+        public bool IsLooping { get; set; }
+
+        /// <summary>
+        /// Animation name (e.g., "AnimLoop01", "AnimLoop02", "AnimLoop03").
+        /// </summary>
+        public string AnimationName { get; set; }
+
+        /// <summary>
+        /// Whether the animation has completed (for one-shot animations).
+        /// </summary>
+        public bool IsComplete { get; set; }
     }
 }
 
