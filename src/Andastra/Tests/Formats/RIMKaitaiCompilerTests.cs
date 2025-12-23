@@ -58,26 +58,63 @@ namespace Andastra.Parsing.Tests.Formats
                 return;
             }
 
-            // Try the specific Windows installation path first
-            var windowsPath = @"C:\Program Files (x86)\kaitai-struct-compiler\bin\kaitai-struct-compiler.bat";
-            if (File.Exists(windowsPath))
+            // Use comprehensive compiler finder that checks all common installation locations
+            var compilerPath = FindKaitaiCompiler();
+            var isCI = IsRunningInCIEnvironment();
+
+            if (string.IsNullOrEmpty(compilerPath))
             {
-                var kscCheck = RunCommand(windowsPath, "--version");
-                kscCheck.ExitCode.Should().Be(0, "Kaitai Struct compiler should be available");
-                return;
+                var errorMessage = "Kaitai Struct compiler (kaitai-struct-compiler) was not found in any common installation location or PATH. " +
+                    "Searched locations include: Windows Program Files, PATH, common Linux locations, and JAR file installations.";
+
+                if (isCI)
+                {
+                    // In CI/CD environments, the compiler should be installed - fail the test
+                    var ciGuidance = "For CI/CD installation:" + Environment.NewLine +
+                        "  - Windows: Install from https://github.com/kaitai-io/kaitai_struct_compiler/releases or use Chocolatey: choco install kaitai-struct-compiler" + Environment.NewLine +
+                        "  - Linux: Install via package manager or download JAR from releases page" + Environment.NewLine +
+                        "  - macOS: Install via Homebrew: brew install kaitai-struct-compiler" + Environment.NewLine +
+                        "  - Or set KAITAI_COMPILER_JAR environment variable pointing to kaitai-struct-compiler.jar";
+
+                    throw new InvalidOperationException(errorMessage + Environment.NewLine + ciGuidance);
+                }
+                else
+                {
+                    // In local development, skip with helpful guidance
+                    // This allows developers to run tests without having the compiler installed
+                    var localGuidance = "To install Kaitai Struct compiler:" + Environment.NewLine +
+                        "  - Windows: Download from https://github.com/kaitai-io/kaitai_struct_compiler/releases or use Chocolatey: choco install kaitai-struct-compiler" + Environment.NewLine +
+                        "  - Linux: Install via package manager (e.g., apt-get install kaitai-struct-compiler) or download JAR" + Environment.NewLine +
+                        "  - macOS: Install via Homebrew: brew install kaitai-struct-compiler" + Environment.NewLine +
+                        "  - Or download JAR file and set KAITAI_COMPILER_JAR environment variable";
+
+                    // Skip test in local development
+                    return;
+                }
             }
 
-            // Try to find Kaitai Struct compiler
-            // Check common locations or try to run it
-            var kscCheck2 = RunCommand("kaitai-struct-compiler", "--version");
-            if (kscCheck2.ExitCode != 0)
+            // Verify the compiler works by checking its version
+            var versionCheck = TestCompilerPath(compilerPath);
+            if (!versionCheck.Success)
             {
-                // Try with .jar extension or check if it's in PATH
-                // TODO: STUB - For now, we'll skip if not found - in CI/CD this should be installed
-                return;
+                var errorMsg = $"Kaitai Struct compiler found at {compilerPath} but failed to execute. " +
+                    $"Error: {versionCheck.ErrorMessage}, Output: {versionCheck.Output}";
+
+                if (isCI)
+                {
+                    throw new InvalidOperationException(errorMsg);
+                }
+                else
+                {
+                    // Skip in local dev if compiler exists but doesn't work
+                    return;
+                }
             }
 
-            kscCheck2.ExitCode.Should().Be(0, "Kaitai Struct compiler should be available");
+            // If we get here, compiler is available and working
+            versionCheck.ExitCode.Should().Be(0,
+                $"Kaitai Struct compiler should execute successfully. Found at: {compilerPath}. " +
+                $"Output: {versionCheck.Output}, Error: {versionCheck.ErrorMessage}");
         }
 
         [Fact(Timeout = 300000)]
@@ -449,6 +486,191 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Return the last result (which will be a failure)
             return result;
+        }
+
+        /// <summary>
+        /// Detects if the test is running in a CI/CD environment by checking common environment variables.
+        /// Supports GitHub Actions, Azure DevOps, Jenkins, GitLab CI, Travis CI, AppVeyor, and generic CI environments.
+        /// </summary>
+        private bool IsRunningInCIEnvironment()
+        {
+            // GitHub Actions
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GITHUB_ACTIONS")))
+            {
+                return true;
+            }
+
+            // Azure DevOps
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SYSTEM_TEAMFOUNDATIONCOLLECTIONURI")))
+            {
+                return true;
+            }
+
+            // Jenkins
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("JENKINS_URL")))
+            {
+                return true;
+            }
+
+            // GitLab CI
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GITLAB_CI")))
+            {
+                return true;
+            }
+
+            // Travis CI
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("TRAVIS")))
+            {
+                return true;
+            }
+
+            // AppVeyor
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("APPVEYOR")))
+            {
+                return true;
+            }
+
+            // Generic CI environment variable
+            var ci = Environment.GetEnvironmentVariable("CI");
+            if (!string.IsNullOrEmpty(ci) && (ci.Equals("true", StringComparison.OrdinalIgnoreCase) || ci == "1"))
+            {
+                return true;
+            }
+
+            // TeamCity
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("TEAMCITY_VERSION")))
+            {
+                return true;
+            }
+
+            // CircleCI
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CIRCLECI")))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Comprehensively searches for Kaitai Struct compiler in all common installation locations.
+        /// Checks Windows Program Files, PATH, Linux common locations, npm global installs, and JAR files.
+        /// </summary>
+        private string FindKaitaiCompiler()
+        {
+            // Try common executable locations and PATH entries first
+            var possiblePaths = new[]
+            {
+                // Windows specific paths
+                @"C:\Program Files (x86)\kaitai-struct-compiler\bin\kaitai-struct-compiler.bat",
+                @"C:\Program Files\kaitai-struct-compiler\bin\kaitai-struct-compiler.bat",
+                @"C:\Program Files\kaitai-struct-compiler\kaitai-struct-compiler.exe",
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "kaitai-struct-compiler", "bin", "kaitai-struct-compiler.bat"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "kaitai-struct-compiler", "kaitai-struct-compiler.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "kaitai-struct-compiler", "bin", "kaitai-struct-compiler.bat"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "kaitai-struct-compiler", "kaitai-struct-compiler.exe"),
+
+                // Linux/macOS common locations
+                "/usr/bin/kaitai-struct-compiler",
+                "/usr/local/bin/kaitai-struct-compiler",
+                "/opt/kaitai-struct-compiler/bin/kaitai-struct-compiler",
+
+                // PATH entries (common command names)
+                "kaitai-struct-compiler",
+                "ksc",
+            };
+
+            // Test each path to see if it's executable and works
+            foreach (var path in possiblePaths)
+            {
+                try
+                {
+                    var result = TestCompilerPath(path);
+                    if (result.Success && result.ExitCode == 0)
+                    {
+                        return path;
+                    }
+                }
+                catch
+                {
+                    // Continue searching if this path fails
+                }
+            }
+
+            // Check for npm global installation (common on all platforms)
+            try
+            {
+                var npmGlobalPath = RunCommand("npm", "config get prefix");
+                if (npmGlobalPath.ExitCode == 0 && !string.IsNullOrEmpty(npmGlobalPath.Output))
+                {
+                    var npmPath = npmGlobalPath.Output.Trim();
+                    var npmCompilerPaths = new[]
+                    {
+                        Path.Combine(npmPath, "kaitai-struct-compiler.cmd"), // Windows npm
+                        Path.Combine(npmPath, "kaitai-struct-compiler"), // Unix npm
+                        Path.Combine(npmPath, "node_modules", "kaitai-struct-compiler", "bin", "kaitai-struct-compiler"),
+                    };
+
+                    foreach (var npmCompilerPath in npmCompilerPaths)
+                    {
+                        if (File.Exists(npmCompilerPath))
+                        {
+                            var result = TestCompilerPath(npmCompilerPath);
+                            if (result.Success && result.ExitCode == 0)
+                            {
+                                return npmCompilerPath;
+                            }
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Continue if npm check fails
+            }
+
+            // Try as Java JAR (common installation method, especially for CI/CD)
+            var jarPath = FindKaitaiCompilerJar();
+            if (!string.IsNullOrEmpty(jarPath) && File.Exists(jarPath))
+            {
+                var result = TestCompilerPath(jarPath);
+                if (result.Success && result.ExitCode == 0)
+                {
+                    return jarPath;
+                }
+            }
+
+            // Compiler not found in any location
+            return null;
+        }
+
+        /// <summary>
+        /// Tests if a compiler path is valid by attempting to run it with --version flag.
+        /// Handles both executable files and JAR files (which require java -jar).
+        /// </summary>
+        private (bool Success, int ExitCode, string Output, string ErrorMessage) TestCompilerPath(string compilerPath)
+        {
+            if (string.IsNullOrEmpty(compilerPath))
+            {
+                return (false, -1, "", "Compiler path is null or empty");
+            }
+
+            // Check if it's a JAR file
+            var isJar = compilerPath.EndsWith(".jar", StringComparison.OrdinalIgnoreCase) ||
+                       (File.Exists(compilerPath) && Path.GetExtension(compilerPath).Equals(".jar", StringComparison.OrdinalIgnoreCase));
+
+            if (isJar)
+            {
+                // Use java -jar for JAR files
+                var result = RunCommand("java", $"-jar \"{compilerPath}\" --version");
+                return (result.ExitCode == 0 || !string.IsNullOrEmpty(result.Output), result.ExitCode, result.Output, result.Error);
+            }
+            else
+            {
+                // Use compiler directly
+                var result = RunCommand(compilerPath, "--version");
+                return (result.ExitCode == 0 || !string.IsNullOrEmpty(result.Output), result.ExitCode, result.Output, result.Error);
+            }
         }
 
         private string FindKaitaiCompilerJar()
