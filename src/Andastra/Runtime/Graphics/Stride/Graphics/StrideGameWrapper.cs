@@ -1,5 +1,6 @@
 using System;
 using global::Stride.Engine;
+using global::Stride.Games;
 using Stride.Graphics;
 
 namespace Andastra.Runtime.Stride.Graphics
@@ -28,16 +29,16 @@ namespace Andastra.Runtime.Stride.Graphics
             public TimeSpan Elapsed { get; set; }
         }
 
-        protected override void Update(TimeSpan elapsed)
+        protected override void Update(GameTime gameTime)
         {
-            base.Update(elapsed);
-            UpdateFrame?.Invoke(this, new FrameEventArgs { Elapsed = elapsed });
+            base.Update(gameTime);
+            UpdateFrame?.Invoke(this, new FrameEventArgs { Elapsed = gameTime.Elapsed });
         }
 
-        protected override void Draw(TimeSpan elapsed)
+        protected override void Draw(GameTime gameTime)
         {
-            base.Draw(elapsed);
-            DrawFrame?.Invoke(this, new FrameEventArgs { Elapsed = elapsed });
+            base.Draw(gameTime);
+            DrawFrame?.Invoke(this, new FrameEventArgs { Elapsed = gameTime.Elapsed });
         }
     }
 }
