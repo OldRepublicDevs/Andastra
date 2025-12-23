@@ -148,18 +148,18 @@ namespace Andastra.Runtime.Stride.Graphics
             parameterCollection.Set(LightingKeys.AmbientLightColor, new Color3(_ambientLightColor.X, _ambientLightColor.Y, _ambientLightColor.Z));
             
             // Feature flags - custom BasicEffect parameters
-            parameterCollection.Set(ParameterKeys.New<bool>("VertexColorEnabled"), _vertexColorEnabled);
-            parameterCollection.Set(ParameterKeys.New<bool>("LightingEnabled"), _lightingEnabled);
-            parameterCollection.Set(ParameterKeys.New<bool>("TextureEnabled"), _textureEnabled);
+            parameterCollection.Set(new ValueParameterKey<bool>("VertexColorEnabled"), _vertexColorEnabled);
+            parameterCollection.Set(new ValueParameterKey<bool>("LightingEnabled"), _lightingEnabled);
+            parameterCollection.Set(new ValueParameterKey<bool>("TextureEnabled"), _textureEnabled);
             
             // Fog parameters - custom BasicEffect parameters
-            parameterCollection.Set(ParameterKeys.New<bool>("FogEnabled"), _fogEnabled);
-            parameterCollection.Set(ParameterKeys.New<Color3>("FogColor"), new Color3(_fogColor.X, _fogColor.Y, _fogColor.Z));
-            parameterCollection.Set(ParameterKeys.New<float>("FogStart"), _fogStart);
-            parameterCollection.Set(ParameterKeys.New<float>("FogEnd"), _fogEnd);
+            parameterCollection.Set(new ValueParameterKey<bool>("FogEnabled"), _fogEnabled);
+            parameterCollection.Set(new ValueParameterKey<Color3>("FogColor"), new Color3(_fogColor.X, _fogColor.Y, _fogColor.Z));
+            parameterCollection.Set(new ValueParameterKey<float>("FogStart"), _fogStart);
+            parameterCollection.Set(new ValueParameterKey<float>("FogEnd"), _fogEnd);
             
             // Alpha parameter
-            parameterCollection.Set(ParameterKeys.New<float>("Alpha"), _alpha);
+            parameterCollection.Set(new ValueParameterKey<float>("Alpha"), _alpha);
         }
         
         /// <summary>
@@ -700,7 +700,7 @@ namespace Andastra.Runtime.Stride.Graphics
                 else
                 {
                     // Use custom parameter key for non-standard matrices
-                    parameterKey = ParameterKeys.New<MatrixStride>(name);
+                    parameterKey = new ValueParameterKey<MatrixStride>(name);
                 }
 
                 // Set parameter in both the parameter collection and effect instance
@@ -773,13 +773,13 @@ namespace Andastra.Runtime.Stride.Graphics
                 else if (name == "FogColor")
                 {
                     // Custom parameter for fog color
-                    parameterKey = ParameterKeys.New<Color3>(name);
+                    parameterKey = new ValueParameterKey<Color3>(name);
                     parameterValue = color3Value;
                 }
                 else
                 {
                     // Use custom parameter key for other Vector3 parameters
-                    parameterKey = ParameterKeys.New<Vector3Stride>(name);
+                    parameterKey = new ValueParameterKey<Vector3Stride>(name);
                     parameterValue = strideVector;
                 }
 
@@ -854,15 +854,15 @@ namespace Andastra.Runtime.Stride.Graphics
                 {
                     // Alpha is part of Color4 in Stride, handled with diffuse color
                     // But we can also store it separately for shader use
-                    parameterKey = ParameterKeys.New<float>(name);
+                    parameterKey = new ValueParameterKey<float>(name);
                 }
                 else if (name == "FogStart" || name == "FogEnd")
                 {
-                    parameterKey = ParameterKeys.New<float>(name);
+                    parameterKey = new ValueParameterKey<float>(name);
                 }
                 else
                 {
-                    parameterKey = ParameterKeys.New<float>(name);
+                    parameterKey = new ValueParameterKey<float>(name);
                 }
 
                 // Set parameter in both the parameter collection and effect instance
@@ -904,7 +904,7 @@ namespace Andastra.Runtime.Stride.Graphics
             try
             {
                 // Create parameter key for boolean feature flags
-                var parameterKey = ParameterKeys.New<bool>(name);
+                var parameterKey = new ValueParameterKey<bool>(name);
                 
                 // Set parameter in both the parameter collection and effect instance
                 _parameterCollection.Set(parameterKey, value);
