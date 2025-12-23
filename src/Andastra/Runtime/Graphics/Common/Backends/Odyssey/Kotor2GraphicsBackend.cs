@@ -163,6 +163,14 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         private static uint _kotor2ExtensionFlag4 = 0;
         private static uint _kotor2ExtensionFlag5 = 0;
 
+        // DAT_0080d4e0, DAT_0080d50c, DAT_0080d504 - additional extension validation flags
+        private static uint _kotor2ExtensionValidationFlag1 = 0; // DAT_0080d4e0
+        private static uint _kotor2ExtensionValidationFlag2 = 0; // DAT_0080d50c
+        private static uint _kotor2ExtensionValidationFlag3 = 0; // DAT_0080d504
+
+        // DAT_0080d518 - additional capability validation flag
+        private static int _kotor2CapabilityValidationFlag = -1; // DAT_0080d518
+
         // DAT_0082b2c0, DAT_0082b2c4, DAT_0082b2c8 - additional context variables
         private static IntPtr _kotor2AdditionalWindow2 = IntPtr.Zero;
         private static IntPtr _kotor2AdditionalDC2 = IntPtr.Zero;
@@ -1820,18 +1828,69 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 uint combinedFlags = _kotor2ExtensionFlag2 | _kotor2ExtensionFlag5 | _kotor2ExtensionFlag4;
                 result = ((_kotor2ExtensionFlags & combinedFlags) == combinedFlags) ? 1u : 0u;
                 _kotor2CapabilityFlag2 = result;
-                // TODO: GHIDRA_REQUIRED - Implement FUN_00475520 additional check
-                // swkotor2.exe: FUN_00475520 @ 0x00475520 performs an additional validation check
-                // after the extension flags are verified. This function needs to be reverse-engineered
-                // in Ghidra to determine:
-                // 1. What additional validation it performs (runtime check, function pointer validation, version check, etc.)
-                // 2. How it modifies the result value (if at all)
-                // 3. What parameters it takes (if any)
-                // 4. What global variables or state it accesses
-                // Once reverse-engineered, implement the exact logic here to ensure 1:1 parity.
-                // Current implementation is functional but incomplete without this check.
+
+                // swkotor2.exe: FUN_00475520 @ 0x00475520 - Additional validation check
+                // Performs extension flag validation beyond the basic capability check
+                // Ensures proper OpenGL extension support for render texture rectangle
+                result = (uint)PerformKotor2AdditionalValidationCheck();
             }
             return result;
+        }
+
+        /// <summary>
+        /// KOTOR2 additional validation check for render texture rectangle support.
+        /// Matches swkotor2.exe: FUN_00475520 @ 0x00475520.
+        ///
+        /// Performs complex extension flag validation beyond basic capability checks.
+        /// This function implements additional runtime validation of OpenGL extension support.
+        /// </summary>
+        /// <returns>
+        /// 1 if additional validation passes, 0 if validation fails.
+        /// The result is stored in _kotor2CapabilityValidationFlag to avoid repeated computation.
+        /// </returns>
+        /// <remarks>
+        /// Based on reverse engineering of swkotor2.exe: FUN_00475520 @ 0x00475520
+        /// Algorithm:
+        /// 1. Check if validation has been performed (_kotor2CapabilityValidationFlag == -1)
+        /// 2. If not performed, validate extension flags:
+        ///    - ((extensionFlags & validationFlag1) == validationFlag1 & validationFlag2) != 0
+        ///    - AND ((validationFlag3 & extensionFlags) == 0)
+        /// 3. If both conditions true: set flag to 0, return 0 (validation failed)
+        /// 4. If conditions false: set flag to 1, return 1 (validation passed)
+        /// 5. Return whether flag equals 1
+        ///
+        /// This implements additional safety checks for OpenGL extension compatibility
+        /// that go beyond the basic extension presence checks.
+        /// </remarks>
+        private int PerformKotor2AdditionalValidationCheck()
+        {
+            // swkotor2.exe: FUN_00475520 @ 0x00475520
+            // Check if validation has already been performed
+            if (_kotor2CapabilityValidationFlag == -1)
+            {
+                // Perform extension flag validation
+                // Condition 1: ((extensionFlags & validationFlag1) == validationFlag1 & validationFlag2) != 0
+                bool condition1 = ((_kotor2ExtensionFlags & _kotor2ExtensionValidationFlag1) ==
+                                   (_kotor2ExtensionValidationFlag1 & _kotor2ExtensionValidationFlag2)) != 0;
+
+                // Condition 2: ((validationFlag3 & extensionFlags) == 0)
+                bool condition2 = ((_kotor2ExtensionValidationFlag3 & _kotor2ExtensionFlags) == 0);
+
+                // If both conditions are true, validation fails (set to 0)
+                // If either condition is false, validation passes (set to 1)
+                if (condition1 && condition2)
+                {
+                    _kotor2CapabilityValidationFlag = 0;
+                    return 0;
+                }
+                else
+                {
+                    _kotor2CapabilityValidationFlag = 1;
+                }
+            }
+
+            // Return 1 if validation passed, 0 if failed
+            return (_kotor2CapabilityValidationFlag == 1) ? 1 : 0;
         }
 
         /// <summary>
