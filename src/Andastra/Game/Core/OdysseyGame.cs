@@ -4526,13 +4526,13 @@ namespace Andastra.Runtime.Game.Core
                     }
 
                     string replyLabel = $"[{i + 1}] {replyText}";
-                    GraphicsGraphicsVector2 replyPos = new GraphicsVector2(padding, replyY + (i * 20));
+                    GraphicsVector2 replyPos = new GraphicsVector2(padding, replyY + (i * 20));
                     _spriteBatch.DrawString(_font, replyLabel, replyPos, Color.Yellow);
                 }
 
                 // Draw instruction text
                 string instructionText = "Press 1-9 to select reply, ESC to abort";
-                Andastra.Runtime.Graphics.GraphicsVector2 instructionPos = new Andastra.Runtime.Graphics.Vector2(padding, dialogueBoxY + dialogueBoxHeight - 20);
+                GraphicsVector2 instructionPos = new GraphicsVector2(padding, dialogueBoxY + dialogueBoxHeight - 20);
                 _spriteBatch.DrawString(_font, instructionText, instructionPos, Color.Gray);
             }
         }
