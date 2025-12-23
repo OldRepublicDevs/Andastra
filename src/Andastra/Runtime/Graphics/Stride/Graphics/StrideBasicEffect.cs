@@ -146,8 +146,9 @@ namespace Andastra.Runtime.Stride.Graphics
             // Use a custom parameter key for specular power
             parameterCollection.Set(new ValueParameterKey<float>("SpecularPower"), _specularPower);
 
-            // Lighting - using Stride's lighting keys
-            parameterCollection.Set(LightingKeys.AmbientLightColor, new Color3(_ambientLightColor.X, _ambientLightColor.Y, _ambientLightColor.Z));
+            // Lighting - using custom parameter key for ambient light color
+            // LightingKeys.AmbientLightColor doesn't exist in Stride API, use custom parameter key
+            parameterCollection.Set(new ValueParameterKey<Color3>("AmbientLightColor"), new Color3(_ambientLightColor.X, _ambientLightColor.Y, _ambientLightColor.Z));
 
             // Feature flags - custom BasicEffect parameters
             parameterCollection.Set(new ValueParameterKey<bool>("VertexColorEnabled"), _vertexColorEnabled);
@@ -767,7 +768,8 @@ namespace Andastra.Runtime.Stride.Graphics
 
                 if (name == "AmbientLightColor")
                 {
-                    parameterKey = LightingKeys.AmbientLightColor;
+                    // LightingKeys.AmbientLightColor doesn't exist in Stride API, use custom parameter key
+                    parameterKey = new ValueParameterKey<Color3>(name);
                     parameterValue = color3Value;
                 }
                 else if (name == "DiffuseColor")
