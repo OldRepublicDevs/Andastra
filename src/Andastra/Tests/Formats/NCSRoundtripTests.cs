@@ -3321,61 +3321,220 @@ namespace Andastra.Parsing.Tests.Formats
         /// Attempts to identify the action name at a given bytecode offset.
         /// Returns null if unable to determine.
         /// Matching Java implementation at vendor/DeNCS/src/test/java/com/kotor/resource/formats/ncs/NCSDecompCLIRoundTripTest.java:3656-3699
+        /// 
+        /// Implementation: Full NCS structure analysis - parses the NCS file to locate the instruction
+        /// containing the given offset, and if it's an ACTION instruction, extracts the action ID properly.
+        /// Based on swkotor2.exe ACTION opcode structure: bytecode (0x05) + qualifier (1 byte) + routine ID (uint16 big-endian) + arg count (uint8)
         /// </summary>
         private static string GetActionNameAtOffset(string ncsFile, long offset, string gameFlag)
         {
             try
             {
-                byte[] bytes = File.ReadAllBytes(ncsFile);
                 int offsetInt = (int)offset;
-                if (offsetInt < 0 || offsetInt >= bytes.Length)
+                if (offsetInt < 0)
                 {
                     return null;
                 }
 
-                // Action opcodes are typically at specific positions
-                // Look backwards for the action ID byte (usually 1-2 bytes before the action parameters)
-                // TODO:  This is a heuristic - actual parsing would require full NCS structure analysis
-                if (offsetInt > 0 && (bytes[offsetInt] & 0xFF) < 200)
+                // Parse the NCS file to get instruction structure
+                NCS ncs = null;
+                using (var reader = new NCSBinaryReader(ncsFile))
                 {
-                    // Likely an action ID - try to look it up
-                    int actionId = bytes[offsetInt] & 0xFF;
                     try
                     {
-                        string nwscriptPath = gameFlag.Equals("k2") ? K2Nwscript : K1Nwscript;
-                        if (File.Exists(nwscriptPath))
-                        {
-                            string content = File.ReadAllText(nwscriptPath, Encoding.UTF8);
-                            // Look for "// actionId:" pattern (with or without description)
-                            string pattern = "// " + actionId + ":";
-                            int idx = content.IndexOf(pattern);
-                            if (idx >= 0)
-                            {
-                                // Find the function signature after the comment
-                                // Format: "// 120: Description\n// ...\nvoid FunctionName(...);"
-                                int searchStart = idx + pattern.Length;
-                                int searchEnd = Math.Min(searchStart + 500, content.Length); // Look ahead up to 500 chars
-                                string section = content.Substring(searchStart, searchEnd - searchStart);
-
-                                // Look for function signature pattern: "void FunctionName" or "int FunctionName" etc.
-                                Regex funcPattern = new Regex(@"\b(void|int|float|string|object|location|effect|talent|action|itemproperty|vector)\s+(\w+)\s*\(");
-                                Match match = funcPattern.Match(section);
-                                if (match.Success)
-                                {
-                                    return match.Groups[2].Value; // Return function name
-                                }
-                            }
-                        }
+                        ncs = reader.Load();
                     }
                     catch
                     {
-                        // Ignore lookup failures
+                        // If parsing fails, fall back to null (corrupt or invalid NCS)
+                        return null;
+                    }
+                }
+
+                if (ncs == null || ncs.Instructions == null || ncs.Instructions.Count == 0)
+                {
+                    return null;
+                }
+
+                // Find which instruction contains the given byte offset
+                NCSInstruction containingInstruction = null;
+                foreach (var instruction in ncs.Instructions)
+                {
+                    if (instruction == null)
+                    {
+                        continue;
+                    }
+
+                    int instructionSize = CalculateInstructionSize(instruction);
+                    int instructionStart = instruction.Offset;
+                    int instructionEnd = instructionStart + instructionSize;
+
+                    // Check if the offset falls within this instruction's byte range
+                    if (offsetInt >= instructionStart && offsetInt < instructionEnd)
+                    {
+                        containingInstruction = instruction;
+                        break;
+                    }
+                }
+
+                // If we found an ACTION instruction, extract the action ID
+                if (containingInstruction != null && containingInstruction.InsType == NCSInstructionType.ACTION)
+                {
+                    // ACTION instruction structure:
+                    // Byte 0: bytecode (0x05)
+                    // Byte 1: qualifier
+                    // Bytes 2-3: action ID (uint16, big-endian) - stored in Args[0]
+                    // Byte 4: argument count (uint8) - stored in Args[1]
+                    if (containingInstruction.Args != null && containingInstruction.Args.Count >= 1)
+                    {
+                        try
+                        {
+                            int actionId = Convert.ToInt32(containingInstruction.Args[0]);
+                            return LookupActionName(actionId, gameFlag);
+                        }
+                        catch
+                        {
+                            // Ignore conversion failures
+                        }
                     }
                 }
             }
             catch
             {
                 // Ignore all errors
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Calculates the byte size of an NCS instruction.
+        /// Based on NCSBinaryWriter.DetermineSize and swkotor2.exe instruction size calculation.
+        /// </summary>
+        private static int CalculateInstructionSize(NCSInstruction instruction)
+        {
+            if (instruction == null)
+            {
+                return 0;
+            }
+
+            // Base size: bytecode (1 byte) + qualifier (1 byte)
+            int size = 2;
+
+            switch (instruction.InsType)
+            {
+                case NCSInstructionType.CPDOWNSP:
+                case NCSInstructionType.CPTOPSP:
+                case NCSInstructionType.CPDOWNBP:
+                case NCSInstructionType.CPTOPBP:
+                    // Stack copy operations: offset (4 bytes) + size (2 bytes)
+                    size += 6;
+                    break;
+
+                case NCSInstructionType.CONSTI:
+                case NCSInstructionType.CONSTF:
+                case NCSInstructionType.CONSTO:
+                    // Constants: value (4 bytes)
+                    size += 4;
+                    break;
+
+                case NCSInstructionType.CONSTS:
+                    // String constant: length (2 bytes) + string data
+                    if (instruction.Args != null && instruction.Args.Count >= 1 && instruction.Args[0] is string str)
+                    {
+                        size += 2 + str.Length;
+                    }
+                    else
+                    {
+                        // Fallback: assume empty string
+                        size += 2;
+                    }
+                    break;
+
+                case NCSInstructionType.ACTION:
+                    // ACTION: routine ID (2 bytes, big-endian) + argument count (1 byte)
+                    // Based on swkotor2.exe: ACTION opcode format: uint16 routineId (big-endian, bytes 2-3) + uint8 argCount (byte 4)
+                    size += 3;
+                    break;
+
+                case NCSInstructionType.MOVSP:
+                case NCSInstructionType.JMP:
+                case NCSInstructionType.JSR:
+                case NCSInstructionType.JZ:
+                case NCSInstructionType.JNZ:
+                    // Jump/stack operations: offset (4 bytes)
+                    size += 4;
+                    break;
+
+                case NCSInstructionType.DESTRUCT:
+                    // DESTRUCT: size (2 bytes) + stack offset (2 bytes) + size (2 bytes)
+                    size += 6;
+                    break;
+
+                case NCSInstructionType.DECxSP:
+                case NCSInstructionType.INCxSP:
+                case NCSInstructionType.DECxBP:
+                case NCSInstructionType.INCxBP:
+                    // Increment/decrement: value (4 bytes)
+                    size += 4;
+                    break;
+
+                case NCSInstructionType.STORE_STATE:
+                    // STORE_STATE: size (4 bytes) + stack offset (4 bytes)
+                    size += 8;
+                    break;
+
+                case NCSInstructionType.EQUALTT:
+                case NCSInstructionType.NEQUALTT:
+                    // Struct equality: size (2 bytes)
+                    size += 2;
+                    break;
+
+                // All other instructions (RSADDx, logical/arithmetic ops, RETN, SAVEBP, RESTOREBP, NOP, etc.)
+                // have just opcode + qualifier (2 bytes total)
+                default:
+                    break;
+            }
+
+            return size;
+        }
+
+        /// <summary>
+        /// Looks up an action name by ID from the nwscript.nss file.
+        /// </summary>
+        private static string LookupActionName(int actionId, string gameFlag)
+        {
+            try
+            {
+                string nwscriptPath = gameFlag.Equals("k2") ? K2Nwscript : K1Nwscript;
+                if (!File.Exists(nwscriptPath))
+                {
+                    return null;
+                }
+
+                string content = File.ReadAllText(nwscriptPath, Encoding.UTF8);
+                // Look for "// actionId:" pattern (with or without description)
+                string pattern = "// " + actionId + ":";
+                int idx = content.IndexOf(pattern);
+                if (idx >= 0)
+                {
+                    // Find the function signature after the comment
+                    // Format: "// 120: Description\n// ...\nvoid FunctionName(...);"
+                    int searchStart = idx + pattern.Length;
+                    int searchEnd = Math.Min(searchStart + 500, content.Length); // Look ahead up to 500 chars
+                    string section = content.Substring(searchStart, searchEnd - searchStart);
+
+                    // Look for function signature pattern: "void FunctionName" or "int FunctionName" etc.
+                    Regex funcPattern = new Regex(@"\b(void|int|float|string|object|location|effect|talent|action|itemproperty|vector)\s+(\w+)\s*\(");
+                    Match match = funcPattern.Match(section);
+                    if (match.Success)
+                    {
+                        return match.Groups[2].Value; // Return function name
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore lookup failures
             }
             return null;
         }
