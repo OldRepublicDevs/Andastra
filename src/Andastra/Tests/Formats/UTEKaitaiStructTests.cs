@@ -1283,6 +1283,10 @@ public class {testClassName} {{
             return null;
         }
 
+        /// <summary>
+        /// Executes the generated C# parser to parse a UTE file.
+        /// Compiles the C# parser and executes it with proper dependencies.
+        /// </summary>
         private ParserExecutionResult ExecuteCSharpParser(string outputDir, string testFile)
         {
             // Look for the generated C# parser
@@ -1297,14 +1301,598 @@ public class {testClassName} {{
                 };
             }
 
-            // TODO:  C# execution would require compilation, so we'll skip it for now
-            // and just validate that files were generated
-            return new ParserExecutionResult
+            // Check if C# compiler is available
+            // Try csc (C# compiler) first, then dotnet CLI
+            string cscPath = FindCSharpCompiler();
+            if (string.IsNullOrEmpty(cscPath))
             {
-                Success = true,
-                ErrorMessage = null,
-                ParsedData = $"C# parser files generated: {csFiles.Length} files"
+                return new ParserExecutionResult
+                {
+                    Success = false,
+                    ErrorMessage = "C# compiler (csc or dotnet) not available",
+                    ParsedData = null
+                };
+            }
+
+            // Find the main parser class (usually Ute.cs or similar)
+            var mainParser = csFiles.FirstOrDefault(f => Path.GetFileName(f).ToLower().Contains("ute"));
+            if (mainParser == null)
+            {
+                // Try to find any C# file that looks like a main parser
+                mainParser = csFiles.FirstOrDefault(f =>
+                    !Path.GetFileName(f).ToLower().Contains("kaitai") &&
+                    !Path.GetFileName(f).ToLower().Contains("test"));
+                if (mainParser == null)
+                {
+                    mainParser = csFiles[0]; // Use first C# file found
+                }
+            }
+
+            // Find Kaitai Struct C# runtime
+            string kaitaiRuntimeDll = FindKaitaiStructCSharpRuntime();
+            if (string.IsNullOrEmpty(kaitaiRuntimeDll))
+            {
+                // Try to compile without explicit runtime (may work if runtime is in GAC or referenced)
+                kaitaiRuntimeDll = "";
+            }
+
+            // Create a temporary directory for compilation
+            string compileDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            Directory.CreateDirectory(compileDir);
+
+            try
+            {
+                // Copy all C# files to compile directory
+                foreach (var csFile in csFiles)
+                {
+                    string destFile = Path.Combine(compileDir, Path.GetFileName(csFile));
+                    File.Copy(csFile, destFile, true);
+                }
+
+                // Create a test C# program that uses the parser
+                string testClassName = "UteParserTest";
+                string testClassFile = Path.Combine(compileDir, testClassName + ".cs");
+                string parserClassName = Path.GetFileNameWithoutExtension(mainParser);
+                string parserNamespace = ExtractCSharpNamespace(mainParser);
+
+                // Build test program that parses the UTE file and outputs JSON
+                string testClassContent = $@"using System;
+using System.IO;
+using System.Collections.Generic;
+using System.Text;
+{(string.IsNullOrEmpty(parserNamespace) ? "" : $"using {parserNamespace};")}
+{(string.IsNullOrEmpty(kaitaiRuntimeDll) ? "" : "// Runtime DLL: " + kaitaiRuntimeDll)}
+
+public class {testClassName}
+{{
+    public static void Main(string[] args)
+    {{
+        try
+        {{
+            string testFile = args[0];
+            byte[] data = File.ReadAllBytes(testFile);
+
+            // Create Kaitai Stream from byte array
+            // Kaitai Struct C# uses KaitaiStream or ByteBufferKaitaiStream class
+            // Try different stream creation methods based on runtime version
+            object stream = null;
+            try
+            {{
+                // Try ByteBufferKaitaiStream (common in newer versions)
+                stream = new KaitaiStruct.Runtime.ByteBufferKaitaiStream(data);
+            }}
+            catch
+            {{
+                try
+                {{
+                    // Try KaitaiStream (older versions)
+                    stream = new KaitaiStruct.Runtime.KaitaiStream(data);
+                }}
+                catch
+                {{
+                    // Try without namespace
+                    try {{ stream = new ByteBufferKaitaiStream(data); }} catch {{ }}
+                    if (stream == null) {{ try {{ stream = new KaitaiStream(data); }} catch {{ }} }}
+                }}
+            }}
+            
+            // Parse UTE file - try different constructor patterns
+            {(string.IsNullOrEmpty(parserNamespace) ? parserClassName : $"{parserNamespace}.{parserClassName}")} ute = null;
+            try
+            {{
+                ute = new {(string.IsNullOrEmpty(parserNamespace) ? parserClassName : $"{parserNamespace}.{parserClassName}")}(stream);
+            }}
+            catch
+            {{
+                // Try with byte array directly
+                try {{ ute = new {(string.IsNullOrEmpty(parserNamespace) ? parserClassName : $"{parserNamespace}.{parserClassName}")}(data); }} catch {{ }}
+                // Try with KaitaiStream parameter name
+                if (ute == null) {{ try {{ ute = new {(string.IsNullOrEmpty(parserNamespace) ? parserClassName : $"{parserNamespace}.{parserClassName}")}((KaitaiStruct.Runtime.KaitaiStream)stream); }} catch {{ }} }}
+            }}
+            
+            if (ute == null)
+            {{
+                throw new Exception(""Failed to create UTE parser instance"");
+            }}
+
+            // Build output dictionary
+            var output = new Dictionary<string, object>();
+            
+            // Extract basic fields
+            try {{ output[""FileType""] = ute.FileType ?? """"; }} catch {{ output[""FileType""] = """"; }}
+            try {{ output[""FileVersion""] = ute.FileVersion ?? """"; }} catch {{ output[""FileVersion""] = """"; }}
+
+            // Try to extract root struct
+            try
+            {{
+                object rootStruct = null;
+                try {{ rootStruct = ute.RootStruct; }} catch {{ }}
+                if (rootStruct == null)
+                {{
+                    try {{ rootStruct = ute.Root_Struct; }} catch {{ }}
+                }}
+                if (rootStruct == null)
+                {{
+                    try {{ rootStruct = ute.root_struct; }} catch {{ }}
+                }}
+
+                if (rootStruct != null)
+                {{
+                    // Extract common UTE fields using reflection
+                    string[] fieldNames = {{""Tag"", ""TemplateResRef"", ""Active"", ""DifficultyIndex"", ""Difficulty"",
+                                          ""Faction"", ""MaxCreatures"", ""RecCreatures"", ""Respawns"", ""SpawnOption"",
+                                          ""Reset"", ""ResetTime"", ""PlayerOnly"", ""OnEntered"", ""OnExit"",
+                                          ""OnExhausted"", ""OnHeartbeat"", ""OnUserDefined"", ""Comment"", ""PaletteID""}};
+
+                    var rootType = rootStruct.GetType();
+                    foreach (string fieldName in fieldNames)
+                    {{
+                        try
+                        {{
+                            var prop = rootType.GetProperty(fieldName);
+                            if (prop == null)
+                            {{
+                                // Try lowercase version
+                                string lowerFieldName = fieldName.Substring(0, 1).ToLower() + fieldName.Substring(1);
+                                prop = rootType.GetProperty(lowerFieldName);
+                            }}
+                            if (prop != null)
+                            {{
+                                object value = prop.GetValue(rootStruct);
+                                if (value != null)
+                                {{
+                                    output[fieldName] = value.ToString();
+                                }}
+                            }}
+                        }}
+                        catch
+                        {{
+                            // Field not found, skip
+                        }}
+                    }}
+
+                    // Extract creature list
+                    try
+                    {{
+                        var creatureListProp = rootType.GetProperty(""CreatureList"");
+                        if (creatureListProp == null)
+                        {{
+                            creatureListProp = rootType.GetProperty(""creatureList"");
+                        }}
+                        if (creatureListProp == null)
+                        {{
+                            creatureListProp = rootType.GetProperty(""creature_list"");
+                        }}
+                        if (creatureListProp != null)
+                        {{
+                            object creatureList = creatureListProp.GetValue(rootStruct);
+                            if (creatureList is System.Collections.ICollection collection)
+                            {{
+                                output[""CreatureCount""] = collection.Count;
+                            }}
+                        }}
+                    }}
+                    catch
+                    {{
+                        // Creature list not found
+                    }}
+                }}
+            }}
+            catch (Exception e)
+            {{
+                // Root struct extraction failed, continue with basic fields
+                // output[""Error""] = e.Message;
+            }}
+
+            // Output as JSON-like format
+            Console.WriteLine(""SUCCESS"");
+            Console.Write(""{{"");
+            bool first = true;
+            foreach (var entry in output)
+            {{
+                if (!first) Console.Write("","");
+                string value = entry.Value?.ToString() ?? """";
+                // Escape quotes in value
+                value = value.Replace(""\"""", ""\\\"""").Replace(""\r"", """").Replace(""\n"", """");
+                Console.Write(""\"""" + entry.Key + ""\"":\"""" + value + ""\"""");
+                first = false;
+            }}
+            Console.WriteLine(""}}"");
+        }}
+        catch (Exception e)
+        {{
+            Console.Error.WriteLine(""ERROR: "" + e.Message);
+            Console.Error.WriteLine(e.StackTrace);
+            Environment.Exit(1);
+        }}
+    }}
+}}";
+
+                File.WriteAllText(testClassFile, testClassContent);
+
+                // Compile C# files
+                // Build list of all C# files to compile
+                var allCsFiles = new List<string>();
+                foreach (var csFile in csFiles)
+                {
+                    allCsFiles.Add(Path.Combine(compileDir, Path.GetFileName(csFile)));
+                }
+                allCsFiles.Add(testClassFile);
+
+                // Determine compilation method based on available compiler
+                bool useDotnet = cscPath.Contains("dotnet") || cscPath == "dotnet";
+                
+                if (useDotnet)
+                {
+                    // Use dotnet CLI to compile
+                    // Create a temporary .csproj file
+                    string csprojFile = Path.Combine(compileDir, "UteParserTest.csproj");
+                    string csprojContent = $@"<Project Sdk=""Microsoft.NET.Sdk"">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+  {(string.IsNullOrEmpty(kaitaiRuntimeDll) ? "" : $@"<ItemGroup>
+    <Reference Include=""KaitaiStructRuntime"">
+      <HintPath>{kaitaiRuntimeDll}</HintPath>
+    </Reference>
+  </ItemGroup>")}
+</Project>";
+                    File.WriteAllText(csprojFile, csprojContent);
+
+                    // Build using dotnet
+                    var buildResult = RunCommand("dotnet", $"build \"{csprojFile}\" -o \"{compileDir}\" --no-restore");
+                    if (buildResult.ExitCode != 0)
+                    {
+                        // Try without explicit runtime reference
+                        if (!string.IsNullOrEmpty(kaitaiRuntimeDll))
+                        {
+                            csprojContent = csprojContent.Replace($@"<ItemGroup>
+    <Reference Include=""KaitaiStructRuntime"">
+      <HintPath>{kaitaiRuntimeDll}</HintPath>
+    </Reference>
+  </ItemGroup>", "");
+                            File.WriteAllText(csprojFile, csprojContent);
+                            buildResult = RunCommand("dotnet", $"build \"{csprojFile}\" -o \"{compileDir}\" --no-restore");
+                        }
+                        
+                        if (buildResult.ExitCode != 0)
+                        {
+                            return new ParserExecutionResult
+                            {
+                                Success = false,
+                                ErrorMessage = $"C# compilation failed: {buildResult.Error}. Output: {buildResult.Output}",
+                                ParsedData = buildResult.Output
+                            };
+                        }
+                    }
+
+                    // Execute the compiled program
+                    string exePath = Path.Combine(compileDir, "UteParserTest.exe");
+                    if (!File.Exists(exePath))
+                    {
+                        // Try .dll with dotnet run
+                        exePath = Path.Combine(compileDir, "UteParserTest.dll");
+                        if (File.Exists(exePath))
+                        {
+                            var executeResult = RunCommand("dotnet", $"\"{exePath}\" \"{testFile}\"");
+                            if (executeResult.ExitCode == 0 && executeResult.Output.Contains("SUCCESS"))
+                            {
+                                return new ParserExecutionResult
+                                {
+                                    Success = true,
+                                    ErrorMessage = null,
+                                    ParsedData = executeResult.Output
+                                };
+                            }
+                            else
+                            {
+                                return new ParserExecutionResult
+                                {
+                                    Success = false,
+                                    ErrorMessage = $"C# parser execution failed: {executeResult.Error}. Output: {executeResult.Output}",
+                                    ParsedData = executeResult.Output
+                                };
+                            }
+                        }
+                        else
+                        {
+                            return new ParserExecutionResult
+                            {
+                                Success = false,
+                                ErrorMessage = $"Compiled executable not found in {compileDir}",
+                                ParsedData = buildResult.Output
+                            };
+                        }
+                    }
+                    else
+                    {
+                        var executeResult = RunCommand(exePath, $"\"{testFile}\"");
+                        if (executeResult.ExitCode == 0 && executeResult.Output.Contains("SUCCESS"))
+                        {
+                            return new ParserExecutionResult
+                            {
+                                Success = true,
+                                ErrorMessage = null,
+                                ParsedData = executeResult.Output
+                            };
+                        }
+                        else
+                        {
+                            return new ParserExecutionResult
+                            {
+                                Success = false,
+                                ErrorMessage = $"C# parser execution failed: {executeResult.Error}. Output: {executeResult.Output}",
+                                ParsedData = executeResult.Output
+                            };
+                        }
+                    }
+                }
+                else
+                {
+                    // Use csc (C# compiler) directly
+                    // Build classpath/references
+                    var references = new List<string>();
+                    if (!string.IsNullOrEmpty(kaitaiRuntimeDll) && File.Exists(kaitaiRuntimeDll))
+                    {
+                        references.Add($"-reference:\"{kaitaiRuntimeDll}\"");
+                    }
+                    
+                    // Add standard library references
+                    string frameworkPath = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+                        "dotnet", "shared", "Microsoft.NETCore.App");
+                    if (Directory.Exists(frameworkPath))
+                    {
+                        var frameworkDirs = Directory.GetDirectories(frameworkPath);
+                        if (frameworkDirs.Length > 0)
+                        {
+                            string latestFramework = frameworkDirs.OrderByDescending(d => d).First();
+                            string systemDll = Path.Combine(latestFramework, "System.Runtime.dll");
+                            if (File.Exists(systemDll))
+                            {
+                                references.Add($"-reference:\"{systemDll}\"");
+                            }
+                        }
+                    }
+
+                    // Compile all files
+                    string allFilesArg = string.Join(" ", allCsFiles.Select(f => $"\"{f}\""));
+                    string refsArg = string.Join(" ", references);
+                    var compileResult = RunCommand(cscPath, $"-out:\"{Path.Combine(compileDir, testClassName + ".exe")}\" {refsArg} {allFilesArg}");
+
+                    if (compileResult.ExitCode != 0)
+                    {
+                        // Try without explicit runtime reference
+                        if (!string.IsNullOrEmpty(kaitaiRuntimeDll))
+                        {
+                            references.RemoveAll(r => r.Contains("KaitaiStruct"));
+                            refsArg = string.Join(" ", references);
+                            compileResult = RunCommand(cscPath, $"-out:\"{Path.Combine(compileDir, testClassName + ".exe")}\" {refsArg} {allFilesArg}");
+                        }
+                        
+                        if (compileResult.ExitCode != 0)
+                        {
+                            return new ParserExecutionResult
+                            {
+                                Success = false,
+                                ErrorMessage = $"C# compilation failed: {compileResult.Error}. Output: {compileResult.Output}",
+                                ParsedData = compileResult.Output
+                            };
+                        }
+                    }
+
+                    // Execute the compiled program
+                    string exePath = Path.Combine(compileDir, testClassName + ".exe");
+                    if (!File.Exists(exePath))
+                    {
+                        return new ParserExecutionResult
+                        {
+                            Success = false,
+                            ErrorMessage = $"Compiled executable not found: {exePath}",
+                            ParsedData = compileResult.Output
+                        };
+                    }
+
+                    var executeResult = RunCommand(exePath, $"\"{testFile}\"");
+                    if (executeResult.ExitCode == 0 && executeResult.Output.Contains("SUCCESS"))
+                    {
+                        return new ParserExecutionResult
+                        {
+                            Success = true,
+                            ErrorMessage = null,
+                            ParsedData = executeResult.Output
+                        };
+                    }
+                    else
+                    {
+                        return new ParserExecutionResult
+                        {
+                            Success = false,
+                            ErrorMessage = $"C# parser execution failed: {executeResult.Error}. Output: {executeResult.Output}",
+                            ParsedData = executeResult.Output
+                        };
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ParserExecutionResult
+                {
+                    Success = false,
+                    ErrorMessage = $"Exception during C# parser execution: {ex.Message}",
+                    ParsedData = ex.ToString()
+                };
+            }
+            finally
+            {
+                // Cleanup compile directory
+                try
+                {
+                    if (Directory.Exists(compileDir))
+                    {
+                        Directory.Delete(compileDir, true);
+                    }
+                }
+                catch
+                {
+                    // Ignore cleanup errors
+                }
+            }
+        }
+
+        /// <summary>
+        /// Finds the C# compiler (csc or dotnet).
+        /// </summary>
+        private string FindCSharpCompiler()
+        {
+            // Try dotnet CLI first (most common on modern systems)
+            var dotnetCheck = RunCommand("dotnet", "--version");
+            if (dotnetCheck.ExitCode == 0)
+            {
+                return "dotnet";
+            }
+
+            // Try csc (C# compiler) in common locations
+            string[] possiblePaths = new[]
+            {
+                "csc",
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft Visual Studio", "2022", "Community", "MSBuild", "Current", "Bin", "Roslyn", "csc.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft Visual Studio", "2022", "Professional", "MSBuild", "Current", "Bin", "Roslyn", "csc.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft Visual Studio", "2022", "Enterprise", "MSBuild", "Current", "Bin", "Roslyn", "csc.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft Visual Studio", "2019", "Community", "MSBuild", "Current", "Bin", "Roslyn", "csc.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft Visual Studio", "2019", "Professional", "MSBuild", "Current", "Bin", "Roslyn", "csc.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft Visual Studio", "2019", "Enterprise", "MSBuild", "Current", "Bin", "Roslyn", "csc.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "Microsoft.NET", "Framework", "v4.0.30319", "csc.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "Microsoft.NET", "Framework64", "v4.0.30319", "csc.exe"),
             };
+
+            foreach (string path in possiblePaths)
+            {
+                try
+                {
+                    var processInfo = new ProcessStartInfo
+                    {
+                        FileName = path,
+                        Arguments = "/version",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+
+                    using (var process = Process.Start(processInfo))
+                    {
+                        if (process != null)
+                        {
+                            process.WaitForExit(5000);
+                            if (process.ExitCode == 0 || process.ExitCode == 1) // csc returns 1 for /version, but that's OK
+                            {
+                                return path;
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // Continue searching
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Finds the Kaitai Struct C# runtime DLL.
+        /// </summary>
+        private string FindKaitaiStructCSharpRuntime()
+        {
+            // Check environment variable first
+            var envDll = Environment.GetEnvironmentVariable("KAITAI_CSHARP_RUNTIME");
+            if (!string.IsNullOrEmpty(envDll) && File.Exists(envDll))
+            {
+                return envDll;
+            }
+
+            // Check common locations for Kaitai Struct C# runtime
+            var searchPaths = new[]
+            {
+                Path.Combine(AppContext.BaseDirectory, "KaitaiStruct.Runtime.dll"),
+                Path.Combine(AppContext.BaseDirectory, "..", "KaitaiStruct.Runtime.dll"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages", "kaitai.struct.runtime", "0.9", "lib", "netstandard2.0", "KaitaiStruct.Runtime.dll"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages", "kaitai.struct.runtime", "0.10", "lib", "netstandard2.0", "KaitaiStruct.Runtime.dll"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages", "kaitai.struct.runtime", "0.11", "lib", "netstandard2.0", "KaitaiStruct.Runtime.dll"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages", "kaitai.struct.runtime", "0.12", "lib", "netstandard2.0", "KaitaiStruct.Runtime.dll"),
+                // Also check in output directory (may have been copied there)
+                Path.Combine(KaitaiOutputDir, "csharp", "KaitaiStruct.Runtime.dll"),
+            };
+
+            foreach (var path in searchPaths)
+            {
+                try
+                {
+                    var normalized = Path.GetFullPath(path);
+                    if (File.Exists(normalized))
+                    {
+                        return normalized;
+                    }
+                }
+                catch
+                {
+                    // Ignore path errors
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Extracts the C# namespace from a C# source file.
+        /// </summary>
+        private string ExtractCSharpNamespace(string csFile)
+        {
+            try
+            {
+                string content = File.ReadAllText(csFile);
+                // Look for namespace declaration: namespace com.example;
+                int namespaceIndex = content.IndexOf("namespace ", StringComparison.Ordinal);
+                if (namespaceIndex >= 0)
+                {
+                    int start = namespaceIndex + 10; // "namespace ".Length
+                    int end = content.IndexOfAny(new[] { ';', '\r', '\n', '{' }, start);
+                    if (end > start)
+                    {
+                        return content.Substring(start, end - start).Trim();
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore errors
+            }
+            return "";
         }
 
         private class ParserExecutionResult
