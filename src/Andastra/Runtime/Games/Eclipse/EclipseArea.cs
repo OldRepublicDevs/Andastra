@@ -4380,7 +4380,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                                 // For now, we'll use the light's shadow matrices if available
                                                 lightSpaceMatrix = light.ShadowLightSpaceMatrix;
 
-                                                // Note: Actual shadow map sampling would require graphics API access
+                                                // TODO: STUB -  Note: Actual shadow map sampling would require graphics API access
                                                 // This is handled by AreaLightCalculator.CalculateSoftShadowPcf()
                                             }
 
@@ -5924,7 +5924,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                                 // For now, we'll use the light's shadow matrices if available
                                                 lightSpaceMatrix = light.ShadowLightSpaceMatrix;
 
-                                                // Note: Actual shadow map sampling would require graphics API access
+                                                // TODO: STUB -  Note: Actual shadow map sampling would require graphics API access
                                                 // This is handled by AreaLightCalculator.CalculateSoftShadowPcf()
                                             }
 
@@ -7223,7 +7223,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                                 // For now, we'll use the light's shadow matrices if available
                                                 lightSpaceMatrix = light.ShadowLightSpaceMatrix;
 
-                                                // Note: Actual shadow map sampling would require graphics API access
+                                                // TODO: STUB -  Note: Actual shadow map sampling would require graphics API access
                                                 // This is handled by AreaLightCalculator.CalculateSoftShadowPcf()
                                             }
 
@@ -7343,23 +7343,51 @@ namespace Andastra.Runtime.Games.Eclipse
             graphicsDevice.SetRasterizerState(graphicsDevice.CreateRasterizerState());
 
             // Set up blend state for opacity/alpha blending if needed
+            // Based on swkotor2.exe: Entities with opacity < 1.0 use alpha blending
+            // Original implementation: DirectX 8/9 render states D3DRS_ALPHABLENDENABLE, D3DRS_SRCBLEND, D3DRS_DESTBLEND
+            // Standard alpha blending: SrcAlpha * SourceColor + (1 - SrcAlpha) * DestinationColor
             if (needsAlphaBlending)
             {
                 // Enable alpha blending for transparent entities
-                // Based on swkotor2.exe: Entities with opacity < 1.0 use alpha blending
+                // Configure blend state for standard alpha blending:
+                // - Color: SourceAlpha * SourceColor + InverseSourceAlpha * DestinationColor
+                // - Alpha: SourceAlpha * SourceAlpha + InverseSourceAlpha * DestinationAlpha
+                // Based on swkotor2.exe: Standard alpha blending uses D3DBLEND_SRCALPHA and D3DBLEND_INVSRCALPHA
                 IBlendState blendState = graphicsDevice.CreateBlendState();
-                // Note: Actual blend state configuration would set alpha blending parameters
-                // TODO: STUB - For now, use default blend state (implementation may need to be enhanced)
+                blendState.BlendEnable = true;
+                blendState.ColorBlendFunction = BlendFunction.Add;
+                blendState.ColorSourceBlend = Blend.SourceAlpha;
+                blendState.ColorDestinationBlend = Blend.InverseSourceAlpha;
+                blendState.AlphaBlendFunction = BlendFunction.Add;
+                blendState.AlphaSourceBlend = Blend.SourceAlpha;
+                blendState.AlphaDestinationBlend = Blend.InverseSourceAlpha;
+                blendState.ColorWriteChannels = ColorWriteChannels.All;
+                blendState.BlendFactor = new Color(255, 255, 255, 255); // White blend factor (no tinting)
+                blendState.MultiSampleMask = -1; // Enable all samples
                 graphicsDevice.SetBlendState(blendState);
             }
             else
             {
-                graphicsDevice.SetBlendState(graphicsDevice.CreateBlendState());
+                // Opaque rendering: disable blending for maximum performance
+                // Based on swkotor2.exe: Opaque entities use no blending (One/Zero blend factors)
+                IBlendState blendState = graphicsDevice.CreateBlendState();
+                blendState.BlendEnable = false;
+                blendState.ColorBlendFunction = BlendFunction.Add;
+                blendState.ColorSourceBlend = Blend.One;
+                blendState.ColorDestinationBlend = Blend.Zero;
+                blendState.AlphaBlendFunction = BlendFunction.Add;
+                blendState.AlphaSourceBlend = Blend.One;
+                blendState.AlphaDestinationBlend = Blend.Zero;
+                blendState.ColorWriteChannels = ColorWriteChannels.All;
+                blendState.BlendFactor = new Color(255, 255, 255, 255);
+                blendState.MultiSampleMask = -1;
+                graphicsDevice.SetBlendState(blendState);
             }
 
-            // Apply opacity to basic effect if supported
-            // Note: BasicEffect may not directly support opacity, but we can apply it via material color
-            // TODO: STUB - For now, we'll render with the entity's world matrix (already set above)
+            // Apply opacity to basic effect
+            // Based on swkotor2.exe: Entity opacity is applied to material alpha for fade-in/fade-out effects
+            // IBasicEffect.Alpha property controls the alpha channel of the rendered output
+            basicEffect.Alpha = opacity;
 
             // Set rendering states for entity geometry
             graphicsDevice.SetSamplerState(0, graphicsDevice.CreateSamplerState());
