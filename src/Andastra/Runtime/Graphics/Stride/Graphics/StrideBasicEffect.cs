@@ -78,9 +78,9 @@ namespace Andastra.Runtime.Stride.Graphics
                 // Original game: DirectX 9 fixed-function pipeline specular lighting (swkotor2.exe: d3d9.dll @ 0x0080a6c0)
                 if (_lightingEnabled && _specularPower > 0.0f)
                 {
-                    var specularFeature = new MaterialSpecularMapFeature(
-                        new ComputeColor(new Color4(_specularColor.X, _specularColor.Y, _specularColor.Z, 1.0f))
-                    );
+                    var specularColor = new Color4(_specularColor.X, _specularColor.Y, _specularColor.Z, 1.0f);
+                    var specularFeature = new MaterialSpecularMapFeature();
+                    specularFeature.SpecularMap = new ComputeColor(specularColor);
                     materialDescriptor.Attributes.Specular = specularFeature;
                     // Set specular power via custom parameter key (MaterialKeys.SpecularPowerValue doesn't exist in Stride API)
                     // This will be used by shaders to control specular highlight size
