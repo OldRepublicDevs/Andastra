@@ -290,18 +290,18 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     // Set input texture
                     try
                     {
-                        var inputTextureParam = parameters.Get("InputTexture");
+                        var inputTextureParam = parameters.Get<object>("InputTexture");
                         if (inputTextureParam != null)
                         {
-                            inputTextureParam.SetValue(input);
+                            ((dynamic)inputTextureParam).SetValue(input);
                         }
                         else
                         {
                             // Try alternative parameter names
-                            var sourceTextureParam = parameters.Get("SourceTexture");
+                            var sourceTextureParam = parameters.Get<object>("SourceTexture");
                             if (sourceTextureParam != null)
                             {
-                                sourceTextureParam.SetValue(input);
+                                ((dynamic)sourceTextureParam).SetValue(input);
                             }
                             else
                             {
@@ -323,16 +323,16 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     {
                         try
                         {
-                            var lutTextureParam = parameters.Get("LutTexture");
+                            var lutTextureParam = parameters.Get<object>("LutTexture");
                             if (lutTextureParam != null)
                             {
-                                lutTextureParam.SetValue(_lutTexture);
+                                ((dynamic)lutTextureParam).SetValue(_lutTexture);
                             }
 
-                            var lutSizeParam = parameters.Get("LutSize");
+                            var lutSizeParam = parameters.Get<object>("LutSize");
                             if (lutSizeParam != null)
                             {
-                                lutSizeParam.SetValue((float)_lutSize);
+                                ((dynamic)lutSizeParam).SetValue((float)_lutSize);
                             }
                         }
                         catch (Exception)
@@ -344,22 +344,22 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     // Set color grading parameters
                     try
                     {
-                        var contrastParam = parameters.Get("Contrast");
+                        var contrastParam = parameters.Get<object>("Contrast");
                         if (contrastParam != null)
                         {
-                            contrastParam.SetValue(_contrast);
+                            ((dynamic)contrastParam).SetValue(_contrast);
                         }
 
-                        var saturationParam = parameters.Get("Saturation");
+                        var saturationParam = parameters.Get<object>("Saturation");
                         if (saturationParam != null)
                         {
-                            saturationParam.SetValue(_saturation);
+                            ((dynamic)saturationParam).SetValue(_saturation);
                         }
 
-                        var strengthParam = parameters.Get("Strength");
+                        var strengthParam = parameters.Get<object>("Strength");
                         if (strengthParam != null)
                         {
-                            strengthParam.SetValue(_strength);
+                            ((dynamic)strengthParam).SetValue(_strength);
                         }
                     }
                     catch (Exception)
@@ -370,16 +370,16 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     // Set screen size parameters (useful for UV calculations)
                     try
                     {
-                        var screenSizeParam = parameters.Get("ScreenSize");
+                        var screenSizeParam = parameters.Get<object>("ScreenSize");
                         if (screenSizeParam != null)
                         {
-                            screenSizeParam.SetValue(new Vector2(width, height));
+                            ((dynamic)screenSizeParam).SetValue(new Vector2(width, height));
                         }
 
-                        var screenSizeInvParam = parameters.Get("ScreenSizeInv");
+                        var screenSizeInvParam = parameters.Get<object>("ScreenSizeInv");
                         if (screenSizeInvParam != null)
                         {
-                            screenSizeInvParam.SetValue(new Vector2(1.0f / width, 1.0f / height));
+                            ((dynamic)screenSizeInvParam).SetValue(new Vector2(1.0f / width, 1.0f / height));
                         }
                     }
                     catch (Exception)
