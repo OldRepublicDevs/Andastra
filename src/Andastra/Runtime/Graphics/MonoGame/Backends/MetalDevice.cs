@@ -433,7 +433,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             IntPtr handle = new IntPtr(_nextResourceHandle++);
-            var pipeline = new MetalRaytracingPipeline(handle, desc, raytracingPipelineState);
+            var pipeline = new MetalRaytracingPipeline(handle, desc, raytracingPipelineState, _backend);
             _raytracingPipelines[handle] = pipeline;
             return pipeline;
         }
@@ -1319,21 +1319,31 @@ namespace Andastra.Runtime.MonoGame.Backends
         private readonly IntPtr _handle;
         private readonly GraphicsPipelineDesc _desc;
         private readonly IFramebuffer _framebuffer;
+        private readonly IntPtr _renderPipelineState;
         private bool _disposed;
 
         public GraphicsPipelineDesc Desc { get { return _desc; } }
+
+        // Internal property to access render pipeline state for binding to command encoders
+        internal IntPtr RenderPipelineState { get { return _renderPipelineState; } }
 
         public MetalPipeline(IntPtr handle, GraphicsPipelineDesc desc, IFramebuffer framebuffer)
         {
             _handle = handle;
             _desc = desc;
             _framebuffer = framebuffer;
+            // Extract render pipeline state from handle (handle is the MTLRenderPipelineState)
+            _renderPipelineState = handle;
         }
 
         public void Dispose()
         {
             if (!_disposed)
             {
+                if (_renderPipelineState != IntPtr.Zero)
+                {
+                    MetalNative.ReleaseRenderPipelineState(_renderPipelineState);
+                }
                 _disposed = true;
             }
         }
@@ -1412,6 +1422,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private readonly IntPtr _handle;
         private readonly Interfaces.RaytracingPipelineDesc _desc;
         private readonly IntPtr _raytracingPipelineState;
+        private readonly MetalBackend _backend;
         private bool _disposed;
 
         public Interfaces.RaytracingPipelineDesc Desc { get { return _desc; } }
@@ -1422,11 +1433,12 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// </summary>
         internal IntPtr RaytracingPipelineState { get { return _raytracingPipelineState; } }
 
-        public MetalRaytracingPipeline(IntPtr handle, Interfaces.RaytracingPipelineDesc desc, IntPtr raytracingPipelineState)
+        public MetalRaytracingPipeline(IntPtr handle, Interfaces.RaytracingPipelineDesc desc, IntPtr raytracingPipelineState, MetalBackend backend)
         {
             _handle = handle;
             _desc = desc;
             _raytracingPipelineState = raytracingPipelineState;
+            _backend = backend;
         }
 
         public void Dispose()
@@ -1444,17 +1456,87 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// <summary>
         /// Gets the shader identifier for a shader or hit group in the pipeline.
         /// Shader identifiers are opaque handles used in the shader binding table.
+        ///
+        /// Metal 3.0 raytracing implementation:
+        /// Metal uses MTLFunctionHandle for shader identifiers in raytracing pipelines.
+        /// The shader identifier is obtained from the raytracing pipeline state using the export name.
+        ///
+        /// Based on Metal API: MTLRaytracingPipelineState::functionHandle(function:)
+        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlraytracingpipelinestate
         /// </summary>
         /// <param name="exportName">The export name of the shader or hit group (e.g., "ShadowRayGen", "ShadowMiss", "ShadowHitGroup").</param>
-        /// <returns>Shader identifier bytes (typically 32 bytes for D3D12, variable for Vulkan). Returns null if the export name is not found.</returns>
+        /// <returns>Shader identifier bytes (Metal uses 8-byte function handles). Returns null if the export name is not found.</returns>
         public byte[] GetShaderIdentifier(string exportName)
         {
-            // TODO: STUB - Implement Metal shader identifier retrieval
-            // Metal API: MTLFunctionHandle or MTLIntersectionFunctionTable
-            // Metal doesn't have the same shader identifier concept as D3D12/Vulkan
-            // This would need to map export names to function handles or intersection function table indices
-            // For now, return null to indicate not implemented
-            return null;
+            if (string.IsNullOrEmpty(exportName) || _raytracingPipelineState == IntPtr.Zero)
+            {
+                return null;
+            }
+
+            try
+            {
+                // Metal API: [raytracingPipelineState functionHandleWithFunction:function]
+                // First, we need to get the function from the pipeline descriptor using the export name
+                // Metal stores functions in the pipeline descriptor, and we can query them by name
+
+                // Get function handle from raytracing pipeline state
+                // Metal API: - (MTLFunctionHandle *)functionHandleWithFunction:(id<MTLFunction>)function
+                // We need to get the function first, then get its handle
+
+                // For now, Metal doesn't provide a direct way to get function handles by export name
+                // The shader binding table in Metal is typically built using function handles obtained
+                // during pipeline creation. This method would need access to the original shader functions
+                // that were used to create the pipeline.
+
+                // Implementation: Query the raytracing pipeline state for the function handle
+                // This requires Objective-C interop to call functionHandleWithFunction:
+                // Use MetalNative.GetFunctionHandle which handles selector registration internally
+
+                // We need the function object to get its handle
+                // The function should be stored in the pipeline descriptor when the pipeline was created
+                // For now, we'll attempt to get it from the default library
+                IntPtr defaultLibrary = _backend.GetDefaultLibrary();
+                if (defaultLibrary == IntPtr.Zero)
+                {
+                    return null;
+                }
+
+                // Get function from library by export name
+                IntPtr function = MetalNative.CreateFunctionFromLibrary(defaultLibrary, exportName);
+                if (function == IntPtr.Zero)
+                {
+                    return null;
+                }
+
+                try
+                {
+                    // Get function handle from raytracing pipeline state
+                    IntPtr functionHandle = MetalNative.GetFunctionHandle(_raytracingPipelineState, function);
+                    if (functionHandle == IntPtr.Zero)
+                    {
+                        return null;
+                    }
+
+                    // Metal function handles are 8 bytes (64-bit pointers)
+                    // Convert to byte array for shader binding table
+                    byte[] identifier = new byte[8];
+                    IntPtr handlePtr = new IntPtr(functionHandle.ToInt64());
+                    Marshal.Copy(handlePtr, identifier, 0, 8);
+                    return identifier;
+                }
+                finally
+                {
+                    if (function != IntPtr.Zero)
+                    {
+                        MetalNative.ReleaseFunction(function);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalRaytracingPipeline] GetShaderIdentifier: Exception: {ex.Message}");
+                return null;
+            }
         }
     }
 
@@ -1502,7 +1584,10 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         public void Dispose()
         {
-            _disposed = true;
+            if (!_disposed)
+            {
+                _disposed = true;
+            }
         }
     }
 
@@ -1914,13 +1999,273 @@ namespace Andastra.Runtime.MonoGame.Backends
             WriteBuffer(buffer, byteData, destOffset);
         }
 
+        /// <summary>
+        /// Writes texture data to a GPU texture using Metal blit command encoder.
+        ///
+        /// Implementation strategy:
+        /// 1. Create a temporary staging buffer with shared storage mode for CPU access
+        /// 2. Write CPU data to staging buffer contents
+        /// 3. Use blit command encoder to copy from staging buffer to texture
+        /// 4. Release staging buffer
+        ///
+        /// Based on Metal API:
+        /// - MTLDevice::newBufferWithLength:options: (for staging buffer with StorageModeShared)
+        /// - MTLBuffer::contents() (for CPU access to buffer memory)
+        /// - MTLBlitCommandEncoder::copyFromBuffer:sourceOffset:sourceBytesPerRow:sourceBytesPerImage:sourceSize:toTexture:destinationSlice:destinationLevel:destinationOrigin:
+        ///
+        /// Metal API Reference:
+        /// https://developer.apple.com/documentation/metal/mtlblitcommandencoder/1400774-copyfrombuffer
+        /// https://developer.apple.com/documentation/metal/mtlbuffer/1515376-contents
+        /// </summary>
         public void WriteTexture(ITexture texture, int mipLevel, int arraySlice, byte[] data)
         {
-            if (!_isOpen || texture == null)
+            if (!_isOpen || texture == null || data == null || data.Length == 0)
             {
                 return;
             }
-            // TODO: Implement texture write via Metal command encoder
+
+            // Validate texture
+            MetalTexture metalTexture = texture as MetalTexture;
+            if (metalTexture == null)
+            {
+                Console.WriteLine("[MetalCommandList] WriteTexture: Texture must be a MetalTexture instance");
+                return;
+            }
+
+            IntPtr textureHandle = metalTexture.NativeHandle;
+            if (textureHandle == IntPtr.Zero)
+            {
+                Console.WriteLine("[MetalCommandList] WriteTexture: Invalid texture native handle");
+                return;
+            }
+
+            // Get texture description for validation
+            TextureDesc textureDesc = metalTexture.Desc;
+            if (mipLevel < 0 || mipLevel >= textureDesc.MipLevels)
+            {
+                Console.WriteLine($"[MetalCommandList] WriteTexture: Invalid mip level {mipLevel}, texture has {textureDesc.MipLevels} mip levels");
+                return;
+            }
+
+            // Calculate mip level dimensions
+            int mipWidth = Math.Max(1, textureDesc.Width >> mipLevel);
+            int mipHeight = Math.Max(1, textureDesc.Height >> mipLevel);
+
+            // Calculate bytes per row based on texture format
+            // For uncompressed formats: width * bytesPerPixel
+            // For compressed formats: block-aligned row size
+            uint bytesPerRow = CalculateBytesPerRowForFormat(textureDesc.Format, mipWidth);
+            if (bytesPerRow == 0)
+            {
+                Console.WriteLine($"[MetalCommandList] WriteTexture: Failed to calculate bytes per row for format {textureDesc.Format}");
+                return;
+            }
+
+            // Calculate expected data size
+            uint expectedDataSize = CalculateTextureDataSize(textureDesc.Format, mipWidth, mipHeight);
+            if (data.Length < expectedDataSize)
+            {
+                Console.WriteLine($"[MetalCommandList] WriteTexture: Data size mismatch. Expected {expectedDataSize} bytes, got {data.Length}");
+                return;
+            }
+
+            // Get Metal device from backend for creating staging buffer
+            IntPtr device = _backend.GetMetalDevice();
+            if (device == IntPtr.Zero)
+            {
+                Console.WriteLine("[MetalCommandList] WriteTexture: Failed to get Metal device");
+                return;
+            }
+
+            // Create temporary staging buffer with shared storage mode for CPU access
+            IntPtr stagingBuffer = MetalNative.CreateBufferWithOptions(device, (ulong)data.Length, (uint)MetalResourceOptions.StorageModeShared);
+            if (stagingBuffer == IntPtr.Zero)
+            {
+                Console.WriteLine("[MetalCommandList] WriteTexture: Failed to create staging buffer");
+                return;
+            }
+
+            try
+            {
+                // Get pointer to staging buffer contents for CPU write
+                IntPtr stagingBufferContents = MetalNative.GetBufferContents(stagingBuffer);
+                if (stagingBufferContents == IntPtr.Zero)
+                {
+                    Console.WriteLine("[MetalCommandList] WriteTexture: Failed to get staging buffer contents");
+                    return;
+                }
+
+                // Copy CPU data to staging buffer contents
+                Marshal.Copy(data, 0, stagingBufferContents, data.Length);
+
+                // Get or create blit command encoder for buffer-to-texture copy operation
+                IntPtr blitEncoder = GetOrCreateBlitCommandEncoder();
+                if (blitEncoder == IntPtr.Zero)
+                {
+                    Console.WriteLine("[MetalCommandList] WriteTexture: Failed to get blit command encoder");
+                    return;
+                }
+
+                // Copy from staging buffer to texture using blit command encoder
+                // Metal API: copyFromBuffer:sourceOffset:sourceBytesPerRow:sourceBytesPerImage:sourceSize:toTexture:destinationSlice:destinationLevel:destinationOrigin:
+                MetalOrigin destinationOrigin = new MetalOrigin(0, 0, 0);
+                MetalSize sourceSize = new MetalSize((uint)mipWidth, (uint)mipHeight, 1);
+
+                // Calculate source bytes per image (for 3D textures or array slices)
+                uint sourceBytesPerImage = bytesPerRow * (uint)mipHeight;
+
+                // Copy from staging buffer to texture
+                MetalNative.CopyFromBufferToTexture(blitEncoder, stagingBuffer, 0, bytesPerRow, sourceBytesPerImage, sourceSize,
+                    textureHandle, (uint)arraySlice, (uint)mipLevel, destinationOrigin);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalCommandList] WriteTexture: Exception during texture write: {ex.Message}");
+                Console.WriteLine($"[MetalCommandList] WriteTexture: Stack trace: {ex.StackTrace}");
+            }
+            finally
+            {
+                // Release staging buffer
+                if (stagingBuffer != IntPtr.Zero)
+                {
+                    MetalNative.ReleaseBuffer(stagingBuffer);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Calculates bytes per row for a texture format at a given width.
+        /// </summary>
+        private uint CalculateBytesPerRowForFormat(TextureFormat format, int width)
+        {
+            switch (format)
+            {
+                // 1 byte per pixel formats
+                case TextureFormat.R8_UNorm:
+                case TextureFormat.R8_UInt:
+                case TextureFormat.R8_SInt:
+                    return (uint)width;
+
+                // 2 bytes per pixel formats
+                case TextureFormat.R8G8_UNorm:
+                case TextureFormat.R8G8_UInt:
+                case TextureFormat.R16_Float:
+                case TextureFormat.R16_UNorm:
+                case TextureFormat.R16_UInt:
+                case TextureFormat.R16_SInt:
+                    return (uint)(width * 2);
+
+                // 4 bytes per pixel formats
+                case TextureFormat.R8G8B8A8_UNorm:
+                case TextureFormat.R8G8B8A8_UNorm_SRGB:
+                case TextureFormat.R8G8B8A8_UInt:
+                case TextureFormat.B8G8R8A8_UNorm:
+                case TextureFormat.B8G8R8A8_UNorm_SRGB:
+                case TextureFormat.R16G16_Float:
+                case TextureFormat.R16G16_UInt:
+                case TextureFormat.R32_Float:
+                case TextureFormat.R32_UInt:
+                case TextureFormat.R32_SInt:
+                case TextureFormat.D32_Float:
+                case TextureFormat.D24_UNorm_S8_UInt:
+                    return (uint)(width * 4);
+
+                // 8 bytes per pixel formats
+                case TextureFormat.R16G16B16A16_Float:
+                case TextureFormat.R16G16B16A16_UInt:
+                case TextureFormat.R32G32_Float:
+                case TextureFormat.R32G32_UInt:
+                case TextureFormat.R32G32_SInt:
+                    return (uint)(width * 8);
+
+                // 16 bytes per pixel formats
+                case TextureFormat.R32G32B32A32_Float:
+                case TextureFormat.R32G32B32A32_UInt:
+                case TextureFormat.R32G32B32A32_SInt:
+                    return (uint)(width * 16);
+
+                // Compressed formats - block-aligned
+                case TextureFormat.BC1:
+                case TextureFormat.BC4:
+                    // 8 bytes per 4x4 block, row must be block-aligned
+                    return (uint)(((width + 3) / 4) * 8);
+
+                case TextureFormat.BC2:
+                case TextureFormat.BC3:
+                case TextureFormat.BC5:
+                case TextureFormat.BC6H:
+                case TextureFormat.BC7:
+                    // 16 bytes per 4x4 block, row must be block-aligned
+                    return (uint)(((width + 3) / 4) * 16);
+
+                default:
+                    // Default to RGBA8 format for unknown formats
+                    return (uint)(width * 4);
+            }
+        }
+
+        /// <summary>
+        /// Calculates total data size for a texture at given dimensions.
+        /// </summary>
+        private uint CalculateTextureDataSize(TextureFormat format, int width, int height)
+        {
+            switch (format)
+            {
+                // Uncompressed formats
+                case TextureFormat.R8_UNorm:
+                case TextureFormat.R8_UInt:
+                case TextureFormat.R8_SInt:
+                    return (uint)(width * height);
+
+                case TextureFormat.R8G8_UNorm:
+                case TextureFormat.R8G8_UInt:
+                case TextureFormat.R16_Float:
+                case TextureFormat.R16_UNorm:
+                case TextureFormat.R16_UInt:
+                case TextureFormat.R16_SInt:
+                    return (uint)(width * height * 2);
+
+                case TextureFormat.R8G8B8A8_UNorm:
+                case TextureFormat.R8G8B8A8_UNorm_SRGB:
+                case TextureFormat.R8G8B8A8_UInt:
+                case TextureFormat.B8G8R8A8_UNorm:
+                case TextureFormat.B8G8R8A8_UNorm_SRGB:
+                case TextureFormat.R16G16_Float:
+                case TextureFormat.R16G16_UInt:
+                case TextureFormat.R32_Float:
+                case TextureFormat.R32_UInt:
+                case TextureFormat.R32_SInt:
+                case TextureFormat.D32_Float:
+                case TextureFormat.D24_UNorm_S8_UInt:
+                    return (uint)(width * height * 4);
+
+                case TextureFormat.R16G16B16A16_Float:
+                case TextureFormat.R16G16B16A16_UInt:
+                case TextureFormat.R32G32_Float:
+                case TextureFormat.R32G32_UInt:
+                case TextureFormat.R32G32_SInt:
+                    return (uint)(width * height * 8);
+
+                case TextureFormat.R32G32B32A32_Float:
+                case TextureFormat.R32G32B32A32_UInt:
+                case TextureFormat.R32G32B32A32_SInt:
+                    return (uint)(width * height * 16);
+
+                // Compressed formats
+                case TextureFormat.BC1:
+                case TextureFormat.BC4:
+                    return (uint)(((width + 3) / 4) * ((height + 3) / 4) * 8);
+
+                case TextureFormat.BC2:
+                case TextureFormat.BC3:
+                case TextureFormat.BC5:
+                case TextureFormat.BC6H:
+                case TextureFormat.BC7:
+                    return (uint)(((width + 3) / 4) * ((height + 3) / 4) * 16);
+
+                default:
+                    return (uint)(width * height * 4);
+            }
         }
 
         /// <summary>
@@ -2604,15 +2949,15 @@ namespace Andastra.Runtime.MonoGame.Backends
                         }
                     ";
 
-                    IntPtr device = _backend.GetNativeDevice();
-                    if (device == IntPtr.Zero)
+                    IntPtr nativeDevice = _backend.GetNativeDevice();
+                    if (nativeDevice == IntPtr.Zero)
                     {
                         Console.WriteLine("[MetalCommandList] ClearUAVFloat: Device not available for runtime compilation");
                         return;
                     }
 
                     // Compile shader library from source
-                    IntPtr compiledLibrary = MetalNative.CompileLibraryFromSource(device, shaderSource, out IntPtr compileError);
+                    IntPtr compiledLibrary = MetalNative.CompileLibraryFromSource(nativeDevice, shaderSource, out IntPtr compileError);
                     if (compiledLibrary == IntPtr.Zero)
                     {
                         string errorMsg = compileError != IntPtr.Zero ? MetalNative.GetNSErrorDescription(compileError) : "Unknown compilation error";
@@ -2837,15 +3182,15 @@ namespace Andastra.Runtime.MonoGame.Backends
                         }
                     ";
 
-                    IntPtr device = _backend.GetNativeDevice();
-                    if (device == IntPtr.Zero)
+                    IntPtr nativeDevice = _backend.GetNativeDevice();
+                    if (nativeDevice == IntPtr.Zero)
                     {
                         Console.WriteLine("[MetalCommandList] ClearUAVUint: Device not available for runtime compilation");
                         return;
                     }
 
                     // Compile shader library from source
-                    IntPtr compiledLibrary = MetalNative.CompileLibraryFromSource(device, shaderSource, out IntPtr compileError);
+                    IntPtr compiledLibrary = MetalNative.CompileLibraryFromSource(nativeDevice, shaderSource, out IntPtr compileError);
                     if (compiledLibrary == IntPtr.Zero)
                     {
                         string errorMsg = compileError != IntPtr.Zero ? MetalNative.GetNSErrorDescription(compileError) : "Unknown compilation error";
@@ -3007,14 +3352,213 @@ namespace Andastra.Runtime.MonoGame.Backends
             // This allows draw commands to retrieve primitive type, index buffer, etc.
             _currentGraphicsState = state;
 
-            // TODO:  Note: Full implementation of SetGraphicsState would also:
-            // - Set render pipeline state (MTLRenderPipelineState)
-            // - Begin render pass with framebuffer
-            // - Set viewports and scissors
-            // - Bind vertex buffers
-            // - Bind index buffer
-            // - Bind descriptor sets/binding sets
-            // TODO: STUB - For now, we store the state so draw commands can access it
+            // Validate pipeline
+            if (state.Pipeline == null)
+            {
+                Console.WriteLine("[MetalCommandList] SetGraphicsState: Pipeline is null");
+                return;
+            }
+
+            // Get Metal pipeline from state
+            MetalPipeline metalPipeline = state.Pipeline as MetalPipeline;
+            if (metalPipeline == null)
+            {
+                Console.WriteLine("[MetalCommandList] SetGraphicsState: Pipeline must be a MetalPipeline");
+                return;
+            }
+
+            // Get render pipeline state handle from MetalPipeline
+            // MetalPipeline stores the render pipeline state handle internally
+            IntPtr renderPipelineState = metalPipeline.RenderPipelineState;
+            if (renderPipelineState == IntPtr.Zero)
+            {
+                Console.WriteLine("[MetalCommandList] SetGraphicsState: Pipeline does not have a valid render pipeline state");
+                return;
+            }
+
+            // Get command buffer for creating render encoder
+            IntPtr commandBuffer = _backend.GetCurrentCommandBuffer();
+            if (commandBuffer == IntPtr.Zero)
+            {
+                Console.WriteLine("[MetalCommandList] SetGraphicsState: No active command buffer");
+                return;
+            }
+
+            // End any active encoders before creating render encoder
+            // Metal allows only one encoder type to be active at a time per command buffer
+            if (_currentComputeCommandEncoder != IntPtr.Zero)
+            {
+                MetalNative.EndEncoding(_currentComputeCommandEncoder);
+                MetalNative.ReleaseComputeCommandEncoder(_currentComputeCommandEncoder);
+                _currentComputeCommandEncoder = IntPtr.Zero;
+            }
+
+            if (_currentBlitCommandEncoder != IntPtr.Zero)
+            {
+                MetalNative.EndEncoding(_currentBlitCommandEncoder);
+                MetalNative.ReleaseBlitCommandEncoder(_currentBlitCommandEncoder);
+                _currentBlitCommandEncoder = IntPtr.Zero;
+            }
+
+            if (_currentAccelStructCommandEncoder != IntPtr.Zero)
+            {
+                MetalNative.EndAccelerationStructureCommandEncoding(_currentAccelStructCommandEncoder);
+                _currentAccelStructCommandEncoder = IntPtr.Zero;
+            }
+
+            // Create render pass descriptor from framebuffer
+            if (state.Framebuffer != null)
+            {
+                MetalFramebuffer metalFramebuffer = state.Framebuffer as MetalFramebuffer;
+                if (metalFramebuffer != null)
+                {
+                    FramebufferDesc framebufferDesc = metalFramebuffer.Desc;
+
+                    // Create render pass descriptor
+                    IntPtr renderPassDescriptor = MetalNative.CreateRenderPassDescriptor();
+                    if (renderPassDescriptor != IntPtr.Zero)
+                    {
+                        try
+                        {
+                            // Set color attachments
+                            if (framebufferDesc.ColorAttachments != null)
+                            {
+                                for (int i = 0; i < framebufferDesc.ColorAttachments.Length; i++)
+                                {
+                                    FramebufferAttachment attachment = framebufferDesc.ColorAttachments[i];
+                                    if (attachment.Texture != null)
+                                    {
+                                        MetalTexture metalTexture = attachment.Texture as MetalTexture;
+                                        if (metalTexture != null)
+                                        {
+                                            IntPtr colorTexture = metalTexture.NativeHandle;
+                                            if (colorTexture != IntPtr.Zero)
+                                            {
+                                                // Use default clear color (black) since FramebufferAttachment doesn't have ClearColor
+                                                MetalClearColor clearColor = new MetalClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+                                                MetalNative.SetRenderPassColorAttachment(renderPassDescriptor, (uint)i, colorTexture,
+                                                    MetalLoadAction.Clear, MetalStoreAction.Store, clearColor);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Set depth/stencil attachment
+                            if (framebufferDesc.DepthAttachment.Texture != null)
+                            {
+                                MetalTexture metalTexture = framebufferDesc.DepthAttachment.Texture as MetalTexture;
+                                if (metalTexture != null)
+                                {
+                                    IntPtr depthTexture = metalTexture.NativeHandle;
+                                    if (depthTexture != IntPtr.Zero)
+                                    {
+                                        // Use default clear values since FramebufferAttachment doesn't have ClearDepth/ClearStencil
+                                        MetalNative.SetRenderPassDepthAttachment(renderPassDescriptor, depthTexture,
+                                            MetalLoadAction.Clear, MetalStoreAction.Store, 1.0);
+                                        MetalNative.SetRenderPassStencilAttachment(renderPassDescriptor, depthTexture,
+                                            MetalLoadAction.Clear, MetalStoreAction.Store, 0);
+                                    }
+                                }
+                            }
+
+                            // Begin render pass
+                            _currentRenderCommandEncoder = MetalNative.BeginRenderPass(commandBuffer, renderPassDescriptor);
+                            if (_currentRenderCommandEncoder == IntPtr.Zero)
+                            {
+                                Console.WriteLine("[MetalCommandList] SetGraphicsState: Failed to begin render pass");
+                                return;
+                            }
+
+                            // Set render pipeline state
+                            MetalNative.SetRenderPipelineState(_currentRenderCommandEncoder, renderPipelineState);
+
+                            // Set viewport if provided
+                            // GraphicsState has Viewport (singular) which is a ViewportState
+                            // ViewportState contains Viewports array
+                            if (state.Viewport.Viewports != null && state.Viewport.Viewports.Length > 0)
+                            {
+                                SetViewports(state.Viewport.Viewports);
+                            }
+
+                            // Set scissors if provided
+                            // ViewportState contains Scissors array
+                            if (state.Viewport.Scissors != null && state.Viewport.Scissors.Length > 0)
+                            {
+                                SetScissors(state.Viewport.Scissors);
+                            }
+
+                            // Bind vertex buffers
+                            if (state.VertexBuffers != null)
+                            {
+                                for (int i = 0; i < state.VertexBuffers.Length; i++)
+                                {
+                                    IBuffer vertexBuffer = state.VertexBuffers[i];
+                                    if (vertexBuffer != null)
+                                    {
+                                        MetalBuffer metalBuffer = vertexBuffer as MetalBuffer;
+                                        if (metalBuffer != null)
+                                        {
+                                            IntPtr bufferHandle = metalBuffer.NativeHandle;
+                                            if (bufferHandle != IntPtr.Zero)
+                                            {
+                                                // Bind vertex buffer at slot i
+                                                // Metal API: [renderEncoder setVertexBuffer:buffer offset:0 atIndex:i]
+                                                MetalNative.SetVertexBuffer(_currentRenderCommandEncoder, bufferHandle, 0UL, (uint)i);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Bind index buffer if provided
+                            if (state.IndexBuffer != null)
+                            {
+                                MetalBuffer metalIndexBuffer = state.IndexBuffer as MetalBuffer;
+                                if (metalIndexBuffer != null)
+                                {
+                                    IntPtr indexBufferHandle = metalIndexBuffer.NativeHandle;
+                                    if (indexBufferHandle != IntPtr.Zero)
+                                    {
+                                        // Index buffer is bound when drawing indexed primitives
+                                        // We store it in _currentGraphicsState for use in DrawIndexed
+                                    }
+                                }
+                            }
+
+                            // Bind binding sets (descriptor sets) if provided
+                            if (state.BindingSets != null)
+                            {
+                                for (int i = 0; i < state.BindingSets.Length; i++)
+                                {
+                                    IBindingSet bindingSet = state.BindingSets[i];
+                                    if (bindingSet != null)
+                                    {
+                                        MetalBindingSet metalBindingSet = bindingSet as MetalBindingSet;
+                                        if (metalBindingSet != null)
+                                        {
+                                            IntPtr argumentBuffer = metalBindingSet.ArgumentBuffer;
+                                            if (argumentBuffer != IntPtr.Zero)
+                                            {
+                                                // Bind argument buffer at index i
+                                                // Metal API: [renderEncoder setVertexBuffer:argumentBuffer offset:0 atIndex:bindingSetIndex]
+                                                // For fragment shader resources, use setFragmentBuffer
+                                                MetalNative.SetVertexBuffer(_currentRenderCommandEncoder, argumentBuffer, 0UL, (uint)(i + 10)); // Offset by 10 to avoid conflicts
+                                                MetalNative.SetFragmentBuffer(_currentRenderCommandEncoder, argumentBuffer, 0UL, (uint)(i + 10));
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        finally
+                        {
+                            // Release render pass descriptor (it's retained by the render encoder)
+                            MetalNative.ReleaseRenderPassDescriptor(renderPassDescriptor);
+                        }
+                    }
+                }
+            }
         }
 
         public void SetViewport(Viewport viewport)
@@ -3314,7 +3858,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             // Get current primitive type, index type, and index buffer from graphics state
-            MetalPrimitiveType primitiveType = GetPrimitiveTypeFromGraphicsState();
+            MetalPrimitiveType primitiveType = MetalDevice.GetPrimitiveTypeFromPipeline(_currentGraphicsState.Pipeline);
             MetalIndexType indexType;
             IntPtr indexBuffer;
             int indexBufferOffset = 0;
@@ -3480,7 +4024,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             // Get current primitive type and index buffer from graphics state
-            MetalPrimitiveType primitiveType = GetPrimitiveTypeFromGraphicsState();
+            MetalPrimitiveType primitiveType = MetalDevice.GetPrimitiveTypeFromPipeline(_currentGraphicsState.Pipeline);
             MetalIndexType indexType;
             IntPtr indexBuffer;
             int indexBufferOffset = 0;
@@ -3552,29 +4096,8 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             // Get compute pipeline state from MetalComputePipeline
-            // MetalComputePipeline stores the MTLComputePipelineState handle internally
-            // We need to access it via reflection or add a public property
-            // TODO: STUB - For now, we'll use reflection to get the _computePipelineState field
-            IntPtr computePipelineState = IntPtr.Zero;
-            try
-            {
-                var pipelineType = metalPipeline.GetType();
-                var pipelineStateField = pipelineType.GetField("_computePipelineState", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                if (pipelineStateField != null)
-                {
-                    object pipelineStateObj = pipelineStateField.GetValue(metalPipeline);
-                    if (pipelineStateObj != null)
-                    {
-                        computePipelineState = (IntPtr)pipelineStateObj;
-                    }
-                }
-            }
-            catch
-            {
-                // Reflection failed - pipeline state not accessible
-                throw new InvalidOperationException("Failed to access compute pipeline state from MetalComputePipeline");
-            }
-
+            // MetalComputePipeline exposes ComputePipelineState as an internal property
+            IntPtr computePipelineState = metalPipeline.ComputePipelineState;
             if (computePipelineState == IntPtr.Zero)
             {
                 throw new InvalidOperationException("Compute pipeline does not have a valid MTLComputePipelineState handle. Pipeline may not have been fully created.");
@@ -3595,7 +4118,8 @@ namespace Andastra.Runtime.MonoGame.Backends
             if (_currentRenderCommandEncoder != IntPtr.Zero)
             {
                 MetalNative.EndEncoding(_currentRenderCommandEncoder);
-                MetalNative.ReleaseRenderCommandEncoder(_currentRenderCommandEncoder);
+                // Metal render command encoder is released automatically when command buffer is released
+                // No explicit release needed - just end encoding
                 _currentRenderCommandEncoder = IntPtr.Zero;
             }
 
@@ -3751,13 +4275,13 @@ namespace Andastra.Runtime.MonoGame.Backends
             // dynamic workload distribution, and adaptive compute shader dispatch.
             try
             {
-                IntPtr selector = sel_registerName("dispatchThreadgroupsWithIndirectBuffer:indirectBufferOffset:threadsPerThreadgroup:");
+                IntPtr selector = MetalNative.RegisterSelector("dispatchThreadgroupsWithIndirectBuffer:indirectBufferOffset:threadsPerThreadgroup:");
                 if (selector == IntPtr.Zero)
                 {
                     throw new InvalidOperationException("Failed to register selector for dispatchThreadgroupsWithIndirectBuffer");
                 }
 
-                objc_msgSend_void_buffer_ulong_size(_currentComputeCommandEncoder, selector, metalBufferHandle, unchecked((ulong)offset), threadsPerThreadgroup);
+                MetalNative.objc_msgSend_void_buffer_ulong_size(_currentComputeCommandEncoder, selector, metalBufferHandle, unchecked((ulong)offset), threadsPerThreadgroup);
             }
             catch (Exception ex)
             {
@@ -3948,13 +4472,13 @@ namespace Andastra.Runtime.MonoGame.Backends
             // Metal API Reference: https://developer.apple.com/documentation/metal/mtlcomputecommandencoder/3750526-setraytracingpipelinestate
             try
             {
-                IntPtr selector = sel_registerName("setRaytracingPipelineState:");
+                IntPtr selector = MetalNative.RegisterSelector("setRaytracingPipelineState:");
                 if (selector == IntPtr.Zero)
                 {
                     throw new InvalidOperationException("Failed to register selector for setRaytracingPipelineState");
                 }
 
-                objc_msgSend_void_object(_currentComputeCommandEncoder, selector, raytracingPipelineState);
+                MetalNative.objc_msgSend_void_object(_currentComputeCommandEncoder, selector, raytracingPipelineState);
             }
             catch (Exception ex)
             {
@@ -4099,12 +4623,12 @@ namespace Andastra.Runtime.MonoGame.Backends
             // through the acceleration structures using the shader binding table
             MetalNative.DispatchThreadgroups(
                 _currentComputeCommandEncoder,
-                threadGroupCountX,
-                threadGroupCountY,
-                threadGroupCountZ,
-                threadsPerThreadgroupX,
-                threadsPerThreadgroupY,
-                threadsPerThreadgroupZ);
+                (int)threadGroupCountX,
+                (int)threadGroupCountY,
+                (int)threadGroupCountZ,
+                (int)threadsPerThreadgroupX,
+                (int)threadsPerThreadgroupY,
+                (int)threadsPerThreadgroupZ);
         }
 
         public void BuildBottomLevelAccelStruct(IAccelStruct accelStruct, GeometryDesc[] geometries)
@@ -4620,8 +5144,8 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             // Create acceleration structure command encoder for compaction operation
             // Metal API: MTLCommandBuffer::accelerationStructureCommandEncoder()
-            // Note: This requires the actual MTLCommandBuffer object, not just a handle
-            // In a real implementation, this would go through Objective-C interop to access the command buffer
+            // TODO: STUB - This requires the actual MTLCommandBuffer object, not just a handle
+            // TODO: STUB - In a real implementation, this would go through Objective-C interop to access the command buffer
             IntPtr accelStructCommandEncoder = MetalNative.CreateAccelerationStructureCommandEncoder(commandBuffer);
             if (accelStructCommandEncoder == IntPtr.Zero)
             {
@@ -5211,7 +5735,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static extern void objc_msgSend_void_bool(IntPtr receiver, IntPtr selector, bool value);
 
         [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void objc_msgSend_void_object(IntPtr receiver, IntPtr selector, IntPtr obj);
+        public static extern void objc_msgSend_void_object(IntPtr receiver, IntPtr selector, IntPtr obj);
 
         [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
         private static extern void objc_msgSend_void_int_object(IntPtr receiver, IntPtr selector, int index, IntPtr obj);
@@ -5432,7 +5956,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static extern IntPtr objc_msgSend_void_ptr_uint(IntPtr receiver, IntPtr selector, IntPtr viewports, uint count);
 
         [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr objc_msgSend_void_buffer_ulong_size(IntPtr receiver, IntPtr selector, IntPtr indirectBuffer, ulong indirectBufferOffset, MetalSize threadsPerThreadgroup);
+        public static extern IntPtr objc_msgSend_void_buffer_ulong_size(IntPtr receiver, IntPtr selector, IntPtr indirectBuffer, ulong indirectBufferOffset, MetalSize threadsPerThreadgroup);
 
         // Note: CreateNSString is already defined in MetalBackend.cs (partial class MetalNative)
 
@@ -5845,6 +6369,176 @@ namespace Andastra.Runtime.MonoGame.Backends
                 Console.WriteLine($"[MetalNative] EndAccelerationStructureCommandEncoding: Exception: {ex.Message}");
             }
         }
+
+        // Render pipeline state
+        // Based on Metal API: MTLRenderCommandEncoder::setRenderPipelineState:
+        // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1515811-setrenderpipelinestate
+        // Method signature: - (void)setRenderPipelineState:(id<MTLRenderPipelineState>)pipelineState;
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr objc_msgSend_setRenderPipelineState(IntPtr receiver, IntPtr selector, IntPtr pipelineState);
+
+        /// <summary>
+        /// Sets the render pipeline state on a render command encoder.
+        /// Based on Metal API: MTLRenderCommandEncoder::setRenderPipelineState:
+        /// </summary>
+        public static void SetRenderPipelineState(IntPtr renderCommandEncoder, IntPtr renderPipelineState)
+        {
+            if (renderCommandEncoder == IntPtr.Zero || renderPipelineState == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                IntPtr selector = sel_registerName("setRenderPipelineState:");
+                objc_msgSend_setRenderPipelineState(renderCommandEncoder, selector, renderPipelineState);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalNative] SetRenderPipelineState: Exception: {ex.Message}");
+            }
+        }
+
+        // Vertex buffer binding
+        // Based on Metal API: MTLRenderCommandEncoder::setVertexBuffer:offset:atIndex:
+        // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1515826-setvertexbuffer
+        // Method signature: - (void)setVertexBuffer:(id<MTLBuffer>)buffer offset:(NSUInteger)offset atIndex:(NSUInteger)index;
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr objc_msgSend_setVertexBuffer(IntPtr receiver, IntPtr selector, IntPtr buffer, ulong offset, uint index);
+
+        /// <summary>
+        /// Sets a vertex buffer at a specific index.
+        /// Based on Metal API: MTLRenderCommandEncoder::setVertexBuffer:offset:atIndex:
+        /// </summary>
+        public static void SetVertexBuffer(IntPtr renderCommandEncoder, IntPtr buffer, ulong offset, uint index)
+        {
+            if (renderCommandEncoder == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                IntPtr selector = sel_registerName("setVertexBuffer:offset:atIndex:");
+                objc_msgSend_setVertexBuffer(renderCommandEncoder, selector, buffer, offset, index);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalNative] SetVertexBuffer: Exception: {ex.Message}");
+            }
+        }
+
+        // Fragment buffer binding
+        // Based on Metal API: MTLRenderCommandEncoder::setFragmentBuffer:offset:atIndex:
+        // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1515827-setfragmentbuffer
+        // Method signature: - (void)setFragmentBuffer:(id<MTLBuffer>)buffer offset:(NSUInteger)offset atIndex:(NSUInteger)index;
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr objc_msgSend_setFragmentBuffer(IntPtr receiver, IntPtr selector, IntPtr buffer, ulong offset, uint index);
+
+        /// <summary>
+        /// Sets a fragment buffer at a specific index.
+        /// Based on Metal API: MTLRenderCommandEncoder::setFragmentBuffer:offset:atIndex:
+        /// </summary>
+        public static void SetFragmentBuffer(IntPtr renderCommandEncoder, IntPtr buffer, ulong offset, uint index)
+        {
+            if (renderCommandEncoder == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                IntPtr selector = sel_registerName("setFragmentBuffer:offset:atIndex:");
+                objc_msgSend_setFragmentBuffer(renderCommandEncoder, selector, buffer, offset, index);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalNative] SetFragmentBuffer: Exception: {ex.Message}");
+            }
+        }
+
+        // Buffer to texture copy
+        // Based on Metal API: MTLBlitCommandEncoder::copyFromBuffer:sourceOffset:sourceBytesPerRow:sourceBytesPerImage:sourceSize:toTexture:destinationSlice:destinationLevel:destinationOrigin:
+        // Metal API Reference: https://developer.apple.com/documentation/metal/mtlblitcommandencoder/1400775-copyfrombuffer
+        // Method signature: - (void)copyFromBuffer:(id<MTLBuffer>)sourceBuffer sourceOffset:(NSUInteger)sourceOffset sourceBytesPerRow:(NSUInteger)sourceBytesPerRow sourceBytesPerImage:(NSUInteger)sourceBytesPerImage sourceSize:(MTLSize)sourceSize toTexture:(id<MTLTexture>)destinationTexture destinationSlice:(NSUInteger)destinationSlice destinationLevel:(NSUInteger)destinationLevel destinationOrigin:(MTLOrigin)destinationOrigin;
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void objc_msgSend_copyFromBufferToTexture(IntPtr receiver, IntPtr selector, IntPtr sourceBuffer, ulong sourceOffset, ulong sourceBytesPerRow, ulong sourceBytesPerImage, MetalSize sourceSize, IntPtr destinationTexture, ulong destinationSlice, ulong destinationLevel, MetalOrigin destinationOrigin);
+
+        /// <summary>
+        /// Copies data from a buffer to a texture using a blit command encoder.
+        /// Based on Metal API: MTLBlitCommandEncoder::copyFromBuffer:sourceOffset:sourceBytesPerRow:sourceBytesPerImage:sourceSize:toTexture:destinationSlice:destinationLevel:destinationOrigin:
+        /// </summary>
+        public static void CopyFromBufferToTexture(IntPtr blitEncoder, IntPtr sourceBuffer, ulong sourceOffset, ulong sourceBytesPerRow, ulong sourceBytesPerImage, MetalSize sourceSize, IntPtr destinationTexture, ulong destinationSlice, ulong destinationLevel, MetalOrigin destinationOrigin)
+        {
+            if (blitEncoder == IntPtr.Zero || sourceBuffer == IntPtr.Zero || destinationTexture == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                IntPtr selector = sel_registerName("copyFromBuffer:sourceOffset:sourceBytesPerRow:sourceBytesPerImage:sourceSize:toTexture:destinationSlice:destinationLevel:destinationOrigin:");
+                objc_msgSend_copyFromBufferToTexture(blitEncoder, selector, sourceBuffer, sourceOffset, sourceBytesPerRow, sourceBytesPerImage, sourceSize, destinationTexture, destinationSlice, destinationLevel, destinationOrigin);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalNative] CopyFromBufferToTexture: Exception: {ex.Message}");
+            }
+        }
+
+        // Function handle retrieval for raytracing
+        // Based on Metal API: MTLRaytracingPipelineState::functionHandleWithFunction:
+        // Metal API Reference: https://developer.apple.com/documentation/metal/mtlraytracingpipelinestate/3750527-functionhandlewithfunction
+        // Method signature: - (MTLFunctionHandle *)functionHandleWithFunction:(id<MTLFunction>)function;
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr objc_msgSend_functionHandle(IntPtr receiver, IntPtr selector, IntPtr function);
+
+        /// <summary>
+        /// Gets a function handle from a raytracing pipeline state.
+        /// Based on Metal API: MTLRaytracingPipelineState::functionHandleWithFunction:
+        /// </summary>
+        public static IntPtr GetFunctionHandle(IntPtr raytracingPipelineState, IntPtr function)
+        {
+            if (raytracingPipelineState == IntPtr.Zero || function == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            try
+            {
+                // Register selector for functionHandleWithFunction:
+                // Note: sel_registerName is private in MetalBackend.cs, but since MetalNative is partial,
+                // we need to access it through a wrapper or declare it here
+                IntPtr selector = RegisterSelector("functionHandleWithFunction:");
+                if (selector == IntPtr.Zero)
+                {
+                    return IntPtr.Zero;
+                }
+                return objc_msgSend_functionHandle(raytracingPipelineState, selector, function);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalNative] GetFunctionHandle: Exception: {ex.Message}");
+                return IntPtr.Zero;
+            }
+        }
+
+        /// <summary>
+        /// Registers an Objective-C selector name.
+        /// Wrapper for sel_registerName to make it accessible from MetalDevice.cs partial class.
+        /// Note: sel_registerName is already declared in MetalBackend.cs partial class.
+        /// </summary>
+        public static IntPtr RegisterSelector(string selectorName)
+        {
+            // sel_registerName is declared in MetalBackend.cs partial class
+            // Since MetalNative is partial, we can access it directly
+            // Use the existing declaration from MetalBackend.cs
+            return sel_registerName(selectorName);
+        }
+
+        // Note: sel_registerName, objc_msgSend_void, objc_msgSend_object, and objc_getClass
+        // are already declared in MetalBackend.cs (partial class MetalNative)
+        // We don't need to redeclare them here
     }
 
     #endregion
