@@ -113,7 +113,7 @@ namespace Andastra.Runtime.Game.GUI
             }
 
             // Option value modification (Left/Right on option value)
-            if (IsKeyJustPressed(previousKeyboard, currentKeyboard, Keys.A) || 
+            if (IsKeyJustPressed(previousKeyboard, currentKeyboard, Keys.A) ||
                 IsKeyJustPressed(previousKeyboard, currentKeyboard, Keys.D))
             {
                 OptionsCategory currentCategory = (OptionsCategory)selectedCategoryIndex;
@@ -125,7 +125,7 @@ namespace Andastra.Runtime.Game.GUI
             }
 
             // Enter to edit numeric values or start key binding rebind
-            if (IsKeyJustPressed(previousKeyboard, currentKeyboard, Keys.Enter) && 
+            if (IsKeyJustPressed(previousKeyboard, currentKeyboard, Keys.Enter) &&
                 selectedCategoryIndex >= 0 && selectedCategoryIndex < optionsByCategory.Count)
             {
                 OptionsCategory currentCategory = (OptionsCategory)selectedCategoryIndex;
@@ -221,6 +221,8 @@ namespace Andastra.Runtime.Game.GUI
             int selectedOptionIndex,
             bool isEditingValue,
             string editingValue,
+            bool isRebindingKey,
+            string rebindingActionName,
             Dictionary<OptionsCategory, List<OptionItem>> optionsByCategory)
         {
             // Clear to dark background
@@ -282,7 +284,21 @@ namespace Andastra.Runtime.Game.GUI
                     spriteBatch.Draw(menuTexture, optionRect, bgColor);
 
                     OptionItem option = options[i];
-                    string optionText = option.Name + ": " + (isEditingValue && i == selectedOptionIndex ? editingValue + "_" : option.GetStringValue());
+                    string valueText;
+                    if (isRebindingKey && i == selectedOptionIndex && rebindingActionName == option.Name)
+                    {
+                        // Show "Press any key..." when rebinding
+                        valueText = "Press any key...";
+                    }
+                    else if (isEditingValue && i == selectedOptionIndex)
+                    {
+                        valueText = editingValue + "_";
+                    }
+                    else
+                    {
+                        valueText = option.GetStringValue();
+                    }
+                    string optionText = option.Name + ": " + valueText;
                     Vector2 textPos = new Vector2(optionRect.X + 20, optionRect.Y + (optionHeight - font.LineSpacing) / 2);
                     spriteBatch.DrawString(font, optionText, textPos, new Color(255, 255, 255, 255));
 
@@ -298,9 +314,19 @@ namespace Andastra.Runtime.Game.GUI
             }
 
             // Instructions
-            string instructions = isEditingValue
-                ? "Enter new value, then press Enter to confirm or Escape to cancel"
-                : "Use Arrow Keys to navigate, A/D to change values, Enter to apply, Escape to cancel";
+            string instructions;
+            if (isRebindingKey)
+            {
+                instructions = "Press any key to bind, or Escape to cancel";
+            }
+            else if (isEditingValue)
+            {
+                instructions = "Enter new value, then press Enter to confirm or Escape to cancel";
+            }
+            else
+            {
+                instructions = "Use Arrow Keys to navigate, A/D to change values, Enter to rebind keys, Escape to cancel";
+            }
             Vector2 instSize = font.MeasureString(instructions);
             Vector2 instPos = new Vector2((viewportWidth - instSize.X) / 2, viewportHeight - 40);
             spriteBatch.DrawString(font, instructions, instPos, new Color(211, 211, 211, 255));
@@ -337,9 +363,9 @@ namespace Andastra.Runtime.Game.GUI
                 new OptionItem("Window Width", OptionType.Numeric, () => settings.Width, v => settings.Width = (int)v, 320, 7680),
                 new OptionItem("Window Height", OptionType.Numeric, () => settings.Height, v => settings.Height = (int)v, 240, 4320),
                 new OptionItem("Fullscreen", OptionType.Boolean, () => settings.Fullscreen ? 1 : 0, v => settings.Fullscreen = v > 0, 0, 1),
-                new OptionItem("VSync", OptionType.Boolean, 
-                    () => (settings.Graphics != null && settings.Graphics.VSync) ? 1 : 0, 
-                    v => 
+                new OptionItem("VSync", OptionType.Boolean,
+                    () => (settings.Graphics != null && settings.Graphics.VSync) ? 1 : 0,
+                    v =>
                     {
                         if (settings.Graphics != null)
                         {
@@ -367,8 +393,8 @@ namespace Andastra.Runtime.Game.GUI
                             musicPlayer.Volume = settings.MasterVolume * settings.Audio.MusicVolume;
                         }
                     }, 0, 100),
-                new OptionItem("Music Volume", OptionType.Numeric, () => (int)(settings.Audio.MusicVolume * 100.0f), v => 
-                { 
+                new OptionItem("Music Volume", OptionType.Numeric, () => (int)(settings.Audio.MusicVolume * 100.0f), v =>
+                {
                     float volume = (float)v / 100.0f;
                     settings.Audio.MusicVolume = volume;
                     // Apply volume to music player immediately if available
@@ -389,7 +415,7 @@ namespace Andastra.Runtime.Game.GUI
                         }
                     }, 0, 100),
                 new OptionItem("Voice Volume", OptionType.Numeric, () => (int)(settings.Audio.VoiceVolume * 100.0f),
-                    v => 
+                    v =>
                     {
                         float volume = (float)v / 100.0f;
                         settings.Audio.VoiceVolume = volume;
@@ -452,7 +478,7 @@ namespace Andastra.Runtime.Game.GUI
                 // Mouse settings
                 new OptionItem("Mouse Sensitivity", OptionType.Numeric, () => (int)(settings.MouseSensitivity * 100), v => settings.MouseSensitivity = v / 100.0f, 1, 100),
                 new OptionItem("Invert Mouse Y", OptionType.Boolean, () => settings.InvertMouseY ? 1 : 0, v => settings.InvertMouseY = v > 0, 0, 1),
-                
+
                 // Key bindings - based on swkotor.exe and swkotor2.exe keymap.2da system
                 // All key bindings can be rebound by selecting the option and pressing a new key
                 new KeyBindingOptionItem("Pause", () => settings.Controls.GetKeyBinding("Pause", "Space"), k => settings.Controls.KeyBindings["Pause"] = k),
@@ -471,7 +497,7 @@ namespace Andastra.Runtime.Game.GUI
                 new KeyBindingOptionItem("Inventory", () => settings.Controls.GetKeyBinding("Inventory", "I"), k => settings.Controls.KeyBindings["Inventory"] = k),
                 new KeyBindingOptionItem("Journal", () => settings.Controls.GetKeyBinding("Journal", "J"), k => settings.Controls.KeyBindings["Journal"] = k),
                 new KeyBindingOptionItem("Map", () => settings.Controls.GetKeyBinding("Map", "M"), k => settings.Controls.KeyBindings["Map"] = k),
-                
+
                 // Mouse button bindings - based on swkotor.exe and swkotor2.exe mouse input system
                 new MouseButtonBindingOptionItem("Move/Attack Button", () => settings.Controls.GetMouseButtonBinding("Move", "Left"), b => settings.Controls.MouseButtonBindings["Move"] = b),
                 new MouseButtonBindingOptionItem("Context Action Button", () => settings.Controls.GetMouseButtonBinding("ContextAction", "Right"), b => settings.Controls.MouseButtonBindings["ContextAction"] = b)
