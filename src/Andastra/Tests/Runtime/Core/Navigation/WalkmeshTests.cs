@@ -128,6 +128,12 @@ namespace Andastra.Tests.Runtime.Core.Navigation
         /// - Causes Problem 2: Room Transition Failure
         ///
         /// Root Cause: PyKotor's remap_transitions() function must correctly update Trans1/Trans2/Trans3 fields
+        ///
+        /// Based on swkotor2.exe: Transition indices are stored per-edge in walkmesh faces and must be
+        /// remapped when combining room walkmeshes. The original engine uses transition indices to connect
+        /// rooms via doors and area boundaries.
+        ///
+        /// Reference: Tools/HolocronToolset/src/toolset/data/indoormap.py:426-452 (remap_transitions)
         /// </summary>
         [Fact]
         public void Walkmesh_Transitions_CorrectlyRemapped()
@@ -136,20 +142,160 @@ namespace Andastra.Tests.Runtime.Core.Navigation
             var room1 = CreateSimpleWalkmesh(startIndex: 0);
             var room2 = CreateSimpleWalkmesh(startIndex: 100);
 
-            // Set up a transition in room1 that should link to room2
-            if (room1._faces != null && room1._faces.Length > 0)
+            // Set up transitions in room1 that should link to room2
+            // Dummy index (0) marks the transition location in room1 (from kit component)
+            // This will be remapped to actual room2 index (100) when rooms are connected
+            if (room1._faces != null && room1._faces.Length >= 2)
             {
-                // TODO:  Dummy index (0) marks the transition location in room1
+                // Face 0: Trans1 has dummy index 0 (will be remapped to 100)
                 room1._faces[0].Trans1 = 0;
+                // Face 0: Trans2 has different dummy index 1 (will not be remapped in this test)
+                room1._faces[0].Trans2 = 1;
+                // Face 0: Trans3 is null (no transition, should remain null)
+                room1._faces[0].Trans3 = null;
+
+                // Face 1: Trans1 has dummy index 0 (will be remapped to 100)
+                room1._faces[1].Trans1 = 0;
+                // Face 1: Trans2 has dummy index 0 (will be remapped to 100)
+                room1._faces[1].Trans2 = 0;
+                // Face 1: Trans3 has different value 5 (will not be remapped)
+                room1._faces[1].Trans3 = 5;
             }
 
-            // TODO:  Act: Remap transition from dummy index (0) to actual room2 index (100)
+            // Act: Remap transition from dummy index (0) to actual room2 index (100)
+            // This simulates the indoor map builder connecting room1 to room2
             room1.ChangeLytIndexes(0, 100);
 
-            // Assert: Transition should now point to room2
+            // Assert: All transitions with dummy index 0 should now point to room2 (100)
+            if (room1._faces != null && room1._faces.Length >= 2)
+            {
+                // Face 0: Trans1 was remapped from 0 to 100
+                Assert.Equal(100, room1._faces[0].Trans1 ?? -1);
+                // Face 0: Trans2 was not remapped (different dummy index 1)
+                Assert.Equal(1, room1._faces[0].Trans2 ?? -1);
+                // Face 0: Trans3 remains null (no transition)
+                Assert.Null(room1._faces[0].Trans3);
+
+                // Face 1: Trans1 was remapped from 0 to 100
+                Assert.Equal(100, room1._faces[1].Trans1 ?? -1);
+                // Face 1: Trans2 was remapped from 0 to 100
+                Assert.Equal(100, room1._faces[1].Trans2 ?? -1);
+                // Face 1: Trans3 was not remapped (different value 5)
+                Assert.Equal(5, room1._faces[1].Trans3 ?? -1);
+            }
+        }
+
+        /// <summary>
+        /// Test 3b: Verify transition remapping handles null connections (disconnected hooks).
+        ///
+        /// Issue: When a hook has no connection (connection is null), the transition should be set to null,
+        /// indicating no connection. This is critical for proper door placement and area boundaries.
+        ///
+        /// Based on Tools/HolocronToolset/src/toolset/data/indoormap.py:422-423
+        /// When connection is None, actual_index is None, and RemapTransitions sets transitions to null.
+        /// </summary>
+        [Fact]
+        public void Walkmesh_Transitions_RemappedToNullForDisconnectedHooks()
+        {
+            // Arrange: Create a walkmesh with transitions that should be disconnected
+            var room1 = CreateSimpleWalkmesh(startIndex: 0);
+
+            // Set up transitions with dummy index 0 (from kit component)
             if (room1._faces != null && room1._faces.Length > 0)
             {
+                room1._faces[0].Trans1 = 0;
+                room1._faces[0].Trans2 = 0;
+                room1._faces[0].Trans3 = 0;
+            }
+
+            // Act: Remap transition from dummy index (0) to null (no connection)
+            // This simulates a hook that has no connection in the indoor map builder
+            room1.ChangeLytIndexes(0, null);
+
+            // Assert: All transitions with dummy index 0 should now be null
+            if (room1._faces != null && room1._faces.Length > 0)
+            {
+                Assert.Null(room1._faces[0].Trans1);
+                Assert.Null(room1._faces[0].Trans2);
+                Assert.Null(room1._faces[0].Trans3);
+            }
+        }
+
+        /// <summary>
+        /// Test 3c: Verify RemapTransitions method works identically to ChangeLytIndexes.
+        ///
+        /// Both methods should perform the same operation: remapping transition indices.
+        /// RemapTransitions is the method name used in PyKotor's IndoorMap class.
+        /// ChangeLytIndexes is an alias method for the same operation.
+        /// </summary>
+        [Fact]
+        public void Walkmesh_RemapTransitions_EquivalentToChangeLytIndexes()
+        {
+            // Arrange: Create two walkmeshes
+            var room1a = CreateSimpleWalkmesh(startIndex: 0);
+            var room1b = CreateSimpleWalkmesh(startIndex: 0);
+
+            // Set up identical transitions
+            if (room1a._faces != null && room1a._faces.Length > 0 && room1b._faces != null && room1b._faces.Length > 0)
+            {
+                room1a._faces[0].Trans1 = 0;
+                room1a._faces[0].Trans2 = 0;
+                room1b._faces[0].Trans1 = 0;
+                room1b._faces[0].Trans2 = 0;
+            }
+
+            // Act: Use different methods to remap transitions
+            room1a.ChangeLytIndexes(0, 100);
+            room1b.RemapTransitions(0, 100);
+
+            // Assert: Both methods produce identical results
+            if (room1a._faces != null && room1a._faces.Length > 0 && room1b._faces != null && room1b._faces.Length > 0)
+            {
+                Assert.Equal(room1a._faces[0].Trans1, room1b._faces[0].Trans1);
+                Assert.Equal(room1a._faces[0].Trans2, room1b._faces[0].Trans2);
+            }
+        }
+
+        /// <summary>
+        /// Test 3d: Verify transition remapping only affects matching indices.
+        ///
+        /// Issue: When remapping transitions, only faces with the exact dummy index should be updated.
+        /// Other transition values must remain unchanged to preserve existing connections.
+        /// </summary>
+        [Fact]
+        public void Walkmesh_Transitions_OnlyMatchingIndicesRemapped()
+        {
+            // Arrange: Create a walkmesh with multiple different transition values
+            var room1 = CreateSimpleWalkmesh(startIndex: 0);
+
+            if (room1._faces != null && room1._faces.Length >= 2)
+            {
+                // Face 0: Mix of values to remap and values to preserve
+                room1._faces[0].Trans1 = 0;  // Will be remapped
+                room1._faces[0].Trans2 = 5;  // Should remain 5
+                room1._faces[0].Trans3 = 10; // Should remain 10
+
+                // Face 1: All different values
+                room1._faces[1].Trans1 = 7;  // Should remain 7
+                room1._faces[1].Trans2 = 8; // Should remain 8
+                room1._faces[1].Trans3 = 9; // Should remain 9
+            }
+
+            // Act: Remap only dummy index 0 to 100
+            room1.ChangeLytIndexes(0, 100);
+
+            // Assert: Only Trans1 of Face 0 was remapped, all others unchanged
+            if (room1._faces != null && room1._faces.Length >= 2)
+            {
+                // Face 0: Only Trans1 was remapped
                 Assert.Equal(100, room1._faces[0].Trans1 ?? -1);
+                Assert.Equal(5, room1._faces[0].Trans2 ?? -1);
+                Assert.Equal(10, room1._faces[0].Trans3 ?? -1);
+
+                // Face 1: All transitions unchanged
+                Assert.Equal(7, room1._faces[1].Trans1 ?? -1);
+                Assert.Equal(8, room1._faces[1].Trans2 ?? -1);
+                Assert.Equal(9, room1._faces[1].Trans3 ?? -1);
             }
         }
 
