@@ -85,13 +85,6 @@ namespace Andastra.Runtime.MonoGame.Backends
                 IGraphicsBackend backend = null;
                 foreach (GraphicsBackend backendType in backendOrder)
                 {
-                    // TODO: FIXME - Skip Vulkan for now due to compilation issues
-                    // This should be removed once Vulkan backend compilation issues are resolved
-                    if (backendType == GraphicsBackend.Vulkan)
-                    {
-                        Console.WriteLine("[BackendFactory] Skipping Vulkan backend due to compilation issues");
-                        continue;
-                    }
 
                     // Check if this backend is available on the current system
                     if (!IsBackendAvailable(backendType))

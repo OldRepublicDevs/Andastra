@@ -53,8 +53,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSLPatcher.Tests", "src\And
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Andastra.Parsing", "src\Andastra\Parsing\Andastra.Parsing.csproj", "{87513B33-73DB-40EF-B7E7-75AE09B16A60}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Game", "src\Andastra\Game\Game.csproj", "{5702F2F4-05D4-4C8C-AED7-1A5863B0D4C1}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Andastra.Game", "src\Andastra\Game\Andastra.Game.csproj", "{AC4B9F6A-57A1-461E-ACAD-F6BBE967EFB5}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Resolution", "src\Tools\KotorDiff\Resolution\Resolution.csproj", "{D26ACE3C-8A5B-4DA4-96A3-4E84E5F5F37F}"
@@ -421,18 +419,6 @@ Global
 		{87513B33-73DB-40EF-B7E7-75AE09B16A60}.Release|x64.Build.0 = Release|Any CPU
 		{87513B33-73DB-40EF-B7E7-75AE09B16A60}.Release|x86.ActiveCfg = Release|Any CPU
 		{87513B33-73DB-40EF-B7E7-75AE09B16A60}.Release|x86.Build.0 = Release|Any CPU
-		{5702F2F4-05D4-4C8C-AED7-1A5863B0D4C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5702F2F4-05D4-4C8C-AED7-1A5863B0D4C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5702F2F4-05D4-4C8C-AED7-1A5863B0D4C1}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{5702F2F4-05D4-4C8C-AED7-1A5863B0D4C1}.Debug|x64.Build.0 = Debug|Any CPU
-		{5702F2F4-05D4-4C8C-AED7-1A5863B0D4C1}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{5702F2F4-05D4-4C8C-AED7-1A5863B0D4C1}.Debug|x86.Build.0 = Debug|Any CPU
-		{5702F2F4-05D4-4C8C-AED7-1A5863B0D4C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5702F2F4-05D4-4C8C-AED7-1A5863B0D4C1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5702F2F4-05D4-4C8C-AED7-1A5863B0D4C1}.Release|x64.ActiveCfg = Release|Any CPU
-		{5702F2F4-05D4-4C8C-AED7-1A5863B0D4C1}.Release|x64.Build.0 = Release|Any CPU
-		{5702F2F4-05D4-4C8C-AED7-1A5863B0D4C1}.Release|x86.ActiveCfg = Release|Any CPU
-		{5702F2F4-05D4-4C8C-AED7-1A5863B0D4C1}.Release|x86.Build.0 = Release|Any CPU
 		{AC4B9F6A-57A1-461E-ACAD-F6BBE967EFB5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AC4B9F6A-57A1-461E-ACAD-F6BBE967EFB5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AC4B9F6A-57A1-461E-ACAD-F6BBE967EFB5}.Debug|x64.ActiveCfg = Debug|Any CPU
