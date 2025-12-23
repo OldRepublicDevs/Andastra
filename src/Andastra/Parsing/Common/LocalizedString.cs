@@ -20,6 +20,14 @@ namespace Andastra.Parsing.Common
         /// </summary>
         public int StringRef { get; set; }
 
+        /// <summary>
+        /// Returns true if this LocalizedString is invalid (StringRef == -1 and no substrings).
+        /// </summary>
+        public bool IsInvalid
+        {
+            get { return StringRef == -1 && _substringsInternal.Count == 0; }
+        }
+
         private Dictionary<int, string> _substringsInternal;
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/language.py:451-454
