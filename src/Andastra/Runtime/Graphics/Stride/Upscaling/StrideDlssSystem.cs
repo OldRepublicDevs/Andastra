@@ -500,11 +500,39 @@ namespace Andastra.Runtime.Stride.Upscaling
             if (_graphicsDevice == null) return false;
 
             // Check for NVIDIA GPU
-            // TODO: FIXME - Stride adapter description may not expose VendorId directly
-            // Need to find the correct way to get vendor ID from Stride GraphicsDevice.Adapter
-            // For now, we'll skip the vendor check and rely on NGX initialization to fail if not NVIDIA
-            bool isNvidia = true; // Assume NVIDIA for now, NGX will fail if not available
-            if (!isNvidia)
+            // NVIDIA vendor ID is 0x10DE (PCI vendor ID)
+            // Stride GraphicsDevice.Adapter.Description.VendorId provides the vendor ID
+            // This is the standard Stride API as used in StrideDirect3D12Backend.cs line 407
+            bool isNvidia = false;
+            try
+            {
+                if (_graphicsDevice.Adapter != null && _graphicsDevice.Adapter.Description != null)
+                {
+                    // NVIDIA PCI vendor ID is 0x10DE
+                    const int NVIDIA_VENDOR_ID = 0x10DE;
+                    int vendorId = _graphicsDevice.Adapter.Description.VendorId;
+                    isNvidia = (vendorId == NVIDIA_VENDOR_ID);
+                    
+                    if (!isNvidia)
+                    {
+                        Console.WriteLine($"[StrideDLSS] Non-NVIDIA GPU detected (VendorId: 0x{vendorId:X4}), DLSS not available");
+                        return false;
+                    }
+                }
+                else
+                {
+                    // Adapter information not available, skip vendor check
+                    // NGX initialization will fail if not NVIDIA
+                    Console.WriteLine("[StrideDLSS] Adapter information not available, skipping vendor check");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StrideDLSS] Exception checking GPU vendor: {ex.Message}");
+                // Continue with capability check - NGX will fail if not NVIDIA
+            }
+
+            if (!isNvidia && _graphicsDevice.Adapter != null && _graphicsDevice.Adapter.Description != null)
             {
                 return false;
             }
@@ -574,26 +602,37 @@ namespace Andastra.Runtime.Stride.Upscaling
             if (graphicsDevice == null)
                 return IntPtr.Zero;
 
-            // Stride GraphicsDevice.NativeDevice provides access to the underlying DirectX device
-            // For DirectX 12, this should return the ID3D12Device* pointer
-            // TODO: FIXME - Need to find the correct way to get native device pointer from Stride GraphicsDevice
-            // For now, return IntPtr.Zero as this requires Stride-specific implementation
-            IntPtr nativeDevice = IntPtr.Zero;
-            if (nativeDevice != IntPtr.Zero)
-            {
-                return nativeDevice;
-            }
-
-            // Fallback: Try to get device through reflection if NativeDevice is not available
-            // This is a safety mechanism in case Stride's API changes
+            // Stride GraphicsDevice.NativePointer provides access to the underlying DirectX device
+            // For DirectX 12, this returns the ID3D12Device* pointer
+            // This is the standard Stride API as used in StrideDirect3D12Backend.cs
             try
             {
+                // Direct access to NativePointer property (standard Stride API)
+                IntPtr nativeDevice = graphicsDevice.NativePointer;
+                if (nativeDevice != IntPtr.Zero)
+                {
+                    return nativeDevice;
+                }
+
+                // Fallback: Try to get device through reflection if NativePointer is not available
+                // This is a safety mechanism in case Stride's API changes or property is not accessible
                 var deviceType = graphicsDevice.GetType();
+                var nativePointerProperty = deviceType.GetProperty("NativePointer");
+                if (nativePointerProperty != null)
+                {
+                    var value = nativePointerProperty.GetValue(graphicsDevice);
+                    if (value is IntPtr ptr && ptr != IntPtr.Zero)
+                    {
+                        return ptr;
+                    }
+                }
+
+                // Alternative: Check for NativeDevice property (legacy or alternative API)
                 var nativeDeviceProperty = deviceType.GetProperty("NativeDevice");
                 if (nativeDeviceProperty != null)
                 {
                     var value = nativeDeviceProperty.GetValue(graphicsDevice);
-                    if (value is IntPtr ptr)
+                    if (value is IntPtr ptr && ptr != IntPtr.Zero)
                     {
                         return ptr;
                     }
@@ -604,7 +643,7 @@ namespace Andastra.Runtime.Stride.Upscaling
                 if (d3d12DeviceProperty != null)
                 {
                     var value = d3d12DeviceProperty.GetValue(graphicsDevice);
-                    if (value is IntPtr ptr)
+                    if (value is IntPtr ptr && ptr != IntPtr.Zero)
                     {
                         return ptr;
                     }
@@ -612,7 +651,8 @@ namespace Andastra.Runtime.Stride.Upscaling
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[StrideDLSS] Exception getting D3D12 device through reflection: {ex.Message}");
+                Console.WriteLine($"[StrideDLSS] Exception getting D3D12 device: {ex.Message}");
+                Console.WriteLine($"[StrideDLSS] Stack trace: {ex.StackTrace}");
             }
 
             Console.WriteLine("[StrideDLSS] Failed to get DirectX 12 device pointer from Stride GraphicsDevice");
@@ -1000,6 +1040,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// <summary>
         /// Gets the native D3D12 texture resource pointer from a Stride Texture.
         /// Stride Texture objects wrap D3D12 resources, and we need the native pointer for NGX.
+        /// Based on StrideDirect3D12Backend.cs which uses NativePointer for textures.
         /// </summary>
         private IntPtr GetTextureResourcePtr(Texture texture)
         {
@@ -1009,22 +1050,33 @@ namespace Andastra.Runtime.Stride.Upscaling
             try
             {
                 // Stride Texture.NativePointer provides access to the underlying D3D12 resource
-                // For D3D12, this should return the ID3D12Resource* pointer
-                // TODO: FIXME - Need to find the correct way to get native pointer from Stride Texture
-                // For now, return IntPtr.Zero as this requires Stride-specific implementation
-                IntPtr nativePointer = IntPtr.Zero;
+                // For D3D12, this returns the ID3D12Resource* pointer
+                // This is the standard Stride API as used in StrideDirect3D12Backend.cs line 109
+                IntPtr nativePointer = texture.NativePointer;
                 if (nativePointer != IntPtr.Zero)
                 {
                     return nativePointer;
                 }
 
-                // Fallback: Try to get through reflection if NativePointer is not available
+                // Alternative: StrideTexture2D uses NativeDeviceTexture property
+                // Check for NativeDeviceTexture as fallback (used in StrideTexture2D.cs line 28)
                 var textureType = texture.GetType();
+                var nativeDeviceTextureProperty = textureType.GetProperty("NativeDeviceTexture");
+                if (nativeDeviceTextureProperty != null)
+                {
+                    var value = nativeDeviceTextureProperty.GetValue(texture);
+                    if (value is IntPtr ptr && ptr != IntPtr.Zero)
+                    {
+                        return ptr;
+                    }
+                }
+
+                // Fallback: Try to get through reflection if NativePointer is not available
                 var nativePointerProperty = textureType.GetProperty("NativePointer");
                 if (nativePointerProperty != null)
                 {
                     var value = nativePointerProperty.GetValue(texture);
-                    if (value is IntPtr ptr)
+                    if (value is IntPtr ptr && ptr != IntPtr.Zero)
                     {
                         return ptr;
                     }
@@ -1035,7 +1087,7 @@ namespace Andastra.Runtime.Stride.Upscaling
                 if (nativeResourceProperty != null)
                 {
                     var value = nativeResourceProperty.GetValue(texture);
-                    if (value is IntPtr ptr)
+                    if (value is IntPtr ptr && ptr != IntPtr.Zero)
                     {
                         return ptr;
                     }
@@ -1053,7 +1105,7 @@ namespace Andastra.Runtime.Stride.Upscaling
                         if (nativePtrProperty != null)
                         {
                             var value = nativePtrProperty.GetValue(resource);
-                            if (value is IntPtr ptr)
+                            if (value is IntPtr ptr && ptr != IntPtr.Zero)
                             {
                                 return ptr;
                             }
@@ -1064,6 +1116,7 @@ namespace Andastra.Runtime.Stride.Upscaling
             catch (Exception ex)
             {
                 Console.WriteLine($"[StrideDLSS] Exception getting texture resource pointer: {ex.Message}");
+                Console.WriteLine($"[StrideDLSS] Stack trace: {ex.StackTrace}");
             }
 
             Console.WriteLine("[StrideDLSS] Failed to get D3D12 texture resource pointer from Stride Texture");
