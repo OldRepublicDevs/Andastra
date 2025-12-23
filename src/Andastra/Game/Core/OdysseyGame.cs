@@ -354,9 +354,9 @@ namespace Andastra.Runtime.Game.Core
                         // Based on swkotor2.exe FUN_006d0790: Button sounds ("gui_actscroll", "gui_actclick")
                         var guiSoundPlayerObj = _graphicsBackend.CreateSoundPlayer(resourceProvider);
                         Andastra.Runtime.Core.Audio.ISoundPlayer guiSoundPlayer = null;
-                        if (guiSoundPlayerObj is Andastra.Runtime.Core.Audio.ISoundPlayer soundPlayer)
+                        if (guiSoundPlayerObj is Andastra.Runtime.Core.Audio.ISoundPlayer guiSoundPlayerCast)
                         {
-                            guiSoundPlayer = soundPlayer;
+                            guiSoundPlayer = guiSoundPlayerCast;
                         }
 
                         _guiManager = new Andastra.Runtime.MonoGame.GUI.KotorGuiManager(mgDevice.Device, installation, guiSoundPlayer);
@@ -1107,7 +1107,7 @@ namespace Andastra.Runtime.Game.Core
                 // Play sound at full volume, non-positional (2D sound)
                 // Based on swkotor.exe and swkotor2.exe: Button sounds are 2D (not positional)
                 // Original implementation: Plays sound immediately when button interaction occurs
-                _soundPlayer.PlaySound(soundResRef, 1.0f);
+                _soundPlayer.PlaySound(soundResRef, null, 1.0f);
             }
             catch (Exception ex)
             {

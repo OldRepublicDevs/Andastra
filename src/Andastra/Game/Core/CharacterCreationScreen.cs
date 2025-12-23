@@ -1282,7 +1282,7 @@ namespace Andastra.Runtime.Game.Core
 
                         // Draw the rendered preview texture as a sprite in the preview area
                         // Based on swkotor.exe and swkotor2.exe: Preview texture drawn to screen position
-                        spriteBatch.Draw(_previewTexture, new Rectangle(previewX, previewY, previewWidth, previewHeight), GraphicsGraphicsColor.White);
+                        spriteBatch.Draw(_previewTexture, new Rectangle(previewX, previewY, previewWidth, previewHeight), GraphicsColor.White);
                     }
                 }
                 catch (Exception ex)
