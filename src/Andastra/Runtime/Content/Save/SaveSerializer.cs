@@ -2496,16 +2496,8 @@ namespace Andastra.Runtime.Content.Save
                     utc.Inventory.Add(new InventoryItem(ResRef.FromString(groupedItem.TemplateResRef), true));
                 }
 
-                // Store stack size information for later use when serializing UTC for save games
-                // This allows us to write StackSize directly to the GFF structure even though InventoryItem doesn't support it
-                // Based on swkotor2.exe: StackSize is written to ItemList struct when serializing creatures in save games
-                Dictionary<string, int> itemStackSizes = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-                foreach (ItemState groupedItem in groupedItems.Values)
-                {
-                    itemStackSizes[groupedItem.TemplateResRef] = groupedItem.StackSize;
-                }
-
                 // Store stack sizes for later use when serializing UTC for save games
+                // This allows us to write StackSize directly to the GFF structure even though InventoryItem doesn't support it
                 // Based on swkotor2.exe: StackSize is written to ItemList struct when serializing creatures in save games
                 itemStackSizes = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
                 foreach (ItemState groupedItem in groupedItems.Values)
