@@ -501,18 +501,17 @@ namespace Andastra.Runtime.Stride.Upscaling
 
             // Check for NVIDIA GPU
             // NVIDIA vendor ID is 0x10DE (PCI vendor ID)
-            // Stride GraphicsDevice.Adapter.Description.VendorId provides the vendor ID
-            // This is the standard Stride API as used in StrideDirect3D12Backend.cs line 407
+            // Stride GraphicsDevice.Adapter.VendorId provides the vendor ID directly
             bool isNvidia = false;
             try
             {
-                if (_graphicsDevice.Adapter != null && _graphicsDevice.Adapter.Description != null)
+                if (_graphicsDevice.Adapter != null)
                 {
                     // NVIDIA PCI vendor ID is 0x10DE
                     const int NVIDIA_VENDOR_ID = 0x10DE;
-                    int vendorId = _graphicsDevice.Adapter.Description.VendorId;
+                    int vendorId = _graphicsDevice.Adapter.VendorId;
                     isNvidia = (vendorId == NVIDIA_VENDOR_ID);
-                    
+
                     if (!isNvidia)
                     {
                         Console.WriteLine($"[StrideDLSS] Non-NVIDIA GPU detected (VendorId: 0x{vendorId:X4}), DLSS not available");
@@ -532,7 +531,7 @@ namespace Andastra.Runtime.Stride.Upscaling
                 // Continue with capability check - NGX will fail if not NVIDIA
             }
 
-            if (!isNvidia && _graphicsDevice.Adapter != null && _graphicsDevice.Adapter.Description != null)
+            if (!isNvidia && _graphicsDevice.Adapter != null)
             {
                 return false;
             }
@@ -813,11 +812,11 @@ namespace Andastra.Runtime.Stride.Upscaling
                 return IntPtr.Zero;
 
             // Stride's ImmediateContext provides access to the command list
-            Stride.Graphics.CommandList immediateContext = _graphicsDevice.ImmediateContext;
+            global::Stride.Graphics.CommandList immediateContext = _graphicsDevice.ImmediateContext;
             if (immediateContext != null)
             {
                 // Stride CommandList.NativeCommandList provides the native D3D12 command list pointer
-                Stride.Graphics.CommandList commandList = immediateContext;
+                global::Stride.Graphics.CommandList commandList = immediateContext;
                 if (commandList != null)
                 {
                     IntPtr nativeCommandList = commandList.NativeCommandList;
