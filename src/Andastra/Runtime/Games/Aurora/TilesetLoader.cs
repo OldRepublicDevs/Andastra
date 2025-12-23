@@ -402,51 +402,23 @@ namespace Andastra.Runtime.Games.Aurora
                     // For triangle faces, use barycentric interpolation
                     // All BWM faces are triangles, so we always have 3 vertices
 
-                        // Compute barycentric coordinates
-                        float denom = (v1.Z - v2.Z) * (v0.X - v2.X) + (v2.X - v1.X) * (v0.Z - v2.Z);
-                        if (Math.Abs(denom) < 0.0001f)
-                        {
-                            continue; // Degenerate triangle
-                        }
-
-                        float a = ((v1.Z - v2.Z) * (worldX - v2.X) + (v2.X - v1.X) * (worldZ - v2.Z)) / denom;
-                        float b = ((v2.Z - v0.Z) * (worldX - v2.X) + (v0.X - v2.X) * (worldZ - v2.Z)) / denom;
-                        float c = 1.0f - a - b;
-
-                        // Point is inside triangle if all barycentric coordinates are >= 0
-                        if (a >= 0.0f && b >= 0.0f && c >= 0.0f)
-                        {
-                            // Interpolate height using barycentric coordinates
-                            float height = a * v0.Y + b * v1.Y + c * v2.Y;
-                            return height;
-                        }
-                    }
-                    else
+                    // Compute barycentric coordinates
+                    float denom = (v1.Z - v2.Z) * (v0.X - v2.X) + (v2.X - v1.X) * (v0.Z - v2.Z);
+                    if (Math.Abs(denom) < 0.0001f)
                     {
-                        // For non-triangle faces, use distance to face center as fallback
-                        // Calculate face center
-                        float centerX = 0.0f, centerZ = 0.0f, centerY = 0.0f;
-                        foreach (var vertex in face.Vertices)
-                        {
-                            centerX += vertex.X;
-                            centerZ += vertex.Z;
-                            centerY += vertex.Y;
-                        }
-                        centerX /= face.Vertices.Count;
-                        centerZ /= face.Vertices.Count;
-                        centerY /= face.Vertices.Count;
+                        continue; // Degenerate triangle
+                    }
 
-                        // Calculate distance from sample point to face center
-                        float dx = worldX - centerX;
-                        float dz = worldZ - centerZ;
-                        float distance = (float)Math.Sqrt(dx * dx + dz * dz);
+                    float a = ((v1.Z - v2.Z) * (worldX - v2.X) + (v2.X - v1.X) * (worldZ - v2.Z)) / denom;
+                    float b = ((v2.Z - v0.Z) * (worldX - v2.X) + (v0.X - v2.X) * (worldZ - v2.Z)) / denom;
+                    float c = 1.0f - a - b;
 
-                        // Use closest face
-                        if (distance < minDistance)
-                        {
-                            minDistance = distance;
-                            bestHeight = centerY;
-                        }
+                    // Point is inside triangle if all barycentric coordinates are >= 0
+                    if (a >= 0.0f && b >= 0.0f && c >= 0.0f)
+                    {
+                        // Interpolate height using barycentric coordinates
+                        float height = a * v0.Y + b * v1.Y + c * v2.Y;
+                        return height;
                     }
                 }
 
@@ -461,18 +433,9 @@ namespace Andastra.Runtime.Games.Aurora
                 int faceCount = 0;
                 foreach (var face in walkmesh.Faces)
                 {
-                    if (face.Vertices == null || face.Vertices.Count == 0)
-                    {
-                        continue;
-                    }
-
+                    // BWM faces are always triangles with V1, V2, V3 properties
                     // Calculate face average height
-                    float faceHeight = 0.0f;
-                    foreach (var vertex in face.Vertices)
-                    {
-                        faceHeight += vertex.Y;
-                    }
-                    faceHeight /= face.Vertices.Count;
+                    float faceHeight = (face.V1.Y + face.V2.Y + face.V3.Y) / 3.0f;
 
                     totalHeight += faceHeight;
                     faceCount++;
