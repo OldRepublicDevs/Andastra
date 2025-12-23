@@ -2123,7 +2123,7 @@ namespace Andastra.Runtime.Game.Core
 
                     if (isSelected)
                     {
-                        DrawRectangleBorder(_spriteBatch, itemRect, 2Microsoft.Xna.Framework.Color.White);
+                        DrawRectangleBorder(_spriteBatch, itemRect, 2, Microsoft.Xna.Framework.Color.White);
                     }
 
                     // Draw path text
@@ -2366,7 +2366,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Draws a corner arc (quarter circle border) for rounded rectangle corners.
         /// </summary>
-        private void DrawCornerArc(ISpriteBatch spriteBatch, int centerX, int centerY, int radius, int thicknessMicrosoft.Xna.Framework.Color color, bool leftSide, bool topSide)
+        private void DrawCornerArc(ISpriteBatch spriteBatch, int centerX, int centerY, int radius, int thickness, Microsoft.Xna.Framework.Color color, bool leftSide, bool topSide)
         {
             // Draw quarter circle arc using border approach
             for (int y = -radius; y <= 0; y++)
@@ -2388,7 +2388,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Draws a filled circle (approximated with rectangle).
         /// </summary>
-        private void DrawFilledCircle(ISpriteBatch spriteBatch, Rectangle boundsMicrosoft.Xna.Framework.Color color)
+        private void DrawFilledCircle(ISpriteBatch spriteBatch, Rectangle bounds, Microsoft.Xna.Framework.Color color)
         {
             int centerX = bounds.X + bounds.Width / 2;
             int centerY = bounds.Y + bounds.Height / 2;
