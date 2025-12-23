@@ -1,5 +1,8 @@
 using System;
+using System.IO;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Text;
 using Stride.Graphics;
 using Andastra.Runtime.Graphics.Common.Backends;
 using Andastra.Runtime.Graphics.Common.Enums;
@@ -1527,26 +1530,37 @@ namespace Andastra.Runtime.Stride.Backends
 
         /// <summary>
         /// Creates a D3D12_SHADER_BYTECODE structure from raytracing pipeline description.
-        /// Uses the RayGen shader bytecode as the primary library content.
+        /// Combines all shaders (RayGen, Miss, ClosestHit, AnyHit) into a single DXIL library bytecode.
         ///
-        /// Note: In a full production implementation, all shaders (RayGen, Miss, ClosestHit, AnyHit)
-        // TODO: / would be combined into a single DXIL library bytecode. For now, we use the RayGen shader
-        /// as the library content, which is sufficient when shaders are compiled separately and
-        /// then combined, or when using a single library containing all shaders.
+        /// This implementation uses DXC (DirectX Shader Compiler) to link multiple DXIL shader modules
+        /// into a single library. If DXC is not available or linking fails, it falls back to using
+        /// only the RayGen shader bytecode.
         ///
         /// Based on D3D12 API: D3D12_SHADER_BYTECODE
         /// Reference: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_shader_bytecode
+        /// DXC Linking Reference: https://github.com/microsoft/DirectXShaderCompiler/wiki/Using-dxc.exe-and-writing-simple-shader-tools
         /// </summary>
         /// <param name="desc">Raytracing pipeline description</param>
-        /// <returns>D3D12_SHADER_BYTECODE structure containing the shader bytecode</returns>
+        /// <returns>D3D12_SHADER_BYTECODE structure containing the combined shader bytecode</returns>
         private D3D12_SHADER_BYTECODE CreateDxilLibrary(Andastra.Runtime.Graphics.Common.Interfaces.RaytracingPipelineDesc desc)
         {
             IntPtr shaderBytecodePtr = IntPtr.Zero;
             int shaderBytecodeSize = 0;
 
-            if (desc.RayGenShader != null && desc.RayGenShader.Length > 0)
+            // Attempt to combine all shaders into a single DXIL library
+            byte[] combinedBytecode = LinkDxilShaders(desc);
+
+            if (combinedBytecode != null && combinedBytecode.Length > 0)
             {
-                // Allocate unmanaged memory for shader bytecode
+                // Use the combined library bytecode
+                shaderBytecodeSize = combinedBytecode.Length;
+                shaderBytecodePtr = Marshal.AllocHGlobal(shaderBytecodeSize);
+                Marshal.Copy(combinedBytecode, 0, shaderBytecodePtr, shaderBytecodeSize);
+            }
+            else if (desc.RayGenShader != null && desc.RayGenShader.Length > 0)
+            {
+                // Fallback: Use only RayGen shader if linking failed or DXC not available
+                Console.WriteLine("[StrideDX11] DXIL library linking unavailable, using RayGen shader only");
                 shaderBytecodeSize = desc.RayGenShader.Length;
                 shaderBytecodePtr = Marshal.AllocHGlobal(shaderBytecodeSize);
                 Marshal.Copy(desc.RayGenShader, 0, shaderBytecodePtr, shaderBytecodeSize);
@@ -1557,6 +1571,329 @@ namespace Andastra.Runtime.Stride.Backends
                 pShaderBytecode = shaderBytecodePtr,
                 BytecodeLength = (IntPtr)shaderBytecodeSize
             };
+        }
+
+        /// <summary>
+        /// Links multiple DXIL shader modules into a single DXIL library using DXC.
+        ///
+        /// This method writes each shader bytecode to a temporary file and uses DXC's linking
+        /// capabilities to combine them into a single library. The resulting library contains
+        /// all shader exports (RayGen, Miss, ClosestHit, AnyHit) in a single bytecode blob.
+        ///
+        /// DXC Linking Process:
+        /// 1. Write each shader bytecode to a temporary .dxil file
+        /// 2. Use DXC with -link flag to combine all DXIL files into a single library
+        /// 3. Read the combined library bytecode
+        /// 4. Clean up temporary files
+        ///
+        /// Reference: DXC linking documentation and D3D12 raytracing shader library requirements
+        /// </summary>
+        /// <param name="desc">Raytracing pipeline description containing shader bytecode</param>
+        /// <returns>Combined DXIL library bytecode, or null if linking fails</returns>
+        private byte[] LinkDxilShaders(Andastra.Runtime.Graphics.Common.Interfaces.RaytracingPipelineDesc desc)
+        {
+            // Find DXC compiler
+            string dxcPath = FindDXCPath();
+            if (string.IsNullOrEmpty(dxcPath))
+            {
+                Console.WriteLine("[StrideDX11] DXC compiler not found. Cannot link DXIL shaders.");
+                Console.WriteLine("[StrideDX11] DXC can be installed via Windows SDK or downloaded from:");
+                Console.WriteLine("[StrideDX11]   https://github.com/microsoft/DirectXShaderCompiler/releases");
+                return null;
+            }
+
+            // Collect all non-null shader bytecodes
+            System.Collections.Generic.List<byte[]> shaderBytecodes = new System.Collections.Generic.List<byte[]>();
+            System.Collections.Generic.List<string> shaderNames = new System.Collections.Generic.List<string>();
+
+            if (desc.RayGenShader != null && desc.RayGenShader.Length > 0)
+            {
+                shaderBytecodes.Add(desc.RayGenShader);
+                shaderNames.Add("RayGen");
+            }
+            if (desc.MissShader != null && desc.MissShader.Length > 0)
+            {
+                shaderBytecodes.Add(desc.MissShader);
+                shaderNames.Add("Miss");
+            }
+            if (desc.ClosestHitShader != null && desc.ClosestHitShader.Length > 0)
+            {
+                shaderBytecodes.Add(desc.ClosestHitShader);
+                shaderNames.Add("ClosestHit");
+            }
+            if (desc.AnyHitShader != null && desc.AnyHitShader.Length > 0)
+            {
+                shaderBytecodes.Add(desc.AnyHitShader);
+                shaderNames.Add("AnyHit");
+            }
+
+            // If we only have one shader (or none), no linking needed
+            if (shaderBytecodes.Count <= 1)
+            {
+                if (shaderBytecodes.Count == 1)
+                {
+                    return shaderBytecodes[0];
+                }
+                return null;
+            }
+
+            // Create temporary files for each shader
+            System.Collections.Generic.List<string> tempInputFiles = new System.Collections.Generic.List<string>();
+            string tempOutputFile = Path.Combine(Path.GetTempPath(), $"rt_library_{Guid.NewGuid()}.dxil");
+
+            try
+            {
+                // Write each shader to a temporary file
+                for (int i = 0; i < shaderBytecodes.Count; i++)
+                {
+                    string tempInputFile = Path.Combine(Path.GetTempPath(), $"rt_shader_{shaderNames[i]}_{Guid.NewGuid()}.dxil");
+                    File.WriteAllBytes(tempInputFile, shaderBytecodes[i]);
+                    tempInputFiles.Add(tempInputFile);
+                }
+
+                // Build DXC command line for linking
+                // DXC linking: -link combines multiple DXIL files into a single library
+                // When linking, DXC automatically determines the target from input files
+                // -Fo: Output file
+                StringBuilder arguments = new StringBuilder();
+                arguments.Append("-link ");
+                
+                // Add all input files
+                foreach (string inputFile in tempInputFiles)
+                {
+                    arguments.AppendFormat("\"{0}\" ", inputFile);
+                }
+                
+                arguments.AppendFormat("-Fo \"{0}\"", tempOutputFile);
+
+                ProcessStartInfo startInfo = new ProcessStartInfo
+                {
+                    FileName = dxcPath,
+                    Arguments = arguments.ToString(),
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                };
+
+                using (Process process = Process.Start(startInfo))
+                {
+                    if (process == null)
+                    {
+                        Console.WriteLine("[StrideDX11] Failed to start DXC process for DXIL library linking");
+                        return null;
+                    }
+
+                    // Wait for linking with timeout (30 seconds)
+                    bool completed = process.WaitForExit(30000);
+                    if (!completed)
+                    {
+                        Console.WriteLine("[StrideDX11] DXC linking timeout for DXIL library");
+                        try
+                        {
+                            process.Kill();
+                        }
+                        catch
+                        {
+                            // Ignore kill errors
+                        }
+                        return null;
+                    }
+
+                    if (process.ExitCode != 0)
+                    {
+                        string error = process.StandardError.ReadToEnd();
+                        string output = process.StandardOutput.ReadToEnd();
+                        Console.WriteLine("[StrideDX11] DXC linking failed for DXIL library (exit code {0})", process.ExitCode);
+                        if (!string.IsNullOrEmpty(error))
+                        {
+                            Console.WriteLine("[StrideDX11] DXC error output: {0}", error);
+                        }
+                        if (!string.IsNullOrEmpty(output))
+                        {
+                            Console.WriteLine("[StrideDX11] DXC standard output: {0}", output);
+                        }
+                        return null;
+                    }
+
+                    // Read combined library bytecode
+                    if (File.Exists(tempOutputFile))
+                    {
+                        byte[] combinedBytecode = File.ReadAllBytes(tempOutputFile);
+                        Console.WriteLine("[StrideDX11] Successfully linked {0} shaders into DXIL library ({1} bytes)",
+                            shaderBytecodes.Count, combinedBytecode.Length);
+                        return combinedBytecode;
+                    }
+                    else
+                    {
+                        Console.WriteLine("[StrideDX11] DXC linking succeeded but output file not found: {0}", tempOutputFile);
+                        return null;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[StrideDX11] Exception during DXIL library linking: {0}", ex.Message);
+                return null;
+            }
+            finally
+            {
+                // Clean up temporary files
+                foreach (string tempFile in tempInputFiles)
+                {
+                    try
+                    {
+                        if (File.Exists(tempFile))
+                        {
+                            File.Delete(tempFile);
+                        }
+                    }
+                    catch
+                    {
+                        // Ignore cleanup errors
+                    }
+                }
+
+                try
+                {
+                    if (File.Exists(tempOutputFile))
+                    {
+                        // Keep output file for debugging if linking failed, delete on success
+                        // Actually, we'll delete it since we've read the bytecode
+                        File.Delete(tempOutputFile);
+                    }
+                }
+                catch
+                {
+                    // Ignore cleanup errors
+                }
+            }
+        }
+
+        /// <summary>
+        /// Finds the path to DXC (DirectX Shader Compiler) executable.
+        ///
+        /// DXC is typically installed with:
+        /// - Windows SDK (in Windows Kits bin directory)
+        /// - Visual Studio (in VS installation directory)
+        /// - Standalone download from GitHub
+        ///
+        /// This method searches common installation locations and PATH.
+        /// </summary>
+        /// <returns>Path to dxc.exe, or null if not found</returns>
+        private string FindDXCPath()
+        {
+            string dxcExeName = "dxc.exe";
+
+            // 1. Try Windows SDK installation directory
+            string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+            string programFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+
+            // Windows 10 SDK typically installs to Program Files (x86)\Windows Kits\10\bin\<version>\x64
+            string[] windowsKitsPaths = new[]
+            {
+                Path.Combine(programFilesX86, "Windows Kits", "10", "bin"),
+                Path.Combine(programFiles, "Windows Kits", "10", "bin")
+            };
+
+            foreach (string kitsPath in windowsKitsPaths)
+            {
+                if (Directory.Exists(kitsPath))
+                {
+                    // Search for latest version directory
+                    string[] versionDirs = Directory.GetDirectories(kitsPath);
+                    Array.Sort(versionDirs);
+                    Array.Reverse(versionDirs); // Start with latest version
+
+                    foreach (string versionDir in versionDirs)
+                    {
+                        // Try x64 first, then x86
+                        string[] archDirs = new[]
+                        {
+                            Path.Combine(versionDir, "x64"),
+                            Path.Combine(versionDir, "x86")
+                        };
+
+                        foreach (string archDir in archDirs)
+                        {
+                            string dxcPath = Path.Combine(archDir, dxcExeName);
+                            if (File.Exists(dxcPath))
+                            {
+                                return dxcPath;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 2. Try Visual Studio installation directory
+            string[] vsPaths = new[]
+            {
+                Path.Combine(programFiles, "Microsoft Visual Studio"),
+                Path.Combine(programFilesX86, "Microsoft Visual Studio")
+            };
+
+            foreach (string vsBasePath in vsPaths)
+            {
+                if (Directory.Exists(vsBasePath))
+                {
+                    // Search for VS installation directories (e.g., 2022, 2019, etc.)
+                    string[] vsVersions = Directory.GetDirectories(vsBasePath);
+                    foreach (string vsVersionPath in vsVersions)
+                    {
+                        string vcToolsPath = Path.Combine(vsVersionPath, "VC", "Tools", "MSVC");
+                        if (Directory.Exists(vcToolsPath))
+                        {
+                            // Search for MSVC version directories
+                            string[] msvcVersions = Directory.GetDirectories(vcToolsPath);
+                            foreach (string msvcVersionPath in msvcVersions)
+                            {
+                                string dxcPath = Path.Combine(msvcVersionPath, "bin", "Hostx64", "x64", dxcExeName);
+                                if (File.Exists(dxcPath))
+                                {
+                                    return dxcPath;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 3. Try PATH environment variable
+            string pathEnv = Environment.GetEnvironmentVariable("PATH");
+            if (!string.IsNullOrEmpty(pathEnv))
+            {
+                string[] paths = pathEnv.Split(Path.PathSeparator);
+                foreach (string path in paths)
+                {
+                    if (!string.IsNullOrEmpty(path))
+                    {
+                        string dxcPath = Path.Combine(path, dxcExeName);
+                        if (File.Exists(dxcPath))
+                        {
+                            return dxcPath;
+                        }
+                    }
+                }
+            }
+
+            // 4. Try current directory and common tool locations
+            string[] commonPaths = new[]
+            {
+                Path.Combine(Directory.GetCurrentDirectory(), dxcExeName),
+                Path.Combine(Directory.GetCurrentDirectory(), "tools", dxcExeName),
+                Path.Combine(Directory.GetCurrentDirectory(), "bin", dxcExeName)
+            };
+
+            foreach (string commonPath in commonPaths)
+            {
+                if (File.Exists(commonPath))
+                {
+                    return commonPath;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>
