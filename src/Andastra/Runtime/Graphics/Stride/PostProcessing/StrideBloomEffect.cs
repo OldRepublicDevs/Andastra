@@ -51,20 +51,20 @@ namespace Andastra.Runtime.Stride.PostProcessing
             _spriteBatch = new SpriteBatch(_graphicsDevice);
 
             // Create samplers for StrideGraphics.Texture sampling
-            _linearSampler = SamplerState.New(_graphicsDevice, new global::Stride.Graphics.SamplerStateDescription
+            _linearSampler = StrideGraphics.SamplerState.New(_graphicsDevice, new global::Stride.Graphics.SamplerStateDescription
             {
-                Filter = TextureFilter.Linear,
-                AddressU = TextureAddressMode.Clamp,
-                AddressV = TextureAddressMode.Clamp,
-                AddressW = TextureAddressMode.Clamp
+                Filter = StrideGraphics.TextureFilter.Linear,
+                AddressU = StrideGraphics.TextureAddressMode.Clamp,
+                AddressV = StrideGraphics.TextureAddressMode.Clamp,
+                AddressW = StrideGraphics.TextureAddressMode.Clamp
             });
 
-            _pointSampler = SamplerState.New(_graphicsDevice, new global::Stride.Graphics.SamplerStateDescription
+            _pointSampler = StrideGraphics.SamplerState.New(_graphicsDevice, new global::Stride.Graphics.SamplerStateDescription
             {
-                Filter = TextureFilter.Point,
-                AddressU = TextureAddressMode.Clamp,
-                AddressV = TextureAddressMode.Clamp,
-                AddressW = TextureAddressMode.Clamp
+                Filter = StrideGraphics.TextureFilter.Point,
+                AddressU = StrideGraphics.TextureAddressMode.Clamp,
+                AddressV = StrideGraphics.TextureAddressMode.Clamp,
+                AddressW = StrideGraphics.TextureAddressMode.Clamp
             });
 
             // Load bloom effect shaders from compiled .sdsl files
