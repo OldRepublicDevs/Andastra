@@ -350,7 +350,7 @@ namespace Andastra.Runtime.Game.GUI
         /// - Based on swkotor2.exe: FUN_00631ff0 @ 0x00631ff0 (writes INI values for audio settings)
         /// - Based on swkotor2.exe: FUN_00633270 @ 0x00633270 (loads audio settings from INI file)
         /// </remarks>
-        public static Dictionary<OptionsCategory, List<OptionItem>> CreateDefaultOptions(GameSettings settings, ISoundPlayer soundPlayer = null, IMusicPlayer musicPlayer = null, IVoicePlayer voicePlayer = null)
+        public static Dictionary<OptionsCategory, List<OptionItem>> CreateDefaultOptions(GameSettings settings, ISoundPlayer soundPlayer = null, IMusicPlayer musicPlayer = null, Andastra.Runtime.Core.Audio.IVoicePlayer voicePlayer = null)
         {
             var options = new Dictionary<OptionsCategory, List<OptionItem>>();
 

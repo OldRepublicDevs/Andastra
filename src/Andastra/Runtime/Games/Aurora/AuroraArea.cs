@@ -3698,19 +3698,6 @@ namespace Andastra.Runtime.Games.Aurora
         }
 
         /// <summary>
-        /// Sets the render context for this area.
-        /// </summary>
-        /// <param name="context">The render context containing graphics device and rendering interfaces.</param>
-        /// <remarks>
-        /// Based on nwmain.exe: Area rendering uses graphics device, room mesh renderer, and basic effect.
-        /// Required for tile-based geometry rendering, dynamic lighting, weather effects, and area effects.
-        /// </remarks>
-        public void SetRenderContext(IAreaRenderContext context)
-        {
-            _renderContext = context;
-        }
-
-        /// <summary>
         /// Renders the area.
         /// </summary>
         /// <remarks>
