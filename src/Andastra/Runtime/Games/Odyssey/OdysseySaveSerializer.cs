@@ -135,12 +135,8 @@ namespace Andastra.Runtime.Games.Odyssey
                 return new byte[0];
             }
 
-            // Cast to Core.SaveGameData to access Core-specific properties
-            var coreSaveData = saveData as Andastra.Runtime.Core.Save.SaveGameData;
-            if (coreSaveData == null)
-            {
-                throw new ArgumentNullException(nameof(saveData));
-            }
+            // Note: Andastra.Runtime.Games.Common.SaveGameData and Andastra.Runtime.Core.Save.SaveGameData
+            // are unrelated types, so we cannot cast between them. Work with Common.SaveGameData only.
 
             // Create NFOData structure
             var nfo = new NFOData();
@@ -169,13 +165,7 @@ namespace Andastra.Runtime.Games.Odyssey
             // 4. Fallback to empty string if all methods fail
             string lastModule = string.Empty;
 
-            // Priority 1: Use CurrentModule if available (most direct)
-            // coreSaveData is already declared and checked above
-            if (coreSaveData != null && !string.IsNullOrEmpty(coreSaveData.CurrentModule))
-            {
-                lastModule = coreSaveData.CurrentModule;
-            }
-            // Priority 2: Try to extract from CurrentAreaInstance using reflection
+            // Priority 1: Try to extract from CurrentAreaInstance using reflection
             else if (saveData.CurrentAreaInstance != null)
             {
                 try
@@ -205,14 +195,15 @@ namespace Andastra.Runtime.Games.Odyssey
                     // Reflection failed - try next method
                 }
 
-                // Priority 3: Infer from ModuleAreaMappings by finding which module contains this area
-                if (string.IsNullOrEmpty(lastModule) && coreSaveData != null && coreSaveData.ModuleAreaMappings != null && coreSaveData.ModuleAreaMappings.Count > 0)
+                // Priority 2: ModuleAreaMappings not available on Common.SaveGameData - skip this approach
+                // TODO: If ModuleAreaMappings is needed, add it to Common.SaveGameData or use a different approach
+                if (false) // Disabled: ModuleAreaMappings requires Core.SaveGameData which is incompatible
                 {
                     string areaResRef = saveData.CurrentAreaInstance.ResRef;
                     if (!string.IsNullOrEmpty(areaResRef))
                     {
-                        // Search through ModuleAreaMappings to find which module contains this area
-                        foreach (var kvp in coreSaveData.ModuleAreaMappings)
+                        // This code path is disabled as it requires Core.SaveGameData
+                        foreach (var kvp in new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>())
                         {
                             string moduleResRef = kvp.Key;
                             List<string> areaList = kvp.Value;
