@@ -10833,7 +10833,7 @@ technique ColorGrading
                     // DragonAge2.exe: 0x009a45b0 - Enhanced vertex buffer reading with support for multiple vertex formats
                     int totalBytes = vertexCount * vertexStride;
                     byte[] vertexData = new byte[totalBytes];
-                    
+
                     // Read entire vertex buffer as byte array
                     // IVertexBuffer.GetData<T> supports byte[] as T
                     vertexBuffer.GetData(vertexData);
@@ -10843,13 +10843,13 @@ technique ColorGrading
                     for (int i = 0; i < vertexCount; i++)
                     {
                         int vertexOffset = i * vertexStride;
-                        
+
                         // Extract 3 floats (12 bytes) starting at vertex offset
                         // Use BitConverter.ToSingle to convert bytes to float (little-endian)
                         float x = BitConverter.ToSingle(vertexData, vertexOffset);
                         float y = BitConverter.ToSingle(vertexData, vertexOffset + 4);
                         float z = BitConverter.ToSingle(vertexData, vertexOffset + 8);
-                        
+
                         positions.Add(new Vector3(x, y, z));
                     }
                 }

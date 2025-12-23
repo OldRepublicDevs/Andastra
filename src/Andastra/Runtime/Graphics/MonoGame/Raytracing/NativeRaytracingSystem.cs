@@ -26,7 +26,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
     public class NativeRaytracingSystem : IRaytracingSystem
     {
         #region OIDN (Open Image Denoise) Native Library Integration
-        
+
         // OIDN library name - platform-specific
         // Windows: OpenImageDenoise.dll
         // Linux: libOpenImageDenoise.so
@@ -34,24 +34,24 @@ namespace Andastra.Runtime.MonoGame.Raytracing
         private const string OIDN_LIBRARY_WINDOWS = "OpenImageDenoise.dll";
         private const string OIDN_LIBRARY_LINUX = "libOpenImageDenoise.so";
         private const string OIDN_LIBRARY_MACOS = "libOpenImageDenoise.dylib";
-        
+
         // OIDN device types
         private const int OIDN_DEVICE_TYPE_DEFAULT = 0;
         private const int OIDN_DEVICE_TYPE_CPU = 1;
         private const int OIDN_DEVICE_TYPE_SYCL = 2; // Intel oneAPI SYCL
         private const int OIDN_DEVICE_TYPE_CUDA = 3; // NVIDIA CUDA
         private const int OIDN_DEVICE_TYPE_HIP = 4; // AMD HIP
-        
+
         // OIDN filter types
         private const string OIDN_FILTER_TYPE_RT = "RT"; // Raytracing denoising filter
-        
+
         // OIDN image formats
         private const int OIDN_FORMAT_FLOAT3 = 0; // RGB float
         private const int OIDN_FORMAT_FLOAT4 = 1; // RGBA float
-        
+
         // OIDN image layout
         private const int OIDN_LAYOUT_ROW_MAJOR = 0;
-        
+
         // OIDN error codes
         private const int OIDN_SUCCESS = 0;
         private const int OIDN_ERROR_INVALID_ARGUMENT = 1;
@@ -59,42 +59,42 @@ namespace Andastra.Runtime.MonoGame.Raytracing
         private const int OIDN_ERROR_OUT_OF_MEMORY = 3;
         private const int OIDN_ERROR_UNSUPPORTED_HARDWARE = 4;
         private const int OIDN_ERROR_CANCELLED = 5;
-        
+
         // OIDN API function delegates
         // Based on Intel OIDN API: https://www.openimagedenoise.org/documentation.html
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate IntPtr oidnNewDeviceDelegate(int deviceType);
-        
+
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void oidnCommitDeviceDelegate(IntPtr device);
-        
+
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void oidnReleaseDeviceDelegate(IntPtr device);
-        
+
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate IntPtr oidnNewFilterDelegate(IntPtr device, [MarshalAs(UnmanagedType.LPStr)] string filterType);
-        
+
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void oidnSetSharedFilterImageDelegate(IntPtr filter, [MarshalAs(UnmanagedType.LPStr)] string name, IntPtr ptr, int format, int width, int height, int byteOffset, int bytePixelStride, int byteRowStride);
-        
+
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void oidnSetFilter1bDelegate(IntPtr filter, [MarshalAs(UnmanagedType.LPStr)] string name, bool value);
-        
+
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void oidnCommitFilterDelegate(IntPtr filter);
-        
+
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void oidnExecuteFilterDelegate(IntPtr filter);
-        
+
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void oidnReleaseFilterDelegate(IntPtr filter);
-        
+
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate int oidnGetDeviceErrorDelegate(IntPtr device, [MarshalAs(UnmanagedType.LPStr)] out string outMessage);
-        
+
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void oidnSetDevice1bDelegate(IntPtr device, [MarshalAs(UnmanagedType.LPStr)] string name, bool value);
-        
+
         // OIDN function pointers (loaded dynamically)
         private static oidnNewDeviceDelegate _oidnNewDevice;
         private static oidnCommitDeviceDelegate _oidnCommitDevice;
@@ -107,36 +107,36 @@ namespace Andastra.Runtime.MonoGame.Raytracing
         private static oidnReleaseFilterDelegate _oidnReleaseFilter;
         private static oidnGetDeviceErrorDelegate _oidnGetDeviceError;
         private static oidnSetDevice1bDelegate _oidnSetDevice1b;
-        
+
         // OIDN library handle
         private static IntPtr _oidnLibraryHandle = IntPtr.Zero;
         private static bool _oidnLibraryLoaded = false;
         private static readonly object _oidnLoadLock = new object();
-        
+
         // Platform-specific library loading functions
         // Based on Windows API: LoadLibrary/FreeLibrary/GetProcAddress
         // Based on Linux/macOS: dlopen/dlclose/dlsym
         [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern IntPtr LoadLibrary(string lpFileName);
-        
+
         [DllImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool FreeLibrary(IntPtr hModule);
-        
+
         [DllImport("kernel32.dll", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
         private static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
-        
+
         [DllImport("libdl.so.2", CharSet = CharSet.Ansi)]
         private static extern IntPtr dlopen(string filename, int flags);
-        
+
         [DllImport("libdl.so.2", CharSet = CharSet.Ansi)]
         private static extern int dlclose(IntPtr handle);
-        
+
         [DllImport("libdl.so.2", CharSet = CharSet.Ansi)]
         private static extern IntPtr dlsym(IntPtr handle, string symbol);
-        
+
         private const int RTLD_NOW = 2; // dlopen flag: resolve all symbols immediately
-        
+
         /// <summary>
         /// Loads the OIDN library and initializes function pointers.
         /// Based on Intel OIDN API: Library must be loaded before use.
@@ -151,7 +151,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                 {
                     return true;
                 }
-                
+
                 // Determine library name based on platform
                 string libraryName = null;
                 bool isWindows = false;
@@ -172,13 +172,13 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                         libraryName = OIDN_LIBRARY_LINUX;
                     }
                 }
-                
+
                 if (libraryName == null)
                 {
                     Console.WriteLine("[NativeRT] LoadOIDNLibrary: Unsupported platform for OIDN");
                     return false;
                 }
-                
+
                 // Try to load the library
                 try
                 {
@@ -190,13 +190,13 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                     {
                         _oidnLibraryHandle = dlopen(libraryName, RTLD_NOW);
                     }
-                    
+
                     if (_oidnLibraryHandle == IntPtr.Zero)
                     {
                         Console.WriteLine($"[NativeRT] LoadOIDNLibrary: Failed to load {libraryName}");
                         return false;
                     }
-                    
+
                     // Load function pointers
                     _oidnNewDevice = GetFunction<oidnNewDeviceDelegate>("oidnNewDevice");
                     _oidnCommitDevice = GetFunction<oidnCommitDeviceDelegate>("oidnCommitDevice");
@@ -209,7 +209,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                     _oidnReleaseFilter = GetFunction<oidnReleaseFilterDelegate>("oidnReleaseFilter");
                     _oidnGetDeviceError = GetFunction<oidnGetDeviceErrorDelegate>("oidnGetDeviceError");
                     _oidnSetDevice1b = GetFunction<oidnSetDevice1bDelegate>("oidnSetDevice1b");
-                    
+
                     // Verify all functions loaded
                     if (_oidnNewDevice == null || _oidnCommitDevice == null || _oidnReleaseDevice == null ||
                         _oidnNewFilter == null || _oidnSetSharedFilterImage == null || _oidnSetFilter1b == null ||
@@ -220,7 +220,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                         UnloadOIDNLibrary();
                         return false;
                     }
-                    
+
                     _oidnLibraryLoaded = true;
                     Console.WriteLine($"[NativeRT] LoadOIDNLibrary: Successfully loaded {libraryName}");
                     return true;
@@ -233,7 +233,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                 }
             }
         }
-        
+
         /// <summary>
         /// Unloads the OIDN library.
         /// Uses platform-specific library unloading (FreeLibrary on Windows, dlclose on Linux/macOS).
@@ -262,7 +262,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                     }
                     _oidnLibraryHandle = IntPtr.Zero;
                 }
-                
+
                 // Clear function pointers
                 _oidnNewDevice = null;
                 _oidnCommitDevice = null;
@@ -275,11 +275,11 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                 _oidnReleaseFilter = null;
                 _oidnGetDeviceError = null;
                 _oidnSetDevice1b = null;
-                
+
                 _oidnLibraryLoaded = false;
             }
         }
-        
+
         /// <summary>
         /// Gets a function pointer from the loaded library.
         /// Uses platform-specific function lookup (GetProcAddress on Windows, dlsym on Linux/macOS).
@@ -290,7 +290,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             {
                 return null;
             }
-            
+
             try
             {
                 IntPtr functionPtr;
@@ -303,13 +303,13 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                 {
                     functionPtr = dlsym(_oidnLibraryHandle, functionName);
                 }
-                
+
                 if (functionPtr == IntPtr.Zero)
                 {
                     Console.WriteLine($"[NativeRT] GetFunction: Failed to get function {functionName}");
                     return null;
                 }
-                
+
                 return Marshal.GetDelegateForFunctionPointer<T>(functionPtr);
             }
             catch (Exception ex)
@@ -318,7 +318,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                 return null;
             }
         }
-        
+
         /// <summary>
         /// Initializes OIDN device and filter for native denoising.
         /// Based on Intel OIDN API: oidnNewDevice, oidnNewFilter, oidnCommitDevice, oidnCommitFilter
@@ -329,7 +329,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             {
                 return true;
             }
-            
+
             // Load OIDN library if not already loaded
             if (!LoadOIDNLibrary())
             {
@@ -337,7 +337,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                 _useNativeOIDN = false;
                 return false;
             }
-            
+
             try
             {
                 // Create OIDN device (CPU device for CPU-side processing)
@@ -350,16 +350,16 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                     _useNativeOIDN = false;
                     return false;
                 }
-                
+
                 // Set device properties (optional)
                 // oidnSetDevice1b can be used to set device properties like "setAffinity"
                 // For now, we use default settings
-                
+
                 // Commit device
                 // Based on OIDN API: oidnCommitDevice must be called after setting device properties
                 _oidnCommitDevice(_oidnDevice);
                 CheckOIDNError(_oidnDevice);
-                
+
                 // Create OIDN filter for raytracing denoising
                 // Based on OIDN API: oidnNewFilter(device, "RT") creates a raytracing denoising filter
                 _oidnFilter = _oidnNewFilter(_oidnDevice, OIDN_FILTER_TYPE_RT);
@@ -371,7 +371,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                     ReleaseOIDNDevice();
                     return false;
                 }
-                
+
                 _oidnInitialized = true;
                 _useNativeOIDN = true;
                 Console.WriteLine("[NativeRT] InitializeOIDN: Successfully initialized OIDN native library");
@@ -385,7 +385,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                 return false;
             }
         }
-        
+
         /// <summary>
         /// Releases OIDN device and filter.
         /// Based on Intel OIDN API: oidnReleaseFilter, oidnReleaseDevice
@@ -404,7 +404,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                 }
                 _oidnFilter = IntPtr.Zero;
             }
-            
+
             if (_oidnDevice != IntPtr.Zero)
             {
                 try
@@ -417,10 +417,10 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                 }
                 _oidnDevice = IntPtr.Zero;
             }
-            
+
             _oidnInitialized = false;
         }
-        
+
         /// <summary>
         /// Checks for OIDN errors and logs them.
         /// Based on Intel OIDN API: oidnGetDeviceError
@@ -431,7 +431,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             {
                 return;
             }
-            
+
             try
             {
                 int errorCode = _oidnGetDeviceError(device, out string errorMessage);
@@ -446,7 +446,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                 Console.WriteLine($"[NativeRT] CheckOIDNError: Exception checking error: {ex.Message}");
             }
         }
-        
+
         /// <summary>
         /// Gets the name of an OIDN error code.
         /// </summary>
@@ -468,7 +468,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                     return $"Unknown error ({errorCode})";
             }
         }
-        
+
         /// <summary>
         /// Transfers texture data from GPU to CPU memory for OIDN processing.
         /// Based on DirectX 12/Vulkan: Uses staging buffer to read texture data.
@@ -483,12 +483,12 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             {
                 return null;
             }
-            
+
             // Create staging buffer for reading texture data
             // Based on DirectX 12/Vulkan: Staging buffers are CPU-accessible and can be used to read GPU resources
             // Size: width * height * 4 components (RGBA) * 4 bytes per float = width * height * 16 bytes
             int bufferSize = width * height * 4 * sizeof(float); // RGBA float format
-            
+
             IBuffer stagingBuffer = _device.CreateBuffer(new BufferDesc
             {
                 ByteSize = bufferSize,
@@ -497,29 +497,29 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                 IsAccelStructBuildInput = false,
                 DebugName = "OIDNStagingBuffer"
             });
-            
+
             if (stagingBuffer == null)
             {
                 Console.WriteLine("[NativeRT] ReadTextureDataFromGPU: Failed to create staging buffer");
                 return null;
             }
-            
+
             try
             {
                 // Copy texture to staging buffer using command list
                 // Based on DirectX 12/Vulkan: CopyTextureRegion or similar command
                 ICommandList commandList = _device.CreateCommandList(CommandListType.Compute);
                 commandList.Open();
-                
+
                 // Transition texture to copy source state
                 commandList.SetTextureState(texture, ResourceState.CopySource);
                 commandList.CommitBarriers();
-                
+
                 // Copy texture data to staging buffer
                 // Note: ICommandList doesn't have CopyTextureToBuffer, so we use a compute shader or fallback
                 // For now, we'll use a workaround: create a CPU-readable texture and copy to it
                 // In a full implementation, this would use CopyTextureRegion or similar API
-                
+
                 // Create CPU-readable staging texture
                 ITexture stagingTexture = _device.CreateTexture(new TextureDesc
                 {
@@ -536,7 +536,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                     KeepInitialState = false,
                     DebugName = "OIDNStagingTexture"
                 });
-                
+
                 if (stagingTexture == null)
                 {
                     commandList.Close();
@@ -544,27 +544,27 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                     Console.WriteLine("[NativeRT] ReadTextureDataFromGPU: Failed to create staging texture");
                     return null;
                 }
-                
+
                 // Copy source texture to staging texture
                 commandList.SetTextureState(stagingTexture, ResourceState.CopyDest);
                 commandList.CommitBarriers();
                 commandList.CopyTexture(stagingTexture, texture);
-                
+
                 // Transition staging texture to readable state
                 commandList.SetTextureState(stagingTexture, ResourceState.CopySource);
                 commandList.CommitBarriers();
-                
+
                 commandList.Close();
                 _device.ExecuteCommandList(commandList);
                 commandList.Dispose();
-                
+
                 // Wait for GPU to finish copying
                 _device.WaitIdle();
-                
+
                 // Copy texture data to buffer using compute shader
                 // Based on DirectX 12/Vulkan: Use compute shader to copy texture pixels to structured buffer
                 // This approach works across all backends that support compute shaders
-                
+
                 // Create structured buffer for texture data output (CPU-accessible readback buffer)
                 // Based on DirectX 12: D3D12_HEAP_TYPE_READBACK for CPU-accessible buffers
                 // Based on Vulkan: VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
@@ -577,7 +577,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                     IsAccelStructBuildInput = false,
                     DebugName = "OIDNReadbackBuffer"
                 });
-                
+
                 if (readbackBuffer == null)
                 {
                     Console.WriteLine("[NativeRT] ReadTextureDataFromGPU: Failed to create readback buffer");
@@ -585,7 +585,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                     stagingBuffer.Dispose();
                     return null;
                 }
-                
+
                 // Create compute shader to copy texture to structured buffer
                 // Shader signature:
                 //   RWStructuredBuffer<float4> outputBuffer : register(u0);
@@ -598,7 +598,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                 //       uint bufferIndex = pixelCoord.y * textureSize.x + pixelCoord.x;
                 //       outputBuffer[bufferIndex] = inputTexture[pixelCoord];
                 //   }
-                
+
                 // Try to load or create texture-to-buffer copy compute shader
                 IShader copyShader = CreatePlaceholderComputeShader("TextureToBufferCopy");
                 if (copyShader == null)
@@ -609,7 +609,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                     stagingBuffer.Dispose();
                     return null;
                 }
-                
+
                 // Create binding layout for copy shader
                 IBindingLayout copyLayout = _device.CreateBindingLayout(new BindingLayoutDesc
                 {
@@ -639,7 +639,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                     },
                     IsPushDescriptor = false
                 });
-                
+
                 // Create constant buffer for texture dimensions
                 IBuffer constantsBuffer = _device.CreateBuffer(new BufferDesc
                 {
@@ -649,7 +649,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                     IsAccelStructBuildInput = false,
                     DebugName = "TextureCopyConstants"
                 });
-                
+
                 if (constantsBuffer == null || copyLayout == null)
                 {
                     Console.WriteLine("[NativeRT] ReadTextureDataFromGPU: Failed to create copy shader resources");
@@ -661,16 +661,16 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                     stagingBuffer.Dispose();
                     return null;
                 }
-                
+
                 // Write texture dimensions to constant buffer
                 ICommandList copyCommandList = _device.CreateCommandList(CommandListType.Compute);
                 copyCommandList.Open();
-                
+
                 uint[] dimensions = new uint[] { (uint)width, (uint)height };
                 byte[] dimensionBytes = new byte[8];
                 System.Buffer.BlockCopy(dimensions, 0, dimensionBytes, 0, 8);
                 copyCommandList.WriteBuffer(constantsBuffer, dimensionBytes, 0);
-                
+
                 // Create binding set for copy shader
                 IBindingSet copyBindingSet = _device.CreateBindingSet(copyLayout, new BindingSetDesc
                 {
@@ -696,7 +696,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                         }
                     }
                 });
-                
+
                 if (copyBindingSet == null)
                 {
                     Console.WriteLine("[NativeRT] ReadTextureDataFromGPU: Failed to create copy binding set");
@@ -710,14 +710,14 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                     stagingBuffer.Dispose();
                     return null;
                 }
-                
+
                 // Create compute pipeline for copy shader
                 IComputePipeline copyPipeline = _device.CreateComputePipeline(new ComputePipelineDesc
                 {
                     ComputeShader = copyShader,
                     BindingLayouts = new IBindingLayout[] { copyLayout }
                 });
-                
+
                 if (copyPipeline == null)
                 {
                     Console.WriteLine("[NativeRT] ReadTextureDataFromGPU: Failed to create copy pipeline");
@@ -732,50 +732,50 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                     stagingBuffer.Dispose();
                     return null;
                 }
-                
+
                 // Set compute state and dispatch copy shader
                 copyCommandList.SetTextureState(stagingTexture, ResourceState.ShaderResource);
                 copyCommandList.SetBufferState(readbackBuffer, ResourceState.UnorderedAccess);
                 copyCommandList.SetBufferState(constantsBuffer, ResourceState.ConstantBuffer);
                 copyCommandList.CommitBarriers();
-                
+
                 ComputeState copyState = new ComputeState
                 {
                     Pipeline = copyPipeline,
                     BindingSets = new IBindingSet[] { copyBindingSet }
                 };
                 copyCommandList.SetComputeState(copyState);
-                
+
                 // Dispatch compute shader (one thread per pixel)
                 int groupCountX = (width + 8 - 1) / 8; // 8x8 thread groups
                 int groupCountY = (height + 8 - 1) / 8;
                 copyCommandList.Dispatch(groupCountX, groupCountY, 1);
-                
+
                 // Transition readback buffer to copy source for CPU read
                 copyCommandList.SetBufferState(readbackBuffer, ResourceState.CopySource);
                 copyCommandList.CommitBarriers();
-                
+
                 copyCommandList.Close();
                 _device.ExecuteCommandList(copyCommandList);
                 copyCommandList.Dispose();
-                
+
                 // Wait for GPU to finish
                 _device.WaitIdle();
-                
+
                 // Read buffer data from GPU to CPU
                 // Based on DirectX 12/Vulkan: Map buffer for CPU read access
                 // This requires backend-specific implementation to map and read buffer
                 float[] cpuData = null;
-                
+
                 // Try to read buffer using backend-specific methods via reflection
                 if (_backend != null)
                 {
                     try
                     {
                         Type backendType = _backend.GetType();
-                        System.Reflection.MethodInfo readBufferMethod = backendType.GetMethod("ReadBufferData", 
+                        System.Reflection.MethodInfo readBufferMethod = backendType.GetMethod("ReadBufferData",
                             System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                        
+
                         if (readBufferMethod != null)
                         {
                             object result = readBufferMethod.Invoke(_backend, new object[] { readbackBuffer, 0, bufferSize });
@@ -797,7 +797,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                         Console.WriteLine($"[NativeRT] ReadTextureDataFromGPU: Exception accessing backend ReadBufferData: {ex.Message}");
                     }
                 }
-                
+
                 // Clean up resources
                 copyBindingSet.Dispose();
                 copyPipeline.Dispose();
@@ -807,13 +807,13 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                 readbackBuffer.Dispose();
                 stagingTexture.Dispose();
                 stagingBuffer.Dispose();
-                
+
                 if (cpuData == null)
                 {
                     Console.WriteLine("[NativeRT] ReadTextureDataFromGPU: Buffer read requires backend-specific implementation");
                     Console.WriteLine("[NativeRT] ReadTextureDataFromGPU: Backend must provide ReadBufferData method or buffer mapping support");
                 }
-                
+
                 return cpuData;
             }
             catch (Exception ex)
@@ -823,7 +823,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                 return null;
             }
         }
-        
+
         /// <summary>
         /// Transfers texture data from CPU memory to GPU texture for OIDN results.
         /// Based on DirectX 12/Vulkan: Uses staging buffer to write texture data.
@@ -839,7 +839,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             {
                 return false;
             }
-            
+
             // Convert float array to byte array for WriteTexture
             // Based on ICommandList.WriteTexture: Accepts byte[] data
             int pixelCount = width * height;
@@ -849,7 +849,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                 Console.WriteLine($"[NativeRT] WriteTextureDataToGPU: Data array too small (expected {floatCount} floats, got {data.Length})");
                 return false;
             }
-            
+
             byte[] byteData = new byte[floatCount * sizeof(float)];
             unsafe
             {
@@ -858,29 +858,29 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                     System.Buffer.BlockCopy(data, 0, byteData, 0, byteData.Length);
                 }
             }
-            
+
             // Write texture data using command list
             ICommandList commandList = _device.CreateCommandList(CommandListType.Compute);
             commandList.Open();
-            
+
             // Transition texture to copy dest state
             commandList.SetTextureState(texture, ResourceState.CopyDest);
             commandList.CommitBarriers();
-            
+
             // Write texture data (mip level 0, array slice 0)
             commandList.WriteTexture(texture, 0, 0, byteData);
-            
+
             // Transition texture back to shader resource state
             commandList.SetTextureState(texture, ResourceState.ShaderResource);
             commandList.CommitBarriers();
-            
+
             commandList.Close();
             _device.ExecuteCommandList(commandList);
             commandList.Dispose();
-            
+
             return true;
         }
-        
+
         /// <summary>
         /// Executes OIDN denoising filter on CPU-side data.
         /// Based on Intel OIDN API: oidnSetSharedFilterImage, oidnCommitFilter, oidnExecuteFilter
@@ -899,13 +899,13 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                 Console.WriteLine("[NativeRT] ExecuteOIDNFilter: OIDN not initialized");
                 return false;
             }
-            
+
             if (inputData == null || outputData == null || width <= 0 || height <= 0)
             {
                 Console.WriteLine("[NativeRT] ExecuteOIDNFilter: Invalid parameters");
                 return false;
             }
-            
+
             // Verify data sizes
             int pixelCount = width * height;
             int floatCount = pixelCount * 4; // RGBA
@@ -914,7 +914,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                 Console.WriteLine($"[NativeRT] ExecuteOIDNFilter: Data arrays too small (expected {floatCount} floats)");
                 return false;
             }
-            
+
             try
             {
                 // Pin input data for OIDN
@@ -926,16 +926,16 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                     int byteOffset = 0;
                     int bytePixelStride = 4 * sizeof(float); // 16 bytes per pixel (RGBA float)
                     int byteRowStride = width * bytePixelStride; // Row stride in bytes
-                    
+
                     _oidnSetSharedFilterImage(_oidnFilter, "color", new IntPtr(inputPtr), OIDN_FORMAT_FLOAT4, width, height, byteOffset, bytePixelStride, byteRowStride);
                     CheckOIDNError(_oidnDevice);
-                    
+
                     // Set output image
                     fixed (float* outputPtr = outputData)
                     {
                         _oidnSetSharedFilterImage(_oidnFilter, "output", new IntPtr(outputPtr), OIDN_FORMAT_FLOAT4, width, height, byteOffset, bytePixelStride, byteRowStride);
                         CheckOIDNError(_oidnDevice);
-                        
+
                         // Set albedo image if provided
                         if (albedoData != null && albedoData.Length >= floatCount)
                         {
@@ -945,7 +945,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                                 CheckOIDNError(_oidnDevice);
                             }
                         }
-                        
+
                         // Set normal image if provided
                         if (normalData != null && normalData.Length >= floatCount)
                         {
@@ -955,25 +955,25 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                                 CheckOIDNError(_oidnDevice);
                             }
                         }
-                        
+
                         // Set filter parameters (optional)
                         // Based on OIDN API: oidnSetFilter1b can set boolean parameters like "hdr"
                         // OIDN RT filter supports "hdr" parameter for high dynamic range images
                         _oidnSetFilter1b(_oidnFilter, "hdr", true); // Assume HDR for raytracing output
                         CheckOIDNError(_oidnDevice);
-                        
+
                         // Commit filter (must be called after setting all images and parameters)
                         // Based on OIDN API: oidnCommitFilter must be called before oidnExecuteFilter
                         _oidnCommitFilter(_oidnFilter);
                         CheckOIDNError(_oidnDevice);
-                        
+
                         // Execute filter (performs denoising)
                         // Based on OIDN API: oidnExecuteFilter performs the actual denoising operation
                         _oidnExecuteFilter(_oidnFilter);
                         CheckOIDNError(_oidnDevice);
                     }
                 }
-                
+
                 return true;
             }
             catch (Exception ex)
@@ -983,7 +983,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                 return false;
             }
         }
-        
+
         #endregion
         private IGraphicsBackend _backend;
         private IDevice _device;
@@ -1006,7 +1006,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
         private IRaytracingPipeline _reflectionPipeline;
         private IRaytracingPipeline _aoPipeline;
         private IRaytracingPipeline _giPipeline;
-        
+
         // Shadow pipeline resources
         private IBindingLayout _shadowBindingLayout;
         private IBindingSet _shadowBindingSet;
@@ -1020,28 +1020,28 @@ namespace Andastra.Runtime.MonoGame.Raytracing
         private IComputePipeline _spatialDenoiserPipeline;
         private IBindingLayout _denoiserBindingLayout;
         private IBuffer _denoiserConstantBuffer;
-        
+
         // OIDN (Open Image Denoise) native library state
         // Based on Intel OIDN API: https://www.openimagedenoise.org/documentation.html
         private IntPtr _oidnDevice; // OIDN device handle (oidnDevice)
         private IntPtr _oidnFilter; // OIDN filter handle (oidnFilter)
         private bool _oidnInitialized; // Whether OIDN is initialized
         private bool _useNativeOIDN; // Whether to use native OIDN library (true) or GPU compute shader (false)
-        
+
         // History buffers for temporal accumulation (ping-pong)
         private Dictionary<IntPtr, ITexture> _historyBuffers;
         private Dictionary<IntPtr, int> _historyBufferWidths;
         private Dictionary<IntPtr, int> _historyBufferHeights;
-        
+
         // Texture handle tracking - maps IntPtr handles to ITexture objects
         // This allows us to look up textures when updating binding sets
         private readonly Dictionary<IntPtr, ITexture> _textureHandleMap;
         private readonly Dictionary<IntPtr, TextureInfo> _textureInfoCache; // Cache texture dimensions
-        
+
         // Buffer handle tracking - maps IntPtr handles to IBuffer objects
         // This allows us to look up buffers when building acceleration structures
         private readonly Dictionary<IntPtr, IBuffer> _bufferHandleMap;
-        
+
         // Statistics
         private RaytracingStatistics _lastStats;
 
@@ -1193,7 +1193,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             // Clean up texture tracking
             _textureHandleMap.Clear();
             _textureInfoCache.Clear();
-            
+
             // Clean up buffer tracking
             _bufferHandleMap.Clear();
 
@@ -1351,7 +1351,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             TextureFormat indexFormat = TextureFormat.R32_UInt;
             int expectedIndexBufferSize32 = geometry.IndexCount * 4; // 32-bit indices
             int expectedIndexBufferSize16 = geometry.IndexCount * 2; // 16-bit indices
-            
+
             if (indexBuffer.Desc.ByteSize >= expectedIndexBufferSize32)
             {
                 indexFormat = TextureFormat.R32_UInt;
@@ -1833,12 +1833,12 @@ namespace Andastra.Runtime.MonoGame.Raytracing
 
             // Attempt to load shader bytecode
             byte[] shaderBytecode = LoadShaderBytecode(name, type);
-            
+
             if (shaderBytecode == null || shaderBytecode.Length == 0)
             {
                 // Try to generate minimal valid shader bytecode for the backend
                 shaderBytecode = GenerateMinimalShaderBytecode(type, name);
-                
+
                 if (shaderBytecode == null || shaderBytecode.Length == 0)
                 {
                     Console.WriteLine($"[NativeRT] Error: Failed to load or generate shader bytecode for {name} ({type})");
@@ -1848,7 +1848,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                     Console.WriteLine($"[NativeRT]   - File system: Shaders/{name}.{GetShaderExtension(type)}");
                     return null;
                 }
-                
+
                 Console.WriteLine($"[NativeRT] Warning: Using generated minimal shader bytecode for {name} ({type})");
                 Console.WriteLine($"[NativeRT] For production use, provide pre-compiled shader bytecode.");
             }
@@ -1906,7 +1906,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             {
                 System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
                 string fullResourceName = assembly.GetName().Name + "." + resourcePath.Replace('/', '.');
-                
+
                 using (System.IO.Stream stream = assembly.GetManifestResourceStream(fullResourceName))
                 {
                     if (stream != null)
@@ -1949,22 +1949,22 @@ namespace Andastra.Runtime.MonoGame.Raytracing
         private string GetShaderExtension(ShaderType type)
         {
             GraphicsBackend backend = _device?.Backend ?? GraphicsBackend.Direct3D12;
-            
+
             switch (backend)
             {
                 case GraphicsBackend.Direct3D12:
                     // D3D12 uses DXIL (DirectX Intermediate Language) for raytracing shaders
                     return "dxil";
-                    
+
                 case GraphicsBackend.Vulkan:
                     // Vulkan uses SPIR-V for raytracing shaders
                     return "spv";
-                    
+
                 case GraphicsBackend.Direct3D11:
                     // D3D11 uses compiled shader object (.cso) but doesn't support raytracing
                     // This is a fallback case
                     return "cso";
-                    
+
                 default:
                     // Default to DXIL for unknown backends
                     return "dxil";
@@ -1984,17 +1984,17 @@ namespace Andastra.Runtime.MonoGame.Raytracing
         /// <summary>
         /// Generates minimal valid shader bytecode for the given shader type and backend.
         /// This is a fallback when shader bytecode cannot be loaded from resources.
-        /// 
+        ///
         /// For compute shaders (denoisers), this method provides embedded HLSL source code
         /// that can be compiled to bytecode. For other shader types, returns null as generating
         /// valid raytracing shader bytecode is backend-specific and complex.
-        /// 
+        ///
         /// For production use, shaders should be pre-compiled and provided as resources.
         /// </summary>
         private byte[] GenerateMinimalShaderBytecode(ShaderType type, string name)
         {
             GraphicsBackend backend = _device?.Backend ?? GraphicsBackend.Direct3D12;
-            
+
             // For compute shaders (denoisers), we can provide embedded HLSL source code
             if (type == ShaderType.Compute)
             {
@@ -2014,43 +2014,43 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                         Console.WriteLine($"[NativeRT] Failed to compile embedded HLSL source for {name}");
                         Console.WriteLine($"[NativeRT] Pre-compiled shader bytecode must be provided.");
                         Console.WriteLine($"[NativeRT] Expected format:");
-                        
+
                         switch (backend)
                         {
                             case GraphicsBackend.Direct3D12:
                                 Console.WriteLine($"[NativeRT]   - HLSL source compiled to DXIL using DXC compiler");
                                 Console.WriteLine($"[NativeRT]   - Example: dxc.exe -T cs_6_0 -E main {name}.hlsl -Fo {name}.dxil");
                                 break;
-                                
+
                             case GraphicsBackend.Vulkan:
                                 Console.WriteLine($"[NativeRT]   - GLSL source compiled to SPIR-V using glslc compiler");
                                 Console.WriteLine($"[NativeRT]   - Example: glslc -fshader-stage=compute {name}.glsl -o {name}.spv");
                                 break;
                         }
-                        
+
                         return null;
                     }
                 }
             }
-            
+
             // For other shader types, generating bytecode is too complex
             Console.WriteLine($"[NativeRT] Shader bytecode generation not supported for {type} on {backend} backend");
             Console.WriteLine($"[NativeRT] Pre-compiled shader bytecode must be provided for shader: {name}");
             Console.WriteLine($"[NativeRT] Expected format:");
-            
+
             switch (backend)
             {
                 case GraphicsBackend.Direct3D12:
                     Console.WriteLine($"[NativeRT]   - HLSL source compiled to DXIL using DXC compiler");
                     Console.WriteLine($"[NativeRT]   - Example: dxc.exe -T {GetDxilShaderTarget(type)} -E main {name}.hlsl -Fo {name}.dxil");
                     break;
-                    
+
                 case GraphicsBackend.Vulkan:
                     Console.WriteLine($"[NativeRT]   - GLSL source compiled to SPIR-V using glslc compiler");
                     Console.WriteLine($"[NativeRT]   - Example: glslc -fshader-stage={GetSpirvShaderStage(type)} {name}.glsl -o {name}.spv");
                     break;
             }
-            
+
             return null;
         }
 
@@ -2073,13 +2073,13 @@ namespace Andastra.Runtime.MonoGame.Raytracing
 
         /// <summary>
         /// Gets the HLSL source code for the temporal denoiser compute shader.
-        /// 
+        ///
         /// Temporal denoising algorithm:
         /// 1. Reproject history buffer using motion vectors
         /// 2. Compute color variance from neighborhood
         /// 3. Clamp history to neighborhood bounds (reduces ghosting)
         /// 4. Blend current frame with clamped history using blend factor
-        /// 
+        ///
         /// Binding layout:
         /// - t0: Input texture (current frame, SRV)
         /// - u0: Output texture (denoised result, UAV)
@@ -2117,36 +2117,36 @@ SamplerState linearSampler : register(s0);
 void main(uint3 dispatchThreadId : SV_DispatchThreadID)
 {
     int2 pixelCoord = int2(dispatchThreadId.xy);
-    
+
     // Clamp to valid texture coordinates
     if (pixelCoord.x >= resolution.x || pixelCoord.y >= resolution.y)
         return;
-    
+
     float2 uv = (float2(pixelCoord) + 0.5) / float2(resolution);
-    
+
     // Sample current frame
     float4 currentColor = inputTexture.SampleLevel(linearSampler, uv, 0);
-    
+
     // Sample motion vectors and reproject history
     float2 motion = float2(0.0, 0.0);
     if (motionTexture != null)
     {
         motion = motionTexture.SampleLevel(linearSampler, uv, 0).xy;
     }
-    
+
     float2 historyUV = uv - motion;
     float4 historyColor = float4(0.0, 0.0, 0.0, 0.0);
-    
+
     // Check if history UV is valid (within [0,1] range)
     if (historyUV.x >= 0.0 && historyUV.x <= 1.0 && historyUV.y >= 0.0 && historyUV.y <= 1.0)
     {
         historyColor = historyTexture.SampleLevel(linearSampler, historyUV, 0);
     }
-    
+
     // Compute color variance from 3x3 neighborhood
     float4 minColor = currentColor;
     float4 maxColor = currentColor;
-    
+
     for (int y = -1; y <= 1; y++)
     {
         for (int x = -1; x <= 1; x++)
@@ -2157,22 +2157,22 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
             {
                 float2 sampleUV = (float2(sampleCoord) + 0.5) / float2(resolution);
                 float4 sampleColor = inputTexture.SampleLevel(linearSampler, sampleUV, 0);
-                
+
                 minColor = min(minColor, sampleColor);
                 maxColor = max(maxColor, sampleColor);
             }
         }
     }
-    
+
     // Clamp history to neighborhood bounds (variance clipping)
     // This reduces ghosting by preventing history from contributing colors
     // that are too different from the current frame's neighborhood
     float4 clampedHistory = clamp(historyColor, minColor, maxColor);
-    
+
     // Blend current frame with clamped history
     float blendFactor = denoiserParams.x; // Typically 0.05-0.1 for temporal accumulation
     float4 result = lerp(clampedHistory, currentColor, blendFactor);
-    
+
     // Write result
     outputTexture[pixelCoord] = result;
 }
@@ -2181,13 +2181,13 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
 
         /// <summary>
         /// Gets the HLSL source code for the spatial denoiser compute shader.
-        /// 
+        ///
         /// Spatial denoising algorithm:
         /// 1. Sample neighborhood around current pixel
         /// 2. Compute edge-aware weights based on color and normal similarity
         /// 3. Apply bilateral filter with edge-aware weights
         /// 4. Output filtered result
-        /// 
+        ///
         /// Binding layout:
         /// - t0: Input texture (current frame, SRV)
         /// - u0: Output texture (denoised result, UAV)
@@ -2222,7 +2222,7 @@ Texture2D<float3> albedoTexture : register(t4);
 SamplerState linearSampler : register(s0);
 
 // Compute edge-aware weight for bilateral filtering
-float ComputeBilateralWeight(float4 centerColor, float4 sampleColor, 
+float ComputeBilateralWeight(float4 centerColor, float4 sampleColor,
                              float3 centerNormal, float3 sampleNormal,
                              float3 centerAlbedo, float3 sampleAlbedo,
                              float2 offset, float sigmaColor, float sigmaSpatial, float normalWeight)
@@ -2230,11 +2230,11 @@ float ComputeBilateralWeight(float4 centerColor, float4 sampleColor,
     // Spatial weight (Gaussian based on distance)
     float spatialDist = length(offset);
     float spatialWeight = exp(-(spatialDist * spatialDist) / (2.0 * sigmaSpatial * sigmaSpatial));
-    
+
     // Color weight (Gaussian based on color difference)
     float colorDist = length(centerColor.rgb - sampleColor.rgb);
     float colorWeight = exp(-(colorDist * colorDist) / (2.0 * sigmaColor * sigmaColor));
-    
+
     // Normal weight (dot product for surface similarity)
     float normalWeightValue = 1.0;
     if (normalTexture != null)
@@ -2242,7 +2242,7 @@ float ComputeBilateralWeight(float4 centerColor, float4 sampleColor,
         float normalDot = dot(centerNormal, sampleNormal);
         normalWeightValue = pow(max(0.0, normalDot), normalWeight);
     }
-    
+
     // Albedo weight (for edge detection)
     float albedoWeight = 1.0;
     if (albedoTexture != null)
@@ -2250,7 +2250,7 @@ float ComputeBilateralWeight(float4 centerColor, float4 sampleColor,
         float albedoDist = length(centerAlbedo - sampleAlbedo);
         albedoWeight = exp(-(albedoDist * albedoDist) / (2.0 * 0.1 * 0.1));
     }
-    
+
     return spatialWeight * colorWeight * normalWeightValue * albedoWeight;
 }
 
@@ -2258,37 +2258,37 @@ float ComputeBilateralWeight(float4 centerColor, float4 sampleColor,
 void main(uint3 dispatchThreadId : SV_DispatchThreadID)
 {
     int2 pixelCoord = int2(dispatchThreadId.xy);
-    
+
     // Clamp to valid texture coordinates
     if (pixelCoord.x >= resolution.x || pixelCoord.y >= resolution.y)
         return;
-    
+
     float2 uv = (float2(pixelCoord) + 0.5) / float2(resolution);
-    
+
     // Sample center pixel
     float4 centerColor = inputTexture.SampleLevel(linearSampler, uv, 0);
     float3 centerNormal = float3(0.0, 0.0, 1.0);
     float3 centerAlbedo = float3(1.0, 1.0, 1.0);
-    
+
     if (normalTexture != null)
     {
         centerNormal = normalTexture.SampleLevel(linearSampler, uv, 0).xyz;
     }
-    
+
     if (albedoTexture != null)
     {
         centerAlbedo = albedoTexture.SampleLevel(linearSampler, uv, 0).xyz;
     }
-    
+
     // Bilateral filter parameters
     float sigmaColor = denoiserParams.y;   // Color similarity threshold
     float sigmaSpatial = denoiserParams.z; // Spatial radius
     float normalWeight = denoiserParams.w;  // Normal weight exponent
-    
+
     // Apply bilateral filter over neighborhood
     float4 filteredColor = float4(0.0, 0.0, 0.0, 0.0);
     float totalWeight = 0.0;
-    
+
     int radius = (int)sigmaSpatial;
     for (int y = -radius; y <= radius; y++)
     {
@@ -2300,32 +2300,32 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
             {
                 float2 sampleUV = (float2(sampleCoord) + 0.5) / float2(resolution);
                 float4 sampleColor = inputTexture.SampleLevel(linearSampler, sampleUV, 0);
-                
+
                 float3 sampleNormal = centerNormal;
                 float3 sampleAlbedo = centerAlbedo;
-                
+
                 if (normalTexture != null)
                 {
                     sampleNormal = normalTexture.SampleLevel(linearSampler, sampleUV, 0).xyz;
                 }
-                
+
                 if (albedoTexture != null)
                 {
                     sampleAlbedo = albedoTexture.SampleLevel(linearSampler, sampleUV, 0).xyz;
                 }
-                
+
                 float2 offset = float2(x, y);
                 float weight = ComputeBilateralWeight(centerColor, sampleColor,
                                                        centerNormal, sampleNormal,
                                                        centerAlbedo, sampleAlbedo,
                                                        offset, sigmaColor, sigmaSpatial, normalWeight);
-                
+
                 filteredColor += sampleColor * weight;
                 totalWeight += weight;
             }
         }
     }
-    
+
     // Normalize by total weight
     if (totalWeight > 0.0)
     {
@@ -2335,7 +2335,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
     {
         filteredColor = centerColor;
     }
-    
+
     // Write result
     outputTexture[pixelCoord] = filteredColor;
 }
@@ -2344,13 +2344,13 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
 
         /// <summary>
         /// Attempts to compile HLSL source code to shader bytecode.
-        /// 
+        ///
         /// This method tries to use DXC (DirectX Shader Compiler) for D3D12 backends,
         /// or glslc for Vulkan backends. If the compiler is not available, returns null.
-        /// 
+        ///
         /// In production, shaders should be pre-compiled offline and embedded as resources.
         /// This runtime compilation is provided as a fallback for development and testing.
-        /// 
+        ///
         /// swkotor2.exe: N/A (modern raytracing shader compilation, not in original game)
         /// </summary>
         private byte[] CompileHlslToBytecode(string hlslSource, string shaderName, GraphicsBackend backend)
@@ -2360,15 +2360,15 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
                 Console.WriteLine($"[NativeRT] CompileHlslToBytecode: Empty HLSL source for {shaderName}");
                 return null;
             }
-            
+
             switch (backend)
             {
                 case GraphicsBackend.Direct3D12:
                     return CompileHlslToDxil(hlslSource, shaderName);
-                    
+
                 case GraphicsBackend.Vulkan:
                     return CompileHlslToSpirv(hlslSource, shaderName);
-                    
+
                 default:
                     Console.WriteLine($"[NativeRT] CompileHlslToBytecode: Unsupported backend {backend} for shader {shaderName}");
                     return null;
@@ -2377,11 +2377,11 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
 
         /// <summary>
         /// Compiles HLSL source code to DXIL bytecode using DXC compiler.
-        /// 
+        ///
         /// DXC (DirectX Shader Compiler) is the modern HLSL compiler that produces DXIL.
         /// This method locates DXC, writes the HLSL source to a temporary file, executes
         /// DXC to compile it, and reads the resulting DXIL bytecode.
-        /// 
+        ///
         /// swkotor2.exe: N/A (modern raytracing shader compilation, not in original game)
         /// </summary>
         private byte[] CompileHlslToDxil(string hlslSource, string shaderName)
@@ -2526,15 +2526,15 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
 
         /// <summary>
         /// Compiles HLSL source code to SPIR-V bytecode using DXC compiler with SPIR-V backend.
-        /// 
+        ///
         /// DXC supports compiling HLSL directly to SPIR-V using the -spirv flag.
         /// This is preferred over converting HLSL to GLSL first, as it maintains better
         /// compatibility and handles HLSL-specific features correctly.
-        /// 
+        ///
         /// Alternative: If DXC with SPIR-V is not available, this could fall back to
         /// glslc after converting HLSL to GLSL, but that conversion is complex and
         /// error-prone, so we only support DXC with SPIR-V output.
-        /// 
+        ///
         /// swkotor2.exe: N/A (modern raytracing shader compilation, not in original game)
         /// </summary>
         private byte[] CompileHlslToSpirv(string hlslSource, string shaderName)
@@ -2558,10 +2558,10 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
 
         /// <summary>
         /// Compiles HLSL source code to SPIR-V using DXC with -spirv flag.
-        /// 
+        ///
         /// DXC supports compiling HLSL directly to SPIR-V, which is the preferred
         /// method for Vulkan raytracing shaders as it maintains HLSL semantics.
-        /// 
+        ///
         /// swkotor2.exe: N/A (modern raytracing shader compilation, not in original game)
         /// </summary>
         private byte[] CompileHlslToSpirvWithDXC(string hlslSource, string shaderName, string dxcPath)
@@ -2698,14 +2698,14 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
 
         /// <summary>
         /// Finds the path to DXC (DirectX Shader Compiler) executable.
-        /// 
+        ///
         /// DXC is typically installed with:
         /// - Windows SDK (in Windows Kits bin directory)
         /// - Visual Studio (in VS installation directory)
         /// - Standalone download from GitHub
-        /// 
+        ///
         /// This method searches common installation locations and PATH.
-        /// 
+        ///
         /// swkotor2.exe: N/A (modern raytracing shader compilation, not in original game)
         /// </summary>
         private string FindDXCPath()
@@ -2829,7 +2829,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
                     return commonPath;
                 }
             }
-            
+
             return null;
         }
 
@@ -2893,7 +2893,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
             }
 
             // Create constant buffer for shadow ray parameters
-            // Size: Vector3 lightDirection (12 bytes) + float maxDistance (4 bytes) + 
+            // Size: Vector3 lightDirection (12 bytes) + float maxDistance (4 bytes) +
             //       int samplesPerPixel (4 bytes) + float softShadowAngle (4 bytes) +
             //       int2 renderResolution (8 bytes) + padding = 32 bytes (aligned)
             _shadowConstantBuffer = _device.CreateBuffer(new BufferDesc
@@ -3074,7 +3074,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
             // Manual layout to ensure correct byte order
             byte[] constantData = new byte[32];
             int offset = 0;
-            
+
             // Light direction (Vector3 = 3 floats = 12 bytes)
             BitConverter.GetBytes(constants.LightDirection.X).CopyTo(constantData, offset);
             offset += 4;
@@ -3082,23 +3082,23 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
             offset += 4;
             BitConverter.GetBytes(constants.LightDirection.Z).CopyTo(constantData, offset);
             offset += 4;
-            
+
             // Max distance (float = 4 bytes)
             BitConverter.GetBytes(constants.MaxDistance).CopyTo(constantData, offset);
             offset += 4;
-            
+
             // Soft shadow angle (float = 4 bytes)
             BitConverter.GetBytes(constants.SoftShadowAngle).CopyTo(constantData, offset);
             offset += 4;
-            
+
             // Samples per pixel (int = 4 bytes)
             BitConverter.GetBytes(constants.SamplesPerPixel).CopyTo(constantData, offset);
             offset += 4;
-            
+
             // Render width (int = 4 bytes)
             BitConverter.GetBytes(constants.RenderWidth).CopyTo(constantData, offset);
             offset += 4;
-            
+
             // Render height (int = 4 bytes)
             BitConverter.GetBytes(constants.RenderHeight).CopyTo(constantData, offset);
 
@@ -3141,7 +3141,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
             // Check if the binding layout supports push descriptors
             // Push descriptors allow updating bindings without recreating the binding set
             bool supportsPushDescriptors = _shadowBindingLayout.Desc.IsPushDescriptor;
-            
+
             if (supportsPushDescriptors)
             {
                 // If push descriptors are supported, we can update the binding set in-place
@@ -3156,7 +3156,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
             // Recreate the binding set with the new output texture
             // Dispose the old binding set first
             IBindingSet oldBindingSet = _shadowBindingSet;
-            
+
             try
             {
                 // Create new binding set with updated texture
@@ -3195,14 +3195,14 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
 
                 // Dispose the old binding set after successful creation
                 oldBindingSet.Dispose();
-                
+
                 Console.WriteLine($"[NativeRT] UpdateShadowBindingSet: Successfully updated binding set with output texture {outputTexture}");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[NativeRT] UpdateShadowBindingSet: Exception recreating binding set: {ex.Message}");
                 Console.WriteLine($"[NativeRT] UpdateShadowBindingSet: Stack trace: {ex.StackTrace}");
-                
+
                 // Restore old binding set if recreation failed
                 _shadowBindingSet = oldBindingSet;
             }
@@ -3236,14 +3236,14 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
                 // Get dimensions from texture description
                 int width = mappedTexture.Desc.Width;
                 int height = mappedTexture.Desc.Height;
-                
+
                 // Cache the info for future lookups
                 _textureInfoCache[textureHandle] = new TextureInfo
                 {
                     Width = width,
                     Height = height
                 };
-                
+
                 return (width, height);
             }
 
@@ -3278,9 +3278,9 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
             // - Large pointer values (typically > 0x1000 for valid memory addresses)
             // - Not small integers (which might be resource indices)
             // - Aligned to pointer boundaries (though this is platform-dependent)
-            
+
             long handleValue = handle.ToInt64();
-            
+
             // Check if handle looks like a valid pointer
             // On 64-bit systems, valid pointers are typically in user space (0x0000000100000000 - 0x00007FFFFFFFFFFF on Windows)
             // On 32-bit systems, valid pointers are typically 0x00400000 - 0x7FFFFFFF
@@ -3295,7 +3295,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
             // it might be a resource index rather than a pointer
             // However, some graphics APIs do use small handles, so we're conservative
             // We'll accept it if it's not in our map and is non-zero
-            
+
             return true;
         }
 
@@ -3310,7 +3310,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
         /// - D3D12: Can query ID3D12Resource for description via GetDesc() COM interface
         /// - Vulkan: Can query VkImage for description via vkGetImageMemoryRequirements and format info
         /// - Metal: Can query MTLTexture for description via width/height/pixelFormat properties
-        /// 
+        ///
         /// This method attempts to use reflection or backend-specific APIs to query texture info.
         /// If the backend doesn't support querying, returns null and heuristics will be used instead.
         /// </remarks>
@@ -3326,7 +3326,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
                 // Try to query texture info based on backend type
                 Type deviceType = _device.GetType();
                 string deviceTypeName = deviceType.Name;
-                
+
                 // Backend-specific querying strategies
                 if (deviceTypeName.Contains("D3D12"))
                 {
@@ -3354,7 +3354,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
                     // In a full implementation, MetalDevice would provide QueryMTLTextureDescription method
                     return QueryMetalTextureDescription(nativeHandle);
                 }
-                
+
                 // Unknown backend type, return null to use heuristics
                 return null;
             }
@@ -3386,16 +3386,16 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
                 // 1. QueryInterface to get ID3D12Resource from the handle
                 // 2. Call GetDesc() via COM vtable
                 // 3. Convert D3D12_RESOURCE_DESC to TextureDesc
-                
+
                 // Since we don't have direct access to D3D12 COM interfaces here,
                 // we would need D3D12Device to provide a helper method
                 // For now, return null to use heuristics
-                
+
                 // In a full implementation, this would:
                 // - Use Marshal.GetObjectForIUnknown to get ID3D12Resource
                 // - Call GetDesc() via COM interface
                 // - Convert D3D12_RESOURCE_DESC to TextureDesc
-                
+
                 return null;
             }
             catch (Exception ex)
@@ -3426,16 +3426,16 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
                 // 1. vkGetImageMemoryRequirements to get size
                 // 2. VkImageCreateInfo (stored when image was created) for format/dimensions
                 // 3. Convert Vulkan structures to TextureDesc
-                
+
                 // Since we don't have direct access to Vulkan functions here,
                 // we would need VulkanDevice to provide a helper method
                 // For now, return null to use heuristics
-                
+
                 // In a full implementation, this would:
                 // - Call vkGetImageMemoryRequirements via VulkanDevice
                 // - Get format/dimensions from stored VkImageCreateInfo
                 // - Convert to TextureDesc
-                
+
                 return null;
             }
             catch (Exception ex)
@@ -3466,16 +3466,16 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
                 // 1. Use objc_msgSend to call width, height, pixelFormat getters
                 // 2. Convert MTLPixelFormat to TextureFormat
                 // 3. Create TextureDesc from properties
-                
+
                 // Since we don't have direct access to Objective-C runtime here,
                 // we would need MetalDevice to provide a helper method
                 // For now, return null to use heuristics
-                
+
                 // In a full implementation, this would:
                 // - Use objc_msgSend to get width, height, pixelFormat
                 // - Convert MTLPixelFormat enum to TextureFormat
                 // - Create TextureDesc
-                
+
                 return null;
             }
             catch (Exception ex)
@@ -3598,7 +3598,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
             {
                 ReleaseOIDNDevice();
             }
-            
+
             // Destroy compute pipelines
             if (_temporalDenoiserPipeline != null)
             {
@@ -3769,12 +3769,12 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
 
             // Attempt to load compute shader bytecode
             byte[] shaderBytecode = LoadShaderBytecode(name, ShaderType.Compute);
-            
+
             if (shaderBytecode == null || shaderBytecode.Length == 0)
             {
                 // Try to generate minimal valid compute shader bytecode for the backend
                 shaderBytecode = GenerateMinimalShaderBytecode(ShaderType.Compute, name);
-                
+
                 if (shaderBytecode == null || shaderBytecode.Length == 0)
                 {
                     Console.WriteLine($"[NativeRT] Error: Failed to load or generate compute shader bytecode for {name}");
@@ -3784,7 +3784,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
                     Console.WriteLine($"[NativeRT]   - File system: Shaders/{name}.{GetShaderExtension(ShaderType.Compute)}");
                     return null;
                 }
-                
+
                 Console.WriteLine($"[NativeRT] Warning: Using generated minimal compute shader bytecode for {name}");
                 Console.WriteLine($"[NativeRT] For production use, provide pre-compiled shader bytecode.");
             }
@@ -4050,7 +4050,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
             {
                 return;
             }
-            
+
             // Get input and output textures
             ITexture inputTexture = GetTextureFromHandle(parameters.InputTexture);
             ITexture outputTexture = GetTextureFromHandle(parameters.OutputTexture);
@@ -4061,7 +4061,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
             {
                 return;
             }
-            
+
             // Try native OIDN library first if available
             if (_useNativeOIDN && _oidnInitialized && _oidnFilter != IntPtr.Zero)
             {
@@ -4075,7 +4075,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
                     ApplyOIDNDenoisingGPU(parameters, width, height);
                     return;
                 }
-                
+
                 // Read auxiliary buffers if available
                 float[] albedoData = null;
                 float[] normalData = null;
@@ -4087,12 +4087,12 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
                 {
                     normalData = ReadTextureDataFromGPU(normalTexture, width, height);
                 }
-                
+
                 // Step 2: Allocate output buffer
                 int pixelCount = width * height;
                 int floatCount = pixelCount * 4; // RGBA
                 float[] outputData = new float[floatCount];
-                
+
                 // Step 3: Execute OIDN filter on CPU
                 bool denoiseSuccess = ExecuteOIDNFilter(inputData, outputData, albedoData, normalData, width, height);
                 if (!denoiseSuccess)
@@ -4101,7 +4101,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
                     ApplyOIDNDenoisingGPU(parameters, width, height);
                     return;
                 }
-                
+
                 // Step 4: Transfer results from CPU to GPU
                 bool writeSuccess = WriteTextureDataToGPU(outputTexture, outputData, width, height);
                 if (!writeSuccess)
@@ -4110,7 +4110,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
                     ApplyOIDNDenoisingGPU(parameters, width, height);
                     return;
                 }
-                
+
                 // Native OIDN processing completed successfully
                 return;
             }
@@ -4120,7 +4120,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
                 ApplyOIDNDenoisingGPU(parameters, width, height);
             }
         }
-        
+
         /// <summary>
         /// Applies OIDN-style denoising using GPU compute shader (fallback implementation).
         /// This is used when native OIDN library is not available or when GPU->CPU transfer is not supported.
@@ -4413,7 +4413,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
                     // Try to query texture information from the backend
                     // Different backends may provide different ways to query texture info from native handles
                     TextureDesc? queriedDesc = QueryTextureDescriptionFromNativeHandle(textureHandle);
-                    
+
                     if (queriedDesc.HasValue)
                     {
                         // We have a complete description from the backend
@@ -4422,14 +4422,14 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
                         {
                             // Cache it for future lookups
                             _textureHandleMap[textureHandle] = texture;
-                            
+
                             // Cache texture info
                             _textureInfoCache[textureHandle] = new TextureInfo
                             {
                                 Width = queriedDesc.Value.Width,
                                 Height = queriedDesc.Value.Height
                             };
-                            
+
                             Console.WriteLine($"[NativeRT] GetTextureFromHandle: Successfully created texture wrapper from native handle {textureHandle:X} ({queriedDesc.Value.Width}x{queriedDesc.Value.Height}, {queriedDesc.Value.Format})");
                             return texture;
                         }
@@ -4450,11 +4450,11 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
                             TextureFormat.R8G8B8A8_UNorm,      // LDR output
                             TextureFormat.R10G10B10A2_UNorm    // Packed LDR
                         };
-                        
+
                         // Try to get dimensions from cache if available
                         int width = 1920;  // Default fallback dimensions (common render resolution)
                         int height = 1080;
-                        
+
                         if (_textureInfoCache.TryGetValue(textureHandle, out TextureInfo cachedInfo))
                         {
                             width = cachedInfo.Width;
@@ -4468,7 +4468,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
                             width = 1920;
                             height = 1080;
                         }
-                        
+
                         // Try each common format until one works
                         foreach (TextureFormat format in commonFormats)
                         {
@@ -4495,14 +4495,14 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
                                 {
                                     // Cache it for future lookups
                                     _textureHandleMap[textureHandle] = texture;
-                                    
+
                                     // Cache texture info
                                     _textureInfoCache[textureHandle] = new TextureInfo
                                     {
                                         Width = width,
                                         Height = height
                                     };
-                                    
+
                                     Console.WriteLine($"[NativeRT] GetTextureFromHandle: Successfully created texture wrapper from native handle {textureHandle:X} using format {format} (inferred {width}x{height})");
                                     return texture;
                                 }
@@ -4527,7 +4527,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
             // TODO: STUB - For now, we return null and log a warning
             Console.WriteLine($"[NativeRT] GetTextureFromHandle: Could not resolve texture handle {textureHandle}");
             Console.WriteLine($"[NativeRT] GetTextureFromHandle: Use RegisterTextureHandle to register textures before use");
-            
+
             return null;
         }
 
@@ -4551,14 +4551,14 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
             }
 
             _textureHandleMap[handle] = texture;
-            
+
             // Also cache texture info
             _textureInfoCache[handle] = new TextureInfo
             {
                 Width = texture.Desc.Width,
                 Height = texture.Desc.Height
             };
-            
+
             Console.WriteLine($"[NativeRT] RegisterTextureHandle: Registered texture handle {handle} -> {texture.Desc.Width}x{texture.Desc.Height}");
         }
 
@@ -4575,7 +4575,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
 
             _textureHandleMap.Remove(handle);
             _textureInfoCache.Remove(handle);
-            
+
             Console.WriteLine($"[NativeRT] UnregisterTextureHandle: Unregistered texture handle {handle}");
         }
 
@@ -4599,7 +4599,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
             // Buffer not found in registry
             Console.WriteLine($"[NativeRT] GetBufferFromHandle: Could not resolve buffer handle {bufferHandle}");
             Console.WriteLine($"[NativeRT] GetBufferFromHandle: Use RegisterBufferHandle to register buffers before use");
-            
+
             return null;
         }
 
@@ -4623,7 +4623,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
             }
 
             _bufferHandleMap[handle] = buffer;
-            
+
             Console.WriteLine($"[NativeRT] RegisterBufferHandle: Registered buffer handle {handle} -> size: {buffer.Desc.ByteSize} bytes");
         }
 
@@ -4639,7 +4639,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
             }
 
             _bufferHandleMap.Remove(handle);
-            
+
             Console.WriteLine($"[NativeRT] UnregisterBufferHandle: Unregistered buffer handle {handle}");
         }
 

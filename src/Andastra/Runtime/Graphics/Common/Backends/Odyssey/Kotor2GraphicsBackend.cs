@@ -571,10 +571,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     {
                         _kotor2GlGenProgramsArb(1, ref _kotor2VertexProgramId);
                     }
-                    
+
                     // Bind vertex program
                     _kotor2GlBindProgramArb(GL_VERTEX_PROGRAM_ARB, _kotor2VertexProgramId);
-                    
+
                     // Load vertex program string (matching swkotor2.exe line 231-299)
                     // NOTE: The exact vertex program string should be extracted from swkotor2.exe using Ghidra
                     // to ensure 1:1 parity. Current implementation uses a basic passthrough program.
@@ -585,10 +585,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                         "MOV result.position, vertex.position;\n" +
                         "MOV result.texcoord[0], vertex.texcoord[0];\n" +
                         "END\n";
-                    
+
                     // Load program string (0x8875 = GL_PROGRAM_FORMAT_ASCII_ARB)
                     _kotor2GlProgramStringArb(GL_VERTEX_PROGRAM_ARB, 0x8875, vertexProgramString.Length, vertexProgramString);
-                    
+
                     // Unbind vertex program (program remains loaded and can be bound later)
                     _kotor2GlBindProgramArb(GL_VERTEX_PROGRAM_ARB, 0);
                 }
@@ -984,7 +984,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         /// - FUN_00461220: Display list cleanup (conditional)
         /// - FUN_00461200: Display list initialization (conditional)
         /// - FUN_004235b0: Display setup/configuration
-        /// 
+        ///
         /// Based on reverse engineering of swkotor2.exe at address 0x00423b80.
         /// The function checks a flag and conditionally calls cleanup/init functions,
         /// then always calls the display setup function.
@@ -1140,13 +1140,13 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         /// <remarks>
         /// This function initializes the bitmap data for font glyphs.
         /// The bitmap data matches the embedded font data in swkotor2.exe.
-        /// 
+        ///
         /// Font data format (matching swkotor2.exe: FUN_00461200 @ 0x00461200):
         /// - 95 characters (ASCII 0x20 ' ' to 0x7E '~')
         /// - Each character: 8x13 pixels = 13 bytes (1 byte per row, 8 bits for 8 pixels)
         /// - Total size: 95 * 13 = 1235 bytes
         /// - Data format: OpenGL glBitmap format (bitmap data, 1 bit per pixel, MSB first)
-        /// 
+        ///
         /// Source: Extracted from swkotor2.exe using Ghidra reverse engineering.
         /// The font glyph bitmap data is embedded in the binary at the data section
         /// referenced by FUN_00461200. This implementation uses the exact font data
@@ -1521,7 +1521,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         /// - Sets up pixel format using wglChoosePixelFormatARB if available
         /// - Falls back to standard ChoosePixelFormat if ARB extension not available
         /// - Returns window handle or IntPtr.Zero on failure
-        /// 
+        ///
         /// Based on swkotor2.exe reverse engineering:
         /// - Window class: "KOTOR2SecondaryWindow" (registered once, reused)
         /// - Window style: 0 (WS_OVERLAPPED, minimal style for hidden window)
@@ -1542,7 +1542,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             // Check if class is already registered by attempting to get class info
             WNDCLASSA existingClass = new WNDCLASSA();
             IntPtr classAtom = GetClassInfoA(IntPtr.Zero, className, ref existingClass);
-            
+
             if (classAtom == IntPtr.Zero)
             {
                 // Class not registered, register it now
@@ -1713,7 +1713,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         /// 2. Performs conditional manipulation based on the value and sign
         /// 3. Updates the seed using floating-point operations for the next call
         /// 4. Returns the 64-bit result
-        /// 
+        ///
         /// Original implementation details (swkotor2.exe: FUN_0076dba0 @ 0x0076dba0):
         /// - Uses x87 FPU stack (ST0) for seed storage
         /// - Performs FISTP (Float Integer Store and Pop) to round to int64
@@ -1725,7 +1725,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             // Matching swkotor2.exe: FUN_0076dba0 @ 0x0076dba0
             // This function generates a random value using floating-point operations
             // TODO:  The actual implementation uses x87 FPU instructions
-            
+
             // Step 1: Round the floating-point seed to 64-bit integer (matching FISTP instruction)
             // This matches the decompilation: uVar1 = (ulonglong)ROUND(in_ST0);
             long roundedValue = (long)Math.Round(_kotor2RandomSeed);
@@ -1756,11 +1756,11 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     double diff = _kotor2RandomSeed - (double)roundedValue;
                     float floatDiff = (float)diff;
                     uint uVar2 = (0x80000000 < (uint)floatDiff) ? 1u : 0u;
-                    
+
                     uint newLocal20 = local20 - uVar2;
                     uint borrow = (local20 < uVar2) ? 1u : 0u;
                     uint newUStack1c = uStack1c - borrow;
-                    
+
                     uVar1 = ((ulong)newUStack1c << 32) | newLocal20;
                 }
             }
@@ -1770,7 +1770,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             // Constants chosen to match typical game engine PRNG patterns
             // Multiplying by a large prime and adding a constant, then taking fractional part
             _kotor2RandomSeed = _kotor2RandomSeed * 1103515245.0 + 12345.0;
-            
+
             // Keep seed in a reasonable range by taking fractional part of normalized value
             // This prevents overflow while maintaining good distribution
             if (_kotor2RandomSeed > 2147483647.0 || _kotor2RandomSeed < -2147483648.0)
@@ -2121,14 +2121,14 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         /// Rendering in KOTOR2 is handled by the Area.Render() method which manages
         /// all scene rendering including rooms, entities, effects, lighting, and fog.
         /// This method is a wrapper that ensures the OpenGL context is current before rendering.
-        /// 
+        ///
         /// Based on swkotor2.exe rendering architecture:
         /// - Scene rendering is delegated to Area system (OdysseyArea.Render())
         /// - Graphics backend provides OpenGL context management and state setup
         /// - Area system handles all per-frame rendering logic (entities, rooms, effects)
         /// - This matches the original game's rendering architecture where the graphics backend
         ///   manages OpenGL context and the game logic handles scene rendering
-        /// 
+        ///
         /// Matching swkotor.exe pattern (KOTOR1):
         /// - Both games use the same rendering architecture pattern
         /// - Graphics backend ensures context is current and clears buffers

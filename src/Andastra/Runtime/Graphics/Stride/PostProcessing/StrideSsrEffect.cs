@@ -93,7 +93,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// - Effect.Load() loads from default content paths
         /// - ContentManager.Load&lt;Effect&gt;() loads from content manager
         /// - EffectSystem can compile shaders at runtime from source
-        /// 
+        ///
         /// Algorithm based on vendor/reone/glsl/f_pbr_ssr.glsl for 1:1 parity with original game.
         /// </remarks>
         private void LoadSsrShaders()
@@ -1052,7 +1052,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// <remarks>
         /// Based on Stride shader compilation: Creates shader source code in .sdsl format
         /// and compiles it at runtime using EffectCompiler.
-        /// 
+        ///
         /// Shader matches vendor/reone/glsl/f_pbr_ssr.glsl exactly for 1:1 parity with original game.
         /// Converts GLSL to HLSL/.sdsl format while preserving all algorithm details.
         /// </remarks>

@@ -27,7 +27,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         private GraphicsDevice _graphicsDevice;
         private IntPtr _fsrContext;
         private Texture _outputTexture;
-        
+
         // FSR 2.x compute shaders
         private EffectInstance _fsrEasuEffect;
         private EffectInstance _fsrRcasEffect;
@@ -35,20 +35,20 @@ namespace Andastra.Runtime.Stride.Upscaling
         private Effect _fsrEasuEffectBase;
         private Effect _fsrRcasEffectBase;
         private Effect _fsrTemporalEffectBase;
-        
+
         // FSR internal textures for temporal accumulation
         private Texture _fsrHistoryTexture;
         private Texture _fsrLockTexture;
         private Texture _fsrExposureTexture;
-        
+
         // FSR parameters
         private FsrConstants _fsrConstants;
         private bool _fsrContextNeedsRecreation;
-        
+
         // FSR dispatch parameters
         private const int FSR_THREAD_GROUP_SIZE_X = 16;
         private const int FSR_THREAD_GROUP_SIZE_Y = 16;
-        
+
         /// <summary>
         /// FSR constants structure matching AMD FidelityFX SDK format.
         /// Based on FfxFsr2DispatchDescription from FidelityFX SDK.
@@ -879,10 +879,10 @@ shader FSRTemporal : ComputeShaderBase
         protected override void OnModeChanged(FsrMode mode)
         {
             Console.WriteLine($"[StrideFSR] Mode changed to: {mode}");
-            
+
             // Mark that FSR context needs recreation with new quality preset
             _fsrContextNeedsRecreation = true;
-            
+
             // Recreate FSR context with new quality preset
             // In a full implementation, this would recreate the FSR context with updated quality settings
             if (_initialized)
@@ -895,7 +895,7 @@ shader FSRTemporal : ComputeShaderBase
         protected override void OnFrameGenerationChanged(bool enabled)
         {
             Console.WriteLine($"[StrideFSR] Frame Generation: {(enabled ? "enabled" : "disabled")}");
-            
+
             // Frame generation requires FSR 3.0+
             // For FSR 2.x, this is a no-op, but we track it for future FSR 3.0 support
             if (enabled && FsrVersion < 3)
@@ -907,7 +907,7 @@ shader FSRTemporal : ComputeShaderBase
         protected override void OnSharpnessChanged(float sharpness)
         {
             Console.WriteLine($"[StrideFSR] Sharpness set to: {sharpness:F2}");
-            
+
             // Update RCAS sharpness parameter
             // This will be applied in CalculateFsrConstants on next frame
             // Sharpness is clamped to [0, 1] range

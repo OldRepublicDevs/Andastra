@@ -6885,9 +6885,6 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                             IntPtr releasePtr = Marshal.ReadIntPtr(vtable, 2 * IntPtr.Size);
 
                             // Create delegate for Release
-                            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-                            delegate uint ReleaseDelegate(IntPtr pUnknown);
-
                             var release = Marshal.GetDelegateForFunctionPointer<ReleaseDelegate>(releasePtr);
                             release(fontPtr);
                         }

@@ -15,7 +15,7 @@ namespace Andastra.Tests.Runtime.Parsing.MDL
 {
     /// <summary>
     /// Exhaustive and comprehensive unit tests for ASCII MDL format handling.
-    /// 
+    ///
     /// This test module provides meticulous coverage of ALL MDL/MDX ASCII format features:
     /// - All node types (dummy, trimesh, light, emitter, reference, saber, aabb, skin, dangly)
     /// - All controller types (position, orientation, scale, alpha, color, radius, etc.)
@@ -25,14 +25,14 @@ namespace Andastra.Tests.Runtime.Parsing.MDL
     /// - Edge cases and error handling
     /// - Format detection
     /// - All combinations of features
-    /// 
+    ///
     /// 1:1 port of vendor/PyKotor/Libraries/PyKotor/tests/resource/formats/test_mdl_ascii.py
     /// </summary>
-    
+
     // ============================================================================
     // Test Data Builders
     // ============================================================================
-    
+
     public static class MDLAsciiTestHelpers
     {
         /// <summary>

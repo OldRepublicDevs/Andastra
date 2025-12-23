@@ -666,7 +666,6 @@ namespace Andastra.Runtime.Core.Actions
                             }
                         }
                     }
-                }
             }
             catch
             {
