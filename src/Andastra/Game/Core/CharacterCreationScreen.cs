@@ -14,6 +14,7 @@ using Andastra.Runtime.Games.Odyssey.Systems;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common;
 using Andastra.Runtime.Engines.Odyssey.Data;
+using Andastra.Parsing.Formats.TPC;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Game.Core
@@ -28,12 +29,12 @@ namespace Andastra.Runtime.Game.Core
     /// - K1 Music: "mus_theme_rep", K2 Music: "mus_main"
     /// - Load Screen: K1 uses "load_chargen", K2 uses "load_default"
     /// - Flow: Main Menu → Character Creation → Module Load
-    /// 
+    ///
     /// Based on reverse engineering of:
     /// - swkotor.exe: Character generation functions
     /// - swkotor2.exe: Character generation functions
     /// - vendor/reone: CharacterGeneration class implementation
-    /// 
+    ///
     /// Character Creation Steps:
     /// 1. Class Selection (Scout, Soldier, Scoundrel for K1; Jedi Guardian, Jedi Sentinel, Jedi Consular for K2)
     /// 2. Quick or Custom (Quick uses defaults, Custom allows full customization)
@@ -66,10 +67,10 @@ namespace Andastra.Runtime.Game.Core
         private bool _needsModelUpdate = true;
         private bool _guiLoaded = false;
         private ITexture2D _pixelTexture;
-        
+
         // Portrait texture cache
         private Dictionary<int, ITexture2D> _portraitTextureCache;
-        
+
         // 3D model rendering
         private IEntityModelRenderer _entityModelRenderer;
         private Entity _previewEntity;
@@ -78,18 +79,18 @@ namespace Andastra.Runtime.Game.Core
         private bool _modelRendererInitialized = false;
         private IRenderTarget _previewRenderTarget;
         private ITexture2D _previewTexture;
-        
+
         // Feat selection state
         private List<int> _availableFeatIds = new List<int>();
         private int _selectedFeatIndex = 0;
         private int _featScrollOffset = 0;
-        
+
         // Skill selection state
         private List<int> _availableSkillIds = new List<int>(); // Skill IDs 0-7
         private int _selectedSkillIndex = 0;
         private int _skillScrollOffset = 0;
         private int _availableSkillPoints = 0;
-        
+
         /// <summary>
         /// Character creation steps.
         /// </summary>
@@ -104,7 +105,7 @@ namespace Andastra.Runtime.Game.Core
             Name,
             Summary
         }
-        
+
         /// <summary>
         /// Available classes for the current game.
         /// </summary>
@@ -119,7 +120,7 @@ namespace Andastra.Runtime.Game.Core
                 return new CharacterClass[] { CharacterClass.JediGuardian, CharacterClass.JediSentinel, CharacterClass.JediConsular };
             }
         }
-        
+
         /// <summary>
         /// Creates a new character creation screen.
         /// </summary>
@@ -147,10 +148,10 @@ namespace Andastra.Runtime.Game.Core
             _onCancel = onCancel ?? throw new ArgumentNullException(nameof(onCancel));
             _graphicsBackend = graphicsBackend;
             _gameDataManager = new GameDataManager(installation);
-            
+
             // Initialize portrait texture cache
             _portraitTextureCache = new Dictionary<int, ITexture2D>();
-            
+
             // Initialize character data with defaults
             _characterData = new CharacterCreationData
             {
@@ -169,28 +170,28 @@ namespace Andastra.Runtime.Game.Core
                 SelectedFeats = new List<int>(),
                 SkillRanks = new Dictionary<int, int>()
             };
-            
+
             // Initialize all skills to 0 (untrained)
             for (int i = 0; i < 8; i++)
             {
                 _characterData.SkillRanks[i] = 0;
             }
-            
+
             // Initialize available skills (all 8 skills in KOTOR)
             _availableSkillIds = new List<int> { 0, 1, 2, 3, 4, 5, 6, 7 };
-            
+
             // Initialize available feats for the default class
             UpdateAvailableFeats();
-            
+
             // Initialize skill points
             UpdateSkillPoints();
-            
+
             // Load the maincg GUI panel
             // Based on swkotor.exe and swkotor2.exe: Character creation uses "maincg" GUI panel
             // Original implementation: GUI panel is loaded when character creation screen is initialized
             int screenWidth = _graphicsDevice.Viewport.Width > 0 ? _graphicsDevice.Viewport.Width : 800;
             int screenHeight = _graphicsDevice.Viewport.Height > 0 ? _graphicsDevice.Viewport.Height : 600;
-            
+
             _guiLoaded = _guiManager.LoadGui("maincg", screenWidth, screenHeight);
             if (_guiLoaded)
             {
@@ -200,17 +201,17 @@ namespace Andastra.Runtime.Game.Core
             {
                 System.Console.WriteLine("[CharacterCreationScreen] WARNING: Failed to load maincg GUI panel, character creation UI may not display correctly");
             }
-            
+
             // Create a 1x1 pixel texture for drawing rectangles
             byte[] pixelData = new byte[] { 255, 255, 255, 255 }; // White pixel
             _pixelTexture = _graphicsDevice.CreateTexture2D(1, 1, pixelData);
-            
+
             // Initialize 3D model rendering system for character preview
             // Based on swkotor.exe and swkotor2.exe: Character preview uses 3D model rendering
             // Original implementation: 3D model renderer is created when character creation screen initializes
             InitializeModelRenderer();
         }
-        
+
         /// <summary>
         /// Initializes the 3D model rendering system for character preview.
         /// Based on swkotor.exe and swkotor2.exe: Character preview uses 3D model rendering
@@ -227,7 +228,7 @@ namespace Andastra.Runtime.Game.Core
                 System.Console.WriteLine("[CharacterCreationScreen] INFO: Graphics backend not available, 3D model preview will be disabled");
                 return;
             }
-            
+
             try
             {
                 // Create entity model renderer from graphics backend
@@ -235,22 +236,22 @@ namespace Andastra.Runtime.Game.Core
                 // GameDataManager provides access to 2DA tables (appearance.2da) for model resolution
                 // Installation provides access to resource system (MDL files, textures, etc.)
                 _entityModelRenderer = _graphicsBackend.CreateEntityModelRenderer(_gameDataManager, _installation);
-                
+
                 if (_entityModelRenderer == null)
                 {
                     System.Console.WriteLine("[CharacterCreationScreen] WARNING: Failed to create entity model renderer, 3D model preview will be disabled");
                     return;
                 }
-                
+
                 // Mark renderer as initialized
                 _modelRendererInitialized = true;
-                
+
                 // Initialize preview entity with initial character data
                 InitializePreviewEntity();
-                
+
                 // Initialize preview camera matrices
                 InitializePreviewCamera();
-                
+
                 System.Console.WriteLine("[CharacterCreationScreen] INFO: 3D model rendering system initialized successfully");
             }
             catch (Exception ex)
@@ -259,7 +260,7 @@ namespace Andastra.Runtime.Game.Core
                 _modelRendererInitialized = false;
             }
         }
-        
+
         /// <summary>
         /// Updates the character creation screen.
         /// </summary>
@@ -271,7 +272,7 @@ namespace Andastra.Runtime.Game.Core
         /// - Handles button clicks (Next, Back, Cancel, Finish)
         /// - Manages step navigation and validation
         /// - Processes step-specific input (class selection, attributes, skills, feats, portrait, name)
-        /// 
+        ///
         /// Based on reverse engineering of:
         /// - swkotor.exe: Character generation input handling and update loop
         /// - swkotor2.exe: Character generation input handling and update loop
@@ -288,34 +289,34 @@ namespace Andastra.Runtime.Game.Core
             {
                 _previousMouseState = mouseState;
             }
-            
+
             // Update model rotation for preview animation
             _modelRotationAngle += deltaTime * 0.5f; // Slow rotation
             if (_modelRotationAngle > 2.0f * (float)Math.PI)
             {
                 _modelRotationAngle -= 2.0f * (float)Math.PI;
             }
-            
+
             // Check for appearance changes and update model if needed
             if (_characterData.Appearance != _previousAppearance)
             {
                 _previousAppearance = _characterData.Appearance;
                 _needsModelUpdate = true;
             }
-            
+
             // Update preview model if needed (appearance, gender, or class changes)
             if (_needsModelUpdate && _modelRendererInitialized)
             {
                 UpdatePreviewModel();
             }
-            
+
             // Handle global input (Cancel/Escape)
             if (IsKeyPressed(keyboardState, _previousKeyboardState, Keys.Escape))
             {
                 Cancel();
                 return;
             }
-            
+
             // Handle step-specific input
             switch (_currentStep)
             {
@@ -344,12 +345,12 @@ namespace Andastra.Runtime.Game.Core
                     HandleSummaryInput(keyboardState, mouseState);
                     break;
             }
-            
+
             // Update previous states for next frame
             _previousKeyboardState = keyboardState;
             _previousMouseState = mouseState;
         }
-        
+
         /// <summary>
         /// Checks if a key was just pressed (not held).
         /// </summary>
@@ -357,7 +358,7 @@ namespace Andastra.Runtime.Game.Core
         {
             return current.IsKeyDown(key) && previous.IsKeyUp(key);
         }
-        
+
         /// <summary>
         /// Checks if a mouse button was just clicked (not held).
         /// </summary>
@@ -365,14 +366,14 @@ namespace Andastra.Runtime.Game.Core
         {
             return current.IsButtonDown(button) && previous.IsButtonUp(button);
         }
-        
+
         /// <summary>
         /// Handles input for class selection step.
         /// </summary>
         private void HandleClassSelectionInput(IKeyboardState keyboardState, IMouseState mouseState)
         {
             CharacterClass[] availableClasses = GetAvailableClasses();
-            
+
             // Keyboard navigation
             if (IsKeyPressed(keyboardState, _previousKeyboardState, Keys.Up) || IsKeyPressed(keyboardState, _previousKeyboardState, Keys.Left))
             {
@@ -390,14 +391,14 @@ namespace Andastra.Runtime.Game.Core
                 UpdateSkillPoints();
                 _needsModelUpdate = true;
             }
-            
+
             // Confirm selection
             if (IsKeyPressed(keyboardState, _previousKeyboardState, Keys.Enter) || IsKeyPressed(keyboardState, _previousKeyboardState, Keys.Space))
             {
                 GoToNextStep();
             }
         }
-        
+
         /// <summary>
         /// Handles input for Quick or Custom selection step.
         /// </summary>
@@ -412,7 +413,7 @@ namespace Andastra.Runtime.Game.Core
             {
                 _isQuickMode = false;
             }
-            
+
             // Confirm selection
             if (IsKeyPressed(keyboardState, _previousKeyboardState, Keys.Enter) || IsKeyPressed(keyboardState, _previousKeyboardState, Keys.Space))
             {
@@ -427,14 +428,14 @@ namespace Andastra.Runtime.Game.Core
                     _currentStep = CreationStep.Attributes;
                 }
             }
-            
+
             // Back button
             if (IsKeyPressed(keyboardState, _previousKeyboardState, Keys.Back))
             {
                 GoToPreviousStep();
             }
         }
-        
+
         /// <summary>
         /// Handles input for attributes step.
         /// </summary>
@@ -449,7 +450,7 @@ namespace Andastra.Runtime.Game.Core
             {
                 _selectedAttributeIndex = (_selectedAttributeIndex + 1) % 6;
             }
-            
+
             // Attribute adjustment
             if (IsKeyPressed(keyboardState, _previousKeyboardState, Keys.Left))
             {
@@ -459,7 +460,7 @@ namespace Andastra.Runtime.Game.Core
             {
                 AdjustAttribute(_selectedAttributeIndex, 1);
             }
-            
+
             // Next/Back
             if (IsKeyPressed(keyboardState, _previousKeyboardState, Keys.Enter) || IsKeyPressed(keyboardState, _previousKeyboardState, Keys.Space))
             {
@@ -470,7 +471,7 @@ namespace Andastra.Runtime.Game.Core
                 GoToPreviousStep();
             }
         }
-        
+
         /// <summary>
         /// Adjusts an attribute value with validation.
         /// </summary>
@@ -482,34 +483,34 @@ namespace Andastra.Runtime.Game.Core
             int basePoints = 6 * 8; // 6 attributes * 8 base = 48 points
             int pointsSpent = totalPoints - basePoints;
             int maxPoints = 30; // Maximum points that can be allocated
-            
+
             // Get current attribute value
             int currentValue = GetAttributeValue(attributeIndex);
             int newValue = currentValue + delta;
-            
+
             // Validate: attributes must be between 8 and 18 (or 20 with bonuses)
             if (newValue < 8 || newValue > 20)
             {
                 return;
             }
-            
+
             // Validate: check point allocation
             int newPointsSpent = pointsSpent + delta;
             if (newPointsSpent < 0 || newPointsSpent > maxPoints)
             {
                 return;
             }
-            
+
             // Apply change
             SetAttributeValue(attributeIndex, newValue);
-            
+
             // Update skill points if Intelligence changed
             if (attributeIndex == 3) // Intelligence
             {
                 UpdateSkillPoints();
             }
         }
-        
+
         /// <summary>
         /// Gets the value of an attribute by index.
         /// </summary>
@@ -526,7 +527,7 @@ namespace Andastra.Runtime.Game.Core
                 default: return 12;
             }
         }
-        
+
         /// <summary>
         /// Sets the value of an attribute by index.
         /// </summary>
@@ -542,7 +543,7 @@ namespace Andastra.Runtime.Game.Core
                 case 5: _characterData.Charisma = value; break;
             }
         }
-        
+
         /// <summary>
         /// Handles input for skills step.
         /// Based on swkotor.exe and swkotor2.exe: Skill selection allows adjusting skill ranks with available skill points
@@ -579,12 +580,12 @@ namespace Andastra.Runtime.Game.Core
                     }
                 }
             }
-            
+
             // Skill rank adjustment
             if (_selectedSkillIndex >= 0 && _selectedSkillIndex < _availableSkillIds.Count)
             {
                 int skillId = _availableSkillIds[_selectedSkillIndex];
-                
+
                 // Increase skill rank
                 if (IsKeyPressed(keyboardState, _previousKeyboardState, Keys.Right))
                 {
@@ -596,7 +597,7 @@ namespace Andastra.Runtime.Game.Core
                     AdjustSkillRank(skillId, -1);
                 }
             }
-            
+
             // Next/Back
             if (IsKeyPressed(keyboardState, _previousKeyboardState, Keys.Enter) || IsKeyPressed(keyboardState, _previousKeyboardState, Keys.Space))
             {
@@ -607,7 +608,7 @@ namespace Andastra.Runtime.Game.Core
                 GoToPreviousStep();
             }
         }
-        
+
         /// <summary>
         /// Adjusts a skill rank with validation.
         /// Based on swkotor.exe and swkotor2.exe: Skill rank adjustment validates point costs and maximum ranks
@@ -621,44 +622,44 @@ namespace Andastra.Runtime.Game.Core
             {
                 return;
             }
-            
+
             int currentRank = _characterData.SkillRanks.ContainsKey(skillId) ? _characterData.SkillRanks[skillId] : 0;
             int newRank = currentRank + delta;
-            
+
             // Validate: ranks cannot be negative
             if (newRank < 0)
             {
                 return;
             }
-            
+
             // Get class ID
             int classId = GetClassId(_characterData.Class);
-            
+
             // Check if skill is class skill
             bool isClassSkill = _gameDataManager.IsClassSkill(skillId, classId);
-            
+
             // Determine maximum rank and point cost
             int maxRank = isClassSkill ? 4 : 2; // Class skills: 4, cross-class: 2 at level 1
             int pointCost = isClassSkill ? 1 : 2; // Class skills: 1 point, cross-class: 2 points
-            
+
             // Validate: check maximum rank
             if (newRank > maxRank)
             {
                 return;
             }
-            
+
             // Validate: check available points
             int pointsNeeded = delta > 0 ? pointCost : -pointCost;
             if (delta > 0 && _availableSkillPoints < pointCost)
             {
                 return; // Not enough points to increase
             }
-            
+
             // Apply change
             _characterData.SkillRanks[skillId] = newRank;
             _availableSkillPoints -= pointsNeeded;
         }
-        
+
         /// <summary>
         /// Updates available skill points based on class and Intelligence.
         /// Based on swkotor.exe and swkotor2.exe: Skill points = (class skill point base + INT modifier) / 2, multiplied by 4 for level 1
@@ -676,17 +677,17 @@ namespace Andastra.Runtime.Game.Core
                 _availableSkillPoints = 0;
                 return;
             }
-            
+
             // Calculate Intelligence modifier: (INT - 10) / 2
             int intModifier = (_characterData.Intelligence - 10) / 2;
-            
+
             // Calculate base skill points: (class skill point base + INT modifier) / 2, minimum 1
             int baseSkillPoints = classData.SkillsPerLevel + intModifier;
             int skillPointsPerLevel = Math.Max(1, baseSkillPoints / 2);
-            
+
             // Level 1 characters get 4x skill points
             int totalSkillPoints = skillPointsPerLevel * 4;
-            
+
             // Calculate points already spent
             int pointsSpent = 0;
             for (int i = 0; i < 8; i++)
@@ -699,10 +700,10 @@ namespace Andastra.Runtime.Game.Core
                     pointsSpent += rank * pointCost;
                 }
             }
-            
+
             _availableSkillPoints = totalSkillPoints - pointsSpent;
         }
-        
+
         /// <summary>
         /// Handles input for feats step.
         /// Based on swkotor.exe and swkotor2.exe: Feat selection allows browsing available feats and selecting/deselecting them
@@ -737,7 +738,7 @@ namespace Andastra.Runtime.Game.Core
                     }
                 }
             }
-            
+
             // Select/Deselect feat
             if (IsKeyPressed(keyboardState, _previousKeyboardState, Keys.Enter) || IsKeyPressed(keyboardState, _previousKeyboardState, Keys.Space))
             {
@@ -759,7 +760,7 @@ namespace Andastra.Runtime.Game.Core
                     }
                 }
             }
-            
+
             // Next/Back
             if (IsKeyPressed(keyboardState, _previousKeyboardState, Keys.Tab))
             {
@@ -770,7 +771,7 @@ namespace Andastra.Runtime.Game.Core
                 GoToPreviousStep();
             }
         }
-        
+
         /// <summary>
         /// Handles input for portrait selection step.
         /// </summary>
@@ -787,7 +788,7 @@ namespace Andastra.Runtime.Game.Core
                 _characterData.Portrait = Math.Min(99, _characterData.Portrait + 1); // Assume max 100 portraits
                 _needsModelUpdate = true;
             }
-            
+
             // Next/Back
             if (IsKeyPressed(keyboardState, _previousKeyboardState, Keys.Enter) || IsKeyPressed(keyboardState, _previousKeyboardState, Keys.Space))
             {
@@ -798,7 +799,7 @@ namespace Andastra.Runtime.Game.Core
                 GoToPreviousStep();
             }
         }
-        
+
         /// <summary>
         /// Handles input for name entry step.
         /// </summary>
@@ -838,13 +839,13 @@ namespace Andastra.Runtime.Game.Core
                     }
                 }
             }
-            
+
             // Limit name length
             if (_characterData.Name.Length > 32)
             {
                 _characterData.Name = _characterData.Name.Substring(0, 32);
             }
-            
+
             // Next/Back/Finish
             if (IsKeyPressed(keyboardState, _previousKeyboardState, Keys.Enter))
             {
@@ -859,7 +860,7 @@ namespace Andastra.Runtime.Game.Core
                 GoToPreviousStep();
             }
         }
-        
+
         /// <summary>
         /// Handles input for summary step.
         /// </summary>
@@ -875,7 +876,7 @@ namespace Andastra.Runtime.Game.Core
                 GoToPreviousStep();
             }
         }
-        
+
         /// <summary>
         /// Advances to the next step in character creation.
         /// </summary>
@@ -916,7 +917,7 @@ namespace Andastra.Runtime.Game.Core
                     break;
             }
         }
-        
+
         /// <summary>
         /// Returns to the previous step in character creation.
         /// </summary>
@@ -954,7 +955,7 @@ namespace Andastra.Runtime.Game.Core
                     break;
             }
         }
-        
+
         /// <summary>
         /// Draws the character creation screen.
         /// </summary>
@@ -966,7 +967,7 @@ namespace Andastra.Runtime.Game.Core
         /// - Renders step-specific UI elements (class selection, attributes, skills, feats, portrait, name, summary)
         /// - Renders navigation buttons (Next, Back, Cancel, Finish)
         /// - Updates GUI control states based on current step and selections
-        /// 
+        ///
         /// Based on reverse engineering of:
         /// - swkotor.exe: Character generation rendering functions
         /// - swkotor2.exe: Character generation rendering functions
@@ -980,7 +981,7 @@ namespace Andastra.Runtime.Game.Core
             {
                 return;
             }
-            
+
             // Render the maincg GUI panel
             // Based on swkotor.exe and swkotor2.exe: "maincg" GUI panel is the base UI for character creation
             // The GUI manager handles rendering of the GUI panel using its internal sprite batch
@@ -992,10 +993,10 @@ namespace Andastra.Runtime.Game.Core
                 // Then we render step-specific UI on top using the provided sprite batch
                 _guiManager.Draw(null); // Pass null for gameTime as it's not used in base implementation
             }
-            
+
             // Begin sprite batch for step-specific UI and buttons
             spriteBatch.Begin();
-            
+
             try
             {
                 // Render character model preview
@@ -1004,7 +1005,7 @@ namespace Andastra.Runtime.Game.Core
                 // swkotor.exe: Character preview rendering uses 3D model viewport with camera rotation
                 // swkotor2.exe: Character preview rendering uses 3D model viewport with camera rotation
                 RenderCharacterModelPreview(spriteBatch);
-                
+
                 // Render step-specific UI based on current step
                 // Based on swkotor.exe and swkotor2.exe: Each step has specific UI elements
                 switch (_currentStep)
@@ -1034,7 +1035,7 @@ namespace Andastra.Runtime.Game.Core
                         RenderSummaryUI(spriteBatch, font);
                         break;
                 }
-                
+
                 // Render navigation buttons (Next, Back, Cancel, Finish)
                 // Based on swkotor.exe and swkotor2.exe: Navigation buttons are always visible
                 RenderNavigationButtons(spriteBatch, font);
@@ -1044,7 +1045,7 @@ namespace Andastra.Runtime.Game.Core
                 spriteBatch.End();
             }
         }
-        
+
         /// <summary>
         /// Initializes the preview entity for 3D character model rendering.
         /// Based on swkotor.exe and swkotor2.exe: Character preview entity is created with appearance data
@@ -1059,37 +1060,37 @@ namespace Andastra.Runtime.Game.Core
             {
                 return;
             }
-            
+
             // Create a temporary entity for preview
             // Based on swkotor.exe and swkotor2.exe: Character preview uses temporary creature entity
             _previewEntity = new Entity(ObjectType.Creature, null);
             _previewEntity.Tag = "CharacterPreview";
             _previewEntity.Position = Vector3.Zero;
             _previewEntity.Facing = 0f;
-            
+
             // Add transform component (required by EntityModelRenderer for rendering)
             // Based on swkotor.exe and swkotor2.exe: Entity transform component provides position/rotation for rendering
             var transformComponent = new Andastra.Runtime.Games.Odyssey.Components.TransformComponent(Vector3.Zero, 0f);
             transformComponent.Owner = _previewEntity;
             _previewEntity.AddComponent<ITransformComponent>(transformComponent);
-            
+
             // Add creature component with appearance data
             var creatureComponent = new CreatureComponent();
             creatureComponent.AppearanceType = _characterData.Appearance;
             creatureComponent.BodyVariation = 0; // Use ModelA (variation 0)
             creatureComponent.Gender = _characterData.Gender == Gender.Male ? 0 : 1;
             _previewEntity.AddComponent<CreatureComponent>(creatureComponent);
-            
+
             // Add renderable component
             var renderableComponent = new OdysseyRenderableComponent();
             renderableComponent.Visible = true;
             // Model will be resolved by ModelResolver based on appearance
             _previewEntity.AddComponent<IRenderableComponent>(renderableComponent);
-            
+
             // Update model when entity is created
             UpdatePreviewModel();
         }
-        
+
         /// <summary>
         /// Initializes the preview camera matrices for 3D character model rendering.
         /// Based on swkotor.exe and swkotor2.exe: Character preview uses fixed camera position
@@ -1102,34 +1103,34 @@ namespace Andastra.Runtime.Game.Core
             {
                 return;
             }
-            
+
             // Preview viewport dimensions
             int previewX = _graphicsDevice.Viewport.Width - 350;
             int previewY = 100;
             int previewWidth = 300;
             int previewHeight = 400;
-            
+
             // Calculate aspect ratio for preview viewport
             float aspectRatio = (float)previewWidth / (float)previewHeight;
-            
+
             // Set up view matrix: Camera positioned to look at character from front/side
             // Based on swkotor.exe and swkotor2.exe: Character preview camera positioned at (0, 1.5, 3) looking at (0, 0.9, 0)
             Vector3 cameraPosition = new Vector3(0f, 1.5f, 3f);
             Vector3 cameraTarget = new Vector3(0f, 0.9f, 0f); // Character center (approximately eye level)
             Vector3 cameraUp = Vector3.UnitY;
-            
+
             // Create view matrix using LookAt
             _previewViewMatrix = Matrix4x4.CreateLookAt(cameraPosition, cameraTarget, cameraUp);
-            
+
             // Set up projection matrix: Perspective projection for 3D preview
             // Based on swkotor.exe and swkotor2.exe: Character preview uses ~45 degree FOV
             float fieldOfView = (float)Math.PI / 4f; // 45 degrees
             float nearPlane = 0.1f;
             float farPlane = 100f;
-            
+
             _previewProjectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(fieldOfView, aspectRatio, nearPlane, farPlane);
         }
-        
+
         /// <summary>
         /// Updates the preview model when appearance, gender, or class changes.
         /// Based on swkotor.exe and swkotor2.exe: Model updates when character data changes
@@ -1141,7 +1142,7 @@ namespace Andastra.Runtime.Game.Core
             {
                 return;
             }
-            
+
             // Update creature component appearance
             CreatureComponent creatureComp = _previewEntity.GetComponent<CreatureComponent>();
             if (creatureComp != null)
@@ -1149,20 +1150,20 @@ namespace Andastra.Runtime.Game.Core
                 creatureComp.AppearanceType = _characterData.Appearance;
                 creatureComp.Gender = _characterData.Gender == Gender.Male ? 0 : 1;
             }
-            
+
             // Resolve model ResRef from appearance
             string modelResRef = ModelResolver.ResolveCreatureModel(_gameDataManager, _characterData.Appearance, 0);
-            
+
             // Update renderable component with model ResRef
             IRenderableComponent renderableComp = _previewEntity.GetComponent<IRenderableComponent>();
             if (renderableComp != null && !string.IsNullOrEmpty(modelResRef))
             {
                 renderableComp.ModelResRef = modelResRef;
             }
-            
+
             _needsModelUpdate = false;
         }
-        
+
         /// <summary>
         /// Renders the character model preview.
         /// Based on swkotor.exe and swkotor2.exe: Character model is rendered in a 3D viewport with rotation
@@ -1179,15 +1180,15 @@ namespace Andastra.Runtime.Game.Core
             int previewY = 100;
             int previewWidth = 300;
             int previewHeight = 400;
-            
+
             // Draw preview background
             Color previewBgColor = new Color(30, 30, 30, 200);
             DrawRectangle(spriteBatch, new Rectangle(previewX, previewY, previewWidth, previewHeight), previewBgColor);
-            
+
             // Draw preview border
             Color previewBorderColor = new Color(100, 100, 100, 255);
             DrawRectangleOutline(spriteBatch, new Rectangle(previewX, previewY, previewWidth, previewHeight), previewBorderColor, 2);
-            
+
             // Render 3D model if renderer is initialized
             if (_modelRendererInitialized && _entityModelRenderer != null && _previewEntity != null)
             {
@@ -1203,7 +1204,7 @@ namespace Andastra.Runtime.Game.Core
                             _previewRenderTarget.Dispose();
                             _previewRenderTarget = null;
                         }
-                        
+
                         // Create render target for preview region
                         // Based on swkotor.exe and swkotor2.exe: Render target created with depth buffer for 3D rendering
                         _previewRenderTarget = _graphicsDevice.CreateRenderTarget(previewWidth, previewHeight, true);
@@ -1212,33 +1213,33 @@ namespace Andastra.Runtime.Game.Core
                             _previewTexture = _previewRenderTarget.ColorTexture;
                         }
                     }
-                    
+
                     if (_previewRenderTarget != null && _previewTexture != null)
                     {
                         // Save current render target and viewport
                         IRenderTarget previousRenderTarget = _graphicsDevice.RenderTarget;
                         Viewport previousViewport = _graphicsDevice.Viewport;
-                        
+
                         try
                         {
                             // Set render target to preview render target
                             _graphicsDevice.RenderTarget = _previewRenderTarget;
-                            
+
                             // Set viewport to match preview render target size
                             Viewport previewViewport = new Viewport(0, 0, previewWidth, previewHeight, 0.0f, 1.0f);
                             // Note: Viewport setting is handled by graphics device implementation
                             // The render target automatically sets the appropriate viewport
-                            
+
                             // Clear render target with dark background
                             // Based on swkotor.exe and swkotor2.exe: Character preview uses dark background color
                             _graphicsDevice.Clear(new Color(20, 20, 25, 255));
                             _graphicsDevice.ClearDepth(1.0f);
-                            
+
                             // Apply rotation to view matrix for animated rotation
                             // Based on swkotor.exe and swkotor2.exe: Character preview rotates slowly
                             // Rotate the camera around the character (orbit camera)
                             Vector3 cameraTarget = new Vector3(0f, 0.9f, 0f); // Character center (approximately eye level)
-                            
+
                             // Calculate rotated camera position (orbit around character)
                             float radius = 3f;
                             float height = 1.5f;
@@ -1247,17 +1248,17 @@ namespace Andastra.Runtime.Game.Core
                                 height,
                                 (float)(Math.Cos(_modelRotationAngle) * radius)
                             );
-                            
+
                             // Create rotated view matrix
                             Matrix4x4 rotatedViewMatrix = Matrix4x4.CreateLookAt(rotatedCameraPos, cameraTarget, Vector3.UnitY);
-                            
+
                             // Update projection matrix based on preview viewport aspect ratio
                             float aspectRatio = (float)previewWidth / (float)previewHeight;
                             float fieldOfView = (float)Math.PI / 4f; // 45 degrees
                             float nearPlane = 0.1f;
                             float farPlane = 100f;
                             Matrix4x4 projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(fieldOfView, aspectRatio, nearPlane, farPlane);
-                            
+
                             // Render the entity model with rotation
                             // Based on swkotor.exe and swkotor2.exe: Entity model rendered with view/projection matrices
                             _entityModelRenderer.RenderEntity(_previewEntity, rotatedViewMatrix, projectionMatrix);
@@ -1267,7 +1268,7 @@ namespace Andastra.Runtime.Game.Core
                             // Restore previous render target and viewport
                             _graphicsDevice.RenderTarget = previousRenderTarget;
                         }
-                        
+
                         // Draw the rendered preview texture as a sprite in the preview area
                         // Based on swkotor.exe and swkotor2.exe: Preview texture drawn to screen position
                         spriteBatch.Draw(_previewTexture, new Rectangle(previewX, previewY, previewWidth, previewHeight), Color.White);
@@ -1280,7 +1281,7 @@ namespace Andastra.Runtime.Game.Core
                 }
             }
         }
-        
+
         /// <summary>
         /// Renders the class selection UI.
         /// Based on swkotor.exe and swkotor2.exe: Class selection displays available classes with descriptions
@@ -1293,36 +1294,36 @@ namespace Andastra.Runtime.Game.Core
             {
                 return;
             }
-            
+
             CharacterClass[] availableClasses = GetAvailableClasses();
             int startY = 150;
             int itemHeight = 40;
             int selectedY = startY + (_selectedClassIndex * itemHeight);
-            
+
             // Render class options
             for (int i = 0; i < availableClasses.Length; i++)
             {
                 CharacterClass characterClass = availableClasses[i];
                 string className = GetClassName(characterClass);
                 bool isSelected = (i == _selectedClassIndex);
-                
+
                 int y = startY + (i * itemHeight);
                 Color textColor = isSelected ? Color.Yellow : Color.White;
-                
+
                 // Draw selection indicator
                 if (isSelected)
                 {
                     DrawRectangle(spriteBatch, new Rectangle(50, y - 2, 400, itemHeight), new Color(100, 100, 100, 100));
                 }
-                
+
                 // Draw class name
                 spriteBatch.DrawString(font, className, new Vector2(60, y), textColor);
             }
-            
+
             // Render step title
             spriteBatch.DrawString(font, "Select Class", new Vector2(50, 100), Color.White);
         }
-        
+
         /// <summary>
         /// Renders the Quick or Custom selection UI.
         /// Based on swkotor.exe and swkotor2.exe: Player chooses between Quick (defaults) or Custom (full customization)
@@ -1333,10 +1334,10 @@ namespace Andastra.Runtime.Game.Core
             {
                 return;
             }
-            
+
             int startY = 200;
             int itemHeight = 50;
-            
+
             // Render Quick option
             Color quickColor = _isQuickMode ? Color.Yellow : Color.White;
             spriteBatch.DrawString(font, "Quick Character", new Vector2(50, startY), quickColor);
@@ -1344,7 +1345,7 @@ namespace Andastra.Runtime.Game.Core
             {
                 DrawRectangle(spriteBatch, new Rectangle(45, startY - 2, 300, itemHeight), new Color(100, 100, 100, 100));
             }
-            
+
             // Render Custom option
             Color customColor = !_isQuickMode ? Color.Yellow : Color.White;
             spriteBatch.DrawString(font, "Custom Character", new Vector2(50, startY + itemHeight), customColor);
@@ -1352,11 +1353,11 @@ namespace Andastra.Runtime.Game.Core
             {
                 DrawRectangle(spriteBatch, new Rectangle(45, startY + itemHeight - 2, 300, itemHeight), new Color(100, 100, 100, 100));
             }
-            
+
             // Render step title
             spriteBatch.DrawString(font, "Character Creation Mode", new Vector2(50, 100), Color.White);
         }
-        
+
         /// <summary>
         /// Renders the attributes UI.
         /// Based on swkotor.exe and swkotor2.exe: Attributes are displayed with current values and adjustment controls
@@ -1370,7 +1371,7 @@ namespace Andastra.Runtime.Game.Core
             {
                 return;
             }
-            
+
             string[] attributeNames = { "Strength", "Dexterity", "Constitution", "Intelligence", "Wisdom", "Charisma" };
             int[] attributeValues = {
                 _characterData.Strength,
@@ -1380,10 +1381,10 @@ namespace Andastra.Runtime.Game.Core
                 _characterData.Wisdom,
                 _characterData.Charisma
             };
-            
+
             int startY = 150;
             int itemHeight = 35;
-            
+
             // Calculate points spent
             int totalPoints = _characterData.Strength + _characterData.Dexterity + _characterData.Constitution +
                             _characterData.Intelligence + _characterData.Wisdom + _characterData.Charisma;
@@ -1391,39 +1392,39 @@ namespace Andastra.Runtime.Game.Core
             int pointsSpent = totalPoints - basePoints;
             int maxPoints = 30;
             int pointsRemaining = maxPoints - pointsSpent;
-            
+
             // Render points remaining
             string pointsText = $"Points Remaining: {pointsRemaining} / {maxPoints}";
             spriteBatch.DrawString(font, pointsText, new Vector2(50, 100), Color.Cyan);
-            
+
             // Render attributes
             for (int i = 0; i < attributeNames.Length; i++)
             {
                 bool isSelected = (i == _selectedAttributeIndex);
                 int y = startY + (i * itemHeight);
                 Color textColor = isSelected ? Color.Yellow : Color.White;
-                
+
                 // Draw selection indicator
                 if (isSelected)
                 {
                     DrawRectangle(spriteBatch, new Rectangle(45, y - 2, 450, itemHeight), new Color(100, 100, 100, 100));
                 }
-                
+
                 // Draw attribute name and value
                 string attributeText = $"{attributeNames[i]}: {attributeValues[i]}";
                 spriteBatch.DrawString(font, attributeText, new Vector2(60, y), textColor);
-                
+
                 // Draw adjustment indicators
                 if (isSelected)
                 {
                     spriteBatch.DrawString(font, "< - >", new Vector2(350, y), Color.Gray);
                 }
             }
-            
+
             // Render step title
             spriteBatch.DrawString(font, "Adjust Attributes", new Vector2(50, 70), Color.White);
         }
-        
+
         /// <summary>
         /// Renders the skills UI.
         /// Based on swkotor.exe and swkotor2.exe: Skills are displayed with current ranks and available points
@@ -1438,32 +1439,32 @@ namespace Andastra.Runtime.Game.Core
             {
                 return;
             }
-            
+
             // Render step title
             spriteBatch.DrawString(font, "Allocate Skill Points", new Vector2(50, 50), Color.White);
-            
+
             // Render instruction text
             string instructionText = "Use Up/Down to navigate, Left/Right to adjust ranks, Enter/Space to continue";
             spriteBatch.DrawString(font, instructionText, new Vector2(50, 80), Color.Gray);
-            
+
             // Render available skill points
             string pointsText = $"Available Skill Points: {_availableSkillPoints}";
             Color pointsColor = _availableSkillPoints > 0 ? Color.Cyan : Color.Red;
             spriteBatch.DrawString(font, pointsText, new Vector2(50, 105), pointsColor);
-            
+
             // Get class ID for class skill checking
             int classId = GetClassId(_characterData.Class);
-            
+
             // Render skill list
             int listStartY = 135;
             int itemHeight = 30;
             int maxVisibleItems = 8;
             int listWidth = 500;
-            
+
             // Calculate visible range
             int visibleStart = _skillScrollOffset;
             int visibleEnd = Math.Min(visibleStart + maxVisibleItems, _availableSkillIds.Count);
-            
+
             // Render visible skills
             for (int i = visibleStart; i < visibleEnd; i++)
             {
@@ -1473,7 +1474,7 @@ namespace Andastra.Runtime.Game.Core
                 {
                     continue;
                 }
-                
+
                 bool isSelected = (i == _selectedSkillIndex);
                 int currentRank = _characterData.SkillRanks.ContainsKey(skillId) ? _characterData.SkillRanks[skillId] : 0;
                 bool isClassSkill = _gameDataManager.IsClassSkill(skillId, classId);
@@ -1481,21 +1482,21 @@ namespace Andastra.Runtime.Game.Core
                 int pointCost = isClassSkill ? 1 : 2;
                 bool canIncrease = _availableSkillPoints >= pointCost && currentRank < maxRank;
                 bool canDecrease = currentRank > 0;
-                
+
                 int y = listStartY + ((i - visibleStart) * itemHeight);
-                
+
                 // Draw selection indicator background
                 if (isSelected)
                 {
                     DrawRectangle(spriteBatch, new Rectangle(45, y - 2, listWidth, itemHeight), new Color(100, 100, 100, 150));
                 }
-                
+
                 // Draw class skill indicator (different background for class skills)
                 if (isClassSkill)
                 {
                     DrawRectangle(spriteBatch, new Rectangle(45, y - 2, 20, itemHeight), new Color(40, 80, 120, 200));
                 }
-                
+
                 // Determine text color based on state
                 Color textColor = Color.White;
                 if (isSelected)
@@ -1506,26 +1507,26 @@ namespace Andastra.Runtime.Game.Core
                 {
                     textColor = new Color(144, 200, 238, 255); // Light blue for class skills
                 }
-                
+
                 // Render skill name
                 string skillName = skillData.Name ?? $"Skill {skillId}";
                 if (skillName.Length > 25)
                 {
                     skillName = skillName.Substring(0, 22) + "...";
                 }
-                
+
                 // Render class skill indicator
                 string classSkillIndicator = isClassSkill ? "[C]" : "[X]";
                 Color indicatorColor = isClassSkill ? new Color(144, 200, 238, 255) : Color.Gray;
                 spriteBatch.DrawString(font, classSkillIndicator, new Vector2(50, y), indicatorColor);
-                
+
                 // Render skill name
                 spriteBatch.DrawString(font, skillName, new Vector2(90, y), textColor);
-                
+
                 // Render rank display
                 string rankText = $"Rank: {currentRank}/{maxRank}";
                 spriteBatch.DrawString(font, rankText, new Vector2(280, y), textColor);
-                
+
                 // Render adjustment controls
                 if (isSelected)
                 {
@@ -1538,7 +1539,7 @@ namespace Andastra.Runtime.Game.Core
                     {
                         spriteBatch.DrawString(font, "<", new Vector2(380, y), Color.DarkGray);
                     }
-                    
+
                     // Render increase button indicator
                     if (canIncrease)
                     {
@@ -1548,13 +1549,13 @@ namespace Andastra.Runtime.Game.Core
                     {
                         spriteBatch.DrawString(font, ">", new Vector2(400, y), Color.DarkGray);
                     }
-                    
+
                     // Render point cost
                     string costText = $"({pointCost} pt)";
                     spriteBatch.DrawString(font, costText, new Vector2(420, y), Color.Gray);
                 }
             }
-            
+
             // Render detailed description for selected skill
             if (_selectedSkillIndex >= 0 && _selectedSkillIndex < _availableSkillIds.Count)
             {
@@ -1565,16 +1566,16 @@ namespace Andastra.Runtime.Game.Core
                     int descriptionX = 560;
                     int descriptionY = 135;
                     int descriptionWidth = 220;
-                    
+
                     // Draw description panel background
                     DrawRectangle(spriteBatch, new Rectangle(descriptionX - 5, descriptionY - 5, descriptionWidth + 10, 200), new Color(30, 30, 30, 220));
                     DrawRectangleOutline(spriteBatch, new Rectangle(descriptionX - 5, descriptionY - 5, descriptionWidth + 10, 200), Color.White, 2);
-                    
+
                     // Render skill name
                     string descSkillName = selectedSkillData.Name ?? $"Skill {selectedSkillId}";
                     spriteBatch.DrawString(font, descSkillName, new Vector2(descriptionX, descriptionY), Color.White);
                     descriptionY += 25;
-                    
+
                     // Render description
                     string description = selectedSkillData.Description ?? "No description available.";
                     // Word wrap description (simple implementation)
@@ -1582,7 +1583,7 @@ namespace Andastra.Runtime.Game.Core
                     string currentLine = string.Empty;
                     int lineHeight = 18;
                     int maxCharsPerLine = descriptionWidth / 7; // Rough estimate
-                    
+
                     foreach (string word in words)
                     {
                         string testLine = currentLine + (currentLine.Length > 0 ? " " : "") + word;
@@ -1596,7 +1597,7 @@ namespace Andastra.Runtime.Game.Core
                         {
                             currentLine = testLine;
                         }
-                        
+
                         if (descriptionY > 135 + 170) // Stop if we run out of space
                         {
                             break;
@@ -1606,7 +1607,7 @@ namespace Andastra.Runtime.Game.Core
                     {
                         spriteBatch.DrawString(font, currentLine, new Vector2(descriptionX, descriptionY), new Color(211, 211, 211, 255)); // Light gray
                     }
-                    
+
                     // Render class skill info
                     descriptionY += 20;
                     bool isClassSkill = _gameDataManager.IsClassSkill(selectedSkillId, classId);
@@ -1616,7 +1617,7 @@ namespace Andastra.Runtime.Game.Core
                 }
             }
         }
-        
+
         /// <summary>
         /// Renders the feats UI.
         /// Based on swkotor.exe and swkotor2.exe: Feats are displayed with available feats for selection
@@ -1631,35 +1632,35 @@ namespace Andastra.Runtime.Game.Core
             {
                 return;
             }
-            
+
             // Render step title
             spriteBatch.DrawString(font, "Select Feats", new Vector2(50, 50), Color.White);
-            
+
             // Render instruction text
             string instructionText = "Use Up/Down to navigate, Enter/Space to select/deselect, Tab to continue";
             spriteBatch.DrawString(font, instructionText, new Vector2(50, 80), Color.Gray);
-            
+
             // Render selected feats count
             string selectedCountText = $"Selected: {_characterData.SelectedFeats.Count}";
             spriteBatch.DrawString(font, selectedCountText, new Vector2(50, 105), Color.Cyan);
-            
+
             // Render feat list
             int listStartY = 135;
             int itemHeight = 30;
             int maxVisibleItems = 12;
             int listWidth = 450;
-            
+
             // Calculate visible range
             int visibleStart = _featScrollOffset;
             int visibleEnd = Math.Min(visibleStart + maxVisibleItems, _availableFeatIds.Count);
-            
+
             // Render scrollbar hint if needed
             if (_availableFeatIds.Count > maxVisibleItems)
             {
                 string scrollHint = $"Showing {visibleStart + 1}-{visibleEnd} of {_availableFeatIds.Count}";
                 spriteBatch.DrawString(font, scrollHint, new Vector2(50, listStartY + (maxVisibleItems * itemHeight) + 5), Color.DarkGray);
             }
-            
+
             // Render visible feats
             for (int i = visibleStart; i < visibleEnd; i++)
             {
@@ -1669,25 +1670,25 @@ namespace Andastra.Runtime.Game.Core
                 {
                     continue;
                 }
-                
+
                 bool isSelected = (i == _selectedFeatIndex);
                 bool isTaken = _characterData.SelectedFeats.Contains(featId);
                 bool meetsPrereqs = MeetsFeatPrerequisites(featData);
-                
+
                 int y = listStartY + ((i - visibleStart) * itemHeight);
-                
+
                 // Draw selection indicator background
                 if (isSelected)
                 {
                     DrawRectangle(spriteBatch, new Rectangle(45, y - 2, listWidth, itemHeight), new Color(100, 100, 100, 150));
                 }
-                
+
                 // Draw taken indicator (different background for selected feats)
                 if (isTaken)
                 {
                     DrawRectangle(spriteBatch, new Rectangle(45, y - 2, 20, itemHeight), new Color(40, 120, 40, 200));
                 }
-                
+
                 // Determine text color based on state
                 Color textColor = Color.White;
                 if (!meetsPrereqs)
@@ -1702,27 +1703,27 @@ namespace Andastra.Runtime.Game.Core
                 {
                     textColor = Color.Yellow; // Yellow for currently selected item
                 }
-                
+
                 // Render feat name
                 string featName = featData.Name ?? $"Feat {featId}";
                 if (featName.Length > 40)
                 {
                     featName = featName.Substring(0, 37) + "...";
                 }
-                
+
                 // Render selection indicator
                 string indicator = isTaken ? "[X]" : "[ ]";
                 spriteBatch.DrawString(font, indicator, new Vector2(50, y), textColor);
-                
+
                 spriteBatch.DrawString(font, featName, new Vector2(90, y), textColor);
-                
+
                 // Render prerequisite warning if not met
                 if (!meetsPrereqs && isSelected)
                 {
                     spriteBatch.DrawString(font, " (Prerequisites not met)", new Vector2(90 + font.MeasureString(featName).X, y), Color.Red);
                 }
             }
-            
+
             // Render detailed description for selected feat
             if (_selectedFeatIndex >= 0 && _selectedFeatIndex < _availableFeatIds.Count)
             {
@@ -1733,16 +1734,16 @@ namespace Andastra.Runtime.Game.Core
                     int descriptionX = 520;
                     int descriptionY = 135;
                     int descriptionWidth = 250;
-                    
+
                     // Draw description panel background
                     DrawRectangle(spriteBatch, new Rectangle(descriptionX - 5, descriptionY - 5, descriptionWidth + 10, 250), new Color(30, 30, 30, 220));
                     DrawRectangleOutline(spriteBatch, new Rectangle(descriptionX - 5, descriptionY - 5, descriptionWidth + 10, 250), Color.White, 2);
-                    
+
                     // Render feat name
                     string descFeatName = selectedFeatData.Name ?? $"Feat {selectedFeatId}";
                     spriteBatch.DrawString(font, descFeatName, new Vector2(descriptionX, descriptionY), Color.White);
                     descriptionY += 25;
-                    
+
                     // Render description
                     string description = selectedFeatData.Description ?? "No description available.";
                     // Word wrap description (simple implementation)
@@ -1750,7 +1751,7 @@ namespace Andastra.Runtime.Game.Core
                     string currentLine = string.Empty;
                     int lineHeight = 20;
                     int maxCharsPerLine = descriptionWidth / 8; // Rough estimate
-                    
+
                     foreach (string word in words)
                     {
                         string testLine = currentLine + (currentLine.Length > 0 ? " " : "") + word;
@@ -1764,7 +1765,7 @@ namespace Andastra.Runtime.Game.Core
                         {
                             currentLine = testLine;
                         }
-                        
+
                         if (descriptionY > 135 + 220) // Stop if we run out of space
                         {
                             break;
@@ -1774,7 +1775,7 @@ namespace Andastra.Runtime.Game.Core
                     {
                         spriteBatch.DrawString(font, currentLine, new Vector2(descriptionX, descriptionY), new Color(211, 211, 211, 255)); // Light gray
                     }
-                    
+
                     // Render prerequisites
                     descriptionY += 30;
                     if (selectedFeatData.PrereqFeat1 >= 0)
@@ -1788,7 +1789,7 @@ namespace Andastra.Runtime.Game.Core
                 }
             }
         }
-        
+
         /// <summary>
         /// Renders the portrait selection UI.
         /// Based on swkotor.exe and swkotor2.exe: Portrait selection displays available portraits
@@ -1801,21 +1802,21 @@ namespace Andastra.Runtime.Game.Core
             {
                 return;
             }
-            
+
             // Render step title
             spriteBatch.DrawString(font, "Select Portrait", new Vector2(50, 100), Color.White);
-            
+
             // Render current portrait number
             string portraitText = $"Portrait: {_characterData.Portrait}";
             spriteBatch.DrawString(font, portraitText, new Vector2(50, 150), Color.White);
-            
+
             // Render navigation hints
             spriteBatch.DrawString(font, "Use Left/Right arrows to change portrait", new Vector2(50, 200), Color.Gray);
-            
+
             // Render portrait thumbnail
             RenderPortraitThumbnail(spriteBatch);
         }
-        
+
         /// <summary>
         /// Renders the portrait thumbnail for the currently selected portrait.
         /// Based on swkotor.exe and swkotor2.exe: Portrait thumbnails are displayed in character creation
@@ -1830,7 +1831,7 @@ namespace Andastra.Runtime.Game.Core
             {
                 return;
             }
-            
+
             // Get portrait data from portraits.2da
             PortraitData portraitData = _gameDataManager.GetPortrait(_characterData.Portrait);
             if (portraitData == null || string.IsNullOrEmpty(portraitData.BaseResRef))
@@ -1843,7 +1844,7 @@ namespace Andastra.Runtime.Game.Core
                 DrawRectangleOutline(spriteBatch, new Rectangle(thumbnailX, thumbnailY, thumbnailSize, thumbnailSize), Color.Gray, 2);
                 return;
             }
-            
+
             // Load or get cached portrait texture
             ITexture2D portraitTexture = LoadPortraitTexture(_characterData.Portrait, portraitData.BaseResRef);
             if (portraitTexture == null)
@@ -1856,24 +1857,24 @@ namespace Andastra.Runtime.Game.Core
                 DrawRectangleOutline(spriteBatch, new Rectangle(thumbnailX, thumbnailY, thumbnailSize, thumbnailSize), Color.Gray, 2);
                 return;
             }
-            
+
             // Render portrait thumbnail
             // Based on swkotor.exe and swkotor2.exe: Portrait thumbnails are typically 128x128 or 256x256 pixels
             // Original implementation: Portraits are rendered at fixed size with selection border
             int thumbnailX = 50;
             int thumbnailY = 250;
             int thumbnailSize = 128; // Standard portrait thumbnail size
-            
+
             // Draw selection border (highlight current portrait)
             Color selectionColor = Color.Yellow;
             int borderThickness = 3;
             DrawRectangleOutline(spriteBatch, new Rectangle(thumbnailX - borderThickness, thumbnailY - borderThickness, thumbnailSize + (borderThickness * 2), thumbnailSize + (borderThickness * 2)), selectionColor, borderThickness);
-            
+
             // Draw portrait texture
             Rectangle thumbnailRect = new Rectangle(thumbnailX, thumbnailY, thumbnailSize, thumbnailSize);
             spriteBatch.Draw(portraitTexture, thumbnailRect, Color.White);
         }
-        
+
         /// <summary>
         /// Loads a portrait texture from game resources and caches it.
         /// Based on swkotor.exe and swkotor2.exe: Portrait textures are loaded from TPC/TGA files
@@ -1891,13 +1892,13 @@ namespace Andastra.Runtime.Game.Core
             {
                 return null;
             }
-            
+
             // Check cache first
             if (_portraitTextureCache.TryGetValue(portraitId, out ITexture2D cached))
             {
                 return cached;
             }
-            
+
             try
             {
                 // Load portrait texture from installation
@@ -1913,23 +1914,23 @@ namespace Andastra.Runtime.Game.Core
                         Andastra.Parsing.Installation.SearchLocation.CHITIN
                     }
                 );
-                
+
                 if (tpcTexture == null)
                 {
                     return null;
                 }
-                
+
                 // Convert TPC to ITexture2D
                 // Based on swkotor.exe and swkotor2.exe: TPC textures are converted to DirectX textures for rendering
                 // Original implementation: TPC mipmaps are decompressed and uploaded to GPU as RGBA textures
                 ITexture2D texture = ConvertTpcToTexture2D(tpcTexture);
-                
+
                 if (texture != null)
                 {
                     // Cache the loaded texture
                     _portraitTextureCache[portraitId] = texture;
                 }
-                
+
                 return texture;
             }
             catch (Exception ex)
@@ -1938,7 +1939,7 @@ namespace Andastra.Runtime.Game.Core
                 return null;
             }
         }
-        
+
         /// <summary>
         /// Converts a TPC texture to ITexture2D for rendering.
         /// Based on swkotor.exe and swkotor2.exe: TPC textures are converted to DirectX textures
@@ -1954,36 +1955,36 @@ namespace Andastra.Runtime.Game.Core
             {
                 return null;
             }
-            
+
             // Get first layer (largest mipmap)
             Formats.TPC.TPCLayer layer = tpc.Layers[0];
             if (layer == null || layer.Mipmaps == null || layer.Mipmaps.Count == 0)
             {
                 return null;
             }
-            
+
             // Get first mipmap (largest resolution)
             Formats.TPC.TPCMipmap mipmap = layer.Mipmaps[0];
             if (mipmap == null || mipmap.Data == null || mipmap.Data.Length == 0)
             {
                 return null;
             }
-            
+
             int width = mipmap.Width;
             int height = mipmap.Height;
             Formats.TPC.TPCTextureFormat format = layer.Format;
-            
+
             // Convert TPC format to RGBA byte array
             byte[] rgbaData = ConvertTpcDataToRgba(mipmap.Data, width, height, format);
             if (rgbaData == null)
             {
                 return null;
             }
-            
+
             // Create texture from RGBA data
             return _graphicsDevice.CreateTexture2D(width, height, rgbaData);
         }
-        
+
         /// <summary>
         /// Converts TPC pixel data to RGBA byte array.
         /// Based on swkotor.exe and swkotor2.exe: TPC formats are converted to RGBA for rendering
@@ -2002,10 +2003,10 @@ namespace Andastra.Runtime.Game.Core
             {
                 return null;
             }
-            
+
             int pixelCount = width * height;
             byte[] rgbaData = new byte[pixelCount * 4]; // RGBA = 4 bytes per pixel
-            
+
             try
             {
                 switch (format)
@@ -2017,7 +2018,7 @@ namespace Andastra.Runtime.Game.Core
                             System.Buffer.BlockCopy(tpcData, 0, rgbaData, 0, pixelCount * 4);
                         }
                         break;
-                    
+
                     case Formats.TPC.TPCTextureFormat.RGB:
                         // Convert RGB to RGBA (add alpha = 255)
                         if (tpcData.Length >= pixelCount * 3)
@@ -2031,7 +2032,7 @@ namespace Andastra.Runtime.Game.Core
                             }
                         }
                         break;
-                    
+
                     case Formats.TPC.TPCTextureFormat.BGRA:
                         // Convert BGRA to RGBA (swap R and B)
                         if (tpcData.Length >= pixelCount * 4)
@@ -2045,7 +2046,7 @@ namespace Andastra.Runtime.Game.Core
                             }
                         }
                         break;
-                    
+
                     case Formats.TPC.TPCTextureFormat.BGR:
                         // Convert BGR to RGBA (swap R and B, add alpha = 255)
                         if (tpcData.Length >= pixelCount * 3)
@@ -2059,7 +2060,7 @@ namespace Andastra.Runtime.Game.Core
                             }
                         }
                         break;
-                    
+
                     case Formats.TPC.TPCTextureFormat.Greyscale:
                         // Convert greyscale to RGBA (R=G=B=greyscale, A=255)
                         if (tpcData.Length >= pixelCount)
@@ -2074,7 +2075,7 @@ namespace Andastra.Runtime.Game.Core
                             }
                         }
                         break;
-                    
+
                     case Formats.TPC.TPCTextureFormat.DXT1:
                         // Decompress DXT1 to RGBA
                         // Based on swkotor.exe and swkotor2.exe: DXT formats are decompressed by DirectX
@@ -2090,7 +2091,7 @@ namespace Andastra.Runtime.Game.Core
                             return null;
                         }
                         break;
-                    
+
                     case Formats.TPC.TPCTextureFormat.DXT3:
                         // Decompress DXT3 to RGBA
                         // Based on swkotor.exe and swkotor2.exe: DXT formats are decompressed by DirectX
@@ -2106,7 +2107,7 @@ namespace Andastra.Runtime.Game.Core
                             return null;
                         }
                         break;
-                    
+
                     case Formats.TPC.TPCTextureFormat.DXT5:
                         // Decompress DXT5 to RGBA
                         // Based on swkotor.exe and swkotor2.exe: DXT formats are decompressed by DirectX
@@ -2122,12 +2123,12 @@ namespace Andastra.Runtime.Game.Core
                             return null;
                         }
                         break;
-                    
+
                     default:
                         System.Console.WriteLine($"[CharacterCreationScreen] Unsupported TPC format: {format}");
                         return null;
                 }
-                
+
                 return rgbaData;
             }
             catch (Exception ex)
@@ -2136,7 +2137,7 @@ namespace Andastra.Runtime.Game.Core
                 return null;
             }
         }
-        
+
         /// <summary>
         /// Renders the name entry UI.
         /// Based on swkotor.exe and swkotor2.exe: Name entry displays text input field
@@ -2149,10 +2150,10 @@ namespace Andastra.Runtime.Game.Core
             {
                 return;
             }
-            
+
             // Render step title
             spriteBatch.DrawString(font, "Enter Character Name", new Vector2(50, 100), Color.White);
-            
+
             // Render name input field background
             int inputX = 50;
             int inputY = 150;
@@ -2160,12 +2161,12 @@ namespace Andastra.Runtime.Game.Core
             int inputHeight = 40;
             DrawRectangle(spriteBatch, new Rectangle(inputX, inputY, inputWidth, inputHeight), new Color(50, 50, 50, 200));
             DrawRectangleOutline(spriteBatch, new Rectangle(inputX, inputY, inputWidth, inputHeight), Color.White, 2);
-            
+
             // Render current name
             string displayName = string.IsNullOrEmpty(_characterData.Name) ? "Enter name..." : _characterData.Name;
             Color nameColor = string.IsNullOrEmpty(_characterData.Name) ? Color.Gray : Color.White;
             spriteBatch.DrawString(font, displayName, new Vector2(inputX + 10, inputY + 10), nameColor);
-            
+
             // Render cursor (blinking)
             float time = (float)(DateTime.Now.Millisecond % 1000) / 1000.0f;
             if (time < 0.5f)
@@ -2174,7 +2175,7 @@ namespace Andastra.Runtime.Game.Core
                 spriteBatch.DrawString(font, "|", new Vector2(cursorX, inputY + 10), Color.White);
             }
         }
-        
+
         /// <summary>
         /// Renders the summary UI.
         /// Based on swkotor.exe and swkotor2.exe: Summary displays all character creation choices
@@ -2187,26 +2188,26 @@ namespace Andastra.Runtime.Game.Core
             {
                 return;
             }
-            
+
             // Render step title
             spriteBatch.DrawString(font, "Character Summary", new Vector2(50, 50), Color.White);
-            
+
             int y = 100;
             int lineHeight = 25;
-            
+
             // Render character information
             spriteBatch.DrawString(font, $"Name: {_characterData.Name}", new Vector2(50, y), Color.White);
             y += lineHeight;
-            
+
             spriteBatch.DrawString(font, $"Class: {GetClassName(_characterData.Class)}", new Vector2(50, y), Color.White);
             y += lineHeight;
-            
+
             spriteBatch.DrawString(font, $"Gender: {_characterData.Gender}", new Vector2(50, y), Color.White);
             y += lineHeight;
-            
+
             spriteBatch.DrawString(font, $"Portrait: {_characterData.Portrait}", new Vector2(50, y), Color.White);
             y += lineHeight * 2;
-            
+
             // Render attributes
             spriteBatch.DrawString(font, "Attributes:", new Vector2(50, y), Color.Cyan);
             y += lineHeight;
@@ -2222,11 +2223,11 @@ namespace Andastra.Runtime.Game.Core
             y += lineHeight;
             spriteBatch.DrawString(font, $"  CHA: {_characterData.Charisma}", new Vector2(70, y), Color.White);
             y += lineHeight * 2;
-            
+
             // Render skills
             spriteBatch.DrawString(font, "Skills:", new Vector2(50, y), Color.Cyan);
             y += lineHeight;
-            
+
             int classId = GetClassId(_characterData.Class);
             string[] skillNames = { "Computer Use", "Demolitions", "Stealth", "Awareness", "Persuade", "Repair", "Security", "Treat Injury" };
             for (int i = 0; i < 8; i++)
@@ -2238,11 +2239,11 @@ namespace Andastra.Runtime.Game.Core
                 y += lineHeight;
             }
             y += lineHeight;
-            
+
             // Render completion hint
             spriteBatch.DrawString(font, "Press Enter to finish character creation", new Vector2(50, y), Color.Yellow);
         }
-        
+
         /// <summary>
         /// Renders navigation buttons (Next, Back, Cancel, Finish).
         /// Based on swkotor.exe and swkotor2.exe: Navigation buttons are always visible at the bottom of the screen
@@ -2257,12 +2258,12 @@ namespace Andastra.Runtime.Game.Core
             {
                 return;
             }
-            
+
             int buttonY = _graphicsDevice.Viewport.Height - 60;
             int buttonWidth = 100;
             int buttonHeight = 40;
             int buttonSpacing = 20;
-            
+
             // Render Back button (if not on first step)
             if (_currentStep != CreationStep.ClassSelection)
             {
@@ -2271,13 +2272,13 @@ namespace Andastra.Runtime.Game.Core
                 DrawRectangleOutline(spriteBatch, new Rectangle(backX, buttonY, buttonWidth, buttonHeight), Color.White, 2);
                 spriteBatch.DrawString(font, "Back", new Vector2(backX + 25, buttonY + 10), Color.White);
             }
-            
+
             // Render Cancel button
             int cancelX = _currentStep != CreationStep.ClassSelection ? 170 : 50;
             DrawRectangle(spriteBatch, new Rectangle(cancelX, buttonY, buttonWidth, buttonHeight), new Color(120, 40, 40, 200));
             DrawRectangleOutline(spriteBatch, new Rectangle(cancelX, buttonY, buttonWidth, buttonHeight), Color.White, 2);
             spriteBatch.DrawString(font, "Cancel", new Vector2(cancelX + 15, buttonY + 10), Color.White);
-            
+
             // Render Next/Finish button
             string nextButtonText = (_currentStep == CreationStep.Summary) ? "Finish" : "Next";
             int nextX = _graphicsDevice.Viewport.Width - buttonWidth - 50;
@@ -2286,7 +2287,7 @@ namespace Andastra.Runtime.Game.Core
             DrawRectangleOutline(spriteBatch, new Rectangle(nextX, buttonY, buttonWidth, buttonHeight), Color.White, 2);
             spriteBatch.DrawString(font, nextButtonText, new Vector2(nextX + 20, buttonY + 10), Color.White);
         }
-        
+
         /// <summary>
         /// Draws a filled rectangle using a 1x1 pixel texture.
         /// </summary>
@@ -2298,7 +2299,7 @@ namespace Andastra.Runtime.Game.Core
             }
             spriteBatch.Draw(_pixelTexture, rect, color);
         }
-        
+
         /// <summary>
         /// Draws a rectangle outline using a 1x1 pixel texture.
         /// </summary>
@@ -2317,7 +2318,7 @@ namespace Andastra.Runtime.Game.Core
             // Draw right edge
             spriteBatch.Draw(_pixelTexture, new Rectangle(rect.X + rect.Width - thickness, rect.Y, thickness, rect.Height), color);
         }
-        
+
         /// <summary>
         /// Converts CharacterClass enum to class ID used in classes.2da.
         /// Based on nwscript.nss constants: CLASS_TYPE_SOLDIER=0, CLASS_TYPE_SCOUT=1, etc.
@@ -2342,7 +2343,7 @@ namespace Andastra.Runtime.Game.Core
                     return 0;
             }
         }
-        
+
         /// <summary>
         /// Updates the available feats list based on current class.
         /// Based on swkotor.exe and swkotor2.exe: FUN_0060d1d0 (LoadFeatGain) loads starting feats from featgain.2da
@@ -2352,11 +2353,11 @@ namespace Andastra.Runtime.Game.Core
         private void UpdateAvailableFeats()
         {
             _availableFeatIds.Clear();
-            
+
             // Get starting feats for the current class
             int classId = GetClassId(_characterData.Class);
             List<int> startingFeats = _gameDataManager.GetStartingFeats(classId);
-            
+
             // Add all starting feats that are selectable
             foreach (int featId in startingFeats)
             {
@@ -2366,15 +2367,15 @@ namespace Andastra.Runtime.Game.Core
                     _availableFeatIds.Add(featId);
                 }
             }
-            
+
             // Sort by feat ID for consistent display
             _availableFeatIds.Sort();
-            
+
             // Reset selection state
             _selectedFeatIndex = 0;
             _featScrollOffset = 0;
         }
-        
+
         /// <summary>
         /// Checks if a feat's prerequisites are met.
         /// Based on swkotor.exe and swkotor2.exe: Feat prerequisite checking in character creation
@@ -2387,24 +2388,24 @@ namespace Andastra.Runtime.Game.Core
             {
                 return false;
             }
-            
+
             // Check prerequisite feats
             if (featData.PrereqFeat1 >= 0 && !_characterData.SelectedFeats.Contains(featData.PrereqFeat1))
             {
                 return false;
             }
-            
+
             if (featData.PrereqFeat2 >= 0 && !_characterData.SelectedFeats.Contains(featData.PrereqFeat2))
             {
                 return false;
             }
-            
+
             // Check minimum level (character is level 1 during creation, so minlevel should be <= 1)
             if (featData.MinLevel > 1)
             {
                 return false;
             }
-            
+
             // Check attribute requirements (minstr, mindex, minint, minwis, mincon, mincha)
             // Based on swkotor.exe and swkotor2.exe: Attribute requirements checked during feat selection
             // Original implementation: Compares character attributes against feat.2da minstr/mindex/etc. columns
@@ -2432,10 +2433,10 @@ namespace Andastra.Runtime.Game.Core
             {
                 return false;
             }
-            
+
             return true;
         }
-        
+
         /// <summary>
         /// Gets the display name for a character class.
         /// </summary>
@@ -2459,7 +2460,7 @@ namespace Andastra.Runtime.Game.Core
                     return "Unknown";
             }
         }
-        
+
         /// <summary>
         /// Completes character creation and calls the completion callback.
         /// </summary>
@@ -2470,11 +2471,11 @@ namespace Andastra.Runtime.Game.Core
             {
                 _characterData.Name = "Player"; // Default name
             }
-            
+
             // Call completion callback
             _onComplete(_characterData);
         }
-        
+
         /// <summary>
         /// Cancels character creation and returns to main menu.
         /// </summary>
@@ -2483,7 +2484,7 @@ namespace Andastra.Runtime.Game.Core
             _onCancel();
         }
     }
-    
+
     /// <summary>
     /// Data structure for character creation.
     /// </summary>
@@ -2517,7 +2518,7 @@ namespace Andastra.Runtime.Game.Core
         /// </summary>
         public Dictionary<int, int> SkillRanks { get; set; }
     }
-    
+
     /// <summary>
     /// Character class enumeration.
     /// </summary>
@@ -2530,7 +2531,7 @@ namespace Andastra.Runtime.Game.Core
         JediSentinel,   // K2 only
         JediConsular    // K2 only
     }
-    
+
     /// <summary>
     /// Gender enumeration.
     /// </summary>

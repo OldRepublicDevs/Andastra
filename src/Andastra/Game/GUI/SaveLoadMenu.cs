@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Andastra.Runtime.Core.Save;
 using Andastra.Runtime.Graphics;
-using Vector2 = Odyssey.Graphics.Vector2;
-using Rectangle = Odyssey.Graphics.Rectangle;
-using Color = Odyssey.Graphics.Color;
+using Microsoft.Xna.Framework;
 
 namespace Andastra.Runtime.Game.GUI
 {
@@ -188,7 +186,7 @@ namespace Andastra.Runtime.Game.GUI
             }
 
             // Instructions
-            string instructions = isEnteringName 
+            string instructions = isEnteringName
                 ? "Enter save name, then press Enter to save or Escape to cancel"
                 : "Select a save slot or create a new save. Press Escape to cancel.";
             Vector2 instSize = font.MeasureString(instructions);

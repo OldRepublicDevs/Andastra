@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Xunit;
 using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Resource.Formats.BWM;
+using Andastra.Parsing.Formats.BWM;
 using Andastra.Parsing.Resource.Formats.LYT;
 
 namespace Andastra.Tests.Runtime.Core.Navigation
