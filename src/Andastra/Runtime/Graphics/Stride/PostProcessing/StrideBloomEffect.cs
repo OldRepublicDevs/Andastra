@@ -243,12 +243,12 @@ shader BrightPassEffect : ShaderBase
     VSOutput VS(uint vertexId : SV_VertexID)
     {
         VSOutput output;
-        
+
         // Generate full-screen quad from vertex ID
         float2 uv = float2((vertexId << 1) & 2, vertexId & 2);
         output.Position = float4(uv * float2(2, -2) + float2(-1, 1), 0, 1);
         output.TexCoord = uv;
-        
+
         return output;
     }
 
@@ -256,7 +256,7 @@ shader BrightPassEffect : ShaderBase
     float4 PS(VSOutput input) : SV_Target
     {
         float4 color = SourceTexture.Sample(LinearSampler, input.TexCoord);
-        
+
         // Extract bright areas: keep pixels above threshold, set others to black
         float brightness = dot(color.rgb, float3(0.299, 0.587, 0.114)); // Luminance calculation
         if (brightness > Threshold)
@@ -323,12 +323,12 @@ shader BlurEffect : ShaderBase
     VSOutput VS(uint vertexId : SV_VertexID)
     {
         VSOutput output;
-        
+
         // Generate full-screen quad from vertex ID
         float2 uv = float2((vertexId << 1) & 2, vertexId & 2);
         output.Position = float4(uv * float2(2, -2) + float2(-1, 1), 0, 1);
         output.TexCoord = uv;
-        
+
         return output;
     }
 
@@ -344,14 +344,14 @@ shader BlurEffect : ShaderBase
         float4 color = float4(0, 0, 0, 0);
         float2 texelSize = ScreenSizeInv;
         float2 offset = BlurDirection * texelSize * BlurRadius;
-        
+
         // Apply 9-tap Gaussian blur
         for (int i = 0; i < 9; i++)
         {
             float2 sampleCoord = input.TexCoord + offset * (float(i) - 4.0);
             color += SourceTexture.Sample(LinearSampler, sampleCoord) * weights[i];
         }
-        
+
         return color;
     }
 };";
@@ -469,7 +469,7 @@ shader BlurEffect : ShaderBase
 
             // Begin sprite batch rendering
             // Use SpriteSortMode.Immediate for post-processing effects
-            _spriteBatch.Begin(commandList, SpriteSortMode.Immediate, BlendStates.Opaque, _linearSampler, 
+            _spriteBatch.Begin(commandList, SpriteSortMode.Immediate, BlendStates.Opaque, _linearSampler,
                 DepthStencilStates.None, RasterizerStates.CullNone, _brightPassEffect);
 
             // If we have a custom bright pass effect, set its parameters
@@ -742,7 +742,7 @@ shader BlurEffect : ShaderBase
                 // Based on Stride architecture: EffectSystem manages effect lifecycle
                 // Try to use EffectSystem's compilation capabilities if available
                 // Note: EffectSystem interface may vary, so we use reflection as fallback
-                
+
                 // Attempt to get EffectCompiler from EffectSystem
                 var compilerProperty = effectSystem.GetType().GetProperty("Compiler");
                 if (compilerProperty != null)

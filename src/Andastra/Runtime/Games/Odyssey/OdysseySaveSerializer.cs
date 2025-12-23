@@ -753,9 +753,9 @@ namespace Andastra.Runtime.Games.Odyssey
                 // Based on swkotor2.exe: Variables are stored in separate typed dictionaries
                 // The IGameState interface routes GetGlobal<T> to the appropriate dictionary based on T
                 // Based on SaveSystem implementation: ScriptGlobals uses separate dictionaries (_globalBools, _globalInts, _globalStrings)
-                
+
                 bool serialized = false;
-                
+
                 // Boolean variables: Try to get as bool first (most specific type)
                 // IGameState.GetGlobal<bool> should route to the bool dictionary if the variable is stored as bool
                 try
@@ -923,7 +923,7 @@ namespace Andastra.Runtime.Games.Odyssey
                             // Boolean variables stored as int (0 = false, non-zero = true)
                             int boolVal = GetIntField(varStruct, "VariableValue", 0);
                             bool boolValue = boolVal != 0;
-                            
+
                             // Update game state with boolean global
                             try
                             {
@@ -940,7 +940,7 @@ namespace Andastra.Runtime.Games.Odyssey
                         {
                             // Integer variables stored as int32
                             int intVal = GetIntField(varStruct, "VariableValue", 0);
-                            
+
                             // Update game state with integer global
                             try
                             {
@@ -957,7 +957,7 @@ namespace Andastra.Runtime.Games.Odyssey
                         {
                             // String variables stored as string field
                             string strVal = GetStringField(varStruct, "VariableValue", string.Empty);
-                            
+
                             // Update game state with string global
                             try
                             {
@@ -2427,7 +2427,7 @@ namespace Andastra.Runtime.Games.Odyssey
             // Encounter entities have EncounterComponent and are in the world but not directly exposed via IArea interface
             // We find them by iterating through all entities in the world and filtering by AreaId and EncounterComponent
             IWorld world = null;
-            
+
             // Get world reference from any entity in the area (creatures, doors, placeables, etc.)
             // This allows us to access GetAllEntities() to find encounter entities
             foreach (IEntity entity in area.Creatures)
@@ -2438,7 +2438,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     break;
                 }
             }
-            
+
             if (world == null)
             {
                 foreach (IEntity entity in area.Doors)
@@ -2450,7 +2450,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     }
                 }
             }
-            
+
             if (world == null)
             {
                 foreach (IEntity entity in area.Placeables)
@@ -2462,14 +2462,14 @@ namespace Andastra.Runtime.Games.Odyssey
                     }
                 }
             }
-            
+
             // Get area ID for filtering entities
             uint areaId = 0;
             if (world != null)
             {
                 areaId = world.GetAreaId(area);
             }
-            
+
             // Extract store entities from world by filtering for entities with StoreComponent in this area
             // Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 extracts store entity states from area
             // Original implementation: Stores are stored in area's store collection and extracted during save
@@ -2482,7 +2482,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     {
                         continue;
                     }
-                    
+
                     // Filter entities that belong to this area and have StoreComponent
                     if (entity.AreaId == areaId)
                     {
@@ -2515,7 +2515,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     {
                         continue;
                     }
-                    
+
                     // Filter entities that belong to this area and have EncounterComponent
                     if (entity.AreaId == areaId)
                     {
@@ -2666,7 +2666,7 @@ namespace Andastra.Runtime.Games.Odyssey
             {
                 entityState.IsOpen = placeableComponent.IsOpen;
                 entityState.IsLocked = placeableComponent.IsLocked;
-                
+
                 // Check for IsDestroyed property using reflection (placeables can be destroyed)
                 var isDestroyedProperty = placeableComponent.GetType().GetProperty("IsDestroyed");
                 if (isDestroyedProperty != null && isDestroyedProperty.CanRead)
@@ -3851,7 +3851,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <remarks>
         /// Based on swkotor2.exe: Local variable application
         /// Uses entity's variable system to store local variables via IScriptGlobals interface
-        /// 
+        ///
         /// Local variables are stored per entity (by ObjectId) in the ScriptGlobals system.
         /// This method applies all variable types from the LocalVariableSet:
         /// - Integer variables (SetLocalInt)
@@ -3859,7 +3859,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// - String variables (SetLocalString)
         /// - Object reference variables (SetLocalObject)
         /// - Location variables (SetLocalLocation)
-        /// 
+        ///
         /// Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 applies entity local variables during save game load
         /// Located via string references: "LocalVariables" @ entity state structure
         /// Original implementation: Reads local variables from GFF structure and applies them to entity's variable storage
@@ -4023,7 +4023,7 @@ namespace Andastra.Runtime.Games.Odyssey
             // Restore effect properties
             effect.SubType = savedEffect.SubType;
             effect.DurationType = (EffectDurationType)savedEffect.DurationType;
-            
+
             // Restore parameters from IntParams list
             if (savedEffect.IntParams != null && savedEffect.IntParams.Count >= 4)
             {
@@ -4183,7 +4183,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Based on swkotor2.exe: Dynamic entity spawning
         /// Located via string references: "CreateObject" @ 0x007bd0e0
         /// Spawns entities from BlueprintResRef that were not in original GIT
-        /// 
+        ///
         /// Original implementation (swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0):
         /// - Loads SpawnedList from area state GFF
         /// - For each spawned entity:
@@ -5061,7 +5061,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 // Based on swkotor2.exe: Save directory is typically "SAVES:" or user's Documents folder
                 string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                 savesDirectory = Path.Combine(documentsPath, "SWKotOR", "saves");
-                
+
                 // If still not set, throw exception
                 if (string.IsNullOrEmpty(savesDirectory))
                 {
@@ -5323,7 +5323,7 @@ namespace Andastra.Runtime.Games.Odyssey
             foreach (string dir in Directory.GetDirectories(savesDirectory))
             {
                 string dirName = Path.GetFileName(dir);
-                
+
                 // Parse save number from directory name
                 // Format: "000001 - SaveName" -> extract "000001" and convert to int
                 if (dirName.Length >= 6 && dirName[6] == ' ')
