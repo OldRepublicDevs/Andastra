@@ -138,11 +138,22 @@ namespace Andastra.Runtime.Games.Odyssey
             // Note: Andastra.Runtime.Games.Common.SaveGameData and Andastra.Runtime.Core.Save.SaveGameData
             // are unrelated types, so we use reflection to check and access Core-specific properties
             object coreSaveData = null;
+            Type coreSaveDataType = null;
             var saveDataType = saveData.GetType();
             var coreSaveDataTypeName = "Andastra.Runtime.Core.Save.SaveGameData";
             if (saveDataType.FullName == coreSaveDataTypeName)
             {
                 coreSaveData = saveData;
+                coreSaveDataType = saveDataType;
+            }
+            else
+            {
+                // Try to get the type via reflection in case it's a derived type
+                coreSaveDataType = Type.GetType(coreSaveDataTypeName);
+                if (coreSaveDataType != null && coreSaveDataType.IsAssignableFrom(saveDataType))
+                {
+                    coreSaveData = saveData;
+                }
             }
 
             // Create NFOData structure
@@ -202,38 +213,68 @@ namespace Andastra.Runtime.Games.Odyssey
                     // Reflection failed - try next method
                 }
 
-                // Priority 2: Try ModuleAreaMappings if available
-                if (string.IsNullOrEmpty(lastModule) && saveData.ModuleAreaMappings != null && saveData.ModuleAreaMappings.Count > 0)
+                // Priority 2: Try ModuleAreaMappings if available (only on Core.SaveGameData)
+                if (string.IsNullOrEmpty(lastModule) && coreSaveData != null)
                 {
-                    string areaResRef = saveData.CurrentAreaInstance.ResRef;
-                    if (!string.IsNullOrEmpty(areaResRef))
+                    try
                     {
-                        foreach (var kvp in saveData.ModuleAreaMappings)
+                        var moduleAreaMappingsProperty = coreSaveDataType.GetProperty("ModuleAreaMappings");
+                        if (moduleAreaMappingsProperty != null)
                         {
-                            string moduleResRef = kvp.Key;
-                            List<string> areaList = kvp.Value;
-                            if (areaList != null && areaList.Contains(areaResRef, StringComparer.OrdinalIgnoreCase))
+                            var moduleAreaMappings = moduleAreaMappingsProperty.GetValue(coreSaveData) as Dictionary<string, List<string>>;
+                            if (moduleAreaMappings != null && moduleAreaMappings.Count > 0)
                             {
-                                lastModule = moduleResRef;
-                                break;
+                                string areaResRef = saveData.CurrentAreaInstance.ResRef;
+                                if (!string.IsNullOrEmpty(areaResRef))
+                                {
+                                    foreach (var kvp in moduleAreaMappings)
+                                    {
+                                        string moduleResRef = kvp.Key;
+                                        List<string> areaList = kvp.Value;
+                                        if (areaList != null && areaList.Contains(areaResRef, StringComparer.OrdinalIgnoreCase))
+                                        {
+                                            lastModule = moduleResRef;
+                                            break;
+                                        }
+                                    }
+                                }
                             }
                         }
+                    }
+                    catch
+                    {
+                        // Reflection failed - skip this method
                     }
                 }
             }
 
-            // Priority 3: Try to infer from CurrentArea string if CurrentAreaInstance is null
-            if (string.IsNullOrEmpty(lastModule) && !string.IsNullOrEmpty(saveData.CurrentArea) && saveData.ModuleAreaMappings != null && saveData.ModuleAreaMappings.Count > 0)
+            // Priority 3: Try to infer from CurrentArea string if CurrentAreaInstance is null (only on Core.SaveGameData)
+            if (string.IsNullOrEmpty(lastModule) && !string.IsNullOrEmpty(saveData.CurrentArea) && coreSaveData != null)
             {
-                foreach (var kvp in saveData.ModuleAreaMappings)
+                try
                 {
-                    string moduleResRef = kvp.Key;
-                    List<string> areaList = kvp.Value;
-                    if (areaList != null && areaList.Contains(saveData.CurrentArea, StringComparer.OrdinalIgnoreCase))
+                    var moduleAreaMappingsProperty = coreSaveDataType.GetProperty("ModuleAreaMappings");
+                    if (moduleAreaMappingsProperty != null)
                     {
-                        lastModule = moduleResRef;
-                        break;
+                        var moduleAreaMappings = moduleAreaMappingsProperty.GetValue(coreSaveData) as Dictionary<string, List<string>>;
+                        if (moduleAreaMappings != null && moduleAreaMappings.Count > 0)
+                        {
+                            foreach (var kvp in moduleAreaMappings)
+                            {
+                                string moduleResRef = kvp.Key;
+                                List<string> areaList = kvp.Value;
+                                if (areaList != null && areaList.Contains(saveData.CurrentArea, StringComparer.OrdinalIgnoreCase))
+                                {
+                                    lastModule = moduleResRef;
+                                    break;
+                                }
+                            }
+                        }
                     }
+                }
+                catch
+                {
+                    // Reflection failed - skip this method
                 }
             }
 
@@ -5257,15 +5298,56 @@ namespace Andastra.Runtime.Games.Odyssey
                     }
                 }
 
-                // Priority 3: If module name not found, try to infer from CurrentArea
-                if (string.IsNullOrEmpty(moduleName) && !string.IsNullOrEmpty(saveData.CurrentArea))
+                // Priority 2: Try to infer from CurrentAreaInstance ResRef using ModuleAreaMappings
+                if (string.IsNullOrEmpty(moduleName) && saveData.CurrentAreaInstance != null && saveData.ModuleAreaMappings != null && saveData.ModuleAreaMappings.Count > 0)
+                {
+                    try
+                    {
+                        // Get area ResRef from CurrentAreaInstance
+                        string areaResRef = saveData.CurrentAreaInstance.ResRef;
+                        if (!string.IsNullOrEmpty(areaResRef))
+                        {
+                            // Search ModuleAreaMappings to find which module contains this area
+                            // Based on swkotor2.exe: Module state lookup by area name
+                            // Original implementation: Searches ModuleAreaMappings to find which module contains the current area
+                            // Located via string reference: "Mod_Area_list" @ 0x007be748 (swkotor2.exe)
+                            // Module IFO file contains Mod_Area_list (GFF List) with Area_Name fields for each area
+                            foreach (var kvp in saveData.ModuleAreaMappings)
+                            {
+                                string moduleResRef = kvp.Key;
+                                List<string> areaList = kvp.Value;
+                                if (areaList != null && areaList.Contains(areaResRef, StringComparer.OrdinalIgnoreCase))
+                                {
+                                    moduleName = moduleResRef;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Property access failed - try alternative methods
+                    }
+                }
+
+                // Priority 3: If module name not found, try to infer from CurrentArea string using ModuleAreaMappings
+                if (string.IsNullOrEmpty(moduleName) && !string.IsNullOrEmpty(saveData.CurrentArea) && saveData.ModuleAreaMappings != null && saveData.ModuleAreaMappings.Count > 0)
                 {
                     // Module name might be derivable from area name
                     // Based on swkotor2.exe: Module state lookup by area name
                     // Original implementation: Searches ModuleAreaMappings to find which module contains the current area
                     // Located via string reference: "Mod_Area_list" @ 0x007be748 (swkotor2.exe)
-                    // ModuleAreaMappings not available on Common.SaveGameData
-                    // TODO: If module inference from area is needed, add ModuleAreaMappings to Common.SaveGameData
+                    // Module IFO file contains Mod_Area_list (GFF List) with Area_Name fields for each area
+                    foreach (var kvp in saveData.ModuleAreaMappings)
+                    {
+                        string moduleResRef = kvp.Key;
+                        List<string> areaList = kvp.Value;
+                        if (areaList != null && areaList.Contains(saveData.CurrentArea, StringComparer.OrdinalIgnoreCase))
+                        {
+                            moduleName = moduleResRef;
+                            break;
+                        }
+                    }
                 }
 
                 // Serialize area state if we have module name
