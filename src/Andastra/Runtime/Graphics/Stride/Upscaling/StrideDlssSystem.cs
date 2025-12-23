@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using Stride.Graphics;
 using Andastra.Runtime.Graphics.Common.Enums;
@@ -601,22 +602,17 @@ namespace Andastra.Runtime.Stride.Upscaling
             if (graphicsDevice == null)
                 return IntPtr.Zero;
 
-            // Stride GraphicsDevice.NativePointer provides access to the underlying DirectX device
-            // For DirectX 12, this returns the ID3D12Device* pointer
-            // This is the standard Stride API as used in StrideDirect3D12Backend.cs
+            // Stride GraphicsDevice native device access via reflection
+            // For DirectX 12, we need to get the ID3D12Device* pointer
+            // Stride API may use NativePointer or NativeDevice depending on backend
             try
             {
-                // Direct access to NativePointer property (standard Stride API)
-                IntPtr nativeDevice = graphicsDevice.NativePointer;
-                if (nativeDevice != IntPtr.Zero)
-                {
-                    return nativeDevice;
-                }
-
-                // Fallback: Try to get device through reflection if NativePointer is not available
-                // This is a safety mechanism in case Stride's API changes or property is not accessible
+                // Use reflection to access native device pointer (property may not be public)
                 var deviceType = graphicsDevice.GetType();
-                var nativePointerProperty = deviceType.GetProperty("NativePointer");
+                
+                // Try NativePointer first (used by D3D12 and Vulkan backends)
+                var nativePointerProperty = deviceType.GetProperty("NativePointer", 
+                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 if (nativePointerProperty != null)
                 {
                     var value = nativePointerProperty.GetValue(graphicsDevice);
@@ -626,8 +622,9 @@ namespace Andastra.Runtime.Stride.Upscaling
                     }
                 }
 
-                // Alternative: Check for NativeDevice property (legacy or alternative API)
-                var nativeDeviceProperty = deviceType.GetProperty("NativeDevice");
+                // Try NativeDevice property (used by D3D11 backend)
+                var nativeDeviceProperty = deviceType.GetProperty("NativeDevice",
+                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 if (nativeDeviceProperty != null)
                 {
                     var value = nativeDeviceProperty.GetValue(graphicsDevice);
