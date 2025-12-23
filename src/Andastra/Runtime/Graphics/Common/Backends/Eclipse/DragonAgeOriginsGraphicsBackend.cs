@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Parsing.Formats.MDL;
 using Andastra.Parsing.Formats.MDLData;
@@ -3197,10 +3198,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 // Based on daorigins.exe: Dialogue history entries are added when text changes
                 if (_world != null && _world.CurrentArea != null)
                 {
-                    // Cast to EclipseArea to access dialogue history methods
-                    if (_world.CurrentArea is Andastra.Runtime.Games.Eclipse.EclipseArea eclipseArea)
+                    // Cast to IDialogueHistoryArea to access dialogue history methods
+                    if (_world.CurrentArea is IDialogueHistoryArea dialogueHistoryArea)
                     {
-                        eclipseArea.AddDialogueHistoryEntry(speakerName, dialogueText, currentTime);
+                        dialogueHistoryArea.AddDialogueHistoryEntry(speakerName, dialogueText, currentTime);
                     }
                 }
 
@@ -3592,14 +3593,14 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 return;
             }
 
-            // Cast to EclipseArea to access dialogue history
-            if (!(_world.CurrentArea is Andastra.Runtime.Games.Eclipse.EclipseArea eclipseArea))
+            // Cast to IDialogueHistoryArea to access dialogue history
+            if (!(_world.CurrentArea is IDialogueHistoryArea dialogueHistoryArea))
             {
                 return;
             }
 
-            IReadOnlyList<Andastra.Runtime.Games.Eclipse.EclipseArea.DialogueHistoryEntry> history =
-                eclipseArea.GetDialogueHistory();
+            IReadOnlyList<DialogueHistoryEntry> history =
+                dialogueHistoryArea.GetDialogueHistory();
 
             if (history == null || history.Count == 0)
             {

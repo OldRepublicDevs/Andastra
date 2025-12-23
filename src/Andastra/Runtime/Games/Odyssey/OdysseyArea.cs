@@ -1176,7 +1176,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// - vendor/reone/src/libs/graphics/format/bwmreader.cpp
         /// - vendor/KotOR.js/src/odyssey/OdysseyWalkMesh.ts
         /// </remarks>
-        
+
         /// <summary>
         /// Converts a NavigationMesh (core/engine-agnostic) to OdysseyNavigationMesh (engine-specific).
         /// </summary>
@@ -1244,7 +1244,7 @@ namespace Andastra.Runtime.Games.Odyssey
             // Rebuild AABB tree using NavigationMesh static method
             // Based on NavigationMesh.BuildAabbTreeFromFaces - builds AABB tree from face data
             int faceCount = faceIndices.Length / 3;
-            NavigationMesh.AabbNode aabbRoot = NavigationMesh.BuildAabbTreeFromFaces(vertices, faceIndices, surfaceMaterials, faceCount);
+            Andastra.Runtime.Core.Navigation.NavigationMesh.AabbNode aabbRoot = Andastra.Runtime.Core.Navigation.NavigationMesh.BuildAabbTreeFromFaces(vertices, faceIndices, surfaceMaterials, faceCount);
 
             // Create OdysseyNavigationMesh with extracted data
             // Based on OdysseyNavigationMesh constructor: takes arrays and AABB root
@@ -1271,7 +1271,7 @@ namespace Andastra.Runtime.Games.Odyssey
             {
                 // Use NavigationMeshFactory to create combined navigation mesh from all room walkmeshes
                 // Based on swkotor2.exe: ModuleLoader.LoadWalkmesh pattern
-                var navMeshFactory = new Loading.NavigationMeshFactory();
+                var navMeshFactory = new Andastra.Runtime.Engines.Odyssey.Loading.NavigationMeshFactory();
                 INavigationMesh combinedNavMesh = navMeshFactory.CreateFromModule(_module, _rooms);
 
                 if (combinedNavMesh != null)
@@ -2679,7 +2679,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Based on swkotor2.exe: Room meshes are loaded on-demand when needed for rendering.
         /// Located via string references: "Rooms" @ 0x007bd490, "RoomName" @ 0x007bd484
         /// Original implementation: Loads MDL/MDX files from module archives and creates renderable mesh data.
-        /// 
+        ///
         /// Implementation details:
         /// - Resource search order: Module.Model() -> Module.ModelExt() -> Installation (OVERRIDE -> CHITIN)
         /// - Matches swkotor2.exe resource loading: Module -> Override -> Chitin
@@ -2691,7 +2691,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// - Validation: Ensures mesh has valid vertex/index buffers and at least 3 indices (one triangle)
         /// - Error handling: Catches exceptions and returns null (room is skipped, doesn't crash)
         /// - Caching: Loaded meshes are cached in _roomMeshes dictionary for future use
-        /// 
+        ///
         /// This replaces the previous stub implementation with full on-demand loading functionality.
         /// </remarks>
         private IRoomMeshData LoadRoomMeshOnDemand(string modelResRef, IRoomMeshRenderer roomRenderer)
@@ -2757,7 +2757,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 {
                     Installation.Installation installation = _module.Installation;
                     SearchLocation[] searchOrder = { SearchLocation.OVERRIDE, SearchLocation.CHITIN };
-                    
+
                     Installation.ResourceResult mdlResult = installation.Resource(modelResRef, ResourceType.MDL, searchOrder);
                     if (mdlResult != null && mdlResult.Data != null && mdlResult.Data.Length > 0)
                     {
