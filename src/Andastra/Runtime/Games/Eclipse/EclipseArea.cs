@@ -4144,7 +4144,7 @@ namespace Andastra.Runtime.Games.Eclipse
             RemoveEntityFromArea(entity);
         }
 
-        protected override void AddEntityToArea(IEntity entity)
+        internal override void AddEntityToArea(IEntity entity)
         {
             if (entity == null)
             {
