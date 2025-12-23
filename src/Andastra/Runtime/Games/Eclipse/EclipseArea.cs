@@ -55,6 +55,15 @@ using XnaPrimitiveType = Microsoft.Xna.Framework.Graphics.PrimitiveType;
 using ParsingResourceType = Andastra.Parsing.Resource.ResourceType;
 using ContentSearchLocation = Andastra.Runtime.Content.Interfaces.SearchLocation;
 using ParsingSearchLocation = Andastra.Parsing.Installation.SearchLocation;
+// Type alias for IDynamicLight to use MonoGame.Interfaces version
+using IDynamicLight = Andastra.Runtime.MonoGame.Interfaces.IDynamicLight;
+// Type aliases to resolve ambiguity for graphics types
+using GraphicsPrimitiveType = Andastra.Runtime.Graphics.PrimitiveType;
+using GraphicsBlend = Andastra.Runtime.Graphics.Blend;
+using GraphicsBlendFunction = Andastra.Runtime.Graphics.BlendFunction;
+using GraphicsColorWriteChannels = Andastra.Runtime.Graphics.ColorWriteChannels;
+using GraphicsColor = Andastra.Runtime.Graphics.Color;
+using ParsingColor = Andastra.Parsing.Common.Color;
 
 namespace Andastra.Runtime.Games.Eclipse
 {
@@ -4991,7 +5000,7 @@ namespace Andastra.Runtime.Games.Eclipse
                         // Draw indexed primitives (triangles)
                         // Based on daorigins.exe/DragonAge2.exe: Room geometry uses indexed triangle lists
                         graphicsDevice.DrawIndexedPrimitives(
-                            PrimitiveType.TriangleList,
+                            GraphicsPrimitiveType.TriangleList,
                             0, // base vertex
                             0, // min vertex index
                             roomMeshData.IndexCount, // index count
@@ -5993,7 +6002,7 @@ namespace Andastra.Runtime.Games.Eclipse
                         {
                             pass.Apply();
                             graphicsDevice.DrawIndexedPrimitives(
-                                PrimitiveType.TriangleList,
+                                GraphicsPrimitiveType.TriangleList,
                                 0,
                                 0,
                                 roomMeshData.IndexCount / 3
@@ -6057,7 +6066,7 @@ namespace Andastra.Runtime.Games.Eclipse
                         {
                             pass.Apply();
                             graphicsDevice.DrawIndexedPrimitives(
-                                PrimitiveType.TriangleList,
+                                GraphicsPrimitiveType.TriangleList,
                                 0,
                                 0,
                                 staticObjectMeshData.IndexCount / 3
@@ -6135,7 +6144,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     {
                         pass.Apply();
                         graphicsDevice.DrawIndexedPrimitives(
-                            PrimitiveType.TriangleList,
+                            GraphicsPrimitiveType.TriangleList,
                             0,
                             0,
                             entityMeshData.IndexCount / 3
@@ -6582,7 +6591,7 @@ namespace Andastra.Runtime.Games.Eclipse
                         // Draw indexed primitives (triangles)
                         // Based on daorigins.exe/DragonAge2.exe: Static object geometry uses indexed triangle lists
                         graphicsDevice.DrawIndexedPrimitives(
-                            PrimitiveType.TriangleList,
+                            GraphicsPrimitiveType.TriangleList,
                             0, // base vertex
                             0, // min vertex index
                             staticObjectMeshData.IndexCount, // index count
@@ -6744,7 +6753,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     if (meshDataToRender.IndexCount > 0)
                     {
                         graphicsDevice.DrawIndexedPrimitives(
-                            PrimitiveType.TriangleList,
+                            GraphicsPrimitiveType.TriangleList,
                             0, // base vertex
                             0, // min vertex index
                             meshDataToRender.IndexCount, // index count
@@ -6820,7 +6829,7 @@ namespace Andastra.Runtime.Games.Eclipse
                         if (debrisMeshData.IndexCount > 0)
                         {
                             graphicsDevice.DrawIndexedPrimitives(
-                                PrimitiveType.TriangleList,
+                                GraphicsPrimitiveType.TriangleList,
                                 0, // base vertex
                                 0, // min vertex index
                                 debrisMeshData.IndexCount, // index count
@@ -7909,14 +7918,14 @@ namespace Andastra.Runtime.Games.Eclipse
                 // Based on swkotor2.exe: Standard alpha blending uses D3DBLEND_SRCALPHA and D3DBLEND_INVSRCALPHA
                 IBlendState blendState = graphicsDevice.CreateBlendState();
                 blendState.BlendEnable = true;
-                blendState.ColorBlendFunction = BlendFunction.Add;
-                blendState.ColorSourceBlend = Blend.SourceAlpha;
-                blendState.ColorDestinationBlend = Blend.InverseSourceAlpha;
-                blendState.AlphaBlendFunction = BlendFunction.Add;
-                blendState.AlphaSourceBlend = Blend.SourceAlpha;
-                blendState.AlphaDestinationBlend = Blend.InverseSourceAlpha;
-                blendState.ColorWriteChannels = ColorWriteChannels.All;
-                blendState.BlendFactor = new Color(255, 255, 255, 255); // White blend factor (no tinting)
+                blendState.ColorBlendFunction = GraphicsBlendFunction.Add;
+                blendState.ColorSourceBlend = GraphicsBlend.SourceAlpha;
+                blendState.ColorDestinationBlend = GraphicsBlend.InverseSourceAlpha;
+                blendState.AlphaBlendFunction = GraphicsBlendFunction.Add;
+                blendState.AlphaSourceBlend = GraphicsBlend.SourceAlpha;
+                blendState.AlphaDestinationBlend = GraphicsBlend.InverseSourceAlpha;
+                blendState.ColorWriteChannels = GraphicsColorWriteChannels.All;
+                blendState.BlendFactor = new GraphicsColor(255, 255, 255, 255); // White blend factor (no tinting)
                 blendState.MultiSampleMask = -1; // Enable all samples
                 graphicsDevice.SetBlendState(blendState);
             }
@@ -7926,13 +7935,13 @@ namespace Andastra.Runtime.Games.Eclipse
                 // Based on swkotor2.exe: Opaque entities use no blending (One/Zero blend factors)
                 IBlendState blendState = graphicsDevice.CreateBlendState();
                 blendState.BlendEnable = false;
-                blendState.ColorBlendFunction = BlendFunction.Add;
-                blendState.ColorSourceBlend = Blend.One;
-                blendState.ColorDestinationBlend = Blend.Zero;
-                blendState.AlphaBlendFunction = BlendFunction.Add;
-                blendState.AlphaSourceBlend = Blend.One;
-                blendState.AlphaDestinationBlend = Blend.Zero;
-                blendState.ColorWriteChannels = ColorWriteChannels.All;
+                blendState.ColorBlendFunction = GraphicsBlendFunction.Add;
+                blendState.ColorSourceBlend = GraphicsBlend.One;
+                blendState.ColorDestinationBlend = GraphicsBlend.Zero;
+                blendState.AlphaBlendFunction = GraphicsBlendFunction.Add;
+                blendState.AlphaSourceBlend = GraphicsBlend.One;
+                blendState.AlphaDestinationBlend = GraphicsBlend.Zero;
+                blendState.ColorWriteChannels = GraphicsColorWriteChannels.All;
                 blendState.BlendFactor = new Color(255, 255, 255, 255);
                 blendState.MultiSampleMask = -1;
                 graphicsDevice.SetBlendState(blendState);
@@ -8769,7 +8778,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                 // Fallback: Use sprite batch without shader if texture type doesn't match
                                 spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
                                 Rectangle destinationRect = new Rectangle(0, 0, output.Width, output.Height);
-                                spriteBatch.Draw(hdrInput.ColorTexture, destinationRect, Color.White);
+                                spriteBatch.Draw(hdrInput.ColorTexture, destinationRect, GraphicsColor.White);
                                 spriteBatch.End();
                             }
                         }
@@ -8778,7 +8787,7 @@ namespace Andastra.Runtime.Games.Eclipse
                             // Fallback: Use sprite batch without shader if not MonoGame backend
                             spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
                             Rectangle destinationRect = new Rectangle(0, 0, output.Width, output.Height);
-                            spriteBatch.Draw(hdrInput.ColorTexture, destinationRect, Color.White);
+                            spriteBatch.Draw(hdrInput.ColorTexture, destinationRect, GraphicsColor.White);
                             spriteBatch.End();
                         }
                     }
@@ -8787,7 +8796,7 @@ namespace Andastra.Runtime.Games.Eclipse
                         // Fallback: Use sprite batch without shader if compilation failed
                         spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
                         Rectangle destinationRect = new Rectangle(0, 0, output.Width, output.Height);
-                        spriteBatch.Draw(hdrInput.ColorTexture, destinationRect, Color.White);
+                        spriteBatch.Draw(hdrInput.ColorTexture, destinationRect, GraphicsColor.White);
                         spriteBatch.End();
                     }
                 }
@@ -8844,7 +8853,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
                     Rectangle destinationRect = new Rectangle(0, 0, output.Width, output.Height);
                     // Copy input to output (Gaussian blur would be done in shader with multiple passes)
-                    spriteBatch.Draw(input.ColorTexture, destinationRect, Color.White);
+                    spriteBatch.Draw(input.ColorTexture, destinationRect, GraphicsColor.White);
                     spriteBatch.End();
                 }
             }
@@ -8950,7 +8959,7 @@ namespace Andastra.Runtime.Games.Eclipse
                             {
                                 // Fallback: Use sprite batch without shader
                     spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
-                    spriteBatch.Draw(hdrScene.ColorTexture, destinationRect, Color.White);
+                    spriteBatch.Draw(hdrScene.ColorTexture, destinationRect, GraphicsColor.White);
                     spriteBatch.End();
 
                     spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AdditiveBlend);
@@ -8964,7 +8973,7 @@ namespace Andastra.Runtime.Games.Eclipse
                         {
                             // Fallback: Use sprite batch without shader (less accurate intensity)
                             spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
-                            spriteBatch.Draw(hdrScene.ColorTexture, destinationRect, Color.White);
+                            spriteBatch.Draw(hdrScene.ColorTexture, destinationRect, GraphicsColor.White);
                             spriteBatch.End();
 
                             spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AdditiveBlend);
@@ -8979,7 +8988,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     {
                         // Fallback: Use sprite batch without shader
                         spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
-                        spriteBatch.Draw(hdrScene.ColorTexture, destinationRect, Color.White);
+                        spriteBatch.Draw(hdrScene.ColorTexture, destinationRect, GraphicsColor.White);
                         spriteBatch.End();
 
                         spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AdditiveBlend);
@@ -9557,7 +9566,7 @@ technique ColorGrading
                                 // Fallback: Use sprite batch without shader if texture type doesn't match
                                 spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
                                 Rectangle destinationRect = new Rectangle(0, 0, output.Width, output.Height);
-                                spriteBatch.Draw(hdrInput.ColorTexture, destinationRect, Color.White);
+                                spriteBatch.Draw(hdrInput.ColorTexture, destinationRect, GraphicsColor.White);
                                 spriteBatch.End();
                             }
                         }
@@ -9566,7 +9575,7 @@ technique ColorGrading
                             // Fallback: Use sprite batch without shader if not MonoGame backend
                             spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
                             Rectangle destinationRect = new Rectangle(0, 0, output.Width, output.Height);
-                            spriteBatch.Draw(hdrInput.ColorTexture, destinationRect, Color.White);
+                            spriteBatch.Draw(hdrInput.ColorTexture, destinationRect, GraphicsColor.White);
                             spriteBatch.End();
                         }
                     }
@@ -9575,7 +9584,7 @@ technique ColorGrading
                         // Fallback: Use sprite batch without shader if compilation failed
                         spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
                         Rectangle destinationRect = new Rectangle(0, 0, output.Width, output.Height);
-                        spriteBatch.Draw(hdrInput.ColorTexture, destinationRect, Color.White);
+                        spriteBatch.Draw(hdrInput.ColorTexture, destinationRect, GraphicsColor.White);
                         spriteBatch.End();
                     }
                 }
@@ -9677,7 +9686,7 @@ technique ColorGrading
                                 // Fallback: Use sprite batch without shader if texture type doesn't match
                                 spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
                                 Rectangle destinationRect = new Rectangle(0, 0, output.Width, output.Height);
-                                spriteBatch.Draw(input.ColorTexture, destinationRect, Color.White);
+                                spriteBatch.Draw(input.ColorTexture, destinationRect, GraphicsColor.White);
                                 spriteBatch.End();
                             }
                         }
@@ -9686,7 +9695,7 @@ technique ColorGrading
                             // Fallback: Use sprite batch without shader if not MonoGame backend
                             spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
                             Rectangle destinationRect = new Rectangle(0, 0, output.Width, output.Height);
-                            spriteBatch.Draw(input.ColorTexture, destinationRect, Color.White);
+                            spriteBatch.Draw(input.ColorTexture, destinationRect, GraphicsColor.White);
                             spriteBatch.End();
                         }
                     }
@@ -9695,7 +9704,7 @@ technique ColorGrading
                         // Fallback: Use sprite batch without shader if compilation failed
                         spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
                         Rectangle destinationRect = new Rectangle(0, 0, output.Width, output.Height);
-                        spriteBatch.Draw(input.ColorTexture, destinationRect, Color.White);
+                        spriteBatch.Draw(input.ColorTexture, destinationRect, GraphicsColor.White);
                         spriteBatch.End();
                     }
                 }
@@ -10760,12 +10769,26 @@ technique ColorGrading
         /// <summary>
         /// Adds a dynamic light to the scene.
         /// </summary>
-        void AddLight(IDynamicLight light);
+        void AddLight(Andastra.Runtime.MonoGame.Interfaces.IDynamicLight light);
 
         /// <summary>
         /// Removes a dynamic light from the scene.
         /// </summary>
-        void RemoveLight(IDynamicLight light);
+        void RemoveLight(Andastra.Runtime.MonoGame.Interfaces.IDynamicLight light);
+
+        /// <summary>
+        /// Gets lights affecting a specific point.
+        /// </summary>
+        /// <param name="position">World space position.</param>
+        /// <param name="radius">Query radius.</param>
+        /// <returns>Array of lights affecting the point.</returns>
+        Andastra.Runtime.MonoGame.Interfaces.IDynamicLight[] GetLightsAffectingPoint(Vector3 position, float radius);
+
+        /// <summary>
+        /// Gets all active lights.
+        /// </summary>
+        /// <returns>Array of all active lights.</returns>
+        Andastra.Runtime.MonoGame.Interfaces.IDynamicLight[] GetActiveLights();
     }
 
     /// <summary>
@@ -10819,17 +10842,6 @@ technique ColorGrading
         /// - DragonAge2.exe: Enhanced state restoration with constraint support
         /// </remarks>
         bool SetRigidBodyState(IEntity entity, Vector3 velocity, Vector3 angularVelocity, float mass, List<PhysicsConstraint> constraints);
-    }
-
-    /// <summary>
-    /// Interface for dynamic lights.
-    /// </summary>
-    public interface IDynamicLight
-    {
-        Vector3 Position { get; }
-        Vector3 Color { get; }
-        float Intensity { get; }
-        float Range { get; }
     }
 
     /// <summary>
