@@ -84,7 +84,7 @@ namespace Andastra.Runtime.Stride.Graphics
             return pressedKeys.ToArray();
         }
 
-        private global::global::Stride.Input.Keys ConvertKey(GraphicsKeys key)
+        private global::Stride.Input.Keys ConvertKey(GraphicsKeys key)
         {
             // Map our Keys enum to Stride's Keys enum
             switch (key)

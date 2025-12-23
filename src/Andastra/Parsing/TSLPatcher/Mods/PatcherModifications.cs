@@ -147,8 +147,7 @@ namespace Andastra.Parsing.Mods
         public abstract object PatchResource(
             byte[] source,
             PatcherMemory memory,
-            PatchLogger logger,
-            Game game);
+            PatchLogger logger, BioWareGame game);
 
         /// <summary>
         /// Apply this patch's modifications to the mutable_data object argument passed.
@@ -156,8 +155,7 @@ namespace Andastra.Parsing.Mods
         public abstract void Apply(
             object mutableData,
             PatcherMemory memory,
-            PatchLogger logger,
-            Game game);
+            PatchLogger logger, BioWareGame game);
 
         /// <summary>
         /// All optional TSLPatcher vars that can be parsed for a given patch list.

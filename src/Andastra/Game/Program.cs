@@ -13,7 +13,7 @@ namespace Andastra.Runtime.Game
     /// Program Entry Point:
     /// - Based on swkotor2.exe: entry @ 0x0076e2dd (PE entry point)
     /// - Main initialization: FUN_00404250 @ 0x00404250 (WinMain equivalent, initializes game)
-    /// - Located via string references: "swkotor2" @ 0x007b575c (executable name), "KotOR2" @ 0x0080c210 (game title)
+    /// - Located via string references: "swkotor2" @ 0x007b575c (executable name), "KotOR2" @ 0x0080c210 (BioWareGame title)
     /// - Original implementation: Entry point calls GetVersionExA, initializes heap, calls FUN_00404250
     /// - FUN_00404250 @ 0x00404250: Creates mutex "swkotor2" via CreateMutexA, initializes COM via CoInitialize, loads config.txt (FUN_00460ff0), loads swKotor2.ini (FUN_00630a90), creates engine objects, runs game loop
     /// - Mutex creation: CreateMutexA with name "swkotor2" prevents multiple instances, WaitForSingleObject checks if already running
@@ -46,7 +46,7 @@ namespace Andastra.Runtime.Game
 
             GameSettings settings = null;
             string gamePath = null;
-            Game selectedGame = Game.K1;
+            BioWareGame selectedGame = BioWareGame.K1;
 
             if (!skipLauncher)
             {
@@ -70,11 +70,11 @@ namespace Andastra.Runtime.Game
 
                 // Convert Game enum to KotorGame for settings
                 KotorGame kotorGame = KotorGame.K1;
-                if (selectedGame == Game.K2)
+                if (selectedGame == BioWareGame.K2)
                 {
                     kotorGame = KotorGame.K2;
                 }
-                else if (selectedGame != Game.K1)
+                else if (selectedGame != BioWareGame.K1)
                 {
                     // For non-KOTOR games, we'll need to handle differently
                     // TODO: STUB - For now, show error

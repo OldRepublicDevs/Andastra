@@ -61,8 +61,8 @@ namespace Andastra.Parsing.Resource.Generics
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/pth.py:185-209
-        // Original: def dismantle_pth(pth: PTH, game: Game = Game.K2, *, use_deprecated: bool = True) -> GFF:
-        public static GFF DismantlePth(PTH pth, Game game = Game.K2, bool useDeprecated = true)
+        // Original: def dismantle_pth(pth: PTH, game: Game = BioWareGame.K2, *, use_deprecated: bool = True) -> GFF:
+        public static GFF DismantlePth(PTH pth, BioWareGame game = BioWareGame.K2, bool useDeprecated = true)
         {
             var gff = new GFF(GFFContent.PTH);
             var root = gff.Root;

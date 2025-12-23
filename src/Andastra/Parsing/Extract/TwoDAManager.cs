@@ -47,7 +47,7 @@ namespace Andastra.Parsing.Extract
             }
 
             // Prefer K2 metadata if installation is TSL; otherwise default to K1
-            bool isK2 = installation.Game == Game.TSL;
+            bool isK2 = installation.Game == BioWareGame.TSL;
             var targets = TwoDARegistry.ColumnsFor(dataType, isK2);
             foreach (var kvp in targets)
             {

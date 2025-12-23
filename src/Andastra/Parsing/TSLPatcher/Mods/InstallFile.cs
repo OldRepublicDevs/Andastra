@@ -35,8 +35,7 @@ namespace Andastra.Parsing.Mods
         public override object PatchResource(
             byte[] source,
             PatcherMemory memory,
-            PatchLogger logger,
-            Game game)
+            PatchLogger logger, BioWareGame game)
         {
             Apply(source, memory, logger, game);
             // Python: with BinaryReader.from_auto(source) as reader: return reader.read_all()
@@ -46,8 +45,7 @@ namespace Andastra.Parsing.Mods
         public override void Apply(
             object mutableData,
             PatcherMemory memory,
-            PatchLogger logger,
-            Game game)
+            PatchLogger logger, BioWareGame game)
         {
             // InstallFile doesn't modify the file, just copies it
         }

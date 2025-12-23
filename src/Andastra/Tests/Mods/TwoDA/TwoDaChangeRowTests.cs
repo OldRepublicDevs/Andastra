@@ -30,7 +30,7 @@ namespace Andastra.Parsing.Tests.Mods.TwoDA
             config.Modifiers.Add(new ChangeRow2DA("", new Target(TargetType.ROW_INDEX, 1), new Dictionary<string, RowValue>() { ["Col1"] = new RowValueConstant("X") }));
 
             // Act
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             // Assert
             Assert.Equal(new[] { "a", "X" }, twoda.GetColumn("Col1"));
@@ -52,7 +52,7 @@ namespace Andastra.Parsing.Tests.Mods.TwoDA
             config.Modifiers.Add(new ChangeRow2DA("", new Target(TargetType.ROW_LABEL, "1"), new Dictionary<string, RowValue>() { ["Col1"] = new RowValueConstant("X") }));
 
             // Act
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             // Assert
             Assert.Equal(new[] { "a", "X" }, twoda.GetColumn("Col1"));
@@ -74,7 +74,7 @@ namespace Andastra.Parsing.Tests.Mods.TwoDA
             config.Modifiers.Add(new ChangeRow2DA("", new Target(TargetType.LABEL_COLUMN, "d"), new Dictionary<string, RowValue>() { ["Col2"] = new RowValueConstant("X") }));
 
             // Act
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             // Assert
             Assert.Equal(new[] { "a", "d" }, twoda.GetColumn("label"));
@@ -100,7 +100,7 @@ namespace Andastra.Parsing.Tests.Mods.TwoDA
             config.Modifiers.Add(new ChangeRow2DA("", new Target(TargetType.ROW_INDEX, 1), new Dictionary<string, RowValue>() { ["Col1"] = new RowValueTLKMemory(1) }));
 
             // Act
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             // Assert
             Assert.Equal(new[] { "0", "1" }, twoda.GetColumn("Col1"));
@@ -126,7 +126,7 @@ namespace Andastra.Parsing.Tests.Mods.TwoDA
             config.Modifiers.Add(new ChangeRow2DA("", new Target(TargetType.ROW_INDEX, 1), new Dictionary<string, RowValue>() { ["Col1"] = new RowValue2DAMemory(1) }));
 
             // Act
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             // Assert
             Assert.Equal(new[] { "mem0", "mem1" }, twoda.GetColumn("Col1"));
@@ -150,7 +150,7 @@ namespace Andastra.Parsing.Tests.Mods.TwoDA
             config.Modifiers.Add(new ChangeRow2DA("", new Target(TargetType.ROW_INDEX, 0), new Dictionary<string, RowValue>() { ["Col2"] = new RowValueHigh("Col2") }));
 
             // Act
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             // Assert
             Assert.Equal(new[] { "3", "2" }, twoda.GetColumn("Col1"));
@@ -178,7 +178,7 @@ namespace Andastra.Parsing.Tests.Mods.TwoDA
             ));
 
             // Act
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             // Assert
             Assert.Equal(new[] { "a", "d" }, twoda.GetColumn("Col1"));
@@ -207,7 +207,7 @@ namespace Andastra.Parsing.Tests.Mods.TwoDA
             ));
 
             // Act
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             // Assert
             Assert.Equal(new[] { "a", "d" }, twoda.GetColumn("Col1"));
@@ -236,7 +236,7 @@ namespace Andastra.Parsing.Tests.Mods.TwoDA
             ));
 
             // Act
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             // Assert
             Assert.Equal(new[] { "a", "d" }, twoda.GetColumn("label"));

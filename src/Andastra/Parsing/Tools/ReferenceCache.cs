@@ -97,7 +97,7 @@ namespace Andastra.Parsing.Tools
     /// </summary>
     public class StrRefReferenceCache
     {
-        private readonly Game _game;
+        private readonly BioWareGame _game;
         private readonly Dictionary<int, Dictionary<ResourceIdentifier, List<string>>> _cache = new Dictionary<int, Dictionary<ResourceIdentifier, List<string>>>();
         private readonly Dictionary<string, HashSet<string>> _strref2daColumns;
         private int _totalReferencesFound;
@@ -105,16 +105,16 @@ namespace Andastra.Parsing.Tools
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:136-159
         // Original: def __init__(self, game: Game):
-        public StrRefReferenceCache(Game game)
+        public StrRefReferenceCache(BioWareGame game)
         {
             _game = game;
 
             // Get game-specific 2DA column definitions
-            if (_game == Game.K1)
+            if (_game == BioWareGame.K1)
             {
                 _strref2daColumns = TwoDARegistry.ColumnsFor("strref", false);
             }
-            else if (_game == Game.TSL)
+            else if (_game == BioWareGame.TSL)
             {
                 _strref2daColumns = TwoDARegistry.ColumnsFor("strref", true);
             }
@@ -432,14 +432,14 @@ namespace Andastra.Parsing.Tools
     /// </summary>
     public class TwoDAMemoryReferenceCache
     {
-        private readonly Game _game;
+        private readonly BioWareGame _game;
         private readonly Dictionary<(string twodaFilename, int rowIndex), Dictionary<ResourceIdentifier, List<string>>> _cache = new Dictionary<(string, int), Dictionary<ResourceIdentifier, List<string>>>();
         private int _totalReferencesFound;
         private readonly HashSet<string> _filesWith2daRefs = new HashSet<string>();
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:492-498
         // Original: def __init__(self, game: Game):
-        public TwoDAMemoryReferenceCache(Game game)
+        public TwoDAMemoryReferenceCache(BioWareGame game)
         {
             _game = game;
         }
@@ -1092,7 +1092,7 @@ namespace Andastra.Parsing.Tools
                 var twoda = new TwoDABinaryReader(resource.GetData()).Load();
                 string filename = resource.Filename().ToLowerInvariant();
 
-                bool isK2 = installation.Game == Game.TSL;
+                bool isK2 = installation.Game == BioWareGame.TSL;
                 var strref2daColumns = TwoDARegistry.ColumnsFor("strref", isK2);
 
                 if (!strref2daColumns.TryGetValue(filename, out HashSet<string> columns))

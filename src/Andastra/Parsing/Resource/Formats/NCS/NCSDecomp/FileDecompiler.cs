@@ -2749,7 +2749,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             return true;
         }
 
-        private Game MapGameType()
+        private BioWareGame MapGameType()
         {
             if (this.gameType == NWScriptLocator.GameType.TSL)
             {

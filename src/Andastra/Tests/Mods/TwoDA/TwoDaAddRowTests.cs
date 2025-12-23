@@ -31,7 +31,7 @@ namespace Andastra.Parsing.Tests.Mods.TwoDA
             config.Modifiers.Add(new AddRow2DA("", null, null, new Dictionary<string, RowValue>()));
 
             // Act
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             // Assert
             Assert.Equal(3, twoda.GetHeight());
@@ -53,7 +53,7 @@ namespace Andastra.Parsing.Tests.Mods.TwoDA
             config.Modifiers.Add(new AddRow2DA("", null, "r1", new Dictionary<string, RowValue>()));
 
             // Act
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             // Assert
             Assert.Equal(1, twoda.GetHeight());
@@ -85,7 +85,7 @@ namespace Andastra.Parsing.Tests.Mods.TwoDA
             ));
 
             // Act
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             // Assert
             Assert.Equal(3, twoda.GetHeight());
@@ -121,7 +121,7 @@ namespace Andastra.Parsing.Tests.Mods.TwoDA
             ));
 
             // Act
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             // Assert
             Assert.Equal(3, twoda.GetHeight());
@@ -165,7 +165,7 @@ namespace Andastra.Parsing.Tests.Mods.TwoDA
             ));
 
             // Act
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             // Assert
             Assert.Equal(4, twoda.GetHeight());
@@ -198,7 +198,7 @@ namespace Andastra.Parsing.Tests.Mods.TwoDA
             ));
 
             // Act - Python uses patch_resource which does bytes round-trip
-            byte[] bytes = (byte[])config.PatchResource(twoda.ToBytes(), memory, logger, Game.K1);
+            byte[] bytes = (byte[])config.PatchResource(twoda.ToBytes(), memory, logger, BioWareGame.K1);
             var patchedTwoda = TwoDAFile.FromBytes((byte[])bytes);
 
             // Assert
@@ -221,7 +221,7 @@ namespace Andastra.Parsing.Tests.Mods.TwoDA
             config.Modifiers.Add(new AddRow2DA("", "", "2", new Dictionary<string, RowValue>() { ["Col1"] = new RowValueHigh("Col1") }));
 
             // Act
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             // Assert
             Assert.Equal(new[] { "1", "2", "3" }, twoda.GetColumn("Col1"));
@@ -244,7 +244,7 @@ namespace Andastra.Parsing.Tests.Mods.TwoDA
             config.Modifiers.Add(new AddRow2DA("", null, "1", new Dictionary<string, RowValue>() { ["Col1"] = new RowValueTLKMemory(1) }));
 
             // Act
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             // Assert
             Assert.Equal(new[] { "5", "6" }, twoda.GetColumn("Col1"));
@@ -267,7 +267,7 @@ namespace Andastra.Parsing.Tests.Mods.TwoDA
             config.Modifiers.Add(new AddRow2DA("", null, "1", new Dictionary<string, RowValue>() { ["Col1"] = new RowValue2DAMemory(1) }));
 
             // Act
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             // Assert
             Assert.Equal(new[] { "5", "6" }, twoda.GetColumn("Col1"));
@@ -300,7 +300,7 @@ namespace Andastra.Parsing.Tests.Mods.TwoDA
             ));
 
             // Act
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             // Assert
             Assert.Equal(2, twoda.GetHeight());

@@ -31,7 +31,7 @@ namespace Andastra.Parsing.Tests.Integration
             modifications.Modifiers.Add(modify);
 
             // Act
-            modifications.Apply(ssf, Memory, Logger, Game.K1);
+            modifications.Apply(ssf, Memory, Logger, BioWareGame.K1);
 
             // Assert
             ssf.Get(SSFSound.BATTLE_CRY_1).Should().Be(999);
@@ -49,7 +49,7 @@ namespace Andastra.Parsing.Tests.Integration
             modifications.Modifiers.Add(modify);
 
             // Act
-            modifications.Apply(ssf, Memory, Logger, Game.K1);
+            modifications.Apply(ssf, Memory, Logger, BioWareGame.K1);
 
             // Assert
             ssf.Get(SSFSound.BATTLE_CRY_1).Should().Be(12345);
@@ -70,7 +70,7 @@ namespace Andastra.Parsing.Tests.Integration
             modifications.Modifiers.Add(modify);
 
             // Act
-            modifications.Apply(ssf, Memory, Logger, Game.K1);
+            modifications.Apply(ssf, Memory, Logger, BioWareGame.K1);
 
             // Assert
             ssf.Get(SSFSound.BATTLE_CRY_1).Should().Be(67890);
@@ -91,7 +91,7 @@ namespace Andastra.Parsing.Tests.Integration
             modifications.Modifiers.Add(modify);
 
             // Act
-            modifications.Apply(ssf, Memory, Logger, Game.K1);
+            modifications.Apply(ssf, Memory, Logger, BioWareGame.K1);
 
             // Assert
             ssf.Get(SSFSound.BATTLE_CRY_1).Should().Be(99999);
@@ -112,7 +112,7 @@ namespace Andastra.Parsing.Tests.Integration
             modifications.Modifiers.Add(new ModifySSF(SSFSound.BATTLE_CRY_3, new NoTokenUsage(333)));
 
             // Act
-            modifications.Apply(ssf, Memory, Logger, Game.K1);
+            modifications.Apply(ssf, Memory, Logger, BioWareGame.K1);
 
             // Assert
             ssf.Get(SSFSound.BATTLE_CRY_1).Should().Be(111);
@@ -145,7 +145,7 @@ namespace Andastra.Parsing.Tests.Integration
             modifications.Modifiers.Add(modify3);
 
             // Act
-            modifications.Apply(ssf, Memory, Logger, Game.K1);
+            modifications.Apply(ssf, Memory, Logger, BioWareGame.K1);
 
             // Assert
             ssf.Get(SSFSound.BATTLE_CRY_1).Should().Be(999);
@@ -165,7 +165,7 @@ namespace Andastra.Parsing.Tests.Integration
             modifications.Modifiers.Add(new ModifySSF(SSFSound.BATTLE_CRY_1, new NoTokenUsage(999)));
 
             // Act
-            modifications.Apply(ssf, Memory, Logger, Game.K1);
+            modifications.Apply(ssf, Memory, Logger, BioWareGame.K1);
 
             // Assert
             ssf.Get(SSFSound.BATTLE_CRY_1).Should().Be(999);
@@ -186,7 +186,7 @@ Battlecry 1=5
             var ssf = new SSF();
 
             var memory = new PatcherMemory();
-            object bytes = config.PatchesSSF.First(p => p.SaveAs == "test.ssf").PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchesSSF.First(p => p.SaveAs == "test.ssf").PatchResource(ssf.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedSsf = SSF.FromBytes((byte[])bytes);
 
             patchedSsf.Get(SSFSound.BATTLE_CRY_1).Should().Be(5);
@@ -207,7 +207,7 @@ Battlecry 2=2DAMEMORY5
 
             var memory = new PatcherMemory();
             memory.Memory2DA[5] = "123";
-            object bytes = config.PatchesSSF.First(p => p.SaveAs == "test.ssf").PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchesSSF.First(p => p.SaveAs == "test.ssf").PatchResource(ssf.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedSsf = SSF.FromBytes((byte[])bytes);
 
             patchedSsf.Get(SSFSound.BATTLE_CRY_2).Should().Be(123);
@@ -228,7 +228,7 @@ Battlecry 3=StrRef7
 
             var memory = new PatcherMemory();
             memory.MemoryStr[7] = 456;
-            object bytes = config.PatchesSSF.First(p => p.SaveAs == "test.ssf").PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchesSSF.First(p => p.SaveAs == "test.ssf").PatchResource(ssf.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedSsf = SSF.FromBytes((byte[])bytes);
 
             patchedSsf.Get(SSFSound.BATTLE_CRY_3).Should().Be(456);

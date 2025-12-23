@@ -10,9 +10,9 @@ namespace Andastra.Runtime.Stride.Graphics
     /// </summary>
     public class StrideGraphicsDevice : IGraphicsDevice
     {
-        private readonly GraphicsDevice _device;
+        private readonly StrideGraphics.GraphicsDevice _device;
 
-        public StrideGraphicsDevice(GraphicsDevice device)
+        public StrideGraphicsDevice(StrideGraphics.GraphicsDevice device)
         {
             _device = device ?? throw new ArgumentNullException(nameof(device));
         }
@@ -140,7 +140,7 @@ namespace Andastra.Runtime.Stride.Graphics
         public ISpriteBatch CreateSpriteBatch()
         {
             // Stride SpriteBatch requires GraphicsDevice, which we have
-            return new StrideSpriteBatch(new SpriteBatch(_device));
+            return new StrideSpriteBatch(new StrideGraphics.SpriteBatch(_device));
         }
 
         public IntPtr NativeHandle => _device.NativeDevice;

@@ -40,8 +40,8 @@ namespace Andastra.Parsing.Resource.Generics
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utt.py:336-345
-        // Original: def write_utt(utt: UTT, target: TARGET_TYPES, game: Game = Game.K2, file_format: ResourceType = ResourceType.GFF, *, use_deprecated: bool = True):
-        public static void WriteUtt(UTT utt, object target, Game game = Game.K2, ResourceType fileFormat = null, bool useDeprecated = true)
+        // Original: def write_utt(utt: UTT, target: TARGET_TYPES, game: Game = BioWareGame.K2, file_format: ResourceType = ResourceType.GFF, *, use_deprecated: bool = True):
+        public static void WriteUtt(UTT utt, object target, BioWareGame game = BioWareGame.K2, ResourceType fileFormat = null, bool useDeprecated = true)
         {
             ResourceType format = fileFormat ?? ResourceType.GFF;
             GFF gff = UTTHelpers.DismantleUtt(utt, game, useDeprecated);
@@ -61,8 +61,8 @@ namespace Andastra.Parsing.Resource.Generics
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utt.py:348-356
-        // Original: def bytes_utt(utt: UTT, game: Game = Game.K2, file_format: ResourceType = ResourceType.GFF, *, use_deprecated: bool = True) -> bytes:
-        public static byte[] BytesUtt(UTT utt, Game game = Game.K2, ResourceType fileFormat = null, bool useDeprecated = true)
+        // Original: def bytes_utt(utt: UTT, game: Game = BioWareGame.K2, file_format: ResourceType = ResourceType.GFF, *, use_deprecated: bool = True) -> bytes:
+        public static byte[] BytesUtt(UTT utt, BioWareGame game = BioWareGame.K2, ResourceType fileFormat = null, bool useDeprecated = true)
         {
             ResourceType format = fileFormat ?? ResourceType.GFF;
             GFF gff = UTTHelpers.DismantleUtt(utt, game, useDeprecated);

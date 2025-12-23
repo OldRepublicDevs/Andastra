@@ -85,7 +85,7 @@ namespace HolocronToolset.Data
 
         public string Name { get; set; }
         public Installation Installation => _installation;
-        public Game Game => _installation.Game;
+        public BioWareGame Game => _installation.Game;
         public string Path => _installation.Path;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py

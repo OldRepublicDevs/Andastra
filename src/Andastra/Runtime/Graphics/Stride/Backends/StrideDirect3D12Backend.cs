@@ -35,7 +35,7 @@ namespace Andastra.Runtime.Stride.Backends
     /// </summary>
     public class StrideDirect3D12Backend : BaseDirect3D12Backend
     {
-        private global::Stride.Engine.Game _game;
+        private global::Stride.Engine.BioWareGame _game;
         private GraphicsDevice _strideDevice;
 
         // Bindless resource tracking

@@ -187,10 +187,10 @@ namespace Andastra.Parsing.Formats.NCS
         public string OutputFile { get; set; }
         public string OutputDir { get; set; }
         public string OutputName { get; set; }
-        public Game Game { get; set; }
+        public BioWareGame Game { get; set; }
         public KnownExternalCompilers ChosenCompiler { get; set; }
 
-        public NwnnsscompConfig(string sha256Hash, string sourceFile, string outputFile, Game game)
+        public NwnnsscompConfig(string sha256Hash, string sourceFile, string outputFile, BioWareGame game)
         {
             Sha256Hash = sha256Hash;
             SourceFile = sourceFile;
@@ -238,8 +238,7 @@ namespace Andastra.Parsing.Formats.NCS
     {
         public override void CompileScript(
             string sourcePath,
-            string outputPath,
-            Game game,
+            string outputPath, BioWareGame game,
             [CanBeNull] List<NCSOptimizer> optimizers = null,
             bool debug = false)
         {
@@ -295,15 +294,14 @@ namespace Andastra.Parsing.Formats.NCS
             _fileHash = GenerateHash(nwnnsscompPath);
         }
 
-        public NwnnsscompConfig Config(string sourceFile, string outputFile, Game game)
+        public NwnnsscompConfig Config(string sourceFile, string outputFile, BioWareGame game)
         {
             return new NwnnsscompConfig(_fileHash, sourceFile, outputFile, game);
         }
 
         public override void CompileScript(
             string sourcePath,
-            string outputPath,
-            Game game,
+            string outputPath, BioWareGame game,
             [CanBeNull] List<NCSOptimizer> optimizers = null,
             bool debug = false)
         {
@@ -318,8 +316,7 @@ namespace Andastra.Parsing.Formats.NCS
         /// </summary>
         public (string stdout, string stderr) CompileScriptWithOutput(
             string sourceFile,
-            string outputFile,
-            Game game,
+            string outputFile, BioWareGame game,
             int timeout = 5)
         {
             if (!File.Exists(sourceFile))
@@ -407,8 +404,7 @@ namespace Andastra.Parsing.Formats.NCS
 
         public (string stdout, string stderr) DecompileScript(
             string sourceFile,
-            string outputFile,
-            Game game,
+            string outputFile, BioWareGame game,
             int timeout = 5)
         {
             if (!File.Exists(sourceFile))

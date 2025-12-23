@@ -61,7 +61,7 @@ namespace Andastra.Runtime.Game.Core
         private IFont _font;
 
         // Game systems
-        private GameSession _session;
+        private Andastra.Runtime.Engines.Odyssey.Game.GameSession _session;
         private World _world;
         private ScriptGlobals _globals;
         private Kotor1 _engineApi;
@@ -115,7 +115,7 @@ namespace Andastra.Runtime.Game.Core
         private bool _musicEnabled = true; // Music enabled by default (can be toggled by BTN_MUSIC in K2)
 
         // GUI system for main menu
-        private Andastra.Runtime.Graphics.MonoGame.GUI.KotorGuiManager _guiManager;
+        private Andastra.Runtime.MonoGame.GUI.KotorGuiManager _guiManager;
         private bool _mainMenuGuiLoaded = false;
 
         // Cursor system
@@ -299,7 +299,7 @@ namespace Andastra.Runtime.Game.Core
                 // Create resource provider from installation if game path is available
                 if (!string.IsNullOrEmpty(_settings.GamePath) && Directory.Exists(_settings.GamePath))
                 {
-                    var installation = new Installation(_settings.GamePath, _settings.Game == Andastra.Runtime.Core.KotorGame.K1 ? Andastra.Parsing.Common.Game.K1 : Andastra.Parsing.Common.Game.K2);
+                    var installation = new Installation(_settings.GamePath, _settings.Game == Andastra.Runtime.Core.KotorGame.K1 ? Andastra.Parsing.Common.BioWareGame.K1 : Andastra.Parsing.Common.BioWareGame.K2);
                     var resourceProvider = new OdysseyResourceProvider(installation);
 
                     // Create music player from graphics backend
@@ -968,7 +968,7 @@ namespace Andastra.Runtime.Game.Core
                         }
                         else if (!string.IsNullOrEmpty(_settings.GamePath))
                         {
-                            installation = new Installation(_settings.GamePath, _settings.Game == Andastra.Runtime.Core.KotorGame.K1 ? Andastra.Parsing.Common.Game.K1 : Andastra.Parsing.Common.Game.K2);
+                            installation = new Installation(_settings.GamePath, _settings.Game == Andastra.Runtime.Core.KotorGame.K1 ? Andastra.Parsing.Common.BioWareGame.K1 : Andastra.Parsing.Common.BioWareGame.K2);
                         }
 
                         if (installation == null)
@@ -4407,7 +4407,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Handles dialogue node enter events.
         /// </summary>
-        private void OnDialogueNodeEnter(object sender, Odyssey.Kotor.Dialogue.DialogueEventArgs e)
+        private void OnDialogueNodeEnter(object sender, Andastra.Runtime.Engines.Odyssey.Dialogue.DialogueEventArgs e)
         {
             if (e != null && !string.IsNullOrEmpty(e.Text))
             {
@@ -4418,7 +4418,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Handles dialogue replies ready events.
         /// </summary>
-        private void OnDialogueRepliesReady(object sender, Odyssey.Kotor.Dialogue.DialogueEventArgs e)
+        private void OnDialogueRepliesReady(object sender, Andastra.Runtime.Engines.Odyssey.Dialogue.DialogueEventArgs e)
         {
             if (e != null && e.State != null && e.State.AvailableReplies != null)
             {
@@ -4435,7 +4435,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Handles dialogue end events.
         /// </summary>
-        private void OnDialogueEnd(object sender, Odyssey.Kotor.Dialogue.DialogueEventArgs e)
+        private void OnDialogueEnd(object sender, Andastra.Runtime.Engines.Odyssey.Dialogue.DialogueEventArgs e)
         {
             Console.WriteLine("[Dialogue] Conversation ended");
             // Unsubscribe from events

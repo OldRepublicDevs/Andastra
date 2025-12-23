@@ -159,7 +159,8 @@ namespace Andastra.Parsing.Formats.NCS
         /// Uses NwscriptParser by writing content to a temporary file.
         /// </summary>
         private static (List<ScriptFunction> functions, List<ScriptConstant> constants) ParseIncludeFileSymbols(
-            string includeFileSource, Game game)
+            string includeFileSource,
+            BioWareGame game)
         {
             try
             {
@@ -432,8 +433,7 @@ namespace Andastra.Parsing.Formats.NCS
         ///     - Applies no default optimizations (nwnnsscomp.exe produces optimized bytecode directly)
         /// </summary>
         public static NCS CompileNss(
-            string source,
-            Game game,
+            string source, BioWareGame game,
             Dictionary<string, byte[]> library = null,
             List<NCSOptimizer> optimizers = null,
             [CanBeNull] List<string> libraryLookup = null,
@@ -556,8 +556,7 @@ namespace Andastra.Parsing.Formats.NCS
         /// Uses the DeNCS decompiler (1:1 port from vendor/DeNCS) for accurate decompilation.
         /// </summary>
         public static string DecompileNcs(
-            [CanBeNull] NCS ncs,
-            Game game,
+            [CanBeNull] NCS ncs, BioWareGame game,
             List<ScriptFunction> functions = null,
             [CanBeNull] List<ScriptConstant> constants = null,
             [CanBeNull] string nwscriptPath = null)

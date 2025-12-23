@@ -137,7 +137,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// </remarks>
         public override void Tick()
         {
-            // Call base implementation for common tick logic (simulation time, accumulator, game time)
+            // Call base implementation for common tick logic (simulation time, accumulator, BioWareGame time
             base.Tick();
 
             // Aurora-specific: Update game time in module IFO file

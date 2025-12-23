@@ -50,8 +50,7 @@ namespace Andastra.Parsing.Mods.TwoDA
         public override object PatchResource(
             byte[] source,
             PatcherMemory memory,
-            PatchLogger logger,
-            Game game)
+            PatchLogger logger, BioWareGame game)
         {
             Formats.TwoDA.TwoDA twoda = new TwoDABinaryReader(source).Load();
             Apply(twoda, memory, logger, game);
@@ -61,8 +60,7 @@ namespace Andastra.Parsing.Mods.TwoDA
         public override void Apply(
             object mutableData,
             PatcherMemory memory,
-            PatchLogger logger,
-            Game game)
+            PatchLogger logger, BioWareGame game)
         {
             if (!(mutableData is Formats.TwoDA.TwoDA twoda))
             {

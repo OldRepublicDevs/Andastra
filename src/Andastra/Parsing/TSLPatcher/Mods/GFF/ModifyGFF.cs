@@ -45,7 +45,7 @@ namespace Andastra.Parsing.Mods.GFF
     /// </summary>
     public abstract class ModifyGFF
     {
-        public abstract void Apply(object rootContainer, PatcherMemory memory, PatchLogger logger, Game game = Game.K1);
+        public abstract void Apply(object rootContainer, PatcherMemory memory, PatchLogger logger, BioWareGame game = BioWareGame.K1);
 
         protected static void SetFieldValue(GFFStruct gffStruct, string label, object value, GFFFieldType fieldType, PatcherMemory memory)
         {
@@ -359,7 +359,7 @@ namespace Andastra.Parsing.Mods.GFF
         ///     3. Creates a new struct and adds it to the list.
         ///     4. Applies any additional field modifications specified in the modifiers.
         /// </summary>
-        public override void Apply(object rootContainer, PatcherMemory memory, PatchLogger logger, Game game = Game.K1)
+        public override void Apply(object rootContainer, PatcherMemory memory, PatchLogger logger, BioWareGame game = BioWareGame.K1)
         {
             if (!(rootContainer is GFFStruct rootStruct))
             {
@@ -554,7 +554,7 @@ namespace Andastra.Parsing.Mods.GFF
         ///     - Sets the field on the struct instance using the appropriate setter based on field type
         ///     - Applies any modifier patches recursively
         /// </summary>
-        public override void Apply(object rootContainer, PatcherMemory memory, PatchLogger logger, Game game = Game.K1)
+        public override void Apply(object rootContainer, PatcherMemory memory, PatchLogger logger, BioWareGame game = BioWareGame.K1)
         {
             if (!(rootContainer is GFFStruct rootStruct))
             {
@@ -693,7 +693,7 @@ namespace Andastra.Parsing.Mods.GFF
             SrcTokenId = srcTokenId;
         }
 
-        public override void Apply(object rootContainer, PatcherMemory memory, PatchLogger logger, Game game = Game.K1)
+        public override void Apply(object rootContainer, PatcherMemory memory, PatchLogger logger, BioWareGame game = BioWareGame.K1)
         {
             if (!(rootContainer is GFFStruct rootStruct))
             {
@@ -875,7 +875,7 @@ namespace Andastra.Parsing.Mods.GFF
         ///     - Converts the patch value to the correct type
         ///     - Calls the corresponding setter method on the parent struct
         /// </summary>
-        public override void Apply(object rootContainer, PatcherMemory memory, PatchLogger logger, Game game = Game.K1)
+        public override void Apply(object rootContainer, PatcherMemory memory, PatchLogger logger, BioWareGame game = BioWareGame.K1)
         {
             if (!(rootContainer is GFFStruct rootStruct))
             {

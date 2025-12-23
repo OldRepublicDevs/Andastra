@@ -144,11 +144,9 @@ namespace Andastra.Runtime.MonoGame.UI
         {
             switch (_selectedIndex)
             {
-                case 0: // New Game
-                    OnNewGame?.Invoke();
+                case 0: // New BioWareGame OnNewGame?.Invoke();
                     break;
-                case 1: // Load Game
-                    OnLoadGame?.Invoke();
+                case 1: // Load BioWareGame OnLoadGame?.Invoke();
                     break;
                 case 2: // Options
                     OnOptions?.Invoke();

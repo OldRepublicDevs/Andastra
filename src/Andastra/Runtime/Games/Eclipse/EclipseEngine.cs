@@ -80,9 +80,9 @@ namespace Andastra.Runtime.Engines.Eclipse
     public abstract class EclipseEngine : BaseEngine
     {
         protected string _installationPath;
-        private readonly Game _game;
+        private readonly BioWareGame _game;
 
-        protected EclipseEngine(IEngineProfile profile, Game game)
+        protected EclipseEngine(IEngineProfile profile, BioWareGame game)
             : base(profile)
         {
             if (profile == null)
@@ -98,7 +98,7 @@ namespace Andastra.Runtime.Engines.Eclipse
             _game = game;
         }
 
-        public Game Game
+        public BioWareGame Game
         {
             get { return _game; }
         }
@@ -140,13 +140,13 @@ namespace Andastra.Runtime.Engines.Eclipse
         /// Eclipse Engine Game Detection:
         /// - Based on Eclipse Engine game detection patterns (Dragon Age series)
         /// - Detection method: Uses Game enum from profile, with fallback to executable detection
-        /// - Dragon Age: Origins: Game.DA or Game.DA_ORIGINS, checks for "daorigins.exe"
-        /// - Dragon Age 2: Game.DA2 or Game.DRAGON_AGE_2, checks for "DragonAge2.exe"
+        /// - Dragon Age: Origins: BioWareGame.DA or BioWareGame.DA_ORIGINS, checks for "daorigins.exe"
+        /// - Dragon Age 2: BioWareGame.DA2 or Game.DRAGON_AGE_2, checks for "DragonAge2.exe"
         /// - Similar to Odyssey Engine detection pattern (swkotor.exe/swkotor2.exe detection)
         /// - Original implementation: Eclipse Engine executables identify themselves via executable name
         /// - Cross-engine: Similar detection pattern across all BioWare engines (executable name + fallback file checks)
         /// </remarks>
-        private static GameType DetectEclipseGameType(string installationPath, Game game)
+        private static GameType DetectEclipseGameType(string installationPath, BioWareGame game)
         {
             if (string.IsNullOrEmpty(installationPath) || !System.IO.Directory.Exists(installationPath))
             {

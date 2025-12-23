@@ -29,11 +29,11 @@ namespace Andastra.Parsing.Tests.Mods
             var config = new ModificationsSSF("", false);
             config.Modifiers.Add(new ModifySSF(SSFSound.BATTLE_CRY_1, new NoTokenUsage(5)));
 
-            // Python does: ssf = read_ssf(config.patch_resource(bytes_ssf(ssf), memory, PatchLogger(), Game.K1))
+            // Python does: ssf = read_ssf(config.patch_resource(bytes_ssf(ssf), memory, PatchLogger(), BioWareGame.K1))
             // Full round-trip through bytes
             var writer = new SSFBinaryWriter(ssf);
             byte[] data = writer.Write();
-            byte[] patchedData = (byte[])config.PatchResource(data, memory, new PatchLogger(), Game.K2);
+            byte[] patchedData = (byte[])config.PatchResource(data, memory, new PatchLogger(), BioWareGame.K2);
             var reader = new SSFBinaryReader(patchedData);
             ssf = reader.Load();
 
@@ -56,7 +56,7 @@ namespace Andastra.Parsing.Tests.Mods
             // Full round-trip through bytes
             var writer = new SSFBinaryWriter(ssf);
             byte[] data = writer.Write();
-            byte[] patchedData = (byte[])config.PatchResource(data, memory, new PatchLogger(), Game.K2);
+            byte[] patchedData = (byte[])config.PatchResource(data, memory, new PatchLogger(), BioWareGame.K2);
             var reader = new SSFBinaryReader(patchedData);
             ssf = reader.Load();
 
@@ -79,7 +79,7 @@ namespace Andastra.Parsing.Tests.Mods
             // Full round-trip through bytes
             var writer = new SSFBinaryWriter(ssf);
             byte[] data = writer.Write();
-            byte[] patchedData = (byte[])config.PatchResource(data, memory, new PatchLogger(), Game.K2);
+            byte[] patchedData = (byte[])config.PatchResource(data, memory, new PatchLogger(), BioWareGame.K2);
             var reader = new SSFBinaryReader(patchedData);
             ssf = reader.Load();
 

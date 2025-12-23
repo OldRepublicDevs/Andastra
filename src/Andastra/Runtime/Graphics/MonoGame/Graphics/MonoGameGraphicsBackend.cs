@@ -12,7 +12,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
     /// </summary>
     public class MonoGameGraphicsBackend : IGraphicsBackend
     {
-        private Game _game;
+        private Microsoft.Xna.Framework.Game _game;
         private GraphicsDeviceManager _graphicsDeviceManager;
         private MonoGameGraphicsDevice _graphicsDevice;
         private MonoGameContentManager _contentManager;

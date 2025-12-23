@@ -2277,7 +2277,7 @@ namespace Andastra.Runtime.Content.Save
                 // Serialize UTC to bytes with StackSize support for save games
                 // Based on swkotor2.exe: FUN_005675e0 @ 0x005675e0 writes StackSize to ItemList struct when serializing creatures
                 // swkotor2.exe: SerializeCreature_K2 @ 0x005226d0 calls FUN_005675e0 for each inventory item
-                byte[] utcData = SerializeUtcForSaveGame(utc, Game.K2, itemStackSizes);
+                byte[] utcData = SerializeUtcForSaveGame(utc, BioWareGame.K2, itemStackSizes);
 
                 // Create ResRef for cached character (AVAILNPC + index)
                 string cachedResRef = "AVAILNPC" + index.ToString();
@@ -2526,7 +2526,7 @@ namespace Andastra.Runtime.Content.Save
         /// <param name="game">The game version.</param>
         /// <param name="itemStackSizes">Dictionary mapping item TemplateResRef to stack size.</param>
         /// <returns>Serialized UTC data as byte array.</returns>
-        private byte[] SerializeUtcForSaveGame(UTC utc, Game game, Dictionary<string, int> itemStackSizes)
+        private byte[] SerializeUtcForSaveGame(UTC utc, BioWareGame game, Dictionary<string, int> itemStackSizes)
         {
             if (utc == null)
             {

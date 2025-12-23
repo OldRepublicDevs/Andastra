@@ -1269,7 +1269,7 @@ namespace Andastra.Parsing.Tests.Formats
         /// </summary>
         private static void RunInbuiltCompiler(string originalNssPath, string compiledOut, string gameFlag)
         {
-            Game game = gameFlag.Equals("k2") ? Game.K2 : Game.K1;
+            BioWareGame game = gameFlag.Equals("k2") ? BioWareGame.K2 : BioWareGame.K1;
 
             string source = File.ReadAllText(originalNssPath, Encoding.UTF8);
             string parentDir = Path.GetDirectoryName(originalNssPath);
@@ -1379,7 +1379,7 @@ namespace Andastra.Parsing.Tests.Formats
 
                 Directory.CreateDirectory(Path.GetDirectoryName(compiledOut));
 
-                Game game = gameFlag.Equals("k2") ? Game.K2 : Game.K1;
+                BioWareGame game = gameFlag.Equals("k2") ? BioWareGame.K2 : BioWareGame.K1;
                 ExternalNCSCompiler compiler = GetExternalCompiler();
 
                 Console.Write($" (external: {Path.GetFileName(NwnCompiler)}, variant: {compiler.GetInfo()})");

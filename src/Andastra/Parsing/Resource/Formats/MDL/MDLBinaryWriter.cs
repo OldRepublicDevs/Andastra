@@ -18,7 +18,7 @@ namespace Andastra.Parsing.Formats.MDL
         private readonly MDLData.MDL _mdl;
         private readonly RawBinaryWriter _writer;
         private readonly RawBinaryWriter _mdxWriter;
-        private readonly Game _game;
+        private readonly BioWareGame _game;
 
         // MDX data flags (matching PyKotor _MDXDataFlags)
         private static class MDXDataFlags
@@ -697,7 +697,7 @@ namespace Andastra.Parsing.Formats.MDL
             }
         }
 
-        public MDLBinaryWriter(MDLData.MDL mdl, string mdlPath, string mdxPath, Game game = Game.K1)
+        public MDLBinaryWriter(MDLData.MDL mdl, string mdlPath, string mdxPath, BioWareGame game = BioWareGame.K1)
         {
             _mdl = mdl ?? throw new ArgumentNullException(nameof(mdl));
             _writer = RawBinaryWriter.ToFile(mdlPath);
@@ -705,7 +705,7 @@ namespace Andastra.Parsing.Formats.MDL
             _game = game;
         }
 
-        public MDLBinaryWriter(MDLData.MDL mdl, object mdlTarget, object mdxTarget, Game game = Game.K1)
+        public MDLBinaryWriter(MDLData.MDL mdl, object mdlTarget, object mdxTarget, BioWareGame game = BioWareGame.K1)
         {
             _mdl = mdl ?? throw new ArgumentNullException(nameof(mdl));
             _writer = RawBinaryWriter.ToAuto(mdlTarget);

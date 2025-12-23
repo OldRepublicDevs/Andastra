@@ -27,7 +27,7 @@ namespace Andastra.Parsing.Tests.Mods
             new ModifySSF(SSFSound.BATTLE_CRY_1, new NoTokenUsage(5))
         });
 
-            object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedSsf = SSF.FromBytes((byte[])bytes);
 
             patchedSsf.Get(SSFSound.BATTLE_CRY_1).Should().Be(5);
@@ -45,7 +45,7 @@ namespace Andastra.Parsing.Tests.Mods
             new ModifySSF(SSFSound.BATTLE_CRY_2, new TokenUsage2DA(5))
         });
 
-            object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedSsf = SSF.FromBytes((byte[])bytes);
 
             patchedSsf.Get(SSFSound.BATTLE_CRY_2).Should().Be(123);
@@ -63,7 +63,7 @@ namespace Andastra.Parsing.Tests.Mods
             new ModifySSF(SSFSound.BATTLE_CRY_3, new TokenUsageTLK(5))
         });
 
-            object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedSsf = SSF.FromBytes((byte[])bytes);
 
             patchedSsf.Get(SSFSound.BATTLE_CRY_3).Should().Be(321);
@@ -84,7 +84,7 @@ namespace Andastra.Parsing.Tests.Mods
             new ModifySSF(SSFSound.SELECT_2, new NoTokenUsage(50))
         });
 
-            object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedSsf = SSF.FromBytes((byte[])bytes);
 
             patchedSsf.Get(SSFSound.BATTLE_CRY_1).Should().Be(10);
@@ -112,7 +112,7 @@ namespace Andastra.Parsing.Tests.Mods
             new ModifySSF(SSFSound.SELECT_1, new TokenUsageTLK(4))
         });
 
-            object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedSsf = SSF.FromBytes((byte[])bytes);
 
             patchedSsf.Get(SSFSound.BATTLE_CRY_1).Should().Be(100);
@@ -132,7 +132,7 @@ namespace Andastra.Parsing.Tests.Mods
             new ModifySSF(SSFSound.CRITICAL_HIT, new NoTokenUsage(999))
         });
 
-            object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedSsf = SSF.FromBytes((byte[])bytes);
 
             patchedSsf.Get(SSFSound.CRITICAL_HIT).Should().Be(999);
@@ -153,7 +153,7 @@ namespace Andastra.Parsing.Tests.Mods
             new ModifySSF(SSFSound.BATTLE_CRY_2, new NoTokenUsage(200))
         });
 
-            object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedSsf = SSF.FromBytes((byte[])bytes);
 
             patchedSsf.Get(SSFSound.BATTLE_CRY_1).Should().Be(100);
@@ -175,7 +175,7 @@ namespace Andastra.Parsing.Tests.Mods
             }
 
             var config = new ModificationsSSF("", false, modifiers);
-            object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedSsf = SSF.FromBytes((byte[])bytes);
 
             value = 1;

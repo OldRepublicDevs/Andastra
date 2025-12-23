@@ -37,7 +37,7 @@ namespace Andastra.Parsing.Tests.Integration
             // Act
             var modifications = new ModificationsTLK("test.tlk", false);
             modifications.Modifiers.Add(modify);
-            modifications.Apply(tlk, Memory, Logger, Game.K1);
+            modifications.Apply(tlk, Memory, Logger, BioWareGame.K1);
 
             // Assert
             tlk.Count.Should().Be(3);
@@ -63,7 +63,7 @@ namespace Andastra.Parsing.Tests.Integration
             // Act
             var modifications = new ModificationsTLK("test.tlk", false);
             modifications.Modifiers.Add(modify);
-            modifications.Apply(tlk, Memory, Logger, Game.K1);
+            modifications.Apply(tlk, Memory, Logger, BioWareGame.K1);
 
             // Assert
             tlk.Count.Should().Be(3);
@@ -92,7 +92,7 @@ namespace Andastra.Parsing.Tests.Integration
             var modifications = new ModificationsTLK("test.tlk", false);
             modifications.Modifiers.Add(modify1);
             modifications.Modifiers.Add(modify2);
-            modifications.Apply(tlk, Memory, Logger, Game.K1);
+            modifications.Apply(tlk, Memory, Logger, BioWareGame.K1);
 
             // Assert
             tlk.Count.Should().Be(3);
@@ -116,7 +116,7 @@ namespace Andastra.Parsing.Tests.Integration
             // Act
             var modifications = new ModificationsTLK("test.tlk", false);
             modifications.Modifiers.Add(modify);
-            modifications.Apply(tlk, Memory, Logger, Game.K1);
+            modifications.Apply(tlk, Memory, Logger, BioWareGame.K1);
 
             // Assert
             Memory.MemoryStr[0].Should().Be(1);
@@ -148,7 +148,7 @@ namespace Andastra.Parsing.Tests.Integration
             modify.Load();
             var modifications = new ModificationsTLK("test.tlk", false);
             modifications.Modifiers.Add(modify);
-            modifications.Apply(targetTlk, Memory, Logger, Game.K1);
+            modifications.Apply(targetTlk, Memory, Logger, BioWareGame.K1);
 
             // Assert
             targetTlk.String(1).Should().Be("Source 1");
@@ -172,7 +172,7 @@ namespace Andastra.Parsing.Tests.Integration
             // Act
             var modifications = new ModificationsTLK("test.tlk", false);
             modifications.Modifiers.Add(modify);
-            modifications.Apply(tlk, Memory, Logger, Game.K1);
+            modifications.Apply(tlk, Memory, Logger, BioWareGame.K1);
 
             // Assert
             // Replace operation uses TokenId (0), not ModIndex
@@ -205,7 +205,7 @@ namespace Andastra.Parsing.Tests.Integration
             var modifications = new ModificationsTLK("test.tlk", false);
             modifications.Modifiers.Add(replace);
             modifications.Modifiers.Add(append);
-            modifications.Apply(tlk, Memory, Logger, Game.K1);
+            modifications.Apply(tlk, Memory, Logger, BioWareGame.K1);
 
             // Assert
             tlk.Count.Should().Be(4);
@@ -244,7 +244,7 @@ StrRef1=1
             dialogTlk.Add("Old2");
 
             var memory = new PatcherMemory();
-            config.PatchesTLK.Apply(dialogTlk, memory, new PatchLogger(), Game.K1);
+            config.PatchesTLK.Apply(dialogTlk, memory, new PatchLogger(), BioWareGame.K1);
 
             dialogTlk.Count.Should().Be(4);
             dialogTlk.String(2).Should().Be("Append2");
@@ -282,7 +282,7 @@ ReplaceFile0=replace.tlk
             dialogTlk.Add("Old4");
 
             var memory = new PatcherMemory();
-            config.PatchesTLK.Apply(dialogTlk, memory, new PatchLogger(), Game.K1);
+            config.PatchesTLK.Apply(dialogTlk, memory, new PatchLogger(), BioWareGame.K1);
 
             dialogTlk.Count.Should().Be(4);
             dialogTlk.String(1).Should().Be("Replace2");

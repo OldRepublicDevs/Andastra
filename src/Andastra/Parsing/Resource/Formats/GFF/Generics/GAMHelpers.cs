@@ -140,7 +140,7 @@ namespace Andastra.Parsing.Resource.Generics
         /// - Handles both Aurora and  formats
         /// - Engine-specific fields are written based on game type
         /// </remarks>
-        public static GFF DismantleGam(GAM gam, Game game)
+        public static GFF DismantleGam(GAM gam, BioWareGame game)
         {
             // Validate game type - GAM format is only used by Aurora and Infinity Engine, NOT Odyssey
             // Odyssey uses NFO format for save games, not GAM format

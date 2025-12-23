@@ -64,9 +64,9 @@ IndexField=2DAMEMORY5
             var memory = new PatcherMemory();
 
             // Apply all patches
-            config.PatchesTLK.Apply(tlk, memory, new PatchLogger(), Game.K1);
-            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
-            byte[] gffBytes = (byte[])config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            config.PatchesTLK.Apply(tlk, memory, new PatchLogger(), BioWareGame.K1);
+            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), BioWareGame.K1);
+            byte[] gffBytes = (byte[])config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedGff = GFF.FromBytes(gffBytes);
 
             // Verify TLK
@@ -126,7 +126,7 @@ I0=special
             );
 
             var memory = new PatcherMemory();
-            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
+            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), BioWareGame.K1);
 
             twoda.GetHeaders().Should().Contain("Col3");
             twoda.GetHeight().Should().Be(3);
@@ -185,7 +185,7 @@ TypeId=200
             gff.Root.SetList("ItemList", new GFFList());
 
             var memory = new PatcherMemory();
-            object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedGff = GFF.FromBytes((byte[])bytes);
 
             GFFStruct parent = patchedGff.Root.GetStruct("Parent");
@@ -219,7 +219,7 @@ Battlecry 3=StrRef7
             memory.Memory2DA[5] = "200";
             memory.MemoryStr[7] = 300;
 
-            object bytes = config.PatchesSSF.First(p => p.SaveAs == "test.ssf").PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchesSSF.First(p => p.SaveAs == "test.ssf").PatchResource(ssf.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedSsf = SSF.FromBytes((byte[])bytes);
 
             patchedSsf.Get(SSFSound.BATTLE_CRY_1).Should().Be(100);
@@ -276,7 +276,7 @@ value=also_conflict
             );
 
             var memory = new PatcherMemory();
-            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
+            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), BioWareGame.K1);
 
             // Should have: original (id=1 updated), unique_add (id=100), unique_copy (id=200)
             twoda.GetHeight().Should().Be(3);
@@ -325,7 +325,7 @@ col1=high()
             );
 
             var memory = new PatcherMemory();
-            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
+            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), BioWareGame.K1);
 
             twoda.GetHeight().Should().Be(3);
 
@@ -396,11 +396,11 @@ Battlecry 2=2DAMEMORY0
             var memory = new PatcherMemory();
 
             // Apply all patches
-            config.PatchesTLK.Apply(tlk, memory, new PatchLogger(), Game.K1);
-            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
-            byte[] gffBytes = (byte[])config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            config.PatchesTLK.Apply(tlk, memory, new PatchLogger(), BioWareGame.K1);
+            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), BioWareGame.K1);
+            byte[] gffBytes = (byte[])config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedGff = GFF.FromBytes(gffBytes);
-            byte[] ssfBytes = (byte[])config.PatchesSSF.First(p => p.SaveAs == "test.ssf").PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
+            byte[] ssfBytes = (byte[])config.PatchesSSF.First(p => p.SaveAs == "test.ssf").PatchResource(ssf.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedSsf = SSF.FromBytes(ssfBytes);
 
             // Verify all modifications

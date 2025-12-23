@@ -52,7 +52,7 @@ namespace Andastra.Tests.Runtime.Parsing.MDL
         /// <summary>
         /// Create a test node with specified type.
         /// </summary>
-        public static MDLNode CreateTestNode(string name = "test_node", MDLNodeType nodeType = MDLNodeType.Dummy)
+        public static MDLNode CreateTestNode(string name = "test_node", MDLNodeType nodeType = MDLNodeType.DUMMY)
         {
             var node = new MDLNode();
             node.Name = name;

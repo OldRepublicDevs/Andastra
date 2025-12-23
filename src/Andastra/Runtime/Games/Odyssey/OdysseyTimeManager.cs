@@ -182,7 +182,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </remarks>
         public override void Tick()
         {
-            // Call base implementation for common tick logic (simulation time, accumulator, game time)
+            // Call base implementation for common tick logic (simulation time, accumulator, BioWareGame time
             // Base implementation matches original engine behavior:
             // - Advances simulation time by FixedTimestep (60 Hz = 0.01667s)
             // - Decrements accumulator by FixedTimestep

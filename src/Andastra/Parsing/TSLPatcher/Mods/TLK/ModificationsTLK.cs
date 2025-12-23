@@ -57,8 +57,7 @@ namespace Andastra.Parsing.Mods.TLK
         public override object PatchResource(
             byte[] source,
             PatcherMemory memory,
-            PatchLogger logger,
-            Game game)
+            PatchLogger logger, BioWareGame game)
         {
             var reader = new TLKBinaryReader(source);
             Formats.TLK.TLK dialog = reader.Load();
@@ -113,8 +112,7 @@ namespace Andastra.Parsing.Mods.TLK
         public override void Apply(
             object mutableData,
             PatcherMemory memory,
-            PatchLogger logger,
-            Game game)
+            PatchLogger logger, BioWareGame game)
         {
             if (mutableData is Formats.TLK.TLK dialog)
             {

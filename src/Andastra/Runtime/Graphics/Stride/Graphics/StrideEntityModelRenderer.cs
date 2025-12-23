@@ -57,7 +57,7 @@ namespace Andastra.Runtime.Stride.Graphics
         private readonly GraphicsDevice _graphicsDevice;
         private readonly Dictionary<string, MdlToStrideModelConverter.ConversionResult> _modelCache;
         private readonly Dictionary<string, IBasicEffect> _materialCache;
-        private readonly GameDataManager _gameDataManager;
+        private readonly Andastra.Runtime.Engines.Odyssey.Data.GameDataManager _gameDataManager;
         private readonly Installation _installation;
         private readonly Func<string, IBasicEffect> _materialResolver;
 
@@ -72,7 +72,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
 
             _graphicsDevice = device;
-            _gameDataManager = gameDataManager as GameDataManager;
+            _gameDataManager = gameDataManager as Andastra.Runtime.Engines.Odyssey.Data.GameDataManager;
             _installation = installation as Installation;
             _modelCache = new Dictionary<string, MdlToStrideModelConverter.ConversionResult>(StringComparer.OrdinalIgnoreCase);
             _materialCache = new Dictionary<string, IBasicEffect>(StringComparer.OrdinalIgnoreCase);

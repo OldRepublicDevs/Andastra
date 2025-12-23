@@ -952,7 +952,7 @@ namespace Andastra.Parsing.Tests.Formats
             item.Droppable = 0;
             utm.Items.Add(item);
 
-            byte[] data = UTMHelpers.BytesUtm(utm, Game.K2);
+            byte[] data = UTMHelpers.BytesUtm(utm, BioWareGame.K2);
             Directory.CreateDirectory(Path.GetDirectoryName(path));
             File.WriteAllBytes(path, data);
         }

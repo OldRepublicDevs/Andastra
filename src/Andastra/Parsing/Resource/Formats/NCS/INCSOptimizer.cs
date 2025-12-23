@@ -41,7 +41,7 @@ namespace Andastra.Parsing.Formats.NCS
         public abstract void CompileScript(
             string sourcePath,
             string outputPath,
-            Game game,
+            BioWareGame game,
             [CanBeNull] List<NCSOptimizer> optimizers = null,
             bool debug = false);
     }

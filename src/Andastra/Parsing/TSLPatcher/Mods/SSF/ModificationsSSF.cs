@@ -64,8 +64,7 @@ namespace Andastra.Parsing.Mods.SSF
         public override object PatchResource(
             byte[] source,
             PatcherMemory memory,
-            PatchLogger logger,
-            Game game)
+            PatchLogger logger, BioWareGame game)
         {
             var reader = new SSFBinaryReader(source);
             Formats.SSF.SSF ssf = reader.Load();
@@ -78,8 +77,7 @@ namespace Andastra.Parsing.Mods.SSF
         public override void Apply(
             object mutableData,
             PatcherMemory memory,
-            PatchLogger logger,
-            Game game)
+            PatchLogger logger, BioWareGame game)
         {
             if (mutableData is Formats.SSF.SSF ssf)
             {

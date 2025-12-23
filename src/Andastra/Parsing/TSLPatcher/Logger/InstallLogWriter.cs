@@ -71,7 +71,7 @@ namespace Andastra.Parsing.Logger
         /// <param name="modPath">The mod directory path</param>
         /// <param name="gamePath">The game directory path</param>
         /// <param name="game">The detected game (K1 or TSL)</param>
-        public void WriteHeader(string modPath, string gamePath, Game? game)
+        public void WriteHeader(string modPath, string gamePath, BioWareGame? game)
         {
             lock (_lockObject)
             {

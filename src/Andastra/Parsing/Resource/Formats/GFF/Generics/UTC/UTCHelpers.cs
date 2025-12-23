@@ -263,8 +263,8 @@ namespace Andastra.Parsing.Resource.Generics.UTC
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utc.py:797-954
-        // Original: def dismantle_utc(utc: UTC, game: Game = Game.K2, *, use_deprecated: bool = True) -> GFF:
-        public static GFF DismantleUtc(UTC utc, Game game = Game.K2, bool useDeprecated = true)
+        // Original: def dismantle_utc(utc: UTC, game: Game = BioWareGame.K2, *, use_deprecated: bool = True) -> GFF:
+        public static GFF DismantleUtc(UTC utc, BioWareGame game = BioWareGame.K2, bool useDeprecated = true)
         {
             var gff = new GFF(GFFContent.UTC);
             var root = gff.Root;
@@ -464,8 +464,8 @@ namespace Andastra.Parsing.Resource.Generics.UTC
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utc.py:978-993
-        // Original: def bytes_utc(utc: UTC, game: Game = Game.K2, file_format: ResourceType = ResourceType.GFF) -> bytes:
-        public static byte[] BytesUtc(UTC utc, Game game = Game.K2, ResourceType fileFormat = null)
+        // Original: def bytes_utc(utc: UTC, game: Game = BioWareGame.K2, file_format: ResourceType = ResourceType.GFF) -> bytes:
+        public static byte[] BytesUtc(UTC utc, BioWareGame game = BioWareGame.K2, ResourceType fileFormat = null)
         {
             if (fileFormat == null)
             {

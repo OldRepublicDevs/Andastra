@@ -26,7 +26,7 @@ namespace Andastra.Parsing.Tests.Mods
             config.Modifiers.Add(new ModifySSF(SSFSound.BATTLE_CRY_1, new NoTokenUsage(5)));
 
             // Act
-            object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             ssf = SSF.FromBytes((byte[])bytes);
 
             // Assert
@@ -45,7 +45,7 @@ namespace Andastra.Parsing.Tests.Mods
             config.Modifiers.Add(new ModifySSF(SSFSound.BATTLE_CRY_2, new TokenUsage2DA(5)));
 
             // Act
-            object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             ssf = SSF.FromBytes((byte[])bytes);
 
             // Assert
@@ -64,7 +64,7 @@ namespace Andastra.Parsing.Tests.Mods
             config.Modifiers.Add(new ModifySSF(SSFSound.BATTLE_CRY_3, new TokenUsageTLK(5)));
 
             // Act
-            object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             ssf = SSF.FromBytes((byte[])bytes);
 
             // Assert
@@ -86,7 +86,7 @@ namespace Andastra.Parsing.Tests.Mods
             config.Modifiers.Add(new ModifySSF(SSFSound.BATTLE_CRY_3, new TokenUsageTLK(2)));
 
             // Act
-            object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             ssf = SSF.FromBytes((byte[])bytes);
 
             // Assert

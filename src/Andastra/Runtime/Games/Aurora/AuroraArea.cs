@@ -2552,8 +2552,8 @@ namespace Andastra.Runtime.Games.Aurora
         /// Based on nwmain.exe: Day/night cycle system
         /// - Cycle duration: 24 minutes real time = 24 hours game time
         /// - Updates IsNight flag based on cycle position
-        /// - Night time: 18:00 - 06:00 (game time) = 6 hours real time
-        /// - Day time: 06:00 - 18:00 (game time) = 12 hours real time
+        /// - Night time: 18:00 - 06:00 (BioWareGame time) = 6 hours real time
+        /// - Day time: 06:00 - 18:00 (BioWareGame time) = 12 hours real time
         /// - Lighting colors transition based on time of day
         /// </remarks>
         private void UpdateDayNightCycle(float deltaTime)

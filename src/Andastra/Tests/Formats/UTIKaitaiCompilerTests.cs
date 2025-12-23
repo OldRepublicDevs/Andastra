@@ -1001,7 +1001,7 @@ namespace Andastra.Parsing.Tests.Formats
             prop.ChanceAppear = 100;
             uti.Properties.Add(prop);
 
-            byte[] data = UTIHelpers.BytesUti(uti, Game.K2);
+            byte[] data = UTIHelpers.BytesUti(uti, BioWareGame.K2);
             Directory.CreateDirectory(Path.GetDirectoryName(path));
             File.WriteAllBytes(path, data);
         }

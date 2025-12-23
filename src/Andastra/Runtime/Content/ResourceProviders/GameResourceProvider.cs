@@ -43,7 +43,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
         public GameResourceProvider(Installation installation)
         {
             _installation = installation ?? throw new ArgumentNullException("installation");
-            _gameType = installation.Game == Game.K1 ? GameType.K1 : GameType.K2;
+            _gameType = installation.Game == BioWareGame.K1 ? GameType.K1 : GameType.K2;
         }
 
         public GameType GameType { get { return _gameType; } }

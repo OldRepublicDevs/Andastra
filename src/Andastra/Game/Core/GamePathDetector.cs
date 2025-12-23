@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 using Microsoft.Win32;
 using Andastra.Parsing.Common;
 using Andastra.Runtime.Core;
-using GameType = Andastra.Parsing.Common.Game;
+using GameType = Andastra.Parsing.Common.BioWareGame;
 
 namespace Andastra.Runtime.Game.Core
 {
@@ -612,13 +612,13 @@ namespace Andastra.Runtime.Game.Core
         {
             switch (game)
             {
-                case Game.NWN:
+                case BioWareGame.NWN:
                     return "NWN_PATH";
-                case Game.NWN2:
+                case BioWareGame.NWN2:
                     return "NWN2_PATH";
-                case Game.DA:
+                case BioWareGame.DA:
                     return "DA_PATH";
-                case Game.DA2:
+                case BioWareGame.DA2:
                     return "DA2_PATH";
                 default:
                     return null;
@@ -696,27 +696,27 @@ namespace Andastra.Runtime.Game.Core
         {
             switch (game)
             {
-                case Game.NWN:
+                case BioWareGame.NWN:
                     return new[]
                     {
                         @"SOFTWARE\BioWare\NWN\Neverwinter",
                         @"SOFTWARE\BioWare\Neverwinter Nights",
                         @"SOFTWARE\Wizards of the Coast\Neverwinter Nights"
                     };
-                case Game.NWN2:
+                case BioWareGame.NWN2:
                     return new[]
                     {
                         @"SOFTWARE\Obsidian\Neverwinter Nights 2",
                         @"SOFTWARE\Atari\Neverwinter Nights 2"
                     };
-                case Game.DA:
+                case BioWareGame.DA:
                     return new[]
                     {
                         @"SOFTWARE\BioWare\Dragon Age",
                         @"SOFTWARE\BioWare\Dragon Age Origins",
                         @"SOFTWARE\Electronic Arts\Dragon Age Origins"
                     };
-                case Game.DA2:
+                case BioWareGame.DA2:
                     return new[]
                     {
                         @"SOFTWARE\BioWare\Dragon Age 2",
@@ -798,13 +798,13 @@ namespace Andastra.Runtime.Game.Core
         {
             switch (game)
             {
-                case Game.NWN:
+                case BioWareGame.NWN:
                     return "Neverwinter Nights";
-                case Game.NWN2:
+                case BioWareGame.NWN2:
                     return "Neverwinter Nights 2";
-                case Game.DA:
+                case BioWareGame.DA:
                     return "Dragon Age Origins";
-                case Game.DA2:
+                case BioWareGame.DA2:
                     return "Dragon Age II";
                 default:
                     return null;
@@ -837,28 +837,28 @@ namespace Andastra.Runtime.Game.Core
         {
             switch (game)
             {
-                case Game.NWN:
+                case BioWareGame.NWN:
                     return new[]
                     {
                         @"C:\GOG Games\Neverwinter Nights",
                         @"C:\Program Files (x86)\GOG Galaxy\Games\Neverwinter Nights",
                         @"D:\GOG Games\Neverwinter Nights"
                     };
-                case Game.NWN2:
+                case BioWareGame.NWN2:
                     return new[]
                     {
                         @"C:\GOG Games\Neverwinter Nights 2",
                         @"C:\Program Files (x86)\GOG Galaxy\Games\Neverwinter Nights 2",
                         @"D:\GOG Games\Neverwinter Nights 2"
                     };
-                case Game.DA:
+                case BioWareGame.DA:
                     return new[]
                     {
                         @"C:\GOG Games\Dragon Age Origins",
                         @"C:\Program Files (x86)\GOG Galaxy\Games\Dragon Age Origins",
                         @"D:\GOG Games\Dragon Age Origins"
                     };
-                case Game.DA2:
+                case BioWareGame.DA2:
                     return new[]
                     {
                         @"C:\GOG Games\Dragon Age II",
@@ -896,7 +896,7 @@ namespace Andastra.Runtime.Game.Core
         {
             switch (game)
             {
-                case Game.NWN:
+                case BioWareGame.NWN:
                     return new[]
                     {
                         @"C:\Program Files (x86)\Neverwinter Nights",
@@ -904,7 +904,7 @@ namespace Andastra.Runtime.Game.Core
                         @"C:\Games\Neverwinter Nights",
                         @"D:\Games\Neverwinter Nights"
                     };
-                case Game.NWN2:
+                case BioWareGame.NWN2:
                     return new[]
                     {
                         @"C:\Program Files (x86)\Neverwinter Nights 2",
@@ -913,7 +913,7 @@ namespace Andastra.Runtime.Game.Core
                         @"C:\Games\Neverwinter Nights 2",
                         @"D:\Games\Neverwinter Nights 2"
                     };
-                case Game.DA:
+                case BioWareGame.DA:
                     return new[]
                     {
                         @"C:\Program Files (x86)\Dragon Age",
@@ -922,7 +922,7 @@ namespace Andastra.Runtime.Game.Core
                         @"C:\Games\Dragon Age Origins",
                         @"D:\Games\Dragon Age Origins"
                     };
-                case Game.DA2:
+                case BioWareGame.DA2:
                     return new[]
                     {
                         @"C:\Program Files (x86)\Dragon Age 2",
@@ -949,7 +949,7 @@ namespace Andastra.Runtime.Game.Core
 
             switch (game)
             {
-                case Game.NWN:
+                case BioWareGame.NWN:
                     // Validate Neverwinter Nights installation
                     string nwnChitinKey = Path.Combine(path, "chitin.key");
                     string nwnExe = Path.Combine(path, "nwmain.exe");
@@ -962,7 +962,7 @@ namespace Andastra.Runtime.Game.Core
                            File.Exists(nwnGuiErf) &&
                            Directory.Exists(nwnDataDir);
                     
-                case Game.NWN2:
+                case BioWareGame.NWN2:
                     // Validate Neverwinter Nights 2 installation
                     string nwn2Exe = Path.Combine(path, "nwn2main.exe");
                     string nwn2ExeUpper = Path.Combine(path, "NWN2MAIN.EXE");
@@ -979,7 +979,7 @@ namespace Andastra.Runtime.Game.Core
                            File.Exists(nwn2ModelsZip) &&
                            File.Exists(nwn2ScriptsZip);
 
-                case Game.DA:
+                case BioWareGame.DA:
                     // Validate Dragon Age: Origins installation
                     // Based on xoreos/src/engines/dragonage/probes.cpp:69-75
                     // Required files:
@@ -1007,7 +1007,7 @@ namespace Andastra.Runtime.Game.Core
                     // Either launcher OR main executable is acceptable (different distribution methods)
                     return (hasLauncher || hasExe) && hasPackagesDir && hasDataDir && hasGlobalRim;
 
-                case Game.DA2:
+                case BioWareGame.DA2:
                     // Validate Dragon Age II installation
                     // Based on xoreos/src/engines/dragonage2/probes.cpp:72-89
                     // Required files:

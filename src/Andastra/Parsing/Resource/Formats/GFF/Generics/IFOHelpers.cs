@@ -292,8 +292,8 @@ namespace Andastra.Parsing.Resource.Generics
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/ifo.py:183-277
-        // Original: def dismantle_ifo(ifo: IFO, game: Game = Game.K2) -> GFF:
-        public static GFF DismantleIfo(IFO ifo, Game game = Game.K2)
+        // Original: def dismantle_ifo(ifo: IFO, game: Game = BioWareGame.K2) -> GFF:
+        public static GFF DismantleIfo(IFO ifo, BioWareGame game = BioWareGame.K2)
         {
             var gff = new GFF(GFFContent.IFO);
             var root = gff.Root;

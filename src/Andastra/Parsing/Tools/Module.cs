@@ -27,7 +27,7 @@ namespace Andastra.Parsing.Tools
             string filepath,
             string rimFolderpath = null,
             string moduleRoot = null,
-            Game? game = null)
+            BioWareGame? game = null)
         {
             var rOutpath = new CaseAwarePath(filepath);
             if (!FileHelpers.IsModFile(rOutpath.GetResolvedPath()))

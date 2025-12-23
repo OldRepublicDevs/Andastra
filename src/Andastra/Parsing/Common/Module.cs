@@ -131,17 +131,11 @@ namespace Andastra.Parsing.Common
         // - The engine will attempt to load ANY resource type stored in a module container, as long as:
         //   1. The resource type ID is valid
         //   2. The resource data can be parsed by the appropriate loader
-        //
-        // However, following this convention ensures:
-        // - Compatibility with modding tools (TSLPatcher, PyKotor, etc.)
-        // - Proper resource organization matching original game modules
-        // - TwoDA files remain in override/chitin (convention enforced by tooling)
-        //
-        // Subfolder Support: NOT SUPPORTED
+        // Our implementation will enforce that:
         // - ResRef is a flat 16-byte ASCII string (no path separators)
         // - Container format has no subfolder/hierarchy support
         // - Module loading code only handles filename-based discovery
-        public static bool Contains(this KModuleType type, ResourceType restype, Game? game = null)
+        public static bool Contains(this KModuleType type, ResourceType restype, BioWareGame? game = null)
         {
             if (restype.TargetType() != restype)
             {

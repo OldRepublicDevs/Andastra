@@ -932,7 +932,7 @@ namespace Andastra.Parsing.Tools
             // Read pointer at offset 12-16 (after 12-byte header)
             // Matching Python: pointer: int = struct.unpack("I", data[12:16])[0]
             uint pointer = BitConverter.ToUInt32(data, 12);
-            // Matching Python: return Game.K1 if pointer == _GEOM_ROOT_FP0_K1 else Game.K2
+            // Matching Python: return BioWareGame.K1 if pointer == _GEOM_ROOT_FP0_K1 else BioWareGame.K2
             return pointer != _GEOM_ROOT_FP0_K1;
         }
 
@@ -955,7 +955,7 @@ namespace Andastra.Parsing.Tools
             }
 
             // If already K1, return as-is
-            // Matching Python: if detect_version(data) == Game.K1: return data
+            // Matching Python: if detect_version(data) == BioWareGame.K1: return data
             if (!DetectVersion(data))
             {
                 return data;
@@ -1105,7 +1105,7 @@ namespace Andastra.Parsing.Tools
             }
 
             // If already K2, return as-is
-            // Matching Python: if detect_version(data) == Game.K2: return data
+            // Matching Python: if detect_version(data) == BioWareGame.K2: return data
             if (DetectVersion(data))
             {
                 return data;

@@ -273,8 +273,8 @@ namespace Andastra.Parsing.Resource.Generics.DLG
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/gff.py:307-549
-        // Original: def dismantle_dlg(dlg: DLG, game: Game = Game.K2, *, use_deprecated: bool = True) -> GFF:
-        public static GFF DismantleDlg(DLG dlg, Game game = Game.K2)
+        // Original: def dismantle_dlg(dlg: DLG, game: Game = BioWareGame.K2, *, use_deprecated: bool = True) -> GFF:
+        public static GFF DismantleDlg(DLG dlg, BioWareGame game = BioWareGame.K2)
         {
             var gff = new GFF(GFFContent.DLG);
             GFFStruct root = gff.Root;
@@ -391,7 +391,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/gff.py:356-488
         // Original: def dismantle_node(gff_struct: GFFStruct, node: DLGNode, nodes: list[DLGNode], list_name: str, game: Game):
-        private static void DismantleNode(GFFStruct gffStruct, DLGNode node, List<DLGEntry> allEntries, List<DLGReply> allReplies, string listName, Game game)
+        private static void DismantleNode(GFFStruct gffStruct, DLGNode node, List<DLGEntry> allEntries, List<DLGReply> allReplies, string listName, BioWareGame game)
         {
             gffStruct.SetLocString("Text", node.Text);
             gffStruct.SetString("Listener", node.Listener);
@@ -531,7 +531,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/gff.py:334-385
         // Original: def dismantle_link(gff_struct: GFFStruct, link: DLGLink, nodes: list, list_name: str):
         // Note: PyKotor's dismantle_link is nested inside dismantle_dlg and has access to game parameter
-        private static void DismantleLink(GFFStruct gffStruct, DLGLink link, Game game, string listName)
+        private static void DismantleLink(GFFStruct gffStruct, DLGLink link, BioWareGame game, string listName)
         {
             // Basic link fields - written for all games
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/gff.py:363-367
@@ -588,7 +588,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/gff.py:578-603
-        // Original: def write_dlg(dlg: DLG, target: TARGET_TYPES, game: Game = Game.K2, file_format: ResourceType = ResourceType.GFF, *, use_deprecated: bool = True):
+        // Original: def write_dlg(dlg: DLG, target: TARGET_TYPES, game: Game = BioWareGame.K2, file_format: ResourceType = ResourceType.GFF, *, use_deprecated: bool = True):
         /// <summary>
         /// Writes a dialogue to a target file format.
         /// </summary>
@@ -597,7 +597,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG
         /// <param name="game">Game the dialogue is for (default K2)</param>
         /// <param name="fileFormat">Format to write as (default GFF)</param>
         /// <param name="useDeprecated">Use deprecated fields (default True)</param>
-        public static void WriteDlg(DLG dlg, object target, Game game = Game.K2, ResourceType fileFormat = null, bool useDeprecated = true)
+        public static void WriteDlg(DLG dlg, object target, BioWareGame game = BioWareGame.K2, ResourceType fileFormat = null, bool useDeprecated = true)
         {
             if (fileFormat == null)
             {
@@ -608,8 +608,8 @@ namespace Andastra.Parsing.Resource.Generics.DLG
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/gff.py:606-633
-        // Original: def bytes_dlg(dlg: DLG, game: Game = Game.K2, file_format: ResourceType = ResourceType.GFF) -> bytes:
-        public static byte[] BytesDlg(DLG dlg, Game game = Game.K2, ResourceType fileFormat = null)
+        // Original: def bytes_dlg(dlg: DLG, game: Game = BioWareGame.K2, file_format: ResourceType = ResourceType.GFF) -> bytes:
+        public static byte[] BytesDlg(DLG dlg, BioWareGame game = BioWareGame.K2, ResourceType fileFormat = null)
         {
             if (fileFormat == null)
             {

@@ -16,7 +16,7 @@ namespace Andastra.Runtime.Game.Core
     /// - Directory aliases: FUN_00633270 sets up HD0, CD0, OVERRIDE, MODULES, SAVES, MUSIC, MOVIES, etc. (maps to .\ paths)
     /// - Command-line: DAT_008ba024 = GetCommandLineA() stores command-line arguments (set in entry @ 0x0076e2dd)
     /// - Original implementation: Command-line arguments parsed to override INI file settings
-    /// - Settings include: Game path, window size, fullscreen mode, graphics options, audio options
+    /// - Settings include: BioWareGame path window size, fullscreen mode, graphics options, audio options
     /// </remarks>
     public static class GameSettingsExtensions
     {

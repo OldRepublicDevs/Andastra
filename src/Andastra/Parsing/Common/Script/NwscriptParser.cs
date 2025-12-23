@@ -23,7 +23,7 @@ namespace Andastra.Parsing.Common.Script
         /// <param name="game">Game version (K1 or K2) for context</param>
         /// <returns>Tuple containing lists of constants and functions</returns>
         public static (List<ScriptConstant> constants, List<ScriptFunction> functions) ParseNwscriptFile(
-            string nwscriptPath, Game game)
+            string nwscriptPath, BioWareGame game)
         {
             if (!File.Exists(nwscriptPath))
             {

@@ -36,7 +36,7 @@ namespace Andastra.Parsing.Uninstall
         /// 3. Verify the entry count matches (K1: 49,265, TSL: 136,329)
         /// 4. Update this dictionary with the calculated hash
         /// </summary>
-        private static readonly Dictionary<Game, string> VanillaTlkHashes = InitializeVanillaTlkHashes();
+        private static readonly Dictionary<BioWareGame, string> VanillaTlkHashes = InitializeVanillaTlkHashes();
 
         /// <summary>
         /// Initializes the vanilla TLK hashes dictionary.
@@ -51,9 +51,9 @@ namespace Andastra.Parsing.Uninstall
         /// .\scripts\Calculate-VanillaTlkHash.ps1 -TlkPath "C:\Games\KOTOR2\dialog.tlk" -Game "TSL"
         /// </summary>
         /// <returns>Dictionary initialized with vanilla TLK hashes</returns>
-        private static Dictionary<Game, string> InitializeVanillaTlkHashes()
+        private static Dictionary<BioWareGame, string> InitializeVanillaTlkHashes()
         {
-            var hashes = new Dictionary<Game, string>
+            var hashes = new Dictionary<BioWareGame, string>
             {
                 // K1 vanilla dialog.tlk SHA1 hash
                 // This will be automatically calculated from a verified vanilla K1 installation if found
@@ -66,7 +66,7 @@ namespace Andastra.Parsing.Uninstall
                 // - Verifies entry count matches expected vanilla count (49,265)
                 // - Calculates and returns the SHA1 hash
                 // If automatic detection fails, manually calculate using the helper script and set the value here
-                { Game.K1, null },
+                { BioWareGame.K1, null },
                 
                 // TSL vanilla dialog.tlk SHA1 hash
                 // Calculated from verified vanilla TSL installation with exactly 136,329 entries
@@ -82,7 +82,7 @@ namespace Andastra.Parsing.Uninstall
                 // - Verify entry count is exactly 136,329 before calculating hash
                 //
                 // Once calculated, replace null with the hash value (lowercase hex string)
-                { Game.TSL, null }
+                { BioWareGame.TSL, null }
             };
 
             // Attempt to calculate K1 hash from vanilla file if available
@@ -90,7 +90,7 @@ namespace Andastra.Parsing.Uninstall
             string k1Hash = TryCalculateVanillaK1TlkHash();
             if (!string.IsNullOrEmpty(k1Hash))
             {
-                hashes[Game.K1] = k1Hash;
+                hashes[BioWareGame.K1] = k1Hash;
             }
 
             // Attempt to calculate TSL hash from vanilla file if available
@@ -98,7 +98,7 @@ namespace Andastra.Parsing.Uninstall
             string tslHash = TryCalculateVanillaTslTlkHash();
             if (!string.IsNullOrEmpty(tslHash))
             {
-                hashes[Game.TSL] = tslHash;
+                hashes[BioWareGame.TSL] = tslHash;
             }
 
             return hashes;
@@ -149,7 +149,7 @@ namespace Andastra.Parsing.Uninstall
                     }
 
                     // Verify this is a vanilla installation
-                    if (!IsVanillaInstallation(installPath, Game.K1))
+                    if (!IsVanillaInstallation(installPath, BioWareGame.K1))
                     {
                         continue;
                     }
@@ -228,7 +228,7 @@ namespace Andastra.Parsing.Uninstall
                     }
 
                     // Verify this is a vanilla installation
-                    if (!IsVanillaInstallation(installPath, Game.TSL))
+                    if (!IsVanillaInstallation(installPath, BioWareGame.TSL))
                     {
                         continue;
                     }
@@ -559,7 +559,7 @@ namespace Andastra.Parsing.Uninstall
         /// <param name="installPath">Path to the game installation</param>
         /// <param name="game">Game type (K1 or TSL)</param>
         /// <returns>True if the installation appears to be vanilla, False otherwise</returns>
-        private static bool IsVanillaInstallation(string installPath, Game game)
+        private static bool IsVanillaInstallation(string installPath, BioWareGame game)
         {
             string overridePath = Installation.Installation.GetOverridePath(installPath);
             
@@ -605,7 +605,7 @@ namespace Andastra.Parsing.Uninstall
         /// <returns>SHA1 hash as lowercase hex string, or null if verification fails</returns>
         /// <exception cref="FileNotFoundException">If the file does not exist</exception>
         /// <exception cref="ArgumentException">If entry count verification fails and verifyEntryCount is true</exception>
-        public static string CalculateAndVerifyTlkHash(string tlkFilePath, Game game, bool verifyEntryCount = true)
+        public static string CalculateAndVerifyTlkHash(string tlkFilePath, BioWareGame game, bool verifyEntryCount = true)
         {
             if (string.IsNullOrEmpty(tlkFilePath))
             {
@@ -623,7 +623,7 @@ namespace Andastra.Parsing.Uninstall
                 try
                 {
                     TLK tlk = new TLKBinaryReader(File.ReadAllBytes(tlkFilePath)).Load();
-                    int expectedEntryCount = game == Game.K1 ? 49265 : 136329;
+                    int expectedEntryCount = game == BioWareGame.K1 ? 49265 : 136329;
                     
                     if (tlk.Entries.Count != expectedEntryCount)
                     {
@@ -694,7 +694,7 @@ namespace Andastra.Parsing.Uninstall
         /// <param name="gamePath">The path to the game installation directory</param>
         public static void UninstallAllMods(string gamePath)
         {
-            Game game = Installation.Installation.DetermineGame(gamePath)
+            BioWareGame game = Installation.Installation.DetermineGame(gamePath)
                        ?? throw new ArgumentException($"Unable to determine game type at path: {gamePath}");
 
             string overridePath = Installation.Installation.GetOverridePath(gamePath);
@@ -812,7 +812,7 @@ namespace Andastra.Parsing.Uninstall
         /// </summary>
         /// <param name="dialogTlkPath">Path to dialog.tlk file</param>
         /// <param name="game">Game type (K1 or TSL)</param>
-        private static void RestoreVanillaTlk(string dialogTlkPath, Game game)
+        private static void RestoreVanillaTlk(string dialogTlkPath, BioWareGame game)
         {
             if (!File.Exists(dialogTlkPath))
             {
@@ -839,7 +839,7 @@ namespace Andastra.Parsing.Uninstall
                     // No known vanilla hash - use entry count as fallback detection method
                     // This is the old approach but still works for detecting modifications
                     TLK dialogTlk = new TLKBinaryReader(File.ReadAllBytes(dialogTlkPath)).Load();
-                    int expectedEntryCount = game == Game.K1 ? 49265 : 136329;
+                    int expectedEntryCount = game == BioWareGame.K1 ? 49265 : 136329;
                     needsRestoration = dialogTlk.Entries.Count != expectedEntryCount;
                 }
 
@@ -871,7 +871,7 @@ namespace Andastra.Parsing.Uninstall
         /// <param name="dialogTlkPath">Path to dialog.tlk file</param>
         /// <param name="game">Game type (K1 or TSL)</param>
         /// <param name="currentHash">Current SHA1 hash of dialog.tlk (for logging)</param>
-        private static void RestoreTlkToVanilla(string dialogTlkPath, Game game, string currentHash)
+        private static void RestoreTlkToVanilla(string dialogTlkPath, BioWareGame game, string currentHash)
         {
             // Strategy 1: Try to restore from backup file
             string backupPath = dialogTlkPath + ".backup";
@@ -934,14 +934,14 @@ namespace Andastra.Parsing.Uninstall
         /// </summary>
         /// <param name="dialogTlkPath">Path to dialog.tlk file</param>
         /// <param name="game">Game type (K1 or TSL)</param>
-        private static void RestoreTlkByEntryCount(string dialogTlkPath, Game game)
+        private static void RestoreTlkByEntryCount(string dialogTlkPath, BioWareGame game)
         {
             try
             {
                 TLK dialogTlk = new TLKBinaryReader(File.ReadAllBytes(dialogTlkPath)).Load();
 
                 // Trim TLK entries based on game type
-                int maxEntries = game == Game.K1 ? 49265 : 136329;
+                int maxEntries = game == BioWareGame.K1 ? 49265 : 136329;
                 if (dialogTlk.Entries.Count > maxEntries)
                 {
                     dialogTlk.Entries = dialogTlk.Entries.Take(maxEntries).ToList();

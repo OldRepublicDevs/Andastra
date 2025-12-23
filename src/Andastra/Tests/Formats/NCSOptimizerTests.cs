@@ -30,7 +30,7 @@ namespace Andastra.Parsing.Tests.Formats
                 library = new Dictionary<string, byte[]>();
             }
             List<string> lookup = !(libraryLookup is null) ? new List<string> { libraryLookup } : null;
-            return NCSAuto.CompileNss(script, Game.K1, null, null, lookup);
+            return NCSAuto.CompileNss(script, BioWareGame.K1, null, null, lookup);
         }
 
         [Fact(Timeout = 120000)] // 2 minutes timeout

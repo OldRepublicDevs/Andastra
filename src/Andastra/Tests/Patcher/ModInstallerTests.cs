@@ -29,12 +29,12 @@ namespace Andastra.Parsing.Tests.Patcher
             {
             }
 
-            public override object PatchResource(byte[] source, PatcherMemory memory, PatchLogger logger, Game game)
+            public override object PatchResource(byte[] source, PatcherMemory memory, PatchLogger logger, BioWareGame game)
             {
                 return source;
             }
 
-            public override void Apply(object mutableData, PatcherMemory memory, PatchLogger logger, Game game)
+            public override void Apply(object mutableData, PatcherMemory memory, PatchLogger logger, BioWareGame game)
             {
                 // No-op for testing
             }

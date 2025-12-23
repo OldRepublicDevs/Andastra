@@ -2,13 +2,14 @@
 
   <PropertyGroup>
     <TargetFrameworks>net9.0</TargetFrameworks>
-    <Nullable>enable</Nullable>
+    <LangVersion>7.3</LangVersion>
+    <Nullable>disable</Nullable>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Andastra\Parsing\Andastra.Parsing.csproj" />
+    <ProjectReference Include="..\..\src\Andastra\Andastra.csproj" />
   </ItemGroup>
 
 </Project>

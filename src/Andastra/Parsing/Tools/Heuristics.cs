@@ -30,7 +30,7 @@ namespace Andastra.Parsing.Tools
         /// 3. Run checks and score games
         /// 4. Return game with highest score or None if scores are equal or all checks fail
         /// </remarks>
-        public static Game? DetermineGame(string path)
+        public static BioWareGame? DetermineGame(string path)
         {
             if (string.IsNullOrEmpty(path))
             {
@@ -216,55 +216,55 @@ namespace Andastra.Parsing.Tools
             int gaIosScore2 = gaK2IosChecks.Count(x => x);
             int gaAndroidScore = gaAndroidChecks.Count(x => x);
 
-            Game? highestScoringGame = null;
+            BioWareGame? highestScoringGame = null;
             int highestScore = 0;
 
             if (gaScore > highestScore)
             {
                 highestScore = gaScore;
-                highestScoringGame = Game.K1;
+                highestScoringGame = BioWareGame.K1;
             }
 
             if (gaScore2 > highestScore)
             {
                 highestScore = gaScore2;
-                highestScoringGame = Game.K2;
+                highestScoringGame = BioWareGame.K2;
             }
 
             if (gaXboxScore > highestScore)
             {
                 highestScore = gaXboxScore;
-                highestScoringGame = Game.K1_XBOX;
+                highestScoringGame = BioWareGame.K1_XBOX;
             }
 
             if (gaXboxScore2 > highestScore)
             {
                 highestScore = gaXboxScore2;
-                highestScoringGame = Game.K2_XBOX;
+                highestScoringGame = BioWareGame.K2_XBOX;
             }
 
             if (gaIosScore > highestScore)
             {
                 highestScore = gaIosScore;
-                highestScoringGame = Game.K1_IOS;
+                highestScoringGame = BioWareGame.K1_IOS;
             }
 
             if (gaIosScore2 > highestScore)
             {
                 highestScore = gaIosScore2;
-                highestScoringGame = Game.K2_IOS;
+                highestScoringGame = BioWareGame.K2_IOS;
             }
 
             if (gaAndroidScore > highestScore)
             {
                 highestScore = gaAndroidScore;
-                highestScoringGame = Game.K1_ANDROID;
+                highestScoringGame = BioWareGame.K1_ANDROID;
             }
 
             if (gaAndroidScore > highestScore)
             {
                 highestScore = gaAndroidScore;
-                highestScoringGame = Game.K2_ANDROID;
+                highestScoringGame = BioWareGame.K2_ANDROID;
             }
 
             return highestScoringGame;

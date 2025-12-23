@@ -54,7 +54,7 @@ namespace Andastra.Parsing.Installation
         /// <param name="game">Game type (K1 or K2)</param>
         /// <param name="useComplexMode">If true, uses complex mode (checks for _a.rim, _adx.rim). If false, uses simple mode (just .rim). Default: auto-detect based on file existence</param>
         /// <returns>ModuleFileGroup containing discovered files, or null if no files found</returns>
-        public static ModuleFileGroup DiscoverModuleFiles(string modulesPath, string moduleRoot, Game game, bool? useComplexMode = null)
+        public static ModuleFileGroup DiscoverModuleFiles(string modulesPath, string moduleRoot, BioWareGame game, bool? useComplexMode = null)
         {
             if (string.IsNullOrEmpty(modulesPath) || !Directory.Exists(modulesPath))
             {
@@ -262,7 +262,7 @@ namespace Andastra.Parsing.Installation
         /// <param name="moduleRoot">Module root name</param>
         /// <param name="game">Game type</param>
         /// <returns>List of file paths in registration order (first registered = lowest priority, last registered = highest priority)</returns>
-        public static List<string> GetModuleFilePaths(string modulesPath, string moduleRoot, Game game)
+        public static List<string> GetModuleFilePaths(string modulesPath, string moduleRoot, BioWareGame game)
         {
             ModuleFileGroup group = DiscoverModuleFiles(modulesPath, moduleRoot, game);
             if (group == null)

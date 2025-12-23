@@ -47,8 +47,8 @@ namespace Andastra.Parsing.Resource.Generics
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utw.py:131-152
-        // Original: def dismantle_utw(utw: UTW, game: Game = Game.K2, *, use_deprecated: bool = True) -> GFF:
-        public static GFF DismantleUtw(UTW utw, Game game = Game.K2, bool useDeprecated = true)
+        // Original: def dismantle_utw(utw: UTW, game: Game = BioWareGame.K2, *, use_deprecated: bool = True) -> GFF:
+        public static GFF DismantleUtw(UTW utw, BioWareGame game = BioWareGame.K2, bool useDeprecated = true)
         {
             var gff = new GFF(GFFContent.UTW);
             var root = gff.Root;

@@ -312,8 +312,8 @@ namespace Andastra.Parsing.Resource.Generics.ARE
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:538-682
-        // Original: def dismantle_are(are: ARE, game: Game = Game.K2, *, use_deprecated: bool = True) -> GFF:
-        public static GFF DismantleAre(ARE are, Game game = Game.K2, bool useDeprecated = true)
+        // Original: def dismantle_are(are: ARE, game: Game = BioWareGame.K2, *, use_deprecated: bool = True) -> GFF:
+        public static GFF DismantleAre(ARE are, BioWareGame game = BioWareGame.K2, bool useDeprecated = true)
         {
             var gff = new GFF(GFFContent.ARE);
             var root = gff.Root;
@@ -542,8 +542,8 @@ namespace Andastra.Parsing.Resource.Generics.ARE
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:742-757
-        // Original: def bytes_are(are: ARE, game: Game = Game.K2, file_format: ResourceType = ResourceType.GFF) -> bytes:
-        public static byte[] BytesAre(ARE are, Game game = Game.K2, ResourceType fileFormat = null)
+        // Original: def bytes_are(are: ARE, game: Game = BioWareGame.K2, file_format: ResourceType = ResourceType.GFF) -> bytes:
+        public static byte[] BytesAre(ARE are, BioWareGame game = BioWareGame.K2, ResourceType fileFormat = null)
         {
             if (fileFormat == null)
             {

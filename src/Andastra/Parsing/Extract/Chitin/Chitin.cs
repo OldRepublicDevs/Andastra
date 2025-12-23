@@ -28,17 +28,17 @@ namespace Andastra.Parsing.Extract.Chitin
 
         private readonly string _keyPath;
         private readonly string _basePath;
-        private readonly Game? _game;
+        private readonly BioWareGame? _game;
 
         private List<FileResource> _resources;
         private Dictionary<string, List<FileResource>> _resourceDict;
 
         public string KeyPath => _keyPath;
         public string BasePath => _basePath;
-        public Game? Game => _game;
+        public BioWareGame? Game => _game;
         public int Count => _resources.Count;
 
-        public Chitin(string keyPath, [CanBeNull] string basePath = null, Game? game = null)
+        public Chitin(string keyPath, [CanBeNull] string basePath = null, BioWareGame? game = null)
         {
             _keyPath = keyPath ?? throw new ArgumentNullException(nameof(keyPath));
             _basePath = basePath ?? Path.GetDirectoryName(keyPath) ?? throw new ArgumentException("Cannot determine base path", nameof(keyPath));

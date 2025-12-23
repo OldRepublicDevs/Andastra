@@ -75,7 +75,7 @@ namespace Andastra.Parsing.Installation
         /// </summary>
         /// <param name="game">The game type to check.</param>
         /// <returns>List of FileResource objects from patch.erf.</returns>
-        List<FileResource> GetPatchErfResources(Game game);
+        List<FileResource> GetPatchErfResources(BioWareGame game);
     }
 }
 

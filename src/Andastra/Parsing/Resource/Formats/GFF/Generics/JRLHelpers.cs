@@ -66,7 +66,7 @@ namespace Andastra.Parsing.Resource.Generics
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/jrl.py:115-141
-        // Original: def dismantle_jrl(jrl: JRL, game: Game = Game.K2, *, use_deprecated: bool = True) -> GFF:
+        // Original: def dismantle_jrl(jrl: JRL, game: Game = BioWareGame.K2, *, use_deprecated: bool = True) -> GFF:
         public static GFF DismantleJrl(JRL jrl)
         {
             var gff = new GFF(GFFContent.JRL);

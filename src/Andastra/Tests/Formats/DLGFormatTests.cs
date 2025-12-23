@@ -35,7 +35,7 @@ namespace Andastra.Parsing.Tests.Formats
             ValidateIO(dlg);
 
             // Test writing and reading back
-            byte[] data = DLGHelper.BytesDlg(dlg, Game.K1);
+            byte[] data = DLGHelper.BytesDlg(dlg, BioWareGame.K1);
             dlg = DLGHelper.ReadDlg(data);
             ValidateIO(dlg);
         }
@@ -323,7 +323,7 @@ namespace Andastra.Parsing.Tests.Formats
             dlg.OnAbort = ResRef.FromBlank();
             dlg.OnEnd = ResRef.FromBlank();
 
-            byte[] data = DLGHelper.BytesDlg(dlg, Game.K1);
+            byte[] data = DLGHelper.BytesDlg(dlg, BioWareGame.K1);
             DLG loaded = DLGHelper.ReadDlg(data);
 
             loaded.WordCount.Should().Be(0);
@@ -353,7 +353,7 @@ namespace Andastra.Parsing.Tests.Formats
             entry1.Links.Add(new DLGLink(reply2, 1));
             reply1.Links.Add(new DLGLink(entry2, 0));
 
-            byte[] data = DLGHelper.BytesDlg(dlg, Game.K1);
+            byte[] data = DLGHelper.BytesDlg(dlg, BioWareGame.K1);
             DLG loaded = DLGHelper.ReadDlg(data);
 
             loaded.AllEntries().Count.Should().Be(2);
@@ -372,7 +372,7 @@ namespace Andastra.Parsing.Tests.Formats
             dlgK1.RecordNoVo = 0;
             dlgK1.NextNodeId = 0;
 
-            byte[] dataK1 = DLGHelper.BytesDlg(dlgK1, Game.K1);
+            byte[] dataK1 = DLGHelper.BytesDlg(dlgK1, BioWareGame.K1);
             GFF gffK1 = GFF.FromBytes(dataK1);
 
             // K1 format should not have K2-specific root fields
@@ -389,7 +389,7 @@ namespace Andastra.Parsing.Tests.Formats
             dlgK2.RecordNoVo = 1;
             dlgK2.NextNodeId = 42;
 
-            byte[] dataK2 = DLGHelper.BytesDlg(dlgK2, Game.K2);
+            byte[] dataK2 = DLGHelper.BytesDlg(dlgK2, BioWareGame.K2);
             GFF gffK2 = GFF.FromBytes(dataK2);
 
             // K2 format should have K2-specific root fields
@@ -458,7 +458,7 @@ namespace Andastra.Parsing.Tests.Formats
             dlg.Starters.Add(new DLGLink(entry, 0));
 
             // Round-trip test
-            byte[] data = DLGHelper.BytesDlg(dlg, Game.K1);
+            byte[] data = DLGHelper.BytesDlg(dlg, BioWareGame.K1);
             DLG loaded = DLGHelper.ReadDlg(data);
 
             loaded.WordCount.Should().Be(200);
@@ -512,7 +512,7 @@ namespace Andastra.Parsing.Tests.Formats
             dlg.Starters.Add(new DLGLink(entry, 0));
             entry.Links.Add(new DLGLink(reply, 0));
 
-            byte[] data = DLGHelper.BytesDlg(dlg, Game.K1);
+            byte[] data = DLGHelper.BytesDlg(dlg, BioWareGame.K1);
             Directory.CreateDirectory(Path.GetDirectoryName(path));
             File.WriteAllBytes(path, data);
         }

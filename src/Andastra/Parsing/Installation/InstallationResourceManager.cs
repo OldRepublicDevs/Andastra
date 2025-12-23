@@ -20,12 +20,12 @@ namespace Andastra.Parsing.Installation
     public class InstallationResourceManager : IResourceLookup
     {
         private readonly string _installPath;
-        private readonly Game _game;
+        private readonly BioWareGame _game;
         private readonly Dictionary<string, Chitin> _chitinCache = new Dictionary<string, Chitin>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, LazyCapsule> _capsuleCache = new Dictionary<string, LazyCapsule>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, List<FileResource>> _overrideCache = new Dictionary<string, List<FileResource>>(StringComparer.OrdinalIgnoreCase);
 
-        public InstallationResourceManager(string installPath, Game game)
+        public InstallationResourceManager(string installPath, BioWareGame game)
         {
             _installPath = installPath ?? throw new ArgumentNullException(nameof(installPath));
             _game = game;
@@ -532,7 +532,7 @@ namespace Andastra.Parsing.Installation
         /// <summary>
         /// Returns the list of FileResources stored in patch.erf (K1 only).
         /// </summary>
-        public List<FileResource> GetPatchErfResources(Game game)
+        public List<FileResource> GetPatchErfResources(BioWareGame game)
         {
             var results = new List<FileResource>();
             if (!game.IsK1())

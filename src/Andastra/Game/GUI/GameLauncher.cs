@@ -9,7 +9,7 @@ using Andastra.Parsing.Tools;
 using Andastra.Runtime.Core;
 using Andastra.Runtime.Game.Core;
 using Andastra.Runtime.Graphics.Common.Enums;
-using GameType = Andastra.Parsing.Common.Game;
+using GameType = Andastra.Parsing.Common.BioWareGame;
 
 namespace Andastra.Game.GUI
 {
@@ -209,16 +209,16 @@ namespace Andastra.Game.GUI
             _gameComboBox.Items.Clear();
 
             // Odyssey Engine
-            _gameComboBox.Items.Add(new GameItem(Game.K1, "Knights of the Old Republic (KotOR 1)"));
-            _gameComboBox.Items.Add(new GameItem(Game.K2, "Knights of the Old Republic II: The Sith Lords (KotOR 2)"));
+            _gameComboBox.Items.Add(new GameItem(BioWareGame.K1, "Knights of the Old Republic (KotOR 1)"));
+            _gameComboBox.Items.Add(new GameItem(BioWareGame.K2, "Knights of the Old Republic II: The Sith Lords (KotOR 2)"));
 
             // Aurora Engine
-            _gameComboBox.Items.Add(new GameItem(Game.NWN, "Neverwinter Nights"));
-            _gameComboBox.Items.Add(new GameItem(Game.NWN2, "Neverwinter Nights 2"));
+            _gameComboBox.Items.Add(new GameItem(BioWareGame.NWN, "Neverwinter Nights"));
+            _gameComboBox.Items.Add(new GameItem(BioWareGame.NWN2, "Neverwinter Nights 2"));
 
             // Eclipse Engine - Dragon Age
-            _gameComboBox.Items.Add(new GameItem(Game.DA, "Dragon Age: Origins"));
-            _gameComboBox.Items.Add(new GameItem(Game.DA2, "Dragon Age II"));
+            _gameComboBox.Items.Add(new GameItem(BioWareGame.DA, "Dragon Age: Origins"));
+            _gameComboBox.Items.Add(new GameItem(BioWareGame.DA2, "Dragon Age II"));
 
         }
 
@@ -276,12 +276,12 @@ namespace Andastra.Game.GUI
             List<string> paths = new List<string>();
 
             // For K1 and K2, use PathTools
-            if (SelectedGame == Game.K1 || SelectedGame == Game.K2)
+            if (SelectedGame == BioWareGame.K1 || SelectedGame == BioWareGame.K2)
             {
-                KotorGame kotorGame = SelectedGame == Game.K1 ? KotorGame.K1 : KotorGame.K2;
+                KotorGame kotorGame = SelectedGame == BioWareGame.K1 ? KotorGame.K1 : KotorGame.K2;
                 
                 // Use PathTools to find paths
-                Dictionary<Game, List<CaseAwarePath>> foundPaths = PathTools.FindKotorPathsFromDefault();
+                Dictionary<BioWareGame, List<CaseAwarePath>> foundPaths = PathTools.FindKotorPathsFromDefault();
                 if (foundPaths.TryGetValue(SelectedGame, out List<CaseAwarePath> gamePaths))
                 {
                     foreach (var path in gamePaths)
@@ -304,8 +304,8 @@ namespace Andastra.Game.GUI
                     }
                 }
             }
-            else if (SelectedGame == Game.NWN || SelectedGame == Game.NWN2 || 
-                     SelectedGame == Game.DA || SelectedGame == Game.DA2)
+            else if (SelectedGame == BioWareGame.NWN || SelectedGame == BioWareGame.NWN2 || 
+                     SelectedGame == BioWareGame.DA || SelectedGame == BioWareGame.DA2)
             {
                 // Use GamePathDetector to find paths for NWN, DA games
                 List<string> detectorPaths = GamePathDetector.FindGamePathsFromDefault(SelectedGame);
@@ -410,15 +410,15 @@ namespace Andastra.Game.GUI
             // Validate based on game type
             switch (SelectedGame)
             {
-                case Game.K1:
+                case BioWareGame.K1:
                     return File.Exists(Path.Combine(path, "chitin.key")) &&
                            File.Exists(Path.Combine(path, "swkotor.exe"));
 
-                case Game.K2:
+                case BioWareGame.K2:
                     return File.Exists(Path.Combine(path, "chitin.key")) &&
                            File.Exists(Path.Combine(path, "swkotor2.exe"));
 
-                case Game.NWN:
+                case BioWareGame.NWN:
                     // Validate Neverwinter Nights installation
                     // Based on xoreos/src/engines/nwn/nwn.cpp:213-268
                     // Required files:
@@ -446,7 +446,7 @@ namespace Andastra.Game.GUI
                     
                     return hasChitinKey && hasExe && hasGuiErf && hasDataDir;
                     
-                case Game.NWN2:
+                case BioWareGame.NWN2:
                     // Validate Neverwinter Nights 2 installation
                     // Based on xoreos/src/engines/nwn2/nwn2.cpp:214-300
                     // Required files:
@@ -480,7 +480,7 @@ namespace Andastra.Game.GUI
                     return hasNwn2Exe && hasNwn2DataDir && hasNwn2TwoDaZip && 
                            hasNwn2ActorsZip && hasNwn2ModelsZip && hasNwn2ScriptsZip;
 
-                case Game.DA:
+                case BioWareGame.DA:
                     // Validate Dragon Age: Origins installation
                     // Based on xoreos/src/engines/dragonage/probes.cpp:69-75
                     // Required files:
@@ -511,7 +511,7 @@ namespace Andastra.Game.GUI
                     // Either launcher OR main executable is acceptable (different distribution methods)
                     return (hasLauncher || hasExe) && hasPackagesDir && hasDataDir && hasGlobalRim;
                     
-                case Game.DA2:
+                case BioWareGame.DA2:
                     // Validate Dragon Age II installation
                     // Based on xoreos/src/engines/dragonage2/probes.cpp:72-89
                     // Required files:
@@ -552,12 +552,12 @@ namespace Andastra.Game.GUI
         {
             switch (game)
             {
-                case Game.K1: return "Knights of the Old Republic";
-                case Game.K2: return "Knights of the Old Republic II";
-                case Game.NWN: return "Neverwinter Nights";
-                case Game.NWN2: return "Neverwinter Nights 2";
-                case Game.DA: return "Dragon Age: Origins";
-                case Game.DA2: return "Dragon Age II";
+                case BioWareGame.K1: return "Knights of the Old Republic";
+                case BioWareGame.K2: return "Knights of the Old Republic II";
+                case BioWareGame.NWN: return "Neverwinter Nights";
+                case BioWareGame.NWN2: return "Neverwinter Nights 2";
+                case BioWareGame.DA: return "Dragon Age: Origins";
+                case BioWareGame.DA2: return "Dragon Age II";
                 default: return "Game";
             }
         }

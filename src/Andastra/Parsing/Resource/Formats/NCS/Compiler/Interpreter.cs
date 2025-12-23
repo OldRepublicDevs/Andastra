@@ -43,7 +43,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
         public List<StackSnapshot> StackSnapshots { get; }
         public List<ActionSnapshot> ActionSnapshots { get; }
 
-        public Interpreter(NCS ncs, Game game = Game.K1, int? maxInstructions = null)
+        public Interpreter(NCS ncs, BioWareGame game = BioWareGame.K1, int? maxInstructions = null)
         {
             _ncs = ncs ?? throw new ArgumentNullException(nameof(ncs));
             _cursor = ncs.Instructions.Count > 0 ? ncs.Instructions[0] : null;
@@ -972,13 +972,13 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
             _mocks.Remove(functionName);
         }
 
-        private static List<ScriptFunction> GetFunctionsForGame(Game game)
+        private static List<ScriptFunction> GetFunctionsForGame(BioWareGame game)
         {
-            if (game == Game.K1)
+            if (game == BioWareGame.K1)
             {
                 return ScriptDefs.KOTOR_FUNCTIONS;
             }
-            else if (game == Game.K2)
+            else if (game == BioWareGame.K2)
             {
                 return ScriptDefs.TSL_FUNCTIONS;
             }

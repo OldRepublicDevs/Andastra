@@ -41,13 +41,13 @@ $referenceMap = @{
 }
 
 # Find all .csproj files
-$projects = Get-ChildItem -Path $script:RootPath -Filter "*.csproj" -Recurse -File | 
+$projects = Get-ChildItem -Path $script:RootPath -Filter "*.csproj" -Recurse -File |
     Where-Object { $_.FullName -notlike "*\vendor\*" -and $_.FullName -notlike "*\tests\*" }
 
 foreach ($projFile in $projects) {
     $content = Get-Content $projFile.FullName -Raw
     $modified = $false
-    
+
     foreach ($oldRef in $referenceMap.Keys) {
         $newRef = $referenceMap[$oldRef]
         if ($content -match [regex]::Escape($oldRef)) {
@@ -57,7 +57,7 @@ foreach ($projFile in $projects) {
             Write-Host "    $oldRef -> $newRef" -ForegroundColor DarkGray
         }
     }
-    
+
     if ($modified) {
         Set-Content -Path $projFile.FullName -Value $content -Encoding UTF8 -NoNewline
     }

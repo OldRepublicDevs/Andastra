@@ -34,7 +34,7 @@ namespace Andastra.Parsing.Tests.Mods
 
             var writer = new GFFBinaryWriter(gff);
             byte[] gffBytes = writer.Write();
-            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
+            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, BioWareGame.K2);
             GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
             patchedGff.Root.GetUInt8("Field1").Should().Be(2);
@@ -54,7 +54,7 @@ namespace Andastra.Parsing.Tests.Mods
 
             var writer = new GFFBinaryWriter(gff);
             byte[] gffBytes = writer.Write();
-            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
+            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, BioWareGame.K2);
             GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
             patchedGff.Root.GetInt8("Field1").Should().Be(2);
@@ -74,7 +74,7 @@ namespace Andastra.Parsing.Tests.Mods
 
             var writer = new GFFBinaryWriter(gff);
             byte[] gffBytes = writer.Write();
-            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
+            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, BioWareGame.K2);
             GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
             patchedGff.Root.GetUInt16("Field1").Should().Be(2);
@@ -94,7 +94,7 @@ namespace Andastra.Parsing.Tests.Mods
 
             var writer = new GFFBinaryWriter(gff);
             byte[] gffBytes = writer.Write();
-            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
+            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, BioWareGame.K2);
             GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
             patchedGff.Root.GetInt16("Field1").Should().Be(2);
@@ -114,7 +114,7 @@ namespace Andastra.Parsing.Tests.Mods
 
             var writer = new GFFBinaryWriter(gff);
             byte[] gffBytes = writer.Write();
-            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
+            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, BioWareGame.K2);
             GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
             patchedGff.Root.GetUInt32("Field1").Should().Be(2);
@@ -134,7 +134,7 @@ namespace Andastra.Parsing.Tests.Mods
 
             var writer = new GFFBinaryWriter(gff);
             byte[] gffBytes = writer.Write();
-            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
+            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, BioWareGame.K2);
             GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
             patchedGff.Root.GetInt32("Field1").Should().Be(2);
@@ -154,7 +154,7 @@ namespace Andastra.Parsing.Tests.Mods
 
             var writer = new GFFBinaryWriter(gff);
             byte[] gffBytes = writer.Write();
-            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
+            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, BioWareGame.K2);
             GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
             patchedGff.Root.GetUInt64("Field1").Should().Be(2);
@@ -174,7 +174,7 @@ namespace Andastra.Parsing.Tests.Mods
 
             var writer = new GFFBinaryWriter(gff);
             byte[] gffBytes = writer.Write();
-            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
+            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, BioWareGame.K2);
             GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
             patchedGff.Root.GetInt64("Field1").Should().Be(2);
@@ -198,7 +198,7 @@ namespace Andastra.Parsing.Tests.Mods
 
             var writer = new GFFBinaryWriter(gff);
             byte[] gffBytes = writer.Write();
-            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
+            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, BioWareGame.K2);
             GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
             patchedGff.Root.GetSingle("Field1").Should().BeApproximately(2.345f, 0.0001f);
@@ -218,7 +218,7 @@ namespace Andastra.Parsing.Tests.Mods
 
             var writer = new GFFBinaryWriter(gff);
             byte[] gffBytes = writer.Write();
-            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
+            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, BioWareGame.K2);
             GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
             patchedGff.Root.GetDouble("Field1").Should().Be(2.345678);
@@ -242,7 +242,7 @@ namespace Andastra.Parsing.Tests.Mods
 
             var writer = new GFFBinaryWriter(gff);
             byte[] gffBytes = writer.Write();
-            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
+            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, BioWareGame.K2);
             GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
             patchedGff.Root.GetValue("Field1").Should().Be("def");
@@ -264,7 +264,7 @@ namespace Andastra.Parsing.Tests.Mods
 
             var writer = new GFFBinaryWriter(gff);
             byte[] gffBytes = writer.Write();
-            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
+            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, BioWareGame.K2);
             GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
             LocalizedString locString = patchedGff.Root.GetLocString("Field1");
@@ -285,7 +285,7 @@ namespace Andastra.Parsing.Tests.Mods
 
             var writer = new GFFBinaryWriter(gff);
             byte[] gffBytes = writer.Write();
-            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
+            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, BioWareGame.K2);
             GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
             patchedGff.Root.GetVector3("Field1").Should().Be(new Vector3(1, 2, 3));
@@ -305,7 +305,7 @@ namespace Andastra.Parsing.Tests.Mods
 
             var writer = new GFFBinaryWriter(gff);
             byte[] gffBytes = writer.Write();
-            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
+            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, BioWareGame.K2);
             GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
             patchedGff.Root.GetVector4("Field1").Should().Be(new Vector4(1, 2, 3, 4));
@@ -332,7 +332,7 @@ namespace Andastra.Parsing.Tests.Mods
 
             var writer = new GFFBinaryWriter(gff);
             byte[] gffBytes = writer.Write();
-            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
+            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, BioWareGame.K2);
             GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
             GFFList patchedList = patchedGff.Root.GetList("List");
@@ -356,7 +356,7 @@ namespace Andastra.Parsing.Tests.Mods
 
             var writer = new GFFBinaryWriter(gff);
             byte[] gffBytes = writer.Write();
-            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
+            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, BioWareGame.K2);
             GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
             patchedGff.Root.GetValue("String").Should().Be("123");
@@ -379,7 +379,7 @@ namespace Andastra.Parsing.Tests.Mods
 
             var writer = new GFFBinaryWriter(gff);
             byte[] gffBytes = writer.Write();
-            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
+            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, BioWareGame.K2);
             GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
             patchedGff.Root.GetValue("String").Should().Be("123");
@@ -410,7 +410,7 @@ namespace Andastra.Parsing.Tests.Mods
 
             var writer = new GFFBinaryWriter(gff);
             byte[] gffBytes = writer.Write();
-            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
+            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, BioWareGame.K2);
             GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
             patchedGff.Root.GetList("List").Should().NotBeNull();
@@ -442,7 +442,7 @@ namespace Andastra.Parsing.Tests.Mods
 
             var writer = new GFFBinaryWriter(gff);
             byte[] gffBytes = writer.Write();
-            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
+            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, BioWareGame.K2);
             GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
             GFFList patchedList = patchedGff.Root.GetList("List");
@@ -464,7 +464,7 @@ namespace Andastra.Parsing.Tests.Mods
 
             var writer = new GFFBinaryWriter(gff);
             byte[] gffBytes = writer.Write();
-            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
+            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, BioWareGame.K2);
             GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
             patchedGff.Root.GetValue("String").Should().Be("123");
@@ -485,7 +485,7 @@ namespace Andastra.Parsing.Tests.Mods
 
             var writer = new GFFBinaryWriter(gff);
             byte[] gffBytes = writer.Write();
-            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
+            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, BioWareGame.K2);
             GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
             patchedGff.Root.GetValue("String").Should().Be("123");
@@ -517,7 +517,7 @@ namespace Andastra.Parsing.Tests.Mods
 
             var writer = new GFFBinaryWriter(gff);
             byte[] gffBytes = writer.Write();
-            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
+            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, BioWareGame.K2);
             GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
             patchedGff.Root.GetLocString("Field1").StringRef.Should().Be(123);
@@ -544,7 +544,7 @@ namespace Andastra.Parsing.Tests.Mods
 
             var writer = new GFFBinaryWriter(gff);
             byte[] gffBytes = writer.Write();
-            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
+            byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, BioWareGame.K2);
             GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
             GFFList patchedList = patchedGff.Root.GetList("List");
@@ -568,7 +568,7 @@ namespace Andastra.Parsing.Tests.Mods
 
             var writer = new GFFBinaryWriter(gff);
             byte[] gffBytes = writer.Write();
-            config.PatchResource(gffBytes, memory, logger, Game.K2);
+            config.PatchResource(gffBytes, memory, logger, BioWareGame.K2);
 
             memory.Memory2DA[12].Should().Be("1");
         }

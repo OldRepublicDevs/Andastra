@@ -38,7 +38,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
         /// <param name="filename">The filename for the script (without path)</param>
         /// <param name="game">The game being patched (K1 or K2)</param>
         /// <returns>The compiled NCS bytecode, or the NSS source bytes if compilation failed</returns>
-        public byte[] Compile(string nssSource, string filename, Game game)
+        public byte[] Compile(string nssSource, string filename, BioWareGame game)
         {
             if (string.IsNullOrEmpty(nssSource))
             {
@@ -103,7 +103,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
         /// Attempts to compile using external nwnnsscomp.exe.
         /// </summary>
         [CanBeNull]
-        private byte[] CompileWithExternal(string nssPath, string filename, Game game)
+        private byte[] CompileWithExternal(string nssPath, string filename, BioWareGame game)
         {
             if (string.IsNullOrEmpty(_nwnnsscompPath))
             {
