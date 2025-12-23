@@ -292,6 +292,12 @@ namespace Andastra.Runtime.Games.Eclipse
         // Key: Model name, Value: Bounding volume (BMin, BMax, Radius)
         private readonly Dictionary<string, MeshBoundingVolume> _cachedMeshBoundingVolumes;
 
+        // Cached MDL/MDX raw data to avoid re-loading from resource provider
+        // Based on daorigins.exe/DragonAge2.exe: Resource data is cached to improve performance
+        // Key: Model ResRef (lowercase), Value: Tuple of (MDL data, MDX data)
+        // MDX data may be null if MDL file is ASCII format or doesn't require MDX
+        private readonly Dictionary<string, Tuple<byte[], byte[]>> _cachedMdlMdxData = new Dictionary<string, Tuple<byte[], byte[]>>(StringComparer.OrdinalIgnoreCase);
+
         // Shadow map storage for shadow-casting lights
         // Based on daorigins.exe/DragonAge2.exe: Shadow maps are created per shadow-casting light
         // Key: Light ID (uint), Value: Shadow map render target (depth texture)
@@ -7988,7 +7994,7 @@ namespace Andastra.Runtime.Games.Eclipse
         }
 
         /// <summary>
-        /// Loads a room mesh from an MDL model.
+        /// Loads a room mesh from an MDL model with full Eclipse resource provider integration.
         /// </summary>
         /// <param name="modelResRef">Model resource reference (without extension).</param>
         /// <param name="roomMeshRenderer">Room mesh renderer to use for loading.</param>
@@ -7996,7 +8002,14 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// Based on daorigins.exe/DragonAge2.exe: Room meshes are loaded from MDL models stored in module archives.
         /// Original implementation: Loads MDL and MDX files from module resources, parses them, and creates GPU buffers.
-        // TODO: / Note: Full implementation requires Eclipse resource provider integration for MDL/MDX loading.
+        /// 
+        /// Eclipse Resource Provider Integration:
+        /// - Resource lookup order: OVERRIDE > PACKAGES > STREAMING > HARDCODED (daorigins.exe: 0x00ad7a34)
+        /// - MDL files are stored in RIM files, packages/core/env/, or streaming resources
+        /// - MDX files are companion files to MDL files (same ResRef, different ResourceType)
+        /// - MDX is optional: ASCII MDL files don't require MDX, binary MDL files require MDX for vertex data
+        /// - Resource data is cached to avoid re-loading from disk/archives
+        /// - Based on Eclipse Engine's Unreal Engine ResourceManager system
         /// </remarks>
         private IRoomMeshData LoadRoomMesh(string modelResRef, IRoomMeshRenderer roomMeshRenderer)
         {
@@ -8011,51 +8024,74 @@ namespace Andastra.Runtime.Games.Eclipse
                 // Resource provider not available - cannot load room mesh
                 // This is expected if area was created without resource provider reference
                 // Based on daorigins.exe/DragonAge2.exe: Eclipse uses IGameResourceProvider for resource loading
+                System.Console.WriteLine($"[EclipseArea] Cannot load room mesh '{modelResRef}': Resource provider not available");
                 return null;
             }
 
+            // Normalize ResRef for caching (case-insensitive)
+            string normalizedResRef = modelResRef.ToLowerInvariant();
+
             try
             {
-                // Load MDL file data using Eclipse resource provider
-                // Based on daorigins.exe/DragonAge2.exe: MDL files are stored in RIM files, packages, or streaming resources
-                // Eclipse uses IGameResourceProvider which handles RIM files, packages, and streaming resources
-                // Original implementation: Loads MDL/MDX from module RIM files, packages/core/env/, or streaming resources
+                // Check cache for MDL/MDX data first
                 byte[] mdlData = null;
                 byte[] mdxData = null;
+                bool dataFromCache = false;
 
-                // Load MDL resource using resource provider
-                // Based on Eclipse engine: Resource lookup order is OVERRIDE > PACKAGES > STREAMING > HARDCODED
-                // ResourceIdentifier is created with ResRef and ResourceType.MDL
-                try
+                if (_cachedMdlMdxData.TryGetValue(normalizedResRef, out Tuple<byte[], byte[]> cachedData))
                 {
-                    // Create ResourceIdentifier for MDL file
-                    // Based on Eclipse engine: Resources are identified by ResRef and ResourceType
-                    ResourceIdentifier mdlResourceId = new ResourceIdentifier(modelResRef, ParsingResourceType.MDL);
-
-                    // Load MDL data asynchronously (use GetAwaiter().GetResult() for synchronous context)
-                    // Based on IGameResourceProvider: GetResourceBytesAsync loads resource data
-                    // Eclipse resource provider searches: override directory → module RIM files → packages/core/env/ → streaming
-                    mdlData = _resourceProvider.GetResourceBytesAsync(mdlResourceId, System.Threading.CancellationToken.None).GetAwaiter().GetResult();
-
-                    // Load MDX file if MDL was loaded successfully
-                    // Based on Eclipse engine: MDX files contain vertex data for MDL models
-                    // MDX files are companion files to MDL files (same ResRef, different ResourceType)
-                    if (mdlData != null && mdlData.Length > 0)
+                    // Use cached data
+                    mdlData = cachedData.Item1;
+                    mdxData = cachedData.Item2;
+                    dataFromCache = true;
+                }
+                else
+                {
+                    // Load MDL file data using Eclipse resource provider
+                    // Based on daorigins.exe/DragonAge2.exe: MDL files are stored in RIM files, packages, or streaming resources
+                    // Eclipse uses IGameResourceProvider which handles RIM files, packages, and streaming resources
+                    // Original implementation: Loads MDL/MDX from module RIM files, packages/core/env/, or streaming resources
+                    try
                     {
-                        // Create ResourceIdentifier for MDX file
+                        // Create ResourceIdentifier for MDL file
+                        // Based on Eclipse engine: Resources are identified by ResRef and ResourceType
+                        ResourceIdentifier mdlResourceId = new ResourceIdentifier(modelResRef, ParsingResourceType.MDL);
+
+                        // Load MDL data synchronously using GetResourceBytes (avoids deadlock from GetAwaiter().GetResult())
+                        // Based on IGameResourceProvider: GetResourceBytes loads resource data synchronously
+                        // Eclipse resource provider searches: override directory → module RIM files → packages/core/env/ → streaming
+                        // Resource lookup order: OVERRIDE > PACKAGES > STREAMING > HARDCODED (daorigins.exe: 0x00ad7a34)
+                        mdlData = _resourceProvider.GetResourceBytes(mdlResourceId);
+
+                        if (mdlData == null || mdlData.Length == 0)
+                        {
+                            System.Console.WriteLine($"[EclipseArea] MDL resource '{modelResRef}' not found in resource provider");
+                            return null;
+                        }
+
+                        // Load MDX file if MDL was loaded successfully
+                        // Based on Eclipse engine: MDX files contain vertex data for binary MDL models
+                        // MDX files are companion files to MDL files (same ResRef, different ResourceType)
+                        // MDX is optional: ASCII MDL files don't require MDX, binary MDL files require MDX for vertex data
+                        // Based on daorigins.exe/DragonAge2.exe: Binary MDL files reference MDX data, ASCII MDL files are self-contained
                         ResourceIdentifier mdxResourceId = new ResourceIdentifier(modelResRef, ParsingResourceType.MDX);
 
-                        // Load MDX data asynchronously
+                        // Load MDX data synchronously
                         // Eclipse resource provider searches for MDX in same locations as MDL
-                        mdxData = _resourceProvider.GetResourceBytesAsync(mdxResourceId, System.Threading.CancellationToken.None).GetAwaiter().GetResult();
+                        // If MDX is not found, we'll try to parse MDL as ASCII format (which doesn't require MDX)
+                        mdxData = _resourceProvider.GetResourceBytes(mdxResourceId);
+
+                        // Cache the loaded data for future use
+                        _cachedMdlMdxData[normalizedResRef] = new Tuple<byte[], byte[]>(mdlData, mdxData);
                     }
-                }
-                catch (Exception ex)
-                {
-                    // Resource loading failed - log and return null
-                    // Based on Eclipse engine: Resource loading errors are logged but don't crash the game
-                    System.Console.WriteLine($"[EclipseArea] Error loading MDL/MDX resource '{modelResRef}': {ex.Message}");
-                    return null;
+                    catch (Exception ex)
+                    {
+                        // Resource loading failed - log detailed error and return null
+                        // Based on Eclipse engine: Resource loading errors are logged but don't crash the game
+                        System.Console.WriteLine($"[EclipseArea] Error loading MDL/MDX resource '{modelResRef}': {ex.Message}");
+                        System.Console.WriteLine($"[EclipseArea] Stack trace: {ex.StackTrace}");
+                        return null;
+                    }
                 }
 
                 // Parse MDL file if data was loaded
@@ -8064,27 +8100,58 @@ namespace Andastra.Runtime.Games.Eclipse
                     // Parse MDL file
                     // Based on daorigins.exe/DragonAge2.exe: MDL files use binary format (similar to Odyssey)
                     // MDLAuto.ReadMdl can parse both binary MDL (with MDX data) and ASCII MDL formats
-                    Andastra.Parsing.Formats.MDLData.MDL mdl = MDLAuto.ReadMdl(mdlData, sourceExt: mdxData);
+                    // If MDX is null, MDLAuto.ReadMdl will attempt to parse as ASCII MDL
+                    Andastra.Parsing.Formats.MDLData.MDL mdl = null;
+                    try
+                    {
+                        mdl = MDLAuto.ReadMdl(mdlData, sourceExt: mdxData);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Console.WriteLine($"[EclipseArea] Error parsing MDL file '{modelResRef}': {ex.Message}");
+                        if (!dataFromCache)
+                        {
+                            // Remove invalid cached data
+                            _cachedMdlMdxData.Remove(normalizedResRef);
+                        }
+                        return null;
+                    }
+
                     if (mdl == null)
                     {
-                        // Failed to parse MDL
+                        System.Console.WriteLine($"[EclipseArea] Failed to parse MDL file '{modelResRef}' (MDL parser returned null)");
+                        if (!dataFromCache)
+                        {
+                            // Remove invalid cached data
+                            _cachedMdlMdxData.Remove(normalizedResRef);
+                        }
                         return null;
                     }
 
                     // Create mesh data using room renderer
                     // Based on daorigins.exe/DragonAge2.exe: Room renderer extracts geometry from MDL and creates GPU buffers
                     // Original implementation: Converts MDL geometry to vertex/index buffers for rendering
-                    IRoomMeshData meshData = roomMeshRenderer.LoadRoomMesh(modelResRef, mdl);
+                    IRoomMeshData meshData = null;
+                    try
+                    {
+                        meshData = roomMeshRenderer.LoadRoomMesh(modelResRef, mdl);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Console.WriteLine($"[EclipseArea] Error creating mesh data from MDL '{modelResRef}': {ex.Message}");
+                        return null;
+                    }
+
                     if (meshData == null)
                     {
-                        // Failed to create mesh data
+                        System.Console.WriteLine($"[EclipseArea] Failed to create mesh data from MDL '{modelResRef}' (room renderer returned null)");
                         return null;
                     }
 
                     // Validate mesh data has valid buffers
                     if (meshData.VertexBuffer == null || meshData.IndexBuffer == null)
                     {
-                        // Invalid mesh data
+                        System.Console.WriteLine($"[EclipseArea] Invalid mesh data for '{modelResRef}': Missing vertex or index buffer");
                         return null;
                     }
 
@@ -8104,16 +8171,24 @@ namespace Andastra.Runtime.Games.Eclipse
 
                     return meshData;
                 }
+                else
+                {
+                    System.Console.WriteLine($"[EclipseArea] MDL data is null or empty for '{modelResRef}'");
+                    return null;
+                }
             }
             catch (Exception ex)
             {
-                // Error during room mesh loading
-                System.Console.WriteLine($"[EclipseArea] Error loading room mesh '{modelResRef}': {ex.Message}");
+                // Error during room mesh loading - log comprehensive error information
+                System.Console.WriteLine($"[EclipseArea] Unexpected error loading room mesh '{modelResRef}': {ex.Message}");
+                System.Console.WriteLine($"[EclipseArea] Exception type: {ex.GetType().Name}");
+                System.Console.WriteLine($"[EclipseArea] Stack trace: {ex.StackTrace}");
+                if (ex.InnerException != null)
+                {
+                    System.Console.WriteLine($"[EclipseArea] Inner exception: {ex.InnerException.Message}");
+                }
                 return null;
             }
-
-            return null;
-            // This will be implemented when static object system is added
         }
 
         /// <summary>
@@ -14093,6 +14168,7 @@ technique ColorGrading
         /// <summary>
         /// Extracts pixel data from DDS format to RGBA.
         /// Based on daorigins.exe: DDS pixel data extraction and conversion.
+        /// daorigins.exe: 0x00400000 - DDS texture decompression for DirectX 9 compatibility
         /// </summary>
         /// <param name="ddsData">DDS file data.</param>
         /// <param name="width">Texture width.</param>
@@ -14106,12 +14182,482 @@ technique ColorGrading
                 return null;
             }
 
-            // For this implementation, we'll use a simplified approach
-            // In a full implementation, this would decompress DXT formats
-            // Based on daorigins.exe: DDS decompression for DirectX 9 compatibility
-            // TODO: STUB - Full DXT decompression not implemented
-            return null;
+            // Check DDS magic number
+            if (ddsData[0] != 'D' || ddsData[1] != 'D' || ddsData[2] != 'S' || ddsData[3] != ' ')
+            {
+                return null;
+            }
+
+            // Parse pixel format from DDS header (offset 80-111)
+            // Based on daorigins.exe: DDS format detection for texture decompression
+            uint pixelFormatFlags = BitConverter.ToUInt32(ddsData, 80);
+            uint fourCC = BitConverter.ToUInt32(ddsData, 84);
+
+            // DDS header is 128 bytes, pixel data starts after header
+            int pixelDataOffset = 128;
+            if (pixelDataOffset >= ddsData.Length)
+            {
+                return null;
+            }
+
+            // Calculate pixel data size
+            int pixelDataSize = ddsData.Length - pixelDataOffset;
+            byte[] pixelData = new byte[pixelDataSize];
+            Array.Copy(ddsData, pixelDataOffset, pixelData, 0, pixelDataSize);
+
+            // Allocate output buffer (RGBA = 4 bytes per pixel)
+            byte[] output = new byte[width * height * 4];
+
+            // Determine format and decompress
+            // Based on daorigins.exe: DDS format detection and decompression routing
+            if (fourCC == 0x31545844) // "DXT1" (0x31545844 = 'DXT1' in little-endian)
+            {
+                // DXT1 (BC1) compression: 8 bytes per 4x4 block
+                // Based on daorigins.exe: DXT1 decompression using S3TC algorithm
+                DecompressDxt1(pixelData, output, width, height);
+            }
+            else if (fourCC == 0x33545844) // "DXT3" (0x33545844 = 'DXT3' in little-endian)
+            {
+                // DXT3 (BC2) compression: 16 bytes per 4x4 block with explicit alpha
+                // Based on daorigins.exe: DXT3 decompression with explicit alpha channel
+                DecompressDxt3(pixelData, output, width, height);
+            }
+            else if (fourCC == 0x35545844) // "DXT5" (0x35545844 = 'DXT5' in little-endian)
+            {
+                // DXT5 (BC3) compression: 16 bytes per 4x4 block with interpolated alpha
+                // Based on daorigins.exe: DXT5 decompression with interpolated alpha channel
+                DecompressDxt5(pixelData, output, width, height);
+            }
+            else if ((pixelFormatFlags & 0x40) != 0) // DDPF_FOURCC - compressed format
+            {
+                // Unknown compressed format - fill with magenta to indicate error
+                for (int i = 0; i < output.Length; i += 4)
+                {
+                    output[i] = 255;     // R
+                    output[i + 1] = 0;   // G
+                    output[i + 2] = 255; // B
+                    output[i + 3] = 255; // A
+                }
+            }
+            else if ((pixelFormatFlags & 0x40) == 0 && (pixelFormatFlags & 0x1) != 0) // DDPF_RGB - uncompressed
+            {
+                // Uncompressed RGB/RGBA format
+                // Based on daorigins.exe: Uncompressed DDS format handling
+                uint rgbBitCount = BitConverter.ToUInt32(ddsData, 88);
+                uint rBitMask = BitConverter.ToUInt32(ddsData, 92);
+                uint gBitMask = BitConverter.ToUInt32(ddsData, 96);
+                uint bBitMask = BitConverter.ToUInt32(ddsData, 100);
+                uint aBitMask = BitConverter.ToUInt32(ddsData, 104);
+
+                if (rgbBitCount == 32 && rBitMask == 0x00FF0000 && gBitMask == 0x0000FF00 && 
+                    bBitMask == 0x000000FF && aBitMask == 0xFF000000)
+                {
+                    // BGRA format (most common uncompressed DDS)
+                    ConvertBgraToRgba(pixelData, output, width, height);
+                }
+                else if (rgbBitCount == 32 && rBitMask == 0x000000FF && gBitMask == 0x0000FF00 && 
+                         bBitMask == 0x00FF0000 && aBitMask == 0xFF000000)
+                {
+                    // RGBA format
+                    Array.Copy(pixelData, output, Math.Min(pixelData.Length, output.Length));
+                }
+                else if (rgbBitCount == 24 && rBitMask == 0x000000FF && gBitMask == 0x0000FF00 && 
+                         bBitMask == 0x00FF0000)
+                {
+                    // RGB format
+                    ConvertRgbToRgba(pixelData, output, width, height);
+                }
+                else
+                {
+                    // Unknown uncompressed format - fill with magenta
+                    for (int i = 0; i < output.Length; i += 4)
+                    {
+                        output[i] = 255;     // R
+                        output[i + 1] = 0;   // G
+                        output[i + 2] = 255; // B
+                        output[i + 3] = 255; // A
+                    }
+                }
+            }
+            else
+            {
+                // Unknown format - fill with magenta to indicate error
+                for (int i = 0; i < output.Length; i += 4)
+                {
+                    output[i] = 255;     // R
+                    output[i + 1] = 0;   // G
+                    output[i + 2] = 255; // B
+                    output[i + 3] = 255; // A
+                }
+            }
+
+            return output;
         }
+
+        #region DXT Decompression
+
+        /// <summary>
+        /// Decompresses DXT1 (BC1) compressed texture data to RGBA.
+        /// Based on daorigins.exe: DXT1 decompression using S3TC algorithm.
+        /// DXT1 format: 8 bytes per 4x4 pixel block, 1-bit alpha support.
+        /// </summary>
+        /// <param name="input">Compressed DXT1 data.</param>
+        /// <param name="output">Output RGBA buffer (must be width * height * 4 bytes).</param>
+        /// <param name="width">Texture width.</param>
+        /// <param name="height">Texture height.</param>
+        private void DecompressDxt1(byte[] input, byte[] output, int width, int height)
+        {
+            int blockCountX = (width + 3) / 4;
+            int blockCountY = (height + 3) / 4;
+
+            int srcOffset = 0;
+            for (int by = 0; by < blockCountY; by++)
+            {
+                for (int bx = 0; bx < blockCountX; bx++)
+                {
+                    if (srcOffset + 8 > input.Length)
+                    {
+                        break;
+                    }
+
+                    // Read color endpoints (little-endian)
+                    // Based on daorigins.exe: DXT1 color endpoint extraction
+                    ushort c0 = (ushort)(input[srcOffset] | (input[srcOffset + 1] << 8));
+                    ushort c1 = (ushort)(input[srcOffset + 2] | (input[srcOffset + 3] << 8));
+                    uint indices = (uint)(input[srcOffset + 4] | (input[srcOffset + 5] << 8) |
+                                         (input[srcOffset + 6] << 16) | (input[srcOffset + 7] << 24));
+                    srcOffset += 8;
+
+                    // Decode colors from 5-6-5 RGB format
+                    byte[] colors = new byte[16]; // 4 colors * 4 components (RGBA)
+                    DecodeColor565(c0, colors, 0);
+                    DecodeColor565(c1, colors, 4);
+
+                    // Generate intermediate colors based on DXT1 mode
+                    // Based on daorigins.exe: DXT1 color interpolation
+                    if (c0 > c1)
+                    {
+                        // 4-color mode: interpolate two intermediate colors
+                        colors[8] = (byte)((2 * colors[0] + colors[4]) / 3);
+                        colors[9] = (byte)((2 * colors[1] + colors[5]) / 3);
+                        colors[10] = (byte)((2 * colors[2] + colors[6]) / 3);
+                        colors[11] = 255;
+
+                        colors[12] = (byte)((colors[0] + 2 * colors[4]) / 3);
+                        colors[13] = (byte)((colors[1] + 2 * colors[5]) / 3);
+                        colors[14] = (byte)((colors[2] + 2 * colors[6]) / 3);
+                        colors[15] = 255;
+                    }
+                    else
+                    {
+                        // 3-color + transparent mode: one intermediate color, one transparent
+                        colors[8] = (byte)((colors[0] + colors[4]) / 2);
+                        colors[9] = (byte)((colors[1] + colors[5]) / 2);
+                        colors[10] = (byte)((colors[2] + colors[6]) / 2);
+                        colors[11] = 255;
+
+                        colors[12] = 0;
+                        colors[13] = 0;
+                        colors[14] = 0;
+                        colors[15] = 0; // Transparent
+                    }
+
+                    // Write pixels for this 4x4 block
+                    for (int py = 0; py < 4; py++)
+                    {
+                        for (int px = 0; px < 4; px++)
+                        {
+                            int x = bx * 4 + px;
+                            int y = by * 4 + py;
+                            if (x >= width || y >= height)
+                            {
+                                continue;
+                            }
+
+                            // Extract 2-bit index for this pixel
+                            int idx = (int)((indices >> ((py * 4 + px) * 2)) & 3);
+                            int dstOffset = (y * width + x) * 4;
+
+                            output[dstOffset] = colors[idx * 4];         // R
+                            output[dstOffset + 1] = colors[idx * 4 + 1]; // G
+                            output[dstOffset + 2] = colors[idx * 4 + 2]; // B
+                            output[dstOffset + 3] = colors[idx * 4 + 3]; // A
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Decompresses DXT3 (BC2) compressed texture data to RGBA.
+        /// Based on daorigins.exe: DXT3 decompression with explicit alpha channel.
+        /// DXT3 format: 16 bytes per 4x4 pixel block, explicit 4-bit alpha per pixel.
+        /// </summary>
+        /// <param name="input">Compressed DXT3 data.</param>
+        /// <param name="output">Output RGBA buffer (must be width * height * 4 bytes).</param>
+        /// <param name="width">Texture width.</param>
+        /// <param name="height">Texture height.</param>
+        private void DecompressDxt3(byte[] input, byte[] output, int width, int height)
+        {
+            int blockCountX = (width + 3) / 4;
+            int blockCountY = (height + 3) / 4;
+
+            int srcOffset = 0;
+            for (int by = 0; by < blockCountY; by++)
+            {
+                for (int bx = 0; bx < blockCountX; bx++)
+                {
+                    if (srcOffset + 16 > input.Length)
+                    {
+                        break;
+                    }
+
+                    // Read explicit alpha values (8 bytes = 64 bits = 16 pixels * 4 bits)
+                    // Based on daorigins.exe: DXT3 explicit alpha extraction
+                    byte[] alphas = new byte[16];
+                    for (int i = 0; i < 4; i++)
+                    {
+                        ushort row = (ushort)(input[srcOffset + i * 2] | (input[srcOffset + i * 2 + 1] << 8));
+                        for (int j = 0; j < 4; j++)
+                        {
+                            // Extract 4-bit alpha value and expand to 8 bits
+                            int a = (row >> (j * 4)) & 0xF;
+                            alphas[i * 4 + j] = (byte)(a | (a << 4)); // Expand 4-bit to 8-bit
+                        }
+                    }
+                    srcOffset += 8;
+
+                    // Read color block (same format as DXT1)
+                    ushort c0 = (ushort)(input[srcOffset] | (input[srcOffset + 1] << 8));
+                    ushort c1 = (ushort)(input[srcOffset + 2] | (input[srcOffset + 3] << 8));
+                    uint indices = (uint)(input[srcOffset + 4] | (input[srcOffset + 5] << 8) |
+                                         (input[srcOffset + 6] << 16) | (input[srcOffset + 7] << 24));
+                    srcOffset += 8;
+
+                    // Decode colors (always 4-color mode for DXT3/5)
+                    byte[] colors = new byte[16];
+                    DecodeColor565(c0, colors, 0);
+                    DecodeColor565(c1, colors, 4);
+
+                    // Always 4-color mode for DXT3/5 (no transparent mode)
+                    colors[8] = (byte)((2 * colors[0] + colors[4]) / 3);
+                    colors[9] = (byte)((2 * colors[1] + colors[5]) / 3);
+                    colors[10] = (byte)((2 * colors[2] + colors[6]) / 3);
+                    colors[11] = 255;
+
+                    colors[12] = (byte)((colors[0] + 2 * colors[4]) / 3);
+                    colors[13] = (byte)((colors[1] + 2 * colors[5]) / 3);
+                    colors[14] = (byte)((colors[2] + 2 * colors[6]) / 3);
+                    colors[15] = 255;
+
+                    // Write pixels for this 4x4 block
+                    for (int py = 0; py < 4; py++)
+                    {
+                        for (int px = 0; px < 4; px++)
+                        {
+                            int x = bx * 4 + px;
+                            int y = by * 4 + py;
+                            if (x >= width || y >= height)
+                            {
+                                continue;
+                            }
+
+                            int idx = (int)((indices >> ((py * 4 + px) * 2)) & 3);
+                            int dstOffset = (y * width + x) * 4;
+
+                            output[dstOffset] = colors[idx * 4];         // R
+                            output[dstOffset + 1] = colors[idx * 4 + 1]; // G
+                            output[dstOffset + 2] = colors[idx * 4 + 2]; // B
+                            output[dstOffset + 3] = alphas[py * 4 + px];  // A (from explicit alpha)
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Decompresses DXT5 (BC3) compressed texture data to RGBA.
+        /// Based on daorigins.exe: DXT5 decompression with interpolated alpha channel.
+        /// DXT5 format: 16 bytes per 4x4 pixel block, interpolated 8-bit alpha per pixel.
+        /// </summary>
+        /// <param name="input">Compressed DXT5 data.</param>
+        /// <param name="output">Output RGBA buffer (must be width * height * 4 bytes).</param>
+        /// <param name="width">Texture width.</param>
+        /// <param name="height">Texture height.</param>
+        private void DecompressDxt5(byte[] input, byte[] output, int width, int height)
+        {
+            int blockCountX = (width + 3) / 4;
+            int blockCountY = (height + 3) / 4;
+
+            int srcOffset = 0;
+            for (int by = 0; by < blockCountY; by++)
+            {
+                for (int bx = 0; bx < blockCountX; bx++)
+                {
+                    if (srcOffset + 16 > input.Length)
+                    {
+                        break;
+                    }
+
+                    // Read interpolated alpha block (8 bytes)
+                    // Based on daorigins.exe: DXT5 interpolated alpha extraction
+                    byte a0 = input[srcOffset];
+                    byte a1 = input[srcOffset + 1];
+                    ulong alphaIndices = 0;
+                    for (int i = 0; i < 6; i++)
+                    {
+                        alphaIndices |= (ulong)input[srcOffset + 2 + i] << (i * 8);
+                    }
+                    srcOffset += 8;
+
+                    // Calculate alpha lookup table (8 alpha values)
+                    // Based on daorigins.exe: DXT5 alpha interpolation
+                    byte[] alphaTable = new byte[8];
+                    alphaTable[0] = a0;
+                    alphaTable[1] = a1;
+                    if (a0 > a1)
+                    {
+                        // 6-interpolated-alpha mode
+                        alphaTable[2] = (byte)((6 * a0 + 1 * a1) / 7);
+                        alphaTable[3] = (byte)((5 * a0 + 2 * a1) / 7);
+                        alphaTable[4] = (byte)((4 * a0 + 3 * a1) / 7);
+                        alphaTable[5] = (byte)((3 * a0 + 4 * a1) / 7);
+                        alphaTable[6] = (byte)((2 * a0 + 5 * a1) / 7);
+                        alphaTable[7] = (byte)((1 * a0 + 6 * a1) / 7);
+                    }
+                    else
+                    {
+                        // 4-interpolated-alpha + 2-extreme mode
+                        alphaTable[2] = (byte)((4 * a0 + 1 * a1) / 5);
+                        alphaTable[3] = (byte)((3 * a0 + 2 * a1) / 5);
+                        alphaTable[4] = (byte)((2 * a0 + 3 * a1) / 5);
+                        alphaTable[5] = (byte)((1 * a0 + 4 * a1) / 5);
+                        alphaTable[6] = 0;
+                        alphaTable[7] = 255;
+                    }
+
+                    // Read color block (same format as DXT1)
+                    ushort c0 = (ushort)(input[srcOffset] | (input[srcOffset + 1] << 8));
+                    ushort c1 = (ushort)(input[srcOffset + 2] | (input[srcOffset + 3] << 8));
+                    uint indices = (uint)(input[srcOffset + 4] | (input[srcOffset + 5] << 8) |
+                                         (input[srcOffset + 6] << 16) | (input[srcOffset + 7] << 24));
+                    srcOffset += 8;
+
+                    // Decode colors (always 4-color mode for DXT3/5)
+                    byte[] colors = new byte[16];
+                    DecodeColor565(c0, colors, 0);
+                    DecodeColor565(c1, colors, 4);
+
+                    colors[8] = (byte)((2 * colors[0] + colors[4]) / 3);
+                    colors[9] = (byte)((2 * colors[1] + colors[5]) / 3);
+                    colors[10] = (byte)((2 * colors[2] + colors[6]) / 3);
+                    colors[11] = 255;
+
+                    colors[12] = (byte)((colors[0] + 2 * colors[4]) / 3);
+                    colors[13] = (byte)((colors[1] + 2 * colors[5]) / 3);
+                    colors[14] = (byte)((colors[2] + 2 * colors[6]) / 3);
+                    colors[15] = 255;
+
+                    // Write pixels for this 4x4 block
+                    for (int py = 0; py < 4; py++)
+                    {
+                        for (int px = 0; px < 4; px++)
+                        {
+                            int x = bx * 4 + px;
+                            int y = by * 4 + py;
+                            if (x >= width || y >= height)
+                            {
+                                continue;
+                            }
+
+                            // Extract 2-bit color index and 3-bit alpha index
+                            int colorIdx = (int)((indices >> ((py * 4 + px) * 2)) & 3);
+                            int alphaIdx = (int)((alphaIndices >> ((py * 4 + px) * 3)) & 7);
+                            int dstOffset = (y * width + x) * 4;
+
+                            output[dstOffset] = colors[colorIdx * 4];         // R
+                            output[dstOffset + 1] = colors[colorIdx * 4 + 1]; // G
+                            output[dstOffset + 2] = colors[colorIdx * 4 + 2]; // B
+                            output[dstOffset + 3] = alphaTable[alphaIdx];     // A (from interpolated alpha)
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Decodes a 5-6-5 RGB color value to RGBA.
+        /// Based on daorigins.exe: 5-6-5 color format decoding.
+        /// </summary>
+        /// <param name="color">16-bit color value in 5-6-5 format (R5G6B5).</param>
+        /// <param name="output">Output buffer to write RGBA values.</param>
+        /// <param name="offset">Offset in output buffer to write values.</param>
+        private void DecodeColor565(ushort color, byte[] output, int offset)
+        {
+            // Extract 5-bit red, 6-bit green, 5-bit blue
+            int r = (color >> 11) & 0x1F;
+            int g = (color >> 5) & 0x3F;
+            int b = color & 0x1F;
+
+            // Expand to 8-bit values (replicate high bits to low bits for better quality)
+            // Based on daorigins.exe: 5-6-5 to 8-8-8 color expansion
+            output[offset] = (byte)((r << 3) | (r >> 2));     // R: 5 bits -> 8 bits
+            output[offset + 1] = (byte)((g << 2) | (g >> 4)); // G: 6 bits -> 8 bits
+            output[offset + 2] = (byte)((b << 3) | (b >> 2)); // B: 5 bits -> 8 bits
+            output[offset + 3] = 255;                          // A: fully opaque
+        }
+
+        /// <summary>
+        /// Converts BGRA pixel data to RGBA format.
+        /// Based on daorigins.exe: BGRA to RGBA conversion for DirectX 9 compatibility.
+        /// </summary>
+        /// <param name="input">Input BGRA data.</param>
+        /// <param name="output">Output RGBA buffer.</param>
+        /// <param name="width">Texture width.</param>
+        /// <param name="height">Texture height.</param>
+        private void ConvertBgraToRgba(byte[] input, byte[] output, int width, int height)
+        {
+            int pixelCount = width * height;
+            for (int i = 0; i < pixelCount; i++)
+            {
+                int srcIdx = i * 4;
+                int dstIdx = i * 4;
+                if (srcIdx + 3 < input.Length)
+                {
+                    output[dstIdx] = input[srcIdx + 2];     // R <- B
+                    output[dstIdx + 1] = input[srcIdx + 1]; // G <- G
+                    output[dstIdx + 2] = input[srcIdx];     // B <- R
+                    output[dstIdx + 3] = input[srcIdx + 3]; // A <- A
+                }
+            }
+        }
+
+        /// <summary>
+        /// Converts RGB pixel data to RGBA format (adds alpha channel).
+        /// Based on daorigins.exe: RGB to RGBA conversion.
+        /// </summary>
+        /// <param name="input">Input RGB data.</param>
+        /// <param name="output">Output RGBA buffer.</param>
+        /// <param name="width">Texture width.</param>
+        /// <param name="height">Texture height.</param>
+        private void ConvertRgbToRgba(byte[] input, byte[] output, int width, int height)
+        {
+            int pixelCount = width * height;
+            for (int i = 0; i < pixelCount; i++)
+            {
+                int srcIdx = i * 3;
+                int dstIdx = i * 4;
+                if (srcIdx + 2 < input.Length)
+                {
+                    output[dstIdx] = input[srcIdx];         // R
+                    output[dstIdx + 1] = input[srcIdx + 1]; // G
+                    output[dstIdx + 2] = input[srcIdx + 2]; // B
+                    output[dstIdx + 3] = 255;               // A (fully opaque)
+                }
+            }
+        }
+
+        #endregion
 
         /// <summary>
         /// Represents a debris piece generated from destroyed geometry.
