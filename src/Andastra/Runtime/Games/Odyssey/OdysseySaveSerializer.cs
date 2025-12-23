@@ -20,8 +20,10 @@ using Andastra.Runtime.Games.Odyssey.Systems;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
+using Andastra.Runtime.Core.Enums;
 using RuntimeIModule = Andastra.Runtime.Core.Interfaces.IModule;
 using Loading = Andastra.Runtime.Engines.Odyssey.Loading;
+using ObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 
 namespace Andastra.Runtime.Games.Odyssey
 {
@@ -3413,8 +3415,8 @@ namespace Andastra.Runtime.Games.Odyssey
             }
             else if (structData.Exists("Position"))
             {
-                Vector3 pos = structData.GetVector3("Position");
-                state.Position = new System.Numerics.Vector3(pos.X, pos.Y, pos.Z);
+                System.Numerics.Vector3 pos = structData.GetVector3("Position");
+                state.Position = pos;
             }
 
             // Facing
