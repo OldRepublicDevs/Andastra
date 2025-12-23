@@ -644,7 +644,7 @@ shader MotionBlurEffect : ShaderBase
             }
 
             // Get command list for rendering operations
-            var commandList = _graphicsDevice.ImmediateContext;
+            var commandList = _graphicsDevice.ImmediateContext();
             if (commandList == null)
             {
                 return;

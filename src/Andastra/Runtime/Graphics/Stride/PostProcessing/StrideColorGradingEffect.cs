@@ -258,7 +258,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
             try
             {
-                var commandList = _graphicsDevice.ImmediateContext;
+                var commandList = _graphicsDevice.ImmediateContext();
                 if (commandList == null)
                 {
                     return false;
@@ -516,7 +516,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
             try
             {
-                var commandList = _graphicsDevice.ImmediateContext;
+                var commandList = _graphicsDevice.ImmediateContext();
                 if (commandList == null)
                 {
                     Console.WriteLine("[StrideColorGrading] ImmediateContext not available");
@@ -730,7 +730,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 Vector4[] data = new Vector4[size];
 
                 // Get ImmediateContext (StrideGraphics.CommandList) from GraphicsDevice
-                var commandList = _graphicsDevice.ImmediateContext;
+                var commandList = _graphicsDevice.ImmediateContext();
                 if (commandList == null)
                 {
                     Console.WriteLine("[StrideColorGrading] ReadTextureData: ImmediateContext not available");
@@ -836,7 +836,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 }
 
                 // Get ImmediateContext (StrideGraphics.CommandList) from GraphicsDevice
-                var commandList = _graphicsDevice.ImmediateContext;
+                var commandList = _graphicsDevice.ImmediateContext();
                 if (commandList == null)
                 {
                     Console.WriteLine("[StrideColorGrading] WriteTextureData: ImmediateContext not available");

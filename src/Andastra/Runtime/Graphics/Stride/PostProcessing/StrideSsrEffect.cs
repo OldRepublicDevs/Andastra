@@ -353,7 +353,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             // If we have a shader effect, use GPU-based ray marching
             if (_ssrEffect != null && _fullscreenEffect != null)
             {
-                var commandList = _graphicsDevice.ImmediateContext;
+                var commandList = _graphicsDevice.ImmediateContext();
                 if (commandList != null)
                 {
                     ExecuteSsrGpu(input, depth, normal, roughness, lightmap, output, StrideGraphics.CommandList);
@@ -377,7 +377,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// Implements complete GPU rendering matching vendor/reone/glsl/f_pbr_ssr.glsl.
         /// </summary>
         private void ExecuteSsrGpu(StrideGraphics.Texture input, StrideGraphics.Texture depth, StrideGraphics.Texture normal, StrideGraphics.Texture roughness,
-            StrideGraphics.Texture lightmap, StrideGraphics.Texture output, StrideGraphics.CommandList StrideGraphics.CommandList)
+            StrideGraphics.Texture lightmap, StrideGraphics.Texture output, StrideGraphics.CommandList commandList)
         {
             if (_ssrEffect == null || _fullscreenEffect == null || commandList == null)
             {
@@ -741,7 +741,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// Implements proper StrideGraphics.Texture readback using Stride's GetData API.
         /// This is expensive and should only be used as CPU fallback when GPU shaders are not available.
         /// </summary>
-        private Vector4[] ReadTextureData(global::Stride.Graphics.StrideGraphics.Texture texture)
+        private Vector4[] ReadTextureData(StrideGraphics.Texture texture)
         {
             if (StrideGraphics.Texture == null || _graphicsDevice == null)
             {
@@ -756,7 +756,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 var data = new Vector4[size];
 
                 // Get ImmediateContext (StrideGraphics.CommandList) from GraphicsDevice
-                var commandList = _graphicsDevice.ImmediateContext;
+                var commandList = _graphicsDevice.ImmediateContext();
                 if (commandList == null)
                 {
                     Console.WriteLine("[StrideSSR] ReadTextureData: ImmediateContext not available");
@@ -865,7 +865,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// Implements proper StrideGraphics.Texture upload using Stride's SetData API.
         /// This is expensive and should only be used as CPU fallback when GPU shaders are not available.
         /// </summary>
-        private void WriteTextureData(global::Stride.Graphics.StrideGraphics.Texture texture, Vector4[] data, int width, int height)
+        private void WriteTextureData(StrideGraphics.Texture texture, Vector4[] data, int width, int height)
         {
             if (StrideGraphics.Texture == null || data == null || _graphicsDevice == null)
             {
@@ -889,7 +889,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 }
 
                 // Get ImmediateContext (StrideGraphics.CommandList) from GraphicsDevice
-                var commandList = _graphicsDevice.ImmediateContext;
+                var commandList = _graphicsDevice.ImmediateContext();
                 if (commandList == null)
                 {
                     Console.WriteLine("[StrideSSR] WriteTextureData: ImmediateContext not available");
@@ -1034,7 +1034,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
             // Update constant buffer
             // In Stride, constant buffers are updated through Buffer.SetData() or EffectInstance.Parameters
-            var commandList = _graphicsDevice.ImmediateContext;
+            var commandList = _graphicsDevice.ImmediateContext();
             if (commandList != null && _ssrConstants != null)
             {
                 // Convert struct to byte array for SetData
