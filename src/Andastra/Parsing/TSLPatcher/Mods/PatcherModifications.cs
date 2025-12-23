@@ -27,13 +27,13 @@ namespace Andastra.Parsing.Mods
 
     /// <summary>
     /// Abstract base class for TSLPatcher modifications.
-    /// 
+    ///
     /// Args:
     /// ----
     ///     sourcefile (str): The source file for the modifications.
     ///     replace (bool | None, optional): Whether to replace the file. Defaults to None.
     ///     modifiers (list | None, optional): List of modifiers. Defaults to None.
-    /// 
+    ///
     /// Attributes:
     /// ----------
     ///     sourcefile (str): The source file for the modifications.
@@ -48,13 +48,13 @@ namespace Andastra.Parsing.Mods
     ///     skip_if_not_replace (bool): Determines how !ReplaceFile will be handled.
     ///         TSLPatcher's InstallList and CompileList are the only patchlists that handle replace behavior differently.
     ///         in InstallList/CompileList, if this is True and !ReplaceFile is False or File#=file_to_install.ext, the resource will be skipped if the resource already exists.
-    /// 
+    ///
     /// Methods:
     /// -------
     ///     patch_resource(source, memory, logger, game): Patch the resource defined by the 'source' arg. Returns the bytes data of the result.
     ///     apply(mutable_data, memory, logger, game): Apply this patch's modifications to the mutable_data object argument passed.
     ///     pop_tslpatcher_vars(file_section_dict, default_destination): Parse optional TSLPatcher exclamation point variables.
-    /// 
+    ///
     /// Exclamation-point variables:
     /// ---------------------------
     ///     NOTE: All exclamation-point variables that define a path in TSLPatcher must be backslashed instead of forward-slashed. PyKotor will normalize both slashes though.
@@ -197,24 +197,56 @@ namespace Andastra.Parsing.Mods
         }
 
         /// <summary>
+        /// Determines whether the specified object is equal to the current object.
+        /// Two PatcherModifications instances are considered equal if they have the same
+        /// Destination, SaveAs, and ReplaceFile values.
+        /// </summary>
+        /// <param name="obj">The object to compare with the current object.</param>
+        /// <returns>true if the specified object is equal to the current object; otherwise, false.</returns>
+        public override bool Equals(object obj)
+        {
+            if (obj == null || GetType() != obj.GetType())
+            {
+                return false;
+            }
+
+            PatcherModifications other = (PatcherModifications)obj;
+            return string.Equals(Destination, other.Destination, StringComparison.Ordinal) &&
+                   string.Equals(SaveAs, other.SaveAs, StringComparison.Ordinal) &&
+                   ReplaceFile == other.ReplaceFile;
+        }
+
+        /// <summary>
+        /// Returns a hash code for this instance.
+        /// The hash code is computed from Destination, SaveAs, and ReplaceFile.
+        /// This enables proper use of PatcherModifications instances in hash-based collections
+        /// like HashSet and Dictionary.
+        /// </summary>
+        /// <returns>A hash code for the current object.</returns>
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Destination, SaveAs, ReplaceFile);
+        }
+
+        /// <summary>
         /// Convert a value to boolean.
-        /// 
+        ///
         /// The value can be:
         /// - A boolean (True or False)
         /// - A string "1" (which should be converted to True)
         /// - A string "0" (which should be converted to False)
-        /// 
+        ///
         /// This function is redundant, but provided for users that may not understand Python.
         /// </summary>
         protected static bool ConvertToBool(object value)
         {
             // Convert a value to boolean.
-            // 
+            //
             // The value can be:
             // - A boolean (True or False)
             // - A string "1" (which should be converted to True)
             // - A string "0" (which should be converted to False)
-            // 
+            //
             // This function is redundant, but provided for users that may not understand Python.
             return value is bool b && b || (value is string str && str == "1");
         }
