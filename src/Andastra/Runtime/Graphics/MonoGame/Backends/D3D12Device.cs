@@ -5636,9 +5636,153 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
         }
 
+        /// <summary>
+        /// Creates a CBV (Constant Buffer View) descriptor for a constant buffer in a binding set.
+        /// Based on DirectX 12 Constant Buffer Views: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createconstantbufferview
+        /// Creates a shader-visible descriptor in the CBV_SRV_UAV descriptor heap for binding sets.
+        /// Constant buffers in D3D12 must have sizes that are multiples of 256 bytes (D3D12 requirement).
+        /// </summary>
+        /// <param name="buffer">The buffer to create a CBV descriptor for.</param>
+        /// <param name="offset">Offset in bytes from the start of the buffer.</param>
+        /// <param name="range">Range in bytes to view. If 0 or -1, uses all remaining bytes from offset to end of buffer.</param>
+        /// <param name="cpuDescriptorHandle">CPU descriptor handle where the CBV descriptor will be created.</param>
         private void CreateCbvDescriptorForBindingSet(IBuffer buffer, int offset, int range, IntPtr cpuDescriptorHandle)
         {
-            // TODO: Implement CBV descriptor creation for binding set
+            // Validate inputs
+            if (buffer == null)
+            {
+                throw new ArgumentNullException(nameof(buffer));
+            }
+
+            if (cpuDescriptorHandle == IntPtr.Zero)
+            {
+                throw new ArgumentException("CPU descriptor handle must be valid", nameof(cpuDescriptorHandle));
+            }
+
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (_device == IntPtr.Zero)
+            {
+                throw new InvalidOperationException("D3D12 device is not initialized");
+            }
+
+            // Get D3D12 resource from buffer's native handle
+            // buffer.NativeHandle is the ID3D12Resource* pointer
+            IntPtr d3d12Resource = buffer.NativeHandle;
+            if (d3d12Resource == IntPtr.Zero)
+            {
+                throw new ArgumentException("Buffer native handle must be valid", nameof(buffer));
+            }
+
+            // Get buffer description
+            BufferDesc desc = buffer.Desc;
+
+            // Validate offset
+            if (offset < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(offset), "Offset must be non-negative");
+            }
+
+            if (offset >= desc.ByteSize)
+            {
+                throw new ArgumentOutOfRangeException(nameof(offset), "Offset exceeds buffer size");
+            }
+
+            // Calculate size in bytes
+            // If range is 0 or -1, use all remaining bytes from offset to end of buffer
+            int sizeInBytes;
+            if (range <= 0)
+            {
+                // Use all remaining bytes from offset to end of buffer
+                sizeInBytes = desc.ByteSize - offset;
+                if (sizeInBytes <= 0)
+                {
+                    throw new ArgumentException("Invalid range: offset is at or beyond end of buffer");
+                }
+            }
+            else
+            {
+                // Use specified range
+                sizeInBytes = range;
+
+                // Validate range doesn't exceed buffer bounds
+                if (offset + sizeInBytes > desc.ByteSize)
+                {
+                    // Clamp to buffer size
+                    sizeInBytes = desc.ByteSize - offset;
+                    if (sizeInBytes <= 0)
+                    {
+                        throw new ArgumentException("Invalid range: offset + range exceeds buffer size");
+                    }
+                }
+            }
+
+            // Constant buffers in D3D12 must be aligned to 256 bytes (D3D12 constant buffer alignment requirement)
+            // Round up to nearest multiple of 256
+            // Based on DirectX 12 Constant Buffer Requirements: https://docs.microsoft.com/en-us/windows/win32/direct3d12/uploading-resources#buffer-alignment
+            const int constantBufferAlignment = 256;
+            int alignedSize = ((sizeInBytes + constantBufferAlignment - 1) / constantBufferAlignment) * constantBufferAlignment;
+
+            // Ensure aligned size doesn't exceed available buffer space
+            // The aligned size must fit within the buffer from the offset
+            int maxAvailableSize = desc.ByteSize - offset;
+            if (alignedSize > maxAvailableSize)
+            {
+                // Can't round up - use the maximum available size aligned down to 256-byte boundary
+                alignedSize = (maxAvailableSize / constantBufferAlignment) * constantBufferAlignment;
+                
+                // If the available size is less than 256 bytes, we can't create a valid CBV
+                // (D3D12 requires constant buffers to be at least 256 bytes)
+                if (alignedSize < constantBufferAlignment)
+                {
+                    throw new ArgumentException($"Cannot create CBV: available size {maxAvailableSize} bytes at offset {offset} is less than minimum required {constantBufferAlignment} bytes");
+                }
+            }
+
+            // Get GPU virtual address of the buffer resource
+            ulong bufferGpuVa = GetGpuVirtualAddress(d3d12Resource);
+            if (bufferGpuVa == 0UL)
+            {
+                throw new InvalidOperationException("Failed to get GPU virtual address for buffer");
+            }
+
+            // Calculate the GPU virtual address with offset
+            // The BufferLocation in D3D12_CONSTANT_BUFFER_VIEW_DESC is the GPU virtual address of the start of the constant buffer
+            ulong bufferLocation = bufferGpuVa + (ulong)offset;
+
+            // Create D3D12_CONSTANT_BUFFER_VIEW_DESC structure
+            // Based on DirectX 12 Constant Buffer Views: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_constant_buffer_view_desc
+            var cbvDesc = new D3D12_CONSTANT_BUFFER_VIEW_DESC
+            {
+                BufferLocation = bufferLocation, // GPU virtual address (buffer base + offset)
+                SizeInBytes = unchecked((uint)alignedSize) // Size must be multiple of 256 bytes
+            };
+
+            // Allocate memory for the CBV descriptor structure
+            int cbvDescSize = Marshal.SizeOf(typeof(D3D12_CONSTANT_BUFFER_VIEW_DESC));
+            IntPtr cbvDescPtr = Marshal.AllocHGlobal(cbvDescSize);
+            try
+            {
+                Marshal.StructureToPtr(cbvDesc, cbvDescPtr, false);
+
+                // Call ID3D12Device::CreateConstantBufferView
+                // Based on DirectX 12 Constant Buffer Views: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createconstantbufferview
+                // void CreateConstantBufferView(
+                //   const D3D12_CONSTANT_BUFFER_VIEW_DESC *pDesc,
+                //   D3D12_CPU_DESCRIPTOR_HANDLE DestDescriptor
+                // );
+                // Note: Unlike CreateShaderResourceView and CreateUnorderedAccessView, CreateConstantBufferView
+                // does not take a pResource parameter - the resource is identified by the GPU virtual address in pDesc
+                CallCreateConstantBufferView(_device, cbvDescPtr, cpuDescriptorHandle);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(cbvDescPtr);
+            }
         }
 
         private void CreateSrvDescriptorForStructuredBuffer(IBuffer buffer, int offset, int range, IntPtr cpuDescriptorHandle)
@@ -6259,10 +6403,48 @@ namespace Andastra.Runtime.MonoGame.Backends
         }
 
         /// <summary>
+        /// COM interface method delegate for CreateConstantBufferView.
+        /// Based on DirectX 12 Constant Buffer Views: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createconstantbufferview
+        /// </summary>
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void CreateConstantBufferViewDelegate(IntPtr device, IntPtr pDesc, IntPtr DestDescriptor);
+
+        /// <summary>
         /// COM interface method delegate for CreateShaderResourceView.
         /// </summary>
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void CreateShaderResourceViewDelegate(IntPtr device, IntPtr pResource, IntPtr pDesc, IntPtr DestDescriptor);
+
+        /// <summary>
+        /// Calls ID3D12Device::CreateConstantBufferView through COM vtable.
+        /// VTable index 33 for ID3D12Device (before CreateRenderTargetView at index 34).
+        /// Based on DirectX 12 Constant Buffer Views: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createconstantbufferview
+        /// Note: Unlike CreateShaderResourceView and CreateUnorderedAccessView, CreateConstantBufferView does not take a pResource parameter.
+        /// The resource is identified by the GPU virtual address in the D3D12_CONSTANT_BUFFER_VIEW_DESC structure.
+        /// </summary>
+        private unsafe void CallCreateConstantBufferView(IntPtr device, IntPtr pDesc, IntPtr DestDescriptor)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (device == IntPtr.Zero || pDesc == IntPtr.Zero || DestDescriptor == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)device;
+            // CreateConstantBufferView is at index 33 in ID3D12Device vtable (before CreateRenderTargetView at 34)
+            IntPtr methodPtr = vtable[33];
+
+            // Create delegate from function pointer
+            CreateConstantBufferViewDelegate createCbv = (CreateConstantBufferViewDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CreateConstantBufferViewDelegate));
+
+            createCbv(device, pDesc, DestDescriptor);
+        }
 
         /// <summary>
         /// Calls ID3D12Device::CreateShaderResourceView through COM vtable.
