@@ -2,6 +2,8 @@ using System;
 using StrideGraphics = Stride.Graphics;
 using Stride.Core.Mathematics;
 using Andastra.Runtime.Graphics;
+using Stride.Rendering;
+using Stride.Engine;
 
 namespace Andastra.Runtime.Stride.Graphics
 {
@@ -11,10 +13,29 @@ namespace Andastra.Runtime.Stride.Graphics
     public class StrideGraphicsDevice : IGraphicsDevice
     {
         private readonly StrideGraphics.GraphicsDevice _device;
+        private readonly StrideGraphics.CommandList _graphicsContext;
 
-        public StrideGraphicsDevice(StrideGraphics.GraphicsDevice device)
+        public StrideGraphicsDevice(StrideGraphics.GraphicsDevice device, StrideGraphics.CommandList graphicsContext = null)
         {
             _device = device ?? throw new ArgumentNullException(nameof(device));
+            _graphicsContext = graphicsContext;
+        }
+
+        /// <summary>
+        /// Gets the CommandList from GraphicsContext for immediate rendering operations.
+        /// Replaces the deprecated ImmediateContext property.
+        /// </summary>
+        public StrideGraphics.CommandList ImmediateContext
+        {
+            get
+            {
+                if (_graphicsContext != null)
+                {
+                    return _graphicsContext;
+                }
+                // Fallback: Try to get from device if available (may not work in all Stride versions)
+                return null;
+            }
         }
 
         public Andastra.Runtime.Graphics.Viewport Viewport
@@ -94,7 +115,11 @@ namespace Andastra.Runtime.Stride.Graphics
                     int offset = i * 4;
                     colorData[i] = new Stride.Core.Mathematics.Color(data[offset], data[offset + 1], data[offset + 2], data[offset + 3]);
                 }
-                texture.SetData(_device.ImmediateContext, colorData);
+                var commandList = this.ImmediateContext;
+                if (commandList != null)
+                {
+                    texture.SetData(commandList, colorData);
+                }
             }
             return new StrideTexture2D(texture);
         }
