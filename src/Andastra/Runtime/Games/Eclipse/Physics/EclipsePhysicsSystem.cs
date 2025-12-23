@@ -59,16 +59,67 @@ namespace Andastra.Runtime.Games.Eclipse
         private bool _disposed = false;
 
         /// <summary>
+        /// PhysX scene instance for physics simulation.
+        /// Based on daorigins.exe/DragonAge2.exe: PhysX scene creation and management.
+        /// Original implementation: PhysX scene is created during physics system initialization.
+        /// </summary>
+        private PhysXScene _physXScene;
+
+        /// <summary>
         /// Creates a new Eclipse physics system.
         /// </summary>
         /// <remarks>
-        /// Initializes the physics world with default settings.
+        /// Initializes the physics world with default settings and creates a PhysX scene.
         /// Based on physics world initialization in daorigins.exe, DragonAge2.exe.
+        /// 
+        /// PhysX Scene Creation Process (daorigins.exe/DragonAge2.exe):
+        /// 1. Create PhysX scene descriptor with default settings
+        /// 2. Set gravity vector (default: -9.8 m/s² in Y direction)
+        /// 3. Configure scene flags (enable collision detection, constraint solving, etc.)
+        /// 4. Create PhysX scene instance from descriptor
+        /// 5. Initialize scene with default simulation parameters
+        /// 
+        /// Original implementation: PhysX scene is created via PxPhysics::createScene() with scene descriptor.
+        /// Scene descriptor contains: gravity, flags, simulation parameters, broad phase type, etc.
         /// </remarks>
         public EclipsePhysicsSystem()
         {
-            // Physics world is initialized with default settings
-            // TODO:  In a full implementation, this would create a PhysX scene
+            // Create PhysX scene descriptor with default settings
+            // Based on daorigins.exe/DragonAge2.exe: PhysX scene descriptor creation
+            // Original implementation: PxSceneDesc sceneDesc; sceneDesc.gravity = PxVec3(0, -9.8f, 0);
+            PhysXSceneDescriptor sceneDescriptor = new PhysXSceneDescriptor
+            {
+                Gravity = _gravity,
+                // Enable all standard PhysX scene features
+                // Based on daorigins.exe/DragonAge2.exe: Standard PhysX scene flags
+                Flags = PhysXSceneFlags.EnableActiveActors | 
+                        PhysXSceneFlags.EnableCCD | 
+                        PhysXSceneFlags.EnableStabilization,
+                // Broad phase type: Multi box pruning (standard for games)
+                // Based on daorigins.exe/DragonAge2.exe: Uses multi box pruning for broad phase collision detection
+                BroadPhaseType = PhysXBroadPhaseType.MultiBoxPruning,
+                // Default simulation parameters
+                // Based on daorigins.exe/DragonAge2.exe: Standard PhysX simulation parameters
+                DefaultTimeStep = 1.0f / 60.0f, // 60 Hz default
+                MaxSubSteps = 4, // Maximum sub-steps for stability
+                MaxDepenetrationWithUnitMass = 0.1f, // Maximum depenetration per step
+                // Friction type: Patch friction (standard PhysX friction model)
+                FrictionType = PhysXFrictionType.Patch,
+                // Solver type: PGS (Projected Gauss-Seidel) - standard PhysX solver
+                SolverType = PhysXSolverType.PGS,
+                // Constraint solver iterations (standard PhysX uses 10-20 iterations)
+                SolverIterations = 10,
+                SolverVelocityIterations = 1
+            };
+
+            // Create PhysX scene from descriptor
+            // Based on daorigins.exe/DragonAge2.exe: PhysX scene creation via PxPhysics::createScene()
+            // Original implementation: PxScene* scene = physics->createScene(sceneDesc);
+            _physXScene = new PhysXScene(sceneDescriptor);
+
+            // Initialize scene with default settings
+            // Based on daorigins.exe/DragonAge2.exe: Scene initialization after creation
+            _physXScene.Initialize();
         }
 
         /// <summary>
@@ -84,7 +135,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// </remarks>
         public void StepSimulation(float deltaTime)
         {
-            if (_disposed)
+            if (_disposed || _physXScene == null)
             {
                 return;
             }
@@ -99,6 +150,11 @@ namespace Andastra.Runtime.Games.Eclipse
             // 2. Collision response (impulse application)
             // 3. Constraint solving
             // 4. Integration (position/rotation updates)
+            
+            // Step PhysX scene simulation
+            // Based on daorigins.exe/DragonAge2.exe: PhysX scene simulation step
+            // Original implementation: scene->simulate(deltaTime); scene->fetchResults(true);
+            _physXScene.Simulate(clampedDeltaTime);
 
             // Phase 1: Apply forces and integrate velocities (predictive step)
             // Based on daorigins.exe: 0x008e55f0 - Velocity integration before collision detection
@@ -532,6 +588,13 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Physics world cleanup
         /// - DragonAge2.exe: Enhanced resource cleanup
+        /// 
+        /// Cleanup process:
+        /// 1. Remove all rigid bodies from scene
+        /// 2. Remove all constraints from scene
+        /// 3. Clear static collision shapes
+        /// 4. Release PhysX scene (via scene->release())
+        /// 5. Mark system as disposed
         /// </remarks>
         public void Dispose()
         {
@@ -540,9 +603,24 @@ namespace Andastra.Runtime.Games.Eclipse
                 return;
             }
 
+            // Clear all rigid bodies
             _rigidBodies.Clear();
+
+            // Clear all constraints
             _entityConstraints.Clear();
+
+            // Clear static collision shapes
             _staticCollisionShapes.Clear();
+
+            // Release PhysX scene
+            // Based on daorigins.exe/DragonAge2.exe: PhysX scene is released during cleanup
+            // Original implementation: scene->release(); (PhysX reference counting)
+            if (_physXScene != null)
+            {
+                _physXScene.Dispose();
+                _physXScene = null;
+            }
+
             _disposed = true;
         }
 
