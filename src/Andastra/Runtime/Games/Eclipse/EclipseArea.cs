@@ -4825,11 +4825,33 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Pre-render: Update lighting system
             // Eclipse-specific: Lighting system prepares shadow maps and light culling
+            // Based on daorigins.exe/DragonAge2.exe: Pre-render lighting preparation updates shadow maps and prepares light lists
+            // Original implementation: Updates shadow map matrices for directional lights and performs light culling/clustering
             if (_lightingSystem != null)
             {
-                // Update lighting system (prepares shadow maps, culls lights, etc.)
-                // This is called before rendering to prepare lighting data
-                // TODO:  In a full implementation, this would update shadow maps, prepare light lists, etc.
+                // Cast to concrete type to access UpdateClustering and UpdateShadowMaps methods
+                // EclipseLightingSystem has public methods for pre-render preparation
+                var eclipseLightingSystem = _lightingSystem as Lighting.EclipseLightingSystem;
+                if (eclipseLightingSystem != null)
+                {
+                    // Update shadow maps for directional lights (sun/moon)
+                    // Based on daorigins.exe/DragonAge2.exe: Shadow maps are updated before rendering to ensure shadow matrices are current
+                    // Updates shadow map view/projection matrices for lights that cast shadows
+                    // Shadow maps are rendered from the light's perspective using orthographic projection
+                    eclipseLightingSystem.UpdateShadowMaps();
+
+                    // Prepare light lists by updating clustering/tiling
+                    // Based on daorigins.exe/DragonAge2.exe: Light clustering assigns lights to spatial clusters for efficient culling
+                    // UpdateClustering uses current view/projection matrices to determine which lights affect which screen-space clusters
+                    // This optimizes rendering by allowing per-cluster light culling during geometry rendering
+                    eclipseLightingSystem.UpdateClustering(viewMatrix, projectionMatrix);
+
+                    // Submit light data to GPU buffers
+                    // Based on daorigins.exe/DragonAge2.exe: Light data is uploaded to GPU buffers for efficient shader access
+                    // Updates GPU buffers with current light properties and cluster assignments
+                    // This ensures shaders have up-to-date light data for rendering
+                    eclipseLightingSystem.SubmitLightData();
+                }
             }
 
             // Set up rendering state for Eclipse's advanced rendering
@@ -13540,14 +13562,14 @@ technique ColorGrading
         }
     }
 
-        /// <summary>
-        /// Loads a texture from TPC format data.
-        /// Based on daorigins.exe: TPC texture loading and conversion to graphics API format.
-        /// </summary>
-        /// <param name="tpcData">TPC file data as byte array.</param>
-        /// <param name="textureName">Texture name for error reporting.</param>
-        /// <returns>ITexture2D instance or null on failure.</returns>
-        private ITexture2D LoadTextureFromTPCData(byte[] tpcData, string textureName)
+    /// <summary>
+    /// Loads a texture from TPC format data.
+    /// Based on daorigins.exe: TPC texture loading and conversion to graphics API format.
+    /// </summary>
+    /// <param name="tpcData">TPC file data as byte array.</param>
+    /// <param name="textureName">Texture name for error reporting.</param>
+    /// <returns>ITexture2D instance or null on failure.</returns>
+    private ITexture2D LoadTextureFromTPCData(byte[] tpcData, string textureName)
     {
         if (_renderContext?.GraphicsDevice == null)
         {
@@ -13594,7 +13616,7 @@ technique ColorGrading
             System.Console.WriteLine($"[EclipseArea] LoadTextureFromTPCData: Exception loading TPC texture '{textureName}': {ex.Message}");
             return null;
         }
-    }
+        }
 
         /// <summary>
         /// Loads a texture from DDS format data.
@@ -13640,7 +13662,7 @@ technique ColorGrading
             System.Console.WriteLine($"[EclipseArea] LoadTextureFromDDSData: Exception loading DDS texture '{textureName}': {ex.Message}");
             return null;
         }
-    }
+        }
 
         /// <summary>
         /// Converts TPC texture data to RGBA format for MonoGame.
@@ -13693,18 +13715,18 @@ technique ColorGrading
                 System.Console.WriteLine($"[EclipseArea] ConvertTPCToRGBA: Unsupported TPC format {format}");
                 return null;
         }
-    }
+        }
 
-    /// <summary>
-    /// Attempts to parse DDS header to extract texture information.
-    /// Based on daorigins.exe: DDS header parsing for texture dimensions and format.
-    /// </summary>
-    /// <param name="ddsData">DDS file data.</param>
-    /// <param name="width">Output texture width.</param>
-    /// <param name="height">Output texture height.</param>
-    /// <param name="hasAlpha">Output whether texture has alpha channel.</param>
-    /// <returns>True if header parsed successfully, false otherwise.</returns>
-    private bool TryParseDDSHeader(byte[] ddsData, out int width, out int height, out bool hasAlpha)
+        /// <summary>
+        /// Attempts to parse DDS header to extract texture information.
+        /// Based on daorigins.exe: DDS header parsing for texture dimensions and format.
+        /// </summary>
+        /// <param name="ddsData">DDS file data.</param>
+        /// <param name="width">Output texture width.</param>
+        /// <param name="height">Output texture height.</param>
+        /// <param name="hasAlpha">Output whether texture has alpha channel.</param>
+        /// <returns>True if header parsed successfully, false otherwise.</returns>
+        private bool TryParseDDSHeader(byte[] ddsData, out int width, out int height, out bool hasAlpha)
     {
         width = 0;
         height = 0;
@@ -13748,15 +13770,15 @@ technique ColorGrading
         return width > 0 && height > 0;
     }
 
-    /// <summary>
-    /// Extracts pixel data from DDS format to RGBA.
-    /// Based on daorigins.exe: DDS pixel data extraction and conversion.
-    /// </summary>
-    /// <param name="ddsData">DDS file data.</param>
-    /// <param name="width">Texture width.</param>
-    /// <param name="height">Texture height.</param>
-    /// <param name="hasAlpha">Whether texture has alpha channel.</param>
-    /// <returns>RGBA pixel data as byte array, or null on failure.</returns>
+        /// <summary>
+        /// Extracts pixel data from DDS format to RGBA.
+        /// Based on daorigins.exe: DDS pixel data extraction and conversion.
+        /// </summary>
+        /// <param name="ddsData">DDS file data.</param>
+        /// <param name="width">Texture width.</param>
+        /// <param name="height">Texture height.</param>
+        /// <param name="hasAlpha">Whether texture has alpha channel.</param>
+        /// <returns>RGBA pixel data as byte array, or null on failure.</returns>
     private byte[] ExtractDDSDataToRGBA(byte[] ddsData, int width, int height, bool hasAlpha)
     {
         if (ddsData == null || ddsData.Length < 128)
@@ -13767,179 +13789,7 @@ technique ColorGrading
         // For this implementation, we'll use a simplified approach
         // In a full implementation, this would decompress DXT formats
         // Based on daorigins.exe: DDS decompression for DirectX 9 compatibility
-
-    /// <summary>
-    /// Represents a debris piece generated from destroyed geometry.
-    /// </summary>
-    /// <remarks>
-    /// Based on daorigins.exe/DragonAge2.exe: Debris physics objects.
-    /// </remarks>
-    public class DebrisPiece
-        {
-        /// <summary>
-        /// Mesh identifier that this debris came from.
-        /// </summary>
-        public string MeshId { get; set; }
-
-        /// <summary>
-        /// Face indices that form this debris piece.
-        /// </summary>
-        public List<int> FaceIndices { get; set; }
-
-        /// <summary>
-        /// Position of debris piece in world space.
-        /// </summary>
-        public Vector3 Position { get; set; }
-
-        /// <summary>
-        /// Linear velocity of debris piece.
-        /// </summary>
-        public Vector3 Velocity { get; set; }
-
-        /// <summary>
-        /// Rotation of debris piece (Euler angles).
-        /// </summary>
-        public Vector3 Rotation { get; set; }
-
-        /// <summary>
-        /// Angular velocity of debris piece.
-        /// </summary>
-        public Vector3 AngularVelocity { get; set; }
-
-        /// <summary>
-        /// Total lifetime of debris piece (seconds).
-        /// </summary>
-        public float LifeTime { get; set; }
-
-        /// <summary>
-        /// Remaining lifetime of debris piece (seconds).
-        /// </summary>
-        public float RemainingLifeTime { get; set; }
-
-        public DebrisPiece()
-        {
-            MeshId = string.Empty;
-            FaceIndices = new List<int>();
-            Position = Vector3.Zero;
-            Velocity = Vector3.Zero;
-            Rotation = Vector3.Zero;
-            AngularVelocity = Vector3.Zero;
-            LifeTime = 30.0f;
-            RemainingLifeTime = 30.0f;
-        }
+        // TODO: STUB - Full DXT decompression not implemented
+        return null;
     }
-}
-
-
-                return false;
-            }
-
-            // Parse DDS header (little-endian)
-            // Based on daorigins.exe: DDS header parsing for DirectX 9 texture creation
-            height = BitConverter.ToInt32(ddsData, 12);
-            width = BitConverter.ToInt32(ddsData, 16);
-
-            // Check pixel format (offset 80-111 in header)
-            uint pixelFormatFlags = BitConverter.ToUInt32(ddsData, 80);
-            uint fourCC = BitConverter.ToUInt32(ddsData, 84);
-
-            // Determine if texture has alpha
-            // Based on daorigins.exe: DDS format detection for alpha channel support
-            if ((pixelFormatFlags & 0x4) != 0) // DDPF_ALPHAPIXELS
-            {
-                hasAlpha = true;
-            }
-            else if (fourCC == 0x31545844) // "DXT1"
-            {
-                hasAlpha = false; // DXT1 has 1-bit alpha but we treat as opaque for simplicity
-            }
-            else if (fourCC == 0x33545844 || fourCC == 0x35545844) // "DXT3" or "DXT5"
-            {
-                hasAlpha = true; // DXT3/DXT5 have alpha
-            }
-
-            return width > 0 && height > 0;
-        }
-
-        /// <summary>
-        /// Extracts pixel data from DDS format to RGBA.
-        /// Based on daorigins.exe: DDS pixel data extraction and conversion.
-        /// </summary>
-        /// <param name="ddsData">DDS file data.</param>
-        /// <param name="width">Texture width.</param>
-        /// <param name="height">Texture height.</param>
-        /// <param name="hasAlpha">Whether texture has alpha channel.</param>
-        /// <returns>RGBA pixel data as byte array, or null on failure.</returns>
-        private byte[] ExtractDDSDataToRGBA(byte[] ddsData, int width, int height, bool hasAlpha)
-        {
-            if (ddsData == null || ddsData.Length < 128)
-            {
-                return null;
-            }
-
-        // For this implementation, we'll use a simplified approach
-        // In a full implementation, this would decompress DXT formats
-        // Based on daorigins.exe: DDS decompression for DirectX 9 compatibility
-
-            /// <summary>
-            /// Represents a debris piece generated from destroyed geometry.
-            /// </summary>
-            /// <remarks>
-            /// Based on daorigins.exe/DragonAge2.exe: Debris physics objects.
-            /// </remarks>
-    public class DebrisPiece
-    {
-        /// <summary>
-        /// Mesh identifier that this debris came from.
-        /// </summary>
-        public string MeshId { get; set; }
-
-        /// <summary>
-        /// Face indices that form this debris piece.
-        /// </summary>
-        public List<int> FaceIndices { get; set; }
-
-        /// <summary>
-        /// Position of debris piece in world space.
-        /// </summary>
-        public Vector3 Position { get; set; }
-
-        /// <summary>
-        /// Linear velocity of debris piece.
-        /// </summary>
-        public Vector3 Velocity { get; set; }
-
-        /// <summary>
-        /// Rotation of debris piece (Euler angles).
-        /// </summary>
-        public Vector3 Rotation { get; set; }
-
-        /// <summary>
-        /// Angular velocity of debris piece.
-        /// </summary>
-        public Vector3 AngularVelocity { get; set; }
-
-        /// <summary>
-        /// Total lifetime of debris piece (seconds).
-        /// </summary>
-        public float LifeTime { get; set; }
-
-        /// <summary>
-        /// Remaining lifetime of debris piece (seconds).
-        /// </summary>
-        public float RemainingLifeTime { get; set; }
-
-        public DebrisPiece()
-        {
-            MeshId = string.Empty;
-            FaceIndices = new List<int>();
-            Position = Vector3.Zero;
-            Velocity = Vector3.Zero;
-            Rotation = Vector3.Zero;
-            AngularVelocity = Vector3.Zero;
-            LifeTime = 30.0f;
-            RemainingLifeTime = 30.0f;
-        }
-    }
-}
 
