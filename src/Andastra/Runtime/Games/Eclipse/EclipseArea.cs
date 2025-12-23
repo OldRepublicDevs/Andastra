@@ -11650,39 +11650,21 @@ technique ColorGrading
 
         /// <summary>
         /// Gets whether this modification requires navigation mesh updates.
+        /// Geometry modifications may affect navigation if they destroy or significantly deform terrain.
         /// </summary>
-        public bool RequiresNavigationMeshUpdate
-        {
-            get
-            {
-                // Geometry modifications may affect navigation if they destroy or significantly deform terrain
-                return _modificationType == GeometryModificationType.Destroyed;
-            }
-        }
+        public bool RequiresNavigationMeshUpdate => _modificationType == GeometryModificationType.Destroyed;
 
         /// <summary>
         /// Gets whether this modification requires physics system updates.
+        /// All geometry modifications require physics updates.
         /// </summary>
-        public bool RequiresPhysicsUpdate
-        {
-            get
-            {
-                // All geometry modifications require physics updates
-                return true;
-            }
-        }
+        public bool RequiresPhysicsUpdate => true;
 
         /// <summary>
         /// Gets whether this modification requires lighting system updates.
+        /// Geometry modifications don't typically require lighting updates unless they affect light sources.
         /// </summary>
-        public bool RequiresLightingUpdate
-        {
-            get
-            {
-                // Geometry modifications don't typically require lighting updates unless they affect light sources
-                return false;
-            }
-        }
+        public bool RequiresLightingUpdate => false;
     }
 
     /// <summary>
@@ -11862,126 +11844,126 @@ technique ColorGrading
         /// This cached data is used to rebuild collision shapes when geometry is modified.
         /// </remarks>
         private void CacheMeshGeometryFromMDL(string meshId, Andastra.Parsing.Formats.MDLData.MDL mdl)
+    {
+        if (string.IsNullOrEmpty(meshId) || mdl == null)
         {
-            if (string.IsNullOrEmpty(meshId) || mdl == null)
-            {
-                return;
-            }
-
-            // Extract vertex positions and indices from MDL
-            List<Vector3> vertices = new List<Vector3>();
-            List<int> indices = new List<int>();
-
-            // Extract geometry from all meshes in MDL
-            // Based on daorigins.exe: MDL models contain mesh nodes with vertices and faces
-            ExtractGeometryFromMDL(mdl, vertices, indices);
-
-            if (vertices.Count == 0 || indices.Count == 0)
-            {
-                return; // No geometry to cache
-            }
-
-            // Cache the geometry data
-            CachedMeshGeometry cachedGeometry = new CachedMeshGeometry
-            {
-                MeshId = meshId,
-                Vertices = vertices,
-                Indices = indices
-            };
-
-            _cachedMeshGeometry[meshId] = cachedGeometry;
+            return;
         }
 
-        /// <summary>
-        /// Extracts vertex positions and indices from MDL model.
-        /// </summary>
-        /// <param name="mdl">Parsed MDL model data.</param>
-        /// <param name="vertices">Output list of vertex positions.</param>
-        /// <param name="indices">Output list of triangle indices.</param>
-        /// <remarks>
-        /// Based on daorigins.exe/DragonAge2.exe: MDL geometry extraction from all mesh nodes.
-        /// </remarks>
-        private void ExtractGeometryFromMDL(Andastra.Parsing.Formats.MDLData.MDL mdl, List<Vector3> vertices, List<int> indices)
-        {
-            if (mdl == null || mdl.Root == null)
-            {
-                return;
-            }
+        // Extract vertex positions and indices from MDL
+        List<Vector3> vertices = new List<Vector3>();
+        List<int> indices = new List<int>();
 
-            // Extract geometry from all nodes recursively
-            ExtractGeometryFromNode(mdl.Root, vertices, indices);
+        // Extract geometry from all meshes in MDL
+        // Based on daorigins.exe: MDL models contain mesh nodes with vertices and faces
+        ExtractGeometryFromMDL(mdl, vertices, indices);
+
+        if (vertices.Count == 0 || indices.Count == 0)
+        {
+            return; // No geometry to cache
         }
 
-        /// <summary>
-        /// Extracts geometry from an MDL node recursively.
-        /// </summary>
-        /// <param name="node">MDL node to extract geometry from.</param>
-        /// <param name="vertices">Output list of vertex positions.</param>
-        /// <param name="indices">Output list of triangle indices.</param>
-        /// <remarks>
-        /// Based on daorigins.exe/DragonAge2.exe: Recursive geometry extraction from MDL node hierarchy.
-        /// </remarks>
-        private void ExtractGeometryFromNode(Andastra.Parsing.Formats.MDLData.MDLNode node, List<Vector3> vertices, List<int> indices)
+        // Cache the geometry data
+        CachedMeshGeometry cachedGeometry = new CachedMeshGeometry
         {
-            if (node == null)
-            {
-                return;
-            }
+            MeshId = meshId,
+            Vertices = vertices,
+            Indices = indices
+        };
 
-            // Extract geometry from this node's mesh
-            if (node.Mesh != null)
+        _cachedMeshGeometry[meshId] = cachedGeometry;
+    }
+
+    /// <summary>
+    /// Extracts vertex positions and indices from MDL model.
+    /// </summary>
+    /// <param name="mdl">Parsed MDL model data.</param>
+    /// <param name="vertices">Output list of vertex positions.</param>
+    /// <param name="indices">Output list of triangle indices.</param>
+    /// <remarks>
+    /// Based on daorigins.exe/DragonAge2.exe: MDL geometry extraction from all mesh nodes.
+    /// </remarks>
+    private void ExtractGeometryFromMDL(Andastra.Parsing.Formats.MDLData.MDL mdl, List<Vector3> vertices, List<int> indices)
+    {
+        if (mdl == null || mdl.Root == null)
+        {
+            return;
+        }
+
+        // Extract geometry from all nodes recursively
+        ExtractGeometryFromNode(mdl.Root, vertices, indices);
+    }
+
+    /// <summary>
+    /// Extracts geometry from an MDL node recursively.
+    /// </summary>
+    /// <param name="node">MDL node to extract geometry from.</param>
+    /// <param name="vertices">Output list of vertex positions.</param>
+    /// <param name="indices">Output list of triangle indices.</param>
+    /// <remarks>
+    /// Based on daorigins.exe/DragonAge2.exe: Recursive geometry extraction from MDL node hierarchy.
+    /// </remarks>
+    private void ExtractGeometryFromNode(Andastra.Parsing.Formats.MDLData.MDLNode node, List<Vector3> vertices, List<int> indices)
+    {
+        if (node == null)
+        {
+            return;
+        }
+
+        // Extract geometry from this node's mesh
+        if (node.Mesh != null)
+        {
+            var mesh = node.Mesh;
+            if (mesh.Vertices != null && mesh.Faces != null)
             {
-                var mesh = node.Mesh;
-                if (mesh.Vertices != null && mesh.Faces != null)
+                // Get current vertex offset (number of vertices already added)
+                int vertexOffset = vertices.Count;
+
+                // Add vertices from this mesh
+                foreach (var vertex in mesh.Vertices)
                 {
-                    // Get current vertex offset (number of vertices already added)
-                    int vertexOffset = vertices.Count;
-
-                    // Add vertices from this mesh
-                    foreach (var vertex in mesh.Vertices)
-                    {
-                        vertices.Add(new Vector3(vertex.X, vertex.Y, vertex.Z));
-                    }
-
-                    // Add faces (triangles) from this mesh
-                    foreach (var face in mesh.Faces)
-                    {
-                        // MDL faces are triangles with vertex indices V1, V2, V3
-                        // Adjust indices by vertex offset to account for previous meshes
-                        indices.Add(vertexOffset + face.V1);
-                        indices.Add(vertexOffset + face.V2);
-                        indices.Add(vertexOffset + face.V3);
-                    }
+                    vertices.Add(new Vector3(vertex.X, vertex.Y, vertex.Z));
                 }
-            }
 
-            // Recursively process child nodes
-            if (node.Children != null)
-            {
-                foreach (var child in node.Children)
+                // Add faces (triangles) from this mesh
+                foreach (var face in mesh.Faces)
                 {
-                    ExtractGeometryFromNode(child, vertices, indices);
+                    // MDL faces are triangles with vertex indices V1, V2, V3
+                    // Adjust indices by vertex offset to account for previous meshes
+                    indices.Add(vertexOffset + face.V1);
+                    indices.Add(vertexOffset + face.V2);
+                    indices.Add(vertexOffset + face.V3);
                 }
             }
         }
 
-        /// <summary>
-        /// Extracts vertex positions from mesh data by reading directly from VertexBuffer.
-        /// </summary>
-        /// <param name="meshData">Mesh data containing VertexBuffer to read from.</param>
-        /// <param name="meshId">Mesh identifier (used for fallback to cached data).</param>
-        /// <returns>List of vertex positions extracted from VertexBuffer, or from cache if buffer read fails.</returns>
-        /// <remarks>
-        /// Based on daorigins.exe: 0x008f12a0 - Vertex data is read directly from GPU vertex buffer for collision shape updates.
-        /// DragonAge2.exe: 0x009a45b0 - Enhanced vertex buffer reading with support for multiple vertex formats.
-        ///
-        /// Implementation:
-        /// 1. Attempts to read vertex data directly from VertexBuffer
-        /// 2. Extracts position data from vertex format (Position is at offset 0 in most formats)
-        /// 3. Falls back to cached geometry data if buffer read fails or buffer is unavailable
-        /// </remarks>
-        private List<Vector3> ExtractVertexPositions(IRoomMeshData meshData, string meshId)
+        // Recursively process child nodes
+        if (node.Children != null)
         {
+            foreach (var child in node.Children)
+            {
+                ExtractGeometryFromNode(child, vertices, indices);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Extracts vertex positions from mesh data by reading directly from VertexBuffer.
+    /// </summary>
+    /// <param name="meshData">Mesh data containing VertexBuffer to read from.</param>
+    /// <param name="meshId">Mesh identifier (used for fallback to cached data).</param>
+    /// <returns>List of vertex positions extracted from VertexBuffer, or from cache if buffer read fails.</returns>
+    /// <remarks>
+    /// Based on daorigins.exe: 0x008f12a0 - Vertex data is read directly from GPU vertex buffer for collision shape updates.
+    /// DragonAge2.exe: 0x009a45b0 - Enhanced vertex buffer reading with support for multiple vertex formats.
+    ///
+    /// Implementation:
+    /// 1. Attempts to read vertex data directly from VertexBuffer
+    /// 2. Extracts position data from vertex format (Position is at offset 0 in most formats)
+    /// 3. Falls back to cached geometry data if buffer read fails or buffer is unavailable
+    /// </remarks>
+    private List<Vector3> ExtractVertexPositions(IRoomMeshData meshData, string meshId)
+    {
             if (meshData == null || meshData.VertexBuffer == null)
             {
                 // Fallback to cached data if buffer is unavailable
