@@ -203,18 +203,53 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering:
         /// - daorigins.exe: GUIItemUpgrade class handles screen hiding
         /// - DragonAge2.exe: GUIItemUpgrade class structure handles screen state management
+        ///   - Based on DragonAge2.exe: ItemUpgradeScreenBackUp @ 0x00bfdebc - callback for screen back button
+        ///   - Based on DragonAge2.exe: InvokeCallbackMessage ItemUpgrade ItemUpgrade.BackUp @ 0x00bfde50
         ///
-        // TODO: / Full implementation:
+        /// Full implementation:
         /// 1. Hide ItemUpgrade GUI
         ///   - Based on daorigins.exe: GUIItemUpgrade class hides screen
         ///   - Based on DragonAge2.exe: GUIItemUpgrade class structure
         /// 2. Save any pending changes to item upgrades
+        ///   - Finalize item stat recalculations if target item exists
+        ///   - Ensure all upgrade changes are persisted to item components
         /// 3. Return control to game
+        ///   - Clear current GUI from GUI manager
+        ///   - Unload GUI resources
         /// 4. Clear upgrade screen state
+        ///   - Reset all state variables to initial values
+        ///   - Clear all caches and maps
         /// </remarks>
         public override void Hide()
         {
+            // Step 1: Save any pending changes to item upgrades
+            // Based on Dragon Age Origins: ItemUpgrade system finalizes changes when hiding screen
+            // Based on Dragon Age 2: ItemUpgradeScreenBackUp callback ensures changes are saved
+            if (_targetItem != null)
+            {
+                IItemComponent itemComponent = _targetItem.GetComponent<IItemComponent>();
+                if (itemComponent != null)
+                {
+                    // Finalize item stat recalculations to ensure all upgrade changes are persisted
+                    // Based on Dragon Age Origins: ItemUpgrade system recalculates stats before hiding
+                    // Based on Dragon Age 2: GetAbilityUpgradedValue @ 0x00c0f20c ensures ability-based stats are finalized
+                    RecalculateItemStats(_targetItem);
+                }
+            }
+
+            // Step 2: Hide ItemUpgrade GUI and return control to game
+            // Based on daorigins.exe: GUIItemUpgrade class hides screen
+            // Based on DragonAge2.exe: GUIItemUpgrade class structure handles screen state management
             _isVisible = false;
+
+            // Clear current GUI from GUI manager to return control to game
+            // Based on Eclipse GUI system: SetCurrentGui(null) clears current GUI and returns control
+            if (_guiManager != null)
+            {
+                // Clear current GUI (returns control to game)
+                // Based on Eclipse GUI system: Setting current GUI to null/empty returns control
+                _guiManager.SetCurrentGui(null);
+            }
 
             // Clear GUI state
             // Based on Eclipse GUI system: GUI cleanup when hiding screen
@@ -225,6 +260,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 _buttonMap.Clear();
 
                 // Unload GUI from GUI manager if available
+                // Based on Eclipse GUI system: UnloadGui releases GUI resources
                 if (_guiManager != null && !string.IsNullOrEmpty(_guiName))
                 {
                     _guiManager.UnloadGui(_guiName);
@@ -232,6 +268,23 @@ namespace Andastra.Runtime.Games.Eclipse
 
                 _guiInitialized = false;
             }
+
+            // Clear loaded GUI reference
+            _loadedGui = null;
+            _guiName = null;
+
+            // Step 3: Clear upgrade screen state
+            // Based on Dragon Age Origins: ItemUpgrade system clears state when hiding
+            // Based on Dragon Age 2: GUIItemUpgrade class structure resets state on hide
+            _targetItem = null;
+            _character = null;
+            _selectedUpgradeSlot = -1;
+            _availableUpgradesPerSlot.Clear();
+            _slotUpgradeListBoxTags.Clear();
+
+            // Clear upgrade ResRef map (from base class)
+            // Based on Eclipse upgrade system: Upgrade tracking is cleared when screen is hidden
+            _upgradeResRefMap.Clear();
         }
 
         /// <summary>
