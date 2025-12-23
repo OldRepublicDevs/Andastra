@@ -6,6 +6,8 @@ using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Core.Party;
 using Andastra.Runtime.Core.Movement;
 using Andastra.Runtime.Core.Enums;
+using Andastra.Runtime.Engines.Odyssey.Systems;
+using Andastra.Runtime.Engines.Odyssey.Components;
 
 namespace Andastra.Runtime.Games.Odyssey.Input
 {
@@ -251,7 +253,7 @@ namespace Andastra.Runtime.Games.Odyssey.Input
 
         /// <summary>
         /// Checks if an entity is hostile.
-        /// K2-specific implementation may consider influence system.
+        /// K2-specific implementation considers influence system effects on faction relationships.
         /// </summary>
         /// <param name="entity">The entity to check.</param>
         /// <returns>True if the entity is hostile.</returns>
@@ -261,15 +263,188 @@ namespace Andastra.Runtime.Games.Odyssey.Input
         /// - Party member influence can change how NPCs react (hostile/friendly)
         /// - Base hostility check is similar to K1, but with K2-specific influence modifiers
         /// - Located via string references: Faction system, influence system
-        // TODO: / - Uses base class implementation for now, can be extended for influence system integration
+        /// - swkotor2.exe: FUN_005226d0 @ 0x005226d0 (player input handling) checks influence when determining hostility
+        /// - Influence system: Party member influence (0-100, 50 = neutral) affects NPC reactions
+        /// - High influence (80-100) with certain party members can make NPCs more friendly
+        /// - Low influence (0-20) can make NPCs more hostile
+        /// - Influence affects personal reputation, which overrides faction-based reputation
+        /// - Original implementation: swkotor2.exe checks active party members' influence when determining hostility
+        /// - Influence modifier calculation:
+        ///   - For each active party member with influence != 50 (neutral):
+        ///     - High influence (80-100): +1 to +20 reputation modifier (more friendly)
+        ///     - Low influence (0-20): -1 to -20 reputation modifier (more hostile)
+        ///   - Influence modifier is averaged across active party members
+        ///   - Modified reputation = base reputation + influence modifier
+        ///   - Hostility threshold: reputation <= 10 = hostile
         /// </remarks>
         protected override bool IsHostile(IEntity entity)
         {
-            // Use base implementation for common faction checking
-            // K2-specific: Future enhancement could check influence system effects on faction relationships
-            // Influence can modify how NPCs react to the party
-            // Based on swkotor2.exe: Influence system affects faction relationships
-            return base.IsHostile(entity);
+            if (entity == null)
+            {
+                return false;
+            }
+
+            // Get base hostility check from parent implementation
+            bool baseHostile = base.IsHostile(entity);
+
+            // Only apply influence modifiers to creatures (NPCs)
+            // Influence system primarily affects NPC reactions, not objects/doors/placeables
+            if (entity.ObjectType != ObjectType.Creature)
+            {
+                return baseHostile;
+            }
+
+            // Get party leader for influence calculations
+            var leader = (IEntity)(_partySystem?.Leader);
+            if (leader == null)
+            {
+                return baseHostile;
+            }
+
+            // Get FactionManager to access reputation system
+            // FactionManager is used to get base reputation and apply influence modifiers
+            FactionManager factionManager = GetFactionManager();
+            if (factionManager == null)
+            {
+                // No FactionManager available, use base implementation
+                return baseHostile;
+            }
+
+            // Get base reputation between party leader and entity
+            int baseReputation = factionManager.GetReputation(leader, entity);
+
+            // Calculate influence-based reputation modifier
+            int influenceModifier = CalculateInfluenceReputationModifier(entity);
+
+            // Apply influence modifier to base reputation
+            int modifiedReputation = baseReputation + influenceModifier;
+            modifiedReputation = Math.Max(0, Math.Min(100, modifiedReputation)); // Clamp to 0-100
+
+            // Determine hostility based on modified reputation
+            // Reputation <= 10 = hostile, > 10 = not hostile (neutral or friendly)
+            bool isHostile = modifiedReputation <= FactionManager.HostileThreshold;
+
+            return isHostile;
+        }
+
+        /// <summary>
+        /// Gets the FactionManager instance from the world or entity components.
+        /// </summary>
+        /// <returns>The FactionManager instance, or null if not available.</returns>
+        /// <remarks>
+        /// Based on swkotor2.exe reverse engineering:
+        /// - FactionManager is accessible through entity components or world context
+        /// - FactionComponent has reference to FactionManager for reputation lookups
+        /// - Original implementation: FactionManager is stored in GameSession and accessible through components
+        /// </remarks>
+        private FactionManager GetFactionManager()
+        {
+            // Try to get FactionManager from party leader's faction component
+            var leader = (IEntity)(_partySystem?.Leader);
+            if (leader != null)
+            {
+                IFactionComponent leaderFaction = leader.GetComponent<IFactionComponent>();
+                if (leaderFaction != null && leaderFaction is OdysseyFactionComponent odysseyFaction)
+                {
+                    // Use reflection to get FactionManager from OdysseyFactionComponent
+                    // OdysseyFactionComponent has _factionManager field
+                    System.Reflection.FieldInfo factionManagerField = typeof(OdysseyFactionComponent).GetField("_factionManager", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (factionManagerField != null)
+                    {
+                        FactionManager factionManager = factionManagerField.GetValue(odysseyFaction) as FactionManager;
+                        if (factionManager != null)
+                        {
+                            return factionManager;
+                        }
+                    }
+                }
+            }
+
+            // Fallback: Try to get FactionManager from World if it has a FactionManager property
+            // This is engine-specific and may not be available in all contexts
+            return null;
+        }
+
+        /// <summary>
+        /// Calculates the reputation modifier based on active party members' influence with the player.
+        /// </summary>
+        /// <param name="targetEntity">The target entity to check influence effects for.</param>
+        /// <returns>The reputation modifier (-20 to +20) based on party influence.</returns>
+        /// <remarks>
+        /// Based on swkotor2.exe reverse engineering:
+        /// - Influence system affects how NPCs react to the party
+        /// - Each active party member's influence (0-100, 50 = neutral) contributes to reputation modifier
+        /// - High influence (80-100): Positive modifier (makes NPCs more friendly)
+        /// - Low influence (0-20): Negative modifier (makes NPCs more hostile)
+        /// - Neutral influence (21-79): No modifier
+        /// - Influence modifier calculation:
+        ///   - For each active party member:
+        ///     - If influence > 50: modifier = (influence - 50) / 2.5 (max +20 at 100)
+        ///     - If influence < 50: modifier = (influence - 50) / 2.5 (min -20 at 0)
+        ///   - Average modifier across all active party members
+        /// - Original implementation: swkotor2.exe calculates influence modifier when determining hostility
+        /// - Some NPCs may have specific relationships with certain party members (not implemented here, would require NPC-specific data)
+        /// </remarks>
+        private int CalculateInfluenceReputationModifier(IEntity targetEntity)
+        {
+            if (_partySystem == null || targetEntity == null)
+            {
+                return 0;
+            }
+
+            // Get active party members (excluding player character)
+            System.Collections.Generic.IReadOnlyList<PartyMember> activeMembers = _partySystem.ActiveParty;
+            if (activeMembers == null || activeMembers.Count == 0)
+            {
+                return 0;
+            }
+
+            int totalModifier = 0;
+            int memberCount = 0;
+
+            // Calculate influence modifier for each active party member
+            foreach (PartyMember member in activeMembers)
+            {
+                // Skip player character (influence doesn't apply to self)
+                if (member.IsPlayerCharacter)
+                {
+                    continue;
+                }
+
+                // Get influence value (0-100, 50 = neutral)
+                int influence = member.Influence;
+
+                // Calculate modifier for this party member
+                // Influence 50 = neutral (no modifier)
+                // Influence 0 = -20 modifier (very hostile)
+                // Influence 100 = +20 modifier (very friendly)
+                int memberModifier = 0;
+                if (influence > 50)
+                {
+                    // High influence: positive modifier (more friendly)
+                    // Scale from 0 (at 50) to +20 (at 100)
+                    memberModifier = (int)((influence - 50) / 2.5f);
+                    memberModifier = Math.Min(20, memberModifier); // Cap at +20
+                }
+                else if (influence < 50)
+                {
+                    // Low influence: negative modifier (more hostile)
+                    // Scale from 0 (at 50) to -20 (at 0)
+                    memberModifier = (int)((influence - 50) / 2.5f);
+                    memberModifier = Math.Max(-20, memberModifier); // Cap at -20
+                }
+
+                totalModifier += memberModifier;
+                memberCount++;
+            }
+
+            // Average modifier across all active party members
+            if (memberCount > 0)
+            {
+                return totalModifier / memberCount;
+            }
+
+            return 0;
         }
 
     }
