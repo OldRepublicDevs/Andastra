@@ -7,6 +7,7 @@ using System.Reflection;
 using JetBrains.Annotations;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.MDL;
+using Andastra.Parsing.Formats.MDLData;
 using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Installation;

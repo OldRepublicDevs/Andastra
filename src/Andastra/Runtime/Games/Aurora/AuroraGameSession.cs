@@ -5,6 +5,7 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Engines.Common;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Content.ResourceProviders;
+using Andastra.Runtime.Games.Aurora;
 
 namespace Andastra.Runtime.Engines.Aurora
 {
