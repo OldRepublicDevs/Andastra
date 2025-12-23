@@ -72,19 +72,52 @@ namespace Andastra.Runtime.Stride.Backends
 
         protected override void DestroyDeviceResources()
         {
+            // Release the DXR fallback device COM interface if it was created
+            if (_raytracingFallbackDevice != IntPtr.Zero)
+            {
+                try
+                {
+                    // Get the vtable pointer from the COM object
+                    IntPtr vtable = Marshal.ReadIntPtr(_raytracingFallbackDevice);
+                    if (vtable != IntPtr.Zero)
+                    {
+                        // Get the Release function pointer (vtable index 2 for IUnknown::Release)
+                        IntPtr releasePtr = Marshal.ReadIntPtr(vtable, 2 * IntPtr.Size);
+                        if (releasePtr != IntPtr.Zero)
+                        {
+                            // Create delegate and call Release
+                            ReleaseDelegate release = Marshal.GetDelegateForFunctionPointer<ReleaseDelegate>(releasePtr);
+                            release(_raytracingFallbackDevice);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("[StrideDX11] Error releasing DXR fallback device COM interface: {0}", ex.Message);
+                }
+                finally
+                {
+                    _raytracingFallbackDevice = IntPtr.Zero;
+                }
+            }
+
             // Stride manages device lifetime
             _strideDevice = null;
             _device = IntPtr.Zero;
-            
+
             // Clear cached fallback command list when device is destroyed
             _fallbackCommandList = IntPtr.Zero;
+
+            // Reset raytracing state
+            _useDxrFallbackLayer = false;
+            _raytracingEnabled = false;
         }
 
         protected override void DestroySwapChainResources()
         {
             // Stride manages swap chain lifetime
             _commandList = null;
-            
+
             // Clear cached fallback command list when swap chain is destroyed
             // (command list is tied to swap chain in some implementations)
             _fallbackCommandList = IntPtr.Zero;
@@ -386,11 +419,6 @@ namespace Andastra.Runtime.Stride.Backends
                 // 2. Creating a fallback device wrapper around the D3D11 device
                 // 3. Querying for fallback layer support
 
-                // Initialize fallback device using native D3D11 device
-                // TODO:  In a full implementation, this would use P/Invoke to call:
-                // D3D12CreateRaytracingFallbackDevice(IUnknown* pD3D12Device, ...)
-                // However, since we're on D3D11, the fallback layer provides a compatibility layer
-
                 // Check if fallback layer is available by attempting to load it
                 bool fallbackLayerAvailable = CheckDxrFallbackLayerAvailability();
 
@@ -400,21 +428,35 @@ namespace Andastra.Runtime.Stride.Backends
                     // that translates DXR calls to compute shader operations
                     // The fallback device wraps the D3D11 device and provides DXR API compatibility
 
-                    // Initialize the fallback device
-                    // This would typically involve:
-                    // - Creating a D3D12RaytracingFallbackDevice instance
-                    // - Wrapping the D3D11 device
-                    // - Setting up compute shader-based raytracing emulation
+                    // Initialize the fallback device using P/Invoke to D3D12CreateRaytracingFallbackDevice
+                    // The D3D11 device pointer (_device) is already an IUnknown* pointer (all COM interfaces derive from IUnknown)
+                    // The fallback layer will wrap this D3D11 device to provide DXR API compatibility
 
-                    // Since we're using Stride's abstraction, we store the native device pointer
-                    // as the fallback device handle. The actual fallback layer initialization
-                    // would happen at the native level when raytracing operations are performed.
+                    IntPtr fallbackDevicePtr = IntPtr.Zero;
+                    int hresult = D3D12CreateRaytracingFallbackDevice(
+                        _device, // D3D11 device as IUnknown*
+                        D3D12_RAYTRACING_FALLBACK_FLAGS.D3D12_RAYTRACING_FALLBACK_FLAG_NONE, // Use default flags
+                        IID_ID3D12Device5, // Query for ID3D12Device5 interface (fallback device implements this)
+                        out fallbackDevicePtr);
 
-                    _raytracingFallbackDevice = _device; // Use native device as fallback device handle
-                    _useDxrFallbackLayer = true;
-                    _raytracingEnabled = true;
+                    // Check if creation succeeded (HRESULT 0 = S_OK)
+                    if (hresult == 0 && fallbackDevicePtr != IntPtr.Zero)
+                    {
+                        // Successfully created fallback device
+                        _raytracingFallbackDevice = fallbackDevicePtr;
+                        _useDxrFallbackLayer = true;
+                        _raytracingEnabled = true;
 
-                    Console.WriteLine("[StrideDX11] DXR fallback layer initialized successfully (software-based raytracing via compute shaders)");
+                        Console.WriteLine("[StrideDX11] DXR fallback layer initialized successfully via D3D12CreateRaytracingFallbackDevice (software-based raytracing via compute shaders)");
+                    }
+                    else
+                    {
+                        // Failed to create fallback device
+                        Console.WriteLine("[StrideDX11] Failed to create DXR fallback device: HRESULT = 0x{0:X8}", hresult);
+                        _raytracingFallbackDevice = IntPtr.Zero;
+                        _useDxrFallbackLayer = false;
+                        _raytracingEnabled = false;
+                    }
                 }
                 else
                 {
@@ -2403,6 +2445,30 @@ namespace Andastra.Runtime.Stride.Backends
             IntPtr commandList,
             ref D3D12_DISPATCH_RAYS_DESC pDesc);
 
+        /// <summary>
+        /// Creates a DXR fallback device that wraps a D3D11 or D3D12 device to provide
+        /// DXR API compatibility on hardware without native raytracing support.
+        ///
+        /// The fallback device translates DXR calls to compute shader operations that
+        /// emulate raytracing behavior. This allows DXR applications to run on older hardware.
+        ///
+        /// Based on Microsoft D3D12RaytracingFallback library:
+        /// https://github.com/microsoft/DirectX-Graphics-Samples/tree/master/Libraries/D3D12RaytracingFallback
+        ///
+        /// Reference: D3D12CreateRaytracingFallbackDevice function
+        /// </summary>
+        /// <param name="pDevice">Pointer to the underlying D3D11 or D3D12 device (as IUnknown*)</param>
+        /// <param name="CreateFlags">Creation flags (D3D12_RAYTRACING_FALLBACK_FLAGS)</param>
+        /// <param name="riid">Interface ID to query for (typically IID_ID3D12RaytracingFallbackDevice)</param>
+        /// <param name="ppDevice">Output pointer to the created fallback device</param>
+        /// <returns>HRESULT: 0 (S_OK) on success, error code on failure</returns>
+        [DllImport("D3D12RaytracingFallback.dll", EntryPoint = "D3D12CreateRaytracingFallbackDevice", CallingConvention = CallingConvention.StdCall)]
+        private static extern int D3D12CreateRaytracingFallbackDevice(
+            IntPtr pDevice,
+            D3D12_RAYTRACING_FALLBACK_FLAGS CreateFlags,
+            [MarshalAs(UnmanagedType.LPStruct)] System.Guid riid,
+            out IntPtr ppDevice);
+
         #endregion
 
         #region TLAS Instance Data Structure
@@ -2782,6 +2848,32 @@ namespace Andastra.Runtime.Stride.Backends
         /// Used for QueryInterface when querying buffers for GPU virtual address support.
         /// </summary>
         private static readonly System.Guid IID_ID3D12Resource = new System.Guid("696442be-a72e-4059-bc79-5b5c98040fad");
+
+        /// <summary>
+        /// Interface ID for ID3D12Device5.
+        /// Used when creating the DXR fallback device via D3D12CreateRaytracingFallbackDevice.
+        /// The fallback device implements ID3D12Device5 interface to provide DXR API compatibility.
+        /// Based on Microsoft D3D12RaytracingFallback library and DirectX 12 API.
+        /// </summary>
+        private static readonly System.Guid IID_ID3D12Device5 = new System.Guid(0x8b4f173b, 0x2fea, 0x4b80, 0xb4, 0xc4, 0x52, 0x46, 0xa8, 0xe9, 0xda, 0x52);
+
+        /// <summary>
+        /// DXR fallback layer creation flags.
+        /// Based on D3D12_RAYTRACING_FALLBACK_FLAGS enum from D3D12RaytracingFallback library.
+        /// </summary>
+        private enum D3D12_RAYTRACING_FALLBACK_FLAGS : uint
+        {
+            /// <summary>
+            /// No special flags. Use default fallback layer behavior.
+            /// </summary>
+            D3D12_RAYTRACING_FALLBACK_FLAG_NONE = 0,
+
+            /// <summary>
+            /// Disable state object creation optimization.
+            /// May be used for debugging or compatibility.
+            /// </summary>
+            D3D12_RAYTRACING_FALLBACK_FLAG_DISABLE_STATE_OBJECT_CREATION = 1
+        }
 
         #region COM Interface Delegates
 
