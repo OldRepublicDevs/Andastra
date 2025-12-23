@@ -27,10 +27,18 @@ using Andastra.Runtime.Engines.Odyssey.EngineApi;
 using Andastra.Runtime.Scripting.EngineApi;
 using Andastra.Runtime.Scripting.VM;
 using Andastra.Runtime.Core.Audio;
-using Microsoft.Xna.Framework;
 
 namespace Andastra.Runtime.Game.Core
 {
+    /// <summary>
+    /// Simple GameTime class for tracking elapsed and total game time.
+    /// </summary>
+    public class GameTime
+    {
+        public System.TimeSpan ElapsedGameTime { get; set; }
+        public System.TimeSpan TotalGameTime { get; set; }
+    }
+
     /// <summary>
     /// Odyssey game implementation using graphics abstraction layer.
     /// Supports both MonoGame and Stride backends.
@@ -161,6 +169,12 @@ namespace Andastra.Runtime.Game.Core
         private bool _isEnteringSaveName = false;
         private float _saveNameInputCursorTime = 0f;
 
+        // Movies menu system
+        private List<string> _availableMovies;
+        private int _selectedMovieIndex = 0;
+        private bool _isPlayingMovie = false;
+        private System.Threading.CancellationTokenSource _movieCancellationTokenSource;
+
         // Input tracking
         private IMouseState _previousMouseState;
         private IKeyboardState _previousKeyboardState;
@@ -211,7 +225,7 @@ namespace Andastra.Runtime.Game.Core
             _globals = new ScriptGlobals();
             _engineApi = new Kotor1();
             _vm = new NcsVm();
-            _session = new GameSession(_settings, _world, _vm, _globals);
+            _session = new Andastra.Runtime.Engines.Odyssey.Game.GameSession(_settings, _world, _vm, _globals);
 
             // Initialize camera controller
             // Based on swkotor.exe and swkotor2.exe: Camera system initialization
@@ -300,7 +314,7 @@ namespace Andastra.Runtime.Game.Core
                 if (!string.IsNullOrEmpty(_settings.GamePath) && Directory.Exists(_settings.GamePath))
                 {
                     var installation = new Installation(_settings.GamePath, _settings.Game == Andastra.Runtime.Core.KotorGame.K1 ? Andastra.Parsing.Common.BioWareGame.K1 : Andastra.Parsing.Common.BioWareGame.K2);
-                    var resourceProvider = new OdysseyResourceProvider(installation);
+                    var resourceProvider = new GameResourceProvider(installation);
 
                     // Create music player from graphics backend
                     var musicPlayerObj = _graphicsBackend.CreateMusicPlayer(resourceProvider);
@@ -1244,7 +1258,7 @@ namespace Andastra.Runtime.Game.Core
             try
             {
                 // Create resource provider
-                var resourceProvider = new OdysseyResourceProvider(installation);
+                var resourceProvider = new GameResourceProvider(installation);
 
                 // Load gui3D_room model first
                 // Based on swkotor.exe and swkotor2.exe: gui3D_room is loaded to determine menu variant (K2) and for 3D rendering
@@ -1426,7 +1440,7 @@ namespace Andastra.Runtime.Game.Core
             {
                 // Load guisounds.2da from the installation
                 // Based on swkotor.exe and swkotor2.exe: guisounds.2da is in the override or data folder
-                var resourceProvider = new OdysseyResourceProvider(installation);
+                var resourceProvider = new GameResourceProvider(installation);
                 var guisoundsRes = resourceProvider.GetResource("guisounds", ResourceType.TwoDA);
                 if (guisoundsRes != null)
                 {
@@ -5119,7 +5133,7 @@ namespace Andastra.Runtime.Game.Core
 
                 // Create resource provider to enumerate BIK files
                 var installation = new Installation(_settings.GamePath);
-                var resourceProvider = new OdysseyResourceProvider(installation);
+                var resourceProvider = new GameResourceProvider(installation);
 
                 // Enumerate all BIK resources
                 // Based on IGameResourceProvider.EnumerateResources(ResourceType.BIK)
@@ -5250,7 +5264,7 @@ namespace Andastra.Runtime.Game.Core
                 }
 
                 var installation = new Installation(_settings.GamePath);
-                var resourceProvider = new OdysseyResourceProvider(installation);
+                var resourceProvider = new GameResourceProvider(installation);
 
                 // Create adapters for movie player
                 // Based on ModuleTransitionSystem adapter pattern
