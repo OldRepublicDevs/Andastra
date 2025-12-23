@@ -650,7 +650,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 return false;
             }
 
-            Game game = _installation.Game;
+            BioWareGame game = _installation.Game;
             // Check if this is NOT an Eclipse game (games without item upgrade support)
             // Eclipse games (Dragon Age) have item upgrade systems
             return !game.IsEclipse();

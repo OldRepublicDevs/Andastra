@@ -38,7 +38,7 @@ Col2=value2
             TwoDA twoda = CreateTest2DA(new[] { "Col1", "Col2" }, Array.Empty<(string, string[])>());
 
             var memory = new PatcherMemory();
-            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
+            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), BioWareGame.K1);
 
             twoda.GetHeight().Should().Be(1);
             twoda.GetCellString(0, "Col1").Should().Be("value1");
@@ -79,7 +79,7 @@ value=three
             TwoDA twoda = CreateTest2DA(new[] { "id", "value" }, Array.Empty<(string, string[])>());
 
             var memory = new PatcherMemory();
-            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
+            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), BioWareGame.K1);
 
             twoda.GetHeight().Should().Be(1);
             twoda.GetCellString(0, "id").Should().Be("100");
@@ -109,7 +109,7 @@ Col1=second
             TwoDA twoda = CreateTest2DA(new[] { "Col1" }, Array.Empty<(string, string[])>());
 
             var memory = new PatcherMemory();
-            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
+            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), BioWareGame.K1);
 
             // Depending on implementation, might add both or overwrite
             // This tests the actual behavior
@@ -139,7 +139,7 @@ RowLabel=copied
             var memory = new PatcherMemory();
 
             // Should not throw, might add nothing or handle error gracefully
-            Action action = () => config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
+            Action action = () => config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), BioWareGame.K1);
             action.Should().NotThrow();
         }
 
@@ -165,7 +165,7 @@ NonExistentColumn=value
 
             var memory = new PatcherMemory();
 
-            Action action = () => config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
+            Action action = () => config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), BioWareGame.K1);
             action.Should().NotThrow();
         }
 
@@ -187,7 +187,7 @@ Col1=high()
             TwoDA twoda = CreateTest2DA(new[] { "Col1" }, Array.Empty<(string, string[])>());
 
             var memory = new PatcherMemory();
-            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
+            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), BioWareGame.K1);
 
             twoda.GetHeight().Should().Be(1);
             // High of empty should be 1 or 0+1
@@ -220,7 +220,7 @@ Col1=high()
             );
 
             var memory = new PatcherMemory();
-            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
+            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), BioWareGame.K1);
 
             twoda.GetHeight().Should().Be(3);
             // Should skip non-numeric and use 123 as highest
@@ -248,7 +248,7 @@ Value=42
             var gff = new GFF();
 
             var memory = new PatcherMemory();
-            object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedGff = GFF.FromBytes((byte[])bytes);
 
             // Should create the nested structure
@@ -272,7 +272,7 @@ NonExistentField=123
 
             var memory = new PatcherMemory();
 
-            Func<object> action = () => config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            Func<object> action = () => config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             action.Should().NotThrow();
         }
 
@@ -296,7 +296,7 @@ value=2DAMEMORY99
             var memory = new PatcherMemory();
             // Don't set Memory2DA[99]
 
-            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
+            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), BioWareGame.K1);
 
             twoda.GetHeight().Should().Be(1);
             // Should handle missing token gracefully
@@ -329,7 +329,7 @@ DefaultValue=X
             );
 
             var memory = new PatcherMemory();
-            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
+            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), BioWareGame.K1);
 
             twoda.GetHeaders().Should().Contain("NewCol");
             twoda.GetColumn("NewCol").Should().AllBe("X");
@@ -359,7 +359,7 @@ Col1=changed
             );
 
             var memory = new PatcherMemory();
-            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
+            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), BioWareGame.K1);
 
             twoda.GetCellString(0, "Col1").Should().Be("changed");
         }
@@ -383,7 +383,7 @@ Label=TestStruct
             var gff = new GFF();
 
             var memory = new PatcherMemory();
-            object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedGff = GFF.FromBytes((byte[])bytes);
 
             GFFStruct struct1 = patchedGff.Root.GetStruct("TestStruct");
@@ -422,8 +422,8 @@ value=2DAMEMORY0
             var memory = new PatcherMemory();
 
             // Apply in sequence - tokens should be available
-            config.Patches2DA.First(p => p.SaveAs == "test1.2da").Apply(twoda1, memory, new PatchLogger(), Game.K1);
-            config.Patches2DA.First(p => p.SaveAs == "test2.2da").Apply(twoda2, memory, new PatchLogger(), Game.K1);
+            config.Patches2DA.First(p => p.SaveAs == "test1.2da").Apply(twoda1, memory, new PatchLogger(), BioWareGame.K1);
+            config.Patches2DA.First(p => p.SaveAs == "test2.2da").Apply(twoda2, memory, new PatchLogger(), BioWareGame.K1);
 
             memory.Memory2DA[0].Should().NotBeNullOrEmpty();
             memory.Memory2DA[1].Should().NotBeNullOrEmpty();
@@ -448,7 +448,7 @@ Col1=value
 
             var memory = new PatcherMemory();
 
-            Action action = () => config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
+            Action action = () => config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), BioWareGame.K1);
             action.Should().NotThrow();
 
             if (twoda.GetHeight() > 0)

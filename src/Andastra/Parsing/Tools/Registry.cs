@@ -19,11 +19,11 @@ namespace Andastra.Parsing.Tools
     {
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/registry.py:32-62
         // Original: KOTOR_REG_PATHS: dict[Game, dict[ProcessorArchitecture, list[tuple[str, str]]]]
-        private static readonly Dictionary<Game, Dictionary<ProcessorArchitecture, List<Tuple<string, string>>>> KotorRegPaths =
-            new Dictionary<Game, Dictionary<ProcessorArchitecture, List<Tuple<string, string>>>>
+        private static readonly Dictionary<BioWareGame, Dictionary<ProcessorArchitecture, List<Tuple<string, string>>>> KotorRegPaths =
+            new Dictionary<BioWareGame, Dictionary<ProcessorArchitecture, List<Tuple<string, string>>>>
             {
                 {
-                    Game.K1,
+                    BioWareGame.K1,
                     new Dictionary<ProcessorArchitecture, List<Tuple<string, string>>>
                     {
                         {
@@ -49,7 +49,7 @@ namespace Andastra.Parsing.Tools
                     }
                 },
                 {
-                    Game.K2,
+                    BioWareGame.K2,
                     new Dictionary<ProcessorArchitecture, List<Tuple<string, string>>>
                     {
                         {
@@ -199,7 +199,7 @@ namespace Andastra.Parsing.Tools
         /// <summary>
         /// Returns a list of registry keys that are utilized by KOTOR.
         /// </summary>
-        public static List<Tuple<string, string>> WinregKey(Game game)
+        public static List<Tuple<string, string>> WinregKey(BioWareGame game)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -215,7 +215,7 @@ namespace Andastra.Parsing.Tools
         /// <summary>
         /// (untested) Returns the specified path value in the windows registry for the given game.
         /// </summary>
-        public static Tuple<object, int> GetWinregPath(Game game)
+        public static Tuple<object, int> GetWinregPath(BioWareGame game)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -335,7 +335,7 @@ namespace Andastra.Parsing.Tools
         /// <summary>
         /// Gets the retail registry key path for the given game.
         /// </summary>
-        public static string GetRetailKey(Game game)
+        public static string GetRetailKey(BioWareGame game)
         {
             ProcessorArchitecture arch = ProcessorArchitectureExtensions.FromOs();
             if (arch == ProcessorArchitecture.BIT_64)
@@ -413,7 +413,7 @@ namespace Andastra.Parsing.Tools
         /// <summary>
         /// (untested) Removes the registry path for the given game.
         /// </summary>
-        public static void RemoveWinregPath(Game game)
+        public static void RemoveWinregPath(BioWareGame game)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -467,19 +467,19 @@ namespace Andastra.Parsing.Tools
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/registry.py:259-281
         // Original: def __init__(self, installation_path: os.PathLike | str, game: Game | None = None):
-        public SpoofKotorRegistry(string installationPath, Game? game = null)
+        public SpoofKotorRegistry(string installationPath, BioWareGame? game = null)
         {
             _key = "Path";
             _spoofedPath = Path.GetFullPath(installationPath);
 
-            Game determinedGame;
+            BioWareGame determinedGame;
             if (game.HasValue)
             {
                 determinedGame = game.Value;
             }
             else
             {
-                Game? determinedGameNullable = Installation.Installation.DetermineGame(installationPath);
+                BioWareGame? determinedGameNullable = Installation.Installation.DetermineGame(installationPath);
                 if (determinedGameNullable == null)
                 {
                     throw new ArgumentException($"Could not auto-determine the game k1 or k2 from '{installationPath}'. Try sending 'game' enum to prevent auto-detections like this.");

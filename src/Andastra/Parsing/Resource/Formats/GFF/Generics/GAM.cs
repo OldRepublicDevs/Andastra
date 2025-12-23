@@ -10,7 +10,7 @@ namespace Andastra.Parsing.Resource.Generics
     /// Stores game state information for Aurora Engine.
     ///
     /// GAM files are GFF-based format files that store game state including party information,
-    /// global variables, game time, and time played. Used by Aurora (Neverwinter Nights).
+    /// global variables, BioWareGame time and time played. Used by Aurora (Neverwinter Nights).
     ///
     /// NOTE: Odyssey (KOTOR) does NOT use GAM format - it uses NFO format for save games.
     /// </summary>
@@ -19,7 +19,7 @@ namespace Andastra.Parsing.Resource.Generics
     /// - GFF format with "GAM " signature
     /// - Used by Aurora (nwmain.exe, nwn2main.exe)
     /// - NOT used by Odyssey (swkotor.exe, swkotor2.exe) - Odyssey uses NFO format
-    /// - Contains game state: party members, global variables, game time, time played
+    /// - Contains game state: party members, global variables, BioWareGame time time played
     /// </remarks>
     [PublicAPI]
     public sealed class GAM

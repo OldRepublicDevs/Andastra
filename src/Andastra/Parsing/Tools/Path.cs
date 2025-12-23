@@ -21,16 +21,16 @@ namespace Andastra.Parsing.Tools
         /// Gets default hardcoded paths for KOTOR installations on different platforms.
         /// Note: Some paths (e.g., App Store versions) are incomplete and need community input.
         /// </summary>
-        public static Dictionary<string, Dictionary<Game, List<string>>> GetDefaultPaths()
+        public static Dictionary<string, Dictionary<BioWareGame, List<string>>> GetDefaultPaths()
         {
-            return new Dictionary<string, Dictionary<Game, List<string>>>
+            return new Dictionary<string, Dictionary<BioWareGame, List<string>>>
             {
                 {
                     "Windows",
-                    new Dictionary<Game, List<string>>
+                    new Dictionary<BioWareGame, List<string>>
                     {
                         {
-                            Game.K1,
+                            BioWareGame.K1,
                             new List<string>
                             {
                                 @"C:\Program Files\Steam\steamapps\common\swkotor",
@@ -42,7 +42,7 @@ namespace Andastra.Parsing.Tools
                             }
                         },
                         {
-                            Game.K2,
+                            BioWareGame.K2,
                             new List<string>
                             {
                                 @"C:\Program Files\Steam\steamapps\common\Knights of the Old Republic II",
@@ -56,10 +56,10 @@ namespace Andastra.Parsing.Tools
                 },
                 {
                     "Darwin",
-                    new Dictionary<Game, List<string>>
+                    new Dictionary<BioWareGame, List<string>>
                     {
                         {
-                            Game.K1,
+                            BioWareGame.K1,
                             new List<string>
                             {
                                 "~/Library/Application Support/Steam/steamapps/common/swkotor/Knights of the Old Republic.app/Contents/Assets",
@@ -68,7 +68,7 @@ namespace Andastra.Parsing.Tools
                             }
                         },
                         {
-                            Game.K2,
+                            BioWareGame.K2,
                             new List<string>
                             {
                                 "~/Library/Application Support/Steam/steamapps/common/Knights of the Old Republic II/Knights of the Old Republic II.app/Contents/Assets",
@@ -83,10 +83,10 @@ namespace Andastra.Parsing.Tools
                 },
                 {
                     "Linux",
-                    new Dictionary<Game, List<string>>
+                    new Dictionary<BioWareGame, List<string>>
                     {
                         {
-                            Game.K1,
+                            BioWareGame.K1,
                             new List<string>
                             {
                                 "~/.local/share/steam/common/steamapps/swkotor",
@@ -103,7 +103,7 @@ namespace Andastra.Parsing.Tools
                             }
                         },
                         {
-                            Game.K2,
+                            BioWareGame.K2,
                             new List<string>
                             {
                                 "~/.local/share/Steam/common/steamapps/Knights of the Old Republic II",
@@ -140,19 +140,19 @@ namespace Andastra.Parsing.Tools
         /// - On Windows, also searches the registry for additional locations
         /// - Returns results as lists for each Game rather than sets
         /// </remarks>
-        public static Dictionary<Game, List<CaseAwarePath>> FindKotorPathsFromDefault()
+        public static Dictionary<BioWareGame, List<CaseAwarePath>> FindKotorPathsFromDefault()
         {
             string osStr = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "Windows" :
                           RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "Darwin" :
                           RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "Linux" : "Unknown";
 
             // Build hardcoded default kotor locations
-            Dictionary<string, Dictionary<Game, List<string>>> rawLocations = GetDefaultPaths();
-            Dictionary<Game, HashSet<CaseAwarePath>> locations = new Dictionary<Game, HashSet<CaseAwarePath>>();
+            Dictionary<string, Dictionary<BioWareGame, List<string>>> rawLocations = GetDefaultPaths();
+            Dictionary<BioWareGame, HashSet<CaseAwarePath>> locations = new Dictionary<BioWareGame, HashSet<CaseAwarePath>>();
 
-            if (rawLocations.TryGetValue(osStr, out Dictionary<Game, List<string>> osPaths))
+            if (rawLocations.TryGetValue(osStr, out Dictionary<BioWareGame, List<string>> osPaths))
             {
-                foreach (KeyValuePair<Game, List<string>> gamePaths in osPaths)
+                foreach (KeyValuePair<BioWareGame, List<string>> gamePaths in osPaths)
                 {
                     HashSet<CaseAwarePath> gameLocations = new HashSet<CaseAwarePath>();
                     foreach (string path in gamePaths.Value)
@@ -185,16 +185,16 @@ namespace Andastra.Parsing.Tools
             else
             {
                 // Initialize empty sets for unknown OS
-                locations[Game.K1] = new HashSet<CaseAwarePath>();
-                locations[Game.K2] = new HashSet<CaseAwarePath>();
+                locations[BioWareGame.K1] = new HashSet<CaseAwarePath>();
+                locations[BioWareGame.K2] = new HashSet<CaseAwarePath>();
             }
 
             // Build kotor locations by registry (if on windows)
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 // Get registry paths for K1 and K2
-                List<Tuple<string, string>> k1RegPaths = Registry.WinregKey(Game.K1);
-                List<Tuple<string, string>> k2RegPaths = Registry.WinregKey(Game.K2);
+                List<Tuple<string, string>> k1RegPaths = Registry.WinregKey(BioWareGame.K1);
+                List<Tuple<string, string>> k2RegPaths = Registry.WinregKey(BioWareGame.K2);
 
                 foreach (Tuple<string, string> regPath in k1RegPaths)
                 {
@@ -207,11 +207,11 @@ namespace Andastra.Parsing.Tools
                             string resolvedPath = path.GetResolvedPath();
                             if (Directory.Exists(resolvedPath))
                             {
-                                if (!locations.ContainsKey(Game.K1))
+                                if (!locations.ContainsKey(BioWareGame.K1))
                                 {
-                                    locations[Game.K1] = new HashSet<CaseAwarePath>();
+                                    locations[BioWareGame.K1] = new HashSet<CaseAwarePath>();
                                 }
-                                locations[Game.K1].Add(new CaseAwarePath(resolvedPath));
+                                locations[BioWareGame.K1].Add(new CaseAwarePath(resolvedPath));
                             }
                         }
                         catch
@@ -232,11 +232,11 @@ namespace Andastra.Parsing.Tools
                             string resolvedPath = path.GetResolvedPath();
                             if (Directory.Exists(resolvedPath))
                             {
-                                if (!locations.ContainsKey(Game.K2))
+                                if (!locations.ContainsKey(BioWareGame.K2))
                                 {
-                                    locations[Game.K2] = new HashSet<CaseAwarePath>();
+                                    locations[BioWareGame.K2] = new HashSet<CaseAwarePath>();
                                 }
-                                locations[Game.K2].Add(new CaseAwarePath(resolvedPath));
+                                locations[BioWareGame.K2].Add(new CaseAwarePath(resolvedPath));
                             }
                         }
                         catch
@@ -250,19 +250,19 @@ namespace Andastra.Parsing.Tools
                 string amazonK1PathStr = Registry.FindSoftwareKey("AmazonGames/Star Wars - Knights of the Old");
                 if (!string.IsNullOrEmpty(amazonK1PathStr) && Directory.Exists(amazonK1PathStr))
                 {
-                    if (!locations.ContainsKey(Game.K1))
+                    if (!locations.ContainsKey(BioWareGame.K1))
                     {
-                        locations[Game.K1] = new HashSet<CaseAwarePath>();
+                        locations[BioWareGame.K1] = new HashSet<CaseAwarePath>();
                     }
-                    locations[Game.K1].Add(new CaseAwarePath(amazonK1PathStr));
+                    locations[BioWareGame.K1].Add(new CaseAwarePath(amazonK1PathStr));
                 }
             }
 
             // Don't return nested sets, return as lists
-            return new Dictionary<Game, List<CaseAwarePath>>
+            return new Dictionary<BioWareGame, List<CaseAwarePath>>
             {
-                { Game.K1, locations.ContainsKey(Game.K1) ? locations[Game.K1].ToList() : new List<CaseAwarePath>() },
-                { Game.K2, locations.ContainsKey(Game.K2) ? locations[Game.K2].ToList() : new List<CaseAwarePath>() }
+                { BioWareGame.K1, locations.ContainsKey(BioWareGame.K1) ? locations[BioWareGame.K1].ToList() : new List<CaseAwarePath>() },
+                { BioWareGame.K2, locations.ContainsKey(BioWareGame.K2) ? locations[BioWareGame.K2].ToList() : new List<CaseAwarePath>() }
             };
         }
 

@@ -33,8 +33,7 @@ namespace Andastra.Parsing.Mods.GFF
         public override object PatchResource(
             byte[] source,
             PatcherMemory memory,
-            PatchLogger logger,
-            Game game)
+            PatchLogger logger, BioWareGame game)
         {
             var reader = new GFFBinaryReader(source);
             Formats.GFF.GFF gff = reader.Load();
@@ -46,8 +45,7 @@ namespace Andastra.Parsing.Mods.GFF
         public override void Apply(
             object mutableData,
             PatcherMemory memory,
-            PatchLogger logger,
-            Game game)
+            PatchLogger logger, BioWareGame game)
         {
             // Python: for change_field in self.modifiers: change_field.apply(mutable_data.root, memory, logger)
             if (mutableData is Formats.GFF.GFF gff)

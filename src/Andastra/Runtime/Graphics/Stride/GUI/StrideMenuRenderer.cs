@@ -53,10 +53,10 @@ namespace Andastra.Runtime.Stride.GUI
     /// </remarks>
     public class StrideMenuRenderer : BaseMenuRenderer
     {
-        private GraphicsDevice _graphicsDevice;
-        private SpriteBatch _spriteBatch;
-        private SpriteFont _font;
-        private Texture2D _whiteTexture;
+        private Stride.Graphics.GraphicsDevice _graphicsDevice;
+        private Stride.Graphics.SpriteBatch _spriteBatch;
+        private Stride.Graphics.SpriteFont _font;
+        private Stride.Graphics.Texture2D _whiteTexture;
         private bool _isDisposed = false;
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace Andastra.Runtime.Stride.GUI
         /// <param name="graphicsDevice">The Stride GraphicsDevice to use for rendering.</param>
         /// <param name="font">Optional SpriteFont for text rendering. Can be null.</param>
         /// <exception cref="ArgumentNullException">Thrown if graphicsDevice is null.</exception>
-        public StrideMenuRenderer([NotNull] GraphicsDevice graphicsDevice, SpriteFont font = null)
+        public StrideMenuRenderer([NotNull] Stride.Graphics.GraphicsDevice graphicsDevice, Stride.Graphics.SpriteFont font = null)
         {
             if (graphicsDevice == null)
             {
@@ -86,7 +86,7 @@ namespace Andastra.Runtime.Stride.GUI
             try
             {
                 // Create SpriteBatch for 2D rendering
-                _spriteBatch = new SpriteBatch(_graphicsDevice);
+                _spriteBatch = new Stride.Graphics.SpriteBatch(_graphicsDevice);
 
                 // Create 1x1 white texture for drawing rectangles and backgrounds
                 _whiteTexture = Texture2D.New2D(_graphicsDevice, 1, 1, PixelFormat.R8G8B8A8_UNorm);

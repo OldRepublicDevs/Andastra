@@ -248,11 +248,11 @@ namespace NSSComp
                 {
                     if (arg == "1" || arg == "k1" || arg.Equals("kotor1", StringComparison.OrdinalIgnoreCase))
                     {
-                        result.Game = Andastra.Parsing.Common.Game.K1;
+                        result.Game = Andastra.Parsing.Common.BiowareGame.K1;
                     }
                     else if (arg == "2" || arg == "k2" || arg.Equals("kotor2", StringComparison.OrdinalIgnoreCase) || arg.Equals("tsl", StringComparison.OrdinalIgnoreCase))
                     {
-                        result.Game = Andastra.Parsing.Common.Game.K2;
+                        result.Game = Andastra.Parsing.Common.BiowareGame.K2;
                     }
                     else
                     {
@@ -422,11 +422,11 @@ namespace NSSComp
                 }
                 else if (arg == "-k1" || arg == "--kotor1")
                 {
-                    result.Game = Andastra.Parsing.Common.Game.K1;
+                    result.Game = Andastra.Parsing.Common.BiowareGame.K1;
                 }
                 else if (arg == "-k2" || arg == "--kotor2" || arg == "--tsl")
                 {
-                    result.Game = Andastra.Parsing.Common.Game.K2;
+                    result.Game = Andastra.Parsing.Common.BiowareGame.K2;
                 }
                 else if (arg == "-i" || arg == "--include" || arg == "--input")
                 {
@@ -687,7 +687,7 @@ namespace NSSComp
             {
                 // Try to infer from source file location or content
                 // Default to K2 (TSL) as it's more common
-                result.Game = Andastra.Parsing.Common.Game.K2;
+                result.Game = Andastra.Parsing.Common.BiowareGame.K2;
             }
 
             return result;
@@ -715,7 +715,7 @@ namespace NSSComp
                 }
 
                 string source = File.ReadAllText(args.SourceFile, Encoding.UTF8);
-                Game game = args.Game ?? Andastra.Parsing.Common.Game.K2;
+                Game game = args.Game ?? Andastra.Parsing.Common.BiowareGame.K2;
 
                 // Build library lookup paths
                 List<string> libraryLookup = new List<string>();
@@ -791,7 +791,7 @@ namespace NSSComp
         {
             try
             {
-                Game game = args.Game ?? Andastra.Parsing.Common.Game.K2;
+                Game game = args.Game ?? Andastra.Parsing.Common.BiowareGame.K2;
                 Encoding encoding = GetEncoding(args.Encoding);
 
                 // Collect all input files

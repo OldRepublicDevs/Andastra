@@ -7,7 +7,7 @@ using System.Linq;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using JetBrains.Annotations;
-using Game = Andastra.Parsing.Common.Game;
+using Game = Andastra.Parsing.Common.BiowareGame;
 
 namespace KotorDiff.Cache
 {

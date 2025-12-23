@@ -268,7 +268,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
         }
 
         // Matching pattern from DLGHelper.DismantleDlg
-        // Original: def dismantle_cnv(cnv: CNV, game: Game = Game.DA) -> GFF:
+        // Original: def dismantle_cnv(cnv: CNV, game: Game = BioWareGame.DA) -> GFF:
         /// <summary>
         /// Dismantles a CNV object into a GFF structure.
         /// </summary>
@@ -282,7 +282,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
         /// - Writes conversation tree to GFF root struct
         /// - Handles Eclipse Engine conversation format
         /// </remarks>
-        public static GFF DismantleCnv(CNV cnv, Game game)
+        public static GFF DismantleCnv(CNV cnv, BioWareGame game)
         {
             // Validate game type - CNV format is only used by Eclipse Engine
             if (!game.IsEclipse())
@@ -389,7 +389,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
 
         // Matching pattern from DLGHelper.DismantleNode
         // Original: def dismantle_node(gff_struct: GFFStruct, node: CNVNode, nodes: list[CNVNode], list_name: str, game: Game):
-        private static void DismantleNode(GFFStruct gffStruct, CNVNode node, List<CNVEntry> allEntries, List<CNVReply> allReplies, string listName, Game game)
+        private static void DismantleNode(GFFStruct gffStruct, CNVNode node, List<CNVEntry> allEntries, List<CNVReply> allReplies, string listName, BioWareGame game)
         {
             gffStruct.SetLocString("Text", node.Text);
             gffStruct.SetString("Listener", node.Listener);
@@ -516,7 +516,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
 
         // Matching pattern from DLGHelper.DismantleLink
         // Original: def dismantle_link(gff_struct: GFFStruct, link: CNVLink, game: Game, list_name: str):
-        private static void DismantleLink(GFFStruct gffStruct, CNVLink link, Game game, string listName)
+        private static void DismantleLink(GFFStruct gffStruct, CNVLink link, BioWareGame game, string listName)
         {
             if (listName == "StartingList")
             {
@@ -569,7 +569,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
         }
 
         // Matching pattern from DLGHelper.BytesDlg
-        // Original: def bytes_cnv(cnv: CNV, game: Game = Game.DA, file_format: ResourceType = ResourceType.GFF) -> bytes:
+        // Original: def bytes_cnv(cnv: CNV, game: Game = BioWareGame.DA, file_format: ResourceType = ResourceType.GFF) -> bytes:
         /// <summary>
         /// Converts a CNV object to bytes.
         /// </summary>
@@ -577,7 +577,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
         /// <param name="game">The game type (must be Eclipse engine).</param>
         /// <param name="fileFormat">File format (default: CNV, must be CNV or GFF).</param>
         /// <returns>Byte array containing CNV file data.</returns>
-        public static byte[] BytesCnv(CNV cnv, Game game, ResourceType fileFormat = null)
+        public static byte[] BytesCnv(CNV cnv, BioWareGame game, ResourceType fileFormat = null)
         {
             if (fileFormat == null)
             {

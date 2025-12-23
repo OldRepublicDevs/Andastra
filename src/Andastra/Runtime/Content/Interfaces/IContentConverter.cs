@@ -16,7 +16,7 @@ namespace Andastra.Runtime.Content.Interfaces
     /// - TPC conversion: Converts TPC (texture) to runtime texture format
     /// - BWM conversion: Converts BWM (walkmesh) to runtime navigation mesh format
     /// - Async conversion: ConvertAsync allows non-blocking asset conversion (prevents frame drops)
-    /// - Conversion context: Provides resource provider, cache, game type, module name for dependency resolution
+    /// - Conversion context: Provides resource provider, cache, BioWareGame type module name for dependency resolution
     /// - Converter version: Tracks converter implementation version for cache invalidation
     /// - CanConvert: Checks if converter can handle specific resource (by ResRef, type, etc.)
     /// - Supported types: Lists resource types this converter handles (MDL, TPC, BWM, etc.)

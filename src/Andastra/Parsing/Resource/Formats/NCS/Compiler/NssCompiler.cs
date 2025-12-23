@@ -18,7 +18,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
     /// </summary>
     public class NssCompiler
     {
-        private readonly Game _game;
+        private readonly BioWareGame _game;
         [CanBeNull]
         private readonly List<string> _libraryLookup;
         private readonly bool _debug;

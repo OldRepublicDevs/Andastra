@@ -497,7 +497,7 @@ namespace Andastra.Parsing.Tests.Formats
             uti.Properties.Add(prop);
 
             // Write and read back
-            byte[] data = UTIHelpers.BytesUti(uti, Game.K2);
+            byte[] data = UTIHelpers.BytesUti(uti, BioWareGame.K2);
             UTI loaded = UTIHelpers.ReadUti(data);
 
             loaded.Properties.Count.Should().Be(1);

@@ -93,7 +93,7 @@ I1=special_value
             Modifications2DA modifications = config.Patches2DA.First(p => p.SaveAs == "test.2da");
 
             // Act
-            modifications.Apply(twoda, Memory, Logger, Game.K1);
+            modifications.Apply(twoda, Memory, Logger, BioWareGame.K1);
 
             // Assert
             twoda.GetCellString(0, "NewCol").Should().Be("default");
@@ -132,7 +132,7 @@ L1=2DAMEMORY5
             Modifications2DA modifications = config.Patches2DA.First(p => p.SaveAs == "test.2da");
 
             // Act
-            modifications.Apply(twoda, Memory, Logger, Game.K1);
+            modifications.Apply(twoda, Memory, Logger, BioWareGame.K1);
 
             // Assert - Python: assert twoda.get_column("Col3") == ["", "ABC"]
             twoda.GetColumn("Col1").Should().Equal("a", "c");
@@ -170,7 +170,7 @@ L1=StrRef5
             Modifications2DA modifications = config.Patches2DA.First(p => p.SaveAs == "test.2da");
 
             // Act
-            modifications.Apply(twoda, Memory, Logger, Game.K1);
+            modifications.Apply(twoda, Memory, Logger, BioWareGame.K1);
 
             // Assert
             twoda.GetCellString("1", "NewCol").Should().Be("12345");
@@ -207,7 +207,7 @@ I1=Y
             Modifications2DA modifications = config.Patches2DA.First(p => p.SaveAs == "test.2da");
 
             // Act
-            modifications.Apply(twoda, Memory, Logger, Game.K1);
+            modifications.Apply(twoda, Memory, Logger, BioWareGame.K1);
 
             // Assert - Python: assert memory.memory_2da[0] == "X" (value from row 0, column NewCol)
             Memory.Memory2DA[0].Should().Be("X");
@@ -247,7 +247,7 @@ I1=Y
             Modifications2DA modifications = config.Patches2DA.First(p => p.SaveAs == "test.2da");
 
             // Act
-            modifications.Apply(twoda, Memory, Logger, Game.K1);
+            modifications.Apply(twoda, Memory, Logger, BioWareGame.K1);
 
             // Assert - Python: assert memory.memory_2da[0] == "Y"
             Memory.Memory2DA[0].Should().Be("Y");
@@ -394,7 +394,7 @@ DefaultValue=default
             Modifications2DA modifications = config.Patches2DA.First(p => p.SaveAs == "test.2da");
 
             // Act
-            modifications.Apply(twoda, Memory, Logger, Game.K1);
+            modifications.Apply(twoda, Memory, Logger, BioWareGame.K1);
 
             // Assert
             twoda.GetHeight().Should().Be(3);

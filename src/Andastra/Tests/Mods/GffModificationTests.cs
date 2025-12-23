@@ -29,7 +29,7 @@ namespace Andastra.Parsing.Tests.Mods
         });
 
             // Act
-            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             gff = GFF.FromBytes((byte[])bytes);
 
             // Assert
@@ -50,7 +50,7 @@ namespace Andastra.Parsing.Tests.Mods
         });
 
             // Act
-            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             gff = GFF.FromBytes((byte[])bytes);
 
             // Assert
@@ -71,7 +71,7 @@ namespace Andastra.Parsing.Tests.Mods
         });
 
             // Act
-            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             gff = GFF.FromBytes((byte[])bytes);
 
             // Assert
@@ -92,7 +92,7 @@ namespace Andastra.Parsing.Tests.Mods
         });
 
             // Act
-            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             gff = GFF.FromBytes((byte[])bytes);
 
             // Assert
@@ -113,7 +113,7 @@ namespace Andastra.Parsing.Tests.Mods
         });
 
             // Act
-            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             gff = GFF.FromBytes((byte[])bytes);
 
             // Assert
@@ -134,7 +134,7 @@ namespace Andastra.Parsing.Tests.Mods
         });
 
             // Act
-            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             gff = GFF.FromBytes((byte[])bytes);
 
             // Assert
@@ -155,7 +155,7 @@ namespace Andastra.Parsing.Tests.Mods
         });
 
             // Act
-            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             gff = GFF.FromBytes((byte[])bytes);
 
             // Assert
@@ -176,7 +176,7 @@ namespace Andastra.Parsing.Tests.Mods
         });
 
             // Act
-            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             gff = GFF.FromBytes((byte[])bytes);
 
             // Assert
@@ -198,7 +198,7 @@ namespace Andastra.Parsing.Tests.Mods
         });
 
             // Act
-            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             gff = GFF.FromBytes((byte[])bytes);
 
             // Assert
@@ -222,7 +222,7 @@ namespace Andastra.Parsing.Tests.Mods
         });
 
             // Act
-            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             gff = GFF.FromBytes((byte[])bytes);
 
             // Assert

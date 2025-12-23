@@ -37,7 +37,7 @@ namespace Andastra.Parsing.Tests.Formats
             ValidateIO(ute);
 
             // Test writing and reading back
-            GFF writtenGff = UTEHelpers.DismantleUte(ute, Game.K2);
+            GFF writtenGff = UTEHelpers.DismantleUte(ute, BioWareGame.K2);
             byte[] data = GFFAuto.BytesGff(writtenGff);
             gff = GFFAuto.ReadGff(data, 0, null);
             ute = UTEHelpers.ConstructUte(gff);
@@ -200,7 +200,7 @@ namespace Andastra.Parsing.Tests.Formats
             ute.Creatures.Should().NotBeNull("Creatures should not be null");
             ute.Creatures.Count.Should().Be(0, "Empty UTE should have 0 creatures");
 
-            GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
+            GFF gff = UTEHelpers.DismantleUte(ute, BioWareGame.K2);
             byte[] data = GFFAuto.BytesGff(gff);
             GFF loadedGff = GFFAuto.ReadGff(data, 0, null);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
@@ -241,7 +241,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             ute.Creatures.Count.Should().Be(2);
 
-            GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
+            GFF gff = UTEHelpers.DismantleUte(ute, BioWareGame.K2);
             byte[] data = GFFAuto.BytesGff(gff);
             GFF loadedGff = GFFAuto.ReadGff(data, 0, null);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
@@ -258,7 +258,7 @@ namespace Andastra.Parsing.Tests.Formats
             ute.Tag = "active_encounter";
             ute.Active = true;
 
-            GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
+            GFF gff = UTEHelpers.DismantleUte(ute, BioWareGame.K2);
             byte[] data = GFFAuto.BytesGff(gff);
             GFF loadedGff = GFFAuto.ReadGff(data, 0, null);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
@@ -273,7 +273,7 @@ namespace Andastra.Parsing.Tests.Formats
             ute.Tag = "inactive_encounter";
             ute.Active = false;
 
-            GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
+            GFF gff = UTEHelpers.DismantleUte(ute, BioWareGame.K2);
             byte[] data = GFFAuto.BytesGff(gff);
             GFF loadedGff = GFFAuto.ReadGff(data, 0, null);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
@@ -290,7 +290,7 @@ namespace Andastra.Parsing.Tests.Formats
             ute.DifficultyIndex = 3;
             ute.Faction = 2;
 
-            GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
+            GFF gff = UTEHelpers.DismantleUte(ute, BioWareGame.K2);
             byte[] data = GFFAuto.BytesGff(gff);
             GFF loadedGff = GFFAuto.ReadGff(data, 0, null);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
@@ -310,7 +310,7 @@ namespace Andastra.Parsing.Tests.Formats
             ute.SingleSpawn = 1;
             ute.PlayerOnly = 1;
 
-            GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
+            GFF gff = UTEHelpers.DismantleUte(ute, BioWareGame.K2);
             byte[] data = GFFAuto.BytesGff(gff);
             GFF loadedGff = GFFAuto.ReadGff(data, 0, null);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
@@ -330,7 +330,7 @@ namespace Andastra.Parsing.Tests.Formats
             ute.ResetTime = 300;
             ute.Respawn = -1; // Infinite respawns
 
-            GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
+            GFF gff = UTEHelpers.DismantleUte(ute, BioWareGame.K2);
             byte[] data = GFFAuto.BytesGff(gff);
             GFF loadedGff = GFFAuto.ReadGff(data, 0, null);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
@@ -351,7 +351,7 @@ namespace Andastra.Parsing.Tests.Formats
             ute.OnHeartbeatScript = ResRef.FromString("on_heartbeat");
             ute.OnUserDefinedScript = ResRef.FromString("on_user");
 
-            GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
+            GFF gff = UTEHelpers.DismantleUte(ute, BioWareGame.K2);
             byte[] data = GFFAuto.BytesGff(gff);
             GFF loadedGff = GFFAuto.ReadGff(data, 0, null);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
@@ -379,7 +379,7 @@ namespace Andastra.Parsing.Tests.Formats
             };
             ute.Creatures.Add(creature);
 
-            GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
+            GFF gff = UTEHelpers.DismantleUte(ute, BioWareGame.K2);
             byte[] data = GFFAuto.BytesGff(gff);
             GFF loadedGff = GFFAuto.ReadGff(data, 0, null);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
@@ -437,7 +437,7 @@ namespace Andastra.Parsing.Tests.Formats
             ute.Creatures.Add(creature1);
             ute.Creatures.Add(creature2);
 
-            GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
+            GFF gff = UTEHelpers.DismantleUte(ute, BioWareGame.K2);
             byte[] data = GFFAuto.BytesGff(gff);
             GFF loadedGff = GFFAuto.ReadGff(data, 0, null);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
@@ -567,7 +567,7 @@ namespace Andastra.Parsing.Tests.Formats
             ute.Tag = "palette_encounter";
             ute.PaletteId = 5;
 
-            GFF gff = UTEHelpers.DismantleUte(ute, Game.K2, true);
+            GFF gff = UTEHelpers.DismantleUte(ute, BioWareGame.K2, true);
             byte[] data = GFFAuto.BytesGff(gff);
             GFF loadedGff = GFFAuto.ReadGff(data, 0, null);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
@@ -582,7 +582,7 @@ namespace Andastra.Parsing.Tests.Formats
             ute.Tag = "localized_encounter";
             ute.Name = LocalizedString.FromStringId(12345);
 
-            GFF gff = UTEHelpers.DismantleUte(ute, Game.K2, true);
+            GFF gff = UTEHelpers.DismantleUte(ute, BioWareGame.K2, true);
             byte[] data = GFFAuto.BytesGff(gff);
             GFF loadedGff = GFFAuto.ReadGff(data, 0, null);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
@@ -603,7 +603,7 @@ namespace Andastra.Parsing.Tests.Formats
             };
             ute.Creatures.Add(creature);
 
-            GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
+            GFF gff = UTEHelpers.DismantleUte(ute, BioWareGame.K2);
             byte[] data = GFFAuto.BytesGff(gff);
             GFF loadedGff = GFFAuto.ReadGff(data, 0, null);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
@@ -625,7 +625,7 @@ namespace Andastra.Parsing.Tests.Formats
             };
             ute.Creatures.Add(creature);
 
-            GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
+            GFF gff = UTEHelpers.DismantleUte(ute, BioWareGame.K2);
             byte[] data = GFFAuto.BytesGff(gff);
             GFF loadedGff = GFFAuto.ReadGff(data, 0, null);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
@@ -648,7 +648,7 @@ namespace Andastra.Parsing.Tests.Formats
             ute.Creatures.Add(creature);
 
             // Test with K2 game
-            GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
+            GFF gff = UTEHelpers.DismantleUte(ute, BioWareGame.K2);
             byte[] data = GFFAuto.BytesGff(gff);
             GFF loadedGff = GFFAuto.ReadGff(data, 0, null);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
@@ -696,7 +696,7 @@ namespace Andastra.Parsing.Tests.Formats
             ute.Creatures.Add(creature);
 
             Directory.CreateDirectory(Path.GetDirectoryName(path));
-            GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
+            GFF gff = UTEHelpers.DismantleUte(ute, BioWareGame.K2);
             byte[] data = GFFAuto.BytesGff(gff);
             File.WriteAllBytes(path, data);
         }

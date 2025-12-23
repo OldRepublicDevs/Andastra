@@ -85,7 +85,7 @@ namespace Andastra.Parsing.Tests.Integration
             ((RowValueConstant)mod.Cells["Col1"]).Value(null, null, null).Should().Be("X");
 
             // Act
-            config.Patches2DA[0].Apply(twoda, memory, logger, Game.K1);
+            config.Patches2DA[0].Apply(twoda, memory, logger, BioWareGame.K1);
 
             // Assert Result
             twoda.GetColumn("Col1").Should().Equal(new[] { "a", "X" });
@@ -120,7 +120,7 @@ namespace Andastra.Parsing.Tests.Integration
             var logger = new PatchLogger();
 
             // Act
-            config.Patches2DA[0].Apply(twoda, memory, logger, Game.K1);
+            config.Patches2DA[0].Apply(twoda, memory, logger, BioWareGame.K1);
 
             // Assert Result
             twoda.GetColumn("Col1").Should().Equal(new[] { "a", "X" });
@@ -152,7 +152,7 @@ namespace Andastra.Parsing.Tests.Integration
             var logger = new PatchLogger();
 
             // Act
-            config.Patches2DA[0].Apply(twoda, memory, logger, Game.K1);
+            config.Patches2DA[0].Apply(twoda, memory, logger, BioWareGame.K1);
 
             // Assert
             twoda.GetHeight().Should().Be(2);
@@ -185,7 +185,7 @@ namespace Andastra.Parsing.Tests.Integration
             var logger = new PatchLogger();
 
             // Act
-            config.Patches2DA[0].Apply(twoda, memory, logger, Game.K1);
+            config.Patches2DA[0].Apply(twoda, memory, logger, BioWareGame.K1);
 
             // Assert
             twoda.GetHeight().Should().Be(2);
@@ -229,7 +229,7 @@ namespace Andastra.Parsing.Tests.Integration
         ";
 
             PatcherConfig config = SetupIniAndConfig(iniText);
-            config.PatchesGFF[0].Apply(gff, memory, logger, Game.K1);
+            config.PatchesGFF[0].Apply(gff, memory, logger, BioWareGame.K1);
 
             // Expected:
             // gff.Root.GetStruct("SomeStruct").Should().NotBeNull();
@@ -271,7 +271,7 @@ namespace Andastra.Parsing.Tests.Integration
         ";
 
             PatcherConfig config = SetupIniAndConfig(iniText);
-            config.PatchesGFF[0].Apply(gff, memory, logger, Game.K1);
+            config.PatchesGFF[0].Apply(gff, memory, logger, BioWareGame.K1);
 
             gff.Root.Exists("Field1").Should().BeTrue();
             gff.Root.GetFieldType("Field1").Should().Be(GFFFieldType.LocalizedString);
@@ -313,7 +313,7 @@ namespace Andastra.Parsing.Tests.Integration
         ";
 
             PatcherConfig config = SetupIniAndConfig(iniText);
-            config.PatchesGFF[0].Apply(gff, memory, logger, Game.K1);
+            config.PatchesGFF[0].Apply(gff, memory, logger, BioWareGame.K1);
 
             // Verify:
             GFFStruct parentStruct = gff.Root.GetStruct("ParentStruct");

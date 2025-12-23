@@ -88,8 +88,8 @@ namespace Andastra.Parsing.Resource.Generics
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/ute.py:277-322
-        // Original: def dismantle_ute(ute: UTE, game: Game = Game.K2, *, use_deprecated: bool = True) -> GFF:
-        public static GFF DismantleUte(UTE ute, Game game = Game.K2, bool useDeprecated = true)
+        // Original: def dismantle_ute(ute: UTE, game: Game = BioWareGame.K2, *, use_deprecated: bool = True) -> GFF:
+        public static GFF DismantleUte(UTE ute, BioWareGame game = BioWareGame.K2, bool useDeprecated = true)
         {
             var gff = new GFF(GFFContent.UTE);
             var root = gff.Root;

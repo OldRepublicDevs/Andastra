@@ -31,7 +31,7 @@ namespace Andastra.Parsing.Tests.Integration
             var modify = new ModifyFieldGFF("TestField", new FieldValueConstant((byte)25));
 
             // Act
-            modify.Apply(gff.Root, Memory, Logger, Game.K1);
+            modify.Apply(gff.Root, Memory, Logger, BioWareGame.K1);
 
             // Assert
             gff.Root.GetUInt8("TestField").Should().Be(25);
@@ -47,7 +47,7 @@ namespace Andastra.Parsing.Tests.Integration
             var modify = new ModifyFieldGFF("TestField", new FieldValueConstant((sbyte)-25));
 
             // Act
-            modify.Apply(gff.Root, Memory, Logger, Game.K1);
+            modify.Apply(gff.Root, Memory, Logger, BioWareGame.K1);
 
             // Assert
             gff.Root.GetInt8("TestField").Should().Be(-25);
@@ -63,7 +63,7 @@ namespace Andastra.Parsing.Tests.Integration
             var modify = new ModifyFieldGFF("TestField", new FieldValueConstant((ushort)500));
 
             // Act
-            modify.Apply(gff.Root, Memory, Logger, Game.K1);
+            modify.Apply(gff.Root, Memory, Logger, BioWareGame.K1);
 
             // Assert
             gff.Root.GetUInt16("TestField").Should().Be(500);
@@ -79,7 +79,7 @@ namespace Andastra.Parsing.Tests.Integration
             var modify = new ModifyFieldGFF("TestField", new FieldValueConstant((short)-500));
 
             // Act
-            modify.Apply(gff.Root, Memory, Logger, Game.K1);
+            modify.Apply(gff.Root, Memory, Logger, BioWareGame.K1);
 
             // Assert
             gff.Root.GetInt16("TestField").Should().Be(-500);
@@ -95,7 +95,7 @@ namespace Andastra.Parsing.Tests.Integration
             var modify = new ModifyFieldGFF("TestField", new FieldValueConstant(5000u));
 
             // Act
-            modify.Apply(gff.Root, Memory, Logger, Game.K1);
+            modify.Apply(gff.Root, Memory, Logger, BioWareGame.K1);
 
             // Assert
             gff.Root.GetUInt32("TestField").Should().Be(5000);
@@ -111,7 +111,7 @@ namespace Andastra.Parsing.Tests.Integration
             var modify = new ModifyFieldGFF("TestField", new FieldValueConstant(-5000));
 
             // Act
-            modify.Apply(gff.Root, Memory, Logger, Game.K1);
+            modify.Apply(gff.Root, Memory, Logger, BioWareGame.K1);
 
             // Assert
             gff.Root.GetInt32("TestField").Should().Be(-5000);
@@ -127,7 +127,7 @@ namespace Andastra.Parsing.Tests.Integration
             var modify = new ModifyFieldGFF("TestField", new FieldValueConstant(50000ul));
 
             // Act
-            modify.Apply(gff.Root, Memory, Logger, Game.K1);
+            modify.Apply(gff.Root, Memory, Logger, BioWareGame.K1);
 
             // Assert
             gff.Root.GetUInt64("TestField").Should().Be(50000);
@@ -143,7 +143,7 @@ namespace Andastra.Parsing.Tests.Integration
             var modify = new ModifyFieldGFF("TestField", new FieldValueConstant(-50000L));
 
             // Act
-            modify.Apply(gff.Root, Memory, Logger, Game.K1);
+            modify.Apply(gff.Root, Memory, Logger, BioWareGame.K1);
 
             // Assert
             gff.Root.GetInt64("TestField").Should().Be(-50000);
@@ -159,7 +159,7 @@ namespace Andastra.Parsing.Tests.Integration
             var modify = new ModifyFieldGFF("TestField", new FieldValueConstant(3.14f));
 
             // Act
-            modify.Apply(gff.Root, Memory, Logger, Game.K1);
+            modify.Apply(gff.Root, Memory, Logger, BioWareGame.K1);
 
             // Assert
             gff.Root.GetSingle("TestField").Should().BeApproximately(3.14f, 0.0001f);
@@ -175,7 +175,7 @@ namespace Andastra.Parsing.Tests.Integration
             var modify = new ModifyFieldGFF("TestField", new FieldValueConstant(3.14159));
 
             // Act
-            modify.Apply(gff.Root, Memory, Logger, Game.K1);
+            modify.Apply(gff.Root, Memory, Logger, BioWareGame.K1);
 
             // Assert
             gff.Root.GetDouble("TestField").Should().BeApproximately(3.14159, 0.00001);
@@ -191,7 +191,7 @@ namespace Andastra.Parsing.Tests.Integration
             var modify = new ModifyFieldGFF("TestField", new FieldValueConstant("NewValue"));
 
             // Act
-            modify.Apply(gff.Root, Memory, Logger, Game.K1);
+            modify.Apply(gff.Root, Memory, Logger, BioWareGame.K1);
 
             // Assert
             gff.Root.GetValue("TestField").Should().Be("NewValue");
@@ -208,7 +208,7 @@ namespace Andastra.Parsing.Tests.Integration
             var modify = new ModifyFieldGFF("Position", new FieldValueConstant(newVector));
 
             // Act
-            modify.Apply(gff.Root, Memory, Logger, Game.K1);
+            modify.Apply(gff.Root, Memory, Logger, BioWareGame.K1);
 
             // Assert
             Vector3 result = gff.Root.GetVector3("Position");
@@ -228,7 +228,7 @@ namespace Andastra.Parsing.Tests.Integration
             var modify = new ModifyFieldGFF("Rotation", new FieldValueConstant(newVector));
 
             // Act
-            modify.Apply(gff.Root, Memory, Logger, Game.K1);
+            modify.Apply(gff.Root, Memory, Logger, BioWareGame.K1);
 
             // Assert
             Vector4 result = gff.Root.GetVector4("Rotation");
@@ -249,7 +249,7 @@ namespace Andastra.Parsing.Tests.Integration
             var modify = new ModifyFieldGFF("Field1", new FieldValueConstant(delta));
 
             // Act
-            modify.Apply(gff.Root, Memory, Logger, Game.K1);
+            modify.Apply(gff.Root, Memory, Logger, BioWareGame.K1);
 
             // Assert - Python: assert gff.root.get_locstring("Field1").stringref == 1
             LocalizedString result = gff.Root.GetLocString("Field1");
@@ -268,7 +268,7 @@ namespace Andastra.Parsing.Tests.Integration
             var modify = new ModifyFieldGFF("NameStrRef", new FieldValueTLKMemory(5));
 
             // Act
-            modify.Apply(gff.Root, Memory, Logger, Game.K1);
+            modify.Apply(gff.Root, Memory, Logger, BioWareGame.K1);
 
             // Assert
             gff.Root.GetInt32("NameStrRef").Should().Be(12345);
@@ -286,7 +286,7 @@ namespace Andastra.Parsing.Tests.Integration
             var modify = new ModifyFieldGFF("AppearanceType", new FieldValue2DAMemory(3));
 
             // Act
-            modify.Apply(gff.Root, Memory, Logger, Game.K1);
+            modify.Apply(gff.Root, Memory, Logger, BioWareGame.K1);
 
             // Assert
             gff.Root.GetInt32("AppearanceType").Should().Be(999);
@@ -304,7 +304,7 @@ namespace Andastra.Parsing.Tests.Integration
             var modify = new ModifyFieldGFF("OuterStruct\\InnerField", new FieldValueConstant("NewValue"));
 
             // Act
-            modify.Apply(gff.Root, Memory, Logger, Game.K1);
+            modify.Apply(gff.Root, Memory, Logger, BioWareGame.K1);
 
             // Assert
             GFFStruct result = gff.Root.GetStruct("OuterStruct");
@@ -324,7 +324,7 @@ namespace Andastra.Parsing.Tests.Integration
             var add = new AddFieldGFF("Test", "NewIntField", GFFFieldType.Int32, new FieldValueConstant(42), null);
 
             // Act
-            add.Apply(gff.Root, Memory, Logger, Game.K1);
+            add.Apply(gff.Root, Memory, Logger, BioWareGame.K1);
 
             // Assert
             gff.Root.Exists("NewIntField").Should().BeTrue();
@@ -340,7 +340,7 @@ namespace Andastra.Parsing.Tests.Integration
             var add = new AddFieldGFF("Test", "NewStringField", GFFFieldType.String, new FieldValueConstant("TestString"), null);
 
             // Act
-            add.Apply(gff.Root, Memory, Logger, Game.K1);
+            add.Apply(gff.Root, Memory, Logger, BioWareGame.K1);
 
             // Assert
             gff.Root.Exists("NewStringField").Should().BeTrue();
@@ -356,7 +356,7 @@ namespace Andastra.Parsing.Tests.Integration
             var add = new AddFieldGFF("Test", "NewFloatField", GFFFieldType.Single, new FieldValueConstant(3.14f), null);
 
             // Act
-            add.Apply(gff.Root, Memory, Logger, Game.K1);
+            add.Apply(gff.Root, Memory, Logger, BioWareGame.K1);
 
             // Assert
             gff.Root.Exists("NewFloatField").Should().BeTrue();
@@ -373,7 +373,7 @@ namespace Andastra.Parsing.Tests.Integration
             var add = new AddFieldGFF("Test", "NewVector", GFFFieldType.Vector3, new FieldValueConstant(vector), null);
 
             // Act
-            add.Apply(gff.Root, Memory, Logger, Game.K1);
+            add.Apply(gff.Root, Memory, Logger, BioWareGame.K1);
 
             // Assert
             gff.Root.Exists("NewVector").Should().BeTrue();
@@ -394,7 +394,7 @@ namespace Andastra.Parsing.Tests.Integration
             var add = new AddFieldGFF("Test", "NewField", GFFFieldType.Int32, new FieldValueConstant(100), "OuterStruct");
 
             // Act
-            add.Apply(gff.Root, Memory, Logger, Game.K1);
+            add.Apply(gff.Root, Memory, Logger, BioWareGame.K1);
 
             // Assert
             GFFStruct result = gff.Root.GetStruct("OuterStruct");
@@ -414,7 +414,7 @@ namespace Andastra.Parsing.Tests.Integration
             var add = new AddFieldGFF("Test", "Description", GFFFieldType.LocalizedString, new FieldValueConstant(locString), null);
 
             // Act
-            add.Apply(gff.Root, Memory, Logger, Game.K1);
+            add.Apply(gff.Root, Memory, Logger, BioWareGame.K1);
 
             // Assert
             LocalizedString result = gff.Root.GetLocString("Description");
@@ -440,7 +440,7 @@ namespace Andastra.Parsing.Tests.Integration
             var add = new AddStructToListGFF("Test", new FieldValueConstant(newStruct), "ItemList", null);
 
             // Act
-            add.Apply(gff.Root, Memory, Logger, Game.K1);
+            add.Apply(gff.Root, Memory, Logger, BioWareGame.K1);
 
             // Assert
             GFFList result = gff.Root.GetList("ItemList");
@@ -462,7 +462,7 @@ namespace Andastra.Parsing.Tests.Integration
             var add = new AddStructToListGFF("Test", new FieldValueConstant(newStruct), "ItemList", null);
 
             // Act
-            add.Apply(gff.Root, Memory, Logger, Game.K1);
+            add.Apply(gff.Root, Memory, Logger, BioWareGame.K1);
 
             // Assert
             GFFList result = gff.Root.GetList("ItemList");
@@ -548,7 +548,7 @@ TypeId=1
             var memory = new PatcherMemory();
             var writer = new GFFBinaryWriter(gff);
             byte[] bytes = writer.Write();
-            byte[] patchedBytes = (byte[])config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(bytes, memory, new PatchLogger(), Game.K1);
+            byte[] patchedBytes = (byte[])config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(bytes, memory, new PatchLogger(), BioWareGame.K1);
             var reader = new GFFBinaryReader(patchedBytes);
             GFF patchedGff = reader.Load();
 
@@ -591,7 +591,7 @@ TypeId=0
             var memory = new PatcherMemory();
             var writer = new GFFBinaryWriter(gff);
             byte[] bytes = writer.Write();
-            byte[] patchedBytes = (byte[])config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(bytes, memory, new PatchLogger(), Game.K1);
+            byte[] patchedBytes = (byte[])config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(bytes, memory, new PatchLogger(), BioWareGame.K1);
             var reader = new GFFBinaryReader(patchedBytes);
             GFF patchedGff = reader.Load();
 

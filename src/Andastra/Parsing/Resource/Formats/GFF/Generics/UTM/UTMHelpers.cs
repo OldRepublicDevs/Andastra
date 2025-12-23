@@ -76,8 +76,8 @@ namespace Andastra.Parsing.Resource.Generics.UTM
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utm.py:163-223
-        // Original: def dismantle_utm(utm: UTM, game: Game = Game.K2, *, use_deprecated: bool = True) -> GFF:
-        public static GFF DismantleUtm(UTM utm, Game game = Game.K2, bool useDeprecated = true)
+        // Original: def dismantle_utm(utm: UTM, game: Game = BioWareGame.K2, *, use_deprecated: bool = True) -> GFF:
+        public static GFF DismantleUtm(UTM utm, BioWareGame game = BioWareGame.K2, bool useDeprecated = true)
         {
             var gff = new GFF(GFFContent.UTM);
             var root = gff.Root;
@@ -145,8 +145,8 @@ namespace Andastra.Parsing.Resource.Generics.UTM
         }
 
         // Matching pattern from DLGHelper.BytesDlg
-        // Original: def bytes_utm(utm: UTM, game: Game = Game.K2, file_format: ResourceType = ResourceType.GFF, *, use_deprecated: bool = True) -> bytes:
-        public static byte[] BytesUtm(UTM utm, Game game = Game.K2, ResourceType fileFormat = null, bool useDeprecated = true)
+        // Original: def bytes_utm(utm: UTM, game: Game = BioWareGame.K2, file_format: ResourceType = ResourceType.GFF, *, use_deprecated: bool = True) -> bytes:
+        public static byte[] BytesUtm(UTM utm, BioWareGame game = BioWareGame.K2, ResourceType fileFormat = null, bool useDeprecated = true)
         {
             if (fileFormat == null)
             {

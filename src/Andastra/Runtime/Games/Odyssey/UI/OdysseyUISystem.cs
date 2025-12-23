@@ -44,11 +44,11 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
 
             // Create appropriate upgrade screen based on game type
             // K1 uses K1UpgradeScreen (swkotor.exe), K2 uses K2UpgradeScreen (swkotor2.exe)
-            if (installation.Game == Andastra.Parsing.Common.Game.K1)
+            if (installation.Game == Andastra.Parsing.Common.BioWareGame.K1)
             {
                 _upgradeScreen = new K1UpgradeScreen(installation, world);
             }
-            else if (installation.Game == Andastra.Parsing.Common.Game.TSL)
+            else if (installation.Game == Andastra.Parsing.Common.BioWareGame.TSL)
             {
                 _upgradeScreen = new K2UpgradeScreen(installation, world);
             }

@@ -23,8 +23,7 @@ namespace Andastra.Parsing.Tests.Formats
         }
 
         private static void AssertBidirectionalRoundtrip(
-            string source,
-            Game game,
+            string source, BioWareGame game,
             List<string> libraryLookup = null)
         {
             NCS compiled = NCSAuto.CompileNss(source, game, null, null, libraryLookup);
@@ -120,9 +119,9 @@ namespace Andastra.Parsing.Tests.Formats
             ");
 
             string decompiled = NCSAuto.DecompileNcs(
-                NCSAuto.CompileNss(source, Game.K1),
-                Game.K1);
-            AssertBidirectionalRoundtrip(source, Game.K1);
+                NCSAuto.CompileNss(source, BioWareGame.K1),
+                BioWareGame.K1);
+            AssertBidirectionalRoundtrip(source, BioWareGame.K1);
             AssertSubstrings(decompiled, new[]
             {
                 "int valueInt = 42;",
@@ -162,9 +161,9 @@ namespace Andastra.Parsing.Tests.Formats
             ");
 
             string decompiled = NCSAuto.DecompileNcs(
-                NCSAuto.CompileNss(source, Game.K1),
-                Game.K1);
-            AssertBidirectionalRoundtrip(source, Game.K1);
+                NCSAuto.CompileNss(source, BioWareGame.K1),
+                BioWareGame.K1);
+            AssertBidirectionalRoundtrip(source, BioWareGame.K1);
             AssertSubstrings(decompiled, new[]
             {
                 "int sum = a + b;",
@@ -197,9 +196,9 @@ namespace Andastra.Parsing.Tests.Formats
             ");
 
             string decompiled = NCSAuto.DecompileNcs(
-                NCSAuto.CompileNss(source, Game.K1),
-                Game.K1);
-            AssertBidirectionalRoundtrip(source, Game.K1);
+                NCSAuto.CompileNss(source, BioWareGame.K1),
+                BioWareGame.K1);
+            AssertBidirectionalRoundtrip(source, BioWareGame.K1);
             AssertSubstrings(decompiled, new[]
             {
                 "int andResult = mask & value;",
@@ -242,9 +241,9 @@ namespace Andastra.Parsing.Tests.Formats
             ");
 
             string decompiled = NCSAuto.DecompileNcs(
-                NCSAuto.CompileNss(source, Game.K1),
-                Game.K1);
-            AssertBidirectionalRoundtrip(source, Game.K1);
+                NCSAuto.CompileNss(source, BioWareGame.K1),
+                BioWareGame.K1);
+            AssertBidirectionalRoundtrip(source, BioWareGame.K1);
             AssertSubstrings(decompiled, new[]
             {
                 "if ((a > b && b >= c) || (a == c))",
@@ -281,9 +280,9 @@ namespace Andastra.Parsing.Tests.Formats
             ");
 
             string decompiled = NCSAuto.DecompileNcs(
-                NCSAuto.CompileNss(source, Game.K1),
-                Game.K1);
-            AssertBidirectionalRoundtrip(source, Game.K1);
+                NCSAuto.CompileNss(source, BioWareGame.K1),
+                BioWareGame.K1);
+            AssertBidirectionalRoundtrip(source, BioWareGame.K1);
             AssertSubstrings(decompiled, new[]
             {
                 "counter += 5;",
@@ -316,9 +315,9 @@ namespace Andastra.Parsing.Tests.Formats
             ");
 
             string decompiled = NCSAuto.DecompileNcs(
-                NCSAuto.CompileNss(source, Game.K1),
-                Game.K1);
-            AssertBidirectionalRoundtrip(source, Game.K1);
+                NCSAuto.CompileNss(source, BioWareGame.K1),
+                BioWareGame.K1);
+            AssertBidirectionalRoundtrip(source, BioWareGame.K1);
             AssertSubstrings(decompiled, new[]
             {
                 "int first = i++;",
@@ -370,9 +369,9 @@ namespace Andastra.Parsing.Tests.Formats
             ");
 
             string decompiled = NCSAuto.DecompileNcs(
-                NCSAuto.CompileNss(source, Game.K1),
-                Game.K1);
-            AssertBidirectionalRoundtrip(source, Game.K1);
+                NCSAuto.CompileNss(source, BioWareGame.K1),
+                BioWareGame.K1);
+            AssertBidirectionalRoundtrip(source, BioWareGame.K1);
             AssertSubstrings(decompiled, new[]
             {
                 "if (state == 0)",
@@ -413,9 +412,9 @@ namespace Andastra.Parsing.Tests.Formats
             ");
 
             string decompiled = NCSAuto.DecompileNcs(
-                NCSAuto.CompileNss(source, Game.K1),
-                Game.K1);
-            AssertBidirectionalRoundtrip(source, Game.K1);
+                NCSAuto.CompileNss(source, BioWareGame.K1),
+                BioWareGame.K1);
+            AssertBidirectionalRoundtrip(source, BioWareGame.K1);
             AssertSubstrings(decompiled, new[]
             {
                 "while (i < 5)",
@@ -451,9 +450,9 @@ namespace Andastra.Parsing.Tests.Formats
             ");
 
             string decompiled = NCSAuto.DecompileNcs(
-                NCSAuto.CompileNss(source, Game.K1),
-                Game.K1);
-            AssertBidirectionalRoundtrip(source, Game.K1);
+                NCSAuto.CompileNss(source, BioWareGame.K1),
+                BioWareGame.K1);
+            AssertBidirectionalRoundtrip(source, BioWareGame.K1);
             AssertSubstrings(decompiled, new[]
             {
                 "switch (value)",
@@ -501,9 +500,9 @@ namespace Andastra.Parsing.Tests.Formats
             ");
 
             string decompiled = NCSAuto.DecompileNcs(
-                NCSAuto.CompileNss(source, Game.K1),
-                Game.K1);
-            AssertBidirectionalRoundtrip(source, Game.K1);
+                NCSAuto.CompileNss(source, BioWareGame.K1),
+                BioWareGame.K1);
+            AssertBidirectionalRoundtrip(source, BioWareGame.K1);
             AssertSubstrings(decompiled, new[]
             {
                 "struct CombatStats",
@@ -543,9 +542,9 @@ namespace Andastra.Parsing.Tests.Formats
             ");
 
             string decompiled = NCSAuto.DecompileNcs(
-                NCSAuto.CompileNss(source, Game.K1),
-                Game.K1);
-            AssertBidirectionalRoundtrip(source, Game.K1);
+                NCSAuto.CompileNss(source, BioWareGame.K1),
+                BioWareGame.K1);
+            AssertBidirectionalRoundtrip(source, BioWareGame.K1);
             AssertSubstrings(decompiled, new[]
             {
                 "int CountPartyMembers()",
@@ -575,9 +574,9 @@ namespace Andastra.Parsing.Tests.Formats
             ");
 
             string decompiled = NCSAuto.DecompileNcs(
-                NCSAuto.CompileNss(source, Game.K1),
-                Game.K1);
-            AssertBidirectionalRoundtrip(source, Game.K1);
+                NCSAuto.CompileNss(source, BioWareGame.K1),
+                BioWareGame.K1);
+            AssertBidirectionalRoundtrip(source, BioWareGame.K1);
             AssertSubstrings(decompiled, new[]
             {
                 "DelayCommand(1.5, AssignCommand(player, ApplyBuff(player)));",
@@ -615,9 +614,9 @@ namespace Andastra.Parsing.Tests.Formats
 
                 var libraryLookup = new List<string> { tempDir };
                 string decompiled = NCSAuto.DecompileNcs(
-                    NCSAuto.CompileNss(source, Game.K1, null, null, libraryLookup),
-                    Game.K1);
-                AssertBidirectionalRoundtrip(source, Game.K1, libraryLookup);
+                    NCSAuto.CompileNss(source, BioWareGame.K1, null, null, libraryLookup),
+                    BioWareGame.K1);
+                AssertBidirectionalRoundtrip(source, BioWareGame.K1, libraryLookup);
                 // Note: The decompiler preserves #include directives rather than inlining
                 // the function, so we check for the include and the function call, not the definition
                 AssertSubstrings(decompiled, new[]
@@ -649,9 +648,9 @@ namespace Andastra.Parsing.Tests.Formats
             ");
 
             string decompiled = NCSAuto.DecompileNcs(
-                NCSAuto.CompileNss(source, Game.K2),
-                Game.K2);
-            AssertBidirectionalRoundtrip(source, Game.K2);
+                NCSAuto.CompileNss(source, BioWareGame.K2),
+                BioWareGame.K2);
+            AssertBidirectionalRoundtrip(source, BioWareGame.K2);
             AssertSubstrings(decompiled, new[]
             {
                 "effect penalty = EffectAttackDecrease(2, ATTACK_BONUS_MISC);",
@@ -666,11 +665,11 @@ namespace Andastra.Parsing.Tests.Formats
     /// </summary>
     public class NcsBinaryRoundtripSamples
     {
-        private static readonly (string RelativePath, Game Game)[] SampleFiles = new[]
+        private static readonly (string RelativePath, BioWareGame game)[] SampleFiles = new[]
         {
-            ("tests/files/test.ncs", Game.K1),
-            ("tests/test_pykotor/test_files/test.ncs", Game.K1),
-            ("tests/test_toolset/test_files/90sk99.ncs", Game.K2),
+            ("tests/files/test.ncs", BioWareGame.K1),
+            ("tests/test_pykotor/test_files/test.ncs", BioWareGame.K1),
+            ("tests/test_toolset/test_files/90sk99.ncs", BioWareGame.K2),
         };
 
         private static byte[] CanonicalBytes(NCS ncs)
@@ -684,7 +683,7 @@ namespace Andastra.Parsing.Tests.Formats
         [InlineData(2)]
         public void TestBinaryRoundtripSamples(int fileIndex)
         {
-            (string relativePath, Game game) = SampleFiles[fileIndex];
+            (string relativePath, BioWareGame game) = SampleFiles[fileIndex];
             string ncsPath = Path.Combine("vendor", "PyKotor", relativePath);
 
             if (!File.Exists(ncsPath))

@@ -40,8 +40,8 @@ namespace Andastra.Parsing.Resource.Generics
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utw.py:164-173
-        // Original: def write_utw(utw: UTW, target: TARGET_TYPES, game: Game = Game.K2, file_format: ResourceType = ResourceType.GFF, *, use_deprecated: bool = True):
-        public static void WriteUtw(UTW utw, object target, Game game = Game.K2, ResourceType fileFormat = null, bool useDeprecated = true)
+        // Original: def write_utw(utw: UTW, target: TARGET_TYPES, game: Game = BioWareGame.K2, file_format: ResourceType = ResourceType.GFF, *, use_deprecated: bool = True):
+        public static void WriteUtw(UTW utw, object target, BioWareGame game = BioWareGame.K2, ResourceType fileFormat = null, bool useDeprecated = true)
         {
             ResourceType format = fileFormat ?? ResourceType.GFF;
             GFF gff = UTWHelpers.DismantleUtw(utw, game, useDeprecated);
@@ -61,8 +61,8 @@ namespace Andastra.Parsing.Resource.Generics
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utw.py:176-184
-        // Original: def bytes_utw(utw: UTW, game: Game = Game.K2, file_format: ResourceType = ResourceType.GFF, *, use_deprecated: bool = True) -> bytes:
-        public static byte[] BytesUtw(UTW utw, Game game = Game.K2, ResourceType fileFormat = null, bool useDeprecated = true)
+        // Original: def bytes_utw(utw: UTW, game: Game = BioWareGame.K2, file_format: ResourceType = ResourceType.GFF, *, use_deprecated: bool = True) -> bytes:
+        public static byte[] BytesUtw(UTW utw, BioWareGame game = BioWareGame.K2, ResourceType fileFormat = null, bool useDeprecated = true)
         {
             ResourceType format = fileFormat ?? ResourceType.GFF;
             GFF gff = UTWHelpers.DismantleUtw(utw, game, useDeprecated);

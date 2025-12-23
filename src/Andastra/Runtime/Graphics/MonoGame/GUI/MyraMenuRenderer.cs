@@ -111,7 +111,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                 // Attempt to retrieve Game instance from GraphicsDevice
                 // MonoGame GraphicsDevice has an internal reference to the Game instance
                 // This is accessed via reflection since it's not publicly exposed
-                Game gameInstance = TryGetGameInstanceFromGraphicsDevice(_graphicsDevice);
+                BioWareGame gameInstance = TryGetGameInstanceFromGraphicsDevice(_graphicsDevice);
                 
                 // Initialize Myra environment with Game instance if available
                 // MyraEnvironment.Game enables proper input handling, resource management, and rendering context
@@ -185,7 +185,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// - Returns null if Game cannot be found (Myra can still work without it)
         /// - Based on MonoGame internal structure (GraphicsDevice._graphicsDeviceService or GraphicsDevice.ServiceProvider)
         /// </remarks>
-        private Game TryGetGameInstanceFromGraphicsDevice(GraphicsDevice graphicsDevice)
+        private Microsoft.Xna.Framework.Game TryGetGameInstanceFromGraphicsDevice(GraphicsDevice graphicsDevice)
         {
             if (graphicsDevice == null)
             {

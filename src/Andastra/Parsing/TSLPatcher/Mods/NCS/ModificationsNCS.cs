@@ -236,8 +236,7 @@ namespace Andastra.Parsing.Mods.NCS
         public override object PatchResource(
             byte[] source,
             PatcherMemory memory,
-            PatchLogger logger,
-            Game game)
+            PatchLogger logger, BioWareGame game)
         {
             byte[] ncsBytearray = (byte[])source.Clone();
             Apply(ncsBytearray, memory, logger, game);
@@ -257,8 +256,7 @@ namespace Andastra.Parsing.Mods.NCS
         public override void Apply(
             object mutableData,
             PatcherMemory memory,
-            PatchLogger logger,
-            Game game)
+            PatchLogger logger, BioWareGame game)
         {
             if (mutableData is byte[] ncsBytearray)
             {

@@ -70,19 +70,7 @@
     <PackageReference Include="System.Windows.Extensions" Version="10.0.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
-    <ProjectReference Include="Data\Data.csproj" />
-    <ProjectReference Include="Windows\Windows.csproj" />
-    <ProjectReference Include="Utils\Utils.csproj" />
-    <ProjectReference Include="Editors\Editors.csproj" />
-    <ProjectReference Include="Dialogs\Dialogs.csproj" />
-    <ProjectReference Include="Widgets\Widgets.csproj" />
-    <ProjectReference Include="..\..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
-    <ProjectReference Include="..\Data\Data.csproj" />
-    <ProjectReference Include="..\Utils\Utils.csproj" />
-    <ProjectReference Include="..\Widgets\Widgets.csproj" />
-    <ProjectReference Include="..\Dialogs\Dialogs.csproj" />
-    <ProjectReference Include="..\Editors\Editors.csproj" />
+    <ProjectReference Include="..\..\Andastra\Andastra.csproj" />
   </ItemGroup>
   <!-- Resources -->
   <ItemGroup>

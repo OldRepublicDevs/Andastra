@@ -74,7 +74,7 @@ namespace Andastra.Tests.Runtime.TestHelpers
 
             // Setup Installation properties
             string mockPath = Path.Combine(Path.GetTempPath(), "AndastraTestInstallation");
-            Game mockGame = Game.K2; // Default to TSL for testing
+            BioWareGame mockGame = BioWareGame.K2; // Default to TSL for testing
 
             mockInstallation.Setup(i => i.Path).Returns(mockPath);
             mockInstallation.Setup(i => i.Game).Returns(mockGame);
@@ -244,7 +244,7 @@ namespace Andastra.Tests.Runtime.TestHelpers
 
             // Setup Installation properties
             string mockPath = Path.Combine(Path.GetTempPath(), "AndastraTestInstallation");
-            Game mockGame = Game.K2; // Default to TSL for testing
+            BioWareGame mockGame = BioWareGame.K2; // Default to TSL for testing
 
             mockInstallation.Setup(i => i.Path).Returns(mockPath);
             mockInstallation.Setup(i => i.Game).Returns(mockGame);

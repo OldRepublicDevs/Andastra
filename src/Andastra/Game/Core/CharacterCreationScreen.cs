@@ -15,6 +15,7 @@ using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common;
 using Andastra.Runtime.Engines.Odyssey.Data;
 using Andastra.Parsing.Formats.TPC;
+using Andastra.Parsing.Common;
 using FeatData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.FeatData;
 using JetBrains.Annotations;
 
@@ -50,7 +51,7 @@ namespace Andastra.Runtime.Game.Core
     {
         private readonly IGraphicsDevice _graphicsDevice;
         private readonly Installation _installation;
-        private readonly KotorGame _game;
+        private readonly BioWareGame _game;
         private readonly BaseGuiManager _guiManager;
         private readonly Action<CharacterCreationData> _onComplete;
         private readonly Action _onCancel;
@@ -112,7 +113,7 @@ namespace Andastra.Runtime.Game.Core
         /// </summary>
         private CharacterClass[] GetAvailableClasses()
         {
-            if (_game == KotorGame.K1)
+            if (_game == BioWareGame.K1)
             {
                 return new CharacterClass[] { CharacterClass.Scout, CharacterClass.Soldier, CharacterClass.Scoundrel };
             }
@@ -135,7 +136,7 @@ namespace Andastra.Runtime.Game.Core
         public CharacterCreationScreen(
             IGraphicsDevice graphicsDevice,
             Installation installation,
-            KotorGame game,
+            BioWareGame game,
             BaseGuiManager guiManager,
             Action<CharacterCreationData> onComplete,
             Action onCancel,

@@ -47,7 +47,7 @@ namespace Andastra.Parsing.TSLPatcher
         private string backup;
         private readonly HashSet<string> processedBackupFiles = new HashSet<string>();
 
-        public Game? Game { get; private set; }
+        public BioWareGame? Game { get; private set; }
         [CanBeNull]
         public string TslPatchDataPath { get; set; }
 
@@ -589,7 +589,7 @@ namespace Andastra.Parsing.TSLPatcher
                             $"IMPORTANT! The module at path '{outputContainerPath}' did not exist, building one in the 'Modules' folder immediately from the following files:" +
                             $"\n    Modules/{moduleRoot}.rim" +
                             $"\n    Modules/{moduleRoot}_s.rim" +
-                            (Game != null && (Game.Value == Common.Game.TSL || Game.Value == Common.Game.K2) ? $"\n    Modules/{moduleRoot}_dlg.erf" : "")
+                            (Game != null && (Game.Value == Common.BioWareGame.TSL || Game.Value == Common.BioWareGame.K2) ? $"\n    Modules/{moduleRoot}_dlg.erf" : "")
                         );
                         try
                         {
@@ -968,7 +968,7 @@ namespace Andastra.Parsing.TSLPatcher
             }
 
             // Load _dlg.erf if exists (TSL only)
-            if ((Game is null || Game.Value == Common.Game.TSL || Game.Value == Common.Game.K2) && File.Exists(filepathDlgErf))
+            if ((Game is null || Game.Value == Common.BioWareGame.TSL || Game.Value == Common.BioWareGame.K2) && File.Exists(filepathDlgErf))
             {
                 var erfCapsule = new Capsule(filepathDlgErf, createIfNotExist: false);
                 foreach (CapsuleResource res in erfCapsule)

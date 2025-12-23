@@ -49,7 +49,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
         /// - Writes GFF format file with "CNV " signature
         /// - Supports file paths and streams
         /// </remarks>
-        public static void WriteCnv(CNV cnv, object target, Game game, ResourceType fileFormat = null)
+        public static void WriteCnv(CNV cnv, object target, BioWareGame game, ResourceType fileFormat = null)
         {
             ResourceType format = fileFormat ?? ResourceType.CNV;
             if (format != ResourceType.CNV && format != ResourceType.GFF)
@@ -97,7 +97,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
         /// - Dismantles CNV object to GFF structure
         /// - Converts GFF to bytes with "CNV " signature
         /// </remarks>
-        public static byte[] BytesCnv(CNV cnv, Game game, ResourceType fileFormat = null)
+        public static byte[] BytesCnv(CNV cnv, BioWareGame game, ResourceType fileFormat = null)
         {
             ResourceType format = fileFormat ?? ResourceType.CNV;
             if (format != ResourceType.CNV && format != ResourceType.GFF)

@@ -37,7 +37,7 @@ namespace Andastra.Parsing.Tests.Formats
             ValidateIO(utw);
 
             // Test writing and reading back
-            byte[] data = UTWAuto.BytesUtw(utw, Game.K2);
+            byte[] data = UTWAuto.BytesUtw(utw, BioWareGame.K2);
             utw = UTWAuto.ReadUtw(data);
             ValidateIO(utw);
         }
@@ -139,7 +139,7 @@ namespace Andastra.Parsing.Tests.Formats
             UTW originalUtw = CreateTestUtwObject();
 
             // Write to bytes
-            byte[] data = UTWAuto.BytesUtw(originalUtw, Game.K2);
+            byte[] data = UTWAuto.BytesUtw(originalUtw, BioWareGame.K2);
 
             // Read back
             UTW loadedUtw = UTWAuto.ReadUtw(data);
@@ -241,7 +241,7 @@ namespace Andastra.Parsing.Tests.Formats
             utw.Tag = "TEST_WAYPOINT";
             utw.Name = LocalizedString.FromInvalid();
 
-            byte[] data = UTWAuto.BytesUtw(utw, Game.K2);
+            byte[] data = UTWAuto.BytesUtw(utw, BioWareGame.K2);
             UTW loaded = UTWAuto.ReadUtw(data);
 
             loaded.Tag.Should().Be("TEST_WAYPOINT");
@@ -276,7 +276,7 @@ namespace Andastra.Parsing.Tests.Formats
             utw.Tag = "TEST_TAG";
             utw.Name = LocalizedString.FromInvalid();
 
-            byte[] data = UTWAuto.BytesUtw(utw, Game.K2);
+            byte[] data = UTWAuto.BytesUtw(utw, BioWareGame.K2);
             UTW loaded = UTWAuto.ReadUtw(data);
 
             loaded.ResRef.Should().Be(new ResRef("test_waypoint"));
@@ -291,7 +291,7 @@ namespace Andastra.Parsing.Tests.Formats
             utw.Tag = "TEST_TAG";
             utw.Name = LocalizedString.FromStrRef(12345);
 
-            byte[] data = UTWAuto.BytesUtw(utw, Game.K2);
+            byte[] data = UTWAuto.BytesUtw(utw, BioWareGame.K2);
             UTW loaded = UTWAuto.ReadUtw(data);
 
             loaded.Name.Should().NotBeNull("LocalizedName should not be null");
@@ -309,7 +309,7 @@ namespace Andastra.Parsing.Tests.Formats
             utw.MapNoteEnabled = true;
             utw.MapNote = LocalizedString.FromStrRef(67890);
 
-            byte[] data = UTWAuto.BytesUtw(utw, Game.K2);
+            byte[] data = UTWAuto.BytesUtw(utw, BioWareGame.K2);
             UTW loaded = UTWAuto.ReadUtw(data);
 
             loaded.HasMapNote.Should().BeTrue("HasMapNote should be true");
@@ -327,7 +327,7 @@ namespace Andastra.Parsing.Tests.Formats
             utw.Name = LocalizedString.FromInvalid();
             utw.AppearanceId = 1; // Standard waypoint appearance
 
-            byte[] data = UTWAuto.BytesUtw(utw, Game.K2);
+            byte[] data = UTWAuto.BytesUtw(utw, BioWareGame.K2);
             UTW loaded = UTWAuto.ReadUtw(data);
 
             loaded.AppearanceId.Should().Be(1, "AppearanceId should be preserved");
@@ -343,7 +343,7 @@ namespace Andastra.Parsing.Tests.Formats
             utw.Name = LocalizedString.FromInvalid();
             utw.PaletteId = 5;
 
-            byte[] data = UTWAuto.BytesUtw(utw, Game.K2);
+            byte[] data = UTWAuto.BytesUtw(utw, BioWareGame.K2);
             UTW loaded = UTWAuto.ReadUtw(data);
 
             loaded.PaletteId.Should().Be(5, "PaletteId should be preserved");
@@ -359,7 +359,7 @@ namespace Andastra.Parsing.Tests.Formats
             utw.Name = LocalizedString.FromInvalid();
             utw.Comment = "Test comment for waypoint";
 
-            byte[] data = UTWAuto.BytesUtw(utw, Game.K2);
+            byte[] data = UTWAuto.BytesUtw(utw, BioWareGame.K2);
             UTW loaded = UTWAuto.ReadUtw(data);
 
             loaded.Comment.Should().Be("Test comment for waypoint", "Comment should be preserved");
@@ -375,7 +375,7 @@ namespace Andastra.Parsing.Tests.Formats
             utw.Name = LocalizedString.FromInvalid();
             utw.LinkedTo = "LINKED_WAYPOINT";
 
-            byte[] data = UTWAuto.BytesUtw(utw, Game.K2);
+            byte[] data = UTWAuto.BytesUtw(utw, BioWareGame.K2);
             UTW loaded = UTWAuto.ReadUtw(data);
 
             loaded.LinkedTo.Should().Be("LINKED_WAYPOINT", "LinkedTo should be preserved");
@@ -391,7 +391,7 @@ namespace Andastra.Parsing.Tests.Formats
             utw.Name = LocalizedString.FromInvalid();
             utw.Description = LocalizedString.FromStrRef(11111);
 
-            byte[] data = UTWAuto.BytesUtw(utw, Game.K2);
+            byte[] data = UTWAuto.BytesUtw(utw, BioWareGame.K2);
             UTW loaded = UTWAuto.ReadUtw(data);
 
             loaded.Description.Should().NotBeNull("Description should not be null");
@@ -414,7 +414,7 @@ namespace Andastra.Parsing.Tests.Formats
             originalUtw.AppearanceId = 1;
             originalUtw.PaletteId = 3;
 
-            byte[] data = UTWAuto.BytesUtw(originalUtw, Game.K2);
+            byte[] data = UTWAuto.BytesUtw(originalUtw, BioWareGame.K2);
             UTW loadedUtw = UTWAuto.ReadUtw(data);
 
             // Validate all fields
@@ -454,7 +454,7 @@ namespace Andastra.Parsing.Tests.Formats
             utw.HasMapNote = false;
             utw.MapNoteEnabled = true; // Enabled but no map note
 
-            byte[] data = UTWAuto.BytesUtw(utw, Game.K2);
+            byte[] data = UTWAuto.BytesUtw(utw, BioWareGame.K2);
             UTW loaded = UTWAuto.ReadUtw(data);
 
             // Both values should be preserved as stored
@@ -473,7 +473,7 @@ namespace Andastra.Parsing.Tests.Formats
         private static void CreateTestUtwFile(string path)
         {
             UTW utw = CreateTestUtwObject();
-            byte[] data = UTWAuto.BytesUtw(utw, Game.K2);
+            byte[] data = UTWAuto.BytesUtw(utw, BioWareGame.K2);
             Directory.CreateDirectory(Path.GetDirectoryName(path));
             File.WriteAllBytes(path, data);
         }

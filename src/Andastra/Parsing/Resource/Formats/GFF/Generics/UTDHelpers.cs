@@ -154,8 +154,8 @@ namespace Andastra.Parsing.Resource.Generics
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utd.py:563-665
-        // Original: def dismantle_utd(utd: UTD, game: Game = Game.K2, *, use_deprecated: bool = True) -> GFF:
-        public static GFF DismantleUtd(UTD utd, Game game = Game.K2, bool useDeprecated = true)
+        // Original: def dismantle_utd(utd: UTD, game: Game = BioWareGame.K2, *, use_deprecated: bool = True) -> GFF:
+        public static GFF DismantleUtd(UTD utd, BioWareGame game = BioWareGame.K2, bool useDeprecated = true)
         {
             var gff = new GFF(GFFContent.UTD);
             var root = gff.Root;
@@ -245,8 +245,8 @@ namespace Andastra.Parsing.Resource.Generics
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utd.py:656-664
-        // Original: def bytes_utd(utd: UTD, game: Game = Game.K2, file_format: ResourceType = ResourceType.GFF) -> bytes:
-        public static byte[] BytesUtd(UTD utd, Game game = Game.K2, ResourceType fileFormat = null)
+        // Original: def bytes_utd(utd: UTD, game: Game = BioWareGame.K2, file_format: ResourceType = ResourceType.GFF) -> bytes:
+        public static byte[] BytesUtd(UTD utd, BioWareGame game = BioWareGame.K2, ResourceType fileFormat = null)
         {
             if (fileFormat == null)
             {

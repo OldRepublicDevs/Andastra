@@ -53,7 +53,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// FSR constants structure matching AMD FidelityFX SDK format.
         /// Based on FfxFsr2DispatchDescription from FidelityFX SDK.
         /// </summary>
-        internal struct FsrConstants
+        public struct FsrConstants
         {
             public Vector4 Color;
             public Vector4 Depth;

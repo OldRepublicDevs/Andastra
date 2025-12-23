@@ -40,8 +40,8 @@ namespace Andastra.Parsing.Resource.Generics
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/pth.py:221-230
-        // Original: def write_pth(pth: PTH, target: TARGET_TYPES, game: Game = Game.K2, file_format: ResourceType = ResourceType.GFF, *, use_deprecated: bool = True):
-        public static void WritePth(PTH pth, object target, Game game = Game.K2, ResourceType fileFormat = null, bool useDeprecated = true)
+        // Original: def write_pth(pth: PTH, target: TARGET_TYPES, game: Game = BioWareGame.K2, file_format: ResourceType = ResourceType.GFF, *, use_deprecated: bool = True):
+        public static void WritePth(PTH pth, object target, BioWareGame game = BioWareGame.K2, ResourceType fileFormat = null, bool useDeprecated = true)
         {
             ResourceType format = fileFormat ?? ResourceType.GFF;
             GFF gff = PTHHelpers.DismantlePth(pth, game, useDeprecated);
@@ -61,8 +61,8 @@ namespace Andastra.Parsing.Resource.Generics
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/pth.py:233-241
-        // Original: def bytes_pth(pth: PTH, game: Game = Game.K2, file_format: ResourceType = ResourceType.GFF, *, use_deprecated: bool = True) -> bytes:
-        public static byte[] BytesPth(PTH pth, Game game = Game.K2, ResourceType fileFormat = null, bool useDeprecated = true)
+        // Original: def bytes_pth(pth: PTH, game: Game = BioWareGame.K2, file_format: ResourceType = ResourceType.GFF, *, use_deprecated: bool = True) -> bytes:
+        public static byte[] BytesPth(PTH pth, BioWareGame game = BioWareGame.K2, ResourceType fileFormat = null, bool useDeprecated = true)
         {
             ResourceType format = fileFormat ?? ResourceType.GFF;
             GFF gff = PTHHelpers.DismantlePth(pth, game, useDeprecated);

@@ -45,7 +45,7 @@ namespace Andastra.Parsing.Resource
         public static object ValidateCapsule(
             object capsuleObj,
             bool strict = false,
-            Game? game = null)
+            BioWareGame? game = null)
         {
             object container = LoadAsErfRim(capsuleObj);
             if (container == null)
@@ -141,7 +141,7 @@ namespace Andastra.Parsing.Resource
         public static byte[] ValidateResource(
             object resource,
             bool strict = false,
-            Game? game = null,
+            BioWareGame? game = null,
             bool shouldRaise = false)
         {
             try
@@ -441,7 +441,7 @@ namespace Andastra.Parsing.Resource
                         var reader = new GFFBinaryReader(data);
                         GFF gff = reader.Load();
                         ARE are = AREHelpers.ConstructAre(gff);
-                        return AREHelpers.BytesAre(are, Game.K2);
+                        return AREHelpers.BytesAre(are, BioWareGame.K2);
                     } catch { return null; }
                 }},
                 { ResourceType.DLG, (fileRes) => {
@@ -451,7 +451,7 @@ namespace Andastra.Parsing.Resource
                         var reader = new GFFBinaryReader(data);
                         GFF gff = reader.Load();
                         DLG dlg = DLGHelper.ConstructDlg(gff);
-                        return DLGHelper.BytesDlg(dlg, Game.K2);
+                        return DLGHelper.BytesDlg(dlg, BioWareGame.K2);
                     } catch { return null; }
                 }},
                 { ResourceType.GIT, (fileRes) => {
@@ -461,7 +461,7 @@ namespace Andastra.Parsing.Resource
                         var reader = new GFFBinaryReader(data);
                         GFF gff = reader.Load();
                         GIT git = GITHelpers.ConstructGit(gff);
-                        return GITHelpers.BytesGit(git, Game.K2);
+                        return GITHelpers.BytesGit(git, BioWareGame.K2);
                     } catch { return null; }
                 }},
                 { ResourceType.IFO, (fileRes) => {
@@ -471,7 +471,7 @@ namespace Andastra.Parsing.Resource
                         var reader = new GFFBinaryReader(data);
                         GFF gff = reader.Load();
                         IFO ifo = IFOHelpers.ConstructIfo(gff);
-                        GFF ifoGff = IFOHelpers.DismantleIfo(ifo, Game.K2);
+                        GFF ifoGff = IFOHelpers.DismantleIfo(ifo, BioWareGame.K2);
                         return GFFAuto.BytesGff(ifoGff, IFO.BinaryType);
                     } catch { return null; }
                 }},
@@ -492,7 +492,7 @@ namespace Andastra.Parsing.Resource
                         var reader = new GFFBinaryReader(data);
                         GFF gff = reader.Load();
                         PTH pth = PTHHelpers.ConstructPth(gff);
-                        return PTHAuto.BytesPth(pth, Game.K2);
+                        return PTHAuto.BytesPth(pth, BioWareGame.K2);
                     } catch { return null; }
                 }},
                 { ResourceType.UTC, (fileRes) => {
@@ -502,7 +502,7 @@ namespace Andastra.Parsing.Resource
                         var reader = new GFFBinaryReader(data);
                         GFF gff = reader.Load();
                         UTC utc = UTCHelpers.ConstructUtc(gff);
-                        return UTCHelpers.BytesUtc(utc, Game.K2);
+                        return UTCHelpers.BytesUtc(utc, BioWareGame.K2);
                     } catch { return null; }
                 }},
                 { ResourceType.UTD, (fileRes) => {
@@ -512,7 +512,7 @@ namespace Andastra.Parsing.Resource
                         var reader = new GFFBinaryReader(data);
                         GFF gff = reader.Load();
                         UTD utd = UTDHelpers.ConstructUtd(gff);
-                        GFF utdGff = UTDHelpers.DismantleUtd(utd, Game.K2);
+                        GFF utdGff = UTDHelpers.DismantleUtd(utd, BioWareGame.K2);
                         return GFFAuto.BytesGff(utdGff, UTD.BinaryType);
                     } catch { return null; }
                 }},
@@ -523,7 +523,7 @@ namespace Andastra.Parsing.Resource
                         var reader = new GFFBinaryReader(data);
                         GFF gff = reader.Load();
                         UTE ute = UTEHelpers.ConstructUte(gff);
-                        GFF uteGff = UTEHelpers.DismantleUte(ute, Game.K2);
+                        GFF uteGff = UTEHelpers.DismantleUte(ute, BioWareGame.K2);
                         return GFFAuto.BytesGff(uteGff, UTE.BinaryType);
                     } catch { return null; }
                 }},
@@ -534,7 +534,7 @@ namespace Andastra.Parsing.Resource
                         var reader = new GFFBinaryReader(data);
                         GFF gff = reader.Load();
                         UTI uti = UTIHelpers.ConstructUti(gff);
-                        return UTIHelpers.BytesUti(uti, Game.K2);
+                        return UTIHelpers.BytesUti(uti, BioWareGame.K2);
                     } catch { return null; }
                 }},
                 { ResourceType.UTM, (fileRes) => {
@@ -544,7 +544,7 @@ namespace Andastra.Parsing.Resource
                         var reader = new GFFBinaryReader(data);
                         GFF gff = reader.Load();
                         UTM utm = UTMHelpers.ConstructUtm(gff);
-                        return UTMHelpers.BytesUtm(utm, Game.K2);
+                        return UTMHelpers.BytesUtm(utm, BioWareGame.K2);
                     } catch { return null; }
                 }},
                 { ResourceType.UTP, (fileRes) => {
@@ -554,7 +554,7 @@ namespace Andastra.Parsing.Resource
                         var reader = new GFFBinaryReader(data);
                         GFF gff = reader.Load();
                         UTP utp = UTPHelpers.ConstructUtp(gff);
-                        GFF utpGff = UTPHelpers.DismantleUtp(utp, Game.K2);
+                        GFF utpGff = UTPHelpers.DismantleUtp(utp, BioWareGame.K2);
                         return GFFAuto.BytesGff(utpGff, UTP.BinaryType);
                     } catch { return null; }
                 }},
@@ -565,7 +565,7 @@ namespace Andastra.Parsing.Resource
                         var reader = new GFFBinaryReader(data);
                         GFF gff = reader.Load();
                         UTS uts = UTSHelpers.ConstructUts(gff);
-                        GFF utsGff = UTSHelpers.DismantleUts(uts, Game.K2);
+                        GFF utsGff = UTSHelpers.DismantleUts(uts, BioWareGame.K2);
                         return GFFAuto.BytesGff(utsGff, UTS.BinaryType);
                     } catch { return null; }
                 }},
@@ -576,7 +576,7 @@ namespace Andastra.Parsing.Resource
                         var reader = new GFFBinaryReader(data);
                         GFF gff = reader.Load();
                         UTT utt = UTTHelpers.ConstructUtt(gff);
-                        return UTTAuto.BytesUtt(utt, Game.K2);
+                        return UTTAuto.BytesUtt(utt, BioWareGame.K2);
                     } catch { return null; }
                 }},
                 { ResourceType.UTW, (fileRes) => {
@@ -586,7 +586,7 @@ namespace Andastra.Parsing.Resource
                         var reader = new GFFBinaryReader(data);
                         GFF gff = reader.Load();
                         UTW utw = UTWHelpers.ConstructUtw(gff);
-                        return UTWAuto.BytesUtw(utw, Game.K2);
+                        return UTWAuto.BytesUtw(utw, BioWareGame.K2);
                     } catch { return null; }
                 }},
                 // Walkmesh resources - validate by reading and re-serializing

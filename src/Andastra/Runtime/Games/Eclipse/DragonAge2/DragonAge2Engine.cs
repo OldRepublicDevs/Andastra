@@ -27,7 +27,7 @@ namespace Andastra.Runtime.Engines.Eclipse.DragonAge2
     public class DragonAge2Engine : EclipseEngine
     {
         public DragonAge2Engine(IEngineProfile profile)
-            : base(profile, Game.DA2)
+            : base(profile, BioWareGame.DA2)
         {
         }
 

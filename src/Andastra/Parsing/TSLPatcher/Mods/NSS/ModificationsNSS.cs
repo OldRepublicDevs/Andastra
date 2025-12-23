@@ -56,8 +56,7 @@ namespace Andastra.Parsing.Mods.NSS
         public override object PatchResource(
             byte[] source,
             PatcherMemory memory,
-            PatchLogger logger,
-            Game game)
+            PatchLogger logger, BioWareGame game)
         {
             if (source is null)
             {
@@ -174,8 +173,7 @@ namespace Andastra.Parsing.Mods.NSS
         public override void Apply(
             object mutableData,
             PatcherMemory memory,
-            PatchLogger logger,
-            Game game)
+            PatchLogger logger, BioWareGame game)
         {
             if (mutableData is MutableString nssSource)
             {
@@ -245,8 +243,7 @@ namespace Andastra.Parsing.Mods.NSS
         private byte[] CompileWithExternal(
             string tempScriptFile,
             ExternalNCSCompiler nwnnsscompiler,
-            PatchLogger logger,
-            Game game)
+            PatchLogger logger, BioWareGame game)
         {
             string tempDir = Path.GetTempPath();
             string tempCompiledFilepath = Path.Combine(tempDir, "temp_script.ncs");

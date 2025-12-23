@@ -214,7 +214,7 @@ namespace HoloPatcher.UI
             if (game.HasValue)
             {
                 // Find KOTOR paths from registry and default locations
-                Dictionary<Game, List<string>> detectedPaths = FindKotorPathsFromDefault();
+                Dictionary<BiowareGame, List<string>> detectedPaths = FindKotorPathsFromDefault();
                 // Can be null if paths not found
                 if (detectedPaths.TryGetValue(game.Value, out List<string> paths))
                 {
@@ -462,19 +462,19 @@ namespace HoloPatcher.UI
         /// - macOS: Steam, App Store locations
         /// - Linux: Steam, Flatpak, WSL paths
         /// </summary>
-        private static Dictionary<Game, List<string>> FindKotorPathsFromDefault()
+        private static Dictionary<BiowareGame, List<string>> FindKotorPathsFromDefault()
         {
-            var paths = new Dictionary<Game, List<string>>
+            var paths = new Dictionary<BiowareGame, List<string>>
             {
                 { Game.K1, new List<string>() },
                 { Game.TSL, new List<string>() }
             };
 
             // Get platform-specific default paths
-            Dictionary<Game, List<string>> defaultPaths = GetDefaultPaths();
+            Dictionary<BiowareGame, List<string>> defaultPaths = GetDefaultPaths();
 
             // Check each default path for existence
-            foreach (KeyValuePair<Game, List<string>> kvp in defaultPaths)
+            foreach (KeyValuePair<BiowareGame, List<string>> kvp in defaultPaths)
             {
                 Game game = kvp.Key;
                 foreach (string path in kvp.Value)
@@ -499,9 +499,9 @@ namespace HoloPatcher.UI
         /// <summary>
         /// Gets default KOTOR installation paths for the current platform.
         /// </summary>
-        private static Dictionary<Game, List<string>> GetDefaultPaths()
+        private static Dictionary<BiowareGame, List<string>> GetDefaultPaths()
         {
-            var paths = new Dictionary<Game, List<string>>
+            var paths = new Dictionary<BiowareGame, List<string>>
             {
                 { Game.K1, new List<string>() },
                 { Game.TSL, new List<string>() }
@@ -618,7 +618,7 @@ namespace HoloPatcher.UI
         /// Searches the Windows registry for KOTOR installation paths.
         /// Checks Steam, GOG, and retail CD/DVD installations.
         /// </summary>
-        private static void SearchWindowsRegistry(Dictionary<Game, List<string>> paths)
+        private static void SearchWindowsRegistry(Dictionary<BiowareGame, List<string>> paths)
         {
 #if WINDOWS
             // Registry paths for K1

@@ -10,12 +10,12 @@ namespace Andastra.Runtime.Stride.Graphics
     /// </summary>
     public class StrideSpriteBatch : ISpriteBatch
     {
-        private readonly SpriteBatch _spriteBatch;
+        private readonly StrideGraphics.SpriteBatch _spriteBatch;
         private bool _isBegun;
 
-        internal SpriteBatch SpriteBatch => _spriteBatch;
+        internal StrideGraphics.SpriteBatch SpriteBatch => _spriteBatch;
 
-        public StrideSpriteBatch(SpriteBatch spriteBatch)
+        public StrideSpriteBatch(StrideGraphics.SpriteBatch spriteBatch)
         {
             _spriteBatch = spriteBatch ?? throw new System.ArgumentNullException(nameof(spriteBatch));
             // GraphicsDevice is obtained from SpriteBatch when Begin() is called
@@ -128,7 +128,7 @@ namespace Andastra.Runtime.Stride.Graphics
             throw new System.ArgumentException("Texture must be a StrideTexture2D", nameof(texture));
         }
 
-        private SpriteFont GetStrideFont(IFont font)
+        private StrideGraphics.SpriteFont GetStrideFont(IFont font)
         {
             if (font is StrideFont strideFont)
             {

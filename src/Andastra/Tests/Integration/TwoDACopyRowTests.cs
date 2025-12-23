@@ -42,7 +42,7 @@ Col2=X
             );
 
             var memory = new PatcherMemory();
-            object bytes = config.Patches2DA.First(p => p.SaveAs == "test.2da").PatchResource(twoda.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.Patches2DA.First(p => p.SaveAs == "test.2da").PatchResource(twoda.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedTwoda = TwoDA.FromBytes((byte[])bytes);
 
             patchedTwoda.GetHeight().Should().Be(3);
@@ -75,7 +75,7 @@ Col2=X
             );
 
             var memory = new PatcherMemory();
-            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
+            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), BioWareGame.K1);
 
             twoda.GetHeight().Should().Be(3);
             twoda.GetColumn("Col1").Should().Equal("a", "c", "c");
@@ -105,7 +105,7 @@ Col2=d
             );
 
             var memory = new PatcherMemory();
-            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
+            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), BioWareGame.K1);
 
             twoda.GetHeight().Should().Be(2);
             twoda.GetLabel(1).Should().Be("1");
@@ -136,7 +136,7 @@ Col2=X
             );
 
             var memory = new PatcherMemory();
-            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
+            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), BioWareGame.K1);
 
             twoda.GetHeight().Should().Be(1);
             twoda.GetLabel(0).Should().Be("0");
@@ -173,7 +173,7 @@ Col2=f
             );
 
             var memory = new PatcherMemory();
-            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
+            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), BioWareGame.K1);
 
             twoda.GetHeight().Should().Be(3);
             twoda.GetLabel(1).Should().Be("1");
@@ -207,7 +207,7 @@ NewRowLabel=r2
             );
 
             var memory = new PatcherMemory();
-            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
+            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), BioWareGame.K1);
 
             twoda.GetLabel(2).Should().Be("r2");
             twoda.GetColumn("Col1").Should().Equal("a", "c", "a");
@@ -240,7 +240,7 @@ Col2=high()
             );
 
             var memory = new PatcherMemory();
-            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
+            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), BioWareGame.K1);
 
             twoda.GetHeight().Should().Be(3);
             twoda.GetCellString(2, "Col1").Should().Be("3");
@@ -276,7 +276,7 @@ Col2=StrRef6
             memory.MemoryStr[5] = 100;
             memory.MemoryStr[6] = 200;
 
-            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
+            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), BioWareGame.K1);
 
             twoda.GetHeight().Should().Be(3);
             twoda.GetCellString(2, "Col1").Should().Be("100");
@@ -312,7 +312,7 @@ Col2=2DAMEMORY6
             memory.Memory2DA[5] = "AAA";
             memory.Memory2DA[6] = "BBB";
 
-            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
+            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), BioWareGame.K1);
 
             twoda.GetHeight().Should().Be(3);
             twoda.GetCellString(2, "Col1").Should().Be("AAA");
@@ -344,7 +344,7 @@ RowIndex=0
             );
 
             var memory = new PatcherMemory();
-            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
+            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), BioWareGame.K1);
 
             twoda.GetHeight().Should().Be(3);
             memory.Memory2DA[5].Should().Be("2");
@@ -379,7 +379,7 @@ Col1=Y
             );
 
             var memory = new PatcherMemory();
-            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
+            config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), BioWareGame.K1);
 
             twoda.GetHeight().Should().Be(2);
             twoda.GetColumn("Col1").Should().Equal("X", "Y");

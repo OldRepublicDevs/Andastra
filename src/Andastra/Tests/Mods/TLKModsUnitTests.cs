@@ -32,7 +32,7 @@ namespace Andastra.Parsing.Tests.Mods
                 "Old2",
             };
 
-            config.Apply(dialogTlk, memory, new PatchLogger(), Game.K1);
+            config.Apply(dialogTlk, memory, new PatchLogger(), BioWareGame.K1);
 
             dialogTlk.Count.Should().Be(4);
             dialogTlk.Get(2).Text.Should().Be("Append2");
@@ -59,7 +59,7 @@ namespace Andastra.Parsing.Tests.Mods
             dialogTlk.Add("Old3");
             dialogTlk.Add("Old4");
 
-            config.Apply(dialogTlk, memory, new PatchLogger(), Game.K1);
+            config.Apply(dialogTlk, memory, new PatchLogger(), BioWareGame.K1);
 
             dialogTlk.Count.Should().Be(4);
             dialogTlk.Get(1).Text.Should().Be("Replace2");
@@ -85,7 +85,7 @@ namespace Andastra.Parsing.Tests.Mods
             dialogTlk.Add("Existing1");
             dialogTlk.Add("Existing2");
 
-            config.Apply(dialogTlk, memory, new PatchLogger(), Game.K1);
+            config.Apply(dialogTlk, memory, new PatchLogger(), BioWareGame.K1);
 
             dialogTlk.Count.Should().Be(7);
             memory.MemoryStr[0].Should().Be(2);
@@ -105,7 +105,7 @@ namespace Andastra.Parsing.Tests.Mods
             config.Modifiers.Add(m1);
 
             var dialogTlk = new TLK();
-            config.Apply(dialogTlk, memory, new PatchLogger(), Game.K1);
+            config.Apply(dialogTlk, memory, new PatchLogger(), BioWareGame.K1);
 
             TLKEntry entry = dialogTlk.Get(0);
             entry.Should().NotBeNull();
@@ -129,7 +129,7 @@ namespace Andastra.Parsing.Tests.Mods
             var dialogTlk = new TLK();
             dialogTlk.Add("Original");
 
-            config.Apply(dialogTlk, memory, new PatchLogger(), Game.K1);
+            config.Apply(dialogTlk, memory, new PatchLogger(), BioWareGame.K1);
 
             dialogTlk.Count.Should().Be(3);
             dialogTlk.Get(0).Text.Should().Be("Replace0");
@@ -150,7 +150,7 @@ namespace Andastra.Parsing.Tests.Mods
             config.Modifiers.Add(m1);
 
             var dialogTlk = new TLK();
-            config.Apply(dialogTlk, memory, new PatchLogger(), Game.K1);
+            config.Apply(dialogTlk, memory, new PatchLogger(), BioWareGame.K1);
 
             dialogTlk.Count.Should().Be(1);
             dialogTlk.Get(0).Text.Should().Be("First");

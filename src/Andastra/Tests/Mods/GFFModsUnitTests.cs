@@ -26,7 +26,7 @@ namespace Andastra.Parsing.Tests.Mods
             var memory = new PatcherMemory();
             var config = new ModificationsGFF("", false, new List<ModifyGFF> { new ModifyFieldGFF("Field1", new FieldValueConstant(2)) });
 
-            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedGff = GFF.FromBytes((byte[])bytes);
 
             patchedGff.Root.GetUInt8("Field1").Should().Be(2);
@@ -41,7 +41,7 @@ namespace Andastra.Parsing.Tests.Mods
             var memory = new PatcherMemory();
             var config = new ModificationsGFF("", false, new List<ModifyGFF> { new ModifyFieldGFF("Field1", new FieldValueConstant(2)) });
 
-            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedGff = GFF.FromBytes((byte[])bytes);
 
             patchedGff.Root.GetInt8("Field1").Should().Be(2);
@@ -56,7 +56,7 @@ namespace Andastra.Parsing.Tests.Mods
             var memory = new PatcherMemory();
             var config = new ModificationsGFF("", false, new List<ModifyGFF> { new ModifyFieldGFF("Field1", new FieldValueConstant(2)) });
 
-            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedGff = GFF.FromBytes((byte[])bytes);
 
             patchedGff.Root.GetUInt16("Field1").Should().Be(2);
@@ -71,7 +71,7 @@ namespace Andastra.Parsing.Tests.Mods
             var memory = new PatcherMemory();
             var config = new ModificationsGFF("", false, new List<ModifyGFF> { new ModifyFieldGFF("Field1", new FieldValueConstant(2)) });
 
-            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedGff = GFF.FromBytes((byte[])bytes);
 
             patchedGff.Root.GetInt16("Field1").Should().Be(2);
@@ -86,7 +86,7 @@ namespace Andastra.Parsing.Tests.Mods
             var memory = new PatcherMemory();
             var config = new ModificationsGFF("", false, new List<ModifyGFF> { new ModifyFieldGFF("Field1", new FieldValueConstant(2)) });
 
-            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedGff = GFF.FromBytes((byte[])bytes);
 
             patchedGff.Root.GetUInt32("Field1").Should().Be(2u);
@@ -101,7 +101,7 @@ namespace Andastra.Parsing.Tests.Mods
             var memory = new PatcherMemory();
             var config = new ModificationsGFF("", false, new List<ModifyGFF> { new ModifyFieldGFF("Field1", new FieldValueConstant(2)) });
 
-            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedGff = GFF.FromBytes((byte[])bytes);
 
             patchedGff.Root.GetInt32("Field1").Should().Be(2);
@@ -116,7 +116,7 @@ namespace Andastra.Parsing.Tests.Mods
             var memory = new PatcherMemory();
             var config = new ModificationsGFF("", false, new List<ModifyGFF> { new ModifyFieldGFF("Field1", new FieldValueConstant(2UL)) });
 
-            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedGff = GFF.FromBytes((byte[])bytes);
 
             patchedGff.Root.GetUInt64("Field1").Should().Be(2UL);
@@ -131,7 +131,7 @@ namespace Andastra.Parsing.Tests.Mods
             var memory = new PatcherMemory();
             var config = new ModificationsGFF("", false, new List<ModifyGFF> { new ModifyFieldGFF("Field1", new FieldValueConstant(2L)) });
 
-            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedGff = GFF.FromBytes((byte[])bytes);
 
             patchedGff.Root.GetInt64("Field1").Should().Be(2L);
@@ -146,7 +146,7 @@ namespace Andastra.Parsing.Tests.Mods
             var memory = new PatcherMemory();
             var config = new ModificationsGFF("", false, new List<ModifyGFF> { new ModifyFieldGFF("Field1", new FieldValueConstant(2.345f)) });
 
-            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedGff = GFF.FromBytes((byte[])bytes);
 
             patchedGff.Root.GetSingle("Field1").Should().BeApproximately(2.345f, 0.0001f);
@@ -161,7 +161,7 @@ namespace Andastra.Parsing.Tests.Mods
             var memory = new PatcherMemory();
             var config = new ModificationsGFF("", false, new List<ModifyGFF> { new ModifyFieldGFF("Field1", new FieldValueConstant(2.345678)) });
 
-            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedGff = GFF.FromBytes((byte[])bytes);
 
             patchedGff.Root.GetDouble("Field1").Should().BeApproximately(2.345678, 0.000001);
@@ -176,7 +176,7 @@ namespace Andastra.Parsing.Tests.Mods
             var memory = new PatcherMemory();
             var config = new ModificationsGFF("", false, new List<ModifyGFF> { new ModifyFieldGFF("Field1", new FieldValueConstant("def")) });
 
-            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedGff = GFF.FromBytes((byte[])bytes);
 
             patchedGff.Root.GetValue("Field1").Should().Be("def");
@@ -195,7 +195,7 @@ namespace Andastra.Parsing.Tests.Mods
                 new List<ModifyGFF> { new ModifyFieldGFF("Field1", new FieldValueConstant(new LocalizedStringDelta(new FieldValueConstant(1)))) }
             );
 
-            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedGff = GFF.FromBytes((byte[])bytes);
 
             patchedGff.Root.GetLocString("Field1").StringRef.Should().Be(1);
@@ -210,7 +210,7 @@ namespace Andastra.Parsing.Tests.Mods
             var memory = new PatcherMemory();
             var config = new ModificationsGFF("", false, new List<ModifyGFF> { new ModifyFieldGFF("Field1", new FieldValueConstant(new Vector3(1, 2, 3))) });
 
-            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedGff = GFF.FromBytes((byte[])bytes);
 
             Vector3 vector = patchedGff.Root.GetVector3("Field1");
@@ -228,7 +228,7 @@ namespace Andastra.Parsing.Tests.Mods
             var memory = new PatcherMemory();
             var config = new ModificationsGFF("", false, new List<ModifyGFF> { new ModifyFieldGFF("Field1", new FieldValueConstant(new Vector4(1, 2, 3, 4))) });
 
-            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedGff = GFF.FromBytes((byte[])bytes);
 
             Vector4 vector = patchedGff.Root.GetVector4("Field1");
@@ -250,7 +250,7 @@ namespace Andastra.Parsing.Tests.Mods
             var memory = new PatcherMemory();
             var config = new ModificationsGFF("", false, new List<ModifyGFF> { new ModifyFieldGFF("List\\0\\String", new FieldValueConstant("abc")) });
 
-            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedGff = GFF.FromBytes((byte[])bytes);
 
             GFFList patchedList = patchedGff.Root.GetList("List");
@@ -274,7 +274,7 @@ namespace Andastra.Parsing.Tests.Mods
             new ModifyFieldGFF("Integer", new FieldValue2DAMemory(5))
          });
 
-            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedGff = GFF.FromBytes((byte[])bytes);
 
             patchedGff.Root.GetValue("String").Should().Be("123");
@@ -292,7 +292,7 @@ namespace Andastra.Parsing.Tests.Mods
 
             var config = new ModificationsGFF("", false, new List<ModifyGFF> { new ModifyFieldGFF("StrRef", new FieldValueTLKMemory(10)) });
 
-            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedGff = GFF.FromBytes((byte[])bytes);
 
             patchedGff.Root.GetUInt32("StrRef").Should().Be(999);
@@ -313,7 +313,7 @@ namespace Andastra.Parsing.Tests.Mods
             new ModifyFieldGFF("Field3", new FieldValueConstant(200))
          });
 
-            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patchedGff = GFF.FromBytes((byte[])bytes);
 
             patchedGff.Root.GetUInt8("Field1").Should().Be(10);

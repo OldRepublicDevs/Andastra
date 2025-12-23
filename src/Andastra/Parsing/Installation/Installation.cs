@@ -20,7 +20,7 @@ namespace Andastra.Parsing.Installation
     public class Installation
     {
         private readonly string _path;
-        private readonly Game _game;
+        private readonly BioWareGame _game;
         private readonly InstallationResourceManager _resourceManager;
 
         // Hardcoded module names for better UI display
@@ -59,7 +59,7 @@ namespace Andastra.Parsing.Installation
         };
 
         public string Path => _path;
-        public Game Game => _game;
+        public BioWareGame Game => _game;
         public InstallationResourceManager Resources => _resourceManager;
 
         public Installation(string path)
@@ -80,7 +80,7 @@ namespace Andastra.Parsing.Installation
         /// <summary>
         /// Determines the game type from an installation path.
         /// </summary>
-        public static Game? DetermineGame(string installPath)
+        public static BioWareGame? DetermineGame(string installPath)
         {
             if (string.IsNullOrWhiteSpace(installPath) || !Directory.Exists(installPath))
                 return null;
@@ -90,14 +90,14 @@ namespace Andastra.Parsing.Installation
             string tsl32Exe = System.IO.Path.Combine(installPath, "SWKOTOR2.EXE");
 
             if (File.Exists(tsl64Exe) || File.Exists(tsl32Exe))
-                return Game.TSL;
+                return BioWareGame.TSL;
 
             // Check for swkotor.exe (K1)
             string k164Exe = System.IO.Path.Combine(installPath, "swkotor.exe");
             string k132Exe = System.IO.Path.Combine(installPath, "SWKOTOR.EXE");
 
             if (File.Exists(k164Exe) || File.Exists(k132Exe))
-                return Game.K1;
+                return BioWareGame.K1;
 
             // Check for chitin.key as fallback indicator
             string chitinPath = System.IO.Path.Combine(installPath, "chitin.key");
@@ -116,11 +116,11 @@ namespace Andastra.Parsing.Installation
 
                     if (modules.Any(m => m?.StartsWith("001", StringComparison.OrdinalIgnoreCase) == true ||
                                          m?.StartsWith("004", StringComparison.OrdinalIgnoreCase) == true))
-                        return Game.TSL;
+                        return BioWareGame.TSL;
 
                     if (modules.Any(m => m?.StartsWith("dan", StringComparison.OrdinalIgnoreCase) == true ||
                                          m?.StartsWith("tar", StringComparison.OrdinalIgnoreCase) == true))
-                        return Game.K1;
+                        return BioWareGame.K1;
                 }
             }
 
@@ -424,7 +424,7 @@ namespace Andastra.Parsing.Installation
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:944-946
         // Original: def core_resources(self) -> list[FileResource]:
         /// <summary>
-        /// Similar to chitin_resources, but also return the resources in patch.erf if exists and the installation is Game.K1.
+        /// Similar to chitin_resources, but also return the resources in patch.erf if exists and the installation is BioWareGame.K1.
         /// </summary>
         public List<FileResource> CoreResources()
         {

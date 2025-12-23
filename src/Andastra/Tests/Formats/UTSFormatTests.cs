@@ -36,7 +36,7 @@ namespace Andastra.Parsing.Tests.Formats
             ValidateIO(uts);
 
             // Test writing and reading back
-            GFF gff2 = UTSHelpers.DismantleUts(uts, Game.K2);
+            GFF gff2 = UTSHelpers.DismantleUts(uts, BioWareGame.K2);
             byte[] data = new GFFBinaryWriter(gff2).Write();
             GFF gff3 = GFF.FromBytes(data);
             UTS uts2 = UTSHelpers.ConstructUts(gff3);
@@ -312,7 +312,7 @@ namespace Andastra.Parsing.Tests.Formats
             UTS originalUts = CreateTestUtsObject();
 
             // Write to GFF and then to bytes
-            GFF gff = UTSHelpers.DismantleUts(originalUts, Game.K2);
+            GFF gff = UTSHelpers.DismantleUts(originalUts, BioWareGame.K2);
             byte[] data = new GFFBinaryWriter(gff).Write();
 
             // Read back
@@ -342,7 +342,7 @@ namespace Andastra.Parsing.Tests.Formats
             uts.ResRef = ResRef.FromBlank();
             uts.Name = LocalizedString.FromInvalid();
 
-            GFF gff = UTSHelpers.DismantleUts(uts, Game.K2);
+            GFF gff = UTSHelpers.DismantleUts(uts, BioWareGame.K2);
             byte[] data = new GFFBinaryWriter(gff).Write();
             GFF gff2 = GFF.FromBytes(data);
             UTS loaded = UTSHelpers.ConstructUts(gff2);
@@ -418,7 +418,7 @@ namespace Andastra.Parsing.Tests.Formats
         private static void CreateTestUtsFile(string path)
         {
             UTS uts = CreateTestUtsObject();
-            GFF gff = UTSHelpers.DismantleUts(uts, Game.K2);
+            GFF gff = UTSHelpers.DismantleUts(uts, BioWareGame.K2);
             byte[] data = new GFFBinaryWriter(gff).Write();
             Directory.CreateDirectory(Path.GetDirectoryName(path));
             File.WriteAllBytes(path, data);

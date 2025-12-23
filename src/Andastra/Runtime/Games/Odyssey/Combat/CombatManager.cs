@@ -742,7 +742,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
             }
 
             // Calculate XP: Base formula is CR * 100, with diminishing returns
-            // TODO:  KOTOR uses a simplified XP system compared to D&D 3.5
+            // KOTOR uses a simplified XP system compared to D&D 3.5
             int xpAwarded = (int)(cr * 100);
 
             // Get victim position for distance calculations

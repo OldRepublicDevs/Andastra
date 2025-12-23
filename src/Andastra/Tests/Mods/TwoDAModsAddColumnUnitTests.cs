@@ -55,7 +55,7 @@ namespace Andastra.Parsing.Tests.Mods
                 new Dictionary<int, string>()
             ));
 
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             twoda.GetColumn("Col1").Should().Equal("a", "c");
             twoda.GetColumn("Col2").Should().Equal("b", "d");
@@ -84,7 +84,7 @@ namespace Andastra.Parsing.Tests.Mods
                 new Dictionary<int, string>()
             ));
 
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             twoda.GetColumn("Col1").Should().Equal("a", "c");
             twoda.GetColumn("Col2").Should().Equal("b", "d");
@@ -113,7 +113,7 @@ namespace Andastra.Parsing.Tests.Mods
                 new Dictionary<int, string>()
             ));
 
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             twoda.GetColumn("Col1").Should().Equal("a", "c");
             twoda.GetColumn("Col2").Should().Equal("b", "d");
@@ -143,7 +143,7 @@ namespace Andastra.Parsing.Tests.Mods
                 new Dictionary<int, string>()
             ));
 
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             twoda.GetColumn("Col1").Should().Equal("a", "c");
             twoda.GetColumn("Col2").Should().Equal("b", "d");
@@ -173,7 +173,7 @@ namespace Andastra.Parsing.Tests.Mods
                 new Dictionary<int, string>()
             ));
 
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             twoda.GetColumn("Col1").Should().Equal("a", "c");
             twoda.GetColumn("Col2").Should().Equal("b", "d");
@@ -207,7 +207,7 @@ namespace Andastra.Parsing.Tests.Mods
             );
             config.Modifiers.Add(addColumn);
 
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             twoda.GetColumn("Col1").Should().Equal("a", "c");
             twoda.GetColumn("Col2").Should().Equal("b", "d");
@@ -240,7 +240,7 @@ namespace Andastra.Parsing.Tests.Mods
                 new Dictionary<int, string>()
             ));
 
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             twoda.GetColumn("NewCol").Should().Equal("idx0", "default", "lbl2");
         }
@@ -264,7 +264,7 @@ namespace Andastra.Parsing.Tests.Mods
                 new Dictionary<int, string>()
             ));
 
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             twoda.GetHeaders().Should().Contain("Col2");
             twoda.GetHeight().Should().Be(0);
@@ -286,7 +286,7 @@ namespace Andastra.Parsing.Tests.Mods
             config.Modifiers.Add(new AddColumn2DA("", "Col3", "Y", new Dictionary<int, RowValue>(), new Dictionary<string, RowValue>(), new Dictionary<int, string>()));
             config.Modifiers.Add(new AddColumn2DA("", "Col4", "Z", new Dictionary<int, RowValue>(), new Dictionary<string, RowValue>(), new Dictionary<int, string>()));
 
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             twoda.GetHeaders().Should().Equal("Col1", "Col2", "Col3", "Col4");
             twoda.GetCellString(0, "Col2").Should().Be("X");

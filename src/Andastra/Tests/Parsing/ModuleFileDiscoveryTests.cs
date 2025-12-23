@@ -35,7 +35,7 @@ namespace Andastra.Tests.Parsing
                 File.WriteAllText(Path.Combine(tmpDir, "test01_s.rim"), "");
                 File.WriteAllText(Path.Combine(tmpDir, "test01_dlg.erf"), "");
 
-                ModuleFileGroup group = ModuleFileDiscovery.DiscoverModuleFiles(tmpDir, "test01", Game.TSL);
+                ModuleFileGroup group = ModuleFileDiscovery.DiscoverModuleFiles(tmpDir, "test01", BioWareGame.TSL);
                 Assert.NotNull(group);
                 Assert.True(group.UsesModOverride);
                 Assert.NotNull(group.ModFile);
@@ -61,7 +61,7 @@ namespace Andastra.Tests.Parsing
                 // Only _s.rim present, no main .rim
                 File.WriteAllText(Path.Combine(tmpDir, "test02_s.rim"), "");
 
-                ModuleFileGroup group = ModuleFileDiscovery.DiscoverModuleFiles(tmpDir, "test02", Game.K1);
+                ModuleFileGroup group = ModuleFileDiscovery.DiscoverModuleFiles(tmpDir, "test02", BioWareGame.K1);
                 Assert.Null(group);
             }
             finally
@@ -83,14 +83,14 @@ namespace Andastra.Tests.Parsing
                 File.WriteAllText(Path.Combine(tmpDir, "test03_s.rim"), "");
                 File.WriteAllText(Path.Combine(tmpDir, "test03_dlg.erf"), "");
 
-                ModuleFileGroup k2 = ModuleFileDiscovery.DiscoverModuleFiles(tmpDir, "test03", Game.TSL);
+                ModuleFileGroup k2 = ModuleFileDiscovery.DiscoverModuleFiles(tmpDir, "test03", BioWareGame.TSL);
                 Assert.NotNull(k2);
                 Assert.False(k2.UsesModOverride);
                 Assert.NotNull(k2.MainRimFile);
                 Assert.NotNull(k2.DataRimFile);
                 Assert.NotNull(k2.DlgErfFile);
 
-                ModuleFileGroup k1 = ModuleFileDiscovery.DiscoverModuleFiles(tmpDir, "test03", Game.K1);
+                ModuleFileGroup k1 = ModuleFileDiscovery.DiscoverModuleFiles(tmpDir, "test03", BioWareGame.K1);
                 Assert.NotNull(k1);
                 Assert.False(k1.UsesModOverride);
                 Assert.NotNull(k1.MainRimFile);

@@ -48,7 +48,7 @@ namespace Andastra.Parsing.Resource.Generics
         /// - Writes GFF format file with "GAM " signature
         /// - Supports file paths and streams
         /// </remarks>
-        public static void WriteGam(GAM gam, object target, Game game, ResourceType fileFormat = null)
+        public static void WriteGam(GAM gam, object target, BioWareGame game, ResourceType fileFormat = null)
         {
             ResourceType format = fileFormat ?? ResourceType.GAM;
             if (format != ResourceType.GAM)
@@ -98,7 +98,7 @@ namespace Andastra.Parsing.Resource.Generics
         /// - Dismantles GAM object to GFF structure
         /// - Converts GFF to bytes with "GAM " signature
         /// </remarks>
-        public static byte[] BytesGam(GAM gam, Game game, ResourceType fileFormat = null)
+        public static byte[] BytesGam(GAM gam, BioWareGame game, ResourceType fileFormat = null)
         {
             ResourceType format = fileFormat ?? ResourceType.GAM;
             if (format != ResourceType.GAM)

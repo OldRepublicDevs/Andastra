@@ -35,13 +35,13 @@ namespace Andastra.Runtime.Stride.PostProcessing
     /// </summary>
     public class StrideSsrEffect : BaseSsrEffect
     {
-        private GraphicsDevice _graphicsDevice;
+        private Stride.Graphics.GraphicsDevice _graphicsDevice;
         private EffectInstance _ssrEffect;
         private Texture _historyTexture;
         private Texture _temporaryTexture;
-        private SpriteBatch _spriteBatch;
+        private Stride.Graphics.SpriteBatch _spriteBatch;
         private Effect _fullscreenEffect;
-        private ConstantBuffer _ssrConstants;
+        private Stride.Graphics.ConstantBuffer _ssrConstants;
         private SamplerState _linearSampler;
         private SamplerState _pointSampler;
         private bool _effectInitialized;
@@ -73,7 +73,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             public Vector2 Padding;
         }
 
-        public StrideSsrEffect(GraphicsDevice graphicsDevice)
+        public StrideSsrEffect(Stride.Graphics.GraphicsDevice graphicsDevice)
         {
             _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
             _clipNear = 0.1f;
@@ -175,7 +175,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             try
             {
                 // Create sprite batch for fullscreen quad rendering
-                _spriteBatch = new SpriteBatch(_graphicsDevice);
+                _spriteBatch = new Stride.Graphics.SpriteBatch(_graphicsDevice);
 
                 // Create samplers for texture sampling
                 _linearSampler = SamplerState.New(_graphicsDevice, new SamplerStateDescription
@@ -1595,7 +1595,4 @@ shader SSREffect : ShaderBase
         {
             _clipNear = near;
             _clipFar = far;
-        }
-    }
-}
-
+       

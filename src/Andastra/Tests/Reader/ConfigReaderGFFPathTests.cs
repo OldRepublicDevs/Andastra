@@ -294,7 +294,7 @@ Value=123
             // Apply patch end-to-end
             var gff = new GFF();
             var memory = new PatcherMemory();
-            object bytes = result.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = result.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patched = GFF.FromBytes((byte[])bytes);
 
             GFFStruct someStruct = patched.Root.GetStruct("SomeStruct");
@@ -339,7 +339,7 @@ StrRef=2DAMEMORY5
             var memory = new PatcherMemory();
             memory.Memory2DA[5] = "123";
 
-            object bytes = result.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            object bytes = result.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), BioWareGame.K1);
             var patched = GFF.FromBytes((byte[])bytes);
 
             patched.Root.GetLocString("Field1").StringRef.Should().Be(123);

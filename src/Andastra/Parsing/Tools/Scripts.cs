@@ -14,7 +14,7 @@ namespace Andastra.Parsing.Tools
     {
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/scripts.py:26-58
         // Original: def decompile_ncs_to_nss(ncs_path: Path, output_path: Path | None = None, *, game: Game, functions: list[ScriptFunction] | None = None, constants: list[ScriptConstant] | None = None) -> str:
-        public static string DecompileNcsToNss(string ncsPath, string outputPath = null, Game game = Game.K1, List<ScriptFunction> functions = null, List<ScriptConstant> constants = null)
+        public static string DecompileNcsToNss(string ncsPath, string outputPath = null, BioWareGame game = BioWareGame.K1, List<ScriptFunction> functions = null, List<ScriptConstant> constants = null)
         {
             NCS ncs = NCSAuto.ReadNcs(ncsPath);
             string source = NCSAuto.DecompileNcs(ncs, game, functions, constants);
@@ -29,7 +29,7 @@ namespace Andastra.Parsing.Tools
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/scripts.py:61-111
         // Original: def disassemble_ncs(ncs_path: Path, output_path: Path | None = None, *, game: Game | None = None, pretty: bool = True) -> str:
-        public static string DisassembleNcs(string ncsPath, string outputPath = null, Game? game = null, bool pretty = true)
+        public static string DisassembleNcs(string ncsPath, string outputPath = null, BioWareGame? game = null, bool pretty = true)
         {
             NCS ncs = NCSAuto.ReadNcs(ncsPath);
 
@@ -76,7 +76,7 @@ namespace Andastra.Parsing.Tools
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/scripts.py:114-147
         // Original: def ncs_to_text(ncs_path: Path, output_path: Path | None = None, *, mode: str = "decompile", game: Game | None = None) -> str:
-        public static string NcsToText(string ncsPath, string outputPath = null, string mode = "decompile", Game? game = null)
+        public static string NcsToText(string ncsPath, string outputPath = null, string mode = "decompile", BioWareGame? game = null)
         {
             if (mode == "decompile")
             {

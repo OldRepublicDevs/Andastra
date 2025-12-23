@@ -35,7 +35,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:94
             // Original: nssParser = NssParser(functions=KOTOR_FUNCTIONS, constants=KOTOR_CONSTANTS, library=library, library_lookup=normalized_lookup)
-            var compiler = new NssCompiler(Game.K1, libraryLookup);
+            var compiler = new NssCompiler(BioWareGame.K1, libraryLookup);
             NCS ncs = compiler.Compile(script, library);
             return ncs;
         }

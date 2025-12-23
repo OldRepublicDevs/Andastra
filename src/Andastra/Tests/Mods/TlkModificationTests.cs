@@ -40,7 +40,7 @@ namespace Andastra.Parsing.Tests.Mods
             dialogTlk.Add("Old2", "");
 
             // Act
-            config.Apply(dialogTlk, memory, new PatchLogger(), Game.K1);
+            config.Apply(dialogTlk, memory, new PatchLogger(), BioWareGame.K1);
 
             // Assert
             Assert.Equal(4, dialogTlk.Count);
@@ -91,7 +91,7 @@ namespace Andastra.Parsing.Tests.Mods
             dialogTlk.Add("Old4", "");
 
             // Act
-            config.Apply(dialogTlk, memory, new PatchLogger(), Game.K1);
+            config.Apply(dialogTlk, memory, new PatchLogger(), BioWareGame.K1);
 
             // Assert
             Assert.Equal(4, dialogTlk.Count);

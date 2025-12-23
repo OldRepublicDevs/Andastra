@@ -38,7 +38,7 @@ namespace Andastra.Parsing.Tests.Formats
             ValidateIO(utm);
 
             // Test writing and reading back
-            byte[] data = UTMHelpers.BytesUtm(utm, Game.K2);
+            byte[] data = UTMHelpers.BytesUtm(utm, BioWareGame.K2);
             utm = UTMHelpers.ReadUtm(data);
             ValidateIO(utm);
         }
@@ -231,7 +231,7 @@ namespace Andastra.Parsing.Tests.Formats
                 testUtm.CanBuy = testCase.canBuy;
                 testUtm.CanSell = testCase.canSell;
 
-                GFF gff = UTMHelpers.DismantleUtm(testUtm, Game.K2);
+                GFF gff = UTMHelpers.DismantleUtm(testUtm, BioWareGame.K2);
                 byte? buySellFlagNullable = gff.Root.GetUInt8("BuySellFlag");
                 byte buySellFlag = buySellFlagNullable ?? 0;
 
@@ -292,7 +292,7 @@ namespace Andastra.Parsing.Tests.Formats
             item2.Droppable = 1;
             utm.Items.Add(item2);
 
-            byte[] data = UTMHelpers.BytesUtm(utm, Game.K2);
+            byte[] data = UTMHelpers.BytesUtm(utm, BioWareGame.K2);
             UTM loaded = UTMHelpers.ReadUtm(data);
 
             loaded.Items.Count.Should().Be(2, "Should have 2 items");
@@ -322,7 +322,7 @@ namespace Andastra.Parsing.Tests.Formats
             utm.CanSell = false;
             utm.Id = 0;
 
-            byte[] data = UTMHelpers.BytesUtm(utm, Game.K2);
+            byte[] data = UTMHelpers.BytesUtm(utm, BioWareGame.K2);
             UTM loaded = UTMHelpers.ReadUtm(data);
 
             loaded.ResRef.Should().Be(ResRef.FromBlank());
@@ -354,7 +354,7 @@ namespace Andastra.Parsing.Tests.Formats
                 utm.Items.Add(item);
             }
 
-            byte[] data = UTMHelpers.BytesUtm(utm, Game.K2);
+            byte[] data = UTMHelpers.BytesUtm(utm, BioWareGame.K2);
             UTM loaded = UTMHelpers.ReadUtm(data);
 
             loaded.Items.Count.Should().Be(5);
@@ -383,13 +383,13 @@ namespace Andastra.Parsing.Tests.Formats
             utm.Id = 42;
 
             // Test with useDeprecated = true (default)
-            byte[] data1 = UTMHelpers.BytesUtm(utm, Game.K2, useDeprecated: true);
+            byte[] data1 = UTMHelpers.BytesUtm(utm, BioWareGame.K2, useDeprecated: true);
             GFF gff1 = GFF.FromBytes(data1);
             gff1.Root.Exists("ID").Should().BeTrue("ID field should exist when useDeprecated=true");
             gff1.Root.GetUInt8("ID").Should().Be(42, "ID field should be 42");
 
             // Test with useDeprecated = false
-            byte[] data2 = UTMHelpers.BytesUtm(utm, Game.K2, useDeprecated: false);
+            byte[] data2 = UTMHelpers.BytesUtm(utm, BioWareGame.K2, useDeprecated: false);
             GFF gff2 = GFF.FromBytes(data2);
             gff2.Root.Exists("ID").Should().BeFalse("ID field should not exist when useDeprecated=false");
         }
@@ -402,7 +402,7 @@ namespace Andastra.Parsing.Tests.Formats
             utm.Name = LocalizedString.FromEnglish("English Merchant Name");
             utm.Name.SetData(Language.German, Gender.Male, "Deutscher Händlername");
 
-            byte[] data = UTMHelpers.BytesUtm(utm, Game.K2);
+            byte[] data = UTMHelpers.BytesUtm(utm, BioWareGame.K2);
             UTM loaded = UTMHelpers.ReadUtm(data);
 
             loaded.Name.Should().NotBeNull("Name should not be null");
@@ -417,7 +417,7 @@ namespace Andastra.Parsing.Tests.Formats
             var utm = new UTM();
             utm.Comment = "This is a test merchant comment";
 
-            byte[] data = UTMHelpers.BytesUtm(utm, Game.K2);
+            byte[] data = UTMHelpers.BytesUtm(utm, BioWareGame.K2);
             UTM loaded = UTMHelpers.ReadUtm(data);
 
             loaded.Comment.Should().Be("This is a test merchant comment", "Comment should match");
@@ -430,7 +430,7 @@ namespace Andastra.Parsing.Tests.Formats
             var utm = new UTM();
             utm.OnOpenScript = new ResRef("merchant_open");
 
-            byte[] data = UTMHelpers.BytesUtm(utm, Game.K2);
+            byte[] data = UTMHelpers.BytesUtm(utm, BioWareGame.K2);
             UTM loaded = UTMHelpers.ReadUtm(data);
 
             loaded.OnOpenScript.Should().Be(new ResRef("merchant_open"), "OnOpenScript should match");
@@ -444,7 +444,7 @@ namespace Andastra.Parsing.Tests.Formats
             utm.MarkUp = 25;
             utm.MarkDown = 20;
 
-            byte[] data = UTMHelpers.BytesUtm(utm, Game.K2);
+            byte[] data = UTMHelpers.BytesUtm(utm, BioWareGame.K2);
             UTM loaded = UTMHelpers.ReadUtm(data);
 
             loaded.MarkUp.Should().Be(25, "MarkUp should match");
@@ -504,7 +504,7 @@ namespace Andastra.Parsing.Tests.Formats
             }
 
             // Round-trip test
-            byte[] data = UTMHelpers.BytesUtm(utm, Game.K2);
+            byte[] data = UTMHelpers.BytesUtm(utm, BioWareGame.K2);
             UTM loaded = UTMHelpers.ReadUtm(data);
 
             loaded.ResRef.Should().Be(new ResRef("complex_merchant"));
@@ -555,7 +555,7 @@ namespace Andastra.Parsing.Tests.Formats
             item2.Droppable = 0;
             utm.Items.Add(item2);
 
-            byte[] data = UTMHelpers.BytesUtm(utm, Game.K2);
+            byte[] data = UTMHelpers.BytesUtm(utm, BioWareGame.K2);
             UTM loaded = UTMHelpers.ReadUtm(data);
 
             // Validate all fields
@@ -611,7 +611,7 @@ namespace Andastra.Parsing.Tests.Formats
             item.Droppable = 0;
             utm.Items.Add(item);
 
-            byte[] data = UTMHelpers.BytesUtm(utm, Game.K2);
+            byte[] data = UTMHelpers.BytesUtm(utm, BioWareGame.K2);
             Directory.CreateDirectory(Path.GetDirectoryName(path));
             File.WriteAllBytes(path, data);
         }

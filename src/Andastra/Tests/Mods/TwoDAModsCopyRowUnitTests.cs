@@ -48,7 +48,7 @@ namespace Andastra.Parsing.Tests.Mods
                 new Dictionary<string, RowValue> { { "Col2", new RowValueConstant("X") } }
             ));
 
-            object bytes = config.PatchResource(twoda.ToBytes(), memory, logger, Game.K1);
+            object bytes = config.PatchResource(twoda.ToBytes(), memory, logger, BioWareGame.K1);
             var patchedTwoda = TwoDAFile.FromBytes((byte[])bytes);
 
             patchedTwoda.GetHeight().Should().Be(3);
@@ -77,7 +77,7 @@ namespace Andastra.Parsing.Tests.Mods
                 new Dictionary<string, RowValue> { { "Col2", new RowValueConstant("X") } }
             ));
 
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             twoda.GetHeight().Should().Be(3);
             twoda.GetColumn("Col1").Should().Equal("a", "c", "c");
@@ -108,7 +108,7 @@ namespace Andastra.Parsing.Tests.Mods
                 }
             ));
 
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             twoda.GetHeight().Should().Be(2);
             twoda.GetLabel(1).Should().Be("1");
@@ -140,7 +140,7 @@ namespace Andastra.Parsing.Tests.Mods
                 }
             ));
 
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             twoda.GetHeight().Should().Be(1);
             twoda.GetLabel(0).Should().Be("0");
@@ -183,7 +183,7 @@ namespace Andastra.Parsing.Tests.Mods
                 }
             ));
 
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             twoda.GetHeight().Should().Be(3);
             twoda.GetLabel(1).Should().Be("1");
@@ -213,7 +213,7 @@ namespace Andastra.Parsing.Tests.Mods
                 new Dictionary<string, RowValue>()
             ));
 
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             twoda.GetLabel(2).Should().Be("r2");
             twoda.GetColumn("Col1").Should().Equal("a", "c", "a");
@@ -241,7 +241,7 @@ namespace Andastra.Parsing.Tests.Mods
                 new Dictionary<string, RowValue> { { "Col2", new RowValueHigh("Col2") } }
             ));
 
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             twoda.GetHeight().Should().Be(3);
             twoda.GetColumn("Col1").Should().Equal("a", "c", "a");
@@ -270,7 +270,7 @@ namespace Andastra.Parsing.Tests.Mods
                 new Dictionary<string, RowValue> { { "Col2", new RowValueTLKMemory(0) } }
             ));
 
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             twoda.GetColumn("Col1").Should().Equal("a", "c", "a");
             twoda.GetColumn("Col2").Should().Equal("1", "2", "5");
@@ -297,7 +297,7 @@ namespace Andastra.Parsing.Tests.Mods
                 new Dictionary<string, RowValue> { { "Col2", new RowValue2DAMemory(0) } }
             ));
 
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             twoda.GetColumn("Col1").Should().Equal("a", "c", "a");
             twoda.GetColumn("Col2").Should().Equal("1", "2", "999");
@@ -325,7 +325,7 @@ namespace Andastra.Parsing.Tests.Mods
             );
             config.Modifiers.Add(copy);
 
-            config.Apply(twoda, memory, logger, Game.K1);
+            config.Apply(twoda, memory, logger, BioWareGame.K1);
 
             twoda.GetHeight().Should().Be(3);
             memory.Memory2DA[5].Should().Be("2");

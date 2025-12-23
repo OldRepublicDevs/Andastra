@@ -283,26 +283,26 @@ namespace Andastra.Parsing.Resource
             // Matching PyKotor: uses dismantle methods to convert generics back to GFF, then bytes_gff
             if (resource is ARE are)
             {
-                return AREHelpers.BytesAre(are, Game.K2);
+                return AREHelpers.BytesAre(are, BioWareGame.K2);
             }
             if (resource is DLG dlg)
             {
-                return DLGHelper.BytesDlg(dlg, Game.K2);
+                return DLGHelper.BytesDlg(dlg, BioWareGame.K2);
             }
             if (resource is CNV cnv)
             {
                 // CNV format is only used by Eclipse Engine games
                 // Default to Dragon Age Origins if game type is not specified
-                return Andastra.Parsing.Resource.Generics.CNV.CNVHelper.BytesCnv(cnv, Game.DA);
+                return Andastra.Parsing.Resource.Generics.CNV.CNVHelper.BytesCnv(cnv, BioWareGame.DA);
             }
             if (resource is GIT git)
             {
-                return GITHelpers.BytesGit(git, Game.K2);
+                return GITHelpers.BytesGit(git, BioWareGame.K2);
             }
             if (resource is IFO ifo)
             {
                 // IFO doesn't have a BytesIfo method, so use DismantleIfo + BytesGff
-                GFF ifoGff = IFOHelpers.DismantleIfo(ifo, Game.K2);
+                GFF ifoGff = IFOHelpers.DismantleIfo(ifo, BioWareGame.K2);
                 return GFFAuto.BytesGff(ifoGff, IFO.BinaryType);
             }
             if (resource is JRL jrl)
@@ -311,53 +311,53 @@ namespace Andastra.Parsing.Resource
             }
             if (resource is PTH pth)
             {
-                return PTHAuto.BytesPth(pth, Game.K2);
+                return PTHAuto.BytesPth(pth, BioWareGame.K2);
             }
             if (resource is UTC utc)
             {
-                return UTCHelpers.BytesUtc(utc, Game.K2);
+                return UTCHelpers.BytesUtc(utc, BioWareGame.K2);
             }
             if (resource is UTD utd)
             {
                 // UTD doesn't have a BytesUtd method, so use DismantleUtd + BytesGff
-                GFF utdGff = UTDHelpers.DismantleUtd(utd, Game.K2);
+                GFF utdGff = UTDHelpers.DismantleUtd(utd, BioWareGame.K2);
                 return GFFAuto.BytesGff(utdGff, UTD.BinaryType);
             }
             if (resource is UTE ute)
             {
                 // UTE doesn't have a BytesUte method, so use DismantleUte + BytesGff
-                GFF uteGff = UTEHelpers.DismantleUte(ute, Game.K2);
+                GFF uteGff = UTEHelpers.DismantleUte(ute, BioWareGame.K2);
                 return GFFAuto.BytesGff(uteGff, UTE.BinaryType);
             }
             if (resource is UTM utm)
             {
                 // UTM doesn't have a BytesUtm method, so use DismantleUtm + BytesGff
-                GFF utmGff = UTMHelpers.DismantleUtm(utm, Game.K2);
+                GFF utmGff = UTMHelpers.DismantleUtm(utm, BioWareGame.K2);
                 return GFFAuto.BytesGff(utmGff, UTM.BinaryType);
             }
             if (resource is UTP utp)
             {
                 // UTP doesn't have a BytesUtp method, so use DismantleUtp + BytesGff
-                GFF utpGff = UTPHelpers.DismantleUtp(utp, Game.K2);
+                GFF utpGff = UTPHelpers.DismantleUtp(utp, BioWareGame.K2);
                 return GFFAuto.BytesGff(utpGff, UTP.BinaryType);
             }
             if (resource is UTS uts)
             {
                 // UTS doesn't have a BytesUts method, so use DismantleUts + BytesGff
-                GFF utsGff = UTSHelpers.DismantleUts(uts, Game.K2);
+                GFF utsGff = UTSHelpers.DismantleUts(uts, BioWareGame.K2);
                 return GFFAuto.BytesGff(utsGff, UTS.BinaryType);
             }
             if (resource is UTW utw)
             {
-                return UTWAuto.BytesUtw(utw, Game.K2);
+                return UTWAuto.BytesUtw(utw, BioWareGame.K2);
             }
             if (resource is UTT utt)
             {
-                return UTTAuto.BytesUtt(utt, Game.K2);
+                return UTTAuto.BytesUtt(utt, BioWareGame.K2);
             }
             if (resource is UTI uti)
             {
-                return UTIHelpers.BytesUti(uti, Game.K2);
+                return UTIHelpers.BytesUti(uti, BioWareGame.K2);
             }
             if (resource is BWM bwm)
             {

@@ -21,7 +21,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
     public class CNVBinaryWriter
     {
         private readonly CNV _cnv;
-        private readonly Game _game;
+        private readonly BioWareGame _game;
         private readonly string _filepath;
         private readonly Stream _stream;
         private byte[] _writtenBytes;
@@ -32,7 +32,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
         /// <param name="cnv">The CNV object to write.</param>
         /// <param name="filepath">Path to write the CNV file to.</param>
         /// <param name="game">The game type (must be Eclipse engine).</param>
-        public CNVBinaryWriter(CNV cnv, string filepath, Game game)
+        public CNVBinaryWriter(CNV cnv, string filepath, BioWareGame game)
         {
             _cnv = cnv ?? throw new ArgumentNullException(nameof(cnv));
             _filepath = filepath ?? throw new ArgumentNullException(nameof(filepath));
@@ -54,7 +54,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
         /// <param name="cnv">The CNV object to write.</param>
         /// <param name="target">Stream to write to.</param>
         /// <param name="game">The game type (must be Eclipse engine).</param>
-        public CNVBinaryWriter(CNV cnv, Stream target, Game game)
+        public CNVBinaryWriter(CNV cnv, Stream target, BioWareGame game)
         {
             _cnv = cnv ?? throw new ArgumentNullException(nameof(cnv));
             _stream = target ?? throw new ArgumentNullException(nameof(target));
@@ -75,7 +75,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
         /// </summary>
         /// <param name="cnv">The CNV object to write.</param>
         /// <param name="game">The game type (must be Eclipse engine).</param>
-        public CNVBinaryWriter(CNV cnv, Game game)
+        public CNVBinaryWriter(CNV cnv, BioWareGame game)
         {
             _cnv = cnv ?? throw new ArgumentNullException(nameof(cnv));
             _game = game;

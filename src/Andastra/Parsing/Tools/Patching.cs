@@ -210,9 +210,9 @@ namespace Andastra.Parsing.Tools
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/patching.py:247-356
         // Original: def convert_gff_game(...)
-        public static void ConvertGffGame(Game fromGame, FileResource resource, PatchingConfig config)
+        public static void ConvertGffGame(BioWareGame fromGame, FileResource resource, PatchingConfig config)
         {
-            Game toGame = fromGame.IsK1() ? Game.K2 : Game.K1;
+            BioWareGame toGame = fromGame.IsK1() ? BioWareGame.K2 : BioWareGame.K1;
             string newName = resource.Filename();
             object convertedData = new byte[0];
             string savepath = null;
@@ -589,11 +589,11 @@ namespace Andastra.Parsing.Tools
             {
                 if (config.K1ConvertGffs && !resource.InsideCapsule)
                 {
-                    ConvertGffGame(Game.K2, resource, config);
+                    ConvertGffGame(BioWareGame.K2, resource, config);
                 }
                 if (config.TslConvertGffs && !resource.InsideCapsule)
                 {
-                    ConvertGffGame(Game.K1, resource, config);
+                    ConvertGffGame(BioWareGame.K1, resource, config);
                 }
 
                 GFF gff = null;

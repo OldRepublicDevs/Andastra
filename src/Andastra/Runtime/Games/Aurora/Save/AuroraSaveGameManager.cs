@@ -126,9 +126,9 @@ namespace Andastra.Runtime.Games.Aurora.Save
                     : new GIT();
                 
                 // Write game.git GFF file
-                // Use Game.NWN for Aurora engine (Neverwinter Nights)
+                // Use BioWareGame.NWN for Aurora engine (Neverwinter Nights)
                 string gameGitPath = Path.Combine(saveDir, "game.git");
-                GFF gitGff = GITHelpers.DismantleGit(git, Game.NWN);
+                GFF gitGff = GITHelpers.DismantleGit(git, BioWareGame.NWN);
                 gitGff.Content = GFFContent.GIT;
                 GFFAuto.WriteGff(gitGff, gameGitPath);
 
@@ -149,11 +149,11 @@ namespace Andastra.Runtime.Games.Aurora.Save
                 File.WriteAllText(nwsyncadPath, ""); // Empty for single-player saves
 
                 // Save game.gam - Game state (GAM format)
-                // Based on nwmain.exe: GAM files store party, globals, game time, etc.
+                // Based on nwmain.exe: GAM files store party, globals, BioWareGame time etc.
                 // Convert SaveGameData to GAM format
                 GAM gam = ConvertSaveGameDataToGAM(saveData);
                 string gameGamPath = Path.Combine(saveDir, "game.gam");
-                GAMAuto.WriteGam(gam, gameGamPath, Game.NWN);
+                GAMAuto.WriteGam(gam, gameGamPath, BioWareGame.NWN);
 
                 return await Task.FromResult(true);
             }
@@ -261,7 +261,7 @@ namespace Andastra.Runtime.Games.Aurora.Save
                 }
 
                 // Load game.gam - Game state (GAM format)
-                // Based on nwmain.exe: GAM files store party, globals, game time, etc.
+                // Based on nwmain.exe: GAM files store party, globals, BioWareGame time etc.
                 string gameGamPath = Path.Combine(saveDir, "game.gam");
                 if (File.Exists(gameGamPath))
                 {
@@ -767,7 +767,7 @@ namespace Andastra.Runtime.Games.Aurora.Save
         /// Converts SaveGameData to GAM format.
         /// </summary>
         /// <remarks>
-        /// Based on nwmain.exe: GAM files store game state (party, globals, game time, etc.)
+        /// Based on nwmain.exe: GAM files store game state (party, globals, BioWareGame time etc.)
         /// </remarks>
         private GAM ConvertSaveGameDataToGAM(SaveGameData saveData)
         {
@@ -883,7 +883,7 @@ namespace Andastra.Runtime.Games.Aurora.Save
         /// Converts GAM format to SaveGameData.
         /// </summary>
         /// <remarks>
-        /// Based on nwmain.exe: GAM files store game state (party, globals, game time, etc.)
+        /// Based on nwmain.exe: GAM files store game state (party, globals, BioWareGame time etc.)
         /// </remarks>
         private void ConvertGAMToSaveGameData(GAM gam, SaveGameData saveData)
         {

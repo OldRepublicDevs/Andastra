@@ -549,7 +549,7 @@ namespace Andastra.Parsing.Tests.Formats
                 ute.Tag = "test_encounter";
                 ute.ResRef = ResRef.FromString("test_encounter");
 
-                GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
+                GFF gff = UTEHelpers.DismantleUte(ute, BioWareGame.K2);
                 byte[] data = GFFAuto.BytesGff(gff);
                 Directory.CreateDirectory(Path.GetDirectoryName(TestUteFile));
                 File.WriteAllBytes(TestUteFile, data);

@@ -60,7 +60,7 @@ Path=TestStruct
             // Act - Apply to actual GFF
             var gff = new GFF();
             ModificationsGFF modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
-            modifications.Apply(gff, Memory, Logger, Game.K1);
+            modifications.Apply(gff, Memory, Logger, BioWareGame.K1);
 
             // Assert
             gff.Root.Exists("TestStruct").Should().BeTrue();
@@ -92,7 +92,7 @@ Value(lang2)=French text
             // Act
             var gff = new GFF();
             ModificationsGFF modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
-            modifications.Apply(gff, Memory, Logger, Game.K1);
+            modifications.Apply(gff, Memory, Logger, BioWareGame.K1);
 
             // Assert
             gff.Root.Exists("Description").Should().BeTrue();
@@ -130,7 +130,7 @@ Path=OuterStruct
             // Act
             var gff = new GFF();
             ModificationsGFF modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
-            modifications.Apply(gff, Memory, Logger, Game.K1);
+            modifications.Apply(gff, Memory, Logger, BioWareGame.K1);
 
             // Assert
             GFFStruct outerStruct = gff.Root.GetStruct("OuterStruct");
@@ -210,7 +210,7 @@ Path=StructA\StructB
             // Act
             var gff = new GFF();
             ModificationsGFF modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
-            modifications.Apply(gff, Memory, Logger, Game.K1);
+            modifications.Apply(gff, Memory, Logger, BioWareGame.K1);
 
             // Assert
             GFFStruct structA = gff.Root.GetStruct("StructA");
@@ -244,7 +244,7 @@ Path=\ExistingStruct
 
             // Act
             ModificationsGFF modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
-            modifications.Apply(gff, Memory, Logger, Game.K1);
+            modifications.Apply(gff, Memory, Logger, BioWareGame.K1);
 
             // Assert
             GFFStruct existingStructResult = gff.Root.GetStruct("ExistingStruct");
@@ -272,7 +272,7 @@ Value=88
             // Act
             var gff = new GFF();
             ModificationsGFF modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
-            modifications.Apply(gff, Memory, Logger, Game.K1);
+            modifications.Apply(gff, Memory, Logger, BioWareGame.K1);
 
             // Assert
             gff.Root.Exists("RootField").Should().BeTrue();
@@ -305,7 +305,7 @@ TypeId=0
 
             // Act
             ModificationsGFF modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
-            modifications.Apply(gff, Memory, Logger, Game.K1);
+            modifications.Apply(gff, Memory, Logger, BioWareGame.K1);
 
             // Assert
             GFFList resultList = gff.Root.GetList("ItemList");
@@ -337,7 +337,7 @@ Level1\Level2\Level3\DeepField=999
 
             // Act
             ModificationsGFF modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
-            modifications.Apply(gff, Memory, Logger, Game.K1);
+            modifications.Apply(gff, Memory, Logger, BioWareGame.K1);
 
             // Assert
             GFFStruct level1Result = gff.Root.GetStruct("Level1");
@@ -368,7 +368,7 @@ ItemList\0\Tag=modified_tag
 
             // Act
             ModificationsGFF modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
-            modifications.Apply(gff, Memory, Logger, Game.K1);
+            modifications.Apply(gff, Memory, Logger, BioWareGame.K1);
 
             // Assert
             GFFList resultList = gff.Root.GetList("ItemList");
@@ -399,7 +399,7 @@ Path=Nested\\Field
 
             // Act
             ModificationsGFF modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
-            modifications.Apply(gff, Memory, Logger, Game.K1);
+            modifications.Apply(gff, Memory, Logger, BioWareGame.K1);
 
             // Assert - Python: memory.memory_2da[self.dest_token_id] = self.path
             Memory.Memory2DA[5].Should().Be("Nested\\Field");
@@ -445,7 +445,7 @@ Path=TestStruct
 
             // Act
             ModificationsGFF modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
-            modifications.Apply(gff, Memory, Logger, Game.K1);
+            modifications.Apply(gff, Memory, Logger, BioWareGame.K1);
 
             // Assert
             GFFStruct result = gff.Root.GetStruct("TestStruct");
@@ -479,7 +479,7 @@ Value=42
 
             // Act
             ModificationsGFF modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
-            modifications.Apply(gff, Memory, Logger, Game.K1);
+            modifications.Apply(gff, Memory, Logger, BioWareGame.K1);
 
             // Assert
             gff.Root.GetValue("ExistingField").Should().Be("modified_value");
