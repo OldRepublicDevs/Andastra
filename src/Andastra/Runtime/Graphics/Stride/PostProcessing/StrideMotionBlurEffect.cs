@@ -36,8 +36,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
     {
         private StrideGraphics.GraphicsDevice _graphicsDevice;
         private EffectInstance _motionBlurEffect;
-        private StrideGraphics.StrideGraphics.Texture _velocityTexture;
-        private StrideGraphics.StrideGraphics.Texture _temporaryTexture;
+        private StrideGraphics.Texture _velocityTexture;
+        private StrideGraphics.Texture _temporaryTexture;
         private StrideGraphics.SpriteBatch _spriteBatch;
         private StrideGraphics.SamplerState _linearSampler;
         private StrideGraphics.Effect _motionBlurEffectBase;
