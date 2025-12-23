@@ -50,31 +50,62 @@ namespace Andastra.Tests.Runtime.TestHelpers
         /// including LookupResource, LocateResource, ClearCache, ReloadModule, GetChitinResources,
         /// and GetPatchErfResources. All Installation properties (Path, Game, Resources) are properly
         /// configured. Based on swkotor2.exe resource management system (CExoKeyTable, CExoResMan).
+        /// 
+        /// Ghidra References:
+        /// - swkotor2.exe: 0x007c14d4 - "Resource" string reference
+        /// - swkotor2.exe: 0x0041d1e0 - FUN_0041d1e0 (resource lookup function, CExoKeyTable lookup)
+        /// - swkotor2.exe: 0x006e69a0 - FUN_006e69a0 (uses "Resource" string for lookup)
+        /// - swkotor2.exe: 0x007b6078 - "CExoKeyTable::DestroyTable: Resource %s still in demand during table deletion"
+        /// - swkotor2.exe: 0x007b6124 - "CExoKeyTable::AddKey: Duplicate Resource "
+        /// 
+        /// Original Engine Behavior:
+        /// - Resource lookup searches in precedence order: OVERRIDE > MODULES > CHITIN > TEXTUREPACKS > STREAM
+        /// - Returns null if resource name is null/whitespace (matches InstallationResourceManager.LookupResource line 44-45)
+        /// - Returns null if searchOrder is empty array (matches InstallationResourceManager.LookupResource line 50-52)
+        /// - Uses default search order if searchOrder is null (matches InstallationResourceManager.LookupResource line 56-72)
+        /// - Searches locations in order and returns first match (matches InstallationResourceManager.LookupResource line 76-85)
         /// </summary>
         /// <returns>A fully configured mock Installation instance ready for testing.</returns>
         public static Installation CreateMockInstallation()
         {
             // Create a comprehensive mock Installation with full resource lookup capabilities
+            // Based on swkotor2.exe: 0x0041d1e0 (FUN_0041d1e0 - CExoKeyTable resource lookup)
             var mockInstallation = new Mock<Installation>(MockBehavior.Strict);
             var mockResources = new Mock<IResourceLookup>(MockBehavior.Strict);
-            
+
             // Setup Installation properties
             string mockPath = Path.Combine(Path.GetTempPath(), "AndastraTestInstallation");
             Game mockGame = Game.K2; // Default to TSL for testing
-            
+
             mockInstallation.Setup(i => i.Path).Returns(mockPath);
             mockInstallation.Setup(i => i.Game).Returns(mockGame);
             mockInstallation.Setup(i => i.Resources).Returns(mockResources.Object);
-            
+
             // Setup LookupResource with correct signature (SearchLocation[] and string)
-            // Supports both the actual API signature and the test signature for compatibility
+            // Matches InstallationResourceManager.LookupResource signature exactly
+            // swkotor2.exe: 0x0041d1e0 - resource lookup returns bool, fills result parameter
+            // Our implementation returns ResourceResult (null if not found, matches original behavior)
             mockResources.Setup(r => r.LookupResource(
-                It.IsAny<string>(),
+                It.Is<string>(s => string.IsNullOrWhiteSpace(s)),
                 It.IsAny<ResourceType>(),
                 It.IsAny<SearchLocation[]>(),
                 It.IsAny<string>()))
-                .Returns((ResourceResult)null);
-            
+                .Returns((ResourceResult)null); // Matches line 44-45: if (string.IsNullOrWhiteSpace(resname)) return null;
+
+            mockResources.Setup(r => r.LookupResource(
+                It.Is<string>(s => !string.IsNullOrWhiteSpace(s)),
+                It.IsAny<ResourceType>(),
+                It.Is<SearchLocation[]>(order => order != null && order.Length == 0),
+                It.IsAny<string>()))
+                .Returns((ResourceResult)null); // Matches line 50-52: if (searchOrder != null && searchOrder.Length == 0) return null;
+
+            mockResources.Setup(r => r.LookupResource(
+                It.Is<string>(s => !string.IsNullOrWhiteSpace(s)),
+                It.IsAny<ResourceType>(),
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
+                .Returns((ResourceResult)null); // Default: resource not found (matches line 88: return null after search)
+
             // Setup LocateResource - returns empty list by default
             mockResources.Setup(r => r.LocateResource(
                 It.IsAny<string>(),
@@ -82,21 +113,21 @@ namespace Andastra.Tests.Runtime.TestHelpers
                 It.IsAny<SearchLocation[]>(),
                 It.IsAny<string>()))
                 .Returns(new List<LocationResult>());
-            
+
             // Setup ClearCache - no-op for mocks
             mockResources.Setup(r => r.ClearCache()).Verifiable();
-            
+
             // Setup ReloadModule - no-op for mocks
             mockResources.Setup(r => r.ReloadModule(It.IsAny<string>())).Verifiable();
-            
+
             // Setup GetChitinResources - returns empty list by default
             mockResources.Setup(r => r.GetChitinResources())
                 .Returns(new List<FileResource>());
-            
+
             // Setup GetPatchErfResources - returns empty list by default
             mockResources.Setup(r => r.GetPatchErfResources(It.IsAny<Game>()))
                 .Returns(new List<FileResource>());
-            
+
             // Setup Installation.Resource method (delegates to Resources.LookupResource)
             mockInstallation.Setup(i => i.Resource(
                 It.IsAny<string>(),
@@ -105,7 +136,7 @@ namespace Andastra.Tests.Runtime.TestHelpers
                 It.IsAny<string>()))
                 .Returns((string resname, ResourceType restype, SearchLocation[] searchOrder, string moduleRoot) =>
                     mockResources.Object.LookupResource(resname, restype, searchOrder, moduleRoot));
-            
+
             // Setup Installation.Locate method (delegates to Resources.LocateResource)
             mockInstallation.Setup(i => i.Locate(
                 It.IsAny<string>(),
@@ -114,45 +145,45 @@ namespace Andastra.Tests.Runtime.TestHelpers
                 It.IsAny<string>()))
                 .Returns((string resname, ResourceType restype, SearchLocation[] searchOrder, string moduleRoot) =>
                     mockResources.Object.LocateResource(resname, restype, searchOrder, moduleRoot));
-            
+
             // Setup Installation.Texture method - returns null by default
             mockInstallation.Setup(i => i.Texture(
                 It.IsAny<string>(),
                 It.IsAny<SearchLocation[]>()))
                 .Returns((Formats.TPC.TPC)null);
-            
+
             // Setup Installation.GetModuleRoots - returns empty list by default
             mockInstallation.Setup(i => i.GetModuleRoots())
                 .Returns(new List<string>());
-            
+
             // Setup Installation.GetModuleFiles - returns empty list by default
             mockInstallation.Setup(i => i.GetModuleFiles(It.IsAny<string>()))
                 .Returns(new List<string>());
-            
+
             // Setup Installation.ClearCache - delegates to Resources.ClearCache
             mockInstallation.Setup(i => i.ClearCache())
                 .Callback(() => mockResources.Object.ClearCache());
-            
+
             // Setup Installation.ReloadModule - delegates to Resources.ReloadModule
             mockInstallation.Setup(i => i.ReloadModule(It.IsAny<string>()))
                 .Callback((string moduleName) => mockResources.Object.ReloadModule(moduleName));
-            
+
             // Setup Installation.ModulePath - returns mock modules path
             mockInstallation.Setup(i => i.ModulePath())
                 .Returns(Installation.GetModulesPath(mockPath));
-            
+
             // Setup Installation.OverridePath - returns mock override path
             mockInstallation.Setup(i => i.OverridePath())
                 .Returns(Installation.GetOverridePath(mockPath));
-            
+
             // Setup Installation.PackagePath - returns mock packages path
             mockInstallation.Setup(i => i.PackagePath())
                 .Returns(Installation.GetPackagesPath(mockPath));
-            
+
             // Setup Installation.ChitinResources - delegates to Resources.GetChitinResources
             mockInstallation.Setup(i => i.ChitinResources())
                 .Returns(() => mockResources.Object.GetChitinResources());
-            
+
             // Setup Installation.CoreResources - combines ChitinResources and GetPatchErfResources
             mockInstallation.Setup(i => i.CoreResources())
                 .Returns(() =>
@@ -162,15 +193,15 @@ namespace Andastra.Tests.Runtime.TestHelpers
                     results.AddRange(mockResources.Object.GetPatchErfResources(mockGame));
                     return results;
                 });
-            
+
             // Setup Installation.OverrideList - returns empty list by default
             mockInstallation.Setup(i => i.OverrideList())
                 .Returns(new List<string>());
-            
+
             // Setup Installation.OverrideResources - returns empty list by default
             mockInstallation.Setup(i => i.OverrideResources(It.IsAny<string>()))
                 .Returns(new List<FileResource>());
-            
+
             // Setup Installation.Locations - returns empty dictionary by default
             mockInstallation.Setup(i => i.Locations(
                 It.IsAny<List<ResourceIdentifier>>(),
@@ -188,6 +219,18 @@ namespace Andastra.Tests.Runtime.TestHelpers
         /// Provides a fully functional mock that returns the specified resource when looked up,
         /// while all other resources return null. All InstallationResourceManager methods are
         /// properly configured. Based on swkotor2.exe resource management system.
+        /// 
+        /// Ghidra References:
+        /// - swkotor2.exe: 0x007c14d4 - "Resource" string reference
+        /// - swkotor2.exe: 0x0041d1e0 - FUN_0041d1e0 (resource lookup function, CExoKeyTable lookup)
+        /// - swkotor2.exe: 0x006e69a0 - FUN_006e69a0 (uses "Resource" string for lookup)
+        /// - swkotor2.exe: 0x007b6078 - "CExoKeyTable::DestroyTable: Resource %s still in demand during table deletion"
+        /// - swkotor2.exe: 0x007b6124 - "CExoKeyTable::AddKey: Duplicate Resource "
+        /// 
+        /// Original Engine Behavior:
+        /// - Resource lookup searches in precedence order: OVERRIDE > MODULES > CHITIN > TEXTUREPACKS > STREAM
+        /// - Returns ResourceResult with data if found, null otherwise
+        /// - Case-insensitive resource name matching (matches InstallationResourceManager behavior)
         /// </summary>
         /// <param name="resRef">The resource reference name to configure.</param>
         /// <param name="resourceType">The resource type to configure.</param>
@@ -196,21 +239,24 @@ namespace Andastra.Tests.Runtime.TestHelpers
         public static Installation CreateMockInstallationWithResource(string resRef, ResourceType resourceType, byte[] data)
         {
             // Create a comprehensive mock Installation with specific resource data
+            // Based on swkotor2.exe: 0x0041d1e0 (FUN_0041d1e0 - CExoKeyTable resource lookup)
             var mockInstallation = new Mock<Installation>(MockBehavior.Strict);
             var mockResources = new Mock<IResourceLookup>(MockBehavior.Strict);
-            
+
             // Setup Installation properties
             string mockPath = Path.Combine(Path.GetTempPath(), "AndastraTestInstallation");
             Game mockGame = Game.K2; // Default to TSL for testing
-            
+
             mockInstallation.Setup(i => i.Path).Returns(mockPath);
             mockInstallation.Setup(i => i.Game).Returns(mockGame);
             mockInstallation.Setup(i => i.Resources).Returns(mockResources.Object);
-            
+
             // Setup resource lookup for specific resource with correct signature
+            // Place resource in override directory (highest precedence in original engine)
+            // Matches InstallationResourceManager default search order: OVERRIDE first (line 60)
             string mockFilePath = Path.Combine(mockPath, "override", $"{resRef}.{resourceType.Extension}");
             var resourceResult = new ResourceResult(resRef, resourceType, mockFilePath, data);
-            
+
             mockResources.Setup(r => r.LookupResource(
                 resRef,
                 resourceType,
@@ -225,7 +271,7 @@ namespace Andastra.Tests.Runtime.TestHelpers
                 It.IsAny<SearchLocation[]>(),
                 It.IsAny<string>()))
                 .Returns((ResourceResult)null);
-            
+
             // Setup LocateResource - returns location for the specific resource, empty for others
             mockResources.Setup(r => r.LocateResource(
                 resRef,
@@ -236,28 +282,28 @@ namespace Andastra.Tests.Runtime.TestHelpers
                 {
                     new LocationResult(mockFilePath, 0, data.Length)
                 });
-            
+
             mockResources.Setup(r => r.LocateResource(
                 It.Is<string>(s => !string.Equals(s, resRef, StringComparison.OrdinalIgnoreCase)),
                 It.IsAny<ResourceType>(),
                 It.IsAny<SearchLocation[]>(),
                 It.IsAny<string>()))
                 .Returns(new List<LocationResult>());
-            
+
             // Setup ClearCache - no-op for mocks
             mockResources.Setup(r => r.ClearCache()).Verifiable();
-            
+
             // Setup ReloadModule - no-op for mocks
             mockResources.Setup(r => r.ReloadModule(It.IsAny<string>())).Verifiable();
-            
+
             // Setup GetChitinResources - returns empty list by default
             mockResources.Setup(r => r.GetChitinResources())
                 .Returns(new List<FileResource>());
-            
+
             // Setup GetPatchErfResources - returns empty list by default
             mockResources.Setup(r => r.GetPatchErfResources(It.IsAny<Game>()))
                 .Returns(new List<FileResource>());
-            
+
             // Setup Installation.Resource method (delegates to Resources.LookupResource)
             mockInstallation.Setup(i => i.Resource(
                 It.IsAny<string>(),
@@ -266,7 +312,7 @@ namespace Andastra.Tests.Runtime.TestHelpers
                 It.IsAny<string>()))
                 .Returns((string resname, ResourceType restype, SearchLocation[] searchOrder, string moduleRoot) =>
                     mockResources.Object.LookupResource(resname, restype, searchOrder, moduleRoot));
-            
+
             // Setup Installation.Locate method (delegates to Resources.LocateResource)
             mockInstallation.Setup(i => i.Locate(
                 It.IsAny<string>(),
@@ -275,45 +321,45 @@ namespace Andastra.Tests.Runtime.TestHelpers
                 It.IsAny<string>()))
                 .Returns((string resname, ResourceType restype, SearchLocation[] searchOrder, string moduleRoot) =>
                     mockResources.Object.LocateResource(resname, restype, searchOrder, moduleRoot));
-            
+
             // Setup Installation.Texture method - returns null by default (would need TPC parsing)
             mockInstallation.Setup(i => i.Texture(
                 It.IsAny<string>(),
                 It.IsAny<SearchLocation[]>()))
                 .Returns((Formats.TPC.TPC)null);
-            
+
             // Setup Installation.GetModuleRoots - returns empty list by default
             mockInstallation.Setup(i => i.GetModuleRoots())
                 .Returns(new List<string>());
-            
+
             // Setup Installation.GetModuleFiles - returns empty list by default
             mockInstallation.Setup(i => i.GetModuleFiles(It.IsAny<string>()))
                 .Returns(new List<string>());
-            
+
             // Setup Installation.ClearCache - delegates to Resources.ClearCache
             mockInstallation.Setup(i => i.ClearCache())
                 .Callback(() => mockResources.Object.ClearCache());
-            
+
             // Setup Installation.ReloadModule - delegates to Resources.ReloadModule
             mockInstallation.Setup(i => i.ReloadModule(It.IsAny<string>()))
                 .Callback((string moduleName) => mockResources.Object.ReloadModule(moduleName));
-            
+
             // Setup Installation.ModulePath - returns mock modules path
             mockInstallation.Setup(i => i.ModulePath())
                 .Returns(Installation.GetModulesPath(mockPath));
-            
+
             // Setup Installation.OverridePath - returns mock override path
             mockInstallation.Setup(i => i.OverridePath())
                 .Returns(Installation.GetOverridePath(mockPath));
-            
+
             // Setup Installation.PackagePath - returns mock packages path
             mockInstallation.Setup(i => i.PackagePath())
                 .Returns(Installation.GetPackagesPath(mockPath));
-            
+
             // Setup Installation.ChitinResources - delegates to Resources.GetChitinResources
             mockInstallation.Setup(i => i.ChitinResources())
                 .Returns(() => mockResources.Object.GetChitinResources());
-            
+
             // Setup Installation.CoreResources - combines ChitinResources and GetPatchErfResources
             mockInstallation.Setup(i => i.CoreResources())
                 .Returns(() =>
@@ -323,15 +369,15 @@ namespace Andastra.Tests.Runtime.TestHelpers
                     results.AddRange(mockResources.Object.GetPatchErfResources(mockGame));
                     return results;
                 });
-            
+
             // Setup Installation.OverrideList - returns empty list by default
             mockInstallation.Setup(i => i.OverrideList())
                 .Returns(new List<string>());
-            
+
             // Setup Installation.OverrideResources - returns empty list by default
             mockInstallation.Setup(i => i.OverrideResources(It.IsAny<string>()))
                 .Returns(new List<FileResource>());
-            
+
             // Setup Installation.Locations - returns location for the specific resource, empty for others
             mockInstallation.Setup(i => i.Locations(
                 It.IsAny<List<ResourceIdentifier>>(),
@@ -404,23 +450,23 @@ namespace Andastra.Tests.Runtime.TestHelpers
                 // Create a minimal Game instance for testing
                 // Stride Game constructor initializes GraphicsDevice automatically
                 var game = new Stride.Engine.Game();
-                
+
                 // Set window properties for headless/minimal testing
                 game.Window.ClientSize = new Int2(1280, 720);
                 game.Window.Title = "Stride Test";
                 game.Window.IsFullscreen = false;
                 game.Window.IsMouseVisible = false;
-                
+
                 // Initialize the game to ensure GraphicsDevice is created
                 // In a headless environment, this might fail if no GPU is available
                 game.Initialize();
-                
+
                 // Return the GraphicsDevice from the game instance
                 if (game.GraphicsDevice != null)
                 {
                     return game.GraphicsDevice;
                 }
-                
+
                 // If GraphicsDevice is null after initialization, dispose and return null
                 game.Dispose();
                 return null;
@@ -455,12 +501,12 @@ namespace Andastra.Tests.Runtime.TestHelpers
                 game.Window.IsFullscreen = false;
                 game.Window.IsMouseVisible = false;
                 game.Initialize();
-                
+
                 if (game.GraphicsDevice != null)
                 {
                     return game;
                 }
-                
+
                 game.Dispose();
                 return null;
             }
