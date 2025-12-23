@@ -12738,6 +12738,127 @@ technique ColorGrading
 
             return new List<int>();
         }
+
+        /// <summary>
+        /// Caches mesh geometry data (vertex positions and indices) from MDL model.
+        /// This cached data is used for collision shape updates when geometry is modified.
+        /// </summary>
+        /// <param name="meshId">Mesh identifier (model name/resref).</param>
+        /// <param name="mdl">MDL model to extract geometry from.</param>
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Original vertex/index data is cached for physics collision shape generation.
+        /// When geometry is modified (destroyed/deformed), collision shapes are rebuilt from this cached data.
+        /// </remarks>
+        private void CacheMeshGeometryFromMDL(string meshId, MDL mdl)
+        {
+            if (string.IsNullOrEmpty(meshId) || mdl == null || mdl.Root == null)
+            {
+                return;
+            }
+
+            // Check if already cached
+            if (_cachedMeshGeometry.ContainsKey(meshId))
+            {
+                return;
+            }
+
+            // Extract vertex positions and indices recursively from all nodes
+            List<Vector3> vertices = new List<Vector3>();
+            List<int> indices = new List<int>();
+
+            ExtractGeometryFromMDLNode(mdl.Root, System.Numerics.Matrix4x4.Identity, vertices, indices);
+
+            // Only cache if we extracted valid geometry
+            if (vertices.Count > 0 && indices.Count > 0)
+            {
+                CachedMeshGeometry cachedGeometry = new CachedMeshGeometry
+                {
+                    MeshId = meshId,
+                    Vertices = vertices,
+                    Indices = indices
+                };
+
+                _cachedMeshGeometry[meshId] = cachedGeometry;
+            }
+        }
+
+        /// <summary>
+        /// Recursively extracts vertex positions and indices from an MDL node.
+        /// </summary>
+        /// <param name="node">MDL node to extract geometry from.</param>
+        /// <param name="parentTransform">Parent transform matrix.</param>
+        /// <param name="vertices">List to add vertex positions to.</param>
+        /// <param name="indices">List to add indices to.</param>
+        private void ExtractGeometryFromMDLNode(MDLNode node, System.Numerics.Matrix4x4 parentTransform, List<Vector3> vertices, List<int> indices)
+        {
+            if (node == null)
+            {
+                return;
+            }
+
+            // Build node transform
+            System.Numerics.Quaternion rotation = new System.Numerics.Quaternion(
+                node.Orientation.X,
+                node.Orientation.Y,
+                node.Orientation.Z,
+                node.Orientation.W
+            );
+
+            System.Numerics.Vector3 translation = new System.Numerics.Vector3(
+                node.Position.X,
+                node.Position.Y,
+                node.Position.Z
+            );
+
+            System.Numerics.Vector3 scale = new System.Numerics.Vector3(
+                node.ScaleX,
+                node.ScaleY,
+                node.ScaleZ
+            );
+
+            // Build transform: Translation * Rotation * Scale
+            System.Numerics.Matrix4x4 rotationMatrix = System.Numerics.Matrix4x4.CreateFromQuaternion(rotation);
+            System.Numerics.Matrix4x4 scaleMatrix = System.Numerics.Matrix4x4.CreateScale(scale);
+            System.Numerics.Matrix4x4 translationMatrix = System.Numerics.Matrix4x4.CreateTranslation(translation);
+            System.Numerics.Matrix4x4 nodeTransform = translationMatrix * rotationMatrix * scaleMatrix;
+            System.Numerics.Matrix4x4 finalTransform = nodeTransform * parentTransform;
+
+            // Extract mesh geometry if present
+            if (node.Mesh != null && node.Mesh.Vertices != null && node.Mesh.Faces != null)
+            {
+                int baseVertexIndex = vertices.Count;
+
+                // Extract vertex positions from mesh
+                foreach (System.Numerics.Vector3 vertex in node.Mesh.Vertices)
+                {
+                    // Transform position by node transform
+                    System.Numerics.Vector3 transformedPos = System.Numerics.Vector3.Transform(
+                        vertex,
+                        finalTransform
+                    );
+                    vertices.Add(new Vector3(transformedPos.X, transformedPos.Y, transformedPos.Z));
+                }
+
+                // Extract indices from faces
+                foreach (MDLFace face in node.Mesh.Faces)
+                {
+                    // MDL faces are 0-indexed
+                    // Offset indices by base vertex index
+                    indices.Add(baseVertexIndex + face.V1);
+                    indices.Add(baseVertexIndex + face.V2);
+                    indices.Add(baseVertexIndex + face.V3);
+                }
+            }
+
+            // Recursively process child nodes
+            if (node.Children != null)
+            {
+                foreach (MDLNode child in node.Children)
+                {
+                    ExtractGeometryFromMDLNode(child, finalTransform, vertices, indices);
+                }
+            }
+        }
     }
 
     /// <summary>
