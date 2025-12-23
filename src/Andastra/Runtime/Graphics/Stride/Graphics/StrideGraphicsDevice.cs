@@ -95,22 +95,30 @@ namespace Andastra.Runtime.Stride.Graphics
         {
             get
             {
-                var rt = _device.CurrentRenderTargets;
-                if (rt != null && rt.Length > 0 && rt[0] != null)
+                if (_graphicsContext == null)
                 {
-                    return new StrideRenderTarget(rt[0], null, _graphicsContext);
+                    return null;
+                }
+                var rt = _graphicsContext.GetRenderTarget(0);
+                if (rt != null)
+                {
+                    return new StrideRenderTarget(rt, null, _graphicsContext);
                 }
                 return null;
             }
             set
             {
+                if (_graphicsContext == null)
+                {
+                    throw new InvalidOperationException("CommandList is required for SetRenderTarget");
+                }
                 if (value == null)
                 {
-                    _device.SetRenderTargets(null);
+                    _graphicsContext.SetRenderTarget(null, (StrideGraphics.Texture)null);
                 }
                 else if (value is StrideRenderTarget strideRt)
                 {
-                    _device.SetRenderTargets(strideRt.RenderTarget);
+                    _graphicsContext.SetRenderTarget(null, strideRt.RenderTarget);
                 }
                 else
                 {
