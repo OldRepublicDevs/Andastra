@@ -2065,9 +2065,11 @@ namespace Andastra.Runtime.Game.Core
             {
                 // Set up render state for 3D rendering
                 // Enable depth testing and disable alpha blending for 3D model
-                _graphicsDevice.SetDepthStencilState(DepthStencilState.Default);
-                _graphicsDevice.SetBlendState(BlendState.Opaque);
-                _graphicsDevice.SetRasterizerState(RasterizerState.CullCounterClockwise);
+                _graphicsDevice.SetDepthStencilState(_graphicsDevice.CreateDepthStencilState());
+                IBlendState opaqueBlendState = _graphicsDevice.CreateBlendState();
+                // TODO: Configure blend state to be opaque (no alpha blending)
+                _graphicsDevice.SetBlendState(opaqueBlendState);
+                _graphicsDevice.SetRasterizerState(_graphicsDevice.CreateRasterizerState());
 
                 // Create rotation matrix for continuous Y-axis rotation
                 // Based on swkotor.exe and swkotor2.exe: Character model rotates continuously around Y-axis
@@ -4798,7 +4800,7 @@ namespace Andastra.Runtime.Game.Core
 
                     string replyLabel = $"[{i + 1}] {replyText}";
                     GraphicsVector2 replyPos = new GraphicsVector2(padding, replyY + (i * 20));
-                    _spriteBatch.DrawString(_font, replyLabel, replyPos, Color.Yellow);
+                    _spriteBatch.DrawString(_font, replyLabel, replyPos, GraphicsColor.Yellow);
                 }
 
                 // Draw instruction text

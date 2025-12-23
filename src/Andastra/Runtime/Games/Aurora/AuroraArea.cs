@@ -157,6 +157,7 @@ namespace Andastra.Runtime.Games.Aurora
         // Snow particle system for weather rendering
         // Based on nwmain.exe: CNWSArea::RenderWeather renders snow particles as billboard sprites
         private SnowParticleSystem _snowParticleSystem;
+        private RainParticleSystem _rainParticleSystem;
 
         // Cached white texture for lightning flash rendering
         // Based on nwmain.exe: Lightning flash uses a white full-screen overlay for brightness effect
@@ -399,7 +400,7 @@ namespace Andastra.Runtime.Games.Aurora
                 }
 
                 // Verify GFF content type is ARE
-                if (gff.ContentType != GFFContent.ARE)
+                if (gff.Content != GFFContent.ARE)
                 {
                     // Try to parse anyway - some ARE files may have incorrect content type
                     // This is a defensive measure for compatibility
@@ -421,7 +422,7 @@ namespace Andastra.Runtime.Games.Aurora
                 if (root.Exists("Name"))
                 {
                     LocalizedString nameLocStr = root.GetLocString("Name");
-                    if (nameLocStr != null && !nameLocStr.IsInvalid)
+                    if (nameLocStr != null && nameLocStr.StringRef != -1)
                     {
                         _displayName = nameLocStr.ToString();
                     }
@@ -430,7 +431,7 @@ namespace Andastra.Runtime.Games.Aurora
                 if (root.Exists("ResRef"))
                 {
                     ResRef resRefObj = root.GetResRef("ResRef");
-                    if (resRefObj != null && !resRefObj.IsBlank)
+                    if (resRefObj != null && !resRefObj.IsBlank())
                     {
                         string resRefStr = resRefObj.ToString();
                         if (!string.IsNullOrEmpty(resRefStr))
@@ -1168,7 +1169,7 @@ namespace Andastra.Runtime.Games.Aurora
 
                 // Verify GFF content type is GIT
                 // Based on nwmain.exe: GIT files have "GIT " signature in GFF header
-                if (gff.ContentType != GFFContent.GIT)
+                if (gff.Content != GFFContent.GIT)
                 {
                     // Try to parse anyway - some GIT files may have incorrect content type
                     // This is a defensive measure for compatibility
@@ -1197,7 +1198,7 @@ namespace Andastra.Runtime.Games.Aurora
                     // ObjectId: Generate sequential ID
                     // Tag: Use ResRef as default tag (creatures don't have explicit Tag in GIT, use TemplateResRef)
                     uint objectId = nextObjectId++;
-                    string tag = creature.ResRef != null && !creature.ResRef.IsBlank ? creature.ResRef.ToString() : string.Empty;
+                    string tag = creature.ResRef != null && !creature.ResRef.IsBlank() ? creature.ResRef.ToString() : string.Empty;
                     var entity = new AuroraEntity(objectId, ObjectType.Creature, tag);
 
                     // Set position from GIT
@@ -1227,7 +1228,7 @@ namespace Andastra.Runtime.Games.Aurora
 
                     // Store template ResRef for later template loading
                     // Based on nwmain.exe: TemplateResRef is used to load UTC template file
-                    if (creature.ResRef != null && !creature.ResRef.IsBlank)
+                    if (creature.ResRef != null && !creature.ResRef.IsBlank())
                     {
                         entity.SetData("TemplateResRef", creature.ResRef.ToString());
                     }
@@ -1359,7 +1360,7 @@ namespace Andastra.Runtime.Games.Aurora
                     if (waypointComponent != null && waypointComponent is Components.AuroraWaypointComponent auroraWaypoint)
                     {
                         auroraWaypoint.HasMapNote = waypoint.HasMapNote;
-                        if (waypoint.HasMapNote && waypoint.MapNote != null && !waypoint.MapNote.IsInvalid)
+                        if (waypoint.HasMapNote && waypoint.MapNote != null && !waypoint.MapNote.StringRef != -1)
                         {
                             auroraWaypoint.MapNote = waypoint.MapNote.ToString();
                             auroraWaypoint.MapNoteEnabled = waypoint.MapNoteEnabled;
@@ -1372,7 +1373,7 @@ namespace Andastra.Runtime.Games.Aurora
                     }
 
                     // Set waypoint name from GIT
-                    if (waypoint.Name != null && !waypoint.Name.IsInvalid)
+                    if (waypoint.Name != null && !waypoint.Name.StringRef != -1)
                     {
                         entity.SetData("WaypointName", waypoint.Name.ToString());
                     }
@@ -1556,7 +1557,7 @@ namespace Andastra.Runtime.Games.Aurora
                 }
 
                 // Verify GFF content type is ARE
-                if (gff.ContentType != GFFContent.ARE)
+                if (gff.Content != GFFContent.ARE)
                 {
                     // Try to parse anyway - some ARE files may have incorrect content type
                     // This is a defensive measure for compatibility
