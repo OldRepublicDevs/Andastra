@@ -665,7 +665,7 @@ namespace Andastra.Runtime.Game.Core
             // Render cursor using sprite batch
             // Cursor rendered with alpha blending on top of everything
             _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Default);
-            _spriteBatch.Draw(cursorTexture, renderPositionMicrosoft.Xna.Framework.Color.White);
+            _spriteBatch.Draw(cursorTexture, renderPosition, Microsoft.Xna.Framework.Color.White);
             _spriteBatch.End();
         }
 
@@ -2388,7 +2388,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Draws a filled circle (approximated with rectangle).
         /// </summary>
-        private void DrawFilledCircle(ISpriteBatch spriteBatch, Rectangle bounds, Microsoft.Xna.Framework.Color color)
+        private void DrawFilledCircle(ISpriteBatch spriteBatch, Microsoft.Xna.Framework.Rectangle bounds, Microsoft.Xna.Framework.Color color)
         {
             int centerX = bounds.X + bounds.Width / 2;
             int centerY = bounds.Y + bounds.Height / 2;
@@ -2781,7 +2781,7 @@ namespace Andastra.Runtime.Game.Core
                 }
                 if (_font != null)
                 {
-                    _spriteBatch.DrawString(_font, statusText, new Vector2(10, 10)Microsoft.Xna.Framework.Color.White);
+                    _spriteBatch.DrawString(_font, statusText, new Vector2(10, 10), Microsoft.Xna.Framework.Color.White);
                 }
             }
             // If no font, we just skip text rendering - the 3D scene is still visible
@@ -3073,8 +3073,8 @@ namespace Andastra.Runtime.Game.Core
             var playerVertices = new VertexPositionColor[]
             {
                 // Bottom face
-                new VertexPositionColor(new Vector3(-0.5f, -0.5f, 0)Microsoft.Xna.Framework.Color.Blue),
-                new VertexPositionColor(new Vector3(0.5f, -0.5f, 0)Microsoft.Xna.Framework.Color.Blue),
+                new VertexPositionColor(new Vector3(-0.5f, -0.5f, 0), Microsoft.Xna.Framework.Color.Blue),
+                new VertexPositionColor(new Vector3(0.5f, -0.5f, 0), Microsoft.Xna.Framework.Color.Blue),
                 new VertexPositionColor(new Vector3(0.5f, 0.5f, 0)Microsoft.Xna.Framework.Color.Blue),
                 new VertexPositionColor(new Vector3(-0.5f, 0.5f, 0)Microsoft.Xna.Framework.Color.Blue),
                 // Top face
