@@ -6,7 +6,8 @@ namespace Andastra.Parsing.Common
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/game_object.py:28-327
     // Original: class ObjectType(IntEnum): class GameObjectState: class GameObject(ABC):
-    public enum ObjectType
+    // Renamed from ObjectType to ParsingObjectType to avoid conflict with Andastra.Runtime.Core.Enums.ObjectType
+    public enum ParsingObjectType
     {
         INVALID = 0,
         CREATURE = 1,
@@ -56,10 +57,10 @@ namespace Andastra.Parsing.Common
 
     public abstract class GameObject
     {
-        private readonly ObjectType _type;
+        private readonly ParsingObjectType _type;
         private readonly GameObjectState _state;
 
-        protected GameObject(ObjectType objectType, GameObjectState state = null)
+        protected GameObject(ParsingObjectType objectType, GameObjectState state = null)
         {
             _type = objectType;
             _state = state ?? new GameObjectState();
@@ -149,7 +150,7 @@ namespace Andastra.Parsing.Common
             set { _state.Open = value; }
         }
 
-        public ObjectType ObjectType
+        public ParsingObjectType ObjectType
         {
             get { return _type; }
         }
