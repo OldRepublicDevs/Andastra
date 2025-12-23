@@ -13014,7 +13014,7 @@ technique ColorGrading
     /// Based on daorigins.exe/DragonAge2.exe: Vertex modifications track position changes for deformed geometry.
     /// </remarks>
     public struct ModifiedVertex
-        {
+    {
         /// <summary>
         /// Original vertex index in the mesh.
         /// </summary>
@@ -13063,7 +13063,7 @@ technique ColorGrading
     /// - Generates debris physics objects from destroyed faces
     /// </remarks>
     internal class DestructibleGeometryModificationTracker
-    {
+        {
         // Modified mesh data by mesh ID (model name/resref)
         // Based on daorigins.exe: Modifications are tracked per mesh/model
         private readonly Dictionary<string, ModifiedMesh> _modifiedMeshes;
@@ -13458,7 +13458,6 @@ technique ColorGrading
 
             return connectedFaces;
         }
-    }
 
     /// <summary>
     /// Represents a modified mesh with all its modifications.
