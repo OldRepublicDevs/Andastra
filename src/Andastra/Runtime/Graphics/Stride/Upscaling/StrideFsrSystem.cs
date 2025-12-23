@@ -129,17 +129,7 @@ namespace Andastra.Runtime.Stride.Upscaling
 
             try
             {
-                // Strategy 1: Try to use EffectInstance.Apply() if CommandList can be used as GraphicsContext
-                // In some Stride versions, CommandList implements GraphicsContext or can be cast
-                // Check if CommandList has a GraphicsContext property or can be used directly
-                var graphicsContext = commandList as GraphicsContext;
-                if (graphicsContext != null)
-                {
-                    effectInstance.Apply(graphicsContext);
-                    return;
-                }
-
-                // Strategy 2: Try to get GraphicsContext from GraphicsDevice
+                // Strategy 1: Try to get GraphicsContext from GraphicsDevice
                 // Stride GraphicsDevice may have GraphicsContext property (separate from ImmediateContext)
                 try
                 {
