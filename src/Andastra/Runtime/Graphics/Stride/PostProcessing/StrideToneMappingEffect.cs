@@ -191,7 +191,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// <summary>
         /// Executes tone mapping using GPU shader path or CPU fallback.
         /// </summary>
-        private void ExecuteToneMapping(Texture input, float exposure, Texture output)
+        private void ExecuteToneMapping(StrideGraphics.Texture input, float exposure, StrideGraphics.Texture output)
         {
             // Tone Mapping Shader Execution:
             // - Input: HDR color buffer
@@ -213,7 +213,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// Attempts to execute tone mapping using GPU shader.
         /// Returns true if successful, false if CPU fallback is needed.
         /// </summary>
-        private bool TryExecuteToneMappingGpu(Texture input, float exposure, Texture output)
+        private bool TryExecuteToneMappingGpu(StrideGraphics.Texture input, float exposure, StrideGraphics.Texture output)
         {
             // Ensure rendering resources are initialized
             if (!_renderingResourcesInitialized)
@@ -469,7 +469,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// Implements the complete tone mapping algorithm matching GPU shader behavior.
         /// Based on industry-standard tone mapping algorithms.
         /// </summary>
-        private void ExecuteToneMappingCpu(Texture input, float exposure, Texture output)
+        private void ExecuteToneMappingCpu(StrideGraphics.Texture input, float exposure, StrideGraphics.Texture output)
         {
             if (input == null || output == null || _graphicsDevice == null)
             {

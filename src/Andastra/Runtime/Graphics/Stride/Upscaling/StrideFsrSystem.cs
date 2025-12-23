@@ -26,7 +26,7 @@ namespace Andastra.Runtime.Stride.Upscaling
     public class StrideFsrSystem : BaseFsrSystem
     {
         private StrideGraphics.GraphicsDevice _graphicsDevice;
-        private Stride.Rendering.CommandList _graphicsContext;
+        private CommandList _graphicsContext;
         private IntPtr _fsrContext;
         private StrideGraphics.Texture _outputTexture;
 
@@ -83,13 +83,13 @@ namespace Andastra.Runtime.Stride.Upscaling
         public override int FsrVersion => 2; // FSR 2.x
         public override bool FrameGenerationAvailable => CheckFrameGenerationSupport();
 
-        public StrideFsrSystem(StrideGraphics.GraphicsDevice graphicsDevice, Stride.Rendering.CommandList graphicsContext = null)
+        public StrideFsrSystem(StrideGraphics.GraphicsDevice graphicsDevice, CommandList graphicsContext = null)
         {
             _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
             _graphicsContext = graphicsContext;
         }
 
-        private Stride.Rendering.CommandList GetCommandList()
+        private CommandList GetCommandList()
         {
             if (_graphicsContext != null)
             {
@@ -98,7 +98,7 @@ namespace Andastra.Runtime.Stride.Upscaling
             return null;
         }
 
-        private Stride.Rendering.CommandList GetGraphicsContext()
+        private CommandList GetGraphicsContext()
         {
             return _graphicsContext;
         }
@@ -120,7 +120,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// 3. Set compute pipeline state on CommandList
         /// 4. Dispatch compute shader (done by caller)
         /// </summary>
-        private void ApplyEffectInstanceToCommandList(EffectInstance effectInstance, Stride.Rendering.CommandList commandList)
+        private void ApplyEffectInstanceToCommandList(EffectInstance effectInstance, CommandList commandList)
         {
             if (effectInstance == null || commandList == null || effectInstance.Effect == null)
             {
@@ -605,7 +605,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// <summary>
         /// Executes FSR Lock pass: Detects disocclusions and areas needing special handling.
         /// </summary>
-        private void ExecuteFsrLockPass(Stride.Rendering.CommandList graphicsContext, StrideGraphics.Texture input, StrideGraphics.Texture depth,
+        private void ExecuteFsrLockPass(CommandList graphicsContext, StrideGraphics.Texture input, StrideGraphics.Texture depth,
             StrideGraphics.Texture motionVectors, StrideGraphics.Texture lockOutput)
         {
             if (_fsrTemporalEffect == null || graphicsContext == null) return;
@@ -635,7 +635,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// <summary>
         /// Executes FSR Depth Clip pass: Clips depth values for better temporal stability.
         /// </summary>
-        private void ExecuteFsrDepthClipPass(Stride.Rendering.CommandList graphicsContext, StrideGraphics.Texture depth, StrideGraphics.Texture lockTexture)
+        private void ExecuteFsrDepthClipPass(CommandList graphicsContext, StrideGraphics.Texture depth, StrideGraphics.Texture lockTexture)
         {
             if (_fsrTemporalEffect == null || depth == null || graphicsContext == null) return;
 
@@ -662,7 +662,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// <summary>
         /// Executes FSR Reactive Mask pass: Processes reactivity mask.
         /// </summary>
-        private void ExecuteFsrReactiveMaskPass(Stride.Rendering.CommandList graphicsContext, StrideGraphics.Texture reactivityMask, StrideGraphics.Texture lockTexture)
+        private void ExecuteFsrReactiveMaskPass(CommandList graphicsContext, StrideGraphics.Texture reactivityMask, StrideGraphics.Texture lockTexture)
         {
             if (_fsrTemporalEffect == null || reactivityMask == null || graphicsContext == null) return;
 
@@ -689,7 +689,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// <summary>
         /// Executes FSR Temporal accumulation pass: Main upscaling pass using temporal data.
         /// </summary>
-        private void ExecuteFsrTemporalPass(Stride.Rendering.CommandList graphicsContext, StrideGraphics.Texture input, StrideGraphics.Texture motionVectors,
+        private void ExecuteFsrTemporalPass(CommandList graphicsContext, StrideGraphics.Texture input, StrideGraphics.Texture motionVectors,
             StrideGraphics.Texture depth, StrideGraphics.Texture lockTexture, StrideGraphics.Texture reactivityMask, StrideGraphics.Texture historyTexture, StrideGraphics.Texture output)
         {
             if (_fsrTemporalEffect == null || graphicsContext == null) return;
@@ -724,7 +724,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// <summary>
         /// Executes FSR EASU pass: Edge-adaptive spatial upsampling (FSR 1.0).
         /// </summary>
-        private void ExecuteFsrEasuPass(Stride.Rendering.CommandList graphicsContext, StrideGraphics.Texture input, StrideGraphics.Texture output)
+        private void ExecuteFsrEasuPass(CommandList graphicsContext, StrideGraphics.Texture input, StrideGraphics.Texture output)
         {
             if (_fsrEasuEffect == null || graphicsContext == null) return;
 
@@ -750,7 +750,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// <summary>
         /// Executes FSR RCAS pass: Robust contrast adaptive sharpening.
         /// </summary>
-        private void ExecuteFsrRcasPass(Stride.Rendering.CommandList graphicsContext, StrideGraphics.Texture input, StrideGraphics.Texture output)
+        private void ExecuteFsrRcasPass(CommandList graphicsContext, StrideGraphics.Texture input, StrideGraphics.Texture output)
         {
             if (_fsrRcasEffect == null || graphicsContext == null) return;
 
@@ -838,7 +838,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// <summary>
         /// Tries to load an FSR shader from compiled effect files.
         /// </summary>
-        private bool TryLoadFsrShader(string shaderName, out Effect effect)
+        private bool TryLoadFsrShader(string shaderName, out StrideGraphics.Effect effect)
         {
             effect = null;
             try
@@ -1164,14 +1164,14 @@ shader FSRTemporal : ComputeShaderBase
     /// </summary>
     internal static class FsrShaderKeys
     {
-        public static readonly ObjectParameterKey<Texture> InputColor = new ObjectParameterKey<Texture>("InputColor");
-        public static readonly ObjectParameterKey<Texture> InputMotionVectors = new ObjectParameterKey<Texture>("InputMotionVectors");
-        public static readonly ObjectParameterKey<Texture> InputDepth = new ObjectParameterKey<Texture>("InputDepth");
-        public static readonly ObjectParameterKey<Texture> InputReactiveMask = new ObjectParameterKey<Texture>("InputReactiveMask");
-        public static readonly ObjectParameterKey<Texture> InputLock = new ObjectParameterKey<Texture>("InputLock");
-        public static readonly ObjectParameterKey<Texture> InputHistory = new ObjectParameterKey<Texture>("InputHistory");
-        public static readonly ObjectParameterKey<Texture> OutputColor = new ObjectParameterKey<Texture>("OutputColor");
-        public static readonly ObjectParameterKey<Texture> OutputLock = new ObjectParameterKey<Texture>("OutputLock");
+        public static readonly ObjectParameterKey<StrideGraphics.Texture> InputColor = new ObjectParameterKey<StrideGraphics.Texture>("InputColor");
+        public static readonly ObjectParameterKey<StrideGraphics.Texture> InputMotionVectors = new ObjectParameterKey<StrideGraphics.Texture>("InputMotionVectors");
+        public static readonly ObjectParameterKey<StrideGraphics.Texture> InputDepth = new ObjectParameterKey<StrideGraphics.Texture>("InputDepth");
+        public static readonly ObjectParameterKey<StrideGraphics.Texture> InputReactiveMask = new ObjectParameterKey<StrideGraphics.Texture>("InputReactiveMask");
+        public static readonly ObjectParameterKey<StrideGraphics.Texture> InputLock = new ObjectParameterKey<StrideGraphics.Texture>("InputLock");
+        public static readonly ObjectParameterKey<StrideGraphics.Texture> InputHistory = new ObjectParameterKey<StrideGraphics.Texture>("InputHistory");
+        public static readonly ObjectParameterKey<StrideGraphics.Texture> OutputColor = new ObjectParameterKey<StrideGraphics.Texture>("OutputColor");
+        public static readonly ObjectParameterKey<StrideGraphics.Texture> OutputLock = new ObjectParameterKey<StrideGraphics.Texture>("OutputLock");
         public static readonly ValueParameterKey<StrideFsrSystem.FsrConstants> FsrConstants = new ValueParameterKey<StrideFsrSystem.FsrConstants>("FsrConstants");
     }
 }
