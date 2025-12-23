@@ -26,7 +26,7 @@ namespace Andastra.Runtime.Stride.Upscaling
     public class StrideFsrSystem : BaseFsrSystem
     {
         private StrideGraphics.GraphicsDevice _graphicsDevice;
-        private CommandList _graphicsContext;
+        private Stride.Rendering.CommandList _graphicsContext;
         private IntPtr _fsrContext;
         private StrideGraphics.Texture _outputTexture;
 
@@ -371,8 +371,8 @@ namespace Andastra.Runtime.Stride.Upscaling
                 format, TextureFlags.RenderTarget | TextureFlags.ShaderResource | TextureFlags.UnorderedAccess);
         }
 
-        private void ExecuteFsr(Texture input, Texture motionVectors, Texture depth,
-            Texture reactivityMask, Texture output, float deltaTime)
+        private void ExecuteFsr(StrideGraphics.Texture input, StrideGraphics.Texture motionVectors, StrideGraphics.Texture depth,
+            StrideGraphics.Texture reactivityMask, StrideGraphics.Texture output, float deltaTime)
         {
             // FSR 2.x dispatch implementation
             // Based on AMD FidelityFX SDK: ffxFsr2ContextDispatch
@@ -447,7 +447,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// Applies FSR 1.0 spatial-only upscaling (no temporal).
         /// Useful for UI or when motion vectors are unavailable.
         /// </summary>
-        public Texture ApplySpatialOnly(Texture input, int targetWidth, int targetHeight)
+        public StrideGraphics.Texture ApplySpatialOnly(StrideGraphics.Texture input, int targetWidth, int targetHeight)
         {
             if (!IsEnabled || input == null) return input;
 
@@ -459,7 +459,7 @@ namespace Andastra.Runtime.Stride.Upscaling
             return _outputTexture ?? input;
         }
 
-        private void ExecuteFsr1(Texture input, Texture output)
+        private void ExecuteFsr1(StrideGraphics.Texture input, StrideGraphics.Texture output)
         {
             // FSR 1.0 spatial-only upscaling (no temporal):
             // Pass 1: EASU - edge-adaptive spatial upsampling
@@ -497,7 +497,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// <summary>
         /// Ensures FSR internal textures are created with correct dimensions.
         /// </summary>
-        private void EnsureFsrInternalTextures(int width, int height, PixelFormat format)
+        private void EnsureFsrInternalTextures(int width, int height, StrideGraphics.PixelFormat format)
         {
             // History texture: Stores previous frame for temporal accumulation
             if (_fsrHistoryTexture == null || _fsrHistoryTexture.Width != width || _fsrHistoryTexture.Height != height)
@@ -528,8 +528,8 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// Calculates FSR constants based on input/output resolution and quality settings.
         /// Based on AMD FidelityFX SDK: FfxFsr2DispatchDescription constants.
         /// </summary>
-        private void CalculateFsrConstants(Texture input, Texture output, Texture motionVectors,
-            Texture depth, float deltaTime)
+        private void CalculateFsrConstants(StrideGraphics.Texture input, StrideGraphics.Texture output, StrideGraphics.Texture motionVectors,
+            StrideGraphics.Texture depth, float deltaTime)
         {
             float inputWidth = input.Width;
             float inputHeight = input.Height;
@@ -776,7 +776,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// <summary>
         /// Updates FSR history texture for next frame's temporal accumulation.
         /// </summary>
-        private void UpdateFsrHistory(Texture currentFrame, Texture historyTexture)
+        private void UpdateFsrHistory(StrideGraphics.Texture currentFrame, StrideGraphics.Texture historyTexture)
         {
             if (currentFrame == null || historyTexture == null) return;
 

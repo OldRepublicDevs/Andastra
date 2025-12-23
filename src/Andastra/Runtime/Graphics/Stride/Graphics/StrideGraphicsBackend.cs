@@ -2,9 +2,11 @@ using System;
 using System.Reflection;
 using Stride.Engine;
 using Stride.Graphics;
+using StrideGraphics = Stride.Graphics;
 using Stride.Core.Mathematics;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common.Enums;
+using Andastra.Runtime.Games.Odyssey;
 
 namespace Andastra.Runtime.Stride.Graphics
 {
@@ -53,7 +55,21 @@ namespace Andastra.Runtime.Stride.Graphics
 
             // Stride initialization happens in the game constructor
             // We'll set up the window properties before running
-            _game.Window.ClientSize = new Int2(width, height);
+            // Note: ClientSize may not be available in all Stride versions, will be set when window is created
+            try
+            {
+                var clientSizeProperty = _game.Window.GetType().GetProperty("ClientSize");
+                if (clientSizeProperty != null && clientSizeProperty.CanWrite)
+                {
+                    clientSizeProperty.SetValue(_game.Window, new Int2(width, height));
+                }
+            }
+            catch
+            {
+                // ClientSize property not available or not settable in this Stride version
+                Console.WriteLine("[Stride] WARNING: Could not set ClientSize, window size may not be applied correctly");
+            }
+
             _game.Window.Title = title;
             _game.Window.IsFullscreen = fullscreen;
             _game.Window.IsMouseVisible = true;
@@ -73,40 +89,19 @@ namespace Andastra.Runtime.Stride.Graphics
             // Initialize graphics components when game starts
             if (_graphicsDevice == null)
             {
-                // In Stride, CommandList is obtained from GraphicsDevice.ResourceFactory or created per-frame
-                // For immediate rendering, we'll create a CommandList from the GraphicsDevice
-                // TODO: STUB - CommandList creation might need to be per-frame in Stride 4.x
-                // For now, we'll pass null and handle it in StrideGraphicsDevice
+                // In Stride, CommandList is obtained from Game.GraphicsContext.CommandList per-frame
+                // Pass null initially - CommandList will be registered per-frame in BeginFrame()
+                // Based on Stride Graphics API: https://doc.stride3d.net/latest/en/manual/graphics/
+                // CommandList from Game.GraphicsContext.CommandList is used for immediate rendering operations
                 StrideGraphics.CommandList commandList = null;
-                try
-                {
-                    // Try to get CommandList from GraphicsDevice.ResourceFactory if available
-                    // In Stride 4.x, CommandList is typically created per-frame from ResourceFactory
-                    // For immediate context, we'll need to create it when needed
-                    if (_game.GraphicsDevice != null)
-                    {
-                        // CommandList will be created on-demand in StrideGraphicsDevice when needed
-                        // For now, pass null - the device will handle CommandList creation
-                    }
-                }
-                catch
-                {
-                    // CommandList creation failed, will be handled in StrideGraphicsDevice
-                }
 
                 _graphicsDevice = new StrideGraphicsDevice(_game.GraphicsDevice, commandList);
                 _contentManager = new StrideContentManager(_game.Content, commandList);
                 _window = new StrideWindow(_game.Window);
                 _inputManager = new StrideInputManager(_game.Input);
 
-                // Register the CommandList for use by ImmediateContext() extension method
-                // In Stride, we'll need to create and register CommandList per-frame
-                // For now, we'll register it when it becomes available
-                // TODO: STUB - CommandList should be created per-frame and registered each frame
-                if (_game.GraphicsDevice != null && commandList != null)
-                {
-                    GraphicsDeviceExtensions.RegisterCommandList(_game.GraphicsDevice, commandList);
-                }
+                // CommandList registration is now handled per-frame in BeginFrame()
+                // This ensures thread safety and proper resource management in Stride 4.x
 
                 // Apply VSync state if it was set before graphics device was initialized
                 // Based on swkotor2.exe: VSync controlled via DirectX Present parameters (PresentationInterval)
@@ -122,18 +117,12 @@ namespace Andastra.Runtime.Stride.Graphics
             _game.UpdateFrame += (sender, e) =>
             {
                 BeginFrame();
-                if (updateAction != null)
-                {
-                    updateAction((float)e.Elapsed.TotalSeconds);
-                }
+                updateAction?.Invoke((float)e.Elapsed.TotalSeconds);
             };
 
             _game.DrawFrame += (sender, e) =>
             {
-                if (drawAction != null)
-                {
-                    drawAction();
-                }
+                drawAction?.Invoke();
                 EndFrame();
             };
 
@@ -148,6 +137,21 @@ namespace Andastra.Runtime.Stride.Graphics
         public void BeginFrame()
         {
             _inputManager.Update();
+
+            // Update the CommandList registry with the current frame's CommandList
+            // Stride creates a new CommandList per frame for thread safety and proper resource management
+            // Based on Stride Graphics API: Game.GraphicsContext.CommandList should be used per-frame
+            // swkotor2.exe: Graphics device command list management @ 0x004eb750 (original engine behavior)
+            if (_game != null && _game.GraphicsContext != null && _game.GraphicsDevice != null)
+            {
+                var commandList = _game.GraphicsContext.CommandList;
+                if (commandList != null)
+                {
+                    // Register/update the current frame's CommandList
+                    // This ensures ImmediateContext() returns the correct CommandList for this frame
+                    GraphicsDeviceExtensions.RegisterCommandList(_game.GraphicsDevice, commandList);
+                }
+            }
         }
 
         public void EndFrame()
@@ -182,7 +186,7 @@ namespace Andastra.Runtime.Stride.Graphics
         {
             if (cameraController is Andastra.Runtime.Core.Camera.CameraController coreCameraController)
             {
-                return new Odyssey.Stride.Camera.StrideDialogueCameraController(coreCameraController);
+                return new Andastra.Runtime.Stride.Camera.StrideDialogueCameraController(coreCameraController);
             }
             throw new ArgumentException("Camera controller must be a CameraController instance", nameof(cameraController));
         }
@@ -375,9 +379,14 @@ namespace Andastra.Runtime.Stride.Graphics
             }
 
             // Unregister CommandList when disposing
+            // CommandList is now managed per-frame, but we still need to clean up on disposal
             if (_game != null && _game.GraphicsDevice != null)
             {
                 GraphicsDeviceExtensions.UnregisterCommandList(_game.GraphicsDevice);
+            }
+
+            if (_game != null)
+            {
                 _game.Dispose();
                 _game = null;
             }
