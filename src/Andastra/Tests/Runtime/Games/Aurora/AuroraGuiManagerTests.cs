@@ -3,6 +3,7 @@ using System.Numerics;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics.GUI;
+using Andastra.Parsing.Common;
 using Andastra.Runtime.Games.Aurora.GUI;
 using Andastra.Runtime.Graphics;
 using Andastra.Tests.Runtime.TestHelpers;
@@ -10,6 +11,8 @@ using FluentAssertions;
 using Moq;
 using Xunit;
 using GUIWriter = Andastra.Parsing.Resource.Generics.GUI.GUIWriter;
+using GraphicsVector2 = Andastra.Runtime.Graphics.Vector2;
+using ParsingColor = Andastra.Parsing.Common.Color;
 
 namespace Andastra.Tests.Runtime.Games.Aurora
 {
@@ -253,13 +256,13 @@ namespace Andastra.Tests.Runtime.Games.Aurora
                     {
                         Tag = "BTN_TEST",
                         Id = 1,
-                        Position = new Vector2(100, 100),
-                        Size = new Vector2(200, 50),
+                        Position = new GraphicsVector2(100, 100),
+                        Size = new GraphicsVector2(200, 50),
                         GuiText = new GUIText
                         {
                             Text = "Test Button",
                             Font = ResRef.FromString("fnt_d16x16"),
-                            Color = new Color(255, 255, 255, 255),
+                            Color = new ParsingColor(255, 255, 255, 255),
                             Alignment = 0
                         }
                     }
