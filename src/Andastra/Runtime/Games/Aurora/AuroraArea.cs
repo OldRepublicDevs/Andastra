@@ -2334,6 +2334,15 @@ namespace Andastra.Runtime.Games.Aurora
 
         /// <summary>
         /// Adds an entity to this area's collections.
+        /// Public method that delegates to the protected AddEntityToArea method.
+        /// </summary>
+        public void AddEntity(IEntity entity)
+        {
+            AddEntityToArea(entity);
+        }
+
+        /// <summary>
+        /// Adds an entity to this area's collections.
         /// </summary>
         /// <remarks>
         /// Aurora-specific: Basic entity addition without physics system.

@@ -843,7 +843,7 @@ namespace Andastra.Parsing.Formats.TPC
             return dxt5Data;
         }
 
-        // Compress a single DXT3 block (4x4 pixels = 16 bytes output: 8 bytes alpha + 8 bytes color)
+        // Compress a single DXT3 block (4x4 pixels = 16 bytes output: 8 bytes alpha + 8 bytes ParsingColor)
         private static void CompressDxt3Block(byte[] dest, int[] src)
         {
             CompressAlphaBlockDxt3(dest, src);
@@ -865,7 +865,7 @@ namespace Andastra.Parsing.Formats.TPC
             }
         }
 
-        // Compress a single DXT5 block (4x4 pixels = 16 bytes output: 8 bytes interpolated alpha + 8 bytes color)
+        // Compress a single DXT5 block (4x4 pixels = 16 bytes output: 8 bytes interpolated alpha + 8 bytes ParsingColor)
         private static void CompressDxt5Block(byte[] dest, int[] src)
         {
             CompressAlphaBlockDxt5(dest, src);

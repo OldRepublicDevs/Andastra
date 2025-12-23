@@ -19,7 +19,10 @@ using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Resource.Generics.UTC;
 using Andastra.Runtime.Games.Odyssey.Components;
+using Andastra.Runtime.Engines.Odyssey.Components;
 using Andastra.Runtime.Games.Aurora.Components;
+using Andastra.Runtime.Games.Common.Components;
+using ObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 
 namespace Andastra.Runtime.Games.Aurora
 {
@@ -1756,7 +1759,7 @@ namespace Andastra.Runtime.Games.Aurora
             // Initialize store component
             // Based on nwmain.exe: Store entities have CNWSStore component attached
             // Using Odyssey StoreComponent since it has the same properties as Aurora stores
-            var storeComponent = new Runtime.Games.Odyssey.Components.StoreComponent();
+            var storeComponent = new StoreComponent();
             entity.AddComponent(storeComponent);
 
             // Load UTM template if TemplateResRef is provided
@@ -1861,7 +1864,7 @@ namespace Andastra.Runtime.Games.Aurora
                     creatureComponent.Tag = utc.Tag;
                 }
 
-                if (utc.Conversation != null && !utc.Conversation.IsBlank)
+                if (utc.Conversation != null && !utc.Conversation.IsBlank())
                 {
                     creatureComponent.Conversation = utc.Conversation.ToString();
                 }
@@ -1901,7 +1904,7 @@ namespace Andastra.Runtime.Games.Aurora
                 creatureComponent.ClassList.Clear();
                 foreach (var utcClass in utc.Classes)
                 {
-                    var creatureClass = new Runtime.Games.Common.Components.BaseCreatureClass
+                    var creatureClass = new AuroraCreatureClass
                     {
                         ClassId = utcClass.ClassId,
                         Level = utcClass.ClassLevel
@@ -2047,12 +2050,12 @@ namespace Andastra.Runtime.Games.Aurora
                 // Load items for sale from UTM ItemList
                 // Based on nwmain.exe: CNWSStore::LoadStore processes ItemList
                 // ItemList parsing: Lines 100-150 (approximate, needs verification)
-                storeComponent.ItemsForSale = new List<Runtime.Games.Odyssey.Components.StoreItem>();
+                storeComponent.ItemsForSale = new List<StoreItem>();
                 foreach (var utmItem in utm.Items)
                 {
-                    if (utmItem.ResRef != null && !utmItem.ResRef.IsBlank)
+                    if (utmItem.ResRef != null && !utmItem.ResRef.IsBlank())
                     {
-                        var storeItem = new Runtime.Games.Odyssey.Components.StoreItem
+                        var storeItem = new StoreItem
                         {
                             ResRef = utmItem.ResRef.ToString(),
                             StackSize = 1, // UTM doesn't store stack size, default to 1
