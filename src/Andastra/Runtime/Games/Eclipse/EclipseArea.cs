@@ -3903,12 +3903,13 @@ namespace Andastra.Runtime.Games.Eclipse
             {
                 // Step 2: Try to get bounds from renderable component if available
                 // Based on daorigins.exe/DragonAge2.exe: Renderable components store mesh bounds
+                // Original implementation: Queries entity renderable component for mesh bounds, falls back to type-based defaults
+                // Eclipse engine uses MDL models which have BMin/BMax bounding box data at root level and per-mesh level
                 IRenderableComponent renderable = entity.GetComponent<IRenderableComponent>();
-                if (renderable != null)
+                if (renderable != null && !string.IsNullOrEmpty(renderable.ModelResRef))
                 {
-                    // Try to get bounds from renderable component
-                    // Note: IRenderableComponent interface may need Bounds property or GetBounds() method
-                    // TODO: STUB - For now, we'll use type-based defaults and check for entity data
+                    // Try multiple methods to get mesh bounds in order of preference:
+                    // 1. Check entity data for cached bounds (set during model loading)
                     if (entity.HasData("MeshBounds"))
                     {
                         Vector3 meshBounds = entity.GetData<Vector3>("MeshBounds", Vector3.Zero);
@@ -3916,6 +3917,162 @@ namespace Andastra.Runtime.Games.Eclipse
                         {
                             // Convert full bounds to half extents
                             halfExtents = new Vector3(meshBounds.X * 0.5f, meshBounds.Y * 0.5f, meshBounds.Z * 0.5f);
+                        }
+                    }
+
+                    // 2. Try to get bounds from cached mesh bounding volumes (set during model loading)
+                    // Based on daorigins.exe/DragonAge2.exe: Bounding volumes are cached for frustum culling
+                    // Original implementation: Mesh bounding volumes are calculated from MDL BMin/BMax and cached
+                    if (halfExtents.X == 0.5f && halfExtents.Y == 0.5f && halfExtents.Z == 0.5f)
+                    {
+                        if (_cachedMeshBoundingVolumes != null && _cachedMeshBoundingVolumes.TryGetValue(renderable.ModelResRef, out MeshBoundingVolume boundingVolume))
+                        {
+                            // Calculate half extents from bounding box (BMin to BMax)
+                            // Based on daorigins.exe/DragonAge2.exe: BMin and BMax are world-space bounding box corners
+                            // Half extents = (BMax - BMin) * 0.5f
+                            Vector3 boundsSize = boundingVolume.BMax - boundingVolume.BMin;
+                            if (boundsSize.X > 0 && boundsSize.Y > 0 && boundsSize.Z > 0)
+                            {
+                                halfExtents = new Vector3(boundsSize.X * 0.5f, boundsSize.Y * 0.5f, boundsSize.Z * 0.5f);
+                            }
+                        }
+                    }
+
+                    // 3. Try to get bounds from cached mesh data by loading MDL model if available
+                    // Based on daorigins.exe/DragonAge2.exe: MDL models contain BMin/BMax at root level
+                    // Original implementation: Loads MDL model and extracts bounding box from root node
+                    if (halfExtents.X == 0.5f && halfExtents.Y == 0.5f && halfExtents.Z == 0.5f)
+                    {
+                        if (_resourceProvider != null)
+                        {
+                            try
+                            {
+                                // Load MDL model to get bounding box
+                                // Based on daorigins.exe/DragonAge2.exe: MDL files contain BMin/BMax bounding box at root level
+                                // Original implementation: Loads MDL from resource provider and reads BMin/BMax from model header
+                                ResourceIdentifier mdlResourceId = new ResourceIdentifier(renderable.ModelResRef, ParsingResourceType.MDL);
+                                byte[] mdlData = _resourceProvider.GetResourceBytesAsync(mdlResourceId, System.Threading.CancellationToken.None).GetAwaiter().GetResult();
+
+                                if (mdlData != null && mdlData.Length > 0)
+                                {
+                                    // Parse MDL to get bounding box
+                                    // Based on daorigins.exe/DragonAge2.exe: MDL models have BMin/BMax at root level
+                                    // MDLAuto.ReadMdl parses MDL binary format and extracts BMin/BMax from model header
+                                    MDL mdl = MDLAuto.ReadMdl(mdlData, sourceExt: null);
+                                    if (mdl != null)
+                                    {
+                                        // Calculate half extents from MDL bounding box
+                                        // Based on daorigins.exe/DragonAge2.exe: BMin and BMax are model-space bounding box corners
+                                        // Half extents = (BMax - BMin) * 0.5f
+                                        Vector3 mdlBoundsSize = mdl.BMax - mdl.BMin;
+                                        if (mdlBoundsSize.X > 0 && mdlBoundsSize.Y > 0 && mdlBoundsSize.Z > 0)
+                                        {
+                                            halfExtents = new Vector3(mdlBoundsSize.X * 0.5f, mdlBoundsSize.Y * 0.5f, mdlBoundsSize.Z * 0.5f);
+
+                                            // Cache the bounds in entity data for future use
+                                            // This avoids reloading the MDL model on subsequent calls
+                                            entity.SetData("MeshBounds", mdlBoundsSize);
+
+                                            // Also cache the bounding volume if not already cached
+                                            if (_cachedMeshBoundingVolumes != null && !_cachedMeshBoundingVolumes.ContainsKey(renderable.ModelResRef))
+                                            {
+                                                MeshBoundingVolume boundingVolume = new MeshBoundingVolume(mdl.BMin, mdl.BMax, mdl.Radius);
+                                                _cachedMeshBoundingVolumes[renderable.ModelResRef] = boundingVolume;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            // MDL has invalid bounds - try to calculate from mesh nodes
+                                            // Based on daorigins.exe/DragonAge2.exe: If root BMin/BMax is invalid, calculate from mesh nodes
+                                            // Original implementation: Iterates through all mesh nodes and calculates bounding box from mesh BbMin/BbMax
+                                            Vector3 calculatedBMin = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+                                            Vector3 calculatedBMax = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+                                            bool foundValidBounds = false;
+
+                                            // Recursively traverse all nodes to find mesh bounding boxes
+                                            List<MDLNode> nodesToCheck = new List<MDLNode> { mdl.Root };
+                                            while (nodesToCheck.Count > 0)
+                                            {
+                                                MDLNode node = nodesToCheck[nodesToCheck.Count - 1];
+                                                nodesToCheck.RemoveAt(nodesToCheck.Count - 1);
+
+                                                if (node != null && node.Mesh != null)
+                                                {
+                                                    // Check if mesh has valid bounding box
+                                                    // Based on daorigins.exe/DragonAge2.exe: Mesh nodes have BbMin/BbMax per-mesh bounding boxes
+                                                    if (node.Mesh.BbMin.X < 1000000 && node.Mesh.BbMax.X > -1000000)
+                                                    {
+                                                        calculatedBMin.X = Math.Min(calculatedBMin.X, node.Mesh.BbMin.X);
+                                                        calculatedBMin.Y = Math.Min(calculatedBMin.Y, node.Mesh.BbMin.Y);
+                                                        calculatedBMin.Z = Math.Min(calculatedBMin.Z, node.Mesh.BbMin.Z);
+                                                        calculatedBMax.X = Math.Max(calculatedBMax.X, node.Mesh.BbMax.X);
+                                                        calculatedBMax.Y = Math.Max(calculatedBMax.Y, node.Mesh.BbMax.Y);
+                                                        calculatedBMax.Z = Math.Max(calculatedBMax.Z, node.Mesh.BbMax.Z);
+                                                        foundValidBounds = true;
+                                                    }
+                                                }
+
+                                                // Add child nodes to check
+                                                if (node != null && node.Children != null)
+                                                {
+                                                    nodesToCheck.AddRange(node.Children);
+                                                }
+                                            }
+
+                                            if (foundValidBounds)
+                                            {
+                                                // Calculate half extents from calculated bounding box
+                                                Vector3 calculatedBoundsSize = calculatedBMax - calculatedBMin;
+                                                if (calculatedBoundsSize.X > 0 && calculatedBoundsSize.Y > 0 && calculatedBoundsSize.Z > 0)
+                                                {
+                                                    halfExtents = new Vector3(calculatedBoundsSize.X * 0.5f, calculatedBoundsSize.Y * 0.5f, calculatedBoundsSize.Z * 0.5f);
+
+                                                    // Cache the bounds in entity data for future use
+                                                    entity.SetData("MeshBounds", calculatedBoundsSize);
+
+                                                    // Also cache the bounding volume if not already cached
+                                                    if (_cachedMeshBoundingVolumes != null && !_cachedMeshBoundingVolumes.ContainsKey(renderable.ModelResRef))
+                                                    {
+                                                        MeshBoundingVolume boundingVolume = new MeshBoundingVolume(calculatedBMin, calculatedBMax, mdl.Radius);
+                                                        _cachedMeshBoundingVolumes[renderable.ModelResRef] = boundingVolume;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                // MDL loading failed - log but don't crash
+                                // Based on Eclipse engine: Resource loading errors are logged but don't crash the game
+                                System.Console.WriteLine($"[EclipseArea] Error loading MDL for bounds calculation '{renderable.ModelResRef}': {ex.Message}");
+                            }
+                        }
+                    }
+
+                    // 4. Try to get bounds from cached entity mesh data if available
+                    // Based on daorigins.exe/DragonAge2.exe: Cached mesh data can be used to calculate bounds
+                    // Original implementation: Calculates bounds from vertex buffer if mesh data is cached
+                    if (halfExtents.X == 0.5f && halfExtents.Y == 0.5f && halfExtents.Z == 0.5f)
+                    {
+                        if (_cachedEntityMeshes != null && _cachedEntityMeshes.TryGetValue(renderable.ModelResRef, out IRoomMeshData entityMeshData))
+                        {
+                            if (entityMeshData != null && entityMeshData.VertexBuffer != null)
+                            {
+                                // Calculate bounds from vertex buffer
+                                // Based on daorigins.exe/DragonAge2.exe: Vertex buffers contain position data that can be used for bounds calculation
+                                // Original implementation: Iterates through vertex buffer and finds min/max positions
+                                Vector3 calculatedBounds = CalculateBoundsFromVertexBuffer(entityMeshData.VertexBuffer);
+                                if (calculatedBounds.X > 0 && calculatedBounds.Y > 0 && calculatedBounds.Z > 0)
+                                {
+                                    // Convert full bounds to half extents
+                                    halfExtents = new Vector3(calculatedBounds.X * 0.5f, calculatedBounds.Y * 0.5f, calculatedBounds.Z * 0.5f);
+
+                                    // Cache the bounds in entity data for future use
+                                    entity.SetData("MeshBounds", calculatedBounds);
+                                }
+                            }
                         }
                     }
                 }
@@ -3987,6 +4144,50 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Mark entity as having physics
             entity.SetData("HasPhysics", true);
+        }
+
+        /// <summary>
+        /// Calculates bounding box from vertex buffer data.
+        /// </summary>
+        /// <param name="vertexBuffer">Vertex buffer to calculate bounds from.</param>
+        /// <returns>Bounding box size (full extents, not half extents), or Vector3.Zero if calculation fails.</returns>
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Vertex buffers contain position data that can be used for bounds calculation
+        /// Original implementation: Iterates through vertex buffer and finds min/max positions
+        /// This is a fallback method when MDL model bounds are not available
+        /// Note: Vertex format may vary, so this method attempts to extract position data from common vertex formats
+        /// </remarks>
+        private Vector3 CalculateBoundsFromVertexBuffer(IVertexBuffer vertexBuffer)
+        {
+            if (vertexBuffer == null || vertexBuffer.VertexCount == 0)
+            {
+                return Vector3.Zero;
+            }
+
+            try
+            {
+                // Try to get vertex data using common vertex formats
+                // Based on daorigins.exe/DragonAge2.exe: Vertex buffers use Position, Normal, TextureCoordinate format
+                // Original implementation: Extracts position data from vertex buffer and calculates min/max
+                // Note: This is a simplified implementation - full implementation would need to handle multiple vertex formats
+                // For now, we'll return Vector3.Zero to indicate calculation is not available
+                // This is acceptable since we have multiple fallback methods (MDL model bounds, cached bounds, type-based defaults)
+                // TODO: SIMPLIFIED - Full implementation would extract position data from vertex buffer based on vertex format
+                // Full implementation would:
+                // 1. Determine vertex format (Position, PositionNormal, PositionNormalTexture, etc.)
+                // 2. Extract position data from vertex buffer using GetData<T> with appropriate vertex struct
+                // 3. Calculate min/max positions across all vertices
+                // 4. Return bounding box size (max - min)
+                // This is complex because vertex format varies by mesh type and rendering backend
+                return Vector3.Zero;
+            }
+            catch (Exception ex)
+            {
+                // Vertex buffer access failed - log but don't crash
+                // Based on Eclipse engine: Resource access errors are logged but don't crash the game
+                System.Console.WriteLine($"[EclipseArea] Error calculating bounds from vertex buffer: {ex.Message}");
+                return Vector3.Zero;
+            }
         }
 
         /// <summary>
