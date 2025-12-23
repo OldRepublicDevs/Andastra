@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using Stride.Graphics;
+using StrideGraphics = Stride.Graphics;
 using Stride.Rendering;
 using Stride.Core.Mathematics;
 using Stride.Engine;
@@ -28,18 +28,18 @@ namespace Andastra.Runtime.Stride.PostProcessing
     /// </summary>
     public class StrideBloomEffect : BaseBloomEffect
     {
-        private GraphicsDevice _graphicsDevice;
-        private Texture _brightPassTarget;
-        private Texture[] _blurTargets;
-        private SpriteBatch _spriteBatch;
-        private SamplerState _linearSampler;
-        private SamplerState _pointSampler;
+        private StrideGraphics.GraphicsDevice _graphicsDevice;
+        private StrideGraphics.Texture _brightPassTarget;
+        private StrideGraphics.Texture[] _blurTargets;
+        private StrideGraphics.SpriteBatch _spriteBatch;
+        private StrideGraphics.SamplerState _linearSampler;
+        private StrideGraphics.SamplerState _pointSampler;
         private EffectInstance _brightPassEffect;
         private EffectInstance _blurEffect;
-        private Effect _brightPassEffectBase;
-        private Effect _blurEffectBase;
+        private StrideGraphics.Effect _brightPassEffectBase;
+        private StrideGraphics.Effect _blurEffectBase;
 
-        public StrideBloomEffect(GraphicsDevice graphicsDevice)
+        public StrideBloomEffect(StrideGraphics.GraphicsDevice graphicsDevice)
         {
             _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
             InitializeRenderingResources();
