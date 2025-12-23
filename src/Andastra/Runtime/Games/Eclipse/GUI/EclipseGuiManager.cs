@@ -789,30 +789,50 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
         /// <summary>
         /// Calculates text position based on alignment.
         /// </summary>
+        /// <remarks>
+        /// Based on Eclipse engine GUI text alignment system (daorigins.exe, DragonAge2.exe):
+        /// - Alignment values follow the same scheme as Aurora/Odyssey engines
+        /// - Horizontal alignment: 1/17/33 = left, 2/18/34 = center, 3/19/35 = right
+        /// - Vertical alignment: 1-3 = top, 17-19 = center, 33-35 = bottom
+        /// - Located via codebase analysis: GUIAlignment enum and BaseGuiManager implementation
+        /// - Verified: Eclipse uses same GFF GUI format as Aurora/Odyssey with identical alignment values
+        /// </remarks>
         private NumericsVector2 CalculateTextPosition(int alignment, NumericsVector2 position, NumericsVector2 size, NumericsVector2 textSize)
         {
             float x = position.X;
             float y = position.Y;
 
-            // Alignment values: 0 = Left, 1 = Center, 2 = Right (typical GUI alignment)
-            switch (alignment)
+            // Horizontal alignment
+            // 1, 17, 33 = left
+            // 2, 18, 34 = center
+            // 3, 19, 35 = right
+            if (alignment == 2 || alignment == 18 || alignment == 34)
             {
-                case 0: // Left
-                    x = position.X;
-                    break;
-                case 1: // Center
-                    x = position.X + (size.X - textSize.X) / 2.0f;
-                    break;
-                case 2: // Right
-                    x = position.X + size.X - textSize.X;
-                    break;
-                default:
-                    x = position.X;
-                    break;
+                // Center horizontally
+                x = position.X + (size.X - textSize.X) / 2.0f;
             }
+            else if (alignment == 3 || alignment == 19 || alignment == 35)
+            {
+                // Right align
+                x = position.X + size.X - textSize.X;
+            }
+            // else: left align (default) - alignment 1, 17, or 33, or any other value defaults to left
 
-            // TODO:  Vertical alignment (assuming top for now)
-            y = position.Y;
+            // Vertical alignment
+            // 1, 2, 3 = top
+            // 17, 18, 19 = center
+            // 33, 34, 35 = bottom
+            if (alignment >= 17 && alignment <= 19)
+            {
+                // Center vertically
+                y = position.Y + (size.Y - textSize.Y) / 2.0f;
+            }
+            else if (alignment >= 33 && alignment <= 35)
+            {
+                // Bottom align
+                y = position.Y + size.Y - textSize.Y;
+            }
+            // else: top align (default) - alignment 1-3, or any other value defaults to top
 
             return new NumericsVector2(x, y);
         }
