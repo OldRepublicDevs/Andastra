@@ -37,7 +37,7 @@ namespace Andastra.Tests.Runtime.Core.Plot
             state.IsCompleted.Should().BeFalse();
         }
 
-        [Test]
+        [Fact]
         public void RegisterPlot_WithNegativeIndex_DoesNotRegister()
         {
             // Arrange

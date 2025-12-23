@@ -833,7 +833,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Gets common GOG installation paths for a game.
         /// </summary>
-        private static string[] GetGogPathsForGame(Game game)
+        private static string[] GetGogPathsForGame(GameType game)
         {
             switch (game)
             {
@@ -873,7 +873,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Tries to find game paths in common installation locations.
         /// </summary>
-        private static List<string> TryCommonPathsForGame(Game game)
+        private static List<string> TryCommonPathsForGame(GameType game)
         {
             var paths = new List<string>();
             string[] commonPaths = GetCommonPathsForGame(game);
@@ -892,7 +892,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Gets common installation paths for a game.
         /// </summary>
-        private static string[] GetCommonPathsForGame(Game game)
+        private static string[] GetCommonPathsForGame(GameType game)
         {
             switch (game)
             {
@@ -940,7 +940,7 @@ namespace Andastra.Runtime.Game.Core
         /// Verifies a path is a valid game installation.
         /// Uses the same validation logic as GameLauncher.ValidateInstallation.
         /// </summary>
-        public static bool IsValidGameInstallation(string path, Game game)
+        public static bool IsValidGameInstallation(string path, GameType game)
         {
             if (string.IsNullOrEmpty(path) || !Directory.Exists(path))
             {

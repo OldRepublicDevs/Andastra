@@ -1579,8 +1579,8 @@ namespace Andastra.Game.GUI
         public bool? MonoGameSupportedOrientationsLandscapeRight { get; set; }
 
         // Rasterizer State
-        public CullMode? RasterizerCullMode { get; set; }
-        public FillMode? RasterizerFillMode { get; set; }
+        public Andastra.Runtime.Graphics.Common.Enums.CullMode? RasterizerCullMode { get; set; }
+        public Andastra.Runtime.Graphics.Common.Enums.FillMode? RasterizerFillMode { get; set; }
         public bool? RasterizerDepthBiasEnabled { get; set; }
         public double? RasterizerDepthBias { get; set; }
         public double? RasterizerSlopeScaleDepthBias { get; set; }
