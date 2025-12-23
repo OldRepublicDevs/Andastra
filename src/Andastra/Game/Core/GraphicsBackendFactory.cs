@@ -35,7 +35,7 @@ namespace Andastra.Runtime.Game.Core
                     case GraphicsBackendType.MonoGame:
                         return new Andastra.Runtime.MonoGame.Graphics.MonoGameGraphicsBackend();
                     case GraphicsBackendType.Stride:
-                        return new Andastra.Runtime.Graphics.Stride.Graphics.StrideGraphicsBackend();
+                        return new Andastra.Runtime.Stride.Graphics.StrideGraphicsBackend();
                     default:
                         throw new ArgumentException("Unknown graphics backend type: " + backendType, nameof(backendType));
                 }

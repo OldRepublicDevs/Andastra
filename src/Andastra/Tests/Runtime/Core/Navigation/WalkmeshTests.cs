@@ -57,18 +57,15 @@ namespace Andastra.Tests.Runtime.Core.Navigation
                 new Vector3(2, 1, 0)
             };
 
-            // Add walkable faces
+            // Add walkable faces using vertices from the list
             var faces = new List<BWMFace>
             {
-                new BWMFace { Material = 1 }, // Walkable
-                new BWMFace { Material = 1 },  // Walkable
-                new BWMFace { Material = 1 }   // Walkable
+                new BWMFace(vertices[0], vertices[1], vertices[2]), // Walkable
+                new BWMFace(vertices[1], vertices[2], vertices[3]),  // Walkable
+                new BWMFace(vertices[3], vertices[4], vertices[5])   // Walkable
             };
 
-            bwm._vertices = vertices.ToArray();
-            bwm._faceIndices = new[] { 0, 1, 2, 1, 2, 3, 3, 4, 5 };
-            bwm._faces = faces.ToArray();
-            bwm._vertexCount = (uint)vertices.Count;
+            bwm.Faces = faces;
 
             // Assert: AreaModel type must be set for AABB tree
             Assert.Equal(BWMType.AreaModel, bwm.WalkmeshType);
@@ -100,24 +97,30 @@ namespace Andastra.Tests.Runtime.Core.Navigation
             var faceIndices = new[] { 0, 1, 2 };
             var faces = new[]
             {
-                new BWMFace { Material = 1 }, // Walkable (grass)
-                new BWMFace { Material = 0 }  // Non-walkable (void)
+                new BWMFace(Vector3.Zero, Vector3.UnitX, Vector3.UnitY) { Material = (SurfaceMaterial)1 }, // Walkable (grass)
+                new BWMFace(Vector3.Zero, Vector3.UnitX, Vector3.UnitY) { Material = (SurfaceMaterial)0 }  // Non-walkable (void)
             };
 
-            originalBWM._vertices = vertices;
-            originalBWM._faceIndices = faceIndices;
-            originalBWM._faces = faces;
-            originalBWM._vertexCount = 3;
+            originalBWM.Faces = new List<BWMFace>(faces);
 
             // Act: Deep copy the walkmesh (simulating Indoor Map Builder operation)
-            var copiedBWM = (BWM)originalBWM.Clone();
+            var copiedBWM = new BWM
+            {
+                WalkmeshType = originalBWM.WalkmeshType,
+                Faces = new List<BWMFace>(originalBWM.Faces.Select(f => new BWMFace(f.V1, f.V2, f.V3) { Material = f.Material })),
+                Position = originalBWM.Position,
+                RelativeHook1 = originalBWM.RelativeHook1,
+                RelativeHook2 = originalBWM.RelativeHook2,
+                AbsoluteHook1 = originalBWM.AbsoluteHook1,
+                AbsoluteHook2 = originalBWM.AbsoluteHook2
+            };
 
             // Assert: Materials must be preserved
-            Assert.NotNull(copiedBWM._faces);
-            Assert.Equal(originalBWM._faces.Length, copiedBWM._faces.Length);
-            for (int i = 0; i < originalBWM._faces.Length; i++)
+            Assert.NotNull(copiedBWM.Faces);
+            Assert.Equal(originalBWM.Faces.Count, copiedBWM.Faces.Count);
+            for (int i = 0; i < originalBWM.Faces.Count; i++)
             {
-                Assert.Equal(originalBWM._faces[i].Material, copiedBWM._faces[i].Material);
+                Assert.Equal(originalBWM.Faces[i].Material, copiedBWM.Faces[i].Material);
             }
         }
 
@@ -147,21 +150,21 @@ namespace Andastra.Tests.Runtime.Core.Navigation
             // Set up transitions in room1 that should link to room2
             // Dummy index (0) marks the transition location in room1 (from kit component)
             // This will be remapped to actual room2 index (100) when rooms are connected
-            if (room1._faces != null && room1._faces.Length >= 2)
+            if (room1.Faces != null && room1.Faces.Count >= 2)
             {
                 // Face 0: Trans1 has dummy index 0 (will be remapped to 100)
-                room1._faces[0].Trans1 = 0;
+                room1.Faces[0].Trans1 = 0;
                 // Face 0: Trans2 has different dummy index 1 (will not be remapped in this test)
-                room1._faces[0].Trans2 = 1;
+                room1.Faces[0].Trans2 = 1;
                 // Face 0: Trans3 is null (no transition, should remain null)
-                room1._faces[0].Trans3 = null;
+                room1.Faces[0].Trans3 = null;
 
                 // Face 1: Trans1 has dummy index 0 (will be remapped to 100)
-                room1._faces[1].Trans1 = 0;
+                room1.Faces[1].Trans1 = 0;
                 // Face 1: Trans2 has dummy index 0 (will be remapped to 100)
-                room1._faces[1].Trans2 = 0;
+                room1.Faces[1].Trans2 = 0;
                 // Face 1: Trans3 has different value 5 (will not be remapped)
-                room1._faces[1].Trans3 = 5;
+                room1.Faces[1].Trans3 = 5;
             }
 
             // Act: Remap transition from dummy index (0) to actual room2 index (100)
@@ -169,21 +172,21 @@ namespace Andastra.Tests.Runtime.Core.Navigation
             room1.ChangeLytIndexes(0, 100);
 
             // Assert: All transitions with dummy index 0 should now point to room2 (100)
-            if (room1._faces != null && room1._faces.Length >= 2)
+            if (room1.Faces != null && room1.Faces.Count >= 2)
             {
                 // Face 0: Trans1 was remapped from 0 to 100
-                Assert.Equal(100, room1._faces[0].Trans1 ?? -1);
+                Assert.Equal(100, room1.Faces[0].Trans1 ?? -1);
                 // Face 0: Trans2 was not remapped (different dummy index 1)
-                Assert.Equal(1, room1._faces[0].Trans2 ?? -1);
+                Assert.Equal(1, room1.Faces[0].Trans2 ?? -1);
                 // Face 0: Trans3 remains null (no transition)
-                Assert.Null(room1._faces[0].Trans3);
+                Assert.Null(room1.Faces[0].Trans3);
 
                 // Face 1: Trans1 was remapped from 0 to 100
-                Assert.Equal(100, room1._faces[1].Trans1 ?? -1);
+                Assert.Equal(100, room1.Faces[1].Trans1 ?? -1);
                 // Face 1: Trans2 was remapped from 0 to 100
-                Assert.Equal(100, room1._faces[1].Trans2 ?? -1);
+                Assert.Equal(100, room1.Faces[1].Trans2 ?? -1);
                 // Face 1: Trans3 was not remapped (different value 5)
-                Assert.Equal(5, room1._faces[1].Trans3 ?? -1);
+                Assert.Equal(5, room1.Faces[1].Trans3 ?? -1);
             }
         }
 
@@ -203,11 +206,11 @@ namespace Andastra.Tests.Runtime.Core.Navigation
             var room1 = CreateSimpleWalkmesh(startIndex: 0);
 
             // Set up transitions with dummy index 0 (from kit component)
-            if (room1._faces != null && room1._faces.Length > 0)
+            if (room1.Faces != null && room1.Faces.Count > 0)
             {
-                room1._faces[0].Trans1 = 0;
-                room1._faces[0].Trans2 = 0;
-                room1._faces[0].Trans3 = 0;
+                room1.Faces[0].Trans1 = 0;
+                room1.Faces[0].Trans2 = 0;
+                room1.Faces[0].Trans3 = 0;
             }
 
             // Act: Remap transition from dummy index (0) to null (no connection)
@@ -215,11 +218,11 @@ namespace Andastra.Tests.Runtime.Core.Navigation
             room1.ChangeLytIndexes(0, null);
 
             // Assert: All transitions with dummy index 0 should now be null
-            if (room1._faces != null && room1._faces.Length > 0)
+            if (room1.Faces != null && room1.Faces.Count > 0)
             {
-                Assert.Null(room1._faces[0].Trans1);
-                Assert.Null(room1._faces[0].Trans2);
-                Assert.Null(room1._faces[0].Trans3);
+                Assert.Null(room1.Faces[0].Trans1);
+                Assert.Null(room1.Faces[0].Trans2);
+                Assert.Null(room1.Faces[0].Trans3);
             }
         }
 
@@ -238,12 +241,12 @@ namespace Andastra.Tests.Runtime.Core.Navigation
             var room1b = CreateSimpleWalkmesh(startIndex: 0);
 
             // Set up identical transitions
-            if (room1a._faces != null && room1a._faces.Length > 0 && room1b._faces != null && room1b._faces.Length > 0)
+            if (room1a.Faces != null && room1a.Faces.Count > 0 && room1b.Faces != null && room1b.Faces.Count > 0)
             {
-                room1a._faces[0].Trans1 = 0;
-                room1a._faces[0].Trans2 = 0;
-                room1b._faces[0].Trans1 = 0;
-                room1b._faces[0].Trans2 = 0;
+                room1a.Faces[0].Trans1 = 0;
+                room1a.Faces[0].Trans2 = 0;
+                room1b.Faces[0].Trans1 = 0;
+                room1b.Faces[0].Trans2 = 0;
             }
 
             // Act: Use different methods to remap transitions
@@ -251,7 +254,7 @@ namespace Andastra.Tests.Runtime.Core.Navigation
             room1b.RemapTransitions(0, 100);
 
             // Assert: Both methods produce identical results
-            if (room1a._faces != null && room1a._faces.Length > 0 && room1b._faces != null && room1b._faces.Length > 0)
+            if (room1a.Faces != null && room1a.Faces.Count > 0 && room1b.Faces != null && room1b.Faces.Count > 0)
             {
                 Assert.Equal(room1a._faces[0].Trans1, room1b._faces[0].Trans1);
                 Assert.Equal(room1a._faces[0].Trans2, room1b._faces[0].Trans2);
@@ -270,34 +273,34 @@ namespace Andastra.Tests.Runtime.Core.Navigation
             // Arrange: Create a walkmesh with multiple different transition values
             var room1 = CreateSimpleWalkmesh(startIndex: 0);
 
-            if (room1._faces != null && room1._faces.Length >= 2)
+            if (room1.Faces != null && room1.Faces.Count >= 2)
             {
                 // Face 0: Mix of values to remap and values to preserve
-                room1._faces[0].Trans1 = 0;  // Will be remapped
-                room1._faces[0].Trans2 = 5;  // Should remain 5
-                room1._faces[0].Trans3 = 10; // Should remain 10
+                room1.Faces[0].Trans1 = 0;  // Will be remapped
+                room1.Faces[0].Trans2 = 5;  // Should remain 5
+                room1.Faces[0].Trans3 = 10; // Should remain 10
 
                 // Face 1: All different values
-                room1._faces[1].Trans1 = 7;  // Should remain 7
-                room1._faces[1].Trans2 = 8; // Should remain 8
-                room1._faces[1].Trans3 = 9; // Should remain 9
+                room1.Faces[1].Trans1 = 7;  // Should remain 7
+                room1.Faces[1].Trans2 = 8; // Should remain 8
+                room1.Faces[1].Trans3 = 9; // Should remain 9
             }
 
             // Act: Remap only dummy index 0 to 100
             room1.ChangeLytIndexes(0, 100);
 
             // Assert: Only Trans1 of Face 0 was remapped, all others unchanged
-            if (room1._faces != null && room1._faces.Length >= 2)
+            if (room1.Faces != null && room1.Faces.Count >= 2)
             {
                 // Face 0: Only Trans1 was remapped
-                Assert.Equal(100, room1._faces[0].Trans1 ?? -1);
-                Assert.Equal(5, room1._faces[0].Trans2 ?? -1);
-                Assert.Equal(10, room1._faces[0].Trans3 ?? -1);
+                Assert.Equal(100, room1.Faces[0].Trans1 ?? -1);
+                Assert.Equal(5, room1.Faces[0].Trans2 ?? -1);
+                Assert.Equal(10, room1.Faces[0].Trans3 ?? -1);
 
                 // Face 1: All transitions unchanged
-                Assert.Equal(7, room1._faces[1].Trans1 ?? -1);
-                Assert.Equal(8, room1._faces[1].Trans2 ?? -1);
-                Assert.Equal(9, room1._faces[1].Trans3 ?? -1);
+                Assert.Equal(7, room1.Faces[1].Trans1 ?? -1);
+                Assert.Equal(8, room1.Faces[1].Trans2 ?? -1);
+                Assert.Equal(9, room1.Faces[1].Trans3 ?? -1);
             }
         }
 
@@ -318,29 +321,19 @@ namespace Andastra.Tests.Runtime.Core.Navigation
                 WalkmeshType = BWMType.AreaModel
             };
 
-            var vertices = new[]
+            var faces = new List<BWMFace>
             {
-                Vector3.Zero, Vector3.UnitX, Vector3.UnitY,           // Face 0
-                Vector3.UnitX, Vector3.One, Vector3.UnitY              // Face 1 (adjacent)
+                new BWMFace(Vector3.Zero, Vector3.UnitX, Vector3.UnitY) { Material = (SurfaceMaterial)1 },  // Face 0: Walkable
+                new BWMFace(Vector3.UnitX, Vector3.One, Vector3.UnitY) { Material = (SurfaceMaterial)1 }   // Face 1: Walkable
             };
 
-            var faceIndices = new[] { 0, 1, 2, 1, 3, 2 };
-            var faces = new[]
-            {
-                new BWMFace { Material = 1 },  // Face 0: Walkable
-                new BWMFace { Material = 1 }   // Face 1: Walkable
-            };
-
-            bwm._vertices = vertices;
-            bwm._faceIndices = faceIndices;
-            bwm._faces = faces;
-            bwm._vertexCount = 4;
+            bwm.Faces = faces;
 
             // Assert: Walkmesh should be valid for adjacency
-            Assert.NotNull(bwm._faces);
-            Assert.Equal(2, bwm._faces.Length);
-            Assert.Equal(1, bwm._faces[0].Material);
-            Assert.Equal(1, bwm._faces[1].Material);
+            Assert.NotNull(bwm.Faces);
+            Assert.Equal(2, bwm.Faces.Count);
+            Assert.Equal((SurfaceMaterial)1, bwm.Faces[0].Material);
+            Assert.Equal((SurfaceMaterial)1, bwm.Faces[1].Material);
         }
 
         /// <summary>
@@ -527,22 +520,13 @@ namespace Andastra.Tests.Runtime.Core.Navigation
                 Position = new Vector3(startIndex, 0, 0)
             };
 
-            var vertices = new[]
+            var faces = new List<BWMFace>
             {
-                Vector3.Zero, Vector3.UnitX, Vector3.UnitY,
-                Vector3.UnitX, Vector3.One, Vector3.UnitY
+                new BWMFace(Vector3.Zero, Vector3.UnitX, Vector3.UnitY) { Material = (SurfaceMaterial)1 },
+                new BWMFace(Vector3.UnitX, Vector3.One, Vector3.UnitY) { Material = (SurfaceMaterial)1 }
             };
 
-            var faces = new[]
-            {
-                new BWMFace { Material = 1 },
-                new BWMFace { Material = 1 }
-            };
-
-            bwm._vertices = vertices;
-            bwm._faceIndices = new[] { 0, 1, 2, 1, 3, 2 };
-            bwm._faces = faces;
-            bwm._vertexCount = (uint)vertices.Length;
+            bwm.Faces = faces;
 
             return bwm;
         }
