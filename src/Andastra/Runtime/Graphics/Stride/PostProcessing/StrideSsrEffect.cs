@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Numerics;
-using Stride.Graphics;
+using StrideGraphics = Stride.Graphics;
 using Stride.Rendering;
 using Stride.Core.Mathematics;
 using Stride.Engine;
@@ -35,15 +35,15 @@ namespace Andastra.Runtime.Stride.PostProcessing
     /// </summary>
     public class StrideSsrEffect : BaseSsrEffect
     {
-        private Stride.Graphics.GraphicsDevice _graphicsDevice;
+        private StrideGraphics.GraphicsDevice _graphicsDevice;
         private EffectInstance _ssrEffect;
-        private Texture _historyTexture;
-        private Texture _temporaryTexture;
-        private Stride.Graphics.SpriteBatch _spriteBatch;
-        private Effect _fullscreenEffect;
-        private Stride.Graphics.ConstantBuffer _ssrConstants;
-        private SamplerState _linearSampler;
-        private SamplerState _pointSampler;
+        private StrideGraphics.Texture _historyTexture;
+        private StrideGraphics.Texture _temporaryTexture;
+        private StrideGraphics.SpriteBatch _spriteBatch;
+        private StrideGraphics.Effect _fullscreenEffect;
+        private StrideGraphics.ConstantBuffer _ssrConstants;
+        private StrideGraphics.SamplerState _linearSampler;
+        private StrideGraphics.SamplerState _pointSampler;
         private bool _effectInitialized;
         private float _clipNear;
         private float _clipFar;
@@ -73,7 +73,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             public Vector2 Padding;
         }
 
-        public StrideSsrEffect(Stride.Graphics.GraphicsDevice graphicsDevice)
+        public StrideSsrEffect(StrideGraphics.GraphicsDevice graphicsDevice)
         {
             _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
             _clipNear = 0.1f;
@@ -102,7 +102,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             // Effect.Load() searches in standard content paths for compiled .sdeffect files
             try
             {
-                _fullscreenEffect = Effect.Load(_graphicsDevice, "SSREffect");
+                _fullscreenEffect = StrideGraphics.Effect.Load(_graphicsDevice, "SSREffect");
                 if (_fullscreenEffect != null)
                 {
                     _ssrEffect = new EffectInstance(_fullscreenEffect);
@@ -130,7 +130,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                         {
                             try
                             {
-                                _fullscreenEffect = contentManager.Load<Effect>("SSREffect");
+                                _fullscreenEffect = contentManager.Load<StrideGraphics.Effect>("SSREffect");
                                 if (_fullscreenEffect != null)
                                 {
                                     _ssrEffect = new EffectInstance(_fullscreenEffect);
@@ -175,7 +175,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             try
             {
                 // Create sprite batch for fullscreen quad rendering
-                _spriteBatch = new Stride.Graphics.SpriteBatch(_graphicsDevice);
+                _spriteBatch = new StrideGraphics.SpriteBatch(_graphicsDevice);
 
                 // Create samplers for texture sampling
                 _linearSampler = SamplerState.New(_graphicsDevice, new SamplerStateDescription
@@ -264,9 +264,9 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// <param name="height">Render height.</param>
         /// <param name="lightmap">Optional lightmap texture for reflection color modulation (matches GLSL sLightmap).</param>
         /// <returns>Output texture with reflections applied.</returns>
-        public Texture Apply(Texture input, Texture depth, Texture normal, Texture roughness,
+        public StrideGraphics.Texture Apply(StrideGraphics.Texture input, StrideGraphics.Texture depth, StrideGraphics.Texture normal, StrideGraphics.Texture roughness,
             System.Numerics.Matrix4x4 viewMatrix, System.Numerics.Matrix4x4 projectionMatrix,
-            int width, int height, Texture lightmap = null)
+            int width, int height, StrideGraphics.Texture lightmap = null)
         {
             if (!_enabled || input == null || depth == null || normal == null)
             {
@@ -303,7 +303,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             return _temporaryTexture ?? input;
         }
 
-        private void EnsureTextures(int width, int height, PixelFormat format)
+        private void EnsureTextures(int width, int height, StrideGraphics.PixelFormat format)
         {
             if (_historyTexture != null &&
                 _historyTexture.Width == width &&
@@ -315,11 +315,11 @@ namespace Andastra.Runtime.Stride.PostProcessing
             _historyTexture?.Dispose();
             _temporaryTexture?.Dispose();
 
-            var desc = TextureDescription.New2D(width, height, 1, format,
-                TextureFlags.ShaderResource | TextureFlags.RenderTarget);
+            var desc = StrideGraphics.TextureDescription.New2D(width, height, 1, format,
+                StrideGraphics.TextureFlags.ShaderResource | StrideGraphics.TextureFlags.RenderTarget);
 
-            _historyTexture = Texture.New(_graphicsDevice, desc);
-            _temporaryTexture = Texture.New(_graphicsDevice, desc);
+            _historyTexture = StrideGraphics.Texture.New(_graphicsDevice, desc);
+            _temporaryTexture = StrideGraphics.Texture.New(_graphicsDevice, desc);
         }
 
         /// <summary>
@@ -327,9 +327,9 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// Implements the complete algorithm from vendor/reone/glsl/f_pbr_ssr.glsl
         /// for 1:1 parity with original game behavior.
         /// </summary>
-        private void ExecuteSsr(Texture input, Texture depth, Texture normal, Texture roughness,
-            Texture lightmap, System.Numerics.Matrix4x4 viewMatrix, System.Numerics.Matrix4x4 projectionMatrix,
-            Texture output, int width, int height)
+        private void ExecuteSsr(StrideGraphics.Texture input, StrideGraphics.Texture depth, StrideGraphics.Texture normal, StrideGraphics.Texture roughness,
+            StrideGraphics.Texture lightmap, System.Numerics.Matrix4x4 viewMatrix, System.Numerics.Matrix4x4 projectionMatrix,
+            StrideGraphics.Texture output, int width, int height)
         {
             if (!_effectInitialized || output == null)
             {
@@ -365,8 +365,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// GPU-based SSR execution using shader effect.
         /// Implements complete GPU rendering matching vendor/reone/glsl/f_pbr_ssr.glsl.
         /// </summary>
-        private void ExecuteSsrGpu(Texture input, Texture depth, Texture normal, Texture roughness,
-            Texture lightmap, Texture output, CommandList commandList)
+        private void ExecuteSsrGpu(StrideGraphics.Texture input, StrideGraphics.Texture depth, StrideGraphics.Texture normal, StrideGraphics.Texture roughness,
+            StrideGraphics.Texture lightmap, StrideGraphics.Texture output, StrideGraphics.CommandList commandList)
         {
             if (_ssrEffect == null || _fullscreenEffect == null || commandList == null)
             {
@@ -451,8 +451,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// Implements the complete ray marching algorithm matching vendor/reone/glsl/f_pbr_ssr.glsl
         /// for 1:1 parity with original game behavior.
         /// </summary>
-        private void ExecuteSsrCpu(Texture input, Texture depth, Texture normal, Texture roughness,
-            Texture lightmap, Texture output, int width, int height)
+        private void ExecuteSsrCpu(StrideGraphics.Texture input, StrideGraphics.Texture depth, StrideGraphics.Texture normal, StrideGraphics.Texture roughness,
+            StrideGraphics.Texture lightmap, StrideGraphics.Texture output, int width, int height)
         {
             // Read texture data
             var inputData = ReadTextureData(input);
@@ -1056,7 +1056,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// Shader matches vendor/reone/glsl/f_pbr_ssr.glsl exactly for 1:1 parity with original game.
         /// Converts GLSL to HLSL/.sdsl format while preserving all algorithm details.
         /// </remarks>
-        private Effect CreateSsrEffect()
+        private StrideGraphics.Effect CreateSsrEffect()
         {
             try
             {
@@ -1303,7 +1303,7 @@ shader SSREffect : ShaderBase
         /// - EffectCompiler can be accessed from GraphicsDevice services (EffectSystem)
         /// - Compilation requires proper SDSL syntax and shader structure
         /// </remarks>
-        private Effect CompileShaderFromSource(string shaderSource, string shaderName)
+        private StrideGraphics.Effect CompileShaderFromSource(string shaderSource, string shaderName)
         {
             if (string.IsNullOrEmpty(shaderSource))
             {
@@ -1416,7 +1416,7 @@ shader SSREffect : ShaderBase
         /// <param name="shaderSource">Shader source code.</param>
         /// <param name="shaderName">Shader name for identification.</param>
         /// <returns>Compiled Effect, or null if compilation fails.</returns>
-        private Effect CompileShaderWithEffectSystem(Stride.Shaders.Compiler.EffectCompiler effectSystem, string shaderSource, string shaderName)
+        private StrideGraphics.Effect CompileShaderWithEffectSystem(global::Stride.Shaders.Compiler.EffectCompiler effectSystem, string shaderSource, string shaderName)
         {
             try
             {
@@ -1550,7 +1550,7 @@ shader SSREffect : ShaderBase
                 return hash;
             }
 
-            public override ShaderSource Clone()
+            public override object Clone()
             {
                 return new ShaderSourceClass
                 {

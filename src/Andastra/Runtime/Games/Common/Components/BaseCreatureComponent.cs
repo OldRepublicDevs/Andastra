@@ -435,7 +435,7 @@ namespace Andastra.Runtime.Games.Common.Components
         /// <summary>
         /// Interface for feat data (common properties needed for usability checking).
         /// </summary>
-        protected interface IFeatData
+        public interface IFeatData
         {
             int UsesPerDay { get; }
         }

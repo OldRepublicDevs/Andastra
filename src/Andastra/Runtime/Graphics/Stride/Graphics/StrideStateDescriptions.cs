@@ -1,5 +1,6 @@
 using System;
 using Stride.Graphics;
+using Stride.Core.Mathematics;
 
 namespace Andastra.Runtime.Stride.Graphics
 {
@@ -112,7 +113,7 @@ namespace Andastra.Runtime.Stride.Graphics
         /// Global blend factor used for constant blending operations.
         /// This is a Color4 value where components are in the range [0.0, 1.0].
         /// </summary>
-        public Stride.Core.Mathematics.Color4 BlendFactor;
+        public global::Stride.Core.Mathematics.Color4 BlendFactor;
 
         /// <summary>
         /// Multi-sample mask for alpha-to-coverage and multi-sample anti-aliasing.
@@ -286,7 +287,7 @@ namespace Andastra.Runtime.Stride.Graphics
                         ColorWriteChannels = ColorWriteChannels.All
                     }
                 },
-                BlendFactor = new Stride.Core.Mathematics.Color4(0f, 0f, 0f, 1f),
+                BlendFactor = new global::Stride.Core.Mathematics.Color4(0f, 0f, 0f, 1f),
                 MultiSampleMask = -1
             };
         }
@@ -348,7 +349,7 @@ namespace Andastra.Runtime.Stride.Graphics
             return new BlendStateDescription
             {
                 RenderTargets = renderTargets,
-                BlendFactor = new Stride.Core.Mathematics.Color4(0f, 0f, 0f, 1f),
+                BlendFactor = new global::Stride.Core.Mathematics.Color4(0f, 0f, 0f, 1f),
                 MultiSampleMask = -1
             };
         }

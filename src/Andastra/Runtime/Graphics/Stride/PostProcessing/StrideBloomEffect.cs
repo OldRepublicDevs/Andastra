@@ -734,7 +734,7 @@ shader BlurEffect : ShaderBase
         /// <param name="shaderSource">Shader source code.</param>
         /// <param name="shaderName">Shader name for identification.</param>
         /// <returns>Compiled Effect, or null if compilation fails.</returns>
-        private Effect CompileShaderWithEffectSystem(Stride.Shaders.Compiler.EffectCompiler effectSystem, string shaderSource, string shaderName)
+        private Effect CompileShaderWithEffectSystem(global::Stride.Shaders.Compiler.EffectCompiler effectSystem, string shaderSource, string shaderName)
         {
             try
             {
@@ -868,7 +868,7 @@ shader BlurEffect : ShaderBase
                 return hash;
             }
 
-            public override ShaderSource Clone()
+            public override object Clone()
             {
                 return new ShaderSourceClass
                 {

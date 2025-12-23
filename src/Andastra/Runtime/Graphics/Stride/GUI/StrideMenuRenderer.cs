@@ -1,5 +1,5 @@
 using System;
-using Stride.Graphics;
+using StrideGraphics = Stride.Graphics;
 using Stride.Core.Mathematics;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common.GUI;
@@ -53,10 +53,10 @@ namespace Andastra.Runtime.Stride.GUI
     /// </remarks>
     public class StrideMenuRenderer : BaseMenuRenderer
     {
-        private Stride.Graphics.GraphicsDevice _graphicsDevice;
-        private Stride.Graphics.SpriteBatch _spriteBatch;
-        private Stride.Graphics.SpriteFont _font;
-        private Stride.Graphics.Texture2D _whiteTexture;
+        private StrideGraphics.GraphicsDevice _graphicsDevice;
+        private StrideGraphics.SpriteBatch _spriteBatch;
+        private StrideGraphics.SpriteFont _font;
+        private global::Stride.Graphics.Texture2D _whiteTexture;
         private bool _isDisposed = false;
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace Andastra.Runtime.Stride.GUI
         /// <param name="graphicsDevice">The Stride GraphicsDevice to use for rendering.</param>
         /// <param name="font">Optional SpriteFont for text rendering. Can be null.</param>
         /// <exception cref="ArgumentNullException">Thrown if graphicsDevice is null.</exception>
-        public StrideMenuRenderer([NotNull] Stride.Graphics.GraphicsDevice graphicsDevice, Stride.Graphics.SpriteFont font = null)
+        public StrideMenuRenderer([NotNull] StrideGraphics.GraphicsDevice graphicsDevice, StrideGraphics.SpriteFont font = null)
         {
             if (graphicsDevice == null)
             {
