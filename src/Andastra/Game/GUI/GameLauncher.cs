@@ -266,7 +266,8 @@ namespace Andastra.Game.GUI
             {
                 using (var settingsDialog = new GraphicsSettingsDialog(SelectedGraphicsBackend, _graphicsSettings))
                 {
-                    if (settingsDialog.ShowModal(this) == DialogResult.Ok)
+                    settingsDialog.ShowModal(this);
+                    if (settingsDialog.Result == DialogResult.Ok)
                     {
                         _graphicsSettings = settingsDialog.Settings;
                     }
@@ -443,6 +444,7 @@ namespace Andastra.Game.GUI
                            File.Exists(Path.Combine(path, "swkotor2.exe"));
 
                 case BioWareGame.NWN:
+                {
                     // Validate Neverwinter Nights installation
                     // Based on xoreos/src/engines/nwn/nwn.cpp:213-268
                     // Required files:
@@ -469,6 +471,7 @@ namespace Andastra.Game.GUI
                     bool hasDataDir = Directory.Exists(nwnDataDir);
                     
                     return hasChitinKey && hasExe && hasGuiErf && hasDataDir;
+                }
                     
                 case BioWareGame.NWN2:
                     // Validate Neverwinter Nights 2 installation
@@ -505,6 +508,7 @@ namespace Andastra.Game.GUI
                            hasNwn2ActorsZip && hasNwn2ModelsZip && hasNwn2ScriptsZip;
 
                 case BioWareGame.DA:
+                {
                     // Validate Dragon Age: Origins installation
                     // Based on xoreos/src/engines/dragonage/probes.cpp:69-75
                     // Required files:
@@ -534,6 +538,7 @@ namespace Andastra.Game.GUI
                     // All mandatory files/directories must exist
                     // Either launcher OR main executable is acceptable (different distribution methods)
                     return (hasLauncher || hasExe) && hasPackagesDir && hasDataDir && hasGlobalRim;
+                }
                     
                 case BioWareGame.DA2:
                     // Validate Dragon Age II installation

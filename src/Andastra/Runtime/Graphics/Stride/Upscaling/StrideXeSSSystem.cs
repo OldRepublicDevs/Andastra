@@ -167,9 +167,12 @@ namespace Andastra.Runtime.Stride.Upscaling
             //   resetHistory
             // )
 
-            // Get command list from Stride's graphics context
-            var commandList = _graphicsDevice?.CommandList;
-            if (commandList == null) return;
+            // TODO: STUB - Get command list from Stride's graphics context
+            // In Stride, CommandList is accessed via GraphicsContext, not directly from GraphicsDevice
+            // This requires proper integration with Stride's rendering pipeline
+            // For now, this is a placeholder implementation
+            // var commandList = _graphicsDevice.ImmediateContext?.CommandList;
+            // if (commandList == null) return;
 
             // Convert Stride textures to XeSS resource handles
             // Would need to get native handles from Stride textures

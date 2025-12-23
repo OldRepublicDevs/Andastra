@@ -1292,6 +1292,23 @@ namespace Andastra.Runtime.Games.Odyssey.Save
             }
         }
 
+        private long GetInt64Field(GFFStruct gffStruct, string fieldName, long defaultValue)
+        {
+            if (gffStruct == null || string.IsNullOrEmpty(fieldName))
+            {
+                return defaultValue;
+            }
+
+            try
+            {
+                return gffStruct.GetInt64(fieldName);
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
         #endregion
 
         #endregion
