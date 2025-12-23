@@ -8472,11 +8472,8 @@ namespace Andastra.Runtime.MonoGame.Backends
                 int mipDepth = Math.Max(1, (texture.Desc.Depth > 0 ? texture.Desc.Depth : 1) >> mipLevel);
 
                 // Calculate data size for this mip level
-                // TODO: STUB -  For simplicity, assume uncompressed format - real implementation would handle compressed formats
-                int bytesPerPixel = GetBytesPerPixel(texture.Desc.Format);
-                int rowPitch = mipWidth * bytesPerPixel;
-                int slicePitch = rowPitch * mipHeight;
-                int totalSize = slicePitch * mipDepth;
+                // Handles both uncompressed and compressed formats (BC/DXT, ASTC)
+                int totalSize = CalculateTextureDataSize(texture.Desc.Format, mipWidth, mipHeight, mipDepth);
 
                 if (data.Length < totalSize)
                 {
@@ -8620,28 +8617,360 @@ namespace Andastra.Runtime.MonoGame.Backends
                 }
             }
 
-            // Helper method to get bytes per pixel for a texture format
-            // TODO:  Simplified version - real implementation would handle all formats
+            /// <summary>
+            /// Gets the number of bytes per pixel for a texture format.
+            /// For compressed formats (BC/ASTC), returns the effective bytes per pixel
+            /// calculated from block size divided by pixels per block.
+            ///
+            /// Based on Vulkan texture format specifications and DirectX texture format standards.
+            /// Reference: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkFormat.html
+            /// </summary>
+            /// <param name="format">The texture format</param>
+            /// <returns>Bytes per pixel (or effective bytes per pixel for compressed formats)</returns>
             private int GetBytesPerPixel(TextureFormat format)
             {
                 switch (format)
                 {
+                    // 8-bit single channel formats (1 byte per pixel)
                     case TextureFormat.R8_UNorm:
+                    case TextureFormat.R8_UInt:
+                    case TextureFormat.R8_SInt:
+                    case TextureFormat.R8_SNorm:
                         return 1;
+
+                    // 8-bit two channel formats (2 bytes per pixel)
                     case TextureFormat.R8G8_UNorm:
+                    case TextureFormat.R8G8_UInt:
+                    case TextureFormat.R8G8_SNorm:
+                    case TextureFormat.R8G8_SInt:
                         return 2;
+
+                    // 8-bit four channel formats (4 bytes per pixel)
                     case TextureFormat.R8G8B8A8_UNorm:
                     case TextureFormat.R8G8B8A8_UNorm_SRGB:
+                    case TextureFormat.R8G8B8A8_UInt:
+                    case TextureFormat.R8G8B8A8_SInt:
+                    case TextureFormat.R8G8B8A8_SNorm:
                     case TextureFormat.B8G8R8A8_UNorm:
+                    case TextureFormat.B8G8R8A8_UNorm_SRGB:
                         return 4;
+
+                    // 16-bit single channel formats (2 bytes per pixel)
+                    case TextureFormat.R16_Float:
+                    case TextureFormat.R16_UNorm:
+                    case TextureFormat.R16_UInt:
+                    case TextureFormat.R16_SInt:
+                        return 2;
+
+                    // 16-bit two channel formats (4 bytes per pixel)
+                    case TextureFormat.R16G16_Float:
+                    case TextureFormat.R16G16_UNorm:
+                    case TextureFormat.R16G16_UInt:
+                    case TextureFormat.R16G16_SInt:
+                        return 4;
+
+                    // 16-bit four channel formats (8 bytes per pixel)
                     case TextureFormat.R16G16B16A16_Float:
+                    case TextureFormat.R16G16B16A16_UNorm:
+                    case TextureFormat.R16G16B16A16_UInt:
+                    case TextureFormat.R16G16B16A16_SInt:
                         return 8;
+
+                    // 32-bit single channel formats (4 bytes per pixel)
+                    case TextureFormat.R32_Float:
+                    case TextureFormat.R32_UInt:
+                    case TextureFormat.R32_SInt:
+                        return 4;
+
+                    // 32-bit two channel formats (8 bytes per pixel)
+                    case TextureFormat.R32G32_Float:
+                    case TextureFormat.R32G32_UInt:
+                    case TextureFormat.R32G32_SInt:
+                        return 8;
+
+                    // 32-bit three channel formats (12 bytes per pixel)
+                    case TextureFormat.R32G32B32_Float:
+                    case TextureFormat.R32G32B32_UInt:
+                    case TextureFormat.R32G32B32_SInt:
+                        return 12;
+
+                    // 32-bit four channel formats (16 bytes per pixel)
                     case TextureFormat.R32G32B32A32_Float:
+                    case TextureFormat.R32G32B32A32_UInt:
+                    case TextureFormat.R32G32B32A32_SInt:
                         return 16;
+
+                    // Packed formats (4 bytes per pixel)
+                    case TextureFormat.R11G11B10_Float:  // 11+11+10 bits = 32 bits = 4 bytes
+                    case TextureFormat.R10G10B10A2_UNorm:  // 10+10+10+2 bits = 32 bits = 4 bytes
+                    case TextureFormat.R10G10B10A2_UInt:  // 10+10+10+2 bits = 32 bits = 4 bytes
+                        return 4;
+
+                    // Block-compressed formats (BC/DXT)
+                    // BC1/DXT1: 8 bytes per 4x4 block (16 pixels) = 0.5 bytes per pixel
+                    // Round up to 1 for practical purposes in staging buffer calculations
+                    case TextureFormat.BC1_UNorm:
+                    case TextureFormat.BC1_UNorm_SRGB:
+                    case TextureFormat.BC1:
+                    case TextureFormat.BC4_UNorm:
+                    case TextureFormat.BC4:
+                        // 8 bytes / 16 pixels = 0.5 bytes per pixel, but we need at least 1 for calculations
+                        // For staging buffers, we'll use the block-aligned size calculation elsewhere
+                        // Here we return 1 as a reasonable approximation for per-pixel calculations
+                        return 1;
+
+                    // BC2/DXT3, BC3/DXT5, BC5, BC6H, BC7: 16 bytes per 4x4 block (16 pixels) = 1 byte per pixel
+                    case TextureFormat.BC2_UNorm:
+                    case TextureFormat.BC2_UNorm_SRGB:
+                    case TextureFormat.BC2:
+                    case TextureFormat.BC3_UNorm:
+                    case TextureFormat.BC3_UNorm_SRGB:
+                    case TextureFormat.BC3:
+                    case TextureFormat.BC5_UNorm:
+                    case TextureFormat.BC5:
+                    case TextureFormat.BC6H_UFloat:
+                    case TextureFormat.BC6H:
+                    case TextureFormat.BC7_UNorm:
+                    case TextureFormat.BC7_UNorm_SRGB:
+                    case TextureFormat.BC7:
+                        // 16 bytes / 16 pixels = 1 byte per pixel
+                        return 1;
+
+                    // ASTC compressed formats (for Metal/mobile)
+                    // ASTC block sizes vary, but all are 16 bytes per block
+                    // Block dimensions determine pixels per block
+                    case TextureFormat.ASTC_4x4:  // 16 bytes per 4x4 block (16 pixels) = 1 byte per pixel
+                        return 1;
+                    case TextureFormat.ASTC_5x5:  // 16 bytes per 5x5 block (25 pixels) ≈ 0.64 bytes per pixel, round to 1
+                        return 1;
+                    case TextureFormat.ASTC_6x6:  // 16 bytes per 6x6 block (36 pixels) ≈ 0.44 bytes per pixel, round to 1
+                        return 1;
+                    case TextureFormat.ASTC_8x8:  // 16 bytes per 8x8 block (64 pixels) = 0.25 bytes per pixel, round to 1
+                        return 1;
+                    case TextureFormat.ASTC_10x10:  // 16 bytes per 10x10 block (100 pixels) = 0.16 bytes per pixel, round to 1
+                        return 1;
+                    case TextureFormat.ASTC_12x12:  // 16 bytes per 12x12 block (144 pixels) ≈ 0.11 bytes per pixel, round to 1
+                        return 1;
+
+                    // Depth formats
+                    case TextureFormat.D16_UNorm:  // 16 bits = 2 bytes per pixel
+                        return 2;
+                    case TextureFormat.D24_UNorm_S8_UInt:  // 24 bits depth + 8 bits stencil = 32 bits = 4 bytes per pixel
+                        return 4;
+                    case TextureFormat.D32_Float:  // 32 bits = 4 bytes per pixel
+                        return 4;
+                    case TextureFormat.D32_Float_S8_UInt:  // 32 bits depth + 8 bits stencil = 40 bits, but typically stored as 64 bits = 8 bytes per pixel
+                        // Note: D32_Float_S8_UInt is typically stored as 64 bits (8 bytes) per pixel
+                        // in most implementations for alignment reasons, even though only 40 bits are used
+                        return 8;
+
+                    // Unknown format - default to 4 bytes per pixel as fallback
+                    case TextureFormat.Unknown:
                     default:
-                        // Default to 4 bytes per pixel for unknown formats
+                        // Default to 4 bytes per pixel for unknown formats (RGBA8 is most common)
                         return 4;
                 }
+            }
+
+            /// <summary>
+            /// Calculates the total data size in bytes for a texture mip level.
+            /// Properly handles both uncompressed and compressed (block-based) formats.
+            /// 
+            /// For uncompressed formats: size = width * height * depth * bytesPerPixel
+            /// For compressed formats: size = (block-aligned width) * (block-aligned height) * depth * bytesPerBlock / pixelsPerBlock
+            /// 
+            /// Based on DirectX texture format specifications and Vulkan format requirements.
+            /// Reference: https://docs.microsoft.com/en-us/windows/win32/direct3d10/d3d10-graphics-programming-guide-resources-block-compression
+            /// </summary>
+            /// <param name="format">The texture format</param>
+            /// <param name="width">Width of the mip level</param>
+            /// <param name="height">Height of the mip level</param>
+            /// <param name="depth">Depth of the mip level (1 for 2D textures)</param>
+            /// <returns>Total size in bytes required for the texture data</returns>
+            private int CalculateTextureDataSize(TextureFormat format, int width, int height, int depth)
+            {
+                // Check if format is compressed (block-based)
+                if (IsCompressedFormat(format))
+                {
+                    return CalculateCompressedTextureSize(format, width, height, depth);
+                }
+
+                // Uncompressed format: simple pixel-based calculation
+                int bytesPerPixel = GetBytesPerPixel(format);
+                int rowPitch = width * bytesPerPixel;
+                int slicePitch = rowPitch * height;
+                return slicePitch * depth;
+            }
+
+            /// <summary>
+            /// Checks if a texture format is block-compressed (BC/DXT or ASTC).
+            /// </summary>
+            /// <param name="format">The texture format to check</param>
+            /// <returns>True if the format is compressed, false otherwise</returns>
+            private bool IsCompressedFormat(TextureFormat format)
+            {
+                switch (format)
+                {
+                    // BC/DXT formats
+                    case TextureFormat.BC1_UNorm:
+                    case TextureFormat.BC1_UNorm_SRGB:
+                    case TextureFormat.BC1:
+                    case TextureFormat.BC2_UNorm:
+                    case TextureFormat.BC2_UNorm_SRGB:
+                    case TextureFormat.BC2:
+                    case TextureFormat.BC3_UNorm:
+                    case TextureFormat.BC3_UNorm_SRGB:
+                    case TextureFormat.BC3:
+                    case TextureFormat.BC4_UNorm:
+                    case TextureFormat.BC4:
+                    case TextureFormat.BC5_UNorm:
+                    case TextureFormat.BC5:
+                    case TextureFormat.BC6H_UFloat:
+                    case TextureFormat.BC6H:
+                    case TextureFormat.BC7_UNorm:
+                    case TextureFormat.BC7_UNorm_SRGB:
+                    case TextureFormat.BC7:
+                    // ASTC formats
+                    case TextureFormat.ASTC_4x4:
+                    case TextureFormat.ASTC_5x5:
+                    case TextureFormat.ASTC_6x6:
+                    case TextureFormat.ASTC_8x8:
+                    case TextureFormat.ASTC_10x10:
+                    case TextureFormat.ASTC_12x12:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+
+            /// <summary>
+            /// Calculates the data size for a compressed (block-based) texture format.
+            /// Compressed formats use fixed block sizes (e.g., 4x4 pixels per block for BC formats).
+            /// Dimensions must be block-aligned (rounded up to nearest block boundary).
+            /// 
+            /// BC formats: 4x4 pixel blocks
+            /// ASTC formats: variable block sizes (4x4, 5x5, 6x6, 8x8, 10x10, 12x12)
+            /// </summary>
+            /// <param name="format">The compressed texture format</param>
+            /// <param name="width">Width of the mip level</param>
+            /// <param name="height">Height of the mip level</param>
+            /// <param name="depth">Depth of the mip level (1 for 2D textures)</param>
+            /// <returns>Total size in bytes required for the compressed texture data</returns>
+            private int CalculateCompressedTextureSize(TextureFormat format, int width, int height, int depth)
+            {
+                int blockWidth;
+                int blockHeight;
+                int bytesPerBlock;
+
+                switch (format)
+                {
+                    // BC1/DXT1: 4x4 block, 8 bytes per block
+                    case TextureFormat.BC1_UNorm:
+                    case TextureFormat.BC1_UNorm_SRGB:
+                    case TextureFormat.BC1:
+                        blockWidth = 4;
+                        blockHeight = 4;
+                        bytesPerBlock = 8;
+                        break;
+
+                    // BC2/DXT3: 4x4 block, 16 bytes per block
+                    case TextureFormat.BC2_UNorm:
+                    case TextureFormat.BC2_UNorm_SRGB:
+                    case TextureFormat.BC2:
+                        blockWidth = 4;
+                        blockHeight = 4;
+                        bytesPerBlock = 16;
+                        break;
+
+                    // BC3/DXT5: 4x4 block, 16 bytes per block
+                    case TextureFormat.BC3_UNorm:
+                    case TextureFormat.BC3_UNorm_SRGB:
+                    case TextureFormat.BC3:
+                        blockWidth = 4;
+                        blockHeight = 4;
+                        bytesPerBlock = 16;
+                        break;
+
+                    // BC4: 4x4 block, 8 bytes per block
+                    case TextureFormat.BC4_UNorm:
+                    case TextureFormat.BC4:
+                        blockWidth = 4;
+                        blockHeight = 4;
+                        bytesPerBlock = 8;
+                        break;
+
+                    // BC5: 4x4 block, 16 bytes per block
+                    case TextureFormat.BC5_UNorm:
+                    case TextureFormat.BC5:
+                        blockWidth = 4;
+                        blockHeight = 4;
+                        bytesPerBlock = 16;
+                        break;
+
+                    // BC6H: 4x4 block, 16 bytes per block
+                    case TextureFormat.BC6H_UFloat:
+                    case TextureFormat.BC6H:
+                        blockWidth = 4;
+                        blockHeight = 4;
+                        bytesPerBlock = 16;
+                        break;
+
+                    // BC7: 4x4 block, 16 bytes per block
+                    case TextureFormat.BC7_UNorm:
+                    case TextureFormat.BC7_UNorm_SRGB:
+                    case TextureFormat.BC7:
+                        blockWidth = 4;
+                        blockHeight = 4;
+                        bytesPerBlock = 16;
+                        break;
+
+                    // ASTC formats: variable block sizes, all use 16 bytes per block
+                    case TextureFormat.ASTC_4x4:
+                        blockWidth = 4;
+                        blockHeight = 4;
+                        bytesPerBlock = 16;
+                        break;
+                    case TextureFormat.ASTC_5x5:
+                        blockWidth = 5;
+                        blockHeight = 5;
+                        bytesPerBlock = 16;
+                        break;
+                    case TextureFormat.ASTC_6x6:
+                        blockWidth = 6;
+                        blockHeight = 6;
+                        bytesPerBlock = 16;
+                        break;
+                    case TextureFormat.ASTC_8x8:
+                        blockWidth = 8;
+                        blockHeight = 8;
+                        bytesPerBlock = 16;
+                        break;
+                    case TextureFormat.ASTC_10x10:
+                        blockWidth = 10;
+                        blockHeight = 10;
+                        bytesPerBlock = 16;
+                        break;
+                    case TextureFormat.ASTC_12x12:
+                        blockWidth = 12;
+                        blockHeight = 12;
+                        bytesPerBlock = 16;
+                        break;
+
+                    default:
+                        // Fallback: assume 4x4 block, 16 bytes (most common compressed format)
+                        blockWidth = 4;
+                        blockHeight = 4;
+                        bytesPerBlock = 16;
+                        break;
+                }
+
+                // Calculate block-aligned dimensions
+                // Dimensions must be rounded up to the nearest block boundary
+                int blocksWide = (width + blockWidth - 1) / blockWidth;
+                int blocksHigh = (height + blockHeight - 1) / blockHeight;
+
+                // Calculate total size: blocks wide * blocks high * depth * bytes per block
+                return blocksWide * blocksHigh * depth * bytesPerBlock;
             }
 
             // Helper method to find memory type index - delegates to parent device's implementation
