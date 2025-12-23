@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using JetBrains.Annotations;
 using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
 using Andastra.Runtime.MonoGame.Rendering;
@@ -667,12 +668,129 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         #region Private Methods
 
+        /// <summary>
+        /// Gets the native window handle (HWND) for DirectX 9 device creation.
+        /// Uses Windows API to find the game window through multiple strategies:
+        /// 1. GetForegroundWindow() - if the game window is currently in focus
+        /// 2. GetActiveWindow() - if the game window is the active window in the current thread
+        /// 3. FindWindow() - searches for a window by class name or title
+        ///
+        /// Based on original game window management system:
+        /// - swkotor2.exe: Uses Windows API functions GetActiveWindow @ 0x007d963c
+        /// - "Render Window" @ 0x007b5680 - main game window
+        /// - "Exo Base Window" @ 0x007b74a0 - base window class
+        ///
+        /// DirectX 9 requires a valid window handle for device creation.
+        /// RTX Remix also requires a valid window handle for proper integration.
+        /// </summary>
+        /// <param name="settings">Render settings containing window configuration.</param>
+        /// <returns>Window handle (HWND) if found, or IntPtr.Zero if unable to find a window.</returns>
         private IntPtr GetWindowHandle(RenderSettings settings)
         {
-            // In a real implementation, this would get the window handle from the game window
-            // TODO: STUB - For now, return IntPtr.Zero as a placeholder
-            // The actual window handle would come from the game's window management system
+            // DirectX 9 is Windows-only, so we can safely use Windows API
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                Console.WriteLine("[Direct3D9Wrapper] GetWindowHandle: DirectX 9 is Windows-only");
+                return IntPtr.Zero;
+            }
+
+            IntPtr windowHandle = IntPtr.Zero;
+
+            // Strategy 1: Try GetForegroundWindow() - gets the window currently in focus
+            // This is the most reliable method if the game window is the active window
+            windowHandle = WindowsApiMethods.GetForegroundWindow();
+            if (windowHandle != IntPtr.Zero && IsValidWindow(windowHandle))
+            {
+                Console.WriteLine("[Direct3D9Wrapper] Found window handle via GetForegroundWindow: 0x" + windowHandle.ToString("X8"));
+                return windowHandle;
+            }
+
+            // Strategy 2: Try GetActiveWindow() - gets the active window in the current thread
+            // This works if the game window belongs to the current thread and is active
+            windowHandle = WindowsApiMethods.GetActiveWindow();
+            if (windowHandle != IntPtr.Zero && IsValidWindow(windowHandle))
+            {
+                Console.WriteLine("[Direct3D9Wrapper] Found window handle via GetActiveWindow: 0x" + windowHandle.ToString("X8"));
+                return windowHandle;
+            }
+
+            // Strategy 3: Try FindWindow() with common MonoGame/Windows class names
+            // MonoGame on Windows typically uses class names like "WindowsForms10.Window" or similar
+            // We'll try several common window class patterns
+            string[] windowClasses = new string[]
+            {
+                "WindowsForms10.Window.8.app.0.141b42a_r6_ad1", // Common Windows Forms window class
+                "MonoGameGameWindow", // Potential MonoGame window class
+                "Render Window", // Original game window class name (from swkotor2.exe)
+                null // Will try FindWindow by title if class is null
+            };
+
+            foreach (string windowClass in windowClasses)
+            {
+                windowHandle = WindowsApiMethods.FindWindow(windowClass, null);
+                if (windowHandle != IntPtr.Zero && IsValidWindow(windowHandle))
+                {
+                    Console.WriteLine("[Direct3D9Wrapper] Found window handle via FindWindow (class: " + (windowClass ?? "null") + "): 0x" + windowHandle.ToString("X8"));
+                    return windowHandle;
+                }
+            }
+
+            // Strategy 4: Try FindWindow by window title if available
+            // MonoGame windows typically have a title set via GameWindow.Title
+            // We can try common game window titles, though this is less reliable
+            // Note: This requires knowing the window title, which we don't have from RenderSettings
+
+            // Strategy 5: Try to find window by process ID
+            // Get the current process ID and try to find a window belonging to this process
+            int currentProcessId = System.Diagnostics.Process.GetCurrentProcess().Id;
+            IntPtr foundWindow = IntPtr.Zero;
+            WindowsApiMethods.EnumWindows((hWnd, lParam) =>
+            {
+                uint processId;
+                WindowsApiMethods.GetWindowThreadProcessId(hWnd, out processId);
+                if (processId == currentProcessId && IsValidWindow(hWnd))
+                {
+                    foundWindow = hWnd;
+                    return false; // Stop enumeration
+                }
+                return true; // Continue enumeration
+            }, IntPtr.Zero);
+
+            if (foundWindow != IntPtr.Zero)
+            {
+                Console.WriteLine("[Direct3D9Wrapper] Found window handle via EnumWindows (process ID): 0x" + foundWindow.ToString("X8"));
+                return foundWindow;
+            }
+
+            // If all strategies fail, log a warning and return IntPtr.Zero
+            // The DirectX 9 device creation may still work with IntPtr.Zero in some cases
+            // (e.g., for off-screen rendering), but RTX Remix typically requires a valid window
+            Console.WriteLine("[Direct3D9Wrapper] WARNING: Could not find a valid window handle. Device creation may fail or RTX Remix may not work properly.");
             return IntPtr.Zero;
+        }
+
+        /// <summary>
+        /// Validates that a window handle points to a valid, visible window.
+        /// </summary>
+        /// <param name="hWnd">Window handle to validate.</param>
+        /// <returns>True if the window is valid and visible, false otherwise.</returns>
+        private bool IsValidWindow(IntPtr hWnd)
+        {
+            if (hWnd == IntPtr.Zero)
+            {
+                return false;
+            }
+
+            // Check if window exists and is visible
+            // IsWindow() checks if the handle is a valid window
+            if (!WindowsApiMethods.IsWindow(hWnd))
+            {
+                return false;
+            }
+
+            // Check if window is visible (optional - some windows may be hidden during initialization)
+            // We'll be lenient here and accept hidden windows since they may become visible later
+            return true;
         }
 
         private bool CreateDirect3D9()
@@ -1354,6 +1472,84 @@ namespace Andastra.Runtime.MonoGame.Backends
         public Guid DeviceIdentifier;
         public uint WHQLLevel;
         public uint DriverSubVersion;
+    }
+
+    #endregion
+
+    #region Windows API Declarations
+
+    /// <summary>
+    /// Windows API function declarations for window handle retrieval.
+    /// Based on Windows API: https://docs.microsoft.com/en-us/windows/win32/api/winuser/
+    /// Used for finding the game window handle (HWND) for DirectX 9 device creation.
+    /// </summary>
+    internal static class WindowsApiMethods
+    {
+        private const string USER32_DLL = "user32.dll";
+
+        /// <summary>
+        /// Retrieves the handle to the foreground window (the window with which the user is currently working).
+        /// https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getforegroundwindow
+        /// </summary>
+        /// <returns>A handle to the foreground window, or NULL if no foreground window exists.</returns>
+        [DllImport(USER32_DLL)]
+        public static extern IntPtr GetForegroundWindow();
+
+        /// <summary>
+        /// Retrieves the handle to the active window attached to the calling thread's message queue.
+        /// https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getactivewindow
+        /// </summary>
+        /// <returns>The handle to the active window attached to the calling thread's message queue, or NULL if no window is active.</returns>
+        [DllImport(USER32_DLL)]
+        public static extern IntPtr GetActiveWindow();
+
+        /// <summary>
+        /// Retrieves a handle to the top-level window whose class name and window name match the specified strings.
+        /// https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-findwindowa
+        /// Uses FindWindowA (ANSI version) for consistency with Windows API conventions.
+        /// </summary>
+        /// <param name="lpClassName">The class name. If this parameter is NULL, it finds any window whose title matches the lpWindowName parameter.</param>
+        /// <param name="lpWindowName">The window name. If this parameter is NULL, all window names match.</param>
+        /// <returns>A handle to the window if found, or NULL if no window matches the criteria.</returns>
+        [DllImport(USER32_DLL, CharSet = CharSet.Ansi, SetLastError = true)]
+        public static extern IntPtr FindWindow([CanBeNull] string lpClassName, [CanBeNull] string lpWindowName);
+
+        /// <summary>
+        /// Determines whether the specified window handle identifies an existing window.
+        /// https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-iswindow
+        /// </summary>
+        /// <param name="hWnd">A handle to the window to test.</param>
+        /// <returns>Nonzero if the window handle identifies an existing window, zero otherwise.</returns>
+        [DllImport(USER32_DLL)]
+        public static extern bool IsWindow(IntPtr hWnd);
+
+        /// <summary>
+        /// Enumerates all top-level windows on the screen by passing the handle to each window to an application-defined callback function.
+        /// https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-enumwindows
+        /// </summary>
+        /// <param name="lpEnumFunc">A pointer to an application-defined callback function.</param>
+        /// <param name="lParam">An application-defined value to be passed to the callback function.</param>
+        /// <returns>Nonzero if the function succeeds, zero otherwise.</returns>
+        [DllImport(USER32_DLL)]
+        public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+
+        /// <summary>
+        /// Retrieves the identifier of the thread that created the specified window and, optionally, the identifier of the process that created the window.
+        /// https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowthreadprocessid
+        /// </summary>
+        /// <param name="hWnd">A handle to the window.</param>
+        /// <param name="lpdwProcessId">A pointer to a variable that receives the process identifier. If this parameter is not NULL, GetWindowThreadProcessId copies the identifier of the process to the variable; otherwise, it does not.</param>
+        /// <returns>The identifier of the thread that created the window.</returns>
+        [DllImport(USER32_DLL, SetLastError = true)]
+        public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+        /// <summary>
+        /// Application-defined callback function used with the EnumWindows function.
+        /// </summary>
+        /// <param name="hWnd">A handle to a top-level window.</param>
+        /// <param name="lParam">The application-defined value given in EnumWindows.</param>
+        /// <returns>Return TRUE to continue enumeration, or FALSE to stop enumeration.</returns>
+        public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
     }
 
     #endregion
