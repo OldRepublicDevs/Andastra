@@ -30,6 +30,11 @@ using Andastra.Runtime.Scripting.EngineApi;
 using Andastra.Runtime.Scripting.VM;
 using Andastra.Runtime.Core.Audio;
 using GraphicsVector2 = Andastra.Runtime.Graphics.Vector2;
+// Type aliases to resolve ambiguity between System.Drawing and Andastra.Runtime.Graphics types
+using GraphicsColor = Andastra.Runtime.Graphics.Color;
+using GraphicsRectangle = Andastra.Runtime.Graphics.Rectangle;
+using DrawingColor = System.Drawing.Color;
+using DrawingRectangle = System.Drawing.Rectangle;
 
 namespace Andastra.Runtime.Game.Core
 {
@@ -762,8 +767,8 @@ namespace Andastra.Runtime.Game.Core
                 // Update cursor position and pressed state
                 if (_cursorManager != null)
                 {
-                    Point mousePos = mouseState.Position;
-                    _cursorManager.Position = new GraphicsVector2(mousePos.X, mousePos.Y);
+                    Vector2 mousePos = mouseState.Position;
+                    _cursorManager.Position = new GraphicsVector2((int)mousePos.X, (int)mousePos.Y);
                     _cursorManager.IsPressed = mouseState.LeftButton == ButtonState.Pressed;
                 }
 
@@ -784,7 +789,7 @@ namespace Andastra.Runtime.Game.Core
 
             // Track mouse hover
             _hoveredMenuIndex = -1;
-            Point mousePos = mouseState.Position;
+            Vector2 menuMousePos = mouseState.Position;
 
             // Check which button the mouse is over
             for (int i = 0; i < _menuItems.Length; i++)
@@ -2239,7 +2244,7 @@ namespace Andastra.Runtime.Game.Core
             _spriteBatch.End();
         }
 
-        private void DrawRectangleBorder(ISpriteBatch spriteBatch, Rectangle rect, int thickness, Color color)
+        private void DrawRectangleBorder(ISpriteBatch spriteBatch, Andastra.Runtime.Graphics.Rectangle rect, int thickness, Andastra.Runtime.Graphics.Color color)
         {
             // Top
             spriteBatch.Draw(_menuTexture, new Rectangle(rect.X, rect.Y, rect.Width, thickness), color);
@@ -2255,7 +2260,7 @@ namespace Andastra.Runtime.Game.Core
         /// Draws a filled triangle using rectangles (approximation).
         /// Used for play button icon when font is not available.
         /// </summary>
-        private void DrawTriangle(ISpriteBatch spriteBatch, int[] x, int[] y, Color color)
+        private void DrawTriangle(ISpriteBatch spriteBatch, int[] x, int[] y, Andastra.Runtime.Graphics.Color color)
         {
             // Simple triangle drawing using line approximation
             // Draw lines between points
@@ -2285,7 +2290,7 @@ namespace Andastra.Runtime.Game.Core
                 {
                     int minX = Math.Min(intersections[0], intersections[1]);
                     int maxX = Math.Max(intersections[0], intersections[1]);
-                    spriteBatch.Draw(_menuTexture, new Rectangle(minX, py, maxX - minX, 1), color);
+                    spriteBatch.Draw(_menuTexture, new GraphicsRectangle(minX, py, maxX - minX, 1), color);
                 }
             }
         }
@@ -2293,7 +2298,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Draws a filled triangle with smooth rendering.
         /// </summary>
-        private void DrawFilledTriangle(ISpriteBatch spriteBatch, int[] x, int[] y, Color color)
+        private void DrawFilledTriangle(ISpriteBatch spriteBatch, int[] x, int[] y, Andastra.Runtime.Graphics.Color color)
         {
             DrawTriangle(spriteBatch, x, y, color);
         }
@@ -2301,7 +2306,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Draws a triangle outline (border only).
         /// </summary>
-        private void DrawTriangleOutline(ISpriteBatch spriteBatch, int[] x, int[] y, Color color)
+        private void DrawTriangleOutline(ISpriteBatch spriteBatch, int[] x, int[] y, GraphicsColor color)
         {
             int thickness = 2;
             // Draw three edges of the triangle
@@ -2353,7 +2358,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Draws a diagonal line between two points.
         /// </summary>
-        private void DrawDiagonalLine(ISpriteBatch spriteBatch, int x1, int y1, int x2, int y2, int thickness, Color color)
+        private void DrawDiagonalLine(ISpriteBatch spriteBatch, int x1, int y1, int x2, int y2, int thickness, Andastra.Runtime.Graphics.Color color)
         {
             DrawLine(spriteBatch, x1, y1, x2, y2, thickness, color);
         }
@@ -2362,7 +2367,7 @@ namespace Andastra.Runtime.Game.Core
         /// Draws a rounded rectangle border with smooth corners.
         /// Creates the appearance of rounded corners using border lines with corner arcs.
         /// </summary>
-        private void DrawRoundedRectangle(ISpriteBatch spriteBatch, Rectangle rect, int borderThickness, Color color)
+        private void DrawRoundedRectangle(ISpriteBatch spriteBatch, Andastra.Runtime.Graphics.Rectangle rect, int borderThickness, Andastra.Runtime.Graphics.Color color)
         {
             int cornerRadius = borderThickness * 2;
             int cornerGap = cornerRadius;
@@ -2387,7 +2392,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Draws a corner arc (quarter circle border) for rounded rectangle corners.
         /// </summary>
-        private void DrawCornerArc(ISpriteBatch spriteBatch, int centerX, int centerY, int radius, int thickness, Color color, bool leftSide, bool topSide)
+        private void DrawCornerArc(ISpriteBatch spriteBatch, int centerX, int centerY, int radius, int thickness, Andastra.Runtime.Graphics.Color color, bool leftSide, bool topSide)
         {
             // Draw quarter circle arc using border approach
             for (int y = -radius; y <= 0; y++)
