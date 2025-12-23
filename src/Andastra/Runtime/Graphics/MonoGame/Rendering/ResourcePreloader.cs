@@ -2,11 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.IO;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Parsing.Resource;
+using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Common;
 
 namespace Andastra.Runtime.MonoGame.Rendering
 {
@@ -318,15 +322,21 @@ namespace Andastra.Runtime.MonoGame.Rendering
                 }
 
                 // Extract UTS template resource reference if available
-                // UTS templates define sound properties but may also reference additional sound files
+                // UTS templates define sound properties and contain references to actual sound files
                 // Based on swkotor2.exe: UTS templates loaded from TemplateResRef field
+                // swkotor2.exe: LoadSoundTemplate @ 0x005706b0 loads UTS templates and extracts sound files
+                // The UTS template contains a "Sounds" list (GFFList) with ResRef entries for WAV sound files
+                // We preload the UTS template itself, then parse it to extract and preload referenced sound files
                 if (!string.IsNullOrEmpty(soundComponent.TemplateResRef))
                 {
-                    // UTS is a GFF format file, but we can preload it as a resource
-                    // The actual sound files are in SoundFiles, but the template itself may be useful
-                    // Note: UTS templates are typically not preloaded as they're small and loaded on-demand
-                    // However, if the template contains embedded sound references, we might want to preload it
-                    // TODO: STUB - For now, we skip UTS template preloading as it's a template file, not a sound file
+                    // Queue UTS template for preloading
+                    // The preloader will parse the template and extract sound file references
+                    resourcePriorities.Add(new ResourcePriority
+                    {
+                        ResourceName = soundComponent.TemplateResRef,
+                        ResourceType = ResourceType.UTSTemplate,
+                        Priority = basePriority - 3 // UTS templates are lower priority than direct sound files
+                    });
                 }
             }
 
@@ -538,6 +548,13 @@ namespace Andastra.Runtime.MonoGame.Rendering
             {
                 try
                 {
+                    // Special handling for UTS templates: parse and extract sound files
+                    if (task.ResourceType == ResourceType.UTSTemplate)
+                    {
+                        await PreloadUTSTemplate(task.ResourceName, task.Priority);
+                        return;
+                    }
+
                     // Preload resource
                     var resourceId = new ResourceIdentifier(
                         task.ResourceName,
@@ -554,6 +571,112 @@ namespace Andastra.Runtime.MonoGame.Rendering
             });
         }
 
+        /// <summary>
+        /// Preloads a UTS template and extracts sound file references for preloading.
+        /// </summary>
+        /// <remarks>
+        /// UTS Template Preloading:
+        /// - Based on swkotor2.exe: LoadSoundTemplate @ 0x005706b0 loads UTS templates
+        /// - UTS templates are GFF files with "UTS " signature containing sound object definitions
+        /// - UTS.Sounds list contains ResRef entries for WAV sound files that need to be preloaded
+        /// - UTS.Sound field contains a single sound reference (deprecated but still used)
+        /// - Original implementation: ModuleLoader.LoadSoundTemplate() extracts sound files from UTS template
+        /// - This implementation preloads the UTS template, parses it, and queues referenced sound files
+        /// - Sound files are preloaded with lower priority than the template itself
+        /// </remarks>
+        /// <param name="utsResRef">UTS template resource reference.</param>
+        /// <param name="basePriority">Base priority for sound files extracted from this template.</param>
+        private async System.Threading.Tasks.Task PreloadUTSTemplate(string utsResRef, int basePriority)
+        {
+            try
+            {
+                // Load UTS template bytes
+                var utsResourceId = new ResourceIdentifier(utsResRef, Andastra.Parsing.Resource.ResourceType.UTS);
+                byte[] utsData = await _resourceProvider.GetResourceBytesAsync(utsResourceId, System.Threading.CancellationToken.None);
+
+                if (utsData == null || utsData.Length == 0)
+                {
+                    return; // Template not found or empty
+                }
+
+                // Parse UTS template to extract sound file references
+                // Based on swkotor2.exe: UTS parsing in LoadSoundTemplate
+                // UTSHelpers.ConstructUts() parses GFF structure and extracts Sounds list
+                GFF gff;
+                using (var stream = new MemoryStream(utsData))
+                {
+                    var reader = new GFFBinaryReader(stream);
+                    gff = reader.Load();
+                }
+
+                if (gff == null || gff.Root == null)
+                {
+                    return; // Invalid GFF structure
+                }
+
+                // Construct UTS object to extract sound file references
+                // Based on ModuleLoader.LoadSoundTemplate() which uses UTSHelpers.ConstructUts()
+                UTS uts = UTSHelpers.ConstructUts(gff);
+
+                if (uts == null)
+                {
+                    return; // Failed to parse UTS
+                }
+
+                // Extract sound file references and queue them for preloading
+                // Based on ModuleLoader.LoadSoundTemplate() lines 1312-1322
+                // Sound files are extracted from uts.Sound (single) and uts.Sounds (list)
+                lock (_lock)
+                {
+                    // Extract single sound reference (deprecated but still used)
+                    if (uts.Sound != null && !string.IsNullOrEmpty(uts.Sound.ToString()))
+                    {
+                        string soundFile = uts.Sound.ToString();
+                        if (!_preloadedResources.Contains(soundFile))
+                        {
+                            _preloadedResources.Add(soundFile);
+                            _preloadQueue.Add(new PreloadTask
+                            {
+                                ResourceName = soundFile,
+                                ResourceType = ResourceType.Sound,
+                                Priority = basePriority - 5 // Sound files from templates are lower priority
+                            });
+                        }
+                    }
+
+                    // Extract sound files from Sounds list
+                    // Based on UTSHelpers.ConstructUts() which extracts Sounds list from GFF
+                    if (uts.Sounds != null)
+                    {
+                        foreach (ResRef soundRef in uts.Sounds)
+                        {
+                            if (soundRef != null && !string.IsNullOrEmpty(soundRef.ToString()))
+                            {
+                                string soundFile = soundRef.ToString();
+                                if (!_preloadedResources.Contains(soundFile))
+                                {
+                                    _preloadedResources.Add(soundFile);
+                                    _preloadQueue.Add(new PreloadTask
+                                    {
+                                        ResourceName = soundFile,
+                                        ResourceType = ResourceType.Sound,
+                                        Priority = basePriority - 5 // Sound files from templates are lower priority
+                                    });
+                                }
+                            }
+                        }
+                    }
+
+                    // Sort queue by priority after adding new tasks
+                    _preloadQueue.Sort((a, b) => b.Priority.CompareTo(a.Priority));
+                }
+            }
+            catch
+            {
+                // Ignore UTS template parsing errors (template may be corrupted or missing)
+            }
+        }
+
         private Andastra.Parsing.Resource.ResourceType ConvertResourceType(ResourceType type)
         {
             switch (type)
@@ -568,6 +691,8 @@ namespace Andastra.Runtime.MonoGame.Rendering
                     return Andastra.Parsing.Resource.ResourceType.WAV;
                 case ResourceType.Script:
                     return Andastra.Parsing.Resource.ResourceType.NCS;
+                case ResourceType.UTSTemplate:
+                    return Andastra.Parsing.Resource.ResourceType.UTS;
                 default:
                     return Andastra.Parsing.Resource.ResourceType.INVALID;
             }
@@ -583,7 +708,8 @@ namespace Andastra.Runtime.MonoGame.Rendering
         Model,
         Animation,
         Sound,
-        Script
+        Script,
+        UTSTemplate
     }
 }
 
