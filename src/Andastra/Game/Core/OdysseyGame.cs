@@ -26,7 +26,7 @@ namespace Andastra.Runtime.Game.Core
     {
         private readonly GameSettings _settings;
         private readonly IGraphicsBackend _graphicsBackend;
-        private Andastra.Runtime.Games.Odyssey.Game.GameSession _gameSession;
+        private GameSession _gameSession;
         private World _world;
         private NcsVm _vm;
         private IScriptGlobals _globals;
@@ -85,7 +85,7 @@ namespace Andastra.Runtime.Game.Core
             _globals = CreateScriptGlobals(_settings.Game);
 
             // Create game session with all required dependencies
-            _gameSession = new Andastra.Runtime.Games.Odyssey.Game.GameSession(_settings, _world, _vm, _globals);
+            _gameSession = new GameSession(_settings, _world, _vm, _globals);
 
             // Initialize graphics backend with settings
             string gameTitle = _settings.Game == KotorGame.K1
