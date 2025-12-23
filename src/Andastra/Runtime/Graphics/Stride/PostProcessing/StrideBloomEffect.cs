@@ -186,7 +186,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// and compiles it at runtime using EffectSystem.
         /// Bright pass shader extracts pixels above threshold for bloom effect.
         /// </remarks>
-        private Effect CreateBrightPassEffect()
+        private StrideGraphics.Effect CreateBrightPassEffect()
         {
             try
             {
@@ -266,7 +266,7 @@ shader BrightPassEffect : ShaderBase
         /// and compiles it at runtime using EffectSystem.
         /// Blur shader applies separable Gaussian blur in horizontal or vertical direction.
         /// </remarks>
-        private Effect CreateBlurEffect()
+        private StrideGraphics.Effect CreateBlurEffect()
         {
             try
             {
@@ -598,7 +598,7 @@ shader BlurEffect : ShaderBase
         /// - Original game: DirectX 8/9 fixed-function pipeline (swkotor2.exe: d3d9.dll @ 0x0080a6c0)
         /// - Modern implementation: Uses programmable shaders with runtime compilation
         /// </remarks>
-        private Effect CompileShaderFromSource(string shaderSource, string shaderName)
+        private StrideGraphics.Effect CompileShaderFromSource(string shaderSource, string shaderName)
         {
             if (string.IsNullOrEmpty(shaderSource))
             {
@@ -661,7 +661,7 @@ shader BlurEffect : ShaderBase
         /// <param name="shaderSource">Shader source code.</param>
         /// <param name="shaderName">Shader name for identification.</param>
         /// <returns>Compiled Effect, or null if compilation fails.</returns>
-        private Effect CompileShaderWithCompiler(EffectCompiler compiler, string shaderSource, string shaderName)
+        private StrideGraphics.Effect CompileShaderWithCompiler(EffectCompiler compiler, string shaderSource, string shaderName)
         {
             try
             {
@@ -713,7 +713,7 @@ shader BlurEffect : ShaderBase
         /// <param name="shaderSource">Shader source code.</param>
         /// <param name="shaderName">Shader name for identification.</param>
         /// <returns>Compiled Effect, or null if compilation fails.</returns>
-        private Effect CompileShaderWithEffectSystem(global::Stride.Shaders.Compiler.EffectCompiler effectSystem, string shaderSource, string shaderName)
+        private StrideGraphics.Effect CompileShaderWithEffectSystem(global::Stride.Shaders.Compiler.EffectCompiler effectSystem, string shaderSource, string shaderName)
         {
             try
             {
@@ -749,7 +749,7 @@ shader BlurEffect : ShaderBase
         /// <param name="shaderSource">Shader source code.</param>
         /// <param name="shaderName">Shader name for identification.</param>
         /// <returns>Compiled Effect, or null if compilation fails.</returns>
-        private Effect CompileShaderFromFile(string shaderSource, string shaderName)
+        private StrideGraphics.Effect CompileShaderFromFile(string shaderSource, string shaderName)
         {
             string tempFilePath = null;
             try

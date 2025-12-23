@@ -1,5 +1,5 @@
 using System;
-using Stride.Graphics;
+using StrideGraphics = Stride.Graphics;
 using Stride.Rendering;
 using Stride.Core.Mathematics;
 using Stride.Engine;
@@ -41,17 +41,17 @@ namespace Andastra.Runtime.Stride.PostProcessing
     /// </summary>
     public class StrideToneMappingEffect : BaseToneMappingEffect
     {
-        private GraphicsDevice _graphicsDevice;
+        private StrideGraphics.GraphicsDevice _graphicsDevice;
         private EffectInstance _toneMappingEffect;
         private TonemapOperator _operator;
-        private Texture _temporaryTexture;
-        private SpriteBatch _spriteBatch;
-        private SamplerState _linearSampler;
+        private StrideGraphics.Texture _temporaryTexture;
+        private StrideGraphics.SpriteBatch _spriteBatch;
+        private StrideGraphics.SamplerState _linearSampler;
         private bool _renderingResourcesInitialized;
         private bool _effectInitialized;
-        private Effect _effectBase;
+        private StrideGraphics.Effect _effectBase;
 
-        public StrideToneMappingEffect(GraphicsDevice graphicsDevice)
+        public StrideToneMappingEffect(StrideGraphics.GraphicsDevice graphicsDevice)
         {
             _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
             _operator = TonemapOperator.ACES;
