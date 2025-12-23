@@ -2280,7 +2280,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Draws a triangle outline (border only).
         /// </summary>
-        private void DrawTriangleOutline(ISpriteBatch spriteBatch, int[] x, int[] y, Color color)
+        private void DrawTriangleOutline(ISpriteBatch spriteBatch, int[] x, int[] y, Microsoft.Xna.Framework.Color color)
         {
             int thickness = 2;
             // Draw three edges of the triangle
