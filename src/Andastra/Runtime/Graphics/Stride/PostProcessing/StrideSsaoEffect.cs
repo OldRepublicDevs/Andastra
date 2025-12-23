@@ -218,7 +218,9 @@ namespace Andastra.Runtime.Stride.PostProcessing
             }
 
             // Get command list for rendering operations
-            StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext;
+            // Use dynamic to handle ImmediateContext (may be property or method depending on Stride version)
+            dynamic graphicsContextDynamic = _graphicsDevice.ImmediateContext;
+            StrideGraphics.CommandList commandList = graphicsContextDynamic as StrideGraphics.CommandList;
             if (commandList == null)
             {
                 return;
@@ -237,7 +239,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
             // Begin sprite batch rendering
             // Use SpriteSortMode.Immediate for post-processing effects
-            _spriteBatch.Begin(commandList, StrideGraphics.SpriteSortMode.Immediate, StrideGraphics.BlendStates.Opaque, _linearSampler,
+            // Note: SpriteBatch.Begin expects GraphicsContext, but CommandList should be compatible
+            _spriteBatch.Begin(graphicsContextDynamic, StrideGraphics.SpriteSortMode.Immediate, StrideGraphics.BlendStates.Opaque, _linearSampler,
                 StrideGraphics.DepthStencilStates.None, StrideGraphics.RasterizerStates.CullNone, _gtaoEffect);
 
             // If we have a custom GTAO effect, set its parameters
@@ -321,7 +324,9 @@ namespace Andastra.Runtime.Stride.PostProcessing
             }
 
             // Get command list for rendering operations
-            StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext;
+            // Use dynamic to handle ImmediateContext (may be property or method depending on Stride version)
+            dynamic graphicsContextDynamic = _graphicsDevice.ImmediateContext;
+            StrideGraphics.CommandList commandList = graphicsContextDynamic as StrideGraphics.CommandList;
             if (commandList == null)
             {
                 return;
@@ -332,14 +337,14 @@ namespace Andastra.Runtime.Stride.PostProcessing
             var destinationRect = new RectangleF(0, 0, width, height);
 
             // Pass 1: Horizontal blur
-            ApplyBilateralBlurPass(source, _tempBlurTarget, depthBuffer, true, width, height, commandList);
+            ApplyBilateralBlurPass(source, _tempBlurTarget, depthBuffer, true, width, height, commandList, graphicsContextDynamic);
 
             // Pass 2: Vertical blur (from temp to final destination)
-            ApplyBilateralBlurPass(_tempBlurTarget, destination, depthBuffer, false, width, height, commandList);
+            ApplyBilateralBlurPass(_tempBlurTarget, destination, depthBuffer, false, width, height, commandList, graphicsContextDynamic);
         }
 
         private void ApplyBilateralBlurPass(StrideGraphics.Texture source, StrideGraphics.Texture destination, StrideGraphics.Texture depthBuffer,
-            bool horizontal, int width, int height, StrideGraphics.CommandList commandList)
+            bool horizontal, int width, int height, StrideGraphics.CommandList commandList, dynamic graphicsContext)
         {
             // Apply one pass of bilateral blur (either horizontal or vertical)
             // Bilateral blur weights samples by both spatial distance and depth difference
@@ -357,7 +362,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
             commandList.Clear(destination, Color.Black);
 
             // Begin sprite batch rendering
-            _spriteBatch.Begin(commandList, StrideGraphics.SpriteSortMode.Immediate, StrideGraphics.BlendStates.Opaque, _linearSampler,
+            // Note: SpriteBatch.Begin expects GraphicsContext, use dynamic to handle type compatibility
+            _spriteBatch.Begin(graphicsContext, StrideGraphics.SpriteSortMode.Immediate, StrideGraphics.BlendStates.Opaque, _linearSampler,
                 StrideGraphics.DepthStencilStates.None, StrideGraphics.RasterizerStates.CullNone, _bilateralBlurEffect);
 
             // If we have a custom bilateral blur effect, set its parameters
