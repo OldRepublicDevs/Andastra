@@ -119,11 +119,11 @@ namespace Andastra.Parsing.Common
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:136-183
         // Original: def contains(self, restype: ResourceType, *, game: Game | None = None) -> bool:
-        // 
+        //
         // REVERSE ENGINEERING NOTES (swkotor.exe / swkotor2.exe):
         // This method implements the CONVENTIONAL resource type distribution for module files.
         // IMPORTANT: This is a CONVENTION, not a hard engine requirement.
-        // 
+        //
         // Engine Behavior (reverse engineered):
         // - The engine's resource manager (CExoResMan equivalent) does NOT filter resource types when loading from modules
         // - Module loading code (swkotor.exe: FUN_004094a0, swkotor2.exe: FUN_004096b0) opens RIM files without type filtering
@@ -588,7 +588,7 @@ namespace Andastra.Parsing.Common
             // Build all capsules relevant to this root in the provided installation
             // Use ModuleFileDiscovery to match exact swkotor.exe/swkotor2.exe behavior
             string modulesPath = Andastra.Parsing.Installation.Installation.GetModulesPath(_installation.Path);
-            Andastra.Parsing.Installation.ModuleFileGroup fileGroup = 
+            Andastra.Parsing.Installation.ModuleFileGroup fileGroup =
                 Andastra.Parsing.Installation.ModuleFileDiscovery.DiscoverModuleFiles(modulesPath, _root, _installation.Game);
 
             if (fileGroup == null || !fileGroup.HasFiles())
@@ -613,7 +613,7 @@ namespace Andastra.Parsing.Common
                 // Complex mode: Load _a.rim or _adx.rim (replaces .rim), then _s.rim and _dlg.erf
                 // swkotor.exe: FUN_004094a0 line 49-216
                 _dotMod = false;
-                
+
                 // Step 1: Load _a.rim if exists (REPLACES .rim)
                 // swkotor.exe: FUN_004094a0 line 159
                 if (fileGroup.AreaRimFile != null && File.Exists(fileGroup.AreaRimFile))
@@ -626,14 +626,14 @@ namespace Andastra.Parsing.Common
                 {
                     _capsules[KModuleType.AREA_EXTENDED.ToString()] = new ModuleLinkPiece(fileGroup.AreaExtendedRimFile);
                 }
-                
+
                 // Step 3: Load _s.rim if exists (ADDS to base)
                 // swkotor.exe: FUN_004094a0 line 118 (only if .mod not found)
                 if (fileGroup.DataRimFile != null && File.Exists(fileGroup.DataRimFile))
                 {
                     _capsules[KModuleType.DATA.ToString()] = new ModuleDataPiece(fileGroup.DataRimFile);
                 }
-                
+
                 // Step 4: Load _dlg.erf if exists (K2 only, ADDS to base)
                 // swkotor2.exe: FUN_004096b0 line 147 (only if .mod not found)
                 if (fileGroup.DlgErfFile != null && File.Exists(fileGroup.DlgErfFile))
@@ -891,11 +891,11 @@ namespace Andastra.Parsing.Common
             // For GFF-based resources, we use the specific GFF type (ARE, GIT, UTC, etc.)
             // For non-GFF resources, we use object as a fallback
             Type resourceType = GetResourceTypeForRestype(restype);
-            
+
             // Create ModuleResource<T> using reflection
             Type genericModuleResourceType = typeof(ModuleResource<>);
             Type specificModuleResourceType = genericModuleResourceType.MakeGenericType(resourceType);
-            
+
             // Create instance with constructor: ModuleResource(string, ResourceType, Installation, string)
             object instance = Activator.CreateInstance(
                 specificModuleResourceType,
@@ -904,7 +904,7 @@ namespace Andastra.Parsing.Common
                 _installation,
                 _root
             );
-            
+
             return (ModuleResource)instance;
         }
 
@@ -991,7 +991,7 @@ namespace Andastra.Parsing.Common
             {
                 return typeof(DLG);
             }
-            
+
             // Fallback to object for unknown or unsupported resource types
             return typeof(object);
         }
@@ -1761,6 +1761,7 @@ namespace Andastra.Parsing.Common
         public abstract object Resource();
         public abstract string Filename();
         public abstract ResourceIdentifier GetIdentifier();
+        public abstract byte[] Data();
     }
 
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1709-2131
@@ -1963,7 +1964,7 @@ namespace Andastra.Parsing.Common
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1840-1874
         // Original: def data(self) -> bytes | None:
-        public byte[] Data()
+        public override byte[] Data()
         {
             string fileName = $"{ResName}.{ResType.Extension}";
             string activePath = Active();

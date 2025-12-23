@@ -1,3 +1,4 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <LangVersion>7.3</LangVersion>
@@ -15,8 +16,15 @@
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <TargetFrameworks>net9.0</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <OutputType>WinExe</OutputType>
+    <Optimize>true</Optimize>
+    <Nullable>disable</Nullable>
+    <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
+    <AvaloniaCopyWin32Dll>false</AvaloniaCopyWin32Dll>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <NoWin32Manifest>true</NoWin32Manifest>
+    <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
   </PropertyGroup>
-
   <!-- OutputType: WinExe for Windows (no console), Exe for Linux/macOS (GUI with optional console) -->
   <PropertyGroup Condition="'$(RuntimeIdentifier)'=='' OR $(RuntimeIdentifier.StartsWith('win'))">
     <OutputType>WinExe</OutputType>
@@ -24,7 +32,6 @@
   <PropertyGroup Condition="!$(RuntimeIdentifier.StartsWith('win')) AND '$(RuntimeIdentifier)'!=''">
     <OutputType>Exe</OutputType>
   </PropertyGroup>
-
   <!-- Release Configuration -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
@@ -32,21 +39,18 @@
     <Optimize>true</Optimize>
     <Nullable>disable</Nullable>
   </PropertyGroup>
-
   <!-- Debug Configuration -->
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
     <EnableNETAnalyzers>false</EnableNETAnalyzers>
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
     <Nullable>disable</Nullable>
   </PropertyGroup>
-
   <!-- AvaloniaUI defs -->
   <PropertyGroup>
     <AvaloniaCopyWin32Dll>false</AvaloniaCopyWin32Dll>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <NoWin32Manifest>true</NoWin32Manifest>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.3.10" />
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.10" />
@@ -65,13 +69,44 @@
     <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
     <PackageReference Include="System.Windows.Extensions" Version="10.0.1" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
+    <ProjectReference Include="Data\Data.csproj" />
+    <ProjectReference Include="Windows\Windows.csproj" />
+    <ProjectReference Include="Utils\Utils.csproj" />
+    <ProjectReference Include="Editors\Editors.csproj" />
+    <ProjectReference Include="Dialogs\Dialogs.csproj" />
+    <ProjectReference Include="Widgets\Widgets.csproj" />
+    <ProjectReference Include="..\..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
+    <ProjectReference Include="..\Data\Data.csproj" />
+    <ProjectReference Include="..\Utils\Utils.csproj" />
+    <ProjectReference Include="..\Widgets\Widgets.csproj" />
+    <ProjectReference Include="..\Dialogs\Dialogs.csproj" />
+    <ProjectReference Include="..\Editors\Editors.csproj" />
   </ItemGroup>
-
   <!-- Resources -->
   <ItemGroup>
     <AvaloniaResource Include="Resources\**" />
   </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <None Remove="Data\**" />
+    <None Remove="Windows\**" />
+    <None Remove="Editors\**" />
+    <None Remove="Dialogs\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Remove="Data\**" />
+    <EmbeddedResource Remove="Windows\**" />
+    <EmbeddedResource Remove="Editors\**" />
+    <EmbeddedResource Remove="Dialogs\**" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup></ItemGroup>
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
 </Project>

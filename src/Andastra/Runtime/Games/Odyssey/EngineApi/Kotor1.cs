@@ -4191,10 +4191,10 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             if (creatureComp != null)
             {
                 // Get GameDataManager from context to look up class data
-                Data.GameDataManager gameDataManager = null;
+                Andastra.Runtime.Engines.Odyssey.Data.GameDataManager gameDataManager = null;
                 if (ctx != null && ctx.World != null && ctx.World.GameDataProvider != null)
                 {
-                    Data.OdysseyGameDataProvider odysseyProvider = ctx.World.GameDataProvider as Data.OdysseyGameDataProvider;
+                    Andastra.Runtime.Games.Odyssey.Data.OdysseyGameDataProvider odysseyProvider = ctx.World.GameDataProvider as Andastra.Runtime.Games.Odyssey.Data.OdysseyGameDataProvider;
                     if (odysseyProvider != null)
                     {
                         gameDataManager = odysseyProvider.GameDataManager;
@@ -6452,10 +6452,10 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             }
 
             // Get GameDataManager from context to look up feat data
-            Data.GameDataManager gameDataManager = null;
+            Andastra.Runtime.Engines.Odyssey.Data.GameDataManager gameDataManager = null;
             if (ctx != null && ctx.World != null && ctx.World.GameDataProvider != null)
             {
-                Data.OdysseyGameDataProvider odysseyProvider = ctx.World.GameDataProvider as Data.OdysseyGameDataProvider;
+                Andastra.Runtime.Games.Odyssey.Data.OdysseyGameDataProvider odysseyProvider = ctx.World.GameDataProvider as Andastra.Runtime.Games.Odyssey.Data.OdysseyGameDataProvider;
                 if (odysseyProvider != null)
                 {
                     gameDataManager = odysseyProvider.GameDataManager;

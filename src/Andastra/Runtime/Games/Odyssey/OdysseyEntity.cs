@@ -1223,7 +1223,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 var doorComponent = GetComponent<IDoorComponent>();
                 if (doorComponent == null && _objectType == ObjectType.Door)
                 {
-                    doorComponent = new Andastra.Runtime.Games.Odyssey.Components.DoorComponent();
+                    doorComponent = new Andastra.Runtime.Games.Odyssey.Components.OdysseyDoorComponent();
                     doorComponent.Owner = this;
                     AddComponent<IDoorComponent>(doorComponent);
                 }

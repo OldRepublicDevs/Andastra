@@ -10,7 +10,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// - Common functionality shared across all BioWare engines (Odyssey, Aurora, Eclipse)
     /// - Base interface for engine-specific implementations (OdysseyStatsComponent, AuroraStatsComponent, EclipseStatsComponent)
     /// - Engine-specific details and function addresses are documented in implementation classes, not in this interface
-    /// 
+    ///
     /// Common functionality across all engines:
     /// - HP: Current and maximum hit points (D20 system)
     /// - Abilities: STR, DEX, CON, INT, WIS, CHA (D20 standard abilities, modifiers = (score - 10) / 2)
@@ -22,13 +22,13 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// - IsDead: True when CurrentHP <= 0
     /// - Level: Character level (total class levels)
     /// - HasSpell: Checks if creature knows a spell/ability
-    /// 
+    ///
     /// Engine-specific notes:
     /// - Force Points (CurrentFP, MaxFP): Odyssey-specific (KOTOR/TSL only). Aurora/Eclipse implementations return 0.
     /// - Skill systems: Odyssey has 8 skills, Aurora has 27 skills, Eclipse varies
     /// - AC calculation: Exact formula varies (Aurora includes size modifiers, others may differ)
     /// - HP regeneration: Implementation details vary by engine
-    /// 
+    ///
     /// For engine-specific implementation details and function addresses, see:
     /// - Odyssey: StatsComponent (swkotor.exe, swkotor2.exe)
     /// - Aurora: AuroraStatsComponent (nwmain.exe)
@@ -124,6 +124,12 @@ namespace Andastra.Runtime.Core.Interfaces.Components
         /// <param name="spellId">Spell ID (row index in spells.2da)</param>
         /// <returns>True if the creature knows the spell, false otherwise</returns>
         bool HasSpell(int spellId);
+
+        /// <summary>
+        /// Gets all known spells/Force powers.
+        /// </summary>
+        /// <returns>Enumerable of spell IDs (row indices in spells.2da)</returns>
+        System.Collections.Generic.IEnumerable<int> GetKnownSpells();
 
         /// <summary>
         /// Character level (total class levels).

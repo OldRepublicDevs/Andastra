@@ -1,21 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <LangVersion>7.3</LangVersion>
-    <Version>2.0.0-alpha1</Version>
+    <AllowEditAndContinue>false</AllowEditAndContinue>
+    <AllowOptimize>true</AllowOptimize>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
-    <FileVersion>2.0.0.0</FileVersion>
+    <AvaloniaCopyWin32Dll>false</AvaloniaCopyWin32Dll>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>None</DebugType>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
-    <Platforms>x86;x64;arm64</Platforms>
-    <UseAppHost>true</UseAppHost>
-    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
-    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-    <IsPackable>false</IsPackable>
-    <TargetFrameworks>net9.0</TargetFrameworks>
+    <FileVersion>2.0.0.0</FileVersion>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <IsPackable>false</IsPackable>
+    <LangVersion>7.3</LangVersion>
+    <NoWin32Manifest>true</NoWin32Manifest>
+    <Nullable>disable</Nullable>
+    <Optimize>true</Optimize>
+    <OutputType>WinExe</OutputType>
+    <Platforms>x86;x64;arm64</Platforms>
+    <RemoveIntegerChecks>false</RemoveIntegerChecks>
+    <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
+    <PackageId>HoloPatcher</PackageId>
+    <TargetFrameworks>net9.0</TargetFrameworks>
+    <UseAppHost>true</UseAppHost>
+    <Version>2.0.0-alpha1</Version>
   </PropertyGroup>
-
   <!-- OutputType: WinExe for Windows (no console), Exe for Linux/macOS (GUI with optional console) -->
   <PropertyGroup Condition="'$(RuntimeIdentifier)'=='' OR $(RuntimeIdentifier.StartsWith('win'))">
     <OutputType>WinExe</OutputType>
@@ -23,7 +38,6 @@
   <PropertyGroup Condition="!$(RuntimeIdentifier.StartsWith('win')) AND '$(RuntimeIdentifier)'!=''">
     <OutputType>Exe</OutputType>
   </PropertyGroup>
-
   <!-- Release Configuration -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
@@ -31,7 +45,6 @@
     <Optimize>true</Optimize>
     <Nullable>disable</Nullable>
   </PropertyGroup>
-
   <!-- Debug Configuration -->
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
     <TargetFrameworks>net9.0</TargetFrameworks>
@@ -39,14 +52,12 @@
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
     <Nullable>disable</Nullable>
   </PropertyGroup>
-
   <!-- AvaloniaUI defs -->
   <PropertyGroup>
     <AvaloniaCopyWin32Dll>false</AvaloniaCopyWin32Dll>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <NoWin32Manifest>true</NoWin32Manifest>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.3.10" />
     <PackageReference Include="Avalonia.Desktop" Version="11.3.10" />
@@ -54,10 +65,8 @@
     <PackageReference Condition="'$(TargetFramework)' == 'net48'" Include="NetSparkle" Version="1.1.0" />
     <PackageReference Include="Dotnet.Bundle" Version="*" />
   </ItemGroup>
-
   <ItemGroup>
-    <ProjectReference Include="..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
-    <ProjectReference Include="..\HoloPatcher.UI\Andastra.Patcher.UI.csproj" />
+    <ProjectReference Include="..\..\Andastra\Andastra.csproj" />
+    <ProjectReference Include="..\HoloPatcher.UI\HoloPatcher.UI.csproj" />
   </ItemGroup>
-
 </Project>

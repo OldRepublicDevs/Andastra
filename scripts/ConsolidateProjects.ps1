@@ -41,11 +41,20 @@ function Get-TargetProjectPath {
     $parts = $relative -split '[\\/]'
 
     # Pattern: src/<foldername>/.../file.csproj -> src/<foldername>/<foldername>.csproj
+    # Pattern: src/Tools/<toolname>/.../file.csproj -> src/Tools/<toolname>/<toolname>.csproj
     # Pattern: scripts/<foldername>/.../file.csproj -> scripts/<foldername>/<foldername>.csproj
     if ($parts.Count -ge 2) {
         $baseDir = $parts[0]  # "src" or "scripts"
-        $folderName = $parts[1]  # Top-level folder name
 
+        # Special handling for src/Tools - use the tool name, not "Tools"
+        if ($baseDir -eq "src" -and $parts.Count -ge 3 -and $parts[1] -eq "Tools") {
+            $toolName = $parts[2]  # The actual tool name
+            $targetPath = Join-Path $script:RootPath $baseDir "Tools" $toolName "$toolName.csproj"
+            return $targetPath
+        }
+
+        # For other cases, use the first folder after base
+        $folderName = $parts[1]  # Top-level folder name
         $targetPath = Join-Path $script:RootPath $baseDir $folderName "$folderName.csproj"
         return $targetPath
     }
@@ -77,8 +86,20 @@ function Get-AllNestedProjects {
             if ($null -ne $targetPath) {
                 $targetRelative = Get-RelativePath -FullPath $targetPath -BasePath $script:RootPath
 
+                # Normalize paths for comparison
+                $relativeNormalized = $relative.Replace('\', '/').ToLowerInvariant()
+                $targetNormalized = $targetRelative.Replace('\', '/').ToLowerInvariant()
+
                 # Skip if source and target are the same (already at target level)
-                if ($relative -ne $targetRelative) {
+                # Also check if the filename matches the target pattern (src/X/X.csproj)
+                $sourceFileName = [System.IO.Path]::GetFileNameWithoutExtension($relative)
+                $targetFileName = [System.IO.Path]::GetFileNameWithoutExtension($targetRelative)
+                $parentFolderName = $parts[1]  # The folder name that should match
+
+                $isAtTargetLevel = ($relativeNormalized -eq $targetNormalized) -or
+                                   ($sourceFileName -eq $parentFolderName -and $parts.Count -eq 3)
+
+                if (-not $isAtTargetLevel) {
                     $projects += @{
                         Source = $relative
                         Target = $targetRelative
