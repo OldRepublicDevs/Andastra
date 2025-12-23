@@ -1822,9 +1822,7 @@ namespace Andastra.Runtime.Stride.Backends
             // Each tile is 8x8 texels, stored as uint8_t per tile
             // Data layout: Row-major order of feedback tiles
 
-            try
-            {
-                // Access Stride's native DirectX 12 device and command list
+            // Access Stride's native DirectX 12 device and command list
                 // _device is IntPtr to ID3D12Device (set in CreateDeviceResources)
                 // _commandList is IntPtr to ID3D12GraphicsCommandList (set in CreateSwapChainResources)
                 // resourceInfo.NativeHandle is IntPtr to ID3D12Resource (the sampler feedback texture)
@@ -2200,15 +2198,6 @@ namespace Andastra.Runtime.Stride.Backends
                         {
                             Marshal.FreeHGlobal(mappedDataPtr);
                         }
-                    }
-                    finally
-                    {
-                        Marshal.FreeHGlobal(sourceResourceDescPtr);
-                        Marshal.FreeHGlobal(layoutsPtr);
-                        Marshal.FreeHGlobal(numRowsPtr);
-                        Marshal.FreeHGlobal(rowSizeInBytesPtr);
-                        Marshal.FreeHGlobal(totalBytesPtr);
-                    }
 
                     // Clean up readback resource
                     // Release the COM object (call Release on the resource)
@@ -2226,20 +2215,41 @@ namespace Andastra.Runtime.Stride.Backends
                             }
                         }
                     }
-                }
-                finally
-                {
-                    Marshal.FreeHGlobal(readbackHeapPropsPtr);
-                    Marshal.FreeHGlobal(readbackResourceDescPtr);
-                    Marshal.FreeHGlobal(readbackResourcePtr);
-                }
 
-                Console.WriteLine($"[StrideDX12] OnReadSamplerFeedback: Successfully read {dataSize} bytes from sampler feedback texture {resourceInfo.NativeHandle}");
-            }
+                    Console.WriteLine($"[StrideDX12] OnReadSamplerFeedback: Successfully read {dataSize} bytes from sampler feedback texture {resourceInfo.NativeHandle}");
+                }
             catch (Exception ex)
             {
                 Console.WriteLine($"[StrideDX12] OnReadSamplerFeedback: Error reading sampler feedback data: {ex.Message}");
                 Console.WriteLine($"[StrideDX12] OnReadSamplerFeedback: Stack trace: {ex.StackTrace}");
+            }
+            finally
+            {
+                // Free memory allocated for GetCopyableFootprints (if not already freed in catch blocks)
+                if (sourceResourceDescPtr != IntPtr.Zero)
+                {
+                    Marshal.FreeHGlobal(sourceResourceDescPtr);
+                }
+                if (layoutsPtr != IntPtr.Zero)
+                {
+                    Marshal.FreeHGlobal(layoutsPtr);
+                }
+                if (numRowsPtr != IntPtr.Zero)
+                {
+                    Marshal.FreeHGlobal(numRowsPtr);
+                }
+                if (rowSizeInBytesPtr != IntPtr.Zero)
+                {
+                    Marshal.FreeHGlobal(rowSizeInBytesPtr);
+                }
+                if (totalBytesPtr != IntPtr.Zero)
+                {
+                    Marshal.FreeHGlobal(totalBytesPtr);
+                }
+                // Free memory allocated for readback buffer creation
+                Marshal.FreeHGlobal(readbackHeapPropsPtr);
+                Marshal.FreeHGlobal(readbackResourceDescPtr);
+                Marshal.FreeHGlobal(readbackResourcePtr);
             }
         }
 

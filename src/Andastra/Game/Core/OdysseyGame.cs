@@ -5082,6 +5082,8 @@ namespace Andastra.Runtime.Game.Core
                 _optionsByCategory);
         }
 
+        #endregion
+
         #region Movies Menu
 
         /// <summary>
