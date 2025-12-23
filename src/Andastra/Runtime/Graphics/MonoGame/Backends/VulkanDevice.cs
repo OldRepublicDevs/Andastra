@@ -3926,9 +3926,8 @@ namespace Andastra.Runtime.MonoGame.Backends
                 VulkanFramebuffer vulkanFramebuffer = framebuffer as VulkanFramebuffer;
                 if (vulkanFramebuffer != null)
                 {
-                    // TODO: STUB - VulkanFramebuffer needs a public VkRenderPass property
-                    // For now, get render pass from framebuffer description or create a new one
-                    vkRenderPass = CreateRenderPassFromFramebufferDesc(framebuffer.Desc);
+                    // Get render pass from framebuffer if it has one
+                    vkRenderPass = vulkanFramebuffer.VkRenderPass;
                 }
 
                 // If framebuffer doesn't have a render pass, create one from its description
@@ -4992,8 +4991,30 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             try
             {
+                // Get layout descriptor count for each binding slot
+                // This allows us to support array bindings (multiple descriptors per slot)
+                Dictionary<int, int> layoutDescriptorCounts = new Dictionary<int, int>();
+                if (layout != null)
+                {
+                    VulkanBindingLayout vulkanLayout = layout as VulkanBindingLayout;
+                    if (vulkanLayout != null && vulkanLayout.Desc.Items != null)
+                    {
+                        foreach (BindingLayoutItem layoutItem in vulkanLayout.Desc.Items)
+                        {
+                            layoutDescriptorCounts[layoutItem.Slot] = layoutItem.Count;
+                        }
+                    }
+                }
+
                 foreach (BindingSetItem item in items)
                 {
+                    // Get descriptor count from layout, default to 1 if not found
+                    int descriptorCount = 1;
+                    if (layoutDescriptorCounts.ContainsKey(item.Slot))
+                    {
+                        descriptorCount = layoutDescriptorCounts[item.Slot];
+                    }
+
                     VkDescriptorType descriptorType = ConvertToVkDescriptorType(item.Type);
                     VkWriteDescriptorSet writeDescriptorSet = new VkWriteDescriptorSet
                     {
@@ -5002,7 +5023,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                         dstSet = vkDescriptorSet,
                         dstBinding = (uint)item.Slot,
                         dstArrayElement = 0,
-                        descriptorCount = 1,
+                        descriptorCount = (uint)descriptorCount,
                         descriptorType = descriptorType,
                         pImageInfo = IntPtr.Zero,
                         pBufferInfo = IntPtr.Zero,
@@ -5089,69 +5110,122 @@ namespace Andastra.Runtime.MonoGame.Backends
                             // Acceleration structures require special handling with VkWriteDescriptorSetAccelerationStructureKHR
                             // This uses the VK_KHR_acceleration_structure extension
                             // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkWriteDescriptorSetAccelerationStructureKHR.html
-                            if (item.AccelStruct != null)
+                            // Supports both single acceleration structure (backward compatibility) and array of acceleration structures
+                            
+                            // Determine how many acceleration structures we need to bind
+                            int accelStructCount = descriptorCount;
+                            IAccelStruct[] accelStructArray = null;
+                            
+                            // Check if array is provided (takes precedence)
+                            if (item.AccelStructs != null && item.AccelStructs.Length > 0)
                             {
-                                // Get acceleration structure handle
-                                IntPtr accelStructHandle = GetAccelStructHandle(item.AccelStruct);
-                                if (accelStructHandle != IntPtr.Zero)
+                                accelStructArray = item.AccelStructs;
+                                // Use the minimum of layout count and provided array length
+                                accelStructCount = Math.Min(descriptorCount, accelStructArray.Length);
+                            }
+                            // Fall back to single acceleration structure for backward compatibility
+                            else if (item.AccelStruct != null)
+                            {
+                                // For single binding, create array with one element
+                                accelStructArray = new IAccelStruct[] { item.AccelStruct };
+                                accelStructCount = 1;
+                            }
+                            
+                            // Only proceed if we have at least one acceleration structure
+                            if (accelStructArray != null && accelStructCount > 0)
+                            {
+                                // Set descriptor type for acceleration structure
+                                writeDescriptorSet.descriptorType = VkDescriptorType.VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
+                                // Update descriptor count to match actual acceleration structure count
+                                writeDescriptorSet.descriptorCount = (uint)accelStructCount;
+
+                                // Create VkWriteDescriptorSetAccelerationStructureKHR structure
+                                // This structure is chained via pNext in VkWriteDescriptorSet
+                                // The structure contains an array of acceleration structure handles
+                                
+                                IntPtr accelStructHandlesArray = IntPtr.Zero;
+                                IntPtr accelStructInfoPtr = IntPtr.Zero;
+
+                                try
                                 {
-                                    // Set descriptor type for acceleration structure
-                                    writeDescriptorSet.descriptorType = VkDescriptorType.VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
+                                    // Allocate memory for array of acceleration structure handles
+                                    // Each handle is an IntPtr (VkAccelerationStructureKHR)
+                                    int arraySizeBytes = accelStructCount * IntPtr.Size;
+                                    accelStructHandlesArray = Marshal.AllocHGlobal(arraySizeBytes);
+                                    
+                                    // Write all acceleration structure handles to the array
+                                    for (int i = 0; i < accelStructCount; i++)
+                                    {
+                                        if (accelStructArray[i] != null)
+                                        {
+                                            IntPtr accelStructHandle = GetAccelStructHandle(accelStructArray[i]);
+                                            if (accelStructHandle != IntPtr.Zero)
+                                            {
+                                                // Write handle at offset i * IntPtr.Size
+                                                IntPtr handleOffset = new IntPtr(accelStructHandlesArray.ToInt64() + (i * IntPtr.Size));
+                                                Marshal.WriteIntPtr(handleOffset, accelStructHandle);
+                                            }
+                                            else
+                                            {
+                                                Console.WriteLine($"[VulkanDevice] Warning: Acceleration structure at index {i} in slot {item.Slot} has invalid handle, using null handle");
+                                                // Write null handle
+                                                IntPtr handleOffset = new IntPtr(accelStructHandlesArray.ToInt64() + (i * IntPtr.Size));
+                                                Marshal.WriteIntPtr(handleOffset, IntPtr.Zero);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine($"[VulkanDevice] Warning: Acceleration structure at index {i} in slot {item.Slot} is null, using null handle");
+                                            // Write null handle
+                                            IntPtr handleOffset = new IntPtr(accelStructHandlesArray.ToInt64() + (i * IntPtr.Size));
+                                            Marshal.WriteIntPtr(handleOffset, IntPtr.Zero);
+                                        }
+                                    }
 
                                     // Create VkWriteDescriptorSetAccelerationStructureKHR structure
-                                    // This structure is chained via pNext in VkWriteDescriptorSet
-                                    // The structure contains an array of acceleration structure handles
-
-                                    // Allocate memory for array of acceleration structure handles (IntPtr array)
-                                    // TODO: STUB - For now, we support single acceleration structure per binding
-                                    IntPtr accelStructHandlesArray = IntPtr.Zero;
-                                    IntPtr accelStructInfoPtr = IntPtr.Zero;
-
-                                    try
+                                    VkWriteDescriptorSetAccelerationStructureKHR accelStructInfo = new VkWriteDescriptorSetAccelerationStructureKHR
                                     {
-                                        // Allocate memory for array of acceleration structure handles
-                                        accelStructHandlesArray = Marshal.AllocHGlobal(IntPtr.Size);
-                                        Marshal.WriteIntPtr(accelStructHandlesArray, accelStructHandle);
+                                        sType = VkStructureType.VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR,
+                                        pNext = IntPtr.Zero,
+                                        accelerationStructureCount = (uint)accelStructCount,
+                                        pAccelerationStructures = accelStructHandlesArray
+                                    };
 
-                                        // Create VkWriteDescriptorSetAccelerationStructureKHR structure
-                                        VkWriteDescriptorSetAccelerationStructureKHR accelStructInfo = new VkWriteDescriptorSetAccelerationStructureKHR
-                                        {
-                                            sType = VkStructureType.VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR,
-                                            pNext = IntPtr.Zero,
-                                            accelerationStructureCount = 1,
-                                            pAccelerationStructures = accelStructHandlesArray
-                                        };
+                                    // Allocate memory for the acceleration structure info structure
+                                    accelStructInfoPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(VkWriteDescriptorSetAccelerationStructureKHR)));
+                                    Marshal.StructureToPtr(accelStructInfo, accelStructInfoPtr, false);
 
-                                        // Allocate memory for the acceleration structure info structure
-                                        accelStructInfoPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(VkWriteDescriptorSetAccelerationStructureKHR)));
-                                        Marshal.StructureToPtr(accelStructInfo, accelStructInfoPtr, false);
+                                    // Add both allocations to cleanup list (order: structure first, then handles array)
+                                    // This ensures proper cleanup order
+                                    accelStructInfoPtrs.Add(accelStructInfoPtr);
+                                    accelStructInfoPtrs.Add(accelStructHandlesArray);
 
-                                        // Add both allocations to cleanup list (order: structure first, then handles array)
-                                        // This ensures proper cleanup order
-                                        accelStructInfoPtrs.Add(accelStructInfoPtr);
-                                        accelStructInfoPtrs.Add(accelStructHandlesArray);
+                                    // Chain the acceleration structure info via pNext in VkWriteDescriptorSet
+                                    writeDescriptorSet.pNext = accelStructInfoPtr;
 
-                                        // Chain the acceleration structure info via pNext in VkWriteDescriptorSet
-                                        writeDescriptorSet.pNext = accelStructInfoPtr;
-
-                                        // Clear pointers to prevent double-free (they're now tracked in the list)
-                                        accelStructInfoPtr = IntPtr.Zero;
-                                        accelStructHandlesArray = IntPtr.Zero;
-                                    }
-                                    catch
-                                    {
-                                        // If allocation or marshalling fails, free what we allocated
-                                        if (accelStructInfoPtr != IntPtr.Zero)
-                                        {
-                                            Marshal.FreeHGlobal(accelStructInfoPtr);
-                                        }
-                                        if (accelStructHandlesArray != IntPtr.Zero)
-                                        {
-                                            Marshal.FreeHGlobal(accelStructHandlesArray);
-                                        }
-                                        Console.WriteLine($"[VulkanDevice] Failed to allocate memory for acceleration structure descriptor info for slot {item.Slot}");
-                                    }
+                                    // Clear pointers to prevent double-free (they're now tracked in the list)
+                                    accelStructInfoPtr = IntPtr.Zero;
+                                    accelStructHandlesArray = IntPtr.Zero;
+                                    
+                                    Console.WriteLine($"[VulkanDevice] Bound {accelStructCount} acceleration structure(s) to slot {item.Slot}");
                                 }
+                                catch (Exception ex)
+                                {
+                                    // If allocation or marshalling fails, free what we allocated
+                                    if (accelStructInfoPtr != IntPtr.Zero)
+                                    {
+                                        Marshal.FreeHGlobal(accelStructInfoPtr);
+                                    }
+                                    if (accelStructHandlesArray != IntPtr.Zero)
+                                    {
+                                        Marshal.FreeHGlobal(accelStructHandlesArray);
+                                    }
+                                    Console.WriteLine($"[VulkanDevice] Failed to allocate memory for acceleration structure descriptor info for slot {item.Slot}: {ex.Message}");
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine($"[VulkanDevice] Warning: No acceleration structures provided for slot {item.Slot}, skipping binding");
                             }
                             break;
                     }
@@ -7190,6 +7264,16 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _ownsRenderPass = ownsRenderPass;
             }
 
+            /// <summary>
+            /// Gets the VkRenderPass handle associated with this framebuffer.
+            /// Returns IntPtr.Zero if no render pass is associated.
+            /// The render pass may be shared with other framebuffers or owned by this framebuffer.
+            /// </summary>
+            public IntPtr VkRenderPass
+            {
+                get { return _vkRenderPass; }
+            }
+
             public FramebufferInfo GetInfo()
             {
                 var info = new FramebufferInfo();
@@ -7957,7 +8041,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 int mipDepth = Math.Max(1, (texture.Desc.Depth > 0 ? texture.Desc.Depth : 1) >> mipLevel);
 
                 // Calculate data size for this mip level
-                // For simplicity, assume uncompressed format - real implementation would handle compressed formats
+                // TODO: STUB -  For simplicity, assume uncompressed format - real implementation would handle compressed formats
                 int bytesPerPixel = GetBytesPerPixel(texture.Desc.Format);
                 int rowPitch = mipWidth * bytesPerPixel;
                 int slicePitch = rowPitch * mipHeight;
