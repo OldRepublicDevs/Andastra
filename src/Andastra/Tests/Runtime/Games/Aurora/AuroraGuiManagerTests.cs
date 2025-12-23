@@ -21,16 +21,16 @@ namespace Andastra.Tests.Runtime.Games.Aurora
     {
         private IGraphicsDevice _graphicsDevice;
         private Installation _installation;
-        private Mock<IResourceLookup> _mockResourceLookup;
+        private Mock<InstallationResourceManager> _mockResourceManager;
         private AuroraGuiManager _guiManager;
 
         public AuroraGuiManagerTests()
         {
             _graphicsDevice = GraphicsTestHelper.CreateTestIGraphicsDevice();
-            _mockResourceLookup = new Mock<IResourceLookup>(MockBehavior.Strict);
+            _mockResourceManager = new Mock<InstallationResourceManager>(MockBehavior.Strict, It.IsAny<string>(), It.IsAny<Andastra.Parsing.Common.BioWareGame>());
 
             var mockInstallation = new Mock<Installation>(MockBehavior.Strict);
-            mockInstallation.Setup(i => i.Resources).Returns(_mockResourceLookup.Object);
+            mockInstallation.Setup(i => i.Resources).Returns(_mockResourceManager.Object);
             _installation = mockInstallation.Object;
 
             _guiManager = new AuroraGuiManager(_graphicsDevice, _installation);
@@ -49,11 +49,11 @@ namespace Andastra.Tests.Runtime.Games.Aurora
             string guiName = "mainmenu";
             byte[] guiData = CreateTestGUIData();
 
-            _mockResourceLookup.Setup(r => r.LookupResource(
+            _mockResourceManager.Setup(r => r.LookupResource(
                 guiName,
                 ResourceType.GUI,
-                It.IsAny<string[]>(),
-                It.IsAny<string[]>()))
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
                 .Returns(new ResourceResult(guiName, ResourceType.GUI, "test.gui", guiData));
 
             // Act
@@ -69,11 +69,11 @@ namespace Andastra.Tests.Runtime.Games.Aurora
             // Arrange
             string guiName = "missing_gui";
 
-            _mockResourceLookup.Setup(r => r.LookupResource(
+            _mockResourceManager.Setup(r => r.LookupResource(
                 guiName,
                 ResourceType.GUI,
-                It.IsAny<string[]>(),
-                It.IsAny<string[]>()))
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
                 .Returns((ResourceResult)null);
 
             // Act
@@ -102,11 +102,11 @@ namespace Andastra.Tests.Runtime.Games.Aurora
             string guiName = "test_gui";
             byte[] guiData = CreateTestGUIData();
 
-            _mockResourceLookup.Setup(r => r.LookupResource(
+            _mockResourceManager.Setup(r => r.LookupResource(
                 guiName,
                 ResourceType.GUI,
-                It.IsAny<string[]>(),
-                It.IsAny<string[]>()))
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
                 .Returns(new ResourceResult(guiName, ResourceType.GUI, "test.gui", guiData));
 
             // Act
@@ -125,11 +125,11 @@ namespace Andastra.Tests.Runtime.Games.Aurora
             string guiName = "test_gui";
             byte[] guiData = CreateTestGUIData();
 
-            _mockResourceLookup.Setup(r => r.LookupResource(
+            _mockResourceManager.Setup(r => r.LookupResource(
                 guiName,
                 ResourceType.GUI,
-                It.IsAny<string[]>(),
-                It.IsAny<string[]>()))
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
                 .Returns(new ResourceResult(guiName, ResourceType.GUI, "test.gui", guiData));
 
             _guiManager.LoadGui(guiName, 1920, 1080);
@@ -158,11 +158,11 @@ namespace Andastra.Tests.Runtime.Games.Aurora
             string guiName = "test_gui";
             byte[] guiData = CreateTestGUIData();
 
-            _mockResourceLookup.Setup(r => r.LookupResource(
+            _mockResourceManager.Setup(r => r.LookupResource(
                 guiName,
                 ResourceType.GUI,
-                It.IsAny<string[]>(),
-                It.IsAny<string[]>()))
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
                 .Returns(new ResourceResult(guiName, ResourceType.GUI, "test.gui", guiData));
 
             _guiManager.LoadGui(guiName, 1920, 1080);
