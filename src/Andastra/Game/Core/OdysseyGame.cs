@@ -6,6 +6,7 @@ using System.Numerics;
 using System.Reflection;
 using JetBrains.Annotations;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.MDL;
 using Andastra.Parsing.Formats.MDLData;
 using Andastra.Parsing.Formats.TPC;
@@ -1190,10 +1191,11 @@ namespace Andastra.Runtime.Game.Core
                             break;
                         }
 
+                        BioWareGame bioWareGame = _settings.Game == Andastra.Runtime.Core.KotorGame.K1 ? BioWareGame.K1 : BioWareGame.K2;
                         _characterCreationScreen = new CharacterCreationScreen(
                             _graphicsDevice,
                             installation,
-                            _settings.Game,
+                            bioWareGame,
                             _guiManager,
                             OnCharacterCreationComplete,
                             OnCharacterCreationCancel,
@@ -1299,7 +1301,7 @@ namespace Andastra.Runtime.Game.Core
                 case "BTN_EXIT":
                     // Exit button - exit game
                     Console.WriteLine("[Odyssey] Exit button clicked - exiting game");
-                    Exit();
+                    _graphicsBackend.Exit();
                     break;
 
                 case "BTN_MOVIES":
@@ -1385,7 +1387,7 @@ namespace Andastra.Runtime.Game.Core
                     Console.WriteLine("[Odyssey] Options menu not implemented");
                     break;
                 case 2: // Exit
-                    Exit();
+                    _graphicsBackend.Exit();
                     break;
             }
         }
@@ -1466,7 +1468,7 @@ namespace Andastra.Runtime.Game.Core
                     if (gui3DRoomRes != null && gui3DRoomRes.Length > 0)
                     {
                         // Use MDLAuto for loading (handles both binary and ASCII formats)
-                        _gui3DRoomModel = MDLAuto.Load(gui3DRoomRes);
+                        _gui3DRoomModel = MDLAuto.ReadMdl(gui3DRoomRes);
                         _gui3DRoomLoaded = true;
                         Console.WriteLine("[Odyssey] gui3D_room model loaded successfully");
 
@@ -1500,18 +1502,18 @@ namespace Andastra.Runtime.Game.Core
                 try
                 {
                     string mainMenuModelName = _menuVariant;
-                    var mainMenuRes = resourceProvider.GetResource(mainMenuModelName, ResourceType.MDL);
-                    if (mainMenuRes != null)
+                    var mainMenuRes = resourceProvider.GetResourceBytes(new ResourceIdentifier(mainMenuModelName, ResourceType.MDL));
+                    if (mainMenuRes != null && mainMenuRes.Length > 0)
                     {
-                        using (var reader = new MDLBinaryReader(mainMenuRes))
+                        using (var reader = new MDLBinaryReader(new System.IO.MemoryStream(mainMenuRes)))
                         {
-                            _mainMenuModel = reader.Read();
+                            _mainMenuModel = reader.Load();
 
                             // Build parent node map for efficient parent lookups
                             // Based on swkotor.exe and swkotor2.exe: MDL node hierarchy traversal
                             // Original implementation: Tracks parent-child relationships for transform accumulation
                             // This map is built once when model loads, then used for all transform calculations
-                            _mainMenuModelParentMap = BuildParentNodeMap(_mainMenuModel.RootNode);
+                            _mainMenuModelParentMap = BuildParentNodeMap(_mainMenuModel.Root);
 
                             // Find camera hook position in the model
                             // Based on swkotor.exe and swkotor2.exe: Searches MDL node tree for "camerahook1" node
@@ -1543,8 +1545,8 @@ namespace Andastra.Runtime.Game.Core
                                         // Based on swkotor.exe and swkotor2.exe: Texture loading system
                                         // Original implementation: Loads TPC files and creates DirectX textures (D3DTexture8/9)
                                         // This MonoGame implementation: Converts TPC format to MonoGame Texture2D using TpcToMonoGameTextureConverter
-                                        var textureRes = resourceProvider.GetResource(textureName, ResourceType.TPC);
-                                        if (textureRes != null)
+                                        var textureRes = resourceProvider.GetResourceBytes(new ResourceIdentifier(textureName, ResourceType.TPC));
+                                        if (textureRes != null && textureRes.Length > 0)
                                         {
                                             // Parse TPC texture using TPCAuto (handles TPC, DDS, and TGA formats)
                                             // Based on swkotor.exe texture loading: Supports multiple texture formats
@@ -1582,10 +1584,10 @@ namespace Andastra.Runtime.Game.Core
 
                                     // Fallback to default effect if texture loading fails
                                     // Based on swkotor.exe: Uses default material when texture is missing
-                                    var defaultEffect = new Microsoft.Xna.Framework.Graphics.BasicEffect(mgDevice.Device);
-                                    defaultEffect.EnableDefaultLighting();
-                                    defaultEffect.LightingEnabled = true;
-                                    return defaultEffect;
+                                    var fallbackEffect = new Microsoft.Xna.Framework.Graphics.BasicEffect(mgDevice.Device);
+                                    fallbackEffect.EnableDefaultLighting();
+                                    fallbackEffect.LightingEnabled = true;
+                                    return fallbackEffect;
                                 });
 
                                 var converter = new MdlToMonoGameModelConverter(mgDevice.Device, materialResolver);
@@ -1639,8 +1641,8 @@ namespace Andastra.Runtime.Game.Core
                 // Load guisounds.2da from the installation
                 // Based on swkotor.exe and swkotor2.exe: guisounds.2da is in the override or data folder
                 var resourceProvider = new GameResourceProvider(installation);
-                var guisoundsRes = resourceProvider.GetResource("guisounds", ResourceType.TwoDA);
-                if (guisoundsRes != null)
+                var guisoundsRes = resourceProvider.GetResourceBytes(new ResourceIdentifier("guisounds", ResourceType.TwoDA));
+                if (guisoundsRes != null && guisoundsRes.Length > 0)
                 {
                     // Parse the 2DA file
                     var twoDA = TwoDAAuto.Read2DA(guisoundsRes);
@@ -2391,7 +2393,7 @@ namespace Andastra.Runtime.Game.Core
 
                     // Draw item background
                     Rectangle itemRect = new GraphicsRectangle(centerX - pathSelectorWidth / 2 + 10, itemY, pathSelectorWidth - 20, pathItemHeight - 5);
-                    Color itemBgColor = isSelected ? new GraphicsColor(60, 120, 200, 255) : new GraphicsColor(40, 50, 70, 200);
+                    GraphicsColor itemBgColor = isSelected ? new GraphicsColor(60, 120, 200, 255) : new GraphicsColor(40, 50, 70, 200);
                     _spriteBatch.Draw(_menuTexture, itemRect, itemBgColor);
 
                     if (isSelected)
@@ -2507,7 +2509,7 @@ namespace Andastra.Runtime.Game.Core
         /// Draws a filled triangle using rectangles (approximation).
         /// Used for play button icon when font is not available.
         /// </summary>
-        private void DrawTriangle(ISpriteBatch spriteBatch, int[] x, int[] y, Color color)
+        private void DrawTriangle(ISpriteBatch spriteBatch, int[] x, int[] y, GraphicsColor color)
         {
             // Simple triangle drawing using line approximation
             // Draw lines between points
@@ -3227,22 +3229,22 @@ namespace Andastra.Runtime.Game.Core
                     entityWidth = 0.5f;
                     break;
                 case Andastra.Runtime.Core.Enums.ObjectType.Door:
-                    entityColor = Color.Brown;
+                    entityColor = GraphicsColor.Brown;
                     entityHeight = 3f;
                     entityWidth = 1f;
                     break;
                 case Andastra.Runtime.Core.Enums.ObjectType.Placeable:
-                    entityColor = Color.Orange;
+                    entityColor = GraphicsColor.Orange;
                     entityHeight = 1.5f;
                     entityWidth = 0.8f;
                     break;
                 case Andastra.Runtime.Core.Enums.ObjectType.Trigger:
-                    entityColor = Color.Yellow;
+                    entityColor = GraphicsColor.Yellow;
                     entityHeight = 0.5f;
                     entityWidth = 1f;
                     break;
                 case Andastra.Runtime.Core.Enums.ObjectType.Waypoint:
-                    entityColor = Color.Cyan;
+                    entityColor = GraphicsColor.Cyan;
                     entityHeight = 0.3f;
                     entityWidth = 0.3f;
                     break;
@@ -6271,6 +6273,41 @@ namespace Andastra.Runtime.Game.Core
             _rebindingActionName = string.Empty;
 
             Console.WriteLine("[Odyssey] Options menu closed");
+        }
+
+        /// <summary>
+        /// Closes the gameplay options submenu and returns to main options menu.
+        /// Based on swkotor.exe and swkotor2.exe: Gameplay options submenu navigation
+        /// </summary>
+        private void CloseGameplayOptionsMenu()
+        {
+            Console.WriteLine("[Odyssey] Closing gameplay options submenu...");
+            _currentState = GameState.OptionsMenu;
+            _selectedOptionsCategoryIndex = 0;
+            _selectedOptionsItemIndex = 0;
+        }
+
+        /// <summary>
+        /// Closes the graphics options submenu and returns to main options menu.
+        /// Based on swkotor.exe and swkotor2.exe: Graphics options submenu navigation
+        /// </summary>
+        private void CloseGraphicsOptionsMenu()
+        {
+            Console.WriteLine("[Odyssey] Closing graphics options submenu...");
+            _currentState = GameState.OptionsMenu;
+            _selectedOptionsCategoryIndex = 0;
+            _selectedOptionsItemIndex = 0;
+        }
+
+        /// <summary>
+        /// Loads available save games from the save system.
+        /// Based on swkotor.exe and swkotor2.exe: Save game enumeration
+        /// </summary>
+        private void LoadAvailableSaves()
+        {
+            RefreshSaveList();
+            _selectedSaveIndex = 0;
+            Console.WriteLine($"[Odyssey] Loaded {_availableSaves.Count} available save games");
         }
 
         /// <summary>

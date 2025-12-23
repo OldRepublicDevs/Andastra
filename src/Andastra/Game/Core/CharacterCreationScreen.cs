@@ -18,7 +18,7 @@ using Andastra.Runtime.Graphics.Common;
 using Andastra.Runtime.Engines.Odyssey.Data;
 using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Common;
-using FeatData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.FeatData;
+using Andastra.Runtime.Engines.Odyssey.Systems;
 using JetBrains.Annotations;
 using GraphicsColor = Andastra.Runtime.Graphics.Color;
 using ParsingColor = Andastra.Parsing.Common.Color;
@@ -763,7 +763,7 @@ namespace Andastra.Runtime.Game.Core
                     else
                     {
                         // Check if feat meets prerequisites
-                        FeatData featData = _gameDataManager.GetFeat(featId);
+                        GameDataManager.FeatData featData = _gameDataManager.GetFeat(featId);
                         if (featData != null && MeetsFeatPrerequisites(featData))
                         {
                             _characterData.SelectedFeats.Add(featId);
@@ -1480,7 +1480,7 @@ namespace Andastra.Runtime.Game.Core
             for (int i = visibleStart; i < visibleEnd; i++)
             {
                 int skillId = _availableSkillIds[i];
-                SkillData skillData = _gameDataManager.GetSkill(skillId);
+                GameDataManager.SkillData skillData = _gameDataManager.GetSkill(skillId);
                 if (skillData == null)
                 {
                     continue;
@@ -1548,7 +1548,7 @@ namespace Andastra.Runtime.Game.Core
                     }
                     else
                     {
-                        spriteBatch.DrawString(font, "<", new GraphicsVector2(380, y), GraphicsColor.DarkGray);
+                        spriteBatch.DrawString(font, "<", new GraphicsVector2(380, y), new GraphicsColor(100, 100, 100, 255));
                     }
 
                     // Render increase button indicator
@@ -1558,7 +1558,7 @@ namespace Andastra.Runtime.Game.Core
                     }
                     else
                     {
-                        spriteBatch.DrawString(font, ">", new GraphicsVector2(400, y), GraphicsColor.DarkGray);
+                        spriteBatch.DrawString(font, ">", new GraphicsVector2(400, y), new GraphicsColor(100, 100, 100, 255));
                     }
 
                     // Render point cost
@@ -1571,7 +1571,7 @@ namespace Andastra.Runtime.Game.Core
             if (_selectedSkillIndex >= 0 && _selectedSkillIndex < _availableSkillIds.Count)
             {
                 int selectedSkillId = _availableSkillIds[_selectedSkillIndex];
-                SkillData selectedSkillData = _gameDataManager.GetSkill(selectedSkillId);
+                GameDataManager.SkillData selectedSkillData = _gameDataManager.GetSkill(selectedSkillId);
                 if (selectedSkillData != null)
                 {
                     int descriptionX = 560;
@@ -1669,14 +1669,14 @@ namespace Andastra.Runtime.Game.Core
             if (_availableFeatIds.Count > maxVisibleItems)
             {
                 string scrollHint = $"Showing {visibleStart + 1}-{visibleEnd} of {_availableFeatIds.Count}";
-                spriteBatch.DrawString(font, scrollHint, new GraphicsVector2(50, listStartY + (maxVisibleItems * itemHeight) + 5), GraphicsColor.DarkGray);
+                spriteBatch.DrawString(font, scrollHint, new GraphicsVector2(50, listStartY + (maxVisibleItems * itemHeight) + 5), new GraphicsColor(100, 100, 100, 255));
             }
 
             // Render visible feats
             for (int i = visibleStart; i < visibleEnd; i++)
             {
                 int featId = _availableFeatIds[i];
-                FeatData featData = _gameDataManager.GetFeat(featId);
+                GameDataManager.FeatData featData = _gameDataManager.GetFeat(featId);
                 if (featData == null)
                 {
                     continue;
@@ -1704,7 +1704,7 @@ namespace Andastra.Runtime.Game.Core
                 GraphicsColor textColor = GraphicsColor.White;
                 if (!meetsPrereqs)
                 {
-                    textColor = GraphicsColor.DarkGray; // Gray out feats that don't meet prerequisites
+                    textColor = new GraphicsColor(100, 100, 100, 255); // Gray out feats that don't meet prerequisites
                 }
                 else if (isTaken)
                 {
@@ -1739,7 +1739,7 @@ namespace Andastra.Runtime.Game.Core
             if (_selectedFeatIndex >= 0 && _selectedFeatIndex < _availableFeatIds.Count)
             {
                 int selectedFeatId = _availableFeatIds[_selectedFeatIndex];
-                FeatData selectedFeatData = _gameDataManager.GetFeat(selectedFeatId);
+                GameDataManager.FeatData selectedFeatData = _gameDataManager.GetFeat(selectedFeatId);
                 if (selectedFeatData != null)
                 {
                     int descriptionX = 520;
@@ -1791,7 +1791,7 @@ namespace Andastra.Runtime.Game.Core
                     descriptionY += 30;
                     if (selectedFeatData.PrereqFeat1 >= 0)
                     {
-                        FeatData prereqFeat = _gameDataManager.GetFeat(selectedFeatData.PrereqFeat1);
+                        GameDataManager.FeatData prereqFeat = _gameDataManager.GetFeat(selectedFeatData.PrereqFeat1);
                         string prereqName = prereqFeat?.Name ?? $"Feat {selectedFeatData.PrereqFeat1}";
                         bool hasPrereq = _characterData.SelectedFeats.Contains(selectedFeatData.PrereqFeat1);
                         GraphicsColor prereqColor = hasPrereq ? GraphicsColor.Green : GraphicsColor.Red;
@@ -1843,14 +1843,18 @@ namespace Andastra.Runtime.Game.Core
                 return;
             }
 
+            // Render portrait thumbnail
+            // Based on swkotor.exe and swkotor2.exe: Portrait thumbnails are typically 128x128 or 256x256 pixels
+            // Original implementation: Portraits are rendered at fixed size with selection border
+            int thumbnailX = 50;
+            int thumbnailY = 250;
+            int thumbnailSize = 128; // Standard portrait thumbnail size
+
             // Get portrait data from portraits.2da
-            PortraitData portraitData = _gameDataManager.GetPortrait(_characterData.Portrait);
+            GameDataManager.PortraitData portraitData = _gameDataManager.GetPortrait(_characterData.Portrait);
             if (portraitData == null || string.IsNullOrEmpty(portraitData.BaseResRef))
             {
                 // Render placeholder if portrait not found
-                int thumbnailX = 50;
-                int thumbnailY = 250;
-                int thumbnailSize = 128;
                 DrawRectangle(spriteBatch, new Rectangle(thumbnailX, thumbnailY, thumbnailSize, thumbnailSize), new GraphicsColor(50, 50, 50, 200));
                 DrawRectangleOutline(spriteBatch, new Rectangle(thumbnailX, thumbnailY, thumbnailSize, thumbnailSize), GraphicsColor.Gray, 2);
                 return;
@@ -1861,20 +1865,10 @@ namespace Andastra.Runtime.Game.Core
             if (portraitTexture == null)
             {
                 // Render placeholder if texture failed to load
-                int thumbnailX = 50;
-                int thumbnailY = 250;
-                int thumbnailSize = 128;
                 DrawRectangle(spriteBatch, new Rectangle(thumbnailX, thumbnailY, thumbnailSize, thumbnailSize), new GraphicsColor(50, 50, 50, 200));
                 DrawRectangleOutline(spriteBatch, new Rectangle(thumbnailX, thumbnailY, thumbnailSize, thumbnailSize), GraphicsColor.Gray, 2);
                 return;
             }
-
-            // Render portrait thumbnail
-            // Based on swkotor.exe and swkotor2.exe: Portrait thumbnails are typically 128x128 or 256x256 pixels
-            // Original implementation: Portraits are rendered at fixed size with selection border
-            int thumbnailX = 50;
-            int thumbnailY = 250;
-            int thumbnailSize = 128; // Standard portrait thumbnail size
 
             // Draw selection border (highlight current portrait)
             GraphicsColor selectionColor = GraphicsColor.Yellow;
@@ -1919,7 +1913,6 @@ namespace Andastra.Runtime.Game.Core
                     portraitResRef,
                     new[]
                     {
-                        Andastra.Parsing.Installation.SearchLocation.PORTRAITS,
                         Andastra.Parsing.Installation.SearchLocation.OVERRIDE,
                         Andastra.Parsing.Installation.SearchLocation.CUSTOM_FOLDERS,
                         Andastra.Parsing.Installation.SearchLocation.CHITIN
@@ -1975,7 +1968,7 @@ namespace Andastra.Runtime.Game.Core
             }
 
             // Get first mipmap (largest resolution)
-            Formats.TPC.TPCMipmap mipmap = layer.Mipmaps[0];
+            TPCMipmap mipmap = layer.Mipmaps[0];
             if (mipmap == null || mipmap.Data == null || mipmap.Data.Length == 0)
             {
                 return null;
@@ -1983,7 +1976,7 @@ namespace Andastra.Runtime.Game.Core
 
             int width = mipmap.Width;
             int height = mipmap.Height;
-            Formats.TPC.TPCTextureFormat format = layer.Format;
+            TPCTextureFormat format = mipmap.TpcFormat;
 
             // Convert TPC format to RGBA byte array
             byte[] rgbaData = ConvertTpcDataToRgba(mipmap.Data, width, height, format);
@@ -2022,7 +2015,7 @@ namespace Andastra.Runtime.Game.Core
             {
                 switch (format)
                 {
-                    case Formats.TPC.TPCTextureFormat.RGBA:
+                    case TPCTextureFormat.RGBA:
                         // Already RGBA, copy directly
                         if (tpcData.Length >= pixelCount * 4)
                         {
@@ -2030,7 +2023,7 @@ namespace Andastra.Runtime.Game.Core
                         }
                         break;
 
-                    case Formats.TPC.TPCTextureFormat.RGB:
+                    case TPCTextureFormat.RGB:
                         // Convert RGB to RGBA (add alpha = 255)
                         if (tpcData.Length >= pixelCount * 3)
                         {
@@ -2044,7 +2037,7 @@ namespace Andastra.Runtime.Game.Core
                         }
                         break;
 
-                    case Formats.TPC.TPCTextureFormat.BGRA:
+                    case TPCTextureFormat.BGRA:
                         // Convert BGRA to RGBA (swap R and B)
                         if (tpcData.Length >= pixelCount * 4)
                         {
@@ -2058,7 +2051,7 @@ namespace Andastra.Runtime.Game.Core
                         }
                         break;
 
-                    case Formats.TPC.TPCTextureFormat.BGR:
+                    case TPCTextureFormat.BGR:
                         // Convert BGR to RGBA (swap R and B, add alpha = 255)
                         if (tpcData.Length >= pixelCount * 3)
                         {
@@ -2072,7 +2065,7 @@ namespace Andastra.Runtime.Game.Core
                         }
                         break;
 
-                    case Formats.TPC.TPCTextureFormat.Greyscale:
+                    case TPCTextureFormat.Greyscale:
                         // Convert greyscale to RGBA (R=G=B=greyscale, A=255)
                         if (tpcData.Length >= pixelCount)
                         {
@@ -2087,7 +2080,7 @@ namespace Andastra.Runtime.Game.Core
                         }
                         break;
 
-                    case Formats.TPC.TPCTextureFormat.DXT1:
+                    case TPCTextureFormat.DXT1:
                         // Decompress DXT1 to RGBA
                         // Based on swkotor.exe and swkotor2.exe: DXT formats are decompressed by DirectX
                         // Original implementation: DirectX handles DXT decompression automatically
@@ -2103,7 +2096,7 @@ namespace Andastra.Runtime.Game.Core
                         }
                         break;
 
-                    case Formats.TPC.TPCTextureFormat.DXT3:
+                    case TPCTextureFormat.DXT3:
                         // Decompress DXT3 to RGBA
                         // Based on swkotor.exe and swkotor2.exe: DXT formats are decompressed by DirectX
                         // Original implementation: DirectX handles DXT decompression automatically
@@ -2119,7 +2112,7 @@ namespace Andastra.Runtime.Game.Core
                         }
                         break;
 
-                    case Formats.TPC.TPCTextureFormat.DXT5:
+                    case TPCTextureFormat.DXT5:
                         // Decompress DXT5 to RGBA
                         // Based on swkotor.exe and swkotor2.exe: DXT formats are decompressed by DirectX
                         // Original implementation: DirectX handles DXT decompression automatically
@@ -2372,7 +2365,7 @@ namespace Andastra.Runtime.Game.Core
             // Add all starting feats that are selectable
             foreach (int featId in startingFeats)
             {
-                FeatData featData = _gameDataManager.GetFeat(featId);
+                GameDataManager.FeatData featData = _gameDataManager.GetFeat(featId);
                 if (featData != null && featData.Selectable)
                 {
                     _availableFeatIds.Add(featId);
@@ -2393,7 +2386,7 @@ namespace Andastra.Runtime.Game.Core
         /// - Original implementation: Checks if prerequisite feats are in SelectedFeats list
         /// - Also checks attribute requirements (minlevel, minstr, mindex, etc.) based on current character attributes
         /// </summary>
-        private bool MeetsFeatPrerequisites(FeatData featData)
+        private bool MeetsFeatPrerequisites(GameDataManager.FeatData featData)
         {
             if (featData == null)
             {
