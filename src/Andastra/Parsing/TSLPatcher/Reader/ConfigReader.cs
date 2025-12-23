@@ -975,20 +975,34 @@ namespace Andastra.Parsing.Reader
         }
 
         /// <summary>
-        // TODO: / Parse NCS hack entries from a file section and add them to modifications.
+        /// Parse NCS hack entries from a file section and add them to modifications.
+        /// Based on PyKotor implementation: _parse_ncs_hack_entries in pykotor/tslpatcher/reader.py:721-756
+        /// TSLPatcher HACKList syntax: vendor/PyKotor/wiki/TSLPatcher-HACKList-Syntax.md
         ///
         /// Args:
         /// ----
-        ///     file_section_dict: Dictionary containing offset=value pairs from INI section
+        ///     fileSectionDict: Dictionary containing offset=value pairs from INI section
         ///     modifications: ModificationsNCS object to populate with ModifyNCS objects
+        ///
+        /// Processing Logic:
+        /// ----------------
+        ///     1. Parse offset (hex with 0x prefix or decimal)
+        ///     2. Parse type specifier and value (format: "type:value" or just "value")
+        ///     3. Determine token type based on value format:
+        ///        - "strref#" -> STRREF32 (always 32-bit for compatibility)
+        ///        - "2damemory#" -> MEMORY_2DA32 (always 32-bit for compatibility)
+        ///        - Direct integers -> UINT8, UINT16, or UINT32 based on type specifier
+        ///     4. Create ModifyNCS object and add to modifications.Modifiers
         /// </summary>
         private static void ParseNCSHackEntries(
             Dictionary<string, string> fileSectionDict,
             ModificationsNCS modifications)
         {
+            // Based on PyKotor: _parse_ncs_hack_entries iterates through file_section_dict.items()
             foreach ((string offsetStr, string valueStr) in fileSectionDict)
             {
                 // Parse offset (hex or decimal)
+                // Based on PyKotor: offset_str.lower().startswith("0x") -> int(offset_str, 16), else int(offset_str, 10)
                 int offset;
                 try
                 {
@@ -1013,6 +1027,8 @@ namespace Andastra.Parsing.Reader
                 }
 
                 // Parse type specifier and value
+                // Based on PyKotor: type_specifier = "u16" (default), parsed_value = value_str
+                // If ":" in value_str: type_specifier, parsed_value = value_str.split(":", 1)
                 string typeSpecifier = "u16"; // Default to 16-bit unsigned
                 string parsedValue = valueStr;
                 if (valueStr.Contains(':'))
@@ -1024,40 +1040,36 @@ namespace Andastra.Parsing.Reader
 
                 string lowerValue = parsedValue.ToLower();
 
-                // TODO:  Create appropriate hack entry based on value type
+                // Create appropriate ModifyNCS based on value type
+                // Based on PyKotor: _create_modify_ncs_from_value determines token type
                 NCSTokenType tokenType;
                 int tokenIdOrValue;
 
                 if (lowerValue.StartsWith("strref"))
                 {
                     // StrRef token reference
+                    // Based on PyKotor: Always use STRREF32 for compatibility (handles both 16-bit and 32-bit cases)
+                    // TSLPatcher HACKList syntax: "StrRef# tokens are automatically handled as 32-bit values"
                     tokenIdOrValue = ParseIntValue(parsedValue.Substring(6).Trim());
-                    // Check if it's 32-bit (strref32) or 16-bit (strref)
-                    tokenType = typeSpecifier.ToLower() == "u32" || typeSpecifier.ToLower() == "i32"
-                        ? NCSTokenType.STRREF32
-                        : NCSTokenType.STRREF;
+                    tokenType = NCSTokenType.STRREF32;
                 }
                 else if (lowerValue.StartsWith("2damemory"))
                 {
                     // 2DA memory token reference
+                    // Based on PyKotor: Always use MEMORY_2DA32 for compatibility (handles both 16-bit and 32-bit cases)
+                    // TSLPatcher HACKList syntax: "2DAMEMORY# tokens are automatically handled as 32-bit values"
                     tokenIdOrValue = ParseIntValue(parsedValue.Substring(9).Trim());
-                    // Check if it's 32-bit (2damemory32) or 16-bit (2damemory)
-                    tokenType = typeSpecifier.ToLower() == "u32" || typeSpecifier.ToLower() == "i32"
-                        ? NCSTokenType.MEMORY_2DA32
-                        : NCSTokenType.MEMORY_2DA;
+                    tokenType = NCSTokenType.MEMORY_2DA32;
                 }
                 else
                 {
                     // Direct integer values - map type specifier to enum
+                    // Based on PyKotor: type_specifier == "u8" -> UINT8, "u32" -> UINT32, else -> UINT16 (default)
                     tokenIdOrValue = ParseIntValue(parsedValue);
                     string lowerTypeSpec = typeSpecifier.ToLower();
                     if (lowerTypeSpec == "u8")
                     {
                         tokenType = NCSTokenType.UINT8;
-                    }
-                    else if (lowerTypeSpec == "u16")
-                    {
-                        tokenType = NCSTokenType.UINT16;
                     }
                     else if (lowerTypeSpec == "u32")
                     {
@@ -1065,10 +1077,13 @@ namespace Andastra.Parsing.Reader
                     }
                     else
                     {
-                        tokenType = NCSTokenType.UINT16; // Default to 16-bit
+                        // Default to u16 (16-bit unsigned integer)
+                        tokenType = NCSTokenType.UINT16;
                     }
                 }
 
+                // Create ModifyNCS object and add to modifications
+                // Based on PyKotor: modifications.modifiers.append(modify_ncs)
                 var modifyNcs = new ModifyNCS(tokenType, offset, tokenIdOrValue);
                 modifications.Modifiers.Add(modifyNcs);
             }
