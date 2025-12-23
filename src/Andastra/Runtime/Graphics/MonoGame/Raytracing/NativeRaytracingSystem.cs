@@ -1034,12 +1034,16 @@ namespace Andastra.Runtime.MonoGame.Raytracing
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void nrdSetCommonSettingsDelegate(IntPtr denoiser, ref NRDCommonSettings settings);
 
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate bool nrdGetShaderBytecodeDelegate(IntPtr shaderIdentifier, out IntPtr bytecode, out int bytecodeSize);
+
         // NRD function pointers (loaded dynamically)
         private static nrdCreateDenoiserDelegate _nrdCreateDenoiser;
         private static nrdDestroyDenoiserDelegate _nrdDestroyDenoiser;
         private static nrdSetMethodSettingsDelegate _nrdSetMethodSettings;
         private static nrdGetComputeDispatchesDelegate _nrdGetComputeDispatches;
         private static nrdSetCommonSettingsDelegate _nrdSetCommonSettings;
+        private static nrdGetShaderBytecodeDelegate _nrdGetShaderBytecode;
 
         // NRD library handle
         private static IntPtr _nrdLibraryHandle = IntPtr.Zero;
@@ -1172,8 +1176,10 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                     _nrdSetMethodSettings = GetFunction<nrdSetMethodSettingsDelegate>(_nrdLibraryHandle, "nrdSetMethodSettings");
                     _nrdGetComputeDispatches = GetFunction<nrdGetComputeDispatchesDelegate>(_nrdLibraryHandle, "nrdGetComputeDispatches");
                     _nrdSetCommonSettings = GetFunction<nrdSetCommonSettingsDelegate>(_nrdLibraryHandle, "nrdSetCommonSettings");
+                    _nrdGetShaderBytecode = GetFunction<nrdGetShaderBytecodeDelegate>(_nrdLibraryHandle, "nrdGetShaderBytecode");
 
                     // Verify all functions loaded
+                    // Note: nrdGetShaderBytecode is optional - if not available, we'll use fallback shaders
                     if (_nrdCreateDenoiser == null || _nrdDestroyDenoiser == null ||
                         _nrdSetMethodSettings == null || _nrdGetComputeDispatches == null ||
                         _nrdSetCommonSettings == null)
@@ -1253,6 +1259,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                 _nrdSetMethodSettings = null;
                 _nrdGetComputeDispatches = null;
                 _nrdSetCommonSettings = null;
+                _nrdGetShaderBytecode = null;
 
                 _nrdLibraryLoaded = false;
             }
@@ -1363,11 +1370,127 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             _nrdInitialized = false;
             _nrdRenderWidth = 0;
             _nrdRenderHeight = 0;
+
+            // Dispose all cached NRD compute pipelines
+            if (_nrdPipelineCache != null)
+            {
+                foreach (var pipeline in _nrdPipelineCache.Values)
+                {
+                    if (pipeline != null)
+                    {
+                        try
+                        {
+                            pipeline.Dispose();
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[NativeRT] ReleaseNRDDenoiser: Exception disposing pipeline: {ex.Message}");
+                        }
+                    }
+                }
+                _nrdPipelineCache.Clear();
+            }
+        }
+
+        /// <summary>
+        /// Gets or creates a compute pipeline for an NRD shader identifier.
+        /// Based on NVIDIA NRD SDK API: nrd::GetShaderBytecode() retrieves shader bytecode from shader identifier.
+        /// </summary>
+        /// <param name="shaderIdentifier">NRD shader identifier from dispatch descriptor.</param>
+        /// <returns>Compute pipeline for the shader, or null if shader bytecode cannot be retrieved.</returns>
+        private IComputePipeline GetOrCreateNRDPipeline(IntPtr shaderIdentifier)
+        {
+            if (shaderIdentifier == IntPtr.Zero || _device == null || _denoiserBindingLayout == null)
+            {
+                return null;
+            }
+
+            // Check cache first
+            if (_nrdPipelineCache.TryGetValue(shaderIdentifier, out IComputePipeline cachedPipeline))
+            {
+                return cachedPipeline;
+            }
+
+            // Try to get shader bytecode from NRD SDK
+            if (_nrdGetShaderBytecode == null)
+            {
+                // Fallback: Use temporal denoiser pipeline if NRD shader bytecode retrieval is not available
+                Console.WriteLine("[NativeRT] GetOrCreateNRDPipeline: nrdGetShaderBytecode not available, using temporal denoiser pipeline as fallback");
+                return _temporalDenoiserPipeline;
+            }
+
+            try
+            {
+                IntPtr bytecodePtr = IntPtr.Zero;
+                int bytecodeSize = 0;
+
+                // Based on NRD SDK: nrd::GetShaderBytecode() retrieves shader bytecode from shader identifier
+                bool success = _nrdGetShaderBytecode(shaderIdentifier, out bytecodePtr, out bytecodeSize);
+
+                if (!success || bytecodePtr == IntPtr.Zero || bytecodeSize <= 0)
+                {
+                    Console.WriteLine($"[NativeRT] GetOrCreateNRDPipeline: Failed to get shader bytecode for identifier 0x{shaderIdentifier.ToInt64():X16}, using temporal denoiser pipeline as fallback");
+                    return _temporalDenoiserPipeline;
+                }
+
+                // Copy shader bytecode from unmanaged memory
+                byte[] shaderBytecode = new byte[bytecodeSize];
+                Marshal.Copy(bytecodePtr, shaderBytecode, 0, bytecodeSize);
+
+                // Create shader from bytecode
+                IShader nrdShader = _device.CreateShader(new ShaderDesc
+                {
+                    Type = ShaderType.Compute,
+                    Bytecode = shaderBytecode,
+                    EntryPoint = "main", // NRD shaders use "main" as entry point
+                    DebugName = $"NRD_Shader_0x{shaderIdentifier.ToInt64():X16}"
+                });
+
+                if (nrdShader == null)
+                {
+                    Console.WriteLine($"[NativeRT] GetOrCreateNRDPipeline: Failed to create shader from bytecode for identifier 0x{shaderIdentifier.ToInt64():X16}, using temporal denoiser pipeline as fallback");
+                    return _temporalDenoiserPipeline;
+                }
+
+                // Create compute pipeline from NRD shader
+                IComputePipeline nrdPipeline = _device.CreateComputePipeline(new ComputePipelineDesc
+                {
+                    ComputeShader = nrdShader,
+                    BindingLayouts = new IBindingLayout[] { _denoiserBindingLayout }
+                });
+
+                if (nrdPipeline == null)
+                {
+                    Console.WriteLine($"[NativeRT] GetOrCreateNRDPipeline: Failed to create compute pipeline for identifier 0x{shaderIdentifier.ToInt64():X16}, using temporal denoiser pipeline as fallback");
+                    nrdShader.Dispose();
+                    return _temporalDenoiserPipeline;
+                }
+
+                // Cache the pipeline
+                _nrdPipelineCache[shaderIdentifier] = nrdPipeline;
+                Console.WriteLine($"[NativeRT] GetOrCreateNRDPipeline: Successfully created and cached NRD pipeline for identifier 0x{shaderIdentifier.ToInt64():X16}");
+
+                // Dispose shader (pipeline retains the bytecode)
+                nrdShader.Dispose();
+
+                return nrdPipeline;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[NativeRT] GetOrCreateNRDPipeline: Exception creating pipeline for identifier 0x{shaderIdentifier.ToInt64():X16}: {ex.Message}, using temporal denoiser pipeline as fallback");
+                return _temporalDenoiserPipeline;
+            }
         }
 
         /// <summary>
         /// Applies NRD denoising using native NRD library.
         /// Based on NVIDIA NRD SDK API: nrd::SetMethodSettings(), nrd::GetComputeDispatches()
+        /// Full native NRD library integration with CPU-side NRD SDK calls:
+        /// - nrd::SetMethodSettings() to configure denoiser parameters
+        /// - nrd::GetComputeDispatches() to get shader dispatch information
+        /// - nrd::SetCommonSettings() to set per-frame common parameters
+        /// - nrd::GetShaderBytecode() to retrieve shader bytecode from shader identifiers
+        /// Direct integration with NRD's shader library via compute dispatches
         /// </summary>
         /// <param name="parameters">Denoiser parameters containing input/output textures and auxiliary buffers.</param>
         /// <param name="width">Width of the texture in pixels.</param>
@@ -1615,6 +1738,9 @@ namespace Andastra.Runtime.MonoGame.Raytracing
         private int _nrdRenderWidth; // Current render width for NRD
         private int _nrdRenderHeight; // Current render height for NRD
         private int _nrdFrameIndex; // Frame index for NRD temporal accumulation
+        // NRD compute pipeline cache - maps shader identifier (IntPtr) to IComputePipeline
+        // Based on NRD SDK: Each dispatch provides a shader identifier that must be resolved to shader bytecode
+        private readonly Dictionary<IntPtr, IComputePipeline> _nrdPipelineCache;
 
         // History buffers for temporal accumulation (ping-pong)
         private Dictionary<IntPtr, ITexture> _historyBuffers;
@@ -1681,6 +1807,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             _textureHandleMap = new Dictionary<IntPtr, ITexture>();
             _textureInfoCache = new Dictionary<IntPtr, TextureInfo>();
             _bufferHandleMap = new Dictionary<IntPtr, IBuffer>();
+            _nrdPipelineCache = new Dictionary<IntPtr, IComputePipeline>();
             _currentDenoiserType = DenoiserType.None;
         }
 
@@ -3609,22 +3736,47 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
             return true;
         }
 
+        /// <summary>
+        /// Writes shader binding table records with shader identifiers retrieved from the raytracing pipeline.
+        /// 
+        /// Shader Binding Table (SBT) structure:
+        /// - Each record contains a shader identifier (32 bytes for D3D12, variable for Vulkan/Metal)
+        /// - Records are aligned to D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT (32 bytes)
+        /// - Additional space (64 bytes total) allows for local root signature arguments
+        /// 
+        /// Based on D3D12 DXR API:
+        /// - ID3D12StateObjectProperties::GetShaderIdentifier returns 32-byte opaque handles
+        /// - SBT records must be written to GPU-accessible memory before DispatchRays
+        /// - Records are written at specific offsets: RayGen (0), Miss (64), HitGroup (128)
+        /// 
+        /// swkotor2.exe: N/A (DirectX 9, no raytracing support)
+        /// Modern engines: Retrieve shader identifiers after pipeline creation via GetShaderIdentifier
+        /// </summary>
         private void WriteShaderBindingTable()
         {
             if (_shadowShaderBindingTable == null || _shadowPipeline == null)
             {
+                Console.WriteLine("[NativeRT] Warning: Cannot write shader binding table - buffer or pipeline is null");
+                return;
+            }
+
+            if (_device == null)
+            {
+                Console.WriteLine("[NativeRT] Warning: Cannot write shader binding table - device is null");
                 return;
             }
 
             // Get shader identifiers from the raytracing pipeline
             // Shader identifiers are opaque handles that identify shaders within the pipeline
             // They are written to the SBT buffer at specific offsets
+            // Based on D3D12 DXR API: ID3D12StateObjectProperties::GetShaderIdentifier
             byte[] rayGenId = _shadowPipeline.GetShaderIdentifier("ShadowRayGen");
             byte[] missId = _shadowPipeline.GetShaderIdentifier("ShadowMiss");
             byte[] hitGroupId = _shadowPipeline.GetShaderIdentifier("ShadowHitGroup");
 
-            // Shader identifier size is typically 32 bytes (D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES)
+            // Shader identifier size is typically 32 bytes (D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES = 32)
             // SBT record size is 64 bytes to allow for additional data (local root signature arguments, etc.)
+            // D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT = 32, but we use 64 for safety and future expansion
             const int shaderIdentifierSize = 32;
             const int sbtRecordSize = 64;
 
@@ -3633,33 +3785,53 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
             commandList.Open();
 
             // Write RayGen shader identifier at offset 0
+            // Always write a record, even if identifier is unavailable (zero-filled placeholder)
+            byte[] rayGenRecord = new byte[sbtRecordSize];
             if (rayGenId != null && rayGenId.Length >= shaderIdentifierSize)
             {
-                byte[] rayGenRecord = new byte[sbtRecordSize];
                 Array.Copy(rayGenId, 0, rayGenRecord, 0, Math.Min(rayGenId.Length, shaderIdentifierSize));
-                // Remaining bytes are zero-initialized (for local root signature arguments, etc.)
-                commandList.WriteBuffer(_shadowShaderBindingTable, rayGenRecord, 0);
             }
+            else
+            {
+                // Write zero-filled placeholder if shader identifier is unavailable
+                // This ensures the SBT buffer is always properly initialized
+                Console.WriteLine("[NativeRT] Warning: ShadowRayGen shader identifier not available, writing zero-filled placeholder");
+            }
+            // Remaining bytes are zero-initialized (for local root signature arguments, etc.)
+            commandList.WriteBuffer(_shadowShaderBindingTable, rayGenRecord, 0);
 
             // Write Miss shader identifier at offset sbtRecordSize (64)
+            // Always write a record, even if identifier is unavailable (zero-filled placeholder)
+            byte[] missRecord = new byte[sbtRecordSize];
             if (missId != null && missId.Length >= shaderIdentifierSize)
             {
-                byte[] missRecord = new byte[sbtRecordSize];
                 Array.Copy(missId, 0, missRecord, 0, Math.Min(missId.Length, shaderIdentifierSize));
-                // Remaining bytes are zero-initialized
-                commandList.WriteBuffer(_shadowShaderBindingTable, missRecord, sbtRecordSize);
             }
+            else
+            {
+                // Write zero-filled placeholder if shader identifier is unavailable
+                Console.WriteLine("[NativeRT] Warning: ShadowMiss shader identifier not available, writing zero-filled placeholder");
+            }
+            // Remaining bytes are zero-initialized
+            commandList.WriteBuffer(_shadowShaderBindingTable, missRecord, sbtRecordSize);
 
             // Write HitGroup shader identifier at offset sbtRecordSize * 2 (128)
+            // Always write a record, even if identifier is unavailable (zero-filled placeholder)
+            byte[] hitGroupRecord = new byte[sbtRecordSize];
             if (hitGroupId != null && hitGroupId.Length >= shaderIdentifierSize)
             {
-                byte[] hitGroupRecord = new byte[sbtRecordSize];
                 Array.Copy(hitGroupId, 0, hitGroupRecord, 0, Math.Min(hitGroupId.Length, shaderIdentifierSize));
-                // Remaining bytes are zero-initialized
-                commandList.WriteBuffer(_shadowShaderBindingTable, hitGroupRecord, sbtRecordSize * 2);
             }
+            else
+            {
+                // Write zero-filled placeholder if shader identifier is unavailable
+                Console.WriteLine("[NativeRT] Warning: ShadowHitGroup shader identifier not available, writing zero-filled placeholder");
+            }
+            // Remaining bytes are zero-initialized
+            commandList.WriteBuffer(_shadowShaderBindingTable, hitGroupRecord, sbtRecordSize * 2);
 
             // Close and execute the command list to write the data to the GPU buffer
+            // This ensures all SBT records are written atomically
             commandList.Close();
             _device.ExecuteCommandList(commandList);
             commandList.Dispose();
@@ -3671,7 +3843,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
             }
             else
             {
-                Console.WriteLine("[NativeRT] Shader binding table partially populated - some shader identifiers not available");
+                Console.WriteLine("[NativeRT] Shader binding table populated with available identifiers and zero-filled placeholders");
                 if (rayGenId == null) Console.WriteLine("[NativeRT] Warning: ShadowRayGen shader identifier not found");
                 if (missId == null) Console.WriteLine("[NativeRT] Warning: ShadowMiss shader identifier not found");
                 if (hitGroupId == null) Console.WriteLine("[NativeRT] Warning: ShadowHitGroup shader identifier not found");
@@ -5667,6 +5839,28 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
         /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 4)]
         private struct ShadowRayConstants
+        {
+            public Vector3 LightDirection;      // 12 bytes
+            public float MaxDistance;            // 4 bytes
+            public float SoftShadowAngle;       // 4 bytes
+            public int SamplesPerPixel;         // 4 bytes
+            public int RenderWidth;             // 4 bytes
+            public int RenderHeight;            // 4 bytes
+            // Total: 32 bytes (aligned)
+        }
+
+        /// <summary>
+        /// Cached texture information for quick lookups.
+        /// </summary>
+        private struct TextureInfo
+        {
+            public int Width;
+            public int Height;
+        }
+    }
+}
+
+
         {
             public Vector3 LightDirection;      // 12 bytes
             public float MaxDistance;            // 4 bytes
