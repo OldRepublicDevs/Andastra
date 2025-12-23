@@ -22,19 +22,14 @@ namespace Andastra.Runtime.Stride.Graphics
         }
 
         /// <summary>
-        /// Gets the CommandList from GraphicsContext for immediate rendering operations.
-        /// Replaces the deprecated ImmediateContext property.
+        /// Gets the CommandList for immediate rendering operations.
+        /// Replaces the deprecated ImmediateContext property that returned CommandList.
         /// </summary>
         public StrideGraphics.CommandList ImmediateContext
         {
             get
             {
-                if (_graphicsContext != null)
-                {
-                    return _graphicsContext;
-                }
-                // Fallback: Try to get from device if available (may not work in all Stride versions)
-                return null;
+                return _graphicsContext;
             }
         }
 
@@ -115,10 +110,10 @@ namespace Andastra.Runtime.Stride.Graphics
                     int offset = i * 4;
                     colorData[i] = new Stride.Core.Mathematics.Color(data[offset], data[offset + 1], data[offset + 2], data[offset + 3]);
                 }
-                var commandList = this.ImmediateContext;
-                if (commandList != null)
+                var graphicsContext = this.ImmediateContext;
+                if (graphicsContext != null)
                 {
-                    texture.SetData(commandList, colorData);
+                    texture.SetData(graphicsContext.CommandList, colorData);
                 }
             }
             return new StrideTexture2D(texture);
@@ -165,7 +160,8 @@ namespace Andastra.Runtime.Stride.Graphics
         public ISpriteBatch CreateSpriteBatch()
         {
             // Stride SpriteBatch requires GraphicsDevice, which we have
-            return new StrideSpriteBatch(new StrideGraphics.SpriteBatch(_device));
+            // Also pass GraphicsContext for Begin() calls
+            return new StrideSpriteBatch(new StrideGraphics.SpriteBatch(_device), _graphicsContext);
         }
 
         public IntPtr NativeHandle => _device.NativeDevice;
