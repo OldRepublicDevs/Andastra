@@ -219,7 +219,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
             // Get command list for rendering operations
             // Use dynamic to handle ImmediateContext (may be property or method depending on Stride version)
-            dynamic graphicsContextDynamic = _graphicsDevice.ImmediateContext;
+            dynamic graphicsDeviceDynamic = _graphicsDevice;
+            dynamic graphicsContextDynamic = graphicsDeviceDynamic.ImmediateContext;
             StrideGraphics.CommandList commandList = graphicsContextDynamic as StrideGraphics.CommandList;
             if (commandList == null)
             {
@@ -325,7 +326,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
             // Get command list for rendering operations
             // Use dynamic to handle ImmediateContext (may be property or method depending on Stride version)
-            dynamic graphicsContextDynamic = _graphicsDevice.ImmediateContext;
+            dynamic graphicsDeviceDynamic = _graphicsDevice;
+            dynamic graphicsContextDynamic = graphicsDeviceDynamic.ImmediateContext;
             StrideGraphics.CommandList commandList = graphicsContextDynamic as StrideGraphics.CommandList;
             if (commandList == null)
             {
