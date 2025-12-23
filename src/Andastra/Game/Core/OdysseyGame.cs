@@ -82,7 +82,7 @@ namespace Andastra.Runtime.Game.Core
 
         // Character creation
         private CharacterCreationScreen _characterCreationScreen;
-        private CharacterCreationData _characterData;
+        private Andastra.Runtime.Core.Game.CharacterCreationData _characterData;
         private int _selectedMenuIndex = 0;
         private readonly string[] _menuItems = { "Start Game", "Options", "Exit" };
         private ITexture2D _menuTexture; // 1x1 white texture for drawing rectangles
@@ -2439,7 +2439,23 @@ namespace Andastra.Runtime.Game.Core
         private void OnCharacterCreationComplete(Andastra.Runtime.Game.Core.CharacterCreationData characterData)
         {
             Console.WriteLine("[Odyssey] Character creation completed - starting new game");
-            _characterData = characterData;
+            // Convert GUI CharacterCreationData to runtime CharacterCreationData
+            var runtimeCharacterData = new Andastra.Runtime.Core.Game.CharacterCreationData
+            {
+                Class = (Andastra.Runtime.Core.Game.CharacterClass)characterData.Class,
+                Gender = (Andastra.Runtime.Core.Game.Gender)characterData.Gender,
+                Appearance = characterData.Appearance,
+                Portrait = characterData.Portrait,
+                Name = characterData.Name,
+                Strength = characterData.Strength,
+                Dexterity = characterData.Dexterity,
+                Constitution = characterData.Constitution,
+                Intelligence = characterData.Intelligence,
+                Wisdom = characterData.Wisdom,
+                Charisma = characterData.Charisma,
+                SkillRanks = characterData.SkillRanks ?? new System.Collections.Generic.Dictionary<int, int>()
+            };
+            _characterData = runtimeCharacterData;
             StartGame();
         }
 
