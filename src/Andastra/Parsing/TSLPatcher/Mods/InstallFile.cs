@@ -24,14 +24,6 @@ namespace Andastra.Parsing.Mods
             SkipIfNotReplace = true;
         }
 
-        /// <summary>
-        // TODO: / HACK(th3w1zard1): organize this into PatcherModifications class later, this is only used for nwscript.nss currently.
-        /// </summary>
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(Destination, SaveAs, ReplaceFile);
-        }
-
         public override object PatchResource(
             byte[] source,
             PatcherMemory memory,
