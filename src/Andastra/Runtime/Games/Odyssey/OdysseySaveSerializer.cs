@@ -170,8 +170,7 @@ namespace Andastra.Runtime.Games.Odyssey
             string lastModule = string.Empty;
 
             // Priority 1: Use CurrentModule if available (most direct)
-            // Cast to Core.SaveGameData to access Core-specific properties
-            var coreSaveData = saveData as Andastra.Runtime.Core.Save.SaveGameData;
+            // coreSaveData is already declared and checked above
             if (coreSaveData != null && !string.IsNullOrEmpty(coreSaveData.CurrentModule))
             {
                 lastModule = coreSaveData.CurrentModule;
