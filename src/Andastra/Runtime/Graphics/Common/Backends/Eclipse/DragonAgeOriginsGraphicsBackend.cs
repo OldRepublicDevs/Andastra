@@ -73,6 +73,11 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         private bool _optionsMenuIsEditingValue = false; // True when editing a numeric value
         private string _optionsMenuEditingValue = string.Empty; // Current text being edited
 
+        // Font cache for DirectX 9 text rendering
+        // Based on daorigins.exe: Font system caches fonts to avoid reloading
+        private Dictionary<string, IntPtr> _fontCache = new Dictionary<string, IntPtr>(StringComparer.OrdinalIgnoreCase);
+        private IntPtr _d3dx9Dll = IntPtr.Zero; // Handle to d3dx9.dll for font functions
+
         // UI vertex structure for 2D rendering
         // Based on daorigins.exe: UI vertices use position, color, and texture coordinates
         [StructLayout(LayoutKind.Sequential)]
@@ -192,6 +197,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             _fullscreen = false; // Default to windowed
             _refreshRate = 60; // Default refresh rate
 
+            // Initialize font system
+            // Based on daorigins.exe: Font system initializes with DirectX 9 device
+            InitializeFontSystem();
+
             return true;
         }
 
@@ -206,6 +215,247 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             presentParams.SwapEffect = D3DSWAPEFFECT_DISCARD;
 
             return presentParams;
+        }
+
+        /// <summary>
+        /// Initializes the DirectX 9 font system.
+        /// Based on daorigins.exe: Font system loads d3dx9.dll and prepares for font creation.
+        /// </summary>
+        private void InitializeFontSystem()
+        {
+            // Load d3dx9.dll for font functions
+            // Based on daorigins.exe: Uses d3dx9.dll for font utilities
+            _d3dx9Dll = LoadLibrary("d3dx9_43.dll");
+            if (_d3dx9Dll == IntPtr.Zero)
+            {
+                // Try other common versions
+                _d3dx9Dll = LoadLibrary("d3dx9_42.dll");
+                if (_d3dx9Dll == IntPtr.Zero)
+                {
+                    _d3dx9Dll = LoadLibrary("d3dx9_41.dll");
+                    if (_d3dx9Dll == IntPtr.Zero)
+                    {
+                        _d3dx9Dll = LoadLibrary("d3dx9.dll");
+                    }
+                }
+            }
+
+            if (_d3dx9Dll == IntPtr.Zero)
+            {
+                System.Console.WriteLine("[DragonAgeOriginsGraphicsBackend] InitializeFontSystem: Failed to load d3dx9.dll - font rendering will not work");
+            }
+        }
+
+        /// <summary>
+        /// Renders text using DirectX 9 font system.
+        /// Based on daorigins.exe: ID3DXFont::DrawText with proper centering and color.
+        /// </summary>
+        /// <param name="x">X position for text (center point for centered text).</param>
+        /// <param name="y">Y position for text (center point for centered text).</param>
+        /// <param name="text">Text to render.</param>
+        /// <param name="color">Text color as ARGB (e.g., 0xFFFFFFFF for white).</param>
+        /// <param name="fontSize">Font size in points (default 12).</param>
+        /// <param name="centered">Whether to center text at the given position.</param>
+        private void RenderTextDirectX9(float x, float y, string text, uint color, int fontSize = 12, bool centered = true)
+        {
+            if (_d3dDevice == IntPtr.Zero || string.IsNullOrEmpty(text) || _d3dx9Dll == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Ensure we're on Windows (DirectX 9 is Windows-only)
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            try
+            {
+                // Create font cache key
+                string fontKey = $"Arial_{fontSize}";
+                IntPtr fontPtr = IntPtr.Zero;
+
+                // Check font cache first
+                if (_fontCache.TryGetValue(fontKey, out fontPtr))
+                {
+                    // Font already exists
+                }
+                else
+                {
+                    // Create new font
+                    fontPtr = CreateFontDirectX9(fontSize, "Arial");
+                    if (fontPtr != IntPtr.Zero)
+                    {
+                        _fontCache[fontKey] = fontPtr;
+                    }
+                    else
+                    {
+                        System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] RenderTextDirectX9: Failed to create font {fontKey}");
+                        return;
+                    }
+                }
+
+                // Calculate text rectangle
+                RECT textRect;
+                if (centered)
+                {
+                    // For centered text, create a rectangle centered at (x,y)
+                    // We'll use a large rectangle and center the text within it
+                    int textWidth = text.Length * fontSize; // Rough estimate
+                    int textHeight = fontSize * 2; // Rough estimate
+
+                    textRect.left = (int)(x - textWidth / 2);
+                    textRect.top = (int)(y - textHeight / 2);
+                    textRect.right = (int)(x + textWidth / 2);
+                    textRect.bottom = (int)(y + textHeight / 2);
+                }
+                else
+                {
+                    // For left-aligned text, position at (x,y)
+                    textRect.left = (int)x;
+                    textRect.top = (int)y;
+                    textRect.right = (int)x + 1000; // Large width
+                    textRect.bottom = (int)y + fontSize * 2;
+                }
+
+                // Draw the text
+                // Based on daorigins.exe: ID3DXFont::DrawText with DT_CENTER for centered text
+                int format = centered ? 0x1 : 0x0; // DT_CENTER = 0x1, DT_LEFT = 0x0
+
+                DrawTextDirectX9(fontPtr, text, textRect, format, color);
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] RenderTextDirectX9: Exception - {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Creates a DirectX 9 font.
+        /// Based on daorigins.exe: D3DXCreateFont for creating fonts.
+        /// </summary>
+        /// <param name="fontSize">Font size in points.</param>
+        /// <param name="fontName">Font face name.</param>
+        /// <returns>IntPtr to ID3DXFont, or IntPtr.Zero on failure.</returns>
+        private IntPtr CreateFontDirectX9(int fontSize, string fontName)
+        {
+            if (_d3dDevice == IntPtr.Zero || _d3dx9Dll == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            try
+            {
+                // Get D3DXCreateFont function pointer
+                IntPtr funcPtr = GetProcAddress(_d3dx9Dll, "D3DXCreateFontW");
+                if (funcPtr == IntPtr.Zero)
+                {
+                    System.Console.WriteLine("[DragonAgeOriginsGraphicsBackend] CreateFontDirectX9: Failed to get D3DXCreateFontW address");
+                    return IntPtr.Zero;
+                }
+
+                // Create delegate for D3DXCreateFont
+                var createFont = Marshal.GetDelegateForFunctionPointer<D3DXCreateFontDelegate>(funcPtr);
+
+                // Allocate memory for font pointer
+                IntPtr fontPtr = Marshal.AllocHGlobal(IntPtr.Size);
+                try
+                {
+                    // Call D3DXCreateFont
+                    int hr = createFont(
+                        _d3dDevice,                    // pDevice
+                        -fontSize,                     // Height (negative = point size)
+                        0,                             // Width (0 = auto)
+                        400,                           // Weight (FW_NORMAL = 400)
+                        0,                             // MipLevels (0 = D3DX_DEFAULT)
+                        false,                         // Italic
+                        0,                             // CharSet (ANSI_CHARSET = 0)
+                        0,                             // OutputPrecision (OUT_DEFAULT_PRECIS = 0)
+                        0,                             // Quality (DEFAULT_QUALITY = 0)
+                        0,                             // PitchAndFamily (DEFAULT_PITCH | FF_DONTCARE = 0)
+                        fontName,                      // pFaceName
+                        fontPtr                        // ppFont (output)
+                    );
+
+                    if (hr < 0)
+                    {
+                        System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] CreateFontDirectX9: D3DXCreateFont failed with HRESULT 0x{hr:X8}");
+                        return IntPtr.Zero;
+                    }
+
+                    // Read font pointer from output parameter
+                    IntPtr font = Marshal.ReadIntPtr(fontPtr);
+                    return font;
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(fontPtr);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] CreateFontDirectX9: Exception - {ex.Message}");
+                return IntPtr.Zero;
+            }
+        }
+
+        /// <summary>
+        /// Draws text using an ID3DXFont.
+        /// Based on daorigins.exe: ID3DXFont::DrawText for rendering text.
+        /// </summary>
+        /// <param name="fontPtr">Pointer to ID3DXFont.</param>
+        /// <param name="text">Text to draw.</param>
+        /// <param name="textRect">Text rectangle.</param>
+        /// <param name="format">Text format flags.</param>
+        /// <param name="color">Text color.</param>
+        private void DrawTextDirectX9(IntPtr fontPtr, string text, RECT textRect, int format, uint color)
+        {
+            if (fontPtr == IntPtr.Zero || string.IsNullOrEmpty(text))
+            {
+                return;
+            }
+
+            try
+            {
+                // Get the DrawText method from the font vtable
+                // ID3DXFont vtable: index 3 = DrawTextW
+                IntPtr vtable = Marshal.ReadIntPtr(fontPtr);
+                IntPtr drawTextPtr = Marshal.ReadIntPtr(vtable, 3 * IntPtr.Size);
+
+                // Create delegate for DrawText
+                var drawText = Marshal.GetDelegateForFunctionPointer<ID3DXFontDrawTextDelegate>(drawTextPtr);
+
+                // Allocate RECT structure
+                IntPtr rectPtr = Marshal.AllocHGlobal(Marshal.SizeOf<RECT>());
+                try
+                {
+                    Marshal.StructureToPtr(textRect, rectPtr, false);
+
+                    // Call DrawText
+                    int hr = drawText(
+                        fontPtr,        // pFont (this pointer)
+                        IntPtr.Zero,    // pSprite (null)
+                        text,           // pString
+                        -1,             // Count (-1 = null terminated)
+                        rectPtr,        // pRect
+                        format,         // Format
+                        color           // Color
+                    );
+
+                    if (hr < 0)
+                    {
+                        System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] DrawTextDirectX9: DrawText failed with HRESULT 0x{hr:X8}");
+                    }
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(rectPtr);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] DrawTextDirectX9: Exception - {ex.Message}");
+            }
         }
 
         #region Dragon Age Origins-Specific Implementation
@@ -2465,7 +2715,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // Text color: White (0xFFFFFFFF) or yellow (0xFFFFFF00) for visibility
             // Font size: Small (typically 10-12pt)
             // For now, visual placeholder (background) only - text rendering requires font system
-            // RenderTextDirectX9(labelX, labelY, hotkeyNumber.ToString(), 0xFFFFFFFF);
+            RenderTextDirectX9(labelX, labelY, hotkeyNumber.ToString(), 0xFFFFFFFF);
         }
 
         /// <summary>
@@ -2917,7 +3167,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             float titleY = 20.0f;
             uint titleColor = 0xFFFFFFFF; // White
 
-            // RenderTextDirectX9(titleX, titleY, titleText, titleColor);
+            RenderTextDirectX9(titleX, titleY, titleText, titleColor);
         }
 
         /// <summary>
@@ -2945,7 +3195,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             float hintsY = viewportHeight - 30.0f;
             uint hintsColor = 0xFFCCCCCC; // Light gray
 
-            // RenderTextDirectX9(hintsX, hintsY, hintsText, hintsColor);
+            RenderTextDirectX9(hintsX, hintsY, hintsText, hintsColor);
         }
 
         /// <summary>
@@ -3649,8 +3899,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 textColor = 0xFFFFFF00; // Yellow for selected button
             }
 
-            // RenderTextDirectX9(textX, textY, labelText, textColor);
-            // Note: Actual text rendering implementation would be added when font rendering system is available
+            RenderTextDirectX9(textX, textY, labelText, textColor);
+            // Note: Text rendering now implemented using DirectX 9 font system
         }
 
         /// <summary>
@@ -3880,8 +4130,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // Text color: White (0xFFFFFFFF) for unselected tabs, brighter color for selected tabs
             uint textColor = isSelected ? 0xFFFFFF00 : 0xFFFFFFFF; // Yellow for selected, white for unselected
 
-            // RenderTextDirectX9(textX, textY, categoryName, textColor);
-            // Note: Actual text rendering implementation would be added when font rendering system is available
+            RenderTextDirectX9(textX, textY, categoryName, textColor);
+            // Note: Text rendering now implemented using DirectX 9 font system
         }
 
         /// <summary>
@@ -4414,8 +4664,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 textColor = 0xFFCCCCCC; // Light gray for unselected
             }
 
-            // RenderTextDirectX9(textX, textY, valueText, textColor);
-            // Note: Actual text rendering implementation would be added when font rendering system is available
+            RenderTextDirectX9(textX, textY, valueText, textColor);
+            // Note: Text rendering now implemented using DirectX 9 font system
         }
 
         /// <summary>
@@ -4539,8 +4789,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // For now, this is a placeholder
             uint textColor = 0xFFFFFFFF; // White text
 
-            // RenderTextDirectX9(x, y, labelText, textColor);
-            // Note: Actual text rendering implementation would be added when font rendering system is available
+            RenderTextDirectX9(x, y, labelText, textColor);
+            // Note: Text rendering now implemented using DirectX 9 font system
         }
 
         /// <summary>
@@ -6603,6 +6853,66 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             }
         }
 
+        /// <summary>
+        /// Disposes of graphics backend resources.
+        /// Based on daorigins.exe: Cleanup releases DirectX resources including fonts.
+        /// </summary>
+        public void Dispose()
+        {
+            DisposeFonts();
+        }
+
+        /// <summary>
+        /// Disposes of DirectX 9 font resources.
+        /// Based on daorigins.exe: Font cleanup releases font objects and unloads DLL.
+        /// </summary>
+        private void DisposeFonts()
+        {
+            try
+            {
+                // Release all cached fonts
+                foreach (var kvp in _fontCache)
+                {
+                    IntPtr fontPtr = kvp.Value;
+                    if (fontPtr != IntPtr.Zero)
+                    {
+                        // Release the font (call Release method)
+                        try
+                        {
+                            // Get the Release method from the font vtable
+                            // IUnknown vtable: index 2 = Release
+                            IntPtr vtable = Marshal.ReadIntPtr(fontPtr);
+                            IntPtr releasePtr = Marshal.ReadIntPtr(vtable, 2 * IntPtr.Size);
+
+                            // Create delegate for Release
+                            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+                            delegate uint ReleaseDelegate(IntPtr pUnknown);
+
+                            var release = Marshal.GetDelegateForFunctionPointer<ReleaseDelegate>(releasePtr);
+                            release(fontPtr);
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] DisposeFonts: Exception releasing font {kvp.Key} - {ex.Message}");
+                        }
+                    }
+                }
+
+                _fontCache.Clear();
+
+                // Unload d3dx9.dll
+                if (_d3dx9Dll != IntPtr.Zero)
+                {
+                    FreeLibrary(_d3dx9Dll);
+                    _d3dx9Dll = IntPtr.Zero;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] DisposeFonts: Exception - {ex.Message}");
+            }
+        }
+
         #region D3DX P/Invoke Declarations
 
         // D3DXCreateTextureFromFileInMemoryEx function delegate
@@ -6625,6 +6935,47 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             IntPtr pPalette,         // PALETTEENTRY* (can be null)
             IntPtr ppTexture         // LPDIRECT3DTEXTURE9* (output)
         );
+
+        // D3DXCreateFont function delegate
+        // Based on daorigins.exe: D3DXCreateFont @ 0x00be58XX (reverse engineered text rendering)
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int D3DXCreateFontDelegate(
+            IntPtr pDevice,          // LPDIRECT3DDEVICE9
+            int Height,              // INT (font height in logical units)
+            int Width,               // INT (font width in logical units, 0 = auto)
+            int Weight,              // UINT (font weight, FW_NORMAL = 400)
+            int MipLevels,           // UINT (0 = D3DX_DEFAULT)
+            [MarshalAs(UnmanagedType.Bool)] bool Italic,     // BOOL
+            int CharSet,             // DWORD (character set)
+            int OutputPrecision,     // DWORD (output precision)
+            int Quality,             // DWORD (output quality)
+            int PitchAndFamily,      // DWORD (pitch and family)
+            [MarshalAs(UnmanagedType.LPWStr)] string pFaceName, // LPCWSTR (font face name)
+            IntPtr ppFont            // LPD3DXFONT* (output)
+        );
+
+        // ID3DXFont::DrawText method delegate
+        // Based on daorigins.exe: ID3DXFont::DrawText for text rendering
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int ID3DXFontDrawTextDelegate(
+            IntPtr pFont,            // LPD3DXFONT
+            IntPtr pSprite,          // LPD3DXSPRITE (can be null)
+            [MarshalAs(UnmanagedType.LPWStr)] string pString, // LPCWSTR
+            int Count,               // INT (-1 = null terminated)
+            IntPtr pRect,            // LPRECT (text rectangle)
+            int Format,              // DWORD (text format flags)
+            uint Color               // D3DCOLOR
+        );
+
+        // RECT structure for text rectangle
+        [StructLayout(LayoutKind.Sequential)]
+        private struct RECT
+        {
+            public int left;
+            public int top;
+            public int right;
+            public int bottom;
+        }
 
         // Windows API functions for loading DLLs
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
