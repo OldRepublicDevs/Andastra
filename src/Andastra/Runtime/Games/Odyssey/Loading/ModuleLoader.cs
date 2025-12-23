@@ -373,14 +373,14 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
         /// <remarks>
         /// Based on swkotor2.exe: LoadAreaProperties @ 0x004e26d0
         /// Loads area resources by ResRef from module archives.
-        /// 
+        ///
         /// Area loading sequence:
         /// 1. Load ARE (area properties) - GFF with "ARE " signature
         /// 2. Load GIT (game instance data) - GFF with "GIT " signature containing entities
         /// 3. Load LYT (room layout) - Binary format for room organization (module-level, not area-specific)
         /// 4. Load VIS (visibility) - Binary format for room visibility (module-level, not area-specific)
         /// 5. Load navigation mesh from BWM files - Walkmesh for pathfinding
-        /// 
+        ///
         /// Resource lookup:
         /// - ARE and GIT files are area-specific (loaded by areaResRef)
         /// - LYT and VIS files are module-level (loaded by module ID)
@@ -571,7 +571,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
 
             area.Rooms = new List<RoomInfo>();
 
-            foreach (LYTRoom room in lyt.Rooms)
+            foreach (Andastra.Parsing.Resource.Formats.LYT.LYTRoom room in lyt.Rooms)
             {
                 var roomInfo = new RoomInfo
                 {

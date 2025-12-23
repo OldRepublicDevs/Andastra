@@ -1153,10 +1153,10 @@ namespace Andastra.Runtime.Games.Odyssey
                             var parentData = dataFieldForParent.GetValue(this) as Dictionary<string, object>;
                             if (parentData == null)
                             {
-                                data = new Dictionary<string, object>();
-                                dataFieldForParent.SetValue(this, data);
+                                parentData = new Dictionary<string, object>();
+                                dataFieldForParent.SetValue(this, parentData);
                             }
-                            data["_ParentObjectId"] = parentObjectId;
+                            parentData["_ParentObjectId"] = parentObjectId;
                         }
                     }
                 }
@@ -1479,10 +1479,10 @@ namespace Andastra.Runtime.Games.Odyssey
                             var itemsData = dataFieldForItems.GetValue(this) as Dictionary<string, object>;
                             if (itemsData == null)
                             {
-                                data = new Dictionary<string, object>();
-                                dataFieldForItems.SetValue(this, data);
+                                itemsData = new Dictionary<string, object>();
+                                dataFieldForItems.SetValue(this, itemsData);
                             }
-                            data["_ItemReferences"] = itemReferences;
+                            itemsData["_ItemReferences"] = itemReferences;
                         }
                     }
                 }
@@ -1628,10 +1628,10 @@ namespace Andastra.Runtime.Games.Odyssey
                             var fieldData = dataField.GetValue(this) as Dictionary<string, object>;
                             if (fieldData == null)
                             {
-                                data = new Dictionary<string, object>();
-                                dataField.SetValue(this, data);
+                                fieldData = new Dictionary<string, object>();
+                                dataField.SetValue(this, fieldData);
                             }
-                            data.Clear();
+                            fieldData.Clear();
 
                             for (int i = 0; i < dataList.Count; i++)
                             {

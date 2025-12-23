@@ -574,7 +574,7 @@ namespace Andastra.Runtime.Games.Odyssey
             // Validate that the GFF content type is NFO
             // This is a double-check since we already validated the signature
             // Based on swkotor2.exe: Content type validation @ 0x00707290
-            GFF gff = GFFAuto.ReadGff(nfoData, (int)ResourceType.NFO);
+            GFF gff = GFFAuto.ReadGff(nfoData);
             if (gff.Content != GFFContent.NFO)
             {
                 throw new InvalidDataException($"GFF content type is not NFO. Got: {gff.Content}");
@@ -2541,7 +2541,7 @@ namespace Andastra.Runtime.Games.Odyssey
             // Cameras in GIT have position and FOV but don't have standard ObjectType or ObjectId
             // Since cameras are not runtime entities, they're stored in RuntimeArea when loading from GIT
             // Camera states are extracted from RuntimeArea.GetCameraStates() which was populated during area loading
-            RuntimeArea runtimeArea = area as RuntimeArea;
+            Andastra.Runtime.Core.Module.RuntimeArea runtimeArea = area as Andastra.Runtime.Core.Module.RuntimeArea;
             if (runtimeArea != null)
             {
                 IReadOnlyList<EntityState> cameraStates = runtimeArea.GetCameraStates();
@@ -2564,6 +2564,7 @@ namespace Andastra.Runtime.Games.Odyssey
             // Extract area-level local variables
             // Based on swkotor2.exe: Area local variables are extracted from area's variable storage
             // Original implementation: FUN_005226d0 @ 0x005226d0 extracts area variables when saving
+            OdysseyArea odysseyArea = area as OdysseyArea;
             if (odysseyArea != null)
             {
                 Andastra.Runtime.Core.Save.LocalVariableSet areaVars = odysseyArea.GetLocalVariables();

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Andastra.Runtime.Core
 {
     /// <summary>
@@ -330,6 +332,24 @@ namespace Andastra.Runtime.Core
         public FeedbackSettings Feedback { get; set; } = new FeedbackSettings();
 
         /// <summary>
+        /// Controls settings (key bindings and mouse configuration).
+        /// </summary>
+        /// <remarks>
+        /// Controls Settings:
+        /// - Based on swkotor.exe and swkotor2.exe controls/input system
+        /// - Located via string references: "Mouse Sensitivity" @ 0x007c85cc, "Mouse Look" @ 0x007c8608, "Reverse Mouse Buttons" @ 0x007c8628
+        /// - "keymap" @ 0x007c4cbc (keymap.2da file reference), "Pause" @ 0x007c4de8
+        /// - Original implementation: Key bindings stored in keymap.2da, mouse settings in INI file
+        /// - Settings stored in INI file (swkotor.ini for K1, swkotor2.ini for K2)
+        /// - Based on swkotor2.exe: CExoInputInternal input system (exoinputinternal.cpp @ 0x007c64dc)
+        /// - Based on swkotor2.exe: FUN_00631ff0 @ 0x00631ff0 (writes controls settings to INI file)
+        /// - Based on swkotor2.exe: FUN_00633270 @ 0x00633270 (loads controls settings from INI file)
+        /// - Key bindings: All game actions can be rebound (Pause, Cycle Party, Quick Slots, etc.)
+        /// - Mouse settings: Sensitivity, invert Y axis, button configuration
+        /// </remarks>
+        public ControlsSettings Controls { get; set; } = new ControlsSettings();
+
+        /// <summary>
         /// Feedback settings configuration.
         /// </summary>
         /// <remarks>
@@ -415,6 +435,128 @@ namespace Andastra.Runtime.Core
             /// Whether to show skill check feedback (success/failure messages).
             /// </summary>
             public bool ShowSkillCheckFeedback { get; set; } = true;
+        }
+
+        /// <summary>
+        /// Controls settings configuration (key bindings and mouse settings).
+        /// </summary>
+        /// <remarks>
+        /// Controls Settings:
+        /// - Based on swkotor.exe and swkotor2.exe controls/input system
+        /// - Located via string references: "Mouse Sensitivity" @ 0x007c85cc, "Mouse Look" @ 0x007c8608, "Reverse Mouse Buttons" @ 0x007c8628
+        /// - "keymap" @ 0x007c4cbc (keymap.2da file reference), "Pause" @ 0x007c4de8
+        /// - Original implementation: Key bindings stored in keymap.2da, mouse settings in INI file
+        /// - Settings stored in INI file (swkotor.ini for K1, swkotor2.ini for K2)
+        /// - Based on swkotor2.exe: CExoInputInternal input system (exoinputinternal.cpp @ 0x007c64dc)
+        /// - Key bindings: All game actions can be rebound (Pause, Cycle Party, Quick Slots, etc.)
+        /// - Mouse settings: Sensitivity, invert Y axis, button configuration
+        /// - Default key bindings match original KOTOR:
+        ///   - Pause: Space
+        ///   - Cycle Party Leader: Tab
+        ///   - Quick Slot 1-9: Number keys 1-9
+        ///   - Solo Mode: V
+        ///   - Left Click: Move/Attack
+        ///   - Right Click: Context Action
+        /// </remarks>
+        public class ControlsSettings
+        {
+            /// <summary>
+            /// Key bindings for game actions. Key is action name, value is key name (e.g., "Space", "Tab", "D1").
+            /// </summary>
+            /// <remarks>
+            /// Key Bindings:
+            /// - Based on swkotor.exe and swkotor2.exe keymap.2da system
+            /// - Action names match keymap.2da labels (e.g., "Pause", "CycleParty", "QuickSlot1", etc.)
+            /// - Key names use Keys enum names (e.g., "Space", "Tab", "D1", "D2", etc.)
+            /// - Original implementation: Key bindings loaded from keymap.2da, can be customized in options menu
+            /// - Based on swkotor2.exe: keymap.2da defines keyboard mappings for different contexts (ingame, GUI, dialog, etc.)
+            /// </remarks>
+            public Dictionary<string, string> KeyBindings { get; set; } = new Dictionary<string, string>();
+
+            /// <summary>
+            /// Mouse button bindings for game actions. Key is action name, value is mouse button name (e.g., "Left", "Right", "Middle").
+            /// </summary>
+            /// <remarks>
+            /// Mouse Button Bindings:
+            /// - Based on swkotor.exe and swkotor2.exe mouse input system
+            /// - Action names: "Move", "Attack", "ContextAction", "CameraRotate", "CameraZoom"
+            /// - Button names: "Left", "Right", "Middle", "XButton1", "XButton2"
+            /// - Original implementation: Mouse buttons can be rebound in options menu
+            /// - Based on swkotor2.exe: "Reverse Mouse Buttons" @ 0x007c8628 option swaps left/right buttons
+            /// </remarks>
+            public Dictionary<string, string> MouseButtonBindings { get; set; } = new Dictionary<string, string>();
+
+            /// <summary>
+            /// Initializes default key bindings matching original KOTOR controls.
+            /// </summary>
+            /// <remarks>
+            /// Default Key Bindings:
+            /// - Based on swkotor.exe and swkotor2.exe default keymap.2da values
+            /// - Matches original game's default control scheme
+            /// - All bindings can be changed by the player in options menu
+            /// </remarks>
+            public void InitializeDefaults()
+            {
+                // Clear existing bindings
+                KeyBindings.Clear();
+                MouseButtonBindings.Clear();
+
+                // Default keyboard bindings (based on original KOTOR keymap.2da)
+                KeyBindings["Pause"] = "Space";
+                KeyBindings["CycleParty"] = "Tab";
+                KeyBindings["QuickSlot1"] = "D1";
+                KeyBindings["QuickSlot2"] = "D2";
+                KeyBindings["QuickSlot3"] = "D3";
+                KeyBindings["QuickSlot4"] = "D4";
+                KeyBindings["QuickSlot5"] = "D5";
+                KeyBindings["QuickSlot6"] = "D6";
+                KeyBindings["QuickSlot7"] = "D7";
+                KeyBindings["QuickSlot8"] = "D8";
+                KeyBindings["QuickSlot9"] = "D9";
+                KeyBindings["SoloMode"] = "V";
+                KeyBindings["Character"] = "C";
+                KeyBindings["Inventory"] = "I";
+                KeyBindings["Journal"] = "J";
+                KeyBindings["Map"] = "M";
+                KeyBindings["PauseMenu"] = "Escape";
+
+                // Default mouse button bindings (based on original KOTOR)
+                MouseButtonBindings["Move"] = "Left";
+                MouseButtonBindings["Attack"] = "Left";
+                MouseButtonBindings["ContextAction"] = "Right";
+                MouseButtonBindings["CameraRotate"] = "Middle";
+                MouseButtonBindings["CameraZoom"] = "ScrollWheel";
+            }
+
+            /// <summary>
+            /// Gets the key binding for an action, or returns the default if not set.
+            /// </summary>
+            /// <param name="actionName">The action name.</param>
+            /// <param name="defaultKey">The default key name if binding not found.</param>
+            /// <returns>The key name for the action.</returns>
+            public string GetKeyBinding(string actionName, string defaultKey)
+            {
+                if (KeyBindings.TryGetValue(actionName, out string binding))
+                {
+                    return binding;
+                }
+                return defaultKey;
+            }
+
+            /// <summary>
+            /// Gets the mouse button binding for an action, or returns the default if not set.
+            /// </summary>
+            /// <param name="actionName">The action name.</param>
+            /// <param name="defaultButton">The default button name if binding not found.</param>
+            /// <returns>The button name for the action.</returns>
+            public string GetMouseButtonBinding(string actionName, string defaultButton)
+            {
+                if (MouseButtonBindings.TryGetValue(actionName, out string binding))
+                {
+                    return binding;
+                }
+                return defaultButton;
+            }
         }
     }
 }
