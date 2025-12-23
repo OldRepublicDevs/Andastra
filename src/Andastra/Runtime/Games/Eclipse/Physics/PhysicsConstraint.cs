@@ -59,9 +59,17 @@ namespace Andastra.Runtime.Games.Eclipse.Physics
         /// </summary>
         public Dictionary<string, float> Parameters { get; set; }
 
+        /// <summary>
+        /// Reference frame quaternion for angle calculations (stored when constraint is created).
+        /// For hinge constraints, this represents the initial orientation relative to which angles are measured.
+        /// Based on daorigins.exe/DragonAge2.exe: Hinge constraints store reference frame for angle limit calculations.
+        /// </summary>
+        public Quaternion ReferenceFrame { get; set; }
+
         public PhysicsConstraint()
         {
             Parameters = new Dictionary<string, float>();
+            ReferenceFrame = Quaternion.Identity;
         }
     }
 
