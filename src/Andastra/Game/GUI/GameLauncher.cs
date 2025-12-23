@@ -548,7 +548,7 @@ namespace Andastra.Game.GUI
             }
         }
 
-        private string GetGameName(Game game)
+        private string GetGameName(GameType game)
         {
             switch (game)
             {
@@ -567,12 +567,12 @@ namespace Andastra.Game.GUI
         /// </summary>
         private class GameItem
         {
-            public Game Game { get; }
+            public GameType Game { get; }
             public string DisplayName { get; }
 
-            public GameItem(Game game, string displayName)
+            public GameItem(GameType game, string displayName)
             {
-                GameType = game;
+                Game = game;
                 DisplayName = displayName;
             }
 
