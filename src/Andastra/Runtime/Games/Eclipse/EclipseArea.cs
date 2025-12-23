@@ -31,6 +31,7 @@ using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.MonoGame.Converters;
+using Andastra.Runtime.MonoGame.Graphics;
 using Andastra.Runtime.Core.Collision;
 using XnaVertexPositionColor = Microsoft.Xna.Framework.Graphics.VertexPositionColor;
 using Andastra.Runtime.MonoGame.Rendering;
@@ -4577,20 +4578,514 @@ namespace Andastra.Runtime.Games.Eclipse
             Microsoft.Xna.Framework.Graphics.GraphicsDevice mgDevice = mgGraphicsDevice.Device;
 
             // Render shadow maps for each shadow-casting light
+            // Based on daorigins.exe/DragonAge2.exe: All light types can cast shadows with appropriate projection
+            // - Directional lights: Orthographic projection (single shadow map)
+            // - Point lights: Perspective projection cube map (6 faces, 90-degree FOV per face)
+            // - Spot lights: Perspective projection (single shadow map, cone-shaped frustum)
             foreach (IDynamicLight light in shadowCastingLights)
             {
                 if (light.Type == LightType.Directional)
                 {
                     // Directional lights: Single orthographic shadow map
+                    // Based on daorigins.exe: Directional lights use orthographic projection for parallel light rays
                     RenderDirectionalLightShadowMap(mgDevice, graphicsDevice, basicEffect, light, cameraPosition);
                 }
                 else if (light.Type == LightType.Point)
                 {
                     // Point lights: Cube shadow map (6 faces)
+                    // Based on daorigins.exe: Point lights use cube shadow maps for omni-directional shadows
                     RenderPointLightShadowMap(mgDevice, graphicsDevice, basicEffect, light, cameraPosition);
                 }
-                // Spot lights can also cast shadows, but use perspective projection (similar to directional but with perspective)
-                // For now, we focus on directional and point lights as specified in the TODO
+                else if (light.Type == LightType.Spot)
+                {
+                    // Spot lights: Single perspective shadow map
+                    // Based on daorigins.exe/DragonAge2.exe: Spot lights use perspective projection matching light cone
+                    // Shadow map frustum matches the spot light's cone (inner/outer angles and range)
+                    RenderSpotLightShadowMap(mgDevice, graphicsDevice, basicEffect, light, cameraPosition);
+                }
+                // Area lights typically don't cast shadows in real-time engines (too expensive)
+                // If needed, they would use multiple shadow maps or light field techniques
+            }
+        }
+
+        /// <summary>
+        /// Renders shadow map for a directional light using orthographic projection.
+        /// Based on daorigins.exe/DragonAge2.exe: Directional lights use orthographic shadow maps.
+        /// </summary>
+        private void RenderDirectionalLightShadowMap(
+            Microsoft.Xna.Framework.Graphics.GraphicsDevice mgDevice,
+            IGraphicsDevice graphicsDevice,
+            IBasicEffect basicEffect,
+            IDynamicLight light,
+            Vector3 cameraPosition)
+        {
+            // Get shadow map resolution from light
+            int shadowResolution = light.ShadowResolution;
+            if (shadowResolution <= 0)
+            {
+                return; // Invalid shadow resolution
+            }
+
+            // Get or create shadow map render target for this light
+            IRenderTarget shadowMap;
+            if (!_shadowMaps.TryGetValue(light.LightId, out shadowMap))
+            {
+                // Create new shadow map render target
+                // Based on daorigins.exe/DragonAge2.exe: Shadow maps use depth render targets
+                shadowMap = graphicsDevice.CreateRenderTarget(shadowResolution, shadowResolution, true);
+                _shadowMaps[light.LightId] = shadowMap;
+            }
+
+            // Get underlying MonoGame render target
+            MonoGameRenderTarget mgShadowMap = shadowMap as MonoGameRenderTarget;
+            if (mgShadowMap == null)
+            {
+                return; // Shadow map must be MonoGame render target
+            }
+
+            // Get light's shadow matrices from EclipseLightingSystem
+            // The lighting system calculates these in UpdateShadowMaps()
+            // We need to access the underlying DynamicLight to get shadow matrices
+            Matrix4x4 lightViewMatrix = Matrix4x4.Identity;
+            Matrix4x4 lightProjectionMatrix = Matrix4x4.Identity;
+            Matrix4x4 lightSpaceMatrix = Matrix4x4.Identity;
+
+            // Try to get shadow matrices from lighting system
+            // EclipseLightingSystem stores shadow matrices in DynamicLight objects
+            if (_lightingSystem is Lighting.EclipseLightingSystem eclipseLighting)
+            {
+                // Access underlying DynamicLight to get shadow matrices
+                // EclipseLightingSystem uses DynamicLightAdapter, need to get underlying light
+                IDynamicLight[] allLights = eclipseLighting.GetActiveLights();
+                foreach (IDynamicLight activeLight in allLights)
+                {
+                    if (activeLight != null && activeLight.LightId == light.LightId)
+                    {
+                        // Try to get shadow matrices from DynamicLight
+                        // DynamicLight has ShadowViewMatrix, ShadowProjectionMatrix, ShadowLightSpaceMatrix properties
+                        // But IDynamicLight interface doesn't expose these, so we need to access via reflection or adapter
+                        // For now, calculate matrices here based on light direction
+                        break;
+                    }
+                }
+            }
+
+            // Calculate shadow map matrices if not available from lighting system
+            // Based on EclipseLightingSystem.UpdateShadowMaps() implementation
+            // Shadow map coverage area (world units)
+            const float shadowMapSize = 100.0f; // Half-size (total coverage is 200x200 units)
+            const float shadowMapNear = 0.1f;
+            const float shadowMapFar = 500.0f;
+
+            // Calculate view matrix: look from light direction
+            Vector3 lightDirection = light.Direction;
+            Vector3 lightPosition = -lightDirection * shadowMapFar * 0.5f; // Position light far from scene
+            Vector3 targetPosition = cameraPosition; // Look at camera position (or scene center)
+            Vector3 upVector = Vector3.UnitY; // Use Y-up
+
+            // If light direction is nearly parallel to up vector, use alternative up
+            if (Math.Abs(Vector3.Dot(lightDirection, upVector)) > 0.9f)
+            {
+                upVector = Vector3.UnitZ; // Use Z-up as alternative
+            }
+
+            // Create view matrix looking from light position towards target
+            // Based on Eclipse engine: View matrix transforms world space to light space
+            lightViewMatrix = MatrixHelper.CreateLookAt(lightPosition, targetPosition, upVector);
+
+            // Create orthographic projection matrix
+            // System.Numerics.Matrix4x4 doesn't have CreateOrthographic, so we use CreateOrthographicOffCenter
+            float halfSize = shadowMapSize;
+            lightProjectionMatrix = Matrix4x4.CreateOrthographicOffCenter(
+                -halfSize, // Left
+                halfSize,  // Right
+                -halfSize, // Bottom
+                halfSize,  // Top
+                shadowMapNear,
+                shadowMapFar
+            );
+
+            // Combined light space matrix: projection * view
+            lightSpaceMatrix = lightProjectionMatrix * lightViewMatrix;
+
+            // Store light space matrix for use during lighting pass
+            _shadowLightSpaceMatrices[light.LightId] = lightSpaceMatrix;
+
+            // Save previous render target
+            IRenderTarget previousRenderTarget = graphicsDevice.RenderTarget;
+
+            // Set shadow map as render target
+            graphicsDevice.RenderTarget = shadowMap;
+
+            // Clear shadow map (depth buffer)
+            graphicsDevice.ClearDepth(1.0f);
+
+            // Set up depth-only rendering state
+            // Based on daorigins.exe/DragonAge2.exe: Shadow maps render depth-only
+            // MonoGame: Need to set depth-stencil state for depth-only rendering
+            Microsoft.Xna.Framework.Graphics.DepthStencilState depthState = new Microsoft.Xna.Framework.Graphics.DepthStencilState
+            {
+                DepthBufferEnable = true,
+                DepthBufferWriteEnable = true,
+                DepthBufferFunction = Microsoft.Xna.Framework.Graphics.CompareFunction.LessEqual
+            };
+            mgDevice.DepthStencilState = depthState;
+
+            // Disable color writes (depth-only pass)
+            mgDevice.BlendState = Microsoft.Xna.Framework.Graphics.BlendState.Opaque;
+
+            // Render scene geometry to shadow map using light's view/projection matrices
+            // Based on daorigins.exe/DragonAge2.exe: All shadow-casting geometry is rendered to shadow map
+            RenderGeometryToShadowMap(mgDevice, graphicsDevice, basicEffect, lightViewMatrix, lightProjectionMatrix);
+
+            // Restore previous render target
+            graphicsDevice.RenderTarget = previousRenderTarget;
+
+            // Dispose depth state (MonoGame states should be disposed)
+            depthState.Dispose();
+        }
+
+        /// <summary>
+        /// Renders cube shadow map for a point light (6 faces for omni-directional shadows).
+        /// Based on daorigins.exe/DragonAge2.exe: Point lights use cube shadow maps.
+        /// </summary>
+        private void RenderPointLightShadowMap(
+            Microsoft.Xna.Framework.Graphics.GraphicsDevice mgDevice,
+            IGraphicsDevice graphicsDevice,
+            IBasicEffect basicEffect,
+            IDynamicLight light,
+            Vector3 cameraPosition)
+        {
+            // Get shadow map resolution from light
+            int shadowResolution = light.ShadowResolution;
+            if (shadowResolution <= 0)
+            {
+                return; // Invalid shadow resolution
+            }
+
+            // Get or create cube shadow map render targets for this light (6 faces)
+            IRenderTarget[] cubeShadowMaps;
+            if (!_cubeShadowMaps.TryGetValue(light.LightId, out cubeShadowMaps))
+            {
+                // Create new cube shadow map render targets (6 faces)
+                cubeShadowMaps = new IRenderTarget[6];
+                for (int i = 0; i < 6; i++)
+                {
+                    cubeShadowMaps[i] = graphicsDevice.CreateRenderTarget(shadowResolution, shadowResolution, true);
+                }
+                _cubeShadowMaps[light.LightId] = cubeShadowMaps;
+            }
+
+            // Point light shadow map setup:
+            // - Light position: light.Position
+            // - Far plane: light.Radius (attenuation radius)
+            // - Near plane: 0.1f (small near plane for point lights)
+            // - 6 faces: +X, -X, +Y, -Y, +Z, -Z
+            Vector3 lightPosition = light.Position;
+            float shadowNear = 0.1f;
+            float shadowFar = light.Radius;
+
+            // Cube map face directions (view directions for each face)
+            Vector3[] faceDirections = new Vector3[]
+            {
+                Vector3.UnitX,   // +X face (right)
+                -Vector3.UnitX,  // -X face (left)
+                Vector3.UnitY,   // +Y face (up)
+                -Vector3.UnitY,  // -Y face (down)
+                Vector3.UnitZ,   // +Z face (forward)
+                -Vector3.UnitZ   // -Z face (back)
+            };
+
+            // Up vectors for each face (perpendicular to view direction)
+            Vector3[] faceUps = new Vector3[]
+            {
+                -Vector3.UnitY,  // +X face: up is -Y
+                -Vector3.UnitY,  // -X face: up is -Y
+                Vector3.UnitZ,   // +Y face: up is +Z
+                -Vector3.UnitZ,  // -Y face: up is -Z
+                -Vector3.UnitY,  // +Z face: up is -Y
+                -Vector3.UnitY   // -Z face: up is -Y
+            };
+
+            // Save previous render target
+            IRenderTarget previousRenderTarget = graphicsDevice.RenderTarget;
+
+            // Set up depth-only rendering state
+            Microsoft.Xna.Framework.Graphics.DepthStencilState depthState = new Microsoft.Xna.Framework.Graphics.DepthStencilState
+            {
+                DepthBufferEnable = true,
+                DepthBufferWriteEnable = true,
+                DepthBufferFunction = Microsoft.Xna.Framework.Graphics.CompareFunction.LessEqual
+            };
+            mgDevice.DepthStencilState = depthState;
+            mgDevice.BlendState = Microsoft.Xna.Framework.Graphics.BlendState.Opaque;
+
+            // Render each face of the cube shadow map
+            for (int faceIndex = 0; faceIndex < 6; faceIndex++)
+            {
+                // Set current face as render target
+                graphicsDevice.RenderTarget = cubeShadowMaps[faceIndex];
+
+                // Clear depth buffer
+                graphicsDevice.ClearDepth(1.0f);
+
+                // Calculate view matrix for this face
+                // Look from light position in face direction
+                Vector3 faceDirection = faceDirections[faceIndex];
+                Vector3 faceUp = faceUps[faceIndex];
+                Vector3 targetPosition = lightPosition + faceDirection;
+
+                Matrix4x4 lightViewMatrix = MatrixHelper.CreateLookAt(lightPosition, targetPosition, faceUp);
+
+                // Create perspective projection matrix for point light
+                // Point lights use perspective projection (90-degree FOV for cube maps)
+                float fov = (float)(Math.PI / 2.0); // 90 degrees
+                float aspectRatio = 1.0f; // Square faces
+                Matrix4x4 lightProjectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(fov, aspectRatio, shadowNear, shadowFar);
+
+                // Combined light space matrix for this face
+                Matrix4x4 lightSpaceMatrix = lightProjectionMatrix * lightViewMatrix;
+
+                // Store light space matrix for first face (or store all 6 if needed)
+                // For simplicity, we store the first face's matrix
+                // Full implementation would store all 6 matrices
+                if (faceIndex == 0)
+                {
+                    _shadowLightSpaceMatrices[light.LightId] = lightSpaceMatrix;
+                }
+
+                // Render scene geometry to this face of the shadow map
+                RenderGeometryToShadowMap(mgDevice, graphicsDevice, basicEffect, lightViewMatrix, lightProjectionMatrix);
+            }
+
+            // Restore previous render target
+            graphicsDevice.RenderTarget = previousRenderTarget;
+
+            // Dispose depth state
+            depthState.Dispose();
+        }
+
+        /// <summary>
+        /// Renders scene geometry to shadow map using light's view/projection matrices.
+        /// Based on daorigins.exe/DragonAge2.exe: All shadow-casting geometry is rendered to shadow maps.
+        /// </summary>
+        private void RenderGeometryToShadowMap(
+            Microsoft.Xna.Framework.Graphics.GraphicsDevice mgDevice,
+            IGraphicsDevice graphicsDevice,
+            IBasicEffect basicEffect,
+            Matrix4x4 lightViewMatrix,
+            Matrix4x4 lightProjectionMatrix)
+        {
+            // Render all shadow-casting geometry:
+            // 1. Room geometry (static terrain, buildings)
+            // 2. Static objects (embedded structures)
+            // 3. Entities (placeables, creatures) that cast shadows
+
+            // Render room geometry to shadow map
+            if (_renderContext != null && _renderContext.RoomMeshRenderer != null && _rooms != null)
+            {
+                IRoomMeshRenderer roomMeshRenderer = _renderContext.RoomMeshRenderer;
+
+                foreach (RoomInfo room in _rooms)
+                {
+                    if (room == null || string.IsNullOrEmpty(room.ModelName))
+                    {
+                        continue;
+                    }
+
+                    // Get or load room mesh data
+                    IRoomMeshData roomMeshData;
+                    if (!_cachedRoomMeshes.TryGetValue(room.ModelName, out roomMeshData))
+                    {
+                        roomMeshData = LoadRoomMesh(room.ModelName, roomMeshRenderer);
+                        if (roomMeshData == null)
+                        {
+                            continue;
+                        }
+                        _cachedRoomMeshes[room.ModelName] = roomMeshData;
+                    }
+
+                    if (roomMeshData == null || roomMeshData.VertexBuffer == null || roomMeshData.IndexBuffer == null)
+                    {
+                        continue;
+                    }
+
+                    // Calculate room transformation matrix
+                    float rotationRadians = (float)(room.Rotation * Math.PI / 180.0);
+                    Matrix4x4 rotationMatrix = Matrix4x4.CreateRotationY(rotationRadians);
+                    Matrix4x4 translationMatrix = Matrix4x4.CreateTranslation(room.Position);
+                    Matrix4x4 worldMatrix = rotationMatrix * translationMatrix;
+
+                    // Set up basic effect with light's view/projection matrices
+                    basicEffect.World = worldMatrix;
+                    basicEffect.View = lightViewMatrix;
+                    basicEffect.Projection = lightProjectionMatrix;
+                    basicEffect.LightingEnabled = false; // No lighting in shadow pass
+                    basicEffect.TextureEnabled = false; // No textures in shadow pass
+
+                    // Set vertex and index buffers
+                    graphicsDevice.SetVertexBuffer(roomMeshData.VertexBuffer);
+                    graphicsDevice.SetIndexBuffer(roomMeshData.IndexBuffer);
+
+                    // Render mesh (depth-only, no color)
+                    // BasicEffect will render depth values to shadow map
+                    // Use IEffectTechnique and IEffectPass interfaces
+                    IEffectTechnique technique = basicEffect.CurrentTechnique;
+                    if (technique != null && technique.Passes != null)
+                    {
+                        foreach (IEffectPass pass in technique.Passes)
+                        {
+                            pass.Apply();
+                            graphicsDevice.DrawIndexedPrimitives(
+                                PrimitiveType.TriangleList,
+                                0,
+                                0,
+                                roomMeshData.IndexCount / 3
+                            );
+                        }
+                    }
+                }
+            }
+
+            // Render static objects to shadow map
+            if (_staticObjects != null && _renderContext != null && _renderContext.RoomMeshRenderer != null)
+            {
+                IRoomMeshRenderer roomMeshRenderer = _renderContext.RoomMeshRenderer;
+
+                foreach (StaticObjectInfo staticObject in _staticObjects)
+                {
+                    if (staticObject == null || string.IsNullOrEmpty(staticObject.ModelName))
+                    {
+                        continue;
+                    }
+
+                    // Get or load static object mesh data
+                    IRoomMeshData staticObjectMeshData;
+                    if (!_cachedStaticObjectMeshes.TryGetValue(staticObject.ModelName, out staticObjectMeshData))
+                    {
+                        staticObjectMeshData = LoadStaticObjectMesh(staticObject.ModelName, roomMeshRenderer);
+                        if (staticObjectMeshData == null)
+                        {
+                            continue;
+                        }
+                        _cachedStaticObjectMeshes[staticObject.ModelName] = staticObjectMeshData;
+                    }
+
+                    if (staticObjectMeshData == null || staticObjectMeshData.VertexBuffer == null || staticObjectMeshData.IndexBuffer == null)
+                    {
+                        continue;
+                    }
+
+                    // Calculate static object transformation matrix
+                    float rotationRadians = (float)(staticObject.Rotation * Math.PI / 180.0);
+                    Matrix4x4 rotationMatrix = Matrix4x4.CreateRotationY(rotationRadians);
+                    Matrix4x4 translationMatrix = Matrix4x4.CreateTranslation(staticObject.Position);
+                    Matrix4x4 worldMatrix = rotationMatrix * translationMatrix;
+
+                    // Set up basic effect with light's view/projection matrices
+                    basicEffect.World = worldMatrix;
+                    basicEffect.View = lightViewMatrix;
+                    basicEffect.Projection = lightProjectionMatrix;
+                    basicEffect.LightingEnabled = false;
+                    basicEffect.TextureEnabled = false;
+
+                    // Set vertex and index buffers
+                    graphicsDevice.SetVertexBuffer(staticObjectMeshData.VertexBuffer);
+                    graphicsDevice.SetIndexBuffer(staticObjectMeshData.IndexBuffer);
+
+                    // Render mesh
+                    IEffectTechnique technique = basicEffect.CurrentTechnique;
+                    if (technique != null && technique.Passes != null)
+                    {
+                        foreach (IEffectPass pass in technique.Passes)
+                        {
+                            pass.Apply();
+                            graphicsDevice.DrawIndexedPrimitives(
+                                PrimitiveType.TriangleList,
+                                0,
+                                0,
+                                staticObjectMeshData.IndexCount / 3
+                            );
+                        }
+                    }
+                }
+            }
+
+            // Render entities to shadow map (placeables, creatures that cast shadows)
+            // Based on daorigins.exe/DragonAge2.exe: Entities can cast shadows
+            // For now, we render all entities - full implementation would check shadow-casting flag per entity
+            foreach (IEntity entity in _placeables)
+            {
+                if (entity == null || !entity.IsValid)
+                {
+                    continue;
+                }
+
+                // Get entity mesh data
+                // Based on RenderEntity implementation: Get IRenderableComponent and use ModelResRef
+                IRenderableComponent renderable = entity.GetComponent<IRenderableComponent>();
+                if (renderable == null || string.IsNullOrEmpty(renderable.ModelResRef))
+                {
+                    continue;
+                }
+
+                IRoomMeshData entityMeshData;
+                if (!_cachedEntityMeshes.TryGetValue(renderable.ModelResRef, out entityMeshData))
+                {
+                    // Entity model mesh not cached - attempt to load it
+                    if (_renderContext != null && _renderContext.RoomMeshRenderer != null)
+                    {
+                        entityMeshData = LoadRoomMesh(renderable.ModelResRef, _renderContext.RoomMeshRenderer);
+                        if (entityMeshData != null)
+                        {
+                            _cachedEntityMeshes[renderable.ModelResRef] = entityMeshData;
+                        }
+                    }
+                }
+
+                if (entityMeshData == null || entityMeshData.VertexBuffer == null || entityMeshData.IndexBuffer == null)
+                {
+                    continue;
+                }
+
+                // Get entity transform
+                ITransformComponent transform = entity.GetComponent<ITransformComponent>();
+                if (transform == null)
+                {
+                    continue;
+                }
+
+                // Calculate entity world matrix
+                Matrix4x4 rotationMatrix = Matrix4x4.CreateRotationY(transform.Facing);
+                Matrix4x4 translationMatrix = Matrix4x4.CreateTranslation(transform.Position);
+                Matrix4x4 worldMatrix = rotationMatrix * translationMatrix;
+
+                // Set up basic effect with light's view/projection matrices
+                basicEffect.World = worldMatrix;
+                basicEffect.View = lightViewMatrix;
+                basicEffect.Projection = lightProjectionMatrix;
+                basicEffect.LightingEnabled = false;
+                basicEffect.TextureEnabled = false;
+
+                // Set vertex and index buffers
+                graphicsDevice.SetVertexBuffer(entityMeshData.VertexBuffer);
+                graphicsDevice.SetIndexBuffer(entityMeshData.IndexBuffer);
+
+                // Render mesh
+                IEffectTechnique technique = basicEffect.CurrentTechnique;
+                if (technique != null && technique.Passes != null)
+                {
+                    foreach (IEffectPass pass in technique.Passes)
+                    {
+                        pass.Apply();
+                        graphicsDevice.DrawIndexedPrimitives(
+                            PrimitiveType.TriangleList,
+                            0,
+                            0,
+                            entityMeshData.IndexCount / 3
+                        );
+                    }
+                }
             }
         }
 
