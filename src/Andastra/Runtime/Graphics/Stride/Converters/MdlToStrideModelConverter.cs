@@ -311,7 +311,7 @@ namespace Andastra.Runtime.Stride.Converters
 
             // Create Stride vertex buffer
             int vertexStride = System.Runtime.InteropServices.Marshal.SizeOf<VertexPositionNormalTexture>();
-            Stride.Graphics.Buffer vertexBuffer = Stride.Graphics.Buffer.Vertex.New(
+            global::Stride.Graphics.Buffer vertexBuffer = global::Stride.Graphics.Buffer.Vertex.New(
                 _device,
                 vertices,
                 GraphicsResourceUsage.Default
@@ -319,7 +319,7 @@ namespace Andastra.Runtime.Stride.Converters
 
             // Create Stride index buffer
             // Use 32-bit indices (Stride supports both 16-bit and 32-bit)
-            Stride.Graphics.Buffer indexBuffer = Stride.Graphics.Buffer.Index.New(
+            global::Stride.Graphics.Buffer indexBuffer = global::Stride.Graphics.Buffer.Index.New(
                 _device,
                 indices,
                 GraphicsResourceUsage.Default

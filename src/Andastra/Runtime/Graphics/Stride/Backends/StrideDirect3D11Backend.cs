@@ -186,7 +186,7 @@ namespace Andastra.Runtime.Stride.Backends
             if ((desc.Usage & BufferUsage.Constant) != 0) flags |= BufferFlags.ConstantBuffer;
             if ((desc.Usage & BufferUsage.Structured) != 0) flags |= BufferFlags.StructuredBuffer;
 
-            var buffer = Stride.Graphics.Buffer.New(_strideDevice, desc.SizeInBytes, flags);
+            var buffer = global::Stride.Graphics.Buffer.New(_strideDevice, desc.SizeInBytes, flags);
 
             return new ResourceInfo
             {
@@ -305,7 +305,7 @@ namespace Andastra.Runtime.Stride.Backends
             var flags = BufferFlags.StructuredBuffer | BufferFlags.ShaderResource;
             if (!cpuWritable) flags |= BufferFlags.UnorderedAccess;
 
-            var buffer = Stride.Graphics.Buffer.Structured.New(_strideDevice, elementCount, elementStride,
+            var buffer = global::Stride.Graphics.Buffer.Structured.New(_strideDevice, elementCount, elementStride,
                 cpuWritable);
 
             return new ResourceInfo
