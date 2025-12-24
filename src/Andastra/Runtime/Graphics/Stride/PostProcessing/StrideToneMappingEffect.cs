@@ -597,7 +597,6 @@ namespace Andastra.Runtime.Stride.PostProcessing
             float c = 0.0f;
             float d = 0.0f;
             float e = 0.0f;
-            float f = 0.0f;
 
             // Simplified ACES curve
             Vector3 x = color;
