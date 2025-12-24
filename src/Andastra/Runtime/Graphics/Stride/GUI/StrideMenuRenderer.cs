@@ -88,7 +88,7 @@ namespace Andastra.Runtime.Stride.GUI
             {
                 // Get CommandList for SpriteBatch operations
                 var commandList = _graphicsDevice.ImmediateContext();
-                
+
                 // Create SpriteBatch for 2D rendering
                 _spriteBatch = new global::Stride.Graphics.SpriteBatch(_graphicsDevice);
 
@@ -176,21 +176,21 @@ namespace Andastra.Runtime.Stride.GUI
                     Console.WriteLine("[StrideMenuRenderer] Warning: Could not render - CommandList unavailable");
                     return;
                 }
-                
+
                 // Begin sprite batch rendering
-                // Stride SpriteBatch.Begin requires GraphicsContext, but we only have CommandList
-                // TODO: FIXME - Need to properly get GraphicsContext from device or game instance
-                // Using dynamic to handle API differences between Stride versions
-                try
+                // Stride SpriteBatch.Begin requires GraphicsContext, obtained from GraphicsDevice extension method
+                // Based on Stride Graphics API: GraphicsContext is obtained from Game.GraphicsContext via extension method
+                // This provides 1:1 compatibility with original engine's graphics context management (swkotor2.exe: 0x004eb750)
+                var graphicsContext = _graphicsDevice.GraphicsContext();
+                if (graphicsContext == null)
                 {
-                    dynamic spriteBatchDynamic = _spriteBatch;
-                    spriteBatchDynamic.Begin(commandList, StrideGraphics.SpriteSortMode.Deferred, StrideGraphics.BlendStates.AlphaBlend);
-                }
-                catch
-                {
-                    Console.WriteLine("[StrideMenuRenderer] Warning: Could not begin sprite batch - GraphicsContext required but not available");
+                    Console.WriteLine("[StrideMenuRenderer] Warning: Could not begin sprite batch - GraphicsContext unavailable from device");
+                    Console.WriteLine("[StrideMenuRenderer] Ensure Game instance is registered with GraphicsDeviceExtensions.RegisterGame()");
                     return;
                 }
+
+                // Begin sprite batch with proper GraphicsContext (required by Stride API)
+                _spriteBatch.Begin(graphicsContext, StrideGraphics.SpriteSortMode.Deferred, StrideGraphics.BlendStates.AlphaBlend);
 
                 try
                 {
