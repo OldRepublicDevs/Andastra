@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Andastra\Parsing\Andastra.Parsing.csproj" />
+    <ProjectReference Include="..\..\src\Andastra\Andastra.csproj" />
   </ItemGroup>
 
 </Project>
