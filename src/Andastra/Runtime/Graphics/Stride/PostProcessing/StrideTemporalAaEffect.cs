@@ -150,7 +150,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 {
                     try
                     {
-                        var services = _graphicsDevice.Services;
+                        object services = _graphicsDevice.Services();
                         if (services != null)
                         {
                             var contentManager = services.GetService<ContentManager>();
@@ -747,7 +747,7 @@ shader TemporalAAEffect : ShaderBase
             }
 
             // Get command list for rendering operations
-            var commandList = _graphicsDevice.ImmediateContext;
+            StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext();
             if (commandList == null)
             {
                 return;
@@ -943,7 +943,7 @@ shader TemporalAAEffect : ShaderBase
 
             // Get CommandList from GraphicsDevice's ImmediateContext
             // ImmediateContext provides the command list for immediate-mode rendering
-            var commandList = _graphicsDevice.ImmediateContext;
+            StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext();
             if (commandList == null)
             {
                 // If ImmediateContext is not available, fall back to alternative copy method

@@ -3,17 +3,14 @@ using System.Collections.Generic;
 using System.Numerics;
 using Stride.Graphics;
 using Stride.Core.Mathematics;
+using Andastra.Parsing.Formats.MDLData;
+using Andastra.Parsing.Installation;
+using Andastra.Parsing.Resource;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Engines.Odyssey.Systems;
-using Andastra.Runtime.Games.Odyssey.Data;
+using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Stride.Converters;
-using Andastra.Parsing.Formats.MDLData;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Installation;
-using Andastra.Runtime.Stride.Graphics;
-using Andastra.Runtime.Stride.Graphics;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Stride.Graphics
@@ -26,8 +23,8 @@ namespace Andastra.Runtime.Stride.Graphics
     /// Entity Model Renderer:
     /// - Cross-Engine Analysis (Reverse Engineered via Ghidra):
     ///   - Odyssey (swkotor.exe, swkotor2.exe):
-    ///     - swkotor2.exe: FUN_005261b0 @ 0x005261b0 loads creature model from appearance.2da
     ///     - swkotor.exe: CSWCCreature::LoadModel() @ 0x0074f85c (similar pattern)
+    ///     - swkotor2.exe: FUN_005261b0 @ 0x005261b0 loads creature model from appearance.2da
     ///     - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc (swkotor2.exe)
     ///     - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x0074f85c (swkotor.exe)
     ///     - Model loading: Loads UTC (creature template) from resources, resolves model from appearance.2da

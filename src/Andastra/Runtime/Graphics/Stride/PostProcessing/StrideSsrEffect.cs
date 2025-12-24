@@ -133,7 +133,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 {
                     // Try to get ContentManager from GraphicsDevice services
                     // Stride GraphicsDevice may have Services property that provides ContentManager
-                    var services = _graphicsDevice.Services;
+                    object services = _graphicsDevice.Services();
                     if (services != null)
                     {
                         var contentManager = services.GetService<ContentManager>();
@@ -353,7 +353,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             // If we have a shader effect, use GPU-based ray marching
             if (_ssrEffect != null && _fullscreenEffect != null)
             {
-                var commandList = _graphicsDevice.ImmediateContext;
+                StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext();
                 if (commandList != null)
                 {
                     ExecuteSsrGpu(input, depth, normal, roughness, lightmap, output, commandList);
@@ -756,7 +756,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 var data = new Vector4[size];
 
                 // Get ImmediateContext (StrideGraphics.CommandList) from GraphicsDevice
-                var commandList = _graphicsDevice.ImmediateContext;
+                StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext();
                 if (commandList == null)
                 {
                     Console.WriteLine("[StrideSSR] ReadTextureData: ImmediateContext not available");
@@ -889,7 +889,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 }
 
                 // Get ImmediateContext (StrideGraphics.CommandList) from GraphicsDevice
-                var commandList = _graphicsDevice.ImmediateContext;
+                StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext();
                 if (commandList == null)
                 {
                     Console.WriteLine("[StrideSSR] WriteTextureData: ImmediateContext not available");
@@ -1034,7 +1034,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
             // Update constant buffer
             // In Stride, constant buffers are updated through Buffer.SetData() or EffectInstance.Parameters
-            var commandList = _graphicsDevice.ImmediateContext;
+            StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext();
             if (commandList != null && _ssrConstants != null)
             {
                 // Convert struct to byte array for SetData
@@ -1333,7 +1333,7 @@ shader SSREffect : ShaderBase
                 // Strategy 1: Try to get EffectCompiler from GraphicsDevice services
                 // Based on Stride API: GraphicsDevice.Services provides access to EffectSystem
                 // EffectSystem contains EffectCompiler for runtime shader compilation
-                var services = _graphicsDevice.Services;
+                object services = _graphicsDevice.Services();
                 if (services != null)
                 {
                     // Try to get EffectCompiler from services
@@ -1474,7 +1474,7 @@ shader SSREffect : ShaderBase
 
                 // Try to compile shader from file
                 // Based on Stride API: EffectCompiler can compile from file paths
-                var services = _graphicsDevice.Services;
+                object services = _graphicsDevice.Services();
                 if (services != null)
                 {
                     var effectCompiler = services.GetService<EffectCompiler>();

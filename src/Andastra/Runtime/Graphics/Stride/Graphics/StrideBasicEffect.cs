@@ -571,7 +571,7 @@ namespace Andastra.Runtime.Stride.Graphics
                             {
                                 var valueType = genericArgs[0];
                                 var valueTypeActual = value.GetType();
-                                
+
                                 // Ensure the value type is compatible with the parameter key type
                                 if (valueType.IsAssignableFrom(valueTypeActual) || valueTypeActual.IsSubclassOf(valueType) || valueType == valueTypeActual)
                                 {
@@ -580,7 +580,7 @@ namespace Andastra.Runtime.Stride.Graphics
                                     var keyGenericDef = keyType.GetGenericTypeDefinition();
                                     var isValueParameterKey = keyGenericDef == typeof(ValueParameterKey<>);
                                     var isObjectParameterKey = keyGenericDef == typeof(ObjectParameterKey<>);
-                                    
+
                                     // Find the Set<T> method that takes ParameterKey<T> and T
                                     // ParameterCollection.Set<T>(ParameterKey<T> key, T value)
                                     var setMethods = typeof(ParameterCollection).GetMethods();
@@ -594,7 +594,7 @@ namespace Andastra.Runtime.Stride.Graphics
                                             if (firstParamType.IsGenericType)
                                             {
                                                 var firstParamGenericDef = firstParamType.GetGenericTypeDefinition();
-                                                if (firstParamGenericDef == typeof(ParameterKey<>) || 
+                                                if (firstParamGenericDef == typeof(ParameterKey<>) ||
                                                     firstParamGenericDef == typeof(ValueParameterKey<>) ||
                                                     firstParamGenericDef == typeof(ObjectParameterKey<>))
                                                 {
@@ -604,15 +604,15 @@ namespace Andastra.Runtime.Stride.Graphics
                                             }
                                         }
                                     }
-                                    
+
                                     if (setMethod != null)
                                     {
                                         // Make the generic method with the correct type parameter
                                         var genericSetMethod = setMethod.MakeGenericMethod(valueType);
-                                        
+
                                         // Create the appropriate parameter key type based on whether T is a value type or reference type
                                         ParameterKey parameterKeyToUse = key;
-                                        
+
                                         // If the key is not already the right type, create a new one
                                         // Value types use ValueParameterKey<T>, reference types use ObjectParameterKey<T>
                                         if (!isValueParameterKey && !isObjectParameterKey)
@@ -638,7 +638,7 @@ namespace Andastra.Runtime.Stride.Graphics
                                                 }
                                             }
                                         }
-                                        
+
                                         // Invoke Set<T>(key, value) to set the parameter
                                         genericSetMethod.Invoke(parameters, new[] { parameterKeyToUse, value });
                                     }

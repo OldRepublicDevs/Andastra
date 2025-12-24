@@ -420,7 +420,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 // Strategy 2: Try loading from ContentManager if available
                 try
                 {
-                    var services = _graphicsDevice.Services;
+                    object services = _graphicsDevice.Services();
                     if (services != null)
                     {
                         var contentManager = services.GetService<Stride.Engine.ContentManager>();

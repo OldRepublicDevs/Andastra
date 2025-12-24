@@ -86,15 +86,15 @@ namespace Andastra.Runtime.Stride.PostProcessing
             try
             {
                 // Create sprite batch for fullscreen quad rendering
-                _spriteBatch = new SpriteBatch(_graphicsDevice);
+                _spriteBatch = new StrideGraphics.SpriteBatch(_graphicsDevice);
 
                 // Create linear sampler for StrideGraphics.Texture sampling
-                _linearSampler = SamplerState.New(_graphicsDevice, new SamplerStateDescription
+                _linearSampler = StrideGraphics.SamplerState.New(_graphicsDevice, new StrideGraphics.SamplerStateDescription
                 {
-                    Filter = TextureFilter.Linear,
-                    AddressU = TextureAddressMode.Clamp,
-                    AddressV = TextureAddressMode.Clamp,
-                    AddressW = TextureAddressMode.Clamp
+                    Filter = StrideGraphics.TextureFilter.Linear,
+                    AddressU = StrideGraphics.TextureAddressMode.Clamp,
+                    AddressV = StrideGraphics.TextureAddressMode.Clamp,
+                    AddressW = StrideGraphics.TextureAddressMode.Clamp
                 });
 
                 _renderingResourcesInitialized = true;
@@ -119,7 +119,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
             // Validate LUT dimensions
             // Common sizes: 16x16x16 (256x16) or 32x32x32 (1024x32) flattened to 2D
-            if (lutTexture.Dimension != TextureDimension.Texture2D)
+            if (lutTexture.Dimension != StrideGraphics.TextureDimension.Texture2D)
             {
                 throw new ArgumentException("LUT must be a 2D StrideGraphics.Texture (flattened 3D)", nameof(lutTexture));
             }
@@ -202,10 +202,10 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
             _temporaryTexture?.Dispose();
 
-            var desc = TextureDescription.New2D(width, height, 1, format,
-                TextureFlags.ShaderResource | TextureFlags.RenderTarget);
+            var desc = StrideGraphics.TextureDescription.New2D(width, height, 1, format,
+                StrideGraphics.TextureFlags.ShaderResource | StrideGraphics.TextureFlags.RenderTarget);
 
-            _temporaryTexture = Texture.New(_graphicsDevice, desc);
+            _temporaryTexture = StrideGraphics.Texture.New(_graphicsDevice, desc);
         }
 
         private void ExecuteColorGrading(StrideGraphics.Texture input, StrideGraphics.Texture output)
@@ -258,7 +258,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
             try
             {
-                StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext;
+                StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext();
                 if (commandList == null)
                 {
                     return false;
@@ -266,7 +266,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
                 // Set render target to output
                 commandList.SetRenderTarget(null, output);
-                commandList.SetViewport(new Viewport(0, 0, output.Width, output.Height));
+                commandList.SetViewport(new StrideGraphics.Viewport(0, 0, output.Width, output.Height));
 
                 // Clear render target (optional, but ensures clean output)
                 _graphicsDevice.Clear(output, Color.Transparent);
@@ -280,8 +280,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 // BlendStates.Opaque: overwrite pixels (no blending for post-processing)
                 // DepthStencilStates.None: no depth testing needed for fullscreen quad
                 // RasterizerStates.CullNone: render both front and back faces
-                _spriteBatch.Begin(commandList, SpriteSortMode.Immediate, BlendStates.Opaque, _linearSampler,
-                    DepthStencilStates.None, RasterizerStates.CullNone, _colorGradingEffect);
+                _spriteBatch.Begin(commandList, StrideGraphics.SpriteSortMode.Immediate, StrideGraphics.BlendStates.Opaque, _linearSampler,
+                    StrideGraphics.DepthStencilStates.None, StrideGraphics.RasterizerStates.CullNone, _colorGradingEffect);
 
                 // Set shader parameters
                 var parameters = _colorGradingEffect.Parameters;
@@ -290,7 +290,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     // Set input StrideGraphics.Texture
                     try
                     {
-                        var inputTextureParam = parameters.Get<object>("InputTexture");
+                        var inputTextureParam = parameters.Get<StrideGraphics.Texture>("InputTexture");
                         if (inputTextureParam != null)
                         {
                             ((dynamic)inputTextureParam).SetValue(input);
@@ -298,7 +298,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                         else
                         {
                             // Try alternative parameter names
-                            var sourceTextureParam = parameters.Get<object>("SourceTexture");
+                            var sourceTextureParam = parameters.Get<StrideGraphics.Texture>("SourceTexture");
                             if (sourceTextureParam != null)
                             {
                                 ((dynamic)sourceTextureParam).SetValue(input);
@@ -323,13 +323,13 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     {
                         try
                         {
-                            var lutTextureParam = parameters.Get<object>("LutTexture");
+                            var lutTextureParam = parameters.Get<StrideGraphics.Texture>("LutTexture");
                             if (lutTextureParam != null)
                             {
                                 ((dynamic)lutTextureParam).SetValue(_lutTexture);
                             }
 
-                            var lutSizeParam = parameters.Get<object>("LutSize");
+                            var lutSizeParam = parameters.Get<int>("LutSize");
                             if (lutSizeParam != null)
                             {
                                 ((dynamic)lutSizeParam).SetValue((float)_lutSize);
@@ -344,19 +344,19 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     // Set color grading parameters
                     try
                     {
-                        var contrastParam = parameters.Get<object>("Contrast");
+                        var contrastParam = parameters.Get<float>("Contrast");
                         if (contrastParam != null)
                         {
                             ((dynamic)contrastParam).SetValue(_contrast);
                         }
 
-                        var saturationParam = parameters.Get<object>("Saturation");
+                        var saturationParam = parameters.Get<float>("Saturation");
                         if (saturationParam != null)
                         {
                             ((dynamic)saturationParam).SetValue(_saturation);
                         }
 
-                        var strengthParam = parameters.Get<object>("Strength");
+                        var strengthParam = parameters.Get<float>("Strength");
                         if (strengthParam != null)
                         {
                             ((dynamic)strengthParam).SetValue(_strength);
@@ -370,13 +370,13 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     // Set screen size parameters (useful for UV calculations)
                     try
                     {
-                        var screenSizeParam = parameters.Get<object>("ScreenSize");
+                        var screenSizeParam = parameters.Get<Vector2>("ScreenSize");
                         if (screenSizeParam != null)
                         {
                             ((dynamic)screenSizeParam).SetValue(new Vector2(width, height));
                         }
 
-                        var screenSizeInvParam = parameters.Get<object>("ScreenSizeInv");
+                        var screenSizeInvParam = parameters.Get<Vector2>("ScreenSizeInv");
                         if (screenSizeInvParam != null)
                         {
                             ((dynamic)screenSizeInvParam).SetValue(new Vector2(1.0f / width, 1.0f / height));
@@ -432,13 +432,13 @@ namespace Andastra.Runtime.Stride.PostProcessing
             {
                 // Strategy 1: Try loading from compiled effect files using Effect.Load()
                 // Effect.Load() searches in standard content paths for compiled .sdeffect files
-                Stride.Rendering.Effect effectBase = null;
+                StrideGraphics.Effect effectBase = null;
                 try
                 {
-                    effectBase = Effect.Load(_graphicsDevice, "ColorGradingEffect");
+                    effectBase = StrideGraphics.Effect.Load(_graphicsDevice, "ColorGradingEffect");
                     if (effectBase != null)
                     {
-                        _colorGradingEffect = new EffectInstance(effectBase);
+                        _colorGradingEffect = new StrideGraphics.EffectInstance(effectBase);
                         Console.WriteLine("[StrideColorGrading] Loaded ColorGradingEffect from compiled file");
                         _effectInitialized = true;
                         return;
@@ -453,7 +453,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 // Check if GraphicsDevice has access to ContentManager through services
                 try
                 {
-                    var services = _graphicsDevice.Services;
+                    var services = _graphicsDevice.Services();
                     if (services != null)
                     {
                         var contentManager = services.GetService<ContentManager>();
@@ -461,10 +461,10 @@ namespace Andastra.Runtime.Stride.PostProcessing
                         {
                             try
                             {
-                                effectBase = contentManager.Load<Effect>("ColorGradingEffect");
+                                effectBase = contentManager.Load<StrideGraphics.Effect>("ColorGradingEffect");
                                 if (effectBase != null)
                                 {
-                                    _colorGradingEffect = new EffectInstance(effectBase);
+                                    _colorGradingEffect = new StrideGraphics.EffectInstance(effectBase);
                                     Console.WriteLine("[StrideColorGrading] Loaded ColorGradingEffect from ContentManager");
                                     _effectInitialized = true;
                                     return;
@@ -516,7 +516,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
             try
             {
-                StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext;
+                StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext();
                 if (commandList == null)
                 {
                     Console.WriteLine("[StrideColorGrading] ImmediateContext not available");
@@ -740,12 +740,12 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 StrideGraphics.PixelFormat format = texture.Format;
 
                 // Handle different StrideGraphics.Texture formats
-                if (format == PixelFormat.R8G8B8A8_UNorm ||
-                    format == PixelFormat.R8G8B8A8_UNorm_SRgb ||
-                    format == PixelFormat.R32G32B32A32_Float ||
-                    format == PixelFormat.R16G16B16A16_Float ||
-                    format == PixelFormat.B8G8R8A8_UNorm ||
-                    format == PixelFormat.B8G8R8A8_UNorm_SRgb)
+                if (format == StrideGraphics.PixelFormat.R8G8B8A8_UNorm ||
+                    format == StrideGraphics.PixelFormat.R8G8B8A8_UNorm_SRgb ||
+                    format == StrideGraphics.PixelFormat.R32G32B32A32_Float ||
+                    format == StrideGraphics.PixelFormat.R16G16B16A16_Float ||
+                    format == StrideGraphics.PixelFormat.B8G8R8A8_UNorm ||
+                    format == StrideGraphics.PixelFormat.B8G8R8A8_UNorm_SRgb)
                 {
                     // Read as Color array
                     var colorData = new Color[size];
