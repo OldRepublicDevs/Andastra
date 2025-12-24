@@ -83,10 +83,8 @@ namespace Andastra.Runtime.Stride.Graphics
                     var specularFeature = new MaterialSpecularMapFeature();
                     specularFeature.SpecularMap = new ComputeColor(specularColor);
                     materialDescriptor.Attributes.Specular = specularFeature;
-                    // Set specular power via custom parameter key (MaterialKeys.SpecularPowerValue doesn't exist in Stride API)
-                    // This will be used by shaders to control specular highlight size
-                    // TODO: STUB - ParameterCollection may not be initialized at this point
-                    // Specular power will be set when parameters are updated
+                    // Specular power will be set in InitializeParameters method after ParameterCollection is created
+                    // This ensures proper initialization order and prevents accessing null ParameterCollection
                 }
 
                 // Create the Material from the descriptor
