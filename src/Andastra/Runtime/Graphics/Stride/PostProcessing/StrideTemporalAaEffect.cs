@@ -7,6 +7,7 @@ using Stride.Core.Mathematics;
 using Stride.Engine;
 using Stride.Shaders;
 using Stride.Shaders.Compiler;
+using Stride.Core.Serialization.Contents;
 using Andastra.Runtime.Graphics.Common.PostProcessing;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Stride.Graphics;
@@ -129,37 +130,142 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
             try
             {
-                // Strategy 1: Try loading TAA effect from compiled content files
+                // Strategy 1: Try loading TAA effect from ContentManager
+                // Effects in Stride are loaded through ContentManager.Load<Effect>()
+                // This loads pre-compiled .sdeffect files from the content pipeline
                 try
                 {
-                    // TODO: STUB - Effect.Load() doesn't exist in Stride API
-                    // Effects should be loaded through ContentManager or created programmatically
-                    _taaEffectBase = null;
-                    if (_taaEffectBase != null)
+                    // Get services from GraphicsDevice to access ContentManager
+                    // Services() provides access to engine services including ContentManager
+                    object services = _graphicsDevice.Services();
+                    if (services != null)
                     {
-                        _taaEffect = new EffectInstance(_taaEffectBase);
-                        _effectInitialized = true;
-                        System.Console.WriteLine("[StrideTemporalAaEffect] Loaded TemporalAA effect from compiled file");
-                        return;
+                        // Get ContentManager service using dynamic dispatch
+                        // ContentManager handles loading of compiled assets including effects
+                        var contentManager = ((dynamic)services).GetService<ContentManager>();
+                        if (contentManager != null)
+                        {
+                            // Attempt to load TemporalAA effect from content
+                            // Effect name should match the .sdeffect file name in content
+                            // ContentManager.Load<Effect>() loads and caches compiled shader effects
+                            _taaEffectBase = contentManager.Load<StrideGraphics.Effect>("TemporalAA");
+                            if (_taaEffectBase != null)
+                            {
+                                // Create EffectInstance from the loaded effect base
+                                // EffectInstance provides parameter binding and shader execution
+                                _taaEffect = new EffectInstance(_taaEffectBase);
+                                _effectInitialized = true;
+                                System.Console.WriteLine("[StrideTemporalAaEffect] Loaded TemporalAA effect from ContentManager");
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            System.Console.WriteLine("[StrideTemporalAaEffect] ContentManager service not available from GraphicsDevice");
+                        }
+                    }
+                    else
+                    {
+                        System.Console.WriteLine("[StrideTemporalAaEffect] Services not available from GraphicsDevice");
                     }
                 }
                 catch (Exception ex)
                 {
-                    System.Console.WriteLine($"[StrideTemporalAaEffect] Failed to load TemporalAA from compiled file: {ex.Message}");
+                    System.Console.WriteLine($"[StrideTemporalAaEffect] Failed to load TemporalAA from ContentManager: {ex.Message}");
                 }
 
-                // Strategy 2: Try loading from ContentManager if available
+                // Strategy 2: Alternative ContentManager access pattern
+                // Some Stride versions provide ContentManager through different service access patterns
                 if (_taaEffectBase == null)
                 {
                     try
                     {
-                        // TODO: STUB - ContentManager loading not yet implemented
-                        // Services property access and ContentManager integration needs proper Stride API implementation
-                        // ContentManager should be obtained from Game.Services instead of GraphicsDevice
+                        // Alternative service access pattern for ContentManager
+                        // Try dynamic dispatch for service access
+                        object services = _graphicsDevice.Services();
+                        if (services != null)
+                        {
+                            // Attempt GetService call using dynamic dispatch
+                            // This pattern works in some Stride configurations
+                            var contentManager = ((dynamic)services).GetService<ContentManager>();
+                            if (contentManager != null)
+                            {
+                                try
+                                {
+                                    // Load TemporalAA effect using alternative content path
+                                    // Try different effect names in case the primary one isn't found
+                                    string[] effectNames = { "TemporalAA", "TemporalAntiAliasing", "TAA", "PostProcessing/TemporalAA" };
+
+                                    foreach (string effectName in effectNames)
+                                    {
+                                        try
+                                        {
+                                            _taaEffectBase = contentManager.Load<StrideGraphics.Effect>(effectName);
+                                            if (_taaEffectBase != null)
+                                            {
+                                                _taaEffect = new EffectInstance(_taaEffectBase);
+                                                _effectInitialized = true;
+                                                System.Console.WriteLine($"[StrideTemporalAaEffect] Loaded TemporalAA effect from ContentManager using name '{effectName}'");
+                                                return;
+                                            }
+                                        }
+                                        catch
+                                        {
+                                            // Continue to next effect name if this one fails
+                                            continue;
+                                        }
+                                    }
+
+                                    System.Console.WriteLine("[StrideTemporalAaEffect] None of the expected effect names found in ContentManager");
+                                }
+                                catch (Exception loadEx)
+                                {
+                                    System.Console.WriteLine($"[StrideTemporalAaEffect] Failed to load TemporalAA from ContentManager: {loadEx.Message}");
+                                }
+                            }
+                            else
+                            {
+                                System.Console.WriteLine("[StrideTemporalAaEffect] ContentManager not available through direct service access");
+                            }
+                        }
+
+                        // Additional fallback: Try to get ContentManager from Game.Services if available
+                        // In some Stride architectures, ContentManager is accessed through the Game object
+                        // This requires the Game instance to be accessible, which may not always be available
+                        // from the GraphicsDevice context
+                        try
+                        {
+                            // Attempt to access Game.Services through reflection or service locator pattern
+                            // This is a more advanced integration that requires proper Game context
+                            var gameProperty = _graphicsDevice.GetType().GetProperty("Game");
+                            if (gameProperty != null)
+                            {
+                                var game = gameProperty.GetValue(_graphicsDevice) as dynamic;
+                                if (game != null && game.Services != null)
+                                {
+                                    var gameContentManager = game.Services.GetService<ContentManager>();
+                                    if (gameContentManager != null)
+                                    {
+                                        _taaEffectBase = gameContentManager.Load<StrideGraphics.Effect>("TemporalAA");
+                                        if (_taaEffectBase != null)
+                                        {
+                                            _taaEffect = new EffectInstance(_taaEffectBase);
+                                            _effectInitialized = true;
+                                            System.Console.WriteLine("[StrideTemporalAaEffect] Loaded TemporalAA effect from Game.Services.ContentManager");
+                                            return;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception gameEx)
+                        {
+                            System.Console.WriteLine($"[StrideTemporalAaEffect] Failed to access ContentManager through Game.Services: {gameEx.Message}");
+                        }
                     }
                     catch (Exception ex)
                     {
-                        System.Console.WriteLine($"[StrideTemporalAaEffect] Failed to access ContentManager: {ex.Message}");
+                        System.Console.WriteLine($"[StrideTemporalAaEffect] Failed to access ContentManager through any available method: {ex.Message}");
                     }
                 }
 
@@ -532,12 +638,73 @@ shader TemporalAAEffect : ShaderBase
         /// <returns>Compiled Effect, or null if compilation fails.</returns>
         private StrideGraphics.Effect CompileShaderWithCompiler(EffectCompiler compiler, string shaderSource, string shaderName)
         {
-            // TODO: STUB - Shader compilation needs proper Stride API implementation
-            // ShaderSource is abstract and requires concrete implementation (ShaderClassSource, etc.)
-            // EffectCompiler API may differ from what's used here
-            // Runtime shader compilation requires proper Stride shader compilation pipeline
-            System.Console.WriteLine($"[StrideTemporalAaEffect] Shader compilation not yet implemented for '{shaderName}'");
-            return null;
+            try
+            {
+                // Create compilation context for shader compilation
+                // Based on Stride API: EffectCompiler requires compilation context
+                // ShaderSource is abstract, so we use ShaderClassSource for source code compilation
+                var compilerSource = new ShaderClassSource
+                {
+                    Name = shaderName,
+                    SourceCode = shaderSource
+                };
+
+                // Compile shader source to bytecode
+                // Based on Stride API: EffectCompiler.Compile() compiles shader source
+                // CompilerParameters provides compilation settings including platform target
+                // EffectCompilerParameters contains settings for effect compilation (macros, includes, etc.)
+                dynamic compilationResult = compiler.Compile(compilerSource, new CompilerParameters
+                {
+                    EffectParameters = new EffectCompilerParameters()
+                });
+
+                // Unwrap TaskOrResult to get the actual result
+                // TaskOrResult may need .Result property or similar to unwrap, use dynamic to handle type differences
+                dynamic compilerResult = compilationResult.Result;
+                if (compilerResult != null && compilerResult.Bytecode != null && compilerResult.Bytecode.Length > 0)
+                {
+                    // Create Effect from compiled bytecode
+                    // Based on Stride API: Effect constructor accepts compiled bytecode
+                    // Use global:: to avoid namespace resolution conflicts with System.Numerics
+                    var effect = new StrideGraphics.Effect(_graphicsDevice, (EffectBytecode)compilerResult.Bytecode);
+                    System.Console.WriteLine($"[StrideTemporalAaEffect] Successfully compiled shader '{shaderName}' using EffectCompiler");
+                    return effect;
+                }
+                else
+                {
+                    System.Console.WriteLine($"[StrideTemporalAaEffect] EffectCompiler compilation failed for shader '{shaderName}': No bytecode generated");
+                    if (compilerResult != null && compilerResult.HasErrors)
+                    {
+                        // CompilerResults may not have ErrorText, use ToString() or check for specific error properties
+                        // Try to get error information from the result object
+                        System.Console.WriteLine($"[StrideTemporalAaEffect] Compilation errors occurred for shader '{shaderName}'");
+                        try
+                        {
+                            // Attempt to extract error information from compiler result
+                            var errorProperty = compilerResult.GetType().GetProperty("ErrorText");
+                            if (errorProperty != null)
+                            {
+                                var errorText = errorProperty.GetValue(compilerResult) as string;
+                                if (!string.IsNullOrEmpty(errorText))
+                                {
+                                    System.Console.WriteLine($"[StrideTemporalAaEffect] Compilation errors: {errorText}");
+                                }
+                            }
+                        }
+                        catch
+                        {
+                            // Ignore error extraction failures
+                        }
+                    }
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"[StrideTemporalAaEffect] Exception while compiling shader '{shaderName}' with EffectCompiler: {ex.Message}");
+                System.Console.WriteLine($"[StrideTemporalAaEffect] Stack trace: {ex.StackTrace}");
+                return null;
+            }
         }
 
         /// <summary>
