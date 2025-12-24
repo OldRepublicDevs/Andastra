@@ -404,28 +404,31 @@ namespace Andastra.Parsing.Common
         public override void WriteLocalizedString(LocalizedString value, bool bigEndian = false)
         {
             using (var ms = new MemoryStream())
-            using (var tempWriter = new RawBinaryWriterFile(ms))
             {
-                uint stringref = value.StringRef == -1 ? 0xFFFFFFFF : (uint)value.StringRef;
-                tempWriter.WriteUInt32(stringref, bigEndian);
-                tempWriter.WriteUInt32((uint)value.Count, bigEndian);
-
-                foreach ((Language language, Gender gender, string text) in value)
+                using (var tempWriter = new RawBinaryWriterFile(ms))
                 {
-                    int stringId = LocalizedString.SubstringId(language, gender);
-                    tempWriter.WriteUInt32((uint)stringId, bigEndian);
+                    uint stringref = value.StringRef == -1 ? 0xFFFFFFFF : (uint)value.StringRef;
+                    tempWriter.WriteUInt32(stringref, bigEndian);
+                    tempWriter.WriteUInt32((uint)value.Count, bigEndian);
 
-                    string encodingName = LanguageExtensions.GetEncoding(language);
-                    Encoding encoding = encodingName != null
-                        ? Encoding.GetEncoding(encodingName, EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback)
-                        : Encoding.GetEncoding("windows-1252", EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
+                    foreach ((Language language, Gender gender, string text) in value)
+                    {
+                        int stringId = LocalizedString.SubstringId(language, gender);
+                        tempWriter.WriteUInt32((uint)stringId, bigEndian);
 
-                    byte[] textBytes = encoding.GetBytes(text);
-                    tempWriter.WriteUInt32((uint)textBytes.Length, bigEndian);
-                    tempWriter.WriteBytes(textBytes);
+                        string encodingName = LanguageExtensions.GetEncoding(language);
+                        Encoding encoding = encodingName != null
+                            ? Encoding.GetEncoding(encodingName, EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback)
+                            : Encoding.GetEncoding("windows-1252", EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
+
+                        byte[] textBytes = encoding.GetBytes(text);
+                        tempWriter.WriteUInt32((uint)textBytes.Length, bigEndian);
+                        tempWriter.WriteBytes(textBytes);
+                    }
                 }
-
-                byte[] locstringData = tempWriter.Data();
+                
+                // Get the data after the writer is disposed to ensure all writes are flushed
+                byte[] locstringData = ms.ToArray();
                 WriteUInt32((uint)locstringData.Length);
                 WriteBytes(locstringData);
             }
