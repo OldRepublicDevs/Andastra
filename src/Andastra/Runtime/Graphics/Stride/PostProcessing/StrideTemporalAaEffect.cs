@@ -9,7 +9,6 @@ using Stride.Shaders;
 using Stride.Shaders.Compiler;
 using Andastra.Runtime.Graphics.Common.PostProcessing;
 using Andastra.Runtime.Graphics.Common.Rendering;
-using Andastra.Runtime.Stride.Graphics;
 using RectangleF = Stride.Core.Mathematics.RectangleF;
 using Color = Stride.Core.Mathematics.Color;
 using Vector2 = Stride.Core.Mathematics.Vector2;
@@ -132,7 +131,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 // Strategy 1: Try loading TAA effect from compiled content files
                 try
                 {
-                    _taaEffectBase = StrideGraphics.Effect.Load(_graphicsDevice, "TemporalAA");
+                    _taaEffectBase = Effect.Load(_graphicsDevice, "TemporalAA");
                     if (_taaEffectBase != null)
                     {
                         _taaEffect = new EffectInstance(_taaEffectBase);
@@ -154,30 +153,12 @@ namespace Andastra.Runtime.Stride.PostProcessing
                         object services = _graphicsDevice.Services();
                         if (services != null)
                         {
-                            // Services() extension method always returns null, so this code path will never execute
-                            // However, we need valid syntax for compilation
-                            // In Stride, services should be obtained from Game.Services, not GraphicsDevice.Services
-                            // Use reflection to call GetService to satisfy compiler (code will never execute since services is always null)
-                            Stride.Engine.ContentManager contentManager = null;
-                            try
-                            {
-                                var contentType = Type.GetType("Stride.Engine.ContentManager, Stride.Engine");
-                                if (contentType != null)
-                                {
-                                    var getServiceMethod = services.GetType().GetMethod("GetService", new System.Type[] { typeof(System.Type) });
-                                    contentManager = getServiceMethod?.Invoke(services, new object[] { contentType }) as Stride.Engine.ContentManager;
-                                }
-                            }
-                            catch
-                            {
-                                // Services() always returns null, so this will never execute
-                                contentManager = null;
-                            }
+                            var contentManager = services.GetService<ContentManager>();
                             if (contentManager != null)
                             {
                                 try
                                 {
-                                    _taaEffectBase = contentManager.Load<StrideGraphics.Effect>("TemporalAA");
+                                    _taaEffectBase = contentManager.Load<Effect>("TemporalAA");
                                     if (_taaEffectBase != null)
                                     {
                                         _taaEffect = new EffectInstance(_taaEffectBase);
@@ -663,7 +644,7 @@ shader TemporalAAEffect : ShaderBase
 
                         if (compilationResult != null && compilationResult.Bytecode != null && compilationResult.Bytecode.Length > 0)
                         {
-                            var effect = new StrideGraphics.Effect(_graphicsDevice, compilationResult.Bytecode);
+                            var effect = new Effect(_graphicsDevice, compilationResult.Bytecode);
                             System.Console.WriteLine($"[StrideTemporalAaEffect] Successfully compiled shader '{shaderName}' from file");
                             return effect;
                         }
@@ -781,7 +762,7 @@ shader TemporalAAEffect : ShaderBase
             // Get viewport dimensions
             int width = destination.Width;
             int height = destination.Height;
-            var viewport = new StrideGraphics.Viewport(0, 0, width, height);
+            var viewport = new Viewport(0, 0, width, height);
             commandList.SetViewport(viewport);
 
             // Calculate current jitter offset for this frame
@@ -799,56 +780,42 @@ shader TemporalAAEffect : ShaderBase
                 {
                     // Set blend factor (how much to blend current with history)
                     // Lower values = more history = better AA but more ghosting
-                    var blendFactorParam = _taaEffect.Parameters.Get("BlendFactor");
-                    if (blendFactorParam != null)
+                    // Use reflection to set parameters since ParameterCollection.Get() requires ObjectParameterKey
+                    // and we don't have the key objects available
+                    try
                     {
-                        blendFactorParam.SetValue(_blendFactor);
+                        var setFloatMethod = typeof(global::Stride.Rendering.ParameterCollection).GetMethod("Set", new[] { typeof(string), typeof(float) });
+                        if (setFloatMethod != null)
+                        {
+                            setFloatMethod.Invoke(_taaEffect.Parameters, new object[] { "BlendFactor", _blendFactor });
+                        }
                     }
+                    catch { }
 
-                    // Set jitter offset for sub-pixel sampling
-                    var jitterOffsetParam = _taaEffect.Parameters.Get("JitterOffset");
-                    if (jitterOffsetParam != null)
+                    try
                     {
-                        jitterOffsetParam.SetValue(jitterOffset);
+                        var setVector2Method = typeof(global::Stride.Rendering.ParameterCollection).GetMethod("Set", new[] { typeof(string), typeof(Vector2) });
+                        if (setVector2Method != null)
+                        {
+                            setVector2Method.Invoke(_taaEffect.Parameters, new object[] { "JitterOffset", jitterOffset });
+                            setVector2Method.Invoke(_taaEffect.Parameters, new object[] { "ScreenSize", new Vector2(width, height) });
+                            setVector2Method.Invoke(_taaEffect.Parameters, new object[] { "ScreenSizeInv", new Vector2(1.0f / width, 1.0f / height) });
+                        }
                     }
+                    catch { }
 
-                    // Set screen resolution for UV calculations
-                    var screenSizeParam = _taaEffect.Parameters.Get("ScreenSize");
-                    if (screenSizeParam != null)
+                    try
                     {
-                        screenSizeParam.SetValue(new Vector2(width, height));
+                        var setTextureMethod = typeof(global::Stride.Rendering.ParameterCollection).GetMethod("Set", new[] { typeof(string), typeof(StrideGraphics.Texture) });
+                        if (setTextureMethod != null)
+                        {
+                            if (currentFrame != null) setTextureMethod.Invoke(_taaEffect.Parameters, new object[] { "CurrentFrame", currentFrame });
+                            if (historyBuffer != null) setTextureMethod.Invoke(_taaEffect.Parameters, new object[] { "HistoryBuffer", historyBuffer });
+                            if (velocityBuffer != null) setTextureMethod.Invoke(_taaEffect.Parameters, new object[] { "VelocityBuffer", velocityBuffer });
+                            if (depthBuffer != null) setTextureMethod.Invoke(_taaEffect.Parameters, new object[] { "DepthBuffer", depthBuffer });
+                        }
                     }
-
-                    var screenSizeInvParam = _taaEffect.Parameters.Get("ScreenSizeInv");
-                    if (screenSizeInvParam != null)
-                    {
-                        screenSizeInvParam.SetValue(new Vector2(1.0f / width, 1.0f / height));
-                    }
-
-                    // Bind input textures
-                    var currentFrameParam = _taaEffect.Parameters.Get("CurrentFrame");
-                    if (currentFrameParam != null)
-                    {
-                        currentFrameParam.SetValue(currentFrame);
-                    }
-
-                    var historyBufferParam = _taaEffect.Parameters.Get("HistoryBuffer");
-                    if (historyBufferParam != null && historyBuffer != null)
-                    {
-                        historyBufferParam.SetValue(historyBuffer);
-                    }
-
-                    var velocityBufferParam = _taaEffect.Parameters.Get("VelocityBuffer");
-                    if (velocityBufferParam != null && velocityBuffer != null)
-                    {
-                        velocityBufferParam.SetValue(velocityBuffer);
-                    }
-
-                    var depthBufferParam = _taaEffect.Parameters.Get("DepthBuffer");
-                    if (depthBufferParam != null && depthBuffer != null)
-                    {
-                        depthBufferParam.SetValue(depthBuffer);
-                    }
+                    catch { }
 
                     // Set previous view-projection matrix for reprojection
                     // This is used to reproject history buffer samples to current frame space
@@ -920,8 +887,8 @@ shader TemporalAAEffect : ShaderBase
                 // This fallback is used when shader compilation fails or effect is not initialized
                 // It provides basic functionality by copying current frame without temporal accumulation
                 // For production use, ensure TAA shader is properly compiled and initialized
-                _spriteBatch.Begin(commandList, StrideGraphics.SpriteSortMode.Immediate, StrideGraphics.BlendStates.Opaque,
-                    _linearSampler, StrideGraphics.DepthStencilStates.None, StrideGraphics.RasterizerStates.CullNone);
+                _spriteBatch.Begin(commandList, SpriteSortMode.Immediate, BlendStates.Opaque,
+                    _linearSampler, DepthStencilStates.None, RasterizerStates.CullNone);
                 _spriteBatch.Draw(currentFrame, new RectangleF(0, 0, width, height), Color.White);
                 _spriteBatch.End();
             }
