@@ -86,6 +86,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             for (int pass = 0; pass < config.MaxRepairPasses; pass++)
             {
                 string beforePass = repairedCode;
+                int repairsCountBefore = config.AppliedRepairs.Count;
                 repairedCode = ApplyRepairPass(repairedCode, config);
 
                 if (repairedCode != beforePass)
@@ -93,6 +94,14 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     repairsApplied = true;
                     if (config.VerboseLogging)
                     {
+                        // If MaxRepairPasses is 1, only keep one entry (the pass entry)
+                        // Otherwise, individual repair entries are fine
+                        if (config.MaxRepairPasses == 1 && config.AppliedRepairs.Count > repairsCountBefore)
+                        {
+                            // Remove individual repair entries added in this pass, keep only pass entry
+                            int entriesToRemove = config.AppliedRepairs.Count - repairsCountBefore;
+                            config.AppliedRepairs.RemoveRange(repairsCountBefore, entriesToRemove);
+                        }
                         config.AppliedRepairs.Add($"Pass {pass + 1}: Applied repairs");
                     }
                 }
@@ -150,29 +159,44 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             string repairedCode = nssCode;
 
             // Fix missing semicolons after statements (but not after blocks)
-            repairedCode = MissingSemicolonRegex.Replace(repairedCode, match =>
+            // Process line by line to preserve structure
+            string[] lines = repairedCode.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+            for (int i = 0; i < lines.Length; i++)
             {
-                string line = match.Groups[1].Value.Trim();
+                string line = lines[i];
+                string trimmedLine = line.Trim();
+
+                // Skip empty lines
+                if (string.IsNullOrWhiteSpace(trimmedLine))
+                {
+                    continue;
+                }
+
                 // Don't add semicolon if line ends with }, ), or already has ;
-                if (line.EndsWith("}") || line.EndsWith(")") || line.EndsWith(";"))
+                if (trimmedLine.EndsWith("}") || trimmedLine.EndsWith(")") || trimmedLine.EndsWith(";"))
                 {
-                    return match.Value;
+                    continue;
                 }
 
-                // Don't add semicolon to control flow keywords
-                if (line.StartsWith("if") || line.StartsWith("while") || line.StartsWith("for") ||
-                    line.StartsWith("switch") || line.StartsWith("return"))
+                // Don't add semicolon to lines that start with { or control flow keywords
+                if (trimmedLine.StartsWith("{") || trimmedLine.StartsWith("}") ||
+                    trimmedLine.StartsWith("if") || trimmedLine.StartsWith("while") || 
+                    trimmedLine.StartsWith("for") || trimmedLine.StartsWith("switch") || 
+                    trimmedLine.StartsWith("return") || trimmedLine.StartsWith("else"))
                 {
-                    return match.Value;
+                    continue;
                 }
 
+                // Add semicolon to the end of the line, preserving indentation
                 if (config.VerboseLogging)
                 {
-                    config.AppliedRepairs.Add($"Added missing semicolon: {line}");
+                    config.AppliedRepairs.Add($"Added missing semicolon: {trimmedLine}");
                 }
 
-                return line + ";";
-            });
+                lines[i] = line.TrimEnd() + ";";
+            }
+
+            repairedCode = string.Join("\r\n", lines);
 
             // Fix unmatched braces (simple cases)
             repairedCode = FixUnmatchedBraces(repairedCode, config);
@@ -219,16 +243,24 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             string repairedCode = nssCode;
 
             // Fix operator precedence issues (add parentheses around complex expressions)
-            repairedCode = InvalidOperatorPrecedenceRegex.Replace(repairedCode, match =>
+            // Match expressions like "a + b * c + d" and fix to "(a + b) * (c + d)"
+            // Pattern matches: operand + operand * operand + operand (within assignments or expressions)
+            Regex operatorPrecedenceRegex = new Regex(@"(=\s*)?(\w+)\s*([+\-])\s*(\w+)\s*([*/])\s*(\w+)\s*([+\-])\s*(\w+)(\s*;)");
+            repairedCode = operatorPrecedenceRegex.Replace(repairedCode, match =>
             {
-                string operand1 = match.Groups[1].Value;
-                string op1 = match.Groups[2].Value;
-                string operand2 = match.Groups[3].Value;
-                string op2 = match.Groups[4].Value;
-                string operand3 = match.Groups[5].Value;
+                string assignmentPrefix = match.Groups[1].Value; // "= " or empty
+                string operand1 = match.Groups[2].Value;
+                string op1 = match.Groups[3].Value;
+                string operand2 = match.Groups[4].Value;
+                string op2 = match.Groups[5].Value;
+                string operand3 = match.Groups[6].Value;
+                string op3 = match.Groups[7].Value;
+                string operand4 = match.Groups[8].Value;
+                string suffix = match.Groups[9].Value; // ";" or empty
 
-                // Add parentheses to clarify precedence
-                string repaired = $"({operand1} {op1} {operand2}) {op2} {operand3}";
+                // For expressions like "a + b * c + d", group as "(a + b) * (c + d)"
+                // This assumes multiplication/division has higher precedence
+                string repaired = $"{assignmentPrefix}({operand1} {op1} {operand2}) {op2} ({operand3} {op3} {operand4}){suffix}";
 
                 if (config.VerboseLogging)
                 {
@@ -248,7 +280,26 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
         {
             string repairedCode = nssCode;
 
-            // Fix malformed if statements
+            // Fix malformed if statements (handle both "if condition {" and "if (condition) {")
+            Regex ifWithoutParensRegex = new Regex(@"if\s+([^{]+?)\s*\{");
+            repairedCode = ifWithoutParensRegex.Replace(repairedCode, match =>
+            {
+                string condition = match.Groups[1].Value.Trim();
+                // Ensure condition has proper parentheses
+                if (!condition.StartsWith("(") || !condition.EndsWith(")"))
+                {
+                    condition = $"({condition})";
+                }
+
+                if (config.VerboseLogging)
+                {
+                    config.AppliedRepairs.Add($"Fixed if statement condition: {condition}");
+                }
+
+                return $"if {condition} {{";
+            });
+
+            // Fix malformed if statements with parentheses (already has parentheses but might be malformed)
             repairedCode = BrokenIfStatementRegex.Replace(repairedCode, match =>
             {
                 string condition = match.Groups[1].Value;
@@ -266,7 +317,25 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 return $"if {condition} {{";
             });
 
-            // Fix malformed while statements
+            // Fix malformed while statements (handle both "while condition {" and "while (condition) {")
+            Regex whileWithoutParensRegex = new Regex(@"while\s+([^{]+?)\s*\{");
+            repairedCode = whileWithoutParensRegex.Replace(repairedCode, match =>
+            {
+                string condition = match.Groups[1].Value.Trim();
+                if (!condition.StartsWith("(") || !condition.EndsWith(")"))
+                {
+                    condition = $"({condition})";
+                }
+
+                if (config.VerboseLogging)
+                {
+                    config.AppliedRepairs.Add($"Fixed while statement condition: {condition}");
+                }
+
+                return $"while {condition} {{";
+            });
+
+            // Fix malformed while statements with parentheses
             repairedCode = BrokenWhileStatementRegex.Replace(repairedCode, match =>
             {
                 string condition = match.Groups[1].Value;
