@@ -3519,9 +3519,53 @@ namespace HolocronToolset.Tests.Editors
             inventoryCountLabel.Should().NotBeNull("Inventory count label should exist");
 
             // Label should show inventory count
-            var labelText = inventoryCountLabel.Text;
-            labelText.Should().NotBeNull("Label text should not be null");
-            // TODO: STUB - Note: Full verification would check that label updates when inventory changes
+            var initialLabelText = inventoryCountLabel.Text;
+            initialLabelText.Should().NotBeNull("Label text should not be null");
+            initialLabelText.Should().Contain("Total Items:", "Label should contain 'Total Items:' prefix");
+
+            // Get initial inventory count from label
+            int initialCount = ExtractItemCountFromLabel(initialLabelText);
+
+            // Get UTC object using reflection
+            var utc = GetUtcObject(editor);
+            utc.Should().NotBeNull("UTC object should exist");
+
+            // Get initial inventory count from UTC object
+            int initialInventoryCount = utc.Inventory != null ? utc.Inventory.Count : 0;
+            initialCount.Should().Be(initialInventoryCount, "Label count should match UTC inventory count");
+
+            // Add an item to the inventory to test label update
+            if (utc.Inventory == null)
+            {
+                utc.Inventory = new List<InventoryItem>();
+            }
+
+            var newItem = new InventoryItem(ResRef.FromString("g_w_lghtsbr01"), droppable: true);
+            utc.Inventory.Add(newItem);
+
+            // Call UpdateItemCount() using reflection to update the label
+            CallUpdateItemCount(editor);
+
+            // Verify the label text updated to reflect the new count
+            var updatedLabelText = inventoryCountLabel.Text;
+            updatedLabelText.Should().NotBeNull("Updated label text should not be null");
+            updatedLabelText.Should().Contain("Total Items:", "Updated label should contain 'Total Items:' prefix");
+
+            int updatedCount = ExtractItemCountFromLabel(updatedLabelText);
+            int expectedCount = initialInventoryCount + 1;
+            updatedCount.Should().Be(expectedCount, $"Label should show updated count of {expectedCount} after adding item");
+
+            // Verify UTC inventory count matches
+            int actualInventoryCount = utc.Inventory.Count;
+            actualInventoryCount.Should().Be(expectedCount, "UTC inventory count should match expected count");
+
+            // Test removing an item to verify label updates again
+            utc.Inventory.RemoveAt(utc.Inventory.Count - 1);
+            CallUpdateItemCount(editor);
+
+            var finalLabelText = inventoryCountLabel.Text;
+            int finalCount = ExtractItemCountFromLabel(finalLabelText);
+            finalCount.Should().Be(initialInventoryCount, $"Label should show original count of {initialInventoryCount} after removing item");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1893-1996
@@ -4489,6 +4533,59 @@ namespace HolocronToolset.Tests.Editors
                 throw new InvalidOperationException("_inventoryCountLabel or _inventoryCount field not found in UTCEditor");
             }
             return field.GetValue(editor) as TextBlock;
+        }
+
+        /// <summary>
+        /// Helper method to get the UTC object from the editor using reflection.
+        /// </summary>
+        private static UTC GetUtcObject(UTCEditor editor)
+        {
+            var field = typeof(UTCEditor).GetField("_utc", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (field == null)
+            {
+                throw new InvalidOperationException("_utc field not found in UTCEditor");
+            }
+            return field.GetValue(editor) as UTC;
+        }
+
+        /// <summary>
+        /// Helper method to call UpdateItemCount() on the editor using reflection.
+        /// </summary>
+        private static void CallUpdateItemCount(UTCEditor editor)
+        {
+            var method = typeof(UTCEditor).GetMethod("UpdateItemCount", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (method == null)
+            {
+                throw new InvalidOperationException("UpdateItemCount method not found in UTCEditor");
+            }
+            method.Invoke(editor, null);
+        }
+
+        /// <summary>
+        /// Helper method to extract the item count number from the label text.
+        /// Expected format: "Total Items: {count}"
+        /// </summary>
+        private static int ExtractItemCountFromLabel(string labelText)
+        {
+            if (string.IsNullOrEmpty(labelText))
+            {
+                return 0;
+            }
+
+            // Expected format: "Total Items: {count}"
+            const string prefix = "Total Items:";
+            if (!labelText.Contains(prefix))
+            {
+                return 0;
+            }
+
+            string countPart = labelText.Substring(labelText.IndexOf(prefix) + prefix.Length).Trim();
+            if (int.TryParse(countPart, out int count))
+            {
+                return count;
+            }
+
+            return 0;
         }
 
         /// <summary>
