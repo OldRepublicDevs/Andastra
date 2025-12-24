@@ -10,7 +10,6 @@ using Andastra.Parsing.Resource;
 using Andastra.Parsing.Formats.WAV;
 using Stride.Audio;
 using Stride.Media;
-using SoundPlayState = Stride.Audio.SoundPlayState;
 
 namespace Andastra.Runtime.Stride.Audio
 {
@@ -459,7 +458,7 @@ namespace Andastra.Runtime.Stride.Audio
                 {
                     // Check PlayState to determine if sound is playing
                     // Based on Stride API: PlayState.Playing indicates active playback
-                    return _currentVoiceInstance.PlayState == SoundPlayState.Playing;
+                    return _currentVoiceInstance.PlayState == PlayState.Playing;
                 }
                 catch (Exception ex)
                 {
