@@ -661,6 +661,9 @@ namespace HolocronToolset.Windows
                         // Increment progress after successful extraction
                         progressDialog.IncrementProgress();
                         successCount++;
+
+                        // Update status with completion message
+                        progressDialog.UpdateProgress($"Extracted {successCount}/{resourceSavePaths.Count} resources");
                     }
                     catch (Exception ex)
                     {
