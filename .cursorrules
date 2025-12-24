@@ -134,7 +134,7 @@ Always plan changes carefully before applying them, considering the impact on th
 
 4. Use ghidra mcp to ensure 1:1 parity. Setup using mcp server tool 'open-project' on project path "C:\Users\boden\Andastra Ghidra Project.gpr"
 
-**CRUCIALLY IMPORTANT**: If ghidra was requested/required for the task ensure it works before proceeding with the task. If it fails or a tool call doesn't work due to a connection error or setup error or not available or something, STOP **IMMEDIATELY** and INFORM the user.
+**CRUCIALLY IMPORTANT**: If reva was requested/required for the task ensure it works before proceeding with the task. If it fails or a tool call doesn't work due to a connection error or setup error or not available or something, STOP **IMMEDIATELY** and INFORM the user.
 
 ## 9. NSS/NCS Operations
 
