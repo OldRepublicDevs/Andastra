@@ -1799,14 +1799,86 @@ namespace HolocronToolset.Tests.Editors
             System.Math.Abs(modifiedAre.DynamicLight.B - dynamicLightColor.B).Should().BeLessThan(0.01f);
         }
 
-        // TODO: STUB - Implement test_are_editor_manipulate_wind_power (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:576-596)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:576-596
         // Original: def test_are_editor_manipulate_wind_power(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path): Test manipulating wind power combo box.
         [Fact]
         public void TestAreEditorManipulateWindPower()
         {
-            // TODO: STUB - Implement wind power combo box manipulation test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:576-596
-            throw new NotImplementedException("TestAreEditorManipulateWindPower: Wind power manipulation test not yet implemented");
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            if (!System.IO.File.Exists(areFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            }
+
+            if (!System.IO.File.Exists(areFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            // Matching Python: editor = AREEditor(None, installation)
+            var editor = new AREEditor(null, installation);
+
+            // Matching Python: original_data = are_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(areFile);
+
+            // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, original_data)
+            editor.Load(areFile, "tat001", ResourceType.ARE, originalData);
+
+            // Test all wind power options (typically 0-3)
+            // Matching Python: for power in [0, 1, 2, 3]:
+            int[] windPowerOptions = { 0, 1, 2, 3 };
+            foreach (int power in windPowerOptions)
+            {
+                // Matching Python: if power < editor.ui.windPowerSelect.count():
+                if (power < editor.WindPowerSelect.ItemCount)
+                {
+                    // Matching Python: editor.ui.windPowerSelect.setCurrentIndex(power)
+                    editor.WindPowerSelect.SelectedIndex = power;
+
+                    // Save and verify
+                    // Matching Python: data, _ = editor.build()
+                    var (data, _) = editor.Build();
+
+                    // Matching Python: modified_are = read_are(data)
+                    var modifiedAre = AREHelpers.ReadAre(data);
+
+                    // Matching Python: assert modified_are.wind_power == AREWindPower(power)
+                    // Since AREWindPower is just an int in C#, we compare directly
+                    modifiedAre.WindPower.Should().Be(power);
+
+                    // Reload the modified data to verify UI state
+                    // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, data)
+                    editor.Load(areFile, "tat001", ResourceType.ARE, data);
+
+                    // Verify the UI control reflects the change
+                    // Matching Python: assert editor.ui.windPowerSelect.currentIndex() == power
+                    editor.WindPowerSelect.SelectedIndex.Should().Be(power);
+                }
+            }
         }
 
         // TODO: STUB - Implement test_are_editor_manipulate_weather_checkboxes (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:598-652)
