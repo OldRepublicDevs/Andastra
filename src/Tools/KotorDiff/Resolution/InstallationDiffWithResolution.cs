@@ -119,27 +119,6 @@ namespace KotorDiff.Resolution
                 modificationsByType,
                 incrementalWriter,
                 diffDataFunc);
-            {
-                object install1Candidate = convertedPaths[0];
-                object install2Candidate = convertedPaths[1];
-
-                if (!(install1Candidate is Installation) || !(install2Candidate is Installation))
-                {
-                    // Should not happen after conversion, but handle gracefully
-                    logFunc?.Invoke("Warning: Could not convert all paths to Installations, falling back to regular comparison");
-                    return null;
-                }
-
-                return DiffInstallationsWithResolutionImpl(
-                        install1: (Installation)convertedPaths[0],
-                        install2: (Installation)convertedPaths[1],
-                        filters: filters,
-                        logFunc: logFunc,
-                        compareHashes: compareHashes,
-                        modificationsByType: modificationsByType,
-                        incrementalWriter: incrementalWriter,
-                        additionalInstalls: null,
-                        diffDataFunc: diffDataFunc);
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/resolution.py:618-1226

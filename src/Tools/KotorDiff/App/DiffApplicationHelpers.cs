@@ -15,6 +15,7 @@ using KotorDiff.Diff;
 using Andastra.Parsing.TSLPatcher;
 using Tuple = System.Tuple;
 using SystemTextEncoding = System.Text.Encoding;
+using Game = Andastra.Parsing.Common.BioWareGame;
 
 namespace KotorDiff.App
 {
