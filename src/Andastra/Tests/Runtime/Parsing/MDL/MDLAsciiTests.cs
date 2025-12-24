@@ -42,10 +42,10 @@ namespace Andastra.Tests.Runtime.Parsing.MDL
         /// </summary>
         public static MDLModel CreateTestMDL(string name = "test_model")
         {
-            var mdl = new MDL();
+            var mdl = new Andastra.Parsing.Formats.MDLData.MDL();
             mdl.Name = name;
             mdl.Supermodel = "null";
-            mdl.Classification = MDLClassification.Other;
+            mdl.Classification = MDLClassification.OTHER;
             mdl.Root.Name = "root";
             return mdl;
         }
@@ -70,8 +70,8 @@ namespace Andastra.Tests.Runtime.Parsing.MDL
         {
             var mesh = new MDLMesh();
             mesh.Texture1 = "test_texture";
-            mesh.Render = true;
-            mesh.Shadow = false;
+            mesh.Render = 1;
+            mesh.Shadow = 0.0f;
 
             // Add some vertices
             mesh.VertexPositions = new List<Vector3>
@@ -116,11 +116,11 @@ namespace Andastra.Tests.Runtime.Parsing.MDL
             {
                 row.Data = new List<float> { 1.0f };
             }
-            else if (controllerType == MDLControllerType.ParsingColor)
+            else if (controllerType == MDLControllerType.COLOR)
             {
                 row.Data = new List<float> { 1.0f, 1.0f, 1.0f };
             }
-            else if (controllerType == MDLControllerType.Radius)
+            else if (controllerType == MDLControllerType.RADIUS)
             {
                 row.Data = new List<float> { 5.0f };
             }
@@ -264,9 +264,8 @@ namespace Andastra.Tests.Runtime.Parsing.MDL
             var mdl = MDLAsciiTestHelpers.CreateTestMDL("bytes_test");
 
             using (var stream = new MemoryStream())
-            using (var writer = new StreamWriter(stream, Encoding.UTF8, leaveOpen: true))
             {
-                var asciiWriter = new MDLAsciiWriter(mdl, writer);
+                var asciiWriter = new MDLAsciiWriter(mdl, stream);
                 asciiWriter.Write();
             }
 
@@ -448,7 +447,7 @@ donemodel test
             var mdl = MDLAsciiTestHelpers.CreateTestMDL("light_test");
             var node = MDLAsciiTestHelpers.CreateTestNode("light_node", MDLNodeType.LIGHT);
             node.Light = new MDLLight();
-            node.Light.Color = new Color(1.0f, 1.0f, 1.0f);
+            node.Light.Color = new Andastra.Parsing.Common.Color(1.0f, 1.0f, 1.0f);
             node.Light.FlareRadius = 10.0f;
             mdl.Root.Children.Add(node);
 
@@ -867,10 +866,10 @@ donemodel test
         public void WriteDanglyNode()
         {
             var mdl = MDLAsciiTestHelpers.CreateTestMDL("dangly_test");
-            var node = MDLAsciiTestHelpers.CreateTestNode("dangly_node", MDLNodeType.Danglymesh);
+            var node = MDLAsciiTestHelpers.CreateTestNode("dangly_node", MDLNodeType.DANGLYMESH);
             var dangly = new MDLDangly();
             dangly.Texture1 = "test_texture";
-            dangly.Render = true;
+            dangly.Render = 1;
             dangly.Displacement = 0.1f;
             dangly.Tightness = 0.5f;
             dangly.Period = 1.0f;
@@ -945,7 +944,7 @@ donemodel test
 
                 var danglyNode = mdl.Get("dangly_node");
                 danglyNode.Should().NotBeNull();
-                danglyNode.NodeType.Should().Be(MDLNodeType.Danglymesh);
+                danglyNode.NodeType.Should().Be(MDLNodeType.DANGLYMESH);
                 danglyNode.Mesh.Should().NotBeNull();
                 danglyNode.Mesh.Should().BeOfType<MDLDangly>();
             }
