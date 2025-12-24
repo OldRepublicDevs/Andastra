@@ -72,6 +72,7 @@
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.2.2" />
     <PackageReference Include="Avalonia.Desktop" Version="11.2.2" />
+    <PackageReference Include="MessageBox.Avalonia" Version="1.0.0" />
     <PackageReference Include="ini-parser-netstandard" Version="2.5.3" />
     <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
     <PackageReference Include="LZMA-SDK" Version="19.0.0" />
