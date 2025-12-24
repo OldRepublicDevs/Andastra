@@ -14458,7 +14458,7 @@ technique ColorGrading
         /// when destructible environment geometry is modified.
         /// </remarks>
         [CanBeNull]
-        public CachedMeshGeometry GetCachedMeshGeometry(string meshId)
+        public EclipseArea.CachedMeshGeometry GetCachedMeshGeometry(string meshId)
         {
             if (string.IsNullOrEmpty(meshId))
             {

@@ -341,6 +341,37 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         // DAT_007bb744 - function pointer for glProgramEnvParameter4fARB (matching swkotor.exe: FUN_004a2400)
         private static GlProgramEnvParameter4fArbDelegate _kotor1GlProgramEnvParameter4fArb2 = null;
 
+        // Wrapper function for glProgramEnvParameter4fARB that matches the original swkotor.exe calling convention
+        // The original engine calls (*DAT_007bb744)(target, index, x, y) with 4 parameters
+        // but OpenGL glProgramEnvParameter4fARB requires (target, index, x, y, z, w) with 6 parameters
+        // This wrapper provides the missing z=0.0f and w=0.0f parameters
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void Kotor1ProgramEnvParameter4fWrapperDelegate(uint target, uint index, uint xRaw, uint yRaw);
+
+        // Function pointer wrapper for glProgramEnvParameter4fARB that matches the original swkotor.exe calling convention
+        // The original engine calls (*DAT_007bb744)(target, index, x, y) with 4 parameters
+        // but OpenGL glProgramEnvParameter4fARB requires (target, index, x, y, z, w) with 6 parameters
+        // This field stores a pointer to a wrapper function that adapts the calling convention
+        private static IntPtr _kotor1ProgramEnvParameter4fWrapperPtr = IntPtr.Zero;
+
+
+        // The actual wrapper function implementation
+        private static void Kotor1ProgramEnvParameter4fWrapperImpl(uint target, uint index, uint xRaw, uint yRaw)
+        {
+            // Convert raw uint values to float bit patterns (matching swkotor.exe behavior)
+            // The original engine passes uint32 values that are interpreted as float bit patterns
+            unsafe
+            {
+                float x = *(float*)&xRaw;
+                float y = *(float*)&yRaw;
+                // Call the actual OpenGL function with z=0.0f, w=0.0f (implicit in original calls)
+                if (_kotor1GlProgramEnvParameter4fArb != null)
+                {
+                    _kotor1GlProgramEnvParameter4fArb(target, index, x, y, 0.0f, 0.0f);
+                }
+            }
+        }
+
         // DAT_007bb834 - function pointer for glBindProgramARB (matching swkotor.exe: FUN_004a2400)
         private static GlBindProgramArbDelegate _kotor1GlBindProgramArb2 = null;
 
@@ -810,6 +841,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             if (proc != IntPtr.Zero)
             {
                 _kotor1GlProgramEnvParameter4fArb = Marshal.GetDelegateForFunctionPointer<GlProgramEnvParameter4fArbDelegate>(proc);
+                // Assign the wrapper function to _kotor1GlProgramEnvParameter4fArb2
+                // This wrapper matches the original swkotor.exe calling convention of 4 parameters
+                // instead of the 6 parameters required by the actual OpenGL function
+                _kotor1GlProgramEnvParameter4fArb2 = new GlProgramEnvParameter4fArbDelegate(Kotor1ProgramEnvParameter4fWrapperFunction);
             }
 
             proc = wglGetProcAddress("glProgramLocalParameter4fARB");
