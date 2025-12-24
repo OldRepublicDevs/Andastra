@@ -86,11 +86,21 @@ namespace HolocronToolset.Tests.Editors
             data.Length.Should().BeGreaterThan(0);
 
             // Load it back
-            // TODO:  Note: PTH loading requires LYT file, so we skip loading for now
-            // Just verify build works
+            // Note: PTH loading requires LYT file, but we can still load the PTH data directly for testing
+            // The editor's Load method will show an error if LYT is missing, but we can test the PTH parsing directly
             var loadedPth = Andastra.Parsing.Resource.Generics.PTHAuto.ReadPth(data);
             loadedPth.Should().NotBeNull();
             loadedPth.Count.Should().Be(3, "Should have 3 nodes");
+            
+            // Test loading through the editor (will show error if LYT missing, but PTH will still load)
+            if (installation != null)
+            {
+                editor.Load("test.pth", "test", ResourceType.PTH, data);
+                var (reloadedData, _) = editor.Build();
+                reloadedData.Should().NotBeNull();
+                var reloadedPth = Andastra.Parsing.Resource.Generics.PTHAuto.ReadPth(reloadedData);
+                reloadedPth.Count.Should().Be(3, "Should have 3 nodes after reload");
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_pth_editor.py:232-251
