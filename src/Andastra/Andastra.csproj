@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net9.0</TargetFrameworks>
+    <TargetFramework>net9.0-windows</TargetFramework>
     <LangVersion>7.3</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
@@ -21,9 +21,9 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Eto.Forms" Version="2.10.2" />
-    <PackageReference Include="Eto.Platform.Wpf" Version="2.7.4" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
-    <PackageReference Include="Eto.Platform.Gtk" Version="2.7.4" Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
-    <PackageReference Include="Eto.Platform.Mac" Version="2.7.4" Condition="$([MSBuild]::IsOSPlatform('OSX'))" />
+    <PackageReference Include="Eto.Platform.Wpf" Version="2.10.2" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
+    <PackageReference Include="Eto.Platform.Gtk" Version="2.10.2" Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
+    <PackageReference Include="Eto.Platform.Mac" Version="2.10.2" Condition="$([MSBuild]::IsOSPlatform('OSX'))" />
     <PackageReference Include="Castle.Core" Version="5.2.1" />
     <PackageReference Include="FluentAssertions" Version="8.8.0" />
     <PackageReference Include="ini-parser-netstandard" Version="2.5.3" />
