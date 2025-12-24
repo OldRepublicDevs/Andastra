@@ -92,7 +92,7 @@ namespace Andastra.Runtime.Games.Common.Journal
         /// </summary>
         public virtual void ClearCache()
         {
-            _jrlCache.Clear();
+            // Subclasses override this to clear their own caches
         }
 
         /// <summary>
