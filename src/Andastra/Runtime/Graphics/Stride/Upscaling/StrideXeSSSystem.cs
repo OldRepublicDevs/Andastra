@@ -1,5 +1,5 @@
 using System;
-using Stride.Graphics;
+using StrideGraphics = Stride.Graphics;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Upscaling;
@@ -24,9 +24,9 @@ namespace Andastra.Runtime.Stride.Upscaling
     /// </summary>
     public class StrideXeSSSystem : BaseXeSSSystem
     {
-        private GraphicsDevice _graphicsDevice;
+        private StrideGraphics.GraphicsDevice _graphicsDevice;
         private IntPtr _xessContext;
-        private Texture _outputTexture;
+        private StrideGraphics.Texture _outputTexture;
         private XeSSExecutionPath _executionPath;
 
         public override string Version => "1.3.0"; // XeSS version
@@ -34,7 +34,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         public override int XeSSVersion => 1; // XeSS 1.x
         public override bool DpaAvailable => _executionPath == XeSSExecutionPath.DP4a;
 
-        public StrideXeSSSystem(GraphicsDevice graphicsDevice)
+        public StrideXeSSSystem(StrideGraphics.GraphicsDevice graphicsDevice)
         {
             _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
         }
@@ -113,8 +113,8 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// <summary>
         /// Applies XeSS upscaling to the input frame.
         /// </summary>
-        public Texture Apply(Texture input, Texture motionVectors, Texture depth,
-            Texture exposure, int targetWidth, int targetHeight)
+        public StrideGraphics.Texture Apply(StrideGraphics.Texture input, StrideGraphics.Texture motionVectors, StrideGraphics.Texture depth,
+            StrideGraphics.Texture exposure, int targetWidth, int targetHeight)
         {
             if (!IsEnabled || input == null) return input;
 
@@ -132,7 +132,7 @@ namespace Andastra.Runtime.Stride.Upscaling
             return _outputTexture ?? input;
         }
 
-        private void EnsureOutputTexture(int width, int height, PixelFormat format)
+        private void EnsureOutputTexture(int width, int height, global::Stride.Graphics.PixelFormat format)
         {
             if (_outputTexture != null &&
                 _outputTexture.Width == width &&
@@ -143,12 +143,12 @@ namespace Andastra.Runtime.Stride.Upscaling
 
             _outputTexture?.Dispose();
 
-            var desc = TextureDescription.New2D(width, height, 1, format, TextureFlags.ShaderResource | TextureFlags.RenderTarget);
-            _outputTexture = Texture.New(_graphicsDevice, desc);
+            _outputTexture = StrideGraphics.Texture.New2D(_graphicsDevice, width, height,
+                format, StrideGraphics.TextureFlags.RenderTarget | StrideGraphics.TextureFlags.ShaderResource);
         }
 
-        private void ExecuteXeSS(Texture input, Texture motionVectors, Texture depth,
-            Texture exposure, Texture output)
+        private void ExecuteXeSS(StrideGraphics.Texture input, StrideGraphics.Texture motionVectors, StrideGraphics.Texture depth,
+            StrideGraphics.Texture exposure, StrideGraphics.Texture output)
         {
             // XeSS Execute:
             // xessExecute(
@@ -213,29 +213,22 @@ namespace Andastra.Runtime.Stride.Upscaling
             // Stride's ImmediateContext() extension method provides access to the command list
             // This extension method retrieves the CommandList from the registry (registered via GraphicsDeviceExtensions.RegisterCommandList)
             // or creates a fallback CommandList if not registered
-            CommandList commandList = _graphicsDevice.ImmediateContext();
+            StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext();
             if (commandList != null)
             {
                 // Stride CommandList.NativeCommandList provides the native command list pointer
                 // For DirectX 12: Returns ID3D12GraphicsCommandList*
                 // For Vulkan: Returns VkCommandBuffer
                 // This native pointer is what XeSS SDK expects for xessExecute
-                IntPtr nativeCommandList = commandList.NativeCommandList;
-                if (nativeCommandList != IntPtr.Zero)
-                {
-                    return nativeCommandList;
-                }
-
-                // Fallback: Try through reflection if NativeCommandList property is not directly accessible
-                // This handles cases where the property might be internal or the API structure changed
+                // Use reflection to access NativeCommandList property (may be internal)
                 try
                 {
                     var commandListType = commandList.GetType();
-                    var nativeProperty = commandListType.GetProperty("NativeCommandList");
+                    var nativeProperty = commandListType.GetProperty("NativeCommandList", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                     if (nativeProperty != null)
                     {
                         var value = nativeProperty.GetValue(commandList);
-                        if (value is IntPtr ptr)
+                        if (value is IntPtr ptr && ptr != IntPtr.Zero)
                         {
                             return ptr;
                         }
