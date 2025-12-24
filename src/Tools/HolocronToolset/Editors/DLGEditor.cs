@@ -99,6 +99,19 @@ namespace HolocronToolset.Editors
         private DLGListWidget _orphanedNodesList;
         private DLGListWidget _pinnedItemsList;
 
+        // Menu Actions - matching PyKotor UI actions
+        // File menu actions
+        private MenuItem _actionNew;
+        private MenuItem _actionOpen;
+        private MenuItem _actionSave;
+        private MenuItem _actionSaveAs;
+        private MenuItem _actionRevert;
+        private MenuItem _actionExit;
+
+        // Tools menu actions
+        private MenuItem _actionReloadTree;
+        private MenuItem _actionUnfocus;
+
         private int _currentResultIndex = 0;
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:122-123
         // Original: self.search_results: list[DLGStandardItem] = [], self.current_search_text: str = ""
@@ -166,6 +179,7 @@ namespace HolocronToolset.Editors
         private StackPanel _script1Param1Panel;
         private NumericUpDown _waitFlagSpin;
         private NumericUpDown _fadeTypeSpin;
+        private ComboBox _soundComboBox;
         private ComboBox _voiceComboBox;
 
         // UI Controls - Node timing widgets
@@ -259,8 +273,17 @@ namespace HolocronToolset.Editors
 
         private void SetupUI()
         {
+            // Create main dock panel to support menu bar
+            var dockPanel = new DockPanel();
+            Content = dockPanel;
+
+            // Setup menu bar - matching PyKotor implementation
+            SetupMenuBar(dockPanel);
+
+            // Create main content panel
             var panel = new StackPanel();
-            Content = panel;
+            dockPanel.Children.Add(panel);
+            DockPanel.SetDock(panel, Dock.Bottom);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:436-467
             // Original: def setup_extra_widgets(self):
@@ -581,6 +604,16 @@ namespace HolocronToolset.Editors
             cameraPanel.Children.Add(new TextBlock { Text = "Camera Effect:" });
             cameraPanel.Children.Add(_cameraEffectSelect);
             panel.Children.Add(cameraPanel);
+
+            // Initialize sound combo box
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:360
+            // Original: self.ui.soundComboBox.currentTextChanged.connect(self.on_node_update)
+            _soundComboBox = new ComboBox { IsEditable = true };
+            _soundComboBox.LostFocus += (s, e) => OnNodeUpdate();
+            var soundPanel = new StackPanel();
+            soundPanel.Children.Add(new TextBlock { Text = "Sound ResRef:" });
+            soundPanel.Children.Add(_soundComboBox);
+            panel.Children.Add(soundPanel);
 
             // Initialize voice combo box
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:365
@@ -1581,6 +1614,10 @@ namespace HolocronToolset.Editors
         // Matching PyKotor implementation: editor.ui.script1Param1Spin
         public NumericUpDown Script1Param1Spin => _script1Param1Spin;
 
+        // Expose sound widget for testing
+        // Matching PyKotor implementation: editor.ui.soundComboBox
+        public ComboBox SoundComboBox => _soundComboBox;
+
         // Expose voice widget for testing
         // Matching PyKotor implementation: editor.ui.voiceComboBox
         public ComboBox VoiceComboBox => _voiceComboBox;
@@ -1885,6 +1922,14 @@ namespace HolocronToolset.Editors
                 _fadeTypeSpin.Value = node.FadeType;
             }
 
+            // Load sound ResRef from node
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2425
+            // Original: self.ui.soundComboBox.set_combo_box_text(str(item.link.node.sound))
+            if (_soundComboBox != null && node != null)
+            {
+                _soundComboBox.Text = node.Sound?.ToString() ?? string.Empty;
+            }
+
             // Load voice ResRef from node
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2429
             // Original: self.ui.voiceComboBox.set_combo_box_text(str(item.link.node.vo_resref))
@@ -2070,6 +2115,15 @@ namespace HolocronToolset.Editors
             if (_fadeTypeSpin != null && node != null)
             {
                 node.FadeType = _fadeTypeSpin.Value.HasValue ? (int)_fadeTypeSpin.Value.Value : 0;
+            }
+
+            // Update sound ResRef in node
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2513
+            // Original: item.link.node.sound = ResRef(self.ui.soundComboBox.currentText())
+            if (_soundComboBox != null && node != null)
+            {
+                string soundText = _soundComboBox.Text ?? string.Empty;
+                node.Sound = string.IsNullOrEmpty(soundText) ? ResRef.FromBlank() : new ResRef(soundText);
             }
 
             // Update voice ResRef in node
@@ -2939,10 +2993,25 @@ namespace HolocronToolset.Editors
             // else:
             //     self.blink_window()
 
-            // Note: Sound and voice combo boxes are not yet implemented in the C# UI
-            // TODO: STUB - For now, we'll just blink the window to match the "else" case
-            // When combo boxes are added, this should check them first
-            BlinkWindow();
+            // Get sound and voice resource names from UI combo boxes
+            string soundResname = _soundComboBox?.Text?.Trim() ?? string.Empty;
+            string voiceResname = _voiceComboBox?.Text?.Trim() ?? string.Empty;
+
+            // If sound combo box has text, play sound with SOUND and VOICE search locations
+            if (!string.IsNullOrEmpty(soundResname))
+            {
+                PlaySound(soundResname, new[] { SearchLocation.SOUND, SearchLocation.VOICE });
+            }
+            // Else if voice combo box has text, play voice with VOICE search location
+            else if (!string.IsNullOrEmpty(voiceResname))
+            {
+                PlaySound(voiceResname, new[] { SearchLocation.VOICE });
+            }
+            // Else blink window to indicate no playable sound
+            else
+            {
+                BlinkWindow();
+            }
         }
 
         /// <summary>
