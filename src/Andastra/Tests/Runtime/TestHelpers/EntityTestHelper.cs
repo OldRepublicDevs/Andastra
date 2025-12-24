@@ -86,7 +86,7 @@ namespace Andastra.Tests.Runtime.TestHelpers
             mockDelayScheduler.Setup(d => d.ClearAll()).Callback(() => { });
 
             var mockGameDataProvider = new Mock<IGameDataProvider>(MockBehavior.Loose);
-            mockGameDataProvider.Setup(g => g.GetTable(It.IsAny<string>())).Returns((Parsing.Formats.TwoDA.TwoDA)null);
+            mockGameDataProvider.Setup(g => g.GetTable(It.IsAny<string>())).Returns((Andastra.Parsing.Formats.TwoDA.TwoDA)null);
 
             // Create mock world
             var mockWorld = new Mock<IWorld>(MockBehavior.Loose);
