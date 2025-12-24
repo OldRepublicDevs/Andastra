@@ -257,7 +257,7 @@ namespace Andastra.Runtime.Stride.Graphics
                     int offset = i * 4;
                     colorData[i] = new global::Stride.Core.Mathematics.Color(data[offset], data[offset + 1], data[offset + 2], data[offset + 3]);
                 }
-                StrideGraphics.CommandList graphicsContext = this.ImmediateContext();
+                StrideGraphics.CommandList graphicsContext = this.ImmediateContext;
                 if (graphicsContext != null)
                 {
                     texture.SetData(graphicsContext, colorData);
