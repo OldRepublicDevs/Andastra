@@ -47,6 +47,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
         private IServiceProvider _services;
         private ContentManager _contentManager;
         private EffectSystem _effectSystem;
+        private global::Stride.Engine.Game _game;
+        private dynamic _gameServices; // Use dynamic to allow GetService<T>() calls on Stride.Core.ServiceRegistry
 
         public StrideMotionBlurEffect(StrideGraphics.GraphicsDevice graphicsDevice, StrideGraphics.GraphicsContext graphicsContext = null)
             : this(graphicsDevice, graphicsContext, null, null)
@@ -61,13 +63,178 @@ namespace Andastra.Runtime.Stride.PostProcessing
             _services = services;
             _contentManager = contentManager;
 
+            // Initialize Game and Game.Services access for comprehensive service access
+            // This is required for proper service access in Stride applications
+            InitializeGameServices();
+
             // Try to get EffectSystem from services if available
             if (_services != null)
             {
                 _effectSystem = _services.GetService(typeof(EffectSystem)) as EffectSystem;
             }
 
+            // Also try to get EffectSystem from Game.Services if available
+            if (_effectSystem == null && _gameServices != null)
+            {
+                try
+                {
+                    _effectSystem = (_gameServices as global::Stride.Core.ServiceRegistry)?.GetService<EffectSystem>();
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine($"[StrideMotionBlurEffect] Failed to get EffectSystem from Game.Services: {ex.Message}");
+                }
+            }
+
             InitializeRenderingResources();
+        }
+
+        /// <summary>
+        /// Initializes Game instance and Game.Services access.
+        /// This is required for proper service access in Stride applications.
+        /// Based on StrideTemporalAaEffect implementation pattern.
+        /// </summary>
+        /// <remarks>
+        /// Based on Stride Engine architecture:
+        /// - Game.Services provides access to engine services including EffectSystem, ContentManager, EffectCompiler
+        /// - GraphicsDevice may have a Game property or Services() method depending on Stride version
+        /// - Multiple strategies are used to ensure compatibility across Stride versions
+        /// - Original game: DirectX 8/9 fixed-function pipeline (swkotor2.exe: Frame buffer post-processing @ 0x007c8408)
+        /// - Modern implementation: Uses Stride's service registry for dependency injection
+        /// </remarks>
+        private void InitializeGameServices()
+        {
+            try
+            {
+                // Strategy 1: Try to get Game from GraphicsDevice.Game property (if available)
+                // This is the most direct approach in Stride 4.x+
+                var gameProperty = _graphicsDevice.GetType().GetProperty("Game");
+                if (gameProperty != null)
+                {
+                    _game = gameProperty.GetValue(_graphicsDevice) as global::Stride.Engine.Game;
+                    if (_game != null)
+                    {
+                        _gameServices = _game.Services;
+                        System.Console.WriteLine("[StrideMotionBlurEffect] Successfully accessed Game.Services from GraphicsDevice.Game");
+                        return;
+                    }
+                }
+
+                // Strategy 2: Try to get Game from GraphicsDevice.Services() method
+                // Some Stride versions expose Game through the Services() method
+                // Note: This is the method that was commented out in the TODO
+                try
+                {
+                    var servicesMethod = _graphicsDevice.GetType().GetMethod("Services", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                    if (servicesMethod != null)
+                    {
+                        dynamic graphicsDeviceServices = servicesMethod.Invoke(_graphicsDevice, null);
+                        if (graphicsDeviceServices != null)
+                        {
+                            // Try to get Game from services
+                            try
+                            {
+                                _game = graphicsDeviceServices.GetService<global::Stride.Engine.Game>();
+                                if (_game != null)
+                                {
+                                    _gameServices = _game.Services;
+                                    System.Console.WriteLine("[StrideMotionBlurEffect] Successfully accessed Game.Services from GraphicsDevice.Services()");
+                                    return;
+                                }
+                            }
+                            catch
+                            {
+                                // GetService<T> might not be available, try IServiceProvider pattern
+                            }
+
+                            // Strategy 3: Try to access Game through IServiceProvider pattern
+                            // This works in dependency injection scenarios
+                            if (_game == null && graphicsDeviceServices is IServiceProvider serviceProvider)
+                            {
+                                _game = serviceProvider.GetService(typeof(global::Stride.Engine.Game)) as global::Stride.Engine.Game;
+                                if (_game != null)
+                                {
+                                    _gameServices = _game.Services;
+                                    System.Console.WriteLine("[StrideMotionBlurEffect] Successfully accessed Game through IServiceProvider pattern");
+                                    return;
+                                }
+                            }
+
+                            // If we have services but no Game, use services directly
+                            if (_game == null)
+                            {
+                                _gameServices = graphicsDeviceServices;
+                                System.Console.WriteLine("[StrideMotionBlurEffect] Using GraphicsDevice.Services() directly (Game not found)");
+                                return;
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine($"[StrideMotionBlurEffect] GraphicsDevice.Services() method not available or failed: {ex.Message}");
+                }
+
+                // Strategy 4: Try to find Game instance through reflection on common Stride objects
+                // This is a fallback for complex application architectures
+                try
+                {
+                    // Try to get Game from GraphicsDevice's parent or container
+                    var parentProperty = _graphicsDevice.GetType().GetProperty("Parent") ??
+                                        _graphicsDevice.GetType().GetProperty("Container") ??
+                                        _graphicsDevice.GetType().GetProperty("Owner");
+
+                    if (parentProperty != null)
+                    {
+                        var parent = parentProperty.GetValue(_graphicsDevice);
+                        if (parent != null)
+                        {
+                            // Try to get Game from parent
+                            var parentGameProperty = parent.GetType().GetProperty("Game");
+                            if (parentGameProperty != null)
+                            {
+                                _game = parentGameProperty.GetValue(parent) as global::Stride.Engine.Game;
+                                if (_game != null)
+                                {
+                                    _gameServices = _game.Services;
+                                    System.Console.WriteLine("[StrideMotionBlurEffect] Successfully accessed Game.Services from GraphicsDevice parent");
+                                    return;
+                                }
+                            }
+
+                            // Try to get Services from parent
+                            var parentServicesProperty = parent.GetType().GetProperty("Services");
+                            if (parentServicesProperty != null)
+                            {
+                                var parentServices = parentServicesProperty.GetValue(parent);
+                                if (parentServices != null)
+                                {
+                                    _gameServices = parentServices;
+                                    _game = (_gameServices as IServiceProvider)?.GetService(typeof(global::Stride.Engine.Game)) as global::Stride.Engine.Game;
+                                    if (_game != null)
+                                    {
+                                        System.Console.WriteLine("[StrideMotionBlurEffect] Successfully accessed Game through parent Services");
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine($"[StrideMotionBlurEffect] Failed to access Game through reflection: {ex.Message}");
+                }
+
+                // If all strategies fail, log a warning but continue
+                // The effect can still work using the provided IServiceProvider or fallback methods
+                System.Console.WriteLine("[StrideMotionBlurEffect] Warning: Could not access Game.Services. Some features may not work correctly.");
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"[StrideMotionBlurEffect] Exception while initializing Game.Services access: {ex.Message}");
+                // Continue execution - effect can still work with provided services
+            }
         }
 
         private void InitializeRenderingResources()
@@ -684,46 +851,140 @@ shader MotionBlurEffect : ShaderBase
                 tempFilePath = Path.Combine(Path.GetTempPath(), $"{shaderName}_{Guid.NewGuid()}.sdsl");
                 File.WriteAllText(tempFilePath, shaderSource);
 
-                // TODO: STUB - Services() doesn't exist on Stride GraphicsDevice
-                // EffectCompiler access would require proper service setup
-                // For now, skip this approach and use fallback compilation method
-                // Try to compile shader from file
-                // Based on Stride API: EffectCompiler can compile from file paths
-                // Note: Services() method doesn't exist - commented out for now
-                /*
-                object services = _graphicsDevice.Services();
-                if (services != null)
+                // Strategy 1: Try to get EffectCompiler from Game.Services (if available)
+                // Based on Stride API: Game.Services provides access to EffectCompiler and EffectSystem
+                // This is the proper way to access services in Stride applications
+                if (_gameServices != null)
                 {
-                    var effectCompiler = services.GetService<EffectCompiler>();
-                    if (effectCompiler != null)
+                    try
                     {
-                        // Create compilation source from file
-                        var compilerSource = new ShaderSourceClass
+                        // Try to get EffectCompiler from Game.Services
+                        var effectCompiler = (_gameServices as global::Stride.Core.ServiceRegistry)?.GetService<EffectCompiler>();
+                        if (effectCompiler != null)
                         {
-                            Name = shaderName,
-                            SourceCode = shaderSource
-                        };
+                            // Create compilation source from shader source (not file path, but source code)
+                            // Note: EffectCompiler typically compiles from source, not file paths
+                            var compilerSource = new ShaderSourceClass
+                            {
+                                Name = shaderName,
+                                SourceCode = shaderSource
+                            };
 
-                        // Note: Compile() returns TaskOrResult<EffectBytecodeCompilerResult>, use dynamic to handle unwrapping
-                        dynamic compilationResult = effectCompiler.Compile(compilerSource, new CompilerParameters
-                        {
-                            EffectParameters = new EffectCompilerParameters()
-                        });
+                            // Compile shader source to bytecode
+                            // Note: Compile() returns TaskOrResult<EffectBytecodeCompilerResult>, use dynamic to handle unwrapping
+                            dynamic compilationResult = effectCompiler.Compile(compilerSource, new CompilerParameters
+                            {
+                                EffectParameters = new EffectCompilerParameters()
+                            });
 
-                        // Unwrap TaskOrResult to get the actual result
-                        dynamic compilerResult = compilationResult.Result;
-                        if (compilerResult != null && compilerResult.Bytecode != null && compilerResult.Bytecode.Length > 0)
+                            // Unwrap TaskOrResult to get the actual result
+                            dynamic compilerResult = compilationResult.Result;
+                            if (compilerResult != null && compilerResult.Bytecode != null && compilerResult.Bytecode.Length > 0)
+                            {
+                                var effect = new StrideGraphics.Effect(_graphicsDevice, (EffectBytecode)compilerResult.Bytecode);
+                                System.Console.WriteLine($"[StrideMotionBlurEffect] Successfully compiled shader '{shaderName}' from source using Game.Services.EffectCompiler");
+                                return effect;
+                            }
+                        }
+
+                        // Try to get EffectSystem from Game.Services as alternative
+                        var effectSystem = (_gameServices as global::Stride.Core.ServiceRegistry)?.GetService<EffectSystem>();
+                        if (effectSystem != null)
                         {
-                            var effect = new StrideGraphics.Effect(_graphicsDevice, (EffectBytecode)compilerResult.Bytecode);
-                            System.Console.WriteLine($"[StrideMotionBlurEffect] Successfully compiled shader '{shaderName}' from file");
-                            return effect;
+                            return CompileShaderWithEffectSystem(effectSystem, shaderSource, shaderName);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Console.WriteLine($"[StrideMotionBlurEffect] Failed to compile shader '{shaderName}' using Game.Services: {ex.Message}");
+                    }
+                }
+
+                // Strategy 2: Try to get EffectCompiler from GraphicsDevice.Services() method (if available)
+                // Some Stride versions expose services through GraphicsDevice.Services() method
+                // This was the original approach that was commented out in the TODO
+                try
+                {
+                    var servicesMethod = _graphicsDevice.GetType().GetMethod("Services", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                    if (servicesMethod != null)
+                    {
+                        dynamic graphicsDeviceServices = servicesMethod.Invoke(_graphicsDevice, null);
+                        if (graphicsDeviceServices != null)
+                        {
+                            // Try to get EffectCompiler from services
+                            try
+                            {
+                                var effectCompiler = graphicsDeviceServices.GetService<EffectCompiler>();
+                                if (effectCompiler != null)
+                                {
+                                    // Create compilation source from shader source
+                                    var compilerSource = new ShaderSourceClass
+                                    {
+                                        Name = shaderName,
+                                        SourceCode = shaderSource
+                                    };
+
+                                    // Compile shader source to bytecode
+                                    dynamic compilationResult = effectCompiler.Compile(compilerSource, new CompilerParameters
+                                    {
+                                        EffectParameters = new EffectCompilerParameters()
+                                    });
+
+                                    // Unwrap TaskOrResult to get the actual result
+                                    dynamic compilerResult = compilationResult.Result;
+                                    if (compilerResult != null && compilerResult.Bytecode != null && compilerResult.Bytecode.Length > 0)
+                                    {
+                                        var effect = new StrideGraphics.Effect(_graphicsDevice, (EffectBytecode)compilerResult.Bytecode);
+                                        System.Console.WriteLine($"[StrideMotionBlurEffect] Successfully compiled shader '{shaderName}' from source using GraphicsDevice.Services().EffectCompiler");
+                                        return effect;
+                                    }
+                                }
+                            }
+                            catch
+                            {
+                                // GetService<T> might not be available, try IServiceProvider pattern
+                                if (graphicsDeviceServices is IServiceProvider serviceProvider)
+                                {
+                                    var effectCompiler = serviceProvider.GetService(typeof(EffectCompiler)) as EffectCompiler;
+                                    if (effectCompiler != null)
+                                    {
+                                        return CompileShaderWithCompiler(effectCompiler, shaderSource, shaderName);
+                                    }
+                                }
+                            }
                         }
                     }
                 }
-                */
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine($"[StrideMotionBlurEffect] GraphicsDevice.Services() method not available or failed for shader '{shaderName}': {ex.Message}");
+                }
+
+                // Strategy 3: Try to use provided IServiceProvider if available
+                if (_services != null)
+                {
+                    try
+                    {
+                        var effectCompiler = _services.GetService(typeof(EffectCompiler)) as EffectCompiler;
+                        if (effectCompiler != null)
+                        {
+                            return CompileShaderWithCompiler(effectCompiler, shaderSource, shaderName);
+                        }
+
+                        var effectSystem = _services.GetService(typeof(EffectSystem)) as EffectSystem;
+                        if (effectSystem != null)
+                        {
+                            return CompileShaderWithEffectSystem(effectSystem, shaderSource, shaderName);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Console.WriteLine($"[StrideMotionBlurEffect] Failed to compile shader '{shaderName}' using provided IServiceProvider: {ex.Message}");
+                    }
+                }
 
                 // Final fallback: Effect.Load() doesn't exist in this Stride version
-                // Effect.Load() doesn't support file paths directly, continue to return null
+                // Effect.Load() doesn't support file paths directly, and we've exhausted all service access methods
 
                 System.Console.WriteLine($"[StrideMotionBlurEffect] Could not compile shader '{shaderName}' from file");
                 return null;
