@@ -130,9 +130,7 @@ namespace KotorCLI.Commands
 
                 try
                 {
-                    using (var fs = File.OpenRead(filePath))
-                    {
-                        var gff = GFFBinaryReader.Load(fs);
+                    var gff = GFFAuto.ReadGff(filePath);
 
                         // Basic structure counts
                         stats.StructCount = gff.Structs.Count;
@@ -320,9 +318,7 @@ namespace KotorCLI.Commands
 
                 try
                 {
-                    using (var fs = File.OpenRead(filePath))
-                    {
-                        var erf = ERFBinaryReader.Load(fs);
+                    var erf = ERFAuto.ReadErf(filePath);
 
                         stats.ResourceCount = erf.Count;
                         stats.ErfType = erf.ErfType;
@@ -478,9 +474,7 @@ namespace KotorCLI.Commands
 
                 try
                 {
-                    using (var fs = File.OpenRead(filePath))
-                    {
-                        var tlk = TLKBinaryReader.Load(fs);
+                    var tlk = TLKAuto.ReadTlk(filePath);
 
                         stats.Language = tlk.Language;
                         stats.EntryCount = tlk.Count;
@@ -619,9 +613,7 @@ namespace KotorCLI.Commands
 
                 try
                 {
-                    using (var fs = File.OpenRead(filePath))
-                    {
-                        var ncs = NCSBinaryReader.Load(fs);
+                    var ncs = NCSAuto.ReadNcs(filePath);
 
                         stats.InstructionCount = ncs.Instructions.Count;
 
@@ -827,9 +819,7 @@ namespace KotorCLI.Commands
 
                 try
                 {
-                    using (var fs = File.OpenRead(filePath))
-                    {
-                        var twoda = TwoDABinaryReader.Load(fs);
+                    var twoda = TwoDAAuto.ReadTwoDA(filePath);
 
                         stats.RowCount = twoda.Rows.Count;
                         stats.ColumnCount = twoda.Columns.Count;
@@ -1009,9 +999,7 @@ namespace KotorCLI.Commands
 
                 try
                 {
-                    using (var fs = File.OpenRead(filePath))
-                    {
-                        var bif = BIFBinaryReader.Load(fs);
+                    var bif = new BIFBinaryReader(filePath).Load();
 
                         stats.VariableResourceCount = bif.VariableResources.Count;
                         stats.FixedResourceCount = bif.FixedResources.Count;
@@ -1278,12 +1266,88 @@ namespace KotorCLI.Commands
             var validateCmd = new Command("validate", "Validate file format and structure");
             var validateFileArg = new Argument<string>("file", "File to validate");
             validateCmd.Add(validateFileArg);
+            var verboseOpt = new Option<bool>(new[] { "-v", "--verbose" }, "Show detailed validation information");
+            validateCmd.Options.Add(verboseOpt);
             validateCmd.SetAction(parseResult =>
             {
                 var file = parseResult.GetValue(validateFileArg);
+                var verbose = parseResult.GetValue(verboseOpt);
                 var logger = new StandardLogger();
-                logger.Info("TODO: STUB - validate not yet implemented");
-                Environment.Exit(0);
+
+                if (string.IsNullOrEmpty(file))
+                {
+                    logger.Error("Error: No file specified");
+                    Environment.Exit(1);
+                }
+
+                try
+                {
+                    var stats = FileStatsAnalyzer.AnalyzeFile(file);
+
+                    if (stats.IsValid)
+                    {
+                        logger.Info($"✓ File '{stats.FileName}' is valid");
+                        logger.Info($"  Format: {stats.Format}");
+                        logger.Info($"  Size: {stats.FileSize:N0} bytes ({GetReadableFileSize(stats.FileSize)})");
+
+                        if (verbose)
+                        {
+                            logger.Info("");
+                            logger.Info("Validation Details:");
+
+                            // Format-specific validation details
+                            switch (stats)
+                            {
+                                case GFFFileStats gffStats:
+                                    ValidateGFFStructure(gffStats, logger);
+                                    break;
+                                case ERFFileStats erfStats:
+                                    ValidateERFStructure(erfStats, logger);
+                                    break;
+                                case TLKFileStats tlkStats:
+                                    ValidateTLKStructure(tlkStats, logger);
+                                    break;
+                                case NCSFileStats ncsStats:
+                                    ValidateNCSStructure(ncsStats, logger);
+                                    break;
+                                case TwoDAFileStats twodaStats:
+                                    ValidateTwoDAStructure(twodaStats, logger);
+                                    break;
+                                case BIFFileStats bifStats:
+                                    ValidateBIFStructure(bifStats, logger);
+                                    break;
+                            }
+
+                            // Additional integrity checks
+                            PerformIntegrityChecks(stats, logger);
+                        }
+
+                        logger.Info("");
+                        logger.Info("✓ Validation completed successfully - no errors found");
+                    }
+                    else
+                    {
+                        logger.Error($"✗ File '{stats.FileName}' is invalid");
+                        logger.Info($"  Format: {stats.Format}");
+
+                        if (stats.Errors.Any())
+                        {
+                            logger.Info("");
+                            logger.Info("Validation Errors:");
+                            foreach (var error in stats.Errors)
+                            {
+                                logger.Error($"  - {error}");
+                            }
+                        }
+
+                        Environment.Exit(1);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.Error($"Error validating file '{file}': {ex.Message}");
+                    Environment.Exit(1);
+                }
             });
             rootCommand.Add(validateCmd);
 
@@ -1304,6 +1368,310 @@ namespace KotorCLI.Commands
                 Environment.Exit(0);
             });
             rootCommand.Add(mergeCmd);
+        }
+
+        /// <summary>
+        /// Performs detailed GFF structure validation
+        /// </summary>
+        private static void ValidateGFFStructure(GFFFileStats stats, ILogger logger)
+        {
+            logger.Info("  Structure Analysis:");
+            logger.Info($"    Structs: {stats.StructCount:N0}");
+            logger.Info($"    Fields: {stats.FieldCount:N0}");
+            logger.Info($"    Max Depth: {stats.MaxDepth}");
+
+            // Check for structural integrity
+            if (stats.StructCount == 0)
+            {
+                logger.Warn("    ⚠ Warning: No structs found");
+            }
+
+            if (stats.FieldCount == 0)
+            {
+                logger.Warn("    ⚠ Warning: No fields found");
+            }
+
+            if (stats.MaxDepth > 10)
+            {
+                logger.Warn($"    ⚠ Warning: Deep structure depth ({stats.MaxDepth}) may indicate complex or malformed data");
+            }
+
+            // Validate field data consistency
+            if (stats.FieldDataSize > 0)
+            {
+                double overheadRatio = (double)(stats.FieldIndicesSize + stats.ListIndicesSize) / stats.FieldDataSize;
+                logger.Info($"    Data Efficiency: {overheadRatio:P1} overhead");
+                if (overheadRatio > 0.5)
+                {
+                    logger.Warn("    ⚠ Warning: High overhead ratio may indicate inefficient structure");
+                }
+            }
+
+            // File type validation
+            if (!string.IsNullOrEmpty(stats.FileType))
+            {
+                logger.Info($"    File Type: {stats.FileType}");
+            }
+
+            if (stats.RootStructType >= 0)
+            {
+                logger.Info($"    Root Struct Type: {stats.RootStructType}");
+            }
+        }
+
+        /// <summary>
+        /// Performs detailed ERF structure validation
+        /// </summary>
+        private static void ValidateERFStructure(ERFFileStats stats, ILogger logger)
+        {
+            logger.Info("  Archive Analysis:");
+            logger.Info($"    Resources: {stats.ResourceCount:N0}");
+            logger.Info($"    ERF Type: {stats.ErfType}");
+            logger.Info($"    Save File: {stats.IsSaveErf}");
+
+            if (stats.ResourceCount == 0)
+            {
+                logger.Warn("    ⚠ Warning: Archive contains no resources");
+            }
+
+            // Size validation
+            if (stats.ResourceSizes.Any())
+            {
+                logger.Info($"    Size Range: {GetReadableFileSize(stats.MinResourceSize)} - {GetReadableFileSize(stats.MaxResourceSize)}");
+                logger.Info($"    Average Size: {GetReadableFileSize(stats.AverageResourceSize)}");
+
+                // Check for unusual size distributions
+                if (stats.MinResourceSize == 0)
+                {
+                    logger.Warn("    ⚠ Warning: Archive contains empty resources");
+                }
+
+                if (stats.MaxResourceSize > 10 * 1024 * 1024) // 10MB
+                {
+                    logger.Warn("    ⚠ Warning: Archive contains very large resources (>10MB)");
+                }
+            }
+
+            // Resource type diversity
+            if (stats.ResourceTypeCounts.Count > 0)
+            {
+                logger.Info($"    Resource Types: {stats.ResourceTypeCounts.Count:N0} unique");
+                if (stats.ResourceTypeCounts.Count == 1)
+                {
+                    logger.Info("    Note: Archive contains only one resource type");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Performs detailed TLK structure validation
+        /// </summary>
+        private static void ValidateTLKStructure(TLKFileStats stats, ILogger logger)
+        {
+            logger.Info("  Talk Table Analysis:");
+            logger.Info($"    Language: {stats.Language}");
+            logger.Info($"    Total Entries: {stats.EntryCount:N0}");
+            logger.Info($"    Used Entries: {stats.UsedEntryCount:N0} ({stats.UsagePercentage:P1})");
+
+            if (stats.UsedEntryCount == 0)
+            {
+                logger.Warn("    ⚠ Warning: Talk table contains no text entries");
+            }
+
+            if (stats.UsagePercentage < 0.1)
+            {
+                logger.Warn($"    ⚠ Warning: Very low usage ({stats.UsagePercentage:P1}) - mostly empty entries");
+            }
+
+            // Text content validation
+            if (stats.UsedEntryCount > 0)
+            {
+                logger.Info($"    Text Length: {stats.MinTextLength:N0} - {stats.MaxTextLength:N0} characters");
+                logger.Info($"    Average Length: {stats.AverageTextLength:N0} characters");
+
+                if (stats.MaxTextLength > 4096)
+                {
+                    logger.Warn("    ⚠ Warning: Some entries exceed 4096 characters (may cause display issues)");
+                }
+            }
+
+            // Sound reference validation
+            if (stats.EntriesWithSoundCount > 0)
+            {
+                logger.Info($"    Sound References: {stats.EntriesWithSoundCount:N0} entries ({stats.UniqueSoundRefsCount:N0} unique)");
+            }
+        }
+
+        /// <summary>
+        /// Performs detailed NCS structure validation
+        /// </summary>
+        private static void ValidateNCSStructure(NCSFileStats stats, ILogger logger)
+        {
+            logger.Info("  Script Analysis:");
+            logger.Info($"    Instructions: {stats.InstructionCount:N0}");
+            logger.Info($"    Unique Types: {stats.UniqueInstructionTypes:N0}");
+            logger.Info($"    Diversity Ratio: {stats.InstructionDiversityRatio:P3}");
+
+            if (stats.InstructionCount == 0)
+            {
+                logger.Warn("    ⚠ Warning: Script contains no instructions");
+            }
+
+            // Complexity analysis
+            if (stats.InstructionDiversityRatio < 0.1)
+            {
+                logger.Warn("    ⚠ Warning: Low instruction diversity - script may be repetitive or simple");
+            }
+
+            // Category breakdown validation
+            logger.Info("    Instruction Categories:");
+            logger.Info($"      Control Flow: {stats.JumpInstructions:N0}");
+            logger.Info($"      Arithmetic: {stats.ArithmeticInstructions:N0}");
+            logger.Info($"      Logic/Bitwise: {stats.LogicalInstructions:N0}");
+            logger.Info($"      Stack: {stats.StackInstructions:N0}");
+            logger.Info($"      Variables: {stats.VariableInstructions:N0}");
+            logger.Info($"      Functions: {stats.FunctionInstructions:N0}");
+
+            // Validate script structure
+            if (stats.JumpInstructions == 0 && stats.InstructionCount > 10)
+            {
+                logger.Warn("    ⚠ Warning: No control flow instructions in non-trivial script");
+            }
+
+            if (stats.FunctionInstructions == 0)
+            {
+                logger.Info("    Note: Script contains no function calls");
+            }
+        }
+
+        /// <summary>
+        /// Performs detailed TwoDA structure validation
+        /// </summary>
+        private static void ValidateTwoDAStructure(TwoDAFileStats stats, ILogger logger)
+        {
+            logger.Info("  Table Analysis:");
+            logger.Info($"    Dimensions: {stats.RowCount:N0} rows × {stats.ColumnCount:N0} columns");
+            logger.Info($"    Total Cells: {stats.TotalCells:N0}");
+            logger.Info($"    Fill Rate: {stats.FillPercentage:P1}");
+
+            if (stats.TotalCells == 0)
+            {
+                logger.Warn("    ⚠ Warning: Table contains no cells");
+                return;
+            }
+
+            if (stats.FillPercentage < 0.1)
+            {
+                logger.Warn($"    ⚠ Warning: Table is mostly empty ({stats.FillPercentage:P1} filled)");
+            }
+
+            // Data type validation
+            if (stats.FilledCells > 0)
+            {
+                logger.Info("    Cell Types:");
+                logger.Info($"      Numeric: {stats.NumericCells:N0}");
+                logger.Info($"      String: {stats.StringCells:N0}");
+
+                if (stats.NumericCells > 0)
+                {
+                    logger.Info($"      Content Length: {stats.MinCellLength:N0} - {stats.MaxCellLength:N0} characters");
+                    logger.Info($"      Average Length: {stats.AverageCellLength:F1} characters");
+                }
+            }
+
+            // Column consistency validation
+            if (stats.ColumnTypeAnalysis != null && stats.ColumnTypeAnalysis.Count > 1)
+            {
+                var inconsistentColumns = stats.ColumnTypeAnalysis.Where(x => x.Value.Contains("/")).ToList();
+                if (inconsistentColumns.Any())
+                {
+                    logger.Warn($"    ⚠ Warning: {inconsistentColumns.Count:N0} columns contain mixed data types");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Performs detailed BIF structure validation
+        /// </summary>
+        private static void ValidateBIFStructure(BIFFileStats stats, ILogger logger)
+        {
+            logger.Info("  Archive Analysis:");
+            logger.Info($"    Variable Resources: {stats.VariableResourceCount:N0}");
+            logger.Info($"    Fixed Resources: {stats.FixedResourceCount:N0}");
+            logger.Info($"    Total Resources: {stats.TotalResourceCount:N0}");
+
+            if (stats.TotalResourceCount == 0)
+            {
+                logger.Warn("    ⚠ Warning: Archive contains no resources");
+                return;
+            }
+
+            // Size analysis
+            logger.Info($"    Total Size: {GetReadableFileSize(stats.TotalUncompressedSize)}");
+
+            if (stats.VariableResourceCount > 0)
+            {
+                logger.Info("    Variable Resources:");
+                logger.Info($"      Size Range: {GetReadableFileSize(stats.MinVariableResourceSize)} - {GetReadableFileSize(stats.MaxVariableResourceSize)}");
+                logger.Info($"      Average: {GetReadableFileSize(stats.AverageVariableResourceSize)}");
+            }
+
+            if (stats.FixedResourceCount > 0)
+            {
+                logger.Info("    Fixed Resources:");
+                logger.Info($"      Size Range: {GetReadableFileSize(stats.MinFixedResourceSize)} - {GetReadableFileSize(stats.MaxFixedResourceSize)}");
+                logger.Info($"      Average: {GetReadableFileSize(stats.AverageFixedResourceSize)}");
+            }
+
+            // Resource type diversity
+            if (stats.ResourceTypeCounts.Count > 0)
+            {
+                logger.Info($"    Resource Types: {stats.ResourceTypeCounts.Count:N0} unique");
+            }
+        }
+
+        /// <summary>
+        /// Performs additional integrity checks on file stats
+        /// </summary>
+        private static void PerformIntegrityChecks(FileStats stats, ILogger logger)
+        {
+            // File size sanity checks
+            if (stats.FileSize == 0)
+            {
+                logger.Warn("  ⚠ Integrity: File is empty");
+            }
+            else if (stats.FileSize > 2L * 1024 * 1024 * 1024) // 2GB
+            {
+                logger.Warn("  ⚠ Integrity: File is very large (>2GB) - may cause performance issues");
+            }
+
+            // Format-specific integrity checks
+            if (stats is GFFFileStats gffStats)
+            {
+                // Check for reasonable struct/field ratios
+                if (gffStats.StructCount > 0 && gffStats.FieldCount > 0)
+                {
+                    double fieldsPerStruct = (double)gffStats.FieldCount / gffStats.StructCount;
+                    if (fieldsPerStruct > 100)
+                    {
+                        logger.Warn($"  ⚠ Integrity: Very high field/struct ratio ({fieldsPerStruct:F1})");
+                    }
+                }
+            }
+            else if (stats is ERFFileStats erfStats)
+            {
+                // Check for reasonable compression ratios
+                if (erfStats.TotalUncompressedSize > 0)
+                {
+                    double ratio = (double)stats.FileSize / erfStats.TotalUncompressedSize;
+                    if (ratio > 0.9)
+                    {
+                        logger.Info($"  Integrity: Archive has low compression ({ratio:P1})");
+                    }
+                }
+            }
+
+            logger.Info("  Integrity: All basic checks passed");
         }
     }
 }
