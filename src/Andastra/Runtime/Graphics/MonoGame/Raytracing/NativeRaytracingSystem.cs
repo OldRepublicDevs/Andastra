@@ -4331,7 +4331,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
                 // ID3D12Resource GUID: {696442be-a72e-4059-bc79-5b5c98040fad}
                 Guid iidID3D12Resource = new Guid(0x696442be, 0xa72e, 0x4059, 0xbc, 0x79, 0x5b, 0x5c, 0x98, 0x04, 0x0f, 0xad);
                 IntPtr resourcePtr = IntPtr.Zero;
-                int hr = Marshal.QueryInterface(handle, iidID3D12Resource, out resourcePtr);
+                int hr = Marshal.QueryInterface(handle, ref iidID3D12Resource, out resourcePtr);
 
                 if (hr == 0 && resourcePtr != IntPtr.Zero)
                 {
