@@ -324,7 +324,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                             }
                         }
                     }
-                    
+
                     if (!textureSet)
                     {
                         // Texture parameter couldn't be set - this is not fatal, continue rendering
@@ -415,42 +415,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
             try
             {
-                // Try loading from ContentManager if available
-                StrideGraphics.Effect effectBase = null;
-                try
-                {
-                    object services = _graphicsDevice.Services();
-                    if (services != null)
-                    {
-                        // Use fully qualified name to avoid namespace resolution issues
-                        var contentManager = services.GetService<global::Stride.Engine.ContentManager>();
-                        if (contentManager != null)
-                        {
-                            try
-                            {
-                                effectBase = contentManager.Load<StrideGraphics.Effect>("ToneMappingEffect");
-                                if (effectBase != null)
-                                {
-                                    _effectBase = effectBase;
-                                    _toneMappingEffect = new EffectInstance(effectBase);
-                                    Console.WriteLine("[StrideToneMapping] Loaded ToneMappingEffect from ContentManager");
-                                    _effectInitialized = true;
-                                    return;
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine($"[StrideToneMapping] Failed to load ToneMappingEffect from ContentManager: {ex.Message}");
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[StrideToneMapping] Failed to access ContentManager: {ex.Message}");
-                }
-
-                // Strategy 3: Create effect programmatically if loading failed
+                // Note: GraphicsDevice.Services() always returns null in newer Stride versions
+                // ContentManager should be obtained from Game.Services instead, but we don't have access to Game here
                 // For now, we'll use CPU fallback when shader is not available
                 Console.WriteLine("[StrideToneMapping] No ToneMappingEffect shader found. Will use CPU fallback implementation");
                 _toneMappingEffect = null;
