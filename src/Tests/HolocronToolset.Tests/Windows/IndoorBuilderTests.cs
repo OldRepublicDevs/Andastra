@@ -220,7 +220,7 @@ namespace HolocronToolset.Tests.Windows
         // - test_flip_rooms_command_y (implemented)
         // - test_flip_rooms_command_both (implemented)
         // TODO: STUB - Implement test_duplicate_rooms_command (vendor/PyKotor/Tools/HolocronToolset/tests/gui/windows/test_indoor_builder.py)
-        // TODO: STUB - Implement test_move_warp_command (vendor/PyKotor/Tools/HolocronToolset/tests/gui/windows/test_indoor_builder.py)
+        // - test_move_warp_command (implemented)
         //
         // These will be ported once the IndoorMapBuilder implementation is complete.
         // TODO: STUB - For now, placeholder tests are created to ensure zero omissions.
@@ -1046,6 +1046,9 @@ namespace HolocronToolset.Tests.Windows
 
                 // Matching Python line 633: assert abs(builder._map.warp_point.y - old_position.y) < 0.001
                 builder.Map.WarpPoint.Y.Should().BeApproximately(oldPosition.Y, 0.001f, "Warp point Y should be restored to old position");
+
+                // Exhaustive implementation: Also verify Z coordinate is restored (Python test doesn't check this, but we should for completeness)
+                builder.Map.WarpPoint.Z.Should().BeApproximately(oldPosition.Z, 0.001f, "Warp point Z should be restored to old position");
             }
             finally
             {
