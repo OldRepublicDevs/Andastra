@@ -867,7 +867,6 @@ shader TemporalAAEffect : ShaderBase
                         }
                     }
                     catch { }
-                    }
                 }
 
                 // Draw full-screen quad with TAA shader
@@ -877,6 +876,7 @@ shader TemporalAAEffect : ShaderBase
                 _spriteBatch.End();
             }
             else
+            {
             {
                 // Fallback: Simple copy if TAA effect is not available
                 // This fallback is used when shader compilation fails or effect is not initialized
