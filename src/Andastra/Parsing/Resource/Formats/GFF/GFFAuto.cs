@@ -48,6 +48,26 @@ namespace Andastra.Parsing.Formats.GFF
                     throw new ArgumentException("Source must be a file path, byte array, or stream.", nameof(source));
                 }
             }
+            else if (format == ResourceType.GFF_XML)
+            {
+                var reader = new GFFXmlReader();
+                if (source is string filePath)
+                {
+                    return reader.Load(File.ReadAllText(filePath));
+                }
+                else if (source is byte[] bytes)
+                {
+                    return reader.Load(bytes);
+                }
+                else if (source is Stream stream)
+                {
+                    return reader.Load(stream);
+                }
+                else
+                {
+                    throw new ArgumentException("Source must be a file path, byte array, or stream.", nameof(source));
+                }
+            }
             else if (format.IsGff())
             {
                 byte[] data;
@@ -110,6 +130,25 @@ namespace Andastra.Parsing.Formats.GFF
                     throw new ArgumentException("Target must be a file path or stream.", nameof(target));
                 }
             }
+            else if (format == ResourceType.GFF_XML)
+            {
+                var writer = new GFFXmlWriter();
+                string xmlText = writer.Write(gff);
+
+                if (target is string filePath)
+                {
+                    File.WriteAllText(filePath, xmlText);
+                }
+                else if (target is Stream stream)
+                {
+                    byte[] data = System.Text.Encoding.UTF8.GetBytes(xmlText);
+                    stream.Write(data, 0, data.Length);
+                }
+                else
+                {
+                    throw new ArgumentException("Target must be a file path or stream.", nameof(target));
+                }
+            }
             else if (format.IsGff())
             {
                 // Set content type from filename if not already set
@@ -154,6 +193,12 @@ namespace Andastra.Parsing.Formats.GFF
                 var writer = new GFFJsonWriter();
                 string jsonText = writer.Write(gff);
                 return System.Text.Encoding.UTF8.GetBytes(jsonText);
+            }
+            else if (format == ResourceType.GFF_XML)
+            {
+                var writer = new GFFXmlWriter();
+                string xmlText = writer.Write(gff);
+                return System.Text.Encoding.UTF8.GetBytes(xmlText);
             }
             else
             {

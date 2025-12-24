@@ -1462,9 +1462,10 @@ namespace HolocronToolset.Tests.Formats
         [Fact]
         public void TestK1Serialization()
         {
-            // Read TEST_DLG_XML - Note: XML format not fully supported yet, so construct DLG directly
-            // TODO: STUB - For now, construct DLG manually from expected structure
-            DLG dlg = ConstructTestDlgFromXml();
+            // Read TEST_DLG_XML using XML GFF parsing
+            string xmlContent = GetTestDlgXml();
+            GFF gff = GFFAuto.ReadGff(xmlContent, fileFormat: ResourceType.GFF_XML);
+            DLG dlg = DLGHelper.ConstructDlg(gff);
 
             foreach (DLGNode node in dlg.AllEntries())
             {
