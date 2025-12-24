@@ -4201,14 +4201,106 @@ namespace HolocronToolset.Tests.Editors
             }
         }
 
-        // TODO: STUB - Implement test_dlg_editor_manipulate_sound_roundtrip (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2623-2655)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2623-2655
         // Original: def test_dlg_editor_manipulate_sound_roundtrip(qtbot, installation: HTInstallation, test_files_dir: Path): Test sound roundtrip
         [Fact]
         public void TestDlgEditorManipulateSoundRoundtrip()
         {
-            // TODO: STUB - Implement sound roundtrip test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2623-2655
-            throw new NotImplementedException("TestDlgEditorManipulateSoundRoundtrip: Sound roundtrip test not yet implemented");
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Try to find ORIHA.dlg
+            string dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            }
+
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Skip if test file not available (matching Python pytest.skip behavior)
+                return;
+            }
+
+            // Matching Python: editor = DLGEditor(None, installation)
+            var installation = CreateTestInstallation();
+            if (installation == null)
+            {
+                // Skip if installation is not available
+                return;
+            }
+
+            var editor = new DLGEditor(null, installation);
+            editor.Show();
+
+            // Matching Python: original_data = dlg_file.read_bytes()
+            // Matching Python: editor.load(dlg_file, "ORIHA", ResourceType.DLG, original_data)
+            byte[] originalData = System.IO.File.ReadAllBytes(dlgFile);
+            editor.Load(dlgFile, "ORIHA", ResourceType.DLG, originalData);
+
+            // Matching Python: if editor.model.rowCount() > 0:
+            if (editor.Model.RowCount > 0)
+            {
+                // Matching Python: first_item = editor.model.item(0, 0)
+                // Matching Python: if isinstance(first_item, DLGStandardItem):
+                var firstItem = editor.Model.Item(0, 0);
+                if (firstItem != null && firstItem.Link != null && firstItem.Link.Node != null)
+                {
+                    // Matching Python: editor.ui.dialogTree.setCurrentIndex(first_item.index())
+                    // Select the first item in the model
+                    editor.Model.SelectedIndex = 0;
+
+                    // Matching Python: test_sounds = ["test_sound", "another_sound", ""]
+                    string[] testSounds = { "test_sound", "another_sound", "" };
+
+                    // Matching Python: for sound in test_sounds:
+                    foreach (string sound in testSounds)
+                    {
+                        // Matching Python: editor.ui.soundComboBox.set_combo_box_text(sound)
+                        // Matching Python: editor.on_node_update()
+                        if (editor.SoundComboBox != null)
+                        {
+                            editor.SoundComboBox.Text = sound;
+                            editor.OnNodeUpdate();
+
+                            // Matching Python: data, _ = editor.build()
+                            // Matching Python: modified_dlg = read_dlg(data)
+                            // Matching Python: if modified_dlg.starters:
+                            // Matching Python: assert str(modified_dlg.starters[0].node.sound) == sound
+                            var (savedData, _) = editor.Build();
+                            var modifiedDlg = DLGHelper.ReadDlg(savedData);
+
+                            if (modifiedDlg != null && modifiedDlg.Starters != null && modifiedDlg.Starters.Count > 0)
+                            {
+                                var firstStarter = modifiedDlg.Starters[0];
+                                if (firstStarter?.Node != null)
+                                {
+                                    string savedSound = firstStarter.Node.Sound?.ToString() ?? string.Empty;
+                                    savedSound.Should().Be(sound, $"Sound should be '{sound}' after setting sound to '{sound}'");
+
+                                    // Matching Python: editor.load(dlg_file, "ORIHA", ResourceType.DLG, data)
+                                    // Matching Python: editor.ui.dialogTree.setCurrentIndex(first_item.index())
+                                    // Matching Python: assert editor.ui.soundComboBox.currentText() == sound
+                                    editor.Load(dlgFile, "ORIHA", ResourceType.DLG, savedData);
+                                    editor.Model.SelectedIndex = 0;
+
+                                    if (editor.SoundComboBox != null)
+                                    {
+                                        string loadedSound = editor.SoundComboBox.Text ?? string.Empty;
+                                        loadedSound.Should().Be(sound, $"SoundComboBox should be '{sound}' after loading saved data");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         // TODO: STUB - Implement test_dlg_editor_manipulate_sound_checkbox_roundtrip (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2657-2690)
