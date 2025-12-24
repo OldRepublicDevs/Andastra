@@ -50,6 +50,12 @@ namespace HolocronToolset.Widgets
         private const double BookmarkMarkerRadius = 6.0; // Radius of circular bookmark marker
         private readonly SolidColorBrush BookmarkMarkerBrush = new SolidColorBrush(Color.FromRgb(255, 193, 7)); // Amber/gold color for bookmark markers
 
+        // Ctrl+K sequence handling fields
+        // Implements VS Code-style key sequences where Ctrl+K is pressed first, then a second key
+        private bool _ctrlKPressed = false; // Whether Ctrl+K was pressed and we're waiting for the second key
+        private DateTime _ctrlKPressTime = DateTime.MinValue; // When Ctrl+K was pressed for timeout handling
+        private const int CtrlKSequenceTimeoutMs = 1500; // Timeout in milliseconds (1.5 seconds) to reset sequence
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/code_editor.py:95-121
         // Original: def __init__(self, parent: QWidget):
         public CodeEditor()
@@ -682,10 +688,58 @@ namespace HolocronToolset.Widgets
                 }
             }
 
-            // Note: Ctrl+K, Ctrl+0 and Ctrl+K, Ctrl+J require key sequence handling
-            // TODO: STUB - For now, we'll handle them as single key combinations
-            // TODO:  In a full implementation, you'd track the Ctrl+K press and then handle the second key
-            // For simplicity, we'll use alternative shortcuts or handle them in a key sequence manager
+            // Ctrl+K sequence handling - VS Code style key sequences
+            // When Ctrl+K is pressed, we enter sequence mode and wait for the second key
+            if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && !e.KeyModifiers.HasFlag(KeyModifiers.Shift) && e.Key == Key.K)
+            {
+                // Check if we have a pending Ctrl+K sequence that has timed out
+                if (_ctrlKPressed && (DateTime.Now - _ctrlKPressTime).TotalMilliseconds > CtrlKSequenceTimeoutMs)
+                {
+                    _ctrlKPressed = false;
+                }
+
+                if (!_ctrlKPressed)
+                {
+                    // Start new Ctrl+K sequence
+                    _ctrlKPressed = true;
+                    _ctrlKPressTime = DateTime.Now;
+                    e.Handled = true;
+                    return;
+                }
+                // If Ctrl+K is already pressed, let it fall through to reset the sequence
+            }
+
+            // Handle second key in Ctrl+K sequence
+            if (_ctrlKPressed)
+            {
+                bool handledSequence = false;
+
+                // Ctrl+K, Ctrl+0 for fold all regions
+                if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && e.Key == Key.D0)
+                {
+                    FoldAll();
+                    handledSequence = true;
+                }
+                // Ctrl+K, Ctrl+J for unfold all regions
+                else if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && e.Key == Key.J)
+                {
+                    UnfoldAll();
+                    handledSequence = true;
+                }
+
+                // Reset sequence state after handling (whether successful or not)
+                _ctrlKPressed = false;
+
+                if (handledSequence)
+                {
+                    e.Handled = true;
+                    return;
+                }
+                // If not a valid sequence, continue with normal key handling
+            }
+
+            // Alternative shortcuts for users who prefer single key combinations
+            // These work even when not in sequence mode
             // Ctrl+K Ctrl+0 for fold all (using Ctrl+Shift+0 as alternative)
             if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && e.KeyModifiers.HasFlag(KeyModifiers.Shift) && e.Key == Key.D0)
             {
@@ -725,6 +779,27 @@ namespace HolocronToolset.Widgets
                 ResetZoom();
                 e.Handled = true;
                 return;
+            }
+
+            // Reset Ctrl+K sequence if an invalid key is pressed or timeout occurs
+            // This prevents the sequence from getting stuck if user presses other keys
+            if (_ctrlKPressed)
+            {
+                // Check for timeout
+                if ((DateTime.Now - _ctrlKPressTime).TotalMilliseconds > CtrlKSequenceTimeoutMs)
+                {
+                    _ctrlKPressed = false;
+                }
+                // Reset sequence on cursor movement keys, escape, or other navigation keys
+                // These indicate the user is not trying to complete a Ctrl+K sequence
+                else if (e.Key == Key.Left || e.Key == Key.Right || e.Key == Key.Up || e.Key == Key.Down ||
+                         e.Key == Key.Home || e.Key == Key.End || e.Key == Key.PageUp || e.Key == Key.PageDown ||
+                         e.Key == Key.Escape || e.Key == Key.Tab || e.Key == Key.Enter || e.Key == Key.Back ||
+                         e.Key == Key.Delete || e.Key == Key.Insert ||
+                         (e.KeyModifiers.HasFlag(KeyModifiers.Control) && (e.Key == Key.A || e.Key == Key.C || e.Key == Key.V || e.Key == Key.X || e.Key == Key.Z || e.Key == Key.Y)))
+                {
+                    _ctrlKPressed = false;
+                }
             }
 
             base.OnKeyDown(e);
@@ -2335,6 +2410,40 @@ namespace HolocronToolset.Widgets
         public bool IsWordWrapEnabled()
         {
             return TextWrapping == Avalonia.Media.TextWrapping.Wrap;
+        }
+
+        /// <summary>
+        /// Gets whether Ctrl+K sequence mode is currently active.
+        /// Returns true if Ctrl+K was pressed and we're waiting for the second key.
+        /// Exposed for testing purposes.
+        /// </summary>
+        public bool IsCtrlKSequenceActive()
+        {
+            // Check for timeout before returning
+            if (_ctrlKPressed && (DateTime.Now - _ctrlKPressTime).TotalMilliseconds > CtrlKSequenceTimeoutMs)
+            {
+                _ctrlKPressed = false;
+            }
+            return _ctrlKPressed;
+        }
+
+        /// <summary>
+        /// Resets the Ctrl+K sequence state.
+        /// Useful for testing or when external events require resetting the sequence.
+        /// </summary>
+        public void ResetCtrlKSequence()
+        {
+            _ctrlKPressed = false;
+            _ctrlKPressTime = DateTime.MinValue;
+        }
+
+        /// <summary>
+        /// Gets the timeout duration for Ctrl+K sequences in milliseconds.
+        /// Exposed for testing and configuration purposes.
+        /// </summary>
+        public int GetCtrlKSequenceTimeout()
+        {
+            return CtrlKSequenceTimeoutMs;
         }
     }
 }
