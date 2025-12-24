@@ -456,12 +456,32 @@ shader BlurEffect : ShaderBase
                 StrideGraphics.DepthStencilStates.None, StrideGraphics.RasterizerStates.CullNone, _brightPassEffect);
 
             // If we have a custom bright pass effect, set its parameters
-            // TODO: STUB - ParameterCollection.Get<T> requires non-nullable value types. Parameter setting needs proper API usage.
-            // For now, skip parameter setting - effects will use default values if parameters aren't set.
-            // if (_brightPassEffect != null && _brightPassEffect.Parameters != null)
-            // {
-            //     // Parameter setting code would go here, but requires proper ParameterKey types
-            // }
+            // Use reflection to set parameters since ParameterCollection.Get<T> requires non-nullable value types
+            // and proper ParameterKey types which may not be available at runtime
+            if (_brightPassEffect != null && _brightPassEffect.Parameters != null)
+            {
+                try
+                {
+                    // Set bright pass threshold parameter
+                    var setFloatMethod = typeof(global::Stride.Rendering.ParameterCollection).GetMethod("Set", new[] { typeof(string), typeof(float) });
+                    if (setFloatMethod != null)
+                    {
+                        setFloatMethod.Invoke(_brightPassEffect.Parameters, new object[] { "Threshold", _threshold });
+                    }
+
+                    // Set screen size parameters
+                    var setVector2Method = typeof(global::Stride.Rendering.ParameterCollection).GetMethod("Set", new[] { typeof(string), typeof(Vector2) });
+                    if (setVector2Method != null)
+                    {
+                        setVector2Method.Invoke(_brightPassEffect.Parameters, new object[] { "ScreenSize", new Vector2(width, height) });
+                        setVector2Method.Invoke(_brightPassEffect.Parameters, new object[] { "ScreenSizeInv", new Vector2(1.0f / width, 1.0f / height) });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[StrideBloomEffect] Failed to set bright pass parameters: {ex.Message}");
+                }
+            }
 
             // Draw full-screen quad with source StrideGraphics.Texture
             // Rectangle covering entire destination render target
@@ -506,10 +526,6 @@ shader BlurEffect : ShaderBase
             int height = destination.Height;
             commandList.SetViewport(new StrideGraphics.Viewport(0, 0, width, height));
 
-            // Calculate blur radius based on intensity
-            // Higher intensity = larger blur radius for stronger glow effect
-            float blurRadius = _intensity * 2.0f; // Scale intensity to blur radius
-
             // Begin sprite batch rendering
             // Use SpriteSortMode.Immediate for post-processing effects
             // Begin sprite batch rendering
@@ -526,12 +542,36 @@ shader BlurEffect : ShaderBase
                 StrideGraphics.DepthStencilStates.None, StrideGraphics.RasterizerStates.CullNone, _blurEffect);
 
             // If we have a custom blur effect, set its parameters
-            // TODO: STUB - ParameterCollection.Get<T> requires non-nullable value types. Parameter setting needs proper API usage.
-            // For now, skip parameter setting - effects will use default values if parameters aren't set.
-            // if (_blurEffect != null && _blurEffect.Parameters != null)
-            // {
-            //     // Parameter setting code would go here, but requires proper ParameterKey types
-            // }
+            // Use reflection to set parameters since ParameterCollection.Get<T> requires non-nullable value types
+            // and proper ParameterKey types which may not be available at runtime
+            if (_blurEffect != null && _blurEffect.Parameters != null)
+            {
+                try
+                {
+                    // Set blur direction parameter (horizontal/vertical based on 'horizontal' flag)
+                    var setVector2Method = typeof(global::Stride.Rendering.ParameterCollection).GetMethod("Set", new[] { typeof(string), typeof(Vector2) });
+                    if (setVector2Method != null)
+                    {
+                        var blurDirection = horizontal ? new Vector2(1.0f, 0.0f) : new Vector2(0.0f, 1.0f);
+                        setVector2Method.Invoke(_blurEffect.Parameters, new object[] { "BlurDirection", blurDirection });
+                        setVector2Method.Invoke(_blurEffect.Parameters, new object[] { "ScreenSize", new Vector2(width, height) });
+                        setVector2Method.Invoke(_blurEffect.Parameters, new object[] { "ScreenSizeInv", new Vector2(1.0f / width, 1.0f / height) });
+                    }
+
+                    // Set blur radius parameter
+                    // Calculate blur radius based on intensity (higher intensity = larger blur radius)
+                    var setFloatMethod = typeof(global::Stride.Rendering.ParameterCollection).GetMethod("Set", new[] { typeof(string), typeof(float) });
+                    if (setFloatMethod != null)
+                    {
+                        float blurRadius = _intensity * 2.0f; // Scale intensity to blur radius
+                        setFloatMethod.Invoke(_blurEffect.Parameters, new object[] { "BlurRadius", blurRadius });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[StrideBloomEffect] Failed to set blur parameters: {ex.Message}");
+                }
+            }
 
             // Draw full-screen quad with source StrideGraphics.Texture
             // Rectangle covering entire destination render target
