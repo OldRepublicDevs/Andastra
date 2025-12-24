@@ -247,6 +247,35 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     return false;
                 }
 
+                // Get GraphicsContext from GraphicsDevice for SpriteBatch.Begin
+                // GraphicsContext is a property on GraphicsDevice in Stride
+                StrideGraphics.GraphicsContext graphicsContext = null;
+                try
+                {
+                    // Try to get GraphicsContext property using reflection (C# 7.3 compatible)
+                    var graphicsContextProperty = typeof(StrideGraphics.GraphicsDevice).GetProperty("GraphicsContext");
+                    if (graphicsContextProperty != null)
+                    {
+                        graphicsContext = graphicsContextProperty.GetValue(_graphicsDevice) as StrideGraphics.GraphicsContext;
+                    }
+                }
+                catch
+                {
+                    // If GraphicsContext property doesn't exist, try to use CommandList as GraphicsContext
+                    // (CommandList might be compatible with GraphicsContext in some Stride versions)
+                    graphicsContext = commandList as StrideGraphics.GraphicsContext;
+                }
+                
+                if (graphicsContext == null)
+                {
+                    // Fallback: Try to cast CommandList to GraphicsContext (they might be the same type in some Stride versions)
+                    graphicsContext = commandList as StrideGraphics.GraphicsContext;
+                    if (graphicsContext == null)
+                    {
+                        return false;
+                    }
+                }
+
                 // Set render target to output
                 commandList.SetRenderTarget(null, output);
                 commandList.SetViewport(new StrideGraphics.Viewport(0, 0, output.Width, output.Height));
@@ -259,7 +288,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 int height = output.Height;
 
                 // Begin sprite batch rendering with custom effect
-                _spriteBatch.Begin(commandList, StrideGraphics.SpriteSortMode.Immediate, StrideGraphics.BlendStates.Opaque, _linearSampler,
+                _spriteBatch.Begin(graphicsContext, StrideGraphics.SpriteSortMode.Immediate, StrideGraphics.BlendStates.Opaque, _linearSampler,
                     StrideGraphics.DepthStencilStates.None, StrideGraphics.RasterizerStates.CullNone, _toneMappingEffect);
 
                 // Set shader parameters
@@ -267,33 +296,31 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 if (parameters != null)
                 {
                     // Set input texture
+                    // Note: ParameterCollection.Get<T> requires non-nullable value types for T,
+                    // but StrideGraphics.Texture is a class (nullable), so we can't use Get<Texture>().
+                    // Instead, we use Set() directly with the parameter key string.
                     try
                     {
-                        var inputTextureParam = parameters.Get<StrideGraphics.Texture>("InputTexture");
-                        if (inputTextureParam != null)
-                        {
-                            parameters.Set(inputTextureParam, input);
-                        }
-                        else
+                        // Use Set() with string key instead of Get<Texture>() due to generic constraint
+                        parameters.Set("InputTexture", input);
+                    }
+                    catch
+                    {
+                        try
                         {
                             // Try alternative parameter names
-                            var sourceTextureParam = parameters.Get<StrideGraphics.Texture>("SourceTexture");
-                            if (sourceTextureParam != null)
+                            parameters.Set("SourceTexture", input);
+                        }
+                        catch
+                        {
+                            try
                             {
-                                parameters.Set(sourceTextureParam, input);
+                                parameters.Set("HDRTexture", input);
                             }
-                            else
+                            catch
                             {
-                                var hdrTextureParam = parameters.Get<StrideGraphics.Texture>("HDRTexture");
-                                if (hdrTextureParam != null)
-                                {
-                                    parameters.Set(hdrTextureParam, input);
-                                }
-                                else
-                                {
-                                    _spriteBatch.End();
-                                    return false;
-                                }
+                                _spriteBatch.End();
+                                return false;
                             }
                         }
                     }
