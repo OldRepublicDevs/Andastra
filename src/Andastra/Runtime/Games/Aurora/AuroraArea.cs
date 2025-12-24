@@ -929,7 +929,7 @@ namespace Andastra.Runtime.Games.Aurora
             // ResRef field - based on line 59: WriteFieldCResRef("ResRef")
             if (!string.IsNullOrEmpty(_resRef))
             {
-                ResRef resRefObj = ResRef.FromString(_resRef);
+                ResRef resRefObj = Andastra.Parsing.Common.ResRef.FromString(_resRef);
                 root.SetResRef("ResRef", resRefObj);
             }
 
@@ -1613,8 +1613,8 @@ namespace Andastra.Runtime.Games.Aurora
                 {
                     // No tiles - create empty navigation mesh with correct dimensions
                     AuroraTile[,] emptyTiles = new AuroraTile[height, width];
-                    string tilesetResRef = _tileset != null && !_tileset.IsBlank() ? _tileset.ToString() : null;
-                    _navigationMesh = new AuroraNavigationMesh(emptyTiles, width, height, _tilesetLoader, tilesetResRef);
+                    string emptyTilesetResRef = _tileset != null && !_tileset.IsBlank() ? _tileset.ToString() : null;
+                    _navigationMesh = new AuroraNavigationMesh(emptyTiles, width, height, _tilesetLoader, emptyTilesetResRef);
                     return;
                 }
 
@@ -1796,8 +1796,8 @@ namespace Andastra.Runtime.Games.Aurora
                 // Create AuroraNavigationMesh from parsed tile data
                 // Based on nwmain.exe: CNWSArea tile storage structure
                 // Pass tileset loader and tileset resref for walkmesh-based height sampling
-                string tilesetResRef = _tileset != null && !_tileset.IsBlank() ? _tileset.ToString() : null;
-                _navigationMesh = new AuroraNavigationMesh(tiles, width, height, _tilesetLoader, tilesetResRef);
+                string meshTilesetResRef = _tileset != null && !_tileset.IsBlank() ? _tileset.ToString() : null;
+                _navigationMesh = new AuroraNavigationMesh(tiles, width, height, _tilesetLoader, meshTilesetResRef);
             }
             catch (Exception)
             {
@@ -4091,7 +4091,7 @@ namespace Andastra.Runtime.Games.Aurora
                     return null;
                 }
 
-                return new MemoryStream(data, writable: false);
+                return (Stream)new MemoryStream(data, writable: false);
             }, ct);
         }
 
