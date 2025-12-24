@@ -252,7 +252,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 commandList.SetViewport(new StrideGraphics.Viewport(0, 0, output.Width, output.Height));
 
                 // Clear render target
-                commandList.Clear(output, Stride.Core.Mathematics.Color.Transparent);
+                commandList.Clear(output, global::Stride.Core.Mathematics.Color.Transparent);
 
                 // Get viewport dimensions
                 int width = output.Width;
@@ -359,8 +359,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 }
 
                 // Draw fullscreen quad with input texture
-                var destinationRect = new Stride.Core.Mathematics.RectangleF(0, 0, width, height);
-                _spriteBatch.Draw(input, destinationRect, Stride.Core.Mathematics.Color.White);
+                var destinationRect = new global::Stride.Core.Mathematics.RectangleF(0, 0, width, height);
+                _spriteBatch.Draw(input, destinationRect, global::Stride.Core.Mathematics.Color.White);
 
                 // End sprite batch rendering
                 _spriteBatch.End();
