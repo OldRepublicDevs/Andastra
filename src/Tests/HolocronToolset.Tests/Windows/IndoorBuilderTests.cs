@@ -5429,14 +5429,40 @@ namespace HolocronToolset.Tests.Windows
                     var bwm = component.Bwm;
                     var image = component.Image;
 
-                    // Note: Full image scale validation requires:
-                    // 1. BWM vertices access
-                    // 2. Image dimension access (QImage width/height)
-                    // This will be fully implemented when ModuleKit._load_module_components is complete
-                    // TODO: STUB - For now, verify both exist
-                    bwm.Should().NotBeNull("Component BWM should not be null");
-                    image.Should().NotBeNull("Component image should not be null");
-                    return; // Found a component with BWM and image, test passes
+                      // Validate that image dimensions match walkmesh at 10 pixels per unit
+                      var vertices = bwm.Vertices();
+                      vertices.Should().NotBeEmpty("BWM should have vertices for dimension calculation");
+
+                      // Calculate bounding box
+                      float minX = vertices.Min(v => v.X);
+                      float minY = vertices.Min(v => v.Y);
+                      float maxX = vertices.Max(v => v.X);
+                      float maxY = vertices.Max(v => v.Y);
+
+                      // Add padding (same as kit.py: 5.0 units)
+                      const float PADDING = 5.0f;
+                      minX -= PADDING;
+                      minY -= PADDING;
+                      maxX += PADDING;
+                      maxY += PADDING;
+
+                      // Calculate expected dimensions at 10 pixels per unit
+                      const int PIXELS_PER_UNIT = 10;
+                      int expectedWidth = (int)((maxX - minX) * PIXELS_PER_UNIT);
+                      int expectedHeight = (int)((maxY - minY) * PIXELS_PER_UNIT);
+
+                      // Ensure minimum size (kit.py uses 256)
+                      const int MIN_SIZE = 256;
+                      expectedWidth = Math.Max(expectedWidth, MIN_SIZE);
+                      expectedHeight = Math.Max(expectedHeight, MIN_SIZE);
+
+                      // Validate image dimensions
+                      var writeableBitmap = image as WriteableBitmap;
+                      writeableBitmap.Should().NotBeNull("Image should be a WriteableBitmap");
+                      writeableBitmap.PixelSize.Width.Should().Be(expectedWidth, "Image width should match walkmesh dimensions at 10 pixels per unit");
+                      writeableBitmap.PixelSize.Height.Should().Be(expectedHeight, "Image height should match walkmesh dimensions at 10 pixels per unit");
+
+                      return; // Found a component with properly scaled image, test passes
                 }
             }
 
@@ -6680,12 +6706,53 @@ namespace HolocronToolset.Tests.Windows
                     var image = component.Image;
                     var bwm = component.Bwm;
 
-                    // Note: Full pixel-per-unit validation requires image width/height and BWM vertex access
-                    // This will be fully implemented when ModuleKit._load_module_components is complete
-                    // TODO: STUB - For now, verify both exist
-                    image.Should().NotBeNull("Component image should not be null");
-                    bwm.Should().NotBeNull("Component BWM should not be null");
-                    return; // Found a component with image and BWM, test passes
+                      // Validate that image uses exactly 10 pixels per unit scale
+                      var vertices = bwm.Vertices();
+                      vertices.Should().NotBeEmpty("BWM should have vertices for scale calculation");
+
+                      // Calculate bounding box
+                      float minX = vertices.Min(v => v.X);
+                      float minY = vertices.Min(v => v.Y);
+                      float maxX = vertices.Max(v => v.X);
+                      float maxY = vertices.Max(v => v.Y);
+
+                      // Add padding (same as kit.py: 5.0 units)
+                      const float PADDING = 5.0f;
+                      minX -= PADDING;
+                      minY -= PADDING;
+                      maxX += PADDING;
+                      maxY += PADDING;
+
+                      // Calculate walkmesh dimensions in world units
+                      float walkmeshWidth = maxX - minX;
+                      float walkmeshHeight = maxY - minY;
+
+                      // Get actual image dimensions
+                      var writeableBitmap = image as WriteableBitmap;
+                      writeableBitmap.Should().NotBeNull("Image should be a WriteableBitmap");
+                      int imageWidth = writeableBitmap.PixelSize.Width;
+                      int imageHeight = writeableBitmap.PixelSize.Height;
+
+                      // Ensure minimum size was applied (kit.py uses 256)
+                      const int MIN_SIZE = 256;
+                      imageWidth.Should().BeGreaterOrEqualTo(MIN_SIZE, "Image width should meet minimum size requirement");
+                      imageHeight.Should().BeGreaterOrEqualTo(MIN_SIZE, "Image height should meet minimum size requirement");
+
+                      // Validate exact 10 pixels per unit scale
+                      // Since minimum size clamping can affect the final dimensions, we need to check if the image
+                      // dimensions match either the calculated size or the minimum size
+                      const int PIXELS_PER_UNIT = 10;
+                      int expectedWidth = (int)(walkmeshWidth * PIXELS_PER_UNIT);
+                      int expectedHeight = (int)(walkmeshHeight * PIXELS_PER_UNIT);
+
+                      // The image should be either the expected size or clamped to minimum
+                      bool widthMatches = imageWidth == Math.Max(expectedWidth, MIN_SIZE);
+                      bool heightMatches = imageHeight == Math.Max(expectedHeight, MIN_SIZE);
+
+                      widthMatches.Should().BeTrue($"Image width {imageWidth} should match expected {Math.Max(expectedWidth, MIN_SIZE)} pixels for 10 pixels per unit scale");
+                      heightMatches.Should().BeTrue($"Image height {imageHeight} should match expected {Math.Max(expectedHeight, MIN_SIZE)} pixels for 10 pixels per unit scale");
+
+                      return; // Found a component with correct pixel-per-unit scaling, test passes
                 }
             }
 

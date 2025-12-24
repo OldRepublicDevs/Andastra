@@ -1144,9 +1144,7 @@ namespace HolocronToolset.Data
             if (vertices.Count == 0)
             {
                 // Empty walkmesh - return blank image matching kit.py minimum size
-                // TODO: STUB - For now, return null as placeholder - actual image rendering will be implemented
-                // when Avalonia rendering infrastructure is available
-                return null;
+                return new WriteableBitmap(new PixelSize(256, 256), new Vector(96, 96), PixelFormat.Rgba8888);
             }
 
             // Calculate bounding box (same as kit.py)
@@ -1171,12 +1169,14 @@ namespace HolocronToolset.Data
             width = Math.Max(width, 256);
             height = Math.Max(height, 256);
 
-            // TODO: STUB - For now, return null as placeholder - actual image rendering using Avalonia
-            // RenderTargetBitmap will be implemented when rendering infrastructure is available
-            // The image will be created with Format_RGB888, filled with black, then walkmesh
-            // faces will be drawn with white (walkable) or gray (non-walkable) colors,
-            // and finally the image will be mirrored to match Kit loader behavior
-            return null;
+            // Create a WriteableBitmap with the calculated dimensions
+            // For now, create a black image. Full walkmesh rendering will be implemented later.
+            var bitmap = new WriteableBitmap(new PixelSize(width, height), new Vector(96, 96), PixelFormat.Rgba8888);
+
+            // TODO: STUB - Basic image creation implemented, but actual walkmesh rendering
+            // (drawing faces with white/gray colors and mirroring) will be implemented
+            // when full rendering infrastructure is available
+            return bitmap;
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/kit.py:1467-1535

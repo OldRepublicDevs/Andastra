@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using Avalonia.Controls;
@@ -42,6 +43,13 @@ namespace HolocronToolset.Widgets
         private const double MinZoomLevel = 0.5; // Minimum zoom level (50%)
         private const double MaxZoomLevel = 5.0; // Maximum zoom level (500%)
 
+        // Bookmark visualization fields
+        // Tracks which lines have bookmarks for visual indicators in the left margin
+        private HashSet<int> _bookmarkedLines = new HashSet<int>(); // 1-based line numbers with bookmarks
+        private const double BookmarkMarginWidth = 20.0; // Width of left margin for bookmark indicators
+        private const double BookmarkMarkerRadius = 6.0; // Radius of circular bookmark marker
+        private readonly SolidColorBrush BookmarkMarkerBrush = new SolidColorBrush(Color.FromRgb(255, 193, 7)); // Amber/gold color for bookmark markers
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/code_editor.py:95-121
         // Original: def __init__(self, parent: QWidget):
         public CodeEditor()
@@ -81,6 +89,126 @@ namespace HolocronToolset.Widgets
             catch
             {
                 // XAML not available - will use defaults
+            }
+        }
+
+        // Bookmark visualization methods
+
+        /// <summary>
+        /// Sets the bookmarked lines for visual indicators.
+        /// </summary>
+        /// <param name="lineNumbers">Collection of 1-based line numbers that have bookmarks.</param>
+        public void SetBookmarkedLines(IEnumerable<int> lineNumbers)
+        {
+            _bookmarkedLines.Clear();
+            if (lineNumbers != null)
+            {
+                foreach (int lineNumber in lineNumbers)
+                {
+                    if (lineNumber > 0) // Ensure valid line numbers
+                    {
+                        _bookmarkedLines.Add(lineNumber);
+                    }
+                }
+            }
+            InvalidateVisual(); // Trigger redraw to show bookmark indicators
+        }
+
+        /// <summary>
+        /// Adds a bookmark indicator for the specified line.
+        /// </summary>
+        /// <param name="lineNumber">1-based line number to bookmark.</param>
+        public void AddBookmarkIndicator(int lineNumber)
+        {
+            if (lineNumber > 0)
+            {
+                _bookmarkedLines.Add(lineNumber);
+                InvalidateVisual(); // Trigger redraw
+            }
+        }
+
+        /// <summary>
+        /// Removes a bookmark indicator from the specified line.
+        /// </summary>
+        /// <param name="lineNumber">1-based line number to remove bookmark from.</param>
+        public void RemoveBookmarkIndicator(int lineNumber)
+        {
+            _bookmarkedLines.Remove(lineNumber);
+            InvalidateVisual(); // Trigger redraw
+        }
+
+        /// <summary>
+        /// Clears all bookmark visual indicators.
+        /// </summary>
+        public void ClearBookmarkIndicators()
+        {
+            _bookmarkedLines.Clear();
+            InvalidateVisual(); // Trigger redraw
+        }
+
+        /// <summary>
+        /// Gets the current set of bookmarked line numbers.
+        /// </summary>
+        /// <returns>HashSet of 1-based line numbers with bookmarks.</returns>
+        public HashSet<int> GetBookmarkedLines()
+        {
+            return new HashSet<int>(_bookmarkedLines);
+        }
+
+        // Custom rendering for bookmark visualization
+        public override void Render(DrawingContext context)
+        {
+            base.Render(context);
+
+            // Draw bookmark indicators in the left margin
+            DrawBookmarkIndicators(context);
+        }
+
+        /// <summary>
+        /// Draws circular bookmark indicators in the left margin for bookmarked lines.
+        /// </summary>
+        /// <param name="context">Drawing context for rendering.</param>
+        private void DrawBookmarkIndicators(DrawingContext context)
+        {
+            if (_bookmarkedLines.Count == 0 || string.IsNullOrEmpty(Text))
+            {
+                return; // No bookmarks or no text to draw indicators for
+            }
+
+            // Get text metrics for line height calculation
+            var typeface = new Typeface(FontFamily, FontStyle, FontWeight);
+            var formattedText = new FormattedText(
+                "A", // Sample character for metrics
+                CultureInfo.CurrentCulture,
+                FlowDirection.LeftToRight,
+                typeface,
+                FontSize,
+                Foreground);
+
+            double lineHeight = formattedText.Height;
+            double marginLeft = 4.0; // Left margin from edge
+            double marginTop = Padding.Top; // Account for text box padding
+
+            // Get visible lines (simplified - in a real implementation, we'd track scroll position)
+            string[] lines = Text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+            int totalLines = lines.Length;
+
+            foreach (int lineNumber in _bookmarkedLines)
+            {
+                if (lineNumber <= totalLines && lineNumber > 0)
+                {
+                    // Calculate Y position for this line (0-based to 1-based conversion)
+                    double y = marginTop + (lineNumber - 1) * lineHeight + lineHeight / 2.0;
+
+                    // Draw circular bookmark marker
+                    var centerPoint = new Point(marginLeft + BookmarkMarkerRadius, y);
+                    context.DrawEllipse(
+                        BookmarkMarkerBrush,
+                        null, // No pen for filled circle
+                        centerPoint,
+                        BookmarkMarkerRadius,
+                        BookmarkMarkerRadius);
+                }
             }
         }
 

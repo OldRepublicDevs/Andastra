@@ -35,13 +35,11 @@ def load_kaitai_parser():
 
 def parse_with_kaitai(module, filepath: str) -> Dict[str, Any]:
     """Parse TPC file using Kaitai-generated parser"""
-    with open(filepath, 'rb') as f:
-        data = f.read()
-
-    # Create Kaitai stream and parse
+    # Create Kaitai stream from file
     from kaitaistruct import KaitaiStream
-    stream = KaitaiStream(data)
-    tpc = module.Tpc(stream)
+    with open(filepath, 'rb') as f:
+        stream = KaitaiStream(f)
+        tpc = module.Tpc(stream)
 
     # Extract basic information that Kaitai parser provides
     result = {
@@ -79,21 +77,58 @@ def validate_parsers(tpc_file: str) -> Dict[str, Any]:
         }
 
         # Validate header fields that both parsers should agree on
-        header_fields = ["data_size", "alpha_test", "width", "height", "pixel_type", "mipmap_count"]
+        # Map between manual parser fields and Kaitai parser fields
+        field_mappings = [
+            ("alpha_test", "alpha_test"),
+            ("width", "width"),
+            ("height", "height"),
+            ("mipmap_count", "mipmap_count")
+        ]
 
-        for field in header_fields:
-            if field in manual_result and field in kaitai_result:
-                manual_val = manual_result[field]
-                kaitai_val = kaitai_result[field]
+        # Special handling for format/pixel_type conversion
+        if "format" in manual_result and "pixel_type" in kaitai_result:
+            manual_format = manual_result["format"]
+            kaitai_pixel_type = kaitai_result["pixel_type"]
 
-                if field == "alpha_test":
+            # Convert Kaitai pixel_type to Andastra format enum
+            # Kaitai: 1=Greyscale, 2=RGB/DXT1, 4=RGBA/DXT5, 12=BGRA
+            # Andastra: 0=Greyscale, 1=DXT1, 2=DXT3, 3=DXT5, 4=RGB, 5=RGBA, 6=BGRA, 7=BGR
+            if kaitai_pixel_type == 1:
+                expected_format = 0  # Greyscale
+            elif kaitai_pixel_type == 2:
+                expected_format = 4  # RGB
+            elif kaitai_pixel_type == 4:
+                expected_format = 5  # RGBA
+            elif kaitai_pixel_type == 12:
+                expected_format = 6  # BGRA
+            else:
+                expected_format = -1  # Invalid
+
+            matches = manual_format == expected_format
+            comparison["validation"]["format"] = {
+                "manual": manual_format,
+                "kaitai": kaitai_pixel_type,
+                "expected_format": expected_format,
+                "matches": matches
+            }
+
+            if not matches:
+                comparison["overall_success"] = False
+                comparison["errors"].append(f"format mismatch: manual={manual_format}, kaitai_pixel_type={kaitai_pixel_type}, expected={expected_format}")
+
+        for manual_field, kaitai_field in field_mappings:
+            if manual_field in manual_result and kaitai_field in kaitai_result:
+                manual_val = manual_result[manual_field]
+                kaitai_val = kaitai_result[kaitai_field]
+
+                if manual_field == "alpha_test":
                     # Floating point comparison with tolerance
                     diff = abs(manual_val - kaitai_val)
                     matches = diff < 0.001
                 else:
                     matches = manual_val == kaitai_val
 
-                comparison["validation"][field] = {
+                comparison["validation"][manual_field] = {
                     "manual": manual_val,
                     "kaitai": kaitai_val,
                     "matches": matches
@@ -101,13 +136,13 @@ def validate_parsers(tpc_file: str) -> Dict[str, Any]:
 
                 if not matches:
                     comparison["overall_success"] = False
-                    comparison["errors"].append(f"{field} mismatch: manual={manual_val}, kaitai={kaitai_val}")
+                    comparison["errors"].append(f"{manual_field} mismatch: manual={manual_val}, kaitai={kaitai_val}")
             else:
-                comparison["validation"][field] = {
-                    "error": f"Field {field} missing in one parser"
+                comparison["validation"][manual_field] = {
+                    "error": f"Field {manual_field} (manual) / {kaitai_field} (kaitai) missing in one parser"
                 }
                 comparison["overall_success"] = False
-                comparison["errors"].append(f"Field {field} missing in one parser")
+                comparison["errors"].append(f"Field {manual_field} (manual) / {kaitai_field} (kaitai) missing in one parser")
 
         # Check if texture data size is reasonable
         if "texture_data_size" in kaitai_result:

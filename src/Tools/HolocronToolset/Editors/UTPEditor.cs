@@ -303,7 +303,91 @@ namespace HolocronToolset.Editors
         private void SetupUI()
         {
             // Try to find controls from XAML if available
-            // TODO: STUB - For now, programmatic UI is set up in SetupProgrammaticUI
+            // Use reflection to find controls by name if they were loaded from XAML
+            // This matches PyKotor behavior where UI elements are found by name after XAML loading
+
+            // Basic controls
+            _nameEdit = this.FindName("NameEdit") as TextBox ?? this.FindName("nameEdit") as TextBox;
+            _nameEditBtn = this.FindName("NameEditBtn") as Button ?? this.FindName("nameEditBtn") as Button;
+            _tagEdit = this.FindName("TagEdit") as TextBox ?? this.FindName("tagEdit") as TextBox;
+            _tagGenerateBtn = this.FindName("TagGenerateBtn") as Button ?? this.FindName("tagGenerateBtn") as Button;
+            _resrefEdit = this.FindName("ResrefEdit") as TextBox ?? this.FindName("resrefEdit") as TextBox;
+            _resrefGenerateBtn = this.FindName("ResrefGenerateBtn") as Button ?? this.FindName("resrefGenerateBtn") as Button;
+            _appearanceSelect = this.FindName("AppearanceSelect") as ComboBox ?? this.FindName("appearanceSelect") as ComboBox;
+            _conversationEdit = this.FindName("ConversationEdit") as TextBox ?? this.FindName("conversationEdit") as TextBox;
+            _conversationModifyBtn = this.FindName("ConversationModifyBtn") as Button ?? this.FindName("conversationModifyBtn") as Button;
+            _inventoryBtn = this.FindName("InventoryBtn") as Button ?? this.FindName("inventoryBtn") as Button;
+            _inventoryCountLabel = this.FindName("InventoryCountLabel") as TextBlock ?? this.FindName("inventoryCountLabel") as TextBlock;
+
+            // Advanced controls
+            _hasInventoryCheckbox = this.FindName("HasInventoryCheckbox") as CheckBox ?? this.FindName("hasInventoryCheckbox") as CheckBox;
+            _partyInteractCheckbox = this.FindName("PartyInteractCheckbox") as CheckBox ?? this.FindName("partyInteractCheckbox") as CheckBox;
+            _useableCheckbox = this.FindName("UseableCheckbox") as CheckBox ?? this.FindName("useableCheckbox") as CheckBox;
+            _min1HpCheckbox = this.FindName("Min1HpCheckbox") as CheckBox ?? this.FindName("min1HpCheckbox") as CheckBox;
+            _plotCheckbox = this.FindName("PlotCheckbox") as CheckBox ?? this.FindName("plotCheckbox") as CheckBox;
+            _staticCheckbox = this.FindName("StaticCheckbox") as CheckBox ?? this.FindName("staticCheckbox") as CheckBox;
+            _notBlastableCheckbox = this.FindName("NotBlastableCheckbox") as CheckBox ?? this.FindName("notBlastableCheckbox") as CheckBox;
+            _factionSelect = this.FindName("FactionSelect") as ComboBox ?? this.FindName("factionSelect") as ComboBox;
+            _animationStateSpin = this.FindName("AnimationStateSpin") as NumericUpDown ?? this.FindName("animationStateSpin") as NumericUpDown;
+            _currentHpSpin = this.FindName("CurrentHpSpin") as NumericUpDown ?? this.FindName("currentHpSpin") as NumericUpDown;
+            _maxHpSpin = this.FindName("MaxHpSpin") as NumericUpDown ?? this.FindName("maxHpSpin") as NumericUpDown;
+            _hardnessSpin = this.FindName("HardnessSpin") as NumericUpDown ?? this.FindName("hardnessSpin") as NumericUpDown;
+            _fortitudeSpin = this.FindName("FortitudeSpin") as NumericUpDown ?? this.FindName("fortitudeSpin") as NumericUpDown;
+            _reflexSpin = this.FindName("ReflexSpin") as NumericUpDown ?? this.FindName("reflexSpin") as NumericUpDown;
+            _willSpin = this.FindName("WillSpin") as NumericUpDown ?? this.FindName("willSpin") as NumericUpDown;
+
+            // Lock controls
+            _needKeyCheckbox = this.FindName("NeedKeyCheckbox") as CheckBox ?? this.FindName("needKeyCheckbox") as CheckBox;
+            _removeKeyCheckbox = this.FindName("RemoveKeyCheckbox") as CheckBox ?? this.FindName("removeKeyCheckbox") as CheckBox;
+            _keyEdit = this.FindName("KeyEdit") as TextBox ?? this.FindName("keyEdit") as TextBox;
+            _lockedCheckbox = this.FindName("LockedCheckbox") as CheckBox ?? this.FindName("lockedCheckbox") as CheckBox;
+            _openLockSpin = this.FindName("OpenLockSpin") as NumericUpDown ?? this.FindName("openLockSpin") as NumericUpDown;
+            _difficultySpin = this.FindName("DifficultySpin") as NumericUpDown ?? this.FindName("difficultySpin") as NumericUpDown;
+            _difficultyModSpin = this.FindName("DifficultyModSpin") as NumericUpDown ?? this.FindName("difficultyModSpin") as NumericUpDown;
+
+            // Script controls - find by name pattern
+            string[] scriptNames = { "OnClosed", "OnDamaged", "OnDeath", "OnEndDialog", "OnOpenFailed",
+                "OnHeartbeat", "OnInventory", "OnMelee", "OnOpen", "OnLock", "OnUnlock", "OnUsed", "OnUserDefined" };
+
+            foreach (string scriptName in scriptNames)
+            {
+                var scriptEdit = this.FindName(scriptName + "Edit") as TextBox ?? this.FindName(scriptName.ToLower() + "Edit") as TextBox;
+                if (scriptEdit != null)
+                {
+                    _scriptFields[scriptName] = scriptEdit;
+                }
+            }
+
+            // Comments control
+            _commentsEdit = this.FindName("CommentsEdit") as TextBox ?? this.FindName("commentsEdit") as TextBox;
+
+            // Set up event handlers for controls that were found from XAML
+            if (_nameEditBtn != null)
+            {
+                _nameEditBtn.Click += (s, e) => EditName();
+            }
+            if (_tagGenerateBtn != null)
+            {
+                _tagGenerateBtn.Click += (s, e) => GenerateTag();
+            }
+            if (_resrefGenerateBtn != null)
+            {
+                _resrefGenerateBtn.Click += (s, e) => GenerateResref();
+            }
+            if (_conversationModifyBtn != null)
+            {
+                _conversationModifyBtn.Click += (s, e) => EditConversation();
+            }
+            if (_inventoryBtn != null)
+            {
+                _inventoryBtn.Click += (s, e) => OpenInventory();
+            }
+
+            // Set up context menus for script fields if they were found from XAML
+            if (_installation != null)
+            {
+                SetupFileContextMenus();
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:110-166
