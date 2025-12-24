@@ -2565,18 +2565,24 @@ namespace HolocronToolset.Data
         /// HOW IT WORKS:
         ///
         /// STEP 1: Create Root Dictionary
-        /// - module_id: Module identifier
-        // TODO: / - name: Module name as string (simplified, not full localized string)
-        /// - lighting: RGB color dictionary
-        /// - skybox: Skybox name
-        /// - warp_point: Warp point coordinates dictionary
+        /// - module_id: Module identifier (string)
+        /// - name: Module name as simplified string representation (not full localized string).
+        ///   Uses LocalizedString.ToString() which returns the stringref if valid (>= 0),
+        ///   otherwise returns the English male substring if available, or the first available
+        ///   substring, or "-1" if none exist. For full localized string serialization with
+        ///   all language/gender variants and stringref, use Write() method instead.
+        /// - lighting: RGB color dictionary with "r", "g", "b" float values
+        /// - skybox: Skybox name (string)
+        /// - warp_point: Warp point coordinates dictionary with "x", "y", "z" float values
         ///
         /// STEP 2: Serialize Rooms
         /// - Call Serialize() on each room
         /// - Rooms are serialized as dictionaries with position, rotation, flip, component info
         ///
-        // TODO: / NOTE: This is a simplified serialization. For full serialization including walkmesh
-        /// overrides, use Write() which produces JSON bytes.
+        /// NOTE: This is a simplified serialization intended for quick JSON export. For full
+        /// serialization including walkmesh overrides and complete localized string data with
+        /// all language/gender variants, use Write() method which produces JSON bytes with
+        /// the complete data structure matching the .indoor file format specification.
         ///
         /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:1024-1042
         /// Original: def serialize(self) -> dict[str, Any]:
