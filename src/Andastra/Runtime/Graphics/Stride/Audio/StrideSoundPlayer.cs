@@ -8,6 +8,7 @@ using Andastra.Runtime.Graphics;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Formats.WAV;
 using Stride.Audio;
+using SoundPlayState = Stride.Audio.SoundPlayState;
 
 namespace Andastra.Runtime.Stride.Audio
 {
@@ -310,7 +311,7 @@ namespace Andastra.Runtime.Stride.Audio
                 {
                     // Check if playback has completed
                     // Based on Stride API: PlayState.Stopped indicates playback has finished
-                    if (kvp.Value.PlayState == PlayState.Stopped)
+                    if (kvp.Value.PlayState == SoundPlayState.Stopped)
                     {
                         finishedSounds.Add(kvp.Key);
                     }
