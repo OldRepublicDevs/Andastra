@@ -57,11 +57,11 @@ namespace Andastra.Runtime.Stride.Graphics
                 {
                     shortIndices[i] = (ushort)indices[i];
                 }
-                commandList.UpdateSubresource(_buffer, shortIndices, 0);
+                _buffer.SetData(commandList, shortIndices);
             }
             else
             {
-                commandList.UpdateSubresource(_buffer, indices, 0);
+                _buffer.SetData(commandList, indices);
             }
         }
 
@@ -86,7 +86,7 @@ namespace Andastra.Runtime.Stride.Graphics
             if (_isShort)
             {
                 var shortIndices = new ushort[_indexCount];
-                commandList.Copy(_buffer, shortIndices);
+                _buffer.GetData(commandList, shortIndices);
                 for (int i = 0; i < indices.Length && i < shortIndices.Length; i++)
                 {
                     indices[i] = shortIndices[i];
@@ -94,7 +94,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
             else
             {
-                commandList.Copy(_buffer, indices);
+                _buffer.GetData(commandList, indices);
             }
         }
 

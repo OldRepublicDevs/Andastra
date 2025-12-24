@@ -412,7 +412,7 @@ namespace Andastra.Runtime.Stride.Culling
 
             try
             {
-                var context = _graphicsDevice.ImmediateContext;
+                StrideGraphics.CommandList context = _graphicsDevice.ImmediateContext();
                 int pixelCount = width * height;
                 float[] depthData = new float[pixelCount];
 

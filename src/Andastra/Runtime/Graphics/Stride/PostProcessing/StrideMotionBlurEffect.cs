@@ -317,7 +317,7 @@ shader MotionBlurEffect : ShaderBase
                 // Strategy 1: Try to get EffectCompiler from GraphicsDevice services
                 // Based on Stride API: GraphicsDevice.Services provides access to EffectSystem
                 // EffectSystem contains EffectCompiler for runtime shader compilation
-                var services = _graphicsDevice.Services;
+                object services = _graphicsDevice.Services();
                 if (services != null)
                 {
                     // Try to get EffectCompiler from services
@@ -458,7 +458,7 @@ shader MotionBlurEffect : ShaderBase
 
                 // Try to compile shader from file
                 // Based on Stride API: EffectCompiler can compile from file paths
-                var services = _graphicsDevice.Services;
+                object services = _graphicsDevice.Services();
                 if (services != null)
                 {
                     var effectCompiler = services.GetService<EffectCompiler>();
@@ -642,7 +642,7 @@ shader MotionBlurEffect : ShaderBase
             }
 
             // Get command list for rendering operations
-            var commandList = _graphicsDevice.ImmediateContext;
+            StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext();
             if (commandList == null)
             {
                 return;
