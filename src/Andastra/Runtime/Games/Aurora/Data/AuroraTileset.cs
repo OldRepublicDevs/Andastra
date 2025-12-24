@@ -38,9 +38,9 @@ namespace Andastra.Runtime.Games.Aurora.Data
     {
         private readonly IGameResourceProvider _resourceProvider;
         private readonly ResRef _tilesetResRef;
-        private readonly SetFileParser _setFile;
+        private SetFileParser _setFile;
         private readonly Dictionary<int, ResRef> _tileModelCache;
-        private readonly int _tileCount;
+        private int _tileCount;
         private bool _isLoaded;
 
         /// <summary>
@@ -106,7 +106,7 @@ namespace Andastra.Runtime.Games.Aurora.Data
             {
                 // Load SET file from resource provider
                 // Based on nwmain.exe: CRes::Demand loads resource data
-                byte[] setData = _resourceProvider.LoadResource(_tilesetResRef, ResourceType.SET);
+                byte[] setData = _resourceProvider.GetResourceBytes(new ResourceIdentifier(_tilesetResRef.ToString(), ResourceType.SET));
                 if (setData == null || setData.Length == 0)
                 {
                     throw new InvalidOperationException($"Failed to load tileset SET file: {_tilesetResRef}");

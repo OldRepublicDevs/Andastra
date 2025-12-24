@@ -128,7 +128,7 @@ namespace Andastra.Runtime.Games.Aurora
             }
             else if (_resourceProvider is IGameResourceProvider resourceProvider)
             {
-                return resourceProvider.LoadResource(scriptResRef, "NCS");
+                return resourceProvider.GetResourceBytes(new ResourceIdentifier(scriptResRef, ResourceType.NCS));
             }
 
             return null;
@@ -143,7 +143,13 @@ namespace Andastra.Runtime.Games.Aurora
         protected override IExecutionContext CreateExecutionContext(IEntity caller, IEntity triggerer)
         {
             var context = base.CreateExecutionContext(caller, triggerer);
-            context.ResourceProvider = _resourceProvider;
+            
+            // Set resource provider - cast to concrete type since interface property is readonly
+            if (context is Andastra.Runtime.Scripting.VM.ExecutionContext vmContext)
+            {
+                vmContext.ResourceProvider = _resourceProvider;
+            }
+            
             return context;
         }
 

@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using Andastra.Runtime.Graphics;
 using XnaPrimitiveType = Microsoft.Xna.Framework.Graphics.PrimitiveType;
+using RuntimePrimitiveType = Andastra.Runtime.Graphics.PrimitiveType;
 
 namespace Andastra.Runtime.MonoGame.Rendering
 {

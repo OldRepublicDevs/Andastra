@@ -13,10 +13,24 @@ using Andastra.Runtime.Core.AI;
 using Andastra.Runtime.Core.Animation;
 using Andastra.Runtime.Core.Actions;
 using Andastra.Parsing.Formats.TwoDA;
+using Andastra.Runtime.Core.Templates;
 using Moq;
 
 namespace Andastra.Tests.Runtime.TestHelpers
 {
+    /// <summary>
+    /// Test game event for use in unit tests.
+    /// </summary>
+    internal class TestGameEvent : IGameEvent
+    {
+        public IEntity Entity { get; set; }
+
+        public TestGameEvent(IEntity entity = null)
+        {
+            Entity = entity;
+        }
+    }
+
     /// <summary>
     /// Helper class for creating test entities and components.
     /// </summary>
@@ -57,11 +71,13 @@ namespace Andastra.Tests.Runtime.TestHelpers
             mockTimeManager.Setup(t => t.Update(It.IsAny<float>())).Callback<float>(deltaTime => { });
 
             var mockEventBus = new Mock<IEventBus>(MockBehavior.Loose);
-            mockEventBus.Setup(e => e.Subscribe<It.IsAnyType>(It.IsAny<Action<It.IsAnyType>>())).Callback(() => { });
-            mockEventBus.Setup(e => e.Unsubscribe<It.IsAnyType>(It.IsAny<Action<It.IsAnyType>>())).Callback(() => { });
-            mockEventBus.Setup(e => e.Publish<It.IsAnyType>(It.IsAny<It.IsAnyType>())).Callback(() => { });
-            mockEventBus.Setup(e => e.QueueEvent<It.IsAnyType>(It.IsAny<It.IsAnyType>())).Callback(() => { });
-            mockEventBus.Setup(e => e.ProcessQueue()).Callback(() => { });
+            // Setup Subscribe/Unsubscribe/Publish/QueueEvent with proper IGameEvent constraint
+            // Use TestGameEvent as a concrete type that implements IGameEvent to satisfy the generic constraint
+            mockEventBus.Setup(e => e.Subscribe<TestGameEvent>(It.IsAny<Action<TestGameEvent>>())).Callback(() => { });
+            mockEventBus.Setup(e => e.Unsubscribe<TestGameEvent>(It.IsAny<Action<TestGameEvent>>())).Callback(() => { });
+            mockEventBus.Setup(e => e.Publish<TestGameEvent>(It.IsAny<TestGameEvent>())).Callback(() => { });
+            mockEventBus.Setup(e => e.QueueEvent<TestGameEvent>(It.IsAny<TestGameEvent>())).Callback(() => { });
+            mockEventBus.Setup(e => e.DispatchQueuedEvents()).Callback(() => { });
 
             var mockDelayScheduler = new Mock<IDelayScheduler>(MockBehavior.Loose);
             mockDelayScheduler.Setup(d => d.ScheduleDelay(It.IsAny<float>(), It.IsAny<IAction>(), It.IsAny<IEntity>())).Callback(() => { });
@@ -70,11 +86,11 @@ namespace Andastra.Tests.Runtime.TestHelpers
             mockDelayScheduler.Setup(d => d.ClearAll()).Callback(() => { });
 
             var mockGameDataProvider = new Mock<IGameDataProvider>(MockBehavior.Loose);
-            mockGameDataProvider.Setup(g => g.GetTable(It.IsAny<string>())).Returns((TwoDA.TwoDA)null);
+            mockGameDataProvider.Setup(g => g.GetTable(It.IsAny<string>())).Returns((Parsing.Formats.TwoDA.TwoDA)null);
 
             // Create mock world
             var mockWorld = new Mock<IWorld>(MockBehavior.Loose);
-            
+
             // Set up properties with mocks/interfaces
             mockWorld.SetupProperty(w => w.CurrentArea, (IArea)null);
             mockWorld.SetupProperty(w => w.CurrentModule, (IModule)null);
@@ -473,7 +489,7 @@ namespace Andastra.Tests.Runtime.TestHelpers
 
             // Setup HasItemByTag
             mockInventory.Setup(i => i.HasItemByTag(It.IsAny<string>()))
-                .Returns<string>(tag => 
+                .Returns<string>(tag =>
                 {
                     foreach (var item in items.Values)
                     {
@@ -546,7 +562,7 @@ namespace Andastra.Tests.Runtime.TestHelpers
         /// </summary>
         public static void SetCustomData(IEntity entity, string key, object value)
         {
-            Type baseEntityType = typeof(BaseEntity);
+            Type baseEntityType = typeof(Andastra.Runtime.Games.Common.BaseEntity);
             FieldInfo dataField = baseEntityType.GetField("_data", BindingFlags.NonPublic | BindingFlags.Instance);
             if (dataField != null)
             {
@@ -565,7 +581,7 @@ namespace Andastra.Tests.Runtime.TestHelpers
         /// </summary>
         public static object GetCustomData(IEntity entity, string key)
         {
-            Type baseEntityType = typeof(BaseEntity);
+            Type baseEntityType = typeof(Andastra.Runtime.Games.Common.BaseEntity);
             FieldInfo dataField = baseEntityType.GetField("_data", BindingFlags.NonPublic | BindingFlags.Instance);
             if (dataField != null)
             {
@@ -601,13 +617,13 @@ namespace Andastra.Tests.Runtime.TestHelpers
     /// This class provides a concrete implementation of BaseTransformComponent that can be instantiated
     /// in tests. BaseTransformComponent is abstract to prevent direct instantiation in production code,
     /// but for testing we need a concrete class that uses the real implementation logic.
-    /// 
+    ///
     /// This implementation uses all the functionality from BaseTransformComponent including:
     /// - Position, Facing, Scale properties with proper change tracking
     /// - Forward/Right direction vectors calculated from facing angle
     /// - WorldMatrix computation with caching and parent transform support
     /// - All utility methods (Translate, MoveForward, Rotate, LookAt, DistanceTo, etc.)
-    /// 
+    ///
     /// This is superior to mocking because:
     /// - Uses real implementation logic, making tests more reliable
     /// - Avoids the complexity of mocking all methods and properties
