@@ -42,6 +42,12 @@ namespace HolocronToolset.Dialogs
 
         public void UpdateProgress(string statusText)
         {
+            UpdateProgress(statusText, _completedItems);
+        }
+
+        public void UpdateProgress(string statusText, int completedItems)
+        {
+            _completedItems = completedItems;
             Dispatcher.UIThread.Post(() =>
             {
                 _statusText.Text = statusText;
