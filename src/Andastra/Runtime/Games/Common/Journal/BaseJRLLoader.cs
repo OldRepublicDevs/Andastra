@@ -31,7 +31,7 @@ namespace Andastra.Runtime.Games.Common.Journal
     public abstract class BaseJRLLoader
     {
         protected readonly Installation _installation;
-        protected Dictionary<string, object> _jrlCache; // Cache stores engine-specific JRL types
+        protected Dictionary<string, JRL> _jrlCache; // Cache stores engine-specific JRL types
 
         /// <summary>
         /// Creates a new JRL loader.
@@ -40,7 +40,7 @@ namespace Andastra.Runtime.Games.Common.Journal
         protected BaseJRLLoader(Installation installation)
         {
             _installation = installation ?? throw new ArgumentNullException("installation");
-            _jrlCache = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            _jrlCache = new Dictionary<string, JRL>(StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
