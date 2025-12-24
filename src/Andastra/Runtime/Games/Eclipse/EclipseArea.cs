@@ -241,7 +241,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// Based on daorigins.exe/DragonAge2.exe: Original geometry data is cached for physics collision shape generation.
         /// </remarks>
-        private class CachedMeshGeometry
+        internal class CachedMeshGeometry
         {
             /// <summary>
             /// Mesh identifier (model name/resref).
@@ -424,7 +424,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Initialize destructible geometry modification tracker
             // Based on daorigins.exe/DragonAge2.exe: Geometry modification tracking system
-            _geometryModificationTracker = new DestructibleGeometryModificationTracker();
+            _geometryModificationTracker = new DestructibleGeometryModificationTracker(_cachedMeshGeometry);
 
             // Store area data for lighting system initialization
             _areaData = areaData;
@@ -6987,7 +6987,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                 GraphicsPrimitiveType.TriangleList,
                                 0,
                                 0,
-                                roomMeshData.VertexCount,
+                                roomMeshData.VertexBuffer?.VertexCount ?? 0,
                                 0,
                                 roomMeshData.IndexCount / 3
                             );
@@ -7133,7 +7133,7 @@ namespace Andastra.Runtime.Games.Eclipse
                             GraphicsPrimitiveType.TriangleList,
                             0,
                             0,
-                            entityMeshData.VertexCount,
+                            entityMeshData.VertexBuffer?.VertexCount ?? 0,
                             0,
                             entityMeshData.IndexCount / 3
                         );
@@ -11872,7 +11872,7 @@ technique ColorGrading
         /// 4. Rebuilds collision shapes in physics system with updated geometry
         /// 5. Recalculates collision bounds for efficient spatial queries
         /// </remarks>
-        private void UpdatePhysicsCollisionShapes()
+        internal void UpdatePhysicsCollisionShapes()
         {
             if (_physicsSystem == null || _geometryModificationTracker == null)
             {
@@ -12997,8 +12997,8 @@ technique ColorGrading
                 return;
             }
 
-            // Get world for entity creation
-            IWorld world = area.World;
+            // Get world for entity creation (from destructible entity)
+            IWorld world = _destructibleEntity?.World;
             if (world == null)
             {
                 return;
@@ -13845,14 +13845,20 @@ technique ColorGrading
         // Modification counter for unique IDs
         private int _nextModificationId;
 
+        // Reference to cached mesh geometry dictionary from EclipseArea
+        // Used for debris generation and vertex connectivity checking
+        private readonly Dictionary<string, EclipseArea.CachedMeshGeometry> _cachedMeshGeometry;
+
         /// <summary>
         /// Creates a new geometry modification tracker.
         /// </summary>
-        public DestructibleGeometryModificationTracker()
+        /// <param name="cachedMeshGeometry">Reference to cached mesh geometry dictionary from EclipseArea.</param>
+        public DestructibleGeometryModificationTracker(Dictionary<string, EclipseArea.CachedMeshGeometry> cachedMeshGeometry)
         {
             _modifiedMeshes = new Dictionary<string, ModifiedMesh>(StringComparer.OrdinalIgnoreCase);
             _debrisPieces = new List<DebrisPiece>();
             _nextModificationId = 0;
+            _cachedMeshGeometry = cachedMeshGeometry ?? new Dictionary<string, EclipseArea.CachedMeshGeometry>(StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -14003,7 +14009,7 @@ technique ColorGrading
             List<List<int>> debrisChunks = new List<List<int>>();
 
             // Get cached geometry for vertex connectivity checking
-            if (!_cachedMeshGeometry.TryGetValue(meshId, out CachedMeshGeometry cachedGeometry))
+            if (!_cachedMeshGeometry.TryGetValue(meshId, out EclipseArea.CachedMeshGeometry cachedGeometry))
             {
                 // No cached geometry available - fall back to simple chunking (all faces in one chunk)
                 List<int> singleChunk = new List<int>(destroyedFaceIndices);
