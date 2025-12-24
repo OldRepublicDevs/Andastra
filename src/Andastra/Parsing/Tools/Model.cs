@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using JetBrains.Annotations;
-using BinaryReader = Andastra.Parsing.Common.BinaryReader;
 
 namespace Andastra.Parsing.Tools
 {
@@ -95,7 +93,7 @@ namespace Andastra.Parsing.Tools
         {
             HashSet<string> seenNames = new HashSet<string>();
 
-            using (BinaryReader reader = BinaryReader.FromBytes(data, 12))
+            using (RawBinaryReader reader = RawBinaryReader.FromBytes(data, 12))
             {
                 reader.Seek(168);
                 uint rootOffset = reader.ReadUInt32();
@@ -152,7 +150,7 @@ namespace Andastra.Parsing.Tools
         {
             HashSet<string> textureCaseset = new HashSet<string>();
 
-            using (BinaryReader reader = BinaryReader.FromBytes(data, 12))
+            using (RawBinaryReader reader = RawBinaryReader.FromBytes(data, 12))
             {
                 reader.Seek(168);
                 uint rootOffset = reader.ReadUInt32();
@@ -208,7 +206,7 @@ namespace Andastra.Parsing.Tools
         {
             HashSet<string> lightmapsCaseset = new HashSet<string>();
 
-            using (BinaryReader reader = BinaryReader.FromBytes(data, 12))
+            using (RawBinaryReader reader = RawBinaryReader.FromBytes(data, 12))
             {
                 reader.Seek(168);
                 uint rootOffset = reader.ReadUInt32();
@@ -298,7 +296,7 @@ namespace Andastra.Parsing.Tools
                 texturesLower[kvp.Key.ToLowerInvariant()] = kvp.Value.ToLowerInvariant();
             }
 
-            using (BinaryReader reader = BinaryReader.FromBytes(parsedData, 12))
+            using (RawBinaryReader reader = RawBinaryReader.FromBytes(parsedData, 12))
             {
                 reader.Seek(168);
                 uint rootOffset = reader.ReadUInt32();
@@ -387,7 +385,7 @@ namespace Andastra.Parsing.Tools
                 lightmapsLower[kvp.Key.ToLowerInvariant()] = kvp.Value.ToLowerInvariant();
             }
 
-            using (BinaryReader reader = BinaryReader.FromBytes(parsedData, 12))
+            using (RawBinaryReader reader = RawBinaryReader.FromBytes(parsedData, 12))
             {
                 reader.Seek(168);
                 uint rootOffset = reader.ReadUInt32();
@@ -488,7 +486,7 @@ namespace Andastra.Parsing.Tools
             var elementsOffsets = new List<Tuple<int, int>>();
             var facesOffsets = new List<Tuple<int, int>>();
 
-            using (BinaryReader reader = BinaryReader.FromBytes(parsedMdlData, 0))
+            using (RawBinaryReader reader = RawBinaryReader.FromBytes(parsedMdlData, 0))
             {
                 reader.Seek(168);
                 uint rootOffset = reader.ReadUInt32();
@@ -741,7 +739,7 @@ namespace Andastra.Parsing.Tools
             uint childArrayOffset;
             uint childCount;
 
-            using (BinaryReader reader = BinaryReader.FromBytes(parsedData, 0))
+            using (RawBinaryReader reader = RawBinaryReader.FromBytes(parsedData, 0))
             {
                 // Read node count at offset 44 (relative to parsed data)
                 // Matching Python: reader.seek(44); node_count: int = reader.read_uint32()
@@ -965,7 +963,7 @@ namespace Andastra.Parsing.Tools
 
             // First pass: collect all mesh nodes that need trimming
             // Matching Python: with BinaryReader.from_bytes(data, 12) as reader:
-            using (BinaryReader reader = BinaryReader.FromBytes(data, 12))
+            using (RawBinaryReader reader = RawBinaryReader.FromBytes(data, 12))
             {
                 reader.Seek(168);
                 uint rootOffset = reader.ReadUInt32();
@@ -1123,7 +1121,7 @@ namespace Andastra.Parsing.Tools
 
             // First pass: build dictionary of all offsets in the file
             // Matching Python: with BinaryReader.from_bytes(data, 12) as reader:
-            using (BinaryReader reader = BinaryReader.FromBytes(data, 12))
+            using (RawBinaryReader reader = RawBinaryReader.FromBytes(data, 12))
             {
                 // Recursive function to traverse nodes and collect offsets
                 // Matching Python: def node_recursive(offset_to_root_offset: int) -> None:
