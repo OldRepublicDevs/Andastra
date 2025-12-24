@@ -1,16 +1,13 @@
 using System;
 using System.IO;
 using System.Numerics;
-using StrideGraphics = Stride.Graphics;
-using Stride.Rendering;
 using Stride.Core.Mathematics;
-using Stride.Engine;
+using Stride.Core.Serialization.Contents;
+using Stride.Rendering;
 using Stride.Shaders;
 using Stride.Shaders.Compiler;
-using Stride.Core.Serialization.Contents;
-using Andastra.Runtime.Graphics.Common.Enums;
+using StrideGraphics = Stride.Graphics;
 using Andastra.Runtime.Graphics.Common.PostProcessing;
-using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Stride.Graphics;
 using Matrix = Stride.Core.Mathematics.Matrix;
 using Vector2 = Stride.Core.Mathematics.Vector2;
@@ -113,19 +110,19 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 if (_fullscreenEffect != null)
                 {
                     _ssrEffect = new EffectInstance(_fullscreenEffect);
-                    System.Console.WriteLine("[StrideSSR] Loaded SSREffect from compiled file using Effect.Load()");
+                    Console.WriteLine("[StrideSSR] Loaded SSREffect from compiled file using Effect.Load()");
                     return;
                 }
             }
             catch (MissingMethodException)
             {
                 // Effect.Load() doesn't exist in this Stride version, fall through to ContentManager
-                System.Console.WriteLine("[StrideSSR] Effect.Load() not available in this Stride version, trying ContentManager");
+                Console.WriteLine("[StrideSSR] Effect.Load() not available in this Stride version, trying ContentManager");
             }
             catch (Exception ex)
             {
                 // Other exceptions (file not found, etc.) - fall through to ContentManager
-                System.Console.WriteLine($"[StrideSSR] Failed to load SSREffect from compiled file: {ex.Message}");
+                Console.WriteLine($"[StrideSSR] Failed to load SSREffect from compiled file: {ex.Message}");
             }
 
             // Strategy 2: Try loading from ContentManager if available
@@ -145,7 +142,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     //     var contentManager = services.GetService<ContentManager>();
                     // ContentManager is in Stride.Core.Serialization.Contents namespace
                     // For now, skip ContentManager approach as it requires proper service setup
-                    Stride.Core.Serialization.Contents.ContentManager contentManager = null;
+                    ContentManager contentManager = null;
                     if (contentManager != null)
                     {
                         try
@@ -153,19 +150,19 @@ namespace Andastra.Runtime.Stride.PostProcessing
                             _fullscreenEffect = contentManager.Load<StrideGraphics.Effect>("SSREffect");
                             if (_fullscreenEffect != null)
                             {
-                                _ssrEffect = new StrideGraphics.EffectInstance(_fullscreenEffect);
-                                System.Console.WriteLine("[StrideSSR] Loaded SSREffect from ContentManager");
+                                _ssrEffect = new EffectInstance(_fullscreenEffect);
+                                Console.WriteLine("[StrideSSR] Loaded SSREffect from ContentManager");
                             }
                         }
                         catch (Exception ex)
                         {
-                            System.Console.WriteLine($"[StrideSSR] Failed to load SSREffect from ContentManager: {ex.Message}");
+                            Console.WriteLine($"[StrideSSR] Failed to load SSREffect from ContentManager: {ex.Message}");
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    System.Console.WriteLine($"[StrideSSR] Failed to access ContentManager: {ex.Message}");
+                    Console.WriteLine($"[StrideSSR] Failed to access ContentManager: {ex.Message}");
                 }
             }
 
@@ -177,7 +174,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 if (_fullscreenEffect != null)
                 {
                     _ssrEffect = new EffectInstance(_fullscreenEffect);
-                    System.Console.WriteLine("[StrideSSR] Created SSREffect programmatically");
+                    Console.WriteLine("[StrideSSR] Created SSREffect programmatically");
                 }
             }
 
@@ -185,7 +182,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             // The rendering code will use CPU-side implementation
             if (_fullscreenEffect == null)
             {
-                System.Console.WriteLine("[StrideSSR] Warning: Could not load or create SSR shaders. Using CPU-side implementation.");
+                Console.WriteLine("[StrideSSR] Warning: Could not load or create SSR shaders. Using CPU-side implementation.");
             }
         }
 
@@ -432,7 +429,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 }
                 catch (Exception ex)
                 {
-                    System.Console.WriteLine($"[StrideSSR] Failed to set effect parameters: {ex.Message}");
+                    Console.WriteLine($"[StrideSSR] Failed to set effect parameters: {ex.Message}");
                 }
             }
 
@@ -440,7 +437,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             commandList.SetRenderTarget(null, output);
 
             // Clear render target
-            commandList.Clear(output, global::Stride.Core.Mathematics.Color.Transparent);
+            commandList.Clear(output, Color.Transparent);
 
             // Begin sprite batch rendering with custom effect
             // Stride SpriteBatch.Begin requires GraphicsContext, not CommandList
@@ -459,19 +456,19 @@ namespace Andastra.Runtime.Stride.PostProcessing
             {
                 // If that fails, SpriteBatch.Begin requires GraphicsContext which we don't have direct access to
                 // This is a limitation - we need GraphicsContext from Game instance
-                System.Console.WriteLine("[StrideSSR] Warning: Could not begin sprite batch - GraphicsContext required but not available");
+                Console.WriteLine("[StrideSSR] Warning: Could not begin sprite batch - GraphicsContext required but not available");
                 return;
             }
 
             // Draw fullscreen quad
             var destinationRect = new RectangleF(0, 0, output.Width, output.Height);
-            _spriteBatch.Draw(input, destinationRect, global::Stride.Core.Mathematics.Color.White);
+            _spriteBatch.Draw(input, destinationRect, Color.White);
 
             // End sprite batch rendering
             _spriteBatch.End();
 
             // Reset render target (restore previous state)
-            commandList.SetRenderTarget(null, (StrideGraphics.Texture)null);
+            commandList.SetRenderTarget(null, null);
         }
 
         /// <summary>
@@ -479,8 +476,15 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// Implements the complete ray marching algorithm matching vendor/reone/glsl/f_pbr_ssr.glsl
         /// for 1:1 parity with original game behavior.
         /// </summary>
-        private void ExecuteSsrCpu(StrideGraphics.Texture input, StrideGraphics.Texture depth, StrideGraphics.Texture normal, StrideGraphics.Texture roughness,
-            StrideGraphics.Texture lightmap, StrideGraphics.Texture output, int width, int height)
+        private void ExecuteSsrCpu(
+            StrideGraphics.Texture input,
+            StrideGraphics.Texture depth,
+            StrideGraphics.Texture normal,
+            StrideGraphics.Texture roughness,
+            StrideGraphics.Texture lightmap,
+            StrideGraphics.Texture output,
+            int width,
+            int height)
         {
             // Read StrideGraphics.Texture data
             var inputData = ReadTextureData(input);
@@ -792,7 +796,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     format == StrideGraphics.PixelFormat.B8G8R8A8_UNorm_SRgb)
                 {
                     // Read as Color array (Stride's standard format)
-                    var colorData = new global::Stride.Core.Mathematics.Color[size];
+                    var colorData = new Color[size];
                     texture.GetData(commandList, colorData);
 
                     // Convert Color[] to Vector4[]
@@ -851,7 +855,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     Console.WriteLine($"[StrideSSR] ReadTextureData: Unsupported format {format}, attempting Color readback");
                     try
                     {
-                        var colorData = new global::Stride.Core.Mathematics.Color[size];
+                        var colorData = new Color[size];
                         texture.GetData(commandList, colorData);
 
                         for (int i = 0; i < size; i++)
@@ -922,7 +926,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     format == StrideGraphics.PixelFormat.B8G8R8A8_UNorm ||
                     format == StrideGraphics.PixelFormat.B8G8R8A8_UNorm_SRgb)
                 {
-                    var colorData = new global::Stride.Core.Mathematics.Color[size];
+                    var colorData = new Color[size];
 
                     // Convert Vector4[] to Color[] (clamp to [0,1] and convert to [0,255])
                     for (int i = 0; i < size; i++)
@@ -934,7 +938,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                         float b = Math.Max(0.0f, Math.Min(1.0f, v.Z));
                         float a = Math.Max(0.0f, Math.Min(1.0f, v.W));
 
-                        colorData[i] = new global::Stride.Core.Mathematics.Color(
+                        colorData[i] = new Color(
                             (byte)(r * 255.0f),
                             (byte)(g * 255.0f),
                             (byte)(b * 255.0f),
@@ -992,7 +996,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     Console.WriteLine($"[StrideSSR] WriteTextureData: Unsupported format {format}, attempting Color upload");
                     try
                     {
-                        var colorData = new global::Stride.Core.Mathematics.Color[size];
+                        var colorData = new Color[size];
 
                         for (int i = 0; i < size; i++)
                         {
@@ -1002,7 +1006,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                             float b = Math.Max(0.0f, Math.Min(1.0f, v.Z));
                             float a = Math.Max(0.0f, Math.Min(1.0f, v.W));
 
-                            colorData[i] = new global::Stride.Core.Mathematics.Color(
+                            colorData[i] = new Color(
                                 (byte)(r * 255.0f),
                                 (byte)(g * 255.0f),
                                 (byte)(b * 255.0f),
@@ -1313,8 +1317,8 @@ shader SSREffect : ShaderBase
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine($"[StrideSSR] Failed to create SSR effect: {ex.Message}");
-                System.Console.WriteLine($"[StrideSSR] Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"[StrideSSR] Failed to create SSR effect: {ex.Message}");
+                Console.WriteLine($"[StrideSSR] Stack trace: {ex.StackTrace}");
                 return null;
             }
         }
@@ -1335,13 +1339,13 @@ shader SSREffect : ShaderBase
         {
             if (string.IsNullOrEmpty(shaderSource))
             {
-                System.Console.WriteLine($"[StrideSSR] Cannot compile shader '{shaderName}': shader source is null or empty");
+                Console.WriteLine($"[StrideSSR] Cannot compile shader '{shaderName}': shader source is null or empty");
                 return null;
             }
 
             if (_graphicsDevice == null)
             {
-                System.Console.WriteLine($"[StrideSSR] Cannot compile shader '{shaderName}': GraphicsDevice is null");
+                Console.WriteLine($"[StrideSSR] Cannot compile shader '{shaderName}': GraphicsDevice is null");
                 return null;
             }
 
@@ -1375,8 +1379,8 @@ shader SSREffect : ShaderBase
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine($"[StrideSSR] Failed to compile shader '{shaderName}': {ex.Message}");
-                System.Console.WriteLine($"[StrideSSR] Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"[StrideSSR] Failed to compile shader '{shaderName}': {ex.Message}");
+                Console.WriteLine($"[StrideSSR] Stack trace: {ex.StackTrace}");
                 return null;
             }
         }
@@ -1416,23 +1420,23 @@ shader SSREffect : ShaderBase
                     // Create Effect from compiled bytecode
                     // Based on Stride API: Effect constructor accepts compiled bytecode
                     var effect = new StrideGraphics.Effect(_graphicsDevice, (EffectBytecode)compilerResult.Bytecode);
-                    System.Console.WriteLine($"[StrideSSR] Successfully compiled shader '{shaderName}' using EffectCompiler");
+                    Console.WriteLine($"[StrideSSR] Successfully compiled shader '{shaderName}' using EffectCompiler");
                     return effect;
                 }
                 else
                 {
-                    System.Console.WriteLine($"[StrideSSR] EffectCompiler compilation failed for shader '{shaderName}': No bytecode generated");
+                    Console.WriteLine($"[StrideSSR] EffectCompiler compilation failed for shader '{shaderName}': No bytecode generated");
                     if (compilerResult != null && compilerResult.HasErrors)
                     {
                         // CompilerResults may not have ErrorText, use ToString() or check for specific error properties
-                        System.Console.WriteLine($"[StrideSSR] Compilation errors occurred");
+                        Console.WriteLine($"[StrideSSR] Compilation errors occurred");
                     }
                     return null;
                 }
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine($"[StrideSSR] Exception while compiling shader '{shaderName}' with EffectCompiler: {ex.Message}");
+                Console.WriteLine($"[StrideSSR] Exception while compiling shader '{shaderName}' with EffectCompiler: {ex.Message}");
                 return null;
             }
         }
@@ -1444,7 +1448,7 @@ shader SSREffect : ShaderBase
         /// <param name="shaderSource">Shader source code.</param>
         /// <param name="shaderName">Shader name for identification.</param>
         /// <returns>Compiled Effect, or null if compilation fails.</returns>
-        private StrideGraphics.Effect CompileShaderWithEffectSystem(global::Stride.Shaders.Compiler.EffectCompiler effectSystem, string shaderSource, string shaderName)
+        private StrideGraphics.Effect CompileShaderWithEffectSystem(EffectCompiler effectSystem, string shaderSource, string shaderName)
         {
             try
             {
@@ -1464,12 +1468,12 @@ shader SSREffect : ShaderBase
                     }
                 }
 
-                System.Console.WriteLine($"[StrideSSR] EffectSystem does not provide direct compiler access for shader '{shaderName}'");
+                Console.WriteLine($"[StrideSSR] EffectSystem does not provide direct compiler access for shader '{shaderName}'");
                 return null;
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine($"[StrideSSR] Exception while compiling shader '{shaderName}' with EffectSystem: {ex.Message}");
+                Console.WriteLine($"[StrideSSR] Exception while compiling shader '{shaderName}' with EffectSystem: {ex.Message}");
                 return null;
             }
         }
@@ -1519,8 +1523,8 @@ shader SSREffect : ShaderBase
                         dynamic compilerResult = compilationResult.Result;
                         if (compilerResult != null && compilerResult.Bytecode != null && compilerResult.Bytecode.Length > 0)
                         {
-                            var effect = new Stride.Rendering.Effect(_graphicsDevice, (EffectBytecode)compilerResult.Bytecode);
-                            System.Console.WriteLine($"[StrideSSR] Successfully compiled shader '{shaderName}' from file");
+                            var effect = new StrideGraphics.Effect(_graphicsDevice, (EffectBytecode)compilerResult.Bytecode);
+                            Console.WriteLine($"[StrideSSR] Successfully compiled shader '{shaderName}' from file");
                             return effect;
                         }
                     }
@@ -1530,12 +1534,12 @@ shader SSREffect : ShaderBase
                 // It only works with effect names from content paths, so we skip this fallback
                 // If we reach here, compilation has failed and we return null
 
-                System.Console.WriteLine($"[StrideSSR] Could not compile shader '{shaderName}' from file");
+                Console.WriteLine($"[StrideSSR] Could not compile shader '{shaderName}' from file");
                 return null;
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine($"[StrideSSR] Exception while compiling shader '{shaderName}' from file: {ex.Message}");
+                Console.WriteLine($"[StrideSSR] Exception while compiling shader '{shaderName}' from file: {ex.Message}");
                 return null;
             }
             finally
@@ -1594,7 +1598,7 @@ shader SSREffect : ShaderBase
         /// <summary>
         /// Converts System.Numerics.Matrix4x4 to Stride Matrix.
         /// </summary>
-        private Matrix ConvertMatrix(System.Numerics.Matrix4x4 matrix)
+        private Matrix ConvertMatrix(Matrix4x4 matrix)
         {
             return new Matrix(
                 matrix.M11, matrix.M12, matrix.M13, matrix.M14,

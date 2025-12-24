@@ -593,15 +593,15 @@ namespace Andastra.Runtime.Stride.Audio
             _position += bytesToCopy;
 
             // Music always loops, so buffer type is always Normal
-            // Use local AudioLayer enum and cast to Stride's type
-            AudioLayer.BufferType bufferType = AudioLayer.BufferType.Normal;
+            // Use Stride's BufferType directly
+            StrideAudioLayer.BufferType bufferType = StrideAudioLayer.BufferType.Normal;
 
             // Fill the buffer - pin the array and get pointer
             GCHandle bufferHandle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
             try
             {
                 IntPtr bufferPtr = bufferHandle.AddrOfPinnedObject();
-                FillBuffer(bufferPtr, bytesToCopy, (StrideAudioLayer.BufferType)(int)bufferType);
+                FillBuffer(bufferPtr, bytesToCopy, bufferType);
             }
             finally
             {

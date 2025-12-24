@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
+using Avalonia.Platform.Storage;
 using Andastra.Parsing.Extract;
 using Andastra.Parsing.Formats.SSF;
 using Andastra.Parsing.Resource;
@@ -52,6 +54,7 @@ namespace HolocronToolset.Editors
         private Dictionary<SSFSound, (TextBox soundEdit, TextBox textEdit)> _soundTextPairs;
 
         private TalkTable _talktable;
+        private TextBlock _talktableLabel;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ssf.py:22-61
         // Original: def __init__(self, parent, installation):
@@ -63,6 +66,7 @@ namespace HolocronToolset.Editors
             InitializeComponent();
             SetupUI();
             SetupSignals();
+            UpdateTalktableLabel();
             New();
             MinWidth = 577;
             MinHeight = 437;
@@ -99,6 +103,26 @@ namespace HolocronToolset.Editors
             {
                 return;
             }
+
+            // Add talktable selection button at the top
+            var talktablePanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 10) };
+            var talktableButton = new Button
+            {
+                Content = "Select Talk Table",
+                Width = 150,
+                Height = 30
+            };
+            talktableButton.Click += async (s, e) => await SelectTalkTable();
+            talktablePanel.Children.Add(talktableButton);
+
+            _talktableLabel = new TextBlock
+            {
+                Text = _talktable != null ? $"Using: {System.IO.Path.GetFileName(_talktable.Path)}" : "Using installation talktable",
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(10, 0, 0, 0)
+            };
+            talktablePanel.Children.Add(_talktableLabel);
+            stackPanel.Children.Add(talktablePanel);
 
             // Create all spin boxes and text boxes programmatically
             CreateSoundControl(stackPanel, "Battle Cry 1", SSFSound.BATTLE_CRY_1, out _battlecry1StrrefSpin);
@@ -423,20 +447,66 @@ namespace HolocronToolset.Editors
             }
         }
 
+        private void UpdateTalktableLabel()
+        {
+            if (_talktableLabel != null)
+            {
+                _talktableLabel.Text = _talktable != null ? $"Using: {System.IO.Path.GetFileName(_talktable.Path)}" : "Using installation talktable";
+            }
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ssf.py:298-302
         // Original: def select_talk_table(self):
-        private void SelectTalkTable()
+        private async Task SelectTalkTable()
         {
-            // File dialog to select TLK file
-            // This will be implemented when file dialogs are available
-            // TODO: STUB - For now, use installation's talktable if available
-            if (_installation != null)
+            // Get the top-level window for file dialog
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel == null)
             {
-                if (_installation != null)
+                return;
+            }
+
+            // Create file picker options for TLK file selection
+            var options = new FilePickerOpenOptions
+            {
+                Title = "Select Talk Table (TLK) File",
+                AllowMultiple = false,
+                FileTypeFilter = new List<FilePickerFileType>
                 {
-                    _talktable = new TalkTable(System.IO.Path.Combine(_installation.Path, "dialog.tlk"));
+                    new FilePickerFileType("Talk Table Files")
+                    {
+                        Patterns = new[] { "*.tlk" },
+                        MimeTypes = new[] { "application/octet-stream" }
+                    },
+                    new FilePickerFileType("All Files")
+                    {
+                        Patterns = new[] { "*.*" }
+                    }
                 }
-                UpdateTextBoxes();
+            };
+
+            try
+            {
+                // Show file dialog
+                var files = await topLevel.StorageProvider.OpenFilePickerAsync(options);
+                if (files == null || files.Count == 0)
+                {
+                    return;
+                }
+
+                // Load the selected talktable
+                string tlkPath = files[0].Path.LocalPath;
+                if (File.Exists(tlkPath))
+                {
+                    _talktable = new TalkTable(tlkPath);
+                    UpdateTalktableLabel();
+                    UpdateTextBoxes();
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't crash
+                System.Console.WriteLine($"Failed to select talktable: {ex.Message}");
             }
         }
 
