@@ -1929,7 +1929,8 @@ namespace Andastra.Parsing.TSLPatcher
                     {
                         // Load the GFF file
                         byte[] gffData = File.ReadAllBytes(gffFile);
-                        var gff = Andastra.Parsing.Formats.GFF.GFFAuto.LoadGff(gffData);
+                        var gffReader = new Andastra.Parsing.Formats.GFF.GFFBinaryReader(gffData);
+                        var gff = gffReader.Load();
 
                         // Search for StrRef fields in the GFF structure
                         var strrefFields = FindStrRefFieldsRecursive(gff.Root, oldStrref);
@@ -1937,17 +1938,13 @@ namespace Andastra.Parsing.TSLPatcher
                         if (strrefFields.Count > 0)
                         {
                             // Create GFF modifications to replace StrRef with TLKMEMORY token
-                            var modifications = new Andastra.Parsing.Mods.GFF.ModificationsGFF(gffFile);
+                            var modifications = new Andastra.Parsing.Mods.GFF.ModificationsGFF(gffFile, replace: false, modifiers: null);
 
                             foreach (var fieldPath in strrefFields)
                             {
                                 // Create a TLKMEMORY modifier that replaces the StrRef field
-                                var modifier = new Andastra.Parsing.Mods.GFF.ModifyGFF
-                                {
-                                    FieldPath = fieldPath,
-                                    Type = Andastra.Parsing.Mods.GFF.ModifyGFFType.TLKMemory,
-                                    TLKMemoryToken = newTokenId
-                                };
+                                var fieldValue = new Andastra.Parsing.Mods.GFF.FieldValueTLKMemory(newTokenId);
+                                var modifier = new Andastra.Parsing.Mods.GFF.ModifyFieldGFF(fieldPath, fieldValue);
                                 modifications.Modifiers.Add(modifier);
                             }
 
@@ -1991,7 +1988,8 @@ namespace Andastra.Parsing.TSLPatcher
                     {
                         // Load the 2DA file
                         byte[] twodaData = File.ReadAllBytes(twodaFile);
-                        var twoda = Andastra.Parsing.Formats.TwoDA.TwoDAAuto.Load2DA(twodaData);
+                        var twodaReader = new Andastra.Parsing.Formats.TwoDA.TwoDABinaryReader(twodaData);
+                        var twoda = twodaReader.Load();
 
                         // Search for cells containing the StrRef value
                         var strrefCells = FindStrRefCellsInTwoDa(twoda, oldStrref);
@@ -2004,13 +2002,17 @@ namespace Andastra.Parsing.TSLPatcher
                             foreach (var cellRef in strrefCells)
                             {
                                 // Create a TLKMEMORY modifier that replaces the cell value
-                                var modifier = new Andastra.Parsing.Mods.TwoDA.Modify2DA
+                                var target = new Andastra.Parsing.Mods.TwoDA.Target(
+                                    Andastra.Parsing.Mods.TwoDA.TargetType.ROW_INDEX,
+                                    cellRef.RowIndex);
+                                var cells = new Dictionary<string, Andastra.Parsing.Mods.TwoDA.RowValue>
                                 {
-                                    RowIndex = cellRef.RowIndex,
-                                    ColumnName = cellRef.ColumnName,
-                                    Type = Andastra.Parsing.Mods.TwoDA.Modify2DAType.TLKMemory,
-                                    TLKMemoryToken = newTokenId
+                                    { cellRef.ColumnName, new Andastra.Parsing.Mods.TwoDA.RowValueTLKMemory(newTokenId) }
                                 };
+                                var modifier = new Andastra.Parsing.Mods.TwoDA.ChangeRow2DA(
+                                    $"strref_{cellRef.RowIndex}_{cellRef.ColumnName}",
+                                    target,
+                                    cells);
                                 modifications.Modifiers.Add(modifier);
                             }
 
@@ -2039,45 +2041,62 @@ namespace Andastra.Parsing.TSLPatcher
         /// <summary>
         /// Recursively search GFF structure for fields containing a specific StrRef value.
         /// </summary>
-        private List<string> FindStrRefFieldsRecursive(Andastra.Parsing.Formats.GFF.GFFField field, int targetStrref, string currentPath = "")
+        private List<string> FindStrRefFieldsRecursive(Andastra.Parsing.Formats.GFF.GFFStruct gffStruct, int targetStrref, string currentPath = "")
         {
             var foundPaths = new List<string>();
 
-            if (field.Type == Andastra.Parsing.Formats.GFF.GFFDataType.Int32)
+            // Iterate through all fields in the struct
+            foreach (var (label, fieldType, value) in gffStruct)
             {
-                // Check if this is a StrRef field (StrRef fields are typically named with "StrRef" in them)
-                if (currentPath.Contains("StrRef") || currentPath.Contains("strref"))
+                string fieldPath = string.IsNullOrEmpty(currentPath) ? label : $"{currentPath}.{label}";
+
+                // Check Int32 fields that might be StrRefs (StrRef fields are typically named with "StrRef" in them)
+                if (fieldType == Andastra.Parsing.Formats.GFF.GFFFieldType.Int32)
                 {
-                    int strrefValue = field.Int32Value;
-                    if (strrefValue == targetStrref)
+                    if (label.Contains("StrRef", StringComparison.OrdinalIgnoreCase) || 
+                        label.Contains("strref", StringComparison.OrdinalIgnoreCase) ||
+                        fieldPath.Contains("StrRef", StringComparison.OrdinalIgnoreCase) || 
+                        fieldPath.Contains("strref", StringComparison.OrdinalIgnoreCase))
                     {
-                        foundPaths.Add(currentPath);
+                        int strrefValue = gffStruct.GetInt32(label);
+                        if (strrefValue == targetStrref)
+                        {
+                            foundPaths.Add(fieldPath);
+                        }
                     }
                 }
-            }
-            else if (field.Type == Andastra.Parsing.Formats.GFF.GFFDataType.Struct)
-            {
-                // Recursively search struct fields
-                var structData = field.StructValue;
-                foreach (var childField in structData.Fields)
+                // Check LocalizedString fields for StrRef
+                else if (fieldType == Andastra.Parsing.Formats.GFF.GFFFieldType.LocalizedString)
                 {
-                    string childPath = string.IsNullOrEmpty(currentPath) ?
-                        childField.Label : $"{currentPath}.{childField.Label}";
-                    foundPaths.AddRange(FindStrRefFieldsRecursive(childField, targetStrref, childPath));
-                }
-            }
-            else if (field.Type == Andastra.Parsing.Formats.GFF.GFFDataType.List)
-            {
-                // Recursively search list elements
-                var listData = field.ListValue;
-                for (int i = 0; i < listData.Structs.Count; i++)
-                {
-                    var structData = listData.Structs[i];
-                    foreach (var childField in structData.Fields)
+                    if (value is Andastra.Parsing.Common.LocalizedString locString)
                     {
-                        string childPath = string.IsNullOrEmpty(currentPath) ?
-                            $"{childField.Label}[{i}]" : $"{currentPath}.{childField.Label}[{i}]";
-                        foundPaths.AddRange(FindStrRefFieldsRecursive(childField, targetStrref, childPath));
+                        if (locString.StringRef == targetStrref)
+                        {
+                            foundPaths.Add(fieldPath);
+                        }
+                    }
+                }
+                // Recursively search nested structs
+                else if (fieldType == Andastra.Parsing.Formats.GFF.GFFFieldType.Struct)
+                {
+                    if (value is Andastra.Parsing.Formats.GFF.GFFStruct nestedStruct)
+                    {
+                        foundPaths.AddRange(FindStrRefFieldsRecursive(nestedStruct, targetStrref, fieldPath));
+                    }
+                }
+                // Recursively search list elements
+                else if (fieldType == Andastra.Parsing.Formats.GFF.GFFFieldType.List)
+                {
+                    if (value is Andastra.Parsing.Formats.GFF.GFFList listData)
+                    {
+                        for (int i = 0; i < listData.Count; i++)
+                        {
+                            if (listData[i] is Andastra.Parsing.Formats.GFF.GFFStruct listStruct)
+                            {
+                                string listPath = $"{fieldPath}[{i}]";
+                                foundPaths.AddRange(FindStrRefFieldsRecursive(listStruct, targetStrref, listPath));
+                            }
+                        }
                     }
                 }
             }
@@ -2094,15 +2113,15 @@ namespace Andastra.Parsing.TSLPatcher
 
             // Check if this 2DA has columns that might contain StrRefs
             // StrRef columns are often named with "strref", "stringref", etc.
-            var strrefColumns = twoda.ColumnHeaders.Where(h =>
+            var strrefColumns = twoda.GetHeaders().Where(h =>
                 h.Contains("strref", StringComparison.OrdinalIgnoreCase) ||
                 h.Contains("stringref", StringComparison.OrdinalIgnoreCase)).ToList();
 
             foreach (string columnName in strrefColumns)
             {
-                for (int rowIndex = 0; rowIndex < twoda.RowCount; rowIndex++)
+                for (int rowIndex = 0; rowIndex < twoda.GetHeight(); rowIndex++)
                 {
-                    string cellValue = twoda.GetCell(columnName, rowIndex);
+                    string cellValue = twoda.GetCellString(rowIndex, columnName);
                     if (int.TryParse(cellValue, out int strrefValue) && strrefValue == targetStrref)
                     {
                         foundCells.Add(new TwoDaCellReference
