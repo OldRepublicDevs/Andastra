@@ -73,15 +73,15 @@ namespace Andastra.Runtime.Stride.Graphics
         {
             EnsureBegun();
             var strideTexture = GetStrideTexture(texture);
-            var strideColor = new Stride.Core.Mathematics.Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
-            _spriteBatch.Draw(strideTexture, new Stride.Core.Mathematics.Vector2(position.X, position.Y), strideColor);
+            var strideColor = new global::Stride.Core.Mathematics.Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
+            _spriteBatch.Draw(strideTexture, new global::Stride.Core.Mathematics.Vector2(position.X, position.Y), strideColor);
         }
 
         public void Draw(ITexture2D texture, Andastra.Runtime.Graphics.Rectangle destinationRectangle, Andastra.Runtime.Graphics.Color color)
         {
             EnsureBegun();
             var strideTexture = GetStrideTexture(texture);
-            var strideColor = new Stride.Core.Mathematics.Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
+            var strideColor = new global::Stride.Core.Mathematics.Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
             var strideRect = new RectangleF(destinationRectangle.X, destinationRectangle.Y, destinationRectangle.Width, destinationRectangle.Height);
             _spriteBatch.Draw(strideTexture, strideRect, strideColor);
         }
@@ -90,21 +90,21 @@ namespace Andastra.Runtime.Stride.Graphics
         {
             EnsureBegun();
             var strideTexture = GetStrideTexture(texture);
-            var strideColor = new Stride.Core.Mathematics.Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
+            var strideColor = new global::Stride.Core.Mathematics.Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
             RectangleF? strideRect = null;
             if (sourceRectangle.HasValue)
             {
                 var rect = sourceRectangle.Value;
                 strideRect = new RectangleF(rect.X, rect.Y, rect.Width, rect.Height);
             }
-            _spriteBatch.Draw(strideTexture, new Stride.Core.Mathematics.Vector2(position.X, position.Y), strideRect, strideColor);
+            _spriteBatch.Draw(strideTexture, new global::Stride.Core.Mathematics.Vector2(position.X, position.Y), strideRect, strideColor);
         }
 
         public void Draw(ITexture2D texture, Andastra.Runtime.Graphics.Rectangle destinationRectangle, Andastra.Runtime.Graphics.Rectangle? sourceRectangle, Andastra.Runtime.Graphics.Color color, float rotation, Andastra.Runtime.Graphics.Vector2 origin, Andastra.Runtime.Graphics.SpriteEffects effects, float layerDepth)
         {
             EnsureBegun();
             var strideTexture = GetStrideTexture(texture);
-            var strideColor = new Stride.Core.Mathematics.Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
+            var strideColor = new global::Stride.Core.Mathematics.Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
             var strideDestRect = new RectangleF(destinationRectangle.X, destinationRectangle.Y, destinationRectangle.Width, destinationRectangle.Height);
             RectangleF? strideSrcRect = null;
             if (sourceRectangle.HasValue)
@@ -112,7 +112,7 @@ namespace Andastra.Runtime.Stride.Graphics
                 var rect = sourceRectangle.Value;
                 strideSrcRect = new RectangleF(rect.X, rect.Y, rect.Width, rect.Height);
             }
-            var strideOrigin = new Stride.Core.Mathematics.Vector2(origin.X, origin.Y);
+            var strideOrigin = new global::Stride.Core.Mathematics.Vector2(origin.X, origin.Y);
             var strideEffects = ConvertSpriteEffects(effects);
             _spriteBatch.Draw(strideTexture, strideDestRect, strideSrcRect, strideColor, rotation, strideOrigin, strideEffects, layerDepth);
         }
@@ -121,8 +121,8 @@ namespace Andastra.Runtime.Stride.Graphics
         {
             EnsureBegun();
             var strideFont = GetStrideFont(font);
-            var strideColor = new Stride.Core.Mathematics.Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
-            _spriteBatch.DrawString(strideFont, text, new Stride.Core.Mathematics.Vector2(position.X, position.Y), strideColor);
+            var strideColor = new global::Stride.Core.Mathematics.Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
+            _spriteBatch.DrawString(strideFont, text, new global::Stride.Core.Mathematics.Vector2(position.X, position.Y), strideColor);
         }
 
         private void EnsureBegun()
