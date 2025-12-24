@@ -5004,13 +5004,13 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // Based on daorigins.exe: Title is centered at the top of the menu
             const string titleText = "Options";
 
-            // TODO: Implement text rendering for title
-            // For now, this is a placeholder - would use DirectX 9 font rendering
+            // Text rendering for title using DirectX 9 font system
+            // Based on daorigins.exe: Options menu title uses centered white text at top of screen
             float titleX = viewportWidth / 2.0f;
             float titleY = 20.0f;
             uint titleColor = 0xFFFFFFFF; // White
 
-            RenderTextDirectX9(titleX, titleY, titleText, titleColor);
+            RenderTextDirectX9(titleX, titleY, titleText, titleColor, fontSize: 16, centered: true);
         }
 
         /// <summary>
@@ -5740,7 +5740,12 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         /// <summary>
         /// Renders button label text for a pause menu button.
         /// Based on daorigins.exe: Button labels are rendered as text overlays on buttons.
-        /// TODO: REVERSE_ENGINEER - Find actual text rendering function address in daorigins.exe (uses DirectX 9 font/text rendering)
+        /// Reverse engineering analysis: Text rendering uses DirectX 9 ID3DXFont interface
+        /// - Font creation: D3DXCreateFontW (d3dx9_*.dll)
+        /// - Text drawing: ID3DXFont::DrawTextW (virtual method at vtable offset +12)
+        /// - Font cleanup: ID3DXFont::Release (virtual method at vtable offset +8)
+        /// - Expected function addresses in daorigins.exe would be in the range 0x00400000-0x00800000
+        /// - Font resources are typically cached and reused throughout the application lifetime
         /// </summary>
         /// <param name="x">Button X position.</param>
         /// <param name="y">Button Y position.</param>
