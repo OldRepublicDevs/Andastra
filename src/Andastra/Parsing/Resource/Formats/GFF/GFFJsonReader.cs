@@ -20,8 +20,10 @@ namespace Andastra.Parsing.Formats.GFF
         /// </summary>
         public GFF Load(string jsonText)
         {
-            using var document = JsonDocument.Parse(jsonText);
-            return LoadFromJsonElement(document.RootElement);
+            using (var document = JsonDocument.Parse(jsonText))
+            {
+                return LoadFromJsonElement(document.RootElement);
+            }
         }
 
         /// <summary>
@@ -29,8 +31,10 @@ namespace Andastra.Parsing.Formats.GFF
         /// </summary>
         public GFF Load(Stream jsonStream)
         {
-            using var document = JsonDocument.Parse(jsonStream);
-            return LoadFromJsonElement(document.RootElement);
+            using (var document = JsonDocument.Parse(jsonStream))
+            {
+                return LoadFromJsonElement(document.RootElement);
+            }
         }
 
         /// <summary>
@@ -38,8 +42,10 @@ namespace Andastra.Parsing.Formats.GFF
         /// </summary>
         public GFF Load(byte[] jsonBytes)
         {
-            using var document = JsonDocument.Parse(jsonBytes);
-            return LoadFromJsonElement(document.RootElement);
+            using (var document = JsonDocument.Parse(jsonBytes))
+            {
+                return LoadFromJsonElement(document.RootElement);
+            }
         }
 
         private GFF LoadFromJsonElement(JsonElement rootElement)
@@ -82,7 +88,7 @@ namespace Andastra.Parsing.Formats.GFF
                 GFFFieldType fieldType = ParseFieldType(dataType);
 
                 object value = ParseFieldValue(fieldElement, fieldType);
-                gffStruct.Set(property.Name, fieldType, value);
+                gffStruct.SetField(property.Name, fieldType, value);
             }
 
             return gffStruct;
@@ -90,28 +96,47 @@ namespace Andastra.Parsing.Formats.GFF
 
         private GFFFieldType ParseFieldType(string dataType)
         {
-            return dataType switch
+            switch (dataType)
             {
-                "UInt8" => GFFFieldType.UInt8,
-                "Int8" => GFFFieldType.Int8,
-                "UInt16" => GFFFieldType.UInt16,
-                "Int16" => GFFFieldType.Int16,
-                "UInt32" => GFFFieldType.UInt32,
-                "Int32" => GFFFieldType.Int32,
-                "UInt64" => GFFFieldType.UInt64,
-                "Int64" => GFFFieldType.Int64,
-                "Single" => GFFFieldType.Single,
-                "Double" => GFFFieldType.Double,
-                "String" => GFFFieldType.String,
-                "ResRef" => GFFFieldType.ResRef,
-                "LocalizedString" => GFFFieldType.LocalizedString,
-                "Binary" => GFFFieldType.Binary,
-                "Struct" => GFFFieldType.Struct,
-                "List" => GFFFieldType.List,
-                "Vector3" => GFFFieldType.Vector3,
-                "Vector4" => GFFFieldType.Vector4,
-                _ => throw new ArgumentException($"Unknown GFF field type: {dataType}")
-            };
+                case "UInt8":
+                    return GFFFieldType.UInt8;
+                case "Int8":
+                    return GFFFieldType.Int8;
+                case "UInt16":
+                    return GFFFieldType.UInt16;
+                case "Int16":
+                    return GFFFieldType.Int16;
+                case "UInt32":
+                    return GFFFieldType.UInt32;
+                case "Int32":
+                    return GFFFieldType.Int32;
+                case "UInt64":
+                    return GFFFieldType.UInt64;
+                case "Int64":
+                    return GFFFieldType.Int64;
+                case "Single":
+                    return GFFFieldType.Single;
+                case "Double":
+                    return GFFFieldType.Double;
+                case "String":
+                    return GFFFieldType.String;
+                case "ResRef":
+                    return GFFFieldType.ResRef;
+                case "LocalizedString":
+                    return GFFFieldType.LocalizedString;
+                case "Binary":
+                    return GFFFieldType.Binary;
+                case "Struct":
+                    return GFFFieldType.Struct;
+                case "List":
+                    return GFFFieldType.List;
+                case "Vector3":
+                    return GFFFieldType.Vector3;
+                case "Vector4":
+                    return GFFFieldType.Vector4;
+                default:
+                    throw new ArgumentException($"Unknown GFF field type: {dataType}");
+            }
         }
 
         private object ParseFieldValue(JsonElement fieldElement, GFFFieldType fieldType)
@@ -121,28 +146,47 @@ namespace Andastra.Parsing.Formats.GFF
                 throw new JsonException("Field is missing __value__ property");
             }
 
-            return fieldType switch
+            switch (fieldType)
             {
-                GFFFieldType.UInt8 => valueElement.GetByte(),
-                GFFFieldType.Int8 => valueElement.GetSByte(),
-                GFFFieldType.UInt16 => valueElement.GetUInt16(),
-                GFFFieldType.Int16 => valueElement.GetInt16(),
-                GFFFieldType.UInt32 => (uint)valueElement.GetInt64(),
-                GFFFieldType.Int32 => valueElement.GetInt32(),
-                GFFFieldType.UInt64 => valueElement.GetUInt64(),
-                GFFFieldType.Int64 => valueElement.GetInt64(),
-                GFFFieldType.Single => valueElement.GetSingle(),
-                GFFFieldType.Double => valueElement.GetDouble(),
-                GFFFieldType.String => valueElement.GetString(),
-                GFFFieldType.ResRef => ResRef.From(valueElement.GetString()),
-                GFFFieldType.LocalizedString => ParseLocalizedString(valueElement),
-                GFFFieldType.Binary => ParseBinary(valueElement),
-                GFFFieldType.Struct => ParseStruct(valueElement),
-                GFFFieldType.List => ParseList(valueElement),
-                GFFFieldType.Vector3 => ParseVector3(valueElement),
-                GFFFieldType.Vector4 => ParseVector4(valueElement),
-                _ => throw new ArgumentException($"Unsupported field type: {fieldType}")
-            };
+                case GFFFieldType.UInt8:
+                    return valueElement.GetByte();
+                case GFFFieldType.Int8:
+                    return valueElement.GetSByte();
+                case GFFFieldType.UInt16:
+                    return valueElement.GetUInt16();
+                case GFFFieldType.Int16:
+                    return valueElement.GetInt16();
+                case GFFFieldType.UInt32:
+                    return (uint)valueElement.GetInt64();
+                case GFFFieldType.Int32:
+                    return valueElement.GetInt32();
+                case GFFFieldType.UInt64:
+                    return valueElement.GetUInt64();
+                case GFFFieldType.Int64:
+                    return valueElement.GetInt64();
+                case GFFFieldType.Single:
+                    return valueElement.GetSingle();
+                case GFFFieldType.Double:
+                    return valueElement.GetDouble();
+                case GFFFieldType.String:
+                    return valueElement.GetString();
+                case GFFFieldType.ResRef:
+                    return new ResRef(valueElement.GetString());
+                case GFFFieldType.LocalizedString:
+                    return ParseLocalizedString(valueElement);
+                case GFFFieldType.Binary:
+                    return ParseBinary(valueElement);
+                case GFFFieldType.Struct:
+                    return ParseStruct(valueElement);
+                case GFFFieldType.List:
+                    return ParseList(valueElement);
+                case GFFFieldType.Vector3:
+                    return ParseVector3(valueElement);
+                case GFFFieldType.Vector4:
+                    return ParseVector4(valueElement);
+                default:
+                    throw new ArgumentException($"Unsupported field type: {fieldType}");
+            }
         }
 
         private LocalizedString ParseLocalizedString(JsonElement element)

@@ -85,13 +85,13 @@ namespace Andastra.Parsing.Formats.GFF
                 case GFFFieldType.Single:
                     element.Value = ((float)value).ToString(CultureInfo.InvariantCulture);
                     break;
-                case GFFFieldType.ExoString:
+                case GFFFieldType.String:
                     element.Value = (string)value;
                     break;
                 case GFFFieldType.ResRef:
                     element.Value = ((ResRef)value).ToString();
                     break;
-                case GFFFieldType.LocString:
+                case GFFFieldType.LocalizedString:
                     CreateLocStringElement(element, (LocalizedString)value);
                     break;
                 case GFFFieldType.List:
@@ -144,21 +144,33 @@ namespace Andastra.Parsing.Formats.GFF
 
         private string GetXmlType(GFFFieldType fieldType)
         {
-            return fieldType switch
+            switch (fieldType)
             {
-                GFFFieldType.UInt8 => "byte",
-                GFFFieldType.Int32 => "int32",
-                GFFFieldType.UInt32 => "uint32",
-                GFFFieldType.Int16 => "int16",
-                GFFFieldType.UInt16 => "uint16",
-                GFFFieldType.Single => "float",
-                GFFFieldType.ExoString => "exostring",
-                GFFFieldType.ResRef => "resref",
-                GFFFieldType.LocString => "locstring",
-                GFFFieldType.List => "list",
-                GFFFieldType.Struct => "struct",
-                _ => throw new ArgumentException($"Unsupported field type: {fieldType}")
-            };
+                case GFFFieldType.UInt8:
+                    return "byte";
+                case GFFFieldType.Int32:
+                    return "int32";
+                case GFFFieldType.UInt32:
+                    return "uint32";
+                case GFFFieldType.Int16:
+                    return "int16";
+                case GFFFieldType.UInt16:
+                    return "uint16";
+                case GFFFieldType.Single:
+                    return "float";
+                case GFFFieldType.String:
+                    return "exostring";
+                case GFFFieldType.ResRef:
+                    return "resref";
+                case GFFFieldType.LocalizedString:
+                    return "locstring";
+                case GFFFieldType.List:
+                    return "list";
+                case GFFFieldType.Struct:
+                    return "struct";
+                default:
+                    throw new ArgumentException($"Unsupported field type: {fieldType}");
+            }
         }
     }
 }

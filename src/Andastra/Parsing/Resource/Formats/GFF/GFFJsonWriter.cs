@@ -25,9 +25,11 @@ namespace Andastra.Parsing.Formats.GFF
         /// </summary>
         public string Write(GFF gff)
         {
-            using var stream = new MemoryStream();
-            Write(gff, stream);
-            return System.Text.Encoding.UTF8.GetString(stream.ToArray());
+            using (var stream = new MemoryStream())
+            {
+                Write(gff, stream);
+                return System.Text.Encoding.UTF8.GetString(stream.ToArray());
+            }
         }
 
         /// <summary>
@@ -35,8 +37,10 @@ namespace Andastra.Parsing.Formats.GFF
         /// </summary>
         public void Write(GFF gff, Stream stream)
         {
-            using var writer = new Utf8JsonWriter(stream, _options);
-            WriteGff(writer, gff);
+            using (var writer = new Utf8JsonWriter(stream, _options))
+            {
+                WriteGff(writer, gff);
+            }
         }
 
         /// <summary>
@@ -44,9 +48,11 @@ namespace Andastra.Parsing.Formats.GFF
         /// </summary>
         public byte[] WriteBytes(GFF gff)
         {
-            using var stream = new MemoryStream();
-            Write(gff, stream);
-            return stream.ToArray();
+            using (var stream = new MemoryStream())
+            {
+                Write(gff, stream);
+                return stream.ToArray();
+            }
         }
 
         private void WriteGff(Utf8JsonWriter writer, GFF gff)
@@ -116,7 +122,7 @@ namespace Andastra.Parsing.Formats.GFF
                     writer.WriteStringValue((string)value);
                     break;
                 case GFFFieldType.ResRef:
-                    writer.WriteStringValue(((ResRef)value).Value);
+                    writer.WriteStringValue(((ResRef)value).ToString());
                     break;
                 case GFFFieldType.LocalizedString:
                     WriteLocalizedString(writer, (LocalizedString)value);
