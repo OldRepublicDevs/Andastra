@@ -7,6 +7,7 @@ using Stride.Core.Mathematics;
 using Stride.Engine;
 using Stride.Shaders;
 using Stride.Shaders.Compiler;
+using Stride.Core.Serialization.Contents;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.PostProcessing;
 using Andastra.Runtime.Graphics.Common.Rendering;
@@ -142,9 +143,9 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     // if (services != null)
                     // {
                     //     var contentManager = services.GetService<ContentManager>();
-                    // ContentManager is in Stride.Engine namespace, not Stride.Engine.Content
+                    // ContentManager is in Stride.Core.Serialization.Contents namespace
                     // For now, skip ContentManager approach as it requires proper service setup
-                    ContentManager contentManager = null;
+                    Stride.Core.Serialization.Contents.ContentManager contentManager = null;
                     if (contentManager != null)
                     {
                         try
@@ -152,7 +153,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                             _fullscreenEffect = contentManager.Load<StrideGraphics.Effect>("SSREffect");
                             if (_fullscreenEffect != null)
                             {
-                                _ssrEffect = new EffectInstance(_fullscreenEffect);
+                                _ssrEffect = new StrideGraphics.EffectInstance(_fullscreenEffect);
                                 System.Console.WriteLine("[StrideSSR] Loaded SSREffect from ContentManager");
                             }
                         }
