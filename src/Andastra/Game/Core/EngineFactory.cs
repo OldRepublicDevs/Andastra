@@ -6,6 +6,8 @@ using Andastra.Runtime.Engines.Odyssey.Profiles;
 using Andastra.Runtime.Engines.Eclipse.Profiles;
 using Andastra.Runtime.Engines.Eclipse.DragonAgeOrigins;
 using Andastra.Runtime.Engines.Eclipse.DragonAge2;
+using Andastra.Runtime.Engines.Aurora;
+using Andastra.Runtime.Engines.Aurora.Profiles;
 using Andastra.Runtime.Content.Interfaces;
 
 namespace Andastra.Runtime.Game.Core
@@ -179,15 +181,26 @@ namespace Andastra.Runtime.Game.Core
         /// </summary>
         private static IEngine CreateAuroraEngine(BioWareGame bioWareGame)
         {
-            // Aurora Engine support is partially implemented but requires game-specific profiles
-            // For now, throw NotSupportedException with helpful message
-            // TODO: STUB - Implement Aurora engine profile creation
-            // Full implementation would require:
-            // 1. AuroraEngineProfile classes for Neverwinter Nights and Neverwinter Nights 2
-            // 2. Game-specific resource providers
-            // 3. Module loading implementations
-            // 4. Game session implementations
-            throw new NotSupportedException($"Aurora Engine games (e.g., {bioWareGame}) have base engine implementation but require game-specific profiles. Neverwinter Nights and Neverwinter Nights 2 support is planned but not yet complete.");
+            // Map BioWareGame to GameType for Aurora profile factory
+            GameType gameType;
+            if (bioWareGame.IsNWN1())
+            {
+                gameType = GameType.NWN;
+            }
+            else if (bioWareGame.IsNWN2())
+            {
+                gameType = GameType.NWN2;
+            }
+            else
+            {
+                throw new NotSupportedException($"Unsupported Aurora game variant: {bioWareGame}");
+            }
+
+            // Create profile using Aurora profile factory
+            IEngineProfile profile = AuroraProfileFactory.CreateProfile(gameType);
+
+            // Create and return Aurora engine
+            return new AuroraEngine(profile);
         }
     }
 }
