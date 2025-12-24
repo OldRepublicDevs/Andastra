@@ -9,6 +9,7 @@ using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics.DLG;
 using DLGType = Andastra.Parsing.Resource.Generics.DLG.DLG;
+using DLGHelper = Andastra.Parsing.Resource.Generics.DLG.DLGHelper;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
@@ -4335,14 +4336,90 @@ namespace HolocronToolset.Tests.Editors
             }
         }
 
-        // TODO: STUB - Implement test_dlg_editor_manipulate_emotion_roundtrip (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2565-2592)
+        // Matching PyKotor implementation: test_dlg_editor_manipulate_emotion_roundtrip (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2565-2592)
         // Original: def test_dlg_editor_manipulate_emotion_roundtrip(qtbot, installation: HTInstallation, test_files_dir: Path): Test emotion roundtrip
         [Fact]
         public void TestDlgEditorManipulateEmotionRoundtrip()
         {
-            // TODO: STUB - Implement emotion roundtrip test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2565-2592
-            throw new NotImplementedException("TestDlgEditorManipulateEmotionRoundtrip: Emotion roundtrip test not yet implemented");
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Try to find ORIHA.dlg
+            string dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            }
+
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Skip if test file not available
+                return;
+            }
+
+            // Matching Python: editor = DLGEditor(None, installation)
+            var installation = CreateTestInstallation();
+            if (installation == null)
+            {
+                // Skip if installation is not available
+                return;
+            }
+
+            var editor = new DLGEditor(null, installation);
+            editor.Show();
+
+            // Matching Python: original_data = dlg_file.read_bytes()
+            // Matching Python: editor.load(dlg_file, "ORIHA", ResourceType.DLG, original_data)
+            byte[] originalData = System.IO.File.ReadAllBytes(dlgFile);
+            editor.Load(dlgFile, "ORIHA", ResourceType.DLG, originalData);
+
+            // Matching Python: if editor.model.rowCount() > 0:
+            if (editor.Model.RowCount > 0)
+            {
+                // Matching Python: first_item = editor.model.item(0, 0)
+                // Matching Python: if isinstance(first_item, DLGStandardItem):
+                var firstItem = editor.Model.Item(0, 0);
+                if (firstItem != null && firstItem.Link != null && firstItem.Link.Node != null)
+                {
+                    // Matching Python: editor.ui.dialogTree.setCurrentIndex(first_item.index())
+                    // Select the first item in the model
+                    editor.Model.SelectedIndex = 0;
+
+                    // Matching Python: if editor.ui.emotionSelect.count() > 0:
+                    // Matching Python: for i in range(min(5, editor.ui.emotionSelect.count())):
+                    // Test emotion values 0-7 (emotion_id can be 0-7: None, Happy, Sad, Angry, Surprised, Fear, Disgust, Neutral)
+                    for (int i = 0; i < Math.Min(5, editor.EmotionSelect.Items.Count); i++)
+                    {
+                        // Matching Python: editor.ui.emotionSelect.setCurrentIndex(i)
+                        // Matching Python: editor.on_node_update()
+                        editor.EmotionSelect.SelectedIndex = i;
+                        editor.OnNodeUpdate();
+
+                        // Matching Python: data, _ = editor.build()
+                        // Matching Python: modified_dlg = read_dlg(data)
+                        // Matching Python: if modified_dlg.starters:
+                        // Matching Python: assert modified_dlg.starters[0].node.emotion_id == i
+                        var (savedData, _) = editor.Build();
+                        var modifiedDlg = DLGHelper.ReadDlg(savedData);
+
+                        if (modifiedDlg != null && modifiedDlg.Starters != null && modifiedDlg.Starters.Count > 0)
+                        {
+                            var firstStarter = modifiedDlg.Starters[0];
+                            if (firstStarter?.Node != null)
+                            {
+                                // Matching Python: assert modified_dlg.starters[0].node.emotion_id == i
+                                firstStarter.Node.EmotionId.Should().Be(i, $"Emotion ID should be {i} after setting emotion select to index {i}");
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         // Matching PyKotor implementation: test_dlg_editor_manipulate_expression_roundtrip (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2594-2621)
@@ -5449,14 +5526,136 @@ namespace HolocronToolset.Tests.Editors
             }
         }
 
-        // TODO: STUB - Implement test_dlg_editor_manipulate_all_file_fields_combination (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2989-3034)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2989-3034
         // Original: def test_dlg_editor_manipulate_all_file_fields_combination(qtbot, installation: HTInstallation, test_files_dir: Path): Test all file fields combination
         [Fact]
         public void TestDlgEditorManipulateAllFileFieldsCombination()
         {
-            // TODO: STUB - Implement all file fields combination test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2989-3034
-            throw new NotImplementedException("TestDlgEditorManipulateAllFileFieldsCombination: All file fields combination test not yet implemented");
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            }
+
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Skip if no DLG files available for testing (matching Python pytest.skip behavior)
+                return;
+            }
+
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new DLGEditor(null, installation);
+
+            byte[] originalData = System.IO.File.ReadAllBytes(dlgFile);
+            editor.Load(dlgFile, "ORIHA", ResourceType.DLG, originalData);
+
+            // Modify ALL file-level fields simultaneously
+            // Conversation type - set to index 1 if available
+            if (editor.ConversationSelect != null && editor.ConversationSelect.Items.Count > 0)
+            {
+                editor.ConversationSelect.SelectedIndex = 1;
+            }
+
+            // Computer type - set to index 1 if available
+            if (editor.ComputerSelect != null && editor.ComputerSelect.Items.Count > 0)
+            {
+                editor.ComputerSelect.SelectedIndex = 1;
+            }
+
+            // Checkboxes - set all to true
+            if (editor.SkippableCheckbox != null)
+            {
+                editor.SkippableCheckbox.IsChecked = true;
+            }
+            if (editor.AnimatedCutCheckbox != null)
+            {
+                editor.AnimatedCutCheckbox.IsChecked = true;
+            }
+            if (editor.OldHitCheckbox != null)
+            {
+                editor.OldHitCheckbox.IsChecked = true;
+            }
+            if (editor.UnequipHandsCheckbox != null)
+            {
+                editor.UnequipHandsCheckbox.IsChecked = true;
+            }
+            if (editor.UnequipAllCheckbox != null)
+            {
+                editor.UnequipAllCheckbox.IsChecked = true;
+            }
+
+            // Delay values
+            if (editor.EntryDelaySpin != null)
+            {
+                editor.EntryDelaySpin.Value = 123;
+            }
+            if (editor.ReplyDelaySpin != null)
+            {
+                editor.ReplyDelaySpin.Value = 456;
+            }
+
+            // Voiceover ID
+            if (editor.VoIdEdit != null)
+            {
+                editor.VoIdEdit.Text = "test_vo_id";
+            }
+
+            // Script fields - set text directly (editable combos)
+            if (editor.OnAbortCombo != null)
+            {
+                editor.OnAbortCombo.Text = "test_abort";
+            }
+            if (editor.OnEndEdit != null)
+            {
+                editor.OnEndEdit.Text = "test_on_end";
+            }
+            if (editor.AmbientTrackCombo != null)
+            {
+                editor.AmbientTrackCombo.Text = "test_ambient";
+            }
+            if (editor.CameraModelSelect != null)
+            {
+                editor.CameraModelSelect.Text = "test_camera";
+            }
+
+            // Save and verify all changes
+            var (data, _) = editor.Build();
+            var modifiedDlg = DLGHelper.ReadDlg(data);
+
+            // Verify all file-level properties were set correctly
+            modifiedDlg.Skippable.Should().BeTrue("Skippable checkbox should be set to true");
+            modifiedDlg.AnimatedCut.Should().Be(1, "Animated cut should be set to 1 (true)");
+            modifiedDlg.OldHitCheck.Should().BeTrue("Old hit check should be set to true");
+            modifiedDlg.UnequipHands.Should().BeTrue("Unequip hands should be set to true");
+            modifiedDlg.UnequipItems.Should().BeTrue("Unequip items should be set to true");
+            modifiedDlg.DelayEntry.Should().Be(123, "Entry delay should be set to 123");
+            modifiedDlg.DelayReply.Should().Be(456, "Reply delay should be set to 456");
+            modifiedDlg.VoId.Should().Be("test_vo_id", "Voiceover ID should be set to 'test_vo_id'");
+            modifiedDlg.OnAbort.ToString().Should().Be("test_abort", "On abort script should be set to 'test_abort'");
+            modifiedDlg.OnEnd.ToString().Should().Be("test_on_end", "On end script should be set to 'test_on_end'");
+            modifiedDlg.AmbientTrack.ToString().Should().Be("test_ambient", "Ambient track should be set to 'test_ambient'");
+            modifiedDlg.CameraModel.ToString().Should().Be("test_camera", "Camera model should be set to 'test_camera'");
         }
 
         // TODO: STUB - Implement test_dlg_editor_manipulate_all_node_fields_combination (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:3036-3096)
