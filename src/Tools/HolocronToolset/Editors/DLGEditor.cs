@@ -4171,8 +4171,7 @@ namespace HolocronToolset.Editors
             else
             {
                 // Matching PyKotor: self._logger.error(f"Failed to find original node for node {source_node!r}")
-                // TODO:  In a full implementation, we would log this error
-                // TODO: STUB - For now, we silently fail (matching the behavior when logging is not available)
+                new RobustLogger().Error($"Failed to find original node for node {sourceNode}");
             }
         }
 
