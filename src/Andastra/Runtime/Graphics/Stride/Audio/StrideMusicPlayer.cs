@@ -370,7 +370,7 @@ namespace Andastra.Runtime.Stride.Audio
                 try
                 {
                     IntPtr bufferPtr = silenceHandle.AddrOfPinnedObject();
-                    FillBuffer(bufferPtr, bufferSizeBytes, (Stride.Audio.AudioLayer.BufferType)AudioLayer.BufferType.EndOfStream);
+                    FillBuffer(bufferPtr, bufferSizeBytes, (Stride.Audio.AudioLayer.BufferType)(int)AudioLayer.BufferType.EndOfStream);
                 }
                 finally
                 {
@@ -484,7 +484,7 @@ namespace Andastra.Runtime.Stride.Audio
                     try
                     {
                         IntPtr bufferPtr = silenceHandle4.AddrOfPinnedObject();
-                        FillBuffer(bufferPtr, bufferSizeBytes, (Stride.Audio.AudioLayer.BufferType)AudioLayer.BufferType.EndOfStream);
+                        FillBuffer(bufferPtr, bufferSizeBytes, (Stride.Audio.AudioLayer.BufferType)(int)AudioLayer.BufferType.EndOfStream);
                     }
                     finally
                     {
@@ -599,7 +599,7 @@ namespace Andastra.Runtime.Stride.Audio
             try
             {
                 IntPtr bufferPtr = bufferHandle.AddrOfPinnedObject();
-                FillBuffer(bufferPtr, bytesToCopy, (Stride.Audio.AudioLayer.BufferType)bufferType);
+                FillBuffer(bufferPtr, bytesToCopy, (Stride.Audio.AudioLayer.BufferType)(int)bufferType);
             }
             finally
             {
