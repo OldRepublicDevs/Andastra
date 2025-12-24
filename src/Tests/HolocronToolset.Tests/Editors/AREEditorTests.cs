@@ -1814,9 +1814,143 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorManipulateWeatherCheckboxes()
         {
-            // TODO: STUB - Implement weather checkbox manipulation tests (rain, snow, lightning - TSL only)
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:598-652
-            throw new NotImplementedException("TestAreEditorManipulateWeatherCheckboxes: Weather checkbox manipulation tests not yet implemented (TSL-only features)");
+            // Get TSL installation path
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor2";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            if (!System.IO.File.Exists(areFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            }
+
+            if (!System.IO.File.Exists(areFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            // Matching Python: editor = AREEditor(None, tsl_installation)
+            var editor = new AREEditor(null, installation);
+
+            // Matching Python: original_data = are_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(areFile);
+
+            // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, original_data)
+            editor.Load(areFile, "tat001", ResourceType.ARE, originalData);
+
+            // Test rain checkbox (TSL only)
+            // Matching Python: editor.ui.rainCheck.setChecked(True)
+            if (editor.RainCheck != null)
+            {
+                editor.RainCheck.IsChecked = true;
+            }
+
+            // Matching Python: data, _ = editor.build()
+            var (data, _) = editor.Build();
+
+            // Matching Python: modified_are = read_are(data)
+            var modifiedAre = AREHelpers.ReadAre(data);
+
+            // Matching Python: assert modified_are.chance_rain == 100
+            modifiedAre.ChanceRain.Should().Be(100);
+
+            // Matching Python: editor.ui.rainCheck.setChecked(False)
+            if (editor.RainCheck != null)
+            {
+                editor.RainCheck.IsChecked = false;
+            }
+
+            // Matching Python: data, _ = editor.build()
+            var (data2, _) = editor.Build();
+
+            // Matching Python: modified_are = read_are(data)
+            var modifiedAre2 = AREHelpers.ReadAre(data2);
+
+            // Matching Python: assert modified_are.chance_rain == 0
+            modifiedAre2.ChanceRain.Should().Be(0);
+
+            // Test snow checkbox (TSL only)
+            // Matching Python: editor.ui.snowCheck.setChecked(True)
+            if (editor.SnowCheck != null)
+            {
+                editor.SnowCheck.IsChecked = true;
+            }
+
+            // Matching Python: data, _ = editor.build()
+            var (data3, _) = editor.Build();
+
+            // Matching Python: modified_are = read_are(data)
+            var modifiedAre3 = AREHelpers.ReadAre(data3);
+
+            // Matching Python: assert modified_are.chance_snow == 100
+            modifiedAre3.ChanceSnow.Should().Be(100);
+
+            // Matching Python: editor.ui.snowCheck.setChecked(False)
+            if (editor.SnowCheck != null)
+            {
+                editor.SnowCheck.IsChecked = false;
+            }
+
+            // Matching Python: data, _ = editor.build()
+            var (data4, _) = editor.Build();
+
+            // Matching Python: modified_are = read_are(data)
+            var modifiedAre4 = AREHelpers.ReadAre(data4);
+
+            // Matching Python: assert modified_are.chance_snow == 0
+            modifiedAre4.ChanceSnow.Should().Be(0);
+
+            // Test lightning checkbox (TSL only)
+            // Matching Python: editor.ui.lightningCheck.setChecked(True)
+            if (editor.LightningCheck != null)
+            {
+                editor.LightningCheck.IsChecked = true;
+            }
+
+            // Matching Python: data, _ = editor.build()
+            var (data5, _) = editor.Build();
+
+            // Matching Python: modified_are = read_are(data)
+            var modifiedAre5 = AREHelpers.ReadAre(data5);
+
+            // Matching Python: assert modified_are.chance_lightning == 100
+            modifiedAre5.ChanceLightning.Should().Be(100);
+
+            // Matching Python: editor.ui.lightningCheck.setChecked(False)
+            if (editor.LightningCheck != null)
+            {
+                editor.LightningCheck.IsChecked = false;
+            }
+
+            // Matching Python: data, _ = editor.build()
+            var (data6, _) = editor.Build();
+
+            // Matching Python: modified_are = read_are(data)
+            var modifiedAre6 = AREHelpers.ReadAre(data6);
+
+            // Matching Python: assert modified_are.chance_lightning == 0
+            modifiedAre6.ChanceLightning.Should().Be(0);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:654-675
@@ -3787,9 +3921,410 @@ namespace HolocronToolset.Tests.Editors
         [Fact]
         public void TestAreEditorMaximumValues()
         {
-            // TODO: STUB - Implement maximum values edge case test (all fields set to maximums)
+            // Test setting all numeric fields to their maximum values to ensure proper handling of edge cases
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1366-1397
-            throw new NotImplementedException("TestAreEditorMaximumValues: Maximum values edge case test not yet implemented");
+
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "TestFiles"
+            );
+
+            // Create a temporary directory for test files if it doesn't exist
+            if (!System.IO.Directory.Exists(testFilesDir))
+            {
+                System.IO.Directory.CreateDirectory(testFilesDir);
+            }
+
+            // Create editor instance
+            var editor = new AREEditor(null, installation);
+
+            // Create a new ARE file for testing
+            editor.New();
+            ARE originalAre = editor.Are;
+
+            // Set all numeric fields to their maximum values
+            // Alpha Test: Maximum = 255
+            if (editor.AlphaTestSpin != null)
+            {
+                editor.AlphaTestSpin.Value = 255;
+            }
+
+            // Stealth XP Max: Maximum = int.MaxValue
+            if (editor.StealthMaxSpin != null)
+            {
+                editor.StealthMaxSpin.Value = int.MaxValue;
+            }
+
+            // Stealth XP Loss: Maximum = int.MaxValue
+            if (editor.StealthLossSpin != null)
+            {
+                editor.StealthLossSpin.Value = int.MaxValue;
+            }
+
+            // Map Zoom: Maximum = int.MaxValue
+            if (editor.MapZoomSpin != null)
+            {
+                editor.MapZoomSpin.Value = int.MaxValue;
+            }
+
+            // Map Res X: Maximum = int.MaxValue
+            if (editor.MapResXSpin != null)
+            {
+                editor.MapResXSpin.Value = int.MaxValue;
+            }
+
+            // Map Image coordinates: Maximum = 1.0M
+            if (editor.MapImageX1Spin != null)
+            {
+                editor.MapImageX1Spin.Value = 1.0M;
+            }
+            if (editor.MapImageY1Spin != null)
+            {
+                editor.MapImageY1Spin.Value = 1.0M;
+            }
+            if (editor.MapImageX2Spin != null)
+            {
+                editor.MapImageX2Spin.Value = 1.0M;
+            }
+            if (editor.MapImageY2Spin != null)
+            {
+                editor.MapImageY2Spin.Value = 1.0M;
+            }
+
+            // Map World coordinates: Maximum = decimal.MaxValue
+            if (editor.MapWorldX1Spin != null)
+            {
+                editor.MapWorldX1Spin.Value = decimal.MaxValue;
+            }
+            if (editor.MapWorldY1Spin != null)
+            {
+                editor.MapWorldY1Spin.Value = decimal.MaxValue;
+            }
+            if (editor.MapWorldX2Spin != null)
+            {
+                editor.MapWorldX2Spin.Value = decimal.MaxValue;
+            }
+            if (editor.MapWorldY2Spin != null)
+            {
+                editor.MapWorldY2Spin.Value = decimal.MaxValue;
+            }
+
+            // Fog Near/Far: Maximum = decimal.MaxValue
+            if (editor.FogNearSpin != null)
+            {
+                editor.FogNearSpin.Value = decimal.MaxValue;
+            }
+            if (editor.FogFarSpin != null)
+            {
+                editor.FogFarSpin.Value = decimal.MaxValue;
+            }
+
+            // Shadow Opacity: Maximum = 255
+            if (editor.ShadowsSpin != null)
+            {
+                editor.ShadowsSpin.Value = 255;
+            }
+
+            // Grass Density/Size: Maximum = decimal.MaxValue
+            if (editor.GrassDensitySpin != null)
+            {
+                editor.GrassDensitySpin.Value = decimal.MaxValue;
+            }
+            if (editor.GrassSizeSpin != null)
+            {
+                editor.GrassSizeSpin.Value = decimal.MaxValue;
+            }
+
+            // Grass Probabilities: Maximum = 1.0M
+            if (editor.GrassProbLLSpin != null)
+            {
+                editor.GrassProbLLSpin.Value = 1.0M;
+            }
+            if (editor.GrassProbLRSpin != null)
+            {
+                editor.GrassProbLRSpin.Value = 1.0M;
+            }
+            if (editor.GrassProbULSpin != null)
+            {
+                editor.GrassProbULSpin.Value = 1.0M;
+            }
+            if (editor.GrassProbURSpin != null)
+            {
+                editor.GrassProbURSpin.Value = 1.0M;
+            }
+
+            // Dirt Formulas: Maximum = decimal.MaxValue
+            if (editor.DirtFormula1Spin != null)
+            {
+                editor.DirtFormula1Spin.Value = decimal.MaxValue;
+            }
+            if (editor.DirtFormula2Spin != null)
+            {
+                editor.DirtFormula2Spin.Value = decimal.MaxValue;
+            }
+            if (editor.DirtFormula3Spin != null)
+            {
+                editor.DirtFormula3Spin.Value = decimal.MaxValue;
+            }
+
+            // Dirt Functions: Maximum = int.MaxValue
+            if (editor.DirtFunction1Spin != null)
+            {
+                editor.DirtFunction1Spin.Value = int.MaxValue;
+            }
+            if (editor.DirtFunction2Spin != null)
+            {
+                editor.DirtFunction2Spin.Value = int.MaxValue;
+            }
+            if (editor.DirtFunction3Spin != null)
+            {
+                editor.DirtFunction3Spin.Value = int.MaxValue;
+            }
+
+            // Dirt Sizes: Maximum = decimal.MaxValue
+            if (editor.DirtSize1Spin != null)
+            {
+                editor.DirtSize1Spin.Value = decimal.MaxValue;
+            }
+            if (editor.DirtSize2Spin != null)
+            {
+                editor.DirtSize2Spin.Value = decimal.MaxValue;
+            }
+            if (editor.DirtSize3Spin != null)
+            {
+                editor.DirtSize3Spin.Value = decimal.MaxValue;
+            }
+
+            // Build the ARE object from UI controls to update the ARE object with maximum values
+            var (data, dataExt) = editor.Build();
+            ARE modifiedAre = editor.Are;
+
+            // Check that all values were set to maximum values in the ARE object
+            // Note: Some fields may not have direct ARE object counterparts, so we verify UI values
+
+            // Alpha Test should be set to maximum
+            modifiedAre.AlphaTest.Should().Be(255.0f);
+
+            // Stealth XP values should be set to maximum
+            modifiedAre.StealthXpMax.Should().Be(int.MaxValue);
+            modifiedAre.StealthXpLoss.Should().Be(int.MaxValue);
+
+            // Map values should be set to maximum
+            modifiedAre.MapZoom.Should().Be(int.MaxValue);
+            modifiedAre.MapResX.Should().Be(int.MaxValue);
+
+            // Map coordinates should be set to maximum
+            modifiedAre.MapPoint1.Should().Be(new Vector2(1.0f, 1.0f));
+            modifiedAre.MapPoint2.Should().Be(new Vector2(1.0f, 1.0f));
+            modifiedAre.WorldPoint1.Should().Be(new Vector2((float)decimal.MaxValue, (float)decimal.MaxValue));
+            modifiedAre.WorldPoint2.Should().Be(new Vector2((float)decimal.MaxValue, (float)decimal.MaxValue));
+
+            // Fog values should be set to maximum
+            modifiedAre.FogNear.Should().Be((float)decimal.MaxValue);
+            modifiedAre.FogFar.Should().Be((float)decimal.MaxValue);
+
+            // Shadow opacity should be maximum
+            modifiedAre.ShadowOpacity.Should().Be(255);
+
+            // Grass values should be set to maximum
+            modifiedAre.GrassDensity.Should().Be((float)decimal.MaxValue);
+            modifiedAre.GrassSize.Should().Be((float)decimal.MaxValue);
+
+            // Grass probabilities should be 1.0
+            modifiedAre.GrassProbLL.Should().Be(1.0f);
+            modifiedAre.GrassProbLR.Should().Be(1.0f);
+            modifiedAre.GrassProbUL.Should().Be(1.0f);
+            modifiedAre.GrassProbUR.Should().Be(1.0f);
+
+            // Dirt formulas should be set to maximum
+            modifiedAre.DirtyFormula1.Should().Be(int.MaxValue);
+            modifiedAre.DirtyFormula2.Should().Be(int.MaxValue);
+            modifiedAre.DirtyFormula3.Should().Be(int.MaxValue);
+
+            // Dirt functions should be set to maximum
+            modifiedAre.DirtyFunc1.Should().Be(int.MaxValue);
+            modifiedAre.DirtyFunc2.Should().Be(int.MaxValue);
+            modifiedAre.DirtyFunc3.Should().Be(int.MaxValue);
+
+            // Dirt sizes should be set to maximum
+            modifiedAre.DirtySize1.Should().Be(int.MaxValue);
+            modifiedAre.DirtySize2.Should().Be(int.MaxValue);
+            modifiedAre.DirtySize3.Should().Be(int.MaxValue);
+
+            // Verify UI controls still show maximum values
+            if (editor.AlphaTestSpin != null)
+            {
+                editor.AlphaTestSpin.Value.Should().Be(255);
+            }
+            if (editor.StealthMaxSpin != null)
+            {
+                editor.StealthMaxSpin.Value.Should().Be(int.MaxValue);
+            }
+            if (editor.StealthLossSpin != null)
+            {
+                editor.StealthLossSpin.Value.Should().Be(int.MaxValue);
+            }
+            if (editor.MapZoomSpin != null)
+            {
+                editor.MapZoomSpin.Value.Should().Be(int.MaxValue);
+            }
+            if (editor.MapResXSpin != null)
+            {
+                editor.MapResXSpin.Value.Should().Be(int.MaxValue);
+            }
+            if (editor.MapImageX1Spin != null)
+            {
+                editor.MapImageX1Spin.Value.Should().Be(1.0M);
+            }
+            if (editor.MapImageY1Spin != null)
+            {
+                editor.MapImageY1Spin.Value.Should().Be(1.0M);
+            }
+            if (editor.MapImageX2Spin != null)
+            {
+                editor.MapImageX2Spin.Value.Should().Be(1.0M);
+            }
+            if (editor.MapImageY2Spin != null)
+            {
+                editor.MapImageY2Spin.Value.Should().Be(1.0M);
+            }
+            if (editor.MapWorldX1Spin != null)
+            {
+                editor.MapWorldX1Spin.Value.Should().Be(decimal.MaxValue);
+            }
+            if (editor.MapWorldY1Spin != null)
+            {
+                editor.MapWorldY1Spin.Value.Should().Be(decimal.MaxValue);
+            }
+            if (editor.MapWorldX2Spin != null)
+            {
+                editor.MapWorldX2Spin.Value.Should().Be(decimal.MaxValue);
+            }
+            if (editor.MapWorldY2Spin != null)
+            {
+                editor.MapWorldY2Spin.Value.Should().Be(decimal.MaxValue);
+            }
+            if (editor.FogNearSpin != null)
+            {
+                editor.FogNearSpin.Value.Should().Be(decimal.MaxValue);
+            }
+            if (editor.FogFarSpin != null)
+            {
+                editor.FogFarSpin.Value.Should().Be(decimal.MaxValue);
+            }
+            if (editor.ShadowsSpin != null)
+            {
+                editor.ShadowsSpin.Value.Should().Be(255);
+            }
+            if (editor.GrassDensitySpin != null)
+            {
+                editor.GrassDensitySpin.Value.Should().Be(decimal.MaxValue);
+            }
+            if (editor.GrassSizeSpin != null)
+            {
+                editor.GrassSizeSpin.Value.Should().Be(decimal.MaxValue);
+            }
+            if (editor.GrassProbLLSpin != null)
+            {
+                editor.GrassProbLLSpin.Value.Should().Be(1.0M);
+            }
+            if (editor.GrassProbLRSpin != null)
+            {
+                editor.GrassProbLRSpin.Value.Should().Be(1.0M);
+            }
+            if (editor.GrassProbULSpin != null)
+            {
+                editor.GrassProbULSpin.Value.Should().Be(1.0M);
+            }
+            if (editor.GrassProbURSpin != null)
+            {
+                editor.GrassProbURSpin.Value.Should().Be(1.0M);
+            }
+            if (editor.DirtFormula1Spin != null)
+            {
+                editor.DirtFormula1Spin.Value.Should().Be(decimal.MaxValue);
+            }
+            if (editor.DirtFormula2Spin != null)
+            {
+                editor.DirtFormula2Spin.Value.Should().Be(decimal.MaxValue);
+            }
+            if (editor.DirtFormula3Spin != null)
+            {
+                editor.DirtFormula3Spin.Value.Should().Be(decimal.MaxValue);
+            }
+            if (editor.DirtSize1Spin != null)
+            {
+                editor.DirtSize1Spin.Value.Should().Be(decimal.MaxValue);
+            }
+            if (editor.DirtSize2Spin != null)
+            {
+                editor.DirtSize2Spin.Value.Should().Be(decimal.MaxValue);
+            }
+            if (editor.DirtSize3Spin != null)
+            {
+                editor.DirtSize3Spin.Value.Should().Be(decimal.MaxValue);
+            }
+
+            // Test save/load roundtrip to ensure maximum values persist
+            string testFileName = System.IO.Path.Combine(testFilesDir, "test_maximum_values.are");
+            byte[] data = editor.Save();
+
+            // Reload the file
+            var reloadedEditor = new AREEditor(null, installation);
+            reloadedEditor.Load(testFileName, "test_maximum_values", ResourceType.ARE, data);
+            ARE reloadedAre = reloadedEditor.Are;
+
+            // Verify that reloaded ARE object still has maximum values
+            reloadedAre.AlphaTest.Should().Be(255.0f);
+            reloadedAre.StealthXpMax.Should().Be(int.MaxValue);
+            reloadedAre.StealthXpLoss.Should().Be(int.MaxValue);
+            reloadedAre.MapZoom.Should().Be(int.MaxValue);
+            reloadedAre.MapResX.Should().Be(int.MaxValue);
+            reloadedAre.MapPoint1.Should().Be(new Vector2(1.0f, 1.0f));
+            reloadedAre.MapPoint2.Should().Be(new Vector2(1.0f, 1.0f));
+            reloadedAre.WorldPoint1.Should().Be(new Vector2((float)decimal.MaxValue, (float)decimal.MaxValue));
+            reloadedAre.WorldPoint2.Should().Be(new Vector2((float)decimal.MaxValue, (float)decimal.MaxValue));
+            reloadedAre.FogNear.Should().Be((float)decimal.MaxValue);
+            reloadedAre.FogFar.Should().Be((float)decimal.MaxValue);
+            reloadedAre.ShadowOpacity.Should().Be(255);
+            reloadedAre.GrassDensity.Should().Be((float)decimal.MaxValue);
+            reloadedAre.GrassSize.Should().Be((float)decimal.MaxValue);
+            reloadedAre.GrassProbLL.Should().Be(1.0f);
+            reloadedAre.GrassProbLR.Should().Be(1.0f);
+            reloadedAre.GrassProbUL.Should().Be(1.0f);
+            reloadedAre.GrassProbUR.Should().Be(1.0f);
+            reloadedAre.DirtyFormula1.Should().Be(int.MaxValue);
+            reloadedAre.DirtyFormula2.Should().Be(int.MaxValue);
+            reloadedAre.DirtyFormula3.Should().Be(int.MaxValue);
+            reloadedAre.DirtyFunc1.Should().Be(int.MaxValue);
+            reloadedAre.DirtyFunc2.Should().Be(int.MaxValue);
+            reloadedAre.DirtyFunc3.Should().Be(int.MaxValue);
+            reloadedAre.DirtySize1.Should().Be(int.MaxValue);
+            reloadedAre.DirtySize2.Should().Be(int.MaxValue);
+            reloadedAre.DirtySize3.Should().Be(int.MaxValue);
+
+            // Clean up test file
+            if (System.IO.File.Exists(testFileName))
+            {
+                System.IO.File.Delete(testFileName);
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1399-1432
