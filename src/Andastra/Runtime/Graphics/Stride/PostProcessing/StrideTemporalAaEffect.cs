@@ -754,15 +754,10 @@ shader TemporalAAEffect : ShaderBase
             // If TAA effect is initialized, use it for proper temporal accumulation
             if (_effectInitialized && _taaEffect != null)
             {
-                // Get GraphicsContext from GraphicsDevice (required for SpriteBatch.Begin with EffectInstance)
-                var graphicsContext = _graphicsDevice.GraphicsContext();
-                if (graphicsContext == null)
-                {
-                    // Fallback to CommandList-based Begin if GraphicsContext is not available
-                    // TODO: STUB - SpriteBatch.Begin with EffectInstance requires GraphicsContext, not CommandList
-                    // This is a simplified approach that may not work with all Stride versions
-                    return;
-                }
+                // TODO: STUB - GraphicsContext is required for SpriteBatch.Begin with EffectInstance
+                // GraphicsDevice doesn't provide GraphicsContext directly - would need to get it from Game
+                // For now, use CommandList as fallback
+                StrideGraphics.CommandList graphicsContext = commandList;
                 // Begin sprite batch rendering with TAA effect
                 _spriteBatch.Begin(graphicsContext, StrideGraphics.SpriteSortMode.Immediate, StrideGraphics.BlendStates.Opaque,
                     _linearSampler, StrideGraphics.DepthStencilStates.None, StrideGraphics.RasterizerStates.CullNone, _taaEffect);
@@ -877,18 +872,14 @@ shader TemporalAAEffect : ShaderBase
             }
             else
             {
-            {
                 // Fallback: Simple copy if TAA effect is not available
                 // This fallback is used when shader compilation fails or effect is not initialized
                 // It provides basic functionality by copying current frame without temporal accumulation
                 // For production use, ensure TAA shader is properly compiled and initialized
-                // Get GraphicsContext for SpriteBatch.Begin
-                var graphicsContext = _graphicsDevice.GraphicsContext();
-                if (graphicsContext == null)
-                {
-                    // Fallback if GraphicsContext is not available
-                    return;
-                }
+                // TODO: STUB - GraphicsContext is required for SpriteBatch.Begin with many parameters
+                // GraphicsDevice doesn't provide GraphicsContext directly - would need to get it from Game
+                // For now, use CommandList as fallback
+                StrideGraphics.CommandList graphicsContext = commandList;
                 _spriteBatch.Begin(graphicsContext, StrideGraphics.SpriteSortMode.Immediate, StrideGraphics.BlendStates.Opaque,
                     _linearSampler, StrideGraphics.DepthStencilStates.None, StrideGraphics.RasterizerStates.CullNone);
                 _spriteBatch.Draw(currentFrame, new RectangleF(0, 0, width, height), Color.White);
