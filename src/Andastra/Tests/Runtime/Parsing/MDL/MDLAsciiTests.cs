@@ -150,7 +150,7 @@ namespace Andastra.Tests.Runtime.Parsing.MDL
             anim.Events = new List<MDLEvent> { evt };
 
             // Add a test node to animation
-            var animNode = CreateTestNode("anim_node", MDLNodeType.Dummy);
+            var animNode = CreateTestNode("anim_node", MDLNodeType.DUMMY);
             animNode.Controllers.Add(CreateTestController(MDLControllerType.Position));
             anim.Root = animNode;
 
@@ -303,7 +303,7 @@ namespace Andastra.Tests.Runtime.Parsing.MDL
         public void WriteDummyNode()
         {
             var mdl = MDLAsciiTestHelpers.CreateTestMDL("dummy_test");
-            var node = MDLAsciiTestHelpers.CreateTestNode("dummy_node", MDLNodeType.Dummy);
+            var node = MDLAsciiTestHelpers.CreateTestNode("dummy_node", MDLNodeType.DUMMY);
             mdl.Root.Children.Add(node);
 
             using (var stream = new MemoryStream())
@@ -358,7 +358,7 @@ donemodel test
                 allNodes.Count.Should().Be(2); // root + dummy
                 var dummy = mdl.Get("test_node");
                 dummy.Should().NotBeNull();
-                dummy.NodeType.Should().Be(MDLNodeType.Dummy);
+                dummy.NodeType.Should().Be(MDLNodeType.DUMMY);
             }
         }
 
@@ -366,7 +366,7 @@ donemodel test
         public void WriteTrimeshNode()
         {
             var mdl = MDLAsciiTestHelpers.CreateTestMDL("trimesh_test");
-            var node = MDLAsciiTestHelpers.CreateTestNode("mesh_node", MDLNodeType.Trimesh);
+            var node = MDLAsciiTestHelpers.CreateTestNode("mesh_node", MDLNodeType.TRIMESH);
             node.Mesh = MDLAsciiTestHelpers.CreateTestMesh();
             mdl.Root.Children.Add(node);
 
@@ -434,7 +434,7 @@ donemodel test
 
                 var meshNode = mdl.Get("mesh_node");
                 meshNode.Should().NotBeNull();
-                meshNode.NodeType.Should().Be(MDLNodeType.Trimesh);
+                meshNode.NodeType.Should().Be(MDLNodeType.TRIMESH);
                 meshNode.Mesh.Should().NotBeNull();
                 meshNode.Mesh.VertexPositions.Count.Should().Be(3);
                 meshNode.Mesh.Faces.Count.Should().Be(1);
@@ -445,7 +445,7 @@ donemodel test
         public void WriteLightNode()
         {
             var mdl = MDLAsciiTestHelpers.CreateTestMDL("light_test");
-            var node = MDLAsciiTestHelpers.CreateTestNode("light_node", MDLNodeType.Light);
+            var node = MDLAsciiTestHelpers.CreateTestNode("light_node", MDLNodeType.LIGHT);
             node.Light = new MDLLight();
             node.Light.Color = new ParsingColor(1.0f, 1.0f, 1.0f);
             node.Light.FlareRadius = 10.0f;
@@ -503,7 +503,7 @@ donemodel test
 
                 var lightNode = mdl.Get("light_node");
                 lightNode.Should().NotBeNull();
-                lightNode.NodeType.Should().Be(MDLNodeType.Light);
+                lightNode.NodeType.Should().Be(MDLNodeType.LIGHT);
                 lightNode.Light.Should().NotBeNull();
                 lightNode.Light.FlareRadius.Should().BeApproximately(5.0f, 0.001f);
             }
@@ -513,7 +513,7 @@ donemodel test
         public void WriteEmitterNode()
         {
             var mdl = MDLAsciiTestHelpers.CreateTestMDL("emitter_test");
-            var node = MDLAsciiTestHelpers.CreateTestNode("emitter_node", MDLNodeType.Emitter);
+            var node = MDLAsciiTestHelpers.CreateTestNode("emitter_node", MDLNodeType.EMITTER);
             node.Emitter = new MDLEmitter();
             node.Emitter.UpdateType = MDLUpdateType.Fountain;
             node.Emitter.RenderType = MDLRenderType.Normal;
@@ -573,7 +573,7 @@ donemodel test
 
                 var emitterNode = mdl.Get("emitter_node");
                 emitterNode.Should().NotBeNull();
-                emitterNode.NodeType.Should().Be(MDLNodeType.Emitter);
+                emitterNode.NodeType.Should().Be(MDLNodeType.EMITTER);
                 emitterNode.Emitter.Should().NotBeNull();
             }
         }
@@ -582,7 +582,7 @@ donemodel test
         public void WriteReferenceNode()
         {
             var mdl = MDLAsciiTestHelpers.CreateTestMDL("reference_test");
-            var node = MDLAsciiTestHelpers.CreateTestNode("ref_node", MDLNodeType.Reference);
+            var node = MDLAsciiTestHelpers.CreateTestNode("ref_node", MDLNodeType.REFERENCE);
             node.Reference = new MDLReference();
             node.Reference.Model = "test_ref.mdl";
             mdl.Root.Children.Add(node);
@@ -638,7 +638,7 @@ donemodel test
 
                 var refNode = mdl.Get("ref_node");
                 refNode.Should().NotBeNull();
-                refNode.NodeType.Should().Be(MDLNodeType.Reference);
+                refNode.NodeType.Should().Be(MDLNodeType.REFERENCE);
                 refNode.Reference.Should().NotBeNull();
                 refNode.Reference.Model.Should().Be("test_ref.mdl");
             }
@@ -648,7 +648,7 @@ donemodel test
         public void WriteSaberNode()
         {
             var mdl = MDLAsciiTestHelpers.CreateTestMDL("saber_test");
-            var node = MDLAsciiTestHelpers.CreateTestNode("saber_node", MDLNodeType.Saber);
+            var node = MDLAsciiTestHelpers.CreateTestNode("saber_node", MDLNodeType.SABER);
             node.Saber = new MDLSaber();
             node.Saber.SaberLength = 1.0f;
             node.Saber.SaberWidth = 0.1f;
@@ -706,7 +706,7 @@ donemodel test
 
                 var saberNode = mdl.Get("saber_node");
                 saberNode.Should().NotBeNull();
-                saberNode.NodeType.Should().Be(MDLNodeType.Saber);
+                saberNode.NodeType.Should().Be(MDLNodeType.SABER);
                 saberNode.Saber.Should().NotBeNull();
                 saberNode.Saber.SaberLength.Should().BeApproximately(1.0f, 0.001f);
             }
@@ -716,7 +716,7 @@ donemodel test
         public void WriteAabbNode()
         {
             var mdl = MDLAsciiTestHelpers.CreateTestMDL("aabb_test");
-            var node = MDLAsciiTestHelpers.CreateTestNode("aabb_node", MDLNodeType.Aabb);
+            var node = MDLAsciiTestHelpers.CreateTestNode("aabb_node", MDLNodeType.AABB);
             node.Aabb = new MDLWalkmesh();
             var aabbNode1 = new MDLNode();
             aabbNode1.Position = new Vector3(0.0f, 0.0f, 0.0f);
@@ -780,7 +780,7 @@ donemodel test
 
                 var aabbNode = mdl.Get("aabb_node");
                 aabbNode.Should().NotBeNull();
-                aabbNode.NodeType.Should().Be(MDLNodeType.Aabb);
+                aabbNode.NodeType.Should().Be(MDLNodeType.AABB);
                 aabbNode.Aabb.Should().NotBeNull();
                 aabbNode.Aabb.Aabbs.Count.Should().Be(2);
             }
@@ -790,7 +790,7 @@ donemodel test
         public void WriteSkinNode()
         {
             var mdl = MDLAsciiTestHelpers.CreateTestMDL("skin_test");
-            var node = MDLAsciiTestHelpers.CreateTestNode("skin_node", MDLNodeType.Trimesh);
+            var node = MDLAsciiTestHelpers.CreateTestNode("skin_node", MDLNodeType.TRIMESH);
             var mesh = MDLAsciiTestHelpers.CreateTestMesh();
             var skin = new MDLSkin();
             skin.BoneIndices = new List<int> { 0, 1 };
@@ -998,7 +998,7 @@ donemodel test
             }
 
             // Read back
-            MDL mdl2;
+            MDLModel mdl2;
             using (var reader = new MDLAsciiReader(asciiBytes1))
             {
                 mdl2 = reader.Load();
@@ -1028,18 +1028,18 @@ donemodel test
             var mdl1 = MDLAsciiTestHelpers.CreateTestMDL("all_nodes_test");
 
             // Add all node types
-            var dummy = MDLAsciiTestHelpers.CreateTestNode("dummy", MDLNodeType.Dummy);
-            var trimesh = MDLAsciiTestHelpers.CreateTestNode("trimesh", MDLNodeType.Trimesh);
+            var dummy = MDLAsciiTestHelpers.CreateTestNode("dummy", MDLNodeType.DUMMY);
+            var trimesh = MDLAsciiTestHelpers.CreateTestNode("trimesh", MDLNodeType.TRIMESH);
             trimesh.Mesh = MDLAsciiTestHelpers.CreateTestMesh();
-            var light = MDLAsciiTestHelpers.CreateTestNode("light", MDLNodeType.Light);
+            var light = MDLAsciiTestHelpers.CreateTestNode("light", MDLNodeType.LIGHT);
             light.Light = new MDLLight();
-            var emitter = MDLAsciiTestHelpers.CreateTestNode("emitter", MDLNodeType.Emitter);
+            var emitter = MDLAsciiTestHelpers.CreateTestNode("emitter", MDLNodeType.EMITTER);
             emitter.Emitter = new MDLEmitter();
-            var reference = MDLAsciiTestHelpers.CreateTestNode("reference", MDLNodeType.Reference);
+            var reference = MDLAsciiTestHelpers.CreateTestNode("reference", MDLNodeType.REFERENCE);
             reference.Reference = new MDLReference();
-            var saber = MDLAsciiTestHelpers.CreateTestNode("saber", MDLNodeType.Saber);
+            var saber = MDLAsciiTestHelpers.CreateTestNode("saber", MDLNodeType.SABER);
             saber.Saber = new MDLSaber();
-            var aabb = MDLAsciiTestHelpers.CreateTestNode("aabb", MDLNodeType.Aabb);
+            var aabb = MDLAsciiTestHelpers.CreateTestNode("aabb", MDLNodeType.AABB);
             aabb.Aabb = new MDLWalkmesh();
 
             mdl1.Root.Children.AddRange(new[] { dummy, trimesh, light, emitter, reference, saber, aabb });
@@ -1053,7 +1053,7 @@ donemodel test
                 asciiBytes = stream.ToArray();
             }
 
-            MDL mdl2;
+            MDLModel mdl2;
             using (var reader = new MDLAsciiReader(asciiBytes))
             {
                 mdl2 = reader.Load();
@@ -1099,7 +1099,7 @@ donemodel test
                 asciiBytes = stream.ToArray();
             }
 
-            MDL mdl2;
+            MDLModel mdl2;
             using (var reader = new MDLAsciiReader(asciiBytes))
             {
                 mdl2 = reader.Load();
@@ -1132,7 +1132,7 @@ donemodel test
                 asciiBytes = stream.ToArray();
             }
 
-            MDL mdl2;
+            MDLModel mdl2;
             using (var reader = new MDLAsciiReader(asciiBytes))
             {
                 mdl2 = reader.Load();
@@ -1245,13 +1245,13 @@ donemodel test
             var mdl1 = MDLAsciiTestHelpers.CreateTestMDL("comprehensive_test");
 
             // Add multiple node types with controllers
-            var dummy = MDLAsciiTestHelpers.CreateTestNode("dummy", MDLNodeType.Dummy);
+            var dummy = MDLAsciiTestHelpers.CreateTestNode("dummy", MDLNodeType.DUMMY);
             dummy.Controllers.Add(MDLAsciiTestHelpers.CreateTestController(MDLControllerType.Position));
 
-            var trimesh = MDLAsciiTestHelpers.CreateTestNode("trimesh", MDLNodeType.Trimesh);
+            var trimesh = MDLAsciiTestHelpers.CreateTestNode("trimesh", MDLNodeType.TRIMESH);
             trimesh.Mesh = MDLAsciiTestHelpers.CreateTestMesh();
 
-            var light = MDLAsciiTestHelpers.CreateTestNode("light", MDLNodeType.Light);
+            var light = MDLAsciiTestHelpers.CreateTestNode("light", MDLNodeType.LIGHT);
             light.Light = new MDLLight();
 
             mdl1.Root.Children.AddRange(new[] { dummy, trimesh, light });
@@ -1270,7 +1270,7 @@ donemodel test
                 asciiBytes1 = stream.ToArray();
             }
 
-            MDL mdl2;
+            MDLModel mdl2;
             using (var reader = new MDLAsciiReader(asciiBytes1))
             {
                 mdl2 = reader.Load();
