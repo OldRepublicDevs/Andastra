@@ -145,6 +145,11 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         uint CullingMask { get; set; }
 
         /// <summary>
+        /// Shadow light space matrix (view * projection matrix for shadow mapping).
+        /// </summary>
+        Matrix4x4 ShadowLightSpaceMatrix { get; set; }
+
+        /// <summary>
         /// Updates the light's transform.
         /// </summary>
         void UpdateTransform(Matrix4x4 worldMatrix);

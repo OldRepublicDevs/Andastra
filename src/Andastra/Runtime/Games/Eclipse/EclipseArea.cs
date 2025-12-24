@@ -7753,11 +7753,24 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Render debris pieces
             // Based on daorigins.exe/DragonAge2.exe: Debris pieces are rendered as separate geometry
-            List<DebrisPiece> debrisPieces = _geometryModificationTracker.GetDebrisPieces();
-            if (debrisPieces != null && debrisPieces.Count > 0)
+            List<DestructibleGeometryModificationTracker.DebrisPiece> internalDebrisPieces = _geometryModificationTracker.GetDebrisPieces();
+            if (internalDebrisPieces != null && internalDebrisPieces.Count > 0)
             {
-                foreach (DebrisPiece debris in debrisPieces)
+                foreach (DestructibleGeometryModificationTracker.DebrisPiece internalDebris in internalDebrisPieces)
                 {
+                    // Convert internal DebrisPiece to public DebrisPiece
+                    DebrisPiece debris = new DebrisPiece
+                    {
+                        MeshId = internalDebris.MeshId,
+                        FaceIndices = internalDebris.FaceIndices != null ? new List<int>(internalDebris.FaceIndices) : new List<int>(),
+                        Position = internalDebris.Position,
+                        Velocity = internalDebris.Velocity,
+                        Rotation = internalDebris.Rotation,
+                        AngularVelocity = internalDebris.AngularVelocity,
+                        LifeTime = internalDebris.LifeTime,
+                        RemainingLifeTime = internalDebris.RemainingLifeTime
+                    };
+
                     if (debris == null || debris.RemainingLifeTime <= 0.0f)
                     {
                         continue; // Debris has expired
@@ -8519,7 +8532,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     // Cache original geometry data for collision shape updates
                     // Based on daorigins.exe/DragonAge2.exe: Original vertex/index data is cached for physics collision shape generation
                     // When geometry is modified (destroyed/deformed), collision shapes are rebuilt from this cached data
-                    CacheMeshGeometryFromMDL(modelResRef, mdl);
+                    CacheMeshGeometryFromMDL(modelResRef, mdl, this);
 
                     return meshData;
                 }
@@ -9484,7 +9497,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
                 // Convert TPC format to RGBA data for MonoGame
                 // Based on daorigins.exe: TPC formats converted to RGBA for DirectX 9
-                byte[] rgbaData = ConvertTPCToRGBA(tpc, mipmap.Width, mipmap.Height);
+                byte[] rgbaData = ConvertTPCToRGBA(tpc, mipmap);
                 if (rgbaData == null)
                 {
                     System.Console.WriteLine($"[EclipseArea] LoadTextureFromTPCData: Failed to convert TPC texture '{textureName}' to RGBA");
@@ -9551,6 +9564,390 @@ namespace Andastra.Runtime.Games.Eclipse
                 System.Console.WriteLine($"[EclipseArea] LoadTextureFromDDSData: Exception loading DDS texture '{textureName}': {ex.Message}");
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Converts TPC texture to RGBA byte array.
+        /// </summary>
+        /// <param name="tpc">TPC texture object.</param>
+        /// <param name="mipmap">TPC mipmap to convert.</param>
+        /// <returns>RGBA byte array or null on failure.</returns>
+        /// <remarks>
+        /// Based on daorigins.exe: TPC formats converted to RGBA for DirectX 9 compatibility.
+        /// </remarks>
+        private byte[] ConvertTPCToRGBA(TPC tpc, TPCMipmap mipmap)
+        {
+            if (tpc == null || mipmap == null || mipmap.Data == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                // Use existing converter to convert mipmap to RGBA
+                return TpcToMonoGameTextureConverter.ConvertMipmapToRgba(mipmap);
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"[EclipseArea] ConvertTPCToRGBA: Exception converting TPC to RGBA: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Parses DDS header to extract width, height, and alpha channel information.
+        /// </summary>
+        /// <param name="ddsData">DDS file data as byte array.</param>
+        /// <param name="width">Output width.</param>
+        /// <param name="height">Output height.</param>
+        /// <param name="hasAlpha">Output whether texture has alpha channel.</param>
+        /// <returns>True if header was parsed successfully, false otherwise.</returns>
+        /// <remarks>
+        /// Based on daorigins.exe: DDS header parsing for texture information.
+        /// </remarks>
+        private bool TryParseDDSHeader(byte[] ddsData, out int width, out int height, out bool hasAlpha)
+        {
+            width = 0;
+            height = 0;
+            hasAlpha = false;
+
+            if (ddsData == null || ddsData.Length < 128)
+            {
+                return false;
+            }
+
+            try
+            {
+                // Check DDS magic number (first 4 bytes should be "DDS ")
+                uint magic = BitConverter.ToUInt32(ddsData, 0);
+                if (magic != 0x20534444) // "DDS " in little-endian
+                {
+                    return false;
+                }
+
+                // Read header size (should be 124)
+                uint headerSize = BitConverter.ToUInt32(ddsData, 4);
+                if (headerSize != 124)
+                {
+                    return false;
+                }
+
+                // Read width and height (at offsets 16 and 12)
+                height = (int)BitConverter.ToUInt32(ddsData, 12);
+                width = (int)BitConverter.ToUInt32(ddsData, 16);
+
+                // Read pixel format flags (at offset 80)
+                uint pixelFlags = BitConverter.ToUInt32(ddsData, 80);
+                hasAlpha = (pixelFlags & 0x00000001) != 0; // DDPF_ALPHAPIXELS flag
+
+                return width > 0 && height > 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Extracts pixel data from DDS format to RGBA byte array.
+        /// </summary>
+        /// <param name="ddsData">DDS file data as byte array.</param>
+        /// <param name="width">Texture width.</param>
+        /// <param name="height">Texture height.</param>
+        /// <param name="hasAlpha">Whether texture has alpha channel.</param>
+        /// <returns>RGBA byte array or null on failure.</returns>
+        /// <remarks>
+        /// Based on daorigins.exe: DDS pixel data extraction for DirectX 9 compatibility.
+        /// </remarks>
+        private byte[] ExtractDDSDataToRGBA(byte[] ddsData, int width, int height, bool hasAlpha)
+        {
+            if (ddsData == null || width <= 0 || height <= 0)
+            {
+                return null;
+            }
+
+            try
+            {
+                // DDS data starts after 128-byte header (4 bytes magic + 124 bytes header)
+                int dataOffset = 128;
+                if (dataOffset >= ddsData.Length)
+                {
+                    return null;
+                }
+
+                // Read pixel format to determine compression
+                uint pixelFlags = BitConverter.ToUInt32(ddsData, 80);
+                uint fourCC = BitConverter.ToUInt32(ddsData, 84);
+
+                // Check for compressed formats (DXT1, DXT3, DXT5)
+                if ((pixelFlags & 0x00000004) != 0) // DDPF_FOURCC flag
+                {
+                    // DXT compressed format - use TPC reader to decompress
+                    using (var reader = new TPCDDSReader(ddsData))
+                    {
+                        var tpc = reader.Read();
+                        if (tpc != null && tpc.Layers.Count > 0 && tpc.Layers[0].Mipmaps.Count > 0)
+                        {
+                            var mipmap = tpc.Layers[0].Mipmaps[0];
+                            return TpcToMonoGameTextureConverter.ConvertMipmapToRgba(mipmap);
+                        }
+                    }
+                }
+                else if ((pixelFlags & 0x00000040) != 0) // DDPF_RGB flag
+                {
+                    // Uncompressed RGB/RGBA format
+                    int bitsPerPixel = (int)BitConverter.ToUInt32(ddsData, 88);
+                    int bytesPerPixel = bitsPerPixel / 8;
+                    int pixelDataSize = width * height * bytesPerPixel;
+
+                    if (dataOffset + pixelDataSize > ddsData.Length)
+                    {
+                        return null;
+                    }
+
+                    byte[] rgbaData = new byte[width * height * 4];
+                    int srcOffset = dataOffset;
+                    int dstOffset = 0;
+
+                    for (int y = 0; y < height; y++)
+                    {
+                        for (int x = 0; x < width; x++)
+                        {
+                            if (bytesPerPixel == 4)
+                            {
+                                // BGRA format - convert to RGBA
+                                rgbaData[dstOffset] = ddsData[srcOffset + 2];     // R
+                                rgbaData[dstOffset + 1] = ddsData[srcOffset + 1]; // G
+                                rgbaData[dstOffset + 2] = ddsData[srcOffset];     // B
+                                rgbaData[dstOffset + 3] = ddsData[srcOffset + 3]; // A
+                            }
+                            else if (bytesPerPixel == 3)
+                            {
+                                // BGR format - convert to RGBA
+                                rgbaData[dstOffset] = ddsData[srcOffset + 2];     // R
+                                rgbaData[dstOffset + 1] = ddsData[srcOffset + 1]; // G
+                                rgbaData[dstOffset + 2] = ddsData[srcOffset];     // B
+                                rgbaData[dstOffset + 3] = 255;                    // A
+                            }
+                            else
+                            {
+                                // Unsupported format
+                                return null;
+                            }
+
+                            srcOffset += bytesPerPixel;
+                            dstOffset += 4;
+                        }
+                    }
+
+                    return rgbaData;
+                }
+
+                return null;
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"[EclipseArea] ExtractDDSDataToRGBA: Exception extracting DDS data: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Extracts vertex positions from mesh data by reading directly from VertexBuffer.
+        /// </summary>
+        /// <param name="meshData">Mesh data containing VertexBuffer to read from.</param>
+        /// <param name="meshId">Mesh identifier (used for fallback to cached data).</param>
+        /// <returns>List of vertex positions extracted from VertexBuffer, or from cache if buffer read fails.</returns>
+        /// <remarks>
+        /// Based on daorigins.exe: 0x008f12a0 - Vertex data is read directly from GPU vertex buffer for collision shape updates.
+        /// DragonAge2.exe: 0x009a45b0 - Enhanced vertex buffer reading with support for multiple vertex formats.
+        /// </remarks>
+        private List<Vector3> ExtractVertexPositions(IRoomMeshData meshData, string meshId)
+        {
+            if (meshData == null || meshData.VertexBuffer == null)
+            {
+                // Fallback to cached data if buffer is unavailable
+                return ExtractVertexPositionsFromCache(meshId, this);
+            }
+
+            try
+            {
+                IVertexBuffer vertexBuffer = meshData.VertexBuffer;
+                int vertexCount = vertexBuffer.VertexCount;
+                int vertexStride = vertexBuffer.VertexStride;
+
+                if (vertexCount == 0)
+                {
+                    return ExtractVertexPositionsFromCache(meshId, this);
+                }
+
+                List<Vector3> positions = new List<Vector3>(vertexCount);
+
+                // Read vertex data based on vertex stride to determine format
+                if (vertexStride == 36)
+                {
+                    // RoomVertex format: Position, Normal, TexCoord, Color
+                    RoomMeshRenderer.RoomVertex[] vertices = new RoomMeshRenderer.RoomVertex[vertexCount];
+                    vertexBuffer.GetData(vertices);
+
+                    for (int i = 0; i < vertexCount; i++)
+                    {
+                        positions.Add(new Vector3(vertices[i].Position.X, vertices[i].Position.Y, vertices[i].Position.Z));
+                    }
+                }
+                else if (vertexStride == 16)
+                {
+                    // XnaVertexPositionColor format: Position, Color
+                    XnaVertexPositionColor[] vertices = new XnaVertexPositionColor[vertexCount];
+                    vertexBuffer.GetData(vertices);
+
+                    for (int i = 0; i < vertexCount; i++)
+                    {
+                        positions.Add(new Vector3(
+                            vertices[i].Position.X,
+                            vertices[i].Position.Y,
+                            vertices[i].Position.Z));
+                    }
+                }
+                else if (vertexStride >= 12)
+                {
+                    // Generic format: Position is at offset 0 (first 12 bytes = Vector3)
+                    int totalBytes = vertexCount * vertexStride;
+                    byte[] vertexData = new byte[totalBytes];
+                    vertexBuffer.GetData(vertexData);
+
+                    // Extract positions from first 12 bytes of each vertex
+                    for (int i = 0; i < vertexCount; i++)
+                    {
+                        int vertexOffset = i * vertexStride;
+                        float x = BitConverter.ToSingle(vertexData, vertexOffset);
+                        float y = BitConverter.ToSingle(vertexData, vertexOffset + 4);
+                        float z = BitConverter.ToSingle(vertexData, vertexOffset + 8);
+                        positions.Add(new Vector3(x, y, z));
+                    }
+                }
+                else
+                {
+                    return ExtractVertexPositionsFromCache(meshId, this);
+                }
+
+                return positions;
+            }
+            catch (Exception)
+            {
+                return ExtractVertexPositionsFromCache(meshId, this);
+            }
+        }
+
+        /// <summary>
+        /// Extracts vertex positions from cached mesh geometry data (fallback method).
+        /// </summary>
+        /// <param name="meshId">Mesh identifier.</param>
+        /// <param name="area">EclipseArea instance to access cached mesh geometry.</param>
+        /// <returns>List of vertex positions from cached geometry, or empty list if not cached.</returns>
+        private List<Vector3> ExtractVertexPositionsFromCache(string meshId, EclipseArea area)
+        {
+            if (string.IsNullOrEmpty(meshId) || area == null)
+            {
+                return new List<Vector3>();
+            }
+
+            try
+            {
+                var cachedMeshGeometryField = typeof(EclipseArea).GetField("_cachedMeshGeometry", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (cachedMeshGeometryField != null)
+                {
+                    var cachedMeshGeometryDict = cachedMeshGeometryField.GetValue(area) as Dictionary<string, EclipseArea.CachedMeshGeometry>;
+                    if (cachedMeshGeometryDict != null && cachedMeshGeometryDict.TryGetValue(meshId, out EclipseArea.CachedMeshGeometry cachedGeometry))
+                    {
+                        if (cachedGeometry.Vertices != null)
+                        {
+                            return new List<Vector3>(cachedGeometry.Vertices);
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Reflection failed, return empty list
+            }
+
+            return new List<Vector3>();
+        }
+
+        /// <summary>
+        /// Extracts indices from mesh data by reading directly from IndexBuffer.
+        /// </summary>
+        /// <param name="meshData">Mesh data containing IndexBuffer to read from.</param>
+        /// <param name="meshId">Mesh identifier (used for fallback to cached data).</param>
+        /// <returns>List of indices extracted from IndexBuffer, or from cache if buffer read fails.</returns>
+        /// <remarks>
+        /// Based on daorigins.exe: 0x008f12a0 - Index data is read directly from GPU index buffer for collision shape updates.
+        /// DragonAge2.exe: 0x009a45b0 - Enhanced index buffer reading with support for 16-bit and 32-bit indices.
+        /// </remarks>
+        private List<int> ExtractIndices(IRoomMeshData meshData, string meshId)
+        {
+            if (meshData == null || meshData.IndexBuffer == null)
+            {
+                return ExtractIndicesFromCache(meshId, this);
+            }
+
+            try
+            {
+                IIndexBuffer indexBuffer = meshData.IndexBuffer;
+                int indexCount = indexBuffer.IndexCount;
+
+                if (indexCount == 0)
+                {
+                    return ExtractIndicesFromCache(meshId, this);
+                }
+
+                // Read indices from buffer (handles both 16-bit and 32-bit formats internally)
+                int[] indices = new int[indexCount];
+                indexBuffer.GetData(indices);
+
+                return new List<int>(indices);
+            }
+            catch (Exception)
+            {
+                return ExtractIndicesFromCache(meshId, this);
+            }
+        }
+
+        /// <summary>
+        /// Extracts indices from cached mesh geometry data (fallback method).
+        /// </summary>
+        /// <param name="meshId">Mesh identifier.</param>
+        /// <param name="area">EclipseArea instance to access cached mesh geometry.</param>
+        /// <returns>List of indices from cached geometry, or empty list if not cached.</returns>
+        private List<int> ExtractIndicesFromCache(string meshId, EclipseArea area)
+        {
+            if (string.IsNullOrEmpty(meshId) || area == null)
+            {
+                return new List<int>();
+            }
+
+            try
+            {
+                var cachedMeshGeometryField = typeof(EclipseArea).GetField("_cachedMeshGeometry", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (cachedMeshGeometryField != null)
+                {
+                    var cachedMeshGeometryDict = cachedMeshGeometryField.GetValue(area) as Dictionary<string, EclipseArea.CachedMeshGeometry>;
+                    if (cachedMeshGeometryDict != null && cachedMeshGeometryDict.TryGetValue(meshId, out EclipseArea.CachedMeshGeometry cachedGeometry))
+                    {
+                        if (cachedGeometry.Indices != null)
+                        {
+                            return new List<int>(cachedGeometry.Indices);
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Reflection failed, return empty list
+            }
+
+            return new List<int>();
         }
 
         /// <summary>
@@ -11668,7 +12065,7 @@ technique ColorGrading
                         Vector3 velocity;
                         Vector3 angularVelocity;
                         float mass;
-                        List<PhysicsConstraint> constraints;
+                        List<Physics.PhysicsConstraint> constraints;
                         if (eclipsePhysics.GetRigidBodyState(entity, out velocity, out angularVelocity, out mass, out constraints))
                         {
                             // Update rigid body position to match entity transform
@@ -11924,7 +12321,7 @@ technique ColorGrading
                 // Based on daorigins.exe: Vertex and index data is read directly from GPU buffers for collision shape updates
                 // DragonAge2.exe: Enhanced buffer reading with support for different vertex formats
                 // We need original positions early to calculate final positions from displacement when ModifiedPosition is zero
-                List<Vector3> vertices = ExtractVertexPositions(originalMeshData, meshId, this);
+                List<Vector3> vertices = ExtractVertexPositions(originalMeshData, meshId);
                 List<int> indices = ExtractIndices(originalMeshData, meshId);
 
                 if (vertices == null || vertices.Count == 0 || indices == null || indices.Count == 0)
@@ -13408,6 +13805,7 @@ technique ColorGrading
         /// </summary>
         /// <param name="meshData">Mesh data containing IndexBuffer to read from.</param>
         /// <param name="meshId">Mesh identifier (used for fallback to cached data).</param>
+        /// <param name="area">EclipseArea instance to access cached mesh geometry (optional, for fallback).</param>
         /// <returns>List of indices extracted from IndexBuffer, or from cache if buffer read fails.</returns>
         /// <remarks>
         /// Based on daorigins.exe: 0x008f12a0 - Index data is read directly from GPU index buffer for collision shape updates.
@@ -13418,12 +13816,12 @@ technique ColorGrading
         /// 2. Handles both 16-bit and 32-bit index formats
         /// 3. Falls back to cached geometry data if buffer read fails or buffer is unavailable
         /// </remarks>
-        private List<int> ExtractIndices(IRoomMeshData meshData, string meshId)
+        private List<int> ExtractIndices(IRoomMeshData meshData, string meshId, EclipseArea area = null)
         {
             if (meshData == null || meshData.IndexBuffer == null)
             {
                 // Fallback to cached data if buffer is unavailable
-                return ExtractIndicesFromCache(meshId);
+                return ExtractIndicesFromCache(meshId, area);
             }
 
             try
@@ -13433,7 +13831,7 @@ technique ColorGrading
 
                 if (indexCount == 0)
                 {
-                    return ExtractIndicesFromCache(meshId);
+                    return ExtractIndicesFromCache(meshId, area);
                 }
 
                 // Read indices from buffer (handles both 16-bit and 32-bit formats internally)
@@ -13445,7 +13843,7 @@ technique ColorGrading
             catch (Exception)
             {
                 // If reading from buffer fails, fall back to cached data
-                return ExtractIndicesFromCache(meshId);
+                return ExtractIndicesFromCache(meshId, area);
             }
         }
 
@@ -13453,21 +13851,38 @@ technique ColorGrading
         /// Extracts indices from cached mesh geometry data (fallback method).
         /// </summary>
         /// <param name="meshId">Mesh identifier.</param>
+        /// <param name="area">EclipseArea instance to access cached mesh geometry (optional, for fallback).</param>
         /// <returns>List of indices from cached geometry, or empty list if not cached.</returns>
-        private List<int> ExtractIndicesFromCache(string meshId)
+        private List<int> ExtractIndicesFromCache(string meshId, EclipseArea area = null)
         {
             if (string.IsNullOrEmpty(meshId))
             {
                 return new List<int>();
             }
 
-            // Get cached geometry data
-            if (this._cachedMeshGeometry.TryGetValue(meshId, out EclipseArea.CachedMeshGeometry cachedGeometry))
+            // Get cached geometry data from EclipseArea
+            // Note: _cachedMeshGeometry is private, so we need to access it through reflection or make it internal
+            if (area != null)
             {
-                if (cachedGeometry.Indices != null)
+                try
                 {
-                    // Return a copy of the index list (so modifications don't affect cache)
-                    return new List<int>(cachedGeometry.Indices);
+                    var cachedMeshGeometryField = typeof(EclipseArea).GetField("_cachedMeshGeometry", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (cachedMeshGeometryField != null)
+                    {
+                        var cachedMeshGeometryDict = cachedMeshGeometryField.GetValue(area) as Dictionary<string, EclipseArea.CachedMeshGeometry>;
+                        if (cachedMeshGeometryDict != null && cachedMeshGeometryDict.TryGetValue(meshId, out EclipseArea.CachedMeshGeometry cachedGeometry))
+                        {
+                            if (cachedGeometry.Indices != null)
+                            {
+                                // Return a copy of the index list (so modifications don't affect cache)
+                                return new List<int>(cachedGeometry.Indices);
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // Reflection failed, return empty list
                 }
             }
 
@@ -13480,40 +13895,61 @@ technique ColorGrading
         /// </summary>
         /// <param name="meshId">Mesh identifier (model name/resref).</param>
         /// <param name="mdl">MDL model to extract geometry from.</param>
+        /// <param name="area">EclipseArea instance to access cached mesh geometry dictionary.</param>
         /// <remarks>
         /// Based on daorigins.exe/DragonAge2.exe: Original vertex/index data is cached for physics collision shape generation.
         /// When geometry is modified (destroyed/deformed), collision shapes are rebuilt from this cached data.
         /// </remarks>
-        private void CacheMeshGeometryFromMDL(string meshId, MDL mdl)
+        private void CacheMeshGeometryFromMDL(string meshId, MDL mdl, EclipseArea area)
         {
-            if (string.IsNullOrEmpty(meshId) || mdl == null || mdl.Root == null)
+            if (string.IsNullOrEmpty(meshId) || mdl == null || mdl.Root == null || area == null)
             {
                 return;
             }
 
-            // Check if already cached
-            if (this._cachedMeshGeometry.ContainsKey(meshId))
+            // Get cached geometry dictionary from EclipseArea using reflection
+            try
             {
-                return;
-            }
-
-            // Extract vertex positions and indices recursively from all nodes
-            List<Vector3> vertices = new List<Vector3>();
-            List<int> indices = new List<int>();
-
-            ExtractGeometryFromMDLNode(mdl.Root, System.Numerics.Matrix4x4.Identity, vertices, indices);
-
-            // Only cache if we extracted valid geometry
-            if (vertices.Count > 0 && indices.Count > 0)
-            {
-                EclipseArea.CachedMeshGeometry cachedGeometry = new EclipseArea.CachedMeshGeometry
+                var cachedMeshGeometryField = typeof(EclipseArea).GetField("_cachedMeshGeometry", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (cachedMeshGeometryField == null)
                 {
-                    MeshId = meshId,
-                    Vertices = vertices,
-                    Indices = indices
-                };
+                    return;
+                }
 
-                this._cachedMeshGeometry[meshId] = cachedGeometry;
+                var cachedMeshGeometryDict = cachedMeshGeometryField.GetValue(area) as Dictionary<string, EclipseArea.CachedMeshGeometry>;
+                if (cachedMeshGeometryDict == null)
+                {
+                    return;
+                }
+
+                // Check if already cached
+                if (cachedMeshGeometryDict.ContainsKey(meshId))
+                {
+                    return;
+                }
+
+                // Extract vertex positions and indices recursively from all nodes
+                List<Vector3> vertices = new List<Vector3>();
+                List<int> indices = new List<int>();
+
+                ExtractGeometryFromMDLNode(mdl.Root, System.Numerics.Matrix4x4.Identity, vertices, indices);
+
+                // Only cache if we extracted valid geometry
+                if (vertices.Count > 0 && indices.Count > 0)
+                {
+                    EclipseArea.CachedMeshGeometry cachedGeometry = new EclipseArea.CachedMeshGeometry
+                    {
+                        MeshId = meshId,
+                        Vertices = vertices,
+                        Indices = indices
+                    };
+
+                    cachedMeshGeometryDict[meshId] = cachedGeometry;
+                }
+            }
+            catch
+            {
+                // Reflection failed, cannot cache geometry
             }
         }
 
@@ -13975,7 +14411,22 @@ technique ColorGrading
         /// <returns>List of debris pieces.</returns>
         public List<DebrisPiece> GetDebrisPieces()
         {
-            return new List<DebrisPiece>(_debrisPieces);
+            List<DebrisPiece> result = new List<DebrisPiece>();
+            foreach (var debris in _debrisPieces)
+            {
+                result.Add(new DebrisPiece
+                {
+                    MeshId = debris.MeshId,
+                    FaceIndices = debris.FaceIndices != null ? new List<int>(debris.FaceIndices) : new List<int>(),
+                    Position = debris.Position,
+                    Velocity = debris.Velocity,
+                    Rotation = debris.Rotation,
+                    AngularVelocity = debris.AngularVelocity,
+                    LifeTime = debris.LifeTime,
+                    RemainingLifeTime = debris.RemainingLifeTime
+                });
+            }
+            return result;
         }
 
         /// <summary>
