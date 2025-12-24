@@ -11,6 +11,7 @@ using MDLModel = Andastra.Parsing.Formats.MDLData.MDL;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Resource;
 using System.Numerics;
+using Andastra.Runtime.Graphics.Common;
 
 namespace Andastra.Tests.Runtime.Parsing.MDL
 {
@@ -447,7 +448,7 @@ donemodel test
             var mdl = MDLAsciiTestHelpers.CreateTestMDL("light_test");
             var node = MDLAsciiTestHelpers.CreateTestNode("light_node", MDLNodeType.LIGHT);
             node.Light = new MDLLight();
-            node.Light.Color = new ParsingColor(1.0f, 1.0f, 1.0f);
+            node.Light.Color = new Color(1.0f, 1.0f, 1.0f);
             node.Light.FlareRadius = 10.0f;
             mdl.Root.Children.Add(node);
 
@@ -515,8 +516,8 @@ donemodel test
             var mdl = MDLAsciiTestHelpers.CreateTestMDL("emitter_test");
             var node = MDLAsciiTestHelpers.CreateTestNode("emitter_node", MDLNodeType.EMITTER);
             node.Emitter = new MDLEmitter();
-            node.Emitter.UpdateType = MDLUpdateType.Fountain;
-            node.Emitter.RenderType = MDLRenderType.Normal;
+            node.Emitter.UpdateType = MDLUpdateType.FOUNTAIN;
+            node.Emitter.RenderType = MDLRenderType.NORMAL;
             node.Emitter.Texture = "test_texture";
             mdl.Root.Children.Add(node);
 
