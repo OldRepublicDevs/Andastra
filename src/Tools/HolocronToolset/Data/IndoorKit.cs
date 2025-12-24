@@ -446,11 +446,11 @@ namespace HolocronToolset.Data
     /// TRANSITIONS AND ROOM CONNECTIONS:
     ///
     /// The transition value on a perimeter edge tells which room this edge connects to. When
-    // TODO: / the indoor map builder processes a room's walkmesh, it remaps transitions from dummy
+    /// the indoor map builder processes a room's walkmesh, it remaps transitions from dummy
     /// indices (from the kit component) to actual room indices (in the built module).
     ///
     /// For example:
-    // TODO: / - Component has a hook with transition = 1 (dummy index meaning "next room")
+    /// - Component has a hook with transition = 1 (dummy index meaning "next room")
     /// - When placed in a module, transition = 1 gets remapped to the actual room index (e.g., 5)
     /// - The door is placed at the hook's position, connecting room 0 to room 5
     ///
@@ -1261,17 +1261,17 @@ namespace HolocronToolset.Data
             // LYT doorhooks contain information about where doors connect rooms
             // This implementation matches doorhooks from LYT to their corresponding components
             // and creates KitComponentHook objects for proper door placement
-            
+
             if (lytData == null || lytData.Doorhooks == null || lytData.Doorhooks.Count == 0)
             {
                 return;
             }
-            
+
             if (lytData.Rooms == null || lytData.Rooms.Count == 0)
             {
                 return;
             }
-            
+
             // Create a mapping from room model names (case-insensitive) to components and their positions
             // This allows us to quickly find the component that matches each doorhook's room name
             var roomToComponentMap = new Dictionary<string, Tuple<KitComponent, Vector3>>();
@@ -1279,24 +1279,24 @@ namespace HolocronToolset.Data
             {
                 var lytRoom = lytData.Rooms[i];
                 var component = Components[i];
-                
+
                 // Use the room model name as the key (case-insensitive)
                 string modelName = lytRoom.Model ?? "";
-                string roomKey = !string.IsNullOrEmpty(modelName) 
-                    ? modelName.ToLowerInvariant() 
+                string roomKey = !string.IsNullOrEmpty(modelName)
+                    ? modelName.ToLowerInvariant()
                     : $"room{i}";
-                
+
                 // Store component and its world position
                 roomToComponentMap[roomKey] = new Tuple<KitComponent, Vector3>(component, lytRoom.Position);
             }
-            
+
             // Get the default door for hooks that don't specify a door
             KitDoor defaultDoor = Doors.Count > 0 ? Doors[0] : _CreateDefaultDoor();
             if (Doors.Count == 0)
             {
                 Doors.Add(defaultDoor);
             }
-            
+
             // Process each doorhook from the LYT
             foreach (var doorhook in lytData.Doorhooks)
             {
@@ -1304,23 +1304,23 @@ namespace HolocronToolset.Data
                 {
                     continue;
                 }
-                
+
                 // Find the component that matches this doorhook's room name (case-insensitive)
                 string hookRoomName = doorhook.Room ?? "";
-                string hookRoomKey = !string.IsNullOrEmpty(hookRoomName) 
-                    ? hookRoomName.ToLowerInvariant() 
+                string hookRoomKey = !string.IsNullOrEmpty(hookRoomName)
+                    ? hookRoomName.ToLowerInvariant()
                     : null;
-                
+
                 if (hookRoomKey == null || !roomToComponentMap.ContainsKey(hookRoomKey))
                 {
                     // Room not found - skip this doorhook
                     continue;
                 }
-                
+
                 var componentData = roomToComponentMap[hookRoomKey];
                 var component = componentData.Item1;
                 var roomPosition = componentData.Item2;
-                
+
                 // Convert doorhook world position to component-local position
                 // Components are centered at origin, so we subtract the room's world position
                 Vector3 localPosition = new Vector3(
@@ -1328,22 +1328,22 @@ namespace HolocronToolset.Data
                     doorhook.Position.Y - roomPosition.Y,
                     doorhook.Position.Z - roomPosition.Z
                 );
-                
+
                 // Convert quaternion orientation to rotation angle (yaw in degrees)
                 // Doors rotate around the Y-axis, so we extract the yaw from the quaternion
                 float rotation = _QuaternionToYawRotation(doorhook.Orientation);
-                
+
                 // Find the closest edge in the component's BWM to the hook position
                 // This determines which edge the hook should be associated with
                 int edgeIndex = _FindClosestEdge(component.Bwm, localPosition);
-                
+
                 // Create the KitComponentHook and add it to the component
                 // Note: We use the default door since LYT doorhooks don't specify which door to use
                 var hook = new KitComponentHook(localPosition, rotation, edgeIndex, defaultDoor);
                 component.Hooks.Add(hook);
             }
         }
-        
+
         /// <summary>
         /// Converts a quaternion to a yaw rotation angle in degrees.
         /// Doors rotate around the Y-axis, so we extract the yaw component from the Euler angles.
@@ -1355,31 +1355,31 @@ namespace HolocronToolset.Data
             // Convert quaternion to Euler angles (roll, pitch, yaw)
             // Based on PyKotor's Vector4.to_euler() implementation
             // Reference: vendor/PyKotor/Libraries/PyKotor/src/utility/common/geometry.py:956-989
-            
+
             float qx = quaternion.X;
             float qy = quaternion.Y;
             float qz = quaternion.Z;
             float qw = quaternion.W;
-            
+
             // Calculate yaw (rotation around Y-axis)
             // Formula from PyKotor: yaw = atan2(2*(w*z + x*y), 1 - 2*(y² + z²))
             float t3 = 2.0f * (qw * qz + qx * qy);
             float t4 = 1.0f - 2.0f * (qy * qy + qz * qz);
             float yawRadians = (float)Math.Atan2(t3, t4);
-            
+
             // Convert to degrees
             float yawDegrees = yawRadians * 180.0f / (float)Math.PI;
-            
+
             // Normalize to 0-360 range
             yawDegrees = yawDegrees % 360.0f;
             if (yawDegrees < 0)
             {
                 yawDegrees += 360.0f;
             }
-            
+
             return yawDegrees;
         }
-        
+
         /// <summary>
         /// Finds the closest edge in a BWM to a given position.
         /// Returns the edge index of the closest edge, or -1 if no edges are found.
@@ -1393,17 +1393,17 @@ namespace HolocronToolset.Data
             {
                 return -1;
             }
-            
+
             // Get all perimeter edges from the BWM
             var edges = bwm.Edges();
             if (edges == null || edges.Count == 0)
             {
                 return -1;
             }
-            
+
             float minDistance = float.MaxValue;
             int closestEdgeIndex = -1;
-            
+
             // Search through all edges to find the one closest to the position
             foreach (var edge in edges)
             {
@@ -1411,19 +1411,19 @@ namespace HolocronToolset.Data
                 {
                     continue;
                 }
-                
+
                 // Get the edge vertices
                 int faceIndex = edge.Index / 3;
                 int localEdgeIndex = edge.Index % 3;
-                
+
                 if (faceIndex < 0 || faceIndex >= bwm.Faces.Count)
                 {
                     continue;
                 }
-                
+
                 var face = bwm.Faces[faceIndex];
                 Vector3 v1, v2;
-                
+
                 // Get vertices for this edge based on local edge index
                 if (localEdgeIndex == 0)
                 {
@@ -1440,20 +1440,20 @@ namespace HolocronToolset.Data
                     v1 = face.V3;
                     v2 = face.V1;
                 }
-                
+
                 // Calculate the midpoint of the edge
                 Vector3 edgeMidpoint = new Vector3(
                     (v1.X + v2.X) / 2.0f,
                     (v1.Y + v2.Y) / 2.0f,
                     (v1.Z + v2.Z) / 2.0f
                 );
-                
+
                 // Calculate distance from position to edge midpoint (ignoring Z for 2D distance)
                 // Door hooks are primarily concerned with X/Y positioning
                 float dx = position.X - edgeMidpoint.X;
                 float dy = position.Y - edgeMidpoint.Y;
                 float distance = (float)Math.Sqrt(dx * dx + dy * dy);
-                
+
                 // Update closest edge if this one is closer
                 if (distance < minDistance)
                 {
@@ -1461,7 +1461,7 @@ namespace HolocronToolset.Data
                     closestEdgeIndex = edge.Index;
                 }
             }
-            
+
             return closestEdgeIndex;
         }
 
