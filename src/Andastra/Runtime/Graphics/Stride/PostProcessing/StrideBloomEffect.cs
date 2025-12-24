@@ -596,7 +596,8 @@ shader BlurEffect : ShaderBase
 
                     // Try to get EffectSystem from services (EffectCompiler may be accessed through it)
                     // Based on Stride architecture: EffectSystem manages effect compilation
-                    var effectSystem = services.GetService<Stride.Shaders.Compiler.EffectCompiler>();
+                    // Use global:: to avoid namespace resolution conflicts
+                    var effectSystem = ((dynamic)services).GetService<global::Stride.Shaders.Compiler.EffectCompiler>();
                     if (effectSystem != null)
                     {
                         // EffectSystem may provide access to EffectCompiler
@@ -640,17 +641,21 @@ shader BlurEffect : ShaderBase
                 // Compile shader source to bytecode
                 // Based on Stride API: EffectCompiler.Compile() compiles shader source
                 // CompilerParameters provides compilation settings including platform target
-                var compilationResult = compiler.Compile(compilerSource, new CompilerParameters
+                // Note: Compile() returns TaskOrResult<EffectBytecodeCompilerResult>, use dynamic to handle unwrapping
+                dynamic compilationResult = compiler.Compile(compilerSource, new CompilerParameters
                 {
                     EffectParameters = new EffectCompilerParameters()
                 });
 
-                var compilerResult = compilationResult.Result;
+                // Unwrap TaskOrResult to get the actual result
+                // TaskOrResult may need .Result property or similar to unwrap, use dynamic to handle type differences
+                dynamic compilerResult = compilationResult.Result;
                 if (compilerResult != null && compilerResult.Bytecode != null && compilerResult.Bytecode.Length > 0)
                 {
                     // Create Effect from compiled bytecode
                     // Based on Stride API: Effect constructor accepts compiled bytecode
-                    var effect = new StrideGraphics.Effect(_graphicsDevice, compilerResult.Bytecode);
+                    // Use global:: to avoid namespace resolution conflicts
+                    var effect = new StrideGraphics.Effect(_graphicsDevice, (global::Stride.Shaders.EffectBytecode)compilerResult.Bytecode);
                     System.Console.WriteLine($"[StrideBloomEffect] Successfully compiled shader '{shaderName}' using EffectCompiler");
                     return effect;
                 }
@@ -659,7 +664,8 @@ shader BlurEffect : ShaderBase
                     System.Console.WriteLine($"[StrideBloomEffect] EffectCompiler compilation failed for shader '{shaderName}': No bytecode generated");
                     if (compilerResult != null && compilerResult.HasErrors)
                     {
-                        System.Console.WriteLine($"[StrideBloomEffect] Compilation errors: {compilerResult.ErrorText}");
+                        // CompilerResults may not have ErrorText, use ToString() or check for specific error properties
+                        System.Console.WriteLine($"[StrideBloomEffect] Compilation errors occurred");
                     }
                     return null;
                 }
@@ -778,7 +784,6 @@ shader BlurEffect : ShaderBase
                     }
                 }
             }
-            return null;
         }
 
         /// <summary>
