@@ -325,7 +325,7 @@ namespace HoloPatcher.UI.Views
         private void ApplyTextDecorationDirectly(TextRange selection, TextDecorationLocation location)
         {
             // Fallback method for applying text decorations when the main formatting approach fails.
-            // TODO:  This is a simplified implementation that processes all inlines in selected paragraphs.
+            // Processes only the inlines that overlap with the selection range, not all inlines in selected paragraphs.
             // Get the paragraphs that contain the selection
             Paragraph startPar = selection.GetStartPar();
             Paragraph endPar = selection.GetEndPar();
@@ -335,10 +335,14 @@ namespace HoloPatcher.UI.Views
                 return;
             }
 
+            if (_editor == null || _editor.FlowDocument == null) return;
+
+            int selectionStart = selection.Start;
+            int selectionEnd = selection.End;
+
             // Get all paragraphs in the range
             var paragraphs = new List<Paragraph>();
             bool collecting = false;
-            if (_editor == null || _editor.FlowDocument == null) return;
 
             foreach (var block in _editor.FlowDocument.Blocks)
             {
@@ -359,16 +363,21 @@ namespace HoloPatcher.UI.Views
                 }
             }
 
-            // TODO:  Process each paragraph's inlines - simplified approach
+            // Process each paragraph's inlines that overlap with the selection range
             foreach (Paragraph par in paragraphs)
             {
-                bool isStartPar = (par == startPar);
-                bool isEndPar = (par == endPar);
-
-                // TODO:  Process all inlines in the paragraph (simplified - process all if paragraph is in selection)
+                // Process only inlines that overlap with the selection range
                 foreach (IEditable inline in par.Inlines)
                 {
-                    if (inline is EditableRun run)
+                    // Calculate absolute position of inline in document
+                    int absInlineStart = par.StartInDoc + inline.TextPositionOfInlineInParagraph;
+                    int absInlineEnd = par.StartInDoc + inline.TextPositionOfInlineInParagraph + inline.InlineLength;
+
+                    // Check if inline overlaps with selection range
+                    // An inline overlaps if: absInlineEnd > selectionStart && absInlineStart < selectionEnd
+                    bool inlineOverlapsSelection = absInlineEnd > selectionStart && absInlineStart < selectionEnd;
+
+                    if (inlineOverlapsSelection && inline is EditableRun run)
                     {
                         // Get current text decorations
                         TextDecorationCollection currentDecs = run.TextDecorations ?? new TextDecorationCollection();
