@@ -1,5 +1,4 @@
 using System;
-using Stride.Graphics;
 using Andastra.Runtime.Graphics;
 
 namespace Andastra.Runtime.Stride.Graphics
@@ -36,23 +35,22 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        public void SetData<T>(T[] data) where T : unmanaged
+        public void SetData<T>(T[] data) where T : struct
         {
             if (data == null)
             {
                 throw new ArgumentNullException(nameof(data));
             }
 
-            var commandList = _buffer.GraphicsDevice.ImmediateContext();
-            if (commandList == null)
-            {
-                throw new InvalidOperationException("CommandList is not available. Ensure GraphicsDeviceExtensions.RegisterCommandList() has been called.");
-            }
+            var commandList = _buffer.GraphicsDevice.ImmediateContext()
+                            ?? throw new InvalidOperationException("CommandList is not available. Ensure GraphicsDeviceExtensions.RegisterCommandList() has been called.");
 
-            _buffer.SetData(commandList, data);
+            // Stride's Buffer.SetData requires unmanaged constraint, but interface only allows struct
+            // Use dynamic to bypass compile-time constraint checking (T must be unmanaged at runtime)
+            ((dynamic)_buffer).SetData(commandList, data);
         }
 
-        public void GetData<T>(T[] data) where T : unmanaged
+        public void GetData<T>(T[] data) where T : struct
         {
             if (data == null)
             {
@@ -64,13 +62,12 @@ namespace Andastra.Runtime.Stride.Graphics
                 throw new ArgumentException("Data array length exceeds vertex count.", nameof(data));
             }
 
-            var commandList = _buffer.GraphicsDevice.ImmediateContext();
-            if (commandList == null)
-            {
-                throw new InvalidOperationException("CommandList is not available. Ensure GraphicsDeviceExtensions.RegisterCommandList() has been called.");
-            }
+            var commandList = _buffer.GraphicsDevice.ImmediateContext()
+                                ?? throw new InvalidOperationException("CommandList is not available. Ensure GraphicsDeviceExtensions.RegisterCommandList() has been called.");
 
-            _buffer.GetData(commandList, data);
+            // Stride's Buffer.GetData requires unmanaged constraint, but interface only allows struct
+            // Use dynamic to bypass compile-time constraint checking (T must be unmanaged at runtime)
+            ((dynamic)_buffer).GetData(commandList, data);
         }
 
         public void Dispose()

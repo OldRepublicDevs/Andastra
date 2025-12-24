@@ -6,48 +6,48 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
-using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Core.Enums;
-using Andastra.Runtime.Core.Module;
-using Andastra.Runtime.Games.Common;
-using Andastra.Runtime.Graphics;
-using Andastra.Runtime.Graphics.Common;
-using Andastra.Runtime.Games.Eclipse.Environmental;
 using Andastra.Parsing;
-using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.BWM;
-using Andastra.Parsing.Formats.MDLData;
+using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.MDL;
-using Andastra.Parsing.Tools;
+using Andastra.Parsing.Formats.MDLData;
+using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Tools;
 using Andastra.Runtime.Content.Converters;
-using Andastra.Runtime.Games.Eclipse.Loading;
-using Andastra.Runtime.Games.Eclipse.Lighting;
-using Andastra.Runtime.Games.Eclipse.Physics;
-using Andastra.Parsing.Formats.TPC;
+using Andastra.Runtime.Content.Interfaces;
+using Andastra.Runtime.Core.Collision;
+using Andastra.Runtime.Core.Enums;
+using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Core.Interfaces.Components;
+using Andastra.Runtime.Core.Module;
+using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Games.Eclipse;
+using Andastra.Runtime.Games.Eclipse.Environmental;
+using Andastra.Runtime.Games.Eclipse.Lighting;
+using Andastra.Runtime.Games.Eclipse.Loading;
+using Andastra.Runtime.Games.Eclipse.Physics;
+using Andastra.Runtime.Graphics;
+using Andastra.Runtime.Graphics.Common;
+using Andastra.Runtime.MonoGame.Converters;
+using Andastra.Runtime.MonoGame.Culling;
 using Andastra.Runtime.MonoGame.Enums;
+using Andastra.Runtime.MonoGame.Graphics;
+using Andastra.Runtime.MonoGame.Interfaces;
+using Andastra.Runtime.MonoGame.Lighting;
+using Andastra.Runtime.MonoGame.Rendering;
 using ObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 using IUpdatable = Andastra.Runtime.Games.Eclipse.IUpdatable;
 // Type aliases to resolve ambiguity between XNA and System.Numerics types
-using Andastra.Runtime.MonoGame.Interfaces;
-using Andastra.Runtime.Content.Interfaces;
-using Andastra.Runtime.MonoGame.Converters;
-using Andastra.Runtime.MonoGame.Graphics;
-using Andastra.Runtime.Core.Collision;
 using XnaMatrix = Microsoft.Xna.Framework.Matrix;
 using GraphicsVector2 = Andastra.Runtime.Graphics.Vector2;
 // Type aliases for MonoGame graphics types in different namespace
 using MonoGameTexture2D = Andastra.Runtime.Graphics.MonoGame.Graphics.MonoGameTexture2D;
 using MonoGameGraphicsDevice = Andastra.Runtime.Graphics.MonoGame.Graphics.MonoGameGraphicsDevice;
 using XnaVertexPositionColor = Microsoft.Xna.Framework.Graphics.VertexPositionColor;
-using Andastra.Runtime.MonoGame.Rendering;
-using Andastra.Runtime.MonoGame.Culling;
-using Andastra.Runtime.MonoGame.Lighting;
 // Type alias for IDynamicLight to use MonoGame.Interfaces version
 using IDynamicLight = Andastra.Runtime.MonoGame.Interfaces.IDynamicLight;
 // Type aliases to resolve ambiguity between XNA/MonoGame and Andastra types
@@ -10007,10 +10007,31 @@ namespace Andastra.Runtime.Games.Eclipse
                 return;
             }
 
-            // Apply node transform
-            System.Numerics.Matrix4x4 nodeTransform = node.Transform != null
-                ? System.Numerics.Matrix4x4.Transpose(node.Transform.Value)
-                : System.Numerics.Matrix4x4.Identity;
+            // Build transform matrix from node properties (Position, Orientation, Scale)
+            System.Numerics.Quaternion rotation = new System.Numerics.Quaternion(
+                node.Orientation.X,
+                node.Orientation.Y,
+                node.Orientation.Z,
+                node.Orientation.W
+            );
+
+            System.Numerics.Vector3 translation = new System.Numerics.Vector3(
+                node.Position.X,
+                node.Position.Y,
+                node.Position.Z
+            );
+
+            System.Numerics.Vector3 scale = new System.Numerics.Vector3(
+                node.ScaleX,
+                node.ScaleY,
+                node.ScaleZ
+            );
+
+            // Build transform: Translation * Rotation * Scale
+            System.Numerics.Matrix4x4 scaleMatrix = System.Numerics.Matrix4x4.CreateScale(scale);
+            System.Numerics.Matrix4x4 rotationMatrix = System.Numerics.Matrix4x4.CreateFromQuaternion(rotation);
+            System.Numerics.Matrix4x4 translationMatrix = System.Numerics.Matrix4x4.CreateTranslation(translation);
+            System.Numerics.Matrix4x4 nodeTransform = translationMatrix * rotationMatrix * scaleMatrix;
             System.Numerics.Matrix4x4 finalTransform = nodeTransform * parentTransform;
 
             // Extract geometry from this node's mesh

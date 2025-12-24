@@ -1,12 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using StrideGraphics = Stride.Graphics;
 using Stride.Core.Mathematics;
 using Andastra.Runtime.Graphics;
-using Stride.Rendering;
-using Stride.Engine;
 
 namespace Andastra.Runtime.Stride.Graphics
 {
@@ -23,7 +19,7 @@ namespace Andastra.Runtime.Stride.Graphics
         private SamplerStateDescription[] _currentSamplerStates;
         private bool _stateDirty;
         private PipelineStateKey _lastPipelineStateKey;
-        private Andastra.Runtime.Graphics.Viewport _currentViewport;
+        private Viewport _currentViewport;
 
         /// <summary>
         /// Pipeline state cache key for tracking state combinations.
@@ -84,7 +80,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        public Andastra.Runtime.Graphics.Viewport Viewport
+        public Viewport Viewport
         {
             get
             {
@@ -97,7 +93,7 @@ namespace Andastra.Runtime.Stride.Graphics
                     var presentParams = _device.Presenter?.Description;
                     if (presentParams != null)
                     {
-                        _currentViewport = new Andastra.Runtime.Graphics.Viewport(
+                        _currentViewport = new Viewport(
                             0, 0,
                             presentParams.BackBufferWidth,
                             presentParams.BackBufferHeight,
@@ -107,7 +103,7 @@ namespace Andastra.Runtime.Stride.Graphics
                     else
                     {
                         // Fallback to a default viewport
-                        _currentViewport = new Andastra.Runtime.Graphics.Viewport(0, 0, 1920, 1080, 0.0f, 1.0f);
+                        _currentViewport = new Viewport(0, 0, 1920, 1080, 0.0f, 1.0f);
                     }
                 }
                 return _currentViewport;
@@ -158,14 +154,14 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        public void Clear(Andastra.Runtime.Graphics.Color color)
+        public void Clear(Runtime.Graphics.Color color)
         {
             // In Stride, Clear is done through CommandList, not GraphicsDevice
             // Clear the current render target or backbuffer
             if (_graphicsContext != null)
             {
                 var targetTexture = _currentRenderTarget?.RenderTarget;
-                var strideColor = new global::Stride.Core.Mathematics.Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
+                var strideColor = new Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
                 _graphicsContext.Clear(targetTexture, strideColor);
             }
         }
@@ -180,9 +176,9 @@ namespace Andastra.Runtime.Stride.Graphics
                 var depthStencil = _currentRenderTarget?.DepthStencilBuffer;
                 // Use reflection to call Clear with depth parameter since the exact signature may vary
                 var clearMethod = typeof(StrideGraphics.CommandList).GetMethod("Clear",
-                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance,
+                    BindingFlags.Public | BindingFlags.Instance,
                     null,
-                    new[] { typeof(StrideGraphics.Texture), typeof(global::Stride.Core.Mathematics.Color4?), typeof(StrideGraphics.DepthStencilClearOptions?), typeof(float), typeof(byte) },
+                    new[] { typeof(StrideGraphics.Texture), typeof(Color4?), typeof(StrideGraphics.DepthStencilClearOptions?), typeof(float), typeof(byte) },
                     null);
                 if (clearMethod != null)
                 {
@@ -218,9 +214,9 @@ namespace Andastra.Runtime.Stride.Graphics
                 var depthStencil = _currentRenderTarget?.DepthStencilBuffer;
                 // Use reflection to call Clear with stencil parameter since the exact signature may vary
                 var clearMethod = typeof(StrideGraphics.CommandList).GetMethod("Clear",
-                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance,
+                    BindingFlags.Public | BindingFlags.Instance,
                     null,
-                    new[] { typeof(StrideGraphics.Texture), typeof(global::Stride.Core.Mathematics.Color4?), typeof(StrideGraphics.DepthStencilClearOptions?), typeof(float), typeof(byte) },
+                    new[] { typeof(StrideGraphics.Texture), typeof(Color4?), typeof(StrideGraphics.DepthStencilClearOptions?), typeof(float), typeof(byte) },
                     null);
                 if (clearMethod != null)
                 {
@@ -257,7 +253,7 @@ namespace Andastra.Runtime.Stride.Graphics
                     int offset = i * 4;
                     colorData[i] = new global::Stride.Core.Mathematics.Color(data[offset], data[offset + 1], data[offset + 2], data[offset + 3]);
                 }
-                StrideGraphics.CommandList graphicsContext = this.ImmediateContext;
+                StrideGraphics.CommandList graphicsContext = ImmediateContext;
                 if (graphicsContext != null)
                 {
                     texture.SetData(graphicsContext, colorData);
@@ -285,7 +281,7 @@ namespace Andastra.Runtime.Stride.Graphics
             // We use dynamic invocation to work around this constraint mismatch
             // This will fail at runtime if T is not actually unmanaged (blittable)
             var method = typeof(StrideGraphics.Buffer.Vertex).GetMethod("New",
-                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static,
+                BindingFlags.Public | BindingFlags.Static,
                 null,
                 new[] { typeof(StrideGraphics.GraphicsDevice), typeof(T[]), typeof(StrideGraphics.GraphicsResourceUsage) },
                 null);
@@ -323,7 +319,7 @@ namespace Andastra.Runtime.Stride.Graphics
         {
             // Stride SpriteBatch requires GraphicsDevice, which we have
             // Also pass GraphicsContext for Begin() calls
-            return new StrideSpriteBatch(new StrideGraphics.SpriteBatch(_device), _graphicsContext);
+            return new StrideSpriteBatch(new StrideGraphics.SpriteBatch(_device), _graphicsContext, _device);
         }
 
         public IntPtr NativeHandle
@@ -337,7 +333,7 @@ namespace Andastra.Runtime.Stride.Graphics
                 // Stride GraphicsDevice may use NativePointer or NativeDevice depending on backend
                 // Try NativePointer first (D3D12, Vulkan), then NativeDevice (D3D11)
                 var nativePointerProp = typeof(StrideGraphics.GraphicsDevice).GetProperty("NativePointer",
-                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                 if (nativePointerProp != null)
                 {
                     var value = nativePointerProp.GetValue(_device);
@@ -347,7 +343,7 @@ namespace Andastra.Runtime.Stride.Graphics
                     }
                 }
                 var nativeDeviceProp = typeof(StrideGraphics.GraphicsDevice).GetProperty("NativeDevice",
-                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                 if (nativeDeviceProp != null)
                 {
                     var value = nativeDeviceProp.GetValue(_device);
@@ -403,7 +399,14 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        public void DrawIndexedPrimitives(Andastra.Runtime.Graphics.PrimitiveType primitiveType, int baseVertex, int minVertexIndex, int numVertices, int startIndex, int primitiveCount)
+        public void DrawIndexedPrimitives(
+            PrimitiveType primitiveType,
+            int baseVertex,
+            int minVertexIndex,
+            int numVertices,
+            int startIndex,
+            int primitiveCount
+        )
         {
             if (_graphicsContext == null)
             {
@@ -430,7 +433,7 @@ namespace Andastra.Runtime.Stride.Graphics
             );
         }
 
-        public void DrawPrimitives(Andastra.Runtime.Graphics.PrimitiveType primitiveType, int vertexOffset, int primitiveCount)
+        public void DrawPrimitives(PrimitiveType primitiveType, int vertexOffset, int primitiveCount)
         {
             if (_graphicsContext == null)
             {
@@ -680,7 +683,7 @@ namespace Andastra.Runtime.Stride.Graphics
                     // Stride's DepthStencilStateDescription uses StencilReference property
                     // Check if property exists, otherwise use reflection
                     var stencilRefProp = typeof(StrideGraphics.DepthStencilStateDescription).GetProperty("StencilReference",
-                        System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                        BindingFlags.Public | BindingFlags.Instance);
                     if (stencilRefProp != null)
                     {
                         stencilRefProp.SetValue(strideDepthStencilState, _currentDepthStencilState.ReferenceStencil);
@@ -689,11 +692,8 @@ namespace Andastra.Runtime.Stride.Graphics
                     {
                         // Try alternative property name if StencilReference doesn't exist
                         var refStencilProp = typeof(StrideGraphics.DepthStencilStateDescription).GetProperty("ReferenceStencil",
-                            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-                        if (refStencilProp != null)
-                        {
-                            refStencilProp.SetValue(strideDepthStencilState, _currentDepthStencilState.ReferenceStencil);
-                        }
+                            BindingFlags.Public | BindingFlags.Instance);
+                        refStencilProp?.SetValue(strideDepthStencilState, _currentDepthStencilState.ReferenceStencil);
                     }
 
                     // Front face stencil operations
@@ -767,7 +767,7 @@ namespace Andastra.Runtime.Stride.Graphics
                     }
                     // Set RenderTargets property using reflection since it may not be directly accessible
                     var renderTargetsProp = typeof(StrideGraphics.BlendStateDescription).GetProperty("RenderTargets",
-                        System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                        BindingFlags.Public | BindingFlags.Instance);
                     if (renderTargetsProp != null)
                     {
                         renderTargetsProp.SetValue(strideBlendState, strideRenderTargets);
@@ -812,10 +812,10 @@ namespace Andastra.Runtime.Stride.Graphics
                 // Convert our SamplerStateDescription to Stride's native format
                 var strideSamplerState = new StrideGraphics.SamplerStateDescription
                 {
-                    Filter = samplerDesc.Filter,
-                    AddressU = samplerDesc.AddressU,
-                    AddressV = samplerDesc.AddressV,
-                    AddressW = samplerDesc.AddressW,
+                    Filter = (StrideGraphics.TextureFilter)samplerDesc.Filter,
+                    AddressU = (StrideGraphics.TextureAddressMode)samplerDesc.AddressU,
+                    AddressV = (StrideGraphics.TextureAddressMode)samplerDesc.AddressV,
+                    AddressW = (StrideGraphics.TextureAddressMode)samplerDesc.AddressW,
                     MaxAnisotropy = samplerDesc.MaxAnisotropy,
                     MaxMipLevel = samplerDesc.MaxMipLevel,
                     MipMapLevelOfDetailBias = (float)samplerDesc.MipMapLevelOfDetailBias
@@ -841,36 +841,36 @@ namespace Andastra.Runtime.Stride.Graphics
             // GraphicsDevice is managed by Game, don't dispose it
         }
 
-        private static StrideGraphics.PrimitiveType ConvertPrimitiveType(Andastra.Runtime.Graphics.PrimitiveType type)
+        private static StrideGraphics.PrimitiveType ConvertPrimitiveType(PrimitiveType type)
         {
             switch (type)
             {
-                case Andastra.Runtime.Graphics.PrimitiveType.TriangleList:
+                case PrimitiveType.TriangleList:
                     return StrideGraphics.PrimitiveType.TriangleList;
-                case Andastra.Runtime.Graphics.PrimitiveType.TriangleStrip:
+                case PrimitiveType.TriangleStrip:
                     return StrideGraphics.PrimitiveType.TriangleStrip;
-                case Andastra.Runtime.Graphics.PrimitiveType.LineList:
+                case PrimitiveType.LineList:
                     return StrideGraphics.PrimitiveType.LineList;
-                case Andastra.Runtime.Graphics.PrimitiveType.LineStrip:
+                case PrimitiveType.LineStrip:
                     return StrideGraphics.PrimitiveType.LineStrip;
-                case Andastra.Runtime.Graphics.PrimitiveType.PointList:
+                case PrimitiveType.PointList:
                     return StrideGraphics.PrimitiveType.PointList;
                 default:
                     return StrideGraphics.PrimitiveType.TriangleList;
             }
         }
 
-        private static int GetVerticesPerPrimitive(Andastra.Runtime.Graphics.PrimitiveType type)
+        private static int GetVerticesPerPrimitive(PrimitiveType type)
         {
             switch (type)
             {
-                case Andastra.Runtime.Graphics.PrimitiveType.TriangleList:
-                case Andastra.Runtime.Graphics.PrimitiveType.TriangleStrip:
+                case PrimitiveType.TriangleList:
+                case PrimitiveType.TriangleStrip:
                     return 3;
-                case Andastra.Runtime.Graphics.PrimitiveType.LineList:
-                case Andastra.Runtime.Graphics.PrimitiveType.LineStrip:
+                case PrimitiveType.LineList:
+                case PrimitiveType.LineStrip:
                     return 2;
-                case Andastra.Runtime.Graphics.PrimitiveType.PointList:
+                case PrimitiveType.PointList:
                     return 1;
                 default:
                     return 3;

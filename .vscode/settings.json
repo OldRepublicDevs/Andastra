@@ -1,4 +1,7 @@
 {
   "avalonia.dotnetSdkVersion": "8.0",
-  "dotnet.defaultSolution": "Andastra.sln"
+  "dotnet.defaultSolution": "Andastra.sln",
+  "files.autoSaveWorkspaceFilesOnly": true,
+  "files.autoSaveWhenNoErrors": false,
+  "files.autoSave": "onFocusChange"
 }

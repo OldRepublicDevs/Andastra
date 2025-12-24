@@ -3693,13 +3693,18 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             }
 
             // Use faction reputation as disposition
-            if (ctx != null && ctx.World != null && ctx.World.FactionManager != null)
+            if (ctx != null && ctx.World != null)
             {
                 // Check if world has a faction manager that can get reputation
-                var factionManager = ctx.World.FactionManager;
-                if (factionManager is Runtime.Engines.Eclipse.Systems.EclipseFactionManager eclipseFactionManager)
+                // Use reflection to safely access FactionManager property if it exists
+                var factionManagerProperty = ctx.World.GetType().GetProperty("FactionManager");
+                if (factionManagerProperty != null)
                 {
-                    return eclipseFactionManager.GetReputation(entity, target);
+                    var factionManager = factionManagerProperty.GetValue(ctx.World);
+                    if (factionManager is Runtime.Engines.Eclipse.Systems.EclipseFactionManager eclipseFactionManager)
+                    {
+                        return eclipseFactionManager.GetReputation(entity, target);
+                    }
                 }
             }
 

@@ -1686,15 +1686,15 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Step 3: Generate waypoints around obstacles
             var pathWaypoints = new List<Vector3> { start };
-            
+
             // Use recursive pathfinding to navigate around obstacles
             if (FindPathAroundObstaclesRecursive(start, end, blockingObstacles, pathWaypoints, maxRecursionDepth: 10))
             {
                 pathWaypoints.Add(end);
-                
+
                 // Step 4: Smooth and optimize the path
                 waypoints = SmoothDynamicPath(pathWaypoints);
-                
+
                 // Step 5: Validate final path
                 if (ValidateDynamicPath(waypoints))
                 {
@@ -1866,7 +1866,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Generate waypoints around the obstacle using tangent circle method
             var candidateWaypoints = GenerateTangentWaypoints(current, goal, firstObstacle);
-            
+
             // Try each candidate waypoint
             foreach (Vector3 waypoint in candidateWaypoints)
             {
@@ -1976,7 +1976,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     (float)Math.Sin(angle) * (obstacleRadius + 1.0f)
                 );
                 Vector3 waypoint3D = new Vector3(waypoint2D.X, obstacleCenter.Y, waypoint2D.Y) + obstacleCenter;
-                
+
                 // Only add waypoint if it's between start and end (roughly)
                 Vector2 toWaypoint = waypoint2D - start2D;
                 Vector2 toEndFromStart = end2D - start2D;
@@ -2091,7 +2091,7 @@ namespace Andastra.Runtime.Games.Eclipse
             for (int i = 0; i < smoothed.Count; i++)
             {
                 Vector3 waypoint = smoothed[i];
-                
+
                 // Apply repulsion from nearby obstacles
                 Vector3 repulsion = CalculateObstacleRepulsion(waypoint);
                 Vector3 refinedWaypoint = waypoint + repulsion * 0.5f; // Apply repulsion with damping
