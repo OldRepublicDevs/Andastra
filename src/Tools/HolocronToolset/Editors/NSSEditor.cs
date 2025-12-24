@@ -999,10 +999,12 @@ namespace HolocronToolset.Editors
 
         /// <summary>
         /// Shows the keyboard shortcuts dialog.
+        /// Displays all available keyboard shortcuts organized by category.
         /// </summary>
         private void ShowKeyboardShortcuts()
         {
-            // TODO: Implement ShowKeyboardShortcuts - show a dialog with keyboard shortcuts
+            var dialog = new HolocronToolset.Dialogs.KeyboardShortcutsDialog();
+            dialog.ShowDialog(this);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:1256-1349
@@ -1358,17 +1360,17 @@ namespace HolocronToolset.Editors
 
                     // Create dialog with capsule and supported resource types
                     var dialog = new LoadFromModuleDialog(capsule, _readSupported);
-                    
+
                     // Show dialog asynchronously and wait for result (matching PyKotor's exec() behavior)
                     // In Avalonia, ShowDialog returns Task<TResult> where TResult is the Close() parameter
                     bool? dialogResult = await dialog.ShowDialog<bool?>(this);
-                    
+
                     if (dialogResult == true)
                     {
                         string resname = dialog.ResName();
                         ResourceType selectedRestype = dialog.ResType();
                         byte[] selectedData = dialog.Data();
-                        
+
                         // Matching PyKotor: assert resname is not None, assert restype is not None, assert data is not None
                         if (resname != null && selectedRestype != null && selectedData != null)
                         {
@@ -4977,12 +4979,221 @@ namespace HolocronToolset.Editors
             // Set current file if available
             if (!string.IsNullOrEmpty(_filepath) && File.Exists(_filepath))
             {
-                // TODO:  Note: In a full implementation, we would select and scroll to the current file
-                // TODO: STUB - For now, we just ensure the model is set up correctly
+                SelectAndScrollToCurrentFile();
             }
 
             // Integrate file explorer dock into main UI layout
             IntegrateFileExplorerDock();
+        }
+
+        /// <summary>
+        /// Select and scroll to the current file in the file explorer TreeView.
+        /// Expands parent directories as needed and makes the file visible.
+        /// </summary>
+        private void SelectAndScrollToCurrentFile()
+        {
+            if (_fileExplorerView == null || _fileSystemModel == null || string.IsNullOrEmpty(_filepath))
+            {
+                return;
+            }
+
+            try
+            {
+                // Find the TreeViewItem corresponding to the current file
+                var fileItem = FindTreeViewItemByPath(_fileExplorerView.ItemsSource, _filepath);
+                if (fileItem != null)
+                {
+                    // Expand all parent directories to make the file visible
+                    ExpandParentDirectories(fileItem);
+
+                    // Select the file item
+                    _fileExplorerView.SelectedItem = fileItem;
+
+                    // Scroll to make the item visible
+                    ScrollToTreeViewItem(fileItem);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't crash the editor initialization
+                System.Console.WriteLine($"Error selecting current file in explorer: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Recursively searches for a TreeViewItem with the specified file path.
+        /// </summary>
+        /// <param name="itemsSource">The items source to search in.</param>
+        /// <param name="targetPath">The full file path to find.</param>
+        /// <returns>The TreeViewItem if found, null otherwise.</returns>
+        private TreeViewItem FindTreeViewItemByPath(IEnumerable<object> itemsSource, string targetPath)
+        {
+            if (itemsSource == null || string.IsNullOrEmpty(targetPath))
+            {
+                return null;
+            }
+
+            foreach (var item in itemsSource)
+            {
+                if (!(item is TreeViewItem treeItem))
+                {
+                    continue;
+                }
+
+                // Check if this item matches the target path
+                if (treeItem.Tag is string itemPath && string.Equals(itemPath, targetPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    return treeItem;
+                }
+
+                // Recursively search in child items
+                if (treeItem.ItemsSource != null)
+                {
+                    var foundInChildren = FindTreeViewItemByPath(treeItem.ItemsSource, targetPath);
+                    if (foundInChildren != null)
+                    {
+                        return foundInChildren;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Expands all parent directories of the specified TreeViewItem to make it visible.
+        /// </summary>
+        /// <param name="item">The TreeViewItem to expand parents for.</param>
+        private void ExpandParentDirectories(TreeViewItem item)
+        {
+            if (item == null)
+            {
+                return;
+            }
+
+            // Expand this item if it has children and is not already expanded
+            if (item.ItemsSource != null && !item.IsExpanded)
+            {
+                item.IsExpanded = true;
+            }
+
+            // Find the parent item and expand it recursively
+            var parent = FindParentTreeViewItem(_fileExplorerView.ItemsSource, item);
+            if (parent != null)
+            {
+                ExpandParentDirectories(parent);
+            }
+        }
+
+        /// <summary>
+        /// Finds the parent TreeViewItem of the specified child item.
+        /// </summary>
+        /// <param name="itemsSource">The items source to search in.</param>
+        /// <param name="childItem">The child item to find the parent for.</param>
+        /// <returns>The parent TreeViewItem if found, null otherwise.</returns>
+        private TreeViewItem FindParentTreeViewItem(IEnumerable<object> itemsSource, TreeViewItem childItem)
+        {
+            if (itemsSource == null || childItem == null)
+            {
+                return null;
+            }
+
+            foreach (var item in itemsSource)
+            {
+                if (!(item is TreeViewItem treeItem))
+                {
+                    continue;
+                }
+
+                // Check if this item contains the child
+                if (treeItem.ItemsSource != null)
+                {
+                    foreach (var child in treeItem.ItemsSource)
+                    {
+                        if (child == childItem)
+                        {
+                            return treeItem;
+                        }
+                    }
+
+                    // Recursively search in grandchildren
+                    var foundParent = FindParentTreeViewItem(treeItem.ItemsSource, childItem);
+                    if (foundParent != null)
+                    {
+                        return foundParent;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Scrolls the TreeView to make the specified item visible.
+        /// </summary>
+        /// <param name="item">The TreeViewItem to scroll to.</param>
+        private void ScrollToTreeViewItem(TreeViewItem item)
+        {
+            if (item == null || _fileExplorerView == null)
+            {
+                return;
+            }
+
+            try
+            {
+                // Find the ScrollViewer that contains the TreeView
+                ScrollViewer scrollViewer = FindParentScrollViewer(_fileExplorerView);
+                if (scrollViewer != null)
+                {
+                    // Use BringIntoView to scroll the item into view
+                    item.BringIntoView();
+
+                    // Also try to scroll the TreeView itself if it's in a ScrollViewer
+                    _fileExplorerView.BringIntoView(item);
+                }
+                else
+                {
+                    // Fallback: try to bring the item into view directly
+                    item.BringIntoView();
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't crash
+                System.Console.WriteLine($"Error scrolling to tree view item: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Finds the parent ScrollViewer of the specified control.
+        /// </summary>
+        /// <param name="control">The control to find the ScrollViewer for.</param>
+        /// <returns>The ScrollViewer if found, null otherwise.</returns>
+        private ScrollViewer FindParentScrollViewer(Control control)
+        {
+            if (control == null)
+            {
+                return null;
+            }
+
+            // Check if the control itself is a ScrollViewer
+            if (control is ScrollViewer scrollViewer)
+            {
+                return scrollViewer;
+            }
+
+            // Recursively check parent controls
+            Control parent = control.Parent as Control;
+            while (parent != null)
+            {
+                if (parent is ScrollViewer parentScrollViewer)
+                {
+                    return parentScrollViewer;
+                }
+                parent = parent.Parent as Control;
+            }
+
+            return null;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:1399-1410

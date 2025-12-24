@@ -554,7 +554,26 @@ namespace HolocronToolset.Windows
             var installations = _settings.Installations();
             if (!installations.ContainsKey(name))
             {
-                // TODO:  Installation not configured - would prompt user in full implementation
+                // Installation not configured - prompt user to configure it
+                var promptDialog = new Dialogs.InstallationConfigPromptDialog(name);
+                bool shouldConfigure = await promptDialog.ShowDialogAsync(this);
+
+                if (shouldConfigure)
+                {
+                    // Open settings dialog focused on installations tab
+                    var settingsDialog = new Dialogs.SettingsDialog(this);
+                    var result = await settingsDialog.ShowDialog<bool?>(this);
+
+                    if (result == true && settingsDialog.InstallationEdited)
+                    {
+                        // Settings were saved and installations were edited - try again
+                        // Re-run the installation selection logic
+                        ChangeActiveInstallation(_gameCombo.SelectedIndex);
+                        return;
+                    }
+                }
+
+                // User cancelled or configuration failed - revert selection
                 _gameCombo.SelectedIndex = prevIndex;
                 return;
             }

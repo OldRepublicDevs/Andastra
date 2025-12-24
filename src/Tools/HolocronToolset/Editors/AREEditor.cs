@@ -898,19 +898,19 @@ namespace HolocronToolset.Editors
                 _dirtFormula3Spin.Value = are.DirtyFormula3;
             }
             // Matching Python: self.ui.dirtFunction1Spin.setValue(are.dirty_func_1) (line 233)
-            // Note: ARE class doesn't have DirtyFunc properties - these may need to be extracted from GFF
-            // TODO: STUB - For now, default to 0
             if (_dirtFunction1Spin != null)
             {
-                _dirtFunction1Spin.Value = 0;
+                _dirtFunction1Spin.Value = are.DirtyFunc1;
             }
+            // Matching Python: self.ui.dirtFunction2Spin.setValue(are.dirty_func_2) (line 234)
             if (_dirtFunction2Spin != null)
             {
-                _dirtFunction2Spin.Value = 0;
+                _dirtFunction2Spin.Value = are.DirtyFunc2;
             }
+            // Matching Python: self.ui.dirtFunction3Spin.setValue(are.dirty_func_3) (line 235)
             if (_dirtFunction3Spin != null)
             {
-                _dirtFunction3Spin.Value = 0;
+                _dirtFunction3Spin.Value = are.DirtyFunc3;
             }
             // Matching Python: self.ui.dirtSize1Spin.setValue(are.dirty_size_1) (line 236)
             if (_dirtSize1Spin != null)
@@ -1215,7 +1215,20 @@ namespace HolocronToolset.Editors
                 are.DirtyFormula3 = (int)_dirtFormula3Spin.Value.Value;
             }
             // Original: are.dirty_func_1 = self.ui.dirtFunction1Spin.value() (line 343)
-            // Note: ARE class doesn't have DirtyFunc properties - these may need to be written to GFF directly
+            if (_dirtFunction1Spin != null && _dirtFunction1Spin.Value.HasValue)
+            {
+                are.DirtyFunc1 = (int)_dirtFunction1Spin.Value.Value;
+            }
+            // Original: are.dirty_func_2 = self.ui.dirtFunction2Spin.value() (line 344)
+            if (_dirtFunction2Spin != null && _dirtFunction2Spin.Value.HasValue)
+            {
+                are.DirtyFunc2 = (int)_dirtFunction2Spin.Value.Value;
+            }
+            // Original: are.dirty_func_3 = self.ui.dirtFunction3Spin.value() (line 345)
+            if (_dirtFunction3Spin != null && _dirtFunction3Spin.Value.HasValue)
+            {
+                are.DirtyFunc3 = (int)_dirtFunction3Spin.Value.Value;
+            }
             // Original: are.dirty_size_1 = self.ui.dirtSize1Spin.value() (line 346)
             if (_dirtSize1Spin != null && _dirtSize1Spin.Value.HasValue)
             {
