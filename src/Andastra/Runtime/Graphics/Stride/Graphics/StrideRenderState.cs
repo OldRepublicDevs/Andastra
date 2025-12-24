@@ -198,7 +198,7 @@ namespace Andastra.Runtime.Stride.Graphics
             set
             {
                 var desc = _description;
-                desc.DepthBufferFunction = (StrideGraphics.CompareFunction)ConvertCompareFunction(value);
+                desc.DepthBufferFunction = ConvertCompareFunctionToStride(value);
                 _description = desc;
             }
         }
@@ -232,7 +232,7 @@ namespace Andastra.Runtime.Stride.Graphics
             {
                 var desc = _description;
                 var frontFace = desc.FrontFace;
-                frontFace.StencilFail = (StrideGraphics.StencilOperation)ConvertStencilOperation(value);
+                frontFace.StencilFail = ConvertStencilOperationToStride(value);
                 desc.FrontFace = frontFace;
                 _description = desc;
             }
@@ -245,7 +245,7 @@ namespace Andastra.Runtime.Stride.Graphics
             {
                 var desc = _description;
                 var frontFace = desc.FrontFace;
-                frontFace.StencilDepthFail = (StrideGraphics.StencilOperation)ConvertStencilOperation(value);
+                frontFace.StencilDepthFail = ConvertStencilOperationToStride(value);
                 desc.FrontFace = frontFace;
                 _description = desc;
             }
@@ -258,7 +258,7 @@ namespace Andastra.Runtime.Stride.Graphics
             {
                 var desc = _description;
                 var frontFace = desc.FrontFace;
-                frontFace.StencilPass = (StrideGraphics.StencilOperation)ConvertStencilOperation(value);
+                frontFace.StencilPass = ConvertStencilOperationToStride(value);
                 desc.FrontFace = frontFace;
                 _description = desc;
             }
@@ -271,7 +271,7 @@ namespace Andastra.Runtime.Stride.Graphics
             {
                 var desc = _description;
                 var frontFace = desc.FrontFace;
-                frontFace.StencilFunction = (StrideGraphics.CompareFunction)ConvertCompareFunction(value);
+                frontFace.StencilFunction = ConvertCompareFunctionToStride(value);
                 desc.FrontFace = frontFace;
                 _description = desc;
             }
@@ -290,18 +290,18 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public int StencilMask
         {
-            get { return (int)_description.StencilMask; }
+            get { return _description.StencilMask; }
             set
             {
                 var desc = _description;
-                desc.StencilMask = unchecked((uint)value);
+                desc.StencilMask = value;
                 _description = desc;
             }
         }
 
         public int StencilWriteMask
         {
-            get { return (int)_description.StencilWriteMask; }
+            get { return _description.StencilWriteMask; }
             set
             {
                 var desc = _description;
@@ -327,6 +327,24 @@ namespace Andastra.Runtime.Stride.Graphics
             return (Andastra.Runtime.Graphics.CompareFunction)(int)func;
         }
 
+        /// <summary>
+        /// Converts Andastra.Runtime.Stride.Graphics.CompareFunction to Andastra.Runtime.Graphics.CompareFunction.
+        /// Both enums have identical values, so a direct cast is appropriate.
+        /// </summary>
+        private static Andastra.Runtime.Graphics.CompareFunction ConvertCompareFunction(CompareFunction func)
+        {
+            return (Andastra.Runtime.Graphics.CompareFunction)(int)func;
+        }
+
+        /// <summary>
+        /// Converts Andastra.Runtime.Graphics.CompareFunction to Andastra.Runtime.Stride.Graphics.CompareFunction.
+        /// Both enums have identical values, so a direct cast is appropriate.
+        /// </summary>
+        private static CompareFunction ConvertCompareFunctionToStride(Andastra.Runtime.Graphics.CompareFunction func)
+        {
+            return (CompareFunction)(int)func;
+        }
+
         private static StrideGraphics.StencilOperation ConvertStencilOperation(Andastra.Runtime.Graphics.StencilOperation op)
         {
             return (StrideGraphics.StencilOperation)(int)op;
@@ -335,6 +353,24 @@ namespace Andastra.Runtime.Stride.Graphics
         private static Andastra.Runtime.Graphics.StencilOperation ConvertStencilOperation(StrideGraphics.StencilOperation op)
         {
             return (Andastra.Runtime.Graphics.StencilOperation)(int)op;
+        }
+
+        /// <summary>
+        /// Converts Andastra.Runtime.Stride.Graphics.StencilOperation to Andastra.Runtime.Graphics.StencilOperation.
+        /// Both enums have identical values, so a direct cast is appropriate.
+        /// </summary>
+        private static Andastra.Runtime.Graphics.StencilOperation ConvertStencilOperation(StencilOperation op)
+        {
+            return (Andastra.Runtime.Graphics.StencilOperation)(int)op;
+        }
+
+        /// <summary>
+        /// Converts Andastra.Runtime.Graphics.StencilOperation to Andastra.Runtime.Stride.Graphics.StencilOperation.
+        /// Both enums have identical values, so a direct cast is appropriate.
+        /// </summary>
+        private static StencilOperation ConvertStencilOperationToStride(Andastra.Runtime.Graphics.StencilOperation op)
+        {
+            return (StencilOperation)(int)op;
         }
     }
 
@@ -347,7 +383,7 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public StrideBlendState(BlendStateDescription? description = null)
         {
-            _description = description ?? BlendStateDescription.Default;
+            _description = description ?? BlendStateDescription.Default();
         }
 
         public Andastra.Runtime.Graphics.BlendFunction AlphaBlendFunction
@@ -356,7 +392,7 @@ namespace Andastra.Runtime.Stride.Graphics
             set
             {
                 var desc = _description;
-                desc.AlphaBlendFunction = ConvertBlendFunction(value);
+                desc.AlphaBlendFunction = ConvertBlendFunctionToStride(value);
                 _description = desc;
             }
         }
@@ -389,7 +425,7 @@ namespace Andastra.Runtime.Stride.Graphics
             set
             {
                 var desc = _description;
-                desc.ColorBlendFunction = ConvertBlendFunction(value);
+                desc.ColorBlendFunction = ConvertBlendFunctionToStride(value);
                 _description = desc;
             }
         }
@@ -545,6 +581,34 @@ namespace Andastra.Runtime.Stride.Graphics
             // Andastra's BlendFunction enum matches Stride's BlendFunction enum exactly:
             // Add = 0, Subtract = 1, ReverseSubtract = 2, Min = 3, Max = 4
             return (Andastra.Runtime.Graphics.BlendFunction)(int)func;
+        }
+
+        /// <summary>
+        /// Converts Andastra.Runtime.Stride.Graphics.BlendFunction to Andastra.Runtime.Graphics.BlendFunction.
+        /// Both enums have identical values (Add, Subtract, ReverseSubtract, Min, Max),
+        /// so a direct cast is appropriate.
+        /// </summary>
+        /// <param name="func">Stride namespace blend function to convert.</param>
+        /// <returns>Equivalent Andastra blend function.</returns>
+        private static Andastra.Runtime.Graphics.BlendFunction ConvertBlendFunction(BlendFunction func)
+        {
+            // Both are Andastra enums with identical values:
+            // Add = 0, Subtract = 1, ReverseSubtract = 2, Min = 3, Max = 4
+            return (Andastra.Runtime.Graphics.BlendFunction)(int)func;
+        }
+
+        /// <summary>
+        /// Converts Andastra.Runtime.Graphics.BlendFunction to Andastra.Runtime.Stride.Graphics.BlendFunction.
+        /// Both enums have identical values (Add, Subtract, ReverseSubtract, Min, Max),
+        /// so a direct cast is appropriate.
+        /// </summary>
+        /// <param name="func">Andastra blend function to convert.</param>
+        /// <returns>Equivalent Stride namespace blend function.</returns>
+        private static BlendFunction ConvertBlendFunctionToStride(Andastra.Runtime.Graphics.BlendFunction func)
+        {
+            // Both are Andastra enums with identical values:
+            // Add = 0, Subtract = 1, ReverseSubtract = 2, Min = 3, Max = 4
+            return (BlendFunction)(int)func;
         }
 
         private static StrideGraphics.Blend ConvertBlend(Andastra.Runtime.Graphics.Blend blend)
