@@ -10,6 +10,7 @@ using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.Capsule;
+using Andastra.Parsing.Resource.Generics.UTI;
 using HolocronToolset.Data;
 using System.ComponentModel;
 
@@ -229,6 +230,48 @@ namespace HolocronToolset.Dialogs
             PopulateInventoryTable();
         }
 
+        // Matching PyKotor implementation: get_item method to retrieve UTI data
+        // Original: def get_item(self, resname: str, default: str = "") -> tuple[str, str, UTI]:
+        // Returns (filepath, name, uti) for the given ResRef, or (None, resname, None) if not found
+        private (string filepath, string name, UTI uti) GetItem(string resname)
+        {
+            if (_installation == null || string.IsNullOrWhiteSpace(resname))
+            {
+                return (null, resname, null);
+            }
+
+            try
+            {
+                // Try to find the UTI resource
+                // Matching PyKotor: uses installation.resource() to get UTI data
+                var resRef = ResRef.FromString(resname);
+                var resourceResult = _installation.Resource(resRef.ToString(), ResourceType.UTI);
+
+                if (resourceResult == null || resourceResult.Data == null)
+                {
+                    return (null, resname, null);
+                }
+
+                // Parse the UTI data
+                // Matching PyKotor: uses UTIHelpers.read_uti() equivalent
+                UTI uti = UTIHelpers.ReadUti(resourceResult.Data);
+
+                // Get the display name from the UTI
+                // Matching PyKotor: name = uti.name if uti else resname
+                string displayName = uti.Name?.ToString() ?? resname;
+
+                // Return filepath, name, and UTI object
+                // Matching PyKotor: return filepath, name, uti
+                return (resourceResult.FilePath, displayName, uti);
+            }
+            catch (Exception)
+            {
+                // If anything fails, return the resname as fallback
+                // Matching PyKotor: error handling for corrupted/missing files
+                return (null, resname, null);
+            }
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/inventory.py:191-197
         // Original: for item in self.inventory:
         //          try:
@@ -251,17 +294,19 @@ namespace HolocronToolset.Dialogs
             {
                 try
                 {
-                    // Get item information (filepath, name) from installation if available
+                    // Get item information (filepath, name, uti) from installation if available
+                    // Matching PyKotor: filepath, name, uti = cast("InventoryEditor", self.window()).get_item(resname, "")
                     string filePath = "";
                     string name = item.ResRef?.ToString() ?? "";
+                    UTI uti = null;
 
                     if (_installation != null && item.ResRef != null)
                     {
-                        // Try to get UTI file information
-                        // Matching PyKotor: filepath, name, uti = cast("InventoryEditor", self.window()).get_item(resname, "")
-                        // TODO: STUB - For now, we'll use the ResRef as the name if we can't get the actual name
-                        // TODO:  In a full implementation, this would call a method similar to get_item() to retrieve UTI data
-                        name = item.ResRef.ToString();
+                        // Use get_item method to retrieve UTI data
+                        var (utiFilePath, utiName, utiObject) = GetItem(item.ResRef.ToString());
+                        filePath = utiFilePath ?? "";
+                        name = utiName ?? item.ResRef.ToString();
+                        uti = utiObject;
                     }
 
                     // Create row item matching PyKotor: InventoryTableResnameItem(resname, filepath, name, droppable=droppable, infinite=infinite)
