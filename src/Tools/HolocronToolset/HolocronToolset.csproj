@@ -71,6 +71,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Andastra\Andastra.csproj" />
+    <ProjectReference Include="..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
   </ItemGroup>
   <!-- Resources -->
   <ItemGroup>
