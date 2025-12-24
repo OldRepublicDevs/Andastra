@@ -20,6 +20,7 @@ using UTCHelpers = Andastra.Parsing.Resource.Generics.UTC.UTCHelpers;
 using UTCClass = Andastra.Parsing.Resource.Generics.UTC.UTCClass;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
+using HolocronToolset.Widgets;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
 using UTC = Andastra.Parsing.Resource.Generics.UTC.UTC;
 using MsBox.Avalonia;
@@ -37,9 +38,9 @@ namespace HolocronToolset.Editors
         private static GlobalSettings _globalSettings;
 
         // UI Controls - Basic
-        private TextBox _firstNameEdit;
+        private LocalizedStringEdit _firstNameEdit;
         private Button _firstNameRandomBtn;
-        private TextBox _lastNameEdit;
+        private LocalizedStringEdit _lastNameEdit;
         private Button _lastNameRandomBtn;
         private TextBox _tagEdit;
         private Button _tagGenerateBtn;
@@ -167,7 +168,7 @@ namespace HolocronToolset.Editors
 
             // First Name
             var firstNameLabel = new TextBlock { Text = "First Name:" };
-            _firstNameEdit = new TextBox { IsReadOnly = true };
+            _firstNameEdit = new LocalizedStringEdit();
             _firstNameRandomBtn = new Button { Content = "Random" };
             _firstNameRandomBtn.Click += (s, e) => RandomizeFirstName();
             basicPanel.Children.Add(firstNameLabel);
@@ -176,7 +177,7 @@ namespace HolocronToolset.Editors
 
             // Last Name
             var lastNameLabel = new TextBlock { Text = "Last Name:" };
-            _lastNameEdit = new TextBox { IsReadOnly = true };
+            _lastNameEdit = new LocalizedStringEdit();
             _lastNameRandomBtn = new Button { Content = "Random" };
             _lastNameRandomBtn.Click += (s, e) => RandomizeLastName();
             basicPanel.Children.Add(lastNameLabel);
@@ -523,11 +524,13 @@ namespace HolocronToolset.Editors
             // Basic
             if (_firstNameEdit != null)
             {
-                _firstNameEdit.Text = _installation != null ? _installation.String(utc.FirstName) : utc.FirstName.StringRef.ToString();
+                _firstNameEdit.SetInstallation(_installation);
+                _firstNameEdit.SetLocString(utc.FirstName);
             }
             if (_lastNameEdit != null)
             {
-                _lastNameEdit.Text = _installation != null ? _installation.String(utc.LastName) : utc.LastName.StringRef.ToString();
+                _lastNameEdit.SetInstallation(_installation);
+                _lastNameEdit.SetLocString(utc.LastName);
             }
             if (_tagEdit != null)
             {
@@ -792,11 +795,9 @@ namespace HolocronToolset.Editors
             // Basic - read from UI controls (matching Python which always reads from UI)
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:561-562
             // Python: utc.first_name = self.ui.firstnameEdit.locstring()
-            // In C#, firstNameEdit/lastNameEdit are TextBox (read-only), LocalizedString is stored in _utc.FirstName/LastName and updated via dialogs
-            // So we use utc.FirstName/LastName from the copy (which preserves the values set by dialogs)
-            // Note: This matches Python behavior where locstring() returns the stored LocalizedString
-            utc.FirstName = utc.FirstName ?? LocalizedString.FromInvalid();
-            utc.LastName = utc.LastName ?? LocalizedString.FromInvalid();
+            // In C#, firstNameEdit/lastNameEdit are LocalizedStringEdit widgets that store the LocalizedString
+            utc.FirstName = _firstNameEdit?.GetLocString() ?? utc.FirstName ?? LocalizedString.FromInvalid();
+            utc.LastName = _lastNameEdit?.GetLocString() ?? utc.LastName ?? LocalizedString.FromInvalid();
             utc.Tag = _tagEdit?.Text ?? "";
             utc.ResRef = new ResRef(_resrefEdit?.Text ?? "");
             utc.AppearanceId = _appearanceSelect?.SelectedIndex ?? 0;
@@ -1012,7 +1013,7 @@ namespace HolocronToolset.Editors
                 // Matching Python: self.ui.firstnameEdit.set_locstring(locstring)
                 if (_firstNameEdit != null)
                 {
-                    _firstNameEdit.Text = _installation.String(_utc.FirstName);
+                    _firstNameEdit.SetLocString(_utc.FirstName);
                 }
             }
             catch (Exception ex)
@@ -1071,7 +1072,7 @@ namespace HolocronToolset.Editors
                 // Matching Python: self.ui.lastnameEdit.set_locstring(locstring)
                 if (_lastNameEdit != null)
                 {
-                    _lastNameEdit.Text = _installation.String(_utc.LastName);
+                    _lastNameEdit.SetLocString(_utc.LastName);
                 }
             }
             catch (Exception ex)
