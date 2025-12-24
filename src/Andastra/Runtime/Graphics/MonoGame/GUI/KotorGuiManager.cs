@@ -753,9 +753,6 @@ namespace Andastra.Runtime.MonoGame.GUI
                     // Button clicked - fire event
                     FireButtonClicked(button.Tag, button.Id ?? -1);
 
-                    // Fire the OnButtonClicked event for external handlers
-                    OnButtonClicked?.Invoke(button.Tag, button.Id ?? -1);
-
                     // Play click sound for button
                     PlayButtonClickSound();
 
