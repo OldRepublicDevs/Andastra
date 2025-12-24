@@ -3895,8 +3895,7 @@ namespace HolocronToolset.Tests.Editors
                 if (firstItem != null && firstItem.Link != null && firstItem.Link.Node != null)
                 {
                     // Select the first item (simulate tree selection)
-                    // TODO:  In a full implementation, we would set the tree view selection
-                    // TODO: STUB - For now, we'll directly test the UI controls
+                    editor.SelectTreeItem(firstItem);
 
                     // Test various param1 values (TSL only, but test that UI updates in-memory model)
                     // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2490-2496
@@ -4366,8 +4365,7 @@ namespace HolocronToolset.Tests.Editors
                 if (firstItem != null && firstItem.Link != null)
                 {
                     // Select the first item (simulate tree selection)
-                    // TODO:  In a full implementation, we would set the tree view selection
-                    // TODO: STUB - For now, we'll directly test the UI controls
+                    editor.SelectTreeItem(firstItem);
 
                     // Test quest values
                     string[] testQuests = { "test_quest", "quest_001", "" };
@@ -4393,9 +4391,17 @@ namespace HolocronToolset.Tests.Editors
                                 // Load back and verify
                                 editor.Load(dlgFile, "ORIHA", ResourceType.DLG, data);
 
+                                // Select the first item in the tree view to ensure UI is updated
+                                if (editor.Model.RowCount > 0)
+                                {
+                                    var reloadedItem = editor.Model.Item(0, 0);
+                                    if (reloadedItem != null)
+                                    {
+                                        editor.SelectTreeItem(reloadedItem);
+                                    }
+                                }
+
                                 // Verify quest value is loaded back
-                                // TODO:  Note: In a full implementation, we would select the item in the tree view
-                                // TODO: STUB - For now, we verify the node directly
                                 if (editor.Model.RowCount > 0)
                                 {
                                     var reloadedItem = editor.Model.Item(0, 0);

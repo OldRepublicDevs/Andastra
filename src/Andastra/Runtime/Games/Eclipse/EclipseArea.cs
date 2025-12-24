@@ -13928,35 +13928,14 @@ technique ColorGrading
         /// <returns>List of indices from cached geometry, or empty list if not cached.</returns>
         private List<int> ExtractIndicesFromCache(string meshId, EclipseArea area = null)
         {
-            if (string.IsNullOrEmpty(meshId))
+            if (string.IsNullOrEmpty(meshId) || area == null)
             {
                 return new List<int>();
             }
 
-            // Get cached geometry data from EclipseArea
-            // Note: _cachedMeshGeometry is private, so we need to access it through reflection or make it internal
-            if (area != null)
+            if (area.TryGetCachedMeshGeometryIndices(meshId, out List<int> indices))
             {
-                try
-                {
-                    var cachedMeshGeometryField = typeof(EclipseArea).GetField("_cachedMeshGeometry", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                    if (cachedMeshGeometryField != null)
-                    {
-                        var cachedMeshGeometryDict = cachedMeshGeometryField.GetValue(area) as Dictionary<string, EclipseArea.CachedMeshGeometry>;
-                        if (cachedMeshGeometryDict != null && cachedMeshGeometryDict.TryGetValue(meshId, out EclipseArea.CachedMeshGeometry cachedGeometry))
-            {
-                if (cachedGeometry.Indices != null)
-                {
-                    // Return a copy of the index list (so modifications don't affect cache)
-                    return new List<int>(cachedGeometry.Indices);
-                            }
-                        }
-                    }
-                }
-                catch
-                {
-                    // Reflection failed, return empty list
-                }
+                return indices;
             }
 
             return new List<int>();
@@ -13980,27 +13959,6 @@ technique ColorGrading
                 return;
             }
 
-            // Get cached geometry dictionary from EclipseArea using reflection
-            try
-            {
-                var cachedMeshGeometryField = typeof(EclipseArea).GetField("_cachedMeshGeometry", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                if (cachedMeshGeometryField == null)
-                {
-                    return;
-                }
-
-                var cachedMeshGeometryDict = cachedMeshGeometryField.GetValue(area) as Dictionary<string, EclipseArea.CachedMeshGeometry>;
-                if (cachedMeshGeometryDict == null)
-            {
-                return;
-            }
-
-            // Check if already cached
-                if (cachedMeshGeometryDict.ContainsKey(meshId))
-            {
-                return;
-            }
-
             // Extract vertex positions and indices recursively from all nodes
             List<Vector3> vertices = new List<Vector3>();
             List<int> indices = new List<int>();
@@ -14010,19 +13968,7 @@ technique ColorGrading
             // Only cache if we extracted valid geometry
             if (vertices.Count > 0 && indices.Count > 0)
             {
-                    EclipseArea.CachedMeshGeometry cachedGeometry = new EclipseArea.CachedMeshGeometry
-                {
-                    MeshId = meshId,
-                    Vertices = vertices,
-                    Indices = indices
-                };
-
-                    cachedMeshGeometryDict[meshId] = cachedGeometry;
-                }
-            }
-            catch
-            {
-                // Reflection failed, cannot cache geometry
+                area.CacheMeshGeometry(meshId, vertices, indices);
             }
         }
 
@@ -14519,7 +14465,7 @@ technique ColorGrading
                 return null;
             }
 
-            if (_cachedMeshGeometry.TryGetValue(meshId, out CachedMeshGeometry cachedGeometry))
+            if (_cachedMeshGeometry.TryGetValue(meshId, out EclipseArea.CachedMeshGeometry cachedGeometry))
             {
                 return cachedGeometry;
             }
@@ -14546,7 +14492,7 @@ technique ColorGrading
                 return false;
             }
 
-            if (_cachedMeshGeometry.TryGetValue(meshId, out CachedMeshGeometry cachedGeometry))
+            if (_cachedMeshGeometry.TryGetValue(meshId, out EclipseArea.CachedMeshGeometry cachedGeometry))
             {
                 if (cachedGeometry.Vertices != null && cachedGeometry.Vertices.Count > 0)
                 {
@@ -14578,7 +14524,7 @@ technique ColorGrading
                 return false;
             }
 
-            if (_cachedMeshGeometry.TryGetValue(meshId, out CachedMeshGeometry cachedGeometry))
+            if (_cachedMeshGeometry.TryGetValue(meshId, out EclipseArea.CachedMeshGeometry cachedGeometry))
             {
                 if (cachedGeometry.Indices != null && cachedGeometry.Indices.Count > 0)
                 {
