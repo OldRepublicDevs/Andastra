@@ -12,13 +12,19 @@
     <MonoGameProfile>HiDef</MonoGameProfile>
   </PropertyGroup>
 
-  <!-- Debug Configuration: Fastest build, safest, most verbose -->
+  <!-- Debug Configuration: Optimized for faster development builds -->
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <TargetFramework Condition="!$([MSBuild]::IsOSPlatform('Windows'))">net9.0</TargetFramework>
-    <TargetFramework Condition="$([MSBuild]::IsOSPlatform('Windows'))">net9.0</TargetFramework>
-    <!-- OutputType -->
-    <OutputType Condition="!$([MSBuild]::IsOSPlatform('Windows'))">Exe</OutputType>
-    <OutputType Condition="$([MSBuild]::IsOSPlatform('Windows'))">WinExe</OutputType>
+    <!-- Build only latest .NET (net8.0) for Debug to speed up development builds (unless TargetFramework is explicitly set) -->
+    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT'">net9.0-windows</TargetFrameworks>
+    <OutputType Condition="'$(OS)' == 'Windows_NT'">WinExe</OutputType>
+    <OutputType Condition="'$(OS)' != 'Windows_NT'">Exe</OutputType>
+    <TargetFrameworks Condition="('$(OS)' == 'Windows_NT') AND $(TargetFramework.StartsWith('net4'))">net48</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Linux'))">net9.0-linux</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('OSX'))">net9.0-macosx</TargetFrameworks>
+    <!-- Disable analyzers in Debug builds for faster compilation -->
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
+    <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
+    <Nullable>disable</Nullable>
     <!-- Fast build optimizations -->
     <Optimize>false</Optimize>
     <DebugType>portable</DebugType>
@@ -41,46 +47,84 @@
 
   <!-- Release Configuration: Optimized, cross-platform, takes longer to build -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <TargetFramework Condition="!$([MSBuild]::IsOSPlatform('Windows'))">net9.0</TargetFramework>
-    <TargetFramework Condition="$([MSBuild]::IsOSPlatform('Windows'))">net9.0</TargetFramework>
-    <!-- OutputType -->
-    <OutputType Condition="!$([MSBuild]::IsOSPlatform('Windows'))">Exe</OutputType>
-    <OutputType Condition="$([MSBuild]::IsOSPlatform('Windows'))">WinExe</OutputType>
-    <!-- Full optimization for runtime performance -->
-    <Optimize>true</Optimize>
+    <TargetFrameworks></TargetFrameworks>
+    <!-- Helper to append without duplicate semicolons -->
+    <TargetFrameworks Condition="'$(TargetFrameworks)' != ''">
+      $([System.String]::Copy('$(TargetFrameworks)').TrimEnd(';').TrimStart(';'))
+    </TargetFrameworks>
+    <!-- Add each TFM conditionally -->
+    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '10.0.0'))">
+      $(TargetFrameworks);net10.0
+    </TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '9.0.0'))">
+      $(TargetFrameworks);net9.0
+    </TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '8.0.0'))">
+      $(TargetFrameworks);net8.0
+    </TargetFrameworks>
+    <!-- === .NET 7 SDK: include net7.0 + net6.0 (legacy support) === -->
+    <TargetFrameworks Condition="$([System.String]::new('$(NETCoreSdkVersion)').StartsWith('7.'))">
+      $(TargetFrameworks);net7.0;net6.0
+    </TargetFrameworks>
+    <!-- === .NET 6 SDK: include (legacy support) === -->
+    <TargetFrameworks Condition="$([System.String]::new('$(NETCoreSdkVersion)').StartsWith('6.'))">
+      $(TargetFrameworks);net6.0
+    </TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8')">
+      $(TargetFrameworks);net48
+    </TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2')">
+      $(TargetFrameworks);net462
+    </TargetFrameworks>
+    <BuildInParallel>true</BuildInParallel>
+    <BuildInParallel>true</BuildInParallel>
+    <DebugSymbols>false</DebugSymbols>
     <DebugType>portable</DebugType>
-    <DebugSymbols>true</DebugSymbols>
-    <DefineConstants>TRACE</DefineConstants>
-    <!-- Disable analyzers for build speed (but still optimize code) -->
+    <DebugType>portable</DebugType>
+    <Deterministic>true</Deterministic>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <Nullable>disable</Nullable>
+    <Optimize>true</Optimize>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
     <RunCodeAnalysis>false</RunCodeAnalysis>
-    <EnableNETAnalyzers>false</EnableNETAnalyzers>
-    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
-    <!-- Build performance -->
-    <BuildInParallel>true</BuildInParallel>
-    <UseSharedCompilation>true</UseSharedCompilation>
-    <UseRidGraph>true</UseRidGraph>
-    <Deterministic>false</Deterministic>
-    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
-    <!-- Additional Release optimizations -->
+    <SkipMonoGameContentPipeline Condition="'$(SkipMonoGameContentPipeline)' == ''">false</SkipMonoGameContentPipeline>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <UseRidGraph>true</UseRidGraph>
+    <UseSharedCompilation>true</UseSharedCompilation>
     <WarningLevel>0</WarningLevel>
   </PropertyGroup>
-  <!-- StartupObject removed because Game folder is excluded from build -->
+
+  <!-- RuntimeIdentifiers: Forward-compatible dynamic assignment based on .NET version -->
+  <!-- .NET Framework: Legacy Windows RIDs + cross-platform -->
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
+    <RuntimeIdentifiers>win7-x86;win7-x64;win10-x86;win10-x64</RuntimeIdentifiers>
+  </PropertyGroup>
+  <!-- .NET 8+: Modern Windows RIDs + cross-platform (forward-compatible with net10.0, net11.0, etc.) -->
+  <PropertyGroup Condition="!$(TargetFramework.StartsWith('net4'))">
+    <RuntimeIdentifiers>win-x86;win-x64;win-arm64;linux-x64;linux-arm64;osx-x64;osx-arm64</RuntimeIdentifiers>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <StartupObject>Andastra.Runtime.Game.Program</StartupObject>
+  </PropertyGroup>
+
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="11.2.2" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.2.2" />
-    <PackageReference Include="MessageBox.Avalonia" Version="1.0.0" />
+    <PackageReference Include="Eto.Forms" Version="2.10.2" />
+    <PackageReference Include="Eto.Platform.Gtk" Version="2.10.2" Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
+    <PackageReference Include="Eto.Platform.Mac" Version="2.10.2" Condition="$([MSBuild]::IsOSPlatform('OSX'))" />
+    <PackageReference Include="Eto.Platform.Wpf" Version="2.10.2" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
+    <PackageReference Include="Myra" Version="1.5.10" />
     <PackageReference Include="ini-parser-netstandard" Version="2.5.3" />
     <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
     <PackageReference Include="LZMA-SDK" Version="19.0.0" />
+    <PackageReference Include="SharpCompress" Version="0.38.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="sly" Version="3.7.7" />
     <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.4.1" />
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
-    <PackageReference Include="Myra" Version="1.5.10" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="SharpCompress" Version="0.38.0" />
-    <PackageReference Include="sly" Version="3.7.7" />
     <PackageReference Include="Stride.Audio" Version="4.2.1.2487" />
     <PackageReference Include="Stride.Engine" Version="4.2.1.2487" />
     <PackageReference Include="Stride.Graphics" Version="4.2.1.2487" />
@@ -91,6 +135,12 @@
     <PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.1" />
     <PackageReference Include="System.Text.Json" Version="10.0.1" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="Parsing\Andastra.Parsing.csproj" />
+    <ProjectReference Include="Runtime\Andastra.Runtime.csproj" />
+    <ProjectReference Include="Utility\Andastra.Utility.csproj" />
+  </ItemGroup>
   <ItemGroup>
     <Content Include="Content\**\*.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -99,28 +149,18 @@
   <ItemGroup Condition="'$(SkipMonoGameContentPipeline)' != 'true'">
     <MonoGameContentReference Include="Game\Content.mgcb" />
   </ItemGroup>
+
+  <!-- Exclude files that are now in separate modular projects -->
   <ItemGroup>
-    <Compile Remove="Demo\**" />
-    <Content Remove="Demo\**" />
-    <EmbeddedResource Remove="Demo\**" />
-    <None Remove="Demo\**" />
+    <Compile Remove="Parsing\**" />
+    <Compile Remove="Runtime\**" />
+    <Compile Remove="Utility\**" />
   </ItemGroup>
+
+  <!-- Exclude the new project files from compilation -->
   <ItemGroup>
-    <Compile Remove="Tests\**" />
-    <Content Remove="Tests\**" />
-    <EmbeddedResource Remove="Tests\**" />
-    <None Remove="Tests\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="**\Tests\**" />
-    <Content Remove="**\Tests\**" />
-    <EmbeddedResource Remove="**\Tests\**" />
-    <None Remove="**\Tests\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="Game\**" />
-    <Content Remove="Game\**" />
-    <EmbeddedResource Remove="Game\**" />
-    <None Remove="Game\**" />
+    <None Include="Parsing\Andastra.Parsing.csproj" />
+    <None Include="Runtime\Andastra.Runtime.csproj" />
+    <None Include="Utility\Andastra.Utility.csproj" />
   </ItemGroup>
 </Project>
