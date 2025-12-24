@@ -372,6 +372,17 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             }
         }
 
+        // Wrapper function that matches GlProgramEnvParameter4fArbDelegate signature
+        // This function is used as a delegate and forwards calls to the actual OpenGL function
+        private static void Kotor1ProgramEnvParameter4fWrapperFunction(uint target, uint index, float x, float y, float z, float w)
+        {
+            // Forward the call directly to the OpenGL function
+            if (_kotor1GlProgramEnvParameter4fArb != null)
+            {
+                _kotor1GlProgramEnvParameter4fArb(target, index, x, y, z, w);
+            }
+        }
+
         // DAT_007bb834 - function pointer for glBindProgramARB (matching swkotor.exe: FUN_004a2400)
         private static GlBindProgramArbDelegate _kotor1GlBindProgramArb2 = null;
 
