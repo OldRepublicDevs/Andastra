@@ -4521,6 +4521,9 @@ namespace HolocronToolset.Tests.Editors
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2760-2792
         // Original: def test_dlg_editor_manipulate_plot_xp_roundtrip(qtbot, installation: HTInstallation, test_files_dir: Path): Test plot XP roundtrip
+        // TODO: VERIFY - Ghidra analysis needed to ensure PlotXpPercentage field aligns with swkotor2.exe DLG format
+        // Ghidra project: C:\Users\boden\Andastra Ghidra Project.gpr
+        // Check DLG parsing code for plot_xp_percentage field usage in KotOR 2 (swkotor2.exe: DLG format extensions)
         [Fact]
         public void TestDlgEditorManipulatePlotXpRoundtrip()
         {
