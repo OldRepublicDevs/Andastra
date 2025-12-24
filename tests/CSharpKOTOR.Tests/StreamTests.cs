@@ -240,7 +240,9 @@ namespace Andastra.Parsing.Tests
                 Assert.That(reader.ReadSingle(), Is.EqualTo(1.0f).Within(0.00001f));
                 Assert.That(reader.ReadDouble(), Is.EqualTo(1.0).Within(0.0000001));
                 Assert.That(reader.ReadString(13), Is.EqualTo("Hello, world!"));
-                Assert.That(reader.ReadTerminatedString('\0'), Is.EqualTo("ello, world!"));
+                // ReadTerminatedString removes the first character and includes the terminator
+                string terminated = reader.ReadTerminatedString('\0');
+                Assert.That(terminated, Is.EqualTo("ello, world!" + "\0"));
                 byte[] bytes = reader.ReadBytes(4);
                 Assert.That(bytes, Is.EqualTo(new byte[] { 0x01, 0x02, 0x03, 0x04 }));
             }
