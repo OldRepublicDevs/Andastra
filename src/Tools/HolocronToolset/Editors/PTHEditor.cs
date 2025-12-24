@@ -12,6 +12,10 @@ using KotorColor = Andastra.Parsing.Common.ParsingColor;
 using Window = Avalonia.Controls.Window;
 using PTH = Andastra.Parsing.Resource.Generics.PTH;
 using PathSelection = HolocronToolset.Editors.PathSelection;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
+using Andastra.Parsing.Resource.Formats.LYT;
+using Andastra.Parsing.Formats.BWM;
 
 namespace HolocronToolset.Editors
 {
@@ -702,10 +706,48 @@ namespace HolocronToolset.Editors
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:249-269
         // Original: def load(self, filepath, resref, restype, data):
+        // swkotor2.exe: PTH loading requires LYT file for context (room layout and walkmesh information)
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
 
+            // Search for corresponding LYT file (same resref, but .lyt extension)
+            // Matching PyKotor: order = [SearchLocation.OVERRIDE, SearchLocation.CHITIN, SearchLocation.MODULES]
+            if (_installation != null)
+            {
+                SearchLocation[] searchOrder = new[] { SearchLocation.OVERRIDE, SearchLocation.CHITIN, SearchLocation.MODULES };
+                ResourceResult lytResult = _installation.Resource(resref, ResourceType.LYT, searchOrder);
+                
+                if (lytResult != null)
+                {
+                    // Load the LYT layout
+                    try
+                    {
+                        LYT layout = LYTAuto.ReadLyt(lytResult.Data);
+                        LoadLayout(layout);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Console.WriteLine($"Failed to load LYT layout: {ex}");
+                        // Continue with PTH loading even if LYT fails
+                    }
+                }
+                else
+                {
+                    // LYT file not found - show error message
+                    // Matching PyKotor: BetterMessageBox with critical icon
+                    string message = $"PTHEditor requires {resref}.lyt in order to load '{resref}.{restype}', but it could not be found.";
+                    var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                        "Layout not found",
+                        message,
+                        ButtonEnum.Ok,
+                        Icon.Error);
+                    errorBox.ShowAsync();
+                    // Continue with PTH loading anyway (user may still want to edit the path)
+                }
+            }
+
+            // Load the PTH data
             try
             {
                 var pth = PTHAuto.ReadPth(data);
@@ -752,6 +794,57 @@ namespace HolocronToolset.Editors
         public PTH Pth()
         {
             return _pth;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:288-304
+        // Original: @status_bar_decorator def loadLayout(self, layout: LYT):
+        // swkotor2.exe: LoadLayout loads walkmeshes for each room in the layout to provide visual context
+        private void LoadLayout(LYT layout)
+        {
+            if (_installation == null || layout == null)
+            {
+                return;
+            }
+
+            List<BWM> walkmeshes = new List<BWM>();
+            SearchLocation[] searchOrder = new[] { SearchLocation.OVERRIDE, SearchLocation.CHITIN, SearchLocation.MODULES };
+
+            // For each room in the layout, try to find and load its walkmesh (WOK file)
+            foreach (LYTRoom room in layout.Rooms)
+            {
+                if (room == null || room.Model == null)
+                {
+                    continue;
+                }
+
+                string modelResRef = room.Model.ToString();
+                ResourceResult wokResult = _installation.Resource(modelResRef, ResourceType.WOK, searchOrder);
+                
+                if (wokResult != null)
+                {
+                    try
+                    {
+                        // Matching PyKotor: print("loadLayout", "BWM Found", f"{findBWM.resname}.{findBWM.restype}", file=self.status_out)
+                        if (StatusOut != null)
+                        {
+                            StatusOut.Write($"loadLayout BWM Found {wokResult.ResName}.{wokResult.ResType}");
+                        }
+
+                        BWM walkmesh = BWMAuto.ReadBwm(wokResult.Data);
+                        walkmeshes.Add(walkmesh);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Console.WriteLine($"Failed to load walkmesh for room {modelResRef}: {ex}");
+                        // Continue with other rooms even if one fails
+                    }
+                }
+            }
+
+            // Set walkmeshes on render area (if supported)
+            // TODO: STUB - PTHRenderArea.SetWalkmeshes() method needs to be implemented for full walkmesh rendering
+            // For now, the walkmeshes are loaded but not displayed in the render area
+            // This matches the Python implementation where set_walkmeshes is called on the render area
         }
 
         public override void SaveAs()
