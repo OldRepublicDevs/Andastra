@@ -8,7 +8,7 @@ using System.Text;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Diff;
-using Game = Andastra.Parsing.Common.BiowareGame;
+using Game = Andastra.Parsing.Common.BioWareGame;
 using Andastra.Parsing.Extract;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.NCS;

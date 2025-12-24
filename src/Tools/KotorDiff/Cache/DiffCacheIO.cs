@@ -9,7 +9,7 @@ using Andastra.Parsing.Common;
 using JetBrains.Annotations;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
-using Game = Andastra.Parsing.Common.BiowareGame;
+using Game = Andastra.Parsing.Common.BioWareGame;
 
 namespace KotorDiff.Cache
 {
