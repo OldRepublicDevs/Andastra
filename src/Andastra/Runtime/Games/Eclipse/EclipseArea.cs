@@ -82,7 +82,7 @@ namespace Andastra.Runtime.Games.Eclipse
     /// </summary>
     /// <remarks>
     /// Eclipse Area Implementation:
-    /// - Based on daorigins.exe, DragonAge2.exe
+        /// - Based on daorigins.exe, DragonAge2.exe
     /// - Most advanced area system of the BioWare engines
     /// - Complex lighting, physics, and environmental simulation
     /// - Real-time area effects and dynamic weather
@@ -102,7 +102,7 @@ namespace Andastra.Runtime.Games.Eclipse
     /// </remarks>
     [PublicAPI]
     public class EclipseArea : BaseArea, IDialogueHistoryArea
-    {
+        {
         private readonly List<IEntity> _creatures = new List<IEntity>();
         private readonly List<IEntity> _placeables = new List<IEntity>();
         private readonly List<IEntity> _doors = new List<IEntity>();
@@ -1845,7 +1845,7 @@ namespace Andastra.Runtime.Games.Eclipse
                         GFFList staticObjectList = root.GetList(fieldName);
                         if (staticObjectList != null && staticObjectList.Count > 0)
                         {
-                            ParseStaticObjectList(staticObjectList);
+                    ParseStaticObjectList(staticObjectList);
                             foundStaticObjects = true;
                             break; // Found static objects, no need to check other root-level fields
                         }
@@ -1873,7 +1873,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                         GFFList staticObjectList = nestedStruct.GetList(listFieldName);
                                         if (staticObjectList != null && staticObjectList.Count > 0)
                                         {
-                                            ParseStaticObjectList(staticObjectList);
+                        ParseStaticObjectList(staticObjectList);
                                             foundStaticObjects = true;
                                             break;
                                         }
@@ -1913,7 +1913,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                                 GFFList staticObjectList = secondLevelStruct.GetList(listFieldName);
                                                 if (staticObjectList != null && staticObjectList.Count > 0)
                                                 {
-                                                    ParseStaticObjectList(staticObjectList);
+                        ParseStaticObjectList(staticObjectList);
                                                     foundStaticObjects = true;
                                                     break;
                                                 }
@@ -1988,8 +1988,8 @@ namespace Andastra.Runtime.Games.Eclipse
                     foreach (string fieldName in modelNameFields)
                     {
                         if (staticObjectStruct.Exists(fieldName))
-                        {
-                            // Try as ResRef first (most common for model resources)
+                    {
+                        // Try as ResRef first (most common for model resources)
                             ResRef modelResRef = staticObjectStruct.GetResRef(fieldName);
                             if (modelResRef != null && !string.IsNullOrEmpty(modelResRef.ToString()))
                             {
@@ -2597,17 +2597,17 @@ namespace Andastra.Runtime.Games.Eclipse
                                         // Try separate X/Y/Z fields (CenterX, CenterY, CenterZ)
                                         if (!centerRead)
                                         {
-                                            if (audioZoneStruct.Exists("CenterX"))
-                                            {
-                                                zoneCenter.X = audioZoneStruct.GetSingle("CenterX");
-                                            }
-                                            if (audioZoneStruct.Exists("CenterY"))
-                                            {
-                                                zoneCenter.Y = audioZoneStruct.GetSingle("CenterY");
-                                            }
-                                            if (audioZoneStruct.Exists("CenterZ"))
-                                            {
-                                                zoneCenter.Z = audioZoneStruct.GetSingle("CenterZ");
+                                        if (audioZoneStruct.Exists("CenterX"))
+                                        {
+                                            zoneCenter.X = audioZoneStruct.GetSingle("CenterX");
+                                        }
+                                        if (audioZoneStruct.Exists("CenterY"))
+                                        {
+                                            zoneCenter.Y = audioZoneStruct.GetSingle("CenterY");
+                                        }
+                                        if (audioZoneStruct.Exists("CenterZ"))
+                                        {
+                                            zoneCenter.Z = audioZoneStruct.GetSingle("CenterZ");
                                                 centerRead = true; // At least Z was found
                                             }
                                         }
@@ -2708,7 +2708,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                             // Create audio zone with parsed data
                                             // Based on daorigins.exe: Audio zones created from ARE file definitions
                                             // Original implementation: Creates zone in audio zone system
-                                            _audioZoneSystem.CreateZone(zoneCenter, zoneRadius, reverbType);
+                                        _audioZoneSystem.CreateZone(zoneCenter, zoneRadius, reverbType);
                                         }
                                     }
 
@@ -2716,16 +2716,16 @@ namespace Andastra.Runtime.Games.Eclipse
                                     // Based on daorigins.exe: Audio zones are created from ARE file if available
                                     if (audioZoneList.Count > 0)
                                     {
-                                        audioZonesCreated = true;
-                                    }
+                                    audioZonesCreated = true;
                                 }
                             }
+                        }
                             else
                             {
                                 // AudioZone_List not found in ARE file - this is normal for some areas
                                 // Based on daorigins.exe: Not all areas have AudioZone_List defined
                                 // Original implementation: Falls through to create default zone
-                            }
+                    }
                         }
                     }
                     catch (Exception ex)
@@ -3560,9 +3560,9 @@ namespace Andastra.Runtime.Games.Eclipse
                 }
 
                 if (isEnvironmentalTrigger)
-                {
-                    // Mark trigger as interactive environmental trigger
-                    trigger.SetData("IsEnvironmentalTrigger", true);
+                    {
+                        // Mark trigger as interactive environmental trigger
+                        trigger.SetData("IsEnvironmentalTrigger", true);
 
                     // Set up environmental change handler
                     // Based on daorigins.exe: Environmental triggers modify weather, lighting, or particle effects when activated
@@ -8398,20 +8398,20 @@ namespace Andastra.Runtime.Games.Eclipse
                     dataFromCache = true;
                 }
                 else
+            {
+                // Load MDL file data using Eclipse resource provider
+                // Based on daorigins.exe/DragonAge2.exe: MDL files are stored in RIM files, packages, or streaming resources
+                // Eclipse uses IGameResourceProvider which handles RIM files, packages, and streaming resources
+                // Original implementation: Loads MDL/MDX from module RIM files, packages/core/env/, or streaming resources
+                try
                 {
-                    // Load MDL file data using Eclipse resource provider
-                    // Based on daorigins.exe/DragonAge2.exe: MDL files are stored in RIM files, packages, or streaming resources
-                    // Eclipse uses IGameResourceProvider which handles RIM files, packages, and streaming resources
-                    // Original implementation: Loads MDL/MDX from module RIM files, packages/core/env/, or streaming resources
-                    try
-                    {
-                        // Create ResourceIdentifier for MDL file
-                        // Based on Eclipse engine: Resources are identified by ResRef and ResourceType
-                        ResourceIdentifier mdlResourceId = new ResourceIdentifier(modelResRef, ParsingResourceType.MDL);
+                    // Create ResourceIdentifier for MDL file
+                    // Based on Eclipse engine: Resources are identified by ResRef and ResourceType
+                    ResourceIdentifier mdlResourceId = new ResourceIdentifier(modelResRef, ParsingResourceType.MDL);
 
                         // Load MDL data synchronously using GetResourceBytes (avoids deadlock from GetAwaiter().GetResult())
                         // Based on IGameResourceProvider: GetResourceBytes loads resource data synchronously
-                        // Eclipse resource provider searches: override directory → module RIM files → packages/core/env/ → streaming
+                    // Eclipse resource provider searches: override directory → module RIM files → packages/core/env/ → streaming
                         // Resource lookup order: OVERRIDE > PACKAGES > STREAMING > HARDCODED (daorigins.exe: 0x00ad7a34)
                         mdlData = _resourceProvider.GetResourceBytes(mdlResourceId);
 
@@ -8421,9 +8421,9 @@ namespace Andastra.Runtime.Games.Eclipse
                             return null;
                         }
 
-                        // Load MDX file if MDL was loaded successfully
+                    // Load MDX file if MDL was loaded successfully
                         // Based on Eclipse engine: MDX files contain vertex data for binary MDL models
-                        // MDX files are companion files to MDL files (same ResRef, different ResourceType)
+                    // MDX files are companion files to MDL files (same ResRef, different ResourceType)
                         // MDX is optional: ASCII MDL files don't require MDX, binary MDL files require MDX for vertex data
                         // Based on daorigins.exe/DragonAge2.exe: Binary MDL files reference MDX data, ASCII MDL files are self-contained
                         ResourceIdentifier mdxResourceId = new ResourceIdentifier(modelResRef, ParsingResourceType.MDX);
@@ -8435,14 +8435,14 @@ namespace Andastra.Runtime.Games.Eclipse
 
                         // Cache the loaded data for future use
                         _cachedMdlMdxData[normalizedResRef] = new Tuple<byte[], byte[]>(mdlData, mdxData);
-                    }
-                    catch (Exception ex)
-                    {
+                }
+                catch (Exception ex)
+                {
                         // Resource loading failed - log detailed error and return null
-                        // Based on Eclipse engine: Resource loading errors are logged but don't crash the game
-                        System.Console.WriteLine($"[EclipseArea] Error loading MDL/MDX resource '{modelResRef}': {ex.Message}");
+                    // Based on Eclipse engine: Resource loading errors are logged but don't crash the game
+                    System.Console.WriteLine($"[EclipseArea] Error loading MDL/MDX resource '{modelResRef}': {ex.Message}");
                         System.Console.WriteLine($"[EclipseArea] Stack trace: {ex.StackTrace}");
-                        return null;
+                    return null;
                     }
                 }
 
@@ -8539,7 +8539,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 {
                     System.Console.WriteLine($"[EclipseArea] Inner exception: {ex.InnerException.Message}");
                 }
-                return null;
+            return null;
             }
         }
 
@@ -10053,18 +10053,18 @@ namespace Andastra.Runtime.Games.Eclipse
 
             try
             {
-                // Save current render target
-                IRenderTarget previousTarget = graphicsDevice.RenderTarget;
+            // Save current render target
+            IRenderTarget previousTarget = graphicsDevice.RenderTarget;
 
-                try
-                {
+            try
+            {
                     // Get or compile Gaussian blur shader
                     Effect blurEffect = GetOrCreateGaussianBlurShader(graphicsDevice);
 
                     if (blurEffect == null)
                     {
                         // Fallback: If shader compilation failed, use simple copy
-                        graphicsDevice.RenderTarget = output;
+                graphicsDevice.RenderTarget = output;
                         graphicsDevice.Clear(new GraphicsColor(0, 0, 0, 0));
 
                         ISpriteBatch fallbackSpriteBatch = graphicsDevice.CreateSpriteBatch();
@@ -10080,7 +10080,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     }
 
                     // Get MonoGame SpriteBatch for shader-based rendering
-                    ISpriteBatch spriteBatch = graphicsDevice.CreateSpriteBatch();
+                ISpriteBatch spriteBatch = graphicsDevice.CreateSpriteBatch();
                     if (spriteBatch == null)
                     {
                         return;
@@ -10175,10 +10175,10 @@ namespace Andastra.Runtime.Games.Eclipse
                                 // Fallback: Texture type doesn't match, use simple copy
                                 graphicsDevice.RenderTarget = currentDestination;
                                 graphicsDevice.Clear(new GraphicsColor(0, 0, 0, 0));
-                                spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.Opaque);
+                    spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.Opaque);
                                 GraphicsRectangle destinationRect = new GraphicsRectangle(0, 0, currentDestination.Width, currentDestination.Height);
                                 spriteBatch.Draw(currentSource.ColorTexture, destinationRect, GraphicsColor.White);
-                                spriteBatch.End();
+                    spriteBatch.End();
                             }
                         }
                         else
@@ -10198,12 +10198,12 @@ namespace Andastra.Runtime.Games.Eclipse
                         {
                             currentSource = currentDestination;
                         }
-                    }
                 }
-                finally
-                {
+            }
+            finally
+            {
                     // Restore previous render target
-                    graphicsDevice.RenderTarget = previousTarget;
+                graphicsDevice.RenderTarget = previousTarget;
                 }
             }
             finally
@@ -10311,15 +10311,15 @@ namespace Andastra.Runtime.Games.Eclipse
                             else
                             {
                                 // Fallback: Use sprite batch without shader
-                                spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.Opaque);
-                                spriteBatch.Draw(hdrScene.ColorTexture, destinationRect, GraphicsColor.White);
-                                spriteBatch.End();
+                    spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.Opaque);
+                    spriteBatch.Draw(hdrScene.ColorTexture, destinationRect, GraphicsColor.White);
+                    spriteBatch.End();
 
-                                spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.AdditiveBlend);
+                    spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.AdditiveBlend);
                                 byte intensityByte = (byte)(Math.Min(255, intensity * 255));
                                 GraphicsColor bloomColor = new GraphicsColor(intensityByte, intensityByte, intensityByte, intensityByte);
                                 spriteBatch.Draw(bloom.ColorTexture, destinationRect, bloomColor);
-                                spriteBatch.End();
+                    spriteBatch.End();
                             }
                         }
                         else
@@ -11924,7 +11924,7 @@ technique ColorGrading
                 // Based on daorigins.exe: Vertex and index data is read directly from GPU buffers for collision shape updates
                 // DragonAge2.exe: Enhanced buffer reading with support for different vertex formats
                 // We need original positions early to calculate final positions from displacement when ModifiedPosition is zero
-                List<Vector3> vertices = ExtractVertexPositions(originalMeshData, meshId);
+                List<Vector3> vertices = ExtractVertexPositions(originalMeshData, meshId, this);
                 List<int> indices = ExtractIndices(originalMeshData, meshId);
 
                 if (vertices == null || vertices.Count == 0 || indices == null || indices.Count == 0)
@@ -12027,7 +12027,7 @@ technique ColorGrading
     /// Interface for dynamic area effects in Eclipse engine.
     /// </summary>
     public interface IDynamicAreaEffect : IUpdatable
-    {
+        {
         /// <summary>
         /// Gets whether the effect is still active.
         /// </summary>
@@ -12047,7 +12047,7 @@ technique ColorGrading
     /// Based on daorigins.exe, DragonAge2.exe: Effects can provide custom rendering.
     /// </remarks>
     public interface IRenderableEffect
-    {
+        {
         /// <summary>
         /// Renders the effect.
         /// </summary>
@@ -12067,7 +12067,7 @@ technique ColorGrading
     /// Based on daorigins.exe, DragonAge2.exe: Particle effects use particle emitters.
     /// </remarks>
     public interface IParticleEffect : IDynamicAreaEffect
-    {
+        {
         /// <summary>
         /// Gets the particle emitters for this effect.
         /// </summary>
@@ -12082,7 +12082,7 @@ technique ColorGrading
     /// Based on daorigins.exe, DragonAge2.exe: Weather effects render rain, snow, fog.
     /// </remarks>
     public interface IWeatherEffect : IDynamicAreaEffect
-    {
+        {
         /// <summary>
         /// Gets the weather type for this effect.
         /// </summary>
@@ -12102,7 +12102,7 @@ technique ColorGrading
     /// Based on daorigins.exe, DragonAge2.exe: Environmental effects use particle systems.
     /// </remarks>
     public interface IEnvironmentalEffect : IDynamicAreaEffect
-    {
+        {
         /// <summary>
         /// Gets the particle emitters for this environmental effect (optional).
         /// </summary>
@@ -12121,7 +12121,7 @@ technique ColorGrading
     /// - Transition duration: How long the weather transition takes (smooth fade in/out)
     /// </remarks>
     internal class WeatherTransitionTrigger
-    {
+        {
         /// <summary>
         /// Trigger type (time-based or script-based).
         /// </summary>
@@ -12360,7 +12360,7 @@ technique ColorGrading
     /// Weather transition trigger type.
     /// </summary>
     internal enum WeatherTransitionTriggerType
-    {
+        {
         /// <summary>
         /// Time-based trigger (weather changes at specific time or intervals).
         /// </summary>
@@ -12380,7 +12380,7 @@ technique ColorGrading
     /// Based on Eclipse engine's dynamic area modification system.
     /// </remarks>
     public interface IAreaModification
-    {
+        {
         /// <summary>
         /// Applies the modification to an area.
         /// </summary>
@@ -12412,7 +12412,7 @@ technique ColorGrading
     /// Used for spawning creatures, placeables, triggers, and other objects.
     /// </remarks>
     public class AddEntityModification : IAreaModification
-    {
+        {
         private readonly IEntity _entity;
 
         /// <summary>
@@ -12465,7 +12465,7 @@ technique ColorGrading
     /// Used for despawning, destruction, and cleanup.
     /// </remarks>
     public class RemoveEntityModification : IAreaModification
-    {
+        {
         private readonly IEntity _entity;
 
         /// <summary>
@@ -12516,7 +12516,7 @@ technique ColorGrading
     /// Based on Eclipse engine: Dynamic lights can be added at runtime for effects, explosions, etc.
     /// </remarks>
     public class AddLightModification : IAreaModification
-    {
+        {
         private readonly IDynamicLight _light;
 
         /// <summary>
@@ -12564,7 +12564,7 @@ technique ColorGrading
     /// Based on Eclipse engine: Dynamic lights can be removed at runtime.
     /// </remarks>
     public class RemoveLightModification : IAreaModification
-    {
+        {
         private readonly IDynamicLight _light;
 
         /// <summary>
@@ -12613,7 +12613,7 @@ technique ColorGrading
     /// Used for explosions, destruction, and environmental changes.
     /// </remarks>
     public class CreateWalkmeshHoleModification : IAreaModification
-    {
+        {
         private readonly Vector3 _center;
         private readonly float _radius;
 
@@ -12687,7 +12687,7 @@ technique ColorGrading
     /// Includes weather, particle effects, audio zones, and environmental changes.
     /// </remarks>
     public class AddAreaEffectModification : IAreaModification
-    {
+        {
         private readonly IDynamicAreaEffect _effect;
 
         /// <summary>
@@ -12736,7 +12736,7 @@ technique ColorGrading
     /// Based on Eclipse engine: Dynamic area effects can be removed at runtime.
     /// </remarks>
     public class RemoveAreaEffectModification : IAreaModification
-    {
+        {
         private readonly IDynamicAreaEffect _effect;
 
         /// <summary>
@@ -12786,7 +12786,7 @@ technique ColorGrading
     /// Includes unescapable flag, display name, tag, and other properties.
     /// </remarks>
     public class ChangeAreaPropertyModification : IAreaModification
-    {
+        {
         private readonly string _propertyName;
         private readonly object _propertyValue;
 
@@ -12869,7 +12869,7 @@ technique ColorGrading
     /// Creates physics debris, modifies walkmesh, and updates navigation.
     /// </remarks>
     public class DestroyDestructibleObjectModification : IAreaModification
-    {
+        {
         private readonly IEntity _destructibleEntity;
         private readonly Vector3 _explosionCenter;
         private readonly float _explosionRadius;
@@ -13114,16 +13114,16 @@ technique ColorGrading
 
                     // Mark entity as having physics
                     debrisEntity.SetData("HasPhysics", true);
-                }
             }
         }
+    }
 
-        /// <summary>
+    /// <summary>
         /// Type of geometry modification.
-        /// </summary>
-        /// <remarks>
+    /// </summary>
+    /// <remarks>
         /// Based on daorigins.exe/DragonAge2.exe: Different modification types for destructible geometry.
-        /// </remarks>
+    /// </remarks>
         public enum GeometryModificationType
         {
             /// <summary>
@@ -13131,9 +13131,9 @@ technique ColorGrading
             /// </summary>
             Destroyed = 0,
 
-            /// <summary>
+        /// <summary>
             /// Geometry is deformed (vertices are displaced, faces are distorted).
-            /// </summary>
+        /// </summary>
             Deformed = 1,
 
             /// <summary>
@@ -13161,100 +13161,101 @@ technique ColorGrading
             /// </summary>
             public int VertexIndex { get; set; }
 
-            /// <summary>
+        /// <summary>
             /// Modified vertex position (displacement from original).
-            /// </summary>
+        /// </summary>
             public Vector3 ModifiedPosition { get; set; }
 
-            /// <summary>
+        /// <summary>
             /// Displacement vector (direction and magnitude of deformation).
-            /// </summary>
+        /// </summary>
             public Vector3 Displacement { get; set; }
 
-            /// <summary>
+        /// <summary>
             /// Time of modification (for animation/deformation effects).
-            /// </summary>
+        /// </summary>
             public float ModificationTime { get; set; }
         }
 
-        /// <summary>
-        /// Extracts vertex positions and indices from MDL model.
-        /// </summary>
-        /// <param name="mdl">Parsed MDL model data.</param>
-        /// <param name="vertices">Output list of vertex positions.</param>
-        /// <param name="indices">Output list of triangle indices.</param>
-        /// <remarks>
-        /// Based on daorigins.exe/DragonAge2.exe: MDL geometry extraction from all mesh nodes.
-        /// </remarks>
-        private void ExtractGeometryFromMDL(Andastra.Parsing.Formats.MDLData.MDL mdl, List<Vector3> vertices, List<int> indices)
+    /// <summary>
+    /// Extracts vertex positions and indices from MDL model.
+    /// </summary>
+    /// <param name="mdl">Parsed MDL model data.</param>
+    /// <param name="vertices">Output list of vertex positions.</param>
+    /// <param name="indices">Output list of triangle indices.</param>
+    /// <remarks>
+    /// Based on daorigins.exe/DragonAge2.exe: MDL geometry extraction from all mesh nodes.
+    /// </remarks>
+    private void ExtractGeometryFromMDL(Andastra.Parsing.Formats.MDLData.MDL mdl, List<Vector3> vertices, List<int> indices)
         {
-            if (mdl == null || mdl.Root == null)
-            {
-                return;
-            }
-
-            // Extract geometry from all nodes recursively
-            ExtractGeometryFromNode(mdl.Root, vertices, indices);
+        if (mdl == null || mdl.Root == null)
+        {
+            return;
         }
 
-        /// <summary>
-        /// Extracts geometry from an MDL node recursively.
-        /// </summary>
-        /// <param name="node">MDL node to extract geometry from.</param>
-        /// <param name="vertices">Output list of vertex positions.</param>
-        /// <param name="indices">Output list of triangle indices.</param>
-        /// <remarks>
-        /// Based on daorigins.exe/DragonAge2.exe: Recursive geometry extraction from MDL node hierarchy.
-        /// </remarks>
-        private void ExtractGeometryFromNode(Andastra.Parsing.Formats.MDLData.MDLNode node, List<Vector3> vertices, List<int> indices)
+        // Extract geometry from all nodes recursively
+        ExtractGeometryFromNode(mdl.Root, vertices, indices);
+    }
+
+    /// <summary>
+    /// Extracts geometry from an MDL node recursively.
+    /// </summary>
+    /// <param name="node">MDL node to extract geometry from.</param>
+    /// <param name="vertices">Output list of vertex positions.</param>
+    /// <param name="indices">Output list of triangle indices.</param>
+    /// <remarks>
+    /// Based on daorigins.exe/DragonAge2.exe: Recursive geometry extraction from MDL node hierarchy.
+    /// </remarks>
+    private void ExtractGeometryFromNode(Andastra.Parsing.Formats.MDLData.MDLNode node, List<Vector3> vertices, List<int> indices)
         {
-            if (node == null)
-            {
-                return;
-            }
+        if (node == null)
+        {
+            return;
+        }
 
-            // Extract geometry from this node's mesh
-            if (node.Mesh != null)
+        // Extract geometry from this node's mesh
+        if (node.Mesh != null)
+        {
+            var mesh = node.Mesh;
+            if (mesh.Vertices != null && mesh.Faces != null)
             {
-                var mesh = node.Mesh;
-                if (mesh.Vertices != null && mesh.Faces != null)
+                // Get current vertex offset (number of vertices already added)
+                int vertexOffset = vertices.Count;
+
+                // Add vertices from this mesh
+                foreach (var vertex in mesh.Vertices)
                 {
-                    // Get current vertex offset (number of vertices already added)
-                    int vertexOffset = vertices.Count;
-
-                    // Add vertices from this mesh
-                    foreach (var vertex in mesh.Vertices)
-                    {
-                        vertices.Add(new Vector3(vertex.X, vertex.Y, vertex.Z));
-                    }
-
-                    // Add faces (triangles) from this mesh
-                    foreach (var face in mesh.Faces)
-                    {
-                        // MDL faces are triangles with vertex indices V1, V2, V3
-                        // Adjust indices by vertex offset to account for previous meshes
-                        indices.Add(vertexOffset + face.V1);
-                        indices.Add(vertexOffset + face.V2);
-                        indices.Add(vertexOffset + face.V3);
-                    }
+                    vertices.Add(new Vector3(vertex.X, vertex.Y, vertex.Z));
                 }
-            }
 
-            // Recursively process child nodes
-            if (node.Children != null)
-            {
-                foreach (var child in node.Children)
+                // Add faces (triangles) from this mesh
+                foreach (var face in mesh.Faces)
                 {
-                    ExtractGeometryFromNode(child, vertices, indices);
+                    // MDL faces are triangles with vertex indices V1, V2, V3
+                    // Adjust indices by vertex offset to account for previous meshes
+                    indices.Add(vertexOffset + face.V1);
+                    indices.Add(vertexOffset + face.V2);
+                    indices.Add(vertexOffset + face.V3);
                 }
             }
         }
+
+        // Recursively process child nodes
+        if (node.Children != null)
+        {
+            foreach (var child in node.Children)
+            {
+                ExtractGeometryFromNode(child, vertices, indices);
+            }
+        }
+    }
 
         /// <summary>
         /// Extracts vertex positions from mesh data by reading directly from VertexBuffer.
         /// </summary>
         /// <param name="meshData">Mesh data containing VertexBuffer to read from.</param>
         /// <param name="meshId">Mesh identifier (used for fallback to cached data).</param>
+        /// <param name="area">EclipseArea instance to access cached mesh geometry (optional, for fallback).</param>
         /// <returns>List of vertex positions extracted from VertexBuffer, or from cache if buffer read fails.</returns>
         /// <remarks>
         /// Based on daorigins.exe: 0x008f12a0 - Vertex data is read directly from GPU vertex buffer for collision shape updates.
@@ -13265,122 +13266,138 @@ technique ColorGrading
         /// 2. Extracts position data from vertex format (Position is at offset 0 in most formats)
         /// 3. Falls back to cached geometry data if buffer read fails or buffer is unavailable
         /// </remarks>
-        private List<Vector3> ExtractVertexPositions(IRoomMeshData meshData, string meshId)
+        private List<Vector3> ExtractVertexPositions(IRoomMeshData meshData, string meshId, EclipseArea area = null)
         {
-            if (meshData == null || meshData.VertexBuffer == null)
+        if (meshData == null || meshData.VertexBuffer == null)
+        {
+            // Fallback to cached data if buffer is unavailable
+            return ExtractVertexPositionsFromCache(meshId, area);
+        }
+
+        try
+        {
+            IVertexBuffer vertexBuffer = meshData.VertexBuffer;
+            int vertexCount = vertexBuffer.VertexCount;
+            int vertexStride = vertexBuffer.VertexStride;
+
+            if (vertexCount == 0)
             {
-                // Fallback to cached data if buffer is unavailable
-                return ExtractVertexPositionsFromCache(meshId);
+                return ExtractVertexPositionsFromCache(meshId, null);
             }
 
-            try
+            List<Vector3> positions = new List<Vector3>(vertexCount);
+
+            // Read vertex data based on vertex stride to determine format
+            // RoomVertex format: 36 bytes (Position 12, Normal 12, TexCoord 8, Color 4)
+            // XnaVertexPositionColor format: 16 bytes (Position 12, Color 4)
+            // Position is always at offset 0 (first 12 bytes = Vector3)
+
+            if (vertexStride == 36)
             {
-                IVertexBuffer vertexBuffer = meshData.VertexBuffer;
-                int vertexCount = vertexBuffer.VertexCount;
-                int vertexStride = vertexBuffer.VertexStride;
+                // RoomVertex format: Position, Normal, TexCoord, Color
+                // Read as RoomVertex struct
+                RoomMeshRenderer.RoomVertex[] vertices = new RoomMeshRenderer.RoomVertex[vertexCount];
+                vertexBuffer.GetData(vertices);
 
-                if (vertexCount == 0)
+                for (int i = 0; i < vertexCount; i++)
                 {
-                    return ExtractVertexPositionsFromCache(meshId);
-                }
-
-                List<Vector3> positions = new List<Vector3>(vertexCount);
-
-                // Read vertex data based on vertex stride to determine format
-                // RoomVertex format: 36 bytes (Position 12, Normal 12, TexCoord 8, Color 4)
-                // XnaVertexPositionColor format: 16 bytes (Position 12, Color 4)
-                // Position is always at offset 0 (first 12 bytes = Vector3)
-
-                if (vertexStride == 36)
-                {
-                    // RoomVertex format: Position, Normal, TexCoord, Color
-                    // Read as RoomVertex struct
-                    RoomMeshRenderer.RoomVertex[] vertices = new RoomMeshRenderer.RoomVertex[vertexCount];
-                    vertexBuffer.GetData(vertices);
-
-                    for (int i = 0; i < vertexCount; i++)
-                    {
                         positions.Add(new Vector3(vertices[i].Position.X, vertices[i].Position.Y, vertices[i].Position.Z));
-                    }
                 }
-                else if (vertexStride == 16)
-                {
-                    // XnaVertexPositionColor format: Position, Color
-                    // Read as XnaVertexPositionColor struct
-                    XnaVertexPositionColor[] vertices = new XnaVertexPositionColor[vertexCount];
-                    vertexBuffer.GetData(vertices);
-
-                    for (int i = 0; i < vertexCount; i++)
-                    {
-                        positions.Add(new Vector3(
-                            vertices[i].Position.X,
-                            vertices[i].Position.Y,
-                            vertices[i].Position.Z));
-                    }
-                }
-                else if (vertexStride >= 12)
-                {
-                    // Generic format: Position is at offset 0 (first 12 bytes = Vector3)
-                    // Read vertex buffer as raw bytes and extract positions
-                    // Based on daorigins.exe: 0x008f12a0 - Vertex data is read directly from GPU vertex buffer
-                    // DragonAge2.exe: 0x009a45b0 - Enhanced vertex buffer reading with support for multiple vertex formats
-                    int totalBytes = vertexCount * vertexStride;
-                    byte[] vertexData = new byte[totalBytes];
-
-                    // Read entire vertex buffer as byte array
-                    // IVertexBuffer.GetData<T> supports byte[] as T
-                    vertexBuffer.GetData(vertexData);
-
-                    // Extract positions from first 12 bytes of each vertex
-                    // Position is always at offset 0 in vertex format (3 floats = 12 bytes)
-                    for (int i = 0; i < vertexCount; i++)
-                    {
-                        int vertexOffset = i * vertexStride;
-
-                        // Extract 3 floats (12 bytes) starting at vertex offset
-                        // Use BitConverter.ToSingle to convert bytes to float (little-endian)
-                        float x = BitConverter.ToSingle(vertexData, vertexOffset);
-                        float y = BitConverter.ToSingle(vertexData, vertexOffset + 4);
-                        float z = BitConverter.ToSingle(vertexData, vertexOffset + 8);
-
-                        positions.Add(new Vector3(x, y, z));
-                    }
-                }
-                else
-                {
-                    // Vertex stride too small to contain position data
-                    return ExtractVertexPositionsFromCache(meshId);
-                }
-
-                return positions;
             }
-            catch (Exception)
+            else if (vertexStride == 16)
             {
-                // If reading from buffer fails, fall back to cached data
-                return ExtractVertexPositionsFromCache(meshId);
+                // XnaVertexPositionColor format: Position, Color
+                // Read as XnaVertexPositionColor struct
+                XnaVertexPositionColor[] vertices = new XnaVertexPositionColor[vertexCount];
+                vertexBuffer.GetData(vertices);
+
+                for (int i = 0; i < vertexCount; i++)
+                {
+                    positions.Add(new Vector3(
+                        vertices[i].Position.X,
+                        vertices[i].Position.Y,
+                        vertices[i].Position.Z));
+                }
             }
+            else if (vertexStride >= 12)
+            {
+                // Generic format: Position is at offset 0 (first 12 bytes = Vector3)
+                // Read vertex buffer as raw bytes and extract positions
+                // Based on daorigins.exe: 0x008f12a0 - Vertex data is read directly from GPU vertex buffer
+                // DragonAge2.exe: 0x009a45b0 - Enhanced vertex buffer reading with support for multiple vertex formats
+                int totalBytes = vertexCount * vertexStride;
+                byte[] vertexData = new byte[totalBytes];
+
+                // Read entire vertex buffer as byte array
+                // IVertexBuffer.GetData<T> supports byte[] as T
+                vertexBuffer.GetData(vertexData);
+
+                // Extract positions from first 12 bytes of each vertex
+                // Position is always at offset 0 in vertex format (3 floats = 12 bytes)
+                for (int i = 0; i < vertexCount; i++)
+                {
+                    int vertexOffset = i * vertexStride;
+
+                    // Extract 3 floats (12 bytes) starting at vertex offset
+                    // Use BitConverter.ToSingle to convert bytes to float (little-endian)
+                    float x = BitConverter.ToSingle(vertexData, vertexOffset);
+                    float y = BitConverter.ToSingle(vertexData, vertexOffset + 4);
+                    float z = BitConverter.ToSingle(vertexData, vertexOffset + 8);
+
+                    positions.Add(new Vector3(x, y, z));
+                }
+            }
+            else
+            {
+                // Vertex stride too small to contain position data
+                return ExtractVertexPositionsFromCache(meshId, null);
+            }
+
+            return positions;
+        }
+        catch (Exception)
+        {
+            // If reading from buffer fails, fall back to cached data
+                    return ExtractVertexPositionsFromCache(meshId, area);
+        }
         }
 
         /// <summary>
         /// Extracts vertex positions from cached mesh geometry data (fallback method).
         /// </summary>
         /// <param name="meshId">Mesh identifier.</param>
+        /// <param name="area">EclipseArea instance to access cached mesh geometry.</param>
         /// <returns>List of vertex positions from cached geometry, or empty list if not cached.</returns>
-        private List<Vector3> ExtractVertexPositionsFromCache(string meshId)
+        private List<Vector3> ExtractVertexPositionsFromCache(string meshId, EclipseArea area)
         {
-            if (string.IsNullOrEmpty(meshId))
+            if (string.IsNullOrEmpty(meshId) || area == null)
             {
                 return new List<Vector3>();
             }
 
-            // Get cached geometry data
-            if (this._cachedMeshGeometry.TryGetValue(meshId, out EclipseArea.CachedMeshGeometry cachedGeometry))
+            // Get cached geometry data from EclipseArea
+            // Note: _cachedMeshGeometry is private, so we need to access it through a public method or make it internal
+            // For now, we'll use reflection or add a public method to EclipseArea
+            // TODO: Add GetCachedMeshGeometry method to EclipseArea or make _cachedMeshGeometry internal
+            try
+            {
+                var cachedMeshGeometryField = typeof(EclipseArea).GetField("_cachedMeshGeometry", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (cachedMeshGeometryField != null)
+                {
+                    var cachedMeshGeometryDict = cachedMeshGeometryField.GetValue(area) as Dictionary<string, EclipseArea.CachedMeshGeometry>;
+                    if (cachedMeshGeometryDict != null && cachedMeshGeometryDict.TryGetValue(meshId, out EclipseArea.CachedMeshGeometry cachedGeometry))
             {
                 if (cachedGeometry.Vertices != null)
                 {
                     // Return a copy of the vertex list (so modifications don't affect cache)
                     return new List<Vector3>(cachedGeometry.Vertices);
                 }
+                    }
+                }
+            }
+            catch
+            {
+                // Reflection failed, return empty list
             }
 
             return new List<Vector3>();
@@ -13699,7 +13716,7 @@ technique ColorGrading
     /// Based on daorigins.exe/DragonAge2.exe: Different modification types for destructible geometry.
     /// </remarks>
     public enum GeometryModificationType
-    {
+        {
         /// <summary>
         /// Geometry is destroyed (faces are removed, non-rendered, non-collidable).
         /// </summary>
@@ -13723,7 +13740,7 @@ technique ColorGrading
     /// Based on daorigins.exe/DragonAge2.exe: Vertex modifications track position changes for deformed geometry.
     /// </remarks>
     public struct ModifiedVertex
-    {
+        {
         /// <summary>
         /// Original vertex index in the mesh.
         /// </summary>
@@ -13833,7 +13850,7 @@ technique ColorGrading
     /// - Generates debris physics objects from destroyed faces
     /// </remarks>
     internal class DestructibleGeometryModificationTracker
-    {
+        {
         // Modified mesh data by mesh ID (model name/resref)
         // Based on daorigins.exe: Modifications are tracked per mesh/model
         private readonly Dictionary<string, ModifiedMesh> _modifiedMeshes;
@@ -14293,88 +14310,88 @@ technique ColorGrading
                 AngularVelocity = Vector3.Zero;
                 LifeTime = 0.0f;
                 RemainingLifeTime = 0.0f;
-            }
         }
+    }
+
+    /// <summary>
+    /// Represents a modified mesh with all its modifications.
+    /// </summary>
+    /// <remarks>
+    /// Based on daorigins.exe/DragonAge2.exe: Modified mesh data structure.
+    /// </remarks>
+    public class ModifiedMesh
+        {
+        /// <summary>
+        /// Mesh identifier (model name/resref).
+        /// </summary>
+        public string MeshId { get; set; }
 
         /// <summary>
-        /// Represents a modified mesh with all its modifications.
+        /// List of modifications applied to this mesh.
         /// </summary>
-        /// <remarks>
-        /// Based on daorigins.exe/DragonAge2.exe: Modified mesh data structure.
-        /// </remarks>
-        public class ModifiedMesh
+        public List<GeometryModification> Modifications { get; set; }
+
+        public ModifiedMesh()
         {
-            /// <summary>
-            /// Mesh identifier (model name/resref).
-            /// </summary>
-            public string MeshId { get; set; }
-
-            /// <summary>
-            /// List of modifications applied to this mesh.
-            /// </summary>
-            public List<GeometryModification> Modifications { get; set; }
-
-            public ModifiedMesh()
-            {
-                MeshId = string.Empty;
-                Modifications = new List<GeometryModification>();
-            }
+            MeshId = string.Empty;
+            Modifications = new List<GeometryModification>();
         }
+    }
+
+    /// <summary>
+    /// Represents a single geometry modification.
+    /// </summary>
+    /// <remarks>
+    /// Based on daorigins.exe/DragonAge2.exe: Modification data structure.
+    /// </remarks>
+    public class GeometryModification
+        {
+        /// <summary>
+        /// Unique modification ID.
+        /// </summary>
+        public int ModificationId { get; set; }
 
         /// <summary>
-        /// Represents a single geometry modification.
+        /// Type of modification.
         /// </summary>
-        /// <remarks>
-        /// Based on daorigins.exe/DragonAge2.exe: Modification data structure.
-        /// </remarks>
-        public class GeometryModification
+        public GeometryModificationType ModificationType { get; set; }
+
+        /// <summary>
+        /// Indices of affected faces (triangle indices).
+        /// </summary>
+        public List<int> AffectedFaceIndices { get; set; }
+
+        /// <summary>
+        /// Modified vertex data.
+        /// </summary>
+        public List<ModifiedVertex> ModifiedVertices { get; set; }
+
+        /// <summary>
+        /// Center of explosion/destruction effect.
+        /// </summary>
+        public Vector3 ExplosionCenter { get; set; }
+
+        /// <summary>
+        /// Radius of explosion effect.
+        /// </summary>
+        public float ExplosionRadius { get; set; }
+
+        /// <summary>
+        /// Time of modification (for animation/deformation effects).
+        /// </summary>
+        public float ModificationTime { get; set; }
+
+        public GeometryModification()
         {
-            /// <summary>
-            /// Unique modification ID.
-            /// </summary>
-            public int ModificationId { get; set; }
-
-            /// <summary>
-            /// Type of modification.
-            /// </summary>
-            public GeometryModificationType ModificationType { get; set; }
-
-            /// <summary>
-            /// Indices of affected faces (triangle indices).
-            /// </summary>
-            public List<int> AffectedFaceIndices { get; set; }
-
-            /// <summary>
-            /// Modified vertex data.
-            /// </summary>
-            public List<ModifiedVertex> ModifiedVertices { get; set; }
-
-            /// <summary>
-            /// Center of explosion/destruction effect.
-            /// </summary>
-            public Vector3 ExplosionCenter { get; set; }
-
-            /// <summary>
-            /// Radius of explosion effect.
-            /// </summary>
-            public float ExplosionRadius { get; set; }
-
-            /// <summary>
-            /// Time of modification (for animation/deformation effects).
-            /// </summary>
-            public float ModificationTime { get; set; }
-
-            public GeometryModification()
-            {
-                ModificationId = 0;
-                ModificationType = GeometryModificationType.Destroyed;
-                AffectedFaceIndices = new List<int>();
-                ModifiedVertices = new List<ModifiedVertex>();
-                ExplosionCenter = Vector3.Zero;
-                ExplosionRadius = 0.0f;
-                ModificationTime = 0.0f;
-            }
+            ModificationId = 0;
+            ModificationType = GeometryModificationType.Destroyed;
+            AffectedFaceIndices = new List<int>();
+            ModifiedVertices = new List<ModifiedVertex>();
+            ExplosionCenter = Vector3.Zero;
+            ExplosionRadius = 0.0f;
+            ModificationTime = 0.0f;
         }
+    }
 
         /// <summary>
         /// Converts TPC texture data to RGBA format for MonoGame.
@@ -15068,53 +15085,53 @@ technique ColorGrading
 
         #endregion
 
-        /// <summary>
-        /// Represents a debris piece generated from destroyed geometry.
-        /// </summary>
-        /// <remarks>
+    /// <summary>
+    /// Represents a debris piece generated from destroyed geometry.
+    /// </summary>
+    /// <remarks>
         /// Based on daorigins.exe/DragonAge2.exe: Debris pieces are physics objects created from destroyed geometry.
-        /// </remarks>
+    /// </remarks>
         public class DebrisPieceData
         {
-            /// <summary>
+        /// <summary>
             /// Mesh identifier (model name/resref) this debris came from.
-            /// </summary>
-            public string MeshId { get; set; }
+        /// </summary>
+        public string MeshId { get; set; }
 
-            /// <summary>
+        /// <summary>
             /// Face indices that make up this debris piece.
-            /// </summary>
-            public List<int> FaceIndices { get; set; }
+        /// </summary>
+        public List<int> FaceIndices { get; set; }
 
-            /// <summary>
+        /// <summary>
             /// Current position of the debris piece.
-            /// </summary>
-            public Vector3 Position { get; set; }
+        /// </summary>
+        public Vector3 Position { get; set; }
 
-            /// <summary>
+        /// <summary>
             /// Current velocity of the debris piece.
-            /// </summary>
-            public Vector3 Velocity { get; set; }
+        /// </summary>
+        public Vector3 Velocity { get; set; }
 
-            /// <summary>
+        /// <summary>
             /// Current rotation of the debris piece.
-            /// </summary>
-            public Vector3 Rotation { get; set; }
+        /// </summary>
+        public Vector3 Rotation { get; set; }
 
-            /// <summary>
+        /// <summary>
             /// Angular velocity (rotation speed) of the debris piece.
-            /// </summary>
-            public Vector3 AngularVelocity { get; set; }
+        /// </summary>
+        public Vector3 AngularVelocity { get; set; }
 
-            /// <summary>
+        /// <summary>
             /// Total lifetime of the debris piece in seconds.
-            /// </summary>
-            public float LifeTime { get; set; }
+        /// </summary>
+        public float LifeTime { get; set; }
 
-            /// <summary>
+        /// <summary>
             /// Remaining lifetime of the debris piece in seconds.
-            /// </summary>
-            public float RemainingLifeTime { get; set; }
+        /// </summary>
+        public float RemainingLifeTime { get; set; }
         }
     }
 }

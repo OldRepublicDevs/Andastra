@@ -500,7 +500,8 @@ shader TemporalAAEffect : ShaderBase
             try
             {
                 // Strategy 1: Try to get EffectCompiler from GraphicsDevice services
-                var services = _graphicsDevice.Services;
+                // Note: Services() extension method always returns null in newer Stride versions
+                object services = _graphicsDevice.Services();
                 if (services != null)
                 {
                     // Try to get EffectCompiler from services
