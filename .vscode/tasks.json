@@ -64,12 +64,12 @@
       "dependsOn": "restore"
     },
     {
-      "label": "build-odyssey-debug",
+      "label": "build-andastra-debug",
       "type": "shell",
       "command": "dotnet",
       "args": [
         "build",
-        "${workspaceFolder}/src/OdysseyRuntime/Odyssey.Game/Odyssey.Game.csproj",
+        "${workspaceFolder}/src/Andastra/Andastra.csproj",
         "/property:Configuration=Debug",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary"
@@ -85,12 +85,12 @@
       "dependsOn": "restore"
     },
     {
-      "label": "build-odyssey-release",
+      "label": "build-andastra-release",
       "type": "shell",
       "command": "dotnet",
       "args": [
         "build",
-        "${workspaceFolder}/src/OdysseyRuntime/Odyssey.Game/Odyssey.Game.csproj",
+        "${workspaceFolder}/src/Andastra/Andastra.csproj",
         "/property:Configuration=Release",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary"
