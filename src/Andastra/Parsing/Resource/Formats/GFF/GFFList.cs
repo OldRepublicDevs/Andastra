@@ -26,6 +26,15 @@ namespace Andastra.Parsing.Formats.GFF
             return newStruct;
         }
 
+        public void Add(GFFStruct gffStruct)
+        {
+            if (gffStruct == null)
+            {
+                throw new ArgumentNullException(nameof(gffStruct));
+            }
+            _structs.Add(gffStruct);
+        }
+
         [CanBeNull]
         public GFFStruct At(int index)
         {
