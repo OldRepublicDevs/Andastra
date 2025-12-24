@@ -250,6 +250,55 @@ namespace Andastra.Parsing.Mods.GFF
         }
 
         /// <summary>
+        /// Gets the parent path of a given path, mimicking PureWindowsPath.parent behavior.
+        /// Handles both backslashes and forward slashes, and correctly handles edge cases.
+        /// </summary>
+        protected static string GetParentPath(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+            {
+                return "";
+            }
+
+            // Normalize path separators to forward slashes for consistent processing
+            string normalizedPath = path.Replace('\\', '/');
+
+            // Split on forward slashes, keeping empty entries to handle leading/trailing slashes
+            string[] parts = normalizedPath.Split('/');
+
+            // Remove empty trailing parts (but keep leading empty part for absolute paths)
+            int endIndex = parts.Length - 1;
+            while (endIndex >= 0 && string.IsNullOrEmpty(parts[endIndex]))
+            {
+                endIndex--;
+            }
+
+            if (endIndex < 0)
+            {
+                // Path consists only of slashes, return empty string
+                return "";
+            }
+
+            if (endIndex == 0 && string.IsNullOrEmpty(parts[0]))
+            {
+                // Root path "/", parent is still "/"
+                return "/";
+            }
+
+            if (endIndex == 0)
+            {
+                // Single component path like "a", parent is empty
+                return "";
+            }
+
+            // Join all parts up to but not including the last non-empty part
+            string parentPath = string.Join("/", parts, 0, endIndex);
+
+            // Convert back to Windows-style paths (backslashes) to match the rest of the codebase
+            return parentPath.Replace('/', '\\');
+        }
+
+        /// <summary>
         /// Navigates to a field from the root gff struct from a path.
         /// Python: def _navigate_to_field(self, root_container: GFFStruct, path: PureWindowsPath | os.PathLike | str) -> _GFFField | None
         /// Returns a tuple of (fieldType, value) or null if not found
@@ -376,8 +425,9 @@ namespace Andastra.Parsing.Mods.GFF
             if (pathName == ">>##INDEXINLIST##<<")
             {
                 logger.AddVerbose($"Removing unique sentinel from AddStructToListGFF instance (ini section [{Identifier}]). Path: '{Path}'");
-                // TODO:  Python: self.path = self.path.parent  # HACK(th3w1zard1): idk why conditional parenting is necessary but it works
-                (workingPath, _) = SplitPath(Path);
+                // Python: self.path = self.path.parent  # HACK(th3w1zard1): idk why conditional parenting is necessary but it works
+                // This modifies the path to point to the parent list container instead of the sentinel
+                workingPath = GetParentPath(Path);
                 Path = workingPath;
             }
 
