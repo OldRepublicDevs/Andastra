@@ -9,6 +9,8 @@ using Andastra.Parsing;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Formats.TLK;
 using HolocronToolset.Data;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 
 namespace HolocronToolset.Dialogs
 {
@@ -348,10 +350,13 @@ namespace HolocronToolset.Dialogs
                 }
                 catch (Exception ex)
                 {
-                    // TODO:  Log the error - in a full implementation, this would show an error dialog
-                    // TODO:  Matching PyKotor: errors are typically shown via MessageBox, but we'll log for now
-                    System.Console.WriteLine($"Error saving TLK file: {ex.Message}");
-                    System.Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                    // Show error dialog to user (matching PyKotor: errors are typically shown via MessageBox)
+                    var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                        "Error Saving TLK File",
+                        $"Failed to save the TLK file: {ex.Message}",
+                        ButtonEnum.Ok,
+                        Icon.Error);
+                    errorBox.ShowAsync();
                     // Continue to close the dialog even if save failed
                 }
             }
