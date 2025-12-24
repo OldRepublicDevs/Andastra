@@ -6,7 +6,6 @@ using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.TLK;
-using Andastra.Parsing.Formats.GFF.Generics.JRL;
 using Andastra.Runtime.Games.Common.Journal;
 using JetBrains.Annotations;
 
@@ -50,7 +49,7 @@ namespace Andastra.Runtime.Games.Odyssey.Journal
         /// <summary>
         /// Loads a JRL file by ResRef.
         /// </summary>
-        public override object LoadJRL(string jrlResRef)
+        public override JRL LoadJRL(string jrlResRef)
         {
             if (string.IsNullOrEmpty(jrlResRef))
             {

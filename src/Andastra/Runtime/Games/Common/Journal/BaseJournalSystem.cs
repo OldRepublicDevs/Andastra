@@ -54,10 +54,7 @@ namespace Andastra.Runtime.Games.Common.Journal
         /// </summary>
         protected void InvokeOnQuestStateChanged(string questTag, int oldState, int newState)
         {
-            if (OnQuestStateChanged != null)
-            {
-                OnQuestStateChanged(questTag, oldState, newState);
-            }
+            OnQuestStateChanged?.Invoke(questTag, oldState, newState);
         }
 
         /// <summary>
@@ -65,10 +62,7 @@ namespace Andastra.Runtime.Games.Common.Journal
         /// </summary>
         protected void InvokeOnQuestCompleted(string questTag)
         {
-            if (OnQuestCompleted != null)
-            {
-                OnQuestCompleted(questTag);
-            }
+            OnQuestCompleted?.Invoke(questTag);
         }
 
         /// <summary>
@@ -76,10 +70,7 @@ namespace Andastra.Runtime.Games.Common.Journal
         /// </summary>
         protected void InvokeOnEntryAdded(BaseJournalEntry entry)
         {
-            if (OnEntryAdded != null)
-            {
-                OnEntryAdded(entry);
-            }
+            OnEntryAdded?.Invoke(entry);
         }
 
         protected BaseJournalSystem()
@@ -194,19 +185,13 @@ namespace Andastra.Runtime.Games.Common.Journal
             // Add journal entry for this state (engine-specific implementation)
             ProcessQuestStateChange(questTag, state, oldState);
 
-            if (OnQuestStateChanged != null)
-            {
-                OnQuestStateChanged(questTag, oldState, state);
-            }
+            OnQuestStateChanged?.Invoke(questTag, oldState, state);
 
             // Check for completion
             BaseQuestData quest = GetQuest(questTag);
             if (quest != null && state == quest.CompletionState)
             {
-                if (OnQuestCompleted != null)
-                {
-                    OnQuestCompleted(questTag);
-                }
+                OnQuestCompleted?.Invoke(questTag);
             }
         }
 
@@ -264,10 +249,7 @@ namespace Andastra.Runtime.Games.Common.Journal
             var entry = CreateJournalEntry(questTag, state, text, xpReward);
             _entries.Add(entry);
 
-            if (OnEntryAdded != null)
-            {
-                OnEntryAdded(entry);
-            }
+            OnEntryAdded?.Invoke(entry);
         }
 
         /// <summary>

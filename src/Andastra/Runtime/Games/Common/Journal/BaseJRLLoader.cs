@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Andastra.Parsing.Installation;
+using JRL = Andastra.Parsing.Resource.Generics.JRL;
 
 namespace Andastra.Runtime.Games.Common.Journal
 {
@@ -13,15 +14,15 @@ namespace Andastra.Runtime.Games.Common.Journal
     /// - Common JRL file loading functionality across all engines
     /// - Base classes MUST only contain functionality that is identical across ALL engines
     /// - Engine-specific details MUST be in subclasses (OdysseyJRLLoader, AuroraJRLLoader, EclipseJRLLoader)
-    /// 
+    ///
     /// Based on reverse engineering of JRL file loading systems across multiple BioWare engines.
-    /// 
+    ///
     /// Common functionality across engines:
     /// - JRL file loading from installation
     /// - JRL file caching for performance
     /// - Quest entry text lookup by quest tag and entry ID
     /// - Talk table (TLK) integration for LocalizedString resolution
-    /// 
+    ///
     /// Engine-specific differences:
     /// - Odyssey (swkotor.exe, swkotor2.exe): GFF with "JRL " signature, JRLQuest/JRLQuestEntry structure
     /// - Aurora (nwmain.exe): Different JRL format, CNWSJournal structure
@@ -30,7 +31,7 @@ namespace Andastra.Runtime.Games.Common.Journal
     public abstract class BaseJRLLoader
     {
         protected readonly Installation _installation;
-        protected readonly Dictionary<string, object> _jrlCache; // Cache stores engine-specific JRL types
+        private readonly Dictionary<string, JRL> _jrlCache;
 
         /// <summary>
         /// Creates a new JRL loader.
@@ -39,7 +40,7 @@ namespace Andastra.Runtime.Games.Common.Journal
         protected BaseJRLLoader(Installation installation)
         {
             _installation = installation ?? throw new ArgumentNullException("installation");
-            _jrlCache = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            _jrlCache = new Dictionary<string, JRL>(StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -59,7 +60,7 @@ namespace Andastra.Runtime.Games.Common.Journal
         /// Engine-specific subclasses implement this to handle engine-specific JRL file formats.
         /// </remarks>
         [CanBeNull]
-        public abstract object LoadJRL(string jrlResRef);
+        public abstract JRL LoadJRL(string jrlResRef);
 
         /// <summary>
         /// Gets quest entry text from a JRL file (engine-specific implementation).

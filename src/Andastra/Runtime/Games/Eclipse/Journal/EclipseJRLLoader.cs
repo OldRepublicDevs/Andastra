@@ -52,7 +52,7 @@ namespace Andastra.Runtime.Games.Eclipse.Journal
         /// <summary>
         /// Loads a JRL file by ResRef.
         /// </summary>
-        public override object LoadJRL(string jrlResRef)
+        public override JRL LoadJRL(string jrlResRef)
         {
             if (string.IsNullOrEmpty(jrlResRef))
             {
