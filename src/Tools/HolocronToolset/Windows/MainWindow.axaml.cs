@@ -1,18 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
-using Andastra.Parsing.Extract;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
+using Andastra.Parsing.Formats.TPC;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
-using HolocronToolset.Utils;
-using HolocronToolset.Widgets;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 using FileResource = Andastra.Parsing.Extract.FileResource;
@@ -520,16 +517,235 @@ namespace HolocronToolset.Windows
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1952-2007
         // Original: def on_extract_resources(...):
-        private void OnExtractResources(List<FileResource> resources)
+        private async void OnExtractResources(List<FileResource> resources)
         {
-            // Extract resources - will be implemented when file dialogs are available
-            // TODO: STUB - For now, just log
-            System.Console.WriteLine($"Extracting {resources?.Count ?? 0} resources");
+            if (resources == null || resources.Count == 0)
+            {
+                return;
+            }
+
+            // Build extract save paths - show folder picker dialog
+            var extractResult = await BuildExtractSavePaths(resources);
+            if (extractResult == null)
+            {
+                return; // User cancelled
+            }
+
+            var (folderPath, pathsToWrite) = extractResult.Value;
+
+            // Handle file conflicts and determine final save paths
+            var failedSavePathHandlers = new Dictionary<string, Exception>();
+            var resourceSavePaths = DetermineSavePaths(pathsToWrite, failedSavePathHandlers);
+            if (resourceSavePaths.Count == 0)
+            {
+                return;
+            }
+
+            // Create progress dialog
+            var progressDialog = new Dialogs.ExtractionProgressDialog(resourceSavePaths.Count);
+            progressDialog.Show();
+
+            // Show progress dialog and extract resources
+            await ExtractResourcesAsync(resourceSavePaths, failedSavePathHandlers, progressDialog);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1930-1952
+        // Original: def build_extract_save_paths(self, resources: list[FileResource]) -> tuple[Path, dict[FileResource, Path]] | tuple[None, None]:
+        private async Task<(string FolderPath, Dictionary<FileResource, string> PathsToWrite)?> BuildExtractSavePaths(List<FileResource> resources)
+        {
+            var pathsToWrite = new Dictionary<FileResource, string>();
+
+            // Show folder picker dialog
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel == null)
+            {
+                return null;
+            }
+
+            var options = new FolderPickerOpenOptions
+            {
+                Title = "Extract to folder",
+                AllowMultiple = false
+            };
+
+            var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(options);
+            if (folders == null || folders.Count == 0)
+            {
+                // User cancelled
+                return null;
+            }
+
+            var folderPath = folders[0].Path.LocalPath;
+
+            // Build save paths for each resource
+            foreach (var resource in resources)
+            {
+                var identifier = $"{resource.ResName}.{resource.ResType.Extension}";
+                var savePath = Path.Combine(folderPath, identifier);
+
+                // TODO: Handle resource type specific extensions (TPC->TGA, MDL->MDL.ASCII, etc.)
+                // For now, just use the basic resource identifier
+                pathsToWrite[resource] = savePath;
+            }
+
+            return (folderPath, pathsToWrite);
+        }
+
+        // Equivalent to PyKotor's FileSaveHandler.determine_save_paths()
+        // Original: resource_save_paths: dict[FileResource, Path] = FileSaveHandler(selected_resources).determine_save_paths(paths_to_write, failed_savepath_handlers)
+        private Dictionary<FileResource, string> DetermineSavePaths(Dictionary<FileResource, string> pathsToWrite, Dictionary<string, Exception> failedSavePathHandlers)
+        {
+            var resourceSavePaths = new Dictionary<FileResource, string>();
+
+            foreach (var kvp in pathsToWrite)
+            {
+                var resource = kvp.Key;
+                var desiredPath = kvp.Value;
+
+                try
+                {
+                    // Check if file already exists
+                    if (File.Exists(desiredPath))
+                    {
+                        // For now, just overwrite. In full implementation, would prompt user for conflict resolution
+                        // TODO: Implement file conflict resolution dialog
+                        resourceSavePaths[resource] = desiredPath;
+                    }
+                    else
+                    {
+                        // Ensure directory exists
+                        var directory = Path.GetDirectoryName(desiredPath);
+                        if (!string.IsNullOrEmpty(directory))
+                        {
+                            Directory.CreateDirectory(directory);
+                        }
+                        resourceSavePaths[resource] = desiredPath;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    failedSavePathHandlers[desiredPath] = ex;
+                }
+            }
+
+            return resourceSavePaths;
+        }
+
+        // Async extraction of resources with progress dialog
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1960-2007
+        private async Task ExtractResourcesAsync(Dictionary<FileResource, string> resourceSavePaths, Dictionary<string, Exception> failedSavePathHandlers, Dialogs.ExtractionProgressDialog progressDialog)
+        {
+            if (resourceSavePaths.Count == 0)
+            {
+                return;
+            }
+
+            var errors = new List<Exception>();
+            var successCount = 0;
+
+            try
+            {
+                foreach (var kvp in resourceSavePaths)
+                {
+                    var resource = kvp.Key;
+                    var savePath = kvp.Value;
+
+                    try
+                    {
+                        // Update progress
+                        progressDialog.UpdateProgress($"Processing resource: {resource.ResName}.{resource.ResType.Extension}");
+
+                        // Extract the resource
+                        await ExtractResourceAsync(resource, savePath);
+
+                        successCount++;
+                        progressDialog.UpdateProgress($"Extracted {successCount}/{resourceSavePaths.Count} resources");
+                    }
+                    catch (Exception ex)
+                    {
+                        errors.Add(ex);
+                        progressDialog.UpdateProgress($"Error extracting {resource.ResName}.{resource.ResType.Extension}: {ex.Message}");
+                    }
+                }
+            }
+            finally
+            {
+                progressDialog.AllowClose();
+                progressDialog.Close();
+            }
+
+            // Show results dialog
+            await ShowExtractionResultsDialog(successCount, resourceSavePaths.Count, errors);
+        }
+
+        // Extract a single resource
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:2011-2044
+        // Original: def _extract_resource(self, resource: FileResource, save_path: Path, loader: AsyncLoader, seen_resources: dict[LocationResult, Path]):
+        private async Task ExtractResourceAsync(FileResource resource, string savePath)
+        {
+            var data = resource.GetData();
+
+            // Handle resource type specific processing
+            if (resource.ResType == ResourceType.TPC)
+            {
+                // Decompile TPC to TGA format for extraction
+                try
+                {
+                    var tpc = TPCAuto.ReadTpc(data);
+                    data = TPCAuto.BytesTpc(tpc, ResourceType.TGA);
+                    savePath = Path.ChangeExtension(savePath, ".tga");
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine($"Failed to decompile TPC {resource.ResName}: {ex.Message}");
+                    // Fall back to raw data
+                }
+            }
+            else if (resource.ResType == ResourceType.MDL)
+            {
+                // TODO: Implement MDL decompilation to ASCII format
+                // For now, just extract raw MDL data
+            }
+            // TODO: Handle other resource types as needed
+
+            // Write the data to file
+            await File.WriteAllBytesAsync(savePath, data);
+        }
+
+        // Show extraction results dialog
+        private async Task ShowExtractionResultsDialog(int successCount, int totalCount, List<Exception> errors)
+        {
+            string message;
+            string title;
+            MsBox.Avalonia.Enums.Icon icon;
+
+            if (errors.Count == 0)
+            {
+                // Success
+                title = "Extraction successful";
+                message = $"Successfully extracted {successCount} files.";
+                icon = MsBox.Avalonia.Enums.Icon.Info;
+            }
+            else
+            {
+                // Partial success or failure
+                title = "Failed to extract some items";
+                message = $"Failed to extract {errors.Count} files out of {totalCount}.";
+                icon = MsBox.Avalonia.Enums.Icon.Warning;
+            }
+
+            var messageBox = MessageBoxManager.GetMessageBoxStandard(
+                title,
+                message,
+                ButtonEnum.Ok,
+                icon);
+
+            await messageBox.ShowAsync();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1131-1259
         // Original: def change_active_installation(...):
-        public void ChangeActiveInstallation(int index)
+        public async void ChangeActiveInstallation(int index)
         {
             if (index < 0)
             {
@@ -1270,7 +1486,7 @@ namespace HolocronToolset.Windows
 
             // Get the first (or only) journal location result
             var locationResult = relevant[0];
-            
+
             // Ensure FileResource is set on LocationResult
             FileResource fileResource = locationResult.FileResource;
             if (fileResource == null)
@@ -1313,7 +1529,7 @@ namespace HolocronToolset.Windows
             //           dialog.file_results.connect(self.on_file_search_results)
             //           dialog.exec()
             var dialog = new Dialogs.FileSearcherDialog(this, _installations);
-            
+
             // Connect file results event
             dialog.FileResults += (results, installation) =>
             {
@@ -1334,7 +1550,7 @@ namespace HolocronToolset.Windows
                 resultsDialog.Show();
                 WindowUtils.AddWindow(resultsDialog);
             };
-            
+
             dialog.Show();
             WindowUtils.AddWindow(dialog);
         }
@@ -1445,11 +1661,11 @@ namespace HolocronToolset.Windows
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1457-1472
             // Original: dialog = SettingsDialog(self)
             var dialog = new Dialogs.SettingsDialog(this);
-            
+
             // Matching PyKotor implementation: if (dialog.exec() and dialog.installation_edited and ...)
             // In Avalonia, ShowDialog returns a result indicating if dialog was accepted
             var result = await dialog.ShowDialog<bool?>(this);
-            
+
             // Matching PyKotor implementation: if dialog was accepted and installations were edited
             if (result == true && dialog.InstallationEdited)
             {
@@ -1460,9 +1676,9 @@ namespace HolocronToolset.Windows
                     "You appear to have made changes to your installations, would you like to reload?",
                     ButtonEnum.YesNo,
                     MsBox.Avalonia.Enums.Icon.Question);
-                
+
                 var messageResult = await messageBox.ShowAsync();
-                
+
                 // Matching PyKotor implementation: if user clicks Yes, reload settings
                 if (messageResult == ButtonResult.Yes)
                 {
@@ -1506,7 +1722,7 @@ namespace HolocronToolset.Windows
         {
             // Create a new TLK editor with this window as parent and active installation
             var tlkEditor = new Editors.TLKEditor(this, _active);
-            
+
             // Add to window manager (matching PyKotor's add_window function)
             WindowUtils.AddWindow(tlkEditor, show: true);
         }
