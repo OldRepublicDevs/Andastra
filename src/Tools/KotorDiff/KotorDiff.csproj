@@ -11,5 +11,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Andastra\Andastra.csproj" />
     <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
+    <PackageReference Include="YamlDotNet" Version="16.1.3" />
   </ItemGroup>
 </Project>
