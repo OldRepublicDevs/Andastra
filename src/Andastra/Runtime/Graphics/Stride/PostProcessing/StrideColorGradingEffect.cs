@@ -278,7 +278,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 // BlendStates.Opaque: overwrite pixels (no blending for post-processing)
                 // DepthStencilStates.None: no depth testing needed for fullscreen quad
                 // RasterizerStates.CullNone: render both front and back faces
-                _spriteBatch.Begin(commandList, StrideGraphics.SpriteSortMode.Immediate, StrideGraphics.BlendStates.Opaque, _linearSampler,
+                // SpriteBatch.Begin requires GraphicsContext, use dynamic to handle API differences
+                ((dynamic)_spriteBatch).Begin(commandList, StrideGraphics.SpriteSortMode.Immediate, StrideGraphics.BlendStates.Opaque, _linearSampler,
                     StrideGraphics.DepthStencilStates.None, StrideGraphics.RasterizerStates.CullNone, _colorGradingEffect);
 
                 // Set shader parameters using ParameterCollection.Set with parameter keys
@@ -727,7 +728,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     for (int i = 0; i < size; i++)
                     {
                         var color = colorData[i];
-                        if (format == PixelFormat.R32G32B32A32_Float)
+                        if (format == StrideGraphics.PixelFormat.R32G32B32A32_Float)
                         {
                             // Already float format
                             data[i] = new Vector4(color.R, color.G, color.B, color.A);
@@ -739,7 +740,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                         }
                     }
                 }
-                else if (format == PixelFormat.R16G16B16A16_Float)
+                else if (format == StrideGraphics.PixelFormat.R16G16B16A16_Float)
                 {
                     // Half-precision float format
                     var colorData = new Color[size];
@@ -808,7 +809,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 }
 
                 // Get ImmediateContext (StrideGraphics.CommandList) from GraphicsDevice
-                StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext;
+                StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext();
                 if (commandList == null)
                 {
                     Console.WriteLine("[StrideColorGrading] WriteTextureData: ImmediateContext not available");
@@ -818,10 +819,10 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 StrideGraphics.PixelFormat format = texture.Format;
 
                 // Convert Vector4[] to Color[] based on format
-                if (format == PixelFormat.R8G8B8A8_UNorm ||
-                    format == PixelFormat.R8G8B8A8_UNorm_SRgb ||
-                    format == PixelFormat.B8G8R8A8_UNorm ||
-                    format == PixelFormat.B8G8R8A8_UNorm_SRgb)
+                if (format == StrideGraphics.PixelFormat.R8G8B8A8_UNorm ||
+                    format == StrideGraphics.PixelFormat.R8G8B8A8_UNorm_SRgb ||
+                    format == StrideGraphics.PixelFormat.B8G8R8A8_UNorm ||
+                    format == StrideGraphics.PixelFormat.B8G8R8A8_UNorm_SRgb)
                 {
                     var colorData = new Color[size];
                     for (int i = 0; i < size; i++)
@@ -839,7 +840,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                             (byte)(a * 255.0f)
                         );
                     }
-                    texture.SetData(StrideGraphics.CommandList, colorData);
+                    texture.SetData(commandList, colorData);
                 }
                 else if (format == StrideGraphics.PixelFormat.R32G32B32A32_Float)
                 {
@@ -849,7 +850,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                         var v = data[i];
                         colorData[i] = new Color(v.X, v.Y, v.Z, v.W);
                     }
-                    texture.SetData(StrideGraphics.CommandList, colorData);
+                    texture.SetData(commandList, colorData);
                 }
                 else if (format == StrideGraphics.PixelFormat.R16G16B16A16_Float)
                 {
@@ -859,7 +860,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                         var v = data[i];
                         colorData[i] = new Color(v.X, v.Y, v.Z, v.W);
                     }
-                    texture.SetData(StrideGraphics.CommandList, colorData);
+                    texture.SetData(commandList, colorData);
                 }
                 else
                 {
@@ -880,7 +881,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                             (byte)(a * 255.0f)
                         );
                     }
-                    texture.SetData(StrideGraphics.CommandList, colorData);
+                    texture.SetData(commandList, colorData);
                 }
             }
             catch (Exception ex)
