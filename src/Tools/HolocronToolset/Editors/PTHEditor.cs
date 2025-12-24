@@ -1,12 +1,12 @@
 using System;
 using System.Numerics;
 using System.Collections.Generic;
+using Andastra.Parsing.Common;
+using Andastra.Parsing.Resource;
+using Andastra.Parsing.Resource.Generics;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Resource.Generics;
-using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
 using KotorColor = Andastra.Parsing.Common.ParsingColor;
 using Window = Avalonia.Controls.Window;
@@ -16,35 +16,260 @@ using PathSelection = HolocronToolset.Editors.PathSelection;
 namespace HolocronToolset.Editors
 {
     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py
-    // TODO:  Stub for renderArea UI component - will be fully implemented when UI is available
-    public class PTHRenderArea
+    public class PTHRenderArea : Control
     {
         private PTH _pth;
         private Vector2 _mousePosition;
+        private bool _isMouseDown;
+        private Vector2 _lastMousePosition;
 
         public RenderCamera Camera { get; private set; }
         public PathSelection PathSelection { get; private set; }
 
-        // Signal properties for test compatibility
-        public object SigMousePressed { get; private set; }
-        public object SigMouseMoved { get; private set; }
-        public object SigMouseScrolled { get; private set; }
-        public object SigMouseReleased { get; private set; }
-        public object SigKeyPressed { get; private set; }
+        // Signal events for proper Avalonia event handling
+        public event EventHandler<MouseEventArgs> SigMousePressed;
+        public event EventHandler<MouseEventArgs> SigMouseMoved;
+        public event EventHandler<MouseWheelEventArgs> SigMouseScrolled;
+        public event EventHandler<MouseEventArgs> SigMouseReleased;
+        public event EventHandler<KeyEventArgs> SigKeyPressed;
 
         public PTHRenderArea()
         {
             _pth = new PTH();
             _mousePosition = Vector2.Zero;
+            _isMouseDown = false;
+            _lastMousePosition = Vector2.Zero;
             Camera = new RenderCamera();
             PathSelection = new PathSelection();
 
-            // Initialize signal properties - will be fully implemented when UI is available
-            SigMousePressed = new object();
-            SigMouseMoved = new object();
-            SigMouseScrolled = new object();
-            SigMouseReleased = new object();
-            SigKeyPressed = new object();
+            // Set up Avalonia control properties
+            Background = Brushes.Black;
+            Focusable = true;
+
+            // Set up event handlers
+            PointerPressed += OnPointerPressed;
+            PointerMoved += OnPointerMoved;
+            PointerWheelChanged += OnPointerWheelChanged;
+            PointerReleased += OnPointerReleased;
+            KeyDown += OnKeyDown;
+        }
+
+        // Convert screen coordinates to world coordinates
+        private Vector2 ScreenToWorld(Point screenPoint)
+        {
+            var centerX = Bounds.Width / 2.0;
+            var centerY = Bounds.Height / 2.0;
+
+            // Apply camera transformations in reverse
+            var worldX = (screenPoint.X - centerX) / Camera.Zoom + Camera.Position.X;
+            var worldY = (screenPoint.Y - centerY) / Camera.Zoom + Camera.Position.Y;
+
+            return new Vector2((float)worldX, (float)worldY);
+        }
+
+        // Convert world coordinates to screen coordinates
+        private Point WorldToScreen(Vector2 worldPoint)
+        {
+            var centerX = Bounds.Width / 2.0;
+            var centerY = Bounds.Height / 2.0;
+
+            // Apply camera transformations
+            var screenX = (worldPoint.X - Camera.Position.X) * Camera.Zoom + centerX;
+            var screenY = (worldPoint.Y - Camera.Position.Y) * Camera.Zoom + centerY;
+
+            return new Point(screenX, screenY);
+        }
+
+        // Event handlers
+        private void OnPointerPressed(object sender, PointerPressedEventArgs e)
+        {
+            var point = e.GetCurrentPoint(this);
+            var worldPos = ScreenToWorld(point.Position);
+            _mousePosition = worldPos;
+            _isMouseDown = true;
+            _lastMousePosition = worldPos;
+
+            // Handle selection
+            var nodesUnderMouse = PathNodesUnderMouse();
+            if (nodesUnderMouse.Count > 0)
+            {
+                // Select the first node under mouse
+                PathSelection.Select(new[] { nodesUnderMouse[0] });
+            }
+            else
+            {
+                // Clear selection if clicking empty space
+                PathSelection.Clear();
+            }
+
+            InvalidateVisual();
+
+            // Raise signal event
+            SigMousePressed?.Invoke(this, new MouseEventArgs(point.Properties, point.Timestamp));
+        }
+
+        private void OnPointerMoved(object sender, PointerEventArgs e)
+        {
+            var point = e.GetCurrentPoint(this);
+            var worldPos = ScreenToWorld(point.Position);
+            _mousePosition = worldPos;
+
+            // Handle dragging
+            if (_isMouseDown)
+            {
+                var delta = worldPos - _lastMousePosition;
+                _lastMousePosition = worldPos;
+
+                // If we have selected nodes, move them
+                var selected = PathSelection.All();
+                if (selected.Count > 0)
+                {
+                    MoveSelected(delta.X, delta.Y);
+                }
+                else
+                {
+                    // Pan camera
+                    Camera.NudgePosition(-delta.X, -delta.Y);
+                }
+
+                InvalidateVisual();
+            }
+
+            // Raise signal event
+            SigMouseMoved?.Invoke(this, new MouseEventArgs(point.Properties, point.Timestamp));
+        }
+
+        private void OnPointerWheelChanged(object sender, PointerWheelEventArgs e)
+        {
+            var zoomFactor = e.Delta.Y > 0 ? 1.1f : 0.9f;
+            Camera.NudgeZoom(zoomFactor);
+            InvalidateVisual();
+
+            // Raise signal event
+            SigMouseScrolled?.Invoke(this, e);
+        }
+
+        private void OnPointerReleased(object sender, PointerReleasedEventArgs e)
+        {
+            _isMouseDown = false;
+
+            // Raise signal event
+            var point = e.GetCurrentPoint(this);
+            SigMouseReleased?.Invoke(this, new MouseEventArgs(point.Properties, point.Timestamp));
+        }
+
+        private void OnKeyDown(object sender, KeyEventArgs e)
+        {
+            // Raise signal event
+            SigKeyPressed?.Invoke(this, e);
+        }
+
+        // Render the path nodes and connections
+        public override void Render(DrawingContext context)
+        {
+            base.Render(context);
+
+            if (_pth == null || _pth.Count == 0)
+            {
+                return;
+            }
+
+            // Draw connections first (behind nodes)
+            DrawConnections(context);
+
+            // Draw nodes
+            DrawNodes(context);
+
+            // Draw selection highlights
+            DrawSelectionHighlights(context);
+        }
+
+        private void DrawConnections(DrawingContext context)
+        {
+            foreach (var connection in _pth.GetConnections())
+            {
+                var startPoint = _pth.GetPoint(connection.SourceIndex);
+                var endPoint = _pth.GetPoint(connection.TargetIndex);
+
+                var startScreen = WorldToScreen(startPoint);
+                var endScreen = WorldToScreen(endPoint);
+
+                // Create connection line
+                var pen = new Pen(Brushes.Gray, 2.0);
+                context.DrawLine(pen, startScreen, endScreen);
+            }
+        }
+
+        private void DrawNodes(DrawingContext context)
+        {
+            const float nodeRadius = 8.0f;
+
+            foreach (var point in _pth.GetPoints())
+            {
+                var screenPos = WorldToScreen(point);
+
+                // Draw node circle
+                var ellipseGeometry = new EllipseGeometry(new Rect(
+                    screenPos.X - nodeRadius,
+                    screenPos.Y - nodeRadius,
+                    nodeRadius * 2,
+                    nodeRadius * 2));
+
+                // Use default color for nodes (can be extended to use material colors)
+                var brush = Brushes.LightBlue;
+                context.DrawGeometry(brush, new Pen(Brushes.DarkBlue, 1.0), ellipseGeometry);
+            }
+        }
+
+        private void DrawSelectionHighlights(DrawingContext context)
+        {
+            var selectedNodes = PathSelection.All();
+            if (selectedNodes.Count == 0)
+            {
+                return;
+            }
+
+            const float highlightRadius = 12.0f;
+
+            foreach (var selectedPoint in selectedNodes)
+            {
+                var screenPos = WorldToScreen(selectedPoint);
+
+                // Draw selection highlight
+                var ellipseGeometry = new EllipseGeometry(new Rect(
+                    screenPos.X - highlightRadius,
+                    screenPos.Y - highlightRadius,
+                    highlightRadius * 2,
+                    highlightRadius * 2));
+
+                var brush = Brushes.Yellow;
+                var pen = new Pen(Brushes.Orange, 2.0);
+                context.DrawGeometry(brush, pen, ellipseGeometry);
+            }
+        }
+
+        // Move selected nodes by the specified delta
+        private void MoveSelected(float deltaX, float deltaY)
+        {
+            var selected = PathSelection.All();
+            if (selected.Count == 0)
+            {
+                return;
+            }
+
+            for (int i = 0; i < selected.Count; i++)
+            {
+                var point = selected[i];
+                var index = _pth.Find(point);
+                if (index.HasValue)
+                {
+                    var updated = new Vector2(point.X + deltaX, point.Y + deltaY);
+                    _pth.SetPoint(index.Value, updated);
+                    selected[i] = updated;
+                }
+            }
+
+            PathSelection.Select(selected);
         }
 
         public void SetPth(PTH pth)
@@ -176,21 +401,21 @@ namespace HolocronToolset.Editors
         private PTH _pth;
         private GITSettings _settings;
         private PTHControlScheme _controls;
-        
+
         // Status bar labels
         public Avalonia.Controls.TextBlock LeftLabel { get; private set; }
         public Avalonia.Controls.TextBlock CenterLabel { get; private set; }
         public Avalonia.Controls.TextBlock RightLabel { get; private set; }
-        
+
         // Status output handler
         public PTHStatusOut StatusOut { get; private set; }
-        
+
         // Control scheme - exposed for testing
         public PTHControlScheme Controls => _controls;
-        
+
         // Material colors dictionary - exposed for testing
         public Dictionary<SurfaceMaterial, Avalonia.Media.Color> MaterialColors { get; private set; }
-        
+
         // TODO:  Render area - stub for testing (will be fully implemented when UI is available)
         public PTHRenderArea RenderArea { get; private set; }
 
@@ -297,8 +522,8 @@ namespace HolocronToolset.Editors
         {
             // Create labels for the different parts of the status message
             LeftLabel = new Avalonia.Controls.TextBlock { Text = "Left Status" };
-            CenterLabel = new Avalonia.Controls.TextBlock 
-            { 
+            CenterLabel = new Avalonia.Controls.TextBlock
+            {
                 Text = "Center Status",
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
             };
