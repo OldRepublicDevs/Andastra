@@ -2597,8 +2597,28 @@ namespace HolocronToolset.Editors
         // Original: def _update_bookmark_visualization(self):
         private void UpdateBookmarkVisualization()
         {
-            // TODO:  In a full implementation, this would update visual indicators in the code editor
-            // TODO: STUB - For now, this is a placeholder that matches the Python interface
+            if (_codeEdit == null)
+            {
+                return; // No code editor available
+            }
+
+            // Collect all bookmark line numbers from the bookmark tree
+            var bookmarkedLines = new List<int>();
+
+            // Get bookmark items from the tree view
+            var itemsList = _bookmarkTree.ItemsSource as List<TreeViewItem> ??
+                          (_bookmarkTree.Items as IEnumerable<TreeViewItem> ?? new List<TreeViewItem>()).ToList();
+
+            foreach (var item in itemsList)
+            {
+                if (item?.Tag is BookmarkData bookmarkData && bookmarkData.LineNumber > 0)
+                {
+                    bookmarkedLines.Add(bookmarkData.LineNumber);
+                }
+            }
+
+            // Update the code editor's bookmark visualization
+            _codeEdit.SetBookmarkedLines(bookmarkedLines);
         }
 
         // Public property to access bookmark tree for testing
