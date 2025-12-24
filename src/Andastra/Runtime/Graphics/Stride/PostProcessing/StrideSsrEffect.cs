@@ -147,19 +147,18 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     Stride.Engine.ContentManager contentManager = null;
                     if (contentManager != null)
                     {
-                            try
+                        try
+                        {
+                            _fullscreenEffect = contentManager.Load<StrideGraphics.Effect>("SSREffect");
+                            if (_fullscreenEffect != null)
                             {
-                                _fullscreenEffect = contentManager.Load<StrideGraphics.Effect>("SSREffect");
-                                if (_fullscreenEffect != null)
-                                {
-                                    _ssrEffect = new EffectInstance(_fullscreenEffect);
-                                    System.Console.WriteLine("[StrideSSR] Loaded SSREffect from ContentManager");
-                                }
+                                _ssrEffect = new EffectInstance(_fullscreenEffect);
+                                System.Console.WriteLine("[StrideSSR] Loaded SSREffect from ContentManager");
                             }
-                            catch (Exception ex)
-                            {
-                                System.Console.WriteLine($"[StrideSSR] Failed to load SSREffect from ContentManager: {ex.Message}");
-                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Console.WriteLine($"[StrideSSR] Failed to load SSREffect from ContentManager: {ex.Message}");
                         }
                     }
                 }
