@@ -789,10 +789,24 @@ shader BlurEffect : ShaderBase
                         // CompilerParameters provides compilation settings including platform target
                         // EffectParameters specifies shader compilation options
                         // Platform ensures shader is compiled for the correct graphics API (DirectX, Vulkan, etc.)
-                        // TODO: FIXME - Compilation API has type incompatibilities in this Stride version
-                        // For now, skip file-based compilation
-                        Console.WriteLine($"[StrideBloomEffect] File-based shader compilation not available in this Stride version for '{shaderName}'");
-                        return null;
+                        dynamic compilationResult = effectCompiler.Compile(compilerSource, new CompilerParameters
+                        {
+                            EffectParameters = new EffectCompilerParameters()
+                        });
+
+                        // Unwrap TaskOrResult to get compilation result
+                        dynamic compilerResult = compilationResult.Result;
+                        if (compilerResult != null && compilerResult.Bytecode != null && compilerResult.Bytecode.Length > 0)
+                        {
+                            // Create Effect from compiled bytecode
+                            var effect = new StrideGraphics.Effect(_graphicsDevice, (EffectBytecode)compilerResult.Bytecode);
+                            Console.WriteLine($"[StrideBloomEffect] Successfully compiled shader '{shaderName}' from file using EffectCompiler");
+                            return effect;
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[StrideBloomEffect] File-based compilation failed for shader '{shaderName}': No bytecode generated");
+                        }
                     }
                 }
 
