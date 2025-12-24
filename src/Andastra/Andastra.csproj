@@ -1,9 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <!-- Multi-targeting: Support both Windows (with WPF) and cross-platform builds -->
-    <!-- Builds for BOTH net9.0 (for other projects) and net9.0-windows (for Windows WPF support) -->
-    <TargetFrameworks>net9.0;net9.0-windows</TargetFrameworks>
+    <TargetFramework Condition="!$([MSBuild]::IsOSPlatform('Windows'))">net9.0</TargetFramework>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Windows'))">net9.0;net9.0-windows</TargetFrameworks>
     <LangVersion>7.3</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
@@ -14,6 +13,21 @@
     <OutputType Condition="'$(TargetFramework)' == 'net9.0'">Exe</OutputType>
     <!-- OutputType for net9.0-windows: WinExe (no console window for GUI apps) -->
     <OutputType Condition="'$(TargetFramework)' == 'net9.0-windows'">WinExe</OutputType>
+    <!-- Build Performance Optimizations -->
+    <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+    <BuildInParallel>true</BuildInParallel>
+    <UseSharedCompilation>true</UseSharedCompilation>
+    <UseRidGraph>true</UseRidGraph>
+    <Deterministic>false</Deterministic>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <!-- MonoGame Content Pipeline Optimization -->
+    <MonoGamePlatform>DesktopGL</MonoGamePlatform>
+    <MonoGameProfile>HiDef</MonoGameProfile>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>Andastra.Runtime.Game.Program</StartupObject>
@@ -46,25 +60,9 @@
     <PackageReference Include="System.Drawing.Common" Version="10.0.1" Condition="!$(TargetFramework.StartsWith('net4'))" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.1" />
     <PackageReference Include="System.Text.Json" Version="10.0.1" />
-    <PackageReference Include="xunit" Version="2.9.3" />
-    <PackageReference Include="xunit.analyzers" Version="1.26.0">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="coverlet.collector" Version="6.0.4">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\**\*.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="xunit.runner.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
@@ -82,5 +80,11 @@
     <Content Remove="Tests\**" />
     <EmbeddedResource Remove="Tests\**" />
     <None Remove="Tests\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="**\Tests\**" />
+    <Content Remove="**\Tests\**" />
+    <EmbeddedResource Remove="**\Tests\**" />
+    <None Remove="**\Tests\**" />
   </ItemGroup>
 </Project>
