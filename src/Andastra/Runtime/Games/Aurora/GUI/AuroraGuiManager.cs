@@ -14,6 +14,7 @@ using Andastra.Parsing.Formats.TPC;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Games.Aurora.Fonts;
 using Andastra.Runtime.Graphics;
+using Andastra.Runtime.Graphics.MonoGame.Graphics;
 using Andastra.Runtime.MonoGame.Converters;
 using Andastra.Runtime.MonoGame.Graphics;
 using JetBrains.Annotations;
@@ -28,7 +29,7 @@ namespace Andastra.Runtime.Games.Aurora.GUI
     /// - Based on nwmain.exe GUI system
     /// - GUI format: Uses ResourceType.GUI (0x7ff / 2047) with GFF format, signature "GUI " (verified via Ghidra)
     /// - Font rendering: Uses AuroraBitmapFont for text rendering
-    /// 
+    ///
     /// Ghidra Reverse Engineering Analysis (nwmain.exe):
     /// - CGuiPanel::LoadLayoutFileModelsAndTags @ 0x1401feba0: Loads GUI files using CResGFF with resource type 0x7ff (2047) and signature "GUI "
     ///   - Line 44: CResGFF::CResGFF(local_70, 0x7ff, "GUI ", pCVar14) - Creates GFF reader for GUI resource
@@ -42,7 +43,7 @@ namespace Andastra.Runtime.Games.Aurora.GUI
     ///   - Lines 73-76: CResGFF::ReadFieldFLOAT - Reads "AurString_ColorR/G/B/A" fields
     ///   - Lines 83, 90: CResGFF::ReadFieldFLOAT - Reads "AurString_AlignH/V" fields
     ///   - Lines 98-100: CResGFF::ReadFieldFLOAT - Reads "Obj_Label_X/Y/Z" fields
-    /// 
+    ///
     /// Format Verification:
     /// - Aurora uses the same GFF-based GUI format as Odyssey (KOTOR) engines
     /// - Resource type: 0x7ff (2047) = ResourceType.GUI
@@ -90,7 +91,7 @@ namespace Andastra.Runtime.Games.Aurora.GUI
             _loadedGuis = new Dictionary<string, LoadedGui>(StringComparer.OrdinalIgnoreCase);
             _textureCache = new Dictionary<string, ITexture2D>(StringComparer.OrdinalIgnoreCase);
             _fontCache = new Dictionary<string, AuroraBitmapFont>(StringComparer.OrdinalIgnoreCase);
-            
+
             // Initialize input states (requires MonoGame GraphicsDevice for Mouse/Keyboard)
             if (device is MonoGameGraphicsDevice mgDevice)
             {
@@ -155,7 +156,7 @@ namespace Andastra.Runtime.Games.Aurora.GUI
                 // CAuroraStringWrapper::LoadGffTextData @ 0x1401fe680 loads text data from GFF GUI files
                 // GUIReader handles GFF-based format parsing (same parser used by Odyssey/Eclipse engines)
                 GUIReader guiReader = new GUIReader(resourceResult.Data);
-                GUI gui = guiReader.Load();
+                Andastra.Parsing.Resource.Generics.GUI.GUI gui = guiReader.Load();
 
                 if (gui == null || gui.Controls == null || gui.Controls.Count == 0)
                 {
@@ -456,8 +457,12 @@ namespace Andastra.Runtime.Games.Aurora.GUI
                 return;
             }
 
-            Andastra.Runtime.Graphics.Vector2 controlPosition = control.Position + parentOffset;
-            Andastra.Runtime.Graphics.Vector2 controlSize = control.Size;
+            System.Numerics.Vector2 controlPosNum = control.Position;
+            System.Numerics.Vector2 parentOffsetNum = new System.Numerics.Vector2(parentOffset.X, parentOffset.Y);
+            System.Numerics.Vector2 controlPosResult = controlPosNum + parentOffsetNum;
+            Andastra.Runtime.Graphics.Vector2 controlPosition = new Andastra.Runtime.Graphics.Vector2(controlPosResult.X, controlPosResult.Y);
+            System.Numerics.Vector2 controlSizeNum = control.Size;
+            Andastra.Runtime.Graphics.Vector2 controlSize = new Andastra.Runtime.Graphics.Vector2(controlSizeNum.X, controlSizeNum.Y);
 
             // Render control based on type
             switch (control.GuiType)
@@ -496,7 +501,7 @@ namespace Andastra.Runtime.Games.Aurora.GUI
         private void RenderPanel(GUIPanel panel, Andastra.Runtime.Graphics.Vector2 position, Andastra.Runtime.Graphics.Vector2 size)
         {
             // Render panel background using border fill texture if available
-            if (panel.Border != null && !panel.Border.Fill.IsBlank)
+            if (panel.Border != null && !panel.Border.Fill.IsBlank())
             {
                 ITexture2D fillTexture = LoadTexture(panel.Border.Fill.ToString());
                 if (fillTexture != null)
@@ -532,7 +537,7 @@ namespace Andastra.Runtime.Games.Aurora.GUI
             }
 
             // Render button background
-            if (borderToUse != null && !borderToUse.Fill.IsBlank)
+            if (borderToUse != null && !borderToUse.Fill.IsBlank())
             {
                 ITexture2D fillTexture = LoadTexture(borderToUse.Fill.ToString());
                 if (fillTexture != null)
@@ -592,7 +597,7 @@ namespace Andastra.Runtime.Games.Aurora.GUI
         private void RenderGenericControl(GUIControl control, Andastra.Runtime.Graphics.Vector2 position, Andastra.Runtime.Graphics.Vector2 size)
         {
             // Render border/background if available
-            if (control.Border != null && !control.Border.Fill.IsBlank)
+            if (control.Border != null && !control.Border.Fill.IsBlank())
             {
                 ITexture2D fillTexture = LoadTexture(control.Border.Fill.ToString());
                 if (fillTexture != null)
@@ -630,13 +635,13 @@ namespace Andastra.Runtime.Games.Aurora.GUI
                 {
                     var g = glyph.Value;
                     ITexture2D texture = font.Texture;
-                    
-                    // Draw character glyph
-                    var sourceRect = new Andastra.Runtime.Graphics.Rectangle(g.Value.SourceX, g.Value.SourceY, g.Value.SourceWidth, g.Value.SourceHeight);
-                    var destRect = new Andastra.Runtime.Graphics.Rectangle((int)x, (int)y, (int)g.Value.Width, (int)g.Value.Height);
-                    _spriteBatch.Draw(texture, destRect, sourceRect, color);
 
-                    x += g.Value.Width + font.SpacingR;
+                    // Draw character glyph
+                    var sourceRect = new Andastra.Runtime.Graphics.Rectangle(g.SourceX, g.SourceY, g.SourceWidth, g.SourceHeight);
+                    var destRect = new Andastra.Runtime.Graphics.Rectangle((int)x, (int)y, (int)g.Width, (int)g.Height);
+                    _spriteBatch.Draw(texture, destRect, sourceRect, color, 0.0f, Andastra.Runtime.Graphics.Vector2.Zero, Andastra.Runtime.Graphics.SpriteEffects.None, 0.0f);
+
+                    x += g.Width + font.SpacingR;
                 }
                 else
                 {
@@ -660,7 +665,7 @@ namespace Andastra.Runtime.Games.Aurora.GUI
         /// - Texture conversion: Converts TPC/TGA format to MonoGame Texture2D using TpcToMonoGameTextureConverter
         /// - Caching: Textures are cached by lowercase ResRef to avoid reloading
         /// - Error handling: Returns null on failure (missing resource, parsing error, conversion error)
-        /// 
+        ///
         /// Implementation pattern matches AuroraBitmapFont.Load for consistency.
         /// </remarks>
         private ITexture2D LoadTexture(string textureName)
@@ -761,7 +766,7 @@ namespace Andastra.Runtime.Games.Aurora.GUI
                 Dimension = selected.Dimension,
                 InnerOffset = selected.InnerOffset,
                 InnerOffsetY = selected.InnerOffsetY,
-                Color = selected.Color,
+                Color = selected.Color != null ? new Andastra.Parsing.Common.Color(selected.Color) : null,
                 Pulsing = selected.Pulsing
             };
         }
@@ -780,7 +785,7 @@ namespace Andastra.Runtime.Games.Aurora.GUI
                 Dimension = hilightSelected.Dimension,
                 InnerOffset = hilightSelected.InnerOffset,
                 InnerOffsetY = hilightSelected.InnerOffsetY,
-                Color = hilightSelected.Color,
+                Color = hilightSelected.Color != null ? new Andastra.Parsing.Common.Color(hilightSelected.Color) : null,
                 Pulsing = hilightSelected.Pulsing
             };
         }

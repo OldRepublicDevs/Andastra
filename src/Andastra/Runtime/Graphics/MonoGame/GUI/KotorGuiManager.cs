@@ -2196,7 +2196,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                 Dimension = selected.Dimension,
                 InnerOffset = selected.InnerOffset,
                 InnerOffsetY = selected.InnerOffsetY,
-                Color = selected.Color,
+                Color = selected.Color != null ? new Andastra.Parsing.Common.Color(selected.Color) : null,
                 Pulsing = selected.Pulsing
             };
         }
@@ -2215,7 +2215,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                 Dimension = hilightSelected.Dimension,
                 InnerOffset = hilightSelected.InnerOffset,
                 InnerOffsetY = hilightSelected.InnerOffsetY,
-                Color = hilightSelected.Color,
+                Color = hilightSelected.Color != null ? new Andastra.Parsing.Common.Color(hilightSelected.Color) : null,
                 Pulsing = hilightSelected.Pulsing
             };
         }
