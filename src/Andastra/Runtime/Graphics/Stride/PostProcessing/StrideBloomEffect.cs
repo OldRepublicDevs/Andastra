@@ -9,6 +9,7 @@ using Stride.Shaders.Compiler;
 using Andastra.Runtime.Graphics.Common.PostProcessing;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Stride.Graphics;
+using Andastra.Runtime.Stride.Shaders;
 using Stride.Core.Serialization.Contents;
 
 namespace Andastra.Runtime.Stride.PostProcessing
@@ -98,8 +99,6 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 {
                     // Try to get ContentManager from GraphicsDevice services
                     // Stride GraphicsDevice may have Services property that provides ContentManager
-                    // Use explicit type to avoid C# 7.3 inferred delegate type limitation
-                    // Note: Services() extension method returns null in this Stride version, but code handles null gracefully
                     object services = _graphicsDevice.Services();
                     if (services != null)
                     {
@@ -446,24 +445,18 @@ shader BlurEffect : ShaderBase
 
             // Begin sprite batch rendering
             // Use SpriteSortMode.Immediate for post-processing effects
-            // TODO: STUB - SpriteBatch.Begin expects GraphicsContext, but we have CommandList.
-            // In Stride, CommandList and GraphicsContext may be related. Need to check if CommandList has a GraphicsContext property
-            // or if there's a different Begin overload. For now, using CommandList directly may work if they're compatible types.
-            // If compilation fails, this needs proper GraphicsContext retrieval.
-            try
+            // Begin sprite batch rendering
+            // Use SpriteSortMode.Immediate for post-processing effects
+            // Get GraphicsContext from GraphicsDevice using extension method
+            var graphicsContext = _graphicsDevice.GraphicsContext();
+            if (graphicsContext == null)
             {
-                // Try to get GraphicsContext from CommandList if it exists
-                var graphicsContextProp = commandList.GetType().GetProperty("GraphicsContext");
-                var graphicsContext = graphicsContextProp?.GetValue(commandList) as StrideGraphics.GraphicsContext ?? (StrideGraphics.GraphicsContext)(object)commandList;
-                _spriteBatch.Begin(graphicsContext, StrideGraphics.SpriteSortMode.Immediate, StrideGraphics.BlendStates.Opaque, _linearSampler,
-                    StrideGraphics.DepthStencilStates.None, StrideGraphics.RasterizerStates.CullNone, _brightPassEffect);
-            }
-            catch
-            {
-                // Fallback: SpriteBatch may not be usable without proper GraphicsContext
                 System.Console.WriteLine("[StrideBloomEffect] Warning: Could not begin sprite batch - GraphicsContext unavailable");
                 return;
             }
+
+            _spriteBatch.Begin(graphicsContext, StrideGraphics.SpriteSortMode.Immediate, StrideGraphics.BlendStates.Opaque, _linearSampler,
+                StrideGraphics.DepthStencilStates.None, StrideGraphics.RasterizerStates.CullNone, _brightPassEffect);
 
             // If we have a custom bright pass effect, set its parameters
             // TODO: STUB - ParameterCollection.Get<T> requires non-nullable value types. Parameter setting needs proper API usage.
@@ -522,24 +515,18 @@ shader BlurEffect : ShaderBase
 
             // Begin sprite batch rendering
             // Use SpriteSortMode.Immediate for post-processing effects
-            // TODO: STUB - SpriteBatch.Begin expects GraphicsContext, but we have CommandList.
-            // In Stride, CommandList and GraphicsContext may be related. Need to check if CommandList has a GraphicsContext property
-            // or if there's a different Begin overload. For now, using CommandList directly may work if they're compatible types.
-            // If compilation fails, this needs proper GraphicsContext retrieval.
-            try
+            // Begin sprite batch rendering
+            // Use SpriteSortMode.Immediate for post-processing effects
+            // Get GraphicsContext from GraphicsDevice using extension method
+            var graphicsContext = _graphicsDevice.GraphicsContext();
+            if (graphicsContext == null)
             {
-                // Try to get GraphicsContext from CommandList if it exists
-                var graphicsContextProp = commandList.GetType().GetProperty("GraphicsContext");
-                var graphicsContext = graphicsContextProp?.GetValue(commandList) as StrideGraphics.GraphicsContext ?? (StrideGraphics.GraphicsContext)(object)commandList;
-                _spriteBatch.Begin(graphicsContext, StrideGraphics.SpriteSortMode.Immediate, StrideGraphics.BlendStates.Opaque, _linearSampler,
-                    StrideGraphics.DepthStencilStates.None, StrideGraphics.RasterizerStates.CullNone, _blurEffect);
-            }
-            catch
-            {
-                // Fallback: SpriteBatch may not be usable without proper GraphicsContext
                 System.Console.WriteLine("[StrideBloomEffect] Warning: Could not begin sprite batch - GraphicsContext unavailable");
                 return;
             }
+
+            _spriteBatch.Begin(graphicsContext, StrideGraphics.SpriteSortMode.Immediate, StrideGraphics.BlendStates.Opaque, _linearSampler,
+                StrideGraphics.DepthStencilStates.None, StrideGraphics.RasterizerStates.CullNone, _blurEffect);
 
             // If we have a custom blur effect, set its parameters
             // TODO: STUB - ParameterCollection.Get<T> requires non-nullable value types. Parameter setting needs proper API usage.
@@ -610,14 +597,13 @@ shader BlurEffect : ShaderBase
 
                     // Try to get EffectSystem from services (EffectCompiler may be accessed through it)
                     // Based on Stride architecture: EffectSystem manages effect compilation
-                    // TODO: STUB - EffectSystem/EffectCompiler API may need different namespace or API
-                    // var effectSystem = servicesDynamic.GetService<Stride.Shaders.Compiler.EffectCompiler>();
-                    // if (effectSystem != null)
-                    // {
-                    //     // EffectSystem may provide access to EffectCompiler
-                    //     // Try to compile using EffectSystem's compilation capabilities
-                    //     return CompileShaderWithEffectSystem(effectSystem, shaderSource, shaderName);
-                    // }
+                    var effectSystem = services.GetService<Stride.Shaders.Compiler.EffectCompiler>();
+                    if (effectSystem != null)
+                    {
+                        // EffectSystem may provide access to EffectCompiler
+                        // Try to compile using EffectSystem's compilation capabilities
+                        return CompileShaderWithEffectSystem(effectSystem, shaderSource, shaderName);
+                    }
                 }
 
                 // Strategy 2: Create temporary shader file and compile it
@@ -657,27 +643,27 @@ shader BlurEffect : ShaderBase
                 // CompilerParameters provides compilation settings including platform target
                 var compilationResult = compiler.Compile(compilerSource, new CompilerParameters
                 {
-                    EffectParameters = new EffectCompilerParameters(),
-                    Platform = _graphicsDevice.Features.Profile
+                    EffectParameters = new EffectCompilerParameters()
                 });
-                //
-                // if (compilationResult != null && compilationResult.Bytecode != null && compilationResult.Bytecode.Length > 0)
-                // {
-                //     // Create Effect from compiled bytecode
-                //     // Based on Stride API: Effect constructor accepts compiled bytecode
-                //     var effect = new StrideGraphics.Effect(_graphicsDevice, compilationResult.Bytecode);
-                //     System.Console.WriteLine($"[StrideBloomEffect] Successfully compiled shader '{shaderName}' using EffectCompiler");
-                //     return effect;
-                // }
-                // else
-                // {
-                //     System.Console.WriteLine($"[StrideBloomEffect] EffectCompiler compilation failed for shader '{shaderName}': No bytecode generated");
-                //     if (compilationResult != null && compilationResult.HasErrors)
-                //     {
-                //         System.Console.WriteLine($"[StrideBloomEffect] Compilation errors: {compilationResult.ErrorText}");
-                //     }
-                //     return null;
-                // }
+
+                var compilerResult = compilationResult.Result;
+                if (compilerResult != null && compilerResult.Bytecode != null && compilerResult.Bytecode.Length > 0)
+                {
+                    // Create Effect from compiled bytecode
+                    // Based on Stride API: Effect constructor accepts compiled bytecode
+                    var effect = new StrideGraphics.Effect(_graphicsDevice, compilerResult.Bytecode);
+                    System.Console.WriteLine($"[StrideBloomEffect] Successfully compiled shader '{shaderName}' using EffectCompiler");
+                    return effect;
+                }
+                else
+                {
+                    System.Console.WriteLine($"[StrideBloomEffect] EffectCompiler compilation failed for shader '{shaderName}': No bytecode generated");
+                    if (compilerResult != null && compilerResult.HasErrors)
+                    {
+                        System.Console.WriteLine($"[StrideBloomEffect] Compilation errors: {compilerResult.ErrorText}");
+                    }
+                    return null;
+                }
             }
             catch (Exception ex)
             {
@@ -746,7 +732,8 @@ shader BlurEffect : ShaderBase
                 object services = _graphicsDevice.Services();
                 if (services != null)
                 {
-                    var effectCompiler = services.GetService<EffectCompiler>();
+                    dynamic servicesDynamic = services;
+                    var effectCompiler = servicesDynamic.GetService<EffectCompiler>();
                     if (effectCompiler != null)
                     {
                         // Create compilation source from file
@@ -759,18 +746,9 @@ shader BlurEffect : ShaderBase
                         // CompilerParameters provides compilation settings including platform target
                         // EffectParameters specifies shader compilation options
                         // Platform ensures shader is compiled for the correct graphics API (DirectX, Vulkan, etc.)
-                        var compilationResult = effectCompiler.Compile(compilerSource, new CompilerParameters
-                        {
-                            EffectParameters = new EffectCompilerParameters(),
-                            Platform = _graphicsDevice.Features.Profile
-                        });
-                        //
-                        // if (compilationResult != null && compilationResult.Bytecode != null && compilationResult.Bytecode.Length > 0)
-                        // {
-                        //     var effect = new StrideGraphics.Effect(_graphicsDevice, compilationResult.Bytecode);
-                        //     System.Console.WriteLine($"[StrideBloomEffect] Successfully compiled shader '{shaderName}' from file");
-                        //     return effect;
-                        // }
+                        // TODO: FIXME - Compilation API has type incompatibilities in this Stride version
+                        // For now, skip file-based compilation
+                        System.Console.WriteLine($"[StrideBloomEffect] File-based shader compilation not available in this Stride version for '{shaderName}'");
                     }
                 }
 
@@ -778,7 +756,6 @@ shader BlurEffect : ShaderBase
                 // Effect.Load() doesn't support file paths directly, continue to return null
 
                 System.Console.WriteLine($"[StrideBloomEffect] Could not compile shader '{shaderName}' from file");
-                return null;
             }
             catch (Exception ex)
             {
@@ -800,6 +777,7 @@ shader BlurEffect : ShaderBase
                     }
                 }
             }
+            return null;
         }
 
         /// <summary>
@@ -862,17 +840,9 @@ shader BlurEffect : ShaderBase
             _brightPassEffectBase = null;
 
             _blurEffectBase?.Dispose();
-            _blurEffectBase = null;
-
-            _spriteBatch?.Dispose();
+            _blurEffectBase = null;            _spriteBatch?.Dispose();
             _spriteBatch = null;
-
-            _linearSampler?.Dispose();
-            _linearSampler = null;
-
-            _pointSampler?.Dispose();
-            _pointSampler = null;
         }
     }
-}
+
 
