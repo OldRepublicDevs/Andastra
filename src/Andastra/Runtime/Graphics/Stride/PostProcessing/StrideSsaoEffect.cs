@@ -606,21 +606,20 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 var serviceRegistry = services as IServiceRegistry;
                 if (serviceRegistry != null)
                 {
-                    var getServiceMethod = serviceRegistry.GetType().GetMethod("GetService", new Type[0]);
+                    // GetService takes Type parameter, not generic
+                    var getServiceMethod = serviceRegistry.GetType().GetMethod("GetService", new Type[] { typeof(Type) });
                     if (getServiceMethod != null)
                     {
-                        var genericMethod = getServiceMethod.MakeGenericMethod(typeof(T));
-                        return genericMethod.Invoke(serviceRegistry, null) as T;
+                        return getServiceMethod.Invoke(serviceRegistry, new object[] { typeof(T) }) as T;
                     }
                 }
                 else
                 {
                     // If not IServiceRegistry, try to get GetService method from the object's type
-                    var getServiceMethod = services.GetType().GetMethod("GetService", new Type[0]);
+                    var getServiceMethod = services.GetType().GetMethod("GetService", new Type[] { typeof(Type) });
                     if (getServiceMethod != null)
                     {
-                        var genericMethod = getServiceMethod.MakeGenericMethod(typeof(T));
-                        return genericMethod.Invoke(services, null) as T;
+                        return getServiceMethod.Invoke(services, new object[] { typeof(T) }) as T;
                     }
                 }
             }
