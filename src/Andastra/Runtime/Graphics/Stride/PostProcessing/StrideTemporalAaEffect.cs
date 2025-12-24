@@ -155,23 +155,23 @@ namespace Andastra.Runtime.Stride.PostProcessing
                                 // EffectInstance provides parameter binding and shader execution
                                 _taaEffect = new EffectInstance(_taaEffectBase);
                                 _effectInitialized = true;
-                                System.Console.WriteLine("[StrideTemporalAaEffect] Loaded TemporalAA effect from ContentManager");
+                                Console.WriteLine("[StrideTemporalAaEffect] Loaded TemporalAA effect from ContentManager");
                                 return;
                             }
                         }
                         else
                         {
-                            System.Console.WriteLine("[StrideTemporalAaEffect] ContentManager service not available from GraphicsDevice");
+                            Console.WriteLine("[StrideTemporalAaEffect] ContentManager service not available from GraphicsDevice");
                         }
                     }
                     else
                     {
-                        System.Console.WriteLine("[StrideTemporalAaEffect] Services not available from GraphicsDevice");
+                        Console.WriteLine("[StrideTemporalAaEffect] Services not available from GraphicsDevice");
                     }
                 }
                 catch (Exception ex)
                 {
-                    System.Console.WriteLine($"[StrideTemporalAaEffect] Failed to load TemporalAA from ContentManager: {ex.Message}");
+                    Console.WriteLine($"[StrideTemporalAaEffect] Failed to load TemporalAA from ContentManager: {ex.Message}");
                 }
 
                 // Strategy 2: Alternative ContentManager access pattern
@@ -205,7 +205,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                                             {
                                                 _taaEffect = new EffectInstance(_taaEffectBase);
                                                 _effectInitialized = true;
-                                                System.Console.WriteLine($"[StrideTemporalAaEffect] Loaded TemporalAA effect from ContentManager using name '{effectName}'");
+                                                Console.WriteLine($"[StrideTemporalAaEffect] Loaded TemporalAA effect from ContentManager using name '{effectName}'");
                                                 return;
                                             }
                                         }
@@ -216,16 +216,16 @@ namespace Andastra.Runtime.Stride.PostProcessing
                                         }
                                     }
 
-                                    System.Console.WriteLine("[StrideTemporalAaEffect] None of the expected effect names found in ContentManager");
+                                    Console.WriteLine("[StrideTemporalAaEffect] None of the expected effect names found in ContentManager");
                                 }
                                 catch (Exception loadEx)
                                 {
-                                    System.Console.WriteLine($"[StrideTemporalAaEffect] Failed to load TemporalAA from ContentManager: {loadEx.Message}");
+                                    Console.WriteLine($"[StrideTemporalAaEffect] Failed to load TemporalAA from ContentManager: {loadEx.Message}");
                                 }
                             }
                             else
                             {
-                                System.Console.WriteLine("[StrideTemporalAaEffect] ContentManager not available through direct service access");
+                                Console.WriteLine("[StrideTemporalAaEffect] ContentManager not available through direct service access");
                             }
                         }
 
@@ -251,7 +251,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                                         {
                                             _taaEffect = new EffectInstance(_taaEffectBase);
                                             _effectInitialized = true;
-                                            System.Console.WriteLine("[StrideTemporalAaEffect] Loaded TemporalAA effect from Game.Services.ContentManager");
+                                            Console.WriteLine("[StrideTemporalAaEffect] Loaded TemporalAA effect from Game.Services.ContentManager");
                                             return;
                                         }
                                     }
@@ -260,12 +260,12 @@ namespace Andastra.Runtime.Stride.PostProcessing
                         }
                         catch (Exception gameEx)
                         {
-                            System.Console.WriteLine($"[StrideTemporalAaEffect] Failed to access ContentManager through Game.Services: {gameEx.Message}");
+                            Console.WriteLine($"[StrideTemporalAaEffect] Failed to access ContentManager through Game.Services: {gameEx.Message}");
                         }
                     }
                     catch (Exception ex)
                     {
-                        System.Console.WriteLine($"[StrideTemporalAaEffect] Failed to access ContentManager through any available method: {ex.Message}");
+                        Console.WriteLine($"[StrideTemporalAaEffect] Failed to access ContentManager through any available method: {ex.Message}");
                     }
                 }
 
@@ -277,20 +277,20 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     {
                         _taaEffect = new EffectInstance(_taaEffectBase);
                         _effectInitialized = true;
-                        System.Console.WriteLine("[StrideTemporalAaEffect] Created TemporalAA effect programmatically");
+                        Console.WriteLine("[StrideTemporalAaEffect] Created TemporalAA effect programmatically");
                     }
                 }
 
                 // Final fallback: Effect remains null, will use simple copy
                 if (_taaEffectBase == null)
                 {
-                    System.Console.WriteLine("[StrideTemporalAaEffect] Warning: Could not load or create TAA shader. Using fallback rendering.");
+                    Console.WriteLine("[StrideTemporalAaEffect] Warning: Could not load or create TAA shader. Using fallback rendering.");
                     _effectInitialized = false;
                 }
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine($"[StrideTemporalAaEffect] Exception while initializing TAA effect: {ex.Message}");
+                Console.WriteLine($"[StrideTemporalAaEffect] Exception while initializing TAA effect: {ex.Message}");
                 _effectInitialized = false;
             }
         }
@@ -552,8 +552,8 @@ shader TemporalAAEffect : ShaderBase
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine($"[StrideTemporalAaEffect] Failed to create TAA effect: {ex.Message}");
-                System.Console.WriteLine($"[StrideTemporalAaEffect] Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"[StrideTemporalAaEffect] Failed to create TAA effect: {ex.Message}");
+                Console.WriteLine($"[StrideTemporalAaEffect] Stack trace: {ex.StackTrace}");
                 return null;
             }
         }
@@ -576,13 +576,13 @@ shader TemporalAAEffect : ShaderBase
         {
             if (string.IsNullOrEmpty(shaderSource))
             {
-                System.Console.WriteLine($"[StrideTemporalAaEffect] Cannot compile shader '{shaderName}': shader source is null or empty");
+                Console.WriteLine($"[StrideTemporalAaEffect] Cannot compile shader '{shaderName}': shader source is null or empty");
                 return null;
             }
 
             if (_graphicsDevice == null)
             {
-                System.Console.WriteLine($"[StrideTemporalAaEffect] Cannot compile shader '{shaderName}': GraphicsDevice is null");
+                Console.WriteLine($"[StrideTemporalAaEffect] Cannot compile shader '{shaderName}': GraphicsDevice is null");
                 return null;
             }
 
@@ -623,8 +623,8 @@ shader TemporalAAEffect : ShaderBase
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine($"[StrideTemporalAaEffect] Failed to compile shader '{shaderName}': {ex.Message}");
-                System.Console.WriteLine($"[StrideTemporalAaEffect] Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"[StrideTemporalAaEffect] Failed to compile shader '{shaderName}': {ex.Message}");
+                Console.WriteLine($"[StrideTemporalAaEffect] Stack trace: {ex.StackTrace}");
                 return null;
             }
         }
@@ -642,8 +642,8 @@ shader TemporalAAEffect : ShaderBase
             {
                 // Create compilation context for shader compilation
                 // Based on Stride API: EffectCompiler requires compilation context
-                // ShaderSource is abstract, so we use ShaderClassSource for source code compilation
-                var compilerSource = new ShaderClassSource
+                // ShaderSource is abstract, so we use ShaderSourceClass for source code compilation
+                var compilerSource = new ShaderSourceClass
                 {
                     Name = shaderName,
                     SourceCode = shaderSource
@@ -667,17 +667,17 @@ shader TemporalAAEffect : ShaderBase
                     // Based on Stride API: Effect constructor accepts compiled bytecode
                     // Use global:: to avoid namespace resolution conflicts with System.Numerics
                     var effect = new StrideGraphics.Effect(_graphicsDevice, (EffectBytecode)compilerResult.Bytecode);
-                    System.Console.WriteLine($"[StrideTemporalAaEffect] Successfully compiled shader '{shaderName}' using EffectCompiler");
+                    Console.WriteLine($"[StrideTemporalAaEffect] Successfully compiled shader '{shaderName}' using EffectCompiler");
                     return effect;
                 }
                 else
                 {
-                    System.Console.WriteLine($"[StrideTemporalAaEffect] EffectCompiler compilation failed for shader '{shaderName}': No bytecode generated");
+                    Console.WriteLine($"[StrideTemporalAaEffect] EffectCompiler compilation failed for shader '{shaderName}': No bytecode generated");
                     if (compilerResult != null && compilerResult.HasErrors)
                     {
                         // CompilerResults may not have ErrorText, use ToString() or check for specific error properties
                         // Try to get error information from the result object
-                        System.Console.WriteLine($"[StrideTemporalAaEffect] Compilation errors occurred for shader '{shaderName}'");
+                        Console.WriteLine($"[StrideTemporalAaEffect] Compilation errors occurred for shader '{shaderName}'");
                         try
                         {
                             // Attempt to extract error information from compiler result
@@ -687,7 +687,7 @@ shader TemporalAAEffect : ShaderBase
                                 var errorText = errorProperty.GetValue(compilerResult) as string;
                                 if (!string.IsNullOrEmpty(errorText))
                                 {
-                                    System.Console.WriteLine($"[StrideTemporalAaEffect] Compilation errors: {errorText}");
+                                    Console.WriteLine($"[StrideTemporalAaEffect] Compilation errors: {errorText}");
                                 }
                             }
                         }
@@ -701,8 +701,8 @@ shader TemporalAAEffect : ShaderBase
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine($"[StrideTemporalAaEffect] Exception while compiling shader '{shaderName}' with EffectCompiler: {ex.Message}");
-                System.Console.WriteLine($"[StrideTemporalAaEffect] Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"[StrideTemporalAaEffect] Exception while compiling shader '{shaderName}' with EffectCompiler: {ex.Message}");
+                Console.WriteLine($"[StrideTemporalAaEffect] Stack trace: {ex.StackTrace}");
                 return null;
             }
         }
@@ -729,12 +729,70 @@ shader TemporalAAEffect : ShaderBase
                     }
                 }
 
-                System.Console.WriteLine($"[StrideTemporalAaEffect] EffectSystem does not provide direct compiler access for shader '{shaderName}'");
+                Console.WriteLine($"[StrideTemporalAaEffect] EffectSystem does not provide direct compiler access for shader '{shaderName}'");
                 return null;
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine($"[StrideTemporalAaEffect] Exception while compiling shader '{shaderName}' with EffectSystem: {ex.Message}");
+                Console.WriteLine($"[StrideTemporalAaEffect] Exception while compiling shader '{shaderName}' with EffectSystem: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Compiles shader from file using EffectSystem.
+        /// </summary>
+        /// <param name="effectSystem">EffectSystem instance.</param>
+        /// <param name="filePath">Path to shader file.</param>
+        /// <param name="shaderName">Shader name for identification.</param>
+        /// <returns>Compiled Effect, or null if compilation fails.</returns>
+        private StrideGraphics.Effect CompileShaderWithEffectSystemFromFile(global::Stride.Shaders.Compiler.EffectCompiler effectSystem, string filePath, string shaderName)
+        {
+            try
+            {
+                // Attempt to get EffectCompiler from EffectSystem for file compilation
+                var compilerProperty = effectSystem.GetType().GetProperty("Compiler");
+                if (compilerProperty != null)
+                {
+                    var compiler = compilerProperty.GetValue(effectSystem) as EffectCompiler;
+                    if (compiler != null)
+                    {
+                        // Read shader source from file and create ShaderSourceClass
+                        string fileShaderSource = System.IO.File.ReadAllText(filePath);
+                        var fileSource = new ShaderSourceClass
+                        {
+                            Name = shaderName,
+                            SourceCode = fileShaderSource
+                        };
+
+                        // Compile from file content
+                        dynamic compilationResult = compiler.Compile(fileSource, new CompilerParameters
+                        {
+                            EffectParameters = new EffectCompilerParameters()
+                        });
+
+                        // Unwrap TaskOrResult to get compilation result
+                        dynamic compilerResult = compilationResult.Result;
+                        if (compilerResult != null && compilerResult.Bytecode != null && compilerResult.Bytecode.Length > 0)
+                        {
+                            // Create Effect from compiled bytecode
+                            var effect = new StrideGraphics.Effect(_graphicsDevice, (EffectBytecode)compilerResult.Bytecode);
+                            Console.WriteLine($"[StrideTemporalAaEffect] Successfully compiled shader '{shaderName}' from file using EffectSystem");
+                            return effect;
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[StrideTemporalAaEffect] File-based compilation failed for shader '{shaderName}': No bytecode generated");
+                        }
+                    }
+                }
+
+                Console.WriteLine($"[StrideTemporalAaEffect] EffectSystem does not support file-based compilation for shader '{shaderName}'");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StrideTemporalAaEffect] Exception while compiling shader '{shaderName}' from file with EffectSystem: {ex.Message}");
                 return null;
             }
         }
@@ -763,21 +821,61 @@ shader TemporalAAEffect : ShaderBase
                 {
                     try
                     {
-                        // TODO: STUB - Shader compilation from file not yet implemented
-                        // Requires proper Stride shader compilation API
+                        // Attempt to get EffectCompiler from services for file-based compilation
+                        var effectCompiler = services.GetService<EffectCompiler>();
+                        if (effectCompiler != null)
+                        {
+                            // Read shader source from file and create ShaderSourceClass
+                            // Stride EffectCompiler works with ShaderSource objects, not direct file paths
+                            string fileShaderSource = System.IO.File.ReadAllText(tempFilePath);
+                            var fileSource = new ShaderSourceClass
+                            {
+                                Name = shaderName,
+                                SourceCode = fileShaderSource
+                            };
+
+                            // Compile shader from file content using EffectCompiler
+                            dynamic compilationResult = effectCompiler.Compile(fileSource, new CompilerParameters
+                            {
+                                EffectParameters = new EffectCompilerParameters()
+                            });
+
+                            // Unwrap TaskOrResult to get compilation result
+                            dynamic compilerResult = compilationResult.Result;
+                            if (compilerResult != null && compilerResult.Bytecode != null && compilerResult.Bytecode.Length > 0)
+                            {
+                                // Create Effect from compiled bytecode
+                                var effect = new StrideGraphics.Effect(_graphicsDevice, (EffectBytecode)compilerResult.Bytecode);
+                                Console.WriteLine($"[StrideTemporalAaEffect] Successfully compiled shader '{shaderName}' from file using EffectCompiler");
+                                return effect;
+                            }
+                            else
+                            {
+                                Console.WriteLine($"[StrideTemporalAaEffect] File-based compilation failed for shader '{shaderName}': No bytecode generated");
+                            }
+                        }
+                        else
+                        {
+                            // Try alternative approach: Get EffectSystem and compile through it
+                            var effectSystem = services.GetService<global::Stride.Shaders.Compiler.EffectCompiler>();
+                            if (effectSystem != null)
+                            {
+                                return CompileShaderWithEffectSystemFromFile(effectSystem, tempFilePath, shaderName);
+                            }
+                        }
                     }
-                    catch
+                    catch (Exception compileEx)
                     {
-                        // Ignore compilation errors in stub implementation
+                        Console.WriteLine($"[StrideTemporalAaEffect] Exception during file-based shader compilation for '{shaderName}': {compileEx.Message}");
                     }
                 }
 
-                System.Console.WriteLine($"[StrideTemporalAaEffect] Could not compile shader '{shaderName}' from file");
+                Console.WriteLine($"[StrideTemporalAaEffect] Could not compile shader '{shaderName}' from file");
                 return null;
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine($"[StrideTemporalAaEffect] Exception while compiling shader '{shaderName}' from file: {ex.Message}");
+                Console.WriteLine($"[StrideTemporalAaEffect] Exception while compiling shader '{shaderName}' from file: {ex.Message}");
                 return null;
             }
             finally
@@ -1112,6 +1210,44 @@ shader TemporalAAEffect : ShaderBase
 
             _pointSampler?.Dispose();
             _pointSampler = null;
+        }
+
+        /// <summary>
+        /// Helper class for shader source compilation.
+        /// Wraps shader source code for EffectCompiler.
+        /// </summary>
+        private class ShaderSourceClass : ShaderSource
+        {
+            public string Name { get; set; }
+            public string SourceCode { get; set; }
+
+            public override int GetHashCode()
+            {
+                int hash = 17;
+                hash = hash * 31 + (Name?.GetHashCode() ?? 0);
+                hash = hash * 31 + (SourceCode?.GetHashCode() ?? 0);
+                return hash;
+            }
+
+            public override object Clone()
+            {
+                return new ShaderSourceClass
+                {
+                    Name = Name,
+                    SourceCode = SourceCode
+                };
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (obj == null || !(obj is ShaderSourceClass other))
+                {
+                    return false;
+                }
+
+                return string.Equals(Name, other.Name) &&
+                       string.Equals(SourceCode, other.SourceCode);
+            }
         }
     }
 }
