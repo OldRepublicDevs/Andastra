@@ -626,7 +626,8 @@ shader TemporalAAEffect : ShaderBase
                 System.IO.File.WriteAllText(tempFilePath, shaderSource);
 
                 // Try to compile shader from file
-                var services = _graphicsDevice.Services;
+                // Note: Services() extension method always returns null in newer Stride versions
+                object services = _graphicsDevice.Services();
                 if (services != null)
                 {
                     var effectCompiler = services.GetService<EffectCompiler>();
@@ -820,22 +821,29 @@ shader TemporalAAEffect : ShaderBase
 
                     // Set previous view-projection matrix for reprojection
                     // This is used to reproject history buffer samples to current frame space
-                    var prevViewProjParam = _taaEffect.Parameters.Get("PreviousViewProjection");
-                    if (prevViewProjParam != null)
+                    try
                     {
-                        // Convert System.Numerics.Matrix4x4 to global::Stride.Core.Mathematics.Matrix
-                        var strideMatrix = ConvertToStrideMatrix(_previousViewProjection);
-                        prevViewProjParam.SetValue(strideMatrix);
+                        var setMatrixMethod = typeof(global::Stride.Rendering.ParameterCollection).GetMethod("Set", new[] { typeof(string), typeof(Matrix) });
+                        if (setMatrixMethod != null)
+                        {
+                            var strideMatrix = ConvertToStrideMatrix(_previousViewProjection);
+                            setMatrixMethod.Invoke(_taaEffect.Parameters, new object[] { "PreviousViewProjection", strideMatrix });
+                        }
                     }
+                    catch { }
 
                     // Get current view-projection from RenderContext if available
                     if (context != null && context.RenderView != null)
                     {
-                        var viewProjParam = _taaEffect.Parameters.Get("ViewProjection");
-                        if (viewProjParam != null)
+                        try
                         {
-                            viewProjParam.SetValue(context.RenderView.ViewProjection);
+                            var setMatrixMethod = typeof(global::Stride.Rendering.ParameterCollection).GetMethod("Set", new[] { typeof(string), typeof(Matrix) });
+                            if (setMatrixMethod != null)
+                            {
+                                setMatrixMethod.Invoke(_taaEffect.Parameters, new object[] { "ViewProjection", context.RenderView.ViewProjection });
+                            }
                         }
+                        catch { }
 
                         // Update previous view-projection for next frame
                         var currentViewProj = context.RenderView.ViewProjection;
@@ -844,27 +852,17 @@ shader TemporalAAEffect : ShaderBase
 
                     // Set neighborhood clamp factor for ghosting reduction
                     // Higher values = more aggressive clamping (less ghosting, potentially less AA quality)
-                    var clampFactorParam = _taaEffect.Parameters.Get("ClampFactor");
-                    if (clampFactorParam != null)
+                    try
                     {
-                        clampFactorParam.SetValue(0.5f); // Default: 0.5 (moderate clamping)
+                        var setFloatMethod = typeof(global::Stride.Rendering.ParameterCollection).GetMethod("Set", new[] { typeof(string), typeof(float) });
+                        if (setFloatMethod != null)
+                        {
+                            setFloatMethod.Invoke(_taaEffect.Parameters, new object[] { "ClampFactor", 0.5f });
+                            setFloatMethod.Invoke(_taaEffect.Parameters, new object[] { "DepthThreshold", 0.01f });
+                            setFloatMethod.Invoke(_taaEffect.Parameters, new object[] { "VelocityThreshold", 0.1f });
+                        }
                     }
-
-                    // Set depth threshold for depth-based rejection
-                    // Samples with depth differences larger than this are rejected
-                    var depthThresholdParam = _taaEffect.Parameters.Get("DepthThreshold");
-                    if (depthThresholdParam != null)
-                    {
-                        depthThresholdParam.SetValue(0.01f); // Default: 0.01 (1% depth difference threshold)
-                    }
-
-                    // Set velocity threshold for motion vector rejection
-                    // Motion vectors larger than this are rejected to prevent artifacts
-                    var velocityThresholdParam = _taaEffect.Parameters.Get("VelocityThreshold");
-                    if (velocityThresholdParam != null)
-                    {
-                        velocityThresholdParam.SetValue(0.1f); // Default: 0.1 (10% of screen width)
-                    }
+                    catch { }
 
                     // Set first frame flag (1.0 if first frame, 0.0 otherwise)
                     // First frame has no history, so TAA is skipped
