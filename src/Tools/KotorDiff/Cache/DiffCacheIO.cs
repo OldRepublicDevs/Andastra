@@ -7,6 +7,8 @@ using System.Linq;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using JetBrains.Annotations;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 using Game = Andastra.Parsing.Common.BiowareGame;
 
 namespace KotorDiff.Cache
@@ -77,8 +79,13 @@ namespace KotorDiff.Cache
                 }
             }
 
-            // YAML metadata saving can be added when YAML library is available
-            // TODO: STUB - For now, just log
+            // Save metadata to YAML
+            var serializer = new SerializerBuilder()
+                .WithNamingConvention(CamelCaseNamingConvention.Instance)
+                .Build();
+            string yamlContent = serializer.Serialize(cache.ToDict());
+            File.WriteAllText(cacheFile, yamlContent, System.Text.Encoding.UTF8);
+
             logFunc($"Saved diff cache to: {cacheFile}");
             logFunc($"  Cached {filesList.Count} file comparisons");
             logFunc($"  Cache data directory: {cacheDir}");
@@ -97,9 +104,13 @@ namespace KotorDiff.Cache
                 logFunc = Console.WriteLine;
             }
 
-            // YAML metadata loading can be added when YAML library is available
-            // TODO: STUB - For now, return empty cache
-            var cache = new DiffCache();
+            // Load metadata from YAML
+            var deserializer = new DeserializerBuilder()
+                .WithNamingConvention(CamelCaseNamingConvention.Instance)
+                .Build();
+            string yamlContent = File.ReadAllText(cacheFile, System.Text.Encoding.UTF8);
+            var cacheData = deserializer.Deserialize<Dictionary<string, object>>(yamlContent);
+            var cache = DiffCache.FromDict(cacheData);
 
             // Determine data directory paths
             string cacheDir = Path.Combine(Path.GetDirectoryName(cacheFile), Path.GetFileNameWithoutExtension(cacheFile) + "_data");
