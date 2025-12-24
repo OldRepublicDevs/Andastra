@@ -9,7 +9,6 @@ using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Enums;
-using ObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 using Andastra.Runtime.Core.Module;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Graphics;
@@ -30,26 +29,29 @@ using Andastra.Runtime.Games.Eclipse.Loading;
 using Andastra.Runtime.Games.Eclipse.Lighting;
 using Andastra.Runtime.Games.Eclipse.Physics;
 using Andastra.Parsing.Formats.TPC;
-using IPhysicsSystem = Andastra.Runtime.Games.Eclipse.IPhysicsSystem;
-using IUpdatable = Andastra.Runtime.Games.Eclipse.IUpdatable;
+using Andastra.Runtime.Games.Eclipse;
 using Andastra.Runtime.MonoGame.Enums;
+using ObjectType = Andastra.Runtime.Core.Enums.ObjectType;
+using IUpdatable = Andastra.Runtime.Games.Eclipse.IUpdatable;
 // Type aliases to resolve ambiguity between XNA and System.Numerics types
-using XnaMatrix = Microsoft.Xna.Framework.Matrix;
-using GraphicsVector2 = Andastra.Runtime.Graphics.Vector2;
 using Andastra.Runtime.MonoGame.Interfaces;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.MonoGame.Converters;
 using Andastra.Runtime.MonoGame.Graphics;
 using Andastra.Runtime.Core.Collision;
+using XnaMatrix = Microsoft.Xna.Framework.Matrix;
+using GraphicsVector2 = Andastra.Runtime.Graphics.Vector2;
 // Type aliases for MonoGame graphics types in different namespace
 using MonoGameTexture2D = Andastra.Runtime.Graphics.MonoGame.Graphics.MonoGameTexture2D;
 using MonoGameGraphicsDevice = Andastra.Runtime.Graphics.MonoGame.Graphics.MonoGameGraphicsDevice;
 using XnaVertexPositionColor = Microsoft.Xna.Framework.Graphics.VertexPositionColor;
 using Andastra.Runtime.MonoGame.Rendering;
-using Microsoft.Xna.Framework.Graphics;
 using Andastra.Runtime.MonoGame.Culling;
 using Andastra.Runtime.MonoGame.Lighting;
+// Type alias for IDynamicLight to use MonoGame.Interfaces version
+using IDynamicLight = Andastra.Runtime.MonoGame.Interfaces.IDynamicLight;
 // Type aliases to resolve ambiguity between XNA/MonoGame and Andastra types
+using Microsoft.Xna.Framework.Graphics;
 using XnaColor = Microsoft.Xna.Framework.Color;
 using XnaRectangle = Microsoft.Xna.Framework.Rectangle;
 using XnaBlendState = Microsoft.Xna.Framework.Graphics.BlendState;
@@ -58,8 +60,6 @@ using XnaPrimitiveType = Microsoft.Xna.Framework.Graphics.PrimitiveType;
 using ParsingResourceType = Andastra.Parsing.Resource.ResourceType;
 using ContentSearchLocation = Andastra.Runtime.Content.Interfaces.SearchLocation;
 using ParsingSearchLocation = Andastra.Parsing.Installation.SearchLocation;
-// Type alias for IDynamicLight to use MonoGame.Interfaces version
-using IDynamicLight = Andastra.Runtime.MonoGame.Interfaces.IDynamicLight;
 // Type aliases to resolve ambiguity for graphics types
 using GraphicsPrimitiveType = Andastra.Runtime.Graphics.PrimitiveType;
 using GraphicsBlend = Andastra.Runtime.Graphics.Blend;
@@ -102,7 +102,7 @@ namespace Andastra.Runtime.Games.Eclipse
     /// </remarks>
     [PublicAPI]
     public class EclipseArea : BaseArea, IDialogueHistoryArea
-    {
+        {
         private readonly List<IEntity> _creatures = new List<IEntity>();
         private readonly List<IEntity> _placeables = new List<IEntity>();
         private readonly List<IEntity> _doors = new List<IEntity>();
@@ -8532,7 +8532,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     // Cache original geometry data for collision shape updates
                     // Based on daorigins.exe/DragonAge2.exe: Original vertex/index data is cached for physics collision shape generation
                     // When geometry is modified (destroyed/deformed), collision shapes are rebuilt from this cached data
-                    CacheMeshGeometryFromMDL(modelResRef, mdl, this);
+                    CacheMeshGeometryFromMDL(modelResRef, mdl);
 
                     return meshData;
                 }
@@ -9685,7 +9685,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     // DXT compressed format - use TPC reader to decompress
                     using (var reader = new TPCDDSReader(ddsData))
                     {
-                        var tpc = reader.Read();
+                        var tpc = reader.Load();
                         if (tpc != null && tpc.Layers.Count > 0 && tpc.Layers[0].Mipmaps.Count > 0)
                         {
                             var mipmap = tpc.Layers[0].Mipmaps[0];
@@ -9948,6 +9948,108 @@ namespace Andastra.Runtime.Games.Eclipse
             }
 
             return new List<int>();
+        }
+
+        /// <summary>
+        /// Caches mesh geometry data (vertex positions and indices) from MDL model.
+        /// This cached data is used for collision shape updates when geometry is modified.
+        /// </summary>
+        /// <param name="meshId">Mesh identifier (model name/resref).</param>
+        /// <param name="mdl">MDL model to extract geometry from.</param>
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Original vertex/index data is cached for physics collision shape generation.
+        /// When geometry is modified (destroyed/deformed), collision shapes are rebuilt from this cached data.
+        /// </remarks>
+        private void CacheMeshGeometryFromMDL(string meshId, MDL mdl)
+        {
+            if (string.IsNullOrEmpty(meshId) || mdl == null || mdl.Root == null)
+            {
+                return;
+            }
+
+            // Check if already cached
+            if (_cachedMeshGeometry.ContainsKey(meshId))
+            {
+                return;
+            }
+
+            // Extract vertex positions and indices recursively from all nodes
+            List<Vector3> vertices = new List<Vector3>();
+            List<int> indices = new List<int>();
+
+            ExtractGeometryFromMDLNode(mdl.Root, System.Numerics.Matrix4x4.Identity, vertices, indices);
+
+            // Only cache if we extracted valid geometry
+            if (vertices.Count > 0 && indices.Count > 0)
+            {
+                CachedMeshGeometry cachedGeometry = new CachedMeshGeometry
+                {
+                    MeshId = meshId,
+                    Vertices = vertices,
+                    Indices = indices
+                };
+
+                _cachedMeshGeometry[meshId] = cachedGeometry;
+            }
+        }
+
+        /// <summary>
+        /// Recursively extracts vertex positions and indices from an MDL node.
+        /// </summary>
+        /// <param name="node">MDL node to extract geometry from.</param>
+        /// <param name="parentTransform">Parent transform matrix.</param>
+        /// <param name="vertices">List to add vertex positions to.</param>
+        /// <param name="indices">List to add indices to.</param>
+        private void ExtractGeometryFromMDLNode(MDLNode node, System.Numerics.Matrix4x4 parentTransform, List<Vector3> vertices, List<int> indices)
+        {
+            if (node == null)
+            {
+                return;
+            }
+
+            // Apply node transform
+            System.Numerics.Matrix4x4 nodeTransform = node.Transform != null
+                ? System.Numerics.Matrix4x4.Transpose(node.Transform.Value)
+                : System.Numerics.Matrix4x4.Identity;
+            System.Numerics.Matrix4x4 finalTransform = nodeTransform * parentTransform;
+
+            // Extract geometry from this node's mesh
+            if (node.Mesh != null)
+            {
+                var mesh = node.Mesh;
+                if (mesh.Vertices != null && mesh.Faces != null)
+                {
+                    // Get current vertex offset (number of vertices already added)
+                    int vertexOffset = vertices.Count;
+
+                    // Add vertices from this mesh (apply transform)
+                    foreach (var vertex in mesh.Vertices)
+                    {
+                        System.Numerics.Vector3 pos = new System.Numerics.Vector3(vertex.X, vertex.Y, vertex.Z);
+                        System.Numerics.Vector3 transformedPos = System.Numerics.Vector3.Transform(pos, finalTransform);
+                        vertices.Add(new Vector3(transformedPos.X, transformedPos.Y, transformedPos.Z));
+                    }
+
+                    // Add faces (triangles) from this mesh
+                    foreach (var face in mesh.Faces)
+                    {
+                        // MDL faces are triangles with vertex indices V1, V2, V3
+                        // Adjust indices by vertex offset to account for previous meshes
+                        indices.Add(vertexOffset + face.V1);
+                        indices.Add(vertexOffset + face.V2);
+                        indices.Add(vertexOffset + face.V3);
+                    }
+                }
+            }
+
+            // Recursively process child nodes
+            if (node.Children != null)
+            {
+                foreach (MDLNode child in node.Children)
+                {
+                    ExtractGeometryFromMDLNode(child, finalTransform, vertices, indices);
+                }
+            }
         }
 
         /// <summary>
@@ -13871,11 +13973,11 @@ technique ColorGrading
                     {
                         var cachedMeshGeometryDict = cachedMeshGeometryField.GetValue(area) as Dictionary<string, EclipseArea.CachedMeshGeometry>;
                         if (cachedMeshGeometryDict != null && cachedMeshGeometryDict.TryGetValue(meshId, out EclipseArea.CachedMeshGeometry cachedGeometry))
-                        {
-                            if (cachedGeometry.Indices != null)
-                            {
-                                // Return a copy of the index list (so modifications don't affect cache)
-                                return new List<int>(cachedGeometry.Indices);
+            {
+                if (cachedGeometry.Indices != null)
+                {
+                    // Return a copy of the index list (so modifications don't affect cache)
+                    return new List<int>(cachedGeometry.Indices);
                             }
                         }
                     }

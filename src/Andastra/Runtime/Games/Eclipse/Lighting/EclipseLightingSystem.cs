@@ -3,14 +3,11 @@ using System.Collections.Generic;
 using System.Numerics;
 using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
-using Andastra.Runtime.MonoGame.Lighting;
 using Andastra.Runtime.MonoGame.Graphics;
 using Andastra.Runtime.Graphics;
 using Microsoft.Xna.Framework.Graphics;
 using DynamicLight = Andastra.Runtime.MonoGame.Lighting.DynamicLight;
 using IDynamicLight = Andastra.Runtime.MonoGame.Interfaces.IDynamicLight;
-using Andastra.Runtime.Games.Eclipse;
-using ILightingSystem = Andastra.Runtime.Games.Eclipse.ILightingSystem;
 
 namespace Andastra.Runtime.Games.Eclipse.Lighting
 {
@@ -1368,7 +1365,7 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
     /// <summary>
     /// Adapter to bridge MonoGame.DynamicLight to MonoGame.Interfaces.IDynamicLight interface.
     /// </summary>
-    internal class DynamicLightAdapter : Andastra.Runtime.MonoGame.Interfaces.IDynamicLight
+    internal class DynamicLightAdapter : IDynamicLight
     {
         private readonly DynamicLight _light;
         private bool _disposed;
@@ -1459,6 +1456,11 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
         {
             get { return _light.ShadowSoftness; }
             set { _light.ShadowSoftness = value; }
+        }
+        public System.Numerics.Matrix4x4 ShadowLightSpaceMatrix
+        {
+            get { return _light.ShadowLightSpaceMatrix; }
+            set { _light.ShadowLightSpaceMatrix = value; }
         }
         public bool RaytracedShadows
         {
