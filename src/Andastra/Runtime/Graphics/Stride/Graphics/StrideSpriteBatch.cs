@@ -103,21 +103,15 @@ namespace Andastra.Runtime.Stride.Graphics
             var strideTexture = GetStrideTexture(texture);
             var strideColor = new global::Stride.Core.Mathematics.Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
 
-            // Implement source rectangle support using UV coordinate manipulation
+            // Implement source rectangle support using pixel coordinates
             if (sourceRectangle.HasValue)
             {
-                // Calculate UV coordinates from source rectangle
-                float u = (float)sourceRectangle.Value.X / texture.Width;
-                float v = (float)sourceRectangle.Value.Y / texture.Height;
-                float u2 = (float)(sourceRectangle.Value.X + sourceRectangle.Value.Width) / texture.Width;
-                float v2 = (float)(sourceRectangle.Value.Y + sourceRectangle.Value.Height) / texture.Height;
-
                 // Create destination rectangle with source rectangle dimensions
                 var strideDestRect = new RectangleF(position.X, position.Y, sourceRectangle.Value.Width, sourceRectangle.Value.Height);
 
-                // Use Stride's SpriteBatch.Draw with UV coordinates
-                // Stride SpriteBatch supports UV coordinates via RectangleF source rectangle parameter
-                var strideSourceRect = new RectangleF(u, v, u2 - u, v2 - v);
+                // Create source rectangle in pixel coordinates
+                // Stride SpriteBatch expects source rectangles in pixel coordinates like MonoGame
+                var strideSourceRect = new RectangleF(sourceRectangle.Value.X, sourceRectangle.Value.Y, sourceRectangle.Value.Width, sourceRectangle.Value.Height);
                 _spriteBatch.Draw(strideTexture, strideDestRect, strideSourceRect, strideColor);
             }
             else
@@ -149,13 +143,8 @@ namespace Andastra.Runtime.Stride.Graphics
             RectangleF? strideSourceRect = null;
             if (sourceRectangle.HasValue)
             {
-                // Calculate UV coordinates from source rectangle
-                float u = (float)sourceRectangle.Value.X / texture.Width;
-                float v = (float)sourceRectangle.Value.Y / texture.Height;
-                float uWidth = (float)sourceRectangle.Value.Width / texture.Width;
-                float vHeight = (float)sourceRectangle.Value.Height / texture.Height;
-
-                strideSourceRect = new RectangleF(u, v, uWidth, vHeight);
+                // Use pixel coordinates for source rectangle
+                strideSourceRect = new RectangleF(sourceRectangle.Value.X, sourceRectangle.Value.Y, sourceRectangle.Value.Width, sourceRectangle.Value.Height);
             }
 
             // Convert origin to Stride Vector2
