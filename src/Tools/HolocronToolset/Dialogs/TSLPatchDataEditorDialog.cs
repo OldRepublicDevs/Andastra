@@ -54,6 +54,9 @@ namespace HolocronToolset.Dialogs
         private TreeView _gffFieldsTree;
         private List<ModificationsGFF> _gffModifications = new List<ModificationsGFF>();
 
+        // 2DA modifications
+        private List<Modifications2DA> _twodaModifications = new List<Modifications2DA>();
+
         // Scripts controls
         private ListBox _scriptList;
         // Dictionary to store full file paths for scripts (key: filename, value: full path)
@@ -767,6 +770,9 @@ namespace HolocronToolset.Dialogs
                     // Load GFF modifications
                     _gffModifications = config.PatchesGFF.ToList();
                     RefreshGffFileList();
+
+                    // Load 2DA modifications
+                    _twodaModifications = config.Patches2DA.ToList();
                 }
                 catch
                 {
@@ -1741,10 +1747,59 @@ namespace HolocronToolset.Dialogs
                     modificationsByType.Ncs.Add(modNcs);
                 }
 
-                // Note: 2DA modifications would come from actual 2DA files being modified
-                // The _twodaMemoryTokens are just memory tracking tokens, not actual 2DA file modifications
-                // If there are actual 2DA files to modify, they would be added here
-                // TODO: STUB - For now, we'll leave Twoda empty unless there are actual 2DA modifications
+                // Add 2DA modifications if any exist
+                // Unlike memory tokens (_twodaMemoryTokens), these are actual 2DA file modifications
+                if (_twodaModifications.Count > 0)
+                {
+                    modificationsByType.Twoda = _twodaModifications.ToList();
+
+                    // Copy any 2DA files that need to be installed
+                    foreach (var mod2da in _twodaModifications)
+                    {
+                        string twodaFile = mod2da.SaveAs;
+                        if (!string.IsNullOrEmpty(twodaFile))
+                        {
+                            // Try to find the 2DA file in tslpatchdata or installation
+                            string twodaSourcePath = null;
+                            string tslpatchdataFile = Path.Combine(_tslpatchdataPath, twodaFile);
+
+                            if (File.Exists(tslpatchdataFile))
+                            {
+                                twodaSourcePath = tslpatchdataFile;
+                            }
+                            else if (_installation != null)
+                            {
+                                try
+                                {
+                                    var resource = _installation.Resource(twodaFile, ResourceType.TwoDA);
+                                    if (resource != null)
+                                    {
+                                        twodaSourcePath = resource.FilePath;
+                                    }
+                                }
+                                catch
+                                {
+                                    // Resource not found
+                                }
+                            }
+
+                            // If we found the file and it's not already in tslpatchdata, copy it
+                            if (!string.IsNullOrEmpty(twodaSourcePath) && File.Exists(twodaSourcePath))
+                            {
+                                string destPath = Path.Combine(_tslpatchdataPath, twodaFile);
+                                if (!File.Exists(destPath) || !twodaSourcePath.Equals(destPath, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    File.Copy(twodaSourcePath, destPath, overwrite: true);
+                                }
+                                allFilePaths.Add(twodaFile);
+
+                                // 2DA files go to Override folder by default
+                                string destination = _installToOverrideCheck?.IsChecked == true ? "Override" : ".";
+                                installFiles.Add(new InstallFile(twodaFile, replaceExisting: false, destination: destination));
+                            }
+                        }
+                    }
+                }
 
                 // Add install files
                 modificationsByType.Install = installFiles;
@@ -1851,6 +1906,7 @@ namespace HolocronToolset.Dialogs
                     $"Files included:\n" +
                     $"- {installFiles.Count} file(s) to install\n" +
                     $"- {_gffModifications.Count} GFF modification(s)\n" +
+                    $"- {_twodaModifications.Count} 2DA modification(s)\n" +
                     $"- {_tlkStrings.Count} TLK string(s)\n" +
                     $"- {_scriptPaths.Count} script(s)\n\n" +
                     $"You can now distribute this folder with HoloPatcher/TSLPatcher.",
@@ -1911,6 +1967,19 @@ namespace HolocronToolset.Dialogs
                 {
                     string identifier = modGff.ReplaceFile ? $"Replace{modGff.SourceFile}" : modGff.SourceFile ?? "Unknown";
                     previewLines.AppendLine($"{identifier}={modGff.SourceFile ?? "Unknown"}");
+                }
+            }
+            previewLines.AppendLine();
+
+            // 2DAList section
+            previewLines.AppendLine("[2DAList]");
+            previewLines.AppendLine("; 2DA files to be patched");
+            if (_twodaModifications != null && _twodaModifications.Count > 0)
+            {
+                foreach (var mod2da in _twodaModifications)
+                {
+                    string filename = mod2da.SaveAs ?? "Unknown";
+                    previewLines.AppendLine($"Table0={filename}");
                 }
             }
             previewLines.AppendLine();
