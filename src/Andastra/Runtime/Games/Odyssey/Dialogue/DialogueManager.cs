@@ -642,12 +642,83 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
         }
 
         /// <summary>
-        // TODO: / Creates a dummy reply wrapper for entry continuation.
+        /// Creates a comprehensive dummy reply wrapper for entry continuation.
+        /// This method creates a fully-featured DLGReply that represents continuing
+        /// from the given entry, copying all relevant properties for proper dialogue flow.
         /// </summary>
+        /// <param name="entry">The entry to create a continuation reply for</param>
+        /// <returns>A comprehensive dummy DLGReply with all relevant properties copied</returns>
         private DLGReply CreateDummyReplyForEntry(DLGEntry entry)
         {
             var dummy = new DLGReply();
+
+            // Essential: Copy links for dialogue flow navigation
             dummy.Links.AddRange(entry.Links);
+
+            // Scripts: Copy action scripts that should execute on continuation
+            dummy.Script1 = entry.Script1;
+            dummy.Script2 = entry.Script2;
+            dummy.Script1Param1 = entry.Script1Param1;
+            dummy.Script1Param2 = entry.Script1Param2;
+            dummy.Script1Param3 = entry.Script1Param3;
+            dummy.Script1Param4 = entry.Script1Param4;
+            dummy.Script1Param5 = entry.Script1Param5;
+            dummy.Script1Param6 = entry.Script1Param6;
+            dummy.Script2Param1 = entry.Script2Param1;
+            dummy.Script2Param2 = entry.Script2Param2;
+            dummy.Script2Param3 = entry.Script2Param3;
+            dummy.Script2Param4 = entry.Script2Param4;
+            dummy.Script2Param5 = entry.Script2Param5;
+            dummy.Script2Param6 = entry.Script2Param6;
+
+            // Quest/Plot: Copy quest and plot data for proper processing
+            dummy.Quest = entry.Quest;
+            dummy.QuestEntry = entry.QuestEntry;
+            dummy.PlotIndex = entry.PlotIndex;
+            dummy.PlotXpPercentage = entry.PlotXpPercentage;
+
+            // Camera settings: Copy visual camera configuration
+            dummy.CameraAngle = entry.CameraAngle;
+            dummy.CameraAnim = entry.CameraAnim;
+            dummy.CameraId = entry.CameraId;
+            dummy.CameraFov = entry.CameraFov;
+            dummy.CameraHeight = entry.CameraHeight;
+            dummy.CameraEffect = entry.CameraEffect;
+
+            // Timing: Copy delay and fade settings for proper timing
+            dummy.Delay = entry.Delay;
+            dummy.FadeType = entry.FadeType;
+            dummy.FadeColor = entry.FadeColor;
+            dummy.FadeDelay = entry.FadeDelay;
+            dummy.FadeLength = entry.FadeLength;
+            dummy.WaitFlags = entry.WaitFlags;
+
+            // Animations: Copy animation sequences
+            dummy.Animations.AddRange(entry.Animations);
+            dummy.EmotionId = entry.EmotionId;
+            dummy.FacialId = entry.FacialId;
+
+            // Audio: Copy sound and voiceover settings
+            dummy.Sound = entry.Sound;
+            dummy.SoundExists = entry.SoundExists;
+            dummy.VoResRef = entry.VoResRef;
+
+            // Other properties: Copy remaining relevant settings
+            dummy.Listener = entry.Listener;
+            dummy.TargetHeight = entry.TargetHeight;
+            dummy.AlienRaceNode = entry.AlienRaceNode;
+            dummy.NodeId = entry.NodeId;
+            dummy.PostProcNode = entry.PostProcNode;
+            dummy.Unskippable = entry.Unskippable;
+            dummy.RecordNoVoOverride = entry.RecordNoVoOverride;
+            dummy.RecordVo = entry.RecordVo;
+            dummy.VoTextChanged = entry.VoTextChanged;
+
+            // Dummy-specific properties
+            dummy.ListIndex = -1; // Indicate this is a dummy/generated reply
+            dummy.Text = LocalizedString.FromInvalid(); // No text for continuation replies
+            dummy.Comment = $"Dummy reply for entry continuation (original entry: {entry.ListIndex})";
+
             return dummy;
         }
 
