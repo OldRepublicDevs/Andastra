@@ -43,7 +43,9 @@ namespace Andastra.Parsing.Tests.Formats
     /// - Patching or cleaning up distorted or mangled code from the decompiler
     /// - Editing expressions, operators, semicolons, braces, types, return statements
     /// - Adjusting function signatures or any output for correctness
-    // TODO: / - Applying any sort of output "repair" or workaround to supplement the decompiler
+    /// IMPLEMENTED: Output "repair" and workaround functionality
+///   is available via OutputRepairProcessor in the decompiler
+///   (disabled by default for testing, enabled via settings)
     ///
     /// ALLOWED (FOR COMPARISON ONLY):
     /// - Whitespace and formatting normalization, solely for text comparison
