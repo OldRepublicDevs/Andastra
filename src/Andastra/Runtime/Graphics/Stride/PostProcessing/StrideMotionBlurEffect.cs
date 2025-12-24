@@ -44,11 +44,29 @@ namespace Andastra.Runtime.Stride.PostProcessing
         private StrideGraphics.SpriteBatch _spriteBatch;
         private StrideGraphics.SamplerState _linearSampler;
         private StrideGraphics.Effect _motionBlurEffectBase;
+        private IServiceProvider _services;
+        private ContentManager _contentManager;
+        private EffectSystem _effectSystem;
 
         public StrideMotionBlurEffect(StrideGraphics.GraphicsDevice graphicsDevice, StrideGraphics.GraphicsContext graphicsContext = null)
+            : this(graphicsDevice, graphicsContext, null, null)
+        {
+        }
+
+        public StrideMotionBlurEffect(StrideGraphics.GraphicsDevice graphicsDevice, StrideGraphics.GraphicsContext graphicsContext,
+            IServiceProvider services, ContentManager contentManager)
         {
             _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
             _graphicsContext = graphicsContext;
+            _services = services;
+            _contentManager = contentManager;
+
+            // Try to get EffectSystem from services if available
+            if (_services != null)
+            {
+                _effectSystem = _services.GetService(typeof(EffectSystem)) as EffectSystem;
+            }
+
             InitializeRenderingResources();
         }
 
@@ -88,52 +106,75 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// </remarks>
         private void LoadMotionBlurShader()
         {
-            // Strategy 1: Try loading from ContentManager
-            // Effect.Load() doesn't exist in this Stride version, so we skip directly to ContentManager
-            // Strategy 2: Try loading from ContentManager if available
-            if (_motionBlurEffectBase == null)
+            // Strategy 1: Try loading from ContentManager if available
+            if (_motionBlurEffectBase == null && _contentManager != null)
             {
-                // TODO: STUB - ContentManager access requires proper service setup
-                // Stride GraphicsDevice doesn't provide Services() method directly
-                // ContentManager would need to be passed in or accessed through game services
-                // For now, skip ContentManager approach and use programmatic shader creation
                 try
                 {
-                    // Note: Services() doesn't exist on GraphicsDevice - commented out for now
-                    // If ContentManager is needed, it should be passed as a constructor parameter
-                    // or accessed through a game service context
-                    /*
-                    object services = _graphicsDevice.Services();
-                    if (services != null)
+                    _motionBlurEffectBase = _contentManager.Load<StrideGraphics.Effect>("MotionBlur");
+                    if (_motionBlurEffectBase != null)
                     {
-                        var contentManager = ((dynamic)services).GetService<ContentManager>();
-                        if (contentManager != null)
-                        {
-                            try
-                            {
-                                _motionBlurEffectBase = contentManager.Load<StrideGraphics.Effect>("MotionBlur");
-                                if (_motionBlurEffectBase != null)
-                                {
-                                    _motionBlurEffect = new EffectInstance(_motionBlurEffectBase);
-                                    System.Console.WriteLine("[StrideMotionBlurEffect] Loaded MotionBlur from ContentManager");
-                                    return;
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                System.Console.WriteLine($"[StrideMotionBlurEffect] Failed to load MotionBlur from ContentManager: {ex.Message}");
-                            }
-                        }
+                        _motionBlurEffect = new EffectInstance(_motionBlurEffectBase);
+                        System.Console.WriteLine("[StrideMotionBlurEffect] Loaded MotionBlur from ContentManager");
+                        return;
                     }
-                    */
                 }
                 catch (Exception ex)
                 {
-                    System.Console.WriteLine($"[StrideMotionBlurEffect] Failed to access ContentManager: {ex.Message}");
+                    System.Console.WriteLine($"[StrideMotionBlurEffect] Failed to load MotionBlur from ContentManager: {ex.Message}");
                 }
             }
 
-            // Strategy 3: Create shader programmatically if loading failed
+            // Strategy 2: Try loading from services if available
+            if (_motionBlurEffectBase == null && _services != null)
+            {
+                try
+                {
+                    var contentManager = _services.GetService(typeof(ContentManager)) as ContentManager;
+                    if (contentManager != null)
+                    {
+                        try
+                        {
+                            _motionBlurEffectBase = contentManager.Load<StrideGraphics.Effect>("MotionBlur");
+                            if (_motionBlurEffectBase != null)
+                            {
+                                _motionBlurEffect = new EffectInstance(_motionBlurEffectBase);
+                                System.Console.WriteLine("[StrideMotionBlurEffect] Loaded MotionBlur from services ContentManager");
+                                return;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Console.WriteLine($"[StrideMotionBlurEffect] Failed to load MotionBlur from services ContentManager: {ex.Message}");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine($"[StrideMotionBlurEffect] Failed to access ContentManager from services: {ex.Message}");
+                }
+            }
+
+            // Strategy 3: Create shader programmatically using EffectSystem if available
+            if (_motionBlurEffectBase == null && _effectSystem != null)
+            {
+                try
+                {
+                    _motionBlurEffectBase = CreateMotionBlurEffectWithEffectSystem(_effectSystem);
+                    if (_motionBlurEffectBase != null)
+                    {
+                        _motionBlurEffect = new EffectInstance(_motionBlurEffectBase);
+                        System.Console.WriteLine("[StrideMotionBlurEffect] Created MotionBlur effect using EffectSystem");
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine($"[StrideMotionBlurEffect] Failed to create MotionBlur using EffectSystem: {ex.Message}");
+                }
+            }
+
+            // Strategy 4: Create shader programmatically with fallback compilation
             if (_motionBlurEffectBase == null)
             {
                 _motionBlurEffectBase = CreateMotionBlurEffect();
@@ -303,6 +344,178 @@ shader MotionBlurEffect : ShaderBase
         }
 
         /// <summary>
+        /// Creates a motion blur effect using the EffectSystem for proper compilation.
+        /// </summary>
+        /// <param name="effectSystem">The EffectSystem instance to use for compilation.</param>
+        /// <returns>Compiled Effect, or null if compilation fails.</returns>
+        /// <remarks>
+        /// Based on Stride EffectSystem API:
+        /// - EffectSystem provides the proper compilation environment
+        /// - Uses EffectCompiler internally for shader compilation
+        /// - Ensures proper shader bytecode generation for the target platform
+        /// - Original game: DirectX 8/9 fixed-function pipeline (swkotor2.exe: Frame buffer post-processing @ 0x007c8408)
+        /// - Modern implementation: Uses programmable shaders with runtime compilation
+        /// </remarks>
+        private StrideGraphics.Effect CreateMotionBlurEffectWithEffectSystem(EffectSystem effectSystem)
+        {
+            if (effectSystem == null)
+            {
+                System.Console.WriteLine("[StrideMotionBlurEffect] EffectSystem is null, cannot create motion blur effect");
+                return null;
+            }
+
+            try
+            {
+                // Create shader source code for velocity-based motion blur
+                string shaderSource = @"
+shader MotionBlurEffect : ShaderBase
+{
+    // Input parameters
+    cbuffer PerDraw : register(b0)
+    {
+        float Intensity;
+        float MaxVelocity;
+        int SampleCount;
+        float DeltaTime;
+        float2 ScreenSize;
+        float2 ScreenSizeInv;
+        float DepthThreshold;
+    };
+
+    Texture2D ColorTexture : register(t0);
+    Texture2D MotionVectorsTexture : register(t1);
+    Texture2D DepthTexture : register(t2);
+    SamplerState LinearSampler : register(s0);
+
+    // Vertex shader output
+    struct VSOutput
+    {
+        float4 Position : SV_Position;
+        float2 TexCoord : TEXCOORD0;
+    };
+
+    // Vertex shader: Full-screen quad
+    VSOutput VS(uint vertexId : SV_VertexID)
+    {
+        VSOutput output;
+
+        // Generate full-screen quad from vertex ID
+        float2 uv = float2((vertexId << 1) & 2, vertexId & 2);
+        output.Position = float4(uv * float2(2, -2) + float2(-1, 1), 0, 1);
+        output.TexCoord = uv;
+
+        return output;
+    }
+
+    // Gaussian weights for sample accumulation (9-tap filter)
+    static const float weights[9] = {
+        0.01621622, 0.05405405, 0.12162162, 0.19459459, 0.22702703,
+        0.19459459, 0.12162162, 0.05405405, 0.01621622
+    };
+
+    // Pixel shader: Velocity-based motion blur
+    float4 PS(VSOutput input) : SV_Target
+    {
+        // Sample current pixel color
+        float4 centerColor = ColorTexture.Sample(LinearSampler, input.TexCoord);
+        float centerDepth = DepthTexture.Sample(LinearSampler, input.TexCoord).r;
+
+        // Sample motion vector (RG = velocity in screen space)
+        float2 motionVector = MotionVectorsTexture.Sample(LinearSampler, input.TexCoord).rg;
+
+        // Scale motion vector by intensity and delta time
+        motionVector *= Intensity * DeltaTime;
+
+        // Clamp to maximum velocity to prevent artifacts
+        float velocityLength = length(motionVector);
+        if (velocityLength > MaxVelocity)
+        {
+            motionVector = normalize(motionVector) * MaxVelocity;
+        }
+
+        // If motion is negligible, return original color
+        if (velocityLength < 0.001)
+        {
+            return centerColor;
+        }
+
+        // Initialize accumulation
+        float4 accumulatedColor = centerColor * weights[4]; // Center sample weight
+        float totalWeight = weights[4];
+
+        // Sample along motion vector trail
+        float2 stepVector = motionVector / (SampleCount - 1);
+        float2 currentOffset = -motionVector * 0.5; // Start from beginning of trail
+
+        for (int i = 0; i < SampleCount; i++)
+        {
+            if (i == SampleCount / 2) // Skip center sample (already added)
+            {
+                currentOffset += stepVector;
+                continue;
+            }
+
+            float2 sampleCoord = input.TexCoord + currentOffset * ScreenSizeInv;
+
+            // Clamp to texture bounds
+            sampleCoord = clamp(sampleCoord, float2(0, 0), float2(1, 1));
+
+            // Sample color and depth
+            float4 sampleColor = ColorTexture.Sample(LinearSampler, sampleCoord);
+            float sampleDepth = DepthTexture.Sample(LinearSampler, sampleCoord).r;
+
+            // Depth-aware filtering: reduce weight if depth difference is large
+            float depthDiff = abs(centerDepth - sampleDepth);
+            float depthWeight = 1.0 - saturate(depthDiff / DepthThreshold);
+
+            // Apply Gaussian weight with depth filtering
+            float weight = weights[i] * depthWeight;
+
+            accumulatedColor += sampleColor * weight;
+            totalWeight += weight;
+
+            currentOffset += stepVector;
+        }
+
+        // Normalize accumulated color
+        return accumulatedColor / totalWeight;
+    }
+};";
+
+                // Create shader source object for EffectSystem
+                var shaderSourceObj = new ShaderSourceClass
+                {
+                    Name = "MotionBlurEffect",
+                    SourceCode = shaderSource
+                };
+
+                // Compile using EffectSystem
+                // EffectSystem provides the proper compilation context and bytecode generation
+                var compilationResult = effectSystem.Compile(shaderSourceObj);
+
+                // Handle TaskOrResult unwrapping
+                dynamic compilerResult = compilationResult.Result;
+                if (compilerResult != null && compilerResult.Bytecode != null && compilerResult.Bytecode.Length > 0)
+                {
+                    // Create Effect from compiled bytecode
+                    var effect = new StrideGraphics.Effect(_graphicsDevice, (EffectBytecode)compilerResult.Bytecode);
+                    System.Console.WriteLine("[StrideMotionBlurEffect] Successfully compiled motion blur effect using EffectSystem");
+                    return effect;
+                }
+                else
+                {
+                    System.Console.WriteLine("[StrideMotionBlurEffect] EffectSystem compilation failed: No bytecode generated");
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"[StrideMotionBlurEffect] Failed to create motion blur effect using EffectSystem: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Compiles shader source code to an Effect using Stride's EffectCompiler.
         /// </summary>
         /// <param name="shaderSource">Shader source code in SDSL format.</param>
@@ -332,40 +545,31 @@ shader MotionBlurEffect : ShaderBase
 
             try
             {
-                // TODO: STUB - Services() doesn't exist on Stride GraphicsDevice
-                // EffectCompiler access would require proper service setup
-                // For now, use file-based compilation fallback
-                // Strategy 1: Try to get EffectCompiler from GraphicsDevice services
-                // Based on Stride API: GraphicsDevice.Services provides access to EffectSystem
-                // EffectSystem contains EffectCompiler for runtime shader compilation
-                // Note: Services() method doesn't exist - commented out for now
-                /*
-                object services = _graphicsDevice.Services();
-                if (services != null)
+                // Strategy 1: Try to get EffectCompiler from our stored EffectSystem
+                if (_effectSystem != null)
                 {
-                    // Try to get EffectCompiler from services
-                    // EffectCompiler is typically available through EffectSystem service
-                    var effectCompiler = services.GetService<EffectCompiler>();
+                    return CompileShaderWithEffectSystem(_effectSystem, shaderSource, shaderName);
+                }
+
+                // Strategy 2: Try to get EffectCompiler from services if available
+                if (_services != null)
+                {
+                    var effectCompiler = _services.GetService(typeof(EffectCompiler)) as EffectCompiler;
                     if (effectCompiler != null)
                     {
                         return CompileShaderWithCompiler(effectCompiler, shaderSource, shaderName);
                     }
 
-                    // Try to get EffectSystem from services (EffectCompiler may be accessed through it)
-                    // Based on Stride architecture: EffectSystem manages effect compilation
-                    var effectSystem = services.GetService<Stride.Shaders.Compiler.EffectCompiler>();
+                    // Try to get EffectSystem from services
+                    var effectSystem = _services.GetService(typeof(EffectSystem)) as EffectSystem;
                     if (effectSystem != null)
                     {
-                        // EffectSystem may provide access to EffectCompiler
-                        // Try to compile using EffectSystem's compilation capabilities
                         return CompileShaderWithEffectSystem(effectSystem, shaderSource, shaderName);
                     }
                 }
-                */
 
-                // Strategy 2: Create temporary shader file and compile it
+                // Strategy 3: Create temporary shader file and compile it
                 // Fallback method: Write shader source to temporary file and compile
-                // Based on Stride: Shaders are compiled from .sdsl files
                 return CompileShaderFromFile(shaderSource, shaderName);
             }
             catch (Exception ex)
@@ -715,42 +919,34 @@ shader MotionBlurEffect : ShaderBase
                 // Set shader parameters if effect is available
                 if (_motionBlurEffect != null && _motionBlurEffect.Parameters != null)
                 {
-                    // Set motion blur parameters
-                    // Use reflection to set parameters since ParameterCollection.Set<T> requires ValueParameterKey<T>, not string keys
                     try
                     {
-                        var setFloatMethod = _motionBlurEffect.Parameters.GetType().GetMethod("Set", new[] { typeof(string), typeof(float) });
-                        if (setFloatMethod != null)
+                        // Set scalar parameters using ValueParameterKey
+                        _motionBlurEffect.Parameters.Set(new ValueParameterKey<float>("Intensity"), effectiveIntensity);
+                        _motionBlurEffect.Parameters.Set(new ValueParameterKey<float>("MaxVelocity"), clampedVelocity);
+                        _motionBlurEffect.Parameters.Set(new ValueParameterKey<int>("SampleCount"), _sampleCount);
+                        _motionBlurEffect.Parameters.Set(new ValueParameterKey<float>("DeltaTime"), deltaTime);
+                        _motionBlurEffect.Parameters.Set(new ValueParameterKey<float>("DepthThreshold"), depthThreshold);
+
+                        // Set vector parameters
+                        _motionBlurEffect.Parameters.Set(new ValueParameterKey<Vector2>("ScreenSize"), new Vector2(output.Width, output.Height));
+                        _motionBlurEffect.Parameters.Set(new ValueParameterKey<Vector2>("ScreenSizeInv"), new Vector2(1.0f / output.Width, 1.0f / output.Height));
+
+                        // Set texture parameters using ObjectParameterKey
+                        _motionBlurEffect.Parameters.Set(new ObjectParameterKey<StrideGraphics.Texture>("ColorTexture"), input);
+                        _motionBlurEffect.Parameters.Set(new ObjectParameterKey<StrideGraphics.Texture>("MotionVectorsTexture"), motionVectors);
+                        if (depth != null)
                         {
-                            setFloatMethod.Invoke(_motionBlurEffect.Parameters, new object[] { "Intensity", effectiveIntensity });
-                            setFloatMethod.Invoke(_motionBlurEffect.Parameters, new object[] { "MaxVelocity", clampedVelocity });
-                            setFloatMethod.Invoke(_motionBlurEffect.Parameters, new object[] { "SampleCount", (float)_sampleCount });
-                            setFloatMethod.Invoke(_motionBlurEffect.Parameters, new object[] { "DeltaTime", deltaTime });
-                            setFloatMethod.Invoke(_motionBlurEffect.Parameters, new object[] { "DepthThreshold", depthThreshold });
+                            _motionBlurEffect.Parameters.Set(new ObjectParameterKey<StrideGraphics.Texture>("DepthTexture"), depth);
                         }
 
-                        var setVector2Method = _motionBlurEffect.Parameters.GetType().GetMethod("Set", new[] { typeof(string), typeof(Vector2) });
-                        if (setVector2Method != null)
-                        {
-                            setVector2Method.Invoke(_motionBlurEffect.Parameters, new object[] { "ScreenSize", new Vector2(output.Width, output.Height) });
-                            setVector2Method.Invoke(_motionBlurEffect.Parameters, new object[] { "ScreenSizeInv", new Vector2(1.0f / output.Width, 1.0f / output.Height) });
-                        }
-
-                        // Set texture parameters using ObjectParameterKey (requires reflection with Texture type)
-                        var setTextureMethod = _motionBlurEffect.Parameters.GetType().GetMethod("Set", new[] { typeof(string), typeof(StrideGraphics.Texture) });
-                        if (setTextureMethod != null)
-                        {
-                            setTextureMethod.Invoke(_motionBlurEffect.Parameters, new object[] { "ColorTexture", input });
-                            setTextureMethod.Invoke(_motionBlurEffect.Parameters, new object[] { "MotionVectorsTexture", motionVectors });
-                            if (depth != null)
-                            {
-                                setTextureMethod.Invoke(_motionBlurEffect.Parameters, new object[] { "DepthTexture", depth });
-                            }
-                        }
+                        // Set sampler parameter
+                        _motionBlurEffect.Parameters.Set(new ObjectParameterKey<StrideGraphics.SamplerState>("LinearSampler"), _linearSampler);
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        // Parameters don't exist or API doesn't support string-based access - continue with default values
+                        System.Console.WriteLine($"[StrideMotionBlurEffect] Failed to set shader parameters: {ex.Message}");
+                        // Continue with default values if parameter setting fails
                     }
                 }
 
