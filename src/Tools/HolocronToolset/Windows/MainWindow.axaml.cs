@@ -653,13 +653,14 @@ namespace HolocronToolset.Windows
                     try
                     {
                         // Update progress for current item being processed
-                        progressDialog.UpdateProgress($"Processing resource: {resource.ResName}.{resource.ResType.Extension}", successCount);
+                        progressDialog.UpdateProgress($"Processing resource: {resource.ResName}.{resource.ResType.Extension}");
 
                         // Extract the resource
                         await ExtractResourceAsync(resource, savePath);
 
+                        // Increment progress after successful extraction
+                        progressDialog.IncrementProgress();
                         successCount++;
-                        progressDialog.UpdateProgress($"Extracted {successCount}/{resourceSavePaths.Count} resources", successCount);
                     }
                     catch (Exception ex)
                     {
