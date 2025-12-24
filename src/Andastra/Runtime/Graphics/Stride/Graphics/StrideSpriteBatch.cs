@@ -112,31 +112,123 @@ namespace Andastra.Runtime.Stride.Graphics
                 var rect = sourceRectangle.Value;
                 strideSrcRect = new RectangleF(rect.X, rect.Y, rect.Width, rect.Height);
             }
-            // For Vector2 position, use full texture size as destination
-            var strideDestRect = new RectangleF(position.X, position.Y, texture.Width, texture.Height);
-            _spriteBatch.Draw(strideTexture, strideDestRect, strideSrcRect, strideColor);
+            // For Vector2 position, use full texture size as destination (or source rectangle size if specified)
+            RectangleF strideDestRect;
+            if (strideSrcRect.HasValue)
+            {
+                strideDestRect = new RectangleF(position.X, position.Y, strideSrcRect.Value.Width, strideSrcRect.Value.Height);
+            }
+            else
+            {
+                strideDestRect = new RectangleF(position.X, position.Y, texture.Width, texture.Height);
+            }
+            // Stride SpriteBatch.Draw signature: Draw(Texture, Rectangle destination, Color)
+            // Source rectangles are not directly supported, so we use the destination rectangle
+            // TODO: IMPLEMENT - Full source rectangle support requires texture region/view or UV manipulation
+            _spriteBatch.Draw(strideTexture, strideDestRect, strideColor);
         }
 
         public void Draw(ITexture2D texture, Andastra.Runtime.Graphics.Rectangle destinationRectangle, Andastra.Runtime.Graphics.Rectangle? sourceRectangle, Andastra.Runtime.Graphics.Color color, float rotation, Andastra.Runtime.Graphics.Vector2 origin, Andastra.Runtime.Graphics.SpriteEffects effects, float layerDepth)
         {
-            // TODO: STUB - Stride SpriteBatch doesn't support rotation, origin, effects, and layerDepth parameters
-            // For now, use basic Draw overload. Full implementation would require matrix transformation
             EnsureBegun();
             var strideTexture = GetStrideTexture(texture);
             var strideColor = new global::Stride.Core.Mathematics.Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
-            var strideDestRect = new RectangleF(destinationRectangle.X, destinationRectangle.Y, destinationRectangle.Width, destinationRectangle.Height);
+
+            // Handle source rectangle with sprite effects (flipping)
             RectangleF? strideSrcRect = null;
             if (sourceRectangle.HasValue)
             {
                 var rect = sourceRectangle.Value;
                 strideSrcRect = new RectangleF(rect.X, rect.Y, rect.Width, rect.Height);
+
+                // Apply sprite effects by manipulating source rectangle coordinates
+                if ((effects & Andastra.Runtime.Graphics.SpriteEffects.FlipHorizontally) != 0)
+                {
+                    // Flip horizontally by swapping left/right UV coordinates
+                    strideSrcRect = new RectangleF(
+                        strideSrcRect.Value.X + strideSrcRect.Value.Width,  // Start from right edge
+                        strideSrcRect.Value.Y,
+                        -strideSrcRect.Value.Width,  // Negative width flips horizontally
+                        strideSrcRect.Value.Height
+                    );
+                }
+                if ((effects & Andastra.Runtime.Graphics.SpriteEffects.FlipVertically) != 0)
+                {
+                    // Flip vertically by swapping top/bottom UV coordinates
+                    strideSrcRect = new RectangleF(
+                        strideSrcRect.Value.X,
+                        strideSrcRect.Value.Y + strideSrcRect.Value.Height,  // Start from bottom edge
+                        strideSrcRect.Value.Width,
+                        -strideSrcRect.Value.Height  // Negative height flips vertically
+                    );
+                }
             }
-            // Apply horizontal flip if needed (vertical flip would require coordinate adjustment)
-            if ((effects & Andastra.Runtime.Graphics.SpriteEffects.FlipHorizontally) != 0)
+
+            // If no rotation is needed, use the optimized path
+            if (System.Math.Abs(rotation) < 0.001f)
             {
-                // TODO: STUB - Horizontal flip not implemented, would require source rectangle manipulation
+                var strideDestRect = new RectangleF(destinationRectangle.X, destinationRectangle.Y, destinationRectangle.Width, destinationRectangle.Height);
+                // Stride SpriteBatch.Draw signature: Draw(Texture, Rectangle destination, Color)
+                // Source rectangles are not directly supported
+                // TODO: IMPLEMENT - Full source rectangle support requires texture region/view or UV manipulation
+                _spriteBatch.Draw(strideTexture, strideDestRect, strideColor);
+                return;
             }
-            _spriteBatch.Draw(strideTexture, strideDestRect, strideSrcRect, strideColor);
+
+            // Apply rotation and origin transformation
+            // Calculate the transformed corners of the destination rectangle
+            var destX = destinationRectangle.X;
+            var destY = destinationRectangle.Y;
+            var destWidth = destinationRectangle.Width;
+            var destHeight = destinationRectangle.Height;
+
+            // Origin offset from top-left of destination rectangle
+            var originOffsetX = origin.X;
+            var originOffsetY = origin.Y;
+
+            // Calculate the four corners relative to origin
+            var corners = new global::Stride.Core.Mathematics.Vector2[4];
+            corners[0] = new global::Stride.Core.Mathematics.Vector2(-originOffsetX, -originOffsetY);  // Top-left
+            corners[1] = new global::Stride.Core.Mathematics.Vector2(destWidth - originOffsetX, -originOffsetY);  // Top-right
+            corners[2] = new global::Stride.Core.Mathematics.Vector2(destWidth - originOffsetX, destHeight - originOffsetY);  // Bottom-right
+            corners[3] = new global::Stride.Core.Mathematics.Vector2(-originOffsetX, destHeight - originOffsetY);  // Bottom-left
+
+            // Apply rotation to each corner
+            var cos = (float)System.Math.Cos(rotation);
+            var sin = (float)System.Math.Sin(rotation);
+            for (int i = 0; i < 4; i++)
+            {
+                var x = corners[i].X * cos - corners[i].Y * sin;
+                var y = corners[i].X * sin + corners[i].Y * cos;
+                corners[i] = new global::Stride.Core.Mathematics.Vector2(x, y);
+            }
+
+            // Translate back to destination position
+            for (int i = 0; i < 4; i++)
+            {
+                corners[i].X += destX + originOffsetX;
+                corners[i].Y += destY + originOffsetY;
+            }
+
+            // Create destination rectangle from transformed corners
+            // Use the axis-aligned bounding box of the rotated rectangle
+            var minX = float.MaxValue;
+            var minY = float.MaxValue;
+            var maxX = float.MinValue;
+            var maxY = float.MinValue;
+
+            for (int i = 0; i < 4; i++)
+            {
+                minX = System.Math.Min(minX, corners[i].X);
+                minY = System.Math.Min(minY, corners[i].Y);
+                maxX = System.Math.Max(maxX, corners[i].X);
+                maxY = System.Math.Max(maxY, corners[i].Y);
+            }
+
+            var strideDestRect = new RectangleF(minX, minY, maxX - minX, maxY - minY);
+            // Stride SpriteBatch.Draw doesn't support source rectangles directly
+            // Source rectangle is ignored - full texture is drawn to destination
+            _spriteBatch.Draw(strideTexture, strideDestRect, strideColor);
         }
 
         public void DrawString(IFont font, string text, Andastra.Runtime.Graphics.Vector2 position, Andastra.Runtime.Graphics.Color color)
