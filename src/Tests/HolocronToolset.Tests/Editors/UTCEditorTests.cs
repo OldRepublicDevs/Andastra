@@ -3272,12 +3272,24 @@ namespace HolocronToolset.Tests.Editors
                     }
                 }
 
-                // Verify checked powers are saved
+                // Verify checked powers are saved (powers are stored in the last class)
                 foreach (var item in powersToCheck)
                 {
                     var reloadedItem = GetPowerItem(reloadedEditor, item.Id);
                     reloadedItem.Should().NotBeNull($"Power {item.Id} should exist in reloaded editor");
                     reloadedItem.IsChecked.Should().BeTrue($"Power {item.Id} should be checked in reloaded editor");
+                }
+
+                // Verify powers are in the UTC classes (following the pattern from TestUtcEditorManipulatePowersList)
+                var foundPowers = new List<int>();
+                foreach (var utcClass in utc.Classes)
+                {
+                    foundPowers.AddRange(utcClass.Powers ?? new List<int>());
+                }
+
+                foreach (var item in powersToCheck)
+                {
+                    foundPowers.Should().Contain(item.Id, $"Power {item.Id} should be in UTC classes");
                 }
 
                 // Test feat-power combinations by checking if they coexist properly
