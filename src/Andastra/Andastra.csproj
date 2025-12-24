@@ -14,12 +14,11 @@
 
   <!-- Debug Configuration: Fastest build, safest, most verbose -->
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <!-- Single target framework for fastest build -->
     <TargetFramework Condition="!$([MSBuild]::IsOSPlatform('Windows'))">net9.0</TargetFramework>
-    <TargetFramework Condition="$([MSBuild]::IsOSPlatform('Windows'))">net9.0-windows</TargetFramework>
+    <TargetFramework Condition="$([MSBuild]::IsOSPlatform('Windows'))">net9.0</TargetFramework>
     <!-- OutputType -->
-    <OutputType Condition="'$(TargetFramework)' == 'net9.0'">Exe</OutputType>
-    <OutputType Condition="'$(TargetFramework)' == 'net9.0-windows'">WinExe</OutputType>
+    <OutputType Condition="!$([MSBuild]::IsOSPlatform('Windows'))">Exe</OutputType>
+    <OutputType Condition="$([MSBuild]::IsOSPlatform('Windows'))">WinExe</OutputType>
     <!-- Fast build optimizations -->
     <Optimize>false</Optimize>
     <DebugType>portable</DebugType>
@@ -42,12 +41,11 @@
 
   <!-- Release Configuration: Optimized, cross-platform, takes longer to build -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <!-- All target frameworks for cross-platform -->
     <TargetFramework Condition="!$([MSBuild]::IsOSPlatform('Windows'))">net9.0</TargetFramework>
-    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Windows'))">net9.0;net9.0-windows</TargetFrameworks>
+    <TargetFramework Condition="$([MSBuild]::IsOSPlatform('Windows'))">net9.0</TargetFramework>
     <!-- OutputType -->
-    <OutputType Condition="'$(TargetFramework)' == 'net9.0'">Exe</OutputType>
-    <OutputType Condition="'$(TargetFramework)' == 'net9.0-windows'">WinExe</OutputType>
+    <OutputType Condition="!$([MSBuild]::IsOSPlatform('Windows'))">Exe</OutputType>
+    <OutputType Condition="$([MSBuild]::IsOSPlatform('Windows'))">WinExe</OutputType>
     <!-- Full optimization for runtime performance -->
     <Optimize>true</Optimize>
     <DebugType>portable</DebugType>
@@ -72,10 +70,8 @@
     <StartupObject>Andastra.Runtime.Game.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Eto.Forms" Version="2.10.2" />
-    <PackageReference Include="Eto.Platform.Wpf" Version="2.10.2" Condition="'$(TargetFramework)' == 'net9.0-windows'" />
-    <PackageReference Include="Eto.Platform.Gtk" Version="2.10.2" Condition="'$(TargetFramework)' == 'net9.0' AND $([MSBuild]::IsOSPlatform('Linux'))" />
-    <PackageReference Include="Eto.Platform.Mac" Version="2.10.2" Condition="'$(TargetFramework)' == 'net9.0' AND $([MSBuild]::IsOSPlatform('OSX'))" />
+    <PackageReference Include="Avalonia" Version="11.2.2" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.2.2" />
     <PackageReference Include="ini-parser-netstandard" Version="2.5.3" />
     <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
     <PackageReference Include="LZMA-SDK" Version="19.0.0" />
@@ -121,5 +117,11 @@
     <Content Remove="**\Tests\**" />
     <EmbeddedResource Remove="**\Tests\**" />
     <None Remove="**\Tests\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Game\**" />
+    <Content Remove="Game\**" />
+    <EmbeddedResource Remove="Game\**" />
+    <None Remove="Game\**" />
   </ItemGroup>
 </Project>
