@@ -331,48 +331,28 @@ namespace Andastra.Runtime.Stride.PostProcessing
                         // The effect may use a default texture or the texture may be set via other means
                     }
 
-                    // Set tone mapping parameters
-                    // TODO: FIXME - ParameterCollection.Set<T> requires ValueParameterKey<T>, not string keys
-                    // For now, skip parameter setting as the API doesn't support string-based access
-                    // Parameters may need to be set via effect instance or shader compilation
-                    try
-                    {
-                        // Convert log2 exposure to linear multiplier
-                        float exposureMultiplier = (float)Math.Pow(2.0, exposure);
-                        // Use reflection to attempt parameter setting with string keys
-                        var setMethod = parameters.GetType().GetMethod("Set", new[] { typeof(string), typeof(float) });
-                        if (setMethod != null)
-                        {
-                            setMethod.Invoke(parameters, new object[] { "Exposure", exposureMultiplier });
-                            setMethod.Invoke(parameters, new object[] { "Gamma", _gamma });
-                            setMethod.Invoke(parameters, new object[] { "WhitePoint", _whitePoint });
-                        }
-                        var setIntMethod = parameters.GetType().GetMethod("Set", new[] { typeof(string), typeof(int) });
-                        if (setIntMethod != null)
-                        {
-                            setIntMethod.Invoke(parameters, new object[] { "Operator", (int)_operator });
-                        }
-                    }
-                    catch
-                    {
-                        // Parameters don't exist or API doesn't support string-based access - continue with default values
-                    }
+                    // Set tone mapping parameters using proper ValueParameterKey<T> API
+                    // Convert log2 exposure to linear multiplier for shader consumption
+                    float exposureMultiplier = (float)Math.Pow(2.0, exposure);
 
-                    // Set screen size parameters (useful for UV calculations)
-                    // TODO: FIXME - ParameterCollection.Set<T> requires ValueParameterKey<T>, not string keys
-                    try
-                    {
-                        var setVector2Method = parameters.GetType().GetMethod("Set", new[] { typeof(string), typeof(Vector2) });
-                        if (setVector2Method != null)
-                        {
-                            setVector2Method.Invoke(parameters, new object[] { "ScreenSize", new Vector2(width, height) });
-                            setVector2Method.Invoke(parameters, new object[] { "ScreenSizeInv", new Vector2(1.0f / width, 1.0f / height) });
-                        }
-                    }
-                    catch
-                    {
-                        // Screen size parameters don't exist or API doesn't support string-based access - continue
-                    }
+                    // Set exposure parameter - controls overall brightness scaling
+                    parameters.Set(new ValueParameterKey<float>("Exposure"), exposureMultiplier);
+
+                    // Set gamma parameter - controls gamma correction curve
+                    parameters.Set(new ValueParameterKey<float>("Gamma"), _gamma);
+
+                    // Set white point parameter - controls highlight compression threshold
+                    parameters.Set(new ValueParameterKey<float>("WhitePoint"), _whitePoint);
+
+                    // Set operator parameter - selects tone mapping algorithm (0=Reinhard, 1=ReinhardExtended, etc.)
+                    parameters.Set(new ValueParameterKey<int>("Operator"), (int)_operator);
+
+                    // Set screen size parameters (useful for UV calculations and resolution-dependent effects)
+                    // ScreenSize: viewport dimensions in pixels
+                    parameters.Set(new ValueParameterKey<Vector2>("ScreenSize"), new Vector2(width, height));
+
+                    // ScreenSizeInv: inverse viewport dimensions (1/width, 1/height) for optimized division operations
+                    parameters.Set(new ValueParameterKey<Vector2>("ScreenSizeInv"), new Vector2(1.0f / width, 1.0f / height));
                 }
 
                 // Draw fullscreen quad with input texture
