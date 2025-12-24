@@ -143,13 +143,13 @@ namespace Andastra.Runtime.Content.MDL
 
             string normalizedRef = resRef.ToLowerInvariant();
 
-            // Check cache first
+                // Check cache first
             if (_useCache)
             {
                 ContentMDLModel cached;
                 if (MDLCache.Instance.TryGet(normalizedRef, out cached))
                 {
-                    return ConvertToCoreModel(cached);
+                    return MDLLoader.ConvertToCoreModel(cached);
                 }
             }
 
@@ -204,7 +204,7 @@ namespace Andastra.Runtime.Content.MDL
                 }
 
                 // Convert Content.MDL.MDLModel to Core.MDL.MDLModel
-                CoreMDLModel coreModel = ConvertToCoreModel(contentModel);
+                CoreMDLModel coreModel = MDLLoader.ConvertToCoreModel(contentModel);
 
                 // Add to cache (cache uses Content model)
                 if (_useCache)
@@ -745,7 +745,7 @@ namespace Andastra.Runtime.Content.MDL
         /// <summary>
         /// Converts Content.MDL.MDLReferenceData to Core.MDL.MDLReferenceData.
         /// </summary>
-        private CoreMDLReferenceData ConvertReference(ContentMDLReferenceData contentReference)
+        private static CoreMDLReferenceData ConvertReference(ContentMDLReferenceData contentReference)
         {
             if (contentReference == null)
             {
@@ -762,7 +762,7 @@ namespace Andastra.Runtime.Content.MDL
         /// <summary>
         /// Converts Content.MDL.Vector3Data array to Core.MDL.Vector3Data array.
         /// </summary>
-        private CoreVector3Data[] ConvertVector3Array(ContentVector3Data[] contentVectors)
+        private static CoreVector3Data[] ConvertVector3Array(ContentVector3Data[] contentVectors)
         {
             if (contentVectors == null || contentVectors.Length == 0)
             {
@@ -781,7 +781,7 @@ namespace Andastra.Runtime.Content.MDL
         /// <summary>
         /// Converts Content.MDL.Vector2Data array to Core.MDL.Vector2Data array.
         /// </summary>
-        private CoreVector2Data[] ConvertVector2Array(ContentVector2Data[] contentVectors)
+        private static CoreVector2Data[] ConvertVector2Array(ContentVector2Data[] contentVectors)
         {
             if (contentVectors == null || contentVectors.Length == 0)
             {
@@ -800,7 +800,7 @@ namespace Andastra.Runtime.Content.MDL
         /// <summary>
         /// Converts Content.MDL.Vector4Data array to Core.MDL.Vector4Data array.
         /// </summary>
-        private CoreVector4Data[] ConvertVector4Array(ContentVector4Data[] contentVectors)
+        private static CoreVector4Data[] ConvertVector4Array(ContentVector4Data[] contentVectors)
         {
             if (contentVectors == null || contentVectors.Length == 0)
             {

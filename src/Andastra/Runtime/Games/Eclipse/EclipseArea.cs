@@ -3560,9 +3560,9 @@ namespace Andastra.Runtime.Games.Eclipse
                 }
 
                 if (isEnvironmentalTrigger)
-                    {
-                        // Mark trigger as interactive environmental trigger
-                        trigger.SetData("IsEnvironmentalTrigger", true);
+                {
+                    // Mark trigger as interactive environmental trigger
+                    trigger.SetData("IsEnvironmentalTrigger", true);
 
                     // Set up environmental change handler
                     // Based on daorigins.exe: Environmental triggers modify weather, lighting, or particle effects when activated
@@ -9912,24 +9912,9 @@ namespace Andastra.Runtime.Games.Eclipse
                 return new List<int>();
             }
 
-            try
+            if (area.TryGetCachedMeshGeometryIndices(meshId, out List<int> indices))
             {
-                var cachedMeshGeometryField = typeof(EclipseArea).GetField("_cachedMeshGeometry", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                if (cachedMeshGeometryField != null)
-                {
-                    var cachedMeshGeometryDict = cachedMeshGeometryField.GetValue(area) as Dictionary<string, EclipseArea.CachedMeshGeometry>;
-                    if (cachedMeshGeometryDict != null && cachedMeshGeometryDict.TryGetValue(meshId, out EclipseArea.CachedMeshGeometry cachedGeometry))
-                    {
-                        if (cachedGeometry.Indices != null)
-                        {
-                            return new List<int>(cachedGeometry.Indices);
-                        }
-                    }
-                }
-            }
-            catch
-            {
-                // Reflection failed, return empty list
+                return indices;
             }
 
             return new List<int>();
@@ -10558,18 +10543,18 @@ namespace Andastra.Runtime.Games.Eclipse
 
             try
             {
-            // Save current render target
-            IRenderTarget previousTarget = graphicsDevice.RenderTarget;
+                // Save current render target
+                IRenderTarget previousTarget = graphicsDevice.RenderTarget;
 
-            try
-            {
+                try
+                {
                     // Get or compile Gaussian blur shader
                     Effect blurEffect = GetOrCreateGaussianBlurShader(graphicsDevice);
 
                     if (blurEffect == null)
                     {
                         // Fallback: If shader compilation failed, use simple copy
-                graphicsDevice.RenderTarget = output;
+                        graphicsDevice.RenderTarget = output;
                         graphicsDevice.Clear(new GraphicsColor(0, 0, 0, 0));
 
                         ISpriteBatch fallbackSpriteBatch = graphicsDevice.CreateSpriteBatch();
@@ -10585,7 +10570,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     }
 
                     // Get MonoGame SpriteBatch for shader-based rendering
-                ISpriteBatch spriteBatch = graphicsDevice.CreateSpriteBatch();
+                    ISpriteBatch spriteBatch = graphicsDevice.CreateSpriteBatch();
                     if (spriteBatch == null)
                     {
                         return;
@@ -10680,10 +10665,10 @@ namespace Andastra.Runtime.Games.Eclipse
                                 // Fallback: Texture type doesn't match, use simple copy
                                 graphicsDevice.RenderTarget = currentDestination;
                                 graphicsDevice.Clear(new GraphicsColor(0, 0, 0, 0));
-                    spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.Opaque);
+                                spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.Opaque);
                                 GraphicsRectangle destinationRect = new GraphicsRectangle(0, 0, currentDestination.Width, currentDestination.Height);
                                 spriteBatch.Draw(currentSource.ColorTexture, destinationRect, GraphicsColor.White);
-                    spriteBatch.End();
+                                spriteBatch.End();
                             }
                         }
                         else
@@ -10703,12 +10688,12 @@ namespace Andastra.Runtime.Games.Eclipse
                         {
                             currentSource = currentDestination;
                         }
+                    }
                 }
-            }
-            finally
-            {
+                finally
+                {
                     // Restore previous render target
-                graphicsDevice.RenderTarget = previousTarget;
+                    graphicsDevice.RenderTarget = previousTarget;
                 }
             }
             finally
@@ -13619,141 +13604,141 @@ technique ColorGrading
 
                     // Mark entity as having physics
                     debrisEntity.SetData("HasPhysics", true);
-            }
-        }
-    }
-
-    /// <summary>
-        /// Type of geometry modification.
-    /// </summary>
-    /// <remarks>
-        /// Based on daorigins.exe/DragonAge2.exe: Different modification types for destructible geometry.
-    /// </remarks>
-        public enum GeometryModificationType
-        {
-            /// <summary>
-            /// Geometry is destroyed (faces are removed, non-rendered, non-collidable).
-            /// </summary>
-            Destroyed = 0,
-
-        /// <summary>
-            /// Geometry is deformed (vertices are displaced, faces are distorted).
-        /// </summary>
-            Deformed = 1,
-
-            /// <summary>
-            /// Geometry generates debris (destroyed pieces become physics objects).
-            /// </summary>
-            Debris = 2
-        }
-
-        /// <summary>
-        /// Modified vertex data for geometry deformation.
-        /// </summary>
-        /// <remarks>
-        /// Based on daorigins.exe/DragonAge2.exe: Vertex modifications store position changes and displacements.
-        /// </remarks>
-        /// <summary>
-        /// Represents a modified vertex in destructible geometry.
-        /// </summary>
-        /// <remarks>
-        /// Based on daorigins.exe/DragonAge2.exe: Vertex modifications track position changes for deformed geometry.
-        /// </remarks>
-        public struct ModifiedVertex
-        {
-            /// <summary>
-            /// Original vertex index in the mesh.
-            /// </summary>
-            public int VertexIndex { get; set; }
-
-        /// <summary>
-            /// Modified vertex position (displacement from original).
-        /// </summary>
-            public Vector3 ModifiedPosition { get; set; }
-
-        /// <summary>
-            /// Displacement vector (direction and magnitude of deformation).
-        /// </summary>
-            public Vector3 Displacement { get; set; }
-
-        /// <summary>
-            /// Time of modification (for animation/deformation effects).
-        /// </summary>
-            public float ModificationTime { get; set; }
-        }
-
-    /// <summary>
-    /// Extracts vertex positions and indices from MDL model.
-    /// </summary>
-    /// <param name="mdl">Parsed MDL model data.</param>
-    /// <param name="vertices">Output list of vertex positions.</param>
-    /// <param name="indices">Output list of triangle indices.</param>
-    /// <remarks>
-    /// Based on daorigins.exe/DragonAge2.exe: MDL geometry extraction from all mesh nodes.
-    /// </remarks>
-    private void ExtractGeometryFromMDL(Andastra.Parsing.Formats.MDLData.MDL mdl, List<Vector3> vertices, List<int> indices)
-        {
-        if (mdl == null || mdl.Root == null)
-        {
-            return;
-        }
-
-        // Extract geometry from all nodes recursively
-        ExtractGeometryFromNode(mdl.Root, vertices, indices);
-    }
-
-    /// <summary>
-    /// Extracts geometry from an MDL node recursively.
-    /// </summary>
-    /// <param name="node">MDL node to extract geometry from.</param>
-    /// <param name="vertices">Output list of vertex positions.</param>
-    /// <param name="indices">Output list of triangle indices.</param>
-    /// <remarks>
-    /// Based on daorigins.exe/DragonAge2.exe: Recursive geometry extraction from MDL node hierarchy.
-    /// </remarks>
-    private void ExtractGeometryFromNode(Andastra.Parsing.Formats.MDLData.MDLNode node, List<Vector3> vertices, List<int> indices)
-        {
-        if (node == null)
-        {
-            return;
-        }
-
-        // Extract geometry from this node's mesh
-        if (node.Mesh != null)
-        {
-            var mesh = node.Mesh;
-            if (mesh.Vertices != null && mesh.Faces != null)
-            {
-                // Get current vertex offset (number of vertices already added)
-                int vertexOffset = vertices.Count;
-
-                // Add vertices from this mesh
-                foreach (var vertex in mesh.Vertices)
-                {
-                    vertices.Add(new Vector3(vertex.X, vertex.Y, vertex.Z));
                 }
+        }
+    }
 
-                // Add faces (triangles) from this mesh
-                foreach (var face in mesh.Faces)
+    /// <summary>
+    /// Type of geometry modification.
+    /// </summary>
+    /// <remarks>
+    /// Based on daorigins.exe/DragonAge2.exe: Different modification types for destructible geometry.
+    /// </remarks>
+    public enum GeometryModificationType
+    {
+        /// <summary>
+        /// Geometry is destroyed (faces are removed, non-rendered, non-collidable).
+        /// </summary>
+        Destroyed = 0,
+
+        /// <summary>
+        /// Geometry is deformed (vertices are displaced, faces are distorted).
+        /// </summary>
+        Deformed = 1,
+
+        /// <summary>
+        /// Geometry generates debris (destroyed pieces become physics objects).
+        /// </summary>
+        Debris = 2
+    }
+
+    /// <summary>
+    /// Modified vertex data for geometry deformation.
+    /// </summary>
+    /// <remarks>
+    /// Based on daorigins.exe/DragonAge2.exe: Vertex modifications store position changes and displacements.
+    /// </remarks>
+    /// <summary>
+    /// Represents a modified vertex in destructible geometry.
+    /// </summary>
+    /// <remarks>
+    /// Based on daorigins.exe/DragonAge2.exe: Vertex modifications track position changes for deformed geometry.
+    /// </remarks>
+    public struct ModifiedVertex
+    {
+        /// <summary>
+        /// Original vertex index in the mesh.
+        /// </summary>
+        public int VertexIndex { get; set; }
+
+        /// <summary>
+        /// Modified vertex position (displacement from original).
+        /// </summary>
+        public Vector3 ModifiedPosition { get; set; }
+
+        /// <summary>
+        /// Displacement vector (direction and magnitude of deformation).
+        /// </summary>
+        public Vector3 Displacement { get; set; }
+
+        /// <summary>
+        /// Time of modification (for animation/deformation effects).
+        /// </summary>
+        public float ModificationTime { get; set; }
+    }
+
+        /// <summary>
+        /// Extracts vertex positions and indices from MDL model.
+        /// </summary>
+        /// <param name="mdl">Parsed MDL model data.</param>
+        /// <param name="vertices">Output list of vertex positions.</param>
+        /// <param name="indices">Output list of triangle indices.</param>
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: MDL geometry extraction from all mesh nodes.
+        /// </remarks>
+        private void ExtractGeometryFromMDL(Andastra.Parsing.Formats.MDLData.MDL mdl, List<Vector3> vertices, List<int> indices)
+        {
+            if (mdl == null || mdl.Root == null)
+            {
+                return;
+            }
+
+            // Extract geometry from all nodes recursively
+            ExtractGeometryFromNode(mdl.Root, vertices, indices);
+        }
+
+        /// <summary>
+        /// Extracts geometry from an MDL node recursively.
+        /// </summary>
+        /// <param name="node">MDL node to extract geometry from.</param>
+        /// <param name="vertices">Output list of vertex positions.</param>
+        /// <param name="indices">Output list of triangle indices.</param>
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Recursive geometry extraction from MDL node hierarchy.
+        /// </remarks>
+        private void ExtractGeometryFromNode(Andastra.Parsing.Formats.MDLData.MDLNode node, List<Vector3> vertices, List<int> indices)
+        {
+            if (node == null)
+            {
+                return;
+            }
+
+            // Extract geometry from this node's mesh
+            if (node.Mesh != null)
+            {
+                var mesh = node.Mesh;
+                if (mesh.Vertices != null && mesh.Faces != null)
                 {
-                    // MDL faces are triangles with vertex indices V1, V2, V3
-                    // Adjust indices by vertex offset to account for previous meshes
-                    indices.Add(vertexOffset + face.V1);
-                    indices.Add(vertexOffset + face.V2);
-                    indices.Add(vertexOffset + face.V3);
+                    // Get current vertex offset (number of vertices already added)
+                    int vertexOffset = vertices.Count;
+
+                    // Add vertices from this mesh
+                    foreach (var vertex in mesh.Vertices)
+                    {
+                        vertices.Add(new Vector3(vertex.X, vertex.Y, vertex.Z));
+                    }
+
+                    // Add faces (triangles) from this mesh
+                    foreach (var face in mesh.Faces)
+                    {
+                        // MDL faces are triangles with vertex indices V1, V2, V3
+                        // Adjust indices by vertex offset to account for previous meshes
+                        indices.Add(vertexOffset + face.V1);
+                        indices.Add(vertexOffset + face.V2);
+                        indices.Add(vertexOffset + face.V3);
+                    }
+                }
+            }
+
+            // Recursively process child nodes
+            if (node.Children != null)
+            {
+                foreach (var child in node.Children)
+                {
+                    ExtractGeometryFromNode(child, vertices, indices);
                 }
             }
         }
-
-        // Recursively process child nodes
-        if (node.Children != null)
-        {
-            foreach (var child in node.Children)
-            {
-                ExtractGeometryFromNode(child, vertices, indices);
-            }
-        }
-    }
 
         /// <summary>
         /// Extracts vertex positions from mesh data by reading directly from VertexBuffer.
@@ -13773,98 +13758,98 @@ technique ColorGrading
         /// </remarks>
         private List<Vector3> ExtractVertexPositions(IRoomMeshData meshData, string meshId, EclipseArea area = null)
         {
-        if (meshData == null || meshData.VertexBuffer == null)
-        {
-            // Fallback to cached data if buffer is unavailable
+            if (meshData == null || meshData.VertexBuffer == null)
+            {
+                // Fallback to cached data if buffer is unavailable
             return ExtractVertexPositionsFromCache(meshId, area);
-        }
-
-        try
-        {
-            IVertexBuffer vertexBuffer = meshData.VertexBuffer;
-            int vertexCount = vertexBuffer.VertexCount;
-            int vertexStride = vertexBuffer.VertexStride;
-
-            if (vertexCount == 0)
-            {
-                return ExtractVertexPositionsFromCache(meshId, null);
             }
 
-            List<Vector3> positions = new List<Vector3>(vertexCount);
-
-            // Read vertex data based on vertex stride to determine format
-            // RoomVertex format: 36 bytes (Position 12, Normal 12, TexCoord 8, Color 4)
-            // XnaVertexPositionColor format: 16 bytes (Position 12, Color 4)
-            // Position is always at offset 0 (first 12 bytes = Vector3)
-
-            if (vertexStride == 36)
+            try
             {
-                // RoomVertex format: Position, Normal, TexCoord, Color
-                // Read as RoomVertex struct
-                RoomMeshRenderer.RoomVertex[] vertices = new RoomMeshRenderer.RoomVertex[vertexCount];
-                vertexBuffer.GetData(vertices);
+                IVertexBuffer vertexBuffer = meshData.VertexBuffer;
+                int vertexCount = vertexBuffer.VertexCount;
+                int vertexStride = vertexBuffer.VertexStride;
 
-                for (int i = 0; i < vertexCount; i++)
+                if (vertexCount == 0)
                 {
+                return ExtractVertexPositionsFromCache(meshId, null);
+                }
+
+                List<Vector3> positions = new List<Vector3>(vertexCount);
+
+                // Read vertex data based on vertex stride to determine format
+                // RoomVertex format: 36 bytes (Position 12, Normal 12, TexCoord 8, Color 4)
+                // XnaVertexPositionColor format: 16 bytes (Position 12, Color 4)
+                // Position is always at offset 0 (first 12 bytes = Vector3)
+
+                if (vertexStride == 36)
+                {
+                    // RoomVertex format: Position, Normal, TexCoord, Color
+                    // Read as RoomVertex struct
+                    RoomMeshRenderer.RoomVertex[] vertices = new RoomMeshRenderer.RoomVertex[vertexCount];
+                    vertexBuffer.GetData(vertices);
+
+                    for (int i = 0; i < vertexCount; i++)
+                    {
                         positions.Add(new Vector3(vertices[i].Position.X, vertices[i].Position.Y, vertices[i].Position.Z));
+                    }
                 }
-            }
-            else if (vertexStride == 16)
-            {
-                // XnaVertexPositionColor format: Position, Color
-                // Read as XnaVertexPositionColor struct
-                XnaVertexPositionColor[] vertices = new XnaVertexPositionColor[vertexCount];
-                vertexBuffer.GetData(vertices);
-
-                for (int i = 0; i < vertexCount; i++)
+                else if (vertexStride == 16)
                 {
-                    positions.Add(new Vector3(
-                        vertices[i].Position.X,
-                        vertices[i].Position.Y,
-                        vertices[i].Position.Z));
+                    // XnaVertexPositionColor format: Position, Color
+                    // Read as XnaVertexPositionColor struct
+                    XnaVertexPositionColor[] vertices = new XnaVertexPositionColor[vertexCount];
+                    vertexBuffer.GetData(vertices);
+
+                    for (int i = 0; i < vertexCount; i++)
+                    {
+                        positions.Add(new Vector3(
+                            vertices[i].Position.X,
+                            vertices[i].Position.Y,
+                            vertices[i].Position.Z));
+                    }
                 }
-            }
-            else if (vertexStride >= 12)
-            {
-                // Generic format: Position is at offset 0 (first 12 bytes = Vector3)
-                // Read vertex buffer as raw bytes and extract positions
-                // Based on daorigins.exe: 0x008f12a0 - Vertex data is read directly from GPU vertex buffer
-                // DragonAge2.exe: 0x009a45b0 - Enhanced vertex buffer reading with support for multiple vertex formats
-                int totalBytes = vertexCount * vertexStride;
-                byte[] vertexData = new byte[totalBytes];
-
-                // Read entire vertex buffer as byte array
-                // IVertexBuffer.GetData<T> supports byte[] as T
-                vertexBuffer.GetData(vertexData);
-
-                // Extract positions from first 12 bytes of each vertex
-                // Position is always at offset 0 in vertex format (3 floats = 12 bytes)
-                for (int i = 0; i < vertexCount; i++)
+                else if (vertexStride >= 12)
                 {
-                    int vertexOffset = i * vertexStride;
+                    // Generic format: Position is at offset 0 (first 12 bytes = Vector3)
+                    // Read vertex buffer as raw bytes and extract positions
+                    // Based on daorigins.exe: 0x008f12a0 - Vertex data is read directly from GPU vertex buffer
+                    // DragonAge2.exe: 0x009a45b0 - Enhanced vertex buffer reading with support for multiple vertex formats
+                    int totalBytes = vertexCount * vertexStride;
+                    byte[] vertexData = new byte[totalBytes];
 
-                    // Extract 3 floats (12 bytes) starting at vertex offset
-                    // Use BitConverter.ToSingle to convert bytes to float (little-endian)
-                    float x = BitConverter.ToSingle(vertexData, vertexOffset);
-                    float y = BitConverter.ToSingle(vertexData, vertexOffset + 4);
-                    float z = BitConverter.ToSingle(vertexData, vertexOffset + 8);
+                    // Read entire vertex buffer as byte array
+                    // IVertexBuffer.GetData<T> supports byte[] as T
+                    vertexBuffer.GetData(vertexData);
 
-                    positions.Add(new Vector3(x, y, z));
+                    // Extract positions from first 12 bytes of each vertex
+                    // Position is always at offset 0 in vertex format (3 floats = 12 bytes)
+                    for (int i = 0; i < vertexCount; i++)
+                    {
+                        int vertexOffset = i * vertexStride;
+
+                        // Extract 3 floats (12 bytes) starting at vertex offset
+                        // Use BitConverter.ToSingle to convert bytes to float (little-endian)
+                        float x = BitConverter.ToSingle(vertexData, vertexOffset);
+                        float y = BitConverter.ToSingle(vertexData, vertexOffset + 4);
+                        float z = BitConverter.ToSingle(vertexData, vertexOffset + 8);
+
+                        positions.Add(new Vector3(x, y, z));
+                    }
                 }
-            }
-            else
-            {
-                // Vertex stride too small to contain position data
+                else
+                {
+                    // Vertex stride too small to contain position data
                 return ExtractVertexPositionsFromCache(meshId, null);
-            }
+                }
 
-            return positions;
-        }
-        catch (Exception)
-        {
-            // If reading from buffer fails, fall back to cached data
+                return positions;
+            }
+            catch (Exception)
+            {
+                // If reading from buffer fails, fall back to cached data
                     return ExtractVertexPositionsFromCache(meshId, area);
-        }
+            }
         }
 
         /// <summary>
@@ -13880,29 +13865,9 @@ technique ColorGrading
                 return new List<Vector3>();
             }
 
-            // Get cached geometry data from EclipseArea
-            // Note: _cachedMeshGeometry is private, so we need to access it through a public method or make it internal
-            // For now, we'll use reflection or add a public method to EclipseArea
-            // TODO: Add GetCachedMeshGeometry method to EclipseArea or make _cachedMeshGeometry internal
-            try
+            if (area.TryGetCachedMeshGeometryVertices(meshId, out List<Vector3> vertices))
             {
-                var cachedMeshGeometryField = typeof(EclipseArea).GetField("_cachedMeshGeometry", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                if (cachedMeshGeometryField != null)
-                {
-                    var cachedMeshGeometryDict = cachedMeshGeometryField.GetValue(area) as Dictionary<string, EclipseArea.CachedMeshGeometry>;
-                    if (cachedMeshGeometryDict != null && cachedMeshGeometryDict.TryGetValue(meshId, out EclipseArea.CachedMeshGeometry cachedGeometry))
-            {
-                if (cachedGeometry.Vertices != null)
-                {
-                    // Return a copy of the vertex list (so modifications don't affect cache)
-                    return new List<Vector3>(cachedGeometry.Vertices);
-                }
-                    }
-                }
-            }
-            catch
-            {
-                // Reflection failed, return empty list
+                return vertices;
             }
 
             return new List<Vector3>();
@@ -14026,31 +13991,31 @@ technique ColorGrading
 
                 var cachedMeshGeometryDict = cachedMeshGeometryField.GetValue(area) as Dictionary<string, EclipseArea.CachedMeshGeometry>;
                 if (cachedMeshGeometryDict == null)
-                {
-                    return;
-                }
+            {
+                return;
+            }
 
-                // Check if already cached
+            // Check if already cached
                 if (cachedMeshGeometryDict.ContainsKey(meshId))
-                {
-                    return;
-                }
+            {
+                return;
+            }
 
-                // Extract vertex positions and indices recursively from all nodes
-                List<Vector3> vertices = new List<Vector3>();
-                List<int> indices = new List<int>();
+            // Extract vertex positions and indices recursively from all nodes
+            List<Vector3> vertices = new List<Vector3>();
+            List<int> indices = new List<int>();
 
-                ExtractGeometryFromMDLNode(mdl.Root, System.Numerics.Matrix4x4.Identity, vertices, indices);
+            ExtractGeometryFromMDLNode(mdl.Root, System.Numerics.Matrix4x4.Identity, vertices, indices);
 
-                // Only cache if we extracted valid geometry
-                if (vertices.Count > 0 && indices.Count > 0)
-                {
+            // Only cache if we extracted valid geometry
+            if (vertices.Count > 0 && indices.Count > 0)
+            {
                     EclipseArea.CachedMeshGeometry cachedGeometry = new EclipseArea.CachedMeshGeometry
-                    {
-                        MeshId = meshId,
-                        Vertices = vertices,
-                        Indices = indices
-                    };
+                {
+                    MeshId = meshId,
+                    Vertices = vertices,
+                    Indices = indices
+                };
 
                     cachedMeshGeometryDict[meshId] = cachedGeometry;
                 }
@@ -14394,7 +14359,7 @@ technique ColorGrading
     /// - Generates debris physics objects from destroyed faces
     /// </remarks>
     internal class DestructibleGeometryModificationTracker
-        {
+    {
         // Modified mesh data by mesh ID (model name/resref)
         // Based on daorigins.exe: Modifications are tracked per mesh/model
         private readonly Dictionary<string, ModifiedMesh> _modifiedMeshes;
@@ -14997,7 +14962,7 @@ technique ColorGrading
     /// Based on daorigins.exe/DragonAge2.exe: Modified mesh data structure.
     /// </remarks>
     public class ModifiedMesh
-        {
+    {
         /// <summary>
         /// Mesh identifier (model name/resref).
         /// </summary>
@@ -15022,7 +14987,7 @@ technique ColorGrading
     /// Based on daorigins.exe/DragonAge2.exe: Modification data structure.
     /// </remarks>
     public class GeometryModification
-        {
+    {
         /// <summary>
         /// Unique modification ID.
         /// </summary>
@@ -15070,11 +15035,11 @@ technique ColorGrading
         }
     }
 
-        /// <summary>
+    /// <summary>
         /// Converts TPC texture data to RGBA format for MonoGame.
         /// Based on daorigins.exe: TPC format conversion to DirectX 9 compatible format.
         /// daorigins.exe: 0x00400000 - TPC texture format conversion and decompression
-        /// </summary>
+    /// </summary>
         /// <param name="tpc">Parsed TPC texture object.</param>
         /// <param name="width">Texture width.</param>
         /// <param name="height">Texture height.</param>
@@ -15130,25 +15095,25 @@ technique ColorGrading
                     ConvertGreyscaleToRgba(data, output, width, height);
                     break;
 
-                case TPCTextureFormat.DXT1:
+            case TPCTextureFormat.DXT1:
                     // Decompress DXT1 (BC1) to RGBA
                     // Based on daorigins.exe: DXT1 decompression using S3TC algorithm
                     DecompressDxt1(data, output, width, height);
                     break;
 
-                case TPCTextureFormat.DXT3:
+            case TPCTextureFormat.DXT3:
                     // Decompress DXT3 (BC2) to RGBA
                     // Based on daorigins.exe: DXT3 decompression with explicit alpha
                     DecompressDxt3(data, output, width, height);
                     break;
 
-                case TPCTextureFormat.DXT5:
+            case TPCTextureFormat.DXT5:
                     // Decompress DXT5 (BC3) to RGBA
                     // Based on daorigins.exe: DXT5 decompression with interpolated alpha
                     DecompressDxt5(data, output, width, height);
                     break;
 
-                default:
+            default:
                     // Unknown format - fill with magenta to indicate error
                     // Based on daorigins.exe: Error handling for unsupported formats
                     for (int i = 0; i < output.Length; i += 4)
@@ -15162,77 +15127,77 @@ technique ColorGrading
             }
 
             return output;
-        }
+    }
 
-        /// <summary>
+    /// <summary>
         /// Parses DDS header to extract texture dimensions and format information.
-        /// Based on daorigins.exe: DDS header parsing for texture dimensions and format.
-        /// </summary>
-        /// <param name="ddsData">DDS file data.</param>
-        /// <param name="width">Output texture width.</param>
-        /// <param name="height">Output texture height.</param>
-        /// <param name="hasAlpha">Output whether texture has alpha channel.</param>
-        /// <returns>True if header parsed successfully, false otherwise.</returns>
+    /// Based on daorigins.exe: DDS header parsing for texture dimensions and format.
+    /// </summary>
+    /// <param name="ddsData">DDS file data.</param>
+    /// <param name="width">Output texture width.</param>
+    /// <param name="height">Output texture height.</param>
+    /// <param name="hasAlpha">Output whether texture has alpha channel.</param>
+    /// <returns>True if header parsed successfully, false otherwise.</returns>
         private static bool TryParseDDSHeader(byte[] ddsData, out int width, out int height, out bool hasAlpha)
+    {
+        width = 0;
+        height = 0;
+        hasAlpha = false;
+
+        if (ddsData == null || ddsData.Length < 128)
         {
-            width = 0;
-            height = 0;
-            hasAlpha = false;
-
-            if (ddsData == null || ddsData.Length < 128)
-            {
-                return false;
-            }
-
-            // Check DDS magic number
-            if (ddsData[0] != 'D' || ddsData[1] != 'D' || ddsData[2] != 'S' || ddsData[3] != ' ')
-            {
-                return false;
-            }
-
-            // Parse DDS header (little-endian)
-            // Based on daorigins.exe: DDS header parsing for DirectX 9 texture creation
-            height = BitConverter.ToInt32(ddsData, 12);
-            width = BitConverter.ToInt32(ddsData, 16);
-
-            // Check pixel format (offset 80-111 in header)
-            uint pixelFormatFlags = BitConverter.ToUInt32(ddsData, 80);
-            uint fourCC = BitConverter.ToUInt32(ddsData, 84);
-
-            // Determine if texture has alpha
-            // Based on daorigins.exe: DDS format detection for alpha channel support
-            if ((pixelFormatFlags & 0x4) != 0) // DDPF_ALPHAPIXELS
-            {
-                hasAlpha = true;
-            }
-            else if (fourCC == 0x31545844) // "DXT1"
-            {
-                hasAlpha = false; // DXT1 has 1-bit alpha but we treat as opaque for simplicity
-            }
-            else if (fourCC == 0x33545844 || fourCC == 0x35545844) // "DXT3" or "DXT5"
-            {
-                hasAlpha = true; // DXT3/DXT5 have alpha
-            }
-
-            return width > 0 && height > 0;
+            return false;
         }
 
-        /// <summary>
-        /// Extracts pixel data from DDS format to RGBA.
-        /// Based on daorigins.exe: DDS pixel data extraction and conversion.
-        /// daorigins.exe: 0x00400000 - DDS texture decompression for DirectX 9 compatibility
-        /// </summary>
-        /// <param name="ddsData">DDS file data.</param>
-        /// <param name="width">Texture width.</param>
-        /// <param name="height">Texture height.</param>
-        /// <param name="hasAlpha">Whether texture has alpha channel.</param>
-        /// <returns>RGBA pixel data as byte array, or null on failure.</returns>
-        private static byte[] ExtractDDSDataToRGBA(byte[] ddsData, int width, int height, bool hasAlpha)
+        // Check DDS magic number
+        if (ddsData[0] != 'D' || ddsData[1] != 'D' || ddsData[2] != 'S' || ddsData[3] != ' ')
         {
-            if (ddsData == null || ddsData.Length < 128)
-            {
-                return null;
-            }
+            return false;
+        }
+
+        // Parse DDS header (little-endian)
+        // Based on daorigins.exe: DDS header parsing for DirectX 9 texture creation
+        height = BitConverter.ToInt32(ddsData, 12);
+        width = BitConverter.ToInt32(ddsData, 16);
+
+        // Check pixel format (offset 80-111 in header)
+        uint pixelFormatFlags = BitConverter.ToUInt32(ddsData, 80);
+        uint fourCC = BitConverter.ToUInt32(ddsData, 84);
+
+        // Determine if texture has alpha
+        // Based on daorigins.exe: DDS format detection for alpha channel support
+        if ((pixelFormatFlags & 0x4) != 0) // DDPF_ALPHAPIXELS
+        {
+            hasAlpha = true;
+        }
+        else if (fourCC == 0x31545844) // "DXT1"
+        {
+            hasAlpha = false; // DXT1 has 1-bit alpha but we treat as opaque for simplicity
+        }
+        else if (fourCC == 0x33545844 || fourCC == 0x35545844) // "DXT3" or "DXT5"
+        {
+            hasAlpha = true; // DXT3/DXT5 have alpha
+        }
+
+        return width > 0 && height > 0;
+    }
+
+    /// <summary>
+    /// Extracts pixel data from DDS format to RGBA.
+    /// Based on daorigins.exe: DDS pixel data extraction and conversion.
+        /// daorigins.exe: 0x00400000 - DDS texture decompression for DirectX 9 compatibility
+    /// </summary>
+    /// <param name="ddsData">DDS file data.</param>
+    /// <param name="width">Texture width.</param>
+    /// <param name="height">Texture height.</param>
+    /// <param name="hasAlpha">Whether texture has alpha channel.</param>
+    /// <returns>RGBA pixel data as byte array, or null on failure.</returns>
+        private static byte[] ExtractDDSDataToRGBA(byte[] ddsData, int width, int height, bool hasAlpha)
+    {
+        if (ddsData == null || ddsData.Length < 128)
+        {
+            return null;
+        }
 
             // Check DDS magic number
             if (ddsData[0] != 'D' || ddsData[1] != 'D' || ddsData[2] != 'S' || ddsData[3] != ' ')

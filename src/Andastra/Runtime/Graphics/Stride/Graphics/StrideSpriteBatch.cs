@@ -103,21 +103,29 @@ namespace Andastra.Runtime.Stride.Graphics
             var strideTexture = GetStrideTexture(texture);
             var strideColor = new global::Stride.Core.Mathematics.Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
 
-            // TODO: STUB - Stride SpriteBatch doesn't support source rectangles directly
-            // For now, use full texture and adjust destination size if source rectangle is specified
-            // Full implementation would require texture region/view or UV coordinate manipulation
-            RectangleF strideDestRect;
+            // Implement source rectangle support using UV coordinate manipulation
             if (sourceRectangle.HasValue)
             {
-                // Use source rectangle dimensions for destination size
-                strideDestRect = new RectangleF(position.X, position.Y, sourceRectangle.Value.Width, sourceRectangle.Value.Height);
+                // Calculate UV coordinates from source rectangle
+                float u = (float)sourceRectangle.Value.X / texture.Width;
+                float v = (float)sourceRectangle.Value.Y / texture.Height;
+                float u2 = (float)(sourceRectangle.Value.X + sourceRectangle.Value.Width) / texture.Width;
+                float v2 = (float)(sourceRectangle.Value.Y + sourceRectangle.Value.Height) / texture.Height;
+
+                // Create destination rectangle with source rectangle dimensions
+                var strideDestRect = new RectangleF(position.X, position.Y, sourceRectangle.Value.Width, sourceRectangle.Value.Height);
+
+                // Use Stride's SpriteBatch.Draw with UV coordinates
+                // Stride SpriteBatch supports UV coordinates via RectangleF source rectangle parameter
+                var strideSourceRect = new RectangleF(u, v, u2 - u, v2 - v);
+                _spriteBatch.Draw(strideTexture, strideDestRect, strideSourceRect, strideColor);
             }
             else
             {
-                strideDestRect = new RectangleF(position.X, position.Y, texture.Width, texture.Height);
+                // No source rectangle - use full texture
+                var strideDestRect = new RectangleF(position.X, position.Y, texture.Width, texture.Height);
+                _spriteBatch.Draw(strideTexture, strideDestRect, strideColor);
             }
-
-            _spriteBatch.Draw(strideTexture, strideDestRect, strideColor);
         }
 
         public void Draw(
@@ -134,71 +142,31 @@ namespace Andastra.Runtime.Stride.Graphics
             var strideTexture = GetStrideTexture(texture);
             var strideColor = new global::Stride.Core.Mathematics.Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
 
-            // TODO: STUB - Stride SpriteBatch doesn't support source rectangles directly
-            // Source rectangle and sprite effects are ignored in rotation case
-            // Full implementation would require texture region/view or UV coordinate manipulation
-            // For now, effects are handled in the non-rotation optimized path only
+            // Convert sprite effects to Stride format
+            var strideEffects = ConvertSpriteEffects(effects);
 
-            // If no rotation is needed, use the optimized path
-            if (System.Math.Abs(rotation) < 0.001f)
+            // Handle source rectangle
+            RectangleF? strideSourceRect = null;
+            if (sourceRectangle.HasValue)
             {
-                var destRect = new RectangleF(destinationRectangle.X, destinationRectangle.Y, destinationRectangle.Width, destinationRectangle.Height);
-                _spriteBatch.Draw(strideTexture, destRect, strideColor);
-                return;
+                // Calculate UV coordinates from source rectangle
+                float u = (float)sourceRectangle.Value.X / texture.Width;
+                float v = (float)sourceRectangle.Value.Y / texture.Height;
+                float uWidth = (float)sourceRectangle.Value.Width / texture.Width;
+                float vHeight = (float)sourceRectangle.Value.Height / texture.Height;
+
+                strideSourceRect = new RectangleF(u, v, uWidth, vHeight);
             }
 
-            // Apply rotation and origin transformation
-            // Calculate the transformed corners of the destination rectangle
-            var destX = destinationRectangle.X;
-            var destY = destinationRectangle.Y;
-            var destWidth = destinationRectangle.Width;
-            var destHeight = destinationRectangle.Height;
+            // Convert origin to Stride Vector2
+            var strideOrigin = new global::Stride.Core.Mathematics.Vector2(origin.X, origin.Y);
 
-            // Origin offset from top-left of destination rectangle
-            var originOffsetX = origin.X;
-            var originOffsetY = origin.Y;
+            // Convert destination rectangle to Stride RectangleF
+            var strideDestRect = new RectangleF(destinationRectangle.X, destinationRectangle.Y, destinationRectangle.Width, destinationRectangle.Height);
 
-            // Calculate the four corners relative to origin
-            var corners = new global::Stride.Core.Mathematics.Vector2[4];
-            corners[0] = new global::Stride.Core.Mathematics.Vector2(-originOffsetX, -originOffsetY);  // Top-left
-            corners[1] = new global::Stride.Core.Mathematics.Vector2(destWidth - originOffsetX, -originOffsetY);  // Top-right
-            corners[2] = new global::Stride.Core.Mathematics.Vector2(destWidth - originOffsetX, destHeight - originOffsetY);  // Bottom-right
-            corners[3] = new global::Stride.Core.Mathematics.Vector2(-originOffsetX, destHeight - originOffsetY);  // Bottom-left
-
-            // Apply rotation to each corner
-            var cos = (float)System.Math.Cos(rotation);
-            var sin = (float)System.Math.Sin(rotation);
-            for (int i = 0; i < 4; i++)
-            {
-                var x = corners[i].X * cos - corners[i].Y * sin;
-                var y = corners[i].X * sin + corners[i].Y * cos;
-                corners[i] = new global::Stride.Core.Mathematics.Vector2(x, y);
-            }
-
-            // Translate back to destination position
-            for (int i = 0; i < 4; i++)
-            {
-                corners[i].X += destX + originOffsetX;
-                corners[i].Y += destY + originOffsetY;
-            }
-
-            // Create destination rectangle from transformed corners
-            // Use the axis-aligned bounding box of the rotated rectangle
-            var minX = float.MaxValue;
-            var minY = float.MaxValue;
-            var maxX = float.MinValue;
-            var maxY = float.MinValue;
-
-            for (int i = 0; i < 4; i++)
-            {
-                minX = System.Math.Min(minX, corners[i].X);
-                minY = System.Math.Min(minY, corners[i].Y);
-                maxX = System.Math.Max(maxX, corners[i].X);
-                maxY = System.Math.Max(maxY, corners[i].Y);
-            }
-
-            var strideDestRect = new RectangleF(minX, minY, maxX - minX, maxY - minY);
-            _spriteBatch.Draw(strideTexture, strideDestRect, strideColor);
+            // Use Stride's SpriteBatch.Draw overload that supports all parameters
+            // This overload includes source rectangle, rotation, origin, effects, and layer depth
+            _spriteBatch.Draw(strideTexture, strideDestRect, strideSourceRect, strideColor, rotation, strideOrigin, strideEffects, layerDepth);
         }
 
         public void DrawString(IFont font, string text, Vector2 position,Color color)

@@ -13,6 +13,7 @@ using Andastra.Parsing;
 using Andastra.Parsing.Formats.NCS;
 using Andastra.Parsing.Formats.NCS.NCSDecomp;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis;
+using static Andastra.Parsing.Formats.NCS.NCSDecomp.OutputRepairProcessor;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Lexer;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils;
@@ -906,11 +907,75 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 Debug("WARNING: GenerateCode() returned null code, using empty string as fallback");
                 code = "";
             }
+
+            // Apply output repairs to fix decompiler issues while maintaining engine parity
+            var repairConfig = GetRepairConfig();
+            if (repairConfig != null && (repairConfig.EnableSyntaxRepair || repairConfig.EnableTypeRepair ||
+                repairConfig.EnableExpressionRepair || repairConfig.EnableControlFlowRepair ||
+                repairConfig.EnableFunctionSignatureRepair))
+            {
+                try
+                {
+                    string originalCode = code;
+                    code = OutputRepairProcessor.RepairOutput(code, repairConfig);
+
+                    if (repairConfig.RepairsApplied && repairConfig.VerboseLogging)
+                    {
+                        Debug("Applied " + repairConfig.AppliedRepairs.Count + " output repairs:");
+                        foreach (string repair in repairConfig.AppliedRepairs)
+                        {
+                            Debug("  - " + repair);
+                        }
+                    }
+                }
+                catch (Exception repairEx)
+                {
+                    Debug("WARNING: Output repair failed: " + repairEx.GetType().Name + " - " + repairEx.Message);
+                    // Continue with original code if repair fails
+                }
+            }
+
             return code;
         }
 
         // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:460-474
         // Original: public void decompileToFile(File input, File output, Charset charset, boolean overwrite) throws DecompilerException, IOException
+        /// <summary>
+        /// Gets the output repair configuration based on current settings
+        /// </summary>
+        private OutputRepairConfig GetRepairConfig()
+        {
+            // Check if repairs are enabled via settings
+            var settings = this.settings ?? Decompiler.settings;
+            if (settings != null)
+            {
+                string enableRepairs = settings.GetProperty("Enable Output Repairs", "false");
+                if (!bool.TryParse(enableRepairs, out bool repairsEnabled) || !repairsEnabled)
+                {
+                    return null; // Repairs disabled
+                }
+
+                // Create config based on settings
+                var config = new OutputRepairConfig();
+
+                // Configure repair types
+                config.EnableSyntaxRepair = bool.Parse(settings.GetProperty("Enable Syntax Repair", "true"));
+                config.EnableTypeRepair = bool.Parse(settings.GetProperty("Enable Type Repair", "true"));
+                config.EnableExpressionRepair = bool.Parse(settings.GetProperty("Enable Expression Repair", "true"));
+                config.EnableControlFlowRepair = bool.Parse(settings.GetProperty("Enable Control Flow Repair", "true"));
+                config.EnableFunctionSignatureRepair = bool.Parse(settings.GetProperty("Enable Function Signature Repair", "false"));
+
+                // Configure other options
+                config.MaxRepairPasses = int.Parse(settings.GetProperty("Max Repair Passes", "3"));
+                config.VerboseLogging = bool.Parse(settings.GetProperty("Verbose Repair Logging", "false"));
+
+                return config;
+            }
+
+            // Default: no repairs (maintains backward compatibility)
+            return null;
+        }
+
         public virtual void DecompileToFile(NcsFile input, NcsFile output, System.Text.Encoding charset, bool overwrite)
         {
             if (output.Exists() && !overwrite)
