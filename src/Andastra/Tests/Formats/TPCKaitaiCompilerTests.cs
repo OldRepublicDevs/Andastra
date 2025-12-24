@@ -1060,6 +1060,7 @@ namespace Andastra.Parsing.Tests.Formats
 
         /// <summary>
         /// Test that Kaitai-generated Python parser can parse TPC files (structural validation)
+        /// Validates actual parsing by comparing Kaitai parser output with manual parser implementation
         /// </summary>
         [Fact(Timeout = 300000)]
         public void TestKaitaiPythonParserCanParseTpc()
@@ -1123,8 +1124,116 @@ namespace Andastra.Parsing.Tests.Formats
             string[] pythonFiles = Directory.GetFiles(pythonOutputDir, "*.py", SearchOption.AllDirectories);
             pythonFiles.Should().NotBeEmpty("Python parser files should be generated");
 
-            // TODO:  Note: Actual parsing validation would require Python runtime and kaitai_struct library
-            // This test verifies compilation succeeds, which is the first step
+            // Find Python executable
+            string pythonPath = FindPython();
+            if (string.IsNullOrEmpty(pythonPath))
+            {
+                return; // Skip if Python not available
+            }
+
+            // Create test TPC file using Andastra parser
+            var testTpc = CreateTestTPC();
+            byte[] tpcBytes = TPCAuto.BytesTpc(testTpc, ResourceType.TPC);
+            tpcBytes.Should().NotBeNullOrEmpty("Test TPC bytes should be generated");
+
+            // Write to temporary file for validation
+            string tempTpcFile = Path.Combine(Path.GetTempPath(), $"tpc_kaitai_test_{Guid.NewGuid()}.tpc");
+            try
+            {
+                File.WriteAllBytes(tempTpcFile, tpcBytes);
+
+                // Run validation script that compares Kaitai parser with manual parser
+                string validationScriptPath = Path.Combine(
+                    Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "src", "Andastra", "Tests", "Formats", "validate_kaitai_parser.py");
+
+                // Normalize path
+                validationScriptPath = Path.GetFullPath(validationScriptPath);
+
+                if (!File.Exists(validationScriptPath))
+                {
+                    throw new FileNotFoundError($"Validation script not found at {validationScriptPath}");
+                }
+
+                var validationInfo = new ProcessStartInfo
+                {
+                    FileName = pythonPath,
+                    Arguments = $"\"{validationScriptPath}\" \"{tempTpcFile}\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    WorkingDirectory = Path.GetDirectoryName(validationScriptPath)
+                };
+
+                string validationStdout = "";
+                string validationStderr = "";
+                int validationExitCode = -1;
+
+                using (var validationProcess = Process.Start(validationInfo))
+                {
+                    if (validationProcess != null)
+                    {
+                        validationStdout = validationProcess.StandardOutput.ReadToEnd();
+                        validationStderr = validationProcess.StandardError.ReadToEnd();
+                        validationProcess.WaitForExit(30000);
+                        validationExitCode = validationProcess.ExitCode;
+                    }
+                }
+
+                // Validation should succeed
+                validationExitCode.Should().Be(0,
+                    $"Kaitai parser validation should succeed. STDOUT: {validationStdout}, STDERR: {validationStderr}");
+
+                // Parse validation results
+                ValidationResult validationResult;
+                try
+                {
+                    validationResult = JsonSerializer.Deserialize<ValidationResult>(validationStdout);
+                    validationResult.Should().NotBeNull("Validation results should be valid JSON");
+                }
+                catch (JsonException ex)
+                {
+                    throw new InvalidOperationException(
+                        $"Failed to parse validation JSON output: {validationStdout}. Error: {ex.Message}");
+                }
+
+                // Check overall validation success
+                validationResult.OverallSuccess.Should().BeTrue(
+                    $"Kaitai parser validation should pass. Errors: {string.Join("; ", validationResult.Errors ?? new List<string>())}");
+
+                // Verify key header fields match
+                validationResult.Validation.Should().NotBeNull("Validation results should contain field comparisons");
+
+                // Check critical header fields
+                string[] criticalFields = new[] { "data_size", "width", "height", "pixel_type", "mipmap_count" };
+                foreach (string field in criticalFields)
+                {
+                    validationResult.Validation.ContainsKey(field).Should().BeTrue($"Validation should include {field}");
+                    validationResult.Validation[field].Matches.Should().BeTrue(
+                        $"{field} should match between Kaitai and manual parsers");
+                }
+
+                // Verify alpha_test matches within floating point tolerance
+                validationResult.Validation.ContainsKey("alpha_test").Should().BeTrue("Validation should include alpha_test");
+                validationResult.Validation["alpha_test"].Matches.Should().BeTrue(
+                    "Alpha test should match between parsers within tolerance");
+            }
+            finally
+            {
+                // Clean up temporary file
+                if (File.Exists(tempTpcFile))
+                {
+                    try
+                    {
+                        File.Delete(tempTpcFile);
+                    }
+                    catch
+                    {
+                        // Ignore cleanup errors
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -1494,6 +1603,51 @@ namespace Andastra.Parsing.Tests.Formats
 
             [JsonPropertyName("data_size")]
             public int data_size { get; set; }
+        }
+
+        /// <summary>
+        /// Data structure for Kaitai parser validation results
+        /// </summary>
+        private class ValidationResult
+        {
+            [JsonPropertyName("file")]
+            public string File { get; set; }
+
+            [JsonPropertyName("manual_parser")]
+            public Dictionary<string, object> ManualParser { get; set; }
+
+            [JsonPropertyName("kaitai_parser")]
+            public Dictionary<string, object> KaitaiParser { get; set; }
+
+            [JsonPropertyName("validation")]
+            public Dictionary<string, FieldValidation> Validation { get; set; }
+
+            [JsonPropertyName("overall_success")]
+            public bool OverallSuccess { get; set; }
+
+            [JsonPropertyName("errors")]
+            public List<string> Errors { get; set; }
+
+            [JsonPropertyName("error")]
+            public string Error { get; set; }
+        }
+
+        /// <summary>
+        /// Field validation result
+        /// </summary>
+        private class FieldValidation
+        {
+            [JsonPropertyName("manual")]
+            public object Manual { get; set; }
+
+            [JsonPropertyName("kaitai")]
+            public object Kaitai { get; set; }
+
+            [JsonPropertyName("matches")]
+            public bool Matches { get; set; }
+
+            [JsonPropertyName("error")]
+            public string Error { get; set; }
         }
 
         /// <summary>

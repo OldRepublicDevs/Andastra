@@ -9852,24 +9852,9 @@ namespace Andastra.Runtime.Games.Eclipse
                 return new List<Vector3>();
             }
 
-            try
+            if (area.TryGetCachedMeshGeometryVertices(meshId, out List<Vector3> vertices))
             {
-                var cachedMeshGeometryField = typeof(EclipseArea).GetField("_cachedMeshGeometry", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                if (cachedMeshGeometryField != null)
-                {
-                    var cachedMeshGeometryDict = cachedMeshGeometryField.GetValue(area) as Dictionary<string, EclipseArea.CachedMeshGeometry>;
-                    if (cachedMeshGeometryDict != null && cachedMeshGeometryDict.TryGetValue(meshId, out EclipseArea.CachedMeshGeometry cachedGeometry))
-                    {
-                        if (cachedGeometry.Vertices != null)
-                        {
-                            return new List<Vector3>(cachedGeometry.Vertices);
-                        }
-                    }
-                }
-            }
-            catch
-            {
-                // Reflection failed, return empty list
+                return vertices;
             }
 
             return new List<Vector3>();
@@ -14550,6 +14535,124 @@ technique ColorGrading
                 });
             }
             return result;
+        }
+
+        /// <summary>
+        /// Gets cached mesh geometry data by mesh identifier.
+        /// </summary>
+        /// <param name="meshId">Mesh identifier.</param>
+        /// <returns>Cached mesh geometry if found, null otherwise.</returns>
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Cached geometry is used for collision shape updates
+        /// when destructible environment geometry is modified.
+        /// </remarks>
+        [CanBeNull]
+        public CachedMeshGeometry GetCachedMeshGeometry(string meshId)
+        {
+            if (string.IsNullOrEmpty(meshId))
+            {
+                return null;
+            }
+
+            if (_cachedMeshGeometry.TryGetValue(meshId, out CachedMeshGeometry cachedGeometry))
+            {
+                return cachedGeometry;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Attempts to get cached vertex positions for a mesh.
+        /// </summary>
+        /// <param name="meshId">Mesh identifier.</param>
+        /// <param name="vertices">Output parameter for vertex positions list.</param>
+        /// <returns>True if cached vertices were found, false otherwise.</returns>
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Vertex positions are cached from original MDL data
+        /// for physics collision shape generation and geometry modification operations.
+        /// </remarks>
+        public bool TryGetCachedMeshGeometryVertices(string meshId, out List<Vector3> vertices)
+        {
+            vertices = null;
+
+            if (string.IsNullOrEmpty(meshId))
+            {
+                return false;
+            }
+
+            if (_cachedMeshGeometry.TryGetValue(meshId, out CachedMeshGeometry cachedGeometry))
+            {
+                if (cachedGeometry.Vertices != null && cachedGeometry.Vertices.Count > 0)
+                {
+                    // Return a copy to prevent external modifications from affecting the cache
+                    vertices = new List<Vector3>(cachedGeometry.Vertices);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Attempts to get cached triangle indices for a mesh.
+        /// </summary>
+        /// <param name="meshId">Mesh identifier.</param>
+        /// <param name="indices">Output parameter for triangle indices list.</param>
+        /// <returns>True if cached indices were found, false otherwise.</returns>
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Triangle indices are cached from original MDL data
+        /// for physics collision shape generation and geometry modification operations.
+        /// </remarks>
+        public bool TryGetCachedMeshGeometryIndices(string meshId, out List<int> indices)
+        {
+            indices = null;
+
+            if (string.IsNullOrEmpty(meshId))
+            {
+                return false;
+            }
+
+            if (_cachedMeshGeometry.TryGetValue(meshId, out CachedMeshGeometry cachedGeometry))
+            {
+                if (cachedGeometry.Indices != null && cachedGeometry.Indices.Count > 0)
+                {
+                    // Return a copy to prevent external modifications from affecting the cache
+                    indices = new List<int>(cachedGeometry.Indices);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Caches mesh geometry data (vertex positions and triangle indices) from MDL model.
+        /// </summary>
+        /// <param name="meshId">Mesh identifier (model name/resref).</param>
+        /// <param name="vertices">Vertex positions list.</param>
+        /// <param name="indices">Triangle indices list.</param>
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Original vertex/index data is cached for physics collision shape generation.
+        /// When geometry is modified (destroyed/deformed), collision shapes are rebuilt from this cached data.
+        /// </remarks>
+        public void CacheMeshGeometry(string meshId, List<Vector3> vertices, List<int> indices)
+        {
+            if (string.IsNullOrEmpty(meshId) || vertices == null || indices == null)
+            {
+                return;
+            }
+
+            // Create cached geometry object
+            CachedMeshGeometry cachedGeometry = new CachedMeshGeometry
+            {
+                MeshId = meshId,
+                Vertices = new List<Vector3>(vertices), // Store copies to prevent external modifications
+                Indices = new List<int>(indices)
+            };
+
+            // Cache the geometry data
+            _cachedMeshGeometry[meshId] = cachedGeometry;
         }
 
         /// <summary>

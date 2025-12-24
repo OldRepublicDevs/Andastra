@@ -3887,11 +3887,13 @@ namespace HolocronToolset.Editors
                 return;
             }
 
-            // Find the parent chain and expand them
-            // In Avalonia TreeView, we need to expand items by setting IsExpanded
-            // TODO: STUB - For now, we'll expand all items to ensure visibility (simplified approach)
-            // TODO:  A full implementation would track the parent chain and expand only those
-            ExpandItemRecursive(item);
+            // Find the TreeViewItem corresponding to this DLGStandardItem
+            TreeViewItem treeItem = FindTreeViewItem(_dialogTree.ItemsSource as System.Collections.IEnumerable, item);
+            if (treeItem != null)
+            {
+                // Expand all parent items in the visual tree to ensure visibility
+                ExpandParentItems(treeItem);
+            }
         }
 
         // Helper method to recursively expand items

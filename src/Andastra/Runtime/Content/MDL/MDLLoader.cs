@@ -685,7 +685,7 @@ namespace Andastra.Runtime.Content.MDL
         /// <summary>
         /// Converts Content.MDL.MDLLightData to Core.MDL.MDLLightData.
         /// </summary>
-        private CoreMDLLightData ConvertLight(ContentMDLLightData contentLight)
+        private static CoreMDLLightData ConvertLight(ContentMDLLightData contentLight)
         {
             if (contentLight == null)
             {
@@ -712,7 +712,7 @@ namespace Andastra.Runtime.Content.MDL
         /// <summary>
         /// Converts Content.MDL.MDLEmitterData to Core.MDL.MDLEmitterData.
         /// </summary>
-        private CoreMDLEmitterData ConvertEmitter(ContentMDLEmitterData contentEmitter)
+        private static CoreMDLEmitterData ConvertEmitter(ContentMDLEmitterData contentEmitter)
         {
             if (contentEmitter == null)
             {
