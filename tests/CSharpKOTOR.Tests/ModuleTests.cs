@@ -54,7 +54,7 @@ namespace Andastra.Parsing.Tests
             // Skip this test if we can't create a valid installation
             // (requires a valid game installation path)
             var testPath = Path.GetTempPath();
-            Game? gameType = InstallationClass.DetermineGame(testPath);
+            BioWareGame? gameType = InstallationClass.DetermineGame(testPath);
             if (!gameType.HasValue)
             {
                 // Skip test if no valid game installation
