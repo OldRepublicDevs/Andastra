@@ -5,6 +5,7 @@ using Stride.Rendering;
 using Stride.Core.Mathematics;
 using Stride.Shaders;
 using Stride.Shaders.Compiler;
+using Stride.Core.IO;
 using Andastra.Runtime.Graphics.Common.PostProcessing;
 using Andastra.Runtime.Stride.Graphics;
 using Vector2 = Stride.Core.Mathematics.Vector2;
@@ -769,14 +770,43 @@ shader ColorGradingEffect : ShaderBase
 
                 // Try to compile shader from file
                 // Based on Stride API: EffectCompiler can compile from file paths
-                // Note: EffectCompiler may not be directly accessible, so we try to create one
+                // Note: EffectCompiler requires IVirtualFileProvider parameter
                 EffectCompiler effectCompiler = null;
 
-                // Attempt to create EffectCompiler instance
-                // Based on Stride architecture: EffectCompiler can be instantiated directly
+                // Attempt to get file provider from GraphicsDevice services
+                IVirtualFileProvider fileProvider = null;
                 try
                 {
-                    effectCompiler = new EffectCompiler();
+                    var deviceServices = _graphicsDevice.Services();
+                    if (deviceServices != null)
+                    {
+                        // Try to get IVirtualFileProvider from services using reflection (C# 7.3 compatibility)
+                        var getServiceMethod = deviceServices.GetType().GetMethod("GetService", new Type[0]);
+                        if (getServiceMethod != null)
+                        {
+                            var genericMethod = getServiceMethod.MakeGenericMethod(typeof(IVirtualFileProvider));
+                            fileProvider = genericMethod.Invoke(deviceServices, null) as IVirtualFileProvider;
+                        }
+                    }
+                }
+                catch
+                {
+                    // FileProvider not available from GraphicsDevice services
+                }
+
+                // Attempt to create EffectCompiler instance with file provider
+                // Based on Stride architecture: EffectCompiler requires IVirtualFileProvider
+                try
+                {
+                    if (fileProvider != null)
+                    {
+                        effectCompiler = new EffectCompiler(fileProvider);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[StrideColorGrading] Warning: No file provider available for EffectCompiler, cannot compile shader");
+                        return null; // Cannot create EffectCompiler without fileProvider
+                    }
                 }
                 catch (Exception ex)
                 {

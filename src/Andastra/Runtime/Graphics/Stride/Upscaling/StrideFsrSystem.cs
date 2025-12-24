@@ -1,12 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using StrideGraphics = Stride.Graphics;
 using Stride.Rendering;
 using Stride.Core.Mathematics;
 using Stride.Shaders;
+using Stride.Shaders.Compiler;
 using Stride.Engine;
 using Stride.Core.Serialization.Contents;
 using Stride.Core;
+using Stride.Core.IO;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Upscaling;
 using Andastra.Runtime.Graphics.Common.Rendering;
@@ -97,29 +100,12 @@ namespace Andastra.Runtime.Stride.Upscaling
             _contentManager = contentManager;
 
             // Try to get EffectSystem from services if available
-            if (_services != null)
-            {
-                try
-                {
-                    _effectSystem = _services.GetService(typeof(EffectSystem)) as EffectSystem;
-                }
-                catch
-                {
-                    // EffectSystem not available, continue without it
-                }
-            }
+            _effectSystem = GetServiceHelper<EffectSystem>(_services);
 
             // If ContentManager not provided, try to get it from services
-            if (_contentManager == null && _services != null)
+            if (_contentManager == null)
             {
-                try
-                {
-                    _contentManager = _services.GetService(typeof(ContentManager)) as ContentManager;
-                }
-                catch
-                {
-                    // ContentManager not available, continue without it
-                }
+                _contentManager = GetServiceHelper<ContentManager>(_services);
             }
 
             // If still no ContentManager, try to get it from GraphicsDevice services
@@ -128,16 +114,53 @@ namespace Andastra.Runtime.Stride.Upscaling
                 try
                 {
                     var deviceServices = _graphicsDevice.Services();
-                    if (deviceServices != null)
-                    {
-                        _contentManager = deviceServices.GetService(typeof(ContentManager)) as ContentManager;
-                    }
+                    _contentManager = GetServiceHelper<ContentManager>(deviceServices);
                 }
                 catch
                 {
                     // ContentManager not available from GraphicsDevice, continue without it
                 }
             }
+        }
+
+        /// <summary>
+        /// Helper method to call GetService&lt;T&gt;() using reflection (C# 7.3 compatible).
+        /// </summary>
+        private static T GetServiceHelper<T>(object services) where T : class
+        {
+            if (services == null)
+            {
+                return null;
+            }
+            try
+            {
+                // Try to cast to IServiceRegistry first
+                var serviceRegistry = services as IServiceRegistry;
+                if (serviceRegistry != null)
+                {
+                    var getServiceMethod = serviceRegistry.GetType().GetMethod("GetService", new Type[0]);
+                    if (getServiceMethod != null)
+                    {
+                        var genericMethod = getServiceMethod.MakeGenericMethod(typeof(T));
+                        return genericMethod.Invoke(serviceRegistry, null) as T;
+                    }
+                }
+                else
+                {
+                    // If not IServiceRegistry, try to get GetService method from the object's type
+                    var getServiceMethod = services.GetType().GetMethod("GetService", new Type[0]);
+                    if (getServiceMethod != null)
+                    {
+                        var genericMethod = getServiceMethod.MakeGenericMethod(typeof(T));
+                        return genericMethod.Invoke(services, null) as T;
+                    }
+                }
+            }
+            catch
+            {
+                // Service not available
+            }
+            return null;
         }
 
         private StrideGraphics.CommandList GetCommandList()
@@ -932,7 +955,7 @@ namespace Andastra.Runtime.Stride.Upscaling
             {
                 try
                 {
-                    var contentManager = _services.GetService(typeof(ContentManager)) as ContentManager;
+                    var contentManager = GetServiceHelper<ContentManager>(_services);
                     if (contentManager != null)
                     {
                         effect = contentManager.Load<StrideGraphics.Effect>(shaderName);
@@ -957,7 +980,7 @@ namespace Andastra.Runtime.Stride.Upscaling
                     var deviceServices = _graphicsDevice.Services();
                     if (deviceServices != null)
                     {
-                        var contentManager = deviceServices.GetService(typeof(ContentManager)) as ContentManager;
+                        var contentManager = GetServiceHelper<ContentManager>(deviceServices);
                         if (contentManager != null)
                         {
                             effect = contentManager.Load<StrideGraphics.Effect>(shaderName);
@@ -1216,7 +1239,7 @@ shader FSRTemporal : ComputeShaderBase
                 {
                     try
                     {
-                        var effectSystem = _services.GetService(typeof(EffectSystem)) as EffectSystem;
+                        var effectSystem = GetServiceHelper<EffectSystem>(_services);
                         if (effectSystem != null)
                         {
                             return CompileShaderWithEffectSystem(effectSystem, shaderSource, shaderName);
@@ -1232,13 +1255,10 @@ shader FSRTemporal : ComputeShaderBase
                 try
                 {
                     var deviceServices = _graphicsDevice.Services();
-                    if (deviceServices != null)
+                    var effectSystem = GetServiceHelper<EffectSystem>(deviceServices);
+                    if (effectSystem != null)
                     {
-                        var effectSystem = deviceServices.GetService(typeof(EffectSystem)) as EffectSystem;
-                        if (effectSystem != null)
-                        {
-                            return CompileShaderWithEffectSystem(effectSystem, shaderSource, shaderName);
-                        }
+                        return CompileShaderWithEffectSystem(effectSystem, shaderSource, shaderName);
                     }
                 }
                 catch (Exception ex)
@@ -1261,38 +1281,89 @@ shader FSRTemporal : ComputeShaderBase
         }
 
         /// <summary>
-        /// Compiles shader using EffectSystem.
+        /// Compiles shader using EffectCompiler (replaces EffectSystem.Compile which doesn't exist).
         /// </summary>
-        /// <param name="effectSystem">EffectSystem instance.</param>
+        /// <param name="effectSystem">EffectSystem instance (unused, kept for compatibility).</param>
         /// <param name="shaderSource">Shader source code in SDSL format.</param>
         /// <param name="shaderName">Name identifier for the shader.</param>
         /// <returns>Compiled Effect, or null if compilation fails.</returns>
         /// <remarks>
-        /// Based on Stride EffectSystem API:
-        /// - EffectSystem.Compile() compiles shader source to Effect bytecode
-        /// - EffectSystem provides the proper compilation context and bytecode generation
+        /// Based on Stride EffectCompiler API:
+        /// - EffectCompiler.Compile() compiles shader source to Effect bytecode
+        /// - EffectCompiler requires IVirtualFileProvider for file access
         /// - Returns Effect created from compiled bytecode
         /// </remarks>
         private StrideGraphics.Effect CompileShaderWithEffectSystem(EffectSystem effectSystem, string shaderSource, string shaderName)
         {
-            if (effectSystem == null)
+            // EffectSystem.Compile() doesn't exist, use EffectCompiler instead
+            // Try to get file provider from services or create a minimal one
+            IVirtualFileProvider fileProvider = null;
+            if (_services != null)
             {
-                Console.WriteLine($"[StrideFSR] EffectSystem is null, cannot compile {shaderName}");
+                fileProvider = GetServiceHelper<IVirtualFileProvider>(_services);
+            }
+
+            // If no file provider from services, try to get from ContentManager
+            if (fileProvider == null && _contentManager != null)
+            {
+                try
+                {
+                    // ContentManager may have a FileProvider property
+                    var fileProviderProperty = _contentManager.GetType().GetProperty("FileProvider");
+                    if (fileProviderProperty != null)
+                    {
+                        fileProvider = fileProviderProperty.GetValue(_contentManager) as IVirtualFileProvider;
+                    }
+                }
+                catch
+                {
+                    // FileProvider not available from ContentManager
+                }
+            }
+
+            // Create EffectCompiler with file provider (required parameter)
+            // If no file provider available, create a minimal one or use null (may fail but we try)
+            EffectCompiler compiler = null;
+            try
+            {
+                if (fileProvider != null)
+                {
+                    compiler = new EffectCompiler(fileProvider);
+                }
+                else
+                {
+                    // Try to create without file provider (may fail, but attempt it)
+                    // Note: This may not work, but we try as a fallback
+                    Console.WriteLine($"[StrideFSR] Warning: No file provider available for EffectCompiler, compilation may fail");
+                    return null; // Cannot create EffectCompiler without fileProvider
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StrideFSR] Failed to create EffectCompiler: {ex.Message}");
+                return null;
+            }
+
+            if (compiler == null)
+            {
                 return null;
             }
 
             try
             {
-                // Create shader source object for EffectSystem
+                // Create shader source object for EffectCompiler
                 var shaderSourceObj = new FsrShaderSourceClass
                 {
                     Name = shaderName,
                     SourceCode = shaderSource
                 };
 
-                // Compile using EffectSystem
-                // EffectSystem provides the proper compilation context and bytecode generation
-                var compilationResult = effectSystem.Compile(shaderSourceObj);
+                // Compile using EffectCompiler
+                // EffectCompiler.Compile() compiles shader source to Effect bytecode
+                dynamic compilationResult = compiler.Compile(shaderSourceObj, new CompilerParameters
+                {
+                    EffectParameters = new EffectCompilerParameters()
+                });
 
                 // Handle TaskOrResult unwrapping
                 dynamic compilerResult = compilationResult.Result;
@@ -1300,18 +1371,18 @@ shader FSRTemporal : ComputeShaderBase
                 {
                     // Create Effect from compiled bytecode
                     var effect = new StrideGraphics.Effect(_graphicsDevice, (EffectBytecode)compilerResult.Bytecode);
-                    Console.WriteLine($"[StrideFSR] Successfully compiled {shaderName} shader using EffectSystem");
+                    Console.WriteLine($"[StrideFSR] Successfully compiled {shaderName} shader using EffectCompiler");
                     return effect;
                 }
                 else
                 {
-                    Console.WriteLine($"[StrideFSR] EffectSystem compilation failed for {shaderName}: No bytecode generated");
+                    Console.WriteLine($"[StrideFSR] EffectCompiler compilation failed for {shaderName}: No bytecode generated");
                     return null;
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[StrideFSR] Failed to compile {shaderName} shader using EffectSystem: {ex.Message}");
+                Console.WriteLine($"[StrideFSR] Failed to compile {shaderName} shader using EffectCompiler: {ex.Message}");
                 Console.WriteLine($"[StrideFSR] Stack trace: {ex.StackTrace}");
                 return null;
             }
@@ -1384,6 +1455,65 @@ shader FSRTemporal : ComputeShaderBase
                 Console.WriteLine("[StrideFSR] Warning: Frame Generation requires FSR 3.0+, current version is FSR 2.x");
             }
         }
+
+        protected override void OnSharpnessChanged(float sharpness)
+        {
+            Console.WriteLine($"[StrideFSR] Sharpness set to: {sharpness:F2}");
+
+            // Update RCAS sharpness parameter
+            // This will be applied in CalculateFsrConstants on next frame
+            // Sharpness is clamped to [0, 1] range
+            _sharpness = Math.Max(0.0f, Math.Min(1.0f, sharpness));
+        }
+
+        #endregion
+
+        #region Capability Checks
+
+        private bool CheckFrameGenerationSupport()
+        {
+            // FSR 3.0 Frame Generation works on all GPUs but requires specific driver support
+            return true;
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Gets recommended render resolution for the current quality mode.
+        /// FSR quality modes define specific scale factors.
+        /// </summary>
+        public (int width, int height) GetOptimalRenderResolution(int displayWidth, int displayHeight)
+        {
+            float scaleFactor = GetScaleFactor();
+
+            int renderWidth = (int)Math.Ceiling(displayWidth * scaleFactor);
+            int renderHeight = (int)Math.Ceiling(displayHeight * scaleFactor);
+
+            // FSR prefers power-of-2 aligned dimensions
+            renderWidth = (renderWidth + 7) & ~7;
+            renderHeight = (renderHeight + 7) & ~7;
+
+            return (renderWidth, renderHeight);
+        }
+    }
+
+    /// <summary>
+    /// FSR shader parameter keys for binding resources to compute shaders.
+    /// </summary>
+    internal static class FsrShaderKeys
+    {
+        public static readonly ObjectParameterKey<StrideGraphics.Texture> InputColor = new ObjectParameterKey<StrideGraphics.Texture>("InputColor");
+        public static readonly ObjectParameterKey<StrideGraphics.Texture> InputMotionVectors = new ObjectParameterKey<StrideGraphics.Texture>("InputMotionVectors");
+        public static readonly ObjectParameterKey<StrideGraphics.Texture> InputDepth = new ObjectParameterKey<StrideGraphics.Texture>("InputDepth");
+        public static readonly ObjectParameterKey<StrideGraphics.Texture> InputReactiveMask = new ObjectParameterKey<StrideGraphics.Texture>("InputReactiveMask");
+        public static readonly ObjectParameterKey<StrideGraphics.Texture> InputLock = new ObjectParameterKey<StrideGraphics.Texture>("InputLock");
+        public static readonly ObjectParameterKey<StrideGraphics.Texture> InputHistory = new ObjectParameterKey<StrideGraphics.Texture>("InputHistory");
+        public static readonly ObjectParameterKey<StrideGraphics.Texture> OutputColor = new ObjectParameterKey<StrideGraphics.Texture>("OutputColor");
+        public static readonly ObjectParameterKey<StrideGraphics.Texture> OutputLock = new ObjectParameterKey<StrideGraphics.Texture>("OutputLock");
+        public static readonly ValueParameterKey<StrideFsrSystem.FsrConstants> FsrConstants = new ValueParameterKey<StrideFsrSystem.FsrConstants>("FsrConstants");
+    }
+}
+
 
         protected override void OnSharpnessChanged(float sharpness)
         {
