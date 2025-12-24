@@ -16,6 +16,9 @@
   <PropertyGroup Condition="!$(RuntimeIdentifier.StartsWith('win')) AND '$(RuntimeIdentifier)'!=''">
     <OutputType>Exe</OutputType>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>Andastra.Runtime.Game.Program</StartupObject>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Eto.Forms" Version="2.10.2" />
     <PackageReference Include="Eto.Platform.Gtk" Version="2.7.4" Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
