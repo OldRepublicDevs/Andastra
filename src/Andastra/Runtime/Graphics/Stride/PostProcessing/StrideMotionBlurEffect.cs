@@ -37,6 +37,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
     public class StrideMotionBlurEffect : BaseMotionBlurEffect
     {
         private StrideGraphics.GraphicsDevice _graphicsDevice;
+        private StrideGraphics.GraphicsContext _graphicsContext;
         private EffectInstance _motionBlurEffect;
         private StrideGraphics.Texture _velocityTexture;
         private StrideGraphics.Texture _temporaryTexture;
@@ -44,9 +45,10 @@ namespace Andastra.Runtime.Stride.PostProcessing
         private StrideGraphics.SamplerState _linearSampler;
         private StrideGraphics.Effect _motionBlurEffectBase;
 
-        public StrideMotionBlurEffect(StrideGraphics.GraphicsDevice graphicsDevice)
+        public StrideMotionBlurEffect(StrideGraphics.GraphicsDevice graphicsDevice, StrideGraphics.GraphicsContext graphicsContext = null)
         {
             _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
+            _graphicsContext = graphicsContext;
             InitializeRenderingResources();
         }
 
@@ -54,6 +56,12 @@ namespace Andastra.Runtime.Stride.PostProcessing
         {
             // Create sprite batch for fullscreen quad rendering
             _spriteBatch = new StrideGraphics.SpriteBatch(_graphicsDevice);
+
+            // Initialize GraphicsContext if not provided
+            if (_graphicsContext == null)
+            {
+                _graphicsContext = _graphicsDevice.GraphicsContext();
+            }
 
             // Create linear sampler for texture sampling
             _linearSampler = StrideGraphics.SamplerState.New(_graphicsDevice, new StrideGraphics.SamplerStateDescription
@@ -673,16 +681,24 @@ shader MotionBlurEffect : ShaderBase
                 return;
             }
 
-            // Save previous render target
-            var previousRenderTarget = commandList.GetRenderTarget(0);
+            // Ensure GraphicsContext is available
+            if (_graphicsContext == null)
+            {
+                _graphicsContext = _graphicsDevice.GraphicsContext();
+            }
+            if (_graphicsContext == null)
+            {
+                return;
+            }
 
             try
             {
                 // Set render target to output texture
                 commandList.SetRenderTarget(null, output);
+                commandList.SetViewport(new StrideGraphics.Viewport(0, 0, output.Width, output.Height));
 
                 // Clear render target to black
-                _graphicsDevice.Clear(output, Color.Black);
+                commandList.Clear(output, global::Stride.Core.Mathematics.Color.Black);
 
                 // Calculate effective parameters
                 var effectiveIntensity = _intensity * deltaTime * 60.0f; // Normalize to 60fps
@@ -692,7 +708,8 @@ shader MotionBlurEffect : ShaderBase
                 System.Console.WriteLine($"[StrideMotionBlur] Applying blur: {_sampleCount} samples, intensity {effectiveIntensity:F2}, max velocity {clampedVelocity:F2}");
 
                 // Begin sprite batch rendering with motion blur effect
-                _spriteBatch.Begin(commandList, StrideGraphics.SpriteSortMode.Immediate, StrideGraphics.BlendStates.Opaque,
+                // SpriteBatch.Begin requires GraphicsContext (not CommandList)
+                _spriteBatch.Begin(_graphicsContext, StrideGraphics.SpriteSortMode.Immediate, StrideGraphics.BlendStates.Opaque,
                     _linearSampler, StrideGraphics.DepthStencilStates.None, StrideGraphics.RasterizerStates.CullNone, _motionBlurEffect);
 
                 // Set shader parameters if effect is available

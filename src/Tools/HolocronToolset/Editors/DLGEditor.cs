@@ -94,6 +94,9 @@ namespace HolocronToolset.Editors
 
         // Public property for testing
         public ListBox StuntList => _stuntList;
+
+        // Public properties for menu actions (for testing)
+        public MenuItem ActionReloadTree => _actionReloadTree;
         private TextBox _commentsEdit;
         private Panel _leftDockWidget;
         private DLGListWidget _orphanedNodesList;
@@ -3108,6 +3111,29 @@ namespace HolocronToolset.Editors
             // Tools menu actions
             _actionReloadTree.Click += (s, e) => ReloadTree();
             _actionUnfocus.Click += (s, e) => UnfocusTree();
+        }
+
+        /// <summary>
+        /// Reloads the dialog tree from the current core DLG.
+        /// Matching PyKotor implementation: self.ui.actionReloadTree.triggered.connect(lambda: self._load_dlg(self.core_dlg))
+        /// </summary>
+        private void ReloadTree()
+        {
+            LoadDLG(_coreDlg);
+        }
+
+        /// <summary>
+        /// Unfocuses the current tree selection.
+        /// Matching PyKotor implementation for unfocus tree action.
+        /// </summary>
+        private void UnfocusTree()
+        {
+            // Clear selection in the dialog tree
+            if (_dialogTree != null)
+            {
+                _dialogTree.SelectedItem = null;
+            }
+            _focused = false;
         }
 
         /// <summary>

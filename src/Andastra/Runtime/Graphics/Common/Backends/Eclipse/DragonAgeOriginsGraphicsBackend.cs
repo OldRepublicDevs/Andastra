@@ -2132,11 +2132,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 // Step 2: Parse MDL/MDX files using MDLLoader
                 // Based on daorigins.exe: MDL parser extracts geometry data from binary format
                 // daorigins.exe: MDL parser reads vertex positions, normals, texture coordinates, and indices
+                // Use MDLLoader to get Core.MDL.MDLModel (MDLLoader handles Content->Core conversion internally)
                 Andastra.Runtime.Core.MDL.MDLModel mdlModel;
-                using (var reader = new Andastra.Runtime.Content.MDL.MDLOptimizedReader(mdlData, mdxData))
-                {
-                    mdlModel = reader.Load();
-                }
+                var mdlLoader = new Andastra.Runtime.Content.MDL.MDLLoader(_resourceProvider);
+                mdlModel = mdlLoader.Load(modelResRef);
 
                 if (mdlModel == null || mdlModel.RootNode == null)
                 {
@@ -5037,7 +5036,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
 
             // Based on daorigins.exe: Hint text uses small font size (10pt) for compact display
             const int fontSize = 10;
-            
+
             // Measure text to calculate proper centering and background size
             // Based on daorigins.exe: Text measurement uses ID3DXFont::DrawText with DT_CALCRECT
             System.Numerics.Vector2 textSize = MeasureTextDirectX9(hintsText, fontSize);
@@ -5052,7 +5051,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             const float bottomPadding = 10.0f;
             const float horizontalPadding = 20.0f;
             const float verticalPadding = 8.0f;
-            
+
             // Calculate text position (centered horizontally, positioned from bottom)
             float hintsX = viewportWidth / 2.0f;
             float hintsY = viewportHeight - bottomPadding - (textSize.Y / 2.0f);
@@ -5063,7 +5062,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             float backgroundY = hintsY - (textSize.Y / 2.0f) - verticalPadding;
             float backgroundWidth = textSize.X + (horizontalPadding * 2.0f);
             float backgroundHeight = textSize.Y + (verticalPadding * 2.0f);
-            
+
             // Render semi-transparent background panel for hint text
             // Based on daorigins.exe: Background uses dark color with 70% alpha for visibility
             uint backgroundColor = 0xB2000000; // Black with ~70% alpha (0xB2 = 178/255)
@@ -6627,8 +6626,9 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // Based on daorigins.exe: UI quads use vertex buffers with proper FVF format
             // Vertex buffer size: 6 vertices (2 triangles) * sizeof(UIVertex)
             int vertexBufferSize = 6 * (4 * sizeof(float) + sizeof(uint) + 2 * sizeof(float)); // 4 floats (XYZ) + 1 uint (Color) + 2 floats (UV)
-            IntPtr vertexBuffer = CreateVertexBufferDirectX9(vertexBufferSize, D3DUSAGE_WRITEONLY, arrowFVF, D3DPOOL_DEFAULT, IntPtr.Zero);
-            if (vertexBuffer == IntPtr.Zero)
+            IntPtr vertexBuffer = IntPtr.Zero;
+            int result = CreateVertexBufferDirectX9((uint)vertexBufferSize, D3DUSAGE_WRITEONLY, arrowFVF, D3DPOOL_DEFAULT, ref vertexBuffer);
+            if (result < 0 || vertexBuffer == IntPtr.Zero)
             {
                 System.Console.WriteLine("[DragonAgeOriginsGraphicsBackend] RenderOptionsDropdownArrow: Failed to create vertex buffer for arrow button");
                 return;
