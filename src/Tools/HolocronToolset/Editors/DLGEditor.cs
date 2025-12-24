@@ -161,6 +161,8 @@ namespace HolocronToolset.Editors
         // Original: QLineEdit questEdit, QSpinBox questEntrySpin, QComboBox plotIndexCombo, QDoubleSpinBox plotXpSpin
         private TextBox _questEdit;
         private NumericUpDown _questEntrySpin;
+        private ComboBox _plotIndexCombo;
+        private NumericUpDown _plotXpSpin;
 
         // UI Controls - Speaker widgets
         // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
@@ -637,6 +639,52 @@ namespace HolocronToolset.Editors
             listenerPanel.Children.Add(new TextBlock { Text = "Listener:" });
             listenerPanel.Children.Add(_listenerEdit);
             panel.Children.Add(listenerPanel);
+
+            // Initialize quest widgets
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
+            // Original: QLineEdit questEdit, QSpinBox questEntrySpin
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:407, 408
+            // Original: self.ui.questEdit.textEdited.connect(self.on_node_update), self.ui.questEntrySpin.valueChanged.connect(self.on_node_update)
+            _questEdit = new TextBox();
+            _questEdit.LostFocus += (s, e) => OnNodeUpdate();
+            var questPanel = new StackPanel();
+            questPanel.Children.Add(new TextBlock { Text = "Quest:" });
+            questPanel.Children.Add(_questEdit);
+            panel.Children.Add(questPanel);
+
+            _questEntrySpin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
+            _questEntrySpin.ValueChanged += (s, e) => OnNodeUpdate();
+            var questEntryPanel = new StackPanel();
+            questEntryPanel.Children.Add(new TextBlock { Text = "Quest Entry:" });
+            questEntryPanel.Children.Add(_questEntrySpin);
+            panel.Children.Add(questEntryPanel);
+
+            // Initialize plot widgets
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
+            // Original: QComboBox plotIndexCombo, QDoubleSpinBox plotXpSpin
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:405-406
+            // Original: self.ui.plotIndexCombo.currentIndexChanged.connect(self.on_node_update), self.ui.plotXpSpin.valueChanged.connect(self.on_node_update)
+            _plotIndexCombo = new ComboBox();
+            // Plot index values 0-5 (matching Python implementation)
+            _plotIndexCombo.Items.Add("0 (No Plot)");
+            _plotIndexCombo.Items.Add("1 (Plot 1)");
+            _plotIndexCombo.Items.Add("2 (Plot 2)");
+            _plotIndexCombo.Items.Add("3 (Plot 3)");
+            _plotIndexCombo.Items.Add("4 (Plot 4)");
+            _plotIndexCombo.Items.Add("5 (Plot 5)");
+            _plotIndexCombo.SelectedIndex = 0;
+            _plotIndexCombo.SelectionChanged += (s, e) => OnNodeUpdate();
+            var plotIndexPanel = new StackPanel();
+            plotIndexPanel.Children.Add(new TextBlock { Text = "Plot Index:" });
+            plotIndexPanel.Children.Add(_plotIndexCombo);
+            panel.Children.Add(plotIndexPanel);
+
+            _plotXpSpin = new NumericUpDown { Minimum = 0, Maximum = 100, Value = 0, Increment = 1 };
+            _plotXpSpin.ValueChanged += (s, e) => OnNodeUpdate();
+            var plotXpPanel = new StackPanel();
+            plotXpPanel.Children.Add(new TextBlock { Text = "Plot XP %:" });
+            plotXpPanel.Children.Add(_plotXpSpin);
+            panel.Children.Add(plotXpPanel);
 
             // Initialize script1 and script2 combo boxes
             // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui:170, 374
@@ -1309,11 +1357,11 @@ namespace HolocronToolset.Editors
             if (_restype == ResourceType.CNV)
             {
                 // CNV format is only used by Eclipse Engine games
-                Game gameToUse = _installation?.Game ?? Game.DA;
+                BioWareGame gameToUse = _installation?.game ?? BioWareGame.DA;
                 if (!gameToUse.IsEclipse())
                 {
                     // Default to DA if not Eclipse game
-                    gameToUse = Game.DA;
+                    gameToUse = BioWareGame.DA;
                 }
                 var cnv = DLGHelper.ToCnv(_coreDlg);
                 byte[] cnvData = CNVHelper.BytesCnv(cnv, gameToUse, ResourceType.CNV);
@@ -1321,23 +1369,23 @@ namespace HolocronToolset.Editors
             }
 
             // Detect game from installation - supports all engines (Odyssey K1/K2, Aurora NWN, Eclipse DA/DA2/ME)
-            // Game-specific format handling:
+            // BioWareGame-specific format handling:
             // - K2 (TSL): Extended DLG format with K2-specific fields (ActionParam1-5, Script2, etc.)
             // - K1, NWN, Eclipse (DA/DA2/ME): Base DLG format (no K2-specific fields)
             //   Eclipse games use K1-style DLG format (no K2 extensions)
             //   Note: Eclipse games may also use .cnv format, but DLG files follow K1 format
-            Game gameToUseDlg = _installation?.Game ?? Game.K2;
+            BioWareGame gameToUseDlg = _installation?.BioWareGame ?? BioWareGame.K2;
 
             // For Eclipse games, use K1 format (no K2-specific fields)
             // Matching PyKotor: Eclipse games don't have K2 extensions
             if (gameToUseDlg.IsEclipse())
             {
-                gameToUseDlg = Game.K1; // Use K1 format for Eclipse (no K2-specific fields)
+                gameToUseDlg = BioWareGame.K1; // Use K1 format for Eclipse (no K2-specific fields)
             }
             // For Aurora (NWN), use K1 format (base DLG, no K2 extensions)
             else if (gameToUseDlg.IsAurora())
             {
-                gameToUseDlg = Game.K1; // Use K1 format for Aurora (base DLG, no K2 extensions)
+                gameToUseDlg = BioWareGame.K1; // Use K1 format for Aurora (base DLG, no K2 extensions)
             }
 
             byte[] data = DLGHelper.BytesDlg(_coreDlg, gameToUseDlg, ResourceType.DLG);
@@ -1351,7 +1399,7 @@ namespace HolocronToolset.Editors
         /// </summary>
         private void UpdateUIForGame()
         {
-            Game currentGame = _installation?.Game ?? Game.K2;
+            BioWareGame currentGame = _installation?.BioWareGame ?? BioWareGame.K2;
             bool isK2 = currentGame.IsK2();
 
             // Show/hide K2-specific controls
@@ -1559,6 +1607,8 @@ namespace HolocronToolset.Editors
         // Matching PyKotor implementation: editor.ui.questEdit, editor.ui.questEntrySpin
         public TextBox QuestEdit => _questEdit;
         public NumericUpDown QuestEntrySpin => _questEntrySpin;
+        public ComboBox PlotIndexCombo => _plotIndexCombo;
+        public NumericUpDown PlotXpSpin => _plotXpSpin;
         public NumericUpDown DelaySpin => _delaySpin;
         public NumericUpDown WaitFlagSpin => _waitFlagSpin;
         public NumericUpDown FadeTypeSpin => _fadeTypeSpin;
@@ -1710,6 +1760,14 @@ namespace HolocronToolset.Editors
                 if (_questEntrySpin != null)
                 {
                     _questEntrySpin.Value = 0;
+                }
+                if (_plotIndexCombo != null)
+                {
+                    _plotIndexCombo.SelectedIndex = 0;
+                }
+                if (_plotXpSpin != null)
+                {
+                    _plotXpSpin.Value = 0;
                 }
                 if (_script1Param1Spin != null)
                 {
@@ -1885,6 +1943,19 @@ namespace HolocronToolset.Editors
             if (_questEntrySpin != null && node != null)
             {
                 _questEntrySpin.Value = node.QuestEntry ?? 0;
+            }
+
+            // Load plot fields from node
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2431-2432
+            // Original: self.ui.plotIndexCombo.setCurrentIndex(item.link.node.plot_index), self.ui.plotXpSpin.setValue(item.link.node.plot_xp_percentage)
+            if (_plotIndexCombo != null && node != null)
+            {
+                _plotIndexCombo.SelectedIndex = node.PlotIndex ?? 0;
+            }
+
+            if (_plotXpSpin != null && node != null)
+            {
+                _plotXpSpin.Value = node.PlotXpPercentage ?? 0;
             }
 
             // Load script1 and script2 ResRefs
@@ -2092,6 +2163,19 @@ namespace HolocronToolset.Editors
             if (_questEntrySpin != null && node != null)
             {
                 node.QuestEntry = _questEntrySpin.Value.HasValue ? (int)_questEntrySpin.Value.Value : 0;
+            }
+
+            // Update plot fields in node
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2519-2520
+            // Original: item.link.node.plot_index = self.ui.plotIndexCombo.currentIndex(), item.link.node.plot_xp_percentage = self.ui.plotXpSpin.value()
+            if (_plotIndexCombo != null && node != null)
+            {
+                node.PlotIndex = _plotIndexCombo.SelectedIndex ?? 0;
+            }
+
+            if (_plotXpSpin != null && node != null)
+            {
+                node.PlotXpPercentage = _plotXpSpin.Value.HasValue ? (int)_plotXpSpin.Value.Value : 0;
             }
 
             // Update script1 param1
