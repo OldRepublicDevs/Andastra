@@ -115,15 +115,15 @@ namespace Andastra.Runtime.Stride.PostProcessing
             try
             {
                 // Create sprite batch for fullscreen quad rendering
-                _spriteBatch = new SpriteBatch(_graphicsDevice);
+                _spriteBatch = new StrideGraphics.SpriteBatch(_graphicsDevice);
 
                 // Create linear sampler for texture sampling
-                _linearSampler = SamplerState.New(_graphicsDevice, new SamplerStateDescription
+                _linearSampler = StrideGraphics.SamplerState.New(_graphicsDevice, new StrideGraphics.SamplerStateDescription
                 {
-                    Filter = TextureFilter.Linear,
-                    AddressU = TextureAddressMode.Clamp,
-                    AddressV = TextureAddressMode.Clamp,
-                    AddressW = TextureAddressMode.Clamp
+                    Filter = StrideGraphics.TextureFilter.Linear,
+                    AddressU = StrideGraphics.TextureAddressMode.Clamp,
+                    AddressV = StrideGraphics.TextureAddressMode.Clamp,
+                    AddressW = StrideGraphics.TextureAddressMode.Clamp
                 });
 
                 _renderingResourcesInitialized = true;
@@ -241,7 +241,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             try
             {
                 // Use explicit type to avoid C# 7.3 inferred delegate type limitation
-                StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext;
+                StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext();
                 if (commandList == null)
                 {
                     return false;
@@ -249,18 +249,18 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
                 // Set render target to output
                 commandList.SetRenderTarget(null, output);
-                commandList.SetViewport(new Viewport(0, 0, output.Width, output.Height));
+                commandList.SetViewport(new StrideGraphics.Viewport(0, 0, output.Width, output.Height));
 
                 // Clear render target
-                _graphicsDevice.Clear(output, Color.Transparent);
+                commandList.Clear(output, Stride.Core.Mathematics.Color.Transparent);
 
                 // Get viewport dimensions
                 int width = output.Width;
                 int height = output.Height;
 
                 // Begin sprite batch rendering with custom effect
-                _spriteBatch.Begin(commandList, SpriteSortMode.Immediate, BlendStates.Opaque, _linearSampler,
-                    DepthStencilStates.None, RasterizerStates.CullNone, _toneMappingEffect);
+                _spriteBatch.Begin(commandList, StrideGraphics.SpriteSortMode.Immediate, StrideGraphics.BlendStates.Opaque, _linearSampler,
+                    StrideGraphics.DepthStencilStates.None, StrideGraphics.RasterizerStates.CullNone, _toneMappingEffect);
 
                 // Set shader parameters
                 var parameters = _toneMappingEffect.Parameters;
@@ -269,25 +269,25 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     // Set input texture
                     try
                     {
-                        var inputTextureParam = parameters.Get("InputTexture");
+                        var inputTextureParam = parameters.Get<StrideGraphics.Texture>("InputTexture");
                         if (inputTextureParam != null)
                         {
-                            inputTextureParam.SetValue(input);
+                            parameters.Set(inputTextureParam, input);
                         }
                         else
                         {
                             // Try alternative parameter names
-                            var sourceTextureParam = parameters.Get("SourceTexture");
+                            var sourceTextureParam = parameters.Get<StrideGraphics.Texture>("SourceTexture");
                             if (sourceTextureParam != null)
                             {
-                                sourceTextureParam.SetValue(input);
+                                parameters.Set(sourceTextureParam, input);
                             }
                             else
                             {
-                                var hdrTextureParam = parameters.Get("HDRTexture");
+                                var hdrTextureParam = parameters.Get<StrideGraphics.Texture>("HDRTexture");
                                 if (hdrTextureParam != null)
                                 {
-                                    hdrTextureParam.SetValue(input);
+                                    parameters.Set(hdrTextureParam, input);
                                 }
                                 else
                                 {
@@ -306,30 +306,30 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     // Set tone mapping parameters
                     try
                     {
-                        var exposureParam = parameters.Get("Exposure");
+                        var exposureParam = parameters.Get<float>("Exposure");
                         if (exposureParam != null)
                         {
                             // Convert log2 exposure to linear multiplier
                             float exposureMultiplier = (float)Math.Pow(2.0, exposure);
-                            exposureParam.SetValue(exposureMultiplier);
+                            parameters.Set(exposureParam, exposureMultiplier);
                         }
 
-                        var gammaParam = parameters.Get("Gamma");
+                        var gammaParam = parameters.Get<float>("Gamma");
                         if (gammaParam != null)
                         {
-                            gammaParam.SetValue(_gamma);
+                            parameters.Set(gammaParam, _gamma);
                         }
 
-                        var whitePointParam = parameters.Get("WhitePoint");
+                        var whitePointParam = parameters.Get<float>("WhitePoint");
                         if (whitePointParam != null)
                         {
-                            whitePointParam.SetValue(_whitePoint);
+                            parameters.Set(whitePointParam, _whitePoint);
                         }
 
-                        var operatorParam = parameters.Get("Operator");
+                        var operatorParam = parameters.Get<int>("Operator");
                         if (operatorParam != null)
                         {
-                            operatorParam.SetValue((int)_operator);
+                            parameters.Set(operatorParam, (int)_operator);
                         }
                     }
                     catch (Exception)
@@ -340,16 +340,16 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     // Set screen size parameters (useful for UV calculations)
                     try
                     {
-                        var screenSizeParam = parameters.Get("ScreenSize");
+                        var screenSizeParam = parameters.Get<Vector2>("ScreenSize");
                         if (screenSizeParam != null)
                         {
-                            screenSizeParam.SetValue(new Vector2(width, height));
+                            parameters.Set(screenSizeParam, new Vector2(width, height));
                         }
 
-                        var screenSizeInvParam = parameters.Get("ScreenSizeInv");
+                        var screenSizeInvParam = parameters.Get<Vector2>("ScreenSizeInv");
                         if (screenSizeInvParam != null)
                         {
-                            screenSizeInvParam.SetValue(new Vector2(1.0f / width, 1.0f / height));
+                            parameters.Set(screenSizeInvParam, new Vector2(1.0f / width, 1.0f / height));
                         }
                     }
                     catch (Exception)
@@ -359,14 +359,14 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 }
 
                 // Draw fullscreen quad with input texture
-                var destinationRect = new RectangleF(0, 0, width, height);
-                _spriteBatch.Draw(input, destinationRect, Color.White);
+                var destinationRect = new Stride.Core.Mathematics.RectangleF(0, 0, width, height);
+                _spriteBatch.Draw(input, destinationRect, Stride.Core.Mathematics.Color.White);
 
                 // End sprite batch rendering
                 _spriteBatch.End();
 
                 // Reset render target
-                commandList.SetRenderTarget(null, (Texture)null);
+                commandList.SetRenderTarget(null, (StrideGraphics.Texture)null);
 
                 return true;
             }
@@ -399,10 +399,10 @@ namespace Andastra.Runtime.Stride.PostProcessing
             try
             {
                 // Strategy 1: Try loading from compiled effect files using Effect.Load()
-                Effect effectBase = null;
+                StrideGraphics.Effect effectBase = null;
                 try
                 {
-                    effectBase = Effect.Load(_graphicsDevice, "ToneMappingEffect");
+                    effectBase = StrideGraphics.Effect.Load(_graphicsDevice, "ToneMappingEffect");
                     if (effectBase != null)
                     {
                         _effectBase = effectBase;
@@ -423,12 +423,12 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     var services = _graphicsDevice.Services;
                     if (services != null)
                     {
-                        var contentManager = services.GetService<ContentManager>();
+                        var contentManager = services.GetService<Stride.Engine.ContentManager>();
                         if (contentManager != null)
                         {
                             try
                             {
-                                effectBase = contentManager.Load<Effect>("ToneMappingEffect");
+                                effectBase = contentManager.Load<StrideGraphics.Effect>("ToneMappingEffect");
                                 if (effectBase != null)
                                 {
                                     _effectBase = effectBase;
@@ -482,7 +482,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             try
             {
                 // Use explicit type to avoid C# 7.3 inferred delegate type limitation
-                StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext;
+                StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext();
                 if (commandList == null)
                 {
                     Console.WriteLine("[StrideToneMapping] ImmediateContext not available");
@@ -790,22 +790,22 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 Vector4[] data = new Vector4[size];
 
                 // Use explicit type to avoid C# 7.3 inferred delegate type limitation
-                StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext;
+                StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext();
                 if (commandList == null)
                 {
                     Console.WriteLine("[StrideToneMapping] ReadTextureData: ImmediateContext not available");
                     return data;
                 }
 
-                PixelFormat format = texture.Format;
+                StrideGraphics.PixelFormat format = texture.Format;
 
                 // Handle different texture formats
-                if (format == PixelFormat.R8G8B8A8_UNorm ||
-                    format == PixelFormat.R8G8B8A8_UNorm_SRgb ||
-                    format == PixelFormat.R32G32B32A32_Float ||
-                    format == PixelFormat.R16G16B16A16_Float ||
-                    format == PixelFormat.B8G8R8A8_UNorm ||
-                    format == PixelFormat.B8G8R8A8_UNorm_SRgb)
+                if (format == StrideGraphics.PixelFormat.R8G8B8A8_UNorm ||
+                    format == StrideGraphics.PixelFormat.R8G8B8A8_UNorm_SRgb ||
+                    format == StrideGraphics.PixelFormat.R32G32B32A32_Float ||
+                    format == StrideGraphics.PixelFormat.R16G16B16A16_Float ||
+                    format == StrideGraphics.PixelFormat.B8G8R8A8_UNorm ||
+                    format == StrideGraphics.PixelFormat.B8G8R8A8_UNorm_SRgb)
                 {
                     var colorData = new Color[size];
                     texture.GetData(commandList, colorData);
@@ -813,7 +813,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     for (int i = 0; i < size; i++)
                     {
                         var color = colorData[i];
-                        if (format == PixelFormat.R32G32B32A32_Float)
+                        if (format == StrideGraphics.PixelFormat.R32G32B32A32_Float)
                         {
                             data[i] = new Vector4(color.R, color.G, color.B, color.A);
                         }
@@ -823,7 +823,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                         }
                     }
                 }
-                else if (format == PixelFormat.R16G16B16A16_Float)
+                else if (format == StrideGraphics.PixelFormat.R16G16B16A16_Float)
                 {
                     var colorData = new Color[size];
                     texture.GetData(commandList, colorData);
@@ -888,20 +888,20 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 }
 
                 // Use explicit type to avoid C# 7.3 inferred delegate type limitation
-                StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext;
+                StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext();
                 if (commandList == null)
                 {
                     Console.WriteLine("[StrideToneMapping] WriteTextureData: ImmediateContext not available");
                     return;
                 }
 
-                PixelFormat format = texture.Format;
+                StrideGraphics.PixelFormat format = texture.Format;
 
                 // Convert Vector4[] to Color[] based on format
-                if (format == PixelFormat.R8G8B8A8_UNorm ||
-                    format == PixelFormat.R8G8B8A8_UNorm_SRgb ||
-                    format == PixelFormat.B8G8R8A8_UNorm ||
-                    format == PixelFormat.B8G8R8A8_UNorm_SRgb)
+                if (format == StrideGraphics.PixelFormat.R8G8B8A8_UNorm ||
+                    format == StrideGraphics.PixelFormat.R8G8B8A8_UNorm_SRgb ||
+                    format == StrideGraphics.PixelFormat.B8G8R8A8_UNorm ||
+                    format == StrideGraphics.PixelFormat.B8G8R8A8_UNorm_SRgb)
                 {
                     var colorData = new Color[size];
                     for (int i = 0; i < size; i++)
@@ -921,7 +921,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     }
                     texture.SetData(commandList, colorData);
                 }
-                else if (format == PixelFormat.R32G32B32A32_Float)
+                else if (format == StrideGraphics.PixelFormat.R32G32B32A32_Float)
                 {
                     var colorData = new Color[size];
                     for (int i = 0; i < size; i++)
@@ -931,7 +931,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     }
                     texture.SetData(commandList, colorData);
                 }
-                else if (format == PixelFormat.R16G16B16A16_Float)
+                else if (format == StrideGraphics.PixelFormat.R16G16B16A16_Float)
                 {
                     var colorData = new Color[size];
                     for (int i = 0; i < size; i++)

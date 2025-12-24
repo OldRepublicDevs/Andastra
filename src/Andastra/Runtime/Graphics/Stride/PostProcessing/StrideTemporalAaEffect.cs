@@ -96,25 +96,25 @@ namespace Andastra.Runtime.Stride.PostProcessing
         private void InitializeRenderingResources()
         {
             // Create sprite batch for fullscreen quad rendering
-            _spriteBatch = new SpriteBatch(_graphicsDevice);
+            _spriteBatch = new StrideGraphics.SpriteBatch(_graphicsDevice);
 
             // Create samplers for texture sampling
             // Linear sampler for smooth texture filtering (used for history and current frame)
-            _linearSampler = SamplerState.New(_graphicsDevice, new SamplerStateDescription
+            _linearSampler = StrideGraphics.SamplerState.New(_graphicsDevice, new StrideGraphics.SamplerStateDescription
             {
-                Filter = TextureFilter.Linear,
-                AddressU = TextureAddressMode.Clamp,
-                AddressV = TextureAddressMode.Clamp,
-                AddressW = TextureAddressMode.Clamp
+                Filter = StrideGraphics.TextureFilter.Linear,
+                AddressU = StrideGraphics.TextureAddressMode.Clamp,
+                AddressV = StrideGraphics.TextureAddressMode.Clamp,
+                AddressW = StrideGraphics.TextureAddressMode.Clamp
             });
 
             // Point sampler for velocity and depth buffers (needed for precise reprojection)
-            _pointSampler = SamplerState.New(_graphicsDevice, new SamplerStateDescription
+            _pointSampler = StrideGraphics.SamplerState.New(_graphicsDevice, new StrideGraphics.SamplerStateDescription
             {
-                Filter = TextureFilter.Point,
-                AddressU = TextureAddressMode.Clamp,
-                AddressV = TextureAddressMode.Clamp,
-                AddressW = TextureAddressMode.Clamp
+                Filter = StrideGraphics.TextureFilter.Point,
+                AddressU = StrideGraphics.TextureAddressMode.Clamp,
+                AddressV = StrideGraphics.TextureAddressMode.Clamp,
+                AddressW = StrideGraphics.TextureAddressMode.Clamp
             });
 
             // Initialize TAA effect (will be loaded/created when needed)
