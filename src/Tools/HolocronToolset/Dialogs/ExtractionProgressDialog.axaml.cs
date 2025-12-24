@@ -65,7 +65,11 @@ namespace HolocronToolset.Dialogs
         public void IncrementProgress()
         {
             _completedItems++;
-            UpdateProgress(_statusText.Text);
+            // Safely read current status text from UI thread to avoid cross-thread access
+            Dispatcher.UIThread.Post(() =>
+            {
+                UpdateProgress(_statusText.Text);
+            }, DispatcherPriority.Normal);
         }
 
         public void AllowClose()
