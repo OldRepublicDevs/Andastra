@@ -1,10 +1,6 @@
 using StrideGraphics = Stride.Graphics;
-using Stride.Core.Mathematics;
-using Stride.Engine;
 using Andastra.Runtime.Graphics;
-using System.Numerics;
 using RectangleF = Stride.Core.Mathematics.RectangleF;
-using Andastra.Runtime.Stride.Graphics;
 
 namespace Andastra.Runtime.Stride.Graphics
 {
@@ -29,7 +25,7 @@ namespace Andastra.Runtime.Stride.Graphics
             // This ensures we always get the current GraphicsDevice, allowing for dynamic changes
         }
 
-        public void Begin(Andastra.Runtime.Graphics.SpriteSortMode sortMode = Andastra.Runtime.Graphics.SpriteSortMode.Deferred, Andastra.Runtime.Graphics.BlendState blendState = null)
+        public void Begin(SpriteSortMode sortMode = SpriteSortMode.Deferred, BlendState blendState = null)
         {
             if (_isBegun)
             {
@@ -122,10 +118,8 @@ namespace Andastra.Runtime.Stride.Graphics
             {
                 strideDestRect = new RectangleF(position.X, position.Y, texture.Width, texture.Height);
             }
-            // Stride SpriteBatch.Draw signature: Draw(Texture, Rectangle destination, Color)
-            // Source rectangles are not directly supported, so we use the destination rectangle
-            // TODO: IMPLEMENT - Full source rectangle support requires texture region/view or UV manipulation
-            _spriteBatch.Draw(strideTexture, strideDestRect, strideColor);
+            // Stride SpriteBatch.Draw with source rectangle support
+            _spriteBatch.Draw(strideTexture, strideDestRect, strideSrcRect, strideColor);
         }
 
         public void Draw(ITexture2D texture, Andastra.Runtime.Graphics.Rectangle destinationRectangle, Andastra.Runtime.Graphics.Rectangle? sourceRectangle, Andastra.Runtime.Graphics.Color color, float rotation, Andastra.Runtime.Graphics.Vector2 origin, Andastra.Runtime.Graphics.SpriteEffects effects, float layerDepth)
@@ -167,11 +161,15 @@ namespace Andastra.Runtime.Stride.Graphics
             // If no rotation is needed, use the optimized path
             if (System.Math.Abs(rotation) < 0.001f)
             {
-                var strideDestRect = new RectangleF(destinationRectangle.X, destinationRectangle.Y, destinationRectangle.Width, destinationRectangle.Height);
-                // Stride SpriteBatch.Draw signature: Draw(Texture, Rectangle destination, Color)
-                // Source rectangles are not directly supported
-                // TODO: IMPLEMENT - Full source rectangle support requires texture region/view or UV manipulation
-                _spriteBatch.Draw(strideTexture, strideDestRect, strideColor);
+                var destRect = new RectangleF(destinationRectangle.X, destinationRectangle.Y, destinationRectangle.Width, destinationRectangle.Height);
+                if (strideSrcRect.HasValue)
+                {
+                    _spriteBatch.Draw(strideTexture, destRect, strideSrcRect.Value, strideColor);
+                }
+                else
+                {
+                    _spriteBatch.Draw(strideTexture, destRect, strideColor);
+                }
                 return;
             }
 
