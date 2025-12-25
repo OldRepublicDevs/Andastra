@@ -1047,7 +1047,12 @@ namespace Andastra.Game.GUI
 
         private void SaveSettings()
         {
-            // Save all settings from controls to _settings
+            SaveSettingsToObject(_settings);
+        }
+
+        private void SaveSettingsToObject(GraphicsSettingsData targetSettings)
+        {
+            // Save all settings from controls to the specified settings object
             // Iterate through all controls in _controlMap and save their values
             foreach (var kvp in _controlMap)
             {
@@ -1058,19 +1063,19 @@ namespace Andastra.Game.GUI
                 {
                     if (control is TextBox textBox)
                     {
-                        SaveStringSetting(key, textBox.Text);
+                        SaveStringSetting(key, textBox.Text, targetSettings);
                     }
                     else if (control is NumericUpDown numericUpDown)
                     {
-                        SaveNumericSetting(key, (double)(numericUpDown.Value ?? 0));
+                        SaveNumericSetting(key, (double)(numericUpDown.Value ?? 0), targetSettings);
                     }
                     else if (control is CheckBox checkBox)
                     {
-                        SaveBoolSetting(key, checkBox.IsChecked ?? false);
+                        SaveBoolSetting(key, checkBox.IsChecked ?? false, targetSettings);
                     }
                     else if (control is ComboBox comboBox)
                     {
-                        SaveEnumSetting(key, comboBox.SelectedItem?.ToString());
+                        SaveEnumSetting(key, comboBox.SelectedItem?.ToString(), targetSettings);
                     }
                 }
                 catch (Exception ex)
@@ -1081,87 +1086,87 @@ namespace Andastra.Game.GUI
             }
         }
 
-        private void SaveStringSetting(string key, string value)
+        private void SaveStringSetting(string key, string value, GraphicsSettingsData targetSettings)
         {
             switch (key)
             {
-                case "WindowTitle": _settings.WindowTitle = value; break;
-                case "ContentManagerRootDirectory": _settings.ContentManagerRootDirectory = value; break;
-                case "MonoGameGraphicsProfile": _settings.MonoGameGraphicsProfile = value; break;
+                case "WindowTitle": targetSettings.WindowTitle = value; break;
+                case "ContentManagerRootDirectory": targetSettings.ContentManagerRootDirectory = value; break;
+                case "MonoGameGraphicsProfile": targetSettings.MonoGameGraphicsProfile = value; break;
             }
         }
 
-        private void SaveNumericSetting(string key, double value)
+        private void SaveNumericSetting(string key, double value, GraphicsSettingsData targetSettings)
         {
             switch (key)
             {
-                case "WindowWidth": _settings.WindowWidth = (int)value; break;
-                case "WindowHeight": _settings.WindowHeight = (int)value; break;
-                case "RasterizerDepthBias": _settings.RasterizerDepthBias = value; break;
-                case "RasterizerSlopeScaleDepthBias": _settings.RasterizerSlopeScaleDepthBias = value; break;
-                case "DepthStencilReferenceStencil": _settings.DepthStencilReferenceStencil = (int)value; break;
-                case "DepthStencilStencilMask": _settings.DepthStencilStencilMask = (int)value; break;
-                case "DepthStencilStencilWriteMask": _settings.DepthStencilStencilWriteMask = (int)value; break;
-                case "BlendBlendFactorR": _settings.BlendBlendFactorR = (int)value; break;
-                case "BlendBlendFactorG": _settings.BlendBlendFactorG = (int)value; break;
-                case "BlendBlendFactorB": _settings.BlendBlendFactorB = (int)value; break;
-                case "BlendBlendFactorA": _settings.BlendBlendFactorA = (int)value; break;
-                case "BlendMultiSampleMask": _settings.BlendMultiSampleMask = (int)value; break;
-                case "SamplerMaxAnisotropy": _settings.SamplerMaxAnisotropy = (int)value; break;
-                case "SamplerMaxMipLevel": _settings.SamplerMaxMipLevel = (int)value; break;
-                case "SamplerMipMapLevelOfDetailBias": _settings.SamplerMipMapLevelOfDetailBias = value; break;
-                case "BasicEffectAmbientLightColorX": _settings.BasicEffectAmbientLightColorX = (float)value; break;
-                case "BasicEffectAmbientLightColorY": _settings.BasicEffectAmbientLightColorY = (float)value; break;
-                case "BasicEffectAmbientLightColorZ": _settings.BasicEffectAmbientLightColorZ = (float)value; break;
-                case "BasicEffectDiffuseColorX": _settings.BasicEffectDiffuseColorX = (float)value; break;
-                case "BasicEffectDiffuseColorY": _settings.BasicEffectDiffuseColorY = (float)value; break;
-                case "BasicEffectDiffuseColorZ": _settings.BasicEffectDiffuseColorZ = (float)value; break;
-                case "BasicEffectEmissiveColorX": _settings.BasicEffectEmissiveColorX = (float)value; break;
-                case "BasicEffectEmissiveColorY": _settings.BasicEffectEmissiveColorY = (float)value; break;
-                case "BasicEffectEmissiveColorZ": _settings.BasicEffectEmissiveColorZ = (float)value; break;
-                case "BasicEffectSpecularColorX": _settings.BasicEffectSpecularColorX = (float)value; break;
-                case "BasicEffectSpecularColorY": _settings.BasicEffectSpecularColorY = (float)value; break;
-                case "BasicEffectSpecularColorZ": _settings.BasicEffectSpecularColorZ = (float)value; break;
-                case "BasicEffectSpecularPower": _settings.BasicEffectSpecularPower = (float)value; break;
-                case "BasicEffectAlpha": _settings.BasicEffectAlpha = (float)value; break;
-                case "SpatialAudioDopplerFactor": _settings.SpatialAudioDopplerFactor = (float)value; break;
-                case "SpatialAudioSpeedOfSound": _settings.SpatialAudioSpeedOfSound = (float)value; break;
+                case "WindowWidth": targetSettings.WindowWidth = (int)value; break;
+                case "WindowHeight": targetSettings.WindowHeight = (int)value; break;
+                case "RasterizerDepthBias": targetSettings.RasterizerDepthBias = value; break;
+                case "RasterizerSlopeScaleDepthBias": targetSettings.RasterizerSlopeScaleDepthBias = value; break;
+                case "DepthStencilReferenceStencil": targetSettings.DepthStencilReferenceStencil = (int)value; break;
+                case "DepthStencilStencilMask": targetSettings.DepthStencilStencilMask = (int)value; break;
+                case "DepthStencilStencilWriteMask": targetSettings.DepthStencilStencilWriteMask = (int)value; break;
+                case "BlendBlendFactorR": targetSettings.BlendBlendFactorR = (int)value; break;
+                case "BlendBlendFactorG": targetSettings.BlendBlendFactorG = (int)value; break;
+                case "BlendBlendFactorB": targetSettings.BlendBlendFactorB = (int)value; break;
+                case "BlendBlendFactorA": targetSettings.BlendBlendFactorA = (int)value; break;
+                case "BlendMultiSampleMask": targetSettings.BlendMultiSampleMask = (int)value; break;
+                case "SamplerMaxAnisotropy": targetSettings.SamplerMaxAnisotropy = (int)value; break;
+                case "SamplerMaxMipLevel": targetSettings.SamplerMaxMipLevel = (int)value; break;
+                case "SamplerMipMapLevelOfDetailBias": targetSettings.SamplerMipMapLevelOfDetailBias = value; break;
+                case "BasicEffectAmbientLightColorX": targetSettings.BasicEffectAmbientLightColorX = (float)value; break;
+                case "BasicEffectAmbientLightColorY": targetSettings.BasicEffectAmbientLightColorY = (float)value; break;
+                case "BasicEffectAmbientLightColorZ": targetSettings.BasicEffectAmbientLightColorZ = (float)value; break;
+                case "BasicEffectDiffuseColorX": targetSettings.BasicEffectDiffuseColorX = (float)value; break;
+                case "BasicEffectDiffuseColorY": targetSettings.BasicEffectDiffuseColorY = (float)value; break;
+                case "BasicEffectDiffuseColorZ": targetSettings.BasicEffectDiffuseColorZ = (float)value; break;
+                case "BasicEffectEmissiveColorX": targetSettings.BasicEffectEmissiveColorX = (float)value; break;
+                case "BasicEffectEmissiveColorY": targetSettings.BasicEffectEmissiveColorY = (float)value; break;
+                case "BasicEffectEmissiveColorZ": targetSettings.BasicEffectEmissiveColorZ = (float)value; break;
+                case "BasicEffectSpecularColorX": targetSettings.BasicEffectSpecularColorX = (float)value; break;
+                case "BasicEffectSpecularColorY": targetSettings.BasicEffectSpecularColorY = (float)value; break;
+                case "BasicEffectSpecularColorZ": targetSettings.BasicEffectSpecularColorZ = (float)value; break;
+                case "BasicEffectSpecularPower": targetSettings.BasicEffectSpecularPower = (float)value; break;
+                case "BasicEffectAlpha": targetSettings.BasicEffectAlpha = (float)value; break;
+                case "SpatialAudioDopplerFactor": targetSettings.SpatialAudioDopplerFactor = (float)value; break;
+                case "SpatialAudioSpeedOfSound": targetSettings.SpatialAudioSpeedOfSound = (float)value; break;
             }
         }
 
-        private void SaveBoolSetting(string key, bool value)
+        private void SaveBoolSetting(string key, bool value, GraphicsSettingsData targetSettings)
         {
             switch (key)
             {
-                case "WindowFullscreen": _settings.WindowFullscreen = value; break;
-                case "WindowIsMouseVisible": _settings.WindowIsMouseVisible = value; break;
-                case "WindowVSync": _settings.WindowVSync = value; break;
-                case "MonoGameSynchronizeWithVerticalRetrace": _settings.MonoGameSynchronizeWithVerticalRetrace = value; break;
-                case "MonoGamePreferMultiSampling": _settings.MonoGamePreferMultiSampling = value; break;
-                case "MonoGamePreferHalfPixelOffset": _settings.MonoGamePreferHalfPixelOffset = value; break;
-                case "MonoGameHardwareModeSwitch": _settings.MonoGameHardwareModeSwitch = value; break;
-                case "MonoGameSupportedOrientationsPortrait": _settings.MonoGameSupportedOrientationsPortrait = value; break;
-                case "MonoGameSupportedOrientationsLandscape": _settings.MonoGameSupportedOrientationsLandscape = value; break;
-                case "MonoGameSupportedOrientationsPortraitUpsideDown": _settings.MonoGameSupportedOrientationsPortraitUpsideDown = value; break;
-                case "MonoGameSupportedOrientationsLandscapeLeft": _settings.MonoGameSupportedOrientationsLandscapeLeft = value; break;
-                case "MonoGameSupportedOrientationsLandscapeRight": _settings.MonoGameSupportedOrientationsLandscapeRight = value; break;
-                case "RasterizerDepthBiasEnabled": _settings.RasterizerDepthBiasEnabled = value; break;
-                case "RasterizerScissorTestEnabled": _settings.RasterizerScissorTestEnabled = value; break;
-                case "RasterizerMultiSampleAntiAlias": _settings.RasterizerMultiSampleAntiAlias = value; break;
-                case "DepthStencilDepthBufferEnable": _settings.DepthStencilDepthBufferEnable = value; break;
-                case "DepthStencilDepthBufferWriteEnable": _settings.DepthStencilDepthBufferWriteEnable = value; break;
-                case "DepthStencilStencilEnable": _settings.DepthStencilStencilEnable = value; break;
-                case "DepthStencilTwoSidedStencilMode": _settings.DepthStencilTwoSidedStencilMode = value; break;
-                case "BlendBlendEnable": _settings.BlendBlendEnable = value; break;
-                case "BasicEffectVertexColorEnabled": _settings.BasicEffectVertexColorEnabled = value; break;
-                case "BasicEffectLightingEnabled": _settings.BasicEffectLightingEnabled = value; break;
-                case "BasicEffectTextureEnabled": _settings.BasicEffectTextureEnabled = value; break;
-                case "SpriteBatchBlendStateAlphaBlend": _settings.SpriteBatchBlendStateAlphaBlend = value; break;
-                case "SpriteBatchBlendStateAdditive": _settings.SpriteBatchBlendStateAdditive = value; break;
+                case "WindowFullscreen": targetSettings.WindowFullscreen = value; break;
+                case "WindowIsMouseVisible": targetSettings.WindowIsMouseVisible = value; break;
+                case "WindowVSync": targetSettings.WindowVSync = value; break;
+                case "MonoGameSynchronizeWithVerticalRetrace": targetSettings.MonoGameSynchronizeWithVerticalRetrace = value; break;
+                case "MonoGamePreferMultiSampling": targetSettings.MonoGamePreferMultiSampling = value; break;
+                case "MonoGamePreferHalfPixelOffset": targetSettings.MonoGamePreferHalfPixelOffset = value; break;
+                case "MonoGameHardwareModeSwitch": targetSettings.MonoGameHardwareModeSwitch = value; break;
+                case "MonoGameSupportedOrientationsPortrait": targetSettings.MonoGameSupportedOrientationsPortrait = value; break;
+                case "MonoGameSupportedOrientationsLandscape": targetSettings.MonoGameSupportedOrientationsLandscape = value; break;
+                case "MonoGameSupportedOrientationsPortraitUpsideDown": targetSettings.MonoGameSupportedOrientationsPortraitUpsideDown = value; break;
+                case "MonoGameSupportedOrientationsLandscapeLeft": targetSettings.MonoGameSupportedOrientationsLandscapeLeft = value; break;
+                case "MonoGameSupportedOrientationsLandscapeRight": targetSettings.MonoGameSupportedOrientationsLandscapeRight = value; break;
+                case "RasterizerDepthBiasEnabled": targetSettings.RasterizerDepthBiasEnabled = value; break;
+                case "RasterizerScissorTestEnabled": targetSettings.RasterizerScissorTestEnabled = value; break;
+                case "RasterizerMultiSampleAntiAlias": targetSettings.RasterizerMultiSampleAntiAlias = value; break;
+                case "DepthStencilDepthBufferEnable": targetSettings.DepthStencilDepthBufferEnable = value; break;
+                case "DepthStencilDepthBufferWriteEnable": targetSettings.DepthStencilDepthBufferWriteEnable = value; break;
+                case "DepthStencilStencilEnable": targetSettings.DepthStencilStencilEnable = value; break;
+                case "DepthStencilTwoSidedStencilMode": targetSettings.DepthStencilTwoSidedStencilMode = value; break;
+                case "BlendBlendEnable": targetSettings.BlendBlendEnable = value; break;
+                case "BasicEffectVertexColorEnabled": targetSettings.BasicEffectVertexColorEnabled = value; break;
+                case "BasicEffectLightingEnabled": targetSettings.BasicEffectLightingEnabled = value; break;
+                case "BasicEffectTextureEnabled": targetSettings.BasicEffectTextureEnabled = value; break;
+                case "SpriteBatchBlendStateAlphaBlend": targetSettings.SpriteBatchBlendStateAlphaBlend = value; break;
+                case "SpriteBatchBlendStateAdditive": targetSettings.SpriteBatchBlendStateAdditive = value; break;
             }
         }
 
-        private void SaveEnumSetting(string key, string value)
+        private void SaveEnumSetting(string key, string value, GraphicsSettingsData targetSettings)
         {
             if (string.IsNullOrEmpty(value))
                 return;
@@ -1172,91 +1177,91 @@ namespace Andastra.Game.GUI
                 {
                     case "RasterizerCullMode":
                         if (Enum.TryParse<Andastra.Runtime.Graphics.Common.Enums.CullMode>(value, out var cullMode))
-                            _settings.RasterizerCullMode = cullMode;
+                            targetSettings.RasterizerCullMode = cullMode;
                         break;
                     case "RasterizerFillMode":
                         if (Enum.TryParse<Andastra.Runtime.Graphics.Common.Enums.FillMode>(value, out var fillMode))
-                            _settings.RasterizerFillMode = fillMode;
+                            targetSettings.RasterizerFillMode = fillMode;
                         break;
                     case "DepthStencilDepthBufferFunction":
                         if (Enum.TryParse<CompareFunction>(value, out var depthFunc))
-                            _settings.DepthStencilDepthBufferFunction = depthFunc;
+                            targetSettings.DepthStencilDepthBufferFunction = depthFunc;
                         break;
                     case "DepthStencilStencilFail":
                         if (Enum.TryParse<StencilOperation>(value, out var stencilFail))
-                            _settings.DepthStencilStencilFail = stencilFail;
+                            targetSettings.DepthStencilStencilFail = stencilFail;
                         break;
                     case "DepthStencilStencilDepthFail":
                         if (Enum.TryParse<StencilOperation>(value, out var stencilDepthFail))
-                            _settings.DepthStencilStencilDepthFail = stencilDepthFail;
+                            targetSettings.DepthStencilStencilDepthFail = stencilDepthFail;
                         break;
                     case "DepthStencilStencilPass":
                         if (Enum.TryParse<StencilOperation>(value, out var stencilPass))
-                            _settings.DepthStencilStencilPass = stencilPass;
+                            targetSettings.DepthStencilStencilPass = stencilPass;
                         break;
                     case "DepthStencilStencilFunction":
                         if (Enum.TryParse<CompareFunction>(value, out var stencilFunc))
-                            _settings.DepthStencilStencilFunction = stencilFunc;
+                            targetSettings.DepthStencilStencilFunction = stencilFunc;
                         break;
                     case "BlendAlphaBlendFunction":
                         if (Enum.TryParse<BlendFunction>(value, out var alphaBlendFunc))
-                            _settings.BlendAlphaBlendFunction = alphaBlendFunc;
+                            targetSettings.BlendAlphaBlendFunction = alphaBlendFunc;
                         break;
                     case "BlendAlphaDestinationBlend":
                         if (Enum.TryParse<Blend>(value, out var alphaDestBlend))
-                            _settings.BlendAlphaDestinationBlend = alphaDestBlend;
+                            targetSettings.BlendAlphaDestinationBlend = alphaDestBlend;
                         break;
                     case "BlendAlphaSourceBlend":
                         if (Enum.TryParse<Blend>(value, out var alphaSourceBlend))
-                            _settings.BlendAlphaSourceBlend = alphaSourceBlend;
+                            targetSettings.BlendAlphaSourceBlend = alphaSourceBlend;
                         break;
                     case "BlendColorBlendFunction":
                         if (Enum.TryParse<BlendFunction>(value, out var colorBlendFunc))
-                            _settings.BlendColorBlendFunction = colorBlendFunc;
+                            targetSettings.BlendColorBlendFunction = colorBlendFunc;
                         break;
                     case "BlendColorDestinationBlend":
                         if (Enum.TryParse<Blend>(value, out var colorDestBlend))
-                            _settings.BlendColorDestinationBlend = colorDestBlend;
+                            targetSettings.BlendColorDestinationBlend = colorDestBlend;
                         break;
                     case "BlendColorSourceBlend":
                         if (Enum.TryParse<Blend>(value, out var colorSourceBlend))
-                            _settings.BlendColorSourceBlend = colorSourceBlend;
+                            targetSettings.BlendColorSourceBlend = colorSourceBlend;
                         break;
                     case "BlendColorWriteChannels0":
                         if (Enum.TryParse<ColorWriteChannels>(value, out var colorWriteChannels))
-                            _settings.BlendColorWriteChannels = colorWriteChannels;
+                            targetSettings.BlendColorWriteChannels = colorWriteChannels;
                         break;
                     case "BlendColorWriteChannels1":
                         if (Enum.TryParse<ColorWriteChannels>(value, out var colorWriteChannels1))
-                            _settings.BlendColorWriteChannels1 = colorWriteChannels1;
+                            targetSettings.BlendColorWriteChannels1 = colorWriteChannels1;
                         break;
                     case "BlendColorWriteChannels2":
                         if (Enum.TryParse<ColorWriteChannels>(value, out var colorWriteChannels2))
-                            _settings.BlendColorWriteChannels2 = colorWriteChannels2;
+                            targetSettings.BlendColorWriteChannels2 = colorWriteChannels2;
                         break;
                     case "BlendColorWriteChannels3":
                         if (Enum.TryParse<ColorWriteChannels>(value, out var colorWriteChannels3))
-                            _settings.BlendColorWriteChannels3 = colorWriteChannels3;
+                            targetSettings.BlendColorWriteChannels3 = colorWriteChannels3;
                         break;
                     case "SamplerAddressU":
                         if (Enum.TryParse<TextureAddressMode>(value, out var addressU))
-                            _settings.SamplerAddressU = addressU;
+                            targetSettings.SamplerAddressU = addressU;
                         break;
                     case "SamplerAddressV":
                         if (Enum.TryParse<TextureAddressMode>(value, out var addressV))
-                            _settings.SamplerAddressV = addressV;
+                            targetSettings.SamplerAddressV = addressV;
                         break;
                     case "SamplerAddressW":
                         if (Enum.TryParse<TextureAddressMode>(value, out var addressW))
-                            _settings.SamplerAddressW = addressW;
+                            targetSettings.SamplerAddressW = addressW;
                         break;
                     case "SamplerFilter":
                         if (Enum.TryParse<TextureFilter>(value, out var filter))
-                            _settings.SamplerFilter = filter;
+                            targetSettings.SamplerFilter = filter;
                         break;
                     case "SpriteBatchSortMode":
                         if (Enum.TryParse<SpriteSortMode>(value, out var sortMode))
-                            _settings.SpriteBatchSortMode = sortMode;
+                            targetSettings.SpriteBatchSortMode = sortMode;
                         break;
                 }
             }
@@ -1415,19 +1420,27 @@ namespace Andastra.Game.GUI
 
         private async void OkButton_Click(object sender, RoutedEventArgs e)
         {
-            SaveSettings();
-            var validationResult = GraphicsSettingsSerializer.Validate(_settings);
+            // Create temporary settings object for validation
+            var tempSettings = new GraphicsSettingsData();
+            SaveSettingsToObject(tempSettings);
+            
+            var validationResult = GraphicsSettingsSerializer.Validate(tempSettings);
             if (!validationResult.IsValid)
             {
                 var result = await ShowYesNoDialogAsync("Validation Warnings", "Some settings have validation errors:\n\n" + validationResult.GetFormattedMessage() + "\n\nDo you want to continue anyway?");
                 if (result)
                 {
+                    // User confirmed - NOW save the settings
+                    _settings = tempSettings;
                     _result = true;
                     Close(_result);
                 }
+                // User declined - settings are NOT saved, dialog stays open for corrections
             }
             else
             {
+                // Validation passed - save and close
+                _settings = tempSettings;
                 _result = true;
                 Close(_result);
             }
