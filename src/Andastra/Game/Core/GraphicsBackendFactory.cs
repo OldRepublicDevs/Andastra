@@ -1,5 +1,7 @@
 using System;
+using Andastra.Runtime.Core;
 using Andastra.Runtime.Graphics;
+using Andastra.Runtime.Graphics.Common.Backends.Odyssey;
 using Andastra.Runtime.Graphics.Common.Enums;
 
 namespace Andastra.Runtime.Game.Core
@@ -15,9 +17,10 @@ namespace Andastra.Runtime.Game.Core
     /// - Located via string references: "Graphics Options" @ 0x007b56a8, "BTN_GRAPHICS" @ 0x007d0d8c, "optgraphics_p" @ 0x007d2064
     /// - "2D3DBias" @ 0x007c612c, "2D3D Bias" @ 0x007c71f8 (graphics settings)
     /// - Original implementation: Initializes DirectX device, sets up rendering pipeline
-    /// - This implementation: Factory for creating modern graphics backends (MonoGame, Stride)
+    /// - This implementation: Factory for creating modern graphics backends (MonoGame, Stride) and original engine backends (OdysseyEngine)
     /// - Note: MonoGame and Stride are modern graphics frameworks, not present in original game
     /// - Original game rendering: DirectX 8/9 fixed-function pipeline
+    /// - OdysseyEngine: Matches original game rendering exactly 1:1 (Kotor1GraphicsBackend for K1, Kotor2GraphicsBackend for K2)
     /// </remarks>
     public static class GraphicsBackendFactory
     {
@@ -25,8 +28,9 @@ namespace Andastra.Runtime.Game.Core
         /// Creates a graphics backend of the specified type.
         /// </summary>
         /// <param name="backendType">The backend type to create.</param>
+        /// <param name="gameType">Optional game type for OdysseyEngine backend (K1 or K2). Required when backendType is OdysseyEngine.</param>
         /// <returns>An instance of the graphics backend.</returns>
-        public static IGraphicsBackend CreateBackend(GraphicsBackendType backendType)
+        public static IGraphicsBackend CreateBackend(GraphicsBackendType backendType, KotorGame? gameType = null)
         {
             try
             {
@@ -36,6 +40,23 @@ namespace Andastra.Runtime.Game.Core
                         return new Andastra.Runtime.MonoGame.Graphics.MonoGameGraphicsBackend();
                     case GraphicsBackendType.Stride:
                         return new Andastra.Runtime.Stride.Graphics.StrideGraphicsBackend();
+                    case GraphicsBackendType.OdysseyEngine:
+                        if (!gameType.HasValue)
+                        {
+                            throw new ArgumentException("Game type (K1 or K2) is required when creating OdysseyEngine backend", nameof(gameType));
+                        }
+                        if (gameType.Value == KotorGame.K1)
+                        {
+                            return new Kotor1GraphicsBackend();
+                        }
+                        else if (gameType.Value == KotorGame.K2)
+                        {
+                            return new Kotor2GraphicsBackend();
+                        }
+                        else
+                        {
+                            throw new ArgumentException("OdysseyEngine backend only supports K1 or K2 game types", nameof(gameType));
+                        }
                     default:
                         throw new ArgumentException("Unknown graphics backend type: " + backendType, nameof(backendType));
                 }
