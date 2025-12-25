@@ -913,18 +913,26 @@ namespace Andastra.Runtime.Graphics.Common.Backends
                 finally
                 {
                     // Clean up resources if initialization failed
+                    // Always deactivate context if one was made current before deleting it
                     if (contextMadeCurrent)
                     {
-                        // Make no context current before cleanup
                         wglMakeCurrent(IntPtr.Zero, IntPtr.Zero);
                     }
                     
+                    // Clean up OpenGL context if it was created but not successfully assigned
                     if (tempGlContext != IntPtr.Zero)
                     {
+                        // Defensive: ensure context is not current before deletion
+                        // (Even though wglMakeCurrent may have failed, some drivers might leave state)
+                        if (!contextMadeCurrent && tempGlDevice != IntPtr.Zero)
+                        {
+                            wglMakeCurrent(IntPtr.Zero, IntPtr.Zero);
+                        }
                         wglDeleteContext(tempGlContext);
                         Console.WriteLine("[OdysseyGraphicsBackend] Cleaned up OpenGL context after failure");
                     }
                     
+                    // Clean up device context if it was acquired but not successfully assigned
                     if (tempGlDevice != IntPtr.Zero && _windowHandle != IntPtr.Zero)
                     {
                         ReleaseDC(_windowHandle, tempGlDevice);
