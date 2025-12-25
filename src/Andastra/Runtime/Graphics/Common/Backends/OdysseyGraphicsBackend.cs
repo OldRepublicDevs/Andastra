@@ -701,12 +701,264 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         /// <summary>
         /// Creates the Odyssey window and OpenGL context.
         /// Override in derived classes for game-specific initialization.
+        /// Based on swkotor.exe: FUN_0044dab0 @ 0x0044dab0
+        /// Based on swkotor2.exe: FUN_00461c50 @ 0x00461c50
         /// </summary>
         protected virtual bool CreateOdysseyWindowAndContext()
         {
-            // Default implementation - derived classes override this
-            return CreateOdysseyOpenGLContext(_windowHandle, _width, _height, _isFullscreen, _refreshRate);
+            try
+            {
+                Console.WriteLine("[OdysseyGraphicsBackend] Creating window and OpenGL context...");
+                
+                // Step 1: Register window class (matching swkotor.exe pattern)
+                IntPtr hInstance = GetModuleHandleA(null);
+                
+                _wndProcDelegate = new WndProcDelegate(WindowProc);
+                
+                WNDCLASSA wndClass = new WNDCLASSA
+                {
+                    style = 0x0003, // CS_HREDRAW | CS_VREDRAW
+                    lpfnWndProc = Marshal.GetFunctionPointerForDelegate(_wndProcDelegate),
+                    cbClsExtra = 0,
+                    cbWndExtra = 0,
+                    hInstance = hInstance,
+                    hIcon = IntPtr.Zero,
+                    hCursor = LoadCursorA(IntPtr.Zero, 32512), // IDC_ARROW
+                    hbrBackground = IntPtr.Zero,
+                    lpszMenuName = null,
+                    lpszClassName = "OdysseyRenderWindow"
+                };
+                
+                ushort classAtom = RegisterClassA(ref wndClass);
+                if (classAtom == 0)
+                {
+                    int error = Marshal.GetLastWin32Error();
+                    // Class might already be registered, which is OK
+                    if (error != 1410) // ERROR_CLASS_ALREADY_EXISTS
+                    {
+                        Console.WriteLine($"[OdysseyGraphicsBackend] RegisterClassA failed with error: {error}");
+                    }
+                }
+                
+                // Step 2: Calculate window size (matching swkotor.exe AdjustWindowRect pattern)
+                uint windowStyle = _isFullscreen ? WS_POPUP : WS_OVERLAPPEDWINDOW;
+                
+                RECT rect = new RECT
+                {
+                    left = 0,
+                    top = 0,
+                    right = _width,
+                    bottom = _height
+                };
+                
+                AdjustWindowRect(ref rect, windowStyle, false);
+                
+                int windowWidth = rect.right - rect.left;
+                int windowHeight = rect.bottom - rect.top;
+                
+                // Center on screen
+                int screenWidth = GetSystemMetrics(0); // SM_CXSCREEN
+                int screenHeight = GetSystemMetrics(1); // SM_CYSCREEN
+                int windowX = (screenWidth - windowWidth) / 2;
+                int windowY = (screenHeight - windowHeight) / 2;
+                
+                if (_isFullscreen)
+                {
+                    windowX = 0;
+                    windowY = 0;
+                    windowWidth = screenWidth;
+                    windowHeight = screenHeight;
+                }
+                
+                // Step 3: Create the window (matching swkotor.exe CreateWindowExA pattern)
+                Console.WriteLine($"[OdysseyGraphicsBackend] Creating window: {windowWidth}x{windowHeight} at ({windowX},{windowY})");
+                
+                _windowHandle = CreateWindowExA(
+                    0, // dwExStyle
+                    "OdysseyRenderWindow", // lpClassName
+                    _title, // lpWindowName
+                    windowStyle | 0x10000000, // WS_VISIBLE
+                    windowX, windowY,
+                    windowWidth, windowHeight,
+                    IntPtr.Zero, // hWndParent
+                    IntPtr.Zero, // hMenu
+                    hInstance, // hInstance
+                    IntPtr.Zero // lpParam
+                );
+                
+                if (_windowHandle == IntPtr.Zero)
+                {
+                    int error = Marshal.GetLastWin32Error();
+                    Console.WriteLine($"[OdysseyGraphicsBackend] CreateWindowExA failed with error: {error}");
+                    return false;
+                }
+                
+                Console.WriteLine($"[OdysseyGraphicsBackend] Window created: HWND=0x{_windowHandle.ToInt64():X}");
+                
+                // Step 4: Change display mode for fullscreen (matching swkotor.exe ChangeDisplaySettingsA pattern)
+                if (_isFullscreen)
+                {
+                    DEVMODEA devMode = new DEVMODEA();
+                    devMode.dmSize = (ushort)Marshal.SizeOf(typeof(DEVMODEA));
+                    devMode.dmPelsWidth = (uint)_width;
+                    devMode.dmPelsHeight = (uint)_height;
+                    devMode.dmBitsPerPel = 32;
+                    devMode.dmDisplayFrequency = (uint)_refreshRate;
+                    devMode.dmFields = 0x00080000 | 0x00100000 | 0x00040000 | 0x00400000; // DM_PELSWIDTH | DM_PELSHEIGHT | DM_BITSPERPEL | DM_DISPLAYFREQUENCY
+                    
+                    int result = ChangeDisplaySettingsA(ref devMode, CDS_FULLSCREEN);
+                    if (result != 0)
+                    {
+                        Console.WriteLine($"[OdysseyGraphicsBackend] ChangeDisplaySettingsA failed: {result}");
+                    }
+                }
+                
+                // Step 5: Show the window
+                ShowWindow(_windowHandle, _isFullscreen ? 3 : 1); // SW_MAXIMIZE or SW_SHOWNORMAL
+                SetForegroundWindow(_windowHandle);
+                SetFocus(_windowHandle);
+                
+                // Step 6: Create OpenGL context
+                Console.WriteLine("[OdysseyGraphicsBackend] Creating OpenGL context...");
+                
+                _glDevice = GetDC(_windowHandle);
+                if (_glDevice == IntPtr.Zero)
+                {
+                    Console.WriteLine("[OdysseyGraphicsBackend] GetDC failed");
+                    return false;
+                }
+                
+                // Set up pixel format (matching swkotor.exe ChoosePixelFormat pattern)
+                PIXELFORMATDESCRIPTOR pfd = new PIXELFORMATDESCRIPTOR
+                {
+                    nSize = 40,
+                    nVersion = 1,
+                    dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
+                    iPixelType = PFD_TYPE_RGBA,
+                    cColorBits = 32,
+                    cRedBits = 8,
+                    cGreenBits = 8,
+                    cBlueBits = 8,
+                    cAlphaBits = 8,
+                    cDepthBits = 24,
+                    cStencilBits = 8,
+                    iLayerType = PFD_MAIN_PLANE
+                };
+                
+                int pixelFormat = ChoosePixelFormat(_glDevice, ref pfd);
+                if (pixelFormat == 0)
+                {
+                    Console.WriteLine("[OdysseyGraphicsBackend] ChoosePixelFormat failed");
+                    return false;
+                }
+                
+                Console.WriteLine($"[OdysseyGraphicsBackend] Chose pixel format: {pixelFormat}");
+                
+                if (!SetPixelFormat(_glDevice, pixelFormat, ref pfd))
+                {
+                    Console.WriteLine("[OdysseyGraphicsBackend] SetPixelFormat failed");
+                    return false;
+                }
+                
+                // Create OpenGL context (matching swkotor.exe wglCreateContext pattern)
+                _glContext = wglCreateContext(_glDevice);
+                if (_glContext == IntPtr.Zero)
+                {
+                    Console.WriteLine("[OdysseyGraphicsBackend] wglCreateContext failed");
+                    return false;
+                }
+                
+                Console.WriteLine($"[OdysseyGraphicsBackend] Created OpenGL context: 0x{_glContext.ToInt64():X}");
+                
+                // Make context current (matching swkotor.exe wglMakeCurrent pattern)
+                if (!wglMakeCurrent(_glDevice, _glContext))
+                {
+                    Console.WriteLine("[OdysseyGraphicsBackend] wglMakeCurrent failed");
+                    return false;
+                }
+                
+                // Step 7: Query OpenGL info
+                IntPtr vendorPtr = glGetString(GL_VENDOR);
+                IntPtr rendererPtr = glGetString(GL_RENDERER);
+                IntPtr versionPtr = glGetString(GL_VERSION);
+                
+                string vendor = vendorPtr != IntPtr.Zero ? Marshal.PtrToStringAnsi(vendorPtr) : "Unknown";
+                string renderer = rendererPtr != IntPtr.Zero ? Marshal.PtrToStringAnsi(rendererPtr) : "Unknown";
+                string version = versionPtr != IntPtr.Zero ? Marshal.PtrToStringAnsi(versionPtr) : "Unknown";
+                
+                Console.WriteLine($"[OdysseyGraphicsBackend] OpenGL Vendor: {vendor}");
+                Console.WriteLine($"[OdysseyGraphicsBackend] OpenGL Renderer: {renderer}");
+                Console.WriteLine($"[OdysseyGraphicsBackend] OpenGL Version: {version}");
+                
+                // Step 8: Set initial OpenGL state (matching swkotor.exe pattern)
+                glEnable(GL_DEPTH_TEST);
+                glEnable(GL_STENCIL_TEST);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+                
+                Console.WriteLine("[OdysseyGraphicsBackend] Window and OpenGL context created successfully");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[OdysseyGraphicsBackend] Exception in CreateOdysseyWindowAndContext: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
+                return false;
+            }
         }
+        
+        // Window procedure delegate to prevent garbage collection
+        private WndProcDelegate _wndProcDelegate;
+        
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate IntPtr WndProcDelegate(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+        
+        /// <summary>
+        /// Window procedure for handling Windows messages.
+        /// Based on swkotor.exe/swkotor2.exe: Window message handling
+        /// </summary>
+        private IntPtr WindowProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
+        {
+            const uint WM_CLOSE = 0x0010;
+            const uint WM_DESTROY = 0x0002;
+            const uint WM_KEYDOWN = 0x0100;
+            const uint VK_ESCAPE = 0x1B;
+            
+            switch (msg)
+            {
+                case WM_CLOSE:
+                    _isExiting = true;
+                    return IntPtr.Zero;
+                    
+                case WM_DESTROY:
+                    PostQuitMessage(0);
+                    return IntPtr.Zero;
+                    
+                case WM_KEYDOWN:
+                    if ((int)wParam == VK_ESCAPE)
+                    {
+                        _isExiting = true;
+                    }
+                    break;
+            }
+            
+            return DefWindowProcA(hWnd, msg, wParam, lParam);
+        }
+        
+        // Additional P/Invoke declarations for window creation
+        [DllImport("kernel32.dll", CharSet = CharSet.Ansi)]
+        private static extern IntPtr GetModuleHandleA(string lpModuleName);
+        
+        [DllImport("user32.dll", CharSet = CharSet.Ansi)]
+        private static extern IntPtr LoadCursorA(IntPtr hInstance, int lpCursorName);
+        
+        [DllImport("user32.dll")]
+        private static extern int GetSystemMetrics(int nIndex);
+        
+        [DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
+        
+        [DllImport("user32.dll")]
+        private static extern IntPtr SetFocus(IntPtr hWnd);
         
         /// <summary>
         /// Runs the game loop (blocks until exit).
