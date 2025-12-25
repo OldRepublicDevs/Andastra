@@ -164,7 +164,7 @@ namespace Andastra.Runtime.Stride.Graphics
             set => _ = value;  // Stride doesn't support separate depth buffer setting
         }
 
-        public void Clear(Runtime.Graphics.Color color)
+        public void Clear(Color color)
         {
             // In Stride, Clear is done through CommandList, not GraphicsDevice
             // Clear the current render target or backbuffer
