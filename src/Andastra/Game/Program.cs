@@ -144,8 +144,35 @@ namespace Andastra.Runtime.Game
                 // Launch the game
                 try
                 {
+                    // Determine game type for OdysseyEngine backend
+                    KotorGame? kotorGameType = null;
+                    if (backendType == GraphicsBackendType.OdysseyEngine)
+                    {
+                        if (settings != null)
+                        {
+                            kotorGameType = settings.Game;
+                        }
+                        else if (selectedGame.IsOdyssey())
+                        {
+                            // Convert BioWareGame to KotorGame
+                            if (selectedGame.IsK2())
+                            {
+                                kotorGameType = KotorGame.K2;
+                            }
+                            else if (selectedGame.IsK1())
+                            {
+                                kotorGameType = KotorGame.K1;
+                            }
+                        }
+                        
+                        if (!kotorGameType.HasValue)
+                        {
+                            throw new InvalidOperationException("Game type (K1 or K2) is required when using OdysseyEngine backend");
+                        }
+                    }
+
                     // Create graphics backend
-                    IGraphicsBackend graphicsBackend = Core.GraphicsBackendFactory.CreateBackend(backendType);
+                    IGraphicsBackend graphicsBackend = Core.GraphicsBackendFactory.CreateBackend(backendType, kotorGameType);
 
                     // Check if this is a KOTOR game (uses OdysseyGame) or another BioWare game (uses UnifiedGameLauncher)
                     // For command-line mode, settings will always be set and will be for KOTOR games

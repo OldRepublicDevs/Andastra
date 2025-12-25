@@ -252,10 +252,13 @@ namespace Andastra.Game.GUI
             _graphicsBackendItems = new List<GraphicsBackendItem>();
             var mgItem = new GraphicsBackendItem(GraphicsBackendType.MonoGame, "MonoGame");
             var strideItem = new GraphicsBackendItem(GraphicsBackendType.Stride, "Stride");
+            var odysseyItem = new GraphicsBackendItem(GraphicsBackendType.OdysseyEngine, "Original Engine (KOTOR 1/2)");
             _graphicsBackendItems.Add(mgItem);
             _graphicsBackendItems.Add(strideItem);
+            _graphicsBackendItems.Add(odysseyItem);
             _graphicsBackendComboBox.Items.Add(mgItem.ToString());
             _graphicsBackendComboBox.Items.Add(strideItem.ToString());
+            _graphicsBackendComboBox.Items.Add(odysseyItem.ToString());
         }
 
         private void GraphicsBackendComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
