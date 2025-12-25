@@ -137,8 +137,41 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             // Check resource provider
             if (_resourceProvider != null)
             {
-                // TODO: Check if resource exists in ERF/BIF
-                return true;
+                // Check common resource types in ERF/BIF archives
+                // Try TPC first, then TGA, then MDL, then other formats
+                ResourceType[] typesToCheck = new[]
+                {
+                    ResourceType.TPC,
+                    ResourceType.TGA,
+                    ResourceType.MDL,
+                    ResourceType.MDX,
+                    ResourceType.WAV,
+                    ResourceType.TwoDA,
+                    ResourceType.GFF,
+                    ResourceType.DLG,
+                    ResourceType.UTC,
+                    ResourceType.UTD,
+                    ResourceType.UTP,
+                    ResourceType.UTI,
+                    ResourceType.UTS,
+                    ResourceType.UTT,
+                    ResourceType.UTW,
+                    ResourceType.UTE,
+                    ResourceType.UTM,
+                    ResourceType.ARE,
+                    ResourceType.GIT,
+                    ResourceType.IFO
+                };
+                
+                foreach (var resType in typesToCheck)
+                {
+                    if (ResourceExistsSync(assetName, resType))
+                    {
+                        return true;
+                    }
+                }
+                
+                return false;
             }
             
             // Check file system
@@ -148,6 +181,32 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                    File.Exists(fullPath + ".tga") ||
                    File.Exists(fullPath + ".mdl") ||
                    File.Exists(fullPath + ".mdx");
+        }
+        
+        /// <summary>
+        /// Synchronously checks if a resource exists using the async IGameResourceProvider.
+        /// </summary>
+        private bool ResourceExistsSync(string resRef, ResourceType type)
+        {
+            if (_resourceProvider == null)
+            {
+                return false;
+            }
+            
+            try
+            {
+                var id = new ResourceIdentifier(resRef, type);
+                
+                // Use GetAwaiter().GetResult() to run async method synchronously
+                // NOTE: This is not ideal but necessary for synchronous existence checks
+                return _resourceProvider.ExistsAsync(id, System.Threading.CancellationToken.None)
+                    .GetAwaiter().GetResult();
+            }
+            catch (Exception)
+            {
+                // If the check fails, assume the resource doesn't exist
+                return false;
+            }
         }
         
         /// <summary>
