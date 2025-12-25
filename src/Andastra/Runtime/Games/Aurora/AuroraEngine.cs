@@ -1,7 +1,9 @@
 using System;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Content.ResourceProviders;
+using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Engines.Common;
+using Andastra.Runtime.Games.Aurora;
 
 namespace Andastra.Runtime.Engines.Aurora
 {
@@ -210,6 +212,12 @@ namespace Andastra.Runtime.Engines.Aurora
             }
 
             return GameType.Unknown;
+        }
+
+        protected override World CreateWorld()
+        {
+            var timeManager = new AuroraTimeManager();
+            return new World(timeManager);
         }
     }
 }

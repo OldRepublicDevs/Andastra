@@ -3,7 +3,9 @@ using Andastra.Parsing.Common;
 using Andastra.Parsing.Installation;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Content.ResourceProviders;
+using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Engines.Common;
+using Andastra.Runtime.Games.Eclipse;
 
 namespace Andastra.Runtime.Engines.Eclipse
 {
@@ -201,6 +203,12 @@ namespace Andastra.Runtime.Engines.Eclipse
             }
 
             return GameType.Unknown;
+        }
+
+        protected override World CreateWorld()
+        {
+            var timeManager = new EclipseTimeManager();
+            return new World(timeManager);
         }
     }
 }

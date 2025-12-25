@@ -2,7 +2,9 @@ using System;
 using Andastra.Parsing.Installation;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Content.ResourceProviders;
+using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Engines.Common;
+using Andastra.Runtime.Games.Odyssey;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Engines.Odyssey
@@ -62,6 +64,12 @@ namespace Andastra.Runtime.Engines.Odyssey
             _installationPath = installationPath;
             Installation installation = new Installation(installationPath);
             return new GameResourceProvider(installation);
+        }
+
+        protected override World CreateWorld()
+        {
+            var timeManager = new OdysseyTimeManager();
+            return new World(timeManager);
         }
     }
 }
