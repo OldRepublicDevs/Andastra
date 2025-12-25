@@ -298,7 +298,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
 
         #endregion
 
-        public override GraphicsBackendType BackendType => GraphicsBackendType.OdysseyEngine;
+        // BackendType is inherited from OdysseyGraphicsBackend and returns GraphicsBackendType.OdysseyEngine
 
         protected override string GetGameName() => "Star Wars: Knights of the Old Republic II - The Sith Lords";
 
