@@ -2,8 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Eto.Forms;
-using Eto.Drawing;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Interactivity;
+using Avalonia.Layout;
+using Avalonia.Media;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Tools;
 using Andastra.Runtime.Core;
@@ -18,32 +21,27 @@ namespace Andastra.Game.GUI
     /// </summary>
     /// <remarks>
     /// Launcher UI:
-    /// - Cross-platform using Eto.Forms (Windows/Mac/Linux)
+    /// - Cross-platform using Avalonia (Windows/Mac/Linux)
     /// - Native look-and-feel on each platform
     /// - Game selection combobox (K1, K2, NWN, DA:O, DA2)
     /// - Editable installation path combobox with browse button
     /// - Start button to launch the game
     /// - Error dialog for launch failures
     /// </remarks>
-    public class GameLauncher : Dialog
+    public class GameLauncher : Window
     {
-        private DropDown _gameComboBox;
-        private DropDown _graphicsBackendComboBox;
+        private ComboBox _gameComboBox;
+        private ComboBox _graphicsBackendComboBox;
         private TextBox _pathTextBox;
         private Button _browseButton;
         private Button _settingsButton;
         private Button _startButton;
-        private Label _gameLabel;
-        private Label _graphicsBackendLabel;
-        private Label _pathLabel;
+        private TextBlock _gameLabel;
+        private TextBlock _graphicsBackendLabel;
+        private TextBlock _pathLabel;
         private GraphicsSettingsData _graphicsSettings;
         private List<GraphicsBackendItem> _graphicsBackendItems;
         private List<GameItem> _gameItems;
-
-        /// <summary>
-        /// Gets or sets the dialog result.
-        /// </summary>
-        public DialogResult Result { get; set; }
 
         /// <summary>
         /// Gets the selected game.
@@ -76,9 +74,10 @@ namespace Andastra.Game.GUI
         public GameLauncher()
         {
             Title = "Andastra Game Launcher";
-            ClientSize = new Size(600, 200);
-            Resizable = false;
-            WindowStyle = WindowStyle.Default;
+            Width = 600;
+            Height = 250;
+            CanResize = false;
+            WindowStartupLocation = WindowStartupLocation.CenterScreen;
 
             SelectedGame = GameType.K1; // Default
             SelectedGraphicsBackend = GraphicsBackendType.MonoGame; // Default
@@ -90,126 +89,130 @@ namespace Andastra.Game.GUI
             PopulateGraphicsBackendComboBox();
             _gameComboBox.SelectedIndex = 0;
             _graphicsBackendComboBox.SelectedIndex = 0;
-            _gameComboBox.SelectedIndexChanged += GameComboBox_SelectedIndexChanged;
-            _graphicsBackendComboBox.SelectedIndexChanged += GraphicsBackendComboBox_SelectedIndexChanged;
+            _gameComboBox.SelectionChanged += GameComboBox_SelectionChanged;
+            _graphicsBackendComboBox.SelectionChanged += GraphicsBackendComboBox_SelectionChanged;
             UpdatePathComboBox();
         }
 
         private void InitializeComponent()
         {
-            var layout = new TableLayout
+            var mainGrid = new Grid
             {
-                Spacing = new Size(10, 10),
-                Padding = new Padding(20)
+                Margin = new Thickness(20),
+                RowDefinitions = new RowDefinitions("Auto,10,Auto,10,Auto,10,Auto"),
+                ColumnDefinitions = new ColumnDefinitions("Auto,10,*,10,Auto")
             };
 
             // Game selection row
-            _gameLabel = new Label
+            _gameLabel = new TextBlock
             {
                 Text = "Game:",
                 VerticalAlignment = VerticalAlignment.Center
             };
+            Grid.SetRow(_gameLabel, 0);
+            Grid.SetColumn(_gameLabel, 0);
+            mainGrid.Children.Add(_gameLabel);
 
-            _gameComboBox = new DropDown
+            _gameComboBox = new ComboBox
             {
-                Width = 400
+                MinWidth = 400,
+                VerticalAlignment = VerticalAlignment.Center
             };
-
-            layout.Rows.Add(new TableRow(
-                new TableCell(_gameLabel, true),
-                new TableCell(_gameComboBox, true)
-            ));
+            Grid.SetRow(_gameComboBox, 0);
+            Grid.SetColumn(_gameComboBox, 2);
+            Grid.SetColumnSpan(_gameComboBox, 3);
+            mainGrid.Children.Add(_gameComboBox);
 
             // Graphics backend selection row
-            _graphicsBackendLabel = new Label
+            _graphicsBackendLabel = new TextBlock
             {
                 Text = "Graphics Backend:",
                 VerticalAlignment = VerticalAlignment.Center
             };
+            Grid.SetRow(_graphicsBackendLabel, 2);
+            Grid.SetColumn(_graphicsBackendLabel, 0);
+            mainGrid.Children.Add(_graphicsBackendLabel);
 
-            _graphicsBackendComboBox = new DropDown
+            _graphicsBackendComboBox = new ComboBox
             {
-                Width = 400
+                MinWidth = 300,
+                VerticalAlignment = VerticalAlignment.Center
             };
+            Grid.SetRow(_graphicsBackendComboBox, 2);
+            Grid.SetColumn(_graphicsBackendComboBox, 2);
+            mainGrid.Children.Add(_graphicsBackendComboBox);
 
-            var settingsButtonLayout = new TableLayout { Spacing = new Size(5, 0) };
             _settingsButton = new Button
             {
-                Text = "Settings...",
-                Width = 100
+                Content = "Settings...",
+                Width = 100,
+                VerticalAlignment = VerticalAlignment.Center
             };
             _settingsButton.Click += SettingsButton_Click;
-
-            settingsButtonLayout.Rows.Add(new TableRow(
-                new TableCell(_graphicsBackendComboBox, true),
-                new TableCell(_settingsButton, false)
-            ));
-
-            layout.Rows.Add(new TableRow(
-                new TableCell(_graphicsBackendLabel, true),
-                new TableCell(settingsButtonLayout, true)
-            ));
+            Grid.SetRow(_settingsButton, 2);
+            Grid.SetColumn(_settingsButton, 4);
+            mainGrid.Children.Add(_settingsButton);
 
             // Path selection row
-            _pathLabel = new Label
+            _pathLabel = new TextBlock
             {
                 Text = "Installation Path:",
                 VerticalAlignment = VerticalAlignment.Center
             };
+            Grid.SetRow(_pathLabel, 4);
+            Grid.SetColumn(_pathLabel, 0);
+            mainGrid.Children.Add(_pathLabel);
 
-            // Use a TextBox for editable path input
             _pathTextBox = new TextBox
             {
-                Width = 400
+                MinWidth = 300,
+                VerticalAlignment = VerticalAlignment.Center
             };
+            Grid.SetRow(_pathTextBox, 4);
+            Grid.SetColumn(_pathTextBox, 2);
+            mainGrid.Children.Add(_pathTextBox);
 
             _browseButton = new Button
             {
-                Text = "Browse...",
-                Width = 100
+                Content = "Browse...",
+                Width = 100,
+                VerticalAlignment = VerticalAlignment.Center
             };
             _browseButton.Click += BrowseButton_Click;
-
-            layout.Rows.Add(new TableRow(
-                new TableCell(_pathLabel, true),
-                new TableCell(_pathTextBox, true),
-                new TableCell(_browseButton, false)
-            ));
+            Grid.SetRow(_browseButton, 4);
+            Grid.SetColumn(_browseButton, 4);
+            mainGrid.Children.Add(_browseButton);
 
             // Button row
-            var buttonLayout = new TableLayout
+            var buttonPanel = new StackPanel
             {
-                Spacing = new Size(10, 0)
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                Spacing = 10
             };
 
             _startButton = new Button
             {
-                Text = "Start",
+                Content = "Start",
                 Width = 100
             };
             _startButton.Click += StartButton_Click;
+            buttonPanel.Children.Add(_startButton);
 
             var cancelButton = new Button
             {
-                Text = "Cancel",
+                Content = "Cancel",
                 Width = 100
             };
             cancelButton.Click += (sender, e) => Close();
+            buttonPanel.Children.Add(cancelButton);
 
-            buttonLayout.Rows.Add(new TableRow(
-                new TableCell(null, true),
-                new TableCell(_startButton, false),
-                new TableCell(cancelButton, false)
-            ));
+            Grid.SetRow(buttonPanel, 6);
+            Grid.SetColumn(buttonPanel, 0);
+            Grid.SetColumnSpan(buttonPanel, 5);
+            mainGrid.Children.Add(buttonPanel);
 
-            layout.Rows.Add(new TableRow(
-                new TableCell(buttonLayout, true)
-            ));
-
-            Content = layout;
-
-            // Set default button
-            DefaultButton = _startButton;
+            Content = mainGrid;
         }
 
         private void PopulateGameComboBox()
@@ -255,7 +258,7 @@ namespace Andastra.Game.GUI
             _graphicsBackendComboBox.Items.Add(strideItem.ToString());
         }
 
-        private void GraphicsBackendComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        private void GraphicsBackendComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             int selectedIndex = _graphicsBackendComboBox.SelectedIndex;
             if (selectedIndex >= 0 && selectedIndex < _graphicsBackendItems.Count)
@@ -265,30 +268,39 @@ namespace Andastra.Game.GUI
             }
         }
 
-        private void SettingsButton_Click(object sender, EventArgs e)
+        private async void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                using (var settingsDialog = new GraphicsSettingsDialog(SelectedGraphicsBackend, _graphicsSettings))
+                var settingsDialog = new GraphicsSettingsDialog(SelectedGraphicsBackend, _graphicsSettings);
+                var result = await settingsDialog.ShowDialog<bool>(this);
+                if (result)
                 {
-                    settingsDialog.ShowModal(this);
-                    if (settingsDialog.Result == DialogResult.Ok)
-                    {
-                        _graphicsSettings = settingsDialog.Settings;
-                    }
+                    _graphicsSettings = settingsDialog.Settings;
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    this,
-                    $"Error opening graphics settings:\n\n{ex.Message}\n\n{ex.StackTrace}",
-                    "Settings Error",
-                    MessageBoxType.Error);
+                var errorWindow = new Window
+                {
+                    Title = "Settings Error",
+                    Width = 500,
+                    Height = 400,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                };
+                var errorTextBox = new TextBox
+                {
+                    Text = $"Error opening graphics settings:\n\n{ex.Message}\n\n{ex.StackTrace}",
+                    IsReadOnly = true,
+                    TextWrapping = TextWrapping.Wrap,
+                    AcceptsReturn = true
+                };
+                errorWindow.Content = errorTextBox;
+                await errorWindow.ShowDialog(this);
             }
         }
 
-        private void GameComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        private void GameComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             int selectedIndex = _gameComboBox.SelectedIndex;
             if (selectedIndex >= 0 && selectedIndex < _gameItems.Count)
@@ -355,9 +367,9 @@ namespace Andastra.Game.GUI
             }
         }
 
-        private void BrowseButton_Click(object sender, EventArgs e)
+        private async void BrowseButton_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new SelectFolderDialog
+            var dialog = new OpenFolderDialog
             {
                 Title = "Select game installation directory"
             };
@@ -368,9 +380,10 @@ namespace Andastra.Game.GUI
                 dialog.Directory = _pathTextBox.Text;
             }
 
-            if (dialog.ShowDialog(this) == DialogResult.Ok)
+            var result = await dialog.ShowAsync(this);
+            if (!string.IsNullOrEmpty(result))
             {
-                string selectedPath = dialog.Directory;
+                string selectedPath = result;
 
                 // Validate installation
                 if (ValidateInstallation(selectedPath))
@@ -379,55 +392,95 @@ namespace Andastra.Game.GUI
                 }
                 else
                 {
-                    MessageBox.Show(
-                        this,
-                        $"The selected directory does not appear to be a valid {GetGameName(SelectedGame)} installation.\n\n" +
-                        "Please select a directory containing the game files.",
-                        "Invalid Installation",
-                        MessageBoxType.Warning);
+                    var errorWindow = new Window
+                    {
+                        Title = "Invalid Installation",
+                        Width = 450,
+                        Height = 150,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                        CanResize = false
+                    };
+                    var errorPanel = new StackPanel
+                    {
+                        Margin = new Thickness(20),
+                        Spacing = 10
+                    };
+                    errorPanel.Children.Add(new TextBlock
+                    {
+                        Text = $"The selected directory does not appear to be a valid {GetGameName(SelectedGame)} installation.\n\nPlease select a directory containing the game files.",
+                        TextWrapping = TextWrapping.Wrap
+                    });
+                    var okButton = new Button
+                    {
+                        Content = "OK",
+                        Width = 100,
+                        HorizontalAlignment = HorizontalAlignment.Center
+                    };
+                    okButton.Click += (s, ev) => errorWindow.Close();
+                    errorPanel.Children.Add(okButton);
+                    errorWindow.Content = errorPanel;
+                    await errorWindow.ShowDialog(this);
                 }
             }
         }
 
-        private void StartButton_Click(object sender, EventArgs e)
+        private void StartButton_Click(object sender, RoutedEventArgs e)
         {
             string path = _pathTextBox.Text.Trim();
 
             if (string.IsNullOrEmpty(path))
             {
-                MessageBox.Show(
-                    this,
-                    "Please select or enter a game installation path.",
-                    "Path Required",
-                    MessageBoxType.Warning);
+                ShowMessageBox("Path Required", "Please select or enter a game installation path.");
                 return;
             }
 
             if (!Directory.Exists(path))
             {
-                MessageBox.Show(
-                    this,
-                    "The specified path does not exist.",
-                    "Invalid Path",
-                    MessageBoxType.Error);
+                ShowMessageBox("Invalid Path", "The specified path does not exist.");
                 return;
             }
 
             if (!ValidateInstallation(path))
             {
-                MessageBox.Show(
-                    this,
-                    $"The selected directory does not appear to be a valid {GetGameName(SelectedGame)} installation.\n\n" +
-                    "Please select a directory containing the game files.",
-                    "Invalid Installation",
-                    MessageBoxType.Warning);
+                ShowMessageBox("Invalid Installation", $"The selected directory does not appear to be a valid {GetGameName(SelectedGame)} installation.\n\nPlease select a directory containing the game files.");
                 return;
             }
 
             SelectedPath = path;
             StartClicked = true;
-            Result = DialogResult.Ok;
             Close();
+        }
+
+        private async void ShowMessageBox(string title, string message)
+        {
+            var msgWindow = new Window
+            {
+                Title = title,
+                Width = 400,
+                Height = 150,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                CanResize = false
+            };
+            var panel = new StackPanel
+            {
+                Margin = new Thickness(20),
+                Spacing = 10
+            };
+            panel.Children.Add(new TextBlock
+            {
+                Text = message,
+                TextWrapping = TextWrapping.Wrap
+            });
+            var okButton = new Button
+            {
+                Content = "OK",
+                Width = 100,
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
+            okButton.Click += (s, ev) => msgWindow.Close();
+            panel.Children.Add(okButton);
+            msgWindow.Content = panel;
+            await msgWindow.ShowDialog(this);
         }
 
         private bool ValidateInstallation(string path)
