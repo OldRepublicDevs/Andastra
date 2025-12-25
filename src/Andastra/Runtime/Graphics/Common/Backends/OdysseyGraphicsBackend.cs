@@ -840,60 +840,96 @@ namespace Andastra.Runtime.Graphics.Common.Backends
                 // Step 6: Create OpenGL context
                 Console.WriteLine("[OdysseyGraphicsBackend] Creating OpenGL context...");
                 
-                _glDevice = GetDC(_windowHandle);
-                if (_glDevice == IntPtr.Zero)
+                IntPtr tempGlDevice = IntPtr.Zero;
+                IntPtr tempGlContext = IntPtr.Zero;
+                bool contextMadeCurrent = false;
+                
+                try
                 {
-                    Console.WriteLine("[OdysseyGraphicsBackend] GetDC failed");
-                    return false;
+                    tempGlDevice = GetDC(_windowHandle);
+                    if (tempGlDevice == IntPtr.Zero)
+                    {
+                        Console.WriteLine("[OdysseyGraphicsBackend] GetDC failed");
+                        return false;
+                    }
+                    
+                    // Set up pixel format (matching swkotor.exe ChoosePixelFormat pattern)
+                    PIXELFORMATDESCRIPTOR pfd = new PIXELFORMATDESCRIPTOR
+                    {
+                        nSize = 40,
+                        nVersion = 1,
+                        dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
+                        iPixelType = PFD_TYPE_RGBA,
+                        cColorBits = 32,
+                        cRedBits = 8,
+                        cGreenBits = 8,
+                        cBlueBits = 8,
+                        cAlphaBits = 8,
+                        cDepthBits = 24,
+                        cStencilBits = 8,
+                        iLayerType = PFD_MAIN_PLANE
+                    };
+                    
+                    int pixelFormat = ChoosePixelFormat(tempGlDevice, ref pfd);
+                    if (pixelFormat == 0)
+                    {
+                        Console.WriteLine("[OdysseyGraphicsBackend] ChoosePixelFormat failed");
+                        return false;
+                    }
+                    
+                    Console.WriteLine($"[OdysseyGraphicsBackend] Chose pixel format: {pixelFormat}");
+                    
+                    if (!SetPixelFormat(tempGlDevice, pixelFormat, ref pfd))
+                    {
+                        Console.WriteLine("[OdysseyGraphicsBackend] SetPixelFormat failed");
+                        return false;
+                    }
+                    
+                    // Create OpenGL context (matching swkotor.exe wglCreateContext pattern)
+                    tempGlContext = wglCreateContext(tempGlDevice);
+                    if (tempGlContext == IntPtr.Zero)
+                    {
+                        Console.WriteLine("[OdysseyGraphicsBackend] wglCreateContext failed");
+                        return false;
+                    }
+                    
+                    Console.WriteLine($"[OdysseyGraphicsBackend] Created OpenGL context: 0x{tempGlContext.ToInt64():X}");
+                    
+                    // Make context current (matching swkotor.exe wglMakeCurrent pattern)
+                    if (!wglMakeCurrent(tempGlDevice, tempGlContext))
+                    {
+                        Console.WriteLine("[OdysseyGraphicsBackend] wglMakeCurrent failed");
+                        return false;
+                    }
+                    
+                    contextMadeCurrent = true;
+                    
+                    // Success - assign to instance fields
+                    _glDevice = tempGlDevice;
+                    _glContext = tempGlContext;
+                    tempGlDevice = IntPtr.Zero; // Prevent cleanup
+                    tempGlContext = IntPtr.Zero; // Prevent cleanup
                 }
-                
-                // Set up pixel format (matching swkotor.exe ChoosePixelFormat pattern)
-                PIXELFORMATDESCRIPTOR pfd = new PIXELFORMATDESCRIPTOR
+                finally
                 {
-                    nSize = 40,
-                    nVersion = 1,
-                    dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
-                    iPixelType = PFD_TYPE_RGBA,
-                    cColorBits = 32,
-                    cRedBits = 8,
-                    cGreenBits = 8,
-                    cBlueBits = 8,
-                    cAlphaBits = 8,
-                    cDepthBits = 24,
-                    cStencilBits = 8,
-                    iLayerType = PFD_MAIN_PLANE
-                };
-                
-                int pixelFormat = ChoosePixelFormat(_glDevice, ref pfd);
-                if (pixelFormat == 0)
-                {
-                    Console.WriteLine("[OdysseyGraphicsBackend] ChoosePixelFormat failed");
-                    return false;
-                }
-                
-                Console.WriteLine($"[OdysseyGraphicsBackend] Chose pixel format: {pixelFormat}");
-                
-                if (!SetPixelFormat(_glDevice, pixelFormat, ref pfd))
-                {
-                    Console.WriteLine("[OdysseyGraphicsBackend] SetPixelFormat failed");
-                    return false;
-                }
-                
-                // Create OpenGL context (matching swkotor.exe wglCreateContext pattern)
-                _glContext = wglCreateContext(_glDevice);
-                if (_glContext == IntPtr.Zero)
-                {
-                    Console.WriteLine("[OdysseyGraphicsBackend] wglCreateContext failed");
-                    return false;
-                }
-                
-                Console.WriteLine($"[OdysseyGraphicsBackend] Created OpenGL context: 0x{_glContext.ToInt64():X}");
-                
-                // Make context current (matching swkotor.exe wglMakeCurrent pattern)
-                if (!wglMakeCurrent(_glDevice, _glContext))
-                {
-                    Console.WriteLine("[OdysseyGraphicsBackend] wglMakeCurrent failed");
-                    return false;
+                    // Clean up resources if initialization failed
+                    if (contextMadeCurrent)
+                    {
+                        // Make no context current before cleanup
+                        wglMakeCurrent(IntPtr.Zero, IntPtr.Zero);
+                    }
+                    
+                    if (tempGlContext != IntPtr.Zero)
+                    {
+                        wglDeleteContext(tempGlContext);
+                        Console.WriteLine("[OdysseyGraphicsBackend] Cleaned up OpenGL context after failure");
+                    }
+                    
+                    if (tempGlDevice != IntPtr.Zero && _windowHandle != IntPtr.Zero)
+                    {
+                        ReleaseDC(_windowHandle, tempGlDevice);
+                        Console.WriteLine("[OdysseyGraphicsBackend] Cleaned up device context after failure");
+                    }
                 }
                 
                 // Step 7: Query OpenGL info
