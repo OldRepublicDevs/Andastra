@@ -114,21 +114,30 @@ namespace Andastra.Runtime.Game
                     gamePath = settings.GamePath;
                 }
 
-                // Determine graphics backend (default to MonoGame, can be overridden via command line)
-                GraphicsBackendType backendType = GraphicsBackendType.MonoGame;
-                for (int i = 0; i < args.Length; i++)
+                // Determine graphics backend from launcher or command line
+                GraphicsBackendType backendType = GraphicsBackendType.MonoGame; // Default fallback
+                if (!skipLauncher && _staticLauncher != null)
                 {
-                    if (args[i] == "--backend" && i + 1 < args.Length)
+                    // Use backend selected in launcher UI
+                    backendType = _staticLauncher.SelectedGraphicsBackend;
+                }
+                else
+                {
+                    // Check command line for backend override (for --no-launcher mode)
+                    for (int i = 0; i < args.Length; i++)
                     {
-                        if (args[i + 1].Equals("stride", StringComparison.OrdinalIgnoreCase))
+                        if (args[i] == "--backend" && i + 1 < args.Length)
                         {
-                            backendType = GraphicsBackendType.Stride;
+                            if (args[i + 1].Equals("stride", StringComparison.OrdinalIgnoreCase))
+                            {
+                                backendType = GraphicsBackendType.Stride;
+                            }
+                            else if (args[i + 1].Equals("monogame", StringComparison.OrdinalIgnoreCase))
+                            {
+                                backendType = GraphicsBackendType.MonoGame;
+                            }
+                            break;
                         }
-                        else if (args[i + 1].Equals("monogame", StringComparison.OrdinalIgnoreCase))
-                        {
-                            backendType = GraphicsBackendType.MonoGame;
-                        }
-                        break;
                     }
                 }
 
