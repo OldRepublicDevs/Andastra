@@ -79,8 +79,9 @@ namespace Andastra.Runtime.Stride.Graphics
                 throw new InvalidOperationException("Backend must be initialized before running.");
             }
 
-            // Hook into Initialized event to create wrapper objects and apply settings after GraphicsDevice is available
+            // Hook into Initialized event to apply window settings
             // Based on Stride API: Game.Initialize() is called internally after Run() starts
+            // Note: GraphicsDevice is NOT available during Initialize(), it becomes available later
             _game.Initialized += (sender, e) =>
             {
                 // Apply deferred window settings now that Window is available
@@ -104,9 +105,16 @@ namespace Andastra.Runtime.Stride.Graphics
                     _game.Window.IsFullscreen = _pendingFullscreen;
                     _game.Window.IsMouseVisible = true;
                 }
+            };
 
-                // Initialize graphics components now that GraphicsDevice, Content, and Window are available
-                if (_graphicsDevice == null)
+            // Stride uses a different game loop pattern
+            // We'll need to hook into the game's update and draw callbacks
+            // GraphicsDevice becomes available during the first Update/Draw cycle, not during Initialize()
+            _game.UpdateFrame += (sender, e) =>
+            {
+                // Initialize graphics components on first UpdateFrame (when GraphicsDevice is available)
+                // Based on Stride API: GraphicsDevice is created after Initialize() but before first Update()
+                if (_graphicsDevice == null && _game.GraphicsDevice != null)
                 {
                     // In Stride, CommandList is obtained from Game.GraphicsContext.CommandList per-frame
                     // Pass null initially - CommandList will be registered per-frame in BeginFrame()
@@ -130,12 +138,7 @@ namespace Andastra.Runtime.Stride.Graphics
                         ApplyVSyncState(_desiredVSyncState.Value);
                     }
                 }
-            };
 
-            // Stride uses a different game loop pattern
-            // We'll need to hook into the game's update and draw callbacks
-            _game.UpdateFrame += (sender, e) =>
-            {
                 BeginFrame();
                 updateAction?.Invoke((float)e.Elapsed.TotalSeconds);
             };
@@ -156,7 +159,12 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public void BeginFrame()
         {
-            _inputManager.Update();
+            // InputManager is initialized in the UpdateFrame event handler
+            // Check for null to handle edge case where UpdateFrame hasn't fired yet
+            if (_inputManager != null)
+            {
+                _inputManager.Update();
+            }
 
             // Update the CommandList registry with the current frame's CommandList
             // Stride creates a new CommandList per frame for thread safety and proper resource management
