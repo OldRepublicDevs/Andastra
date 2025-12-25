@@ -127,7 +127,12 @@ namespace Andastra.Runtime.MonoGame.Graphics
 
         public void BeginFrame()
         {
-            _inputManager.Update();
+            // InputManager is initialized in the Update event handler when GraphicsDevice becomes available
+            // Check for null to handle edge case where GraphicsDevice might not be ready on first Update
+            if (_inputManager != null)
+            {
+                _inputManager.Update();
+            }
         }
 
         public void EndFrame()
