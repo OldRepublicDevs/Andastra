@@ -35,6 +35,7 @@ namespace Andastra.Game.GUI
         private TextBox _searchTextBox;
         private Dictionary<string, TabItem> _tabPageMap;
         private bool _result;
+        private bool _isUpdatingPresetComboBox;
 
         /// <summary>
         /// Gets the graphics settings.
@@ -569,8 +570,9 @@ namespace Andastra.Game.GUI
             var blendFactorANumeric = new NumericUpDown { Value = _settings.BlendBlendFactorA ?? 255, Minimum = 0, Maximum = 255 };
             _controlMap["BlendBlendFactorA"] = blendFactorANumeric;
             
-            Grid.SetColumn(new TextBlock { Text = "R:" }, 0);
-            blendFactorGrid.Children.Add(new TextBlock { Text = "R:" });
+            var rLabel = new TextBlock { Text = "R:" };
+            Grid.SetColumn(rLabel, 0);
+            blendFactorGrid.Children.Add(rLabel);
             Grid.SetColumn(blendFactorRNumeric, 2);
             blendFactorGrid.Children.Add(blendFactorRNumeric);
             var gLabel = new TextBlock { Text = "G:" };
@@ -884,8 +886,9 @@ namespace Andastra.Game.GUI
             var supportedOrientationsGrid = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,5,Auto,10,Auto,5,Auto,10,Auto,5,Auto,10,Auto,5,Auto,10,Auto,5,Auto") };
             var portraitCheck = new CheckBox { IsChecked = _settings.MonoGameSupportedOrientationsPortrait ?? true, Content = "Portrait" };
             _controlMap["MonoGameSupportedOrientationsPortrait"] = portraitCheck;
-            Grid.SetColumn(new TextBlock { Text = "Portrait:" }, 0);
-            supportedOrientationsGrid.Children.Add(new TextBlock { Text = "Portrait:" });
+            var portraitLabel = new TextBlock { Text = "Portrait:" };
+            Grid.SetColumn(portraitLabel, 0);
+            supportedOrientationsGrid.Children.Add(portraitLabel);
             Grid.SetColumn(portraitCheck, 2);
             supportedOrientationsGrid.Children.Add(portraitCheck);
             
@@ -1017,8 +1020,9 @@ namespace Andastra.Game.GUI
             var zNumeric = new NumericUpDown { Value = (decimal)z, Minimum = 0.0M, Maximum = 1.0M, FormatString = "F3", Increment = 0.001M };
             _controlMap[$"{baseKey}Z"] = zNumeric;
             
-            Grid.SetColumn(new TextBlock { Text = "R:" }, 0);
-            grid.Children.Add(new TextBlock { Text = "R:" });
+            var rLabel = new TextBlock { Text = "R:" };
+            Grid.SetColumn(rLabel, 0);
+            grid.Children.Add(rLabel);
             Grid.SetColumn(xNumeric, 2);
             grid.Children.Add(xNumeric);
             var gLabel = new TextBlock { Text = "G:" };
@@ -1275,8 +1279,12 @@ namespace Andastra.Game.GUI
             return backendType.ToString();
         }
 
-        private void PresetComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void PresetComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            // Guard against re-entrancy when programmatically updating the combobox
+            if (_isUpdatingPresetComboBox)
+                return;
+
             var selectedValue = (_presetComboBox.SelectedItem as string);
             if (string.IsNullOrEmpty(selectedValue))
                 return;
@@ -1291,19 +1299,26 @@ namespace Andastra.Game.GUI
                 return;
             }
 
-            ShowYesNoDialog("Apply Preset", $"Apply {selectedValue} preset? This will overwrite your current settings.", (result) =>
+            var result = await ShowYesNoDialogAsync("Apply Preset", $"Apply {selectedValue} preset? This will overwrite your current settings.");
+            if (result)
             {
-                if (result)
-                {
-                    _settings = GraphicsSettingsPresetFactory.CreatePreset(preset);
-                    _currentPreset = preset;
-                    LoadSettings();
-                }
-                else
+                _settings = GraphicsSettingsPresetFactory.CreatePreset(preset);
+                _currentPreset = preset;
+                LoadSettings();
+            }
+            else
+            {
+                // Set guard flag to prevent re-entrancy
+                _isUpdatingPresetComboBox = true;
+                try
                 {
                     _presetComboBox.SelectedItem = _currentPreset.ToString();
                 }
-            });
+                finally
+                {
+                    _isUpdatingPresetComboBox = false;
+                }
+            }
         }
 
         private void SearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -1386,34 +1401,30 @@ namespace Andastra.Game.GUI
             }
         }
 
-        private void ResetButton_Click(object sender, RoutedEventArgs e)
+        private async void ResetButton_Click(object sender, RoutedEventArgs e)
         {
-            ShowYesNoDialog("Reset Settings", "Reset all settings to default values?", (result) =>
+            var result = await ShowYesNoDialogAsync("Reset Settings", "Reset all settings to default values?");
+            if (result)
             {
-                if (result)
-                {
-                    _settings = new GraphicsSettingsData();
-                    _currentPreset = GraphicsPreset.Custom;
-                    _presetComboBox.SelectedItem = "Custom";
-                    LoadSettings();
-                }
-            });
+                _settings = new GraphicsSettingsData();
+                _currentPreset = GraphicsPreset.Custom;
+                _presetComboBox.SelectedItem = "Custom";
+                LoadSettings();
+            }
         }
 
-        private void OkButton_Click(object sender, RoutedEventArgs e)
+        private async void OkButton_Click(object sender, RoutedEventArgs e)
         {
             SaveSettings();
             var validationResult = GraphicsSettingsSerializer.Validate(_settings);
             if (!validationResult.IsValid)
             {
-                ShowYesNoDialog("Validation Warnings", "Some settings have validation errors:\n\n" + validationResult.GetFormattedMessage() + "\n\nDo you want to continue anyway?", (result) =>
+                var result = await ShowYesNoDialogAsync("Validation Warnings", "Some settings have validation errors:\n\n" + validationResult.GetFormattedMessage() + "\n\nDo you want to continue anyway?");
+                if (result)
                 {
-                    if (result)
-                    {
-                        _result = true;
-                        Close(_result);
-                    }
-                });
+                    _result = true;
+                    Close(_result);
+                }
             }
             else
             {
@@ -1422,7 +1433,7 @@ namespace Andastra.Game.GUI
             }
         }
 
-        private async void ShowYesNoDialog(string title, string message, Action<bool> callback)
+        private async System.Threading.Tasks.Task<bool> ShowYesNoDialogAsync(string title, string message)
         {
             var dialog = new Window
             {
@@ -1448,7 +1459,7 @@ namespace Andastra.Game.GUI
             dialog.Content = panel;
             
             var result = await dialog.ShowDialog<bool>(this);
-            callback(result);
+            return result;
         }
 
         private async void ShowInfoDialog(string title, string message)
