@@ -22,11 +22,22 @@ namespace Andastra.Runtime.Stride.Graphics
         public event EventHandler<FrameEventArgs> DrawFrame;
 
         /// <summary>
+        /// Event raised when the game is initialized.
+        /// </summary>
+        public event EventHandler Initialized;
+
+        /// <summary>
         /// Frame event arguments containing elapsed time.
         /// </summary>
         public class FrameEventArgs : EventArgs
         {
             public TimeSpan Elapsed { get; set; }
+        }
+
+        protected override void Initialize()
+        {
+            base.Initialize();
+            Initialized?.Invoke(this, EventArgs.Empty);
         }
 
         protected override void Update(GameTime gameTime)
