@@ -96,4 +96,8 @@ vendor/NCSDecomp/
 vendor/reone/extern/
 vendor/reone/glsl/
 *.mk
-vendor/CKOTOR1/
+vendor/CKOTOR1/*
+!vendor/CKOTOR1/scripts/
+!vendor/CKOTOR1/scripts/build_reva_export.bat
+!vendor/CKOTOR1/reva_cli_mcp/
+!vendor/CKOTOR1/reva_cli_mcp/**
