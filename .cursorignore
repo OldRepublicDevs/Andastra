@@ -1,11 +1,6 @@
 
 .*
-!.cursor
-!.cursorignore
-!.cursorrules
-!.editorconfig
-!.gitignore
-!.vscode
+.history/
 *.exe
 vendor/DeNCS/
 vendor/HoloLSP/
@@ -15,4 +10,14 @@ vendor/NCSDecomp/tools/nwnnsscomp_incompatible_tslpatcher.exe
 vendor/NCSDecomp/tools/nwnnsscomp_incompatible_v1.exe
 vendor/NCSDecomp/tools/nwnnsscomp_kscript.exe
 vendor/NCSDecomp/tools/nwnnsscomp_ktool.exe
+
+!.cursor
+!.cursorignore
+!.cursorrules
+!.editorconfig
+!.gitignore
+!.vscode
+!.pre-commit-config.yaml
 !vendor/PyKotor/
+!vendor/swkotor.c
+!vendor/swkotor.h
