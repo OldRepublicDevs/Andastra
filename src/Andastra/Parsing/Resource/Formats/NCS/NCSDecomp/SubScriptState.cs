@@ -1874,20 +1874,6 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                                     break;
                                 }
                             }
-                            else if (typeof(ScriptNode.AExpressionStatement).IsInstanceOfType(child))
-                            {
-                                ScriptNode.AExpressionStatement expStmt = (ScriptNode.AExpressionStatement)child;
-                                ScriptNode.AExpression innerExp = expStmt.GetExp();
-                                if (innerExp != null && typeof(AVarRef).IsInstanceOfType(innerExp))
-                                {
-                                    Error($"DEBUG TransformBinary: Found AVarRef in AExpressionStatement at index {i}, extracting as left operand");
-                                    // Remove all children from this index onwards
-                                    this.current.RemoveLastChild(); // Remove right operand if it's still there
-                                    // Now extract the AVarRef
-                                    left = (AVarRef)this.RemoveLastExp(false);
-                                    break;
-                                }
-                            }
                         }
                     }
                     if (left == null)
