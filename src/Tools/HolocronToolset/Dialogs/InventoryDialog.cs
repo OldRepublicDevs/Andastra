@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -223,7 +224,10 @@ namespace HolocronToolset.Dialogs
             // Create UI wrapper for testing
             Ui = new InventoryDialogUi
             {
-                ContentsTable = _contentsTable
+                ContentsTable = _contentsTable,
+                // Try to find equipment tabs from XAML if they exist
+                StandardEquipmentTab = this.FindControl<Control>("standardEquipmentTab"),
+                NaturalEquipmentTab = this.FindControl<Control>("naturalEquipmentTab")
             };
 
             // Populate DataGrid with initial inventory
@@ -420,9 +424,188 @@ namespace HolocronToolset.Dialogs
 
             // Clear existing equipment and rebuild from equipment frames
             _equipment.Clear();
-            // Matching PyKotor implementation: iterate through equipment frames and extract equipped items
-            // Note: When the full UI with equipment frames is implemented, this will extract from those widgets
-            // TODO: STUB - For now, this is a placeholder structure that matches PyKotor's accept() logic
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/inventory.py:214-221
+            // Original: self.equipment.clear()
+            //          widget: DropFrame | QObject
+            //          for widget in self.ui.standardEquipmentTab.children() + self.ui.naturalEquipmentTab.children():
+            //              if "DropFrame" in widget.__class__.__name__ and getattr(widget, "resname", None):
+            //                  casted_widget: DropFrame = cast("DropFrame", widget)
+            //                  self.equipment[casted_widget.slot] = InventoryItem(ResRef(casted_widget.resname), casted_widget.droppable, casted_widget.infinite)
+            ExtractEquipmentFromFrames();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/inventory.py:214-221
+        // Original: Iterates through standardEquipmentTab and naturalEquipmentTab children to find DropFrame widgets
+        // and extract equipment information (slot, resname, droppable, infinite)
+        private void ExtractEquipmentFromFrames()
+        {
+            // Try to find equipment tabs from UI
+            // Matching PyKotor: self.ui.standardEquipmentTab.children() + self.ui.naturalEquipmentTab.children()
+            var equipmentTabWidgets = new List<Control>();
+
+            // Try to find standardEquipmentTab
+            var standardEquipmentTab = Ui?.StandardEquipmentTab ?? this.FindControl<Control>("standardEquipmentTab");
+            if (standardEquipmentTab != null)
+            {
+                equipmentTabWidgets.AddRange(GetAllChildControls(standardEquipmentTab));
+            }
+
+            // Try to find naturalEquipmentTab
+            var naturalEquipmentTab = Ui?.NaturalEquipmentTab ?? this.FindControl<Control>("naturalEquipmentTab");
+            if (naturalEquipmentTab != null)
+            {
+                equipmentTabWidgets.AddRange(GetAllChildControls(naturalEquipmentTab));
+            }
+
+            // Iterate through all widgets found in equipment tabs
+            // Matching PyKotor: for widget in self.ui.standardEquipmentTab.children() + self.ui.naturalEquipmentTab.children():
+            foreach (var widget in equipmentTabWidgets)
+            {
+                // Matching PyKotor: if "DropFrame" in widget.__class__.__name__ and getattr(widget, "resname", None):
+                // Check if widget has DropFrame-like properties using reflection
+                // This works with both actual DropFrame implementations and any widget with the required properties
+                var widgetType = widget.GetType();
+                string typeName = widgetType.Name;
+
+                // Check if this looks like a DropFrame (has "DropFrame" in class name or has required properties)
+                bool isDropFrameLike = typeName.Contains("DropFrame") || HasDropFrameProperties(widgetType);
+
+                if (isDropFrameLike)
+                {
+                    // Try to get resname property (must be non-null/non-empty to add to equipment)
+                    // Matching PyKotor: getattr(widget, "resname", None)
+                    var resnameProperty = widgetType.GetProperty("resname") ?? widgetType.GetProperty("Resname") ?? widgetType.GetProperty("ResName");
+                    if (resnameProperty != null)
+                    {
+                        var resnameValue = resnameProperty.GetValue(widget);
+                        string resname = resnameValue?.ToString() ?? "";
+
+                        // Only add to equipment if resname is not null/empty
+                        // Matching PyKotor: getattr(widget, "resname", None) - only proceed if resname exists
+                        if (!string.IsNullOrEmpty(resname))
+                        {
+                            // Get slot property
+                            // Matching PyKotor: casted_widget.slot
+                            var slotProperty = widgetType.GetProperty("slot") ?? widgetType.GetProperty("Slot");
+                            EquipmentSlot slot = EquipmentSlot.INVALID;
+                            if (slotProperty != null)
+                            {
+                                var slotValue = slotProperty.GetValue(widget);
+                                if (slotValue is EquipmentSlot equipmentSlot)
+                                {
+                                    slot = equipmentSlot;
+                                }
+                                else if (slotValue != null)
+                                {
+                                    // Try to convert from int or other types
+                                    if (Enum.TryParse<EquipmentSlot>(slotValue.ToString(), out EquipmentSlot parsedSlot))
+                                    {
+                                        slot = parsedSlot;
+                                    }
+                                }
+                            }
+
+                            // Get droppable property
+                            // Matching PyKotor: casted_widget.droppable
+                            bool droppable = false;
+                            var droppableProperty = widgetType.GetProperty("droppable") ?? widgetType.GetProperty("Droppable");
+                            if (droppableProperty != null)
+                            {
+                                var droppableValue = droppableProperty.GetValue(widget);
+                                if (droppableValue is bool droppableBool)
+                                {
+                                    droppable = droppableBool;
+                                }
+                            }
+
+                            // Get infinite property
+                            // Matching PyKotor: casted_widget.infinite
+                            bool infinite = false;
+                            var infiniteProperty = widgetType.GetProperty("infinite") ?? widgetType.GetProperty("Infinite");
+                            if (infiniteProperty != null)
+                            {
+                                var infiniteValue = infiniteProperty.GetValue(widget);
+                                if (infiniteValue is bool infiniteBool)
+                                {
+                                    infinite = infiniteBool;
+                                }
+                            }
+
+                            // Only add to equipment if slot is valid (matching PyKotor behavior)
+                            // Matching PyKotor: self.equipment[casted_widget.slot] = InventoryItem(ResRef(casted_widget.resname), casted_widget.droppable, casted_widget.infinite)
+                            if (slot != EquipmentSlot.INVALID)
+                            {
+                                var resRef = ResRef.FromString(resname);
+                                _equipment[slot] = new InventoryItem(resRef, droppable, infinite);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Helper method to check if a type has DropFrame-like properties (resname, slot, droppable, infinite)
+        private bool HasDropFrameProperties(System.Type type)
+        {
+            var resnameProperty = type.GetProperty("resname") ?? type.GetProperty("Resname") ?? type.GetProperty("ResName");
+            var slotProperty = type.GetProperty("slot") ?? type.GetProperty("Slot");
+            var droppableProperty = type.GetProperty("droppable") ?? type.GetProperty("Droppable");
+            var infiniteProperty = type.GetProperty("infinite") ?? type.GetProperty("Infinite");
+
+            // Consider it DropFrame-like if it has at least resname and slot properties
+            return resnameProperty != null && slotProperty != null;
+        }
+
+        // Helper method to recursively get all child controls from a parent control
+        // Matching PyKotor: widget.children() - gets all child widgets
+        private List<Control> GetAllChildControls(Control parent)
+        {
+            var children = new List<Control>();
+            if (parent == null)
+            {
+                return children;
+            }
+
+            // In Avalonia, controls can have children in different ways depending on the control type
+            // Try to get children from common container types
+            if (parent is Panel panel)
+            {
+                foreach (var child in panel.Children.OfType<Control>())
+                {
+                    children.Add(child);
+                    // Recursively get children of children
+                    children.AddRange(GetAllChildControls(child));
+                }
+            }
+            else if (parent is Decorator decorator && decorator.Child is Control decoratorChild)
+            {
+                children.Add(decoratorChild);
+                children.AddRange(GetAllChildControls(decoratorChild));
+            }
+            else if (parent is ContentControl contentControl && contentControl.Content is Control contentChild)
+            {
+                children.Add(contentChild);
+                children.AddRange(GetAllChildControls(contentChild));
+            }
+            else
+            {
+                // Try to use reflection to find children property
+                var childrenProperty = parent.GetType().GetProperty("Children");
+                if (childrenProperty != null)
+                {
+                    var childrenValue = childrenProperty.GetValue(parent);
+                    if (childrenValue is System.Collections.IEnumerable childrenEnumerable)
+                    {
+                        foreach (var child in childrenEnumerable.OfType<Control>())
+                        {
+                            children.Add(child);
+                            children.AddRange(GetAllChildControls(child));
+                        }
+                    }
+                }
+            }
+
+            return children;
         }
 
         // Matching PyKotor implementation: dialog.exec() returns bool
@@ -499,6 +682,12 @@ namespace HolocronToolset.Dialogs
     public class InventoryDialogUi
     {
         public DataGrid ContentsTable { get; set; }
+        
+        // Matching PyKotor implementation: self.ui.standardEquipmentTab and self.ui.naturalEquipmentTab
+        // Original: QWidget standardEquipmentTab, naturalEquipmentTab (from inventory.ui)
+        // These tabs contain DropFrame widgets for each equipment slot
+        public Control StandardEquipmentTab { get; set; }
+        public Control NaturalEquipmentTab { get; set; }
     }
 
     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/inventory.py:607-625
