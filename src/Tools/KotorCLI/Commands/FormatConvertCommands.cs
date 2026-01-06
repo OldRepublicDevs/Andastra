@@ -217,10 +217,29 @@ namespace KotorCLI.Commands
                 var input = parseResult.GetValue(inputArg);
                 var output = parseResult.GetValue(outputOpt);
                 var logger = new StandardLogger();
-                logger.Info("TODO: STUB - xml2ssf not yet implemented");
-                Environment.Exit(0);
+                var exitCode = ExecuteXml2Ssf(input, output, logger);
+                Environment.Exit(exitCode);
             });
             rootCommand.Add(cmd);
+        }
+
+        private static int ExecuteXml2Ssf(string input, string output, ILogger logger)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(output))
+                {
+                    output = Path.ChangeExtension(input, ".ssf");
+                }
+                Conversions.ConvertXmlToSsf(input, output);
+                logger.Info($"Converted {input} to {output}");
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Failed to convert XML to SSF: {ex.Message}");
+                return 1;
+            }
         }
 
         private static void Add2Da2Csv(RootCommand rootCommand)
