@@ -105,7 +105,8 @@ namespace KotorCLI.Commands
             var disassembleInput = new Argument<string>("input");
             disassembleInput.Description = "Input NCS file";
             disassembleCmd.Add(disassembleInput);
-            var disassembleOutput = new Option<string>(new[] { "-o", "--output" }, "Output text file");
+            var disassembleOutput = new Option<string>("--output", "Output text file");
+            disassembleOutput.AddAlias("-o");
             disassembleCmd.Options.Add(disassembleOutput);
             disassembleCmd.SetAction(parseResult =>
             {
@@ -121,9 +122,11 @@ namespace KotorCLI.Commands
             var assembleInput = new Argument<string>("input");
             assembleInput.Description = "Input NSS file";
             assembleCmd.Add(assembleInput);
-            var assembleOutput = new Option<string>(new[] { "-o", "--output" }, "Output NCS file");
+            var assembleOutput = new Option<string>("--output", "Output NCS file");
+            assembleOutput.AddAlias("-o");
             assembleCmd.Options.Add(assembleOutput);
-            var includeOption = new Option<string[]>(new[] { "-I", "--include" }, "Include directory for #include files");
+            var includeOption = new Option<string[]>("--include", "Include directory for #include files");
+            includeOption.AddAlias("-I");
             assembleCmd.Options.Add(includeOption);
             var debugOption = new Option<bool>("--debug", "Enable debug output");
             assembleCmd.Options.Add(debugOption);

@@ -80,15 +80,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="11.2.2" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.2.2" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.2" />
-    <PackageReference Include="Avalonia.Diagnostics" Version="11.2.2" />
+    <PackageReference Include="Avalonia" Version="11.3.10" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.10" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.10" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="11.3.10" />
     <PackageReference Include="Myra" Version="1.5.10" />
     <PackageReference Include="ini-parser-netstandard" Version="2.5.3" />
     <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
     <PackageReference Include="LZMA-SDK" Version="22.1.1" />
-    <PackageReference Include="SharpCompress" Version="0.42.1" />
+    <PackageReference Include="SharpCompress" Version="0.43.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="sly" Version="3.7.7" />
@@ -111,12 +111,7 @@
   </ItemGroup>
   <!-- Check for MonoGame Content Builder tool availability before building -->
   <Target Name="CheckMonoGameContentBuilderTool" BeforeTargets="BeforeBuild">
-    <Exec Command="dotnet mgcb --version"
-          ContinueOnError="true"
-          IgnoreExitCode="true"
-          StandardOutputImportance="low"
-          StandardErrorImportance="low"
-          EchoOff="true">
+    <Exec Command="dotnet mgcb --version" ContinueOnError="true" IgnoreExitCode="true" StandardOutputImportance="low" StandardErrorImportance="low" EchoOff="true">
       <Output TaskParameter="ExitCode" PropertyName="_MgcbToolCheckExitCode" />
     </Exec>
     <PropertyGroup Condition="'$(_MgcbToolCheckExitCode)' != '0' AND '$(SkipMonoGameContentPipeline)' == ''">
@@ -133,10 +128,7 @@
   </ItemGroup>
 
   <!-- Override MonoGame content builder to prevent hard failure if tool is missing -->
-  <Target Name="BuildMonoGameContent"
-          Condition="'$(SkipMonoGameContentPipeline)' != 'true'"
-          AfterTargets="ResolveProjectReferences"
-          BeforeTargets="CoreBuild">
+  <Target Name="BuildMonoGameContent" Condition="'$(SkipMonoGameContentPipeline)' != 'true'" AfterTargets="ResolveProjectReferences" BeforeTargets="CoreBuild">
     <!-- This target is intentionally left empty - MonoGame.Content.Builder.Task will handle it -->
   </Target>
 

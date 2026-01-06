@@ -70,7 +70,7 @@ namespace KotorCLI.Commands
                 }
             }
 
-            protected static string GetReadableFileSize(long bytes)
+            public static string GetReadableFileSize(long bytes)
             {
                 string[] sizes = { "B", "KB", "MB", "GB", "TB" };
                 double len = bytes;
@@ -1326,7 +1326,7 @@ namespace KotorCLI.Commands
                     {
                         logger.Info($"✓ File '{stats.FileName}' is valid");
                         logger.Info($"  Format: {stats.Format}");
-                        logger.Info($"  Size: {stats.FileSize:N0} bytes ({GetReadableFileSize(stats.FileSize)})");
+                        logger.Info($"  Size: {stats.FileSize:N0} bytes ({FileStats.GetReadableFileSize(stats.FileSize)})");
 
                         if (verbose)
                         {
@@ -1477,8 +1477,8 @@ namespace KotorCLI.Commands
             // Size validation
             if (stats.ResourceSizes.Any())
             {
-                logger.Info($"    Size Range: {GetReadableFileSize(stats.MinResourceSize)} - {GetReadableFileSize(stats.MaxResourceSize)}");
-                logger.Info($"    Average Size: {GetReadableFileSize(stats.AverageResourceSize)}");
+                logger.Info($"    Size Range: {FileStats.GetReadableFileSize(stats.MinResourceSize)} - {FileStats.GetReadableFileSize(stats.MaxResourceSize)}");
+                logger.Info($"    Average Size: {FileStats.GetReadableFileSize(stats.AverageResourceSize)}");
 
                 // Check for unusual size distributions
                 if (stats.MinResourceSize == 0)
@@ -1647,20 +1647,20 @@ namespace KotorCLI.Commands
             }
 
             // Size analysis
-            logger.Info($"    Total Size: {GetReadableFileSize(stats.TotalUncompressedSize)}");
+            logger.Info($"    Total Size: {FileStats.GetReadableFileSize(stats.TotalUncompressedSize)}");
 
             if (stats.VariableResourceCount > 0)
             {
                 logger.Info("    Variable Resources:");
-                logger.Info($"      Size Range: {GetReadableFileSize(stats.MinVariableResourceSize)} - {GetReadableFileSize(stats.MaxVariableResourceSize)}");
-                logger.Info($"      Average: {GetReadableFileSize(stats.AverageVariableResourceSize)}");
+                logger.Info($"      Size Range: {FileStats.GetReadableFileSize(stats.MinVariableResourceSize)} - {FileStats.GetReadableFileSize(stats.MaxVariableResourceSize)}");
+                logger.Info($"      Average: {FileStats.GetReadableFileSize(stats.AverageVariableResourceSize)}");
             }
 
             if (stats.FixedResourceCount > 0)
             {
                 logger.Info("    Fixed Resources:");
-                logger.Info($"      Size Range: {GetReadableFileSize(stats.MinFixedResourceSize)} - {GetReadableFileSize(stats.MaxFixedResourceSize)}");
-                logger.Info($"      Average: {GetReadableFileSize(stats.AverageFixedResourceSize)}");
+                logger.Info($"      Size Range: {FileStats.GetReadableFileSize(stats.MinFixedResourceSize)} - {FileStats.GetReadableFileSize(stats.MaxFixedResourceSize)}");
+                logger.Info($"      Average: {FileStats.GetReadableFileSize(stats.AverageFixedResourceSize)}");
             }
 
             // Resource type diversity

@@ -1,12 +1,6 @@
 
 _ReSharper*/
 .*
-!.cursor
-!.cursorignore
-!.cursorrules
-!.editorconfig
-!.gitignore
-!.vscode
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
 [Bb]in/
@@ -97,7 +91,17 @@ vendor/reone/extern/
 vendor/reone/glsl/
 *.mk
 vendor/CKOTOR1/*
-!vendor/CKOTOR1/scripts/
-!vendor/CKOTOR1/scripts/build_reva_export.bat
-!vendor/CKOTOR1/reva_cli_mcp/
-!vendor/CKOTOR1/reva_cli_mcp/**
+**/~dotnetcleanup*/
+src/Tools/NCSDecomp/~dotnetcleanup*/
+swkotor2_addresses.txt
+
+!.cursor
+!.cursorignore
+!.cursorrules
+!.editorconfig
+!.gitignore
+!.vscode
+!.pre-commit-config.yaml
+!vendor/PyKotor/
+!vendor/swkotor.c
+!vendor/swkotor.h

@@ -79,7 +79,7 @@
     <Compile Include="..\Common\*.cs" />
     <Compile Include="..\Performance\*.cs" />
   </ItemGroup>
-  
+
   <!-- Copy xunit.runner.json from parent directory -->
   <ItemGroup>
     <None Include="..\xunit.runner.json" Link="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
@@ -113,7 +113,17 @@
     </ItemGroup>
     <Copy SourceFiles="@(NetStandardDlls)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" ContinueOnError="true" />
   </Target>
-  
+
+  <!-- Copy test platform DLLs for .NET 9 compatibility -->
+  <Target Name="CopyTestPlatformDlls" AfterTargets="Build">
+    <ItemGroup>
+      <TestPlatformDlls Include="$(NuGetPackageRoot)microsoft.testplatform*\**\Microsoft.TestPlatform.*.dll" />
+      <TestPlatformDlls Include="$(NuGetPackageRoot)microsoft.testplatform*\**\Microsoft.VisualStudio.TestPlatform.*.dll" />
+      <TestPlatformDlls Include="$(NuGetPackageRoot)nuget.frameworks\*\lib\*\NuGet.Frameworks.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(TestPlatformDlls)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" ContinueOnError="true" />
+  </Target>
+
   <!-- Ensure all runtime dependencies are copied -->
   <PropertyGroup>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>

@@ -9,7 +9,7 @@
     <Border Grid.Row="0" BorderBrush="#FF6B4C" BorderThickness="1" CornerRadius="5" Padding="10" Margin="0,0,0,5">
       <StackPanel>
         <TextBlock Text="Paths" FontWeight="Bold" Foreground="#FF6B4C" Margin="0,0,0,10"/>
-        
+
         <!-- Path 1 -->
         <TextBlock Text="Path 1 (Mine/Modified):" Foreground="#FF6B4C" Margin="0,0,0,5"/>
         <Grid ColumnDefinitions="Auto,Auto,*,Auto" Margin="0,0,0,10">
@@ -18,36 +18,36 @@
           <ComboBox x:Name="Path1ComboBox" Grid.Column="2" Margin="0,0,5,0"/>
           <Button x:Name="Path1BrowseButton" Content="Browse..." Grid.Column="3" Click="OnPath1BrowseClick"/>
         </Grid>
-        
+
         <!-- Path 2 -->
         <TextBlock Text="Path 2 (Older/Vanilla):" Foreground="#FF6B4C" Margin="0,10,0,5"/>
         <Grid ColumnDefinitions="Auto,Auto,*,Auto">
           <RadioButton x:Name="Path2RadioInstall" Content="Use Installation" Grid.Column="0" Margin="0,0,10,0" IsChecked="True"/>
           <RadioButton x:Name="Path2RadioCustom" Content="Custom Path" Grid.Column="1" Margin="0,0,10,0"/>
-          <ComboBox x:Name="Path2ComboBox" Grid.Column="2" Margin="0,0,5,0" IsEditable="True"/>
+          <ComboBox x:Name="Path2ComboBox" Grid.Column="2" Margin="0,0,5,0"/>
           <Button x:Name="Path2BrowseButton" Content="Browse..." Grid.Column="3" Click="OnPath2BrowseClick"/>
         </Grid>
       </StackPanel>
     </Border>
-    
+
     <!-- Options Section -->
     <Border Grid.Row="1" BorderBrush="#FF6B4C" BorderThickness="1" CornerRadius="5" Padding="10" Margin="0,0,0,5">
       <StackPanel>
         <TextBlock Text="Options" FontWeight="Bold" Foreground="#FF6B4C" Margin="0,0,0,10"/>
-        
+
         <CheckBox x:Name="CompareHashesCheckBox" Content="Compare hashes" IsChecked="True" Margin="0,0,0,10"/>
-        
+
         <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,10">
           <TextBlock Text="Generate TSLPatchData:" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,10,0"/>
           <TextBox x:Name="TslPatchDataTextBox" Grid.Column="1" Margin="0,0,5,0" Text="Path to tslpatchdata folder"/>
           <Button x:Name="TslPatchDataBrowseButton" Content="Browse..." Grid.Column="2" Click="OnTslPatchDataBrowseClick"/>
         </Grid>
-        
+
         <Grid ColumnDefinitions="Auto,*" Margin="0,0,0,10">
           <TextBlock Text="INI Filename:" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,10,0"/>
           <TextBox x:Name="IniFilenameTextBox" Grid.Column="1" Text="changes.ini"/>
         </Grid>
-        
+
         <Grid ColumnDefinitions="Auto,*">
           <TextBlock Text="Log Level:" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,10,0"/>
           <ComboBox x:Name="LogLevelComboBox" Grid.Column="1" SelectedIndex="1">
@@ -60,25 +60,32 @@
         </Grid>
       </StackPanel>
     </Border>
-    
+
     <!-- Output Section -->
     <Border Grid.Row="2" BorderBrush="#FF6B4C" BorderThickness="1" CornerRadius="5" Padding="10" Margin="0,0,0,5">
       <StackPanel>
         <TextBlock Text="Output" FontWeight="Bold" Foreground="#FF6B4C" Margin="0,0,0,10"/>
         <ScrollViewer>
-          <TextBox x:Name="OutputTextBox" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True" 
+          <TextBox x:Name="OutputTextBox" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True"
                    Background="#1E1E1E" Foreground="#FFFFFF" FontFamily="Consolas"/>
         </ScrollViewer>
       </StackPanel>
     </Border>
-    
+
     <!-- Buttons -->
-    <Grid Grid.Row="3" ColumnDefinitions="*,*,*" ColumnGap="5" Margin="0,0,0,10">
-      <Button x:Name="RunDiffButton" Content="Run Diff" Grid.Column="0" Click="OnRunDiffClick"/>
-      <Button x:Name="ClearButton" Content="Clear Output" Grid.Column="1" Click="OnClearClick"/>
-      <Button x:Name="CloseButton" Content="Close" Grid.Column="2" Click="OnCloseClick"/>
+    <Grid Grid.Row="3" Margin="0,0,0,10">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="5"/>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="5"/>
+        <ColumnDefinition Width="*"/>
+      </Grid.ColumnDefinitions>
+      <Button x:Name="RunDiffButton" Content="Run Diff" Grid.Column="0" Click="OnRunDiffClick" Margin="0,0,5,0"/>
+      <Button x:Name="ClearButton" Content="Clear Output" Grid.Column="2" Click="OnClearClick" Margin="5,0,5,0"/>
+      <Button x:Name="CloseButton" Content="Close" Grid.Column="4" Click="OnCloseClick" Margin="5,0,0,0"/>
     </Grid>
-    
+
     <!-- Progress Bar -->
     <ProgressBar x:Name="ProgressBar" Grid.Row="4" IsIndeterminate="False" Minimum="0" Maximum="100" Value="0"/>
   </Grid>
