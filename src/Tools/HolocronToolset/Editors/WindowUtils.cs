@@ -5,6 +5,7 @@ using System.Linq;
 using Avalonia.Controls;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
+using HolocronToolset.Editors.DLG;
 using Andastra.Parsing.Resource;
 using FileResource = Andastra.Parsing.Extract.FileResource;
 using JetBrains.Annotations;
