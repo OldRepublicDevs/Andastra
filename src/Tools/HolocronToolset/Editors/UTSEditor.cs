@@ -30,7 +30,7 @@ using ListBox = Avalonia.Controls.ListBox;
 using ScrollViewer = Avalonia.Controls.ScrollViewer;
 using StackPanel = Avalonia.Controls.StackPanel;
 using Expander = Avalonia.Controls.Expander;
-using ResourceTYpe = Andastra.Parsing.Resource.ResourceType;
+using ResourceType = Andastra.Parsing.Resource.ResourceType;
 using GFF = Andastra.Parsing.Formats.GFF.GFF;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
@@ -481,7 +481,7 @@ namespace HolocronToolset.Editors
             uts.Comment = _commentsEdit?.Text ?? "";
 
             // Matching Python: gff: GFF = dismantle_uts(uts); write_gff(gff, data)
-            Game game = _installation?.Game ?? Game.K2;
+            BioWareGame game = _installation?.Game ?? BioWareGame.K2;
             var gff = UTSHelpers.DismantleUts(uts, game);
             byte[] data = GFFAuto.BytesGff(gff, ResourceType.UTS);
             return Tuple.Create(data, new byte[0]);
@@ -491,7 +491,7 @@ namespace HolocronToolset.Editors
         private static UTS CopyUts(UTS source)
         {
             // Use Dismantle/Construct pattern for reliable deep copy (matching Python deepcopy behavior)
-            Game game = Game.K2; // Default game for serialization
+            BioWareGame game = BioWareGame.K2; // Default game for serialization
             var gff = UTSHelpers.DismantleUts(source, game);
             return UTSHelpers.ConstructUts(gff);
         }

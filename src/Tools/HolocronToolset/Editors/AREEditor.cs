@@ -126,7 +126,7 @@ namespace HolocronToolset.Editors
             var panel = new StackPanel();
 
             // Name field - matching Python: self.ui.nameEdit
-            var nameLabel = new Avalonia.Controls.TextBlock { Text = "Name:" };
+            var nameLabel = new TextBlock { Text = "Name:" };
             _nameEdit = new LocalizedStringEdit();
             if (_installation != null)
             {
@@ -136,7 +136,7 @@ namespace HolocronToolset.Editors
             panel.Children.Add(_nameEdit);
 
             // Tag field - matching Python: self.ui.tagEdit
-            var tagLabel = new Avalonia.Controls.TextBlock { Text = "Tag:" };
+            var tagLabel = new TextBlock { Text = "Tag:" };
             _tagEdit = new TextBox();
             _tagGenerateButton = new Button { Content = "Generate" };
             _tagGenerateButton.Click += (s, e) => GenerateTag();
@@ -148,7 +148,7 @@ namespace HolocronToolset.Editors
 
             // Camera Style field - matching Python: self.ui.cameraStyleSelect
             // Matching Python: for label in cameras.get_column("name"): self.ui.cameraStyleSelect.addItem(label.title())
-            var cameraStyleLabel = new Avalonia.Controls.TextBlock { Text = "Camera Style:" };
+            var cameraStyleLabel = new TextBlock { Text = "Camera Style:" };
             _cameraStyleSelect = new ComboBox();
             // Load camera styles from cameras.2da via installation
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:111-117
@@ -201,7 +201,7 @@ namespace HolocronToolset.Editors
             panel.Children.Add(_cameraStyleSelect);
 
             // Envmap field - matching Python: self.ui.envmapEdit
-            var envmapLabel = new Avalonia.Controls.TextBlock { Text = "Default Envmap:" };
+            var envmapLabel = new TextBlock { Text = "Default Envmap:" };
             _envmapEdit = new TextBox();
             panel.Children.Add(envmapLabel);
             panel.Children.Add(_envmapEdit);
@@ -217,7 +217,7 @@ namespace HolocronToolset.Editors
             // Alpha Test spin - matching Python: self.ui.alphaTestSpin
             // Engine uses float for AlphaTest (swkotor.exe: 0x00508c50 line 303-304, swkotor2.exe: 0x004e3ff0 line 307-308)
             // Default value: 0.2, range typically 0.0-1.0 but allowing up to 255 for compatibility
-            var alphaTestLabel = new Avalonia.Controls.TextBlock { Text = "Alpha Test:" };
+            var alphaTestLabel = new TextBlock { Text = "Alpha Test:" };
             _alphaTestSpin = new NumericUpDown { Minimum = 0, Maximum = 255, Value = 0, Increment = 0.1m };
             panel.Children.Add(alphaTestLabel);
             panel.Children.Add(_alphaTestSpin);
@@ -227,19 +227,19 @@ namespace HolocronToolset.Editors
             panel.Children.Add(_stealthCheck);
 
             // Stealth XP Max spin - matching Python: self.ui.stealthMaxSpin
-            var stealthMaxLabel = new Avalonia.Controls.TextBlock { Text = "Stealth XP Max:" };
+            var stealthMaxLabel = new TextBlock { Text = "Stealth XP Max:" };
             _stealthMaxSpin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
             panel.Children.Add(stealthMaxLabel);
             panel.Children.Add(_stealthMaxSpin);
 
             // Stealth XP Loss spin - matching Python: self.ui.stealthLossSpin
-            var stealthLossLabel = new Avalonia.Controls.TextBlock { Text = "Stealth XP Loss:" };
+            var stealthLossLabel = new TextBlock { Text = "Stealth XP Loss:" };
             _stealthLossSpin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
             panel.Children.Add(stealthLossLabel);
             panel.Children.Add(_stealthLossSpin);
 
             // Map Axis select - matching Python: self.ui.mapAxisSelect
-            var mapAxisLabel = new Avalonia.Controls.TextBlock { Text = "Map Axis:" };
+            var mapAxisLabel = new TextBlock { Text = "Map Axis:" };
             _mapAxisSelect = new ComboBox();
             _mapAxisSelect.ItemsSource = new[] { "PositiveY", "NegativeY", "PositiveX", "NegativeX" };
             _mapAxisSelect.SelectedIndex = 0;
@@ -247,61 +247,61 @@ namespace HolocronToolset.Editors
             panel.Children.Add(_mapAxisSelect);
 
             // Map Zoom spin - matching Python: self.ui.mapZoomSpin
-            var mapZoomLabel = new Avalonia.Controls.TextBlock { Text = "Map Zoom:" };
+            var mapZoomLabel = new TextBlock { Text = "Map Zoom:" };
             _mapZoomSpin = new NumericUpDown { Minimum = 1, Maximum = int.MaxValue, Value = 1 };
             panel.Children.Add(mapZoomLabel);
             panel.Children.Add(_mapZoomSpin);
 
             // Map Res X spin - matching Python: self.ui.mapResXSpin
-            var mapResXLabel = new Avalonia.Controls.TextBlock { Text = "Map Res X:" };
+            var mapResXLabel = new TextBlock { Text = "Map Res X:" };
             _mapResXSpin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
             panel.Children.Add(mapResXLabel);
             panel.Children.Add(_mapResXSpin);
 
             // Map Image X1 spin - matching Python: self.ui.mapImageX1Spin
-            var mapImageX1Label = new Avalonia.Controls.TextBlock { Text = "Map Image X1:" };
+            var mapImageX1Label = new TextBlock { Text = "Map Image X1:" };
             _mapImageX1Spin = new NumericUpDown { Minimum = 0.0M, Maximum = 1.0M, FormatString = "F6", Value = 0.0M };
             panel.Children.Add(mapImageX1Label);
             panel.Children.Add(_mapImageX1Spin);
 
             // Map Image Y1 spin - matching Python: self.ui.mapImageY1Spin
-            var mapImageY1Label = new Avalonia.Controls.TextBlock { Text = "Map Image Y1:" };
+            var mapImageY1Label = new TextBlock { Text = "Map Image Y1:" };
             _mapImageY1Spin = new NumericUpDown { Minimum = 0.0M, Maximum = 1.0M, FormatString = "F6", Value = 0.0M };
             panel.Children.Add(mapImageY1Label);
             panel.Children.Add(_mapImageY1Spin);
 
             // Map Image X2 spin - matching Python: self.ui.mapImageX2Spin
-            var mapImageX2Label = new Avalonia.Controls.TextBlock { Text = "Map Image X2:" };
+            var mapImageX2Label = new TextBlock { Text = "Map Image X2:" };
             _mapImageX2Spin = new NumericUpDown { Minimum = 0.0M, Maximum = 1.0M, FormatString = "F6", Value = 0.0M };
             panel.Children.Add(mapImageX2Label);
             panel.Children.Add(_mapImageX2Spin);
 
             // Map Image Y2 spin - matching Python: self.ui.mapImageY2Spin
-            var mapImageY2Label = new Avalonia.Controls.TextBlock { Text = "Map Image Y2:" };
+            var mapImageY2Label = new TextBlock { Text = "Map Image Y2:" };
             _mapImageY2Spin = new NumericUpDown { Minimum = 0.0M, Maximum = 1.0M, FormatString = "F6", Value = 0.0M };
             panel.Children.Add(mapImageY2Label);
             panel.Children.Add(_mapImageY2Spin);
 
             // Map World X1 spin - matching Python: self.ui.mapWorldX1Spin
-            var mapWorldX1Label = new Avalonia.Controls.TextBlock { Text = "Map World X1:" };
+            var mapWorldX1Label = new TextBlock { Text = "Map World X1:" };
             _mapWorldX1Spin = new NumericUpDown { Minimum = decimal.MinValue, Maximum = decimal.MaxValue, FormatString = "F6", Value = 0.0M };
             panel.Children.Add(mapWorldX1Label);
             panel.Children.Add(_mapWorldX1Spin);
 
             // Map World Y1 spin - matching Python: self.ui.mapWorldY1Spin
-            var mapWorldY1Label = new Avalonia.Controls.TextBlock { Text = "Map World Y1:" };
+            var mapWorldY1Label = new TextBlock { Text = "Map World Y1:" };
             _mapWorldY1Spin = new NumericUpDown { Minimum = decimal.MinValue, Maximum = decimal.MaxValue, FormatString = "F6", Value = 0.0M };
             panel.Children.Add(mapWorldY1Label);
             panel.Children.Add(_mapWorldY1Spin);
 
             // Map World X2 spin - matching Python: self.ui.mapWorldX2Spin
-            var mapWorldX2Label = new Avalonia.Controls.TextBlock { Text = "Map World X2:" };
+            var mapWorldX2Label = new TextBlock { Text = "Map World X2:" };
             _mapWorldX2Spin = new NumericUpDown { Minimum = decimal.MinValue, Maximum = decimal.MaxValue, FormatString = "F6", Value = 0.0M };
             panel.Children.Add(mapWorldX2Label);
             panel.Children.Add(_mapWorldX2Spin);
 
             // Map World Y2 spin - matching Python: self.ui.mapWorldY2Spin
-            var mapWorldY2Label = new Avalonia.Controls.TextBlock { Text = "Map World Y2:" };
+            var mapWorldY2Label = new TextBlock { Text = "Map World Y2:" };
             _mapWorldY2Spin = new NumericUpDown { Minimum = decimal.MinValue, Maximum = decimal.MaxValue, FormatString = "F6", Value = 0.0M };
             panel.Children.Add(mapWorldY2Label);
             panel.Children.Add(_mapWorldY2Spin);
@@ -311,43 +311,43 @@ namespace HolocronToolset.Editors
             panel.Children.Add(_fogEnabledCheck);
 
             // Fog Color edit - matching Python: self.ui.fogColorEdit
-            var fogColorLabel = new Avalonia.Controls.TextBlock { Text = "Fog Color:" };
+            var fogColorLabel = new TextBlock { Text = "Fog Color:" };
             _fogColorEdit = new ColorEdit(null);
             panel.Children.Add(fogColorLabel);
             panel.Children.Add(_fogColorEdit);
 
             // Fog Near spin - matching Python: self.ui.fogNearSpin
-            var fogNearLabel = new Avalonia.Controls.TextBlock { Text = "Fog Near:" };
+            var fogNearLabel = new TextBlock { Text = "Fog Near:" };
             _fogNearSpin = new NumericUpDown { Minimum = 0.0M, Maximum = decimal.MaxValue, FormatString = "F6", Value = 0.0M };
             panel.Children.Add(fogNearLabel);
             panel.Children.Add(_fogNearSpin);
 
             // Fog Far spin - matching Python: self.ui.fogFarSpin
-            var fogFarLabel = new Avalonia.Controls.TextBlock { Text = "Fog Far:" };
+            var fogFarLabel = new TextBlock { Text = "Fog Far:" };
             _fogFarSpin = new NumericUpDown { Minimum = 0.0M, Maximum = decimal.MaxValue, FormatString = "F6", Value = 0.0M };
             panel.Children.Add(fogFarLabel);
             panel.Children.Add(_fogFarSpin);
 
             // Ambient Color edit - matching Python: self.ui.ambientColorEdit
-            var ambientColorLabel = new Avalonia.Controls.TextBlock { Text = "Sun Ambient:" };
+            var ambientColorLabel = new TextBlock { Text = "Sun Ambient:" };
             _ambientColorEdit = new ColorEdit(null);
             panel.Children.Add(ambientColorLabel);
             panel.Children.Add(_ambientColorEdit);
 
             // Diffuse Color edit - matching Python: self.ui.diffuseColorEdit
-            var diffuseColorLabel = new Avalonia.Controls.TextBlock { Text = "Sun Diffuse:" };
+            var diffuseColorLabel = new TextBlock { Text = "Sun Diffuse:" };
             _diffuseColorEdit = new ColorEdit(null);
             panel.Children.Add(diffuseColorLabel);
             panel.Children.Add(_diffuseColorEdit);
 
             // Dynamic Color edit - matching Python: self.ui.dynamicColorEdit
-            var dynamicColorLabel = new Avalonia.Controls.TextBlock { Text = "Dynamic Light:" };
+            var dynamicColorLabel = new TextBlock { Text = "Dynamic Light:" };
             _dynamicColorEdit = new ColorEdit(null);
             panel.Children.Add(dynamicColorLabel);
             panel.Children.Add(_dynamicColorEdit);
 
             // Wind Power select - matching Python: self.ui.windPowerSelect
-            var windPowerLabel = new Avalonia.Controls.TextBlock { Text = "Wind Power:" };
+            var windPowerLabel = new TextBlock { Text = "Wind Power:" };
             _windPowerSelect = new ComboBox();
             // Wind power enum values: None=0, Light=1, Medium=2, Heavy=3
             _windPowerSelect.ItemsSource = new[] { "None", "Light", "Medium", "Heavy" };
@@ -366,29 +366,29 @@ namespace HolocronToolset.Editors
             // Shadows checkbox and spin - matching Python: self.ui.shadowsCheck, shadowsSpin
             _shadowsCheck = new CheckBox { Content = "Shadows" };
             panel.Children.Add(_shadowsCheck);
-            var shadowsSpinLabel = new Avalonia.Controls.TextBlock { Text = "Shadow Opacity:" };
+            var shadowsSpinLabel = new TextBlock { Text = "Shadow Opacity:" };
             _shadowsSpin = new NumericUpDown { Minimum = 0, Maximum = 255, Value = 0 };
             panel.Children.Add(shadowsSpinLabel);
             panel.Children.Add(_shadowsSpin);
 
             // Terrain section - matching Python: self.ui.grassTextureEdit, grassDensitySpin, etc.
-            var grassTextureLabel = new Avalonia.Controls.TextBlock { Text = "Grass Texture:" };
+            var grassTextureLabel = new TextBlock { Text = "Grass Texture:" };
             _grassTextureEdit = new TextBox();
             panel.Children.Add(grassTextureLabel);
             panel.Children.Add(_grassTextureEdit);
 
-            var grassDensityLabel = new Avalonia.Controls.TextBlock { Text = "Grass Density:" };
+            var grassDensityLabel = new TextBlock { Text = "Grass Density:" };
             _grassDensitySpin = new NumericUpDown { Minimum = 0.0M, Maximum = decimal.MaxValue, FormatString = "F6", Value = 0.0M };
             panel.Children.Add(grassDensityLabel);
             panel.Children.Add(_grassDensitySpin);
 
-            var grassSizeLabel = new Avalonia.Controls.TextBlock { Text = "Grass Size:" };
+            var grassSizeLabel = new TextBlock { Text = "Grass Size:" };
             _grassSizeSpin = new NumericUpDown { Minimum = 0.0M, Maximum = decimal.MaxValue, FormatString = "F6", Value = 0.0M };
             panel.Children.Add(grassSizeLabel);
             panel.Children.Add(_grassSizeSpin);
 
             // Grass probability spins - matching Python: self.ui.grassProbLLSpin, etc.
-            var grassProbLabel = new Avalonia.Controls.TextBlock { Text = "Grass Probability (LL/LR/UL/UR):" };
+            var grassProbLabel = new TextBlock { Text = "Grass Probability (LL/LR/UL/UR):" };
             var grassProbPanel = new StackPanel { Orientation = Orientation.Horizontal };
             _grassProbLLSpin = new NumericUpDown { Minimum = 0.0M, Maximum = 1.0M, FormatString = "F6", Value = 0.0M };
             _grassProbLRSpin = new NumericUpDown { Minimum = 0.0M, Maximum = 1.0M, FormatString = "F6", Value = 0.0M };
@@ -402,23 +402,23 @@ namespace HolocronToolset.Editors
             panel.Children.Add(grassProbPanel);
 
             // Grass color edits - matching Python: self.ui.grassDiffuseEdit, grassAmbientEdit, grassEmissiveEdit
-            var grassDiffuseLabel = new Avalonia.Controls.TextBlock { Text = "Grass Diffuse:" };
+            var grassDiffuseLabel = new TextBlock { Text = "Grass Diffuse:" };
             _grassDiffuseEdit = new ColorEdit(null);
             panel.Children.Add(grassDiffuseLabel);
             panel.Children.Add(_grassDiffuseEdit);
 
-            var grassAmbientLabel = new Avalonia.Controls.TextBlock { Text = "Grass Ambient:" };
+            var grassAmbientLabel = new TextBlock { Text = "Grass Ambient:" };
             _grassAmbientEdit = new ColorEdit(null);
             panel.Children.Add(grassAmbientLabel);
             panel.Children.Add(_grassAmbientEdit);
 
-            var grassEmissiveLabel = new Avalonia.Controls.TextBlock { Text = "Grass Emissive (TSL only):" };
+            var grassEmissiveLabel = new TextBlock { Text = "Grass Emissive (TSL only):" };
             _grassEmissiveEdit = new ColorEdit(null);
             panel.Children.Add(grassEmissiveLabel);
             panel.Children.Add(_grassEmissiveEdit);
 
             // Dirt color edits (TSL only) - matching Python: self.ui.dirtColor1Edit, dirtColor2Edit, dirtColor3Edit
-            var dirtColorLabel = new Avalonia.Controls.TextBlock { Text = "Dirt Colors (TSL only):" };
+            var dirtColorLabel = new TextBlock { Text = "Dirt Colors (TSL only):" };
             var dirtColorPanel = new StackPanel { Orientation = Orientation.Horizontal };
             _dirtColor1Edit = new ColorEdit(null);
             _dirtColor2Edit = new ColorEdit(null);
@@ -434,7 +434,7 @@ namespace HolocronToolset.Editors
             panel.Children.Add(dirtColorPanel);
 
             // Dirt Formula spins (TSL only) - matching Python: self.ui.dirtFormula1Spin, dirtFormula2Spin, dirtFormula3Spin
-            var dirtFormulaLabel = new Avalonia.Controls.TextBlock { Text = "Dirt Formula (TSL only):" };
+            var dirtFormulaLabel = new TextBlock { Text = "Dirt Formula (TSL only):" };
             var dirtFormulaPanel = new StackPanel { Orientation = Orientation.Horizontal };
             _dirtFormula1Spin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
             _dirtFormula2Spin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
@@ -446,7 +446,7 @@ namespace HolocronToolset.Editors
             panel.Children.Add(dirtFormulaPanel);
 
             // Dirt Function spins (TSL only) - matching Python: self.ui.dirtFunction1Spin, dirtFunction2Spin, dirtFunction3Spin
-            var dirtFunctionLabel = new Avalonia.Controls.TextBlock { Text = "Dirt Function (TSL only):" };
+            var dirtFunctionLabel = new TextBlock { Text = "Dirt Function (TSL only):" };
             var dirtFunctionPanel = new StackPanel { Orientation = Orientation.Horizontal };
             _dirtFunction1Spin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
             _dirtFunction2Spin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
@@ -458,7 +458,7 @@ namespace HolocronToolset.Editors
             panel.Children.Add(dirtFunctionPanel);
 
             // Dirt Size spins (TSL only) - matching Python: self.ui.dirtSize1Spin, dirtSize2Spin, dirtSize3Spin
-            var dirtSizeLabel = new Avalonia.Controls.TextBlock { Text = "Dirt Size (TSL only):" };
+            var dirtSizeLabel = new TextBlock { Text = "Dirt Size (TSL only):" };
             var dirtSizePanel = new StackPanel { Orientation = Orientation.Horizontal };
             _dirtSize1Spin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
             _dirtSize2Spin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
@@ -470,28 +470,28 @@ namespace HolocronToolset.Editors
             panel.Children.Add(dirtSizePanel);
 
             // Scripts section - matching Python: self.ui.onEnterSelect, onExitSelect, onHeartbeatSelect, onUserDefinedSelect
-            var onEnterLabel = new Avalonia.Controls.TextBlock { Text = "OnEnter Script:" };
+            var onEnterLabel = new TextBlock { Text = "OnEnter Script:" };
             _onEnterSelect = new ComboBox { IsEditable = true };
             panel.Children.Add(onEnterLabel);
             panel.Children.Add(_onEnterSelect);
 
-            var onExitLabel = new Avalonia.Controls.TextBlock { Text = "OnExit Script:" };
+            var onExitLabel = new TextBlock { Text = "OnExit Script:" };
             _onExitSelect = new ComboBox { IsEditable = true };
             panel.Children.Add(onExitLabel);
             panel.Children.Add(_onExitSelect);
 
-            var onHeartbeatLabel = new Avalonia.Controls.TextBlock { Text = "OnHeartbeat Script:" };
+            var onHeartbeatLabel = new TextBlock { Text = "OnHeartbeat Script:" };
             _onHeartbeatSelect = new ComboBox { IsEditable = true };
             panel.Children.Add(onHeartbeatLabel);
             panel.Children.Add(_onHeartbeatSelect);
 
-            var onUserDefinedLabel = new Avalonia.Controls.TextBlock { Text = "OnUserDefined Script:" };
+            var onUserDefinedLabel = new TextBlock { Text = "OnUserDefined Script:" };
             _onUserDefinedSelect = new ComboBox { IsEditable = true };
             panel.Children.Add(onUserDefinedLabel);
             panel.Children.Add(_onUserDefinedSelect);
 
             // Comments edit - matching Python: self.ui.commentsEdit
-            var commentsLabel = new Avalonia.Controls.TextBlock { Text = "Comments:" };
+            var commentsLabel = new TextBlock { Text = "Comments:" };
             _commentsEdit = new TextBox
             {
                 AcceptsReturn = true,
@@ -1373,7 +1373,7 @@ namespace HolocronToolset.Editors
 
                 // List of fields that AREHelpers.DismantleAre explicitly sets - preserve original if type/value differs
                 // Fields that may have type mismatches or extraction issues
-                var fieldsSetByDismantle = new System.Collections.Generic.HashSet<string>
+                var fieldsSetByDismantle = new HashSet<string>
                 {
                     "Tag", "Name", "AlphaTest", "CameraStyle", "DefaultEnvMap",
                     "Grass_TexName", "Grass_Density", "Grass_QuadSize",
@@ -1729,8 +1729,8 @@ namespace HolocronToolset.Editors
             copy.LoadScreenID = source.LoadScreenID;
 
             // Copy lists
-            copy.AreaList = new System.Collections.Generic.List<string>(source.AreaList);
-            copy.MapList = new System.Collections.Generic.List<ResRef>(source.MapList);
+            copy.AreaList = new List<string>(source.AreaList);
+            copy.MapList = new List<ResRef>(source.MapList);
 
             return copy;
         }

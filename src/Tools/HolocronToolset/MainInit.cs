@@ -79,13 +79,13 @@ namespace HolocronToolset.NET
             {
                 string logDirectory = LogDirectoryHelper.GetLogDirectory();
                 string logFilePath = Path.Combine(logDirectory, "holocron_toolset.log");
-                logger = new Andastra.Parsing.Logger.RobustLogger(logFilePath);
+                logger = new RobustLogger(logFilePath);
             }
             catch (Exception ex)
             {
                 // If log directory setup fails, use logger without file path (console only)
                 // This ensures we can still log the exception even if file logging fails
-                logger = new Andastra.Parsing.Logger.RobustLogger(null);
+                logger = new RobustLogger(null);
                 // Log the setup failure, but don't let it prevent the actual exception from being logged
                 System.Diagnostics.Debug.WriteLine($"Failed to setup log file path: {ex.Message}");
             }

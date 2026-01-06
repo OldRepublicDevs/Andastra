@@ -63,7 +63,7 @@ namespace HolocronToolset.Editors.DLG
             Type type = obj.GetType();
             return type.GetFields(BindingFlags.Public | BindingFlags.Instance).Length > 0 ||
                    type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Length > 0 ||
-                   obj is System.Collections.ICollection;
+                   obj is ICollection;
         }
 
         /// <summary>

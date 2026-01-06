@@ -174,7 +174,7 @@ namespace HolocronToolset.Windows
                 // Matching Python: combined_module = Module(mod_root, self._installation, use_dot_mod=is_mod_file(mod_filepath))
                 // swkotor.exe: FUN_004094a0 - Module loading with .mod override detection
                 bool useDotMod = FileHelpers.IsModFile(modFilepath);
-                _module = new Module(modRoot, _installation.Installation, useDotMod);
+                _module = new ModuleClass(modRoot, _installation.Installation, useDotMod);
 
                 // Store module path and name for UI display
                 _modulePath = modFilepath;
@@ -332,8 +332,8 @@ namespace HolocronToolset.Windows
                     ResourceType restype = resource.GetResType();
 
                     // Determine category (default to "Other" if not found)
-                    TreeViewItem category = categories.ContainsKey(restype) 
-                        ? categories[restype] 
+                    TreeViewItem category = categories.ContainsKey(restype)
+                        ? categories[restype]
                         : categories[ResourceType.INVALID];
 
                     // Create resource item
@@ -359,7 +359,7 @@ namespace HolocronToolset.Windows
                 var categoryChildren = category.ItemsSource as List<TreeViewItem>;
                 if (categoryChildren != null && categoryChildren.Count > 0)
                 {
-                    categoryChildren.Sort((a, b) => 
+                    categoryChildren.Sort((a, b) =>
                     {
                         string headerA = a?.Header?.ToString() ?? "";
                         string headerB = b?.Header?.ToString() ?? "";

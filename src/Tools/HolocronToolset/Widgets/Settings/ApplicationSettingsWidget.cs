@@ -174,7 +174,7 @@ namespace HolocronToolset.Widgets.Settings
             }
 
             // Create and show font dialog
-            var fontDialog = new Dialogs.FontDialog(parentWindow);
+            var fontDialog = new FontDialog(parentWindow);
             if (currentFont != null)
             {
                 fontDialog.SetCurrentFont(currentFont);

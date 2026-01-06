@@ -44,13 +44,13 @@ namespace HolocronToolset.Dialogs
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:573-655
         // Original: def __init__(self, installation: HTInstallation, uti_property: UTIProperty):
-        public PropertyEditorDialog(Window parent, HTInstallation installation, Andastra.Parsing.Resource.Generics.UTI.UTIProperty utiProperty)
+        public PropertyEditorDialog(Window parent, HTInstallation installation, UTIProperty utiProperty)
         {
             InitializeComponent();
             _installation = installation;
-            
+
             // Create a deep copy of the property
-            _utiProperty = new Andastra.Parsing.Resource.Generics.UTI.UTIProperty
+            _utiProperty = new UTIProperty
             {
                 PropertyName = utiProperty.PropertyName,
                 Subtype = utiProperty.Subtype,
@@ -61,12 +61,12 @@ namespace HolocronToolset.Dialogs
                 ChanceAppear = utiProperty.ChanceAppear,
                 UpgradeType = utiProperty.UpgradeType
             };
-            
+
             if (parent != null)
             {
                 this.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             }
-            
+
             SetupUI();
         }
 
@@ -120,22 +120,22 @@ namespace HolocronToolset.Dialogs
                 }
                 if (_okButton != null)
                 {
-                    _okButton.Click += (s, e) => 
-                    { 
+                    _okButton.Click += (s, e) =>
+                    {
                         // Update property before closing
                         GetUtiProperty();
                         DialogResult = true;
                         // Close with true result for ShowDialogAsync<bool> support
-                        Close(true); 
+                        Close(true);
                     };
                 }
                 if (_cancelButton != null)
                 {
-                    _cancelButton.Click += (s, e) => 
-                    { 
-                        DialogResult = false; 
+                    _cancelButton.Click += (s, e) =>
+                    {
+                        DialogResult = false;
                         // Close with false result for ShowDialogAsync<bool> support
-                        Close(false); 
+                        Close(false);
                     };
                 }
             }
@@ -320,7 +320,7 @@ namespace HolocronToolset.Dialogs
             // Split by space to get individual words (after replace("_", " "), we have space-separated words)
             // Using StringSplitOptions.None to preserve empty entries (for multiple consecutive spaces)
             string[] words = input.Split(new[] { ' ' }, StringSplitOptions.None);
-            
+
             // Process each word: capitalize first letter if it's a letter, lowercase the rest
             for (int i = 0; i < words.Length; i++)
             {
@@ -330,7 +330,7 @@ namespace HolocronToolset.Dialogs
                     if (char.IsLetter(firstChar))
                     {
                         // First character is a letter - capitalize it and lowercase the rest
-                        words[i] = char.ToUpperInvariant(firstChar) + 
+                        words[i] = char.ToUpperInvariant(firstChar) +
                                    (words[i].Length > 1 ? words[i].Substring(1).ToLowerInvariant() : "");
                     }
                     else
@@ -359,7 +359,7 @@ namespace HolocronToolset.Dialogs
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:687-691
         // Original: def uti_property(self) -> UTIProperty:
-        public Andastra.Parsing.Resource.Generics.UTI.UTIProperty GetUtiProperty()
+        public UTIProperty GetUtiProperty()
         {
             // Matching PyKotor implementation: self._uti_property.upgrade_type = self.ui.upgradeSelect.currentIndex() - 1
             if (_upgradeSelect != null)
@@ -381,7 +381,7 @@ namespace HolocronToolset.Dialogs
         // Original: if not dialog.exec(): return
         // PyKotor's QDialog.exec() is a blocking modal dialog that returns QDialog.DialogCode.Accepted (true) or Rejected (false)
         // This synchronous method provides the same behavior for compatibility with existing code
-        
+
         /// <summary>
         /// Shows the dialog modally and returns true if the user clicked OK, false if Cancel was clicked or the dialog was closed.
         /// This is a blocking synchronous method that matches PyKotor's QDialog.exec() behavior.
@@ -423,7 +423,7 @@ namespace HolocronToolset.Dialogs
                 {
                     mainWindow = desktop.MainWindow;
                 }
-                
+
                 if (mainWindow != null)
                 {
                     var resultObj = await ShowDialogAsync(mainWindow);

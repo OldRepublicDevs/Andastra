@@ -49,7 +49,7 @@ namespace HolocronToolset.Data
         // Original: app_env_variables: SettingsProperty[dict[str, str]] = Settings.addSetting("EnvironmentVariables", {...})
         public Dictionary<string, string> AppEnvVariables
         {
-            get => GetValue<Dictionary<string, string>>("EnvironmentVariables", new Dictionary<string, string>());
+            get => GetValue("EnvironmentVariables", new Dictionary<string, string>());
             set => SetValue("EnvironmentVariables", value);
         }
 
@@ -57,16 +57,16 @@ namespace HolocronToolset.Data
         {
             // Load settings from base class
             GffSpecializedEditors.GetValue(this);
-            ExtractPath = GetValue<string>("ExtractPath", "");
-            NssCompilerPath = GetValue<string>("NssCompilerPath", "");
-            NcsDecompilerPath = GetValue<string>("NcsDecompilerPath", "");
-            RecentFiles = GetValue<List<string>>("RecentFiles", new List<string>());
-            UseBetaChannel = GetValue<bool>("UseBetaChannel", false);
-            SelectedTheme = GetValue<string>("SelectedTheme", "fusion (light)");
-            SelectedStyle = GetValue<string>("SelectedStyle", "");
-            SelectedLanguage = GetValue<int>("SelectedLanguage", 0);
-            JoinRIMsTogether = GetValue<bool>("JoinRIMsTogether", true);
-            _firstTime = GetValue<bool>("FirstTime", true);
+            ExtractPath = GetValue("ExtractPath", "");
+            NssCompilerPath = GetValue("NssCompilerPath", "");
+            NcsDecompilerPath = GetValue("NcsDecompilerPath", "");
+            RecentFiles = GetValue("RecentFiles", new List<string>());
+            UseBetaChannel = GetValue("UseBetaChannel", false);
+            SelectedTheme = GetValue("SelectedTheme", "fusion (light)");
+            SelectedStyle = GetValue("SelectedStyle", "");
+            SelectedLanguage = GetValue("SelectedLanguage", 0);
+            JoinRIMsTogether = GetValue("JoinRIMsTogether", true);
+            _firstTime = GetValue("FirstTime", true);
         }
 
         public bool GetGffSpecializedEditors()
@@ -83,7 +83,7 @@ namespace HolocronToolset.Data
         // Original: def installations(self) -> dict[str, InstallationConfig]:
         public Dictionary<string, Dictionary<string, object>> Installations()
         {
-            var installations = GetValue<Dictionary<string, Dictionary<string, object>>>("Installations", new Dictionary<string, Dictionary<string, object>>());
+            var installations = GetValue("Installations", new Dictionary<string, Dictionary<string, object>>());
 
             if (_firstTime)
             {
@@ -104,7 +104,7 @@ namespace HolocronToolset.Data
         // Original: showPreviewUTC: SettingsProperty[bool] = Settings.addSetting("showPreviewUTC", ...)
         public bool ShowPreviewUTC
         {
-            get => GetValue<bool>("showPreviewUTC", false);
+            get => GetValue("showPreviewUTC", false);
             set => SetValue("showPreviewUTC", value);
         }
 
@@ -112,7 +112,7 @@ namespace HolocronToolset.Data
         // Original: showPreviewUTD: SettingsProperty[bool] = Settings.addSetting("showPreviewUTD", ...)
         public bool ShowPreviewUTD
         {
-            get => GetValue<bool>("showPreviewUTD", false);
+            get => GetValue("showPreviewUTD", false);
             set => SetValue("showPreviewUTD", value);
         }
 
@@ -120,7 +120,7 @@ namespace HolocronToolset.Data
         // Original: showPreviewUTP: SettingsProperty[bool] = Settings.addSetting("showPreviewUTP", ...)
         public bool ShowPreviewUTP
         {
-            get => GetValue<bool>("showPreviewUTP", false);
+            get => GetValue("showPreviewUTP", false);
             set => SetValue("showPreviewUTP", value);
         }
 
@@ -128,7 +128,7 @@ namespace HolocronToolset.Data
         // Original: settings.value("GlobalFont", "")
         public string GlobalFont
         {
-            get => GetValue<string>("GlobalFont", "");
+            get => GetValue("GlobalFont", "");
             set => SetValue("GlobalFont", value);
         }
     }

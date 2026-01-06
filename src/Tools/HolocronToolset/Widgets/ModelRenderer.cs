@@ -11,7 +11,7 @@ using Andastra.Parsing.Resource;
 using Andastra.Runtime.Stride.Converters;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Stride.Graphics;
-using StrideGraphics = global::Stride.Graphics;
+using StrideGraphics = Stride.Graphics;
 using Stride.Core.Mathematics;
 using JetBrains.Annotations;
 using Andastra.Parsing.Formats.TPC;
@@ -27,7 +27,7 @@ namespace HolocronToolset.Widgets
         private byte[] _mdxData;
         private MDL _parsedModel;
         private MdlToStrideModelConverter.ConversionResult _convertedModel;
-        private Andastra.Runtime.Graphics.IGraphicsDevice _graphicsDevice;
+        private IGraphicsDevice _graphicsDevice;
         private Func<string, IBasicEffect> _materialResolver;
         private readonly Dictionary<string, IBasicEffect> _effectCache;
 
@@ -108,7 +108,7 @@ namespace HolocronToolset.Widgets
         }
 
         // Initialize graphics device and material resolver for model rendering
-        public void InitializeGraphics([NotNull] Andastra.Runtime.Graphics.IGraphicsDevice graphicsDevice, Func<string, IBasicEffect> materialResolver = null)
+        public void InitializeGraphics([NotNull] IGraphicsDevice graphicsDevice, Func<string, IBasicEffect> materialResolver = null)
         {
             if (graphicsDevice == null)
             {
@@ -282,17 +282,17 @@ namespace HolocronToolset.Widgets
         // Rendering state
         private Matrix4x4 _viewMatrix;
         private Matrix4x4 _projectionMatrix;
-        private global::Stride.Core.Mathematics.Vector3 _cameraPosition;
-        private global::Stride.Core.Mathematics.Vector3 _cameraTarget;
-        private global::Stride.Core.Mathematics.Vector3 _cameraUp;
+        private Stride.Core.Mathematics.Vector3 _cameraPosition;
+        private Stride.Core.Mathematics.Vector3 _cameraTarget;
+        private Stride.Core.Mathematics.Vector3 _cameraUp;
 
         // Initialize camera and matrices
         public ModelRenderer()
         {
             // Set up default camera (matching PyKotor default view)
-            _cameraPosition = new global::Stride.Core.Mathematics.Vector3(0, 0, 10);
-            _cameraTarget = new global::Stride.Core.Mathematics.Vector3(0, 0, 0);
-            _cameraUp = new global::Stride.Core.Mathematics.Vector3(0, 1, 0);
+            _cameraPosition = new Stride.Core.Mathematics.Vector3(0, 0, 10);
+            _cameraTarget = new Stride.Core.Mathematics.Vector3(0, 0, 0);
+            _cameraUp = new Stride.Core.Mathematics.Vector3(0, 1, 0);
 
             _effectCache = new Dictionary<string, IBasicEffect>(StringComparer.OrdinalIgnoreCase);
 
@@ -323,7 +323,7 @@ namespace HolocronToolset.Widgets
         }
 
         // Set camera position and target
-        public void SetCamera(global::Stride.Core.Mathematics.Vector3 position, global::Stride.Core.Mathematics.Vector3 target)
+        public void SetCamera(Stride.Core.Mathematics.Vector3 position, Stride.Core.Mathematics.Vector3 target)
         {
             _cameraPosition = position;
             _cameraTarget = target;
@@ -353,7 +353,7 @@ namespace HolocronToolset.Widgets
                     // Matching PyKotor: Use sync=True to force synchronous model loading for the preview renderer
                     // This ensures hooks (headhook, rhand, lhand, gogglehook) are found correctly
                     // Matching PyKotor: self.scene.objects["model"] = self.scene.get_creature_render_object(None, self._creature_to_load, sync=True)
-                    
+
                     // Get body model name from UTC using appearance.2da
                     // Matching PyKotor: Uses get_body_model() function to resolve model from UTC
                     var (bodyModel, bodyTexture) = Andastra.Parsing.Tools.Creature.GetBodyModel(
@@ -415,26 +415,26 @@ namespace HolocronToolset.Widgets
         private void ResetCamera()
         {
             // Reset camera to default position (matching PyKotor default view)
-            _cameraPosition = new global::Stride.Core.Mathematics.Vector3(0, 0, 10);
-            _cameraTarget = new global::Stride.Core.Mathematics.Vector3(0, 0, 0);
-            _cameraUp = new global::Stride.Core.Mathematics.Vector3(0, 1, 0);
+            _cameraPosition = new Stride.Core.Mathematics.Vector3(0, 0, 10);
+            _cameraTarget = new Stride.Core.Mathematics.Vector3(0, 0, 0);
+            _cameraUp = new Stride.Core.Mathematics.Vector3(0, 1, 0);
             UpdateViewMatrix();
             InvalidateVisual();
         }
 
-        private void DrawPlaceholderText(Avalonia.Media.DrawingContext context)
+        private void DrawPlaceholderText(DrawingContext context)
         {
             var text = _parsedModel != null ?
                 $"Model loaded: {_parsedModel.Name}\nMeshes: {_convertedModel?.Meshes.Count ?? 0}\n[3D Rendering TODO: Implement Stride rendering pipeline]" :
                 "No model loaded\n[TODO: Initialize graphics device]";
 
             // Simple text rendering - in full implementation this would be proper 3D viewport
-            var brush = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Colors.White);
-            var formattedText = new Avalonia.Media.FormattedText(
+            var brush = new SolidColorBrush(Avalonia.Media.Colors.White);
+            var formattedText = new FormattedText(
                 text,
                 System.Globalization.CultureInfo.InvariantCulture,
                 Avalonia.Media.FlowDirection.LeftToRight,
-                new Avalonia.Media.Typeface("Arial"),
+                new Typeface("Arial"),
                 12,
                 brush
             );

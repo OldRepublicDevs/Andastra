@@ -29,7 +29,7 @@ namespace HolocronToolset.Data
                     string existingValue = Environment.GetEnvironmentVariable("QT_MULTIMEDIA_PREFERRED_PLUGINS");
                     defaultVars["QT_MULTIMEDIA_PREFERRED_PLUGINS"] = existingValue ?? "windowsmediafoundation";
                 }
-                return GetValue<Dictionary<string, string>>("EnvironmentVariables", defaultVars);
+                return GetValue("EnvironmentVariables", defaultVars);
             }
             set => SetValue("EnvironmentVariables", value);
         }

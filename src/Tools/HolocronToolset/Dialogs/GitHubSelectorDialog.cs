@@ -38,7 +38,7 @@ namespace HolocronToolset.Dialogs
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:120
         // Original: self.repo_data: CompleteRepoData | None = None
-        private Utils.CompleteRepoData _repoData;
+        private CompleteRepoData _repoData;
 
         // Dictionary to map file paths to TreeViewItems for efficient lookup during filtering
         private Dictionary<string, TreeViewItem> _pathToItemMap;
@@ -200,7 +200,7 @@ namespace HolocronToolset.Dialogs
 
             try
             {
-                Utils.CompleteRepoData repoData = await LoadRepoAsync(_owner, _repo);
+                CompleteRepoData repoData = await LoadRepoAsync(_owner, _repo);
                 if (repoData != null)
                 {
                     LoadRepoData(repoData);
@@ -238,7 +238,7 @@ namespace HolocronToolset.Dialogs
                 {
                     string forksUrl = $"https://api.github.com/repos/{_owner}/{_repo}/forks";
                     string forksJson = await HttpClient.GetStringAsync(forksUrl);
-                    List<Utils.ForkContentsData> forks = JsonConvert.DeserializeObject<List<Utils.ForkContentsData>>(forksJson);
+                    List<ForkContentsData> forks = JsonConvert.DeserializeObject<List<ForkContentsData>>(forksJson);
 
                     if (forks != null && forks.Count > 0)
                     {
@@ -253,7 +253,7 @@ namespace HolocronToolset.Dialogs
                         string[] forkParts = firstFork.Split('/');
                         if (forkParts.Length == 2)
                         {
-                            Utils.CompleteRepoData forkRepoData = await LoadRepoAsync(forkParts[0], forkParts[1]);
+                            CompleteRepoData forkRepoData = await LoadRepoAsync(forkParts[0], forkParts[1]);
                             if (forkRepoData != null)
                             {
                                 if (_forkComboBox != null)
@@ -296,7 +296,7 @@ namespace HolocronToolset.Dialogs
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/utility/updater/github.py:532-568
         // Original: @classmethod def load_repo(cls, owner: str, repo_name: str, *, timeout: int = 15) -> CompleteRepoData:
-        private async Task<Utils.CompleteRepoData> LoadRepoAsync(string owner, string repoName, int timeoutSeconds = 15)
+        private async Task<CompleteRepoData> LoadRepoAsync(string owner, string repoName, int timeoutSeconds = 15)
         {
             string baseUrl = $"https://api.github.com/repos/{owner}/{repoName}";
 
@@ -335,7 +335,7 @@ namespace HolocronToolset.Dialogs
             if (repoData.ContainsKey("repo_info") && repoData["repo_info"] != null)
             {
                 var repoInfoJson = JsonConvert.SerializeObject(repoData["repo_info"]);
-                var repoInfo = JsonConvert.DeserializeObject<Utils.RepoIndexData>(repoInfoJson);
+                var repoInfo = JsonConvert.DeserializeObject<RepoIndexData>(repoInfoJson);
                 if (repoInfo != null && !string.IsNullOrEmpty(repoInfo.DefaultBranch))
                 {
                     defaultBranch = repoInfo.DefaultBranch;
@@ -361,20 +361,20 @@ namespace HolocronToolset.Dialogs
             }
 
             // Build CompleteRepoData instance
-            var completeRepoData = new Utils.CompleteRepoData
+            var completeRepoData = new CompleteRepoData
             {
                 RepoInfo = repoData.ContainsKey("repo_info") && repoData["repo_info"] != null
-                    ? JsonConvert.DeserializeObject<Utils.RepoIndexData>(JsonConvert.SerializeObject(repoData["repo_info"]))
+                    ? JsonConvert.DeserializeObject<RepoIndexData>(JsonConvert.SerializeObject(repoData["repo_info"]))
                     : null,
                 Branches = repoData.ContainsKey("branches") && repoData["branches"] != null
-                    ? JsonConvert.DeserializeObject<List<Utils.BranchInfoData>>(JsonConvert.SerializeObject(repoData["branches"]))
-                    : new List<Utils.BranchInfoData>(),
+                    ? JsonConvert.DeserializeObject<List<BranchInfoData>>(JsonConvert.SerializeObject(repoData["branches"]))
+                    : new List<BranchInfoData>(),
                 Contents = repoData.ContainsKey("contents") && repoData["contents"] != null
-                    ? JsonConvert.DeserializeObject<List<Utils.ContentInfoData>>(JsonConvert.SerializeObject(repoData["contents"]))
-                    : new List<Utils.ContentInfoData>(),
+                    ? JsonConvert.DeserializeObject<List<ContentInfoData>>(JsonConvert.SerializeObject(repoData["contents"]))
+                    : new List<ContentInfoData>(),
                 Forks = repoData.ContainsKey("forks") && repoData["forks"] != null
-                    ? JsonConvert.DeserializeObject<List<Utils.ForkContentsData>>(JsonConvert.SerializeObject(repoData["forks"]))
-                    : new List<Utils.ForkContentsData>(),
+                    ? JsonConvert.DeserializeObject<List<ForkContentsData>>(JsonConvert.SerializeObject(repoData["forks"]))
+                    : new List<ForkContentsData>(),
                 Tree = repoData.ContainsKey("tree") && repoData["tree"] != null
                     ? JsonConvert.DeserializeObject<List<Utils.TreeInfoData>>(JsonConvert.SerializeObject(repoData["tree"]))
                     : new List<Utils.TreeInfoData>()
@@ -386,7 +386,7 @@ namespace HolocronToolset.Dialogs
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:220-234
         // Original: def _load_repo_data(self, data: CompleteRepoData, *, do_fork_combo_update: bool = True) -> None:
-        private void LoadRepoData(Utils.CompleteRepoData data, bool doForkComboUpdate = true)
+        private void LoadRepoData(CompleteRepoData data, bool doForkComboUpdate = true)
         {
             _repoData = data;
             if (doForkComboUpdate)

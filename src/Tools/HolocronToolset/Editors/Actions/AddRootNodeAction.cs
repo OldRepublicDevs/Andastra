@@ -1,5 +1,6 @@
 using System;
 using Andastra.Parsing.Resource.Generics.DLG;
+using HolocronToolset.Editors.DLG;
 
 namespace HolocronToolset.Editors.Actions
 {

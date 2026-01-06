@@ -16,7 +16,7 @@ namespace HolocronToolset.Data
         // Original: utcShowByDefault: SettingsProperty[bool] = Settings.addSetting("utcShowByDefault", False)
         public bool UtcShowByDefault
         {
-            get => GetValue<bool>("utcShowByDefault", false);
+            get => GetValue("utcShowByDefault", false);
             set => SetValue("utcShowByDefault", value);
         }
 
@@ -24,7 +24,7 @@ namespace HolocronToolset.Data
         // Original: backgroundColour: SettingsProperty[int] = Settings.addSetting("backgroundColour", 0)
         public int BackgroundColour
         {
-            get => GetValue<int>("backgroundColour", 0);
+            get => GetValue("backgroundColour", 0);
             set => SetValue("backgroundColour", value);
         }
     }

@@ -28,7 +28,7 @@ namespace HolocronToolset.Utils
         public static string SetupExtractPath()
         {
             var settings = new GlobalSettings();
-            string extractPath = settings.GetValue<string>("ExtractPath", "");
+            string extractPath = settings.GetValue("ExtractPath", "");
 
             if (string.IsNullOrEmpty(extractPath) || !Directory.Exists(extractPath))
             {

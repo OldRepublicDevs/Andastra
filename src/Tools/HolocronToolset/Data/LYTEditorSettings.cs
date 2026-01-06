@@ -21,25 +21,25 @@ namespace HolocronToolset.Data
         // Original: LYT-specific settings
         public float GridSize
         {
-            get => GetValue<float>("GridSize", 1.0f);
+            get => GetValue("GridSize", 1.0f);
             set => SetValue("GridSize", value);
         }
 
         public bool ShowGrid
         {
-            get => GetValue<bool>("ShowGrid", true);
+            get => GetValue("ShowGrid", true);
             set => SetValue("ShowGrid", value);
         }
 
         public bool ShowRoomLabels
         {
-            get => GetValue<bool>("ShowRoomLabels", true);
+            get => GetValue("ShowRoomLabels", true);
             set => SetValue("ShowRoomLabels", value);
         }
 
         public bool ShowDoorHookLabels
         {
-            get => GetValue<bool>("ShowDoorHookLabels", true);
+            get => GetValue("ShowDoorHookLabels", true);
             set => SetValue("ShowDoorHookLabels", value);
         }
 
@@ -47,10 +47,10 @@ namespace HolocronToolset.Data
         // Original: def load(self):
         public void Load()
         {
-            GridSize = GetValue<float>("GridSize", 1.0f);
-            ShowGrid = GetValue<bool>("ShowGrid", true);
-            ShowRoomLabels = GetValue<bool>("ShowRoomLabels", true);
-            ShowDoorHookLabels = GetValue<bool>("ShowDoorHookLabels", true);
+            GridSize = GetValue("GridSize", 1.0f);
+            ShowGrid = GetValue("ShowGrid", true);
+            ShowRoomLabels = GetValue("ShowRoomLabels", true);
+            ShowDoorHookLabels = GetValue("ShowDoorHookLabels", true);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/lyt.py:24-29

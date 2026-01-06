@@ -719,7 +719,7 @@ namespace HolocronToolset.Windows
         {
             string message;
             string title;
-            MsBox.Avalonia.Enums.Icon icon;
+            Icon icon;
 
             if (errors.Count == 0)
             {
@@ -1163,7 +1163,7 @@ namespace HolocronToolset.Windows
                 // Matching Python: RobustLogger().warning(f"ModuleDesigner signature mismatch: {exc}. Falling back without module path.")
                 System.Console.WriteLine($"ModuleDesigner creation failed: {ex.Message}. Falling back without module path.");
                 designerWindow = new ModuleDesignerWindow(this, _active, null);
-                
+
                 // If we had a selected module, open it after a short delay
                 // Matching Python: if selected_module is not None: QTimer.singleShot(33, lambda: designer_window.open_module(selected_module))
                 if (!string.IsNullOrEmpty(selectedModulePath))
@@ -1789,7 +1789,7 @@ namespace HolocronToolset.Windows
         private void OpenNewTLKEditor()
         {
             // Create a new TLK editor with this window as parent and active installation
-            var tlkEditor = new Editors.TLKEditor(this, _active);
+            var tlkEditor = new TLKEditor(this, _active);
 
             // Add to window manager (matching PyKotor's add_window function)
             WindowUtils.AddWindow(tlkEditor, show: true);

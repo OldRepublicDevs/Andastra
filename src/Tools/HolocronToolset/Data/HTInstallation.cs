@@ -71,7 +71,7 @@ namespace HolocronToolset.Data
 
         private readonly Installation _installation;
         private readonly Dictionary<string, TwoDA> _cache2da = new Dictionary<string, TwoDA>();
-        private readonly Dictionary<string, Andastra.Parsing.Formats.TPC.TPC> _cacheTpc = new Dictionary<string, Andastra.Parsing.Formats.TPC.TPC>();
+        private readonly Dictionary<string, TPC> _cacheTpc = new Dictionary<string, TPC>();
         private bool? _tsl;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:93-120
@@ -269,7 +269,7 @@ namespace HolocronToolset.Data
             {
                 if (!_tsl.HasValue)
                 {
-                    _tsl = Game == Game.TSL;
+                    _tsl = Game == BioWareGame.TSL;
                 }
                 return _tsl.Value;
             }
@@ -297,7 +297,7 @@ namespace HolocronToolset.Data
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:554-567
         // Original: def ht_get_cache_tpc(self, resname: str) -> TPC | None:
         [CanBeNull]
-        public Andastra.Parsing.Formats.TPC.TPC HtGetCacheTpc(string resname)
+        public TPC HtGetCacheTpc(string resname)
         {
             resname = resname.ToLowerInvariant();
             if (!_cacheTpc.ContainsKey(resname))
@@ -406,7 +406,7 @@ namespace HolocronToolset.Data
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:644-664
         // Original: def get_item_icon(self, base_item: int, model_variation: int, texture_variation: int) -> QPixmap:
         [CanBeNull]
-        public Avalonia.Media.Imaging.Bitmap GetItemIcon(int baseItem, int modelVariation, int textureVariation)
+        public Bitmap GetItemIcon(int baseItem, int modelVariation, int textureVariation)
         {
             // In Avalonia, we return Bitmap instead of QPixmap
             // Matching PyKotor implementation: converts TPC texture to QPixmap for display
@@ -443,7 +443,7 @@ namespace HolocronToolset.Data
         // Original: def to_qimage(self) -> QImage:
         // Converts TPC mipmap to Avalonia Bitmap for display
         [CanBeNull]
-        public static Avalonia.Media.Imaging.Bitmap ConvertTpcMipmapToAvaloniaBitmap(TPCMipmap mipmap)
+        public static Bitmap ConvertTpcMipmapToAvaloniaBitmap(TPCMipmap mipmap)
         {
             if (mipmap == null || mipmap.Data == null || mipmap.Width <= 0 || mipmap.Height <= 0)
             {
@@ -1081,17 +1081,17 @@ namespace HolocronToolset.Data
 
             try
             {
-                var talkTable = new Andastra.Parsing.Extract.TalkTable(tlkPath);
+                var talkTable = new TalkTable(tlkPath);
                 var stringrefs = queries.Select(q => q.StringRef).ToList();
                 var batch = talkTable.Batch(stringrefs);
 
                 string femaleTlkPath = System.IO.Path.Combine(Path, "dialogf.tlk");
-                Dictionary<int, Andastra.Parsing.Extract.StringResult> femaleBatch = new Dictionary<int, Andastra.Parsing.Extract.StringResult>();
+                Dictionary<int, StringResult> femaleBatch = new Dictionary<int, StringResult>();
                 if (File.Exists(femaleTlkPath))
                 {
                     try
                     {
-                        var femaleTalkTable = new Andastra.Parsing.Extract.TalkTable(femaleTlkPath);
+                        var femaleTalkTable = new TalkTable(femaleTlkPath);
                         var femaleBatchDict = femaleTalkTable.Batch(stringrefs);
                         foreach (var kvp in femaleBatchDict)
                         {
@@ -1164,7 +1164,7 @@ namespace HolocronToolset.Data
 
             try
             {
-                var talkTable = new Andastra.Parsing.Extract.TalkTable(tlkPath);
+                var talkTable = new TalkTable(tlkPath);
                 return talkTable.GetString(stringref);
             }
             catch
@@ -1179,10 +1179,10 @@ namespace HolocronToolset.Data
         /// Returns the TalkTable linked to the Installation.
         /// </summary>
         /// <returns>A TalkTable object.</returns>
-        public Andastra.Parsing.Extract.TalkTable TalkTable()
+        public TalkTable TalkTable()
         {
             string tlkPath = System.IO.Path.Combine(Path, "dialog.tlk");
-            return new Andastra.Parsing.Extract.TalkTable(tlkPath);
+            return new TalkTable(tlkPath);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
@@ -1244,18 +1244,18 @@ namespace HolocronToolset.Data
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1807-1843
         // Original: def texture(self, resname: str, order: Sequence[SearchLocation] | None = None, ...) -> TPC | None:
         [CanBeNull]
-        public Andastra.Parsing.Formats.TPC.TPC Texture(string resname, SearchLocation[] searchOrder = null)
+        public TPC Texture(string resname, SearchLocation[] searchOrder = null)
         {
             return _installation.Texture(resname, searchOrder);
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1845-1888
         // Original: def textures(self, resnames: Iterable[str], order: Sequence[SearchLocation] | None = None, ...) -> CaseInsensitiveDict[TPC | None]:
-        public Dictionary<string, Andastra.Parsing.Formats.TPC.TPC> Textures(
+        public Dictionary<string, TPC> Textures(
             List<string> resnames,
             SearchLocation[] searchOrder = null)
         {
-            var textures = new Dictionary<string, Andastra.Parsing.Formats.TPC.TPC>(StringComparer.OrdinalIgnoreCase);
+            var textures = new Dictionary<string, TPC>(StringComparer.OrdinalIgnoreCase);
             if (resnames == null)
             {
                 return textures;

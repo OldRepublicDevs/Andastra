@@ -125,7 +125,7 @@ namespace HolocronToolset.Editors
                 installation)
         {
             _installation = installation;
-            _utc = new Andastra.Parsing.Resource.Generics.UTC.UTC();
+            _utc = new UTC();
             _scriptFields = new Dictionary<string, TextBox>();
             _settings = new UTCEditorSettings();
             _globalSettings = new GlobalSettings();
@@ -990,7 +990,7 @@ namespace HolocronToolset.Editors
         }
 
         // Matching Python: deepcopy(self._utc)
-        private static Andastra.Parsing.Resource.Generics.UTC.UTC CopyUtc(Andastra.Parsing.Resource.Generics.UTC.UTC source)
+        private static UTC CopyUtc(UTC source)
         {
             // Use Dismantle/Construct pattern for reliable deep copy (matching Python deepcopy behavior)
             Game game = Game.K2; // Default game for serialization
@@ -1003,7 +1003,7 @@ namespace HolocronToolset.Editors
         public override void New()
         {
             base.New();
-            _utc = new Andastra.Parsing.Resource.Generics.UTC.UTC();
+            _utc = new UTC();
             LoadUTC(_utc);
             UpdateItemCount();
         }
@@ -1520,7 +1520,7 @@ namespace HolocronToolset.Editors
 
             // Load capsules to search
             // Matching PyKotor: capsules_to_search based on filepath type
-            List<Andastra.Parsing.Formats.Capsule.Capsule> capsulesToSearch = new List<Andastra.Parsing.Formats.Capsule.Capsule>();
+            List<Capsule> capsulesToSearch = new List<Capsule>();
 
             if (_filepath != null)
             {
@@ -1530,7 +1530,7 @@ namespace HolocronToolset.Editors
                     // Matching PyKotor: capsules_to_search = [Capsule(res.filepath()) for res in Capsule(self._filepath) if is_capsule_file(res.filename()) and res.inside_capsule]
                     try
                     {
-                        var outerCapsule = new Andastra.Parsing.Formats.Capsule.Capsule(_filepath);
+                        var outerCapsule = new Capsule(_filepath);
                         foreach (var res in outerCapsule)
                         {
                             // Check if the resource name (resname + extension) is a capsule file
@@ -1542,7 +1542,7 @@ namespace HolocronToolset.Editors
                                 string nestedCapsulePath = System.IO.Path.Combine(_filepath, resourceFilename);
                                 try
                                 {
-                                    capsulesToSearch.Add(new Andastra.Parsing.Formats.Capsule.Capsule(nestedCapsulePath));
+                                    capsulesToSearch.Add(new Capsule(nestedCapsulePath));
                                 }
                                 catch
                                 {
@@ -1597,7 +1597,7 @@ namespace HolocronToolset.Editors
                                     {
                                         try
                                         {
-                                            var capsule = new Andastra.Parsing.Formats.Capsule.Capsule(fullModulePath, createIfNotExist: false);
+                                            var capsule = new Capsule(fullModulePath, createIfNotExist: false);
                                             capsulesToSearch.Add(capsule);
                                         }
                                         catch
@@ -1702,7 +1702,7 @@ namespace HolocronToolset.Editors
 
     // Helper class for checkable list items in Avalonia ListBox
     // Matching PyKotor QListWidgetItem with checkable state and UserRole data
-    public class CheckableListItem : Avalonia.Controls.ContentControl
+    public class CheckableListItem : ContentControl
     {
         private CheckBox _checkBox;
         private TextBlock _textBlock;

@@ -55,7 +55,7 @@ namespace HolocronToolset.Widgets.Edit
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/plaintext.py:26-28
         // Original: def mouseDoubleClickEvent(self, e: QMouseEvent):
-        protected override void OnPointerPressed(Avalonia.Input.PointerPressedEventArgs e)
+        protected override void OnPointerPressed(PointerPressedEventArgs e)
         {
             base.OnPointerPressed(e);
             if (e.ClickCount == 2)

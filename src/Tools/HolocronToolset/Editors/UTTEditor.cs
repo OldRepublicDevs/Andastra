@@ -705,7 +705,7 @@ namespace HolocronToolset.Editors
                 _utt.Comment = _commentsEdit.Text ?? "";
             }
 
-            Game game = _installation?.Game ?? Game.K2;
+            BioWareGame game = _installation?.Game ?? BioWareGame.K2;
             var gff = UTTHelpers.DismantleUtt(_utt, game);
 
             // Preserve unmodified fields from original GFF that aren't yet supported by UTT object model
@@ -715,7 +715,7 @@ namespace HolocronToolset.Editors
                 var newRoot = gff.Root;
 
                 // List of fields that UTTHelpers.DismantleUtt explicitly sets
-                var fieldsSetByDismantle = new System.Collections.Generic.HashSet<string>
+                var fieldsSetByDismantle = new HashSet<string>
                 {
                     "Tag", "ResRef", "Comment", "Type", "LinkedTo", "LinkedToFlags",
                     "KeyName", "AutoRemoveKey", "TrapDetectable", "TrapDetectDC", "DisarmDC", "TrapFlag",
@@ -725,7 +725,7 @@ namespace HolocronToolset.Editors
                 };
 
                 // Fields that may have default value mismatches - always restore from original
-                var fieldsToRestore = new System.Collections.Generic.HashSet<string> { "PaletteID", "TrapDisarmable", "Cursor", "Faction", "TrapOneShot" };
+                var fieldsToRestore = new HashSet<string> { "PaletteID", "TrapDisarmable", "Cursor", "Faction", "TrapOneShot" };
                 foreach (var fieldName in fieldsToRestore)
                 {
                     if (originalRoot.Exists(fieldName))
@@ -831,11 +831,11 @@ namespace HolocronToolset.Editors
         public LocalizedStringEdit NameEdit => _nameEdit;
         public TextBox TagEdit => _tagEdit;
         public TextBox ResrefEdit => _resrefEdit;
-        public Avalonia.Controls.CheckBox AutoRemoveKeyCheckbox => _autoRemoveKeyCheckbox;
-        public Avalonia.Controls.CheckBox IsTrapCheckbox => _isTrapCheckbox;
-        public Avalonia.Controls.CheckBox ActivateOnceCheckbox => _activateOnceCheckbox;
-        public Avalonia.Controls.NumericUpDown DetectDcSpin => _detectDcSpin;
-        public Avalonia.Controls.NumericUpDown DisarmDcSpin => _disarmDcSpin;
+        public CheckBox AutoRemoveKeyCheckbox => _autoRemoveKeyCheckbox;
+        public CheckBox IsTrapCheckbox => _isTrapCheckbox;
+        public CheckBox ActivateOnceCheckbox => _activateOnceCheckbox;
+        public NumericUpDown DetectDcSpin => _detectDcSpin;
+        public NumericUpDown DisarmDcSpin => _disarmDcSpin;
         public UTT Utt => _utt;
 
         // Helper method to populate script combo boxes (matching PyKotor's populate_combo_box and setup_file_context_menu)

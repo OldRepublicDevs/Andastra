@@ -1,8 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
@@ -11,9 +9,7 @@ using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Formats.GFF;
 using UTCHelpers = Andastra.Parsing.Resource.Generics.UTC.UTCHelpers;
-using UTMHelpers = Andastra.Parsing.Resource.Generics.UTM.UTMHelpers;
 using UTC = Andastra.Parsing.Resource.Generics.UTC.UTC;
-using UTM = Andastra.Parsing.Resource.Generics.UTM.UTM;
 using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Formats.RIM;
 using Andastra.Parsing.Tools;
@@ -233,8 +229,8 @@ namespace HolocronToolset.Dialogs
             // Original:         continue
             // Original:     self.ui.locationSelect.addItem(str(capsule.filepath()), capsule.filepath())
             var capsules = _module.Capsules();
-            bool disableRIMSaving = _globalSettings.GetValue<bool>("DisableRIMSaving", false);
-            
+            bool disableRIMSaving = _globalSettings.GetValue("DisableRIMSaving", false);
+
             foreach (var capsule in capsules)
             {
                 if (capsule == null)
@@ -243,7 +239,7 @@ namespace HolocronToolset.Dialogs
                 }
 
                 string capsulePath = capsule.Path.ToString();
-                
+
                 // Skip RIM files if RIM saving is disabled
                 // Matching PyKotor: is_rim_file(capsule.filepath()) checks the full path
                 if (FileHelpers.IsRimFile(capsulePath) && disableRIMSaving)
@@ -407,7 +403,7 @@ namespace HolocronToolset.Dialogs
                     // This can happen in edge cases, but the original path should still be valid
                     absoluteFilepath = _filepath;
                 }
-                
+
                 // Add location to module resource (creates ModuleResource if it doesn't exist)
                 // Matching PyKotor: module_resource.add_locations(locations) is called internally
                 _module.AddLocations(_resname, _restype, new[] { absoluteFilepath });
@@ -423,15 +419,15 @@ namespace HolocronToolset.Dialogs
         {
             // Get game type from installation, defaulting to K2 if not available
             // Matching PyKotor: Uses installation's game type for format compatibility
-            Game gameToUse = _installation?.Game ?? Game.K2;
+            BioWareGame gameToUse = _installation?.Game ?? BioWareGame.K2;
 
             // Create new resource instance based on type and convert to bytes
             // Matching PyKotor implementation: Creates new instances with default values
             // Original: if self._restype is ResourceType.UTC: self.data = bytes_utc(UTC())
             if (restype == ResourceType.UTC)
             {
-                Andastra.Parsing.Resource.Generics.UTC.UTC utc = new Andastra.Parsing.Resource.Generics.UTC.UTC();
-                return Andastra.Parsing.Resource.Generics.UTC.UTCHelpers.BytesUtc(utc, gameToUse);
+                UTC utc = new UTC();
+                return UTCHelpers.BytesUtc(utc, gameToUse);
             }
             else if (restype == ResourceType.UTP)
             {
@@ -828,7 +824,7 @@ namespace HolocronToolset.Dialogs
                 {
                     string installationPath = Path.GetFullPath(_installation.Path);
                     string resourcePath = Path.GetFullPath(resource.FilePath);
-                    
+
                     // Check if resource path is within installation path
                     if (resourcePath.StartsWith(installationPath, StringComparison.OrdinalIgnoreCase))
                     {

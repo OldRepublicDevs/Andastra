@@ -362,7 +362,7 @@ namespace HolocronToolset.Windows
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1249-1256
         // Original: def _refresh_status_bar(self, mouse_pos: QPoint | Vector2 | None = None, mouse_buttons: set[int | Qt.MouseButton] | None = None, keys: set[int | Qt.Key] | None = None):
-        private void RefreshStatusBar(System.Numerics.Vector2? mousePos, System.Collections.Generic.HashSet<int> mouseButtons, System.Collections.Generic.HashSet<int> keys)
+        private void RefreshStatusBar(System.Numerics.Vector2? mousePos, HashSet<int> mouseButtons, HashSet<int> keys)
         {
             // Matching Python line 1002: self._update_status_bar(screen, buttons, keys)
             UpdateStatusBar(mousePos, mouseButtons, keys);
@@ -374,7 +374,7 @@ namespace HolocronToolset.Windows
         /// Rich status bar mirroring Module Designer style.
         /// Updates status bar with mouse position, hover room, selection, keys/buttons, and mode/status.
         /// </summary>
-        private void UpdateStatusBar(System.Numerics.Vector2? mousePos, System.Collections.Generic.HashSet<int> mouseButtons, System.Collections.Generic.HashSet<int> keys)
+        private void UpdateStatusBar(System.Numerics.Vector2? mousePos, HashSet<int> mouseButtons, HashSet<int> keys)
         {
             var renderer = Ui.MapRenderer;
             if (renderer == null)
@@ -398,12 +398,12 @@ namespace HolocronToolset.Windows
             // Matching Python lines 1023-1039: Resolve buttons/keys - ensure they are sets
             if (mouseButtons == null)
             {
-                mouseButtons = new System.Collections.Generic.HashSet<int>();
+                mouseButtons = new HashSet<int>();
                 // In a full implementation, this would get mouse buttons from renderer.mouse_down()
             }
             if (keys == null)
             {
-                keys = new System.Collections.Generic.HashSet<int>();
+                keys = new HashSet<int>();
                 // In a full implementation, this would get keys from renderer.keys_down()
             }
 
@@ -510,7 +510,7 @@ namespace HolocronToolset.Windows
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1074-1094
         // Original: def sort_with_modifiers(...)
-        private List<int> SortWithModifiers(System.Collections.Generic.HashSet<int> items, Func<int, string> getStringFunc, string qtEnumType)
+        private List<int> SortWithModifiers(HashSet<int> items, Func<int, string> getStringFunc, string qtEnumType)
         {
             if (items == null || items.Count == 0)
             {
@@ -525,7 +525,7 @@ namespace HolocronToolset.Windows
                 // Matching Python line 1089: modifier_set = {Qt.Key.Key_Control, Qt.Key.Key_Shift, Qt.Key.Key_Alt, Qt.Key.Key_Meta}
                 // Note: These are Qt key codes - in C# we'd use Avalonia Input.Key enum values
                 // For now, we'll use placeholder values that match common key codes
-                var modifierSet = new System.Collections.Generic.HashSet<int>
+                var modifierSet = new HashSet<int>
                 {
                     17, // Control
                     16, // Shift

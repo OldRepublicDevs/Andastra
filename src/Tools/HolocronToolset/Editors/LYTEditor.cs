@@ -388,7 +388,7 @@ namespace HolocronToolset.Editors
         /// <summary>
         /// Updates the graphics scene to render all LYT layout elements.
         /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:225-234
-        /// Original: 
+        /// Original:
         ///     self.scene.clear()
         ///     for room in self._lyt.rooms:
         ///         self.scene.addItem(RoomItem(room, self))
@@ -1601,7 +1601,7 @@ namespace HolocronToolset.Editors
                     bool modelExists = false;
                     foreach (var room in _lyt.Rooms)
                     {
-                        if (room.Model == new Andastra.Parsing.Common.ResRef(targetResref))
+                        if (room.Model == new ResRef(targetResref))
                         {
                             modelExists = true;
                             break;
@@ -1612,7 +1612,7 @@ namespace HolocronToolset.Editors
                     {
                         // Add a new room entry with the imported model at origin
                         // User can reposition it later in the editor
-                        var newRoom = new LYTRoom(new Andastra.Parsing.Common.ResRef(targetResref), new Vector3(0, 0, 0));
+                        var newRoom = new LYTRoom(new ResRef(targetResref), new Vector3(0, 0, 0));
                         _lyt.Rooms.Add(newRoom);
                         System.Console.WriteLine($"Added room entry for imported model: {targetResref} at position (0, 0, 0)");
                         UpdateScene();

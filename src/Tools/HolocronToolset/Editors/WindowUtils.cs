@@ -56,7 +56,7 @@ namespace HolocronToolset.Editors
             }
 
             var settings = new Settings("Global");
-            var recentFiles = settings.GetValue<List<string>>("RecentFiles", new List<string>())
+            var recentFiles = settings.GetValue("RecentFiles", new List<string>())
                 .Where(fp => File.Exists(fp))
                 .ToList();
 
@@ -116,7 +116,7 @@ namespace HolocronToolset.Editors
         public static Tuple<string, Window> OpenResourceEditor(
             string filepath = null,
             string resname = null,
-            Andastra.Parsing.Resource.ResourceType restype = null,
+            ResourceType restype = null,
             byte[] data = null,
             HTInstallation installation = null,
             Window parentWindow = null,
@@ -360,7 +360,7 @@ namespace HolocronToolset.Editors
             }
             else if (restype.Contents == "plaintext")
             {
-                editor = new HolocronToolset.Editors.TXTEditor(parentWindow, installation);
+                editor = new TXTEditor(parentWindow, installation);
             }
 
             if (editor == null)
