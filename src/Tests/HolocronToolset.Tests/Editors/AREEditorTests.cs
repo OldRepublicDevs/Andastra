@@ -3014,14 +3014,72 @@ namespace HolocronToolset.Tests.Editors
             }
         }
 
-        // TODO: STUB - Implement test_are_editor_manipulate_on_heartbeat_script (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:995-1013)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:995-1013
         // Original: def test_are_editor_manipulate_on_heartbeat_script(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path): Test manipulating on heartbeat script field.
         [Fact]
         public void TestAreEditorManipulateOnHeartbeatScript()
         {
-            // TODO: STUB - Implement on heartbeat script field manipulation test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:995-1013
-            throw new NotImplementedException("TestAreEditorManipulateOnHeartbeatScript: On heartbeat script manipulation test not yet implemented");
+            // Matching Python: Test manipulating on heartbeat script field.
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Matching Python: are_file = test_files_dir / "tat001.are"
+            string areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            if (!System.IO.File.Exists(areFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            }
+
+            // Matching Python: if not are_file.exists(): pytest.skip("tat001.are not found")
+            if (!System.IO.File.Exists(areFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            // Matching Python: editor = AREEditor(None, installation)
+            var editor = new AREEditor(null, installation);
+
+            // Matching Python: original_data = are_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(areFile);
+
+            // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, original_data)
+            editor.Load(areFile, "tat001", ResourceType.ARE, originalData);
+
+            // Matching Python: Modify script (max 16 chars for ResRef)
+            // Matching Python: editor.ui.onHeartbeatSelect.set_combo_box_text("test_on_hbeat")
+            if (editor.OnHeartbeatSelect != null)
+            {
+                editor.OnHeartbeatSelect.Text = "test_on_hbeat";
+            }
+
+            // Matching Python: Save and verify
+            // Matching Python: data, _ = editor.build()
+            var (data, _) = editor.Build();
+
+            // Matching Python: modified_are = read_are(data)
+            var modifiedAre = AREHelpers.ReadAre(data);
+
+            // Matching Python: assert str(modified_are.on_heartbeat) == "test_on_hbeat"
+            modifiedAre.OnHeartbeat.ToString().Should().Be("test_on_hbeat");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1015-1033
