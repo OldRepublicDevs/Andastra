@@ -19,6 +19,8 @@ using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
 using HolocronToolset.Editors.Actions;
 using Avalonia.Platform.Storage;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 
 namespace HolocronToolset.Editors.DLG
 {
@@ -4332,6 +4334,8 @@ namespace HolocronToolset.Editors.DLG
             // Matching PyKotor: cb: QClipboard | None = QApplication.clipboard()
             // Matching PyKotor: if cb is None: return
             // Matching PyKotor: cb.setText(path)
+            // Note: PyKotor doesn't catch clipboard errors, but in C# we should handle them gracefully
+            // Matching TPCEditor pattern: Show error message when clipboard copy fails
             try
             {
                 var topLevel = Avalonia.Controls.TopLevel.GetTopLevel(this);
@@ -4339,11 +4343,28 @@ namespace HolocronToolset.Editors.DLG
                 {
                     await topLevel.Clipboard.SetTextAsync(pathText);
                 }
+                else
+                {
+                    // Clipboard not available - show error message
+                    // Matching TPCEditor pattern: QMessageBox.critical when clipboard is unavailable
+                    var msgBox = MessageBoxManager.GetMessageBoxStandard(
+                        "Copy Failed",
+                        "Clipboard is not available. Unable to copy path to clipboard.",
+                        ButtonEnum.Ok,
+                        Icon.Error);
+                    await msgBox.ShowAsync();
+                }
             }
-            catch
+            catch (Exception ex)
             {
-                // Matching PyKotor: Silently handle clipboard errors (Python doesn't catch, but we should)
-                // TODO:  In a full implementation, we might want to show an error message
+                // Matching TPCEditor pattern: QMessageBox.critical when clipboard copy fails
+                // Show error message to user when clipboard operation fails
+                var msgBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Copy Failed",
+                    $"Failed to copy path to clipboard:\n{ex.Message}",
+                    ButtonEnum.Ok,
+                    Icon.Error);
+                await msgBox.ShowAsync();
             }
         }
 
