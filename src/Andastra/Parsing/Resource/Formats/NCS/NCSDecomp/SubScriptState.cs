@@ -2017,6 +2017,18 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                         right = this.RemoveLastExp(false);
                         Error($"DEBUG TransformBinary: Retry RemoveLastExp for right operand: {right?.GetType().Name ?? "null"}");
                     }
+                    // If still null after retry, create placeholders to avoid null reference exceptions
+                    // but this will result in incorrect decompilation
+                    if (left == null)
+                    {
+                        Error($"DEBUG TransformBinary: WARNING - left operand still null after retry, creating placeholder");
+                        left = this.BuildPlaceholderParam(1);
+                    }
+                    if (right == null)
+                    {
+                        Error($"DEBUG TransformBinary: WARNING - right operand still null after retry, creating placeholder");
+                        right = this.BuildPlaceholderParam(1);
+                    }
                 }
                 
                 exp = new AConditionalExp(left, right, NodeUtils.GetOp(node));
