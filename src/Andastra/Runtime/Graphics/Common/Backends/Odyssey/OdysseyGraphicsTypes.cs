@@ -231,6 +231,31 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
     }
 
     /// <summary>
+    /// Static helper class for OpenGL buffer P/Invoke methods.
+    /// Required because DllImport cannot be used in generic classes.
+    /// </summary>
+    internal static class OdysseyBufferHelpers
+    {
+        [DllImport("opengl32.dll", EntryPoint = "glGenBuffers")]
+        internal static extern void glGenBuffers(int n, uint[] buffers);
+
+        [DllImport("opengl32.dll", EntryPoint = "glBindBuffer")]
+        internal static extern void glBindBuffer(uint target, uint buffer);
+
+        [DllImport("opengl32.dll", EntryPoint = "glBufferData")]
+        internal static extern void glBufferData(uint target, int size, IntPtr data, uint usage);
+
+        [DllImport("opengl32.dll", EntryPoint = "glBufferSubData")]
+        internal static extern void glBufferSubData(uint target, int offset, int size, IntPtr data);
+
+        [DllImport("opengl32.dll", EntryPoint = "glGetBufferSubData")]
+        internal static extern void glGetBufferSubData(uint target, int offset, int size, IntPtr data);
+
+        [DllImport("opengl32.dll", EntryPoint = "glDeleteBuffers")]
+        internal static extern void glDeleteBuffers(int n, uint[] buffers);
+    }
+
+    /// <summary>
     /// Odyssey vertex buffer implementation.
     /// Uses OpenGL vertex buffer objects (VBO).
     /// Based on xoreos VertexBuffer and PyKotor Mesh VBO implementation.
@@ -252,31 +277,9 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         private bool _disposed;
         private bool _vboCreated;
 
-        #region OpenGL P/Invoke
-
-        [DllImport("opengl32.dll", EntryPoint = "glGenBuffers")]
-        private static extern void glGenBuffers(int n, uint[] buffers);
-
-        [DllImport("opengl32.dll", EntryPoint = "glBindBuffer")]
-        private static extern void glBindBuffer(uint target, uint buffer);
-
-        [DllImport("opengl32.dll", EntryPoint = "glBufferData")]
-        private static extern void glBufferData(uint target, int size, IntPtr data, uint usage);
-
-        [DllImport("opengl32.dll", EntryPoint = "glBufferSubData")]
-        private static extern void glBufferSubData(uint target, int offset, int size, IntPtr data);
-
-        [DllImport("opengl32.dll", EntryPoint = "glGetBufferSubData")]
-        private static extern void glGetBufferSubData(uint target, int offset, int size, IntPtr data);
-
-        [DllImport("opengl32.dll", EntryPoint = "glDeleteBuffers")]
-        private static extern void glDeleteBuffers(int n, uint[] buffers);
-
         private const uint GL_ARRAY_BUFFER = 0x8892;
         private const uint GL_STATIC_DRAW = 0x88E4;
         private const uint GL_DYNAMIC_DRAW = 0x88E8;
-
-        #endregion
 
         /// <summary>
         /// Creates a new vertex buffer with the specified data.
@@ -314,7 +317,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             // Matching xoreos: glGenBuffers(1, &_vbo)
             // Matching PyKotor: glGenBuffers(1, &vbo)
             uint[] buffers = new uint[1];
-            glGenBuffers(1, buffers);
+            OdysseyBufferHelpers.glGenBuffers(1, buffers);
             _bufferId = buffers[0];
 
             if (_bufferId == 0)
@@ -325,7 +328,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             // Bind buffer and upload data
             // Matching xoreos: glBindBuffer(GL_ARRAY_BUFFER, _vbo), glBufferData(...)
             // Matching PyKotor: glBindBuffer(GL_ARRAY_BUFFER, vbo), glBufferData(GL_ARRAY_BUFFER, ...)
-            glBindBuffer(GL_ARRAY_BUFFER, _bufferId);
+            OdysseyBufferHelpers.glBindBuffer(GL_ARRAY_BUFFER, _bufferId);
 
             int dataSize = _data.Length * _vertexStride;
 
@@ -337,13 +340,13 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             {
                 IntPtr dataPtr = handle.AddrOfPinnedObject();
                 // Upload data to GPU directly from pinned array
-                glBufferData(GL_ARRAY_BUFFER, dataSize, dataPtr, GL_STATIC_DRAW);
+                OdysseyBufferHelpers.glBufferData(GL_ARRAY_BUFFER, dataSize, dataPtr, GL_STATIC_DRAW);
             }
             finally
             {
                 handle.Free();
                 // Unbind buffer
-                glBindBuffer(GL_ARRAY_BUFFER, 0);
+                OdysseyBufferHelpers.glBindBuffer(GL_ARRAY_BUFFER, 0);
             }
 
             _vboCreated = true;
@@ -377,7 +380,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             // Update VBO if it exists
             if (_vboCreated && _bufferId != 0)
             {
-                glBindBuffer(GL_ARRAY_BUFFER, _bufferId);
+                OdysseyBufferHelpers.glBindBuffer(GL_ARRAY_BUFFER, _bufferId);
 
                 int dataSize = _data.Length * _vertexStride;
 
@@ -388,13 +391,13 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 {
                     IntPtr dataPtr = handle.AddrOfPinnedObject();
                     // Update buffer data directly from pinned array
-                    glBufferData(GL_ARRAY_BUFFER, dataSize, dataPtr, GL_STATIC_DRAW);
+                    OdysseyBufferHelpers.glBufferData(GL_ARRAY_BUFFER, dataSize, dataPtr, GL_STATIC_DRAW);
                 }
                 finally
                 {
                     handle.Free();
                     // Unbind buffer
-                    glBindBuffer(GL_ARRAY_BUFFER, 0);
+                    OdysseyBufferHelpers.glBindBuffer(GL_ARRAY_BUFFER, 0);
                 }
             }
             else
@@ -448,7 +451,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 if (_bufferId != 0)
                 {
                     uint[] buffers = new uint[] { _bufferId };
-                    glDeleteBuffers(1, buffers);
+                    OdysseyBufferHelpers.glDeleteBuffers(1, buffers);
                     _bufferId = 0;
                 }
 
