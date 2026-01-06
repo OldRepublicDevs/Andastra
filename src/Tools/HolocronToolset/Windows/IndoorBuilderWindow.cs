@@ -350,9 +350,227 @@ namespace HolocronToolset.Windows
         // Original: def _refresh_status_bar(self, mouse_pos: QPoint | Vector2 | None = None, mouse_buttons: set[int | Qt.MouseButton] | None = None, keys: set[int | Qt.Key] | None = None):
         private void RefreshStatusBar(System.Numerics.Vector2? mousePos, System.Collections.Generic.HashSet<int> mouseButtons, System.Collections.Generic.HashSet<int> keys)
         {
-            // Matching Python implementation: Update status bar with mouse position, buttons, and keys
-            // This will be fully implemented when status bar UI is available
-            // TODO: STUB - For now, this is a placeholder that matches the Python interface
+            // Matching Python line 1002: self._update_status_bar(screen, buttons, keys)
+            UpdateStatusBar(mousePos, mouseButtons, keys);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1004-1171
+        // Original: def _update_status_bar(self, screen: QPoint | Vector2 | None = None, buttons: set[int | Qt.MouseButton] | None = None, keys: set[int | Qt.Key] | None = None):
+        /// <summary>
+        /// Rich status bar mirroring Module Designer style.
+        /// Updates status bar with mouse position, hover room, selection, keys/buttons, and mode/status.
+        /// </summary>
+        private void UpdateStatusBar(System.Numerics.Vector2? mousePos, System.Collections.Generic.HashSet<int> mouseButtons, System.Collections.Generic.HashSet<int> keys)
+        {
+            var renderer = Ui.MapRenderer;
+            if (renderer == null)
+            {
+                return;
+            }
+
+            // Matching Python lines 1013-1021: Resolve screen coords
+            System.Numerics.Vector2 screenVec;
+            if (mousePos.HasValue)
+            {
+                screenVec = mousePos.Value;
+            }
+            else
+            {
+                // If no mouse position provided, use (0, 0) as default
+                // In a full implementation, this would get cursor position from the renderer
+                screenVec = new System.Numerics.Vector2(0, 0);
+            }
+
+            // Matching Python lines 1023-1039: Resolve buttons/keys - ensure they are sets
+            if (mouseButtons == null)
+            {
+                mouseButtons = new System.Collections.Generic.HashSet<int>();
+                // In a full implementation, this would get mouse buttons from renderer.mouse_down()
+            }
+            if (keys == null)
+            {
+                keys = new System.Collections.Generic.HashSet<int>();
+                // In a full implementation, this would get keys from renderer.keys_down()
+            }
+
+            // Matching Python line 1041: world: Vector3 = renderer.to_world_coords(screen_vec.x, screen_vec.y)
+            // Note: to_world_coords method needs to be implemented in IndoorMapRenderer
+            // For now, we'll use screen coordinates as a placeholder
+            System.Numerics.Vector3 world = new System.Numerics.Vector3(screenVec.X, screenVec.Y, 0.0f);
+
+            // Matching Python line 1042: hover_room: IndoorMapRoom | None = renderer.room_under_mouse()
+            // Note: room_under_mouse method needs to be implemented in IndoorMapRenderer
+            IndoorMapRoom hoverRoom = null; // Placeholder - will be implemented when room_under_mouse is available
+
+            // Matching Python line 1043: sel_rooms = renderer.selected_rooms()
+            var selRooms = renderer.SelectedRooms();
+
+            // Matching Python line 1044: sel_hook = renderer.selected_hook()
+            // Note: selected_hook method needs to be implemented in IndoorMapRenderer
+            Tuple<IndoorMapRoom, int> selHook = null; // Placeholder - will be implemented when selected_hook is available
+
+            // Matching Python lines 1046-1052: Mouse/hover
+            string hoverText;
+            if (hoverRoom != null && hoverRoom.Component != null)
+            {
+                hoverText = $"<b><span style=\"{EmojiStyle}\">🧩</span>&nbsp;Hover:</b> <span style='color:#0055B0'>{System.Security.SecurityElement.Escape(hoverRoom.Component.Name)}</span>";
+            }
+            else
+            {
+                hoverText = $"<b><span style=\"{EmojiStyle}\">🧩</span>&nbsp;Hover:</b> <span style='color:#a6a6a6'><i>None</i></span>";
+            }
+            Ui.StatusBarHoverText = hoverText;
+
+            // Matching Python lines 1054-1058: Mouse coordinates
+            string mouseText = $"<b><span style=\"{EmojiStyle}\">🖱</span>&nbsp;Coords:</b> " +
+                               $"<span style='color:#0055B0'>{world.X:F2}</span>, " +
+                               $"<span style='color:#228800'>{world.Y:F2}</span>";
+            Ui.StatusBarMouseText = mouseText;
+
+            // Matching Python lines 1060-1068: Selection
+            string selText;
+            if (selHook != null)
+            {
+                var hookRoom = selHook.Item1;
+                var hookIdx = selHook.Item2;
+                if (hookRoom != null && hookRoom.Component != null)
+                {
+                    selText = $"<b><span style=\"{EmojiStyle}\">🎯</span>&nbsp;Selected Hook:</b> <span style='color:#0055B0'>{System.Security.SecurityElement.Escape(hookRoom.Component.Name)}</span> (#{hookIdx})";
+                }
+                else
+                {
+                    selText = $"<b><span style=\"{EmojiStyle}\">🎯</span>&nbsp;Selected Hook:</b> <span style='color:#a6a6a6'><i>None</i></span>";
+                }
+            }
+            else if (selRooms != null && selRooms.Count > 0)
+            {
+                selText = $"<b><span style=\"{EmojiStyle}\">🟦</span>&nbsp;Selected Rooms:</b> <span style='color:#0055B0'>{selRooms.Count}</span>";
+            }
+            else
+            {
+                selText = $"<b><span style=\"{EmojiStyle}\">🟦</span>&nbsp;Selected:</b> <span style='color:#a6a6a6'><i>None</i></span>";
+            }
+            Ui.StatusBarSelectionText = selText;
+
+            // Matching Python lines 1073-1094: Keys/buttons (sorted with modifiers first)
+            var keysSorted = SortWithModifiers(keys, GetKeyString, "QtKey");
+            var buttonsSorted = SortWithModifiers(mouseButtons, GetButtonString, "QtMouse");
+
+            // Matching Python lines 1135-1149: Format keys and buttons
+            string keysText = FormatItems(keysSorted, GetKeyString, "#a13ac8");
+            string buttonsText = FormatItems(buttonsSorted, GetButtonString, "#228800");
+            string sep = (keysText.Length > 0 && buttonsText.Length > 0) ? " + " : "";
+            string keysButtonsText = $"<b><span style=\"{EmojiStyle}\">⌨</span>&nbsp;Keys/<span style=\"{EmojiStyle}\">🖱</span>&nbsp;Buttons:</b> {keysText}{sep}{buttonsText}";
+            Ui.StatusBarKeysText = keysButtonsText;
+
+            // Matching Python lines 1154-1171: Mode/status line
+            var modeParts = new List<string>();
+            // Note: _painting_walkmesh and _current_material need to be implemented
+            // if (_paintingWalkmesh)
+            // {
+            //     var material = _currentMaterial();
+            //     string matText = material != null ? material.Name.Replace("_", " ").Title() : "Material";
+            //     modeParts.Add($"<span style='color:#c46811'>Paint: {matText}</span>");
+            // }
+            // Note: _colorize_materials needs to be implemented
+            // if (_colorizeMaterials)
+            // {
+            //     modeParts.Add("Colorized");
+            // }
+            if (renderer.SnapToGrid)
+            {
+                modeParts.Add("Grid Snap");
+            }
+            if (renderer.SnapToHooks)
+            {
+                modeParts.Add("Hook Snap");
+            }
+            string modeText = $"<b><span style=\"{EmojiStyle}\">ℹ</span>&nbsp;Status:</b> " +
+                             (modeParts.Count > 0 ? string.Join(" | ", modeParts) : "<span style='color:#a6a6a6'><i>Idle</i></span>");
+            Ui.StatusBarModeText = modeText;
+        }
+
+        // Matching PyKotor implementation - emoji style constant
+        // Original: self._emoji_style = "font-size:12pt; font-family:'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji','EmojiOne','Twemoji Mozilla','Segoe UI Symbol',sans-serif; vertical-align:middle;"
+        private const string EmojiStyle = "font-size:12pt; font-family:'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji','EmojiOne','Twemoji Mozilla','Segoe UI Symbol',sans-serif; vertical-align:middle;";
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1074-1094
+        // Original: def sort_with_modifiers(...)
+        private List<int> SortWithModifiers(System.Collections.Generic.HashSet<int> items, Func<int, string> getStringFunc, string qtEnumType)
+        {
+            if (items == null || items.Count == 0)
+            {
+                return new List<int>();
+            }
+
+            var modifiers = new List<int>();
+            var normal = new List<int>();
+
+            if (qtEnumType == "QtKey")
+            {
+                // Matching Python line 1089: modifier_set = {Qt.Key.Key_Control, Qt.Key.Key_Shift, Qt.Key.Key_Alt, Qt.Key.Key_Meta}
+                // Note: These are Qt key codes - in C# we'd use Avalonia Input.Key enum values
+                // For now, we'll use placeholder values that match common key codes
+                var modifierSet = new System.Collections.Generic.HashSet<int>
+                {
+                    17, // Control
+                    16, // Shift
+                    18, // Alt
+                    91  // Meta/Windows
+                };
+                foreach (var item in items)
+                {
+                    if (modifierSet.Contains(item))
+                    {
+                        modifiers.Add(item);
+                    }
+                    else
+                    {
+                        normal.Add(item);
+                    }
+                }
+            }
+            else
+            {
+                normal.AddRange(items);
+            }
+
+            modifiers.Sort((a, b) => string.Compare(getStringFunc(a), getStringFunc(b), StringComparison.Ordinal));
+            normal.Sort((a, b) => string.Compare(getStringFunc(a), getStringFunc(b), StringComparison.Ordinal));
+            return modifiers.Concat(normal).ToList();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1096-1112
+        // Original: def get_qt_key_string_local(key: int | Qt.Key | Qt.MouseButton) -> str:
+        private string GetKeyString(int key)
+        {
+            // Matching Python: Remove "Key_" prefix if present
+            // In a full implementation, this would use Avalonia Input.Key enum
+            // For now, return a simple string representation
+            return $"Key{key}";
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1114-1130
+        // Original: def get_qt_button_string_local(btn: int | Qt.MouseButton | Qt.Key) -> str:
+        private string GetButtonString(int button)
+        {
+            // Matching Python: Remove "Button" suffix if present
+            // In a full implementation, this would use Avalonia Input.MouseButton enum
+            // For now, return a simple string representation
+            return $"Btn{button}";
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1135-1145
+        // Original: def fmt(seq: list[int | Qt.Key | Qt.MouseButton], formatter: Callable[[int | Qt.Key | Qt.MouseButton], str], color: str) -> str:
+        private string FormatItems(List<int> seq, Func<int, string> formatter, string color)
+        {
+            if (seq == null || seq.Count == 0)
+            {
+                return "";
+            }
+            var formattedItems = seq.Select(item => System.Security.SecurityElement.Escape(formatter(item))).ToList();
+            var coloredItems = formattedItems.Select(item => $"<span style='color: {color}'>{item}</span>").ToList();
+            return string.Join("&nbsp;+&nbsp;", coloredItems);
         }
     }
 
@@ -537,6 +755,15 @@ namespace HolocronToolset.Windows
         {
             RotSnapSpinValue = (decimal)value;
         }
+
+        // Matching PyKotor implementation - status bar label text properties
+        // Original: self._mouse_label.setText(...), self._hover_label.setText(...), etc.
+        // These properties store the status bar text that can be displayed when UI is available
+        public string StatusBarMouseText { get; set; } = "";
+        public string StatusBarHoverText { get; set; } = "";
+        public string StatusBarSelectionText { get; set; } = "";
+        public string StatusBarKeysText { get; set; } = "";
+        public string StatusBarModeText { get; set; } = "";
     }
 
     // Matching PyKotor implementation - checkbox wrapper for API compatibility
