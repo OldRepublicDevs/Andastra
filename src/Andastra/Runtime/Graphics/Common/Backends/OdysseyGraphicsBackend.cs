@@ -13,11 +13,11 @@ namespace Andastra.Runtime.Graphics.Common.Backends
 {
     /// <summary>
     /// Abstract base class for Odyssey engine graphics backends.
-    /// 
+    ///
     /// Odyssey engine is used by:
     /// - Star Wars: Knights of the Old Republic (swkotor.exe)
     /// - Star Wars: Knights of the Old Republic II - The Sith Lords (swkotor2.exe)
-    /// 
+    ///
     /// This backend matches the Odyssey engine's rendering implementation exactly 1:1,
     /// as reverse-engineered from swkotor.exe and swkotor2.exe.
     /// </summary>
@@ -25,7 +25,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
     /// Odyssey Engine Graphics Backend:
     /// - Based on reverse engineering of swkotor.exe and swkotor2.exe
     /// - Original game graphics system: OpenGL (OPENGL32.DLL) with WGL extensions
-    /// - Graphics initialization: 
+    /// - Graphics initialization:
     ///   - swkotor.exe: FUN_0044dab0 @ 0x0044dab0 (OpenGL context creation)
     ///   - swkotor2.exe: FUN_00461c50 @ 0x00461c50 (OpenGL context creation)
     /// - Common initialization pattern (both games):
@@ -35,13 +35,13 @@ namespace Andastra.Runtime.Graphics.Common.Backends
     ///   4. OpenGL context creation (wglCreateContext, wglMakeCurrent)
     ///   5. Context sharing setup (wglShareLists) - for multi-threaded rendering
     ///   6. Texture initialization (glGenTextures, glBindTexture, glTexImage2D)
-    /// - Located via string references: 
+    /// - Located via string references:
     ///   - "wglCreateContext" @ swkotor.exe:0x0073d2b8, swkotor2.exe:0x007b52cc
     ///   - "wglChoosePixelFormatARB" @ swkotor.exe:0x0073f444, swkotor2.exe:0x007b880c
     ///   - "WGL_NV_render_texture_rectangle" @ swkotor.exe:0x00740798, swkotor2.exe:0x007b880c
     /// - Original game graphics device: OpenGL with WGL extensions for Windows
     /// - This implementation: Direct 1:1 match of Odyssey engine rendering code
-    /// 
+    ///
     /// Inheritance Structure:
     /// - BaseOriginalEngineGraphicsBackend (Common) - Original engine graphics backend base
     ///   - OdysseyGraphicsBackend (this class) - Common Odyssey OpenGL initialization
@@ -51,13 +51,13 @@ namespace Andastra.Runtime.Graphics.Common.Backends
     public abstract class OdysseyGraphicsBackend : BaseOriginalEngineGraphicsBackend, IGraphicsBackend
     {
         #region IGraphicsBackend Implementation Fields
-        
+
         // IGraphicsBackend implementation objects
         protected OdysseyGraphicsDevice _odysseyGraphicsDevice;
         protected OdysseyContentManager _odysseyContentManager;
         protected OdysseyWindow _odysseyWindow;
         protected OdysseyInputManager _odysseyInputManager;
-        
+
         // Window and rendering state
         protected IntPtr _windowHandle;
         protected int _width;
@@ -68,28 +68,28 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         protected bool _isExiting;
         protected bool _isRunning;
         protected bool _vsyncEnabled = true;
-        
+
         // Game loop timing
         protected Stopwatch _gameTimer;
         protected long _previousTicks;
         protected float _targetFrameTime = 1.0f / 60.0f; // 60 FPS target
-        
+
         // Windows message loop
         [DllImport("user32.dll")]
         private static extern bool PeekMessageA(out MSG lpMsg, IntPtr hWnd, uint wMsgFilterMin, uint wMsgFilterMax, uint wRemoveMsg);
-        
+
         [DllImport("user32.dll")]
         private static extern bool TranslateMessage(ref MSG lpMsg);
-        
+
         [DllImport("user32.dll")]
         private static extern IntPtr DispatchMessageA(ref MSG lpMsg);
-        
+
         [DllImport("user32.dll")]
         private static extern void PostQuitMessage(int nExitCode);
-        
+
         [DllImport("gdi32.dll")]
         private static extern bool SwapBuffers(IntPtr hdc);
-        
+
         [StructLayout(LayoutKind.Sequential)]
         private struct MSG
         {
@@ -101,12 +101,12 @@ namespace Andastra.Runtime.Graphics.Common.Backends
             public int pt_x;
             public int pt_y;
         }
-        
+
         private const uint PM_REMOVE = 0x0001;
         private const uint WM_QUIT = 0x0012;
-        
+
         #endregion
-        
+
         protected override string GetEngineName() => "Odyssey";
 
         protected override bool DetermineGraphicsApi()
@@ -622,42 +622,42 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         #endregion
 
         #region IGraphicsBackend Implementation
-        
+
         /// <summary>
         /// Gets the backend type.
         /// </summary>
         public new GraphicsBackendType BackendType => GraphicsBackendType.OdysseyEngine;
-        
+
         /// <summary>
         /// Gets whether the graphics backend has been initialized.
         /// </summary>
         public new bool IsInitialized => _initialized;
-        
+
         /// <summary>
         /// Gets the graphics device.
         /// </summary>
         public IGraphicsDevice GraphicsDevice => _odysseyGraphicsDevice;
-        
+
         /// <summary>
         /// Gets the content manager for loading assets.
         /// </summary>
         public IContentManager ContentManager => _odysseyContentManager;
-        
+
         /// <summary>
         /// Gets the window manager.
         /// </summary>
         public IWindow Window => _odysseyWindow;
-        
+
         /// <summary>
         /// Gets the input manager.
         /// </summary>
         public IInputManager InputManager => _odysseyInputManager;
-        
+
         /// <summary>
         /// Gets whether the graphics backend supports VSync.
         /// </summary>
         public bool SupportsVSync => true;
-        
+
         /// <summary>
         /// Sets the game installation directory path for content loading.
         /// Should be called before or after Initialize().
@@ -666,14 +666,14 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         public void SetGamePath(string gamePath)
         {
             _gamePath = gamePath ?? string.Empty;
-            
+
             // Update content manager if already initialized
             if (_odysseyContentManager != null)
             {
                 _odysseyContentManager.RootDirectory = _gamePath;
             }
         }
-        
+
         /// <summary>
         /// Initializes the graphics backend.
         /// Based on swkotor.exe: FUN_0044dab0 @ 0x0044dab0
@@ -689,34 +689,39 @@ namespace Andastra.Runtime.Graphics.Common.Backends
             {
                 return;
             }
-            
+
             _width = width;
             _height = height;
             _title = title ?? "KOTOR";
             _isFullscreen = fullscreen;
-            
+
             Console.WriteLine($"[OdysseyGraphicsBackend] Initializing: {_width}x{_height}, fullscreen={_isFullscreen}");
-            
+
             // Create the window and OpenGL context
             // This is implemented by derived classes (Kotor1/Kotor2GraphicsBackend)
             if (!CreateOdysseyWindowAndContext())
             {
                 throw new InvalidOperationException("Failed to create Odyssey window and OpenGL context");
             }
-            
+
             // Create wrapper objects
             _odysseyGraphicsDevice = new OdysseyGraphicsDevice(this, _glContext, _glDevice, _windowHandle, _width, _height);
             // Initialize content manager with game path (if available) or empty string
             // The content manager can work without a root directory if a resource provider is set later
             _odysseyContentManager = new OdysseyContentManager(_gamePath ?? string.Empty);
+            // Set graphics device for texture creation
+            if (_odysseyContentManager is OdysseyContentManager odysseyContentManager)
+            {
+                odysseyContentManager.SetGraphicsDevice(_odysseyGraphicsDevice);
+            }
             _odysseyWindow = new OdysseyWindow(_windowHandle, _title, _width, _height, _isFullscreen);
             _odysseyInputManager = new OdysseyInputManager();
-            
+
             _initialized = true;
-            
+
             Console.WriteLine($"[OdysseyGraphicsBackend] Initialized successfully");
         }
-        
+
         /// <summary>
         /// Creates the Odyssey window and OpenGL context.
         /// Override in derived classes for game-specific initialization.
@@ -728,12 +733,12 @@ namespace Andastra.Runtime.Graphics.Common.Backends
             try
             {
                 Console.WriteLine("[OdysseyGraphicsBackend] Creating window and OpenGL context...");
-                
+
                 // Step 1: Register window class (matching swkotor.exe pattern)
                 IntPtr hInstance = GetModuleHandleA(null);
-                
+
                 _wndProcDelegate = new WndProcDelegate(WindowProc);
-                
+
                 WNDCLASSA wndClass = new WNDCLASSA
                 {
                     style = 0x0003, // CS_HREDRAW | CS_VREDRAW
@@ -747,7 +752,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
                     lpszMenuName = null,
                     lpszClassName = "OdysseyRenderWindow"
                 };
-                
+
                 ushort classAtom = RegisterClassA(ref wndClass);
                 if (classAtom == 0)
                 {
@@ -758,10 +763,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends
                         Console.WriteLine($"[OdysseyGraphicsBackend] RegisterClassA failed with error: {error}");
                     }
                 }
-                
+
                 // Step 2: Calculate window size (matching swkotor.exe AdjustWindowRect pattern)
                 uint windowStyle = _isFullscreen ? WS_POPUP : WS_OVERLAPPEDWINDOW;
-                
+
                 RECT rect = new RECT
                 {
                     left = 0,
@@ -769,18 +774,18 @@ namespace Andastra.Runtime.Graphics.Common.Backends
                     right = _width,
                     bottom = _height
                 };
-                
+
                 AdjustWindowRect(ref rect, windowStyle, false);
-                
+
                 int windowWidth = rect.right - rect.left;
                 int windowHeight = rect.bottom - rect.top;
-                
+
                 // Center on screen
                 int screenWidth = GetSystemMetrics(0); // SM_CXSCREEN
                 int screenHeight = GetSystemMetrics(1); // SM_CYSCREEN
                 int windowX = (screenWidth - windowWidth) / 2;
                 int windowY = (screenHeight - windowHeight) / 2;
-                
+
                 if (_isFullscreen)
                 {
                     windowX = 0;
@@ -788,10 +793,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends
                     windowWidth = screenWidth;
                     windowHeight = screenHeight;
                 }
-                
+
                 // Step 3: Create the window (matching swkotor.exe CreateWindowExA pattern)
                 Console.WriteLine($"[OdysseyGraphicsBackend] Creating window: {windowWidth}x{windowHeight} at ({windowX},{windowY})");
-                
+
                 _windowHandle = CreateWindowExA(
                     0, // dwExStyle
                     "OdysseyRenderWindow", // lpClassName
@@ -804,16 +809,16 @@ namespace Andastra.Runtime.Graphics.Common.Backends
                     hInstance, // hInstance
                     IntPtr.Zero // lpParam
                 );
-                
+
                 if (_windowHandle == IntPtr.Zero)
                 {
                     int error = Marshal.GetLastWin32Error();
                     Console.WriteLine($"[OdysseyGraphicsBackend] CreateWindowExA failed with error: {error}");
                     return false;
                 }
-                
+
                 Console.WriteLine($"[OdysseyGraphicsBackend] Window created: HWND=0x{_windowHandle.ToInt64():X}");
-                
+
                 // Step 4: Change display mode for fullscreen (matching swkotor.exe ChangeDisplaySettingsA pattern)
                 if (_isFullscreen)
                 {
@@ -824,26 +829,26 @@ namespace Andastra.Runtime.Graphics.Common.Backends
                     devMode.dmBitsPerPel = 32;
                     devMode.dmDisplayFrequency = (uint)_refreshRate;
                     devMode.dmFields = 0x00080000 | 0x00100000 | 0x00040000 | 0x00400000; // DM_PELSWIDTH | DM_PELSHEIGHT | DM_BITSPERPEL | DM_DISPLAYFREQUENCY
-                    
+
                     int result = ChangeDisplaySettingsA(ref devMode, CDS_FULLSCREEN);
                     if (result != 0)
                     {
                         Console.WriteLine($"[OdysseyGraphicsBackend] ChangeDisplaySettingsA failed: {result}");
                     }
                 }
-                
+
                 // Step 5: Show the window
                 ShowWindow(_windowHandle, _isFullscreen ? 3 : 1); // SW_MAXIMIZE or SW_SHOWNORMAL
                 SetForegroundWindow(_windowHandle);
                 SetFocus(_windowHandle);
-                
+
                 // Step 6: Create OpenGL context
                 Console.WriteLine("[OdysseyGraphicsBackend] Creating OpenGL context...");
-                
+
                 IntPtr tempGlDevice = IntPtr.Zero;
                 IntPtr tempGlContext = IntPtr.Zero;
                 bool contextMadeCurrent = false;
-                
+
                 try
                 {
                     tempGlDevice = GetDC(_windowHandle);
@@ -852,7 +857,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
                         Console.WriteLine("[OdysseyGraphicsBackend] GetDC failed");
                         return false;
                     }
-                    
+
                     // Set up pixel format (matching swkotor.exe ChoosePixelFormat pattern)
                     PIXELFORMATDESCRIPTOR pfd = new PIXELFORMATDESCRIPTOR
                     {
@@ -869,22 +874,22 @@ namespace Andastra.Runtime.Graphics.Common.Backends
                         cStencilBits = 8,
                         iLayerType = PFD_MAIN_PLANE
                     };
-                    
+
                     int pixelFormat = ChoosePixelFormat(tempGlDevice, ref pfd);
                     if (pixelFormat == 0)
                     {
                         Console.WriteLine("[OdysseyGraphicsBackend] ChoosePixelFormat failed");
                         return false;
                     }
-                    
+
                     Console.WriteLine($"[OdysseyGraphicsBackend] Chose pixel format: {pixelFormat}");
-                    
+
                     if (!SetPixelFormat(tempGlDevice, pixelFormat, ref pfd))
                     {
                         Console.WriteLine("[OdysseyGraphicsBackend] SetPixelFormat failed");
                         return false;
                     }
-                    
+
                     // Create OpenGL context (matching swkotor.exe wglCreateContext pattern)
                     tempGlContext = wglCreateContext(tempGlDevice);
                     if (tempGlContext == IntPtr.Zero)
@@ -892,18 +897,18 @@ namespace Andastra.Runtime.Graphics.Common.Backends
                         Console.WriteLine("[OdysseyGraphicsBackend] wglCreateContext failed");
                         return false;
                     }
-                    
+
                     Console.WriteLine($"[OdysseyGraphicsBackend] Created OpenGL context: 0x{tempGlContext.ToInt64():X}");
-                    
+
                     // Make context current (matching swkotor.exe wglMakeCurrent pattern)
                     if (!wglMakeCurrent(tempGlDevice, tempGlContext))
                     {
                         Console.WriteLine("[OdysseyGraphicsBackend] wglMakeCurrent failed");
                         return false;
                     }
-                    
+
                     contextMadeCurrent = true;
-                    
+
                     // Success - assign to instance fields
                     _glDevice = tempGlDevice;
                     _glContext = tempGlContext;
@@ -918,7 +923,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
                     {
                         wglMakeCurrent(IntPtr.Zero, IntPtr.Zero);
                     }
-                    
+
                     // Clean up OpenGL context if it was created but not successfully assigned
                     if (tempGlContext != IntPtr.Zero)
                     {
@@ -931,7 +936,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
                         wglDeleteContext(tempGlContext);
                         Console.WriteLine("[OdysseyGraphicsBackend] Cleaned up OpenGL context after failure");
                     }
-                    
+
                     // Clean up device context if it was acquired but not successfully assigned
                     if (tempGlDevice != IntPtr.Zero && _windowHandle != IntPtr.Zero)
                     {
@@ -939,25 +944,25 @@ namespace Andastra.Runtime.Graphics.Common.Backends
                         Console.WriteLine("[OdysseyGraphicsBackend] Cleaned up device context after failure");
                     }
                 }
-                
+
                 // Step 7: Query OpenGL info
                 IntPtr vendorPtr = glGetString(GL_VENDOR);
                 IntPtr rendererPtr = glGetString(GL_RENDERER);
                 IntPtr versionPtr = glGetString(GL_VERSION);
-                
+
                 string vendor = vendorPtr != IntPtr.Zero ? Marshal.PtrToStringAnsi(vendorPtr) : "Unknown";
                 string renderer = rendererPtr != IntPtr.Zero ? Marshal.PtrToStringAnsi(rendererPtr) : "Unknown";
                 string version = versionPtr != IntPtr.Zero ? Marshal.PtrToStringAnsi(versionPtr) : "Unknown";
-                
+
                 Console.WriteLine($"[OdysseyGraphicsBackend] OpenGL Vendor: {vendor}");
                 Console.WriteLine($"[OdysseyGraphicsBackend] OpenGL Renderer: {renderer}");
                 Console.WriteLine($"[OdysseyGraphicsBackend] OpenGL Version: {version}");
-                
+
                 // Step 8: Set initial OpenGL state (matching swkotor.exe pattern)
                 glEnable(GL_DEPTH_TEST);
                 glEnable(GL_STENCIL_TEST);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-                
+
                 Console.WriteLine("[OdysseyGraphicsBackend] Window and OpenGL context created successfully");
                 return true;
             }
@@ -968,13 +973,13 @@ namespace Andastra.Runtime.Graphics.Common.Backends
                 return false;
             }
         }
-        
+
         // Window procedure delegate to prevent garbage collection
         private WndProcDelegate _wndProcDelegate;
-        
+
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate IntPtr WndProcDelegate(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
-        
+
         /// <summary>
         /// Window procedure for handling Windows messages.
         /// Based on swkotor.exe/swkotor2.exe: Window message handling
@@ -985,17 +990,17 @@ namespace Andastra.Runtime.Graphics.Common.Backends
             const uint WM_DESTROY = 0x0002;
             const uint WM_KEYDOWN = 0x0100;
             const uint VK_ESCAPE = 0x1B;
-            
+
             switch (msg)
             {
                 case WM_CLOSE:
                     _isExiting = true;
                     return IntPtr.Zero;
-                    
+
                 case WM_DESTROY:
                     PostQuitMessage(0);
                     return IntPtr.Zero;
-                    
+
                 case WM_KEYDOWN:
                     if ((int)wParam == VK_ESCAPE)
                     {
@@ -1003,26 +1008,26 @@ namespace Andastra.Runtime.Graphics.Common.Backends
                     }
                     break;
             }
-            
+
             return DefWindowProcA(hWnd, msg, wParam, lParam);
         }
-        
+
         // Additional P/Invoke declarations for window creation
         [DllImport("kernel32.dll", CharSet = CharSet.Ansi)]
         private static extern IntPtr GetModuleHandleA(string lpModuleName);
-        
+
         [DllImport("user32.dll", CharSet = CharSet.Ansi)]
         private static extern IntPtr LoadCursorA(IntPtr hInstance, int lpCursorName);
-        
+
         [DllImport("user32.dll")]
         private static extern int GetSystemMetrics(int nIndex);
-        
+
         [DllImport("user32.dll")]
         private static extern bool SetForegroundWindow(IntPtr hWnd);
-        
+
         [DllImport("user32.dll")]
         private static extern IntPtr SetFocus(IntPtr hWnd);
-        
+
         /// <summary>
         /// Runs the game loop (blocks until exit).
         /// Based on swkotor.exe/swkotor2.exe: Main game loop with PeekMessageA/GetMessageA
@@ -1035,15 +1040,15 @@ namespace Andastra.Runtime.Graphics.Common.Backends
             {
                 throw new InvalidOperationException("Backend must be initialized before running.");
             }
-            
+
             _isRunning = true;
             _isExiting = false;
             _gameTimer = new Stopwatch();
             _gameTimer.Start();
             _previousTicks = _gameTimer.ElapsedTicks;
-            
+
             Console.WriteLine("[OdysseyGraphicsBackend] Starting game loop");
-            
+
             // Main game loop - matches swkotor.exe/swkotor2.exe message loop pattern
             MSG msg = new MSG();
             while (!_isExiting)
@@ -1056,24 +1061,24 @@ namespace Andastra.Runtime.Graphics.Common.Backends
                         _isExiting = true;
                         break;
                     }
-                    
+
                     TranslateMessage(ref msg);
                     DispatchMessageA(ref msg);
                 }
-                
+
                 if (_isExiting)
                 {
                     break;
                 }
-                
+
                 // Calculate delta time
                 long currentTicks = _gameTimer.ElapsedTicks;
                 float deltaTime = (float)(currentTicks - _previousTicks) / Stopwatch.Frequency;
                 _previousTicks = currentTicks;
-                
+
                 // Begin frame
                 BeginFrame();
-                
+
                 // Update game logic
                 if (updateAction != null)
                 {
@@ -1086,7 +1091,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
                         Console.WriteLine($"[OdysseyGraphicsBackend] Update error: {ex.Message}");
                     }
                 }
-                
+
                 // Draw
                 if (drawAction != null)
                 {
@@ -1099,10 +1104,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends
                         Console.WriteLine($"[OdysseyGraphicsBackend] Draw error: {ex.Message}");
                     }
                 }
-                
+
                 // End frame and present
                 EndFrame();
-                
+
                 // Frame rate limiting
                 if (_vsyncEnabled)
                 {
@@ -1122,11 +1127,11 @@ namespace Andastra.Runtime.Graphics.Common.Backends
                     }
                 }
             }
-            
+
             _isRunning = false;
             Console.WriteLine("[OdysseyGraphicsBackend] Game loop ended");
         }
-        
+
         /// <summary>
         /// Exits the game loop.
         /// </summary>
@@ -1134,27 +1139,27 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         {
             Console.WriteLine("[OdysseyGraphicsBackend] Exit requested");
             _isExiting = true;
-            
+
             if (_windowHandle != IntPtr.Zero)
             {
                 PostQuitMessage(0);
             }
         }
-        
+
         /// <summary>
         /// Begins a new frame.
         /// </summary>
         public new void BeginFrame()
         {
             base.BeginFrame();
-            
+
             // Update input
             if (_odysseyInputManager != null)
             {
                 _odysseyInputManager.Update();
             }
         }
-        
+
         /// <summary>
         /// Ends the current frame and presents to screen.
         /// Based on swkotor.exe/swkotor2.exe: SwapBuffers(hdc)
@@ -1162,14 +1167,14 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         public new void EndFrame()
         {
             base.EndFrame();
-            
+
             // Swap buffers to present the frame
             if (_glDevice != IntPtr.Zero)
             {
                 SwapBuffers(_glDevice);
             }
         }
-        
+
         /// <summary>
         /// Creates a room mesh renderer.
         /// </summary>
@@ -1179,10 +1184,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends
             {
                 throw new InvalidOperationException("Backend must be initialized before creating renderers.");
             }
-            
+
             return new OdysseyRoomMeshRenderer(_odysseyGraphicsDevice);
         }
-        
+
         /// <summary>
         /// Creates an entity model renderer.
         /// </summary>
@@ -1192,10 +1197,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends
             {
                 throw new InvalidOperationException("Backend must be initialized before creating renderers.");
             }
-            
+
             return new OdysseyEntityModelRenderer(_odysseyGraphicsDevice, gameDataManager, installation);
         }
-        
+
         /// <summary>
         /// Creates a spatial audio system.
         /// </summary>
@@ -1203,7 +1208,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         {
             return new OdysseySpatialAudio();
         }
-        
+
         /// <summary>
         /// Creates a dialogue camera controller.
         /// </summary>
@@ -1212,7 +1217,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
             // TODO: STUB - Implement Odyssey dialogue camera controller
             return cameraController;
         }
-        
+
         /// <summary>
         /// Creates a sound player.
         /// </summary>
@@ -1221,7 +1226,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
             // TODO: STUB - Implement Odyssey sound player
             return new OdysseySoundPlayer(resourceProvider);
         }
-        
+
         /// <summary>
         /// Creates a music player.
         /// </summary>
@@ -1230,7 +1235,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
             // TODO: STUB - Implement Odyssey music player
             return new OdysseyMusicPlayer(resourceProvider);
         }
-        
+
         /// <summary>
         /// Creates a voice player.
         /// </summary>
@@ -1239,7 +1244,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
             // TODO: STUB - Implement Odyssey voice player
             return new OdysseyVoicePlayer(resourceProvider);
         }
-        
+
         /// <summary>
         /// Sets VSync state.
         /// Based on swkotor.exe/swkotor2.exe: wglSwapIntervalEXT
@@ -1247,7 +1252,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         public void SetVSync(bool enabled)
         {
             _vsyncEnabled = enabled;
-            
+
             // Try to use wglSwapIntervalEXT if available
             try
             {
@@ -1264,10 +1269,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends
                 Console.WriteLine($"[OdysseyGraphicsBackend] Failed to set VSync: {ex.Message}");
             }
         }
-        
+
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate bool WglSwapIntervalExtDelegate(int interval);
-        
+
         #endregion
     }
 }
