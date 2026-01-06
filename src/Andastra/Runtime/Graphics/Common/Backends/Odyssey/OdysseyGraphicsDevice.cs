@@ -29,6 +29,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         private IRenderTarget _currentRenderTarget;
         private IDepthStencilBuffer _depthStencilBuffer;
         
+        // Currently bound buffers for rendering
+        private IVertexBuffer _currentVertexBuffer;
+        private IIndexBuffer _currentIndexBuffer;
+        
         // Backend reference for GL operations
         private readonly OdysseyGraphicsBackend _backend;
         
@@ -138,6 +142,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         // Renderbuffer constants
         private const uint GL_RENDERBUFFER = 0x8D41;
         private const uint GL_DEPTH24_STENCIL8 = 0x88F0;
+        
+        // Index type constants
+        private const uint GL_UNSIGNED_SHORT = 0x1403;
+        private const uint GL_UNSIGNED_INT = 0x1405;
         
         #endregion
         
@@ -283,20 +291,54 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         }
         
         /// <summary>
-        /// Creates a vertex buffer.
+        /// Creates a vertex buffer using OpenGL vertex buffer objects (VBO).
+        /// Based on swkotor.exe/swkotor2.exe: DirectX vertex buffer system with OpenGL VBO backend
+        /// Matching xoreos: VertexBuffer::initGL() - glGenBuffers, glBufferData
+        /// Matching PyKotor: glGenBuffers(1, &vbo), glBufferData(GL_ARRAY_BUFFER, ...)
         /// </summary>
+        /// <typeparam name="T">Vertex type (must be a struct).</typeparam>
+        /// <param name="data">Vertex data array.</param>
+        /// <returns>Created vertex buffer.</returns>
+        /// <remarks>
+        /// Vertex Buffer Object (VBO) Implementation:
+        /// - Uses OpenGL VBO extension (ARB_vertex_buffer_object)
+        /// - Creates GPU-side buffer with glGenBuffers
+        /// - Uploads vertex data with glBufferData
+        /// - Supports static, dynamic, and stream draw usage patterns
+        /// - Automatically manages buffer binding and unbinding
+        /// - Original game: swkotor.exe/swkotor2.exe use DirectX vertex buffers, but OpenGL backend uses VBOs
+        /// - String references in original: "Disable Vertex Buffer Objects" @ 0x007b56bc (VBO option)
+        /// - Vertex array extensions: "glVertexArrayRangeNV" @ 0x007b7ce8, "glVertexAttrib4fvNV" @ 0x007b7d24
+        /// </remarks>
         public IVertexBuffer CreateVertexBuffer<T>(T[] data) where T : struct
         {
-            // TODO: STUB - Implement OpenGL vertex buffer objects (VBO)
+            // Create VBO using OdysseyVertexBuffer which implements full OpenGL VBO functionality
+            // Matching xoreos: VertexBuffer::initGL() - glGenBuffers(1, &_vbo), glBufferData(...)
+            // Matching PyKotor: glGenBuffers(1, &vbo), glBufferData(GL_ARRAY_BUFFER, len(vertex_data), ...)
             return new OdysseyVertexBuffer<T>(data);
         }
         
         /// <summary>
         /// Creates an index buffer.
+        /// Based on swkotor.exe/swkotor2.exe: Index buffer creation for indexed primitive rendering
+        /// Matching xoreos IndexBuffer::initGL() - glGenBuffers, glBufferData with GL_ELEMENT_ARRAY_BUFFER
+        /// The OdysseyIndexBuffer class already fully implements OpenGL IBO creation and management.
         /// </summary>
+        /// <param name="indices">Index data array.</param>
+        /// <param name="isShort">Whether to use 16-bit (true) or 32-bit (false) indices.</param>
+        /// <returns>Created index buffer with OpenGL IBO already initialized.</returns>
+        /// <remarks>
+        /// Index Buffer Implementation:
+        /// - OdysseyIndexBuffer fully implements OpenGL IBO (Index Buffer Object)
+        /// - Uses glGenBuffers to create buffer, glBufferData to upload data
+        /// - Supports both 16-bit (GL_UNSIGNED_SHORT) and 32-bit (GL_UNSIGNED_INT) indices
+        /// - Based on xoreos indexbuffer.cpp: initGL() @ lines 94-106
+        /// - Matching reone Mesh::init() - glGenBuffers(1, &_iboId), glBufferData(GL_ELEMENT_ARRAY_BUFFER, ...)
+        /// </remarks>
         public IIndexBuffer CreateIndexBuffer(int[] indices, bool isShort = true)
         {
-            // TODO: STUB - Implement OpenGL index buffer objects (IBO)
+            // OdysseyIndexBuffer constructor already creates the OpenGL IBO internally
+            // Matching xoreos: IndexBuffer::initGL() creates IBO in constructor
             return new OdysseyIndexBuffer(indices, isShort);
         }
         
@@ -318,6 +360,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             {
                 // Unbind VBO
                 glBindBuffer(GL_ARRAY_BUFFER, 0);
+                _currentVertexBuffer = null;
                 return;
             }
             
@@ -326,26 +369,91 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             // Matching PyKotor: glBindBuffer(GL_ARRAY_BUFFER, self._vbo)
             uint vboId = (uint)vertexBuffer.NativeHandle.ToInt32();
             glBindBuffer(GL_ARRAY_BUFFER, vboId);
+            _currentVertexBuffer = vertexBuffer;
         }
         
         /// <summary>
         /// Sets the index buffer for rendering.
+        /// Based on swkotor.exe/swkotor2.exe: glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo)
+        /// Matching xoreos: glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indexBuffer.getIBO())
+        /// Matching reone: glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _iboId) in Mesh::init()
         /// </summary>
+        /// <param name="indexBuffer">Index buffer to bind, or null to unbind.</param>
+        /// <remarks>
+        /// Index Buffer Binding:
+        /// - Binds the IBO for use in subsequent glDrawElements calls
+        /// - When IBO is bound, glDrawElements uses buffer data instead of client-side pointer
+        /// - IBO remains bound until explicitly unbound or another IBO is bound
+        /// - Based on xoreos mesh.cpp: render() @ lines 222-224 (binds IBO before glDrawElements)
+        /// </remarks>
         public void SetIndexBuffer(IIndexBuffer indexBuffer)
         {
-            // TODO: STUB - Bind IBO for rendering
+            if (indexBuffer == null)
+            {
+                // Unbind IBO
+                // Matching xoreos: glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+                _currentIndexBuffer = null;
+                return;
+            }
+            
+            // Bind the IBO
+            // Matching xoreos: glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indexBuffer.getIBO())
+            // Matching reone: glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _iboId)
+            uint iboId = (uint)indexBuffer.NativeHandle.ToInt32();
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iboId);
+            _currentIndexBuffer = indexBuffer;
         }
         
         /// <summary>
         /// Draws indexed primitives.
         /// Based on swkotor.exe/swkotor2.exe: glDrawElements
+        /// Matching xoreos: glDrawElements(mode, indexBuffer.getCount(), indexBuffer.getType(), 0)
+        /// Matching reone: glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_SHORT, nullptr)
         /// </summary>
+        /// <param name="primitiveType">Type of primitives to draw.</param>
+        /// <param name="baseVertex">Base vertex index (for vertex offset, typically 0).</param>
+        /// <param name="minVertexIndex">Minimum vertex index (unused in OpenGL, kept for API compatibility).</param>
+        /// <param name="numVertices">Number of vertices (unused in OpenGL, kept for API compatibility).</param>
+        /// <param name="startIndex">Starting index in the index buffer.</param>
+        /// <param name="primitiveCount">Number of primitives to draw.</param>
+        /// <remarks>
+        /// Indexed Drawing Implementation:
+        /// - Requires IBO to be bound via SetIndexBuffer() before calling this method
+        /// - Uses glDrawElements with bound IBO and byte offset for startIndex
+        /// - Index type (GL_UNSIGNED_SHORT or GL_UNSIGNED_INT) determined from bound IBO
+        /// - Based on xoreos mesh.cpp: render() @ lines 216-224 (glDrawElements with IBO)
+        /// - Based on reone mesh.cpp: draw() @ lines 118-122 (glDrawElements with VAO/IBO)
+        /// </remarks>
         public void DrawIndexedPrimitives(PrimitiveType primitiveType, int baseVertex, int minVertexIndex, int numVertices, int startIndex, int primitiveCount)
         {
+            if (_currentIndexBuffer == null)
+            {
+                // No IBO bound - cannot draw indexed primitives
+                System.Console.WriteLine("[OdysseyGraphicsDevice] Warning: DrawIndexedPrimitives called but no index buffer is bound. Call SetIndexBuffer() first.");
+                return;
+            }
+
             uint mode = GetGLPrimitiveType(primitiveType);
             int indexCount = GetIndexCount(primitiveType, primitiveCount);
-            // TODO: STUB - Implement proper indexed drawing with offset
-            // glDrawElements(mode, indexCount, GL_UNSIGNED_INT, startIndexOffset);
+            
+            // Determine index type from bound IBO
+            // Matching xoreos: indexBuffer.getType() returns GL_UNSIGNED_SHORT or GL_UNSIGNED_INT
+            uint indexType = _currentIndexBuffer.IsShort ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT;
+            
+            // Calculate byte offset for startIndex
+            // When IBO is bound, glDrawElements last parameter is byte offset into buffer
+            // Matching xoreos: glDrawElements(mode, count, type, byteOffset)
+            // Matching reone: glDrawElements(mode, count, type, nullptr) - offset is 0 when using VAO
+            int indexSize = _currentIndexBuffer.IsShort ? sizeof(ushort) : sizeof(uint);
+            IntPtr startIndexOffset = new IntPtr(startIndex * indexSize);
+            
+            // Draw indexed primitives using bound IBO
+            // Based on swkotor.exe/swkotor2.exe: glDrawElements with IBO
+            // Matching xoreos: glDrawElements(_type, _indexBuffer.getCount(), _indexBuffer.getType(), 0)
+            // Note: baseVertex is not directly supported in OpenGL fixed-function pipeline
+            // For baseVertex support, we would need to adjust vertex indices or use glDrawRangeElements
+            glDrawElements(mode, indexCount, indexType, startIndexOffset);
         }
         
         /// <summary>
