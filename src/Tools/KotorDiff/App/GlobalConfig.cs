@@ -2,7 +2,7 @@
 // Original: class GlobalConfig: ... _global_config: GlobalConfig = GlobalConfig()
 using System.IO;
 
-namespace KotorDiff.App
+namespace KotorDiff.Application
 {
     // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/app.py:69-80
     // Original: class GlobalConfig: ...

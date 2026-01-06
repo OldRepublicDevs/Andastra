@@ -12,9 +12,11 @@ namespace KotorCLI.Commands
         public static void AddToRootCommand(RootCommand rootCommand)
         {
             var catCommand = new Command("cat", "Display resource contents to stdout");
-            var archiveArgument = new Argument<string>("archive", "Archive file (ERF, RIM)");
+            var archiveArgument = new Argument<string>("archive");
+            archiveArgument.Description = "Archive file (ERF, RIM)";
             catCommand.Add(archiveArgument);
-            var resourceArgument = new Argument<string>("resource", "Resource reference name");
+            var resourceArgument = new Argument<string>("resource");
+            resourceArgument.Description = "Resource reference name";
             catCommand.Add(resourceArgument);
             var typeOption = new Option<string>(new[] { "-t", "--type" }, "Resource type extension (optional, will try to detect)");
             catCommand.Options.Add(typeOption);

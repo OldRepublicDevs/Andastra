@@ -12,7 +12,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Common;
-using KotorDiff.App;
+using KotorDiff.Application;
 using KotorDiff.Cli;
 
 namespace KotorDiff.Gui

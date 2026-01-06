@@ -37,7 +37,8 @@ namespace KotorCLI.Commands
         private static void AddGff2Json(RootCommand rootCommand)
         {
             var cmd = new Command("gff2json", "Convert GFF to JSON");
-            var inputArg = new Argument<string>("input", "Input GFF file");
+            var inputArg = new Argument<string>("input");
+            inputArg.Description = "Input GFF file";
             cmd.Add(inputArg);
             var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output JSON file");
             cmd.Options.Add(outputOpt);
@@ -74,7 +75,8 @@ namespace KotorCLI.Commands
         private static void AddJson2Gff(RootCommand rootCommand)
         {
             var cmd = new Command("json2gff", "Convert JSON to GFF");
-            var inputArg = new Argument<string>("input", "Input JSON file");
+            var inputArg = new Argument<string>("input");
+            inputArg.Description = "Input JSON file";
             cmd.Add(inputArg);
             var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output GFF file");
             cmd.Options.Add(outputOpt);
@@ -92,7 +94,8 @@ namespace KotorCLI.Commands
         private static void AddGff2Xml(RootCommand rootCommand)
         {
             var cmd = new Command("gff2xml", "Convert GFF to XML");
-            var inputArg = new Argument<string>("input", "Input GFF file");
+            var inputArg = new Argument<string>("input");
+            inputArg.Description = "Input GFF file";
             cmd.Add(inputArg);
             var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output XML file");
             cmd.Options.Add(outputOpt);
@@ -123,7 +126,8 @@ namespace KotorCLI.Commands
         private static void AddXml2Gff(RootCommand rootCommand)
         {
             var cmd = new Command("xml2gff", "Convert XML to GFF");
-            var inputArg = new Argument<string>("input", "Input XML file");
+            var inputArg = new Argument<string>("input");
+            inputArg.Description = "Input XML file";
             cmd.Add(inputArg);
             var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output GFF file");
             cmd.Options.Add(outputOpt);
@@ -154,7 +158,8 @@ namespace KotorCLI.Commands
         private static void AddTlk2Xml(RootCommand rootCommand)
         {
             var cmd = new Command("tlk2xml", "Convert TLK to XML");
-            var inputArg = new Argument<string>("input", "Input TLK file");
+            var inputArg = new Argument<string>("input");
+            inputArg.Description = "Input TLK file";
             cmd.Add(inputArg);
             var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output XML file");
             cmd.Options.Add(outputOpt);
@@ -172,7 +177,8 @@ namespace KotorCLI.Commands
         private static void AddXml2Tlk(RootCommand rootCommand)
         {
             var cmd = new Command("xml2tlk", "Convert XML to TLK");
-            var inputArg = new Argument<string>("input", "Input XML file");
+            var inputArg = new Argument<string>("input");
+            inputArg.Description = "Input XML file";
             cmd.Add(inputArg);
             var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output TLK file");
             cmd.Options.Add(outputOpt);
@@ -190,7 +196,8 @@ namespace KotorCLI.Commands
         private static void AddSsf2Xml(RootCommand rootCommand)
         {
             var cmd = new Command("ssf2xml", "Convert SSF to XML");
-            var inputArg = new Argument<string>("input", "Input SSF file");
+            var inputArg = new Argument<string>("input");
+            inputArg.Description = "Input SSF file";
             cmd.Add(inputArg);
             var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output XML file");
             cmd.Options.Add(outputOpt);
@@ -208,7 +215,8 @@ namespace KotorCLI.Commands
         private static void AddXml2Ssf(RootCommand rootCommand)
         {
             var cmd = new Command("xml2ssf", "Convert XML to SSF");
-            var inputArg = new Argument<string>("input", "Input XML file");
+            var inputArg = new Argument<string>("input");
+            inputArg.Description = "Input XML file";
             cmd.Add(inputArg);
             var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output SSF file");
             cmd.Options.Add(outputOpt);
@@ -245,7 +253,8 @@ namespace KotorCLI.Commands
         private static void Add2Da2Csv(RootCommand rootCommand)
         {
             var cmd = new Command("2da2csv", "Convert 2DA to CSV");
-            var inputArg = new Argument<string>("input", "Input 2DA file");
+            var inputArg = new Argument<string>("input");
+            inputArg.Description = "Input 2DA file";
             cmd.Add(inputArg);
             var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output CSV file");
             cmd.Options.Add(outputOpt);
@@ -279,11 +288,16 @@ namespace KotorCLI.Commands
         private static void AddCsv22Da(RootCommand rootCommand)
         {
             var cmd = new Command("csv22da", "Convert CSV to 2DA");
-            var inputArg = new Argument<string>("input", "Input CSV file");
+            var inputArg = new Argument<string>("input");
+            inputArg.Description = "Input CSV file";
             cmd.Add(inputArg);
-            var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output 2DA file");
+            var outputOpt = new Option<string>("--output");
+            outputOpt.AddAlias("-o");
+            outputOpt.Description = "Output 2DA file";
             cmd.Options.Add(outputOpt);
-            var delimiterOpt = new Option<string>("--delimiter", () => ",", "CSV delimiter");
+            var delimiterOpt = new Option<string>("--delimiter");
+            delimiterOpt.SetDefaultValue(",");
+            delimiterOpt.Description = "CSV delimiter";
             cmd.Options.Add(delimiterOpt);
             cmd.SetAction(parseResult =>
             {
@@ -297,7 +311,7 @@ namespace KotorCLI.Commands
                     {
                         output = Path.ChangeExtension(input, ".2da");
                     }
-                    Conversions.ConvertCsvTo2Da(input, output, delimiter);
+                    Conversions.ConvertCsvTo2da(input, output, delimiter);
                     logger.Info($"Converted {input} to {output}");
                     Environment.Exit(0);
                 }

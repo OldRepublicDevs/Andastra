@@ -181,13 +181,13 @@ namespace Andastra.Parsing.Resource.Generics
                     }
                     else
                     {
-                        new Logger.RobustLogger().Warning("Encounter geometry list is empty! Creating a default triangle at its position.");
+                        new Andastra.Parsing.Logger.RobustLogger().Warning("Encounter geometry list is empty! Creating a default triangle at its position.");
                         CreateDefaultTriangle(encounter.Geometry, encounter.Position);
                     }
                 }
                 else
                 {
-                    new Logger.RobustLogger().Warning("Encounter geometry list missing! Creating a default triangle at its position.");
+                    new Andastra.Parsing.Logger.RobustLogger().Warning("Encounter geometry list missing! Creating a default triangle at its position.");
                     CreateDefaultTriangle(encounter.Geometry, encounter.Position);
                 }
 
@@ -325,13 +325,13 @@ namespace Andastra.Parsing.Resource.Generics
                     }
                     else
                     {
-                        new Logger.RobustLogger().Warning("Trigger geometry list is empty! Creating a default triangle at its position.");
+                        new Andastra.Parsing.Logger.RobustLogger().Warning("Trigger geometry list is empty! Creating a default triangle at its position.");
                         CreateDefaultTriangle(trigger.Geometry, trigger.Position);
                     }
                 }
                 else
                 {
-                    new Logger.RobustLogger().Warning("Trigger geometry list missing! Creating a default triangle at its position.");
+                    new Andastra.Parsing.Logger.RobustLogger().Warning("Trigger geometry list missing! Creating a default triangle at its position.");
                     CreateDefaultTriangle(trigger.Geometry, trigger.Position);
                 }
                 git.Triggers.Add(trigger);
@@ -486,7 +486,7 @@ namespace Andastra.Parsing.Resource.Generics
 
                 if (encounter.Geometry == null || encounter.Geometry.Count == 0)
                 {
-                    new Logger.RobustLogger().Warning($"Missing encounter geometry for '{encounter.ResRef}', creating a default triangle at its position...");
+                    new Andastra.Parsing.Logger.RobustLogger().Warning($"Missing encounter geometry for '{encounter.ResRef}', creating a default triangle at its position...");
                     var tempGeometry = new List<Vector3>();
                     CreateDefaultTriangle(tempGeometry, encounter.Position);
                     encounter.Geometry = tempGeometry;
@@ -595,7 +595,7 @@ namespace Andastra.Parsing.Resource.Generics
 
                 if (trigger.Geometry == null || trigger.Geometry.Count == 0)
                 {
-                    new Logger.RobustLogger().Warning($"Missing trigger geometry for '{trigger.ResRef}', creating a default triangle at its position...");
+                    new Andastra.Parsing.Logger.RobustLogger().Warning($"Missing trigger geometry for '{trigger.ResRef}', creating a default triangle at its position...");
                     var tempGeometry = new List<Vector3>();
                     CreateDefaultTriangle(tempGeometry, trigger.Position);
                     trigger.Geometry = tempGeometry;

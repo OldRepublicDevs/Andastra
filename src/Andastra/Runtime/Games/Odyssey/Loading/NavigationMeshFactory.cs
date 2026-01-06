@@ -223,7 +223,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
                         catch (Exception ex)
                         {
                             // Log parsing error but continue to fallback
-                            new Logger.RobustLogger().Warning($"Failed to parse WOK '{resRef}' from module: {ex.Message}");
+                            new Andastra.Parsing.Logger.RobustLogger().Warning($"Failed to parse WOK '{resRef}' from module: {ex.Message}");
                         }
                     }
                 }
@@ -251,7 +251,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
             catch (Exception ex)
             {
                 // Failed to load walkmesh - log and return null
-                new Logger.RobustLogger().Warning($"Failed to load walkmesh '{resRef}': {ex.Message}");
+                new Andastra.Parsing.Logger.RobustLogger().Warning($"Failed to load walkmesh '{resRef}': {ex.Message}");
                 return null;
             }
         }
