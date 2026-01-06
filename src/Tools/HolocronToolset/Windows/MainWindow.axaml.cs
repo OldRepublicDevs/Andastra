@@ -659,11 +659,9 @@ namespace HolocronToolset.Windows
                         await ExtractResourceAsync(resource, savePath);
 
                         // Increment progress after successful extraction
-                        progressDialog.IncrementProgress();
+                        // Pass status text explicitly to avoid cross-thread UI access
                         successCount++;
-
-                        // Update status with completion message
-                        progressDialog.UpdateProgress($"Extracted {successCount}/{resourceSavePaths.Count} resources");
+                        progressDialog.IncrementProgress($"Extracted {successCount}/{resourceSavePaths.Count} resources");
                     }
                     catch (Exception ex)
                     {
