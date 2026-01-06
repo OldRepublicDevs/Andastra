@@ -23,7 +23,7 @@ namespace Andastra.Parsing.Tools
             TwoDA appearance = null,
             TwoDA baseitems = null)
         {
-            var log = new RobustLogger();
+            var log = new Andastra.Parsing.Logger.RobustLogger();
 
             // Load appearance.2da if not provided
             if (appearance == null)
@@ -174,7 +174,7 @@ namespace Andastra.Parsing.Tools
                 var appearanceLookup = installation.Resources.LookupResource("appearance", ResourceType.TwoDA);
                 if (appearanceLookup == null)
                 {
-                    new RobustLogger().Error("appearance.2da missing from installation.");
+                    new Andastra.Parsing.Logger.RobustLogger().Error("appearance.2da missing from installation.");
                     return (null, null);
                 }
                 var reader = new TwoDABinaryReader(appearanceLookup.Data);
@@ -185,7 +185,7 @@ namespace Andastra.Parsing.Tools
                 var baseitemsLookup = installation.Resources.LookupResource("baseitems", ResourceType.TwoDA);
                 if (baseitemsLookup == null)
                 {
-                    new RobustLogger().Error("baseitems.2da missing from installation.");
+                    new Andastra.Parsing.Logger.RobustLogger().Error("baseitems.2da missing from installation.");
                     return (null, null);
                 }
                 var reader = new TwoDABinaryReader(baseitemsLookup.Data);
@@ -217,7 +217,7 @@ namespace Andastra.Parsing.Tools
             var handLookup = installation.Resources.LookupResource(handResref, ResourceType.UTI);
             if (handLookup == null)
             {
-                new RobustLogger().Error($"{handResref}.uti missing from installation.");
+                new Andastra.Parsing.Logger.RobustLogger().Error($"{handResref}.uti missing from installation.");
                 return null;
             }
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/creature.py:153-212
@@ -240,7 +240,7 @@ namespace Andastra.Parsing.Tools
                 var appearanceLookup = installation.Resources.LookupResource("appearance", ResourceType.TwoDA);
                 if (appearanceLookup == null)
                 {
-                    new RobustLogger().Error("appearance.2da missing from installation.");
+                    new Andastra.Parsing.Logger.RobustLogger().Error("appearance.2da missing from installation.");
                     return (null, null);
                 }
                 var reader = new TwoDABinaryReader(appearanceLookup.Data);
@@ -251,7 +251,7 @@ namespace Andastra.Parsing.Tools
                 var headsLookup = installation.Resources.LookupResource("heads", ResourceType.TwoDA);
                 if (headsLookup == null)
                 {
-                    new RobustLogger().Error("heads.2da missing from installation.");
+                    new Andastra.Parsing.Logger.RobustLogger().Error("heads.2da missing from installation.");
                     return (null, null);
                 }
                 var reader = new TwoDABinaryReader(headsLookup.Data);
@@ -289,7 +289,7 @@ namespace Andastra.Parsing.Tools
                     {
                         if (!installation.Game.IsK2())
                         {
-                            new RobustLogger().Error("'alttexture' column in heads.2da should never exist in a K1 installation.");
+                            new Andastra.Parsing.Logger.RobustLogger().Error("'alttexture' column in heads.2da should never exist in a K1 installation.");
                         }
                         else
                         {
@@ -305,13 +305,13 @@ namespace Andastra.Parsing.Tools
                         }
                         catch (KeyNotFoundException)
                         {
-                            new RobustLogger().Error($"Cannot find {headColumnName} in heads.2da");
+                            new Andastra.Parsing.Logger.RobustLogger().Error($"Cannot find {headColumnName} in heads.2da");
                         }
                     }
                 }
                 catch (IndexOutOfRangeException)
                 {
-                    new RobustLogger().Error($"Row {headId} missing from heads.2da, defined in appearance.2da under the column 'normalhead' row {utc.AppearanceId}");
+                    new Andastra.Parsing.Logger.RobustLogger().Error($"Row {headId} missing from heads.2da, defined in appearance.2da under the column 'normalhead' row {utc.AppearanceId}");
                 }
             }
 

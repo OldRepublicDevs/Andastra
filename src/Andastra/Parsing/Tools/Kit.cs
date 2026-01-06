@@ -290,7 +290,7 @@ namespace Andastra.Parsing.Tools
         {
             if (logger == null)
             {
-                logger = new RobustLogger();
+                logger = new Andastra.Parsing.Logger.RobustLogger();
             }
 
             Directory.CreateDirectory(outputPath);

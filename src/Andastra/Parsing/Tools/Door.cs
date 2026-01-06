@@ -45,7 +45,7 @@ namespace Andastra.Parsing.Tools
         {
             if (logger == null)
             {
-                logger = new RobustLogger();
+                logger = new Andastra.Parsing.Logger.RobustLogger();
             }
 
             TwoDA genericdoors2DA = null;
@@ -139,7 +139,7 @@ namespace Andastra.Parsing.Tools
         {
             if (logger == null)
             {
-                logger = new RobustLogger();
+                logger = new Andastra.Parsing.Logger.RobustLogger();
             }
 
             var modelVariations = GetModelVariations(modelName);
@@ -214,7 +214,7 @@ namespace Andastra.Parsing.Tools
         {
             if (logger == null)
             {
-                logger = new RobustLogger();
+                logger = new Andastra.Parsing.Logger.RobustLogger();
             }
 
             if (mdl == null || mdl.Root == null)
@@ -313,7 +313,7 @@ namespace Andastra.Parsing.Tools
         {
             if (logger == null)
             {
-                logger = new RobustLogger();
+                logger = new Andastra.Parsing.Logger.RobustLogger();
             }
 
             // Get textures from the model
@@ -427,7 +427,7 @@ namespace Andastra.Parsing.Tools
         {
             if (logger == null)
             {
-                logger = new RobustLogger();
+                logger = new Andastra.Parsing.Logger.RobustLogger();
             }
 
             float doorWidth = defaultWidth;
