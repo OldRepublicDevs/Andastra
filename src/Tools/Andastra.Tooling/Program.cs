@@ -510,9 +510,15 @@ namespace Andastra.Runtime.Tooling
                 Console.WriteLine("Creating mocked execution environment...");
 
                 // Create mock world for script execution environment
+                // MockWorld provides minimal IWorld implementation for CLI script testing
+                // Includes mock systems: TimeManager, EventBus, DelayScheduler, GameDataProvider
+                // Based on swkotor2.exe: World system architecture
                 var world = new MockWorld();
 
                 // Create mock entity (caller) - represents the object executing the script
+                // MockEntity provides minimal IEntity implementation with ObjectId, Tag, ObjectType
+                // Based on swkotor2.exe: Entity system architecture
+                // OBJECT_SELF constant (0x7F000001) is used as the caller's ObjectId
                 var caller = new MockEntity("SCRIPT_CALLER");
                 world.RegisterEntity(caller);
 
