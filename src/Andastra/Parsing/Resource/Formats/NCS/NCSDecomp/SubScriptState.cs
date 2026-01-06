@@ -1563,7 +1563,48 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             AExpression right = null;
             // CRITICAL: For conditional operations (EQUALII, etc.), we MUST extract the right operand first
             // before it gets wrapped by MOVSP or other instructions
-            if (this.current.HasChildren())
+            // For conditional operations, search all children for AUnaryExp (result of NEGI) as it might not be last
+            if (NodeUtils.IsConditionalOp(node) && this.current.HasChildren())
+            {
+                List<ScriptNode.ScriptNode> children = this.current.GetChildren();
+                // Search backwards for AUnaryExp which should be the right operand
+                for (int i = children.Count - 1; i >= 0; i--)
+                {
+                    ScriptNode.ScriptNode child = children[i];
+                    if (typeof(AUnaryExp).IsInstanceOfType(child))
+                    {
+                        Error($"DEBUG TransformBinary: Found AUnaryExp at index {i}, using as right operand");
+                        // Remove all children after this one
+                        while (this.current.HasChildren() && this.current.GetLastChild() != child)
+                        {
+                            this.current.RemoveLastChild();
+                        }
+                        right = (AExpression)this.current.RemoveLastChild();
+                        right.Parent(null);
+                        break;
+                    }
+                    else if (typeof(ScriptNode.AExpressionStatement).IsInstanceOfType(child))
+                    {
+                        ScriptNode.AExpressionStatement expStmt = (ScriptNode.AExpressionStatement)child;
+                        ScriptNode.AExpression innerExp = expStmt.GetExp();
+                        if (innerExp != null && typeof(AUnaryExp).IsInstanceOfType(innerExp))
+                        {
+                            Error($"DEBUG TransformBinary: Found AUnaryExp in AExpressionStatement at index {i}, extracting as right operand");
+                            // Remove all children after this one
+                            while (this.current.HasChildren() && this.current.GetLastChild() != child)
+                            {
+                                this.current.RemoveLastChild();
+                            }
+                            this.current.RemoveLastChild();
+                            innerExp.Parent(null);
+                            right = innerExp;
+                            break;
+                        }
+                    }
+                }
+            }
+            // If not found above, try the standard approach
+            if (right == null && this.current.HasChildren())
             {
                 ScriptNode.ScriptNode lastChild = this.current.GetLastChild();
                 if (typeof(ScriptNode.AExpressionStatement).IsInstanceOfType(lastChild))
