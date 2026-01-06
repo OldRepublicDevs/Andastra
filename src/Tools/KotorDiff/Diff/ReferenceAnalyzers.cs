@@ -670,9 +670,11 @@ namespace KotorDiff.Diff
             logFunc($"Analyzing 2DA memory references: {twodaModifications.Count} 2DA files modified");
 
             // Get the GFF field to 2DA mapping
-            // Note: ReferenceCacheHelpers.GffFieldTo2daMapping() currently returns empty dict
-            // This will be populated from TwoDARegistry when gff_field_mapping() is implemented
-            // TODO: STUB - For now, we check all field paths directly which works correctly
+            // This mapping connects GFF field names (e.g., "BaseItem", "Appearance_Type") to their corresponding 2DA files
+            // Based on PyKotor: TwoDARegistry.gff_field_mapping() - comprehensive mapping of all known GFF fields to 2DA files
+            // The mapping is used to efficiently find which GFF fields reference which 2DA files, allowing us to
+            // search only relevant fields when looking for references to modified 2DA rows
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/analyzers.py:1356
             Dictionary<string, ResourceIdentifier> gffFieldTo2daMapping = ReferenceCacheHelpers.GffFieldTo2daMapping();
 
             // Build reverse mapping: 2da_filename -> list of field names that reference it
