@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Headless;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
@@ -3292,21 +3293,131 @@ namespace HolocronToolset.Tests.Editors
             editor.Model.AddStarter(link);
 
             // Matching PyKotor implementation: Verify keyPressEvent is implemented
-            // In C#, OnKeyDown and OnKeyUp are protected methods, but we can verify:
-            // 1. KeysDown property exists (exposed for testing)
-            // 2. Key events are handled properly
+            // Original: assert hasattr(editor, 'keyPressEvent')
+            // Original: assert hasattr(editor, 'keyReleaseEvent')
+            // In C#, OnKeyDown and OnKeyUp are protected methods, so we use reflection to verify they exist
+            var editorType = editor.GetType();
+            var onKeyDownMethod = editorType.GetMethod("OnKeyDown", BindingFlags.NonPublic | BindingFlags.Instance);
+            var onKeyUpMethod = editorType.GetMethod("OnKeyUp", BindingFlags.NonPublic | BindingFlags.Instance);
+
+            // Verify methods exist (matching PyKotor hasattr checks)
+            Assert.NotNull(onKeyDownMethod);
+            Assert.NotNull(onKeyUpMethod);
+            Assert.Equal("OnKeyDown", onKeyDownMethod.Name);
+            Assert.Equal("OnKeyUp", onKeyUpMethod.Name);
 
             // Verify KeysDown property exists and is initialized
             Assert.NotNull(editor.KeysDown);
             Assert.Equal(0, editor.KeysDown.Count);
 
-            // Verify that OnKeyDown and OnKeyUp methods exist by testing key handling
-            // We can't directly call protected methods, but we can verify the behavior
-            // by checking that KeysDown is updated when keys are pressed/released
+            // Test key handling by simulating key events
+            // Matching PyKotor: The test verifies that keyPressEvent and keyReleaseEvent exist
+            // We go further and actually test that key handling works correctly
+            // Use Avalonia's Window.KeyPress method to simulate key events (matching UTIEditorTests pattern)
+            // This tests the actual key handling behavior, not just method existence
 
-            // Note: In a full UI test environment, we would simulate key events
-            // TODO: STUB - For now, we verify that the infrastructure exists
-            Assert.True(true, "Key press handling infrastructure verified - OnKeyDown and OnKeyUp methods exist");
+            // Test 1: Press a key and verify it's added to KeysDown
+            Key testKey = Key.A;
+            editor.KeyPress(testKey, RawInputModifiers.None, PhysicalKey.KeyA, null);
+            
+            // Verify key was added to KeysDown
+            Assert.True(editor.KeysDown.Contains(testKey), "Key should be added to KeysDown when pressed");
+
+            // Test 2: Press another key and verify both are in KeysDown
+            Key testKey2 = Key.B;
+            editor.KeyPress(testKey2, RawInputModifiers.None, PhysicalKey.KeyB, null);
+            Assert.True(editor.KeysDown.Contains(testKey), "First key should still be in KeysDown");
+            Assert.True(editor.KeysDown.Contains(testKey2), "Second key should be added to KeysDown");
+            Assert.Equal(2, editor.KeysDown.Count);
+
+            // Test 3: Release first key using reflection (OnKeyUp is protected)
+            // Create KeyEventArgs for key release using Activator.CreateInstance
+            // KeyEventArgs constructor requires RoutedEvent and source, but we can use reflection to create it
+            // Alternatively, we can test that OnKeyUp exists and can be called
+            // For testing purposes, we'll create a minimal KeyEventArgs using reflection
+            var keyEventArgsType = typeof(KeyEventArgs);
+            // KeyEventArgs has a protected constructor, so we use Activator with BindingFlags
+            var keyUpEventArgs = (KeyEventArgs)Activator.CreateInstance(
+                keyEventArgsType,
+                BindingFlags.NonPublic | BindingFlags.Instance,
+                null,
+                new object[] { null, null }, // RoutedEvent and source can be null for testing
+                null);
+            // Set Key and KeyModifiers using reflection since they might be read-only
+            var keyProperty = keyEventArgsType.GetProperty("Key");
+            var keyModifiersProperty = keyEventArgsType.GetProperty("KeyModifiers");
+            if (keyProperty != null && keyProperty.CanWrite)
+            {
+                keyProperty.SetValue(keyUpEventArgs, testKey);
+            }
+            else
+            {
+                // If Key is read-only, try to set it via field
+                var keyField = keyEventArgsType.GetField("_key", BindingFlags.NonPublic | BindingFlags.Instance);
+                keyField?.SetValue(keyUpEventArgs, testKey);
+            }
+            if (keyModifiersProperty != null && keyModifiersProperty.CanWrite)
+            {
+                keyModifiersProperty.SetValue(keyUpEventArgs, KeyModifiers.None);
+            }
+            
+            onKeyUpMethod.Invoke(editor, new object[] { keyUpEventArgs });
+            Assert.False(editor.KeysDown.Contains(testKey), "Key should be removed from KeysDown when released");
+            Assert.True(editor.KeysDown.Contains(testKey2), "Other key should still be in KeysDown");
+            Assert.Equal(1, editor.KeysDown.Count);
+
+            // Test 4: Release second key and verify KeysDown is empty
+            var keyUpEventArgs2 = (KeyEventArgs)Activator.CreateInstance(
+                keyEventArgsType,
+                BindingFlags.NonPublic | BindingFlags.Instance,
+                null,
+                new object[] { null, null },
+                null);
+            if (keyProperty != null && keyProperty.CanWrite)
+            {
+                keyProperty.SetValue(keyUpEventArgs2, testKey2);
+            }
+            else
+            {
+                var keyField = keyEventArgsType.GetField("_key", BindingFlags.NonPublic | BindingFlags.Instance);
+                keyField?.SetValue(keyUpEventArgs2, testKey2);
+            }
+            if (keyModifiersProperty != null && keyModifiersProperty.CanWrite)
+            {
+                keyModifiersProperty.SetValue(keyUpEventArgs2, KeyModifiers.None);
+            }
+            onKeyUpMethod.Invoke(editor, new object[] { keyUpEventArgs2 });
+            Assert.False(editor.KeysDown.Contains(testKey2), "Key should be removed from KeysDown when released");
+            Assert.Equal(0, editor.KeysDown.Count, "KeysDown should be empty after all keys are released");
+
+            // Test 5: Verify that pressing and releasing the same key multiple times works correctly
+            editor.KeyPress(testKey, RawInputModifiers.None, PhysicalKey.KeyA, null);
+            Assert.True(editor.KeysDown.Contains(testKey));
+            var keyUpEventArgs3 = (KeyEventArgs)Activator.CreateInstance(
+                keyEventArgsType,
+                BindingFlags.NonPublic | BindingFlags.Instance,
+                null,
+                new object[] { null, null },
+                null);
+            if (keyProperty != null && keyProperty.CanWrite)
+            {
+                keyProperty.SetValue(keyUpEventArgs3, testKey);
+            }
+            else
+            {
+                var keyField = keyEventArgsType.GetField("_key", BindingFlags.NonPublic | BindingFlags.Instance);
+                keyField?.SetValue(keyUpEventArgs3, testKey);
+            }
+            if (keyModifiersProperty != null && keyModifiersProperty.CanWrite)
+            {
+                keyModifiersProperty.SetValue(keyUpEventArgs3, KeyModifiers.None);
+            }
+            onKeyUpMethod.Invoke(editor, new object[] { keyUpEventArgs3 });
+            Assert.False(editor.KeysDown.Contains(testKey));
+            editor.KeyPress(testKey, RawInputModifiers.None, PhysicalKey.KeyA, null);
+            Assert.True(editor.KeysDown.Contains(testKey), "Key should be added again after being released and pressed again");
+
+            editor.Close();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1877-1894
