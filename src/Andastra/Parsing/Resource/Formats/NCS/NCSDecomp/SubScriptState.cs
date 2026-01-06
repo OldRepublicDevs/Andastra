@@ -2000,6 +2000,25 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                     }
                 }
 
+                // CRITICAL: Before creating AConditionalExp, ensure we have valid operands
+                // If we're using placeholders, the AConditionalExp won't work correctly
+                if (left == null || right == null)
+                {
+                    Error($"DEBUG TransformBinary: ERROR - Cannot create AConditionalExp with null operands! left={left?.GetType().Name ?? "null"}, right={right?.GetType().Name ?? "null"}");
+                    // Don't create AConditionalExp if operands are null - this will cause issues
+                    // Instead, try one more time to find the operands
+                    if (left == null && this.current.HasChildren())
+                    {
+                        left = this.RemoveLastExp(false);
+                        Error($"DEBUG TransformBinary: Retry RemoveLastExp for left operand: {left?.GetType().Name ?? "null"}");
+                    }
+                    if (right == null && this.current.HasChildren())
+                    {
+                        right = this.RemoveLastExp(false);
+                        Error($"DEBUG TransformBinary: Retry RemoveLastExp for right operand: {right?.GetType().Name ?? "null"}");
+                    }
+                }
+                
                 exp = new AConditionalExp(left, right, NodeUtils.GetOp(node));
                 Error($"DEBUG TransformBinary: Created AConditionalExp with left={left?.GetType().Name ?? "null"}, right={right?.GetType().Name ?? "null"}, op={NodeUtils.GetOp(node)}, adding to children. Current has {this.current.Size()} children");
             }
