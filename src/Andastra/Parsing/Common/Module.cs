@@ -5,8 +5,10 @@ using System.Linq;
 using Andastra.Parsing.Extract;
 using Andastra.Parsing.Extract.Capsule;
 using Andastra.Parsing.Formats.Capsule;
+using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.MDLData;
+using Andastra.Parsing.Formats.RIM;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Logger;
 using Andastra.Parsing.Resource;
@@ -1758,6 +1760,7 @@ namespace Andastra.Parsing.Common
         public abstract string Filename();
         public abstract ResourceIdentifier GetIdentifier();
         public abstract byte[] Data();
+        public abstract void Save();
     }
 
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1709-2131
@@ -2098,6 +2101,76 @@ namespace Andastra.Parsing.Common
             }
 
             return _resourceObj;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:2183-2254
+        // Original: def save(self):
+        /// <summary>
+        /// Saves the resource to the active file.
+        /// </summary>
+        public override void Save()
+        {
+            string activePath = Active();
+            if (string.IsNullOrEmpty(activePath))
+            {
+                activePath = CreateAnewInOverride();
+            }
+
+            if (FileHelpers.IsBifFile(activePath))
+            {
+                throw new ArgumentException("Cannot save file to BIF.");
+            }
+
+            // Get resource data as bytes
+            byte[] resourceData = ResourceAuto.SaveResource(Resource(), ResType);
+            if (resourceData == null)
+            {
+                throw new InvalidOperationException($"No conversion available for resource type {ResType}");
+            }
+
+            if (FileHelpers.IsAnyErfTypeFile(activePath))
+            {
+                // Handle ERF files (ERF, MOD, SAV, HAK)
+                var erf = ERFAuto.ReadErf(activePath);
+                ResourceType fileFormat = FileHelpers.IsModFile(activePath) ? ResourceType.MOD :
+                    FileHelpers.IsSavFile(activePath) ? ResourceType.SAV :
+                    ResourceType.ERF;
+                erf.SetData(ResName, ResType, resourceData);
+                ERFAuto.WriteErf(erf, activePath, fileFormat);
+            }
+            else if (FileHelpers.IsRimFile(activePath))
+            {
+                // Handle RIM files
+                var rim = RIMAuto.ReadRim(activePath);
+                rim.SetData(ResName, ResType, resourceData);
+                RIMAuto.WriteRim(rim, activePath, ResourceType.RIM);
+            }
+            else
+            {
+                // Regular file - write directly
+                File.WriteAllBytes(activePath, resourceData);
+            }
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:2256-2269
+        // Original: def _create_anew_in_override(self) -> Path:
+        /// <summary>
+        /// Creates a new file in the override folder if no active path exists.
+        /// </summary>
+        private string CreateAnewInOverride()
+        {
+            byte[] resData = ResourceAuto.SaveResource(Resource(), ResType);
+            if (resData == null)
+            {
+                string overridePath = Path.Combine(_installation.OverridePath(), Filename());
+                throw new FileNotFoundException($"Cannot create resource '{GetIdentifier()}' in override folder", overridePath);
+            }
+
+            new Logger.RobustLogger().Warning($"Saving ModuleResource '{GetIdentifier()}' to the Override folder as it does not have any other paths available...");
+            string result = Path.Combine(_installation.OverridePath(), Filename());
+            File.WriteAllBytes(result, resData);
+            Activate(result);
+            return result;
         }
     }
 }
