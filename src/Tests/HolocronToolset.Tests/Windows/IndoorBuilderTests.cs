@@ -2424,33 +2424,32 @@ namespace HolocronToolset.Tests.Windows
 
                 // Matching Python line 1012: builder = builder_no_kits
                 // Note: This test verifies UI spinbox min/max constraints
-                // TODO: PLACEHOLDER - Since UI controls are not fully implemented yet, we test that the renderer
-                // accepts valid values and that the property can be set
-                // The actual UI spinbox min/max validation will be tested when UI is complete
+                // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/windows/test_indoor_builder.py:1038-1052
+                // Original: def test_grid_size_spinbox_min_max(self, qtbot: QtBot, builder_no_kits: IndoorMapBuilder):
 
-                var renderer = builder.Ui.MapRenderer;
+                // Matching Python line 1043: builder.ui.gridSizeSpin.setValue(0.1)
+                // Try to set below minimum (0.1, but minimum is 0.5)
+                builder.Ui.GridSizeSpin.SetValue(0.1);
 
-                // Matching Python line 1015: builder.ui.gridSizeSpin.setValue(0.1)
-                // Try to set below typical minimum (0.1)
-                renderer.SetGridSize(0.1f);
-
-                // Matching Python line 1016: qtbot.wait(10)
+                // Matching Python line 1044: qtbot.wait(10)
                 // Note: In headless tests, operations are synchronous
 
-                // Matching Python line 1018: assert builder.ui.gridSizeSpin.value() >= builder.ui.gridSizeSpin.minimum()
-                // TODO: STUB - For now, verify the value was set (actual min/max validation will be in UI)
-                renderer.GridSize.Should().BeApproximately(0.1f, 0.001f, "grid_size should accept 0.1");
+                // Matching Python line 1046: assert builder.ui.gridSizeSpin.value() >= builder.ui.gridSizeSpin.minimum()
+                // The value should be clamped to minimum (0.5) since 0.1 is below minimum
+                builder.Ui.GridSizeSpin.Value().Should().BeGreaterOrEqualTo(builder.Ui.GridSizeSpin.Minimum(), "grid_size spinbox value should be >= minimum after setting below minimum");
+                builder.Ui.GridSizeSpin.Value().Should().BeApproximately(0.5, 0.001, "grid_size spinbox should clamp 0.1 to minimum 0.5");
 
-                // Matching Python line 1021: builder.ui.gridSizeSpin.setValue(100.0)
-                // Try to set above typical maximum (100.0)
-                renderer.SetGridSize(100.0f);
+                // Matching Python line 1049: builder.ui.gridSizeSpin.setValue(100.0)
+                // Try to set above maximum (100.0, but maximum is 10.0)
+                builder.Ui.GridSizeSpin.SetValue(100.0);
 
-                // Matching Python line 1022: qtbot.wait(10)
+                // Matching Python line 1050: qtbot.wait(10)
                 // Note: In headless tests, operations are synchronous
 
-                // Matching Python line 1024: assert builder.ui.gridSizeSpin.value() <= builder.ui.gridSizeSpin.maximum()
-                // TODO: STUB - For now, verify the value was set (actual min/max validation will be in UI)
-                renderer.GridSize.Should().BeApproximately(100.0f, 0.001f, "grid_size should accept 100.0");
+                // Matching Python line 1052: assert builder.ui.gridSizeSpin.value() <= builder.ui.gridSizeSpin.maximum()
+                // The value should be clamped to maximum (10.0) since 100.0 is above maximum
+                builder.Ui.GridSizeSpin.Value().Should().BeLessOrEqualTo(builder.Ui.GridSizeSpin.Maximum(), "grid_size spinbox value should be <= maximum after setting above maximum");
+                builder.Ui.GridSizeSpin.Value().Should().BeApproximately(10.0, 0.001, "grid_size spinbox should clamp 100.0 to maximum 10.0");
             }
             finally
             {
