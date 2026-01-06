@@ -1737,9 +1737,21 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                     }
                 }
                 // If still not found, try RemoveLastExp
+                // BUT: RemoveLastExp might not find AUnaryExp if it's wrapped in AExpressionStatement
+                // and there are other children after it, so we've already searched for it above
+                // Only use RemoveLastExp as a last resort
                 if (right == null)
                 {
+                    Error("DEBUG TransformBinary: right operand still null after all searches, trying RemoveLastExp as last resort");
                     right = this.RemoveLastExp(false);
+                    if (right != null)
+                    {
+                        Error($"DEBUG TransformBinary: RemoveLastExp found right operand: {right.GetType().Name}");
+                    }
+                    else
+                    {
+                        Error("DEBUG TransformBinary: RemoveLastExp also returned null for right operand");
+                    }
                 }
             }
             // For the left operand, we need to get it from the remaining children
