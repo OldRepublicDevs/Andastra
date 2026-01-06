@@ -64,8 +64,8 @@ namespace Andastra.Parsing.Tools
         // Original: def convert_xml_to_ssf(input_path: Path, output_path: Path) -> None:
         public static void ConvertXmlToSsf(string inputPath, string outputPath)
         {
-            // Note: XML/JSON reading not yet implemented - placeholder
-            throw new NotImplementedException("XML/JSON SSF reading not yet implemented");
+            SSF ssf = SSFAuto.ReadSsf(inputPath, 0, null, ResourceType.SSF_XML);
+            SSFAuto.WriteSsf(ssf, outputPath, ResourceType.SSF);
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/conversions.py:120-134
