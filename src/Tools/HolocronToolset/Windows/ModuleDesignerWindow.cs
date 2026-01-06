@@ -222,7 +222,7 @@ namespace HolocronToolset.Windows
             RefreshWindowTitle();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/module_designer.py:1188-1197
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/module_designer.py:1188-1230
         // Original: def save_git(self):
         public void SaveGit()
         {
@@ -231,12 +231,29 @@ namespace HolocronToolset.Windows
                 return;
             }
 
-            // Matching Python: git = self.git()
-            // Matching Python: if git is None: return
-            // Matching Python: git.path = self._module.path() / "module.git"
-            // Matching Python: write_git(git, git.path)
-            // Note: GIT saving needs to be implemented in Andastra.Parsing
-            // TODO: STUB - For now, this is a placeholder matching the Python interface
+            // Matching Python: git_module = self._module.git()
+            // Matching Python: assert git_module is not None
+            var gitModule = _module.Git();
+            if (gitModule == null)
+            {
+                return;
+            }
+
+            // Matching Python: git_module.save()
+            gitModule.Save();
+
+            // Also save the layout if it has been modified
+            // Matching Python: layout_module = self._module.layout()
+            // Matching Python: if layout_module is not None: layout_module.save()
+            var layoutModule = _module.Layout();
+            if (layoutModule != null)
+            {
+                layoutModule.Save();
+            }
+
+            // Mark the current state as clean after saving
+            // Matching Python: self._mark_clean_state()
+            MarkCleanState();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/module_designer.py:1199-1262
@@ -404,6 +421,20 @@ namespace HolocronToolset.Windows
             {
                 _undoStack.Redo();
             }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/module_designer.py:3200-3204
+        // Original: def _mark_clean_state(self):
+        /// <summary>
+        /// Mark the current state as clean (no unsaved changes).
+        /// </summary>
+        private void MarkCleanState()
+        {
+            if (_undoStack != null)
+            {
+                _undoStack.SetClean();
+            }
+            RefreshWindowTitle();
         }
     }
 
