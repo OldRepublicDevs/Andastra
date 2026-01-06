@@ -1152,7 +1152,7 @@ namespace Andastra.Parsing.Tests.Formats
 
                 if (!File.Exists(validationScriptPath))
                 {
-                    throw new FileNotFoundError($"Validation script not found at {validationScriptPath}");
+                    throw new FileNotFoundException($"Validation script not found at {validationScriptPath}");
                 }
 
                 var validationInfo = new ProcessStartInfo
