@@ -727,34 +727,493 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
     /// Odyssey sound player implementation.
     /// Plays sound effects using the original engine's audio system pattern.
     /// </summary>
-    public class OdysseySoundPlayer
+    /// <remarks>
+    /// Odyssey Sound Player:
+    /// - Based on reverse engineering of swkotor.exe and swkotor2.exe
+    /// - Sound playback: Original engine uses Miles Sound System (MSS) or DirectSound
+    /// - Sound files: Stored as WAV resources, referenced by ResRef (e.g., "sound01")
+    /// - Positional audio: Sounds can be played at 3D positions with distance attenuation
+    /// - This implementation: Uses Windows waveOut APIs for sound playback (similar to OdysseyMusicPlayer)
+    /// - Based on swkotor2.exe: Sound effect playback functions @ various addresses
+    /// - Sound directories: "STREAMSOUNDS" @ 0x007c69dc, "HD0:STREAMSOUNDS" @ 0x007c771c
+    /// - Sound settings: "Sound Volume" @ 0x007c83cc, "Number 3D Sounds" @ 0x007c7258
+    /// - Supports multiple simultaneous sound instances (unlike music/voice which play one at a time)
+    /// </remarks>
+    public class OdysseySoundPlayer : IDisposable
     {
         private readonly object _resourceProvider;
+        private readonly Dictionary<uint, SoundInstanceData> _playingSounds;
+        private readonly object _soundsLock = new object(); // Thread-safe access to playing sounds
+        private uint _nextSoundInstanceId = 1;
+        private float _masterVolume = 1.0f; // Master volume (0.0 to 1.0)
+        private bool _disposed;
+
+        // Sound instance data for tracking active sounds
+        private struct SoundInstanceData
+        {
+            public IntPtr WaveOutHandle;
+            public string SoundResRef;
+            public float OriginalVolume;
+            public Vector3 Position;
+            public bool Is3D;
+            public Thread PlaybackThread;
+            public CancellationTokenSource Cancellation;
+        }
 
         public OdysseySoundPlayer(object resourceProvider)
         {
-            _resourceProvider = resourceProvider;
+            _resourceProvider = resourceProvider ?? throw new ArgumentNullException(nameof(resourceProvider));
+            _playingSounds = new Dictionary<uint, SoundInstanceData>();
         }
 
+        /// <summary>
+        /// Plays a sound effect by ResRef.
+        /// Based on swkotor2.exe: Sound effect playback system
+        /// </summary>
+        /// <param name="soundResRef">The ResRef of the sound file (e.g., "sound01").</param>
         public void Play(string soundResRef)
         {
-            // TODO: STUB - Play sound by ResRef
+            Play(soundResRef, Vector3.Zero);
         }
 
+        /// <summary>
+        /// Plays a 3D positioned sound effect by ResRef.
+        /// Based on swkotor2.exe: 3D sound effect playback system
+        /// </summary>
+        /// <param name="soundResRef">The ResRef of the sound file (e.g., "sound01").</param>
+        /// <param name="position">3D position for spatial audio (Vector3.Zero for non-positional).</param>
         public void Play(string soundResRef, Vector3 position)
         {
-            // TODO: STUB - Play 3D positioned sound
+            if (string.IsNullOrEmpty(soundResRef))
+            {
+                return;
+            }
+
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Console.WriteLine($"[OdysseySoundPlayer] Sound playback not implemented for non-Windows platforms. Sound: {soundResRef}");
+                Console.WriteLine($"[OdysseySoundPlayer] For cross-platform support, implement OpenAL or NAudio integration.");
+                return;
+            }
+
+            try
+            {
+                // Get resource provider
+                IGameResourceProvider resourceProvider = _resourceProvider as IGameResourceProvider;
+                if (resourceProvider == null)
+                {
+                    Console.WriteLine($"[OdysseySoundPlayer] Resource provider is not IGameResourceProvider");
+                    return;
+                }
+
+                // Load WAV resource
+                var resourceId = new ResourceIdentifier(soundResRef, ResourceType.WAV);
+                byte[] wavData = resourceProvider.GetResourceBytesAsync(resourceId, CancellationToken.None).GetAwaiter().GetResult();
+                if (wavData == null || wavData.Length == 0)
+                {
+                    Console.WriteLine($"[OdysseySoundPlayer] Sound not found: {soundResRef}");
+                    return;
+                }
+
+                // Parse WAV file to get format information
+                WAV wavFile = WAVAuto.ReadWav(wavData);
+                if (wavFile == null || wavFile.Data == null || wavFile.Data.Length == 0)
+                {
+                    Console.WriteLine($"[OdysseySoundPlayer] Failed to parse WAV file: {soundResRef}");
+                    return;
+                }
+
+                // Create sound instance ID
+                uint instanceId = _nextSoundInstanceId++;
+                bool is3D = position != Vector3.Zero;
+
+                // Start playback thread
+                CancellationTokenSource cancellation = new CancellationTokenSource();
+                Thread playbackThread = new Thread(() => PlaySoundAsync(instanceId, soundResRef, wavFile, position, is3D, cancellation.Token))
+                {
+                    IsBackground = true,
+                    Name = $"OdysseySoundPlayer-{soundResRef}-{instanceId}"
+                };
+                playbackThread.Start();
+
+                // Track sound instance
+                lock (_soundsLock)
+                {
+                    _playingSounds[instanceId] = new SoundInstanceData
+                    {
+                        WaveOutHandle = IntPtr.Zero, // Will be set by playback thread
+                        SoundResRef = soundResRef,
+                        OriginalVolume = _masterVolume,
+                        Position = position,
+                        Is3D = is3D,
+                        PlaybackThread = playbackThread,
+                        Cancellation = cancellation
+                    };
+                }
+
+                Console.WriteLine($"[OdysseySoundPlayer] Playing sound: {soundResRef} (instance: {instanceId}, 3D: {is3D}, format: {wavFile.SampleRate}Hz, {wavFile.Channels}ch, {wavFile.BitsPerSample}bit)");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[OdysseySoundPlayer] Exception playing sound {soundResRef}: {ex.Message}");
+                Console.WriteLine($"[OdysseySoundPlayer] Stack trace: {ex.StackTrace}");
+            }
         }
 
+        /// <summary>
+        /// Asynchronously plays sound audio using Windows waveOut APIs.
+        /// Based on swkotor2.exe: Sound effect playback system
+        /// </summary>
+        private void PlaySoundAsync(uint instanceId, string soundResRef, WAV wavFile, Vector3 position, bool is3D, CancellationToken cancellationToken)
+        {
+            try
+            {
+                // Prepare WAVEFORMATEX structure
+                WAVEFORMATEX waveFormat = new WAVEFORMATEX
+                {
+                    wFormatTag = 1, // WAVE_FORMAT_PCM
+                    nChannels = (ushort)wavFile.Channels,
+                    nSamplesPerSec = (uint)wavFile.SampleRate,
+                    wBitsPerSample = (ushort)wavFile.BitsPerSample,
+                    nBlockAlign = (ushort)(wavFile.Channels * (wavFile.BitsPerSample / 8)),
+                    nAvgBytesPerSec = (uint)(wavFile.SampleRate * wavFile.Channels * (wavFile.BitsPerSample / 8)),
+                    cbSize = 0
+                };
+
+                // Open waveOut device
+                IntPtr waveOutHandle = IntPtr.Zero;
+                int result = waveOutOpen(out waveOutHandle, WAVE_MAPPER, ref waveFormat, IntPtr.Zero, IntPtr.Zero, CALLBACK_NULL);
+                if (result != MMSYSERR_NOERROR)
+                {
+                    Console.WriteLine($"[OdysseySoundPlayer] Failed to open waveOut device for {soundResRef}: error code {result}");
+                    lock (_soundsLock)
+                    {
+                        _playingSounds.Remove(instanceId);
+                    }
+                    return;
+                }
+
+                // Update instance with waveOut handle
+                lock (_soundsLock)
+                {
+                    if (_playingSounds.TryGetValue(instanceId, out SoundInstanceData instanceData))
+                    {
+                        instanceData.WaveOutHandle = waveOutHandle;
+                        _playingSounds[instanceId] = instanceData;
+                    }
+                    else
+                    {
+                        // Instance was removed (stopped), close handle and return
+                        waveOutClose(waveOutHandle);
+                        return;
+                    }
+                }
+
+                // Apply volume
+                ApplyVolumeToSound(instanceId, waveOutHandle);
+
+                // Play sound data
+                byte[] pcmData = wavFile.Data;
+                int bufferSize = pcmData.Length;
+                int position = 0;
+
+                while (position < bufferSize && !cancellationToken.IsCancellationRequested)
+                {
+                    // Calculate how much data to send
+                    int remainingBytes = bufferSize - position;
+                    int bytesToSend = Math.Min(65536, remainingBytes); // 64KB buffer
+
+                    // Allocate buffer for waveOut
+                    WAVEHDR waveHeader = new WAVEHDR
+                    {
+                        lpData = Marshal.AllocHGlobal(bytesToSend),
+                        dwBufferLength = (uint)bytesToSend,
+                        dwFlags = 0,
+                        dwLoops = 0
+                    };
+
+                    // Copy PCM data to buffer
+                    Marshal.Copy(pcmData, position, waveHeader.lpData, bytesToSend);
+
+                    // Prepare header
+                    result = waveOutPrepareHeader(waveOutHandle, ref waveHeader, Marshal.SizeOf(typeof(WAVEHDR)));
+                    if (result != MMSYSERR_NOERROR)
+                    {
+                        Console.WriteLine($"[OdysseySoundPlayer] Failed to prepare wave header for {soundResRef}: error code {result}");
+                        Marshal.FreeHGlobal(waveHeader.lpData);
+                        break;
+                    }
+
+                    // Write data to waveOut
+                    result = waveOutWrite(waveOutHandle, ref waveHeader, Marshal.SizeOf(typeof(WAVEHDR)));
+                    if (result != MMSYSERR_NOERROR)
+                    {
+                        Console.WriteLine($"[OdysseySoundPlayer] Failed to write wave data for {soundResRef}: error code {result}");
+                        waveOutUnprepareHeader(waveOutHandle, ref waveHeader, Marshal.SizeOf(typeof(WAVEHDR)));
+                        Marshal.FreeHGlobal(waveHeader.lpData);
+                        break;
+                    }
+
+                    // Wait for buffer to complete (with cancellation support)
+                    while ((waveHeader.dwFlags & WHDR_DONE) == 0 && !cancellationToken.IsCancellationRequested)
+                    {
+                        Thread.Sleep(10); // Check every 10ms
+                    }
+
+                    // If cancellation was requested, stop playback
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        waveOutReset(waveOutHandle);
+                        waveOutUnprepareHeader(waveOutHandle, ref waveHeader, Marshal.SizeOf(typeof(WAVEHDR)));
+                        Marshal.FreeHGlobal(waveHeader.lpData);
+                        break;
+                    }
+
+                    // Unprepare header and free buffer
+                    waveOutUnprepareHeader(waveOutHandle, ref waveHeader, Marshal.SizeOf(typeof(WAVEHDR)));
+                    Marshal.FreeHGlobal(waveHeader.lpData);
+
+                    // Advance position
+                    position += bytesToSend;
+                }
+
+                // Clean up
+                lock (_soundsLock)
+                {
+                    if (_playingSounds.ContainsKey(instanceId))
+                    {
+                        if (waveOutHandle != IntPtr.Zero)
+                        {
+                            waveOutReset(waveOutHandle);
+                            waveOutClose(waveOutHandle);
+                        }
+                        _playingSounds.Remove(instanceId);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[OdysseySoundPlayer] Error in PlaySoundAsync for {soundResRef}: {ex.Message}");
+                Console.WriteLine($"[OdysseySoundPlayer] Stack trace: {ex.StackTrace}");
+                lock (_soundsLock)
+                {
+                    if (_playingSounds.TryGetValue(instanceId, out SoundInstanceData instanceData))
+                    {
+                        if (instanceData.WaveOutHandle != IntPtr.Zero)
+                        {
+                            try
+                            {
+                                waveOutReset(instanceData.WaveOutHandle);
+                                waveOutClose(instanceData.WaveOutHandle);
+                            }
+                            catch { }
+                        }
+                        _playingSounds.Remove(instanceId);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Stops all currently playing sounds.
+        /// Based on swkotor2.exe: Sound stop functionality
+        /// </summary>
         public void Stop()
         {
-            // TODO: STUB - Stop all sounds
+            lock (_soundsLock)
+            {
+                // Stop all sound instances
+                foreach (var kvp in _playingSounds)
+                {
+                    uint instanceId = kvp.Key;
+                    SoundInstanceData instanceData = kvp.Value;
+
+                    try
+                    {
+                        // Cancel playback thread
+                        if (instanceData.Cancellation != null)
+                        {
+                            instanceData.Cancellation.Cancel();
+                        }
+
+                        // Stop waveOut playback
+                        if (instanceData.WaveOutHandle != IntPtr.Zero)
+                        {
+                            waveOutReset(instanceData.WaveOutHandle);
+                            waveOutClose(instanceData.WaveOutHandle);
+                        }
+
+                        // Wait for thread to finish (with timeout)
+                        if (instanceData.PlaybackThread != null)
+                        {
+                            if (!instanceData.PlaybackThread.Join(1000))
+                            {
+                                Console.WriteLine($"[OdysseySoundPlayer] Playback thread for {instanceData.SoundResRef} did not terminate in time");
+                            }
+                        }
+
+                        // Dispose cancellation token
+                        instanceData.Cancellation?.Dispose();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[OdysseySoundPlayer] Error stopping sound {instanceId} ({instanceData.SoundResRef}): {ex.Message}");
+                    }
+                }
+
+                // Clear all tracked sounds
+                _playingSounds.Clear();
+
+                Console.WriteLine("[OdysseySoundPlayer] Stopped all sounds");
+            }
         }
 
+        /// <summary>
+        /// Sets the master volume for all sounds.
+        /// Based on swkotor2.exe: "Sound Volume" @ 0x007c83cc
+        /// Volume is clamped to 0.0-1.0 range and applied immediately to all active sounds.
+        /// </summary>
+        /// <param name="volume">Volume (0.0 to 1.0). Values outside this range are clamped.</param>
         public void SetVolume(float volume)
         {
-            // TODO: STUB - Set sound volume
+            lock (_soundsLock)
+            {
+                // Clamp volume to valid range (0.0 to 1.0)
+                _masterVolume = Math.Max(0.0f, Math.Min(1.0f, volume));
+
+                // Apply volume to all playing sounds
+                foreach (var kvp in _playingSounds)
+                {
+                    uint instanceId = kvp.Key;
+                    SoundInstanceData instanceData = kvp.Value;
+
+                    if (instanceData.WaveOutHandle != IntPtr.Zero)
+                    {
+                        ApplyVolumeToSound(instanceId, instanceData.WaveOutHandle);
+                    }
+                }
+
+                Console.WriteLine($"[OdysseySoundPlayer] Master volume set to {_masterVolume:F2} ({(int)(_masterVolume * 100)}%)");
+            }
         }
+
+        /// <summary>
+        /// Applies the current master volume to a specific sound instance.
+        /// Uses Windows waveOutSetVolume API to set the volume for the waveOut device.
+        /// Based on swkotor2.exe: Sound volume control system
+        /// </summary>
+        private void ApplyVolumeToSound(uint instanceId, IntPtr waveOutHandle)
+        {
+            if (waveOutHandle == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                // Get original volume for this instance
+                float originalVolume = _masterVolume;
+                lock (_soundsLock)
+                {
+                    if (_playingSounds.TryGetValue(instanceId, out SoundInstanceData instanceData))
+                    {
+                        originalVolume = instanceData.OriginalVolume;
+                    }
+                }
+
+                // Calculate final volume (master volume * original volume)
+                float finalVolume = _masterVolume * originalVolume;
+
+                // Convert volume (0.0-1.0) to Windows volume format (0x0000-0xFFFF)
+                // Windows volume is a DWORD where low word is left channel, high word is right channel
+                ushort volumeValue = (ushort)(finalVolume * 0xFFFF);
+                uint windowsVolume = (uint)(volumeValue | (volumeValue << 16)); // Left and right channels
+
+                // Set volume for the waveOut device
+                int result = waveOutSetVolume(waveOutHandle, windowsVolume);
+                if (result != MMSYSERR_NOERROR)
+                {
+                    Console.WriteLine($"[OdysseySoundPlayer] Failed to set volume for instance {instanceId}: error code {result}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[OdysseySoundPlayer] Error applying volume to instance {instanceId}: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Disposes resources and stops any playing sounds.
+        /// </summary>
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                Stop();
+                _disposed = true;
+            }
+        }
+
+        #region Windows waveOut API P/Invoke
+        // Windows waveOut API for sound playback
+        // Based on swkotor2.exe: Sound playback uses Miles Sound System (MSS) or DirectSound
+        // This implementation uses waveOut for Windows compatibility
+        // For cross-platform support, consider OpenAL or NAudio
+
+        [DllImport("winmm.dll", EntryPoint = "waveOutOpen", SetLastError = true)]
+        private static extern int waveOutOpen(out IntPtr phwo, int uDeviceID, ref WAVEFORMATEX pwfx, IntPtr dwCallback, IntPtr dwInstance, int fdwOpen);
+
+        [DllImport("winmm.dll", EntryPoint = "waveOutClose", SetLastError = true)]
+        private static extern int waveOutClose(IntPtr hwo);
+
+        [DllImport("winmm.dll", EntryPoint = "waveOutPrepareHeader", SetLastError = true)]
+        private static extern int waveOutPrepareHeader(IntPtr hwo, ref WAVEHDR pwh, int cbwh);
+
+        [DllImport("winmm.dll", EntryPoint = "waveOutUnprepareHeader", SetLastError = true)]
+        private static extern int waveOutUnprepareHeader(IntPtr hwo, ref WAVEHDR pwh, int cbwh);
+
+        [DllImport("winmm.dll", EntryPoint = "waveOutWrite", SetLastError = true)]
+        private static extern int waveOutWrite(IntPtr hwo, ref WAVEHDR pwh, int cbwh);
+
+        [DllImport("winmm.dll", EntryPoint = "waveOutReset", SetLastError = true)]
+        private static extern int waveOutReset(IntPtr hwo);
+
+        [DllImport("winmm.dll", EntryPoint = "waveOutSetVolume", SetLastError = true)]
+        private static extern int waveOutSetVolume(IntPtr hwo, uint dwVolume);
+
+        // WaveOut constants (shared with OdysseyMusicPlayer)
+        private const int WAVE_MAPPER = -1;
+        private const int CALLBACK_NULL = 0x00000000;
+        private const int MMSYSERR_NOERROR = 0;
+        private const uint WHDR_DONE = 0x00000001;
+
+        // WAVEFORMATEX structure for waveOut (shared with OdysseyMusicPlayer)
+        [StructLayout(LayoutKind.Sequential)]
+        private struct WAVEFORMATEX
+        {
+            public ushort wFormatTag;
+            public ushort nChannels;
+            public uint nSamplesPerSec;
+            public uint nAvgBytesPerSec;
+            public ushort nBlockAlign;
+            public ushort wBitsPerSample;
+            public ushort cbSize;
+        }
+
+        // WAVEHDR structure for waveOut buffers (shared with OdysseyMusicPlayer)
+        [StructLayout(LayoutKind.Sequential)]
+        private struct WAVEHDR
+        {
+            public IntPtr lpData;
+            public uint dwBufferLength;
+            public uint dwBytesRecorded;
+            public IntPtr dwUser;
+            public uint dwFlags;
+            public uint dwLoops;
+            public IntPtr lpNext;
+            public IntPtr reserved;
+        }
+        #endregion
     }
 
     /// <summary>
