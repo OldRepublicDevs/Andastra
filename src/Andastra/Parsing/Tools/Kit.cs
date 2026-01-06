@@ -19,6 +19,7 @@ using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Formats.LYT;
 using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Logger;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Vector2 = System.Numerics.Vector2;
