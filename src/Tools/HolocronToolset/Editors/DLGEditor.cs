@@ -21,6 +21,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Threading;
 using CNVHelper = Andastra.Parsing.Resource.Generics.CNV.CNVHelper;
+using DLGAnimation = Andastra.Parsing.Resource.Generics.DLG.DLGAnimation;
 using DLGEntry = Andastra.Parsing.Resource.Generics.DLG.DLGEntry;
 using DLGHelper = Andastra.Parsing.Resource.Generics.DLG.DLGHelper;
 using DLGLink = Andastra.Parsing.Resource.Generics.DLG.DLGLink;
@@ -1689,7 +1690,7 @@ namespace HolocronToolset.Editors
                 string name = anim.AnimationId.ToString();
                 if (_installation != null)
                 {
-                    var animations2da = _installation.HtGetCache2da(HTInstallation.TwoDA_DIALOG_ANIMS);
+                    var animations2da = _installation.HtGetCache2DA(HTInstallation.TwoDADialogAnims);
                     if (animations2da != null && animations2da.Height > anim.AnimationId)
                     {
                         var nameCell = animations2da.GetCell(anim.AnimationId, "name");
