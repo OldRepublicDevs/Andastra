@@ -1685,6 +1685,10 @@ namespace HolocronToolset.Tests.Editors
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:629-655
         // Original: def test_utweditor_editor_help_dialog_opens_correct_file(qtbot, installation: HTInstallation):
+        /// <summary>
+        /// Test that UTWEditor help dialog opens and displays the correct help file (not 'Help File Not Found').
+        /// Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:629-655
+        /// </summary>
         [Fact]
         public void TestUtwEditorEditorHelpDialogOpensCorrectFile()
         {
@@ -1706,25 +1710,35 @@ namespace HolocronToolset.Tests.Editors
             }
 
             var editor = new UTWEditor(null, installation);
+            editor.Show(); // Ensure editor is shown so dialogs can be parented to it
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:637
             // Original: editor._show_help_dialog("GFF-UTW.md")
-            // In C#, the method is ShowHelpDialog (public, not private)
-            try
-            {
-                editor.ShowHelpDialog("GFF-UTW.md");
+            // In C#, the method is ShowHelpDialog (public, not private) which creates and shows the dialog
+            // Since Show() is non-blocking and finding dialogs in ApplicationLifetime is unreliable in headless mode,
+            // we create the dialog directly for testing (ShowHelpDialog does the same internally)
+            // This tests the actual functionality: dialog creation and content loading
+            var dialog = new HolocronToolset.Dialogs.EditorHelpDialog(editor, "GFF-UTW.md");
+            
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:645
+            // Original: qtbot.waitExposed(dialog)
+            // In headless mode, we can't wait for exposure, but content is loaded synchronously in the constructor
+            // Ensure dialog was created successfully
+            dialog.Should().NotBeNull("Help dialog should be created");
 
-                // In headless mode, we can't easily verify the dialog was opened and contains content
-                // The Python test checks for "Help File Not Found" in the HTML content
-                // TODO: STUB - For now, we just verify the method doesn't throw an exception
-                // TODO: STUB - A more complete test would require UI automation which is complex in headless mode
-            }
-            catch (Exception ex)
-            {
-                // If the help file doesn't exist, that's okay - the test verifies the method works
-                // In a real scenario with the help files present, the dialog should open correctly
-                // TODO: STUB - For now, we just ensure the method doesn't crash
-            }
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:648
+            // Original: html = dialog.text_browser.toHtml()
+            // In C#, we use the HtmlContent property which exposes the HTML
+            string html = dialog.HtmlContent;
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:650-652
+            // Original: assert "Help File Not Found" not in html, f"Help file 'GFF-UTW.md' should be found, but error was shown. HTML: {html[:500]}"
+            html.Should().NotContain("Help File Not Found",
+                $"Help file 'GFF-UTW.md' should be found, but error was shown. HTML: {(html.Length > 500 ? html.Substring(0, 500) : html)}");
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:655
+            // Original: assert len(html) > 100, "Help dialog should contain content"
+            html.Length.Should().BeGreaterThan(100, "Help dialog should contain content");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:657-686
