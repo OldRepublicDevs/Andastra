@@ -915,12 +915,12 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 // Play sound data
                 byte[] pcmData = wavFile.Data;
                 int bufferSize = pcmData.Length;
-                int position = 0;
+                int bufferPosition = 0;
 
-                while (position < bufferSize && !cancellationToken.IsCancellationRequested)
+                while (bufferPosition < bufferSize && !cancellationToken.IsCancellationRequested)
                 {
                     // Calculate how much data to send
-                    int remainingBytes = bufferSize - position;
+                    int remainingBytes = bufferSize - bufferPosition;
                     int bytesToSend = Math.Min(65536, remainingBytes); // 64KB buffer
 
                     // Allocate buffer for waveOut
@@ -933,7 +933,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     };
 
                     // Copy PCM data to buffer
-                    Marshal.Copy(pcmData, position, waveHeader.lpData, bytesToSend);
+                    Marshal.Copy(pcmData, bufferPosition, waveHeader.lpData, bytesToSend);
 
                     // Prepare header
                     result = waveOutPrepareHeader(waveOutHandle, ref waveHeader, Marshal.SizeOf(typeof(WAVEHDR)));
@@ -974,7 +974,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     Marshal.FreeHGlobal(waveHeader.lpData);
 
                     // Advance position
-                    position += bytesToSend;
+                    bufferPosition += bytesToSend;
                 }
 
                 // Clean up
