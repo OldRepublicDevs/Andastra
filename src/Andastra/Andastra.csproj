@@ -105,6 +105,10 @@
     <PackageReference Include="System.Text.Json" Version="10.0.1" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="Parsing\Andastra.Parsing.csproj" />
+    <ProjectReference Include="Utility\Andastra.Utility.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <Content Include="Content\**\*.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -145,6 +149,12 @@
   <ItemGroup>
     <Compile Remove="Utility\obj\**" />
     <None Remove="Utility\obj\**" />
+  </ItemGroup>
+
+  <!-- Exclude Parsing directory - it has its own project (Andastra.Parsing.csproj) -->
+  <ItemGroup>
+    <Compile Remove="Parsing\**" />
+    <None Remove="Parsing\**" />
   </ItemGroup>
 
   <!-- Explicitly exclude .axaml files from Avalonia resource scanning -->

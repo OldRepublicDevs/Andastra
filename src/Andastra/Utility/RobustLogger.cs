@@ -16,33 +16,36 @@ namespace Andastra.Utility.Logger
         /// </summary>
         public static RobustLogger Instance { get; } = new RobustLogger();
 
-        private string _logFilePath;
-        private readonly object _lockObject = new object();
+        private string logFilePath;
+        private readonly object lockObject = new object();
 
         /// <summary>
         /// Initialize RobustLogger with optional log file path.
         /// If path is null, logs will only go to console/debug output.
         /// </summary>
-        public RobustLogger([CanBeNull] string logFilePath = null)
+        public RobustLogger([CanBeNull] string fileLogPath = null)
         {
-            _logFilePath = logFilePath;
+            logFilePath = fileLogPath;
         }
 
         /// <summary>
         /// Sets the log file path. Useful for updating when mod path changes.
         /// </summary>
-        public void SetLogFilePath([CanBeNull] string logFilePath)
+        public void SetLogFilePath([CanBeNull] string fileLogPath)
         {
-            lock (_lockObject)
+            lock (lockObject)
             {
-                _logFilePath = logFilePath;
+                logFilePath = fileLogPath;
             }
         }
 
         /// <summary>
         /// Log a debug message.
         /// </summary>
-        public void Debug(string message, bool excInfo = false, Exception exception = null)
+        public void Debug(
+            string message,
+            bool excInfo = false,
+            Exception exception = null)
         {
             string logMessage = FormatMessage("DEBUG", message, excInfo, exception);
             WriteToFile(logMessage);
@@ -52,7 +55,10 @@ namespace Andastra.Utility.Logger
         /// <summary>
         /// Log an info message.
         /// </summary>
-        public void Info(string message, bool excInfo = false, Exception exception = null)
+        public void Info(
+            string message,
+            bool excInfo = false,
+            Exception exception = null)
         {
             string logMessage = FormatMessage("INFO", message, excInfo, exception);
             WriteToFile(logMessage);
@@ -62,7 +68,10 @@ namespace Andastra.Utility.Logger
         /// <summary>
         /// Log a warning message.
         /// </summary>
-        public void Warning(string message, bool excInfo = false, Exception exception = null)
+        public void Warning(
+            string message,
+            bool excInfo = false,
+            Exception exception = null)
         {
             string logMessage = FormatMessage("WARNING", message, excInfo, exception);
             WriteToFile(logMessage);
@@ -73,7 +82,10 @@ namespace Andastra.Utility.Logger
         /// <summary>
         /// Log an error message.
         /// </summary>
-        public void Error(string message, bool excInfo = false, Exception exception = null)
+        public void Error(
+            string message,
+            bool excInfo = false,
+            Exception exception = null)
         {
             string logMessage = FormatMessage("ERROR", message, excInfo, exception);
             WriteToFile(logMessage);
@@ -103,7 +115,11 @@ namespace Andastra.Utility.Logger
             Console.Error.WriteLine(logMessage);
         }
 
-        private string FormatMessage(string level, string message, bool excInfo, Exception exception)
+        private string FormatMessage(
+            string level,
+            string message,
+            bool excInfo,
+            Exception exception)
         {
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             string formatted = $"[{timestamp}] [{level}] {message}";
@@ -120,28 +136,28 @@ namespace Andastra.Utility.Logger
 
         private void WriteToFile(string message)
         {
-            if (string.IsNullOrEmpty(_logFilePath))
+            if (string.IsNullOrEmpty(logFilePath))
             {
                 return;
             }
 
             try
             {
-                lock (_lockObject)
+                lock (lockObject)
                 {
-                    string directory = Path.GetDirectoryName(_logFilePath);
+                    string directory = Path.GetDirectoryName(logFilePath);
                     if (!string.IsNullOrEmpty(directory))
                     {
                         Directory.CreateDirectory(directory);
                     }
 
-                    File.AppendAllText(_logFilePath, message + Environment.NewLine, global::System.Text.Encoding.UTF8);
+                    File.AppendAllText(logFilePath, message + Environment.NewLine, global::System.Text.Encoding.UTF8);
                 }
             }
             catch (Exception ex)
             {
                 // Don't throw - logging failures shouldn't crash the app
-                global::System.Diagnostics.Debug.WriteLine($"Failed to write to log file '{_logFilePath}': {ex.Message}");
+                global::System.Diagnostics.Debug.WriteLine($"Failed to write to log file '{logFilePath}': {ex.Message}");
             }
         }
     }
