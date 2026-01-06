@@ -24,6 +24,18 @@ namespace Andastra.Parsing.Formats.SSF
         {
         }
 
+        public SSFBinaryReader(byte[] data, int offset, int size) : base(data, offset, size, Encoding.ASCII)
+        {
+        }
+
+        public SSFBinaryReader(string filepath, int offset, int size) : base(filepath, offset, size, Encoding.ASCII)
+        {
+        }
+
+        public SSFBinaryReader(Stream source, int offset, int size) : base(source, offset, size, Encoding.ASCII)
+        {
+        }
+
         public SSF Load()
         {
             try

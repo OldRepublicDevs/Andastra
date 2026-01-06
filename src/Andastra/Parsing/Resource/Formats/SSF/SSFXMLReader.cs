@@ -19,6 +19,24 @@ namespace Andastra.Parsing.Formats.SSF
     /// </summary>
     public class SSFXMLReader
     {
+        private readonly int _offset;
+        private readonly int? _size;
+        private readonly object _source;
+
+        public SSFXMLReader()
+        {
+            _offset = 0;
+            _size = null;
+            _source = null;
+        }
+
+        public SSFXMLReader(object source, int offset = 0, int size = 0)
+        {
+            _source = source;
+            _offset = offset;
+            _size = size > 0 ? size : (int?)null;
+        }
+
         /// <summary>
         /// Loads an SSF from XML text.
         /// </summary>
@@ -60,6 +78,68 @@ namespace Andastra.Parsing.Formats.SSF
                 }
             }
             return Load(xmlText);
+        }
+
+        /// <summary>
+        /// Loads an SSF from the source with offset and size constraints.
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ssf/io_ssf_xml.py:47-59
+        /// </summary>
+        public SSF Load()
+        {
+            if (_source == null)
+            {
+                throw new InvalidOperationException("Source must be set via constructor");
+            }
+
+            byte[] xmlBytes = null;
+            if (_source is string filepath)
+            {
+                // Check if the string is XML content (starts with '<') or a file path
+                if (!string.IsNullOrWhiteSpace(filepath) && filepath.TrimStart().StartsWith("<"))
+                {
+                    // Raw XML content - extract substring if offset/size specified
+                    if (_offset > 0 || _size.HasValue)
+                    {
+                        int start = _offset;
+                        int length = _size ?? (filepath.Length - start);
+                        if (start + length > filepath.Length)
+                        {
+                            length = filepath.Length - start;
+                        }
+                        string xmlText = filepath.Substring(start, length);
+                        return Load(xmlText);
+                    }
+                    return Load(filepath);
+                }
+                else
+                {
+                    // File path - read with offset/size
+                    using (var reader = Andastra.Parsing.Common.RawBinaryReader.FromFile(filepath, _offset, _size))
+                    {
+                        xmlBytes = reader.ReadBytes(reader.Size);
+                    }
+                }
+            }
+            else if (_source is byte[] data)
+            {
+                using (var reader = Andastra.Parsing.Common.RawBinaryReader.FromBytes(data, _offset, _size))
+                {
+                    xmlBytes = reader.ReadBytes(reader.Size);
+                }
+            }
+            else if (_source is Stream stream)
+            {
+                using (var reader = Andastra.Parsing.Common.RawBinaryReader.FromStream(stream, _offset, _size))
+                {
+                    xmlBytes = reader.ReadBytes(reader.Size);
+                }
+            }
+            else
+            {
+                throw new ArgumentException("Source must be string, byte[], or Stream");
+            }
+
+            return Load(xmlBytes);
         }
 
         private SSF LoadFromXmlDocument(XDocument doc)
