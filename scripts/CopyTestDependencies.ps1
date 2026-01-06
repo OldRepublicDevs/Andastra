@@ -87,4 +87,29 @@ foreach ($target in $depsJson.targets.PSObject.Properties) {
     }
 }
 
+# Also copy test platform DLLs from SDK directory
+$sdkPath = "C:\Program Files\dotnet\sdk\9.0.307"
+if (Test-Path $sdkPath) {
+    $testPlatformDlls = @(
+        "Microsoft.TestPlatform.CommunicationUtilities.dll",
+        "Microsoft.TestPlatform.CoreUtilities.dll",
+        "Microsoft.TestPlatform.CrossPlatEngine.dll",
+        "Microsoft.TestPlatform.PlatformAbstractions.dll",
+        "Microsoft.TestPlatform.Utilities.dll",
+        "Microsoft.VisualStudio.TestPlatform.Client.dll",
+        "Microsoft.VisualStudio.TestPlatform.Common.dll",
+        "Microsoft.VisualStudio.TestPlatform.ObjectModel.dll",
+        "testhost.dll",
+        "testhost.deps.json"
+    )
+    
+    foreach ($dllName in $testPlatformDlls) {
+        $srcPath = Join-Path $sdkPath $dllName
+        if (Test-Path $srcPath) {
+            Copy-Item $srcPath -Destination $OutputPath -Force
+            $copiedCount++
+        }
+    }
+}
+
 Write-Host "Copied $copiedCount DLLs, $missingCount missing"
