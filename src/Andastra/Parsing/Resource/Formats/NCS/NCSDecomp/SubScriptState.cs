@@ -1592,6 +1592,17 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             // For the left operand, we need to get it from the remaining children
             // If we already extracted right from children, it's already removed
             // Otherwise, RemoveLastExp will handle it
+            // But first, if right was extracted directly from children, make sure it's removed
+            if (right != null && this.current.HasChildren())
+            {
+                ScriptNode.ScriptNode lastChild = this.current.GetLastChild();
+                // If the last child is the right operand we just extracted, remove it
+                if (lastChild == right || (typeof(ScriptNode.AExpressionStatement).IsInstanceOfType(lastChild) && ((ScriptNode.AExpressionStatement)lastChild).GetExp() == right))
+                {
+                    this.current.RemoveLastChild();
+                    right.Parent(null);
+                }
+            }
             AExpression left = this.RemoveLastExp(false);
 
             // Debug logging for conditional operations
@@ -1629,8 +1640,46 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                 // If either operand is null, create placeholder expressions
                 if (left == null)
                 {
-                    Error("DEBUG TransformBinary: left operand is null, creating placeholder");
-                    left = this.BuildPlaceholderParam(1);
+                    Error("DEBUG TransformBinary: left operand is null, searching for AVarRef");
+                    // Try to find AVarRef in children - it might be wrapped or in an unexpected state
+                    if (this.current.HasChildren())
+                    {
+                        List<ScriptNode.ScriptNode> children = this.current.GetChildren();
+                        // Search backwards through children to find AVarRef
+                        for (int i = children.Count - 1; i >= 0; i--)
+                        {
+                            ScriptNode.ScriptNode child = children[i];
+                            if (typeof(AVarRef).IsInstanceOfType(child))
+                            {
+                                Error($"DEBUG TransformBinary: Found AVarRef at index {i}, using as left operand");
+                                // Remove all children from this index onwards, then add back the ones we want to keep
+                                // Actually, simpler: just remove this child
+                                this.current.RemoveLastChild(); // Remove right operand if it's still there
+                                // Now the AVarRef should be the last child
+                                left = (AVarRef)this.RemoveLastExp(false);
+                                break;
+                            }
+                            else if (typeof(ScriptNode.AExpressionStatement).IsInstanceOfType(child))
+                            {
+                                ScriptNode.AExpressionStatement expStmt = (ScriptNode.AExpressionStatement)child;
+                                ScriptNode.AExpression innerExp = expStmt.GetExp();
+                                if (innerExp != null && typeof(AVarRef).IsInstanceOfType(innerExp))
+                                {
+                                    Error($"DEBUG TransformBinary: Found AVarRef in AExpressionStatement at index {i}, extracting as left operand");
+                                    // Remove all children from this index onwards
+                                    this.current.RemoveLastChild(); // Remove right operand if it's still there
+                                    // Now extract the AVarRef
+                                    left = (AVarRef)this.RemoveLastExp(false);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (left == null)
+                    {
+                        Error("DEBUG TransformBinary: left operand is still null, creating placeholder");
+                        left = this.BuildPlaceholderParam(1);
+                    }
                 }
                 if (right == null)
                 {
