@@ -11,6 +11,7 @@ using HolocronToolset.Editors;
 using HolocronToolset.Tests.TestHelpers;
 using Xunit;
 using Andastra.Parsing.Common;
+using Game = Andastra.Parsing.Common.BioWareGame;
 using AREHelpers = Andastra.Parsing.Resource.Generics.ARE.AREHelpers;
 
 namespace HolocronToolset.Tests.Editors
@@ -4936,7 +4937,7 @@ namespace HolocronToolset.Tests.Editors
             // Matching PyKotor: assert callable(editor.change_name)
             // Verify the method is callable (not null and has correct signature)
             changeNameMethod.Should().NotBeNull("ChangeName method should be callable");
-            
+
             // Verify method signature matches expected (no parameters, void return)
             changeNameMethod.GetParameters().Length.Should().Be(0, "ChangeName method should take no parameters");
             changeNameMethod.ReturnType.Should().Be(typeof(void), "ChangeName method should return void");
@@ -5167,10 +5168,9 @@ namespace HolocronToolset.Tests.Editors
         [InlineData(Game.NWN2)]
         [InlineData(Game.DA)]
         [InlineData(Game.DA2)]
-        // TODO: Add Mass Effect games to Game enum when supported
-        // [InlineData(Game.ME)]
-        // [InlineData(Game.ME2)]
-        // [InlineData(Game.ME3)]
+        [InlineData(Game.ME)]
+        [InlineData(Game.ME2)]
+        [InlineData(Game.ME3)]
         public void TestAreHelpersK2SpecificFieldsNotWrittenForNonK2Games(Game game)
         {
             // Test that Grass_Emissive is NOT written for non-K2 games

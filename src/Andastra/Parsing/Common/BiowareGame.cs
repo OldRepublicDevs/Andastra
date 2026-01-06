@@ -29,6 +29,15 @@ namespace Andastra.Parsing.Common
         DA_ORIGINS = DA,
         DA2 = 11,
         DRAGON_AGE_2 = DA2,
+        
+        // Mass Effect series (Eclipse Engine)
+        ME = 12,
+        ME1 = ME,
+        MASS_EFFECT = ME,
+        ME2 = 13,
+        MASS_EFFECT_2 = ME2,
+        ME3 = 14,
+        MASS_EFFECT_3 = ME3,
 
         // Aurora Engine
         NWN = 30,
@@ -107,6 +116,28 @@ namespace Andastra.Parsing.Common
             return BioWareGame == BioWareGame.DA2 || BioWareGame == BioWareGame.DRAGON_AGE_2;
         }
 
+        public static bool IsMassEffect(this BioWareGame BioWareGame)
+        {
+            return BioWareGame == BioWareGame.ME || BioWareGame == BioWareGame.ME1 || BioWareGame == BioWareGame.MASS_EFFECT ||
+                   BioWareGame == BioWareGame.ME2 || BioWareGame == BioWareGame.MASS_EFFECT_2 ||
+                   BioWareGame == BioWareGame.ME3 || BioWareGame == BioWareGame.MASS_EFFECT_3;
+        }
+
+        public static bool IsME1(this BioWareGame BioWareGame)
+        {
+            return BioWareGame == BioWareGame.ME || BioWareGame == BioWareGame.ME1 || BioWareGame == BioWareGame.MASS_EFFECT;
+        }
+
+        public static bool IsME2(this BioWareGame BioWareGame)
+        {
+            return BioWareGame == BioWareGame.ME2 || BioWareGame == BioWareGame.MASS_EFFECT_2;
+        }
+
+        public static bool IsME3(this BioWareGame BioWareGame)
+        {
+            return BioWareGame == BioWareGame.ME3 || BioWareGame == BioWareGame.MASS_EFFECT_3;
+        }
+
         // Aurora Engine
         public static bool IsNeverwinterNights(this BioWareGame BioWareGame)
         {
@@ -132,7 +163,7 @@ namespace Andastra.Parsing.Common
 
         public static bool IsEclipse(this BioWareGame BioWareGame)
         {
-            return IsDragonAge(BioWareGame);
+            return IsDragonAge(BioWareGame) || IsMassEffect(BioWareGame);
         }
 
         public static bool IsAurora(this BioWareGame BioWareGame)
