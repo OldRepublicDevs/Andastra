@@ -1940,10 +1940,12 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                                 // Remove all children from this index onwards
                                 while (this.current.HasChildren() && this.current.GetLastChild() != child)
                                 {
-                                    this.current.RemoveLastChild();
+                                    ScriptNode.ScriptNode removed = this.current.RemoveLastChild();
+                                    Error($"DEBUG TransformBinary: Removed intermediate child {removed.GetType().Name} while extracting AUnaryExp");
                                 }
                                 right = (AExpression)this.current.RemoveLastChild();
                                 right.Parent(null);
+                                Error($"DEBUG TransformBinary: Successfully extracted AUnaryExp as right operand, removed from children");
                                 break;
                             }
                             else if (typeof(ScriptNode.AExpressionStatement).IsInstanceOfType(child))
