@@ -7,48 +7,33 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateGlobalUsings>false</GenerateGlobalUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <!-- MonoGame Content Pipeline -->
-    <MonoGamePlatform>DesktopGL</MonoGamePlatform>
-    <MonoGameProfile>HiDef</MonoGameProfile>
   </PropertyGroup>
 
-  <!-- Debug Configuration: Optimized for faster development builds -->
+  <!-- Debug Configuration -->
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <!-- Build only latest .NET (net9.0) for Debug to speed up development builds (unless TargetFramework is explicitly set) -->
     <TargetFrameworks Condition="'$(OS)' == 'Windows_NT'">net9.0</TargetFrameworks>
     <OutputType>Library</OutputType>
-    <!-- Disable analyzers in Debug builds for faster compilation -->
     <EnableNETAnalyzers>false</EnableNETAnalyzers>
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
     <Nullable>disable</Nullable>
-    <!-- Fast build optimizations -->
     <Optimize>false</Optimize>
     <DebugType>portable</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <!-- Disable all analyzers and checks for speed -->
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <EnableNETAnalyzers>false</EnableNETAnalyzers>
     <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
-    <!-- Build performance -->
     <BuildInParallel>true</BuildInParallel>
     <UseSharedCompilation>true</UseSharedCompilation>
     <UseRidGraph>true</UseRidGraph>
     <Deterministic>false</Deterministic>
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
-    <!-- Skip expensive operations -->
-    <SkipMonoGameContentPipeline Condition="'$(SkipMonoGameContentPipeline)' == ''">true</SkipMonoGameContentPipeline>
   </PropertyGroup>
 
-  <!-- Release Configuration: Optimized, cross-platform, takes longer to build -->
+  <!-- Release Configuration -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <TargetFrameworks></TargetFrameworks>
-    <!-- Helper to append without duplicate semicolons -->
-    <TargetFrameworks Condition="'$(TargetFrameworks)' != ''">
-      $([System.String]::Copy('$(TargetFrameworks)').TrimEnd(';').TrimStart(';'))
-    </TargetFrameworks>
-    <!-- Add each TFM conditionally -->
     <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '10.0.0'))">
       $(TargetFrameworks);net10.0
     </TargetFrameworks>
@@ -58,11 +43,9 @@
     <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '8.0.0'))">
       $(TargetFrameworks);net9.0
     </TargetFrameworks>
-    <!-- === .NET 7 SDK: include net7.0 + net6.0 (legacy support) === -->
     <TargetFrameworks Condition="$([System.String]::new('$(NETCoreSdkVersion)').StartsWith('7.'))">
       $(TargetFrameworks);net7.0;net6.0
     </TargetFrameworks>
-    <!-- === .NET 6 SDK: include (legacy support) === -->
     <TargetFrameworks Condition="$([System.String]::new('$(NETCoreSdkVersion)').StartsWith('6.'))">
       $(TargetFrameworks);net6.0
     </TargetFrameworks>
@@ -84,15 +67,25 @@
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
     <RunCodeAnalysis>false</RunCodeAnalysis>
-    <SkipMonoGameContentPipeline Condition="'$(SkipMonoGameContentPipeline)' == ''">true</SkipMonoGameContentPipeline>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <UseRidGraph>true</UseRidGraph>
     <UseSharedCompilation>true</UseSharedCompilation>
     <WarningLevel>0</WarningLevel>
   </PropertyGroup>
 
+  <!-- Only include Files from Formats folder (relative to this csproj location) -->
   <ItemGroup>
-    <ProjectReference Include="..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
+    <Compile Include="*.cs" />
+    <Compile Include="**/*.cs" />
+  </ItemGroup>
+  
+  <!-- Copy xunit.runner.json from parent directory -->
+  <ItemGroup>
+    <None Include="..\xunit.runner.json" Link="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -100,11 +93,5 @@
     <PackageReference Include="FluentAssertions" Version="7.0.0" />
     <PackageReference Include="Moq" Version="4.20.72" />
     <PackageReference Include="Xunit" Version="2.6.3" />
-  </ItemGroup>
-
-  <!-- Exclude Runtime and Formats folders - they have their own csproj files -->
-  <ItemGroup>
-    <Compile Remove="Runtime/**" />
-    <Compile Remove="Formats/**" />
   </ItemGroup>
 </Project>
