@@ -1230,7 +1230,9 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             else
             {
                 AExpression varref = this.GetVarToCopy(node);
+                Error($"DEBUG TransformCopyTopSp: Adding AVarRef to children, type={varref?.GetType().Name}, current has {this.current.Size()} children");
                 this.current.AddChild((ScriptNode.ScriptNode)varref);
+                Error($"DEBUG TransformCopyTopSp: Added AVarRef, current now has {this.current.Size()} children");
             }
 
             this.CheckEnd(node);
@@ -1480,13 +1482,30 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
         public virtual void TransformBinary(ABinaryCommand node)
         {
             this.CheckStart(node);
+            // For binary operations, we need to extract both operands from the stack
+            // Right operand is on top (last added), left operand is below (added earlier)
+            // Use forceOneOnly=false for both to allow extraction from AExpressionStatement if needed
             AExpression right = this.RemoveLastExp(false);
-            AExpression left = this.RemoveLastExp(this.state == 4);
+            AExpression left = this.RemoveLastExp(false);
             
             // Debug logging for conditional operations
             if (NodeUtils.IsConditionalOp(node))
             {
                 Error($"DEBUG TransformBinary: Creating conditional expression, left={left?.GetType().Name}, right={right?.GetType().Name}, op={NodeUtils.GetOp(node)}");
+                if (left == null || right == null)
+                {
+                    Error($"DEBUG TransformBinary: WARNING - null operands! left={left?.GetType().Name ?? "null"}, right={right?.GetType().Name ?? "null"}");
+                    // Try to get children list for debugging
+                    if (this.current.HasChildren())
+                    {
+                        List<ScriptNode.ScriptNode> children = this.current.GetChildren();
+                        Error($"DEBUG TransformBinary: Current has {children.Count} children:");
+                        for (int i = children.Count - 1; i >= 0 && i >= children.Count - 5; i--)
+                        {
+                            Error($"DEBUG TransformBinary:   child[{i}]={children[i].GetType().Name}");
+                        }
+                    }
+                }
             }
             
             AExpression exp;
@@ -1499,6 +1518,18 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                 if (!NodeUtils.IsConditionalOp(node))
                 {
                     throw new Exception("Unknown binary op at " + this.nodedata.GetPos(node));
+                }
+
+                // If either operand is null, create placeholder expressions
+                if (left == null)
+                {
+                    Error("DEBUG TransformBinary: left operand is null, creating placeholder");
+                    left = this.BuildPlaceholderParam(1);
+                }
+                if (right == null)
+                {
+                    Error("DEBUG TransformBinary: right operand is null, creating placeholder");
+                    right = this.BuildPlaceholderParam(1);
                 }
 
                 exp = new AConditionalExp(left, right, NodeUtils.GetOp(node));
@@ -1963,11 +1994,16 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
 
                 if (typeof(ScriptNode.AExpression).IsInstanceOfType(anode))
                 {
-                    Error("DEBUG removeLastExp: found AExpression, returning");
+                    Error($"DEBUG removeLastExp: found AExpression type={anode.GetType().Name}, returning");
                     // Found a plain expression - put back any AExpressionStatement nodes we found
                     for (int i = foundExpressionStatements.Count - 1; i >= 0; i--)
                     {
                         this.current.AddChild(foundExpressionStatements[i]);
+                    }
+                    // Put back trailing errors
+                    for (int i = trailingErrors.Count - 1; i >= 0; i--)
+                    {
+                        this.current.AddChild(trailingErrors[i]);
                     }
                     break;
                 }
@@ -2048,6 +2084,10 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                 return this.BuildPlaceholderParam(1);
             }
 
+            // Special handling for unassigned AVarRef: if there's an expression with the same stack entry
+            // following it, return that expression instead (for cases like "int1 = GetRunScriptVar()")
+            // BUT: Skip this special handling when we're extracting operands for binary operations,
+            // as we need the actual AVarRef, not the expression that follows it
             if (!forceOneOnly
                 && typeof(AVarRef).IsInstanceOfType(anode)
                 && !((AVarRef)anode).Var().IsAssigned()
@@ -2058,15 +2098,35 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                 if (typeof(ScriptNode.AExpression).IsInstanceOfType(last)
                     && ((AVarRef)anode).Var().Equals(((ScriptNode.AExpression)last).Stackentry()))
                 {
-                    ScriptNode.AExpression exp = this.RemoveLastExp(false);
-                    for (int i = trailingErrors.Count - 1; i >= 0; i--)
+                    // Only use this special handling if the last child is NOT a unary/binary expression
+                    // (those are likely operands for a comparison, not assignments)
+                    // Also skip if the last child is wrapped in an AExpressionStatement (those are standalone statements, not operands)
+                    bool isOperandExpression = typeof(AUnaryExp).IsInstanceOfType(last) 
+                        || typeof(ABinaryExp).IsInstanceOfType(last)
+                        || typeof(AConditionalExp).IsInstanceOfType(last)
+                        || typeof(ScriptNode.AExpressionStatement).IsInstanceOfType(last);
+                    
+                    if (!isOperandExpression)
                     {
-                        this.current.AddChild(trailingErrors[i]);
+                        ScriptNode.AExpression exp = this.RemoveLastExp(false);
+                        for (int i = trailingErrors.Count - 1; i >= 0; i--)
+                        {
+                            this.current.AddChild(trailingErrors[i]);
+                        }
+
+                        return exp;
                     }
-
-                    return exp;
                 }
-
+            }
+            
+            // Check if AVarRef has a following AVarDecl with the same variable (for assignments like "int1 = GetRunScriptVar()")
+            if (!forceOneOnly
+                && typeof(AVarRef).IsInstanceOfType(anode)
+                && !((AVarRef)anode).Var().IsAssigned()
+                && !((AVarRef)anode).Var().IsParam()
+                && this.current.HasChildren())
+            {
+                ScriptNode.ScriptNode last = this.current.GetLastChild();
                 if (typeof(ScriptNode.AVarDecl).IsInstanceOfType(last) && ((AVarRef)anode).Var().Equals(((ScriptNode.AVarDecl)last).GetVarVar())
                     && ((ScriptNode.AVarDecl)last).GetExp() != null)
                 {
@@ -2079,12 +2139,29 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                     return exp;
                 }
             }
+            
+            // Return the AVarRef we found (put back any AExpressionStatement nodes we found)
+            if (typeof(AVarRef).IsInstanceOfType(anode))
+            {
+                for (int i = foundExpressionStatements.Count - 1; i >= 0; i--)
+                {
+                    this.current.AddChild(foundExpressionStatements[i]);
+                }
+                for (int i = trailingErrors.Count - 1; i >= 0; i--)
+                {
+                    this.current.AddChild(trailingErrors[i]);
+                }
+                Error("DEBUG removeLastExp: returning AVarRef");
+                return (ScriptNode.AExpression)anode;
+            }
 
+            // Put back trailing errors before returning
             for (int i = trailingErrors.Count - 1; i >= 0; i--)
             {
                 this.current.AddChild(trailingErrors[i]);
             }
 
+            Error($"DEBUG removeLastExp: returning final expression type={anode?.GetType().Name ?? "null"}");
             return (ScriptNode.AExpression)anode;
         }
 
