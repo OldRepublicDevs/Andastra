@@ -1230,6 +1230,13 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                         Thread.Sleep(10); // Check every 10ms
                     }
 
+                    // If cancellation was requested, stop playback before unpreparing header
+                    // This ensures the buffer is no longer in use before we free it
+                    if (cancellationToken.IsCancellationRequested && _waveOutHandle != IntPtr.Zero)
+                    {
+                        waveOutReset(_waveOutHandle);
+                    }
+
                     // Unprepare header and free buffer
                     waveOutUnprepareHeader(_waveOutHandle, ref waveHeader, Marshal.SizeOf(typeof(WAVEHDR)));
                     Marshal.FreeHGlobal(waveHeader.lpData);
