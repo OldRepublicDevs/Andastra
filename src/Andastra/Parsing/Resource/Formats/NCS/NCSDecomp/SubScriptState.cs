@@ -788,14 +788,39 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                         ScriptNode.ScriptNode last = children[children.Count - 1];
                         ScriptNode.ScriptNode secondLast = children[children.Count - 2];
                         
+                        // Extract expressions, handling both plain expressions and AExpressionStatement
+                        AExpression lastExp = null;
+                        AExpression secondLastExp = null;
+                        
+                        if (last is AExpression lastExpDirect)
+                        {
+                            lastExp = lastExpDirect;
+                        }
+                        else if (last is ScriptNode.AExpressionStatement lastExpStmt)
+                        {
+                            lastExp = lastExpStmt.GetExp();
+                        }
+                        
+                        if (secondLast is AExpression secondLastExpDirect)
+                        {
+                            secondLastExp = secondLastExpDirect;
+                        }
+                        else if (secondLast is ScriptNode.AExpressionStatement secondLastExpStmt)
+                        {
+                            secondLastExp = secondLastExpStmt.GetExp();
+                        }
+                        
                         // Check if we have two expressions that could form a comparison
-                        if (last is AExpression lastExp && secondLast is AExpression secondLastExp)
+                        if (lastExp != null && secondLastExp != null)
                         {
                             Error($"DEBUG TransformConditionalJump (JZ): Found two expressions: {lastExp.GetType().Name} and {secondLastExp.GetType().Name}, creating AConditionalExp");
                             // Create AConditionalExp from the two expressions (assuming equality comparison)
                             // Remove both expressions from children
                             this.current.RemoveLastChild();
                             this.current.RemoveLastChild();
+                            // Clear parent references
+                            lastExp.Parent(null);
+                            secondLastExp.Parent(null);
                             condExp = new AConditionalExp(secondLastExp, lastExp, "==");
                             Error($"DEBUG TransformConditionalJump (JZ): Created AConditionalExp from two expressions");
                         }
@@ -1414,10 +1439,17 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                     // But don't do this for function calls (AActionExp) as they're usually part of expressions
                     // Also don't wrap AConditionalExp, ABinaryExp, or AUnaryExp as they're used by JZ/JNZ for if statements
                     // and other control structures that need to extract them
+                    // CRITICAL: Never wrap AConditionalExp, ABinaryExp, or AUnaryExp as they're needed by JZ/JNZ and binary operations
+                    // AUnaryExp might be the result of NEGI and will be used by EQUALII, so never wrap it
+                    // This check must come first to ensure these are never wrapped
+                    bool isControlStructureExpression = typeof(AConditionalExp).IsInstanceOfType(last) || typeof(ABinaryExp).IsInstanceOfType(last) || typeof(AUnaryExp).IsInstanceOfType(last);
+                    // Also don't wrap AConst (constants) if there are multiple expressions, as they might be operands
+                    // for binary operations (e.g., EQUALII) that haven't processed yet
+                    bool mightBeOperand = typeof(AConst).IsInstanceOfType(last) && this.current.Size() >= 2;
                     if (typeof(AExpression).IsInstanceOfType(last) && !typeof(ScriptNode.AActionExp).IsInstanceOfType(last)
                           && !typeof(AModifyExp).IsInstanceOfType(last) && !typeof(AUnaryModExp).IsInstanceOfType(last)
-                          && !typeof(AReturnStatement).IsInstanceOfType(last) && !typeof(AConditionalExp).IsInstanceOfType(last)
-                          && !typeof(ABinaryExp).IsInstanceOfType(last) && !typeof(AUnaryExp).IsInstanceOfType(last))
+                          && !typeof(AReturnStatement).IsInstanceOfType(last) && !isControlStructureExpression
+                          && !mightBeOperand)
                     {
                         AExpression expr = (AExpression)this.RemoveLastExp(true);
                         if (expr != null)
@@ -1522,7 +1554,38 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             // For binary operations, we need to extract both operands from the stack
             // Right operand is on top (last added), left operand is below (added earlier)
             // Use forceOneOnly=false for both to allow extraction from AExpressionStatement if needed
-            AExpression right = this.RemoveLastExp(false);
+            // For the right operand, prioritize the last child even if it's wrapped in AExpressionStatement,
+            // as it might have been wrapped before the binary operation could process it
+            // Also check if the last child is a plain AUnaryExp, ABinaryExp, or AConditionalExp that should be used
+            AExpression right = null;
+            if (this.current.HasChildren())
+            {
+                ScriptNode.ScriptNode lastChild = this.current.GetLastChild();
+                if (typeof(ScriptNode.AExpressionStatement).IsInstanceOfType(lastChild))
+                {
+                    // Last child is wrapped - extract from it immediately for binary operations
+                    ScriptNode.AExpressionStatement expStmt = (ScriptNode.AExpressionStatement)lastChild;
+                    ScriptNode.AExpression innerExp = expStmt.GetExp();
+                    if (innerExp != null)
+                    {
+                        Error($"DEBUG TransformBinary: Extracting right operand from AExpressionStatement containing {innerExp.GetType().Name}");
+                        this.current.RemoveLastChild();
+                        innerExp.Parent(null);
+                        right = innerExp;
+                    }
+                }
+                else if (typeof(AUnaryExp).IsInstanceOfType(lastChild) || typeof(ABinaryExp).IsInstanceOfType(lastChild) || typeof(AConditionalExp).IsInstanceOfType(lastChild))
+                {
+                    // Last child is a complex expression that should be used as operand
+                    Error($"DEBUG TransformBinary: Using last child {lastChild.GetType().Name} as right operand");
+                    right = (AExpression)this.current.RemoveLastChild();
+                    right.Parent(null);
+                }
+            }
+            if (right == null)
+            {
+                right = this.RemoveLastExp(false);
+            }
             AExpression left = this.RemoveLastExp(false);
 
             // Debug logging for conditional operations
@@ -1565,8 +1628,36 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                 }
                 if (right == null)
                 {
-                    Error("DEBUG TransformBinary: right operand is null, creating placeholder");
-                    right = this.BuildPlaceholderParam(1);
+                    Error("DEBUG TransformBinary: right operand is null, checking if last child is AUnaryExp");
+                    // If right operand is null, check if the last child is an AUnaryExp that should be used
+                    // This handles cases where the unary expression wasn't found by RemoveLastExp
+                    if (this.current.HasChildren())
+                    {
+                        ScriptNode.ScriptNode lastChild = this.current.GetLastChild();
+                        if (typeof(AUnaryExp).IsInstanceOfType(lastChild))
+                        {
+                            Error("DEBUG TransformBinary: Found AUnaryExp as last child, using as right operand");
+                            right = (AExpression)this.current.RemoveLastChild();
+                            right.Parent(null);
+                        }
+                        else if (typeof(ScriptNode.AExpressionStatement).IsInstanceOfType(lastChild))
+                        {
+                            ScriptNode.AExpressionStatement expStmt = (ScriptNode.AExpressionStatement)lastChild;
+                            ScriptNode.AExpression innerExp = expStmt.GetExp();
+                            if (innerExp != null && typeof(AUnaryExp).IsInstanceOfType(innerExp))
+                            {
+                                Error("DEBUG TransformBinary: Found AUnaryExp in AExpressionStatement, extracting as right operand");
+                                this.current.RemoveLastChild();
+                                innerExp.Parent(null);
+                                right = innerExp;
+                            }
+                        }
+                    }
+                    if (right == null)
+                    {
+                        Error("DEBUG TransformBinary: right operand is still null, creating placeholder");
+                        right = this.BuildPlaceholderParam(1);
+                    }
                 }
 
                 exp = new AConditionalExp(left, right, NodeUtils.GetOp(node));
@@ -1575,7 +1666,9 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
 
             exp.Stackentry(this.stack.Get(1));
             this.current.AddChild((ScriptNode.ScriptNode)exp);
-            Error($"DEBUG TransformBinary: Added expression to children. Current now has {this.current.Size()} children");
+            Error($"DEBUG TransformBinary: Added {exp.GetType().Name} to children. Current now has {this.current.Size()} children");
+            // Ensure AConditionalExp is not immediately wrapped by subsequent MOVSP
+            // by marking that we just created a conditional expression
             this.CheckEnd(node);
         }
 
@@ -2080,6 +2173,32 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                 }
                 else if (typeof(ScriptNode.AExpressionStatement).IsInstanceOfType(anode))
                 {
+                    // For binary operations (forceOneOnly=false), we should extract from AExpressionStatement
+                    // immediately if it contains a simple expression (AConst, AVarRef, etc.), as these are
+                    // likely operands that were wrapped before the binary operation could process them.
+                    // Only continue searching if forceOneOnly=true (looking for a specific expression type)
+                    if (!forceOneOnly)
+                    {
+                        ScriptNode.AExpressionStatement expStmt = (ScriptNode.AExpressionStatement)anode;
+                        ScriptNode.AExpression innerExp = expStmt.GetExp();
+                        // Extract immediately for simple expressions that are likely operands
+                        if (innerExp != null && (typeof(AConst).IsInstanceOfType(innerExp) || typeof(AVarRef).IsInstanceOfType(innerExp) || typeof(AUnaryExp).IsInstanceOfType(innerExp)))
+                        {
+                            Error("DEBUG removeLastExp: found AExpressionStatement with simple expression, extracting immediately");
+                            this.current.RemoveLastChild();
+                            innerExp.Parent(null);
+                            // Put back any AExpressionStatement nodes we found earlier
+                            for (int i = foundExpressionStatements.Count - 1; i >= 0; i--)
+                            {
+                                this.current.AddChild(foundExpressionStatements[i]);
+                            }
+                            for (int i = trailingErrors.Count - 1; i >= 0; i--)
+                            {
+                                this.current.AddChild(trailingErrors[i]);
+                            }
+                            return innerExp;
+                        }
+                    }
                     // Store AExpressionStatement nodes and continue searching for plain expressions
                     // Only extract from AExpressionStatement if no plain expressions are found
                     Error("DEBUG removeLastExp: found AExpressionStatement, storing and continuing search");
