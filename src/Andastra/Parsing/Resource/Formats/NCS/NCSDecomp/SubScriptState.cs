@@ -1700,7 +1700,29 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             }
             if (right == null)
             {
-                right = this.RemoveLastExp(false);
+                // For conditional operations, if right is still null, try RemoveLastExp
+                // But also check if the last child is an AExpressionStatement containing AUnaryExp
+                if (NodeUtils.IsConditionalOp(node) && this.current.HasChildren())
+                {
+                    ScriptNode.ScriptNode lastChild = this.current.GetLastChild();
+                    if (typeof(ScriptNode.AExpressionStatement).IsInstanceOfType(lastChild))
+                    {
+                        ScriptNode.AExpressionStatement expStmt = (ScriptNode.AExpressionStatement)lastChild;
+                        ScriptNode.AExpression innerExp = expStmt.GetExp();
+                        if (innerExp != null && typeof(AUnaryExp).IsInstanceOfType(innerExp))
+                        {
+                            Error($"DEBUG TransformBinary: Found AUnaryExp in AExpressionStatement as last child (fallback), extracting for conditional op");
+                            this.current.RemoveLastChild();
+                            innerExp.Parent(null);
+                            right = innerExp;
+                        }
+                    }
+                }
+                // If still not found, try RemoveLastExp
+                if (right == null)
+                {
+                    right = this.RemoveLastExp(false);
+                }
             }
             // For the left operand, we need to get it from the remaining children
             // If we already extracted right from children, it's already removed
