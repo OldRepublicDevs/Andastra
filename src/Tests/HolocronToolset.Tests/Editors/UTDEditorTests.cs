@@ -1812,9 +1812,26 @@ namespace HolocronToolset.Tests.Editors
             var editor = new UTDEditor(null, installation);
 
             // Verify preview toggle functionality exists
-            // In Avalonia, we verify that toggle_preview method exists if implemented
-            // TODO: STUB - For now, we just verify the editor can be created and preview functionality would be available
+            // Matching PyKotor implementation: assert hasattr(editor, 'toggle_preview')
+            // Matching PyKotor implementation: assert callable(editor.toggle_preview)
             editor.Should().NotBeNull();
+            
+            // Verify toggle method exists and is callable
+            var toggleMethod = editor.GetType().GetMethod("TogglePreview");
+            toggleMethod.Should().NotBeNull("TogglePreview method should exist");
+            toggleMethod.IsPublic.Should().BeTrue("TogglePreview should be public");
+            
+            // Verify update method exists and is callable
+            var updateMethod = editor.GetType().GetMethod("Update3dPreview");
+            updateMethod.Should().NotBeNull("Update3dPreview method should exist");
+            updateMethod.IsPublic.Should().BeTrue("Update3dPreview should be public");
+            
+            // Test that methods can be called without throwing
+            Action toggleAction = () => editor.TogglePreview();
+            toggleAction.Should().NotThrow("TogglePreview should be callable");
+            
+            Action updateAction = () => editor.Update3dPreview();
+            updateAction.Should().NotThrow("Update3dPreview should be callable");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utd_editor.py:1315-1341
