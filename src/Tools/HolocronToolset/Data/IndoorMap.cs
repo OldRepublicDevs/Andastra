@@ -1120,7 +1120,7 @@ namespace HolocronToolset.Data
                 // Python: orientation: Vector4 = Vector4.from_euler(0, 0, math.radians(door.bearing))
                 // Python: self.lyt.doorhooks.append(LYTDoorHook(self.room_names[insert.room], door_resname, insert.position, orientation))
                 float bearingRadians = door.Bearing;
-                Quaternion quaternion = QuaternionFromEuler(0.0, 0.0, bearingRadians);
+                System.Numerics.Quaternion quaternion = QuaternionFromEuler(0.0, 0.0, bearingRadians);
                 Vector4 orientation = new Vector4(quaternion.X, quaternion.Y, quaternion.Z, quaternion.W);
                 string roomName = _roomNames[insert.Room];
                 _lyt.Doorhooks.Add(new LYTDoorHook(roomName, doorResname, insert.Position, orientation));
@@ -1339,7 +1339,7 @@ namespace HolocronToolset.Data
         /// <param name="pitch">Rotation around Y axis in radians.</param>
         /// <param name="yaw">Rotation around Z axis in radians.</param>
         /// <returns>A quaternion representing the rotation.</returns>
-        private static Quaternion QuaternionFromEuler(double roll, double pitch, double yaw)
+        private static System.Numerics.Quaternion QuaternionFromEuler(double roll, double pitch, double yaw)
         {
             // Matching Python implementation: Vector4.from_euler
             double qx = Math.Sin(roll / 2) * Math.Cos(pitch / 2) * Math.Cos(yaw / 2) - Math.Cos(roll / 2) * Math.Sin(pitch / 2) * Math.Sin(yaw / 2);
@@ -1347,7 +1347,7 @@ namespace HolocronToolset.Data
             double qz = Math.Cos(roll / 2) * Math.Cos(pitch / 2) * Math.Sin(yaw / 2) - Math.Sin(roll / 2) * Math.Sin(pitch / 2) * Math.Cos(yaw / 2);
             double qw = Math.Cos(roll / 2) * Math.Cos(pitch / 2) * Math.Cos(yaw / 2) + Math.Sin(roll / 2) * Math.Sin(pitch / 2) * Math.Sin(yaw / 2);
 
-            return new Quaternion((float)qx, (float)qy, (float)qz, (float)qw);
+            return new System.Numerics.Quaternion((float)qx, (float)qy, (float)qz, (float)qw);
         }
 
         /// <summary>
