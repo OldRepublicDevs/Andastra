@@ -1440,16 +1440,19 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                     // Also don't wrap AConditionalExp, ABinaryExp, or AUnaryExp as they're used by JZ/JNZ for if statements
                     // and other control structures that need to extract them
                     // CRITICAL: Never wrap AConditionalExp, ABinaryExp, or AUnaryExp as they're needed by JZ/JNZ and binary operations
-                    // AUnaryExp might be the result of NEGI and will be used by EQUALII, so never wrap it
+                    // AUnaryExp might be the result of NEGI and will be used by EQUALII, so NEVER wrap it, even if it's the only child
                     // This check must come first to ensure these are never wrapped
                     bool isControlStructureExpression = typeof(AConditionalExp).IsInstanceOfType(last) || typeof(ABinaryExp).IsInstanceOfType(last) || typeof(AUnaryExp).IsInstanceOfType(last);
                     // Also don't wrap AConst (constants) if there are multiple expressions, as they might be operands
                     // for binary operations (e.g., EQUALII) that haven't processed yet
+                    // Also don't wrap AConst if it's the only child but might be used by a binary operation (conservative approach)
                     bool mightBeOperand = typeof(AConst).IsInstanceOfType(last) && this.current.Size() >= 2;
+                    // Additional safeguard: if last child is AUnaryExp and there are other children, it's definitely an operand
+                    bool isUnaryExpOperand = typeof(AUnaryExp).IsInstanceOfType(last) && this.current.Size() >= 2;
                     if (typeof(AExpression).IsInstanceOfType(last) && !typeof(ScriptNode.AActionExp).IsInstanceOfType(last)
                           && !typeof(AModifyExp).IsInstanceOfType(last) && !typeof(AUnaryModExp).IsInstanceOfType(last)
                           && !typeof(AReturnStatement).IsInstanceOfType(last) && !isControlStructureExpression
-                          && !mightBeOperand)
+                          && !mightBeOperand && !isUnaryExpOperand)
                     {
                         AExpression expr = (AExpression)this.RemoveLastExp(true);
                         if (expr != null)
@@ -1586,6 +1589,9 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             {
                 right = this.RemoveLastExp(false);
             }
+            // For the left operand, we need to get it from the remaining children
+            // If we already extracted right from children, it's already removed
+            // Otherwise, RemoveLastExp will handle it
             AExpression left = this.RemoveLastExp(false);
 
             // Debug logging for conditional operations
