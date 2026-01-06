@@ -79,12 +79,7 @@
     <WarningLevel>0</WarningLevel>
   </PropertyGroup>
 
-  <!-- Only include Files from Runtime folder (relative to this csproj location) -->
-  <ItemGroup>
-    <Compile Include="*.cs" />
-    <Compile Include="**/*.cs" />
-  </ItemGroup>
-  
+  <!-- SDK automatically includes all .cs files in this directory and subdirectories -->
   <!-- Copy xunit.runner.json from parent directory -->
   <ItemGroup>
     <None Include="..\xunit.runner.json" Link="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />

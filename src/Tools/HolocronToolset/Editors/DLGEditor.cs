@@ -34,6 +34,8 @@ using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
 using HolocronToolset.Editors.Actions;
 using HolocronToolset.Editors.DLG;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 
 namespace HolocronToolset.Editors
 {

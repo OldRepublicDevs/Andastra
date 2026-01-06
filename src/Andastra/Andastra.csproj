@@ -120,21 +120,24 @@
     <PropertyGroup Condition="'$(_MgcbToolCheckExitCode)' != '0' AND '$(SkipMonoGameContentPipeline)' == ''">
       <SkipMonoGameContentPipeline>true</SkipMonoGameContentPipeline>
     </PropertyGroup>
-    <Message Condition="'$(_MgcbToolCheckExitCode)' != '0'" Importance="high" Text="MonoGame Content Builder tool (dotnet-mgcb) not available. Setting SkipMonoGameContentPipeline=true. Install with: dotnet tool install -g dotnet-mgcb" />
+    <PropertyGroup>
+      <SkipMonoGameContentPipeline Condition="'$(SkipMonoGameContentPipeline)' == ''">true</SkipMonoGameContentPipeline>
+    </PropertyGroup>
+    <Message Condition="'$(_MgcbToolCheckExitCode)' != '0' OR '$(SkipMonoGameContentPipeline)' == 'true'" Importance="high" Text="MonoGame Content Builder tool (dotnet-mgcb) not available or disabled. Setting SkipMonoGameContentPipeline=true. Install with: dotnet tool install -g dotnet-mgcb" />
   </Target>
-  
+
   <ItemGroup Condition="'$(SkipMonoGameContentPipeline)' != 'true'">
     <MonoGameContentReference Include="Game\Content.mgcb" />
   </ItemGroup>
-  
+
   <!-- Override MonoGame content builder to prevent hard failure if tool is missing -->
-  <Target Name="BuildMonoGameContent" 
+  <Target Name="BuildMonoGameContent"
           Condition="'$(SkipMonoGameContentPipeline)' != 'true'"
           AfterTargets="ResolveProjectReferences"
           BeforeTargets="CoreBuild">
     <!-- This target is intentionally left empty - MonoGame.Content.Builder.Task will handle it -->
   </Target>
-  
+
   <!-- Skip RunContentBuilder target when SkipMonoGameContentPipeline is true -->
   <Target Name="RunContentBuilder" Condition="'$(SkipMonoGameContentPipeline)' == 'true'" />
 
@@ -142,5 +145,16 @@
   <!-- This ensures that dotnet build NEVER runs the application -->
   <Target Name="Run" Condition="'$(MSBuildTargets)' == 'Build' OR '$(MSBuildTargets)' == ''">
     <Message Text="Run target disabled during Build. Use 'dotnet run' explicitly to execute the application." Importance="high" />
+  </Target>
+
+  <!-- Exclude Utility obj folder from compilation -->
+  <ItemGroup>
+    <Compile Remove="Utility\obj\**" />
+    <None Remove="Utility\obj\**" />
+  </ItemGroup>
+
+  <!-- Clean up Utility obj folder that gets incorrectly created -->
+  <Target Name="CleanUtilityObj" BeforeTargets="BeforeBuild">
+    <RemoveDir Directories="$(MSBuildProjectDirectory)\Utility\obj" Condition="Exists('$(MSBuildProjectDirectory)\Utility\obj')" />
   </Target>
 </Project>

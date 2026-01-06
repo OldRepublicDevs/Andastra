@@ -99,7 +99,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Andastra\Andastra.csproj" />
-    <ProjectReference Include="..\..\Andastra\Parsing\TSLPatcher\HoloPatcher.Core.csproj" />
     <ProjectReference Include="..\HoloPatcher.UI\HoloPatcher.UI.csproj" />
   </ItemGroup>
 </Project>
