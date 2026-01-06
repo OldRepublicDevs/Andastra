@@ -5,7 +5,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
-using Andastra.Parsing.Logger;
 using Microsoft.Win32;
 
 namespace Andastra.Parsing.Tools
@@ -302,7 +301,7 @@ namespace Andastra.Parsing.Tools
         /// </summary>
         public static void CreateRegistryPath(RegistryKey hive, string path)
         {
-            RobustLogger log = new RobustLogger();
+            Andastra.Parsing.Logger.RobustLogger log = new Andastra.Parsing.Logger.RobustLogger();
             try
             {
                 string currentPath = "";
@@ -356,7 +355,7 @@ namespace Andastra.Parsing.Tools
         /// </summary>
         public static void SetRegistryKeyValue(string fullKeyPath, string valueName, string valueData)
         {
-            RobustLogger log = new RobustLogger();
+            Andastra.Parsing.Logger.RobustLogger log = new Andastra.Parsing.Logger.RobustLogger();
             try
             {
                 string[] parts = fullKeyPath.Split(new[] { '\\' }, 2);
