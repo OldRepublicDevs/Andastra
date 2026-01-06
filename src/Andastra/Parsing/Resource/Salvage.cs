@@ -20,7 +20,6 @@ using Andastra.Parsing.Formats.TLK;
 using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Formats.VIS;
-using Andastra.Parsing.Logger;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Formats.LYT;
 using Andastra.Parsing.Resource.Generics;
@@ -74,7 +73,7 @@ namespace Andastra.Parsing.Resource
                 {
                     foreach (var resource in erfContainer)
                     {
-                        new RobustLogger().Info($"Validating '{resource.ResRef}.{resource.ResType.Extension}'");
+                        new Andastra.Parsing.Logger.RobustLogger().Info($"Validating '{resource.ResRef}.{resource.ResType.Extension}'");
                         if (resource.ResType == ResourceType.NCS)
                         {
                             newErf.SetData(resource.ResRef.ToString(), resource.ResType, resource.Data);
@@ -86,14 +85,14 @@ namespace Andastra.Parsing.Resource
                             newData = strict ? newData : resource.Data;
                             if (newData == null)
                             {
-                                new RobustLogger().Info($"Not packaging unknown resource '{resource.ResRef}.{resource.ResType.Extension}'");
+                                new Andastra.Parsing.Logger.RobustLogger().Info($"Not packaging unknown resource '{resource.ResRef}.{resource.ResType.Extension}'");
                                 continue;
                             }
                             newErf.SetData(resource.ResRef.ToString(), resource.ResType, newData);
                         }
                         catch (Exception ex) when (ex is IOException || ex is ArgumentException)
                         {
-                            new RobustLogger().Error($" - Corrupted resource: '{resource.ResRef}.{resource.ResType.Extension}'");
+                            new Andastra.Parsing.Logger.RobustLogger().Error($" - Corrupted resource: '{resource.ResRef}.{resource.ResType.Extension}'");
                         }
                     }
                 }
@@ -101,7 +100,7 @@ namespace Andastra.Parsing.Resource
                 {
                     foreach (var resource in rimContainer)
                     {
-                        new RobustLogger().Info($"Validating '{resource.ResRef}.{resource.ResType.Extension}'");
+                        new Andastra.Parsing.Logger.RobustLogger().Info($"Validating '{resource.ResRef}.{resource.ResType.Extension}'");
                         if (resource.ResType == ResourceType.NCS)
                         {
                             newRim.SetData(resource.ResRef.ToString(), resource.ResType, resource.Data);
@@ -113,25 +112,25 @@ namespace Andastra.Parsing.Resource
                             newData = strict ? newData : resource.Data;
                             if (newData == null)
                             {
-                                new RobustLogger().Info($"Not packaging unknown resource '{resource.ResRef}.{resource.ResType.Extension}'");
+                                new Andastra.Parsing.Logger.RobustLogger().Info($"Not packaging unknown resource '{resource.ResRef}.{resource.ResType.Extension}'");
                                 continue;
                             }
                             newRim.SetData(resource.ResRef.ToString(), resource.ResType, newData);
                         }
                         catch (Exception ex) when (ex is IOException || ex is ArgumentException)
                         {
-                            new RobustLogger().Error($" - Corrupted resource: '{resource.ResRef}.{resource.ResType.Extension}'");
+                            new Andastra.Parsing.Logger.RobustLogger().Error($" - Corrupted resource: '{resource.ResRef}.{resource.ResType.Extension}'");
                         }
                     }
                 }
             }
             catch (Exception ex) when (ex is IOException || ex is ArgumentException)
             {
-                new RobustLogger().Error($"Corrupted ERF/RIM, could not salvage: '{capsuleObj}'");
+                new Andastra.Parsing.Logger.RobustLogger().Error($"Corrupted ERF/RIM, could not salvage: '{capsuleObj}'");
             }
 
             int resourceCount = newErf != null ? newErf.Count : (newRim != null ? newRim.Count : 0);
-            new RobustLogger().Info($"Returning salvaged ERF/RIM container with {resourceCount} total resources in it.");
+            new Andastra.Parsing.Logger.RobustLogger().Info($"Returning salvaged ERF/RIM container with {resourceCount} total resources in it.");
             return newErf ?? (object)newRim;
         }
 
@@ -242,7 +241,7 @@ namespace Andastra.Parsing.Resource
                     catch (Exception strategyEx)
                     {
                         // If strategy fails, log and return original data (non-strict mode) or null (strict mode)
-                        new RobustLogger().Warning($"Salvage strategy failed for {restype.Extension}: {strategyEx.Message}");
+                        new Andastra.Parsing.Logger.RobustLogger().Warning($"Salvage strategy failed for {restype.Extension}: {strategyEx.Message}");
                         if (strict)
                         {
                             if (shouldRaise)
@@ -274,7 +273,7 @@ namespace Andastra.Parsing.Resource
                 // In strict mode, return null for unknown types; otherwise return data as-is
                 if (strict)
                 {
-                    new RobustLogger().Info($"No validation strategy available for resource type '{restype.Extension}', returning null (strict mode)");
+                    new Andastra.Parsing.Logger.RobustLogger().Info($"No validation strategy available for resource type '{restype.Extension}', returning null (strict mode)");
                     return null;
                 }
                 return data;
@@ -285,7 +284,7 @@ namespace Andastra.Parsing.Resource
                 {
                     throw;
                 }
-                new RobustLogger().Error($"Corrupted resource: {resource}", !(e is IOException || e is ArgumentException));
+                new Andastra.Parsing.Logger.RobustLogger().Error($"Corrupted resource: {resource}", !(e is IOException || e is ArgumentException));
             }
             return null;
         }
@@ -334,7 +333,7 @@ namespace Andastra.Parsing.Resource
                 }
                 catch (Exception ex)
                 {
-                    new RobustLogger().Warning($"Corrupted LazyCapsule object passed to `validate_capsule` could not be loaded into memory: {ex.Message}");
+                    new Andastra.Parsing.Logger.RobustLogger().Warning($"Corrupted LazyCapsule object passed to `validate_capsule` could not be loaded into memory: {ex.Message}");
                     return null;
                 }
             }
@@ -353,7 +352,7 @@ namespace Andastra.Parsing.Resource
                 }
                 catch
                 {
-                    new RobustLogger().Warning($"Invalid path passed to `validate_capsule`: '{path}'");
+                    new Andastra.Parsing.Logger.RobustLogger().Warning($"Invalid path passed to `validate_capsule`: '{path}'");
                     return null;
                 }
             }
@@ -372,7 +371,7 @@ namespace Andastra.Parsing.Resource
                     }
                     catch
                     {
-                        new RobustLogger().Error("the binary data passed to `validate_capsule` could not be loaded as an ERF/RIM.");
+                        new Andastra.Parsing.Logger.RobustLogger().Error("the binary data passed to `validate_capsule` could not be loaded as an ERF/RIM.");
                         return null;
                     }
                 }
