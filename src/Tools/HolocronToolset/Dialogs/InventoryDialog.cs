@@ -14,6 +14,7 @@ using Andastra.Parsing.Formats.Capsule;
 using Andastra.Parsing.Resource.Generics.UTI;
 using HolocronToolset.Data;
 using System.ComponentModel;
+using Andastra.Parsing.Resource;
 
 namespace HolocronToolset.Dialogs
 {
@@ -663,26 +664,26 @@ namespace HolocronToolset.Dialogs
                 // ShowDialogAsync will handle setting the parent relationship
                 // The result will be the value passed to Close() when the dialog closes (true for OK, false for Cancel)
                 var resultObj = await ShowDialogAsync(dialogParent);
-                bool result = resultObj is bool b ? b : false;
+                bool result = resultObj is bool b && b == true;
                 DialogResult = result;
                 return result;
             }
             else
             {
-                    // Fallback: show non-modally and track result via Closed event
-                    // This should rarely happen, but provides a fallback
-                    bool result = false;
-                    EventHandler closedHandler = null;
-                closedHandler = (s, e) =>
+                // Fallback: show non-modally and track result via Closed event
+                // This should rarely happen, but provides a fallback
+                bool result = false;
+                void closedHandler(object s, EventArgs e)
                 {
-                    this.Closed -= closedHandler;
+                    Closed -= closedHandler;
                     result = DialogResult;
-                };
-                this.Closed += closedHandler;
+                }
+
+                Closed += closedHandler;
                 Show();
                 // Wait for dialog to close
                 // Note: This is not ideal but provides fallback behavior
-                while (this.IsVisible)
+                while (IsVisible)
                 {
                     await Task.Delay(10);
                 }
@@ -720,7 +721,7 @@ namespace HolocronToolset.Dialogs
         // Matching PyKotor: resname property (stored as ResRef)
         public ResRef ResRef
         {
-            get { return _resRef; }
+            get => _resRef;
             set
             {
                 if (_resRef != value)
@@ -735,7 +736,7 @@ namespace HolocronToolset.Dialogs
         // String representation of ResRef for display in DataGrid
         public string ResRefString
         {
-            get { return _resRef?.ToString() ?? ""; }
+            get => _resRef?.ToString() ?? "";
             set
             {
                 if (!string.IsNullOrEmpty(value))
@@ -752,7 +753,7 @@ namespace HolocronToolset.Dialogs
         // Matching PyKotor: droppable property from ItemContainer
         public bool Droppable
         {
-            get { return _droppable; }
+            get => _droppable;
             set
             {
                 if (_droppable != value)
@@ -766,7 +767,7 @@ namespace HolocronToolset.Dialogs
         // Matching PyKotor: infinite property from ItemContainer
         public bool Infinite
         {
-            get { return _infinite; }
+            get => _infinite;
             set
             {
                 if (_infinite != value)
@@ -780,7 +781,7 @@ namespace HolocronToolset.Dialogs
         // Matching PyKotor: name property (display name of the item)
         public string Name
         {
-            get { return _name; }
+            get => _name;
             set
             {
                 if (_name != value)
@@ -794,7 +795,7 @@ namespace HolocronToolset.Dialogs
         // Matching PyKotor: filepath property (file path to the item resource)
         public string FilePath
         {
-            get { return _filePath; }
+            get => _filePath;
             set
             {
                 if (_filePath != value)

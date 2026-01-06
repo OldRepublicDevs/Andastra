@@ -4,6 +4,8 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia;
+using Avalonia.Controls.Primitives;
+using Avalonia.Input;
 
 namespace HolocronToolset.Dialogs
 {

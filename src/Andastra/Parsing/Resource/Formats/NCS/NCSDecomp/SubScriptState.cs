@@ -713,14 +713,17 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                 ScriptNode.AExpression condExp = null;
                 if (this.current.HasChildren())
                 {
+                    Error($"DEBUG TransformConditionalJump (JZ): Searching through {this.current.Size()} children for AConditionalExp");
                     // Search backwards through children to find a conditional expression
                     List<ScriptNode.ScriptNode> children = this.current.GetChildren();
                     for (int i = children.Count - 1; i >= 0; i--)
                     {
                         ScriptNode.ScriptNode child = children[i];
+                        Error($"DEBUG TransformConditionalJump (JZ): Checking child[{i}]={child.GetType().Name}");
                         if (child is AConditionalExp conditionalExp)
                         {
                             // Found a conditional expression - remove it and use it
+                            Error($"DEBUG TransformConditionalJump (JZ): Found AConditionalExp at index {i}");
                             this.current.RemoveChild(i);
                             condExp = conditionalExp;
                             break;
@@ -728,6 +731,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                         else if (child is ScriptNode.AExpressionStatement expStmt && expStmt.GetExp() is AConditionalExp conditionalExpFromStmt)
                         {
                             // Found conditional expression in an expression statement
+                            Error($"DEBUG TransformConditionalJump (JZ): Found AConditionalExp wrapped in AExpressionStatement at index {i}");
                             this.current.RemoveChild(i);
                             conditionalExpFromStmt.Parent(null);
                             condExp = conditionalExpFromStmt;
@@ -736,18 +740,46 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                         // Stop searching if we hit a non-expression node (don't search past control structures)
                         if (!(child is AExpression) && !(child is ScriptNode.AExpressionStatement) && !(child is ScriptNode.AVarDecl))
                         {
+                            Error($"DEBUG TransformConditionalJump (JZ): Stopping search at non-expression node {child.GetType().Name}");
                             break;
                         }
                     }
+                }
+                else
+                {
+                    Error("DEBUG TransformConditionalJump (JZ): No children to search");
                 }
 
                 // If we didn't find a conditional expression by searching, try RemoveLastExp as fallback
                 if (!(condExp is AConditionalExp))
                 {
+                    Error("DEBUG TransformConditionalJump (JZ): AConditionalExp not found in children, trying RemoveLastExp fallback");
                     condExp = this.RemoveLastExp(true);
+                    Error($"DEBUG TransformConditionalJump (JZ): RemoveLastExp returned {condExp?.GetType().Name}");
+                }
+
+                // If still no conditional expression found, try to build one from available expressions
+                // This handles cases where EQUALII created the comparison but it wasn't found in children
+                if (!(condExp is AConditionalExp) && condExp != null)
+                {
+                    // The expression might be wrapped or in a different form
+                    // Try to extract it from AExpressionStatement if needed
+                    if (condExp is ScriptNode.AExpressionStatement expStmt)
+                    {
+                        AExpression innerExp = expStmt.GetExp();
+                        if (innerExp is AConditionalExp innerCondExp)
+                        {
+                            Error("DEBUG TransformConditionalJump (JZ): Extracted AConditionalExp from AExpressionStatement");
+                            condExp = innerCondExp;
+                        }
+                    }
                 }
 
                 // If still no conditional expression found, use what we have (might be a placeholder)
+                if (!(condExp is AConditionalExp))
+                {
+                    Error($"DEBUG TransformConditionalJump (JZ): WARNING - No AConditionalExp found, using {condExp?.GetType().Name ?? "null"} as placeholder");
+                }
                 AIf aif = new AIf(this.SafeGetPos(node), this.SafeGetPos(dest) - 6, condExp);
                 this.current.AddChild(aif);
                 this.current = aif;
@@ -1450,6 +1482,13 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             this.CheckStart(node);
             AExpression right = this.RemoveLastExp(false);
             AExpression left = this.RemoveLastExp(this.state == 4);
+            
+            // Debug logging for conditional operations
+            if (NodeUtils.IsConditionalOp(node))
+            {
+                Error($"DEBUG TransformBinary: Creating conditional expression, left={left?.GetType().Name}, right={right?.GetType().Name}, op={NodeUtils.GetOp(node)}");
+            }
+            
             AExpression exp;
             if (NodeUtils.IsArithmeticOp(node))
             {
@@ -1463,10 +1502,12 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                 }
 
                 exp = new AConditionalExp(left, right, NodeUtils.GetOp(node));
+                Error($"DEBUG TransformBinary: Created AConditionalExp, adding to children. Current has {this.current.Size()} children");
             }
 
             exp.Stackentry(this.stack.Get(1));
             this.current.AddChild((ScriptNode.ScriptNode)exp);
+            Error($"DEBUG TransformBinary: Added expression to children. Current now has {this.current.Size()} children");
             this.CheckEnd(node);
         }
 

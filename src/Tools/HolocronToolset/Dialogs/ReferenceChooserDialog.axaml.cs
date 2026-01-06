@@ -6,6 +6,7 @@ using Andastra.Parsing.Resource.Generics.DLG;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using HolocronToolset.Editors;
+using HolocronToolset.Editors.DLG;
 
 namespace HolocronToolset.Dialogs
 {
