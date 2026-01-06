@@ -276,7 +276,7 @@ namespace HolocronToolset.Widgets.Settings
             var widget = this.FindControl<SetBindWidget>(bindName + "BindEdit");
             if (widget != null)
             {
-                var bind = _settings.GetValue<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>>(settingsProperty.Name, settingsProperty.Default);
+                var bind = _settings.GetValue(settingsProperty.Name, settingsProperty.Default);
                 if (bind == null || bind.Item1 == null || bind.Item2 == null)
                 {
                     bind = settingsProperty.Default;
@@ -292,7 +292,7 @@ namespace HolocronToolset.Widgets.Settings
             var widget = this.FindControl<ColorEdit>(colourName + "ColourEdit");
             if (widget != null)
             {
-                int colorValue = _settings.GetValue<int>(settingsProperty.Name, settingsProperty.Default);
+                int colorValue = _settings.GetValue(settingsProperty.Name, settingsProperty.Default);
                 widget.SetColor(Color.FromRgbaInteger(colorValue));
                 _colours[settingsProperty.Name] = widget;
             }

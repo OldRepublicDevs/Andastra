@@ -10,7 +10,7 @@ namespace HolocronToolset.Data
         // Original: def saveUnusedFields(self) -> bool:
         public bool SaveUnusedFields
         {
-            get => GetValue<bool>("saveUnusedFields", true);
+            get => GetValue("saveUnusedFields", true);
             set => SetValue("saveUnusedFields", value);
         }
 
@@ -18,7 +18,7 @@ namespace HolocronToolset.Data
         // Original: def alwaysSaveK2Fields(self) -> bool:
         public bool AlwaysSaveK2Fields
         {
-            get => GetValue<bool>("alwaysSaveK2Fields", false);
+            get => GetValue("alwaysSaveK2Fields", false);
             set => SetValue("alwaysSaveK2Fields", value);
         }
 

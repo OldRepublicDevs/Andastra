@@ -28,7 +28,7 @@ namespace HolocronToolset.Utils
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/script_decompiler.py:46-60
             // Original: Check for NCS decompiler path
-            string ncsDecompilerPath = settings.GetValue<string>("NcsDecompilerPath", "");
+            string ncsDecompilerPath = settings.GetValue("NcsDecompilerPath", "");
             if (string.IsNullOrEmpty(ncsDecompilerPath) || !File.Exists(ncsDecompilerPath))
             {
                 // TODO:  In full implementation, would prompt user for decompiler

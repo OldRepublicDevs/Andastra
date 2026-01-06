@@ -3,23 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.IO;
-using System.Reflection;
-using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.BWM;
-using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource.Formats.LYT;
-using Andastra.Parsing.Formats.MDL;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Logger;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Avalonia;
-using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Vector3 = System.Numerics.Vector3;
+using Quaternion = System.Numerics.Quaternion;
 
 namespace HolocronToolset.Data
 {
@@ -668,7 +664,7 @@ namespace HolocronToolset.Data
             }
             catch (Exception ex)
             {
-                new Andastra.Parsing.Logger.RobustLogger().Warning($"Failed to load module kit for '{ModuleRoot}': {ex.Message}");
+                new RobustLogger().Warning($"Failed to load module kit for '{ModuleRoot}': {ex.Message}");
                 return false;
             }
         }
@@ -684,7 +680,7 @@ namespace HolocronToolset.Data
             }
             catch (Exception ex)
             {
-                new Andastra.Parsing.Logger.RobustLogger().Warning($"Module '{ModuleRoot}' failed to load: {ex.Message}");
+                new RobustLogger().Warning($"Module '{ModuleRoot}' failed to load: {ex.Message}");
                 return;
             }
 
@@ -692,14 +688,14 @@ namespace HolocronToolset.Data
             var lytResource = _module.Layout();
             if (lytResource == null)
             {
-                new Andastra.Parsing.Logger.RobustLogger().Warning($"Module '{ModuleRoot}' has no LYT resource");
+                new RobustLogger().Warning($"Module '{ModuleRoot}' has no LYT resource");
                 return;
             }
 
             var lytData = lytResource.Resource() as LYT;
             if (lytData == null)
             {
-                new Andastra.Parsing.Logger.RobustLogger().Warning($"Failed to load LYT data for module '{ModuleRoot}'");
+                new RobustLogger().Warning($"Failed to load LYT data for module '{ModuleRoot}'");
                 return;
             }
 
@@ -1046,7 +1042,7 @@ namespace HolocronToolset.Data
             }
             catch (Exception ex)
             {
-                new Andastra.Parsing.Logger.RobustLogger().Warning($"Failed to read WOK for '{modelName}': {ex.Message}");
+                new RobustLogger().Warning($"Failed to read WOK for '{modelName}': {ex.Message}");
                 return null;
             }
         }
@@ -1332,7 +1328,13 @@ namespace HolocronToolset.Data
 
                 // Convert quaternion orientation to rotation angle (yaw in degrees)
                 // Doors rotate around the Y-axis, so we extract the yaw from the quaternion
-                float rotation = _QuaternionToYawRotation(doorhook.Orientation);
+                // Convert Vector4 to Andastra.Utility.Geometry.Quaternion
+                Andastra.Utility.Geometry.Quaternion quaternion = new Andastra.Utility.Geometry.Quaternion(
+                    doorhook.Orientation.X,
+                    doorhook.Orientation.Y,
+                    doorhook.Orientation.Z,
+                    doorhook.Orientation.W);
+                float rotation = _QuaternionToYawRotation(quaternion);
 
                 // Find the closest edge in the component's BWM to the hook position
                 // This determines which edge the hook should be associated with
@@ -1351,7 +1353,7 @@ namespace HolocronToolset.Data
         /// </summary>
         /// <param name="quaternion">The quaternion orientation (x, y, z, w)</param>
         /// <returns>Rotation angle in degrees (0-360)</returns>
-        private float _QuaternionToYawRotation(Andastra.Utility.Geometry.Quaternion quaternion)
+        private float _QuaternionToYawRotation(Quaternion quaternion)
         {
             // Convert quaternion to Euler angles (roll, pitch, yaw)
             // Based on PyKotor's Vector4.to_euler() implementation
@@ -1701,10 +1703,10 @@ namespace HolocronToolset.Data
                     }
 
                     // Load doors
-                    var doorsArray = (Newtonsoft.Json.Linq.JArray)kitJson["doors"];
+                    var doorsArray = (JArray)kitJson["doors"];
                     foreach (var doorJson in doorsArray)
                     {
-                        var doorDict = (Newtonsoft.Json.Linq.JObject)doorJson;
+                        var doorDict = (JObject)doorJson;
                         string utdK1Path = Path.Combine(kitsPath.FullName, kitIdentifier, $"{doorDict["utd_k1"]}.utd");
                         string utdK2Path = Path.Combine(kitsPath.FullName, kitIdentifier, $"{doorDict["utd_k2"]}.utd");
                         var utdK1 = ResourceAutoHelpers.ReadUtd(File.ReadAllBytes(utdK1Path));
@@ -1716,10 +1718,10 @@ namespace HolocronToolset.Data
                     }
 
                     // Load components
-                    var componentsArray = (Newtonsoft.Json.Linq.JArray)kitJson["components"];
+                    var componentsArray = (JArray)kitJson["components"];
                     foreach (var componentJson in componentsArray)
                     {
-                        var componentDict = (Newtonsoft.Json.Linq.JObject)componentJson;
+                        var componentDict = (JObject)componentJson;
                         string name = componentDict["name"].ToString();
                         string componentIdentifier = componentDict["id"].ToString();
 
@@ -1778,7 +1780,7 @@ namespace HolocronToolset.Data
                             {
                                 // If image loading fails, log warning and continue without image
                                 // This matches PyKotor behavior which adds to missing_files on exception
-                                new Andastra.Parsing.Logger.RobustLogger().Warning($"Failed to load component image '{imagePath}': {ex.Message}");
+                                new RobustLogger().Warning($"Failed to load component image '{imagePath}': {ex.Message}");
                                 image = null;
                             }
                         }
@@ -1796,10 +1798,10 @@ namespace HolocronToolset.Data
                         var component = new KitComponent(kit, name, image, bwm, mdl, mdx);
 
                         // Load doorhooks
-                        var doorhooksArray = (Newtonsoft.Json.Linq.JArray)componentDict["doorhooks"];
+                        var doorhooksArray = (JArray)componentDict["doorhooks"];
                         foreach (var hookJson in doorhooksArray)
                         {
-                            var hookDict = (Newtonsoft.Json.Linq.JObject)hookJson;
+                            var hookDict = (JObject)hookJson;
                             var position = new Vector3(
                                 Convert.ToSingle(hookDict["x"]),
                                 Convert.ToSingle(hookDict["y"]),
@@ -1820,7 +1822,7 @@ namespace HolocronToolset.Data
                 }
                 catch (Exception ex)
                 {
-                    new Andastra.Parsing.Logger.RobustLogger().Warning($"Failed to load kit from '{file.FullName}': {ex.Message}");
+                    new RobustLogger().Warning($"Failed to load kit from '{file.FullName}': {ex.Message}");
                 }
             }
 
@@ -1855,10 +1857,3 @@ namespace HolocronToolset.Data
                 if (int.TryParse(currentNum.ToString(), out int num))
                 {
                     nums.Add(num);
-                }
-            }
-            return nums;
-        }
-    }
-}
-

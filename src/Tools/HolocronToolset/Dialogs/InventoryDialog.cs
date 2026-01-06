@@ -512,7 +512,7 @@ namespace HolocronToolset.Dialogs
                                 else if (slotValue != null)
                                 {
                                     // Try to convert from int or other types
-                                    if (Enum.TryParse<EquipmentSlot>(slotValue.ToString(), out EquipmentSlot parsedSlot))
+                                    if (Enum.TryParse(slotValue.ToString(), out EquipmentSlot parsedSlot))
                                     {
                                         slot = parsedSlot;
                                     }
@@ -559,7 +559,7 @@ namespace HolocronToolset.Dialogs
         }
 
         // Helper method to check if a type has DropFrame-like properties (resname, slot, droppable, infinite)
-        private bool HasDropFrameProperties(System.Type type)
+        private bool HasDropFrameProperties(Type type)
         {
             var resnameProperty = type.GetProperty("resname") ?? type.GetProperty("Resname") ?? type.GetProperty("ResName");
             var slotProperty = type.GetProperty("slot") ?? type.GetProperty("Slot");

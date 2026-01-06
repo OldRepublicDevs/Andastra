@@ -78,7 +78,7 @@ namespace HolocronToolset.Dialogs
         {
             var mainPanel = new StackPanel
             {
-                Margin = new Avalonia.Thickness(15),
+                Margin = new Thickness(15),
                 Spacing = 15
             };
 

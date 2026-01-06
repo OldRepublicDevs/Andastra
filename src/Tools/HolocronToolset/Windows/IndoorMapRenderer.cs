@@ -67,7 +67,7 @@ namespace HolocronToolset.Windows
         // Original: self._cam_position: Vector2 = Vector2(DEFAULT_CAMERA_POSITION_X, DEFAULT_CAMERA_POSITION_Y)
         // Original: self._cam_scale: float = DEFAULT_CAMERA_ZOOM
         // Original: self._cam_rotation: float = DEFAULT_CAMERA_ROTATION
-        private System.Numerics.Vector2 _camPosition = new System.Numerics.Vector2(0.0f, 0.0f); // DEFAULT_CAMERA_POSITION_X/Y = 0.0
+        private Vector2 _camPosition = new Vector2(0.0f, 0.0f); // DEFAULT_CAMERA_POSITION_X/Y = 0.0
         private float _camScale = 1.0f; // DEFAULT_CAMERA_ZOOM = 1.0
         private float _camRotation = 0.0f; // DEFAULT_CAMERA_ROTATION = 0.0
 
@@ -284,7 +284,7 @@ namespace HolocronToolset.Windows
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:2613-2614
         // Original: def set_status_callback(self, callback: Callable[[QPoint | Vector2 | None, set[int | Qt.MouseButton], set[int | Qt.Key]], None] | None) -> None:
-        public delegate void StatusCallback(System.Numerics.Vector2? position, System.Collections.Generic.HashSet<int> mouseButtons, System.Collections.Generic.HashSet<int> keys);
+        public delegate void StatusCallback(Vector2? position, HashSet<int> mouseButtons, HashSet<int> keys);
 
         private StatusCallback _statusCallback;
 
@@ -326,7 +326,7 @@ namespace HolocronToolset.Windows
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:2710-2712
         // Original: def set_material_colors(self, material_colors: dict[SurfaceMaterial, QColor]):
-        public void SetMaterialColors(System.Collections.Generic.Dictionary<Andastra.Parsing.Common.SurfaceMaterial, object> materialColors)
+        public void SetMaterialColors(Dictionary<Andastra.Parsing.Common.SurfaceMaterial, object> materialColors)
         {
             // Note: Material colors will be stored when material rendering is fully implemented
             MarkDirty();
@@ -377,7 +377,7 @@ namespace HolocronToolset.Windows
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:3068-3070
         // Original: def camera_position(self) -> Vector2:
-        public System.Numerics.Vector2 CameraPosition()
+        public Vector2 CameraPosition()
         {
             return _camPosition;
         }
@@ -386,7 +386,7 @@ namespace HolocronToolset.Windows
         // Original: def set_camera_position(self, x: float, y: float):
         public void SetCameraPosition(float x, float y)
         {
-            _camPosition = new System.Numerics.Vector2(x, y);
+            _camPosition = new Vector2(x, y);
             MarkDirty();
         }
 

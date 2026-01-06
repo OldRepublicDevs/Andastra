@@ -65,7 +65,7 @@ namespace HolocronToolset.Dialogs
 
         private void SetupProgrammaticUI()
         {
-            var mainPanel = new StackPanel { Margin = new Avalonia.Thickness(10), Spacing = 10 };
+            var mainPanel = new StackPanel { Margin = new Thickness(10), Spacing = 10 };
 
             // Header
             var headerPanel = new StackPanel { Orientation = Orientation.Horizontal };
@@ -86,15 +86,15 @@ namespace HolocronToolset.Dialogs
             var splitPanel = new StackPanel { Orientation = Orientation.Horizontal };
             _leftText = new TextBox { IsReadOnly = true, AcceptsReturn = true, AcceptsTab = false, TextWrapping = Avalonia.Media.TextWrapping.NoWrap, FontFamily = "Consolas" };
             _rightText = new TextBox { IsReadOnly = true, AcceptsReturn = true, AcceptsTab = false, TextWrapping = Avalonia.Media.TextWrapping.NoWrap, FontFamily = "Consolas" };
-            
+
             // Wrap TextBoxes in ScrollViewers for synchronized scrolling
             _leftScrollViewer = new ScrollViewer { HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, Content = _leftText };
             _rightScrollViewer = new ScrollViewer { HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, Content = _rightText };
-            
+
             splitPanel.Children.Add(_leftScrollViewer);
             splitPanel.Children.Add(_rightScrollViewer);
             mainPanel.Children.Add(splitPanel);
-            
+
             // Setup scroll synchronization for programmatic UI
             if (_leftScrollViewer != null && _rightScrollViewer != null)
             {

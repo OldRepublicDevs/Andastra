@@ -86,14 +86,14 @@ namespace HolocronToolset.Editors
         public override Tuple<byte[], byte[]> Build()
         {
             var gff = JRLHelper.DismantleJrl(_jrl);
-            
+
             // Preserve unmodified fields from original GFF that aren't yet supported by JRL object model
             // This ensures roundtrip tests pass by maintaining all original data
             if (_originalGff != null)
             {
                 var originalRoot = _originalGff.Root;
                 var newRoot = gff.Root;
-                
+
                 // Preserve the original Categories list to maintain struct IDs and order
                 // This ensures exact roundtrip preservation like AREEditor does with Rooms list
                 if (originalRoot.Exists("Categories"))
@@ -105,14 +105,14 @@ namespace HolocronToolset.Editors
                         newRoot.SetList("Categories", originalCategories);
                     }
                 }
-                
+
                 // List of fields that JRLHelper.DismantleJrl explicitly sets
                 // Categories is handled above by preserving the original list
-                var fieldsSetByDismantle = new System.Collections.Generic.HashSet<string>
+                var fieldsSetByDismantle = new HashSet<string>
                 {
                     "Categories"
                 };
-                
+
                 // Copy all fields from original that aren't explicitly set by DismantleJrl
                 foreach (var (label, fieldType, value) in originalRoot)
                 {
@@ -122,7 +122,7 @@ namespace HolocronToolset.Editors
                     }
                 }
             }
-            
+
             byte[] data = GFFAuto.BytesGff(gff, ResourceType.JRL);
             return Tuple.Create(data, new byte[0]);
         }
@@ -136,7 +136,7 @@ namespace HolocronToolset.Editors
             _model.Clear();
             _originalGff = null; // Clear original GFF when creating new file
         }
-        
+
         // Helper method to copy a GFF field from one struct to another, preserving type
         private static void CopyGffField(GFFStruct source, GFFStruct destination, string label, GFFFieldType fieldType)
         {

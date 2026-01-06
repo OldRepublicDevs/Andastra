@@ -25,9 +25,10 @@ using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using Vector4 = System.Numerics.Vector4;
 using Vector2 = System.Numerics.Vector2;
 using Vector3 = System.Numerics.Vector3;
-using Vector4 = Andastra.Utility.Geometry.Quaternion;
+using Quaternion = System.Numerics.Quaternion;
 
 namespace HolocronToolset.Data
 {
@@ -77,15 +78,15 @@ namespace HolocronToolset.Data
             List<IndoorMapRoom> rooms = null,
             string moduleId = null,
             LocalizedString name = null,
-            Andastra.Parsing.Common.ParsingColor lighting = null,
+            ParsingColor lighting = null,
             string skybox = null,
-            System.Numerics.Vector3? warpPoint = null,
+            Vector3? warpPoint = null,
             bool? targetGameType = null)
         {
             Rooms = rooms ?? new List<IndoorMapRoom>();
             ModuleId = moduleId ?? "test01";
             Name = name ?? LocalizedString.FromEnglish("New Module");
-            Lighting = lighting ?? new Andastra.Parsing.Common.ParsingColor(0.5f, 0.5f, 0.5f);
+            Lighting = lighting ?? new ParsingColor(0.5f, 0.5f, 0.5f);
             Skybox = skybox ?? "";
             WarpPoint = warpPoint ?? System.Numerics.Vector3.Zero;
             // targetGameType: null = use installation.Tsl, true = TSL/K2, false = K1
@@ -95,9 +96,9 @@ namespace HolocronToolset.Data
         public List<IndoorMapRoom> Rooms { get; set; }
         public string ModuleId { get; set; }
         public LocalizedString Name { get; set; }
-        public Andastra.Parsing.Common.ParsingColor Lighting { get; set; }
+        public ParsingColor Lighting { get; set; }
         public string Skybox { get; set; }
-        public System.Numerics.Vector3 WarpPoint { get; set; }
+        public Vector3 WarpPoint { get; set; }
         // TargetGameType: null = use installation.Tsl, true = TSL/K2, false = K1
         public bool? TargetGameType { get; set; }
 
@@ -722,7 +723,7 @@ namespace HolocronToolset.Data
 
                     if (tpc == null)
                     {
-                        new Andastra.Parsing.Logger.RobustLogger().Warning($"Lightmap '{lightmap}' not found in kit '{room.Component.Kit.Name}' and not available in installation. Skipping lightmap.");
+                        new RobustLogger().Warning($"Lightmap '{lightmap}' not found in kit '{room.Component.Kit.Name}' and not available in installation. Skipping lightmap.");
                         lmRenames.Remove(lightmapLower);
                         _totalLm--;
                         continue;
@@ -1081,7 +1082,7 @@ namespace HolocronToolset.Data
                 UTD sourceUtd = targetTsl ? insert.Door.UtdK2 : insert.Door.UtdK1;
                 if (sourceUtd == null)
                 {
-                    new Andastra.Parsing.Logger.RobustLogger().Warning($"Door insertion {i} has no UTD template (UtdK1/UtdK2 is null). Skipping UTD creation.");
+                    new RobustLogger().Warning($"Door insertion {i} has no UTD template (UtdK1/UtdK2 is null). Skipping UTD creation.");
                     continue;
                 }
 
@@ -1112,15 +1113,15 @@ namespace HolocronToolset.Data
 
                 // Add UTD to module (matching Python line 488)
                 // Python: self.mod.set_data(door_resname, ResourceType.UTD, bytes_utd(utd))
-                byte[] utdData = UTDHelpers.BytesUtd(utd, targetTsl ? Game.K2 : Game.K1);
+                byte[] utdData = UTDHelpers.BytesUtd(utd, targetTsl ? BioWareGame.K2 : BioWareGame.K1);
                 _mod.SetData(doorResname, ResourceType.UTD, utdData);
 
                 // Create door hook in layout (matching Python lines 490-491)
                 // Python: orientation: Vector4 = Vector4.from_euler(0, 0, math.radians(door.bearing))
                 // Python: self.lyt.doorhooks.append(LYTDoorHook(self.room_names[insert.room], door_resname, insert.position, orientation))
                 float bearingRadians = door.Bearing;
-                Andastra.Utility.Geometry.Quaternion quaternion = QuaternionFromEuler(0.0, 0.0, bearingRadians);
-                System.Numerics.Vector4 orientation = new System.Numerics.Vector4(quaternion.X, quaternion.Y, quaternion.Z, quaternion.W);
+                Quaternion quaternion = QuaternionFromEuler(0.0, 0.0, bearingRadians);
+                Vector4 orientation = new Vector4(quaternion.X, quaternion.Y, quaternion.Z, quaternion.W);
                 string roomName = _roomNames[insert.Room];
                 _lyt.Doorhooks.Add(new LYTDoorHook(roomName, doorResname, insert.Position, orientation));
 
@@ -1133,7 +1134,7 @@ namespace HolocronToolset.Data
                         IndoorMapRoom cRoom = insert.Hook1.Door.Height < insert.Hook2.Door.Height ? insert.Room : insert.Room2;
                         if (cRoom == null)
                         {
-                            new Andastra.Parsing.Logger.RobustLogger().Warning($"No room found for door insertion {i} height padding. Skipping.");
+                            new RobustLogger().Warning($"No room found for door insertion {i} height padding. Skipping.");
                         }
                         else
                         {
@@ -1217,7 +1218,7 @@ namespace HolocronToolset.Data
                                 }
                                 else
                                 {
-                                    new Andastra.Parsing.Logger.RobustLogger().Info($"No padding key found for door insertion {i} height.");
+                                    new RobustLogger().Info($"No padding key found for door insertion {i} height.");
                                 }
                             }
                         }
@@ -1232,7 +1233,7 @@ namespace HolocronToolset.Data
 
                         if (cRoom == null)
                         {
-                            new Andastra.Parsing.Logger.RobustLogger().Warning($"No room found for door insertion {i} width padding. Skipping.");
+                            new RobustLogger().Warning($"No room found for door insertion {i} width padding. Skipping.");
                         }
                         else
                         {
@@ -1325,7 +1326,7 @@ namespace HolocronToolset.Data
         {
             // Use Dismantle/Construct pattern for reliable deep copy (matching Python deepcopy behavior)
             // This is the same pattern used in UTPEditor.CopyUtp() and other editor classes
-            Game game = Game.K2; // Default game for serialization
+            BioWareGame game = BioWareGame.K2; // Default game for serialization
             var gff = UTDHelpers.DismantleUtd(source, game);
             return UTDHelpers.ConstructUtd(gff);
         }
@@ -1338,7 +1339,7 @@ namespace HolocronToolset.Data
         /// <param name="pitch">Rotation around Y axis in radians.</param>
         /// <param name="yaw">Rotation around Z axis in radians.</param>
         /// <returns>A quaternion representing the rotation.</returns>
-        private static Andastra.Utility.Geometry.Quaternion QuaternionFromEuler(double roll, double pitch, double yaw)
+        private static Quaternion QuaternionFromEuler(double roll, double pitch, double yaw)
         {
             // Matching Python implementation: Vector4.from_euler
             double qx = Math.Sin(roll / 2) * Math.Cos(pitch / 2) * Math.Cos(yaw / 2) - Math.Cos(roll / 2) * Math.Sin(pitch / 2) * Math.Sin(yaw / 2);
@@ -1346,7 +1347,7 @@ namespace HolocronToolset.Data
             double qz = Math.Cos(roll / 2) * Math.Cos(pitch / 2) * Math.Sin(yaw / 2) - Math.Sin(roll / 2) * Math.Sin(pitch / 2) * Math.Cos(yaw / 2);
             double qw = Math.Cos(roll / 2) * Math.Cos(pitch / 2) * Math.Cos(yaw / 2) + Math.Sin(roll / 2) * Math.Sin(pitch / 2) * Math.Sin(yaw / 2);
 
-            return new Andastra.Utility.Geometry.Quaternion((float)qx, (float)qy, (float)qz, (float)qw);
+            return new Quaternion((float)qx, (float)qy, (float)qz, (float)qw);
         }
 
         /// <summary>
@@ -1663,7 +1664,7 @@ namespace HolocronToolset.Data
             }
             catch (Exception ex)
             {
-                new Andastra.Parsing.Logger.RobustLogger().Error($"Load screen file not found for installation '{installation.Name}': {ex.Message}");
+                new RobustLogger().Error($"Load screen file not found for installation '{installation.Name}': {ex.Message}");
             }
         }
 
@@ -1858,7 +1859,7 @@ namespace HolocronToolset.Data
             _mod.SetData(ModuleId, ResourceType.ARE, AREHelpers.BytesAre(_are));
             _mod.SetData(ModuleId, ResourceType.GIT, GITHelpers.BytesGit(_git));
             // IFO doesn't have a BytesIfo method, so use DismantleIfo + BytesGff
-            GFF ifoGff = IFOHelpers.DismantleIfo(_ifo, Game.K2);
+            GFF ifoGff = IFOHelpers.DismantleIfo(_ifo, BioWareGame.K2);
             _mod.SetData("module", ResourceType.IFO, GFFAuto.BytesGff(ifoGff, IFO.BinaryType));
 
             ERFAuto.WriteErf(_mod, outputPath, ResourceType.MOD);
@@ -2219,7 +2220,7 @@ namespace HolocronToolset.Data
                 var sKit = kits.FirstOrDefault(k => k.Name == kitName);
                 if (sKit == null)
                 {
-                    new Andastra.Parsing.Logger.RobustLogger().Warning($"Kit '{kitName}' is missing, skipping room.");
+                    new RobustLogger().Warning($"Kit '{kitName}' is missing, skipping room.");
                     missingRooms.Add(new MissingRoomInfo(kitName, roomData.GetProperty("component").GetString(), "kit_missing"));
                     continue;
                 }
@@ -2228,7 +2229,7 @@ namespace HolocronToolset.Data
                 var sComponent = sKit.Components.FirstOrDefault(c => c.Name == componentName);
                 if (sComponent == null)
                 {
-                    new Andastra.Parsing.Logger.RobustLogger().Warning($"Component '{componentName}' is missing in kit '{sKit.Name}', skipping room.");
+                    new RobustLogger().Warning($"Component '{componentName}' is missing in kit '{sKit.Name}', skipping room.");
                     missingRooms.Add(new MissingRoomInfo(kitName, componentName, "component_missing"));
                     continue;
                 }
@@ -2255,7 +2256,7 @@ namespace HolocronToolset.Data
                     }
                     catch (Exception ex)
                     {
-                        new Andastra.Parsing.Logger.RobustLogger().Warning($"Failed to read walkmesh override for room '{room.Component.Name}': {ex.Message}");
+                        new RobustLogger().Warning($"Failed to read walkmesh override for room '{room.Component.Name}': {ex.Message}");
                     }
                 }
 
@@ -2297,7 +2298,7 @@ namespace HolocronToolset.Data
             Rooms.Clear();
             ModuleId = "test01";
             Name = LocalizedString.FromEnglish("New Module");
-            Lighting = new Andastra.Parsing.Common.ParsingColor(0.5f, 0.5f, 0.5f);
+            Lighting = new ParsingColor(0.5f, 0.5f, 0.5f);
             TargetGameType = null;
         }
 
@@ -2749,7 +2750,7 @@ namespace HolocronToolset.Data
         // Original: def __init__(self, component: KitComponent, position: Vector3, rotation: float, *, flip_x: bool, flip_y: bool):
         public IndoorMapRoom(
             KitComponent component,
-            System.Numerics.Vector3 position,
+            Vector3 position,
             float rotation,
             bool flipX = false,
             bool flipY = false)
@@ -2771,7 +2772,7 @@ namespace HolocronToolset.Data
         }
 
         public KitComponent Component { get; set; }
-        public System.Numerics.Vector3 Position { get; set; }
+        public Vector3 Position { get; set; }
         public float Rotation { get; set; }
         public List<IndoorMapRoom> Hooks { get; set; }
         public bool FlipX { get; set; }

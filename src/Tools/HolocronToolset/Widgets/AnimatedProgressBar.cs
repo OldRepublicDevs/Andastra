@@ -137,9 +137,9 @@ namespace HolocronToolset.Widgets
             var gradientStops = new GradientStops();
             // GradientStop constructor: (Color color, double offset) - Color first, then offset
             // Color constructor: Color(byte a, byte r, byte g, byte b) - ARGB format
-            gradientStops.Add(new GradientStop(new Avalonia.Media.Color(0, 255, 255, 255), 0.0)); // Transparent at the edges (A=0)
-            gradientStops.Add(new GradientStop(new Avalonia.Media.Color(150, 255, 255, 255), 0.5)); // Semi-transparent white in the center (A=150)
-            gradientStops.Add(new GradientStop(new Avalonia.Media.Color(0, 255, 255, 255), 1.0)); // Transparent at the edges (A=0)
+            gradientStops.Add(new GradientStop(new Color(0, 255, 255, 255), 0.0)); // Transparent at the edges (A=0)
+            gradientStops.Add(new GradientStop(new Color(150, 255, 255, 255), 0.5)); // Semi-transparent white in the center (A=150)
+            gradientStops.Add(new GradientStop(new Color(0, 255, 255, 255), 1.0)); // Transparent at the edges (A=0)
 
             // Create the linear gradient brush with absolute coordinates
             // Matching PyKotor: QLinearGradient(light_rect.left(), 0, light_rect.right(), 0)
@@ -173,31 +173,31 @@ namespace HolocronToolset.Widgets
 
                 // Start from top-left corner (after rounding)
                 ctx.BeginFigure(new Point(x + radius, y), true);
-                
+
                 // Top edge
                 ctx.LineTo(new Point(x + w - radius, y));
-                
+
                 // Top-right corner arc
                 ctx.ArcTo(new Point(x + w, y + radius), new Size(radius, radius), 0, false, SweepDirection.Clockwise);
-                
+
                 // Right edge
                 ctx.LineTo(new Point(x + w, y + h - radius));
-                
+
                 // Bottom-right corner arc
                 ctx.ArcTo(new Point(x + w - radius, y + h), new Size(radius, radius), 0, false, SweepDirection.Clockwise);
-                
+
                 // Bottom edge
                 ctx.LineTo(new Point(x + radius, y + h));
-                
+
                 // Bottom-left corner arc
                 ctx.ArcTo(new Point(x, y + h - radius), new Size(radius, radius), 0, false, SweepDirection.Clockwise);
-                
+
                 // Left edge
                 ctx.LineTo(new Point(x, y + radius));
-                
+
                 // Top-left corner arc
                 ctx.ArcTo(new Point(x + radius, y), new Size(radius, radius), 0, false, SweepDirection.Clockwise);
-                
+
                 ctx.EndFigure(true);
             }
 

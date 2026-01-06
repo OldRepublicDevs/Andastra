@@ -526,7 +526,7 @@ namespace HolocronToolset.Editors
             _ui.ActionCompile = new MenuItem
             {
                 Header = "Compile",
-                HotKey = new Avalonia.Input.KeyGesture(Avalonia.Input.Key.F5)
+                HotKey = new KeyGesture(Avalonia.Input.Key.F5)
             };
             _ui.ActionCompile.Click += (s, e) => CompileCurrentScript();
 
@@ -1004,7 +1004,7 @@ namespace HolocronToolset.Editors
         /// </summary>
         private void ShowKeyboardShortcuts()
         {
-            var dialog = new HolocronToolset.Dialogs.KeyboardShortcutsDialog();
+            var dialog = new KeyboardShortcutsDialog();
             dialog.ShowDialog(this);
         }
 

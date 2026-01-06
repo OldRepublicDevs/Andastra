@@ -125,11 +125,11 @@ namespace HolocronToolset.Widgets.Settings
             }
             if (_attemptKeepOldGFFFields != null)
             {
-                _attemptKeepOldGFFFields.IsChecked = _settings.GetValue<bool>("AttemptKeepOldGFFFields", false);
+                _attemptKeepOldGFFFields.IsChecked = _settings.GetValue("AttemptKeepOldGFFFields", false);
             }
             if (_saveRimCheck != null)
             {
-                _saveRimCheck.IsChecked = !_settings.GetValue<bool>("DisableRIMSaving", false);
+                _saveRimCheck.IsChecked = !_settings.GetValue("DisableRIMSaving", false);
             }
             if (_mergeRimCheck != null)
             {
@@ -137,23 +137,23 @@ namespace HolocronToolset.Widgets.Settings
             }
             if (_moduleSortOptionComboBox != null)
             {
-                _moduleSortOptionComboBox.SelectedIndex = _settings.GetValue<int>("ModuleSortOption", 0);
+                _moduleSortOptionComboBox.SelectedIndex = _settings.GetValue("ModuleSortOption", 0);
             }
             if (_greyRimCheck != null)
             {
-                _greyRimCheck.IsChecked = _settings.GetValue<bool>("GreyRIMText", false);
+                _greyRimCheck.IsChecked = _settings.GetValue("GreyRIMText", false);
             }
             if (_showPreviewUTCCheck != null)
             {
-                _showPreviewUTCCheck.IsChecked = _settings.GetValue<bool>("ShowPreviewUTC", false);
+                _showPreviewUTCCheck.IsChecked = _settings.GetValue("ShowPreviewUTC", false);
             }
             if (_showPreviewUTPCheck != null)
             {
-                _showPreviewUTPCheck.IsChecked = _settings.GetValue<bool>("ShowPreviewUTP", false);
+                _showPreviewUTPCheck.IsChecked = _settings.GetValue("ShowPreviewUTP", false);
             }
             if (_showPreviewUTDCheck != null)
             {
-                _showPreviewUTDCheck.IsChecked = _settings.GetValue<bool>("ShowPreviewUTD", false);
+                _showPreviewUTDCheck.IsChecked = _settings.GetValue("ShowPreviewUTD", false);
             }
             if (_tempDirEdit != null)
             {

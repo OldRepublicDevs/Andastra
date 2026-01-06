@@ -407,9 +407,9 @@ namespace HolocronToolset.Editors
         private PTHControlScheme _controls;
 
         // Status bar labels
-        public Avalonia.Controls.TextBlock LeftLabel { get; private set; }
-        public Avalonia.Controls.TextBlock CenterLabel { get; private set; }
-        public Avalonia.Controls.TextBlock RightLabel { get; private set; }
+        public TextBlock LeftLabel { get; private set; }
+        public TextBlock CenterLabel { get; private set; }
+        public TextBlock RightLabel { get; private set; }
 
         // Status output handler
         public PTHStatusOut StatusOut { get; private set; }
@@ -525,13 +525,13 @@ namespace HolocronToolset.Editors
         private void SetupStatusBar()
         {
             // Create labels for the different parts of the status message
-            LeftLabel = new Avalonia.Controls.TextBlock { Text = "Left Status" };
-            CenterLabel = new Avalonia.Controls.TextBlock
+            LeftLabel = new TextBlock { Text = "Left Status" };
+            CenterLabel = new TextBlock
             {
                 Text = "Center Status",
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
             };
-            RightLabel = new Avalonia.Controls.TextBlock { Text = "Right Status" };
+            RightLabel = new TextBlock { Text = "Right Status" };
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:209-212
@@ -717,7 +717,7 @@ namespace HolocronToolset.Editors
             {
                 SearchLocation[] searchOrder = new[] { SearchLocation.OVERRIDE, SearchLocation.CHITIN, SearchLocation.MODULES };
                 ResourceResult lytResult = _installation.Resource(resref, ResourceType.LYT, searchOrder);
-                
+
                 if (lytResult != null)
                 {
                     // Load the LYT layout
@@ -819,7 +819,7 @@ namespace HolocronToolset.Editors
 
                 string modelResRef = room.Model.ToString();
                 ResourceResult wokResult = _installation.Resource(modelResRef, ResourceType.WOK, searchOrder);
-                
+
                 if (wokResult != null)
                 {
                     try

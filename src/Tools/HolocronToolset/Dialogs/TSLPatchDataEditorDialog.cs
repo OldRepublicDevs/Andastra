@@ -119,7 +119,7 @@ namespace HolocronToolset.Dialogs
 
         private void SetupProgrammaticUI()
         {
-            var mainPanel = new StackPanel { Margin = new Avalonia.Thickness(10), Spacing = 10 };
+            var mainPanel = new StackPanel { Margin = new Thickness(10), Spacing = 10 };
 
             var headerPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 5 };
             headerPanel.Children.Add(new TextBlock { Text = "TSLPatchData Folder:", FontWeight = Avalonia.Media.FontWeight.Bold });
@@ -187,10 +187,10 @@ namespace HolocronToolset.Dialogs
         private void CreateGeneralTab()
         {
             var tab = new TabItem { Header = "General Settings" };
-            var content = new StackPanel { Spacing = 10, Margin = new Avalonia.Thickness(10) };
+            var content = new StackPanel { Spacing = 10, Margin = new Thickness(10) };
 
             // Mod Information Group (using Expander instead of GroupBox - Avalonia doesn't have GroupBox)
-            var modInfoGroup = new Expander { Header = "Mod Information", IsExpanded = true, Margin = new Avalonia.Thickness(0, 0, 0, 10) };
+            var modInfoGroup = new Expander { Header = "Mod Information", IsExpanded = true, Margin = new Thickness(0, 0, 0, 10) };
             var modInfoLayout = new StackPanel { Spacing = 5 };
 
             // Mod name
@@ -216,7 +216,7 @@ namespace HolocronToolset.Dialogs
             content.Children.Add(modInfoGroup);
 
             // Installation Options Group (using Expander instead of GroupBox - Avalonia doesn't have GroupBox)
-            var installOptionsGroup = new Expander { Header = "Installation Options", IsExpanded = true, Margin = new Avalonia.Thickness(0, 0, 0, 10) };
+            var installOptionsGroup = new Expander { Header = "Installation Options", IsExpanded = true, Margin = new Thickness(0, 0, 0, 10) };
             var installOptionsLayout = new StackPanel { Spacing = 5 };
 
             _installToOverrideCheck = new CheckBox { Content = "Install files to Override folder", IsChecked = true };
@@ -243,7 +243,7 @@ namespace HolocronToolset.Dialogs
         private void Create2DAMemoryTab()
         {
             var tab = new TabItem { Header = "2DA Memory" };
-            var content = new StackPanel { Spacing = 10, Margin = new Avalonia.Thickness(10) };
+            var content = new StackPanel { Spacing = 10, Margin = new Thickness(10) };
 
             // Header
             content.Children.Add(new TextBlock
@@ -314,7 +314,7 @@ namespace HolocronToolset.Dialogs
         private void CreateTLKStrRefTab()
         {
             var tab = new TabItem { Header = "TLK StrRef" };
-            var content = new StackPanel { Spacing = 10, Margin = new Avalonia.Thickness(10) };
+            var content = new StackPanel { Spacing = 10, Margin = new Thickness(10) };
 
             // Header
             content.Children.Add(new TextBlock
@@ -330,21 +330,21 @@ namespace HolocronToolset.Dialogs
             // TLK string tree with column headers
             // Matching PyKotor implementation: QTreeWidget with columns ["Token Name", "String", "Used By"]
             var treeContainer = new StackPanel { Spacing = 0 };
-            
+
             // Column headers (matching QTreeWidget header labels)
             var headerGrid = new Grid();
             headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(150, GridUnitType.Pixel) });
             headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(200, GridUnitType.Pixel) });
-            
+
             var headerBorder = new Border
             {
                 Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.FromRgb(240, 240, 240)),
                 BorderBrush = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.FromRgb(200, 200, 200)),
-                BorderThickness = new Avalonia.Thickness(0, 0, 0, 1),
-                Padding = new Avalonia.Thickness(5, 3, 5, 3)
+                BorderThickness = new Thickness(0, 0, 0, 1),
+                Padding = new Thickness(5, 3, 5, 3)
             };
-            
+
             var headerPanel = new StackPanel { Orientation = Orientation.Horizontal };
             headerPanel.Children.Add(new TextBlock
             {
@@ -356,26 +356,26 @@ namespace HolocronToolset.Dialogs
             {
                 Text = "String",
                 FontWeight = Avalonia.Media.FontWeight.Bold,
-                Margin = new Avalonia.Thickness(5, 0, 0, 0)
+                Margin = new Thickness(5, 0, 0, 0)
             });
             headerPanel.Children.Add(new TextBlock
             {
                 Text = "Used By",
                 FontWeight = Avalonia.Media.FontWeight.Bold,
                 Width = 200,
-                Margin = new Avalonia.Thickness(5, 0, 0, 0)
+                Margin = new Thickness(5, 0, 0, 0)
             });
-            
+
             headerBorder.Child = headerPanel;
             treeContainer.Children.Add(headerBorder);
-            
+
             // TreeView for data rows
             _tlkStringTree = new TreeView
             {
                 MinHeight = 300
             };
             treeContainer.Children.Add(_tlkStringTree);
-            
+
             content.Children.Add(treeContainer);
 
             // Buttons
@@ -413,7 +413,7 @@ namespace HolocronToolset.Dialogs
         private void CreateGFFFieldsTab()
         {
             var tab = new TabItem { Header = "GFF Fields" };
-            var content = new StackPanel { Spacing = 10, Margin = new Avalonia.Thickness(10) };
+            var content = new StackPanel { Spacing = 10, Margin = new Thickness(10) };
 
             // Header
             content.Children.Add(new TextBlock
@@ -480,7 +480,7 @@ namespace HolocronToolset.Dialogs
         private void CreateScriptsTab()
         {
             var tab = new TabItem { Header = "Scripts" };
-            var content = new StackPanel { Spacing = 10, Margin = new Avalonia.Thickness(10) };
+            var content = new StackPanel { Spacing = 10, Margin = new Thickness(10) };
 
             // Header labels
             content.Children.Add(new TextBlock { Text = "Scripts:", FontWeight = Avalonia.Media.FontWeight.Bold });
@@ -515,7 +515,7 @@ namespace HolocronToolset.Dialogs
         private void CreateINIPreviewTab()
         {
             var tab = new TabItem { Header = "INI Preview" };
-            var content = new StackPanel { Spacing = 10, Margin = new Avalonia.Thickness(10) };
+            var content = new StackPanel { Spacing = 10, Margin = new Thickness(10) };
 
             content.Children.Add(new TextBlock { Text = "changes.ini Preview:", FontWeight = Avalonia.Media.FontWeight.Bold });
 
@@ -911,7 +911,7 @@ namespace HolocronToolset.Dialogs
             }
         }
 
-        private string GetFieldValueString(Andastra.Parsing.Mods.GFF.FieldValue value)
+        private string GetFieldValueString(FieldValue value)
         {
             if (value == null)
             {
@@ -919,11 +919,11 @@ namespace HolocronToolset.Dialogs
             }
 
             // Try to get a string representation of the value
-            if (value is Andastra.Parsing.Mods.GFF.FieldValueConstant constant)
+            if (value is FieldValueConstant constant)
             {
                 return constant.Stored?.ToString() ?? "";
             }
-            else if (value is Andastra.Parsing.Mods.GFF.FieldValue2DAMemory mem2DA)
+            else if (value is FieldValue2DAMemory mem2DA)
             {
                 return $"2DAMEMORY{mem2DA.TokenId}";
             }
@@ -1624,7 +1624,7 @@ namespace HolocronToolset.Dialogs
             foreach (var kvp in _tlkStrings.OrderBy(x => x.Key))
             {
                 var entry = kvp.Value;
-                
+
                 // Prepare text preview (truncate if too long)
                 string textPreview = entry.Text ?? "";
                 if (textPreview.Length > 60)
@@ -1654,7 +1654,7 @@ namespace HolocronToolset.Dialogs
                 {
                     Text = entry.TokenName ?? "",
                     VerticalAlignment = VerticalAlignment.Center,
-                    Margin = new Avalonia.Thickness(5, 2, 5, 2)
+                    Margin = new Thickness(5, 2, 5, 2)
                 };
                 Grid.SetColumn(tokenNameBlock, 0);
                 itemGrid.Children.Add(tokenNameBlock);
@@ -1665,7 +1665,7 @@ namespace HolocronToolset.Dialogs
                     Text = textPreview,
                     VerticalAlignment = VerticalAlignment.Center,
                     TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis,
-                    Margin = new Avalonia.Thickness(5, 2, 5, 2)
+                    Margin = new Thickness(5, 2, 5, 2)
                 };
                 Grid.SetColumn(stringBlock, 1);
                 itemGrid.Children.Add(stringBlock);
@@ -1676,7 +1676,7 @@ namespace HolocronToolset.Dialogs
                     Text = usedByText,
                     VerticalAlignment = VerticalAlignment.Center,
                     TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis,
-                    Margin = new Avalonia.Thickness(5, 2, 5, 2)
+                    Margin = new Thickness(5, 2, 5, 2)
                 };
                 Grid.SetColumn(usedByBlock, 2);
                 itemGrid.Children.Add(usedByBlock);
@@ -1814,7 +1814,7 @@ namespace HolocronToolset.Dialogs
                     // Generate append.tlk file for non-replacement entries
                     if (appendEntries.Count > 0)
                     {
-                        var appendTlk = new Andastra.Parsing.Formats.TLK.TLK();
+                        var appendTlk = new TLK();
                         appendTlk.Resize(appendEntries.Count);
 
                         // Sort by token ID for consistent ordering
@@ -2568,7 +2568,7 @@ namespace HolocronToolset.Dialogs
 
         private void InitializeComponent()
         {
-            var mainPanel = new StackPanel { Spacing = 10, Margin = new Avalonia.Thickness(15) };
+            var mainPanel = new StackPanel { Spacing = 10, Margin = new Thickness(15) };
 
             mainPanel.Children.Add(new TextBlock
             {
@@ -2677,7 +2677,7 @@ namespace HolocronToolset.Dialogs
 
         private void InitializeComponent()
         {
-            var mainPanel = new StackPanel { Spacing = 10, Margin = new Avalonia.Thickness(15) };
+            var mainPanel = new StackPanel { Spacing = 10, Margin = new Thickness(15) };
 
             mainPanel.Children.Add(new TextBlock
             {
@@ -2826,7 +2826,7 @@ namespace HolocronToolset.Dialogs
 
         private void InitializeComponent()
         {
-            var mainPanel = new StackPanel { Spacing = 10, Margin = new Avalonia.Thickness(15) };
+            var mainPanel = new StackPanel { Spacing = 10, Margin = new Thickness(15) };
 
             // Token Name
             var tokenNameLayout = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5 };
