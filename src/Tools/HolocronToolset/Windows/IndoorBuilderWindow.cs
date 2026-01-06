@@ -4,6 +4,7 @@ using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using HolocronToolset.Data;
+using Andastra.Parsing.Logger;
 using DuplicateRoomsCommand = HolocronToolset.Windows.DuplicateRoomsCommand;
 
 namespace HolocronToolset.Windows
@@ -173,6 +174,20 @@ namespace HolocronToolset.Windows
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1222-1247
             // Original: def _initialize_options_ui(self):
             InitializeOptionsUI();
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:249
+            // Original: self._setup_modules()
+            SetupModules();
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder/builder.py:277
+            // Original: self.ui.moduleSelect.currentIndexChanged.connect(self.on_module_selected)
+            // Wire up module selection event
+            Ui.ModuleSelect.SetCurrentIndexChangedHandler(OnModuleSelected);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder/builder.py:278
+            // Original: self.ui.moduleComponentList.currentItemChanged.connect(self.on_module_component_selected)
+            // Wire up module component selection event
+            // Note: Module component selection will be implemented when moduleComponentList UI is fully integrated
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1222-1247
@@ -572,6 +587,148 @@ namespace HolocronToolset.Windows
             var coloredItems = formattedItems.Select(item => $"<span style='color: {color}'>{item}</span>").ToList();
             return string.Join("&nbsp;+&nbsp;", coloredItems);
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder/builder.py:483-504
+        // Original: def _setup_modules(self):
+        /// <summary>
+        /// Set up the module selection combobox with available modules from the installation.
+        /// Uses ModuleKitManager to get module roots and display names.
+        /// Modules are loaded lazily when selected.
+        /// </summary>
+        private void SetupModules()
+        {
+            if (Ui == null)
+            {
+                return;
+            }
+
+            // Matching Python line 489: self.ui.moduleSelect.clear()
+            Ui.ModuleSelect.Clear();
+            // Matching Python line 490: self.ui.moduleComponentList.clear()
+            Ui.ModuleComponentList.Clear();
+
+            if (_installation == null || ModuleKitManager == null)
+            {
+                // Matching Python lines 492-495: Disable modules UI if no installation is available
+                // Original: if not self._installation:
+                // Original:     self.ui.modulesGroupBox.setEnabled(False)
+                // Original:     return
+                Ui.ModulesGroupBoxEnabled = false;
+                return;
+            }
+
+            // Matching Python line 498: module_roots: list[str] = self._module_kit_manager.get_module_roots()
+            var moduleRoots = ModuleKitManager.GetModuleRoots();
+
+            // Matching Python lines 501-504: Populate the combobox with module names
+            // Original: for module_root in module_roots:
+            // Original:     assert isinstance(module_root, str)
+            // Original:     display_name = self._module_kit_manager.get_module_display_name(module_root)
+            // Original:     self.ui.moduleSelect.addItem(display_name, module_root)
+            foreach (var moduleRoot in moduleRoots)
+            {
+                string displayName = ModuleKitManager.GetModuleDisplayName(moduleRoot);
+                Ui.ModuleSelect.AddItem(displayName, moduleRoot);
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder/builder.py:632-668
+        // Original: def on_module_selected(self, index: int = -1):
+        /// <summary>
+        /// Handle module selection from the combobox.
+        /// Loads module components lazily when a module is selected in the combobox.
+        /// Uses ModuleKitManager to convert module resources into kit components.
+        /// </summary>
+        private void OnModuleSelected(int index = -1)
+        {
+            if (Ui == null)
+            {
+                return;
+            }
+
+            // Matching Python line 638: self.ui.moduleComponentList.clear()
+            Ui.ModuleComponentList.Clear();
+            // Matching Python line 639: self._set_preview_image(None)
+            // Note: Preview image clearing will be implemented when preview image UI is available
+
+            // Matching Python line 641: module_root: str | None = self.ui.moduleSelect.currentData()
+            string moduleRoot = Ui.ModuleSelect.CurrentData();
+            // Matching Python line 642: if not module_root or not self._installation:
+            if (string.IsNullOrEmpty(moduleRoot) || _installation == null || ModuleKitManager == null)
+            {
+                return;
+            }
+
+            try
+            {
+                // Matching Python line 647: module_kit = self._module_kit_manager.get_module_kit(module_root)
+                var moduleKit = ModuleKitManager.GetModuleKit(moduleRoot);
+
+                // Matching Python line 650: if not module_kit.ensure_loaded():
+                if (!moduleKit.EnsureLoaded())
+                {
+                    // Matching Python lines 651-653: Warning logged if no components found
+                    new RobustLogger().Warning($"No components found for module '{moduleRoot}'");
+                    return;
+                }
+
+                // Matching Python lines 657-662: Populate the list with components from the module kit
+                // Original: for component in module_kit.components:
+                // Original:     ensure_component_image(component)
+                // Original:     item = QListWidgetItem(component.name)
+                // Original:     item.setData(Qt.ItemDataRole.UserRole, component)
+                // Original:     self.ui.moduleComponentList.addItem(item)
+                foreach (var component in moduleKit.Components)
+                {
+                    // Note: ensure_component_image equivalent would be called here if needed
+                    // For now, we'll add the component directly
+                    Ui.ModuleComponentList.AddItem(component.Name, component);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Matching Python lines 664-667: Exception handling
+                // Original: except Exception:
+                // Original:     RobustLogger().exception(f"Failed to load module '{module_root}'")
+                new RobustLogger().Exception($"Failed to load module '{moduleRoot}': {ex.Message}");
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder/builder.py:669-690
+        // Original: def on_module_component_selected(self, item: QListWidgetItem | None = None):
+        /// <summary>
+        /// Handle module component selection from the list.
+        /// </summary>
+        private void OnModuleComponentSelected(object item = null)
+        {
+            if (Ui == null)
+            {
+                return;
+            }
+
+            // Matching Python lines 671-674: Clear preview and cursor if no item selected
+            // Original: if item is None:
+            // Original:     self._set_preview_image(None)
+            // Original:     self.ui.mapRenderer.set_cursor_component(None)
+            // Original:     return
+            if (item == null)
+            {
+                // Note: Preview image and cursor component will be implemented when those UI components are available
+                return;
+            }
+
+            // Matching Python line 676: component: KitComponent | None = item.data(Qt.ItemDataRole.UserRole)
+            var component = Ui.ModuleComponentList.GetItemData(item);
+            if (component == null)
+            {
+                return;
+            }
+
+            // Matching Python lines 679-690: Set preview image and cursor component
+            // Original: self._set_preview_image(component.image)
+            // Original: self.ui.mapRenderer.set_cursor_component(component)
+            // Note: Preview image and cursor component setting will be implemented when those UI components are available
+        }
     }
 
     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py
@@ -813,6 +970,52 @@ namespace HolocronToolset.Windows
         public string StatusBarSelectionText { get; set; } = "";
         public string StatusBarKeysText { get; set; } = "";
         public string StatusBarModeText { get; set; } = "";
+
+        // Matching PyKotor implementation - moduleSelect combobox widget
+        // Original: self.ui.moduleSelect (QComboBox)
+        // Matching PyKotor UI file: Tools/HolocronToolset/src/ui/windows/indoor_builder.ui:200
+        // Original: <widget class="QComboBox" name="moduleSelect"/>
+        private ModuleSelectComboBoxWrapper _moduleSelect;
+        public ModuleSelectComboBoxWrapper ModuleSelect
+        {
+            get
+            {
+                if (_moduleSelect == null)
+                {
+                    _moduleSelect = new ModuleSelectComboBoxWrapper();
+                }
+                return _moduleSelect;
+            }
+        }
+
+
+        // Matching PyKotor implementation - moduleComponentList list widget
+        // Original: self.ui.moduleComponentList (QListWidget)
+        // Matching PyKotor UI file: Tools/HolocronToolset/src/ui/windows/indoor_builder.ui:203
+        // Original: <widget class="QListWidget" name="moduleComponentList">
+        private ModuleComponentListWrapper _moduleComponentList;
+        public ModuleComponentListWrapper ModuleComponentList
+        {
+            get
+            {
+                if (_moduleComponentList == null)
+                {
+                    _moduleComponentList = new ModuleComponentListWrapper();
+                }
+                return _moduleComponentList;
+            }
+        }
+
+        // Matching PyKotor implementation - modulesGroupBox widget
+        // Original: self.ui.modulesGroupBox (CollapsibleGroupBox)
+        // Matching PyKotor UI file: Tools/HolocronToolset/src/ui/windows/indoor_builder.ui:173
+        // Original: <widget class="CollapsibleGroupBox" name="modulesGroupBox">
+        private bool _modulesGroupBoxEnabled = true;
+        public bool ModulesGroupBoxEnabled
+        {
+            get { return _modulesGroupBoxEnabled; }
+            set { _modulesGroupBoxEnabled = value; }
+        }
     }
 
     // Matching PyKotor implementation - checkbox wrapper for API compatibility
@@ -880,6 +1083,177 @@ namespace HolocronToolset.Windows
         public double Maximum()
         {
             return (double)_ui.GridSizeSpinMaximumValue;
+        }
+    }
+
+    // Matching PyKotor implementation - moduleSelect combobox wrapper for API compatibility
+    // Original: self.ui.moduleSelect (QComboBox)
+    // Wrapper class to match Python API where combobox has addItem, currentData, clear, count, setCurrentIndex methods
+    public class ModuleSelectComboBoxWrapper
+    {
+        private readonly List<ModuleSelectItem> _items = new List<ModuleSelectItem>();
+        private int _currentIndex = -1;
+        private Action<int> _currentIndexChanged;
+
+        // Event handler for currentIndexChanged (set from UI wrapper)
+        public void SetCurrentIndexChangedHandler(Action<int> handler)
+        {
+            _currentIndexChanged = handler;
+        }
+
+        // Matching PyKotor implementation - addItem method
+        // Original: self.ui.moduleSelect.addItem(display_name, module_root)
+        public void AddItem(string displayName, string moduleRoot)
+        {
+            _items.Add(new ModuleSelectItem { DisplayName = displayName, ModuleRoot = moduleRoot });
+        }
+
+        // Matching PyKotor implementation - currentData method
+        // Original: self.ui.moduleSelect.currentData()
+        public string CurrentData()
+        {
+            if (_currentIndex >= 0 && _currentIndex < _items.Count)
+            {
+                return _items[_currentIndex].ModuleRoot;
+            }
+            return null;
+        }
+
+        // Matching PyKotor implementation - clear method
+        // Original: self.ui.moduleSelect.clear()
+        public void Clear()
+        {
+            _items.Clear();
+            _currentIndex = -1;
+        }
+
+        // Matching PyKotor implementation - count method
+        // Original: self.ui.moduleSelect.count()
+        public int Count()
+        {
+            return _items.Count;
+        }
+
+        // Matching PyKotor implementation - setCurrentIndex method
+        // Original: self.ui.moduleSelect.setCurrentIndex(index)
+        public void SetCurrentIndex(int index)
+        {
+            if (index >= 0 && index < _items.Count)
+            {
+                int oldIndex = _currentIndex;
+                _currentIndex = index;
+                // Trigger currentIndexChanged event if index actually changed
+                if (oldIndex != _currentIndex && _currentIndexChanged != null)
+                {
+                    _currentIndexChanged(_currentIndex);
+                }
+            }
+            else
+            {
+                int oldIndex = _currentIndex;
+                _currentIndex = -1;
+                // Trigger currentIndexChanged event if index actually changed
+                if (oldIndex != _currentIndex && _currentIndexChanged != null)
+                {
+                    _currentIndexChanged(_currentIndex);
+                }
+            }
+        }
+
+        // Matching PyKotor implementation - currentIndex method
+        // Original: self.ui.moduleSelect.currentIndex()
+        public int CurrentIndex()
+        {
+            return _currentIndex;
+        }
+
+        // Matching PyKotor implementation - itemText method
+        // Original: self.ui.moduleSelect.itemText(index)
+        public string ItemText(int index)
+        {
+            if (index >= 0 && index < _items.Count)
+            {
+                return _items[index].DisplayName;
+            }
+            return null;
+        }
+
+        // Matching PyKotor implementation - itemData method
+        // Original: self.ui.moduleSelect.itemData(index)
+        public string ItemData(int index)
+        {
+            if (index >= 0 && index < _items.Count)
+            {
+                return _items[index].ModuleRoot;
+            }
+            return null;
+        }
+
+        private class ModuleSelectItem
+        {
+            public string DisplayName { get; set; }
+            public string ModuleRoot { get; set; }
+        }
+    }
+
+    // Matching PyKotor implementation - moduleComponentList list widget wrapper for API compatibility
+    // Original: self.ui.moduleComponentList (QListWidget)
+    // Wrapper class to match Python API where list widget has addItem, clear, clearSelection, setCurrentItem methods
+    public class ModuleComponentListWrapper
+    {
+        private readonly List<ModuleComponentListItem> _items = new List<ModuleComponentListItem>();
+        private object _currentItem = null;
+
+        // Matching PyKotor implementation - addItem method
+        // Original: self.ui.moduleComponentList.addItem(item)
+        // Where item is QListWidgetItem with component data
+        public void AddItem(string componentName, KitComponent component)
+        {
+            _items.Add(new ModuleComponentListItem { Name = componentName, Component = component });
+        }
+
+        // Matching PyKotor implementation - clear method
+        // Original: self.ui.moduleComponentList.clear()
+        public void Clear()
+        {
+            _items.Clear();
+            _currentItem = null;
+        }
+
+        // Matching PyKotor implementation - clearSelection method
+        // Original: self.ui.moduleComponentList.clearSelection()
+        public void ClearSelection()
+        {
+            _currentItem = null;
+        }
+
+        // Matching PyKotor implementation - setCurrentItem method
+        // Original: self.ui.moduleComponentList.setCurrentItem(None)
+        public void SetCurrentItem(object item)
+        {
+            _currentItem = item;
+        }
+
+        // Matching PyKotor implementation - getItemData method (helper for getting component from item)
+        // Original: item.data(Qt.ItemDataRole.UserRole)
+        public KitComponent GetItemData(object item)
+        {
+            if (item is ModuleComponentListItem listItem)
+            {
+                return listItem.Component;
+            }
+            // Try to find by index if item is an integer
+            if (item is int index && index >= 0 && index < _items.Count)
+            {
+                return _items[index].Component;
+            }
+            return null;
+        }
+
+        private class ModuleComponentListItem
+        {
+            public string Name { get; set; }
+            public KitComponent Component { get; set; }
         }
     }
 
