@@ -1,8 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using HolocronToolset.Data;
 using KitComponent = HolocronToolset.Data.KitComponent;
+using BWM = Andastra.Parsing.Formats.BWM.BWM;
+using BWMFace = Andastra.Parsing.Formats.BWM.BWMFace;
+using JetBrains.Annotations;
 
 namespace HolocronToolset.Windows
 {
@@ -15,6 +19,39 @@ namespace HolocronToolset.Windows
         private bool _dirty = false;
         private UndoStack _undoStack;
         private KitComponent _cursorComponent;
+        
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder/renderer.py:206-208
+        // Original: self._bwm_surface_cache: dict[int, _BWMSurfaceCache] = {}
+        // NOTE: We no longer cache *transformed* room walkmeshes (they require deepcopy + transforms).
+        // Instead we cache BWM face paths/indices in local space and apply transforms cheaply.
+        private readonly Dictionary<int, BWMSurfaceCache> _bwmSurfaceCache = new Dictionary<int, BWMSurfaceCache>();
+        
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder/renderer.py:105-121
+        // Original: @dataclass(frozen=True) class _BWMSurfaceCache
+        /// <summary>
+        /// Precomputed geometry for a BWM in *local* space.
+        /// This cache exists to avoid rebuilding transformed BWMs (deepcopy + rotate/flip/translate)
+        /// on every mouse move / repaint. Transforming is handled by the painter + cheap math.
+        /// </summary>
+        private class BWMSurfaceCache
+        {
+            public int BwmObjId { get; set; }
+            public List<FaceData> FaceDataList { get; set; }
+            public Dictionary<int, int> FaceIdToIndex { get; set; }
+            // Unique vertex list for operations like marquee selection (local space).
+            public List<Vector3> Vertices { get; set; }
+            // Local-space AABB for cheap early-out in picking.
+            public Vector3 BbMin { get; set; }
+            public Vector3 BbMax { get; set; }
+        }
+        
+        // Face data structure for rendering (replaces QPainterPath in Qt version)
+        private class FaceData
+        {
+            public Vector3 V1 { get; set; }
+            public Vector3 V2 { get; set; }
+            public Vector3 V3 { get; set; }
+        }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:2491-2494
         // Original: self.snap_to_grid: bool = False
@@ -127,16 +164,92 @@ namespace HolocronToolset.Windows
             MarkDirty();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:2601-2604
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder/renderer.py:282-285
         // Original: def set_map(self, indoor_map: IndoorMap):
         public void SetMap(IndoorMap indoorMap)
         {
-            // Matching Python line 2602: self._map = indoor_map
+            // Matching Python line 283: self._map = indoor_map
             _map = indoorMap;
-            // Matching Python line 2603: self._cached_walkmeshes.clear()
-            // TODO:  Note: Cached walkmeshes will be implemented when needed - for now, we clear the cache by resetting
-            // Matching Python line 2604: self.mark_dirty()
+            // Matching Python line 284: self._bwm_surface_cache.clear()
+            _bwmSurfaceCache.Clear();
+            // Matching Python line 285: self.mark_dirty()
             MarkDirty();
+        }
+        
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder/renderer.py:986-1023
+        // Original: def _get_bwm_surface_cache(self, bwm: BWM) -> _BWMSurfaceCache
+        /// <summary>
+        /// Get (or build) cached local-space geometry for a BWM.
+        /// </summary>
+        [CanBeNull]
+        private BWMSurfaceCache GetBwmSurfaceCache([CanBeNull] BWM bwm)
+        {
+            if (bwm == null)
+            {
+                return null;
+            }
+            
+            // Use RuntimeHelpers.GetHashCode to get object identity (similar to Python's id())
+            int key = System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(bwm);
+            if (_bwmSurfaceCache.TryGetValue(key, out BWMSurfaceCache cached))
+            {
+                return cached;
+            }
+            
+            // Build face data (local space) and identity->index map
+            var faceDataList = new List<FaceData>();
+            var faceIdToIndex = new Dictionary<int, int>();
+            
+            for (int idx = 0; idx < bwm.Faces.Count; idx++)
+            {
+                BWMFace face = bwm.Faces[idx];
+                faceDataList.Add(new FaceData
+                {
+                    V1 = face.V1,
+                    V2 = face.V2,
+                    V3 = face.V3
+                });
+                // Use RuntimeHelpers.GetHashCode for face identity (similar to Python's id(face))
+                int faceId = System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(face);
+                faceIdToIndex[faceId] = idx;
+            }
+            
+            // Vertex list + AABB for early rejection
+            List<Vector3> verts = bwm.Vertices();
+            Vector3 bbmin;
+            Vector3 bbmax;
+            
+            if (verts != null && verts.Count > 0)
+            {
+                bbmin = new Vector3(
+                    verts.Min(v => v.X),
+                    verts.Min(v => v.Y),
+                    verts.Min(v => v.Z)
+                );
+                bbmax = new Vector3(
+                    verts.Max(v => v.X),
+                    verts.Max(v => v.Y),
+                    verts.Max(v => v.Z)
+                );
+            }
+            else
+            {
+                bbmin = Vector3.Zero;
+                bbmax = Vector3.Zero;
+            }
+            
+            cached = new BWMSurfaceCache
+            {
+                BwmObjId = key,
+                FaceDataList = faceDataList,
+                FaceIdToIndex = faceIdToIndex,
+                Vertices = verts ?? new List<Vector3>(),
+                BbMin = bbmin,
+                BbMax = bbmax
+            };
+            
+            _bwmSurfaceCache[key] = cached;
+            return cached;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:2606-2608
