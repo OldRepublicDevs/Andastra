@@ -760,22 +760,65 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
     /// Odyssey music player implementation.
     /// Plays background music using streaming audio.
     /// </summary>
+    /// <remarks>
+    /// Odyssey Music Player:
+    /// - Based on reverse engineering of swkotor.exe and swkotor2.exe
+    /// - Music playback: Original engine uses Miles Sound System (MSS) for background music
+    /// - Music files: Stored as WAV or MP3 resources, referenced by ResRef (e.g., "mus_theme")
+    /// - Volume control: Original engine has separate music volume setting
+    /// - Based on swkotor2.exe: Music playback functions @ various addresses
+    /// - Music directories: "STREAMMUSIC" @ 0x007c69dc, "HD0:STREAMMUSIC" @ 0x007c771c
+    /// - Music settings: "Music Volume" @ 0x007c83cc, "Music Enabled" @ 0x007c7258
+    /// </remarks>
     public class OdysseyMusicPlayer
     {
         private readonly object _resourceProvider;
         private string _currentTrack;
         private bool _isPlaying;
+        private float _volume = 1.0f; // Default volume (0.0 to 1.0)
+        private readonly object _volumeLock = new object(); // Thread-safe volume access
 
         public OdysseyMusicPlayer(object resourceProvider)
         {
             _resourceProvider = resourceProvider;
         }
 
+        /// <summary>
+        /// Plays background music by ResRef.
+        /// Based on swkotor2.exe: Music playback system
+        /// </summary>
+        /// <param name="musicResRef">The music resource reference (e.g., "mus_theme").</param>
+        /// <remarks>
+        /// Music Playback Implementation:
+        /// - When fully implemented, this will load and play music from the resource provider
+        /// - Volume will be applied from the stored _volume value
+        /// - Original engine uses Miles Sound System (MSS) for streaming music
+        /// - Music files are typically WAV or MP3 format, stored in STREAMMUSIC directory
+        /// </remarks>
         public void Play(string musicResRef)
         {
-            _currentTrack = musicResRef;
-            _isPlaying = true;
+            if (string.IsNullOrEmpty(musicResRef))
+            {
+                return;
+            }
+
+            lock (_volumeLock)
+            {
+                _currentTrack = musicResRef;
+                _isPlaying = true;
+                
+                // Apply stored volume when music playback starts
+                // When music playback is fully implemented, this will set the stream volume
+                ApplyVolumeToCurrentPlayback();
+            }
+
             // TODO: STUB - Play background music
+            // When implemented, this will:
+            // 1. Load music file from resource provider using musicResRef
+            // 2. Create audio stream (MSS, DirectSound, OpenAL, etc.)
+            // 3. Set stream volume to _volume
+            // 4. Start playback
+            // 5. Handle looping if music should loop
         }
 
         public void Stop()
@@ -794,13 +837,93 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             // TODO: STUB - Resume music
         }
 
+        /// <summary>
+        /// Sets the music volume.
+        /// Based on swkotor2.exe: "Music Volume" @ 0x007c83cc
+        /// Volume is clamped to 0.0-1.0 range and stored for use when music is played.
+        /// </summary>
+        /// <param name="volume">Volume (0.0 to 1.0). Values outside this range are clamped.</param>
+        /// <remarks>
+        /// Music Volume Implementation:
+        /// - Volume is stored and will be applied when music playback is implemented
+        /// - For full volume control, music playback system needs to support volume setting
+        /// - Original engine uses Miles Sound System (MSS) which supports per-stream volume
+        /// - This implementation stores volume for future use when Play() is fully implemented
+        /// </remarks>
         public void SetVolume(float volume)
         {
-            // TODO: STUB - Set music volume
+            lock (_volumeLock)
+            {
+                // Clamp volume to valid range (0.0 to 1.0)
+                _volume = Math.Max(0.0f, Math.Min(1.0f, volume));
+
+                // Apply volume to currently playing music if available
+                // When music playback is fully implemented, this will update the active stream
+                // For now, we store the volume for use when Play() is called
+                ApplyVolumeToCurrentPlayback();
+
+                Console.WriteLine($"[OdysseyMusicPlayer] Music volume set to {_volume:F2} ({(int)(_volume * 100)}%)");
+            }
+        }
+
+        /// <summary>
+        /// Gets the current music volume.
+        /// </summary>
+        /// <returns>Current volume (0.0 to 1.0).</returns>
+        public float GetVolume()
+        {
+            lock (_volumeLock)
+            {
+                return _volume;
+            }
+        }
+
+        /// <summary>
+        /// Applies the current volume setting to any active music playback.
+        /// This method is called when volume changes and when music starts playing.
+        /// When music playback is fully implemented, this will update the audio stream volume.
+        /// </summary>
+        private void ApplyVolumeToCurrentPlayback()
+        {
+            // When music playback is fully implemented, this will:
+            // 1. Check if music is currently playing
+            // 2. Update the audio stream volume to _volume
+            // 3. For Miles Sound System (MSS): Use AIL_set_stream_volume() or equivalent
+            // 4. For DirectSound: Use IDirectSoundBuffer8::SetVolume()
+            // 5. For OpenAL: Use alSourcef(source, AL_GAIN, volume)
+            // 6. For cross-platform: Use audio library's volume control API
+
+            if (_isPlaying && !string.IsNullOrEmpty(_currentTrack))
+            {
+                // TODO: When music playback is implemented, apply volume here
+                // Example for future implementation:
+                // if (_musicStream != null)
+                // {
+                //     _musicStream.Volume = _volume;
+                // }
+            }
         }
 
         public bool IsPlaying => _isPlaying;
         public string CurrentTrack => _currentTrack;
+        
+        /// <summary>
+        /// Gets the current music volume (property accessor).
+        /// </summary>
+        public float Volume
+        {
+            get
+            {
+                lock (_volumeLock)
+                {
+                    return _volume;
+                }
+            }
+            set
+            {
+                SetVolume(value);
+            }
+        }
     }
 
     /// <summary>
