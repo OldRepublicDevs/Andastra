@@ -1249,7 +1249,7 @@ namespace HolocronToolset.Editors
                 // Matching PyKotor: node_data: dict[str | int, Any] = json.loads(clipboard_text)
                 // Matching PyKotor: if isinstance(node_data, dict) and "type" in node_data: self._copy = DLGLink.from_dict(node_data)
                 // System.Text.Json deserializes nested objects as JsonElement, so we need to convert them
-                using (System.Text.Json.JsonDocument doc = System.Text.Json.JsonDocument.Parse(clipboardText))
+                using (JsonDocument doc = JsonDocument.Parse(clipboardText))
                 {
                     Dictionary<string, object> nodeData = ConvertJsonElementToDictionary(doc.RootElement);
                     if (nodeData != null && nodeData.ContainsKey("type"))
@@ -1261,7 +1261,7 @@ namespace HolocronToolset.Editors
                     }
                 }
             }
-            catch (System.Text.Json.JsonException)
+            catch (JsonException)
             {
                 // Matching PyKotor: except json.JSONDecodeError: ...
                 // Silently ignore JSON decode errors (clipboard doesn't contain valid JSON)
@@ -1291,9 +1291,9 @@ namespace HolocronToolset.Editors
         /// </summary>
         /// <param name="element">The JsonElement to convert.</param>
         /// <returns>A dictionary representation of the JSON element.</returns>
-        private Dictionary<string, object> ConvertJsonElementToDictionary(System.Text.Json.JsonElement element)
+        private Dictionary<string, object> ConvertJsonElementToDictionary(JsonElement element)
         {
-            if (element.ValueKind != System.Text.Json.JsonValueKind.Object)
+            if (element.ValueKind != JsonValueKind.Object)
             {
                 return null;
             }
@@ -1311,22 +1311,22 @@ namespace HolocronToolset.Editors
         /// </summary>
         /// <param name="element">The JsonElement to convert.</param>
         /// <returns>An object representation of the JSON element.</returns>
-        private object ConvertJsonElementToObject(System.Text.Json.JsonElement element)
+        private object ConvertJsonElementToObject(JsonElement element)
         {
             switch (element.ValueKind)
             {
-                case System.Text.Json.JsonValueKind.Object:
+                case JsonValueKind.Object:
                     return ConvertJsonElementToDictionary(element);
-                case System.Text.Json.JsonValueKind.Array:
+                case JsonValueKind.Array:
                     List<object> list = new List<object>();
                     foreach (var item in element.EnumerateArray())
                     {
                         list.Add(ConvertJsonElementToObject(item));
                     }
                     return list;
-                case System.Text.Json.JsonValueKind.String:
+                case JsonValueKind.String:
                     return element.GetString();
-                case System.Text.Json.JsonValueKind.Number:
+                case JsonValueKind.Number:
                     // Try int first, then double
                     if (element.TryGetInt32(out int intValue))
                     {
@@ -1337,11 +1337,11 @@ namespace HolocronToolset.Editors
                         return longValue;
                     }
                     return element.GetDouble();
-                case System.Text.Json.JsonValueKind.True:
+                case JsonValueKind.True:
                     return true;
-                case System.Text.Json.JsonValueKind.False:
+                case JsonValueKind.False:
                     return false;
-                case System.Text.Json.JsonValueKind.Null:
+                case JsonValueKind.Null:
                     return null;
                 default:
                     return null;
@@ -2957,14 +2957,14 @@ namespace HolocronToolset.Editors
                 // Since Avalonia doesn't natively support HTML in TreeViewItem headers,
                 // we'll strip HTML tags for now and use plain text
                 // In a full implementation, we would use a custom DataTemplate with TextBlock and Inlines
-                string plainText = System.Text.RegularExpressions.Regex.Replace(formattedText, "<.*?>", "");
+                string plainText = Regex.Replace(formattedText, "<.*?>", "");
                 treeItem.Header = plainText;
 
                 // Set tooltip if provided
                 if (!string.IsNullOrEmpty(tooltipText))
                 {
                     // Strip HTML from tooltip for plain text display
-                    string plainTooltip = System.Text.RegularExpressions.Regex.Replace(tooltipText, "<.*?>", "");
+                    string plainTooltip = Regex.Replace(tooltipText, "<.*?>", "");
                     treeItem.ToolTip = plainTooltip;
                 }
             }
@@ -3063,12 +3063,11 @@ namespace HolocronToolset.Editors
             // Matching PyKotor implementation: if selected_item is None: handle Insert key
             if (_model.SelectedIndex < 0)
             {
-                if (key == Key.Insert)
-                {
-                    // Matching PyKotor implementation: self.model.add_root_node()
-                    AddRootNode();
-                    e.Handled = true;
-                }
+                if (key != Key.Insert)
+                    return;
+                // Matching PyKotor implementation: self.model.add_root_node()
+                AddRootNode();
+                e.Handled = true;
                 return;
             }
 
@@ -3096,10 +3095,11 @@ namespace HolocronToolset.Editors
                     // Matching PyKotor implementation: self.model.remove_link(selected_item)
                     RemoveSelectedLink();
                     e.Handled = true;
+                    return;
                 }
 
                 // Matching PyKotor implementation: elif key in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
-                if (key == Key.Enter)
+                if (key == Key.Enter || key == Key.Return)
                 {
                     // Matching PyKotor implementation: edit_text based on focus
                     // Matching Python: if self.ui.dialogTree.hasFocus(): self.edit_text(event, self.ui.dialogTree.selectedIndexes(), self.ui.dialogTree)
@@ -3134,24 +3134,27 @@ namespace HolocronToolset.Editors
                     e.Handled = true;
                     return;
                 }
+
                 // Matching PyKotor implementation: elif key == Qt.Key.Key_F:
-                else if (key == Key.F)
+                if (key == Key.F)
                 {
                     // Matching PyKotor implementation: self.focus_on_node(selected_item.link)
                     FocusOnSelectedNode();
                     e.Handled = true;
                     return;
                 }
+
                 // Matching PyKotor implementation: elif key == Qt.Key.Key_Insert:
-                else if (key == Key.Insert)
+                if (key == Key.Insert)
                 {
                     // Matching PyKotor implementation: self.model.add_child_to_item(selected_item)
                     AddChildToSelectedItem();
                     e.Handled = true;
                     return;
                 }
+
                 // Matching PyKotor implementation: elif key == Qt.Key.Key_P:
-                else if (key == Key.P)
+                if (key == Key.P)
                 {
                     // Matching PyKotor implementation: play sound or blink window
                     PlaySoundOrBlink();
@@ -3299,11 +3302,10 @@ namespace HolocronToolset.Editors
             else if (key == Key.Down)
             {
                 // Matching PyKotor implementation: shift_item(selected_item, 1, no_selection_update=True)
-                if (_model.SelectedIndex < _model.RowCount - 1)
-                {
-                    _model.MoveStarter(_model.SelectedIndex, _model.SelectedIndex + 1);
-                    _model.SelectedIndex = _model.SelectedIndex + 1;
-                }
+                if (_model.SelectedIndex >= _model.RowCount - 1)
+                    return;
+                _model.MoveStarter(_model.SelectedIndex, _model.SelectedIndex + 1);
+                _model.SelectedIndex = _model.SelectedIndex + 1;
             }
         }
 
@@ -3321,7 +3323,6 @@ namespace HolocronToolset.Editors
         {
             // Create and apply the action (this performs the operation and records it for undo/redo)
             var action = new AddRootNodeAction();
-            action.Apply();
             _actionHistory.Apply(action);
 
             // Get the newly created item from the action
