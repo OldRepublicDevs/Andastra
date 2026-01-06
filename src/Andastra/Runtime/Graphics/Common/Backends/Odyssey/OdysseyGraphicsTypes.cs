@@ -261,57 +261,353 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
     /// <summary>
     /// Odyssey sprite batch implementation.
     /// Uses immediate mode OpenGL for 2D rendering.
+    /// Based on xoreos: guiquad.cpp render() @ lines 274-344
+    /// Based on swkotor2.exe: 2D sprite rendering for GUI elements
     /// </summary>
     public class OdysseySpriteBatch : ISpriteBatch
     {
         private readonly OdysseyGraphicsDevice _device;
         private bool _inBatch;
+        private BlendState _currentBlendState;
+        private int _savedMatrixMode;
+        private float[] _savedProjectionMatrix = new float[16];
+        private float[] _savedModelviewMatrix = new float[16];
+        
+        #region OpenGL P/Invoke for Sprite Rendering
+        
+        [DllImport("opengl32.dll", EntryPoint = "glPushAttrib")]
+        private static extern void glPushAttrib(uint mask);
+        
+        [DllImport("opengl32.dll", EntryPoint = "glPopAttrib")]
+        private static extern void glPopAttrib();
+        
+        [DllImport("opengl32.dll", EntryPoint = "glPushMatrix")]
+        private static extern void glPushMatrix();
+        
+        [DllImport("opengl32.dll", EntryPoint = "glPopMatrix")]
+        private static extern void glPopMatrix();
+        
+        [DllImport("opengl32.dll", EntryPoint = "glMatrixMode")]
+        private static extern void glMatrixMode(uint mode);
+        
+        [DllImport("opengl32.dll", EntryPoint = "glLoadIdentity")]
+        private static extern void glLoadIdentity();
+        
+        [DllImport("opengl32.dll", EntryPoint = "glOrtho")]
+        private static extern void glOrtho(double left, double right, double bottom, double top, double zNear, double zFar);
+        
+        [DllImport("opengl32.dll", EntryPoint = "glTranslatef")]
+        private static extern void glTranslatef(float x, float y, float z);
+        
+        [DllImport("opengl32.dll", EntryPoint = "glRotatef")]
+        private static extern void glRotatef(float angle, float x, float y, float z);
+        
+        [DllImport("opengl32.dll", EntryPoint = "glScalef")]
+        private static extern void glScalef(float x, float y, float z);
+        
+        [DllImport("opengl32.dll", EntryPoint = "glEnable")]
+        private static extern void glEnable(uint cap);
+        
+        [DllImport("opengl32.dll", EntryPoint = "glDisable")]
+        private static extern void glDisable(uint cap);
+        
+        [DllImport("opengl32.dll", EntryPoint = "glBlendFunc")]
+        private static extern void glBlendFunc(uint sfactor, uint dfactor);
+        
+        [DllImport("opengl32.dll", EntryPoint = "glColor4f")]
+        private static extern void glColor4f(float red, float green, float blue, float alpha);
+        
+        [DllImport("opengl32.dll", EntryPoint = "glBindTexture")]
+        private static extern void glBindTexture(uint target, uint texture);
+        
+        [DllImport("opengl32.dll", EntryPoint = "glBegin")]
+        private static extern void glBegin(uint mode);
+        
+        [DllImport("opengl32.dll", EntryPoint = "glEnd")]
+        private static extern void glEnd();
+        
+        [DllImport("opengl32.dll", EntryPoint = "glTexCoord2f")]
+        private static extern void glTexCoord2f(float s, float t);
+        
+        [DllImport("opengl32.dll", EntryPoint = "glVertex2f")]
+        private static extern void glVertex2f(float x, float y);
+        
+        [DllImport("opengl32.dll", EntryPoint = "glGetIntegerv")]
+        private static extern void glGetIntegerv(uint pname, int[] data);
+        
+        [DllImport("opengl32.dll", EntryPoint = "glGetFloatv")]
+        private static extern void glGetFloatv(uint pname, float[] data);
+        
+        [DllImport("opengl32.dll", EntryPoint = "glLoadMatrixf")]
+        private static extern void glLoadMatrixf([MarshalAs(UnmanagedType.LPArray)] float[] m);
+        
+        // OpenGL constants
+        private const uint GL_PROJECTION = 0x1701;
+        private const uint GL_MODELVIEW = 0x1700;
+        private const uint GL_TEXTURE_2D = 0x0DE1;
+        private const uint GL_BLEND = 0x0BE2;
+        private const uint GL_SRC_ALPHA = 0x0302;
+        private const uint GL_ONE_MINUS_SRC_ALPHA = 0x0303;
+        private const uint GL_ONE = 0x0001;
+        private const uint GL_ZERO = 0x0000;
+        private const uint GL_QUADS = 0x0007;
+        private const uint GL_COLOR_BUFFER_BIT = 0x00004000;
+        private const uint GL_TEXTURE_BIT = 0x00040000;
+        private const uint GL_ENABLE_BIT = 0x00002000;
+        private const uint GL_TRANSFORM_BIT = 0x00001000;
+        private const uint GL_VIEWPORT = 0x0BA2;
+        private const uint GL_PROJECTION_MATRIX = 0x0BA3;
+        private const uint GL_MODELVIEW_MATRIX = 0x0BA6;
+        
+        #endregion
         
         public OdysseySpriteBatch(OdysseyGraphicsDevice device)
         {
             _device = device;
         }
         
+        /// <summary>
+        /// Begins sprite batch rendering.
+        /// Sets up 2D orthographic projection and saves OpenGL state.
+        /// Based on xoreos: graphics.cpp setOrthogonal() @ lines 561-575
+        /// </summary>
         public void Begin(SpriteSortMode sortMode = SpriteSortMode.Deferred, BlendState blendState = null)
         {
             _inBatch = true;
-            // TODO: STUB - Setup 2D orthographic projection
+            _currentBlendState = blendState ?? BlendState.Default;
+            
+            // Save OpenGL state
+            // Based on xoreos: guiquad.cpp render() saves state with glPushAttrib
+            glPushAttrib(GL_COLOR_BUFFER_BIT | GL_TEXTURE_BIT | GL_ENABLE_BIT | GL_TRANSFORM_BIT);
+            glPushMatrix();
+            
+            // Save current matrix mode and matrices
+            int[] matrixMode = new int[1];
+            glGetIntegerv(0x0BA0, matrixMode); // GL_MATRIX_MODE
+            _savedMatrixMode = matrixMode[0];
+            
+            glGetFloatv(GL_PROJECTION_MATRIX, _savedProjectionMatrix);
+            glGetFloatv(GL_MODELVIEW_MATRIX, _savedModelviewMatrix);
+            
+            // Get viewport dimensions
+            int[] viewport = new int[4];
+            glGetIntegerv(GL_VIEWPORT, viewport);
+            int viewportWidth = viewport[2];
+            int viewportHeight = viewport[3];
+            
+            // Setup 2D orthographic projection
+            // Based on xoreos: graphics.cpp ortho() @ lines 577-609
+            // Orthographic projection: left=0, right=width, bottom=0, top=height, zNear=-1, zFar=1
+            glMatrixMode(GL_PROJECTION);
+            glLoadIdentity();
+            glOrtho(0.0, viewportWidth, viewportHeight, 0.0, -1.0, 1.0); // Note: Y is flipped for screen coordinates
+            
+            glMatrixMode(GL_MODELVIEW);
+            glLoadIdentity();
+            
+            // Setup blending
+            if (_currentBlendState.AlphaBlend)
+            {
+                glEnable(GL_BLEND);
+                if (_currentBlendState.Additive)
+                {
+                    glBlendFunc(GL_ONE, GL_ONE);
+                }
+                else
+                {
+                    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                }
+            }
+            else
+            {
+                glDisable(GL_BLEND);
+            }
+            
+            // Enable texturing
+            glEnable(GL_TEXTURE_2D);
         }
         
+        /// <summary>
+        /// Ends sprite batch rendering.
+        /// Restores previous OpenGL state.
+        /// </summary>
         public void End()
         {
+            if (!_inBatch) return;
+            
+            // Restore color to white
+            glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+            
+            // Restore matrices
+            glMatrixMode(GL_PROJECTION);
+            glLoadMatrixf(_savedProjectionMatrix);
+            
+            glMatrixMode(GL_MODELVIEW);
+            glLoadMatrixf(_savedModelviewMatrix);
+            
+            glMatrixMode((uint)_savedMatrixMode);
+            
+            // Restore OpenGL state
+            glPopMatrix();
+            glPopAttrib();
+            
             _inBatch = false;
-            // TODO: STUB - Restore previous state
         }
         
+        /// <summary>
+        /// Draws a texture at the specified position.
+        /// Based on xoreos: guiquad.cpp render() @ lines 322-331
+        /// </summary>
         public void Draw(ITexture2D texture, Vector2 position, Color color)
         {
-            if (!_inBatch) return;
-            // TODO: STUB - Draw textured quad
+            if (!_inBatch || texture == null) return;
+            
+            Rectangle destinationRect = new Rectangle
+            {
+                X = (int)position.X,
+                Y = (int)position.Y,
+                Width = texture.Width,
+                Height = texture.Height
+            };
+            
+            Draw(texture, destinationRect, null, color, 0.0f, Vector2.Zero, SpriteEffects.None, 0.0f);
         }
         
+        /// <summary>
+        /// Draws a texture with destination rectangle.
+        /// </summary>
         public void Draw(ITexture2D texture, Rectangle destinationRectangle, Color color)
         {
-            if (!_inBatch) return;
-            // TODO: STUB - Draw textured quad with destination rectangle
+            if (!_inBatch || texture == null) return;
+            
+            Draw(texture, destinationRectangle, null, color, 0.0f, Vector2.Zero, SpriteEffects.None, 0.0f);
         }
         
+        /// <summary>
+        /// Draws a texture with source rectangle.
+        /// </summary>
         public void Draw(ITexture2D texture, Vector2 position, Rectangle? sourceRectangle, Color color)
         {
-            if (!_inBatch) return;
-            // TODO: STUB - Draw textured quad with source rectangle
+            if (!_inBatch || texture == null) return;
+            
+            Rectangle destinationRect = new Rectangle
+            {
+                X = (int)position.X,
+                Y = (int)position.Y,
+                Width = sourceRectangle.HasValue ? sourceRectangle.Value.Width : texture.Width,
+                Height = sourceRectangle.HasValue ? sourceRectangle.Value.Height : texture.Height
+            };
+            
+            Draw(texture, destinationRect, sourceRectangle, color, 0.0f, Vector2.Zero, SpriteEffects.None, 0.0f);
         }
         
+        /// <summary>
+        /// Draws a texture with full parameters (rotation, origin, effects, layer depth).
+        /// Based on xoreos: guiquad.cpp render() @ lines 274-344
+        /// </summary>
         public void Draw(ITexture2D texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, SpriteEffects effects, float layerDepth)
         {
-            if (!_inBatch) return;
-            // TODO: STUB - Draw textured quad with full parameters
+            if (!_inBatch || texture == null) return;
+            
+            // Bind texture
+            if (texture is OdysseyTexture2D odysseyTexture)
+            {
+                glBindTexture(GL_TEXTURE_2D, (uint)odysseyTexture.NativeHandle.ToInt64());
+            }
+            
+            // Set color with alpha
+            float alpha = color.A / 255.0f;
+            glColor4f(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, alpha);
+            
+            // Calculate texture coordinates
+            float texLeft, texTop, texRight, texBottom;
+            if (sourceRectangle.HasValue)
+            {
+                Rectangle src = sourceRectangle.Value;
+                texLeft = (float)src.X / texture.Width;
+                texTop = (float)src.Y / texture.Height;
+                texRight = (float)(src.X + src.Width) / texture.Width;
+                texBottom = (float)(src.Y + src.Height) / texture.Height;
+            }
+            else
+            {
+                texLeft = 0.0f;
+                texTop = 0.0f;
+                texRight = 1.0f;
+                texBottom = 1.0f;
+            }
+            
+            // Apply sprite effects (flip texture coordinates)
+            if ((effects & SpriteEffects.FlipHorizontally) != 0)
+            {
+                float temp = texLeft;
+                texLeft = texRight;
+                texRight = temp;
+            }
+            if ((effects & SpriteEffects.FlipVertically) != 0)
+            {
+                float temp = texTop;
+                texTop = texBottom;
+                texBottom = temp;
+            }
+            
+            // Calculate vertex positions
+            float x1 = destinationRectangle.X;
+            float y1 = destinationRectangle.Y;
+            float x2 = destinationRectangle.X + destinationRectangle.Width;
+            float y2 = destinationRectangle.Y + destinationRectangle.Height;
+            
+            // Apply rotation if needed
+            // Based on xoreos: guiquad.cpp render() @ lines 314-318
+            if (rotation != 0.0f)
+            {
+                float centerX = x1 + destinationRectangle.Width * (origin.X / (float)destinationRectangle.Width);
+                float centerY = y1 + destinationRectangle.Height * (origin.Y / (float)destinationRectangle.Height);
+                
+                glPushMatrix();
+                glTranslatef(centerX, centerY, 0.0f);
+                glRotatef(rotation * (180.0f / (float)System.Math.PI), 0.0f, 0.0f, 1.0f);
+                glTranslatef(-centerX, -centerY, 0.0f);
+            }
+            
+            // Draw quad using immediate mode
+            // Based on xoreos: guiquad.cpp render() @ lines 322-331
+            glBegin(GL_QUADS);
+            
+            // Top-left
+            glTexCoord2f(texLeft, texTop);
+            glVertex2f(x1, y1);
+            
+            // Top-right
+            glTexCoord2f(texRight, texTop);
+            glVertex2f(x2, y1);
+            
+            // Bottom-right
+            glTexCoord2f(texRight, texBottom);
+            glVertex2f(x2, y2);
+            
+            // Bottom-left
+            glTexCoord2f(texLeft, texBottom);
+            glVertex2f(x1, y2);
+            
+            glEnd();
+            
+            // Restore matrix if rotation was applied
+            if (rotation != 0.0f)
+            {
+                glPopMatrix();
+            }
         }
         
+        /// <summary>
+        /// Draws text using a sprite font.
+        /// TODO: STUB - Draw text using sprite font (requires font rendering implementation)
+        /// </summary>
         public void DrawString(IFont font, string text, Vector2 position, Color color)
         {
-            if (!_inBatch) return;
+            if (!_inBatch || font == null || string.IsNullOrEmpty(text)) return;
             // TODO: STUB - Draw text using sprite font
+            // This requires font texture atlas and character mapping implementation
         }
         
         public void Dispose()
