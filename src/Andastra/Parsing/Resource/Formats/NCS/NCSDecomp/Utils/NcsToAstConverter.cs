@@ -3285,6 +3285,15 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 return false;
             }
 
+            // CRITICAL: If there's a JSR before RESTOREBP, this is an entry stub, not cleanup code
+            // Entry stub pattern: JSR + RESTOREBP + MOVSP + RETN
+            // Cleanup code pattern: RESTOREBP + MOVSP + RETN + RETN (no JSR before)
+            if (restorebpIndex > 0 && instructions[restorebpIndex - 1].InsType == NCSInstructionType.JSR)
+            {
+                // JSR before RESTOREBP indicates entry stub, not cleanup code
+                return false;
+            }
+
             // Check if RESTOREBP is followed by MOVSP+RETN+RETN pattern
             // Pattern must be at the END of the file (within last 4 instructions: RESTOREBP, MOVSP, RETN, RETN)
             int patternStart = restorebpIndex + 1;
