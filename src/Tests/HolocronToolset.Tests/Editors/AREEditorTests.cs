@@ -4325,16 +4325,16 @@ namespace HolocronToolset.Tests.Editors
                 editor.MapResXSpin.Value = 4096;
             }
 
-            // Matching PyKotor: editor.ui.fogNearSpin.setValue(1000.0)
+            // Matching PyKotor: editor.ui.fogNearSpin.setValue(maximum value)
             if (editor.FogNearSpin != null)
             {
-                editor.FogNearSpin.Value = 1000.0M;
+                editor.FogNearSpin.Value = decimal.MaxValue;
             }
 
-            // Matching PyKotor: editor.ui.fogFarSpin.setValue(10000.0)
+            // Matching PyKotor: editor.ui.fogFarSpin.setValue(maximum value)
             if (editor.FogFarSpin != null)
             {
-                editor.FogFarSpin.Value = 10000.0M;
+                editor.FogFarSpin.Value = decimal.MaxValue;
             }
 
             // Matching PyKotor: editor.ui.shadowsSpin.setValue(255)
