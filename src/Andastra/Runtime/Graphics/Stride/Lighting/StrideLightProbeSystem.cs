@@ -114,7 +114,7 @@ namespace Andastra.Runtime.Stride.Lighting
         /// <summary>
         /// Converts base LightProbe to Stride LightProbe.
         /// </summary>
-        private static LightProbe ConvertFromBaseProbe(BaseLightProbeSystem.LightProbe probe)
+        private static LightProbe ConvertProbe(BaseLightProbeSystem.LightProbe probe)
         {
             Vector3[] shCoeffs = null;
             if (probe.SHCoefficients != null)
@@ -239,7 +239,7 @@ namespace Andastra.Runtime.Stride.Lighting
 
             foreach (BaseLightProbeSystem.LightProbe probe in baseResults)
             {
-                results.Add(ConvertFromBaseProbe(probe));
+                results.Add(ConvertProbe(probe));
             }
         }
 
