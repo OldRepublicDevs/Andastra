@@ -95,6 +95,19 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         [DllImport("opengl32.dll", EntryPoint = "glDeleteBuffers")]
         private static extern void glDeleteBuffers(int n, uint[] buffers);
         
+        // Renderbuffer functions (for depth-stencil buffers)
+        [DllImport("opengl32.dll", EntryPoint = "glGenRenderbuffers")]
+        private static extern void glGenRenderbuffers(int n, uint[] renderbuffers);
+        
+        [DllImport("opengl32.dll", EntryPoint = "glBindRenderbuffer")]
+        private static extern void glBindRenderbuffer(uint target, uint renderbuffer);
+        
+        [DllImport("opengl32.dll", EntryPoint = "glRenderbufferStorage")]
+        private static extern void glRenderbufferStorage(uint target, uint internalformat, int width, int height);
+        
+        [DllImport("opengl32.dll", EntryPoint = "glDeleteRenderbuffers")]
+        private static extern void glDeleteRenderbuffers(int n, uint[] renderbuffers);
+        
         // OpenGL constants
         private const uint GL_COLOR_BUFFER_BIT = 0x00004000;
         private const uint GL_DEPTH_BUFFER_BIT = 0x00000100;
@@ -121,6 +134,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         private const uint GL_STATIC_DRAW = 0x88E4;
         private const uint GL_DYNAMIC_DRAW = 0x88E8;
         private const uint GL_STREAM_DRAW = 0x88E0;
+        
+        // Renderbuffer constants
+        private const uint GL_RENDERBUFFER = 0x8D41;
+        private const uint GL_DEPTH24_STENCIL8 = 0x88F0;
         
         #endregion
         
@@ -256,10 +273,12 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         
         /// <summary>
         /// Creates a depth-stencil buffer.
+        /// Based on swkotor.exe/swkotor2.exe: Depth-stencil buffer creation for z-buffering and stencil operations
+        /// Uses OpenGL renderbuffers (glGenRenderbuffers, glRenderbufferStorage with GL_DEPTH24_STENCIL8)
+        /// Matching reone Renderbuffer implementation: glGenRenderbuffers -> glBindRenderbuffer -> glRenderbufferStorage
         /// </summary>
         public IDepthStencilBuffer CreateDepthStencilBuffer(int width, int height)
         {
-            // TODO: STUB - Implement OpenGL depth-stencil buffer
             return new OdysseyDepthStencilBuffer(width, height);
         }
         
