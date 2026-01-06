@@ -938,7 +938,20 @@ namespace HolocronToolset.Editors.DLG
             editTextItem.Click += (s, e) =>
             {
                 // Matching PyKotor: edit_text_action.triggered.connect(lambda *args: self.edit_text(indexes=source_widget.selectedIndexes(), source_widget=source_widget))
-                EditText();
+                // Determine source widget and get selected indexes
+                Control sourceWidgetForEdit = sourceWidget ?? _dialogTree;
+                List<object> indexes = null;
+                
+                if (sourceWidgetForEdit == _dialogTree)
+                {
+                    indexes = GetSelectedIndexesFromTreeView(_dialogTree);
+                }
+                else if (sourceWidgetForEdit is DLGListWidget listWidget)
+                {
+                    indexes = GetSelectedIndexesFromListWidget(listWidget);
+                }
+                
+                EditText(null, indexes, sourceWidgetForEdit);
             };
             menuItems.Add(editTextItem);
 
@@ -2744,8 +2757,40 @@ namespace HolocronToolset.Editors.DLG
                 else if (key == Key.Enter || key == Key.Return)
                 {
                     // Matching PyKotor implementation: edit_text based on focus
-                    // TODO: STUB - For now, we'll just handle the basic case
-                    EditText();
+                    // Original: if self.ui.dialogTree.hasFocus(): self.edit_text(event, self.ui.dialogTree.selectedIndexes(), self.ui.dialogTree)
+                    // Original: elif self.orphaned_nodes_list.hasFocus(): self.edit_text(event, self.orphaned_nodes_list.selectedIndexes(), self.orphaned_nodes_list)
+                    // Original: elif self.pinned_items_list.hasFocus(): self.edit_text(event, self.pinned_items_list.selectedIndexes(), self.pinned_items_list)
+                    // Original: elif self.find_bar.hasFocus() or self.find_input.hasFocus(): self.handle_find()
+                    
+                    // Check which widget has focus and call edit_text with appropriate parameters
+                    if (_dialogTree != null && _dialogTree.IsFocused)
+                    {
+                        // Get selected indexes from dialog tree
+                        var selectedIndexes = GetSelectedIndexesFromTreeView(_dialogTree);
+                        EditText(e, selectedIndexes, _dialogTree);
+                    }
+                    else if (_orphanedNodesList != null && _orphanedNodesList.IsFocused)
+                    {
+                        // Get selected indexes from orphaned nodes list
+                        var selectedIndexes = GetSelectedIndexesFromListWidget(_orphanedNodesList);
+                        EditText(e, selectedIndexes, _orphanedNodesList);
+                    }
+                    else if (_pinnedItemsList != null && _pinnedItemsList.IsFocused)
+                    {
+                        // Get selected indexes from pinned items list
+                        var selectedIndexes = GetSelectedIndexesFromListWidget(_pinnedItemsList);
+                        EditText(e, selectedIndexes, _pinnedItemsList);
+                    }
+                    else if ((_findBar != null && _findBar.IsFocused) || (_findInput != null && _findInput.IsFocused))
+                    {
+                        // Matching PyKotor: elif self.find_bar.hasFocus() or self.find_input.hasFocus(): self.handle_find()
+                        HandleFind();
+                    }
+                    else
+                    {
+                        // Fallback to basic case (dialogTree)
+                        EditText(e, null, _dialogTree);
+                    }
                     e.Handled = true;
                     return;
                 }
@@ -2982,42 +3027,46 @@ namespace HolocronToolset.Editors.DLG
         }
 
         /// <summary>
-        /// Edits text of the selected item.
+        /// Edits the text of the selected dialog node(s).
         /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1349-1437
         /// Original: def edit_text(self, e: QMouseEvent | QKeyEvent | None = None, indexes: list[QModelIndex] | None = None, source_widget: DLGListWidget | DLGTreeView | None = None)
         /// </summary>
-        private async void EditText()
+        /// <param name="e">The key or mouse event that triggered the edit (optional).</param>
+        /// <param name="indexes">List of selected indexes (optional, will be determined from sourceWidget if not provided).</param>
+        /// <param name="sourceWidget">The widget that triggered the edit (optional, defaults to dialogTree).</param>
+        private async void EditText(KeyEventArgs e = null, List<object> indexes = null, Control sourceWidget = null)
         {
             // Matching PyKotor implementation: if not indexes: self.blink_window(); return
-            // Get selected item from tree view
-            if (_dialogTree?.SelectedItem == null)
+            // If no indexes provided, try to get them from sourceWidget
+            if (indexes == null || indexes.Count == 0)
+            {
+                if (sourceWidget != null)
+                {
+                    if (sourceWidget == _dialogTree)
+                    {
+                        indexes = GetSelectedIndexesFromTreeView(_dialogTree);
+                    }
+                    else if (sourceWidget is DLGListWidget listWidget)
+                    {
+                        indexes = GetSelectedIndexesFromListWidget(listWidget);
+                    }
+                }
+                
+                // If still no indexes, try to get from dialogTree as fallback
+                if (indexes == null || indexes.Count == 0)
+                {
+                    if (_dialogTree != null)
+                    {
+                        indexes = GetSelectedIndexesFromTreeView(_dialogTree);
+                    }
+                }
+            }
+            
+            // Matching PyKotor: if not indexes: self.blink_window(); return
+            if (indexes == null || indexes.Count == 0)
             {
                 // Matching PyKotor: blink_window()
                 BlinkWindow();
-                return;
-            }
-
-            // Get the selected item and extract DLGStandardItem
-            DLGStandardItem item = null;
-            var selectedItem = _dialogTree.SelectedItem;
-            if (selectedItem is TreeViewItem treeItem && treeItem.Tag is DLGStandardItem dlgItem)
-            {
-                item = dlgItem;
-            }
-            else if (selectedItem is DLGStandardItem dlgItemDirect)
-            {
-                item = dlgItemDirect;
-            }
-
-            // Matching PyKotor implementation: if item is None: continue
-            if (item == null)
-            {
-                return;
-            }
-
-            // Matching PyKotor implementation: if item.link is None: continue
-            if (item.Link == null)
-            {
                 return;
             }
 
@@ -3030,86 +3079,221 @@ namespace HolocronToolset.Editors.DLG
                 return;
             }
 
-            try
+            // Matching PyKotor implementation: for index in indexes:
+            // Process each selected index
+            foreach (var indexObj in indexes)
             {
-                // Matching PyKotor implementation: parent_widget validation and fallback logic
-                // Get parent window for dialog
-                Window parentWindow = this;
+                DLGStandardItem item = null;
+                
+                // Determine the model and item based on source widget
+                // Matching PyKotor: model_to_use: DLGListWidget | QAbstractItemModel | None = source_widget if isinstance(source_widget, DLGListWidget) else index.model()
+                if (sourceWidget is DLGListWidget listWidget)
+                {
+                    // Get item from list widget
+                    if (indexObj is DLGListWidgetItem listItem)
+                    {
+                        item = listItem.Item;
+                    }
+                    else if (indexObj is DLGStandardItem dlgItem)
+                    {
+                        item = dlgItem;
+                    }
+                }
+                else if (sourceWidget == _dialogTree || sourceWidget == null)
+                {
+                    // Get item from tree view
+                    if (indexObj is TreeViewItem treeItem && treeItem.Tag is DLGStandardItem dlgItem)
+                    {
+                        item = dlgItem;
+                    }
+                    else if (indexObj is DLGStandardItem dlgItemDirect)
+                    {
+                        item = dlgItemDirect;
+                    }
+                    else if (_dialogTree?.SelectedItem is TreeViewItem selectedTreeItem && selectedTreeItem.Tag is DLGStandardItem selectedDlgItem)
+                    {
+                        item = selectedDlgItem;
+                    }
+                    else if (_dialogTree?.SelectedItem is DLGStandardItem selectedDlgItemDirect)
+                    {
+                        item = selectedDlgItemDirect;
+                    }
+                }
+                
+                // Matching PyKotor implementation: if item is None: continue
+                if (item == null)
+                {
+                    continue;
+                }
+
+                // Matching PyKotor implementation: if item.link is None: continue
+                if (item.Link == null)
+                {
+                    continue;
+                }
+
                 try
                 {
-                    // Check if window is valid (not null, not being destroyed)
-                    if (parentWindow != null)
+                    // Matching PyKotor implementation: parent_widget validation and fallback logic
+                    // Get parent window for dialog
+                    Window parentWindow = this;
+                    try
                     {
-                        // Try to access a property to ensure window is valid
-                        var _ = parentWindow.IsVisible;
-                        // If we get here, window is likely valid
-                        if (!parentWindow.IsVisible || !parentWindow.IsEnabled)
+                        // Check if window is valid (not null, not being destroyed)
+                        if (parentWindow != null)
                         {
-                            // Use active window as fallback if parent is not in a good state
-                            var activeWindow = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
-                                ? desktop.MainWindow
-                                : null;
-                            if (activeWindow != null)
+                            // Try to access a property to ensure window is valid
+                            var _ = parentWindow.IsVisible;
+                            // If we get here, window is likely valid
+                            if (!parentWindow.IsVisible || !parentWindow.IsEnabled)
                             {
-                                parentWindow = activeWindow;
+                                // Use active window as fallback if parent is not in a good state
+                                var activeWindow = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+                                    ? desktop.MainWindow
+                                    : null;
+                                if (activeWindow != null)
+                                {
+                                    parentWindow = activeWindow;
+                                }
                             }
                         }
                     }
-                }
-                catch (Exception)
-                {
-                    // Window is being destroyed or invalid, use active window or this window as fallback
-                    var activeWindow = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
-                        ? desktop.MainWindow
-                        : null;
-                    if (activeWindow != null)
+                    catch (Exception)
                     {
-                        parentWindow = activeWindow;
+                        // Window is being destroyed or invalid, use active window or this window as fallback
+                        var activeWindow = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+                            ? desktop.MainWindow
+                            : null;
+                        if (activeWindow != null)
+                        {
+                            parentWindow = activeWindow;
+                        }
                     }
-                }
 
-                // Matching PyKotor implementation: dialog = LocalizedStringDialog(parent_widget, self._installation, item.link.node.text)
-                var dialog = new LocalizedStringDialog(parentWindow, _installation, item.Link.Node.Text);
+                    // Matching PyKotor implementation: dialog = LocalizedStringDialog(parent_widget, self._installation, item.link.node.text)
+                    var dialog = new LocalizedStringDialog(parentWindow, _installation, item.Link.Node.Text);
 
-                // Matching PyKotor implementation: dialog_result: bool | int = False
-                // Matching PyKotor: dialog_result = dialog.exec()
-                bool dialogResult = false;
-                try
-                {
-                    // In Avalonia, we use ShowDialogAsync to show the dialog modally
-                    dialogResult = await dialog.ShowDialog<bool>(parentWindow);
+                    // Matching PyKotor implementation: dialog_result: bool | int = False
+                    // Matching PyKotor: dialog_result = dialog.exec()
+                    bool dialogResult = false;
+                    try
+                    {
+                        // In Avalonia, we use ShowDialogAsync to show the dialog modally
+                        dialogResult = await dialog.ShowDialog<bool>(parentWindow);
+                    }
+                    catch (Exception exc)
+                    {
+                        // Matching PyKotor: RobustLogger().exception(f"Error executing LocalizedStringDialog: {exc.__class__.__name__}: {exc}")
+                        new RobustLogger().Exception($"Error executing LocalizedStringDialog: {exc.GetType().Name}: {exc}", exc);
+                        continue; // Continue to next item
+                    }
+
+                    // Matching PyKotor implementation: if not dialog_result: continue
+                    if (!dialogResult)
+                    {
+                        // User cancelled the dialog
+                        continue; // Continue to next item
+                    }
+
+                    // Matching PyKotor implementation: item.link.node.text = dialog.locstring
+                    // Access dialog.LocString before cleanup
+                    item.Link.Node.Text = dialog.LocString;
+
+                    // Matching PyKotor implementation: if isinstance(item, DLGStandardItem): self.model.update_item_display_text(item)
+                    // Matching PyKotor implementation: elif isinstance(source_widget, DLGListWidget): source_widget.update_item(item)
+                    if (item is DLGStandardItem)
+                    {
+                        _model.UpdateItemDisplayText(item);
+                    }
+                    else if (sourceWidget is DLGListWidget listWidgetForUpdate)
+                    {
+                        listWidgetForUpdate.UpdateItem(item);
+                    }
+
+                    // Restore selection after tree view update (only for tree view)
+                    if (sourceWidget == _dialogTree || sourceWidget == null)
+                    {
+                        SelectTreeViewItem(item);
+                    }
                 }
                 catch (Exception exc)
                 {
-                    // Matching PyKotor: RobustLogger().exception(f"Error executing LocalizedStringDialog: {exc.__class__.__name__}: {exc}")
-                    new RobustLogger().Exception($"Error executing LocalizedStringDialog: {exc.GetType().Name}: {exc}", exc);
-                    return;
+                    // Matching PyKotor: RobustLogger().exception(f"Error creating LocalizedStringDialog: {exc.__class__.__name__}: {exc}")
+                    new RobustLogger().Exception($"Error creating LocalizedStringDialog: {exc.GetType().Name}: {exc}", exc);
+                    continue; // Continue to next item
                 }
-
-                // Matching PyKotor implementation: if not dialog_result: continue
-                if (!dialogResult)
-                {
-                    // User cancelled the dialog
-                    return;
-                }
-
-                // Matching PyKotor implementation: item.link.node.text = dialog.locstring
-                // Access dialog.LocString before cleanup
-                item.Link.Node.Text = dialog.LocString;
-
-                // Matching PyKotor implementation: if isinstance(item, DLGStandardItem): self.model.update_item_display_text(item)
-                // Update the display text in the tree view
-                _model.UpdateItemDisplayText(item);
-
-                // Restore selection after tree view update
-                SelectTreeViewItem(item);
-            }
-            catch (Exception exc)
+            } // End of foreach loop
+        }
+        
+        /// <summary>
+        /// Gets selected indexes from a TreeView.
+        /// Helper method to extract DLGStandardItem objects from TreeView selection.
+        /// </summary>
+        private List<object> GetSelectedIndexesFromTreeView(TreeView treeView)
+        {
+            var indexes = new List<object>();
+            if (treeView == null)
             {
-                // Matching PyKotor: RobustLogger().exception(f"Error creating LocalizedStringDialog: {exc.__class__.__name__}: {exc}")
-                new RobustLogger().Exception($"Error creating LocalizedStringDialog: {exc.GetType().Name}: {exc}", exc);
-                return;
+                return indexes;
             }
+            
+            // Get selected item from tree view
+            var selectedItem = treeView.SelectedItem;
+            if (selectedItem != null)
+            {
+                if (selectedItem is TreeViewItem treeItem && treeItem.Tag is DLGStandardItem dlgItem)
+                {
+                    indexes.Add(dlgItem);
+                }
+                else if (selectedItem is DLGStandardItem dlgItemDirect)
+                {
+                    indexes.Add(dlgItemDirect);
+                }
+                else
+                {
+                    indexes.Add(selectedItem);
+                }
+            }
+            
+            return indexes;
+        }
+        
+        /// <summary>
+        /// Gets selected indexes from a DLGListWidget.
+        /// Helper method to extract DLGStandardItem objects from DLGListWidget selection.
+        /// </summary>
+        private List<object> GetSelectedIndexesFromListWidget(DLGListWidget listWidget)
+        {
+            var indexes = new List<object>();
+            if (listWidget == null)
+            {
+                return indexes;
+            }
+            
+            // Get selected items from list widget
+            // Matching PyKotor: selectedIndexes() returns list of QModelIndex
+            // In Avalonia, we get selected items directly
+            var selectedItems = listWidget.SelectedItems;
+            if (selectedItems != null)
+            {
+                foreach (var item in selectedItems)
+                {
+                    if (item is DLGListWidgetItem listItem)
+                    {
+                        indexes.Add(listItem);
+                    }
+                    else if (item is DLGStandardItem dlgItem)
+                    {
+                        indexes.Add(dlgItem);
+                    }
+                    else
+                    {
+                        indexes.Add(item);
+                    }
+                }
+            }
+            
+            return indexes;
         }
 
         /// <summary>
