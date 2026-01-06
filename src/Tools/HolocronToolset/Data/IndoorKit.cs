@@ -667,7 +667,7 @@ namespace HolocronToolset.Data
             }
             catch (Exception ex)
             {
-                new RobustLogger().Warning($"Failed to load module kit for '{ModuleRoot}': {ex.Message}");
+                new Andastra.Parsing.Logger.RobustLogger().Warning($"Failed to load module kit for '{ModuleRoot}': {ex.Message}");
                 return false;
             }
         }
@@ -683,7 +683,7 @@ namespace HolocronToolset.Data
             }
             catch (Exception ex)
             {
-                new RobustLogger().Warning($"Module '{ModuleRoot}' failed to load: {ex.Message}");
+                new Andastra.Parsing.Logger.RobustLogger().Warning($"Module '{ModuleRoot}' failed to load: {ex.Message}");
                 return;
             }
 
@@ -691,14 +691,14 @@ namespace HolocronToolset.Data
             var lytResource = _module.Layout();
             if (lytResource == null)
             {
-                new RobustLogger().Warning($"Module '{ModuleRoot}' has no LYT resource");
+                new Andastra.Parsing.Logger.RobustLogger().Warning($"Module '{ModuleRoot}' has no LYT resource");
                 return;
             }
 
             var lytData = lytResource.Resource() as LYT;
             if (lytData == null)
             {
-                new RobustLogger().Warning($"Failed to load LYT data for module '{ModuleRoot}'");
+                new Andastra.Parsing.Logger.RobustLogger().Warning($"Failed to load LYT data for module '{ModuleRoot}'");
                 return;
             }
 
@@ -1045,7 +1045,7 @@ namespace HolocronToolset.Data
             }
             catch (Exception ex)
             {
-                new RobustLogger().Warning($"Failed to read WOK for '{modelName}': {ex.Message}");
+                new Andastra.Parsing.Logger.RobustLogger().Warning($"Failed to read WOK for '{modelName}': {ex.Message}");
                 return null;
             }
         }
@@ -1777,7 +1777,7 @@ namespace HolocronToolset.Data
                             {
                                 // If image loading fails, log warning and continue without image
                                 // This matches PyKotor behavior which adds to missing_files on exception
-                                new RobustLogger().Warning($"Failed to load component image '{imagePath}': {ex.Message}");
+                                new Andastra.Parsing.Logger.RobustLogger().Warning($"Failed to load component image '{imagePath}': {ex.Message}");
                                 image = null;
                             }
                         }
@@ -1819,7 +1819,7 @@ namespace HolocronToolset.Data
                 }
                 catch (Exception ex)
                 {
-                    new RobustLogger().Warning($"Failed to load kit from '{file.FullName}': {ex.Message}");
+                    new Andastra.Parsing.Logger.RobustLogger().Warning($"Failed to load kit from '{file.FullName}': {ex.Message}");
                 }
             }
 

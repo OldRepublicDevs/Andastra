@@ -10,12 +10,12 @@ using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.MDLData;
 using Andastra.Parsing.Formats.RIM;
 using Andastra.Parsing.Installation;
-using Andastra.Parsing.Logger;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource.Generics.ARE;
 using Andastra.Parsing.Resource.Generics.DLG;
 using Andastra.Parsing.Tools;
+using Andastra.Parsing.Logger;
 using JetBrains.Annotations;
 
 namespace Andastra.Parsing.Common
@@ -402,14 +402,14 @@ namespace Andastra.Parsing.Common
                 GFFFieldType? actualFtype = gffIfo.Root.GetFieldType("Mod_Area_list");
                 if (actualFtype != GFFFieldType.List)
                 {
-                    new Logger.RobustLogger().Warning($"{Filename()} has IFO with incorrect field 'Mod_Area_list' type '{actualFtype}', expected 'List'");
+                    new Andastra.Parsing.Logger.RobustLogger().Warning($"{Filename()} has IFO with incorrect field 'Mod_Area_list' type '{actualFtype}', expected 'List'");
                 }
                 else
                 {
                     GFFList areaList = gffIfo.Root.GetList("Mod_Area_list");
                     if (areaList == null)
                     {
-                        new Logger.RobustLogger().Error($"{Filename()}: Module.IFO has a Mod_Area_list field, but it is not a valid list.");
+                        new Andastra.Parsing.Logger.RobustLogger().Error($"{Filename()}: Module.IFO has a Mod_Area_list field, but it is not a valid list.");
                         return null;
                     }
 
@@ -431,7 +431,7 @@ namespace Andastra.Parsing.Common
             }
             else
             {
-                new Logger.RobustLogger().Error($"{Filename()}: Module.IFO does not have an existing Mod_Area_list.");
+                new Andastra.Parsing.Logger.RobustLogger().Error($"{Filename()}: Module.IFO does not have an existing Mod_Area_list.");
             }
 
             return null;
@@ -468,7 +468,7 @@ namespace Andastra.Parsing.Common
                     LocalizedString result = gffAre.Root.GetLocString("Name");
                     if (result == null)
                     {
-                        new Logger.RobustLogger().Error($"{Filename()}: ARE has a Name field, but it is not a valid LocalizedString.");
+                        new Andastra.Parsing.Logger.RobustLogger().Error($"{Filename()}: ARE has a Name field, but it is not a valid LocalizedString.");
                         return LocalizedString.FromInvalid();
                     }
 
@@ -1009,7 +1009,7 @@ namespace Andastra.Parsing.Common
             var locationsList = locations.ToList();
             if (locationsList.Count == 0 && !(resname == "dirt" && restype == ResourceType.TPC))
             {
-                new RobustLogger().Warning(string.Format("No locations found for '{0}.{1}' which are intended to add to module '{2}'", resname, restype, _root));
+                new Andastra.Parsing.Logger.RobustLogger().Warning(string.Format("No locations found for '{0}.{1}' which are intended to add to module '{2}'", resname, restype, _root));
             }
 
             ResourceIdentifier ident = new ResourceIdentifier(resname, restype);
@@ -1348,7 +1348,7 @@ namespace Andastra.Parsing.Common
             ModuleResource areResource = Are();
             if (areResource == null)
             {
-                new RobustLogger().Warning(string.Format("Module '{0}' has no ARE resource, cannot determine loadscreen", _root));
+                new Andastra.Parsing.Logger.RobustLogger().Warning(string.Format("Module '{0}' has no ARE resource, cannot determine loadscreen", _root));
                 return null;
             }
 
@@ -1358,7 +1358,7 @@ namespace Andastra.Parsing.Common
             object areData = areResource.Resource();
             if (areData == null)
             {
-                new RobustLogger().Warning(string.Format("Failed to read ARE resource for module '{0}'", _root));
+                new Andastra.Parsing.Logger.RobustLogger().Warning(string.Format("Failed to read ARE resource for module '{0}'", _root));
                 return null;
             }
 
@@ -1366,7 +1366,7 @@ namespace Andastra.Parsing.Common
             ARE are = areData as ARE;
             if (are == null)
             {
-                new RobustLogger().Warning(string.Format("ARE resource for module '{0}' is not of type ARE", _root));
+                new Andastra.Parsing.Logger.RobustLogger().Warning(string.Format("ARE resource for module '{0}' is not of type ARE", _root));
                 return null;
             }
 
@@ -1375,7 +1375,7 @@ namespace Andastra.Parsing.Common
             int loadscreenId = are.LoadScreenID;
             if (loadscreenId == 0)
             {
-                new RobustLogger().Debug(string.Format("Module '{0}' has LoadScreenID=0, no loadscreen specified", _root));
+                new Andastra.Parsing.Logger.RobustLogger().Debug(string.Format("Module '{0}' has LoadScreenID=0, no loadscreen specified", _root));
                 return null;
             }
 
@@ -1389,7 +1389,7 @@ namespace Andastra.Parsing.Common
             );
             if (loadscreensResult == null || loadscreensResult.Data == null)
             {
-                new RobustLogger().Warning("loadscreens.2da not found in installation");
+                new Andastra.Parsing.Logger.RobustLogger().Warning("loadscreens.2da not found in installation");
                 return null;
             }
 
@@ -1408,13 +1408,13 @@ namespace Andastra.Parsing.Common
                 bmpresref = loadscreenRow.GetString("bmpresref");
                 if (string.IsNullOrWhiteSpace(bmpresref) || bmpresref == "****")
                 {
-                    new RobustLogger().Debug(string.Format("Module '{0}' loadscreen row {1} has no bmpresref", _root, loadscreenId));
+                    new Andastra.Parsing.Logger.RobustLogger().Debug(string.Format("Module '{0}' loadscreen row {1} has no bmpresref", _root, loadscreenId));
                     return null;
                 }
             }
             catch (Exception e)
             {
-                new RobustLogger().Warning(string.Format("Failed to get bmpresref from loadscreens.2da row {0}: {1}", loadscreenId, e.Message));
+                new Andastra.Parsing.Logger.RobustLogger().Warning(string.Format("Failed to get bmpresref from loadscreens.2da row {0}: {1}", loadscreenId, e.Message));
                 return null;
             }
 
@@ -1449,7 +1449,7 @@ namespace Andastra.Parsing.Common
                 }
             }
 
-            new RobustLogger().Debug(string.Format("Loadscreen texture '{0}' not found for module '{1}'", bmpresref, _root));
+            new Andastra.Parsing.Logger.RobustLogger().Debug(string.Format("Loadscreen texture '{0}' not found for module '{1}'", bmpresref, _root));
             return null;
         }
 
@@ -1458,7 +1458,7 @@ namespace Andastra.Parsing.Common
         private void ReloadResources()
         {
             string displayName = (_dotMod ? $"{_root}.mod" : $"{_root}.rim");
-            new RobustLogger().Info(string.Format("Loading module resources needed for '{0}'", displayName));
+            new Andastra.Parsing.Logger.RobustLogger().Info(string.Format("Loading module resources needed for '{0}'", displayName));
 
             // Get main capsule for searching
             ModulePieceResource mainCapsule = LookupMainCapsule();
@@ -1471,7 +1471,7 @@ namespace Andastra.Parsing.Common
             ResRef linkResname = ModuleId();
             if (linkResname == null)
             {
-                new RobustLogger().Warning(string.Format("Module ID is null for module '{0}', cannot load resources", _root));
+                new Andastra.Parsing.Logger.RobustLogger().Warning(string.Format("Module ID is null for module '{0}', cannot load resources", _root));
                 return;
             }
 
@@ -1489,7 +1489,7 @@ namespace Andastra.Parsing.Common
                 {
                     FileResource resource = new FileResource(capsuleResource.ResName, capsuleResource.ResType,
                         capsuleResource.Size, capsuleResource.Offset, capsule.Path.ToString());
-                    new RobustLogger().Info(string.Format("Adding location '{0}' for resource '{1}' from erf/rim '{2}'",
+                    new Andastra.Parsing.Logger.RobustLogger().Info(string.Format("Adding location '{0}' for resource '{1}' from erf/rim '{2}'",
                         capsule.Filename(), resource.Identifier, capsule.PieceInfo.ResIdent()));
                     AddLocations(resource.ResName, resource.ResType, new[] { capsule.Filename() });
                 }
@@ -1607,7 +1607,7 @@ namespace Andastra.Parsing.Common
             {
                 if (_resources.ContainsKey(resource.Identifier) || _gitSearch.Contains(resource.Identifier))
                 {
-                    new RobustLogger().Info(string.Format("Found chitin/core location '{0}' for resource '{1}' for module '{2}'",
+                    new Andastra.Parsing.Logger.RobustLogger().Info(string.Format("Found chitin/core location '{0}' for resource '{1}' for module '{2}'",
                         resource.FilePath, resource.Identifier, displayName));
                     AddLocations(resource.ResName, resource.ResType, new[] { resource.FilePath });
                 }
@@ -1624,7 +1624,7 @@ namespace Andastra.Parsing.Common
                     {
                         continue;
                     }
-                    new RobustLogger().Info(string.Format("Found override location '{0}' for module '{1}'", resource.FilePath, displayName));
+                    new Andastra.Parsing.Logger.RobustLogger().Info(string.Format("Found override location '{0}' for module '{1}'", resource.FilePath, displayName));
                     AddLocations(resource.ResName, resource.ResType, new[] { resource.FilePath });
                 }
             }
@@ -1639,13 +1639,13 @@ namespace Andastra.Parsing.Common
             // Original: for model in self.models(): ... lookup_texture_queries.update(iterate_textures(model_data))
             foreach (ModuleResource model in Models())
             {
-                new RobustLogger().Info(string.Format("Finding textures/lightmaps for model '{0}'...", model.GetIdentifier()));
+                new Andastra.Parsing.Logger.RobustLogger().Info(string.Format("Finding textures/lightmaps for model '{0}'...", model.GetIdentifier()));
                 try
                 {
                     byte[] modelData = model.Resource() as byte[];
                     if (modelData == null)
                     {
-                        new RobustLogger().Warning(string.Format("Missing model '{0}', needed by module '{1}'", model.GetIdentifier(), displayName));
+                        new Andastra.Parsing.Logger.RobustLogger().Warning(string.Format("Missing model '{0}', needed by module '{1}'", model.GetIdentifier(), displayName));
                         continue;
                     }
 
@@ -1654,7 +1654,7 @@ namespace Andastra.Parsing.Common
                 }
                 catch (Exception ex)
                 {
-                    new RobustLogger().Warning(string.Format("Suppressed exception while getting model data '{0}': {1}", model.GetIdentifier(), ex.Message));
+                    new Andastra.Parsing.Logger.RobustLogger().Warning(string.Format("Suppressed exception while getting model data '{0}': {1}", model.GetIdentifier(), ex.Message));
                 }
             }
 
@@ -1685,7 +1685,7 @@ namespace Andastra.Parsing.Common
                     ? string.Join(", ", locationPaths)
                     : string.Join(", ", locationPaths.Take(3)) + $", ... and {locationPaths.Count - 3} more";
 
-                new RobustLogger().Debug(string.Format("Adding {0} texture location(s) for '{1}' to '{2}': {3}",
+                new Andastra.Parsing.Logger.RobustLogger().Debug(string.Format("Adding {0} texture location(s) for '{1}' to '{2}': {3}",
                     kv.Value.Count, kv.Key, displayName, pathsStr));
 
                 AddLocations(kv.Key.ResName, kv.Key.ResType, kv.Value.Select(loc => loc.FilePath));
@@ -1911,7 +1911,7 @@ namespace Andastra.Parsing.Common
                 string locationsInfo = _locations.Count > 0
                     ? $"Searched locations: {string.Join(", ", _locations)}."
                     : "No locations were added to this resource.";
-                new Logger.RobustLogger().Warning(
+                new Andastra.Parsing.Logger.RobustLogger().Warning(
                     $"Cannot activate module resource '{Identifier}'{moduleInfo}: No locations found. " +
                     $"Installation: {installationPath}. {locationsInfo}"
                 );
@@ -1935,7 +1935,7 @@ namespace Andastra.Parsing.Common
             {
                 if (_locations.Count == 0)
                 {
-                    new Logger.RobustLogger().Warning($"No resource found for '{Identifier}'");
+                    new Andastra.Parsing.Logger.RobustLogger().Warning($"No resource found for '{Identifier}'");
                     return null;
                 }
                 Activate();
@@ -1981,7 +1981,7 @@ namespace Andastra.Parsing.Common
                 byte[] data = capsule.GetResource(ResName, ResType);
                 if (data == null)
                 {
-                    new Logger.RobustLogger().Error($"Resource '{fileName}' not found in '{activePath}'");
+                    new Andastra.Parsing.Logger.RobustLogger().Error($"Resource '{fileName}' not found in '{activePath}'");
                 }
                 return data;
             }
@@ -1995,7 +1995,7 @@ namespace Andastra.Parsing.Common
                 if (resource == null)
                 {
                     string msg = $"Resource '{fileName}' not found in BIF '{activePath}' somehow?";
-                    new Logger.RobustLogger().Error(msg);
+                    new Andastra.Parsing.Logger.RobustLogger().Error(msg);
                     return null;
                 }
                 return resource.Data;
@@ -2166,7 +2166,7 @@ namespace Andastra.Parsing.Common
                 throw new FileNotFoundException($"Cannot create resource '{GetIdentifier()}' in override folder", overridePath);
             }
 
-            new Logger.RobustLogger().Warning($"Saving ModuleResource '{GetIdentifier()}' to the Override folder as it does not have any other paths available...");
+            new Andastra.Parsing.Logger.RobustLogger().Warning($"Saving ModuleResource '{GetIdentifier()}' to the Override folder as it does not have any other paths available...");
             string result = Path.Combine(_installation.OverridePath(), Filename());
             File.WriteAllBytes(result, resData);
             Activate(result);

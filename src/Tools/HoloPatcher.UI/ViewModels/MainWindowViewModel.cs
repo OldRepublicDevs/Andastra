@@ -250,7 +250,7 @@ namespace HoloPatcher.UI.ViewModels
         {
             // Initialize RobustLogger for pykotor errors/exceptions/warnings/info
             // Will set log file path when mod is loaded
-            _pykotorLogger = new RobustLogger();
+            _pykotorLogger = new Andastra.Parsing.Logger.RobustLogger();
 
             // Initialize commands
             BrowseModCommand = new AsyncRelayCommand(BrowseMod);

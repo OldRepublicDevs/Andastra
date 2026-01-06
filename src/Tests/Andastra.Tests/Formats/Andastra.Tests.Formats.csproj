@@ -90,9 +90,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Castle.Core" Version="5.2.1" />
-    <PackageReference Include="FluentAssertions" Version="7.0.0" />
-    <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="FluentAssertions" Version="8.8.0" />
     <PackageReference Include="Xunit" Version="2.6.3" />
   </ItemGroup>
+
+  <!-- Copy required DLLs to output directory for .NET 9 compatibility -->
+  <Target Name="CopyNetStandardDlls" AfterTargets="Build">
+    <ItemGroup>
+      <NetStandardDlls Include="$(NuGetPackageRoot)fluentassertions\8.8.0\lib\net6.0\FluentAssertions.dll" />
+      <NetStandardDlls Include="$(NuGetPackageRoot)ini-parser-netstandard\2.5.3\lib\netstandard2.0\INIFileParser.dll" />
+      <NetStandardDlls Include="$(NuGetPackageRoot)jetbrains.annotations\2025.2.4\lib\netstandard2.0\JetBrains.Annotations.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(NetStandardDlls)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

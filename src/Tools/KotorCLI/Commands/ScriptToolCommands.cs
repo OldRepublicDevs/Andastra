@@ -15,7 +15,8 @@ namespace KotorCLI.Commands
         public static void AddToRootCommand(RootCommand rootCommand)
         {
             var decompileCmd = new Command("decompile", "Decompile NCS bytecode to NSS source");
-            var decompileInput = new Argument<string>("input", "Input NCS file");
+            var decompileInput = new Argument<string>("input");
+            decompileInput.Description = "Input NCS file";
             decompileCmd.Add(decompileInput);
             var decompileOutput = new Option<string>(new[] { "-o", "--output" }, "Output NSS file");
             decompileCmd.Options.Add(decompileOutput);
@@ -39,7 +40,7 @@ namespace KotorCLI.Commands
                     }
 
                     // Determine game type
-                    BioWareGame gameType;
+                    BioWareGame gameType = BioWareGame.KOTOR; // Default to KOTOR
                     if (string.Equals(game, "k1", StringComparison.OrdinalIgnoreCase))
                     {
                         gameType = BioWareGame.KOTOR;
@@ -53,6 +54,7 @@ namespace KotorCLI.Commands
                     {
                         logger.Error($"Invalid game type: {game}. Must be 'k1' or 'k2'.");
                         Environment.Exit(1);
+                        return; // Unreachable but helps compiler
                     }
 
                     // Determine output file path
@@ -100,7 +102,8 @@ namespace KotorCLI.Commands
             rootCommand.Add(decompileCmd);
 
             var disassembleCmd = new Command("disassemble", "Disassemble NCS bytecode to text");
-            var disassembleInput = new Argument<string>("input", "Input NCS file");
+            var disassembleInput = new Argument<string>("input");
+            disassembleInput.Description = "Input NCS file";
             disassembleCmd.Add(disassembleInput);
             var disassembleOutput = new Option<string>(new[] { "-o", "--output" }, "Output text file");
             disassembleCmd.Options.Add(disassembleOutput);
@@ -115,11 +118,16 @@ namespace KotorCLI.Commands
             rootCommand.Add(disassembleCmd);
 
             var assembleCmd = new Command("assemble", "Assemble/compile NSS source to NCS bytecode");
-            var assembleInput = new Argument<string>("input", "Input NSS file");
+            var assembleInput = new Argument<string>("input");
+            assembleInput.Description = "Input NSS file";
             assembleCmd.Add(assembleInput);
-            var assembleOutput = new Option<string>(new[] { "-o", "--output" }, "Output NCS file");
+            var assembleOutput = new Option<string>("--output");
+            assembleOutput.AddAlias("-o");
+            assembleOutput.Description = "Output NCS file";
             assembleCmd.Options.Add(assembleOutput);
-            var includeOption = new Option<string[]>(new[] { "-I", "--include" }, "Include directory for #include files");
+            var includeOption = new Option<string[]>("--include");
+            includeOption.AddAlias("-I");
+            includeOption.Description = "Include directory for #include files";
             assembleCmd.Options.Add(includeOption);
             var debugOption = new Option<bool>("--debug", "Enable debug output");
             assembleCmd.Options.Add(debugOption);

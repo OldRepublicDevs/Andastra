@@ -16,7 +16,8 @@ namespace KotorCLI.Commands
             var fileOption = new Option<string>(new[] { "-f", "--file" }, "Archive file to search");
             fileOption.Required = true;
             searchArchiveCommand.Options.Add(fileOption);
-            var patternArgument = new Argument<string>("pattern", "Search pattern (supports wildcards)");
+            var patternArgument = new Argument<string>("pattern");
+            patternArgument.Description = "Search pattern (supports wildcards)";
             searchArchiveCommand.Add(patternArgument);
             var caseSensitiveOption = new Option<bool>("--case-sensitive", "Case-sensitive search");
             searchArchiveCommand.Options.Add(caseSensitiveOption);

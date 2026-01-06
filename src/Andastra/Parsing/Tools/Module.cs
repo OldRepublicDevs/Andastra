@@ -112,7 +112,7 @@ namespace Andastra.Parsing.Tools
             }
             else
             {
-                new Logger.RobustLogger().Warning($"No IFO found in module to be cloned: '{root}'");
+                new Andastra.Parsing.Logger.RobustLogger().Warning($"No IFO found in module to be cloned: '{root}'");
             }
 
             var areRes = oldModule.Are();
@@ -124,7 +124,7 @@ namespace Andastra.Parsing.Tools
             }
             else
             {
-                new Logger.RobustLogger().Warning($"No ARE found in module to be cloned: '{root}'");
+                new Andastra.Parsing.Logger.RobustLogger().Warning($"No ARE found in module to be cloned: '{root}'");
             }
 
             if (keepPathing)
@@ -157,13 +157,13 @@ namespace Andastra.Parsing.Tools
                     var utdModRes = oldModule.Door(oldResname);
                     if (utdModRes == null)
                     {
-                        new Logger.RobustLogger().Warning($"No UTD found for door '{oldResname}' in module '{root}'");
+                        new Andastra.Parsing.Logger.RobustLogger().Warning($"No UTD found for door '{oldResname}' in module '{root}'");
                         continue;
                     }
                     var utdRes = utdModRes.Resource() as Resource.Generics.UTD;
                     if (utdRes == null)
                     {
-                        new Logger.RobustLogger().Warning($"UTD resource is None for door '{oldResname}' in module '{root}'");
+                        new Andastra.Parsing.Logger.RobustLogger().Warning($"UTD resource is None for door '{oldResname}' in module '{root}'");
                         continue;
                     }
 
@@ -188,13 +188,13 @@ namespace Andastra.Parsing.Tools
                     var utpModRes = oldModule.Placeable(oldResname);
                     if (utpModRes == null)
                     {
-                        new Logger.RobustLogger().Warning($"No UTP found for placeable '{oldResname}' in module '{root}'");
+                        new Andastra.Parsing.Logger.RobustLogger().Warning($"No UTP found for placeable '{oldResname}' in module '{root}'");
                         continue;
                     }
                     var utpRes = utpModRes.Resource() as Resource.Generics.UTP;
                     if (utpRes == null)
                     {
-                        new Logger.RobustLogger().Warning($"UTP resource is None for placeable '{oldResname}' in module '{root}'");
+                        new Andastra.Parsing.Logger.RobustLogger().Warning($"UTP resource is None for placeable '{oldResname}' in module '{root}'");
                         continue;
                     }
 
@@ -223,13 +223,13 @@ namespace Andastra.Parsing.Tools
                     var utsModRes = oldModule.Sound(oldResname);
                     if (utsModRes == null)
                     {
-                        new Logger.RobustLogger().Warning($"No UTS found for sound '{oldResname}' in module '{root}'");
+                        new Andastra.Parsing.Logger.RobustLogger().Warning($"No UTS found for sound '{oldResname}' in module '{root}'");
                         continue;
                     }
                     var utsRes = utsModRes.Resource() as Resource.Generics.UTS;
                     if (utsRes == null)
                     {
-                        new Logger.RobustLogger().Warning($"UTS resource is None for sound '{oldResname}' in module '{root}'");
+                        new Andastra.Parsing.Logger.RobustLogger().Warning($"UTS resource is None for sound '{oldResname}' in module '{root}'");
                         continue;
                     }
                     newModule.SetData(newResname, ResourceType.UTS, GFFAuto.BytesGff(UTSHelpers.DismantleUts(utsRes), ResourceType.GFF));
@@ -300,7 +300,7 @@ namespace Andastra.Parsing.Tools
                                 });
                             if (tpc == null)
                             {
-                                new Logger.RobustLogger().Warning($"TPC/TGA resource not found for texture '{texture}' in module '{root}'");
+                                new Andastra.Parsing.Logger.RobustLogger().Warning($"TPC/TGA resource not found for texture '{texture}' in module '{root}'");
                                 continue;
                             }
                             tpc = tpc.Copy();
@@ -339,7 +339,7 @@ namespace Andastra.Parsing.Tools
                                 });
                             if (tpc == null)
                             {
-                                new Logger.RobustLogger().Warning($"TPC/TGA resource not found for lightmap '{lightmap}' in module '{root}'");
+                                new Andastra.Parsing.Logger.RobustLogger().Warning($"TPC/TGA resource not found for lightmap '{lightmap}' in module '{root}'");
                                 continue;
                             }
                             tpc = tpc.Copy();
@@ -369,7 +369,7 @@ namespace Andastra.Parsing.Tools
             }
             else
             {
-                new Logger.RobustLogger().Warning($"No VIS found in module to be cloned: '{root}'");
+                new Andastra.Parsing.Logger.RobustLogger().Warning($"No VIS found in module to be cloned: '{root}'");
             }
 
             if (lyt != null)
@@ -378,7 +378,7 @@ namespace Andastra.Parsing.Tools
             }
             else
             {
-                new Logger.RobustLogger().Error($"No LYT found in module to be cloned: '{root}'");
+                new Andastra.Parsing.Logger.RobustLogger().Error($"No LYT found in module to be cloned: '{root}'");
             }
 
             string modulePath = installation.ModulePath();

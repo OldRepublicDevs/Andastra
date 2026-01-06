@@ -3378,7 +3378,7 @@ namespace HolocronToolset.Editors.DLG
             if (_installation == null)
             {
                 // Matching PyKotor: RobustLogger().error("Cannot edit text: installation is not set")
-                new RobustLogger().Error("Cannot edit text: installation is not set");
+                new Andastra.Parsing.Logger.RobustLogger().Error("Cannot edit text: installation is not set");
                 return;
             }
 
@@ -3487,7 +3487,7 @@ namespace HolocronToolset.Editors.DLG
                     catch (Exception exc)
                     {
                         // Matching PyKotor: RobustLogger().exception(f"Error executing LocalizedStringDialog: {exc.__class__.__name__}: {exc}")
-                        new RobustLogger().Exception($"Error executing LocalizedStringDialog: {exc.GetType().Name}: {exc}", exc);
+                        new Andastra.Parsing.Logger.RobustLogger().Exception($"Error executing LocalizedStringDialog: {exc.GetType().Name}: {exc}", exc);
                         continue; // Continue to next item
                     }
 
@@ -3522,7 +3522,7 @@ namespace HolocronToolset.Editors.DLG
                 catch (Exception exc)
                 {
                     // Matching PyKotor: RobustLogger().exception(f"Error creating LocalizedStringDialog: {exc.__class__.__name__}: {exc}")
-                    new RobustLogger().Exception($"Error creating LocalizedStringDialog: {exc.GetType().Name}: {exc}", exc);
+                    new Andastra.Parsing.Logger.RobustLogger().Exception($"Error creating LocalizedStringDialog: {exc.GetType().Name}: {exc}", exc);
                     continue; // Continue to next item
                 }
             } // End of foreach loop
@@ -4816,7 +4816,7 @@ namespace HolocronToolset.Editors.DLG
             catch (Exception ex)
             {
                 // Matching PyKotor: if no paths or error, log and blink window
-                new RobustLogger().Error($"Failed to find paths for node: {ex.Message}", true, ex);
+                new Andastra.Parsing.Logger.RobustLogger().Error($"Failed to find paths for node: {ex.Message}", true, ex);
                 BlinkWindow();
                 return;
             }
@@ -4825,7 +4825,7 @@ namespace HolocronToolset.Editors.DLG
             if (paths == null || paths.Count == 0)
             {
                 // Matching PyKotor: No paths available - log error and blink window
-                new RobustLogger().Error("No paths available.");
+                new Andastra.Parsing.Logger.RobustLogger().Error("No paths available.");
                 BlinkWindow();
                 return;
             }
@@ -5019,7 +5019,7 @@ namespace HolocronToolset.Editors.DLG
             else
             {
                 // Matching PyKotor: self._logger.error(f"Failed to find original node for node {source_node!r}")
-                new RobustLogger().Error($"Failed to find original node for node {sourceNode}");
+                new Andastra.Parsing.Logger.RobustLogger().Error($"Failed to find original node for node {sourceNode}");
             }
         }
 

@@ -722,7 +722,7 @@ namespace HolocronToolset.Data
 
                     if (tpc == null)
                     {
-                        new RobustLogger().Warning($"Lightmap '{lightmap}' not found in kit '{room.Component.Kit.Name}' and not available in installation. Skipping lightmap.");
+                        new Andastra.Parsing.Logger.RobustLogger().Warning($"Lightmap '{lightmap}' not found in kit '{room.Component.Kit.Name}' and not available in installation. Skipping lightmap.");
                         lmRenames.Remove(lightmapLower);
                         _totalLm--;
                         continue;
@@ -1081,7 +1081,7 @@ namespace HolocronToolset.Data
                 UTD sourceUtd = targetTsl ? insert.Door.UtdK2 : insert.Door.UtdK1;
                 if (sourceUtd == null)
                 {
-                    new RobustLogger().Warning($"Door insertion {i} has no UTD template (UtdK1/UtdK2 is null). Skipping UTD creation.");
+                    new Andastra.Parsing.Logger.RobustLogger().Warning($"Door insertion {i} has no UTD template (UtdK1/UtdK2 is null). Skipping UTD creation.");
                     continue;
                 }
 
@@ -1133,7 +1133,7 @@ namespace HolocronToolset.Data
                         IndoorMapRoom cRoom = insert.Hook1.Door.Height < insert.Hook2.Door.Height ? insert.Room : insert.Room2;
                         if (cRoom == null)
                         {
-                            new RobustLogger().Warning($"No room found for door insertion {i} height padding. Skipping.");
+                            new Andastra.Parsing.Logger.RobustLogger().Warning($"No room found for door insertion {i} height padding. Skipping.");
                         }
                         else
                         {
@@ -1217,7 +1217,7 @@ namespace HolocronToolset.Data
                                 }
                                 else
                                 {
-                                    new RobustLogger().Info($"No padding key found for door insertion {i} height.");
+                                    new Andastra.Parsing.Logger.RobustLogger().Info($"No padding key found for door insertion {i} height.");
                                 }
                             }
                         }
@@ -1232,7 +1232,7 @@ namespace HolocronToolset.Data
 
                         if (cRoom == null)
                         {
-                            new RobustLogger().Warning($"No room found for door insertion {i} width padding. Skipping.");
+                            new Andastra.Parsing.Logger.RobustLogger().Warning($"No room found for door insertion {i} width padding. Skipping.");
                         }
                         else
                         {
@@ -1663,7 +1663,7 @@ namespace HolocronToolset.Data
             }
             catch (Exception ex)
             {
-                new RobustLogger().Error($"Load screen file not found for installation '{installation.Name}': {ex.Message}");
+                new Andastra.Parsing.Logger.RobustLogger().Error($"Load screen file not found for installation '{installation.Name}': {ex.Message}");
             }
         }
 
@@ -2219,7 +2219,7 @@ namespace HolocronToolset.Data
                 var sKit = kits.FirstOrDefault(k => k.Name == kitName);
                 if (sKit == null)
                 {
-                    new RobustLogger().Warning($"Kit '{kitName}' is missing, skipping room.");
+                    new Andastra.Parsing.Logger.RobustLogger().Warning($"Kit '{kitName}' is missing, skipping room.");
                     missingRooms.Add(new MissingRoomInfo(kitName, roomData.GetProperty("component").GetString(), "kit_missing"));
                     continue;
                 }
@@ -2228,7 +2228,7 @@ namespace HolocronToolset.Data
                 var sComponent = sKit.Components.FirstOrDefault(c => c.Name == componentName);
                 if (sComponent == null)
                 {
-                    new RobustLogger().Warning($"Component '{componentName}' is missing in kit '{sKit.Name}', skipping room.");
+                    new Andastra.Parsing.Logger.RobustLogger().Warning($"Component '{componentName}' is missing in kit '{sKit.Name}', skipping room.");
                     missingRooms.Add(new MissingRoomInfo(kitName, componentName, "component_missing"));
                     continue;
                 }
@@ -2255,7 +2255,7 @@ namespace HolocronToolset.Data
                     }
                     catch (Exception ex)
                     {
-                        new RobustLogger().Warning($"Failed to read walkmesh override for room '{room.Component.Name}': {ex.Message}");
+                        new Andastra.Parsing.Logger.RobustLogger().Warning($"Failed to read walkmesh override for room '{room.Component.Name}': {ex.Message}");
                     }
                 }
 

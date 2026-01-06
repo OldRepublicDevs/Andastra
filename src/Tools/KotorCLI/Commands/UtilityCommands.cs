@@ -144,9 +144,9 @@ namespace KotorCLI.Commands
                         var fieldTypeCounts = new Dictionary<GFFFieldType, int>();
                         foreach (var field in gff.Fields)
                         {
-                            if (!fieldTypeCounts.ContainsKey(field.Type))
-                                fieldTypeCounts[field.Type] = 0;
-                            fieldTypeCounts[field.Type]++;
+                            if (!fieldTypeCounts.ContainsKey(field.FieldType))
+                                fieldTypeCounts[field.FieldType] = 0;
+                            fieldTypeCounts[field.FieldType]++;
                         }
                         stats.FieldTypeCounts = fieldTypeCounts;
 
@@ -1058,8 +1058,8 @@ namespace KotorCLI.Commands
                                 resourceTypeCounts[resource.ResType] = 0;
                             resourceTypeCounts[resource.ResType]++;
 
-                            variableSizes.Add(resource.UncompressedSize);
-                            totalVariableSize += resource.UncompressedSize;
+                            variableSizes.Add(resource.Size);
+                            totalVariableSize += resource.Size;
                         }
 
                         // Fixed resources are not supported in KotOR (FixedCount is always 0)
@@ -1230,9 +1230,11 @@ namespace KotorCLI.Commands
         public static void AddToRootCommand(RootCommand rootCommand)
         {
             var diffCmd = new Command("diff", "Compare two files and show differences");
-            var file1Arg = new Argument<string>("file1", "First file");
+            var file1Arg = new Argument<string>("file1");
+            file1Arg.Description = "First file";
             diffCmd.Add(file1Arg);
-            var file2Arg = new Argument<string>("file2", "Second file");
+            var file2Arg = new Argument<string>("file2");
+            file2Arg.Description = "Second file";
             diffCmd.Add(file2Arg);
             var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output diff file");
             diffCmd.Options.Add(outputOpt);
@@ -1248,9 +1250,11 @@ namespace KotorCLI.Commands
             rootCommand.Add(diffCmd);
 
             var grepCmd = new Command("grep", "Search for patterns in files");
-            var grepFileArg = new Argument<string>("file", "File to search");
+            var grepFileArg = new Argument<string>("file");
+            grepFileArg.Description = "File to search";
             grepCmd.Add(grepFileArg);
-            var patternArg = new Argument<string>("pattern", "Search pattern");
+            var patternArg = new Argument<string>("pattern");
+            patternArg.Description = "Search pattern";
             grepCmd.Add(patternArg);
             var caseSensitiveOption = new Option<bool>("--case-sensitive", "Case-sensitive search");
             grepCmd.Options.Add(caseSensitiveOption);
@@ -1269,7 +1273,8 @@ namespace KotorCLI.Commands
             rootCommand.Add(grepCmd);
 
             var statsCmd = new Command("stats", "Show statistics about a file");
-            var statsFileArg = new Argument<string>("file", "File to analyze");
+            var statsFileArg = new Argument<string>("file");
+            statsFileArg.Description = "File to analyze";
             statsCmd.Add(statsFileArg);
             statsCmd.SetAction(parseResult =>
             {
@@ -1296,7 +1301,8 @@ namespace KotorCLI.Commands
             rootCommand.Add(statsCmd);
 
             var validateCmd = new Command("validate", "Validate file format and structure");
-            var validateFileArg = new Argument<string>("file", "File to validate");
+            var validateFileArg = new Argument<string>("file");
+            validateFileArg.Description = "File to validate";
             validateCmd.Add(validateFileArg);
             var verboseOpt = new Option<bool>(new[] { "-v", "--verbose" }, "Show detailed validation information");
             validateCmd.Options.Add(verboseOpt);
@@ -1384,9 +1390,11 @@ namespace KotorCLI.Commands
             rootCommand.Add(validateCmd);
 
             var mergeCmd = new Command("merge", "Merge two GFF files");
-            var targetArg = new Argument<string>("target", "Target GFF file (will be modified)");
+            var targetArg = new Argument<string>("target");
+            targetArg.Description = "Target GFF file (will be modified)";
             mergeCmd.Add(targetArg);
-            var sourceArg = new Argument<string>("source", "Source GFF file (fields to merge)");
+            var sourceArg = new Argument<string>("source");
+            sourceArg.Description = "Source GFF file (fields to merge)";
             mergeCmd.Add(sourceArg);
             var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output GFF file (default: overwrite target)");
             mergeCmd.Options.Add(outputOpt);
@@ -1415,17 +1423,17 @@ namespace KotorCLI.Commands
             // Check for structural integrity
             if (stats.StructCount == 0)
             {
-                logger.Warn("    ⚠ Warning: No structs found");
+                logger.Warning("    ⚠ Warning: No structs found");
             }
 
             if (stats.FieldCount == 0)
             {
-                logger.Warn("    ⚠ Warning: No fields found");
+                logger.Warning("    ⚠ Warning: No fields found");
             }
 
             if (stats.MaxDepth > 10)
             {
-                logger.Warn($"    ⚠ Warning: Deep structure depth ({stats.MaxDepth}) may indicate complex or malformed data");
+                logger.Warning($"    ⚠ Warning: Deep structure depth ({stats.MaxDepth}) may indicate complex or malformed data");
             }
 
             // Validate field data consistency
@@ -1435,7 +1443,7 @@ namespace KotorCLI.Commands
                 logger.Info($"    Data Efficiency: {overheadRatio:P1} overhead");
                 if (overheadRatio > 0.5)
                 {
-                    logger.Warn("    ⚠ Warning: High overhead ratio may indicate inefficient structure");
+                    logger.Warning("    ⚠ Warning: High overhead ratio may indicate inefficient structure");
                 }
             }
 
@@ -1463,7 +1471,7 @@ namespace KotorCLI.Commands
 
             if (stats.ResourceCount == 0)
             {
-                logger.Warn("    ⚠ Warning: Archive contains no resources");
+                logger.Warning("    ⚠ Warning: Archive contains no resources");
             }
 
             // Size validation
@@ -1475,12 +1483,12 @@ namespace KotorCLI.Commands
                 // Check for unusual size distributions
                 if (stats.MinResourceSize == 0)
                 {
-                    logger.Warn("    ⚠ Warning: Archive contains empty resources");
+                    logger.Warning("    ⚠ Warning: Archive contains empty resources");
                 }
 
                 if (stats.MaxResourceSize > 10 * 1024 * 1024) // 10MB
                 {
-                    logger.Warn("    ⚠ Warning: Archive contains very large resources (>10MB)");
+                    logger.Warning("    ⚠ Warning: Archive contains very large resources (>10MB)");
                 }
             }
 
@@ -1507,12 +1515,12 @@ namespace KotorCLI.Commands
 
             if (stats.UsedEntryCount == 0)
             {
-                logger.Warn("    ⚠ Warning: Talk table contains no text entries");
+                logger.Warning("    ⚠ Warning: Talk table contains no text entries");
             }
 
             if (stats.UsagePercentage < 0.1)
             {
-                logger.Warn($"    ⚠ Warning: Very low usage ({stats.UsagePercentage:P1}) - mostly empty entries");
+                logger.Warning($"    ⚠ Warning: Very low usage ({stats.UsagePercentage:P1}) - mostly empty entries");
             }
 
             // Text content validation
@@ -1523,7 +1531,7 @@ namespace KotorCLI.Commands
 
                 if (stats.MaxTextLength > 4096)
                 {
-                    logger.Warn("    ⚠ Warning: Some entries exceed 4096 characters (may cause display issues)");
+                    logger.Warning("    ⚠ Warning: Some entries exceed 4096 characters (may cause display issues)");
                 }
             }
 
@@ -1546,13 +1554,13 @@ namespace KotorCLI.Commands
 
             if (stats.InstructionCount == 0)
             {
-                logger.Warn("    ⚠ Warning: Script contains no instructions");
+                logger.Warning("    ⚠ Warning: Script contains no instructions");
             }
 
             // Complexity analysis
             if (stats.InstructionDiversityRatio < 0.1)
             {
-                logger.Warn("    ⚠ Warning: Low instruction diversity - script may be repetitive or simple");
+                logger.Warning("    ⚠ Warning: Low instruction diversity - script may be repetitive or simple");
             }
 
             // Category breakdown validation
@@ -1567,7 +1575,7 @@ namespace KotorCLI.Commands
             // Validate script structure
             if (stats.JumpInstructions == 0 && stats.InstructionCount > 10)
             {
-                logger.Warn("    ⚠ Warning: No control flow instructions in non-trivial script");
+                logger.Warning("    ⚠ Warning: No control flow instructions in non-trivial script");
             }
 
             if (stats.FunctionInstructions == 0)
@@ -1588,13 +1596,13 @@ namespace KotorCLI.Commands
 
             if (stats.TotalCells == 0)
             {
-                logger.Warn("    ⚠ Warning: Table contains no cells");
+                logger.Warning("    ⚠ Warning: Table contains no cells");
                 return;
             }
 
             if (stats.FillPercentage < 0.1)
             {
-                logger.Warn($"    ⚠ Warning: Table is mostly empty ({stats.FillPercentage:P1} filled)");
+                logger.Warning($"    ⚠ Warning: Table is mostly empty ({stats.FillPercentage:P1} filled)");
             }
 
             // Data type validation
@@ -1617,7 +1625,7 @@ namespace KotorCLI.Commands
                 var inconsistentColumns = stats.ColumnTypeAnalysis.Where(x => x.Value.Contains("/")).ToList();
                 if (inconsistentColumns.Any())
                 {
-                    logger.Warn($"    ⚠ Warning: {inconsistentColumns.Count:N0} columns contain mixed data types");
+                    logger.Warning($"    ⚠ Warning: {inconsistentColumns.Count:N0} columns contain mixed data types");
                 }
             }
         }
@@ -1634,7 +1642,7 @@ namespace KotorCLI.Commands
 
             if (stats.TotalResourceCount == 0)
             {
-                logger.Warn("    ⚠ Warning: Archive contains no resources");
+                logger.Warning("    ⚠ Warning: Archive contains no resources");
                 return;
             }
 
@@ -1670,11 +1678,11 @@ namespace KotorCLI.Commands
             // File size sanity checks
             if (stats.FileSize == 0)
             {
-                logger.Warn("  ⚠ Integrity: File is empty");
+                logger.Warning("  ⚠ Integrity: File is empty");
             }
             else if (stats.FileSize > 2L * 1024 * 1024 * 1024) // 2GB
             {
-                logger.Warn("  ⚠ Integrity: File is very large (>2GB) - may cause performance issues");
+                logger.Warning("  ⚠ Integrity: File is very large (>2GB) - may cause performance issues");
             }
 
             // Format-specific integrity checks
@@ -1686,7 +1694,7 @@ namespace KotorCLI.Commands
                     double fieldsPerStruct = (double)gffStats.FieldCount / gffStats.StructCount;
                     if (fieldsPerStruct > 100)
                     {
-                        logger.Warn($"  ⚠ Integrity: Very high field/struct ratio ({fieldsPerStruct:F1})");
+                        logger.Warning($"  ⚠ Integrity: Very high field/struct ratio ({fieldsPerStruct:F1})");
                     }
                 }
             }
