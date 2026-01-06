@@ -10,6 +10,9 @@ vendor/NCSDecomp/tools/nwnnsscomp_incompatible_tslpatcher.exe
 vendor/NCSDecomp/tools/nwnnsscomp_incompatible_v1.exe
 vendor/NCSDecomp/tools/nwnnsscomp_kscript.exe
 vendor/NCSDecomp/tools/nwnnsscomp_ktool.exe
+**/~dotnetcleanup-*-*
+**/~dotnetcleanup*/
+src/Tools/NCSDecomp/~dotnetcleanup*/
 
 !.cursor
 !.cursorignore

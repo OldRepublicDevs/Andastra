@@ -272,7 +272,7 @@ namespace KotorCLI.Commands
                     {
                         output = Path.ChangeExtension(input, ".csv");
                     }
-                    Conversions.Convert2DaToCsv(input, output, delimiter);
+                    Conversions.Convert2daToCsv(input, output, delimiter);
                     logger.Info($"Converted {input} to {output}");
                     Environment.Exit(0);
                 }
@@ -291,9 +291,11 @@ namespace KotorCLI.Commands
             var inputArg = new Argument<string>("input");
             inputArg.Description = "Input CSV file";
             cmd.Add(inputArg);
-            var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output 2DA file");
+            var outputOpt = new Option<string>("--output", "Output 2DA file");
+            outputOpt.AddAlias("-o");
             cmd.Options.Add(outputOpt);
-            var delimiterOpt = new Option<string>("--delimiter", () => ",", "CSV delimiter");
+            var delimiterOpt = new Option<string>("--delimiter", "CSV delimiter");
+            delimiterOpt.SetDefaultValue(",");
             cmd.Options.Add(delimiterOpt);
             cmd.SetAction(parseResult =>
             {

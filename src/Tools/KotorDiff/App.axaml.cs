@@ -3,12 +3,13 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using KotorDiff.Gui;
 
 namespace KotorDiff
 {
     // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/__main__.py
     // Original: class KotorDiffApp(ThemedApp): ... app.root.mainloop()
-    public partial class App : Avalonia.Controls.Application
+    public partial class App : Application
     {
         public override void Initialize()
         {

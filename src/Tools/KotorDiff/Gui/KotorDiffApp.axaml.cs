@@ -49,11 +49,19 @@ namespace KotorDiff.Gui
             var installationPaths = GetInstallationPaths();
             if (Path1ComboBox != null)
             {
-                Path1ComboBox.Items = installationPaths;
+                Path1ComboBox.Items.Clear();
+                foreach (var path in installationPaths)
+                {
+                    Path1ComboBox.Items.Add(path);
+                }
             }
             if (Path2ComboBox != null)
             {
-                Path2ComboBox.Items = installationPaths;
+                Path2ComboBox.Items.Clear();
+                foreach (var path in installationPaths)
+                {
+                    Path2ComboBox.Items.Add(path);
+                }
             }
 
             // Set up radio button handlers
@@ -143,12 +151,17 @@ namespace KotorDiff.Gui
 
             if (Path1RadioInstall != null && Path1RadioInstall.IsChecked == true)
             {
-                Path1ComboBox.Items = GetInstallationPaths();
+                var paths = GetInstallationPaths();
+                Path1ComboBox.Items.Clear();
+                foreach (var path in paths)
+                {
+                    Path1ComboBox.Items.Add(path);
+                }
             }
             else
             {
-                // In custom mode, allow typing (Items can be empty or null)
-                Path1ComboBox.Items = null;
+                // In custom mode, allow typing (clear items)
+                Path1ComboBox.Items.Clear();
             }
         }
 
@@ -159,11 +172,16 @@ namespace KotorDiff.Gui
 
             if (Path2RadioInstall != null && Path2RadioInstall.IsChecked == true)
             {
-                Path2ComboBox.Items = GetInstallationPaths();
+                var paths = GetInstallationPaths();
+                Path2ComboBox.Items.Clear();
+                foreach (var path in paths)
+                {
+                    Path2ComboBox.Items.Add(path);
+                }
             }
             else
             {
-                Path2ComboBox.Items = null;
+                Path2ComboBox.Items.Clear();
             }
         }
 
@@ -180,7 +198,7 @@ namespace KotorDiff.Gui
             {
                 if (Path1ComboBox != null)
                 {
-                    Path1ComboBox.Text = result;
+                    Path1ComboBox.SelectedItem = result;
                 }
                 if (Path1RadioCustom != null)
                 {
@@ -203,7 +221,7 @@ namespace KotorDiff.Gui
             {
                 if (Path2ComboBox != null)
                 {
-                    Path2ComboBox.Text = result;
+                    Path2ComboBox.SelectedItem = result;
                 }
                 if (Path2RadioCustom != null)
                 {
@@ -237,8 +255,8 @@ namespace KotorDiff.Gui
                 return false;
             }
 
-            string path1 = Path1ComboBox?.Text?.Trim() ?? "";
-            string path2 = Path2ComboBox?.Text?.Trim() ?? "";
+            string path1 = Path1ComboBox?.SelectedItem?.ToString()?.Trim() ?? "";
+            string path2 = Path2ComboBox?.SelectedItem?.ToString()?.Trim() ?? "";
 
             if (string.IsNullOrEmpty(path1))
             {
@@ -287,8 +305,8 @@ namespace KotorDiff.Gui
 
             try
             {
-                string path1Str = Path1ComboBox?.Text?.Trim() ?? "";
-                string path2Str = Path2ComboBox?.Text?.Trim() ?? "";
+                string path1Str = Path1ComboBox?.SelectedItem?.ToString()?.Trim() ?? "";
+                string path2Str = Path2ComboBox?.SelectedItem?.ToString()?.Trim() ?? "";
                 string tslpatchdataStr = TslPatchDataTextBox?.Text?.Trim() ?? "";
 
                 // Don't use placeholder text as path
@@ -345,7 +363,7 @@ namespace KotorDiff.Gui
                     CompareHashes = CompareHashesCheckBox?.IsChecked ?? true,
                 };
 
-                LogToUI($"\n{'='.PadRight(60, '=')}");
+                LogToUI($"\n{"=".PadRight(60, '=')}");
                 LogToUI("Starting KotorDiff comparison...");
                 LogToUI($"Path 1: {path1Str}");
                 LogToUI($"Path 2: {path2Str}");
@@ -353,13 +371,13 @@ namespace KotorDiff.Gui
                 {
                     LogToUI($"TSLPatchData Output: {tslpatchdataStr}");
                 }
-                LogToUI($"{'='.PadRight(60, '=')}\n");
+                LogToUI($"{"=".PadRight(60, '=')}\n");
 
                 // Run the diff
                 // Matching Python: exit_code = run_application(config)
                 int exitCode = AppRunner.RunApplication(config);
 
-                LogToUI($"\n{'='.PadRight(60, '=')}");
+                LogToUI($"\n{"=".PadRight(60, '=')}");
                 if (exitCode == 0)
                 {
                     LogToUI("[SUCCESS] Diff completed successfully!");
@@ -369,7 +387,7 @@ namespace KotorDiff.Gui
                 {
                     LogToUI($"[WARNING] Diff completed with exit code: {exitCode}");
                 }
-                LogToUI($"{'='.PadRight(60, '=')}");
+                LogToUI($"{"=".PadRight(60, '=')}");
             }
             catch (Exception ex)
             {
