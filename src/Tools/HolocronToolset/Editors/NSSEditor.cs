@@ -1669,11 +1669,21 @@ namespace HolocronToolset.Editors
         /// </summary>
         /// <param name="ncsData">The bytes of the compiled NCS script.</param>
         /// <returns>The decompiled NSS source code string, or empty string if decompilation fails.</returns>
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2248-2291
+        // Original: def _decompile_ncs_dencs(self, ncs_data: bytes) -> str:
+        /// <summary>
+        /// Decompiles NCS bytecode using the built-in decompiler.
+        /// Returns empty string on failure instead of raising exceptions to allow caller to handle gracefully.
+        /// This differs from PyKotor which raises ValueError, but provides better error handling for UI scenarios.
+        /// </summary>
+        /// <param name="ncsData">The bytes of the compiled NCS script</param>
+        /// <returns>The decompiled NSS source code string, or empty string if decompilation fails</returns>
         private string DecompileNcsDencs(byte[] ncsData)
         {
+            // Validate input - return empty string for invalid input
             if (ncsData == null || ncsData.Length == 0)
             {
-                // TODO:  Return empty string for invalid input (matching TODO requirement)
+                System.Console.WriteLine("Decompilation failed: NCS data is null or empty");
                 return "";
             }
 
@@ -1691,16 +1701,17 @@ namespace HolocronToolset.Editors
                     {
                         return decompiled;
                     }
-                    // TODO:  If decompilation returned null or empty, return empty string (matching TODO requirement)
-                    // TODO:  Python implementation raises ValueError, but TODO explicitly requests returning empty string
+                    // If decompilation returned null or empty, return empty string
+                    // Note: PyKotor implementation raises ValueError, but we return empty string to allow
+                    // caller to handle gracefully without exception handling
                     System.Console.WriteLine("Decompilation failed: decompile_ncs returned null or empty string");
                     return "";
                 }
                 catch (Exception ex)
                 {
-                    // TODO:  Decompilation failed - log error and return empty string (matching TODO requirement)
-                    // TODO:  Python implementation raises ValueError, but TODO explicitly requests returning empty string
-                    // This allows caller to handle gracefully without exception handling
+                    // Decompilation failed - log error and return empty string
+                    // Note: PyKotor implementation raises ValueError, but we return empty string to allow
+                    // caller to handle gracefully without exception handling
                     System.Console.WriteLine($"Decompilation failed: {ex.Message}");
                     if (ex.InnerException != null)
                     {
@@ -1710,7 +1721,7 @@ namespace HolocronToolset.Editors
                 }
             }
 
-            // TODO:  Installation not set - return empty string (matching TODO requirement)
+            // Installation not set - return empty string
             System.Console.WriteLine("Decompilation failed: installation is not set");
             return "";
         }
