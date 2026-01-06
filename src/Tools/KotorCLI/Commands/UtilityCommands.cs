@@ -101,7 +101,7 @@ namespace KotorCLI.Commands
                 try
                 {
                     using (var fs = File.OpenRead(filePath))
-                    using (var reader = new BinaryReader(fs))
+                    using (var reader = new System.IO.BinaryReader(fs))
                     {
                         if (fs.Length < 8) return false;
                         var magic = reader.ReadBytes(4);
@@ -166,15 +166,21 @@ namespace KotorCLI.Commands
                         stats.MaxDepth = CalculateMaxDepth(gff.Root, gff);
 
                         // Count different data types
-                        stats.StringFieldCount = fieldTypeCounts.GetValueOrDefault(GFFFieldType.CExoString, 0);
-                        stats.IntegerFieldCount = fieldTypeCounts.GetValueOrDefault(GFFFieldType.DWORD, 0) +
-                                                fieldTypeCounts.GetValueOrDefault(GFFFieldType.INT, 0) +
-                                                fieldTypeCounts.GetValueOrDefault(GFFFieldType.SHORT, 0) +
-                                                fieldTypeCounts.GetValueOrDefault(GFFFieldType.BYTE, 0);
-                        stats.FloatFieldCount = fieldTypeCounts.GetValueOrDefault(GFFFieldType.FLOAT, 0);
+                        stats.StringFieldCount = fieldTypeCounts.GetValueOrDefault(GFFFieldType.String, 0);
+                        stats.IntegerFieldCount = fieldTypeCounts.GetValueOrDefault(GFFFieldType.UInt32, 0) +
+                                                fieldTypeCounts.GetValueOrDefault(GFFFieldType.Int32, 0) +
+                                                fieldTypeCounts.GetValueOrDefault(GFFFieldType.Int16, 0) +
+                                                fieldTypeCounts.GetValueOrDefault(GFFFieldType.UInt8, 0) +
+                                                fieldTypeCounts.GetValueOrDefault(GFFFieldType.Int8, 0) +
+                                                fieldTypeCounts.GetValueOrDefault(GFFFieldType.UInt16, 0) +
+                                                fieldTypeCounts.GetValueOrDefault(GFFFieldType.UInt64, 0) +
+                                                fieldTypeCounts.GetValueOrDefault(GFFFieldType.Int64, 0);
+                        stats.FloatFieldCount = fieldTypeCounts.GetValueOrDefault(GFFFieldType.Single, 0) +
+                                                fieldTypeCounts.GetValueOrDefault(GFFFieldType.Double, 0);
                         stats.StructFieldCount = fieldTypeCounts.GetValueOrDefault(GFFFieldType.Struct, 0);
                         stats.ListFieldCount = fieldTypeCounts.GetValueOrDefault(GFFFieldType.List, 0);
-                    stats.VectorFieldCount = fieldTypeCounts.GetValueOrDefault(GFFFieldType.Vector, 0);
+                        stats.VectorFieldCount = fieldTypeCounts.GetValueOrDefault(GFFFieldType.Vector3, 0) +
+                                                fieldTypeCounts.GetValueOrDefault(GFFFieldType.Vector4, 0);
                 }
                 catch (Exception ex)
                 {
@@ -191,12 +197,12 @@ namespace KotorCLI.Commands
 
                 foreach (var field in root)
                 {
-                    if (field.FieldType == GFFFieldType.Struct && field.Value is GFFStruct childStruct)
+                    if (field.fieldType == GFFFieldType.Struct && field.value is GFFStruct childStruct)
                     {
                         int childDepth = CalculateMaxDepth(childStruct, gff, currentDepth + 1);
                         maxDepth = Math.Max(maxDepth, childDepth);
                     }
-                    else if (field.FieldType == GFFFieldType.List && field.Value is GFFList list)
+                    else if (field.fieldType == GFFFieldType.List && field.value is GFFList list)
                     {
                         foreach (var listStruct in list)
                         {
@@ -289,7 +295,7 @@ namespace KotorCLI.Commands
                 try
                 {
                     using (var fs = File.OpenRead(filePath))
-                    using (var reader = new BinaryReader(fs))
+                    using (var reader = new System.IO.BinaryReader(fs))
                     {
                         if (fs.Length < 8) return false;
                         var magic = reader.ReadBytes(8);
@@ -447,7 +453,7 @@ namespace KotorCLI.Commands
                 try
                 {
                     using (var fs = File.OpenRead(filePath))
-                    using (var reader = new BinaryReader(fs))
+                    using (var reader = new System.IO.BinaryReader(fs))
                     {
                         if (fs.Length < 8) return false;
                         var magic = reader.ReadBytes(8);
@@ -490,10 +496,10 @@ namespace KotorCLI.Commands
                             else
                                 textLengths.Add(entry.Text.Length);
 
-                            if (!string.IsNullOrEmpty(entry.Voiceover.ResRef))
+                            if (entry.Voiceover != null && !entry.Voiceover.IsBlank())
                             {
                                 entriesWithSound++;
-                                soundRefs.Add(entry.Voiceover.ResRef);
+                                soundRefs.Add(entry.Voiceover.ToString());
                             }
                         }
 
@@ -585,7 +591,7 @@ namespace KotorCLI.Commands
                 try
                 {
                     using (var fs = File.OpenRead(filePath))
-                    using (var reader = new BinaryReader(fs))
+                    using (var reader = new System.IO.BinaryReader(fs))
                     {
                         if (fs.Length < 8) return false;
                         var magic = reader.ReadBytes(8);
@@ -639,29 +645,68 @@ namespace KotorCLI.Commands
                                 case NCSInstructionType.RETN:
                                     jumpInstructions++;
                                     break;
-                                case NCSInstructionType.ADD:
-                                case NCSInstructionType.SUB:
-                                case NCSInstructionType.MUL:
-                                case NCSInstructionType.DIV:
-                                case NCSInstructionType.MOD:
-                                case NCSInstructionType.NEG:
+                                case NCSInstructionType.ADDII:
+                                case NCSInstructionType.ADDIF:
+                                case NCSInstructionType.ADDFI:
+                                case NCSInstructionType.ADDFF:
+                                case NCSInstructionType.ADDSS:
+                                case NCSInstructionType.ADDVV:
+                                case NCSInstructionType.SUBII:
+                                case NCSInstructionType.SUBIF:
+                                case NCSInstructionType.SUBFI:
+                                case NCSInstructionType.SUBFF:
+                                case NCSInstructionType.SUBVV:
+                                case NCSInstructionType.MULII:
+                                case NCSInstructionType.MULIF:
+                                case NCSInstructionType.MULFI:
+                                case NCSInstructionType.MULFF:
+                                case NCSInstructionType.MULVF:
+                                case NCSInstructionType.MULFV:
+                                case NCSInstructionType.DIVII:
+                                case NCSInstructionType.DIVIF:
+                                case NCSInstructionType.DIVFI:
+                                case NCSInstructionType.DIVFF:
+                                case NCSInstructionType.DIVVF:
+                                case NCSInstructionType.DIVFV:
+                                case NCSInstructionType.MODII:
+                                case NCSInstructionType.NEGI:
+                                case NCSInstructionType.NEGF:
                                     arithmeticInstructions++;
                                     break;
-                                case NCSInstructionType.EQ:
-                                case NCSInstructionType.NEQ:
-                                case NCSInstructionType.GT:
-                                case NCSInstructionType.GE:
-                                case NCSInstructionType.LT:
-                                case NCSInstructionType.LE:
-                                case NCSInstructionType.LOGAND:
-                                case NCSInstructionType.LOGOR:
-                                case NCSInstructionType.INCOR:
-                                case NCSInstructionType.EXCOR:
-                                case NCSInstructionType.BOOLAND:
-                                case NCSInstructionType.BOOLOR:
-                                case NCSInstructionType.SHLEFT:
-                                case NCSInstructionType.SHRIGHT:
-                                case NCSInstructionType.USHRIGHT:
+                                case NCSInstructionType.EQUALII:
+                                case NCSInstructionType.EQUALFF:
+                                case NCSInstructionType.EQUALSS:
+                                case NCSInstructionType.EQUALOO:
+                                case NCSInstructionType.EQUALTT:
+                                case NCSInstructionType.EQUALEFFEFF:
+                                case NCSInstructionType.EQUALEVTEVT:
+                                case NCSInstructionType.EQUALLOCLOC:
+                                case NCSInstructionType.EQUALTALTAL:
+                                case NCSInstructionType.NEQUALII:
+                                case NCSInstructionType.NEQUALFF:
+                                case NCSInstructionType.NEQUALSS:
+                                case NCSInstructionType.NEQUALOO:
+                                case NCSInstructionType.NEQUALTT:
+                                case NCSInstructionType.NEQUALEFFEFF:
+                                case NCSInstructionType.NEQUALEVTEVT:
+                                case NCSInstructionType.NEQUALLOCLOC:
+                                case NCSInstructionType.NEQUALTALTAL:
+                                case NCSInstructionType.GTII:
+                                case NCSInstructionType.GTFF:
+                                case NCSInstructionType.GEQII:
+                                case NCSInstructionType.GEQFF:
+                                case NCSInstructionType.LTII:
+                                case NCSInstructionType.LTFF:
+                                case NCSInstructionType.LEQII:
+                                case NCSInstructionType.LEQFF:
+                                case NCSInstructionType.LOGANDII:
+                                case NCSInstructionType.LOGORII:
+                                case NCSInstructionType.INCORII:
+                                case NCSInstructionType.EXCORII:
+                                case NCSInstructionType.BOOLANDII:
+                                case NCSInstructionType.SHLEFTII:
+                                case NCSInstructionType.SHRIGHTII:
+                                case NCSInstructionType.USHRIGHTII:
                                     logicalInstructions++;
                                     break;
                                 case NCSInstructionType.CPDOWNSP:
@@ -682,8 +727,8 @@ namespace KotorCLI.Commands
                                 case NCSInstructionType.MOVSP:
                                     variableInstructions++;
                                     break;
-                                case NCSInstructionType.SAVEPC:
-                                case NCSInstructionType.RESTOREPC:
+                                case NCSInstructionType.SAVEBP:
+                                case NCSInstructionType.RESTOREBP:
                                     functionInstructions++;
                                     break;
                             }
@@ -790,7 +835,7 @@ namespace KotorCLI.Commands
                 try
                 {
                     using (var fs = File.OpenRead(filePath))
-                    using (var reader = new BinaryReader(fs))
+                    using (var reader = new System.IO.BinaryReader(fs))
                     {
                         if (fs.Length < 12) return false;
                         var magic = reader.ReadBytes(8);
@@ -818,7 +863,7 @@ namespace KotorCLI.Commands
                     var twoda = TwoDAAuto.ReadTwoDA(filePath);
 
                     stats.RowCount = twoda.Rows.Count;
-                        stats.ColumnCount = twoda.Columns.Count;
+                        stats.ColumnCount = twoda.Headers.Count;
 
                         // Analyze data types in cells
                         int totalCells = 0;
@@ -830,10 +875,10 @@ namespace KotorCLI.Commands
 
                         foreach (var row in twoda.Rows)
                         {
-                            foreach (var column in twoda.Columns)
+                            foreach (var column in twoda.Headers)
                             {
                                 totalCells++;
-                                var cellValue = row.GetCell(column);
+                                var cellValue = row.GetString(column);
 
                                 if (string.IsNullOrEmpty(cellValue))
                                 {
@@ -969,7 +1014,7 @@ namespace KotorCLI.Commands
                 try
                 {
                     using (var fs = File.OpenRead(filePath))
-                    using (var reader = new BinaryReader(fs))
+                    using (var reader = new System.IO.BinaryReader(fs))
                     {
                         if (fs.Length < 20) return false;
                         var magic = reader.ReadBytes(8);
@@ -996,8 +1041,8 @@ namespace KotorCLI.Commands
                 {
                     var bif = new BIFBinaryReader(filePath).Load();
 
-                    stats.VariableResourceCount = bif.VariableResources.Count;
-                        stats.FixedResourceCount = bif.FixedResources.Count;
+                    stats.VariableResourceCount = bif.Resources.Count;
+                        stats.FixedResourceCount = bif.FixedCount;
                         stats.TotalResourceCount = stats.VariableResourceCount + stats.FixedResourceCount;
 
                         // Analyze resource types
@@ -1007,7 +1052,7 @@ namespace KotorCLI.Commands
                         long totalVariableSize = 0;
                         long totalFixedSize = 0;
 
-                        foreach (var resource in bif.VariableResources)
+                        foreach (var resource in bif.Resources)
                         {
                             if (!resourceTypeCounts.ContainsKey(resource.ResType))
                                 resourceTypeCounts[resource.ResType] = 0;
@@ -1017,15 +1062,8 @@ namespace KotorCLI.Commands
                             totalVariableSize += resource.UncompressedSize;
                         }
 
-                        foreach (var resource in bif.FixedResources)
-                        {
-                            if (!resourceTypeCounts.ContainsKey(resource.ResType))
-                                resourceTypeCounts[resource.ResType] = 0;
-                            resourceTypeCounts[resource.ResType]++;
-
-                            fixedSizes.Add(resource.UncompressedSize);
-                            totalFixedSize += resource.UncompressedSize;
-                        }
+                        // Fixed resources are not supported in KotOR (FixedCount is always 0)
+                        // No fixed resources to iterate
 
                         stats.ResourceTypeCounts = resourceTypeCounts;
                         stats.VariableResourceSizes = variableSizes;
