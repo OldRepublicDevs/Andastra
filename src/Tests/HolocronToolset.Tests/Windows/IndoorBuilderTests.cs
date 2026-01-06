@@ -5618,10 +5618,47 @@ namespace HolocronToolset.Tests.Windows
                     var component = kit.Components[0];
                     var image = component.Image;
 
-                    // Note: Image format validation requires QImage format access
-                    // This will be fully implemented when ModuleKit._load_module_components is complete
-                    // TODO: STUB - For now, verify image exists
+                    // Matching PyKotor: assert image.format() == QImage.Format.Format_RGB888
+                    // Verify image exists and is not null
                     image.Should().NotBeNull("Component image should not be null");
+                    
+                    // Verify image is a valid Avalonia bitmap type
+                    if (image is Avalonia.Media.Imaging.Bitmap bitmap)
+                    {
+                        // Verify image has valid dimensions
+                        bitmap.PixelSize.Width.Should().BeGreaterThan(0, "Image should have positive width");
+                        bitmap.PixelSize.Height.Should().BeGreaterThan(0, "Image should have positive height");
+                        
+                        // Verify image format is RGB-like (not using alpha channel)
+                        // Matching PyKotor: Format_RGB888 is 24-bit RGB without alpha
+                        // In Avalonia, we check if the image is effectively RGB888 by:
+                        // 1. Checking if it's a WriteableBitmap (which we can inspect)
+                        // 2. Verifying pixel format is RGB-like (Rgba8888 with all alpha = 255, or Rgb888 if available)
+                        if (image is Avalonia.Media.Imaging.WriteableBitmap writeableBitmap)
+                        {
+                            // Verify format is RGB-like (Rgba8888 is acceptable if all alpha values are 255)
+                            // Matching PyKotor: Format_RGB888 means no alpha channel is used
+                            var format = writeableBitmap.Format;
+                            
+                            // Check if format is RGB-like (Rgba8888 with opaque alpha, or ideally Rgb888)
+                            // Note: Avalonia doesn't have a direct RGB888 format, but Rgba8888 with all alpha=255 is equivalent
+                            // We verify this by checking a sample of pixels to ensure alpha is always 255
+                            bool isRgbLike = VerifyImageIsRgb888(writeableBitmap);
+                            isRgbLike.Should().BeTrue("Image format should be RGB888 (24-bit RGB, no alpha channel)");
+                        }
+                        else
+                        {
+                            // For non-WriteableBitmap images, verify basic properties
+                            // The format check will be done when we can access pixel data
+                            // For now, verify dimensions are valid
+                            bitmap.PixelSize.Width.Should().BeGreaterThan(0);
+                            bitmap.PixelSize.Height.Should().BeGreaterThan(0);
+                        }
+                        
+                        // Matching PyKotor: print(f"Component '{component.name}' image format: {image.format()} (correct: RGB888)")
+                        // Note: Component name logging would be done here if component.Name is available
+                    }
+                    
                     return; // Found a component with image, test passes
                 }
             }
@@ -5661,10 +5698,26 @@ namespace HolocronToolset.Tests.Windows
                     var component = kit.Components[0];
                     var image = component.Image;
 
-                    // Note: Image mirroring validation requires pixel data access
-                    // This will be fully implemented when ModuleKit._load_module_components is complete
-                    // TODO: STUB - For now, verify image exists and is valid
+                    // Matching PyKotor: assert not image.isNull(), assert image.width() > 0, assert image.height() > 0
+                    // Verify image is valid and has correct dimensions
                     image.Should().NotBeNull("Component image should not be null");
+                    
+                    if (image is Avalonia.Media.Imaging.Bitmap bitmap)
+                    {
+                        // Verify image has valid dimensions
+                        bitmap.PixelSize.Width.Should().BeGreaterThan(0, "Image should have positive width");
+                        bitmap.PixelSize.Height.Should().BeGreaterThan(0, "Image should have positive height");
+                        
+                        // Matching PyKotor: Verify image has pixel data (mirroring shouldn't corrupt it)
+                        // Check a few pixels to ensure image is valid
+                        // Matching PyKotor: has_pixel_data check - verify image has some non-black pixels
+                        bool hasPixelData = VerifyImageHasPixelData(bitmap);
+                        hasPixelData.Should().BeTrue("Image should have pixel data (walkmesh faces)");
+                        
+                        // Matching PyKotor: print(f"Component '{component.name}' image is valid and properly formatted (mirroring applied)")
+                        // Note: Component name logging would be done here if component.Name is available
+                    }
+                    
                     return; // Found a component with image, test passes
                 }
             }
@@ -5706,10 +5759,23 @@ namespace HolocronToolset.Tests.Windows
                     var component = kit.Components[0];
                     var image = component.Image;
 
-                    // Note: Image size validation requires QImage width/height access
-                    // This will be fully implemented when ModuleKit._load_module_components is complete
-                    // TODO: STUB - For now, verify image exists
+                    // Matching PyKotor: assert image.width() >= MIN_SIZE, assert image.height() >= MIN_SIZE
+                    // Images must be at least 256x256 (same as kit.py)
                     image.Should().NotBeNull("Component image should not be null");
+                    
+                    if (image is Avalonia.Media.Imaging.Bitmap bitmap)
+                    {
+                        // Verify image dimensions meet minimum size requirement
+                        // Matching PyKotor: assert image.width() >= MIN_SIZE, f"Image width {image.width()} must be >= {MIN_SIZE}"
+                        bitmap.PixelSize.Width.Should().BeGreaterOrEqual(MIN_SIZE, 
+                            $"Image width {bitmap.PixelSize.Width} must be >= {MIN_SIZE}");
+                        bitmap.PixelSize.Height.Should().BeGreaterOrEqual(MIN_SIZE, 
+                            $"Image height {bitmap.PixelSize.Height} must be >= {MIN_SIZE}");
+                        
+                        // Matching PyKotor: print(f"Component '{component.name}' image size: {image.width()}x{image.height()} (min: {MIN_SIZE}x{MIN_SIZE})")
+                        // Note: Component name logging would be done here if component.Name is available
+                    }
+                    
                     return; // Found a component with image, test passes
                 }
             }
@@ -8848,6 +8914,229 @@ namespace HolocronToolset.Tests.Windows
         //
         // This file will be expanded incrementally to port all remaining tests.
         // Each test will be ported following the established pattern above with full implementations.
+
+        /// <summary>
+        /// Helper method to verify that an image is effectively RGB888 format (24-bit RGB without alpha).
+        /// Matching PyKotor: QImage.Format.Format_RGB888 verification
+        /// In Avalonia, we check if the image uses Rgba8888 format with all alpha values set to 255 (opaque),
+        /// which is equivalent to RGB888 format.
+        /// </summary>
+        /// <param name="bitmap">The WriteableBitmap to verify</param>
+        /// <returns>True if the image is effectively RGB888 (no alpha channel used), false otherwise</returns>
+        private static bool VerifyImageIsRgb888(Avalonia.Media.Imaging.WriteableBitmap bitmap)
+        {
+            if (bitmap == null)
+            {
+                return false;
+            }
+
+            try
+            {
+                // Check pixel format
+                // Matching PyKotor: Format_RGB888 is 24-bit RGB (3 bytes per pixel, no alpha)
+                // In Avalonia, Rgba8888 with all alpha=255 is equivalent to RGB888
+                var format = bitmap.Format;
+                
+                // Rgba8888 format is acceptable if all alpha values are 255 (fully opaque)
+                // This is effectively RGB888 since the alpha channel is not used
+                if (format == PixelFormat.Rgba8888)
+                {
+                    // Verify that all alpha values are 255 (opaque) by sampling pixels
+                    // This confirms the image is effectively RGB888 (no alpha channel used)
+                    using (var lockedBitmap = bitmap.Lock())
+                    {
+                        int width = lockedBitmap.Size.Width;
+                        int height = lockedBitmap.Size.Height;
+                        
+                        if (width <= 0 || height <= 0)
+                        {
+                            return false;
+                        }
+                        
+                        // Sample pixels to verify alpha is always 255 (opaque)
+                        // Matching PyKotor: We verify format, not individual pixel values
+                        // But we check a sample to ensure alpha channel is not used
+                        unsafe
+                        {
+                            byte* pixelPtr = (byte*)lockedBitmap.Address;
+                            int rowStride = lockedBitmap.RowBytes;
+                            
+                            // Sample up to 100 pixels (or all pixels if image is small)
+                            int sampleCount = Math.Min(100, width * height);
+                            int step = Math.Max(1, (width * height) / sampleCount);
+                            
+                            for (int i = 0; i < sampleCount; i++)
+                            {
+                                int pixelIndex = i * step;
+                                int y = pixelIndex / width;
+                                int x = pixelIndex % width;
+                                
+                                if (y >= height)
+                                {
+                                    break;
+                                }
+                                
+                                // Calculate byte offset for this pixel (RGBA format, 4 bytes per pixel)
+                                int byteOffset = (y * rowStride) + (x * 4);
+                                
+                                // Check alpha channel (4th byte, index 3)
+                                byte alpha = pixelPtr[byteOffset + 3];
+                                
+                                // If any alpha value is not 255, the image is not effectively RGB888
+                                if (alpha != 255)
+                                {
+                                    return false;
+                                }
+                            }
+                        }
+                        
+                        // All sampled pixels have alpha=255, so image is effectively RGB888
+                        return true;
+                    }
+                }
+                else
+                {
+                    // Format is not Rgba8888, so it's not RGB888 equivalent
+                    return false;
+                }
+            }
+            catch
+            {
+                // If we can't verify the format, return false
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Helper method to verify that an image has valid pixel data (not all black/empty).
+        /// Matching PyKotor: has_pixel_data check - verifies image has some non-black pixels
+        /// This is used to verify that images are properly generated and not corrupted.
+        /// </summary>
+        /// <param name="bitmap">The Bitmap to verify</param>
+        /// <returns>True if the image has pixel data (non-black pixels found), false otherwise</returns>
+        private static bool VerifyImageHasPixelData(Avalonia.Media.Imaging.Bitmap bitmap)
+        {
+            if (bitmap == null)
+            {
+                return false;
+            }
+
+            try
+            {
+                // Check if image is WriteableBitmap (which we can inspect directly)
+                if (bitmap is Avalonia.Media.Imaging.WriteableBitmap writeableBitmap)
+                {
+                    using (var lockedBitmap = writeableBitmap.Lock())
+                    {
+                        int width = lockedBitmap.Size.Width;
+                        int height = lockedBitmap.Size.Height;
+                        
+                        if (width <= 0 || height <= 0)
+                        {
+                            return false;
+                        }
+                        
+                        // Matching PyKotor: Check a few pixels to ensure image is valid
+                        // Sample pixels to verify image has non-black pixel data
+                        unsafe
+                        {
+                            byte* pixelPtr = (byte*)lockedBitmap.Address;
+                            int rowStride = lockedBitmap.RowBytes;
+                            var format = writeableBitmap.Format;
+                            
+                            // Sample up to 10 pixels per row, up to 10 rows (matching PyKotor sampling pattern)
+                            int sampleRows = Math.Min(10, height);
+                            int sampleCols = Math.Min(10, width);
+                            int rowStep = Math.Max(1, height / sampleRows);
+                            int colStep = Math.Max(1, width / sampleCols);
+                            
+                            for (int y = 0; y < height; y += rowStep)
+                            {
+                                for (int x = 0; x < width; x += colStep)
+                                {
+                                    // Calculate byte offset for this pixel
+                                    int byteOffset = (y * rowStride) + (x * GetBytesPerPixel(format));
+                                    
+                                    // Check if pixel is non-black
+                                    // For RGBA format, check if any RGB channel is non-zero
+                                    if (format == PixelFormat.Rgba8888)
+                                    {
+                                        byte r = pixelPtr[byteOffset];
+                                        byte g = pixelPtr[byteOffset + 1];
+                                        byte b = pixelPtr[byteOffset + 2];
+                                        
+                                        // If any RGB channel is non-zero, pixel is not black
+                                        if (r != 0 || g != 0 || b != 0)
+                                        {
+                                            return true; // Found non-black pixel
+                                        }
+                                    }
+                                    else if (format == PixelFormat.Bgra8888)
+                                    {
+                                        byte b = pixelPtr[byteOffset];
+                                        byte g = pixelPtr[byteOffset + 1];
+                                        byte r = pixelPtr[byteOffset + 2];
+                                        
+                                        // If any RGB channel is non-zero, pixel is not black
+                                        if (r != 0 || g != 0 || b != 0)
+                                        {
+                                            return true; // Found non-black pixel
+                                        }
+                                    }
+                                    else
+                                    {
+                                        // For other formats, check if any byte is non-zero
+                                        int bytesPerPixel = GetBytesPerPixel(format);
+                                        for (int i = 0; i < bytesPerPixel; i++)
+                                        {
+                                            if (pixelPtr[byteOffset + i] != 0)
+                                            {
+                                                return true; // Found non-zero byte
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // All sampled pixels were black/zero - image may be empty or invalid
+                        return false;
+                    }
+                }
+                else
+                {
+                    // For non-WriteableBitmap images, we can't easily check pixel data
+                    // But we can verify dimensions are valid (which we do in the test)
+                    return bitmap.PixelSize.Width > 0 && bitmap.PixelSize.Height > 0;
+                }
+            }
+            catch
+            {
+                // If we can't verify pixel data, return false
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Helper method to get bytes per pixel for a given PixelFormat.
+        /// </summary>
+        /// <param name="format">The PixelFormat to check</param>
+        /// <returns>Number of bytes per pixel</returns>
+        private static int GetBytesPerPixel(PixelFormat format)
+        {
+            // Common pixel formats and their byte counts
+            switch (format)
+            {
+                case PixelFormat.Rgba8888:
+                case PixelFormat.Bgra8888:
+                    return 4; // 4 bytes per pixel (RGBA/BGRA)
+                case PixelFormat.Rgb565:
+                    return 2; // 2 bytes per pixel
+                default:
+                    // Default to 4 bytes for unknown formats (most common)
+                    return 4;
+            }
+        }
     }
 }
 
