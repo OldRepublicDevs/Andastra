@@ -3342,6 +3342,8 @@ namespace HolocronToolset.Tests.Windows
                 builder.Show();
 
                 // Matching Python: assert hasattr(builder.ui, "moduleSelect")
+                builder.Ui.Should().NotBeNull("UI should not be null");
+                builder.Ui.ModuleSelect.Should().NotBeNull("moduleSelect should exist");
 
                 builder.Should().NotBeNull();
             }
@@ -3378,6 +3380,8 @@ namespace HolocronToolset.Tests.Windows
                 builder.Show();
 
                 // Matching Python: assert hasattr(builder.ui, "moduleComponentList")
+                builder.Ui.Should().NotBeNull("UI should not be null");
+                builder.Ui.ModuleComponentList.Should().NotBeNull("moduleComponentList should exist");
 
                 builder.Should().NotBeNull();
             }
@@ -3451,9 +3455,15 @@ namespace HolocronToolset.Tests.Windows
 
                 // Matching Python test logic:
                 // if builder.ui.moduleSelect.count() == 0: pytest.skip("No modules available")
+                if (builder.Ui.ModuleSelect.Count() == 0)
+                {
+                    return; // Skip if no modules available
+                }
                 // builder.ui.moduleSelect.setCurrentIndex(0)
+                builder.Ui.ModuleSelect.SetCurrentIndex(0);
                 // qtbot.wait(200)  # Wait for lazy loading
                 // QApplication.processEvents()
+                // Note: In C# tests, we don't need to wait for events as we're testing the synchronous API
 
                 builder.Should().NotBeNull();
             }
@@ -3493,7 +3503,9 @@ namespace HolocronToolset.Tests.Windows
                 // assert builder._module_kit_manager is None
                 builder.ModuleKitManager.Should().BeNull("ModuleKitManager should be null when no installation is provided");
                 // assert builder.ui.moduleSelect.count() == 0
-                // TODO: PLACEHOLDER - moduleSelect UI will be implemented when module selection UI is complete
+                builder.Ui.Should().NotBeNull("UI should not be null");
+                builder.Ui.ModuleSelect.Count().Should().Be(0, "moduleSelect should be empty when no installation is provided");
+                builder.Ui.ModulesGroupBoxEnabled.Should().BeFalse("modulesGroupBox should be disabled when no installation is provided");
 
                 builder.Should().NotBeNull();
             }
