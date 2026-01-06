@@ -247,13 +247,17 @@ namespace HolocronToolset.Tests.Dialogs
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_dialogs_extra.py:162-172
             // Original: mock_resource: FileResource = cast(FileResource, MagicMock(spec=FileResource))
-            // TODO:  Create a mock FileResource for testing
-            var mockResource = new Andastra.Parsing.Extract.FileResource(
+            // Original: mock_resource.offset.return_value = 0
+            // Original: mock_resource.size.return_value = 100
+            // Original: mock_resource.filepath.return_value = Path(installation.path()) / "test.utc"
+            // In C#, we create a real FileResource instance for testing (no MagicMock equivalent needed)
+            // Matching Python mock properties: offset=0, size=100, filepath=installation.path() / "test.utc"
+            var mockResource = CreateTestFileResource(
                 "test_resource",
                 Andastra.Parsing.Resource.ResourceType.UTC,
-                0,
-                100,
-                System.IO.Path.Combine(_installation.Path, "test.utc")
+                100,  // size (matching Python: mock_resource.size.return_value = 100)
+                0,    // offset (matching Python: mock_resource.offset.return_value = 0)
+                System.IO.Path.Combine(_installation.Path, "test.utc")  // filepath (matching Python: mock_resource.filepath.return_value)
             );
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_dialogs_extra.py:171-172
@@ -290,6 +294,37 @@ namespace HolocronToolset.Tests.Dialogs
 
             window.Close();
             parent.Close();
+        }
+
+        // Matching PyKotor implementation - helper method to create test FileResource instances
+        // Original: MagicMock is used in Python, but in C# we create real instances
+        // This helper method ensures consistent FileResource creation for testing
+        /// <summary>
+        /// Creates a FileResource instance for testing purposes.
+        /// Matching PyKotor's MagicMock pattern but using real FileResource instances.
+        /// </summary>
+        /// <param name="resname">Resource name</param>
+        /// <param name="restype">Resource type</param>
+        /// <param name="size">Resource size in bytes</param>
+        /// <param name="offset">Resource offset in file</param>
+        /// <param name="filepath">File path where resource is located</param>
+        /// <returns>A FileResource instance configured for testing</returns>
+        private Andastra.Parsing.Extract.FileResource CreateTestFileResource(
+            string resname,
+            Andastra.Parsing.Resource.ResourceType restype,
+            int size,
+            int offset,
+            string filepath)
+        {
+            // Matching PyKotor: Create FileResource with specified properties
+            // In Python, MagicMock allows setting return values, but in C# we use constructor parameters
+            return new Andastra.Parsing.Extract.FileResource(
+                resname,
+                restype,
+                size,
+                offset,
+                filepath
+            );
         }
     }
 }
