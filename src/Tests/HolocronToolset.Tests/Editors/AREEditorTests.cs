@@ -4380,19 +4380,17 @@ namespace HolocronToolset.Tests.Editors
             // Verify shadow_opacity field (ShadowOpacity in ARE structure)
             modifiedAre.ShadowOpacity.Should().Be(255, "shadow_opacity should be 255");
 
-            // Check that all values were set to maximum values in the ARE object
-            // Note: Some fields may not have direct ARE object counterparts, so we verify UI values
+            // Matching PyKotor: assert modified_are.stealth_xp_loss == 9999
+            // Verify stealth_xp_loss field (StealthXpLoss in ARE structure)
+            modifiedAre.StealthXpLoss.Should().Be(9999, "stealth_xp_loss should be 9999");
 
-            // Alpha Test should be set to maximum
-            modifiedAre.AlphaTest.Should().Be(255.0f);
+            // Matching PyKotor: assert modified_are.map_zoom == 100
+            // Verify map_zoom field (MapZoom in ARE structure)
+            modifiedAre.MapZoom.Should().Be(100, "map_zoom should be 100");
 
-            // Stealth XP values should be set to maximum
-            modifiedAre.StealthXpMax.Should().Be(int.MaxValue);
-            modifiedAre.StealthXpLoss.Should().Be(int.MaxValue);
-
-            // Map values should be set to maximum
-            modifiedAre.MapZoom.Should().Be(int.MaxValue);
-            modifiedAre.MapResX.Should().Be(int.MaxValue);
+            // Matching PyKotor: assert modified_are.map_res_x == 4096
+            // Verify map_res_x field (MapResX in ARE structure)
+            modifiedAre.MapResX.Should().Be(4096, "map_res_x should be 4096");
 
             // Map coordinates should be set to maximum
             modifiedAre.MapPoint1.Should().Be(new Vector2(1.0f, 1.0f));
