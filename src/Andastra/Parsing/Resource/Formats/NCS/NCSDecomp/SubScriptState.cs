@@ -1845,12 +1845,32 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                             if (typeof(AVarRef).IsInstanceOfType(child))
                             {
                                 Error($"DEBUG TransformBinary: Found AVarRef at index {i}, using as left operand");
-                                // Remove all children from this index onwards, then add back the ones we want to keep
-                                // Actually, simpler: just remove this child
-                                this.current.RemoveLastChild(); // Remove right operand if it's still there
-                                // Now the AVarRef should be the last child
-                                left = (AVarRef)this.RemoveLastExp(false);
+                                // Remove all children after this one
+                                while (this.current.HasChildren() && this.current.GetLastChild() != child)
+                                {
+                                    this.current.RemoveLastChild();
+                                }
+                                left = (AVarRef)this.current.RemoveLastChild();
+                                left.Parent(null);
                                 break;
+                            }
+                            else if (typeof(ScriptNode.AExpressionStatement).IsInstanceOfType(child))
+                            {
+                                ScriptNode.AExpressionStatement expStmt = (ScriptNode.AExpressionStatement)child;
+                                ScriptNode.AExpression innerExp = expStmt.GetExp();
+                                if (innerExp != null && typeof(AVarRef).IsInstanceOfType(innerExp))
+                                {
+                                    Error($"DEBUG TransformBinary: Found AVarRef in AExpressionStatement at index {i}, extracting as left operand");
+                                    // Remove all children after this one
+                                    while (this.current.HasChildren() && this.current.GetLastChild() != child)
+                                    {
+                                        this.current.RemoveLastChild();
+                                    }
+                                    this.current.RemoveLastChild();
+                                    innerExp.Parent(null);
+                                    left = (AVarRef)innerExp;
+                                    break;
+                                }
                             }
                             else if (typeof(ScriptNode.AExpressionStatement).IsInstanceOfType(child))
                             {
