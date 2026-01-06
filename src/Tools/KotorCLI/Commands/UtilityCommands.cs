@@ -4,12 +4,12 @@ using KotorCLI.Logging;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-using Andastra.Parsing.Resource.Formats.GFF;
-using Andastra.Parsing.Resource.Formats.ERF;
-using Andastra.Parsing.Resource.Formats.TLK;
-using Andastra.Parsing.Resource.Formats.NCS;
+using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Formats.ERF;
+using Andastra.Parsing.Formats.TLK;
+using Andastra.Parsing.Formats.NCS;
 using Andastra.Parsing.Resource.Formats.BIF;
-using Andastra.Parsing.Resource.Formats.TwoDA;
+using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Common;
 using JetBrains.Annotations;
@@ -132,7 +132,7 @@ namespace KotorCLI.Commands
                 {
                     var gff = GFFAuto.ReadGff(filePath);
 
-                        // Basic structure counts
+                    // Basic structure counts
                         stats.StructCount = gff.Structs.Count;
                         stats.FieldCount = gff.Fields.Count;
                         stats.LabelCount = gff.Labels.Count;
@@ -174,8 +174,7 @@ namespace KotorCLI.Commands
                         stats.FloatFieldCount = fieldTypeCounts.GetValueOrDefault(GFFFieldType.FLOAT, 0);
                         stats.StructFieldCount = fieldTypeCounts.GetValueOrDefault(GFFFieldType.Struct, 0);
                         stats.ListFieldCount = fieldTypeCounts.GetValueOrDefault(GFFFieldType.List, 0);
-                        stats.VectorFieldCount = fieldTypeCounts.GetValueOrDefault(GFFFieldType.Vector, 0);
-                    }
+                    stats.VectorFieldCount = fieldTypeCounts.GetValueOrDefault(GFFFieldType.Vector, 0);
                 }
                 catch (Exception ex)
                 {
@@ -320,7 +319,7 @@ namespace KotorCLI.Commands
                 {
                     var erf = ERFAuto.ReadErf(filePath);
 
-                        stats.ResourceCount = erf.Count;
+                    stats.ResourceCount = erf.Count;
                         stats.ErfType = erf.ErfType;
                         stats.IsSaveErf = erf.IsSaveErf;
 
@@ -356,7 +355,6 @@ namespace KotorCLI.Commands
                             .OrderByDescending(x => x.Value)
                             .Take(10)
                             .ToDictionary(x => x.Key, x => x.Value);
-                    }
                 }
                 catch (Exception ex)
                 {
@@ -476,7 +474,7 @@ namespace KotorCLI.Commands
                 {
                     var tlk = TLKAuto.ReadTlk(filePath);
 
-                        stats.Language = tlk.Language;
+                    stats.Language = tlk.Language;
                         stats.EntryCount = tlk.Count;
 
                         // Analyze entries
@@ -513,8 +511,7 @@ namespace KotorCLI.Commands
 
                         // Calculate used entries
                         stats.UsedEntryCount = stats.EntryCount - emptyEntries;
-                        stats.UsagePercentage = stats.EntryCount > 0 ? (double)stats.UsedEntryCount / stats.EntryCount : 0;
-                    }
+                    stats.UsagePercentage = stats.EntryCount > 0 ? (double)stats.UsedEntryCount / stats.EntryCount : 0;
                 }
                 catch (Exception ex)
                 {
@@ -615,7 +612,7 @@ namespace KotorCLI.Commands
                 {
                     var ncs = NCSAuto.ReadNcs(filePath);
 
-                        stats.InstructionCount = ncs.Instructions.Count;
+                    stats.InstructionCount = ncs.Instructions.Count;
 
                         // Analyze instruction types
                         var instructionTypeCounts = new Dictionary<NCSInstructionType, int>();
@@ -710,7 +707,6 @@ namespace KotorCLI.Commands
                         stats.UniqueInstructionTypes = instructionTypeCounts.Count;
                         stats.InstructionDiversityRatio = stats.InstructionCount > 0 ?
                             (double)stats.UniqueInstructionTypes / stats.InstructionCount : 0;
-                    }
                 }
                 catch (Exception ex)
                 {
@@ -821,7 +817,7 @@ namespace KotorCLI.Commands
                 {
                     var twoda = TwoDAAuto.ReadTwoDA(filePath);
 
-                        stats.RowCount = twoda.Rows.Count;
+                    stats.RowCount = twoda.Rows.Count;
                         stats.ColumnCount = twoda.Columns.Count;
 
                         // Analyze data types in cells
@@ -892,7 +888,6 @@ namespace KotorCLI.Commands
                             x => x.Key,
                             x => string.Join("/", x.Value.OrderBy(t => t))
                         );
-                    }
                 }
                 catch (Exception ex)
                 {
@@ -1001,7 +996,7 @@ namespace KotorCLI.Commands
                 {
                     var bif = new BIFBinaryReader(filePath).Load();
 
-                        stats.VariableResourceCount = bif.VariableResources.Count;
+                    stats.VariableResourceCount = bif.VariableResources.Count;
                         stats.FixedResourceCount = bif.FixedResources.Count;
                         stats.TotalResourceCount = stats.VariableResourceCount + stats.FixedResourceCount;
 
@@ -1059,7 +1054,6 @@ namespace KotorCLI.Commands
                             .OrderByDescending(x => x.Value)
                             .Take(10)
                             .ToDictionary(x => x.Key, x => x.Value);
-                    }
                 }
                 catch (Exception ex)
                 {
