@@ -13,7 +13,7 @@ namespace Andastra.Utility.LZMA
     /// Implementation uses SharpCompress for raw LZMA1 format decompression matching Python's lzma.FORMAT_RAW with FILTER_LZMA1.
     /// The properties are fixed for BZF files: lc=3, lp=0, pb=2, dict=8MB (0x5D, 0x00, 0x00, 0x80, 0x00).
     /// </summary>
-    internal static class LzmaHelper
+    public static class LzmaHelper
     {
         // LZMA properties for raw LZMA1 format: lc=3, lp=0, pb=2, dict=8MB
         // These properties match the standard BZF file format used in KotOR games

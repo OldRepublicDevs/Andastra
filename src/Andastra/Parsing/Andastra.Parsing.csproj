@@ -12,8 +12,7 @@
   <!-- Debug Configuration -->
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
     <TargetFrameworks>net9.0</TargetFrameworks>
-    <OutputType Condition="'$(OS)' == 'Windows_NT'">WinExe</OutputType>
-    <OutputType Condition="'$(OS)' != 'Windows_NT'">Exe</OutputType>
+    <OutputType>Library</OutputType>
     <EnableNETAnalyzers>false</EnableNETAnalyzers>
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
     <Nullable>disable</Nullable>
@@ -84,7 +83,7 @@
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
     <PackageReference Include="LZMA-SDK" Version="19.0.0" />
-    <PackageReference Include="SharpCompress" Version="0.38.0" />
+    <PackageReference Include="SharpCompress" Version="0.42.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="sly" Version="3.7.7" />
@@ -94,5 +93,8 @@
     <PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.1" />
     <PackageReference Include="System.Text.Json" Version="10.0.1" />
     <PackageReference Include="ini-parser-netstandard" Version="2.5.3" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Utility\Andastra.Utility.csproj" />
   </ItemGroup>
 </Project>
