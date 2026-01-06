@@ -1368,10 +1368,13 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                         // until the full expression is built (e.g., by EQUAL, ADD, etc. operations).
                         // ALSO: Don't extract AUnaryExp, ABinaryExp, or AConditionalExp as statements in assignment context
                         // as they're likely operands for binary operations (e.g., EQUALII) that need to extract them
+                        // CRITICAL: NEVER wrap AUnaryExp, ABinaryExp, or AConditionalExp as they're needed by EQUALII and JZ/JNZ
+                        // This check must come FIRST before any extraction logic
                         if (typeof(AUnaryExp).IsInstanceOfType(last) || typeof(ABinaryExp).IsInstanceOfType(last) || typeof(AConditionalExp).IsInstanceOfType(last))
                         {
                             // These are likely operands for binary operations - don't extract as statements
-                            Error("DEBUG transformMoveSp: AUnaryExp/ABinaryExp/AConditionalExp, NOT extracting as statement (likely operand)");
+                            // AUnaryExp from NEGI will be used by EQUALII, so NEVER wrap it
+                            Error("DEBUG transformMoveSp: AUnaryExp/ABinaryExp/AConditionalExp, NOT extracting as statement (likely operand for EQUALII/JZ)");
                             expr = null; // Don't extract as statement
                         }
                         else
@@ -1629,6 +1632,11 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                         this.current.RemoveLastChild();
                         innerExp.Parent(null);
                         right = innerExp;
+                        // For conditional operations, if we extracted AUnaryExp, we're done
+                        if (NodeUtils.IsConditionalOp(node) && typeof(AUnaryExp).IsInstanceOfType(innerExp))
+                        {
+                            Error($"DEBUG TransformBinary: Successfully extracted AUnaryExp from AExpressionStatement for conditional op");
+                        }
                     }
                 }
                 else if (typeof(AUnaryExp).IsInstanceOfType(lastChild) || typeof(ABinaryExp).IsInstanceOfType(lastChild) || typeof(AConditionalExp).IsInstanceOfType(lastChild))
