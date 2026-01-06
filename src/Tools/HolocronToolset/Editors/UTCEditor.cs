@@ -114,6 +114,7 @@ namespace HolocronToolset.Editors
 
         // UI Controls - Comments
         private TextBox _commentsEdit;
+        private Expander _commentsExpander; // For tab title update testing
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:52-105
         // Original: def __init__(self, parent, installation):
@@ -479,14 +480,19 @@ namespace HolocronToolset.Editors
             mainPanel.Children.Add(scriptsGroup);
 
             // Comments Group
-            var commentsGroup = new Expander { Header = "Comments", IsExpanded = false };
+            // Matching PyKotor implementation: Comments tab with title update functionality
+            // Original: self.ui.commentsTab in tabWidget, _update_comments_tab_title() method
+            _commentsExpander = new Expander { Header = "Comments", IsExpanded = false };
             var commentsPanel = new StackPanel { Orientation = Orientation.Vertical };
             var commentsLabel = new TextBlock { Text = "Comment:" };
             _commentsEdit = new TextBox { AcceptsReturn = true, AcceptsTab = true };
+            // Matching PyKotor: Wire up text changed event to update tab title
+            // Original: self.ui.comments.textChanged.connect(self._update_comments_tab_title)
+            _commentsEdit.TextChanged += (s, e) => UpdateCommentsTabTitle();
             commentsPanel.Children.Add(commentsLabel);
             commentsPanel.Children.Add(_commentsEdit);
-            commentsGroup.Content = commentsPanel;
-            mainPanel.Children.Add(commentsGroup);
+            _commentsExpander.Content = commentsPanel;
+            mainPanel.Children.Add(_commentsExpander);
 
             scrollViewer.Content = mainPanel;
             Content = scrollViewer;
@@ -497,6 +503,38 @@ namespace HolocronToolset.Editors
             // Try to find controls from XAML if available
             // TODO: STUB - For now, programmatic UI is set up in SetupProgrammaticUI
         }
+
+        /// <summary>
+        /// Updates the Comments tab/expander title with a notification badge if comments are not blank.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:558-564
+        /// Original: def _update_comments_tab_title(self): Updates tab title with "*" indicator
+        /// </summary>
+        private void UpdateCommentsTabTitle()
+        {
+            // Matching PyKotor: comments = self.ui.comments.toPlainText()
+            string comments = _commentsEdit?.Text ?? "";
+            
+            // Matching PyKotor: if comments: setTabText("Comments *") else: setTabText("Comments")
+            if (_commentsExpander != null)
+            {
+                if (!string.IsNullOrWhiteSpace(comments))
+                {
+                    // Matching PyKotor: self.ui.tabWidget.setTabText(..., "Comments *")
+                    _commentsExpander.Header = "Comments *";
+                }
+                else
+                {
+                    // Matching PyKotor: self.ui.tabWidget.setTabText(..., "Comments")
+                    _commentsExpander.Header = "Comments";
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the Comments Expander for testing.
+        /// Matching PyKotor: editor.ui.commentsTab for tab title testing
+        /// </summary>
+        public Expander CommentsExpander => _commentsExpander;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:365-535
         // Original: def load(self, filepath, resref, restype, data):
@@ -779,7 +817,12 @@ namespace HolocronToolset.Editors
                 _scriptFields["OnUserDefined"].Text = utc.OnUserDefined.ToString();
 
             // Comments
-            if (_commentsEdit != null) _commentsEdit.Text = utc.Comment;
+            if (_commentsEdit != null)
+            {
+                _commentsEdit.Text = utc.Comment;
+                // Matching PyKotor: self._update_comments_tab_title() after loading comments
+                UpdateCommentsTabTitle();
+            }
             
             // Update portrait preview after loading all data
             PortraitChanged();
