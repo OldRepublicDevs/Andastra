@@ -123,7 +123,7 @@ namespace KotorCLI.Commands
             assembleCmd.Add(assembleInput);
             var assembleOutput = new Option<string>(new[] { "-o", "--output" }, "Output NCS file");
             assembleCmd.Options.Add(assembleOutput);
-            var includeOption = new Option<string[]>("--include", "Include directory for #include files");
+            var includeOption = new Option<string[]>(new[] { "-I", "--include" }, "Include directory for #include files");
             assembleCmd.Options.Add(includeOption);
             var debugOption = new Option<bool>("--debug", "Enable debug output");
             assembleCmd.Options.Add(debugOption);
