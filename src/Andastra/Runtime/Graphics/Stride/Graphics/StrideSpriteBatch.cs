@@ -398,13 +398,10 @@ namespace Andastra.Runtime.Stride.Graphics
                 // Vertex stride: 5 floats (Position: 3 floats, TextureCoordinate: 2 floats) = 20 bytes
                 int vertexStride = 20; // 5 floats * 4 bytes per float
                 // Create VertexDeclaration with proper element format
-                // Stride uses PixelFormat for VertexElement, but we need to map to proper formats
-                var vertexElements = new StrideGraphics.VertexElement[]
-                {
-                    new StrideGraphics.VertexElement("POSITION", 0, StrideGraphics.PixelFormat.R32G32B32_Float, 0),
-                    new StrideGraphics.VertexElement("TEXCOORD0", 0, StrideGraphics.PixelFormat.R32G32_Float, 12)
-                };
-                var vertexDeclaration = new StrideGraphics.VertexDeclaration(vertexElements, vertexStride);
+                // Stride uses PixelFormat for VertexElement
+                var vertexElement1 = new StrideGraphics.VertexElement("POSITION", 0, StrideGraphics.PixelFormat.R32G32B32_Float, 0);
+                var vertexElement2 = new StrideGraphics.VertexElement("TEXCOORD0", 0, StrideGraphics.PixelFormat.R32G32_Float, 12);
+                var vertexDeclaration = new StrideGraphics.VertexDeclaration(vertexElement1, vertexElement2);
                 _quadVertexBufferBindings = new StrideGraphics.VertexBufferBinding[]
                 {
                     new StrideGraphics.VertexBufferBinding(_quadVertexBuffer, vertexDeclaration, vertexStride, 0)
