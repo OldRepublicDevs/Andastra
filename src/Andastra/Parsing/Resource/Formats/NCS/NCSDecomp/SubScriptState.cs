@@ -1561,6 +1561,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             // as it might have been wrapped before the binary operation could process it
             // Also check if the last child is a plain AUnaryExp, ABinaryExp, or AConditionalExp that should be used
             AExpression right = null;
+            // CRITICAL: For conditional operations (EQUALII, etc.), we MUST extract the right operand first
+            // before it gets wrapped by MOVSP or other instructions
             if (this.current.HasChildren())
             {
                 ScriptNode.ScriptNode lastChild = this.current.GetLastChild();
@@ -1583,6 +1585,17 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                     Error($"DEBUG TransformBinary: Using last child {lastChild.GetType().Name} as right operand");
                     right = (AExpression)this.current.RemoveLastChild();
                     right.Parent(null);
+                }
+                else if (NodeUtils.IsConditionalOp(node))
+                {
+                    // For conditional operations, also check if last child is a plain expression that should be used
+                    // This handles cases where the expression hasn't been wrapped yet
+                    if (typeof(AExpression).IsInstanceOfType(lastChild) && !typeof(AModifyExp).IsInstanceOfType(lastChild) && !typeof(AUnaryModExp).IsInstanceOfType(lastChild))
+                    {
+                        Error($"DEBUG TransformBinary: Using last child {lastChild.GetType().Name} as right operand for conditional op");
+                        right = (AExpression)this.current.RemoveLastChild();
+                        right.Parent(null);
+                    }
                 }
             }
             if (right == null)
