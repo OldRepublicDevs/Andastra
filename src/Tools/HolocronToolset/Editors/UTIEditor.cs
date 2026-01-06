@@ -13,6 +13,7 @@ using Andastra.Parsing.Resource.Generics.UTI;
 using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
+using HolocronToolset.Widgets;
 using JetBrains.Annotations;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
 
@@ -25,10 +26,8 @@ namespace HolocronToolset.Editors
         private UTI _uti;
 
         // UI Controls - Basic
-        private TextBox _nameEdit;
-        private Button _nameEditBtn;
-        private TextBox _descEdit;
-        private Button _descEditBtn;
+        private LocalizedStringEdit _nameEdit;
+        private LocalizedStringEdit _descEdit;
         private TextBox _tagEdit;
         private Button _tagGenerateBtn;
         private TextBox _resrefEdit;
@@ -56,8 +55,8 @@ namespace HolocronToolset.Editors
         private TextBox _commentsEdit;
 
         // Matching PyKotor implementation: Expose UI controls for testing
-        public TextBox NameEdit => _nameEdit;
-        public TextBox DescEdit => _descEdit;
+        public LocalizedStringEdit NameEdit => _nameEdit;
+        public LocalizedStringEdit DescEdit => _descEdit;
         public TextBox TagEdit => _tagEdit;
         public TextBox ResrefEdit => _resrefEdit;
         public ComboBox BaseSelect => _baseSelect;
@@ -174,10 +173,8 @@ namespace HolocronToolset.Editors
                 xamlLoaded = true;
 
                 // Try to find controls from XAML
-                _nameEdit = this.FindControl<TextBox>("nameEdit");
-                _nameEditBtn = this.FindControl<Button>("nameEditBtn");
-                _descEdit = this.FindControl<TextBox>("descEdit");
-                _descEditBtn = this.FindControl<Button>("descEditBtn");
+                _nameEdit = this.FindControl<LocalizedStringEdit>("nameEdit");
+                _descEdit = this.FindControl<LocalizedStringEdit>("descEdit");
                 _tagEdit = this.FindControl<TextBox>("tagEdit");
                 _tagGenerateBtn = this.FindControl<Button>("tagGenerateBtn");
                 _resrefEdit = this.FindControl<TextBox>("resrefEdit");
@@ -220,6 +217,15 @@ namespace HolocronToolset.Editors
             if (_installation != null)
             {
                 SetupInstallation(_installation);
+                // Set installation on LocalizedStringEdit widgets
+                if (_nameEdit != null)
+                {
+                    _nameEdit.SetInstallation(_installation);
+                }
+                if (_descEdit != null)
+                {
+                    _descEdit.SetInstallation(_installation);
+                }
             }
         }
 
@@ -236,21 +242,23 @@ namespace HolocronToolset.Editors
 
             // Name
             var nameLabel = new TextBlock { Text = "Name:" };
-            _nameEdit = new TextBox { IsReadOnly = true };
-            _nameEditBtn = new Button { Content = "Edit Name" };
-            _nameEditBtn.Click += (s, e) => EditName();
+            _nameEdit = new LocalizedStringEdit();
+            if (_installation != null)
+            {
+                _nameEdit.SetInstallation(_installation);
+            }
             basicPanel.Children.Add(nameLabel);
             basicPanel.Children.Add(_nameEdit);
-            basicPanel.Children.Add(_nameEditBtn);
 
             // Description
             var descLabel = new TextBlock { Text = "Description:" };
-            _descEdit = new TextBox { IsReadOnly = true };
-            _descEditBtn = new Button { Content = "Edit Description" };
-            _descEditBtn.Click += (s, e) => EditDescription();
+            _descEdit = new LocalizedStringEdit();
+            if (_installation != null)
+            {
+                _descEdit.SetInstallation(_installation);
+            }
             basicPanel.Children.Add(descLabel);
             basicPanel.Children.Add(_descEdit);
-            basicPanel.Children.Add(_descEditBtn);
 
             // Tag
             var tagLabel = new TextBlock { Text = "Tag:" };
@@ -435,14 +443,8 @@ namespace HolocronToolset.Editors
             {
                 _baseSelect.SelectionChanged += (s, e) => UpdateIcon();
             }
-            if (_nameEditBtn != null)
-            {
-                _nameEditBtn.Click += (s, e) => EditName();
-            }
-            if (_descEditBtn != null)
-            {
-                _descEditBtn.Click += (s, e) => EditDescription();
-            }
+            // Note: Name and Description editing is handled by LocalizedStringEdit's built-in edit button
+            // Matching PyKotor: LocalizedStringLineEdit has its own edit button that opens LocalizedStringDialog
             
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:98-99
             // Original: self.ui.availablePropertyList.doubleClicked.connect(self.on_available_property_list_double_clicked)
@@ -476,13 +478,15 @@ namespace HolocronToolset.Editors
             _uti = uti;
 
             // Basic
+            // Matching PyKotor implementation: self.ui.nameEdit.set_locstring(uti.name)
             if (_nameEdit != null)
             {
-                _nameEdit.Text = _installation != null ? _installation.String(uti.Name) : uti.Name.StringRef.ToString();
+                _nameEdit.SetLocString(uti.Name);
             }
+            // Matching PyKotor implementation: self.ui.descEdit.set_locstring(uti.description)
             if (_descEdit != null)
             {
-                _descEdit.Text = _installation != null ? _installation.String(uti.Description) : uti.Description.StringRef.ToString();
+                _descEdit.SetLocString(uti.Description);
             }
             if (_tagEdit != null)
             {
@@ -567,12 +571,17 @@ namespace HolocronToolset.Editors
             var uti = CopyUTI(_uti);
 
             // Basic - read from UI controls (matching Python which always reads from UI)
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:201-214
-            // Note: Python reads from LocalizedString widgets (locstring()), but we use TextBox
-            // Since we can't reconstruct LocalizedString from text, preserve original from copy
-            // TODO:  In a full implementation, this would read from a LocalizedString widget
-            uti.Name = uti.Name ?? LocalizedString.FromInvalid();
-            uti.Description = uti.Description ?? LocalizedString.FromInvalid();
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:210-211
+            // Original: uti.name = self.ui.nameEdit.locstring()
+            // Original: uti.description = self.ui.descEdit.locstring()
+            if (_nameEdit != null)
+            {
+                uti.Name = _nameEdit.GetLocString();
+            }
+            if (_descEdit != null)
+            {
+                uti.Description = _descEdit.GetLocString();
+            }
             uti.Tag = _tagEdit?.Text ?? uti.Tag ?? "";
             uti.ResRef = _resrefEdit != null && !string.IsNullOrEmpty(_resrefEdit.Text)
                 ? new ResRef(_resrefEdit.Text)
@@ -723,34 +732,24 @@ namespace HolocronToolset.Editors
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:236-240
         // Original: def change_name(self):
+        // Note: Name editing is now handled by LocalizedStringEdit's built-in edit button
+        // The widget opens LocalizedStringDialog internally, so this method is no longer needed
+        // However, we keep it for backwards compatibility if needed elsewhere
         private void EditName()
         {
-            if (_installation == null) return;
-            var dialog = new LocalizedStringDialog(this, _installation, _uti.Name);
-            if (dialog.ShowDialog())
-            {
-                _uti.Name = dialog.LocString;
-                if (_nameEdit != null)
-                {
-                    _nameEdit.Text = _installation.String(_uti.Name);
-                }
-            }
+            // LocalizedStringEdit handles editing internally via its edit button
+            // This method is kept for compatibility but is no longer called
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:242-246
         // Original: def change_desc(self):
+        // Note: Description editing is now handled by LocalizedStringEdit's built-in edit button
+        // The widget opens LocalizedStringDialog internally, so this method is no longer needed
+        // However, we keep it for backwards compatibility if needed elsewhere
         private void EditDescription()
         {
-            if (_installation == null) return;
-            var dialog = new LocalizedStringDialog(this, _installation, _uti.Description);
-            if (dialog.ShowDialog())
-            {
-                _uti.Description = dialog.LocString;
-                if (_descEdit != null)
-                {
-                    _descEdit.Text = _installation.String(_uti.Description);
-                }
-            }
+            // LocalizedStringEdit handles editing internally via its edit button
+            // This method is kept for compatibility but is no longer called
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:248-252
@@ -1120,6 +1119,16 @@ namespace HolocronToolset.Editors
             }
 
             _installation = installation;
+
+            // Set installation on LocalizedStringEdit widgets
+            if (_nameEdit != null)
+            {
+                _nameEdit.SetInstallation(installation);
+            }
+            if (_descEdit != null)
+            {
+                _descEdit.SetInstallation(installation);
+            }
 
             // Matching PyKotor implementation: required: list[str] = [HTInstallation.TwoDA_BASEITEMS, HTInstallation.TwoDA_ITEM_PROPERTIES]
             var required = new List<string> { HTInstallation.TwoDABaseitems, HTInstallation.TwoDAItemProperties };
