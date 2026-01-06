@@ -775,10 +775,37 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                     }
                 }
 
-                // If still no conditional expression found, use what we have (might be a placeholder)
+                // If still no conditional expression found, try to reconstruct it from available expressions
+                // This handles cases where EQUALII created operands but the AConditionalExp wasn't preserved
                 if (!(condExp is AConditionalExp))
                 {
-                    Error($"DEBUG TransformConditionalJump (JZ): WARNING - No AConditionalExp found, using {condExp?.GetType().Name ?? "null"} as placeholder");
+                    Error($"DEBUG TransformConditionalJump (JZ): WARNING - No AConditionalExp found, trying to reconstruct from available expressions");
+                    // Try to find the last two expressions that might form a comparison
+                    // This is a fallback for when EQUALII operands are still in children but AConditionalExp wasn't created
+                    if (this.current.HasChildren() && this.current.Size() >= 2)
+                    {
+                        List<ScriptNode.ScriptNode> children = this.current.GetChildren();
+                        ScriptNode.ScriptNode last = children[children.Count - 1];
+                        ScriptNode.ScriptNode secondLast = children[children.Count - 2];
+                        
+                        // Check if we have two expressions that could form a comparison
+                        if (last is AExpression lastExp && secondLast is AExpression secondLastExp)
+                        {
+                            Error($"DEBUG TransformConditionalJump (JZ): Found two expressions: {lastExp.GetType().Name} and {secondLastExp.GetType().Name}, creating AConditionalExp");
+                            // Create AConditionalExp from the two expressions (assuming equality comparison)
+                            // Remove both expressions from children
+                            this.current.RemoveLastChild();
+                            this.current.RemoveLastChild();
+                            condExp = new AConditionalExp(secondLastExp, lastExp, "==");
+                            Error($"DEBUG TransformConditionalJump (JZ): Created AConditionalExp from two expressions");
+                        }
+                    }
+                    
+                    // If still no conditional expression, use what we have (might be a placeholder)
+                    if (!(condExp is AConditionalExp))
+                    {
+                        Error($"DEBUG TransformConditionalJump (JZ): WARNING - No AConditionalExp found, using {condExp?.GetType().Name ?? "null"} as placeholder");
+                    }
                 }
                 AIf aif = new AIf(this.SafeGetPos(node), this.SafeGetPos(dest) - 6, condExp);
                 this.current.AddChild(aif);
