@@ -1706,6 +1706,192 @@ namespace HolocronToolset.Editors
             }
         }
 
+        /// <summary>
+        /// Handles the Add Animation button click.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2629-2640
+        /// Original: def on_add_anim_clicked(self):
+        /// </summary>
+        private void OnAddAnimClicked()
+        {
+            // Matching PyKotor: selectedIndexes: list[QModelIndex] = self.ui.dialogTree.selectedIndexes()
+            // Original: if not selectedIndexes: QMessageBox(...).exec()
+            var selectedItem = _dialogTree?.SelectedItem;
+            if (selectedItem == null)
+            {
+                // Show message box - in Avalonia we can use a simple message
+                System.Console.WriteLine("No nodes selected - Select an item from the tree first.");
+                // TODO: Show proper message box dialog
+                return;
+            }
+
+            // Get the DLGStandardItem from selected item
+            DLGStandardItem dlgItem = null;
+            if (selectedItem is TreeViewItem treeItem && treeItem.Tag is DLGStandardItem item)
+            {
+                dlgItem = item;
+            }
+            else if (selectedItem is DLGStandardItem itemDirect)
+            {
+                dlgItem = itemDirect;
+            }
+
+            if (dlgItem == null || dlgItem.Link == null || dlgItem.Link.Node == null)
+            {
+                System.Console.WriteLine("No nodes selected - Select an item from the tree first.");
+                return;
+            }
+
+            // Matching PyKotor: dialog = EditAnimationDialog(self, self._installation)
+            // Original: if dialog.exec():
+            // Original:     item.link.node.animations.append(dialog.animation())
+            var dialog = new HolocronToolset.Dialogs.Edit.DialogAnimationDialog(this, _installation, null);
+            
+            // Show dialog and wait for result
+            // Matching PyKotor QDialog.exec() - blocking modal dialog
+            var result = dialog.ShowDialog(this);
+            if (result == true)
+            {
+                // Get the animation from the dialog
+                var newAnim = dialog.GetAnimation();
+                if (newAnim != null)
+                {
+                    // Add animation to node
+                    dlgItem.Link.Node.Animations.Add(newAnim);
+                    RefreshAnimList();
+                    OnNodeUpdate(); // Mark as modified
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handles the Remove Animation button click.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2642-2656
+        /// Original: def on_remove_anim_clicked(self):
+        /// </summary>
+        private void OnRemoveAnimClicked()
+        {
+            // Matching PyKotor: selected_tree_indexes: list[QModelIndex] = self.ui.dialogTree.selectedIndexes()
+            // Original: if not selected_tree_indexes: QMessageBox(...).exec()
+            var selectedItem = _dialogTree?.SelectedItem;
+            if (selectedItem == null)
+            {
+                System.Console.WriteLine("No nodes selected - Select an item from the tree first.");
+                return;
+            }
+
+            // Get the DLGStandardItem from selected item
+            DLGStandardItem dlgItem = null;
+            if (selectedItem is TreeViewItem treeItem && treeItem.Tag is DLGStandardItem item)
+            {
+                dlgItem = item;
+            }
+            else if (selectedItem is DLGStandardItem itemDirect)
+            {
+                dlgItem = itemDirect;
+            }
+
+            if (dlgItem == null || dlgItem.Link == null || dlgItem.Link.Node == null)
+            {
+                System.Console.WriteLine("No nodes selected - Select an item from the tree first.");
+                return;
+            }
+
+            // Matching PyKotor: selected_anim_items: list[QListWidgetItem] = self.ui.animsList.selectedItems()
+            // Original: if not selected_anim_items: QMessageBox(...).exec()
+            var selectedAnimItem = _animsList?.SelectedItem as ListBoxItem;
+            if (selectedAnimItem == null)
+            {
+                System.Console.WriteLine("No animations selected - Select an existing animation from the above list first, or create one.");
+                return;
+            }
+
+            // Matching PyKotor: sel_item.link.node.animations.remove(selected_anim_items[0].data(Qt.ItemDataRole.UserRole))
+            var animToRemove = selectedAnimItem.Tag as DLGAnimation;
+            if (animToRemove != null && dlgItem.Link.Node.Animations.Contains(animToRemove))
+            {
+                dlgItem.Link.Node.Animations.Remove(animToRemove);
+                RefreshAnimList();
+                OnNodeUpdate(); // Mark as modified
+            }
+        }
+
+        /// <summary>
+        /// Handles the Edit Animation button click.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2658-2673
+        /// Original: def on_edit_anim_clicked(self):
+        /// </summary>
+        private void OnEditAnimClicked()
+        {
+            // Matching PyKotor: selected_tree_indexes: list[QModelIndex] = self.ui.dialogTree.selectedIndexes()
+            // Original: if not selected_tree_indexes: QMessageBox(...).exec()
+            var selectedItem = _dialogTree?.SelectedItem;
+            if (selectedItem == null)
+            {
+                System.Console.WriteLine("No nodes selected - Select an item from the tree first.");
+                return;
+            }
+
+            // Get the DLGStandardItem from selected item
+            DLGStandardItem dlgItem = null;
+            if (selectedItem is TreeViewItem treeItem && treeItem.Tag is DLGStandardItem item)
+            {
+                dlgItem = item;
+            }
+            else if (selectedItem is DLGStandardItem itemDirect)
+            {
+                dlgItem = itemDirect;
+            }
+
+            if (dlgItem == null || dlgItem.Link == null || dlgItem.Link.Node == null)
+            {
+                System.Console.WriteLine("No nodes selected - Select an item from the tree first.");
+                return;
+            }
+
+            // Matching PyKotor: selected_anim_items: list[QListWidgetItem] = self.ui.animsList.selectedItems()
+            // Original: if not selected_anim_items: QMessageBox(...).exec()
+            var selectedAnimItem = _animsList?.SelectedItem as ListBoxItem;
+            if (selectedAnimItem == null)
+            {
+                System.Console.WriteLine("No animations selected - Select an existing animation from the above list first.");
+                return;
+            }
+
+            // Matching PyKotor: anim: DLGAnimation = anim_item.data(Qt.ItemDataRole.UserRole)
+            // Original: dialog = EditAnimationDialog(self, self._installation, anim)
+            var animToEdit = selectedAnimItem.Tag as DLGAnimation;
+            if (animToEdit == null)
+            {
+                return;
+            }
+
+            // Create a copy of the animation for editing (to avoid modifying the original until OK is clicked)
+            var animCopy = new DLGAnimation
+            {
+                AnimationId = animToEdit.AnimationId,
+                Participant = animToEdit.Participant
+            };
+
+            var dialog = new HolocronToolset.Dialogs.Edit.DialogAnimationDialog(this, _installation, animCopy);
+            
+            // Show dialog and wait for result
+            // Matching PyKotor QDialog.exec() - blocking modal dialog
+            var result = dialog.ShowDialog(this);
+            if (result == true)
+            {
+                // Matching PyKotor: anim.animation_id = dialog.animation().animation_id
+                // Original: anim.participant = dialog.animation().participant
+                var editedAnim = dialog.GetAnimation();
+                if (editedAnim != null)
+                {
+                    animToEdit.AnimationId = editedAnim.AnimationId;
+                    animToEdit.Participant = editedAnim.Participant;
+                    RefreshAnimList();
+                    OnNodeUpdate(); // Mark as modified
+                }
+            }
+        }
+
         // Properties for tests
         public DLGType CoreDlg => _coreDlg;
         public DLGModel Model => _model;
@@ -2049,6 +2235,10 @@ namespace HolocronToolset.Editors
             {
                 LoadLinkIntoUI(dlgItemDirect);
             }
+
+            // Refresh animation list when selection changes
+            // Matching PyKotor: refresh_anim_list is called in on_node_update and on_selection_changed
+            RefreshAnimList();
 
             _nodeLoadedIntoUi = true;
         }
