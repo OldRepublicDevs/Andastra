@@ -2,6 +2,7 @@ using System;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using Andastra.Runtime.Graphics;
+using Andastra.Runtime.Games.Common;
 
 namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
 {
@@ -1069,13 +1070,84 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Draws text using a sprite font.
-        /// TODO: STUB - Draw text using sprite font (requires font rendering implementation)
+        /// Based on xoreos: texturefont.cpp render() @ lines 52-94
+        /// Based on swkotor2.exe: Font rendering system @ 0x007b6380 (dialogfont16x16)
         /// </summary>
         public void DrawString(IFont font, string text, Vector2 position, Color color)
         {
             if (!_inBatch || font == null || string.IsNullOrEmpty(text)) return;
-            // TODO: STUB - Draw text using sprite font
-            // This requires font texture atlas and character mapping implementation
+
+            // Check if font is a bitmap font (BaseBitmapFont)
+            // BaseBitmapFont provides GetCharacter() method and Texture property
+            if (!(font is BaseBitmapFont bitmapFont))
+            {
+                // Font is not a bitmap font - cannot render
+                return;
+            }
+
+            // Get font texture
+            ITexture2D fontTexture = bitmapFont.Texture;
+            if (fontTexture == null)
+            {
+                return;
+            }
+
+            // Current drawing position (starts at input position)
+            float currentX = position.X;
+            float currentY = position.Y;
+            float lineHeight = bitmapFont.FontHeight + bitmapFont.SpacingB;
+
+            // Iterate through each character in the text
+            foreach (char c in text)
+            {
+                // Handle line breaks
+                if (c == '\n')
+                {
+                    currentX = position.X;
+                    currentY += lineHeight;
+                    continue;
+                }
+
+                // Get character code
+                int charCode = (int)c;
+
+                // Get character glyph information
+                BaseBitmapFont.CharacterGlyph? glyph = bitmapFont.GetCharacter(charCode);
+                if (!glyph.HasValue)
+                {
+                    // Unknown character - skip or use default width
+                    currentX += bitmapFont.FontWidth + bitmapFont.SpacingR;
+                    continue;
+                }
+
+                var glyphValue = glyph.Value;
+
+                // Create source rectangle from glyph coordinates
+                Rectangle sourceRect = new Rectangle
+                {
+                    X = glyphValue.SourceX,
+                    Y = glyphValue.SourceY,
+                    Width = glyphValue.SourceWidth,
+                    Height = glyphValue.SourceHeight
+                };
+
+                // Create destination rectangle
+                Rectangle destRect = new Rectangle
+                {
+                    X = (int)currentX,
+                    Y = (int)currentY,
+                    Width = glyphValue.SourceWidth,
+                    Height = glyphValue.SourceHeight
+                };
+
+                // Draw character as sprite using font texture and glyph coordinates
+                // Based on xoreos: texturefont.cpp render() - draws each character as textured quad
+                Draw(fontTexture, destRect, sourceRect, color, 0.0f, Vector2.Zero, SpriteEffects.None, 0.0f);
+
+                // Advance position for next character
+                // Based on xoreos: texturefont.cpp - advances X position by character width + spacing
+                currentX += glyphValue.Width + bitmapFont.SpacingR;
+            }
         }
 
         public void Dispose()
