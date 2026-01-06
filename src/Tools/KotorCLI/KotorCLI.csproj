@@ -11,6 +11,6 @@
   <ItemGroup>
     <PackageReference Include="System.CommandLine" Version="2.0.1" />
     <PackageReference Include="Tomlyn" Version="0.18.0" />
-    <ProjectReference Include="..\..\Andastra\Andastra.csproj" />
+    <ProjectReference Include="..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
   </ItemGroup>
 </Project>
