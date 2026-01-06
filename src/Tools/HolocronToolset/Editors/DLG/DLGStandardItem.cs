@@ -121,6 +121,31 @@ namespace HolocronToolset.Editors.DLG
         }
 
         /// <summary>
+        /// Inserts a child item at the specified index.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:162-175
+        /// Original: def insertRow(self, row: int, item: DLGStandardItem):
+        /// </summary>
+        /// <param name="index">The index at which to insert the child.</param>
+        /// <param name="child">The child item to insert.</param>
+        public void InsertChild(int index, DLGStandardItem child)
+        {
+            if (child == null)
+            {
+                throw new ArgumentNullException(nameof(child));
+            }
+            if (index < 0 || index > _children.Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index), "Index must be between 0 and children count");
+            }
+            if (child._parent != null)
+            {
+                child._parent._children.Remove(child);
+            }
+            child._parent = this;
+            _children.Insert(index, child);
+        }
+
+        /// <summary>
         /// Gets the index of this item in its parent's children list.
         /// </summary>
         public int GetIndex()

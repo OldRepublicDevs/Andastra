@@ -760,25 +760,55 @@ namespace HolocronToolset.Editors.DLG
             else
             {
                 // Add as child
-                if (row.HasValue && row.Value >= 0 && row.Value <= parentItem.Children.Count)
-                {
-                    // Insert at specific row
-                    var childrenList = parentItem.Children.ToList();
-                    childrenList.Insert(row.Value, newItem);
-                    // Note: We can't directly insert into Children collection, so we'll add and then shift if needed
-                    // TODO: STUB - For now, just add at the end and let the caller handle ordering if needed
-                    parentItem.AddChild(newItem);
-                }
-                else
-                {
-                    parentItem.AddChild(newItem);
-                }
+                int insertIndex = row.HasValue && row.Value >= 0 && row.Value <= parentItem.Children.Count
+                    ? row.Value
+                    : parentItem.Children.Count;
 
-                // Add link to parent node's Links collection
+                // Insert child at the specified index
+                // Matching PyKotor implementation: parent_item.insertRow(row, new_item)
+                parentItem.InsertChild(insertIndex, newItem);
+
+                // Add link to parent node's Links collection at the correct position
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:650-683
+                // Original: links_list.insert(item_row, item.link) and update list_index for all links
                 if (parentItem.Link?.Node != null)
                 {
-                    linkToPaste.ListIndex = parentItem.Link.Node.Links.Count;
-                    parentItem.Link.Node.Links.Add(linkToPaste);
+                    var linksList = parentItem.Link.Node.Links;
+                    
+                    // Check if link already exists in the list (shouldn't happen for new pasted links, but handle it)
+                    int existingIndex = linksList.IndexOf(linkToPaste);
+                    if (existingIndex >= 0)
+                    {
+                        // Link already exists, move it if needed
+                        if (existingIndex != insertIndex)
+                        {
+                            linksList.RemoveAt(existingIndex);
+                            if (existingIndex < insertIndex)
+                            {
+                                insertIndex--; // Adjust index if removing from before the insert position
+                            }
+                        }
+                    }
+                    
+                    // Insert link at the correct position
+                    if (insertIndex >= 0 && insertIndex <= linksList.Count)
+                    {
+                        linksList.Insert(insertIndex, linkToPaste);
+                    }
+                    else
+                    {
+                        linksList.Add(linkToPaste);
+                    }
+                    
+                    // Update list_index for all links to maintain order
+                    // Matching PyKotor implementation: for i, link in enumerate(links_list): link.list_index = i
+                    for (int i = 0; i < linksList.Count; i++)
+                    {
+                        if (linksList[i] != null)
+                        {
+                            linksList[i].ListIndex = i;
+                        }
+                    }
                 }
             }
 
