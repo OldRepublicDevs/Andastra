@@ -1642,7 +1642,15 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                 {
                     // For conditional operations, also check if last child is a plain expression that should be used
                     // This handles cases where the expression hasn't been wrapped yet
-                    if (typeof(AExpression).IsInstanceOfType(lastChild) && !typeof(AModifyExp).IsInstanceOfType(lastChild) && !typeof(AUnaryModExp).IsInstanceOfType(lastChild))
+                    // CRITICAL: For EQUALII, the right operand should be AUnaryExp (result of NEGI)
+                    // Check if it's a plain AUnaryExp or wrapped in AExpressionStatement
+                    if (typeof(AUnaryExp).IsInstanceOfType(lastChild))
+                    {
+                        Error($"DEBUG TransformBinary: Found AUnaryExp as last child for conditional op, using as right operand");
+                        right = (AExpression)this.current.RemoveLastChild();
+                        right.Parent(null);
+                    }
+                    else if (typeof(AExpression).IsInstanceOfType(lastChild) && !typeof(AModifyExp).IsInstanceOfType(lastChild) && !typeof(AUnaryModExp).IsInstanceOfType(lastChild))
                     {
                         Error($"DEBUG TransformBinary: Using last child {lastChild.GetType().Name} as right operand for conditional op");
                         right = (AExpression)this.current.RemoveLastChild();
