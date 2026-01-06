@@ -93,7 +93,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="..\..\Andastra\Andastra.csproj" />
+    <ProjectReference Include="..\..\Andastra\Andastra.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Xunit" Version="2.6.3" />
   </ItemGroup>
 </Project>
