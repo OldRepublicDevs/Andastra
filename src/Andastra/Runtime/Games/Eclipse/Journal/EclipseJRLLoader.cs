@@ -32,7 +32,6 @@ namespace Andastra.Runtime.Games.Eclipse.Journal
     {
         private TLK _baseTlk;
         private TLK _customTlk;
-        private readonly Dictionary<string, JRL> _jrlCache;
 
         public EclipseJRLLoader(Installation installation)
             : base(installation)

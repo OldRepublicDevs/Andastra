@@ -979,44 +979,27 @@ namespace HoloPatcher.UI.ViewModels
 
         private async Task<string> ShowChoiceDialogAsync(string title, string message, params string[] options)
         {
-            // Use MsBox for simple dialogs - for multiple options, use the first option as default
-            // TODO:  This is a simplified implementation to avoid circular dependency with Views
             if (options == null || options.Length == 0)
             {
                 return null;
             }
 
-            if (options.Length == 1)
+            Window window = GetMainWindow();
+            if (window is null)
             {
-                MsBox.Avalonia.Base.IMsBox<ButtonResult> box = MessageBoxManager.GetMessageBoxStandard(
-                    title,
-                    message,
-                    ButtonEnum.Ok,
-                    Icon.Info);
-                await box.ShowAsync();
+                // Fallback: if no window available, return first option
                 return options[0];
             }
 
-            // For multiple options, show Yes/No dialog for first two options, or use first option
-            if (options.Length == 2)
-            {
-                MsBox.Avalonia.Base.IMsBox<ButtonResult> box = MessageBoxManager.GetMessageBoxStandard(
-                    title,
-                    message,
-                    ButtonEnum.YesNo,
-                    Icon.Question);
-                ButtonResult result = await box.ShowAsync();
-                return result == ButtonResult.Yes ? options[0] : options[1];
-            }
+            // Use ChoiceDialog for proper multi-option support
+            // This properly handles any number of options and provides Cancel functionality
+            // ChoiceDialog.Close(option) passes the selected option string, or null for Cancel
+            var dialog = new ChoiceDialog(title, message, options);
+            object result = await dialog.ShowDialogAsync(window);
 
-            // For more than 2 options, default to first option
-            MsBox.Avalonia.Base.IMsBox<ButtonResult> defaultBox = MessageBoxManager.GetMessageBoxStandard(
-                title,
-                message + $"\n\n(Using default: {options[0]})",
-                ButtonEnum.Ok,
-                Icon.Info);
-            await defaultBox.ShowAsync();
-            return options[0];
+            // If result is null, user clicked Cancel - return null
+            // Otherwise, return the selected option string
+            return result as string;
         }
 
         private async Task ShowErrorAsync(string title, string message)

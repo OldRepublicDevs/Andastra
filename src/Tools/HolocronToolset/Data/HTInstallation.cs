@@ -1251,7 +1251,7 @@ namespace HolocronToolset.Data
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1845-1888
         // Original: def textures(self, resnames: Iterable[str], order: Sequence[SearchLocation] | None = None, ...) -> CaseInsensitiveDict[TPC | None]:
-        public Dictionary<string, Andastra.Parsing.Formats.TPC.TPC>(StringComparer.OrdinalIgnoreCase) Textures(
+        public Dictionary<string, Andastra.Parsing.Formats.TPC.TPC> Textures(
             List<string> resnames,
             SearchLocation[] searchOrder = null)
         {
@@ -1284,7 +1284,7 @@ namespace HolocronToolset.Data
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1918-2042
         // Original: def sounds(self, resnames: Iterable[str], order: Sequence[SearchLocation] | None = None, ...) -> CaseInsensitiveDict[bytes | None]:
-        public Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase) Sounds(
+        public Dictionary<string, byte[]> Sounds(
             List<string> resnames,
             SearchLocation[] searchOrder = null)
         {

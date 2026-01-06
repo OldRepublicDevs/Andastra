@@ -133,11 +133,6 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         public int LinkedToFlags { get; set; }
 
         /// <summary>
-        /// Transition destination waypoint tag.
-        /// </summary>
-        public string TransitionDestination { get; set; }
-
-        /// <summary>
         /// Whether the door has a trap.
         /// </summary>
         public bool TrapFlag { get; set; }
@@ -181,11 +176,6 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// Faction ID.
         /// </summary>
         public int FactionId { get; set; }
-
-        /// <summary>
-        /// Conversation file.
-        /// </summary>
-        public string Conversation { get; set; }
 
         /// <summary>
         /// Whether the door is interruptable.

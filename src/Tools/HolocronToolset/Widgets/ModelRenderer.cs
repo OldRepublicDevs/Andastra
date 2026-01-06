@@ -14,6 +14,7 @@ using Andastra.Runtime.Stride.Graphics;
 using StrideGraphics = global::Stride.Graphics;
 using Stride.Core.Mathematics;
 using JetBrains.Annotations;
+using Andastra.Parsing.Formats.TPC;
 
 namespace HolocronToolset.Widgets
 {
@@ -28,6 +29,7 @@ namespace HolocronToolset.Widgets
         private MdlToStrideModelConverter.ConversionResult _convertedModel;
         private Andastra.Runtime.Graphics.IGraphicsDevice _graphicsDevice;
         private Func<string, IBasicEffect> _materialResolver;
+        private readonly Dictionary<string, IBasicEffect> _effectCache;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/renderer/model.py:74-84
         // Original: @property def installation(self) -> Installation | None:
@@ -124,16 +126,136 @@ namespace HolocronToolset.Widgets
         }
 
         // Create a default material resolver for basic rendering
+        // Matching PyKotor implementation: Material resolver creates effects with loaded textures
+        // Original game: swkotor2.exe texture loading and material creation (d3d9.dll @ 0x0080a6c0)
         private Func<string, IBasicEffect> CreateDefaultMaterialResolver()
         {
             return (textureName) =>
             {
-                // TODO: Implement proper Stride effect creation with texture loading
-                // For now, return a placeholder effect
-                // In full implementation, this would create a StrideBasicEffect
-                // and load textures from the installation
-                return null; // Placeholder - needs proper Stride graphics context
+                // Handle null or empty texture names
+                if (string.IsNullOrWhiteSpace(textureName))
+                {
+                    return CreateDefaultEffect();
+                }
+
+                // Normalize texture name for caching (case-insensitive)
+                string normalizedName = textureName.ToLowerInvariant();
+
+                // Check cache first to avoid reloading textures
+                if (_effectCache.TryGetValue(normalizedName, out IBasicEffect cached))
+                {
+                    return cached;
+                }
+
+                // Ensure we have graphics device and installation
+                if (_graphicsDevice == null)
+                {
+                    Console.WriteLine($"[ModelRenderer] Cannot create effect for texture '{textureName}' - graphics device not initialized");
+                    return CreateDefaultEffect();
+                }
+
+                if (_installation == null)
+                {
+                    Console.WriteLine($"[ModelRenderer] Cannot create effect for texture '{textureName}' - installation not set");
+                    return CreateDefaultEffect();
+                }
+
+                // Try to load texture from installation
+                // Matching PyKotor: installation.texture(resname) loads TPC texture
+                // Search order: CUSTOM_FOLDERS, OVERRIDE, CUSTOM_MODULES, TEXTURES_TPA, CHITIN
+                TPC tpc = null;
+                try
+                {
+                    tpc = _installation.Installation.Texture(normalizedName);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[ModelRenderer] Failed to load texture '{textureName}': {ex.Message}");
+                    // Continue with default effect
+                }
+
+                // Create StrideBasicEffect with or without texture
+                IBasicEffect effect = null;
+                if (_graphicsDevice is StrideGraphics.GraphicsDevice strideDevice)
+                {
+                    effect = new StrideBasicEffect(strideDevice);
+
+                    // If texture was loaded successfully, convert and apply it
+                    if (tpc != null)
+                    {
+                        try
+                        {
+                            // Get command list for texture operations
+                            StrideGraphics.CommandList commandList = null;
+                            if (_graphicsDevice is StrideGraphicsDevice strideGraphicsDevice)
+                            {
+                                commandList = strideGraphicsDevice.ImmediateContext;
+                            }
+                            else if (strideDevice != null)
+                            {
+                                commandList = strideDevice.ImmediateContext();
+                            }
+
+                            // Convert TPC to Stride texture
+                            StrideGraphics.Texture strideTexture = TpcToStrideTextureConverter.Convert(
+                                tpc,
+                                strideDevice,
+                                commandList,
+                                generateMipmaps: true
+                            );
+
+                            // Create StrideTexture2D wrapper
+                            StrideTexture2D texture2D = new StrideTexture2D(strideTexture, commandList);
+
+                            // Set texture on effect
+                            effect.Texture = texture2D;
+                            effect.TextureEnabled = true;
+
+                            // Enable basic lighting for textured materials
+                            effect.LightingEnabled = true;
+                            effect.Alpha = 1.0f;
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[ModelRenderer] Failed to convert texture '{textureName}' to Stride format: {ex.Message}");
+                            // Effect will be created without texture
+                        }
+                    }
+                    else
+                    {
+                        // No texture loaded - use default effect settings
+                        effect.TextureEnabled = false;
+                        effect.LightingEnabled = true;
+                        effect.Alpha = 1.0f;
+                    }
+                }
+                else
+                {
+                    // Fallback: create default effect if not Stride device
+                    effect = CreateDefaultEffect();
+                }
+
+                // Cache the effect (even if texture loading failed, cache to avoid repeated attempts)
+                _effectCache[normalizedName] = effect;
+
+                return effect;
             };
+        }
+
+        // Create a default effect without texture (fallback)
+        private IBasicEffect CreateDefaultEffect()
+        {
+            if (_graphicsDevice is StrideGraphics.GraphicsDevice strideDevice)
+            {
+                var effect = new StrideBasicEffect(strideDevice);
+                effect.TextureEnabled = false;
+                effect.LightingEnabled = true;
+                effect.Alpha = 1.0f;
+                return effect;
+            }
+
+            // Return null if graphics device is not Stride (should not happen in Stride context)
+            return null;
         }
 
 
@@ -171,6 +293,8 @@ namespace HolocronToolset.Widgets
             _cameraPosition = new global::Stride.Core.Mathematics.Vector3(0, 0, 10);
             _cameraTarget = new global::Stride.Core.Mathematics.Vector3(0, 0, 0);
             _cameraUp = new global::Stride.Core.Mathematics.Vector3(0, 1, 0);
+
+            _effectCache = new Dictionary<string, IBasicEffect>(StringComparer.OrdinalIgnoreCase);
 
             UpdateViewMatrix();
             UpdateProjectionMatrix();
