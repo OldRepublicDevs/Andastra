@@ -56,7 +56,7 @@ namespace Andastra.Parsing.Formats.SSF
                     {
                         return ResourceType.INVALID;
                     }
-                    
+
                     // Restore stream position to offset so ReadSsf can read from the beginning
                     // This is critical: ReadSsf will create SSFBinaryReader which uses CopyTo
                     // from the current position, so we must restore to the start of the data
@@ -104,19 +104,20 @@ namespace Andastra.Parsing.Formats.SSF
 
             if (format == ResourceType.SSF)
             {
+                int sizeValue = size ?? 0;
                 if (source is string filepath)
                 {
-                    var reader = new SSFBinaryReader(filepath);
+                    var reader = new SSFBinaryReader(filepath, offset, sizeValue);
                     return reader.Load();
                 }
                 if (source is byte[] data)
                 {
-                    var reader = new SSFBinaryReader(data);
+                    var reader = new SSFBinaryReader(data, offset, sizeValue);
                     return reader.Load();
                 }
                 if (source is Stream stream)
                 {
-                    var reader = new SSFBinaryReader(stream);
+                    var reader = new SSFBinaryReader(stream, offset, sizeValue);
                     return reader.Load();
                 }
                 throw new ArgumentException("Source must be string, byte[], or Stream");
@@ -124,28 +125,31 @@ namespace Andastra.Parsing.Formats.SSF
 
             if (format == ResourceType.SSF_XML)
             {
-                var reader = new SSFXMLReader();
+                int sizeValue = size ?? 0;
+                var reader = new SSFXMLReader(source, offset, sizeValue);
                 if (source is string filepath)
                 {
                     // Check if the string is XML content (starts with '<') or a file path
                     if (!string.IsNullOrWhiteSpace(filepath) && filepath.TrimStart().StartsWith("<"))
                     {
-                        // Raw XML content - pass directly to reader
-                        return reader.Load(filepath);
+                        // Raw XML content - use Load() method which handles offset/size
+                        return reader.Load();
                     }
                     else
                     {
-                        // File path - read file content first
-                        return reader.Load(File.ReadAllText(filepath));
+                        // File path - use Load() method which handles offset/size
+                        return reader.Load();
                     }
                 }
                 if (source is byte[] bytes)
                 {
-                    return reader.Load(bytes);
+                    // Use Load() method which handles offset/size
+                    return reader.Load();
                 }
                 if (source is Stream stream)
                 {
-                    return reader.Load(stream);
+                    // Use Load() method which handles offset/size
+                    return reader.Load();
                 }
                 throw new ArgumentException("Source must be XML content, file path, byte array, or stream.");
             }
