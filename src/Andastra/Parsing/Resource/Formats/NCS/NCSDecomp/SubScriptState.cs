@@ -1556,6 +1556,18 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
 
         public virtual void TransformBinary(ABinaryCommand node)
         {
+            string opName = NodeUtils.GetOp(node);
+            int nodePos = this.nodedata != null ? this.nodedata.TryGetPos(node) : -1;
+            Error($"DEBUG TransformBinary: START - op={opName}, pos={nodePos}, state={this.state}, current={this.current.GetType().Name}, hasChildren={this.current.HasChildren()}");
+            if (this.current.HasChildren())
+            {
+                List<ScriptNode.ScriptNode> children = this.current.GetChildren();
+                Error($"DEBUG TransformBinary: Current has {children.Count} children:");
+                for (int i = children.Count - 1; i >= 0 && i >= children.Count - 5; i--)
+                {
+                    Error($"DEBUG TransformBinary:   child[{i}]={children[i].GetType().Name}");
+                }
+            }
             this.CheckStart(node);
             // For binary operations, we need to extract both operands from the stack
             // Right operand is on top (last added), left operand is below (added earlier)
@@ -1766,7 +1778,23 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                 // If still not found, try the standard approach
                 if (left == null)
                 {
-                    left = this.RemoveLastExp(false);
+                    // For conditional operations, if left is still null, check if last child is AVarRef
+                    // This handles cases where right operand was already extracted and AVarRef is now last
+                    if (NodeUtils.IsConditionalOp(node) && this.current.HasChildren())
+                    {
+                        ScriptNode.ScriptNode lastChild = this.current.GetLastChild();
+                        if (typeof(AVarRef).IsInstanceOfType(lastChild))
+                        {
+                            Error($"DEBUG TransformBinary: Found AVarRef as last child for left operand (after right extraction)");
+                            left = (AVarRef)this.current.RemoveLastChild();
+                            left.Parent(null);
+                        }
+                    }
+                    // If still not found, try RemoveLastExp
+                    if (left == null)
+                    {
+                        left = this.RemoveLastExp(false);
+                    }
                 }
             }
 
@@ -1898,12 +1926,12 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                 }
 
                 exp = new AConditionalExp(left, right, NodeUtils.GetOp(node));
-                Error($"DEBUG TransformBinary: Created AConditionalExp, adding to children. Current has {this.current.Size()} children");
+                Error($"DEBUG TransformBinary: Created AConditionalExp with left={left?.GetType().Name ?? "null"}, right={right?.GetType().Name ?? "null"}, op={NodeUtils.GetOp(node)}, adding to children. Current has {this.current.Size()} children");
             }
 
             exp.Stackentry(this.stack.Get(1));
             this.current.AddChild((ScriptNode.ScriptNode)exp);
-            Error($"DEBUG TransformBinary: Added {exp.GetType().Name} to children. Current now has {this.current.Size()} children");
+            Error($"DEBUG TransformBinary: END - Added {exp.GetType().Name} to children. Current now has {this.current.Size()} children");
             // Ensure AConditionalExp is not immediately wrapped by subsequent MOVSP
             // by marking that we just created a conditional expression
             this.CheckEnd(node);
