@@ -1574,13 +1574,24 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                     if (typeof(AUnaryExp).IsInstanceOfType(child))
                     {
                         Error($"DEBUG TransformBinary: Found AUnaryExp at index {i}, using as right operand");
-                        // Remove all children after this one
-                        while (this.current.HasChildren() && this.current.GetLastChild() != child)
+                        // For conditional operations, the AUnaryExp should be the last child (right operand)
+                        // and AVarRef should be before it (left operand)
+                        // So we can just remove the AUnaryExp directly if it's the last child
+                        if (this.current.GetLastChild() == child)
                         {
-                            this.current.RemoveLastChild();
+                            right = (AExpression)this.current.RemoveLastChild();
+                            right.Parent(null);
                         }
-                        right = (AExpression)this.current.RemoveLastChild();
-                        right.Parent(null);
+                        else
+                        {
+                            // AUnaryExp is not last - remove all children after it, then remove it
+                            while (this.current.HasChildren() && this.current.GetLastChild() != child)
+                            {
+                                this.current.RemoveLastChild();
+                            }
+                            right = (AExpression)this.current.RemoveLastChild();
+                            right.Parent(null);
+                        }
                         break;
                     }
                     else if (typeof(ScriptNode.AExpressionStatement).IsInstanceOfType(child))
