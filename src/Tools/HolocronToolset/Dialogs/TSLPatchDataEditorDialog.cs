@@ -327,13 +327,56 @@ namespace HolocronToolset.Dialogs
                 Text = "Manage string references that will be added to dialog.tlk."
             });
 
-            // TLK string tree
-            _tlkStringTree = new TreeView();
-            // Note: Avalonia TreeView doesn't have built-in column headers like QTreeWidget
-            // We'll use a DataGrid or custom TreeViewItem with formatted content
-            // TODO: STUB - For now, we'll use TreeView with custom item templates
-            _tlkStringTree.MinHeight = 300;
-            content.Children.Add(_tlkStringTree);
+            // TLK string tree with column headers
+            // Matching PyKotor implementation: QTreeWidget with columns ["Token Name", "String", "Used By"]
+            var treeContainer = new StackPanel { Spacing = 0 };
+            
+            // Column headers (matching QTreeWidget header labels)
+            var headerGrid = new Grid();
+            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(150, GridUnitType.Pixel) });
+            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(200, GridUnitType.Pixel) });
+            
+            var headerBorder = new Border
+            {
+                Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.FromRgb(240, 240, 240)),
+                BorderBrush = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.FromRgb(200, 200, 200)),
+                BorderThickness = new Avalonia.Thickness(0, 0, 0, 1),
+                Padding = new Avalonia.Thickness(5, 3, 5, 3)
+            };
+            
+            var headerPanel = new StackPanel { Orientation = Orientation.Horizontal };
+            headerPanel.Children.Add(new TextBlock
+            {
+                Text = "Token Name",
+                FontWeight = Avalonia.Media.FontWeight.Bold,
+                Width = 150
+            });
+            headerPanel.Children.Add(new TextBlock
+            {
+                Text = "String",
+                FontWeight = Avalonia.Media.FontWeight.Bold,
+                Margin = new Avalonia.Thickness(5, 0, 0, 0)
+            });
+            headerPanel.Children.Add(new TextBlock
+            {
+                Text = "Used By",
+                FontWeight = Avalonia.Media.FontWeight.Bold,
+                Width = 200,
+                Margin = new Avalonia.Thickness(5, 0, 0, 0)
+            });
+            
+            headerBorder.Child = headerPanel;
+            treeContainer.Children.Add(headerBorder);
+            
+            // TreeView for data rows
+            _tlkStringTree = new TreeView
+            {
+                MinHeight = 300
+            };
+            treeContainer.Children.Add(_tlkStringTree);
+            
+            content.Children.Add(treeContainer);
 
             // Buttons
             var btnLayout = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5 };
@@ -1163,7 +1206,16 @@ namespace HolocronToolset.Dialogs
             string tokenName = null;
             if (selectedItem is TreeViewItem treeItem)
             {
-                tokenName = treeItem.Header?.ToString();
+                // Token name is stored in Tag property
+                tokenName = treeItem.Tag as string;
+                // Fallback: try to extract from header if Tag is not set
+                if (string.IsNullOrWhiteSpace(tokenName) && treeItem.Header is Grid headerGrid && headerGrid.Children.Count > 0)
+                {
+                    if (headerGrid.Children[0] is TextBlock tokenBlock)
+                    {
+                        tokenName = tokenBlock.Text;
+                    }
+                }
             }
             else if (selectedItem is string str)
             {
@@ -1225,7 +1277,16 @@ namespace HolocronToolset.Dialogs
             string tokenName = null;
             if (selectedItem is TreeViewItem treeItem)
             {
-                tokenName = treeItem.Header?.ToString();
+                // Token name is stored in Tag property
+                tokenName = treeItem.Tag as string;
+                // Fallback: try to extract from header if Tag is not set
+                if (string.IsNullOrWhiteSpace(tokenName) && treeItem.Header is Grid headerGrid && headerGrid.Children.Count > 0)
+                {
+                    if (headerGrid.Children[0] is TextBlock tokenBlock)
+                    {
+                        tokenName = tokenBlock.Text;
+                    }
+                }
             }
             else if (selectedItem is string str)
             {
@@ -1558,17 +1619,22 @@ namespace HolocronToolset.Dialogs
 
             _tlkStringTree.Items.Clear();
 
+            // Matching PyKotor implementation: QTreeWidget with columns ["Token Name", "String", "Used By"]
+            // Create TreeViewItem objects with custom Grid layout for columns
             foreach (var kvp in _tlkStrings.OrderBy(x => x.Key))
             {
                 var entry = kvp.Value;
-                // Create a formatted string for display: "TokenName | Text Preview | Used By: file1, file2"
+                
+                // Prepare text preview (truncate if too long)
                 string textPreview = entry.Text ?? "";
                 if (textPreview.Length > 60)
                 {
                     textPreview = textPreview.Substring(0, 57) + "...";
                 }
+                // Replace newlines for display
                 textPreview = textPreview.Replace("\n", "\\n").Replace("\r", "\\r");
 
+                // Prepare "Used By" text
                 string usedByText = entry.UsedBy != null && entry.UsedBy.Count > 0
                     ? string.Join(", ", entry.UsedBy.Take(3))
                     : "(not used)";
@@ -1577,8 +1643,52 @@ namespace HolocronToolset.Dialogs
                     usedByText += $" (+{entry.UsedBy.Count - 3} more)";
                 }
 
-                string displayText = $"{entry.TokenName} | {textPreview} | Used By: {usedByText}";
-                _tlkStringTree.Items.Add(displayText);
+                // Create TreeViewItem with Grid layout for columns
+                var itemGrid = new Grid();
+                itemGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(150, GridUnitType.Pixel) });
+                itemGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                itemGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(200, GridUnitType.Pixel) });
+
+                // Token Name column
+                var tokenNameBlock = new TextBlock
+                {
+                    Text = entry.TokenName ?? "",
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Avalonia.Thickness(5, 2, 5, 2)
+                };
+                Grid.SetColumn(tokenNameBlock, 0);
+                itemGrid.Children.Add(tokenNameBlock);
+
+                // String column
+                var stringBlock = new TextBlock
+                {
+                    Text = textPreview,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis,
+                    Margin = new Avalonia.Thickness(5, 2, 5, 2)
+                };
+                Grid.SetColumn(stringBlock, 1);
+                itemGrid.Children.Add(stringBlock);
+
+                // Used By column
+                var usedByBlock = new TextBlock
+                {
+                    Text = usedByText,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis,
+                    Margin = new Avalonia.Thickness(5, 2, 5, 2)
+                };
+                Grid.SetColumn(usedByBlock, 2);
+                itemGrid.Children.Add(usedByBlock);
+
+                // Create TreeViewItem with the Grid as header
+                var treeItem = new TreeViewItem
+                {
+                    Header = itemGrid,
+                    Tag = entry.TokenName // Store token name for easy retrieval
+                };
+
+                _tlkStringTree.Items.Add(treeItem);
             }
         }
 
