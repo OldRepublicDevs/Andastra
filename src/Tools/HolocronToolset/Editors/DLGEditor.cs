@@ -4700,10 +4700,21 @@ namespace HolocronToolset.Editors
                     await topLevel.Clipboard.SetTextAsync(pathText);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Matching PyKotor: Silently handle clipboard errors (Python doesn't catch, but we should)
-                // TODO:  In a full implementation, we might want to show an error message
+                // Log the clipboard error for debugging
+                new RobustLogger().Error($"Failed to copy path to clipboard: {ex.Message}", true, ex);
+                
+                // Show user-friendly error message
+                var msgBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Clipboard Error",
+                    $"Failed to copy path to clipboard.\n\nError: {ex.Message}\n\nThe path text is still available in the dialog editor.",
+                    ButtonEnum.Ok,
+                    Icon.Error);
+                await msgBox.ShowAsync();
+                
+                // Blink window to get user attention (consistent with other error handling in this file)
+                BlinkWindow();
             }
         }
 
