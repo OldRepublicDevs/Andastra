@@ -95,13 +95,19 @@
   </ItemGroup>
 
   <!-- Copy required DLLs to output directory for .NET 9 compatibility -->
+  <!-- This is a workaround for .NET 9 test host not finding netstandard2.0/net6.0 assemblies -->
   <Target Name="CopyNetStandardDlls" AfterTargets="Build">
     <ItemGroup>
-      <NetStandardDlls Include="$(NuGetPackageRoot)fluentassertions\8.8.0\lib\net6.0\FluentAssertions.dll" />
-      <NetStandardDlls Include="$(NuGetPackageRoot)ini-parser-netstandard\2.5.3\lib\netstandard2.0\INIFileParser.dll" />
-      <NetStandardDlls Include="$(NuGetPackageRoot)jetbrains.annotations\2025.2.4\lib\netstandard2.0\JetBrains.Annotations.dll" />
-      <NetStandardDlls Include="$(NuGetPackageRoot)lzma-sdk\19.0.0\lib\netstandard2.0\SevenZip.dll" />
+      <NetStandardDlls Include="$(NuGetPackageRoot)fluentassertions\8.8.0\lib\net6.0\FluentAssertions.dll" Condition="Exists('$(NuGetPackageRoot)fluentassertions\8.8.0\lib\net6.0\FluentAssertions.dll')" />
+      <NetStandardDlls Include="$(NuGetPackageRoot)ini-parser-netstandard\2.5.3\lib\netstandard2.0\INIFileParser.dll" Condition="Exists('$(NuGetPackageRoot)ini-parser-netstandard\2.5.3\lib\netstandard2.0\INIFileParser.dll')" />
+      <NetStandardDlls Include="$(NuGetPackageRoot)jetbrains.annotations\2025.2.4\lib\netstandard2.0\JetBrains.Annotations.dll" Condition="Exists('$(NuGetPackageRoot)jetbrains.annotations\2025.2.4\lib\netstandard2.0\JetBrains.Annotations.dll')" />
+      <NetStandardDlls Include="$(NuGetPackageRoot)lzma-sdk\19.0.0\lib\netstandard2.0\SevenZip.dll" Condition="Exists('$(NuGetPackageRoot)lzma-sdk\19.0.0\lib\netstandard2.0\SevenZip.dll')" />
     </ItemGroup>
-    <Copy SourceFiles="@(NetStandardDlls)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(NetStandardDlls)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" ContinueOnError="true" />
   </Target>
+  
+  <!-- Ensure all runtime dependencies are copied -->
+  <PropertyGroup>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
 </Project>

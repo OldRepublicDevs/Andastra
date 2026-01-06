@@ -4,7 +4,6 @@ using System.IO;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Installation;
-using Andastra.Parsing.Logger;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
 using JetBrains.Annotations;
@@ -48,7 +47,7 @@ namespace Andastra.Parsing.Tools
         {
             if (logger == null)
             {
-                logger = new RobustLogger();
+                logger = new Andastra.Parsing.Logger.RobustLogger();
             }
 
             TwoDA placeables2DA = null;
