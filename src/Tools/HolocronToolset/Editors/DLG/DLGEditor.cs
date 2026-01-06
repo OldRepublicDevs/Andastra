@@ -4,19 +4,27 @@ using System.IO;
 using System.Linq;
 using System.Media;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Logger;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics.CNV;
 using Andastra.Parsing.Resource.Generics.DLG;
+using Andastra.Parsing.Formats.TwoDA;
 using DLGType = Andastra.Parsing.Resource.Generics.DLG.DLG;
+using DLGHelper = Andastra.Parsing.Resource.Generics.DLG.DLGHelper;
+using CNVHelper = Andastra.Parsing.Resource.Generics.CNV.CNVHelper;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
+using HolocronToolset.Dialogs.Edit;
 using HolocronToolset.Editors.Actions;
 using Avalonia.Platform.Storage;
 using MsBox.Avalonia;
@@ -1800,7 +1808,7 @@ namespace HolocronToolset.Editors.DLG
             foreach (DLGAnimation anim in dlgItem.Link.Node.Animations)
             {
                 string name = anim.AnimationId.ToString();
-                if (animations2da.RowCount > anim.AnimationId)
+                if (animations2da.GetHeight() > anim.AnimationId)
                 {
                     var nameColumn = animations2da.GetColumn("name");
                     if (nameColumn != null && anim.AnimationId < nameColumn.Count)
@@ -1812,6 +1820,95 @@ namespace HolocronToolset.Editors.DLG
                 var item = new ListBoxItem { Content = text, Tag = anim };
                 _animsList.Items.Add(item);
             }
+        }
+
+        /// <summary>
+        /// Handles the Add Animation button click.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py
+        /// </summary>
+        private void OnAddAnimClicked()
+        {
+            DLGStandardItem selectedItem = GetSelectedItemFromTreeView();
+            if (selectedItem?.Link?.Node == null)
+            {
+                return;
+            }
+
+            var dialog = new DialogAnimationDialog(this, _installation, null);
+            bool result = dialog.ShowDialog(this);
+            if (result)
+            {
+                var newAnim = dialog.GetAnimation();
+                if (newAnim != null)
+                {
+                    selectedItem.Link.Node.Animations.Add(newAnim);
+                    UpdateAnimationsList();
+                    OnNodeUpdate();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handles the Remove Animation button click.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py
+        /// </summary>
+        private void OnRemoveAnimClicked()
+        {
+            DLGStandardItem selectedItem = GetSelectedItemFromTreeView();
+            if (selectedItem?.Link?.Node == null || _animsList?.SelectedItem == null)
+            {
+                return;
+            }
+
+            if (_animsList.SelectedItem is ListBoxItem item && item.Tag is DLGAnimation anim)
+            {
+                selectedItem.Link.Node.Animations.Remove(anim);
+                UpdateAnimationsList();
+                OnNodeUpdate();
+            }
+        }
+
+        /// <summary>
+        /// Handles the Edit Animation button click.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py
+        /// </summary>
+        private void OnEditAnimClicked()
+        {
+            DLGStandardItem selectedItem = GetSelectedItemFromTreeView();
+            if (selectedItem?.Link?.Node == null || _animsList?.SelectedItem == null)
+            {
+                return;
+            }
+
+            if (_animsList.SelectedItem is ListBoxItem item && item.Tag is DLGAnimation anim)
+            {
+                var dialog = new DialogAnimationDialog(this, _installation, anim);
+                bool result = dialog.ShowDialog(this);
+                if (result)
+                {
+                    // Animation is updated in-place by the dialog
+                    UpdateAnimationsList();
+                    OnNodeUpdate();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Finds a DLGStandardItem that corresponds to the given link.
+        /// </summary>
+        private DLGStandardItem FindItemForLink(DLGLink link)
+        {
+            if (link == null || _model == null || _model.LinkToItems == null)
+            {
+                return null;
+            }
+
+            if (_model.LinkToItems.ContainsKey(link) && _model.LinkToItems[link] != null && _model.LinkToItems[link].Count > 0)
+            {
+                return _model.LinkToItems[link][0];
+            }
+
+            return null;
         }
 
         // Properties for tests
@@ -2865,7 +2962,7 @@ namespace HolocronToolset.Editors.DLG
                 {
                     // Strip HTML from tooltip for plain text display
                     string plainTooltip = System.Text.RegularExpressions.Regex.Replace(tooltipText, "<.*?>", "");
-                    treeItem.ToolTip = plainTooltip;
+                    ToolTip.SetTip(treeItem, plainTooltip);
                 }
             }
             else
@@ -2931,7 +3028,7 @@ namespace HolocronToolset.Editors.DLG
 
             var node = item.Link.Node;
             string nodeType = node is DLGEntry ? "Entry" : "Reply";
-            string text = node.Text?.GetString(0, Gender.Male) ?? "";
+            string text = node.Text?.GetString(0, Andastra.Parsing.Common.Language.Gender.Male) ?? "";
             if (string.IsNullOrEmpty(text))
             {
                 text = "<empty>";
@@ -3395,7 +3492,14 @@ namespace HolocronToolset.Editors.DLG
                     // Get item from list widget
                     if (indexObj is DLGListWidgetItem listItem)
                     {
-                        item = listItem.Item;
+                        // DLGListWidgetItem wraps a DLGLink, need to get the associated DLGStandardItem
+                        // For now, we'll need to find the item from the link
+                        DLGLink link = listItem.Link;
+                        if (link != null && link.Node != null)
+                        {
+                            // Find the DLGStandardItem that corresponds to this link/node
+                            item = FindItemForLink(link);
+                        }
                     }
                     else if (indexObj is DLGStandardItem dlgItem)
                     {
@@ -4456,7 +4560,9 @@ namespace HolocronToolset.Editors.DLG
                         }
                         if (attrValue is int intVal)
                         {
-                            return intVal != 0 && intVal != 0xFFFFFFFF && intVal != -1;
+                            // C# warning CS0652: The constant 0xFFFFFFFF is outside the range of 'int'
+                            // Since 0xFFFFFFFF as uint is -1 as int, just compare 0 and -1
+                            return intVal != 0 && intVal != -1;
                         }
                         return attrValue != null;
                     }
@@ -4508,12 +4614,12 @@ namespace HolocronToolset.Editors.DLG
                             {
                                 // TODO: STUB - Note: Accessing _substrings would require reflection or public API
                                 // TODO: STUB - For now, check if text exists (simplified)
-                                return node.Text.GetString(0, Gender.Male) != null;
+                                return node.Text.GetString(0, Andastra.Parsing.Common.Language.Gender.Male) != null;
                             }
                         }
                         return false;
                     }
-                    return node.Text != null && !string.IsNullOrEmpty(node.Text.GetString(0, Gender.Male));
+                    return node.Text != null && !string.IsNullOrEmpty(node.Text.GetString(0, Andastra.Parsing.Common.Language.Gender.Male));
                 }
 
                 return false;
