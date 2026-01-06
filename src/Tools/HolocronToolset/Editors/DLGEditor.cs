@@ -1641,6 +1641,71 @@ namespace HolocronToolset.Editors
             }
         }
 
+        /// <summary>
+        /// Refreshes the animations list based on the selected node.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2675-2696
+        /// Original: def refresh_anim_list(self):
+        /// </summary>
+        public void RefreshAnimList()
+        {
+            if (_animsList == null)
+            {
+                return;
+            }
+
+            // Matching PyKotor implementation: self.ui.animsList.clear()
+            _animsList.Items.Clear();
+
+            // Get selected item from dialog tree
+            var selectedItem = _dialogTree?.SelectedItem;
+            DLGStandardItem dlgItem = null;
+
+            if (selectedItem is TreeViewItem treeItem && treeItem.Tag is DLGStandardItem item)
+            {
+                dlgItem = item;
+            }
+            else if (selectedItem is DLGStandardItem itemDirect)
+            {
+                dlgItem = itemDirect;
+            }
+
+            if (dlgItem == null || dlgItem.Link == null || dlgItem.Link.Node == null)
+            {
+                return;
+            }
+
+            // Matching PyKotor implementation: for anim in item.link.node.animations:
+            // Original: name: str = str(anim.animation_id)
+            // Original: if animations_2da.get_height() > anim.animation_id:
+            // Original:     name = animations_2da.get_cell(anim.animation_id, "name")
+            // Original: text: str = f"{name} ({anim.participant})"
+            // Original: anim_item = QListWidgetItem(text)
+            // Original: anim_item.setData(Qt.ItemDataRole.UserRole, anim)
+            // Original: self.ui.animsList.addItem(anim_item)
+            var node = dlgItem.Link.Node;
+            foreach (DLGAnimation anim in node.Animations)
+            {
+                // Get animation name from 2DA if available, otherwise use animation ID
+                string name = anim.AnimationId.ToString();
+                if (_installation != null)
+                {
+                    var animations2da = _installation.HtGetCache2da(HTInstallation.TwoDA_DIALOG_ANIMS);
+                    if (animations2da != null && animations2da.Height > anim.AnimationId)
+                    {
+                        var nameCell = animations2da.GetCell(anim.AnimationId, "name");
+                        if (nameCell != null)
+                        {
+                            name = nameCell.ToString();
+                        }
+                    }
+                }
+
+                string text = $"{name} ({anim.Participant})";
+                var item = new ListBoxItem { Content = text, Tag = anim };
+                _animsList.Items.Add(item);
+            }
+        }
+
         // Properties for tests
         public DLGType CoreDlg => _coreDlg;
         public DLGModel Model => _model;

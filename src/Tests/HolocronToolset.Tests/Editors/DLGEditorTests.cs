@@ -2729,14 +2729,51 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestDlgEditorAddAnimationProgrammatically: Add animation programmatically test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_remove_animation (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1640-1665)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1640-1665
         // Original: def test_dlg_editor_remove_animation(qtbot, installation: HTInstallation): Test removing animation
         [Fact]
         public void TestDlgEditorRemoveAnimation()
         {
-            // TODO: STUB - Implement remove animation test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1640-1665
-            throw new NotImplementedException("TestDlgEditorRemoveAnimation: Remove animation test not yet implemented");
+            // Get installation if available
+            var installation = CreateTestInstallation();
+
+            // Matching PyKotor: editor = DLGEditor(None, installation)
+            var editor = new DLGEditor(null, installation);
+            editor.Show();
+
+            // Matching PyKotor: editor.new()
+            editor.New();
+
+            // Create node with animation
+            // Matching PyKotor: editor.model.add_root_node()
+            editor.Model.AddRootNode();
+            // Matching PyKotor: root_item = editor.model.item(0, 0)
+            var rootItem = editor.Model.Item(0, 0);
+            // Matching PyKotor: editor.ui.dialogTree.setCurrentIndex(root_item.index())
+            editor.Model.SelectedIndex = 0;
+
+            // Matching PyKotor: anim = DLGAnimation()
+            // Matching PyKotor: anim.animation_id = 1
+            // Matching PyKotor: anim.participant = "PLAYER"
+            var anim = new DLGAnimation();
+            anim.AnimationId = 1;
+            anim.Participant = "PLAYER";
+            // Matching PyKotor: root_item.link.node.animations.append(anim)
+            rootItem.Link.Node.Animations.Add(anim);
+            // Matching PyKotor: editor.refresh_anim_list()
+            editor.RefreshAnimList();
+
+            // Matching PyKotor: assert editor.ui.animsList.count() == 1
+            editor.AnimsList.Items.Count.Should().Be(1, "Animation list should have 1 item after adding animation");
+
+            // Remove
+            // Matching PyKotor: root_item.link.node.animations.remove(anim)
+            rootItem.Link.Node.Animations.Remove(anim);
+            // Matching PyKotor: editor.refresh_anim_list()
+            editor.RefreshAnimList();
+
+            // Matching PyKotor: assert editor.ui.animsList.count() == 0
+            editor.AnimsList.Items.Count.Should().Be(0, "Animation list should be empty after removing animation");
         }
 
         // TODO: STUB - Implement test_dlg_editor_multiple_animations (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1667-1691)
