@@ -324,6 +324,15 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
     /// Odyssey basic effect implementation.
     /// Uses OpenGL fixed-function pipeline or ARB shaders.
     /// </summary>
+    /// <remarks>
+    /// Odyssey Basic Effect:
+    /// - Based on reverse engineering of swkotor.exe and swkotor2.exe
+    /// - Original game graphics: OpenGL fixed-function pipeline (OPENGL32.dll @ 0x00809ce2)
+    /// - Matrix application: Original engine uses glMatrixMode(GL_PROJECTION) and glMatrixMode(GL_MODELVIEW)
+    /// - Based on xoreos implementation: graphics.cpp renderWorld() @ lines 1059-1081
+    /// - Opacity/Alpha: Original engine uses glColor4f for alpha blending (swkotor2.exe: FadeTime @ 0x007c60ec)
+    /// - This implementation: Applies matrices and opacity via OpenGL fixed-function pipeline
+    /// </remarks>
     public class OdysseyBasicEffect : IBasicEffect
     {
         private readonly OdysseyGraphicsDevice _device;
@@ -344,6 +353,47 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         private Vector3 _fogColor = Vector3.One;
         private float _fogStart = 0.0f;
         private float _fogEnd = 1.0f;
+        
+        #region OpenGL P/Invoke for Matrix Operations
+        
+        [DllImport("opengl32.dll", EntryPoint = "glMatrixMode")]
+        private static extern void glMatrixMode(uint mode);
+        
+        [DllImport("opengl32.dll", EntryPoint = "glLoadIdentity")]
+        private static extern void glLoadIdentity();
+        
+        [DllImport("opengl32.dll", EntryPoint = "glLoadMatrixf")]
+        private static extern void glLoadMatrixf([MarshalAs(UnmanagedType.LPArray)] float[] m);
+        
+        [DllImport("opengl32.dll", EntryPoint = "glMultMatrixf")]
+        private static extern void glMultMatrixf([MarshalAs(UnmanagedType.LPArray)] float[] m);
+        
+        [DllImport("opengl32.dll", EntryPoint = "glPushMatrix")]
+        private static extern void glPushMatrix();
+        
+        [DllImport("opengl32.dll", EntryPoint = "glPopMatrix")]
+        private static extern void glPopMatrix();
+        
+        [DllImport("opengl32.dll", EntryPoint = "glColor4f")]
+        private static extern void glColor4f(float red, float green, float blue, float alpha);
+        
+        [DllImport("opengl32.dll", EntryPoint = "glBlendFunc")]
+        private static extern void glBlendFunc(uint sfactor, uint dfactor);
+        
+        [DllImport("opengl32.dll", EntryPoint = "glBindTexture")]
+        private static extern void glBindTexture(uint target, uint texture);
+        
+        // OpenGL constants
+        private const uint GL_PROJECTION = 0x1701;
+        private const uint GL_MODELVIEW = 0x1700;
+        private const uint GL_TEXTURE_2D = 0x0DE1;
+        private const uint GL_BLEND = 0x0BE2;
+        private const uint GL_SRC_ALPHA = 0x0302;
+        private const uint GL_ONE_MINUS_SRC_ALPHA = 0x0303;
+        private const uint GL_ONE = 0x0001;
+        private const uint GL_ZERO = 0x0000;
+        
+        #endregion
         
         public OdysseyBasicEffect(OdysseyGraphicsDevice device)
         {
@@ -371,9 +421,95 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         public float FogStart { get { return _fogStart; } set { _fogStart = value; } }
         public float FogEnd { get { return _fogEnd; } set { _fogEnd = value; } }
         
+        /// <summary>
+        /// Applies the effect to OpenGL state.
+        /// Sets projection, view, and world matrices, and applies opacity via color/blending.
+        /// Based on swkotor2.exe: glDrawElements with proper matrix setup
+        /// Based on xoreos: graphics.cpp renderWorld() @ lines 1059-1081
+        /// 
+        /// Note: In OpenGL fixed-function pipeline:
+        /// - Projection matrix is typically set once per frame
+        /// - View matrix is typically set once per frame
+        /// - World matrix is set per-object (caller should use glPushMatrix/glPopMatrix)
+        /// This method applies all three matrices, so caller should manage matrix stack.
+        /// </summary>
         public void Apply()
         {
-            // TODO: STUB - Apply matrices and textures to OpenGL
+            // Apply projection matrix
+            // Based on xoreos: glMatrixMode(GL_PROJECTION); glMultMatrixf(_perspective);
+            glMatrixMode(GL_PROJECTION);
+            glLoadIdentity();
+            float[] projectionArray = MatrixToFloatArray(_projection);
+            glMultMatrixf(projectionArray);
+            
+            // Apply view and world matrices to MODELVIEW
+            // Based on xoreos: glMatrixMode(GL_MODELVIEW); glLoadIdentity(); then apply view transform
+            glMatrixMode(GL_MODELVIEW);
+            glLoadIdentity();
+            
+            // Apply view matrix (camera transform)
+            float[] viewArray = MatrixToFloatArray(_view);
+            glMultMatrixf(viewArray);
+            
+            // Apply world matrix (object transform)
+            // Note: Caller should use glPushMatrix() before Apply() and glPopMatrix() after drawing
+            float[] worldArray = MatrixToFloatArray(_world);
+            glMultMatrixf(worldArray);
+            
+            // Apply opacity via color and blending
+            // Based on swkotor2.exe: FadeTime @ 0x007c60ec (fade duration), alpha blending for entity rendering
+            // Opacity is updated by AppearAnimationFadeSystem for appear animations
+            // Opacity is updated by ActionDestroyObject for destroy animations
+            if (_alpha < 1.0f)
+            {
+                // Enable blending for transparency
+                // Based on xoreos: guiquad.cpp render() @ lines 274-297 (alpha blending)
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                
+                // Set color with alpha for vertex color modulation
+                // glColor4f applies a color multiplier to all vertices
+                glColor4f(_diffuseColor.X, _diffuseColor.Y, _diffuseColor.Z, _alpha);
+            }
+            else
+            {
+                // Full opacity - disable blending for performance
+                glDisable(GL_BLEND);
+                glColor4f(_diffuseColor.X, _diffuseColor.Y, _diffuseColor.Z, 1.0f);
+            }
+            
+            // Apply texture if enabled
+            if (_textureEnabled && _texture != null)
+            {
+                if (_texture is OdysseyTexture2D odysseyTexture)
+                {
+                    glBindTexture(GL_TEXTURE_2D, (uint)odysseyTexture.NativeHandle.ToInt64());
+                }
+            }
+            else
+            {
+                glBindTexture(GL_TEXTURE_2D, 0);
+            }
+        }
+        
+        /// <summary>
+        /// Converts System.Numerics.Matrix4x4 to OpenGL column-major float array.
+        /// OpenGL matrices are column-major, System.Numerics uses row-major.
+        /// Based on xoreos: glm::value_ptr() usage for glMultMatrixf
+        /// </summary>
+        private float[] MatrixToFloatArray(Matrix4x4 matrix)
+        {
+            // System.Numerics.Matrix4x4 is row-major, OpenGL expects column-major
+            // We need to transpose the matrix for OpenGL
+            float[] array = new float[16];
+            
+            // Transpose: row i, column j becomes column i, row j
+            array[0] = matrix.M11; array[4] = matrix.M12; array[8] = matrix.M13; array[12] = matrix.M14;
+            array[1] = matrix.M21; array[5] = matrix.M22; array[9] = matrix.M23; array[13] = matrix.M24;
+            array[2] = matrix.M31; array[6] = matrix.M32; array[10] = matrix.M33; array[14] = matrix.M34;
+            array[3] = matrix.M41; array[7] = matrix.M42; array[11] = matrix.M43; array[15] = matrix.M44;
+            
+            return array;
         }
         
         public void Dispose()
