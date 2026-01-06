@@ -152,12 +152,12 @@ namespace HolocronToolset.Dialogs
                     .Where(lang => lang != Language.Unknown)
                     .OrderBy(lang => (int)lang)
                     .ToList();
-                
+
                 foreach (var language in _orderedLanguages)
                 {
                     _languageSelect.Items.Add(language.ToString());
                 }
-                
+
                 // Set default selection to English (index 0)
                 if (_languageSelect.Items.Count > 0)
                 {
@@ -317,7 +317,7 @@ namespace HolocronToolset.Dialogs
                     // Get the TLK file path from installation
                     // Matching PyKotor: tlk_path: CaseAwarePath = CaseAwarePath(self._installation.path(), "dialog.tlk")
                     string tlkPath = System.IO.Path.Combine(_installation.Path, "dialog.tlk");
-                    
+
                     // Check if TLK file exists
                     if (!File.Exists(tlkPath))
                     {
@@ -330,7 +330,7 @@ namespace HolocronToolset.Dialogs
                     // Read the TLK file
                     // Matching PyKotor: tlk: TLK = read_tlk(tlk_path)
                     TLK tlk = TLKAuto.ReadTlk(tlkPath);
-                    
+
                     // Resize if needed to accommodate the stringref
                     // Matching PyKotor: if len(tlk) <= self.locstring.stringref: tlk.resize(self.locstring.stringref + 1)
                     int stringref = LocString.StringRef;
@@ -338,12 +338,12 @@ namespace HolocronToolset.Dialogs
                     {
                         tlk.Resize(stringref + 1);
                     }
-                    
+
                     // Get the text from the edit control
                     // Matching PyKotor: tlk[self.locstring.stringref].text = self.ui.stringEdit.toPlainText()
                     string text = _stringEdit.Text ?? "";
                     tlk[stringref].Text = text;
-                    
+
                     // Save the TLK file back to disk
                     // Matching PyKotor: write_tlk(tlk, tlk_path)
                     TLKAuto.WriteTlk(tlk, tlkPath, ResourceType.TLK);
@@ -355,12 +355,12 @@ namespace HolocronToolset.Dialogs
                         "Error Saving TLK File",
                         $"Failed to save the TLK file: {ex.Message}",
                         ButtonEnum.Ok,
-                        Icon.Error);
+                        MsBox.Avalonia.Enums.Icon.Error);
                     errorBox.ShowAsync();
                     // Continue to close the dialog even if save failed
                 }
             }
-            
+
             // Matching PyKotor: super().accept()
             Close();
         }

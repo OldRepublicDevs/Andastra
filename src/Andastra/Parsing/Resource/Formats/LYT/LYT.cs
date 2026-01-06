@@ -607,7 +607,7 @@ namespace Andastra.Parsing.Resource.Formats.LYT
         /// A quaternion (X, Y, Z, W) that describes how the door should be rotated.
         /// Quaternions are a way to represent 3D rotations using 4 numbers.
         /// </summary>
-        public System.Numerics.Quaternion Orientation { get; set; }
+        public Quaternion Orientation { get; set; }
 
         /// <summary>
         /// Default constructor.

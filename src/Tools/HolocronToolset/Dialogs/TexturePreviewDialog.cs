@@ -5,8 +5,8 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Andastra.Parsing.Formats.TPC;
-using Andastra.Parsing.Resource;
 using JetBrains.Annotations;
+using Avalonia;
 
 namespace HolocronToolset.Dialogs
 {
