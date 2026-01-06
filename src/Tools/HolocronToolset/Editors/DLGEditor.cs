@@ -1246,13 +1246,17 @@ namespace HolocronToolset.Editors
 
                 // Matching PyKotor: node_data: dict[str | int, Any] = json.loads(clipboard_text)
                 // Matching PyKotor: if isinstance(node_data, dict) and "type" in node_data: self._copy = DLGLink.from_dict(node_data)
-                Dictionary<string, object> nodeData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(clipboardText);
-                if (nodeData != null && nodeData.ContainsKey("type"))
+                // System.Text.Json deserializes nested objects as JsonElement, so we need to convert them
+                using (System.Text.Json.JsonDocument doc = System.Text.Json.JsonDocument.Parse(clipboardText))
                 {
-                    // Parse the JSON data into a DLGLink
-                    // Matching PyKotor: self._copy = DLGLink.from_dict(node_data)
-                    Dictionary<string, object> nodeMap = new Dictionary<string, object>();
-                    _copy = DLGLink.FromDict(nodeData, nodeMap);
+                    Dictionary<string, object> nodeData = ConvertJsonElementToDictionary(doc.RootElement);
+                    if (nodeData != null && nodeData.ContainsKey("type"))
+                    {
+                        // Parse the JSON data into a DLGLink
+                        // Matching PyKotor: self._copy = DLGLink.from_dict(node_data)
+                        Dictionary<string, object> nodeMap = new Dictionary<string, object>();
+                        _copy = DLGLink.FromDict(nodeData, nodeMap);
+                    }
                 }
             }
             catch (System.Text.Json.JsonException)
@@ -1275,7 +1279,71 @@ namespace HolocronToolset.Editors
         {
             // Fire-and-forget async call - we don't need to wait for clipboard check
             // This matches PyKotor's behavior where clipboard check is non-blocking
-            _ = CheckClipboardForJsonNodeAsync();
+            CheckClipboardForJsonNodeAsync();
+        }
+
+        /// <summary>
+        /// Converts a JsonElement to a Dictionary&lt;string, object&gt; recursively.
+        /// This is needed because System.Text.Json deserializes nested objects as JsonElement,
+        /// but DLGLink.FromDict expects Dictionary&lt;string, object&gt;.
+        /// </summary>
+        /// <param name="element">The JsonElement to convert.</param>
+        /// <returns>A dictionary representation of the JSON element.</returns>
+        private Dictionary<string, object> ConvertJsonElementToDictionary(System.Text.Json.JsonElement element)
+        {
+            if (element.ValueKind != System.Text.Json.JsonValueKind.Object)
+            {
+                return null;
+            }
+
+            Dictionary<string, object> result = new Dictionary<string, object>();
+            foreach (var property in element.EnumerateObject())
+            {
+                result[property.Name] = ConvertJsonElementToObject(property.Value);
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Converts a JsonElement to an object (recursively handling nested structures).
+        /// </summary>
+        /// <param name="element">The JsonElement to convert.</param>
+        /// <returns>An object representation of the JSON element.</returns>
+        private object ConvertJsonElementToObject(System.Text.Json.JsonElement element)
+        {
+            switch (element.ValueKind)
+            {
+                case System.Text.Json.JsonValueKind.Object:
+                    return ConvertJsonElementToDictionary(element);
+                case System.Text.Json.JsonValueKind.Array:
+                    List<object> list = new List<object>();
+                    foreach (var item in element.EnumerateArray())
+                    {
+                        list.Add(ConvertJsonElementToObject(item));
+                    }
+                    return list;
+                case System.Text.Json.JsonValueKind.String:
+                    return element.GetString();
+                case System.Text.Json.JsonValueKind.Number:
+                    // Try int first, then double
+                    if (element.TryGetInt32(out int intValue))
+                    {
+                        return intValue;
+                    }
+                    if (element.TryGetInt64(out long longValue))
+                    {
+                        return longValue;
+                    }
+                    return element.GetDouble();
+                case System.Text.Json.JsonValueKind.True:
+                    return true;
+                case System.Text.Json.JsonValueKind.False:
+                    return false;
+                case System.Text.Json.JsonValueKind.Null:
+                    return null;
+                default:
+                    return null;
+            }
         }
 
         /// <summary>
