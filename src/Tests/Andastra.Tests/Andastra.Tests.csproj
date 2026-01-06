@@ -39,7 +39,7 @@
     <Deterministic>false</Deterministic>
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
     <!-- Skip expensive operations -->
-    <SkipMonoGameContentPipeline Condition="'$(SkipMonoGameContentPipeline)' == ''">false</SkipMonoGameContentPipeline>
+    <SkipMonoGameContentPipeline Condition="'$(SkipMonoGameContentPipeline)' == ''">true</SkipMonoGameContentPipeline>
   </PropertyGroup>
 
   <!-- Release Configuration: Optimized, cross-platform, takes longer to build -->
@@ -85,7 +85,7 @@
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
     <RunCodeAnalysis>false</RunCodeAnalysis>
-    <SkipMonoGameContentPipeline Condition="'$(SkipMonoGameContentPipeline)' == ''">false</SkipMonoGameContentPipeline>
+    <SkipMonoGameContentPipeline Condition="'$(SkipMonoGameContentPipeline)' == ''">true</SkipMonoGameContentPipeline>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <UseRidGraph>true</UseRidGraph>
     <UseSharedCompilation>true</UseSharedCompilation>
