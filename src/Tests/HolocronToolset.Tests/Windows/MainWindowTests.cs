@@ -206,8 +206,14 @@ namespace HolocronToolset.Tests.Windows
             System.Reflection.FieldInfo activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             activeField?.SetValue(window, _installation);
 
-            // TODO:  Mock some modules
-            var moduleItems = new List<object> { "Test Module 1", "Test Module 2" };
+            // Mock some modules using proper mock module entries
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_main.py:116-119
+            // Original: modules = [QStandardItem("Test Module 1"), QStandardItem("Test Module 2")]
+            var moduleItems = new List<object>
+            {
+                MockModuleEntry.CreateRimModule("end_m01aa", "Endar Spire"),
+                MockModuleEntry.CreateRimModule("tar_m02aa", "Taris Upper City")
+            };
             window.RefreshModuleList(reload: false, moduleItems: moduleItems);
 
             // Check that sections were set (ResourceList.SetSections should populate sectionCombo)
