@@ -23,6 +23,10 @@ namespace HolocronToolset.Dialogs
         private ScrollViewer _scrollViewer;
         private Panel _htmlContainer;
         private string _htmlContent;
+        
+        // Dictionary to map anchor IDs to controls for scrolling
+        // Key: anchor ID (without #), Value: Control to scroll to
+        private readonly Dictionary<string, Control> _anchorMap = new Dictionary<string, Control>(StringComparer.OrdinalIgnoreCase);
 
         // Expose HTML container for testing
         public Panel HtmlContainer => _htmlContainer;
@@ -316,6 +320,10 @@ namespace HolocronToolset.Dialogs
                 string combinedHtmlBody = string.Join("\n", htmlBodies);
                 string html = WrapHtmlWithStyles(combinedHtmlBody);
                 _htmlContent = html; // Store HTML for testing
+                
+                // Clear anchor map before rendering new content
+                _anchorMap.Clear();
+                
                 RenderHtml(html);
             }
         }
@@ -535,6 +543,28 @@ namespace HolocronToolset.Dialogs
             }
         }
 
+        // Helper method to register anchor IDs from HTML elements
+        private void RegisterAnchorIfPresent(HtmlNode node, Control control)
+        {
+            if (node == null || control == null)
+            {
+                return;
+            }
+
+            // Check for id attribute (modern HTML5 way)
+            string anchorId = node.GetAttributeValue("id", "");
+            if (string.IsNullOrEmpty(anchorId))
+            {
+                // Check for name attribute (legacy anchor support, especially for <a name="...">)
+                anchorId = node.GetAttributeValue("name", "");
+            }
+
+            if (!string.IsNullOrEmpty(anchorId))
+            {
+                _anchorMap[anchorId] = control;
+            }
+        }
+
         // Recursively render HTML nodes to Avalonia controls
         private void RenderNode(HtmlNode node, Panel parent)
         {
@@ -716,6 +746,9 @@ namespace HolocronToolset.Dialogs
             heading.Text = textBuilder.ToString();
 
             parent.Children.Add(heading);
+            
+            // Register anchor ID for scrolling (Markdig auto-generates IDs for headings)
+            RegisterAnchorIfPresent(node, heading);
 
             // Add border line for h1 and h2
             if (level == "h1" || level == "h2")
@@ -750,6 +783,9 @@ namespace HolocronToolset.Dialogs
             }
 
             parent.Children.Add(paragraph);
+            
+            // Register anchor ID if paragraph has one (supports <p id="...">)
+            RegisterAnchorIfPresent(node, paragraph);
         }
 
         private void BuildInlinesFromNode(HtmlNode node, InlineCollection inlines)
@@ -978,6 +1014,10 @@ namespace HolocronToolset.Dialogs
             }
 
             parent.Children.Add(link);
+            
+            // Register anchor ID if this is an anchor element (<a name="..."> or <a id="...">)
+            // This supports legacy anchor elements used for navigation targets
+            RegisterAnchorIfPresent(node, link);
         }
 
         // Handle link clicks - matching PyKotor QTextBrowser link navigation behavior
@@ -1009,8 +1049,8 @@ namespace HolocronToolset.Dialogs
                 if (href.StartsWith("#", System.StringComparison.Ordinal))
                 {
                     // Anchor link - scroll to anchor within current document
-                    // TODO: STUB - Note: Full anchor scrolling would require more complex implementation
-                    // TODO: STUB - For now, we'll just handle file links
+                    string anchorId = href.Substring(1); // Remove leading #
+                    ScrollToAnchor(anchorId);
                     return;
                 }
 
@@ -1052,6 +1092,23 @@ namespace HolocronToolset.Dialogs
                     // Open in new EditorHelpDialog (matching PyKotor behavior)
                     var helpDialog = new EditorHelpDialog(this, new[] { wikiFilename });
                     helpDialog.Show();
+                    
+                    // If anchor was specified, scroll to it after dialog loads
+                    if (!string.IsNullOrEmpty(anchor))
+                    {
+                        // Use DispatcherTimer to wait for dialog to render before scrolling
+                        var timer = new Avalonia.Threading.DispatcherTimer
+                        {
+                            Interval = TimeSpan.FromMilliseconds(100) // 100ms delay for rendering
+                        };
+                        timer.Tick += (s, e) =>
+                        {
+                            timer.Stop();
+                            // Scroll to anchor in the new dialog
+                            helpDialog.ScrollToAnchor(anchor);
+                        };
+                        timer.Start();
+                    }
                 }
                 else
                 {
@@ -1346,6 +1403,88 @@ namespace HolocronToolset.Dialogs
                 }
                 parent = parent.ParentNode;
             }
+        }
+
+        /// <summary>
+        /// Scrolls to an anchor within the current document.
+        /// Matching PyKotor QTextBrowser.scrollToAnchor behavior.
+        /// </summary>
+        /// <param name="anchorId">The anchor ID to scroll to (without # prefix).</param>
+        private void ScrollToAnchor(string anchorId)
+        {
+            if (string.IsNullOrEmpty(anchorId) || _scrollViewer == null || _htmlContainer == null)
+            {
+                return;
+            }
+
+            // Normalize anchor ID (case-insensitive matching)
+            string normalizedAnchorId = anchorId.Trim();
+            
+            // Try to find the control by anchor ID
+            if (!_anchorMap.TryGetValue(normalizedAnchorId, out Control targetControl))
+            {
+                // Anchor not found - silently fail (matching QTextBrowser behavior)
+                return;
+            }
+
+            // Use Dispatcher to ensure layout is complete before scrolling
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                try
+                {
+                    // Get the position of the target control relative to the container
+                    // In Avalonia, we need to use TransformToVisual to get the position
+                    var transform = targetControl.TransformToVisual(_htmlContainer);
+                    if (transform.HasValue)
+                    {
+                        var point = transform.Value.Transform(new Point(0, 0));
+                        double targetY = point.Y;
+                        
+                        // Add a small offset to account for margins/padding (20px from top for better visibility)
+                        double scrollOffset = targetY - 20;
+                        
+                        // Ensure scroll offset is not negative
+                        if (scrollOffset < 0)
+                        {
+                            scrollOffset = 0;
+                        }
+
+                        // Scroll the ScrollViewer to the target position
+                        _scrollViewer.Offset = new Vector(_scrollViewer.Offset.X, scrollOffset);
+                    }
+                    else
+                    {
+                        // Fallback: try to find the control's position by traversing the visual tree
+                        double targetY = 0;
+                        var current = targetControl;
+                        while (current != null && current != _htmlContainer)
+                        {
+                            if (current is Visual visual)
+                            {
+                                var bounds = visual.Bounds;
+                                targetY += bounds.Y;
+                                current = current.Parent as Control;
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+
+                        double scrollOffset = targetY - 20;
+                        if (scrollOffset < 0)
+                        {
+                            scrollOffset = 0;
+                        }
+
+                        _scrollViewer.Offset = new Vector(_scrollViewer.Offset.X, scrollOffset);
+                    }
+                }
+                catch
+                {
+                    // Ignore errors during scrolling (matching QTextBrowser behavior)
+                }
+            }, Avalonia.Threading.DispatcherPriority.Loaded);
         }
 
     }
