@@ -1062,9 +1062,122 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 return FAILURE;
             }
 
+            // Get nwscript.nss path for function definitions to enable compilation validation
+            // Try both K1 and TSL nwscript files to ensure we have function definitions
+            string nwscriptPath = null;
+
+            // Build comprehensive list of candidate paths
+            List<string> candidatePaths = new List<string>();
+
+            // 1. Current working directory
+            string currentDir = System.IO.Directory.GetCurrentDirectory();
+            candidatePaths.Add(System.IO.Path.Combine(currentDir, "tools", "k1_nwscript.nss"));
+            candidatePaths.Add(System.IO.Path.Combine(currentDir, "tools", "tsl_nwscript.nss"));
+            candidatePaths.Add(System.IO.Path.Combine(currentDir, "include", "k2_nwscript.nss"));
+            candidatePaths.Add(System.IO.Path.Combine(currentDir, "tools", "nwscript.nss"));
+
+            // 2. Assembly location and parent directories
             try
             {
-                NCS compiled = NCSAuto.CompileNss(code ?? string.Empty, game, null, null);
+                string assemblyPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                if (!string.IsNullOrEmpty(assemblyPath))
+                {
+                    string assemblyDir = System.IO.Path.GetDirectoryName(assemblyPath);
+                    candidatePaths.Add(System.IO.Path.Combine(assemblyDir, "tools", "k1_nwscript.nss"));
+                    candidatePaths.Add(System.IO.Path.Combine(assemblyDir, "tools", "tsl_nwscript.nss"));
+                    candidatePaths.Add(System.IO.Path.Combine(assemblyDir, "include", "k2_nwscript.nss"));
+                    candidatePaths.Add(System.IO.Path.Combine(assemblyDir, "tools", "nwscript.nss"));
+
+                    // Go up directories from assembly location
+                    string parent = System.IO.Path.GetDirectoryName(assemblyDir);
+                    for (int i = 0; i < 5 && !string.IsNullOrEmpty(parent); i++)
+                    {
+                        candidatePaths.Add(System.IO.Path.Combine(parent, "tools", "k1_nwscript.nss"));
+                        candidatePaths.Add(System.IO.Path.Combine(parent, "tools", "tsl_nwscript.nss"));
+                        candidatePaths.Add(System.IO.Path.Combine(parent, "include", "k2_nwscript.nss"));
+                        candidatePaths.Add(System.IO.Path.Combine(parent, "tools", "nwscript.nss"));
+                        string nextParent = System.IO.Path.GetDirectoryName(parent);
+                        if (string.IsNullOrEmpty(nextParent) || nextParent == parent) break;
+                        parent = nextParent;
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore assembly location errors
+            }
+
+            // 3. Try NWScriptLocator
+            try
+            {
+                var currentSettings = this.settings ?? Decompiler.settings;
+                NWScriptLocator.GameType locatorGameType = this.gameType == NWScriptLocator.GameType.TSL
+                    ? NWScriptLocator.GameType.TSL
+                    : NWScriptLocator.GameType.K1;
+
+                // Try the detected game type first
+                NcsFile nwscriptFile = NWScriptLocator.FindNWScriptFile(locatorGameType, currentSettings);
+                if (nwscriptFile != null && nwscriptFile.Exists())
+                {
+                    candidatePaths.Insert(0, nwscriptFile.GetAbsolutePath()); // Prioritize this
+                }
+                else
+                {
+                    // Try the other game type as fallback
+                    NWScriptLocator.GameType fallbackType = locatorGameType == NWScriptLocator.GameType.TSL
+                        ? NWScriptLocator.GameType.K1
+                        : NWScriptLocator.GameType.TSL;
+                    nwscriptFile = NWScriptLocator.FindNWScriptFile(fallbackType, currentSettings);
+                    if (nwscriptFile != null && nwscriptFile.Exists())
+                    {
+                        candidatePaths.Insert(0, nwscriptFile.GetAbsolutePath()); // Prioritize this
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore NWScriptLocator errors
+            }
+
+            // Check all candidate paths
+            foreach (string candidate in candidatePaths)
+            {
+                try
+                {
+                    string fullPath = System.IO.Path.GetFullPath(candidate);
+                    if (System.IO.File.Exists(fullPath))
+                    {
+                        nwscriptPath = fullPath;
+                        Debug($"Found nwscript.nss at: {nwscriptPath}");
+                        Console.Error.WriteLine($"[NCSDecomp] Found nwscript.nss at: {nwscriptPath}");
+                        break;
+                    }
+                }
+                catch
+                {
+                    continue;
+                }
+            }
+
+            if (string.IsNullOrEmpty(nwscriptPath))
+            {
+                string warning = "WARNING: No nwscript.nss path found - compilation validation will likely fail for game functions";
+                Debug(warning);
+                Console.Error.WriteLine($"[NCSDecomp] {warning}");
+                Console.Error.WriteLine($"[NCSDecomp] Current directory: {System.IO.Directory.GetCurrentDirectory()}");
+                Console.Error.WriteLine($"[NCSDecomp] Tried paths: tools/k1_nwscript.nss, tools/tsl_nwscript.nss, include/k2_nwscript.nss, tools/nwscript.nss");
+            }
+            else
+            {
+                string info = $"Compiling with nwscript.nss: {nwscriptPath}";
+                Debug(info);
+                Console.Error.WriteLine($"[NCSDecomp] {info}");
+            }
+
+            try
+            {
+                Console.Error.WriteLine($"[NCSDecomp] About to compile with nwscriptPath={(nwscriptPath ?? "NULL")}");
+                NCS compiled = NCSAuto.CompileNss(code ?? string.Empty, game, null, null, null, false, nwscriptPath);
                 byte[] compiledBytes = NCSAuto.BytesNcs(compiled);
                 data.SetNewByteCode(BytesToHexString(compiledBytes, 0, compiledBytes.Length));
 
@@ -6485,6 +6598,30 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 catch (Throwable var6)
                 {
                     Debug("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                }
+            }
+        /// <summary>
+        /// Finds the repository root by searching upward for .git directory or .sln file.
+        /// Used to locate nwscript.nss files in tools/ or include/ directories.
+        /// </summary>
+        private string FindRepositoryRootForNwscript()
+        {
+            string currentDir = System.IO.Directory.GetCurrentDirectory();
+            System.IO.DirectoryInfo dir = new System.IO.DirectoryInfo(currentDir);
+
+            while (dir != null)
+            {
+                // Check for .git directory or .sln file
+                if (System.IO.Directory.Exists(System.IO.Path.Combine(dir.FullName, ".git")) ||
+                    System.IO.Directory.GetFiles(dir.FullName, "*.sln").Length > 0)
+                {
+                    return dir.FullName;
+                }
+                dir = dir.Parent;
+            }
+
+            // Fallback to current directory if not found
+            return currentDir;
                     Debug("[NCSDecomp] EXCEPTION executing nwnnsscomp.exe:");
                     Debug("[NCSDecomp] Exception Type: " + var6.GetType().Name);
                     Debug("[NCSDecomp] Exception Message: " + var6.Message);
@@ -6538,6 +6675,30 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             }
 
             return sb.ToString().Trim();
+        }
+
+        /// <summary>
+        /// Finds the repository root by searching upward for .git directory or .sln file.
+        /// Used to locate nwscript.nss files in tools/ or include/ directories.
+        /// </summary>
+        private string FindRepositoryRootForNwscript()
+        {
+            string currentDir = System.IO.Directory.GetCurrentDirectory();
+            System.IO.DirectoryInfo dir = new System.IO.DirectoryInfo(currentDir);
+
+            while (dir != null)
+            {
+                // Check for .git directory or .sln file
+                if (System.IO.Directory.Exists(System.IO.Path.Combine(dir.FullName, ".git")) ||
+                    System.IO.Directory.GetFiles(dir.FullName, "*.sln").Length > 0)
+                {
+                    return dir.FullName;
+                }
+                dir = dir.Parent;
+            }
+
+            // Fallback to current directory if not found
+            return currentDir;
         }
     }
 }
