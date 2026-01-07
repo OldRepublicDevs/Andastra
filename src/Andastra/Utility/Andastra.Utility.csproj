@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
     <LangVersion>7.3</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <GenerateGlobalUsings>false</GenerateGlobalUsings>
+    <GenerateMSBuildEditorConfigFile>false</GenerateMSBuildEditorConfigFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>Andastra.Utility</AssemblyName>
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
   </PropertyGroup>
 
   <!-- Debug Configuration -->
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <TargetFramework>net9.0</TargetFramework>
-    <EnableNETAnalyzers>false</EnableNETAnalyzers>
-    <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
-    <Nullable>disable</Nullable>
     <Optimize>false</Optimize>
     <DebugType>portable</DebugType>
     <DebugSymbols>true</DebugSymbols>
@@ -33,52 +33,22 @@
 
   <!-- Release Configuration -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <TargetFrameworks></TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '10.0.0'))">
-      $(TargetFrameworks);net10.0
-    </TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '9.0.0'))">
-      $(TargetFrameworks);net9.0
-    </TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '8.0.0'))">
-      $(TargetFrameworks);net9.0
-    </TargetFrameworks>
-    <TargetFrameworks Condition="$([System.String]::new('$(NETCoreSdkVersion)').StartsWith('7.'))">
-      $(TargetFrameworks);net7.0;net6.0
-    </TargetFrameworks>
-    <TargetFrameworks Condition="$([System.String]::new('$(NETCoreSdkVersion)').StartsWith('6.'))">
-      $(TargetFrameworks);net6.0
-    </TargetFrameworks>
-    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8')">
-      $(TargetFrameworks);net48
-    </TargetFrameworks>
-    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2')">
-      $(TargetFrameworks);net462
-    </TargetFrameworks>
-    <BuildInParallel>true</BuildInParallel>
+    <Optimize>true</Optimize>
     <DebugSymbols>false</DebugSymbols>
     <DebugType>portable</DebugType>
     <Deterministic>true</Deterministic>
-    <EnableNETAnalyzers>true</EnableNETAnalyzers>
-    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-    <Nullable>disable</Nullable>
-    <Optimize>true</Optimize>
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
     <RunCodeAnalysis>false</RunCodeAnalysis>
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <UseRidGraph>true</UseRidGraph>
-    <UseSharedCompilation>true</UseSharedCompilation>
     <WarningLevel>0</WarningLevel>
+    <BuildInParallel>true</BuildInParallel>
+    <UseSharedCompilation>true</UseSharedCompilation>
+    <UseRidGraph>true</UseRidGraph>
   </PropertyGroup>
 
-  <!-- RuntimeIdentifiers -->
-  <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
-    <RuntimeIdentifiers>win7-x86;win7-x64;win10-x86;win10-x64</RuntimeIdentifiers>
-  </PropertyGroup>
-  <PropertyGroup Condition="!$(TargetFramework.StartsWith('net4'))">
-    <RuntimeIdentifiers>win-x86;win-x64;win-arm64;linux-x64;linux-arm64;osx-x64;osx-arm64</RuntimeIdentifiers>
-  </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
@@ -86,4 +56,13 @@
     <PackageReference Include="System.Collections.Immutable" Version="10.0.1" />
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
   </ItemGroup>
+
+
+  <Target Name="RemoveGeneratedEditorConfigFromCompile" BeforeTargets="BeforeBuild;Build;CoreCompile;Compile">
+    <ItemGroup>
+      <Compile Remove="**\*.GeneratedMSBuildEditorConfig.editorconfig" />
+      <Compile Remove="obj\**\*.GeneratedMSBuildEditorConfig.editorconfig" />
+      <Compile Remove="$(IntermediateOutputPath)**\*.GeneratedMSBuildEditorConfig.editorconfig" />
+    </ItemGroup>
+  </Target>
 </Project>
