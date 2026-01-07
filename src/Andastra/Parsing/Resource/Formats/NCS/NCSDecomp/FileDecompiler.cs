@@ -1177,7 +1177,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             try
             {
                 Console.Error.WriteLine($"[NCSDecomp] About to compile with nwscriptPath={(nwscriptPath ?? "NULL")}");
-                NCS compiled = NCSAuto.CompileNss(code ?? string.Empty, game, null, null, null, false, nwscriptPath);
+                NCS compiled = NCSAuto.CompileNss(code ?? string.Empty, game, null, null, null, null, false, nwscriptPath);
                 byte[] compiledBytes = NCSAuto.BytesNcs(compiled);
                 data.SetNewByteCode(BytesToHexString(compiledBytes, 0, compiledBytes.Length));
 
@@ -6600,52 +6600,51 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     Debug("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
                 }
             }
-        /// <summary>
-        /// Finds the repository root by searching upward for .git directory or .sln file.
-        /// Used to locate nwscript.nss files in tools/ or include/ directories.
-        /// </summary>
-        private string FindRepositoryRootForNwscript()
+
+        private class StreamGobbler
         {
-            string currentDir = System.IO.Directory.GetCurrentDirectory();
-            System.IO.DirectoryInfo dir = new System.IO.DirectoryInfo(currentDir);
-
-            while (dir != null)
+            private Thread thread;
+            InputStream @is;
+            string type;
+            public StreamGobbler(InputStream @is, string type)
             {
-                // Check for .git directory or .sln file
-                if (System.IO.Directory.Exists(System.IO.Path.Combine(dir.FullName, ".git")) ||
-                    System.IO.Directory.GetFiles(dir.FullName, "*.sln").Length > 0)
-                {
-                    return dir.FullName;
-                }
-                dir = dir.Parent;
+                this.@is = @is;
+                this.type = type;
+                this.thread = new Thread(Run);
             }
 
-            // Fallback to current directory if not found
-            return currentDir;
-                    Debug("[NCSDecomp] EXCEPTION executing nwnnsscomp.exe:");
-                    Debug("[NCSDecomp] Exception Type: " + var6.GetType().Name);
-                    Debug("[NCSDecomp] Exception Message: " + var6.Message);
-                    var6.PrintStackTrace(JavaSystem.@out);
-                    Debug("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-                }
+            public void Start()
+            {
+                this.thread.Start();
             }
 
-            private class StreamGobbler
+            private void Run()
             {
-                private Thread thread;
-                InputStream @is;
-                string type;
-                public StreamGobbler(InputStream @is, string type)
+                try
                 {
-                    this.@is = @is;
-                    this.type = type;
-                    this.thread = new Thread(Run);
+                    StreamReader isr = new StreamReader(this.@is);
+                    string line = null;
+                    while ((line = isr.ReadLine()) != null)
+                    {
+                        System.Console.WriteLine(this.type.ToString() + ">" + line);
+                    }
                 }
-
-                public void Start()
+                catch (IOException ioe)
                 {
-                    this.thread.Start();
+                    ioe.PrintStackTrace();
                 }
+            }
+        }
 
-                private void Run()
-                {
+        private static string BytesToHexString(byte[] bytes, int start, int end)
+        {
+            StringBuilder sb = new StringBuilder();
+            for (int i = start; i < end && i < bytes.Length; i++)
+            {
+                sb.Append(String.Format("%02X ", bytes[i] & 0xFF));
+            }
+
+            return sb.ToString().Trim();
+        }
+    }
+}
