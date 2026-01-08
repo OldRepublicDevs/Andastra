@@ -1,4 +1,5 @@
 using System;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;

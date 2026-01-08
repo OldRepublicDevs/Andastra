@@ -4,7 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Minimal
+namespace Andastra.Parsing.Formats.NCS
 {
 
     /// <summary>

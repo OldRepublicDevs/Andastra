@@ -7,9 +7,10 @@ using System.Text;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.NCS;
+using Andastra.Parsing.Logger;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Formats.NCS.Compiler
+namespace Andastra
 {
 
     /// <summary>
@@ -21,13 +22,13 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
         [CanBeNull]
         private readonly string _nwnnsscompPath;
         private readonly string _tempScriptFolder;
-        private readonly Logger.PatchLogger _logger;
+        private readonly object _logger; // Stub logger
 
-        public NCSCompiler([CanBeNull] string nwnnsscompPath, string tempScriptFolder, Logger.PatchLogger logger)
+        public NCSCompiler([CanBeNull] string nwnnsscompPath, string tempScriptFolder, object logger)
         {
             _nwnnsscompPath = nwnnsscompPath;
             _tempScriptFolder = tempScriptFolder ?? throw new ArgumentNullException(nameof(tempScriptFolder));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _logger = logger; // Stub logger
         }
 
         /// <summary>
@@ -72,16 +73,16 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
                 }
                 catch (Exception ex)
                 {
-                    _logger.AddError($"External compilation failed for '{filename}': {ex.Message}");
+                    Console.Error.WriteLine($"External compilation failed for '{filename}': {ex.Message}");
                 }
             }
             else if (isWindows && !nwnnsscompExists)
             {
-                _logger.AddNote($"nwnnsscomp.exe not found in tslpatchdata folder. Falling back to built-in compiler for '{filename}'.");
+                Console.WriteLine($"NOTE: nwnnsscomp.exe not found in tslpatchdata folder. Falling back to built-in compiler for '{filename}'.");
             }
             else if (!isWindows)
             {
-                _logger.AddNote($"External NSS compilation is only supported on Windows. Using built-in compiler for '{filename}'.");
+                Console.WriteLine($"NOTE: External NSS compilation is only supported on Windows. Using built-in compiler for '{filename}'.");
             }
 
             // Fall back to PyKotor's built-in compiler (matches Python TSLPatcher behavior exactly)
@@ -92,8 +93,8 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
             }
             catch (Exception ex)
             {
-                _logger.AddError($"Built-in compilation failed for '{filename}': {ex.Message}");
-                _logger.AddWarning($"Could not compile '{filename}'. Returning uncompiled NSS source.");
+                Console.Error.WriteLine($"ERROR: Built-in compilation failed for '{filename}': {ex.Message}");
+                Console.WriteLine($"WARNING: Could not compile '{filename}'. Returning uncompiled NSS source.");
                 return Encoding.GetEncoding("windows-1252").GetBytes(nssSource);
             }
         }
@@ -119,13 +120,13 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
             }
 
             // Build command line arguments using PyKotor's logic for compatibility with all nwnnsscomp versions
-            NwnnsscompConfig config = new NwnnsscompConfig();
-            var compiler = new ExternalNCSCompiler(config);
+            NwnnsscompConfig config = new ExternalNCSCompiler(_nwnnsscompPath)
+                .Config(nssPath, outputPath, game);
 
             var startInfo = new ProcessStartInfo
             {
                 FileName = _nwnnsscompPath,
-                Arguments = string.Join(" ", config.GetCompileArgs(nssPath, outputPath)),
+                Arguments = string.Join(" ", config.GetCompileArgs(_nwnnsscompPath).Skip(1)),
                 WorkingDirectory = _tempScriptFolder,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -189,7 +190,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
                 byte[] compiledBytes = File.ReadAllBytes(outputPath);
 
                 // Log success
-                _logger.AddVerbose($"Successfully compiled '{filename}' to NCS ({compiledBytes.Length} bytes)");
+                Console.WriteLine($"VERBOSE: Successfully compiled '{filename}' to NCS ({compiledBytes.Length} bytes)");
 
                 return compiledBytes;
             }
@@ -217,7 +218,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
                 }
 
                 // If not the expected version, log a warning but still return true (let it work)
-                _logger.AddWarning($"The nwnnsscomp.exe is not the expected TSLPatcher version (detected: {productName ?? "UNKNOWN"}).");
+                Console.WriteLine($"WARNING: The nwnnsscomp.exe is not the expected TSLPatcher version (detected: {productName ?? "UNKNOWN"}).");
                 return true;
             }
             catch

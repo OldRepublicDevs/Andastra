@@ -10,7 +10,7 @@ using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.NCS.Compiler;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Formats.NCS
+namespace Andastra
 {
     /// <summary>
     /// Shared utility methods for NCS compilers.

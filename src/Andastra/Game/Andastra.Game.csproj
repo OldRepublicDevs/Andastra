@@ -14,5 +14,6 @@
     <ProjectReference Include="..\Graphics\Andastra.Graphics.csproj" />
     <ProjectReference Include="..\Parsing\Minimal\Andastra.Parsing.Minimal.csproj" />
     <ProjectReference Include="..\Utility\Andastra.Utility.csproj" />
+    <ProjectReference Include="Andastra.Runtime.csproj" />
   </ItemGroup>
 </Project>

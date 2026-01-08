@@ -31,7 +31,7 @@ using Andastra.Parsing.Resource.Generics.UTM;
 using Andastra.Parsing.Tools;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Resource
+namespace Andastra.Parsing.Extract
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/salvage.py
     // Original: Handles resource data validation/salvage strategies

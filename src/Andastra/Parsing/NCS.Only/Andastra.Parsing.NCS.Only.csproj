@@ -12,6 +12,9 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Andastra.Core.csproj" />
+    <ProjectReference Include="..\..\Utility\Andastra.Utility.csproj" />
+    <ProjectReference Include="..\Common\Andastra.Parsing.Common.csproj" />
     <ProjectReference Include="..\Minimal\Andastra.Parsing.Minimal.csproj" />
+    <ProjectReference Include="..\Resource\Andastra.Parsing.Resource.csproj" />
   </ItemGroup>
 </Project>

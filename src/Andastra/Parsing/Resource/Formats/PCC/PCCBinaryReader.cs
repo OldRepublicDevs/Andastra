@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats;
 using Andastra.Parsing.Resource;
 using JetBrains.Annotations;

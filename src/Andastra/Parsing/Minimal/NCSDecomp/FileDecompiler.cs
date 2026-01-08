@@ -1,5 +1,6 @@
 //
 using System;
+using Andastra.Parsing.Formats.NCS;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -1149,6 +1150,32 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 Debug(info);
                 Console.Error.WriteLine("[NCSDecomp] " + info);
             }
+
+            // Read original NCS file to get game type and original bytes
+            BioWareGame game;
+            byte[] originalBytes;
+
+            try
+            {
+                using (var reader = new NCSBinaryReader(file.GetAbsolutePath()))
+                {
+                    NCS originalNcs = reader.Load();
+                    if (originalNcs == null)
+                    {
+                        return FAILURE;
+                    }
+                    // TODO: Determine game type from NCS file
+                    game = BioWareGame.K1; // Default fallback
+                    originalBytes = System.IO.File.ReadAllBytes(file.GetAbsolutePath());
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug("Failed to read original NCS: " + ex.Message);
+                return FAILURE;
+            }
+
+            data.SetOriginalByteCode(BytesToHexString(originalBytes, 0, originalBytes.Length));
 
             try
             {

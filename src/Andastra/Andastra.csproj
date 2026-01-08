@@ -10,6 +10,8 @@
     <GenerateGlobalUsings>false</GenerateGlobalUsings>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Exclude Game project from build due to incomplete dependencies -->
+    <ExcludeGameProject>true</ExcludeGameProject>
     <!-- MonoGame Content Pipeline -->
     <MonoGamePlatform>DesktopGL</MonoGamePlatform>
     <MonoGameProfile>HiDef</MonoGameProfile>
@@ -82,8 +84,8 @@
   <ItemGroup>
     <ProjectReference Include="Graphics\Andastra.Graphics.csproj" />
     <ProjectReference Include="UI\Andastra.UI.csproj" />
-    <ProjectReference Include="Game\Andastra.Game.csproj" />
-    <ProjectReference Include="Parsing\Minimal\Andastra.Parsing.Minimal.csproj" />
+    <ProjectReference Include="Game\Andastra.Game.csproj" Condition="'$(ExcludeGameProject)' != 'true'" />
+    <ProjectReference Include="Parsing\Minimal\Andastra.Parsing.Minimal.csproj" Condition="'$(ExcludeGameProject)' != 'true'" />
     <ProjectReference Include="Parsing\Common\Andastra.Parsing.Common.csproj" />
     <ProjectReference Include="Parsing\Core\Andastra.Parsing.Core.csproj" />
     <ProjectReference Include="Parsing\GFF.Only\Andastra.Parsing.GFF.Only.csproj" />
@@ -149,8 +151,4 @@
     <AvaloniaResource Remove="**\*.axaml" />
   </ItemGroup>
 
-  <!-- Clean up Utility obj folder that gets incorrectly created -->
-  <Target Name="CleanUtilityObj" BeforeTargets="BeforeBuild">
-    <RemoveDir Directories="$(MSBuildProjectDirectory)\Utility\obj" Condition="Exists('$(MSBuildProjectDirectory)\Utility\obj')" />
-  </Target>
 </Project>
