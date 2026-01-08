@@ -1,131 +1,145 @@
-# Andastra.NET Rules for AI Agents
+# Andastra.NET AI Agent Rules (2026 Edition)
 
-(2025 Edition – Optimized for LLM Performance & Compliance)
+You are an AI agent contributing to Andastra.NET, a .NET project for reverse-engineering and modding Knights of the Old Republic games. Adhere strictly to these rules for consistency, compatibility, and engine fidelity.
 
-## 1. CRITICAL: ALWAYS COMMIT EVERY CHANGE
+## 1. Git Commits (Non-Negotiable)
 
-Commit format: Conventional Commits
-`fix:`, `feat:`, `refactor:`, `docs:`, `chore:`, `test:`
+Commit every file change (create, modify, delete, move) immediately.
 
-**Rule #1 – Non-negotiable**
-After ANY file change (create, modify, delete, move):
+Use conventional commits with optional scope:
 
-### Windows
+- Types: `fix:`, `feat:`, `refactor:`, `docs:`, `chore:`, `test:`
+- Never use `git add .` or `-A`
 
-```powershell
-git add <file>; git commit -m "type(scope): message"  # NEVER git add . or -A; e.g. feat: add K2 camera system
-```
+| Platform  | Command Format                                      |
+|-----------|-----------------------------------------------------|
+| Windows   | `git add <file>; git commit -m "type(scope): message"` |
+| Unix      | `git add <file> && git commit -m "type(scope): message"` |
 
-### Linux/Mac (Unix)
+Example: `feat(K2-camera): add camera system`
 
-```bash
-git add <file> && git commit -m "type(scope): message"  # NEVER git add . or -A; e.g. feat: add K2 camera system
-```
+## 2. File Organization
 
-**Why this works for LLMs**: Clear, measurable, binary success/failure check. LLMs perform best with explicit "do this exact sequence" instructions.
+Keep root clean. Allowed root files only: `README.md`, `.sln`, `.csproj`, `.props`, `.gitignore`, `.cursor/rules`.
 
-**Why we chain with semicolon(;) and ampersand(&&)**: Other agents simultaneously might be committing, this prevents conflicts when multiple agents may be trying to add/commit to git simultaneously.
+- Place all `.md` (except root `README.md`) in `docs/`
+- Place all scripts (`.ps1`, `.sh`, `.py`, `.bat`) in `scripts/`
 
-## 2. File Organization (Root Must Stay Clean)
+Move misplaced files immediately and commit.
 
-- `docs/` – ALL .md except root `README.md`
-- `scripts/` – ALL .ps1/.sh/.py/.bat
-- Root only allowed: `README.md`, .sln, .csproj, .props, .gitignore, .cursor/rules
+## 3. .NET Target Frameworks
 
-**Action**: If you see misplaced files → move them immediately → commit.
+Target only cross-platform frameworks.
 
-## 3. .NET Target Framework (Cross-Platform Only)
+- Primary: `net9.0`
+- Platform-specific: Use conditional equivalents (e.g., `net9.0-windows` with checks for Linux/macOS)
 
-- Use ONLY: `net9.0`
-- Otherwise, **Must have complementary platform support and conditional checks:**: `-windows`, `-linux`, `-macos`  e.g. `net9.0-windows` and whatever net9.0-windows equivalent is on mac/linux conditionally specified.
+## 4. C# Language Version
 
-## 4. C# Language Version: 7.3 Maximum
+Limit to C# 7.3 maximum. Ban C# 8+ features.
 
-**Hard limit**: C# 8+ features banned (nullable refs, switch expr, ranges, using decl, etc.)
+Rewrite prohibited constructs:
 
-**Rewrite pattern (if you see C# 8+)**:
+| Feature              | Replacement Pattern                                      |
+|----------------------|----------------------------------------------------------|
+| Nullable refs (`string?`) | Use `string` + `[CanBeNull]` attribute                  |
+| Disposable using decl | Use explicit blocks: `using (var x = ...) { }`          |
+| Switch expressions   | Use traditional switch statements                        |
 
-- `string?` → `string` + `[CanBeNull]` (JetBrains.Annotations)
-- `using var x = ...` → `using (var x = ...) { }`
-- Switch expr → switch statement
+### JetBrains.Annotations for Nullability
 
-### 4.1. Jetbrains.Annotations usage
+| Annotation   | Usage Example                                            |
+|--------------|----------------------------------------------------------|
+| `[CanBeNull]`| Marks return/parameter that may be null                   |
+| `[NotNull]`  | Marks parameter that must not be null                     |
 
-- C# 7.3 doesn't support nullable reference types, so we use Jetbrains.Annotations to annotate nullable references.
-- Example 1:
+Example:
 
 ```csharp
 [CanBeNull]
-public string Name { get; set; }
-```
-
-- Example 2:
-
-```csharp
-[CanBeNull]  // may return null or a string (string? equivalent)
-public string GetContent([NotNull] int index, [CanBeNull] object something = null)  // something may be null or an object
+public string GetContent([NotNull] int index, [CanBeNull] object something = null)
 {
-   // ... some logic here
+    // logic
 }
 ```
 
-## 5. Incomplete Code: ALWAYS Mark with `TODO:` + Type
+## 5. Incomplete Code Marking
+
+Always mark unfinished code with `// TODO:` + type + context.
+
+| Type         | Usage Pattern                                            |
+|--------------|----------------------------------------------------------|
+| STUB        | Missing implementation (e.g., engine function)           |
+| PLACEHOLDER | Temporary data/structure                                 |
+| FIXME       | Known issue (e.g., leak)                                 |
+| SIMPLIFIED  | Reduced fidelity (e.g., no optimization)                 |
+| HACK        | Workaround (e.g., reflection)                            |
+
+Examples:
 
 ```csharp
 // TODO: STUB - Implement K2 event system (swkotor2.exe: 0x004eb750)
-// TODO: PLACEHOLDER - Temporary GFF v3.3 (0x005ac670)
-// TODO: FIXME - Memory leak in resource cache
-// TODO: SIMPLIFIED - No pathfinding optimization yet
 // TODO: HACK - Reflection workaround until API fixed
-// TODO: STUB - A full implementation would require...
-// TODO: STUB - For now, use ...
-// TODO: This is a simplified...
 ```
 
-**Why this works**: LLMs love searchability. `TODO:` + type + context is the gold standard for self-documenting code.
+## 6. Architecture Preferences
 
-## 6. Architecture Rule – New Code vs Existing
-
-**New code ONLY** (everything you write):
-**Prefer conditional logic over inheritance**
+For new code: Prefer conditional logic over inheritance.
 
 ```csharp
-if (GameType == GameType.K2) { /* K2 behavior */ }
-else if (GameType == GameType.K1) { /* K1 behavior */ }
+if (GameType == GameType.K1) { /* K1 behavior */ }
+else if (GameType == GameType.K2) { /* K2 TSL behavior */ }
 ```
 
-**Existing code**: Leave inheritance alone. Never refactor it.
-**Why**: LLMs get confused by "sometimes use inheritance, sometimes not". Clear rule: new = conditionals, old = keep as-is.
-## 7. Reverse Engineering Workflow (Mandatory)
+Leave existing inheritance unchanged. Never refactor it.
 
-1. Analyze in Ghidra first
-2. Document in Ghidra: rename functions/vars, add comments, prototype
-3. In C#: comment source of truth
+## 7. Reverse Engineering Workflow
+
+Follow this mandatory sequence:
+
+1. Analyze in Ghidra first.
+2. Document: Rename functions/variables, add comments/prototypes.
+3. In C#: Add source comment.
 
    ```csharp
    // swkotor2.exe: 0x004eb750 – original engine behavior
-   if (GameType == GameType.K2) { ... }
    ```
 
-4. Use reva mcp to ensure 1:1 parity. Setup using mcp server tool 'open-project' on project path "C:\Users\boden\Andastra Ghidra Project.gpr"
+4. Verify 1:1 parity with REVA MCP tools on project "C:\Users\boden\Andastra Ghidra Project.gpr".
 
-**CRUCIALLY IMPORTANT**: If reva was requested/required for the task ensure it works before proceeding with the task. If it fails or a tool call doesn't work due to a connection error or setup error or not available or something, STOP **IMMEDIATELY** and INFORM the user.
+**Critical**: If REVA setup or tool fails (connection/error/unavailable), stop immediately and inform user.
 
 ## 8. NSS/NCS Operations
 
-Use `scripts/NcsTool.ps1` for everything (compile, decompile, compare, roundtrip, generate-defs)
+Use only `scripts/NcsTool.ps1` for compile, decompile, compare, roundtrip, generate-defs.
 
 ## 9. Documentation
 
-- Only public-facing .md → `docs/`
-- Progress reports must be standard roadmaps that are kept in .cursor/roadmaps/*.md
-- Literally all documentation should be roadmaps in ./.cursor/roadmaps or public facing in ./docs
+- Public-facing `.md`: Place in `docs/`
+- Progress roadmaps: Place in `.cursor/roadmaps/*.md`
+- All other documentation: Use roadmaps or public docs only
 
-## 10. Definition of Done (Simple Checklist)
+## 10. Definition of Done
 
-- Code compiles (no warnings)
-- Uses C# 7.3
-- Matches original behavior (Ghidra-verified)
+Verify all items before completion:
+
+- Code compiles without warnings
+- Uses only C# 7.3 features
+- Matches original engine behavior (Ghidra-verified)
 - All changes committed
-- Files in correct folders
-- Uses `TODO:` for anything unfinished
+- Files in correct locations
+- Unfinished parts marked with `TODO: <type> <context>`
+
+Adhere exactly to ensure project integrity and cross-platform compatibility.
+
+**Key Citations**
+- [PromptingGuide.ai (2026)](https://www.promptingguide.ai/)
+- [Lakera Ultimate Guide to Prompt Engineering (2025)](https://www.lakera.ai/blog/prompt-engineering-guide)
+- [IBM 2026 Guide to Prompt Engineering](https://www.ibm.com/think/prompt-engineering)
+- [Agents At Work: 2026 Playbook](https://promptengineering.org/agents-at-work-the-2026-playbook-for-building-reliable-agentic-workflows/)
+- [UiPath 10 Best Practices for AI Agents (2025)](https://www.uipath.com/blog/ai/agent-builder-best-practices)
+- [GitHub Lessons from 2500+ agents.md (2025)](https://github.blog/ai-and-ml/github-copilot/how-to-write-a-great-agents-md-lessons-from-over-2500-repositories/)
+- [Medium Ultimate Technical Guide (2026)](https://medium.com/@ganeshvenkatsubramaniyan/the-ultimate-technical-guide-to-prompt-engineering-in-2026-e4ef8cb61f10)
+- [Portkey Token Efficiency (2025)](https://portkey.ai/blog/optimize-token-efficiency-in-prompts)
+- [Agentic Coding GitHub Repo](https://github.com/sammcj/agentic-coding)
+- [OpenAI Prompt Engineering Guide (2026 Updates)](https://platform.openai.com/docs/guides/prompt-engineering)
