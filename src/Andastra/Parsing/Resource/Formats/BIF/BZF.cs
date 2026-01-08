@@ -4,7 +4,8 @@ using System.IO;
 using System.Linq;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
-using Andastra.Parsing.Extract;
+using Andastra.Parsing.Formats.KEY;
+using Andastra.Parsing.Resource;
 using Andastra.Utility.LZMA;
 using JetBrains.Annotations;
 
@@ -320,33 +321,31 @@ namespace Andastra.Parsing.Extract
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/bzf.py:95-114
         // Original: def merge_KEY(self, key: KEYFile, data_file_index: int):
-        public void MergeKey(KeyFileWrapper key, int dataFileIndex)
+        public void MergeKey(KEY key, int dataFileIndex)
         {
-            var keyResList = key.GetResources();
-
-            foreach (var keyRes in keyResList)
+            foreach (var keyEntry in key.KeyEntries)
             {
-                if (keyRes.BifIndex != dataFileIndex)
+                if (keyEntry.BifIndex != dataFileIndex)
                 {
                     continue;
                 }
 
-                if (keyRes.ResIndex >= _iResources.Count)
+                if (keyEntry.ResIndex >= _iResources.Count)
                 {
-                    Console.WriteLine($"Resource index out of range ({keyRes.ResIndex}/{_iResources.Count})");
+                    Console.WriteLine($"Resource index out of range ({keyEntry.ResIndex}/{_iResources.Count})");
                     continue;
                 }
 
-                if (keyRes.Type != _iResources[keyRes.ResIndex].Type)
+                if (keyEntry.ResType != _iResources[keyEntry.ResIndex].Type)
                 {
-                    Console.WriteLine($"KEY and BZF disagree on the type of the resource \"{keyRes.Name}\" ({keyRes.Type}, {_iResources[keyRes.ResIndex].Type}). Trusting the BZF");
+                    Console.WriteLine($"KEY and BZF disagree on the type of the resource \"{keyEntry.ResRef}\" ({keyEntry.ResType}, {_iResources[keyEntry.ResIndex].Type}). Trusting the BZF");
                 }
 
                 var res = new BZFResource
                 {
-                    Name = keyRes.Name,
-                    Type = _iResources[keyRes.ResIndex].Type,
-                    Index = keyRes.ResIndex
+                    Name = keyEntry.ResRef.ToString(),
+                    Type = _iResources[keyEntry.ResIndex].Type,
+                    Index = keyEntry.ResIndex
                 };
 
                 _resources.Add(res);

@@ -7,6 +7,7 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateGlobalUsings>false</GenerateGlobalUsings>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AssemblyName>Andastra.Parsing.Resource</AssemblyName>
   </PropertyGroup>

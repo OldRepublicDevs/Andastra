@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Andastra.Parsing.Common;
 
-namespace Andastra.Parsing.Common.Script
+namespace Andastra.Script
 {
     /// <summary>
     /// Utility class to parse nwscript.nss files and extract function and constant definitions.

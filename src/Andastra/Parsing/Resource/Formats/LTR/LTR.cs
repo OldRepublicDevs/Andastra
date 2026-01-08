@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Resource;
 
 namespace Andastra.Parsing.Formats.LTR

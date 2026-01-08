@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using Andastra.Parsing.Tools;
+using Andastra.Parsing.Common;
 using JetBrains.Annotations;
 
 namespace Andastra.Parsing.Resource.Formats.BIF

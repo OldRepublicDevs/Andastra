@@ -1,4 +1,5 @@
 using System;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Resource;
 
 namespace Andastra.Parsing.Formats.WAV
