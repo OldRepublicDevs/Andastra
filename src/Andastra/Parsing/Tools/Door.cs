@@ -5,7 +5,7 @@ using System.Linq;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.TwoDA;
-// Removed: using Andastra.Parsing.Installation; // Using fully qualified names to break circular dependency
+using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Logger;
