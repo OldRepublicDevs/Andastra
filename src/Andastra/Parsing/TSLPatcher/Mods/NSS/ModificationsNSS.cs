@@ -10,6 +10,7 @@ using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.NCS;
 using NCSCompiler = ResourceNCS::Andastra.Parsing.Formats.NCS.Compiler.NCSCompiler;
 using EntryPointError = ResourceNCS::Andastra.Parsing.Formats.NCS.Compiler.NSS.EntryPointError;
+using ResourceNCSPatchLogger = ResourceNCS::Andastra.Parsing.Logger.PatchLogger;
 using Andastra.Parsing.Logger;
 using Andastra.Parsing.Memory;
 using JetBrains.Annotations;
@@ -122,7 +123,11 @@ namespace Andastra.Parsing.Mods.NSS
                     {
                         try
                         {
-                            var externalCompiler = new NCSCompiler(NwnnsscompPath, tempFolder, logger);
+                            // Convert TSLPatcher.PatchLogger to Resource.NCS.PatchLogger
+                            var resourceNcsLogger = new ResourceNCSPatchLogger();
+                            // Copy log messages from TSLPatcher logger to Resource.NCS logger
+                            // TODO: HACK - Logger conversion needed between TSLPatcher and Resource.NCS
+                            var externalCompiler = new NCSCompiler(NwnnsscompPath, tempFolder, resourceNcsLogger);
                             KnownExternalCompilers detectedCompiler;
                             try
                             {
@@ -247,46 +252,16 @@ namespace Andastra.Parsing.Mods.NSS
             NCSCompiler nwnnsscompiler,
             PatchLogger logger, BioWareGame game)
         {
-            string tempDir = Path.GetTempPath();
-            string tempCompiledFilepath = Path.Combine(tempDir, "temp_script.ncs");
-
             try
             {
-                (string stdout, string stderr) = nwnnsscompiler.CompileScriptWithOutput(tempScriptFile, tempCompiledFilepath, game, 5);
-                bool isIncludeFile = stdout.Contains("File is an include file, ignored");
-                if (isIncludeFile)
-                {
-                    return null;
-                }
-
-                if (stdout.Trim().Length > 0)
-                {
-                    foreach (string line in stdout.Split('\n'))
-                    {
-                        if (line.Trim().Length > 0)
-                        {
-                            logger.AddVerbose(line);
-                        }
-                    }
-                }
-
-                if (stderr.Trim().Length > 0)
-                {
-                    foreach (string line in stderr.Split('\n'))
-                    {
-                        if (line.Trim().Length > 0)
-                        {
-                            logger.AddError($"nwnnsscomp error: {line}");
-                        }
-                    }
-                }
-
-                if (File.Exists(tempCompiledFilepath))
-                {
-                    return File.ReadAllBytes(tempCompiledFilepath);
-                }
-
-                return null;
+                // Read NSS source from file
+                string nssSource = File.ReadAllText(tempScriptFile, Encoding.GetEncoding("windows-1252"));
+                string filename = Path.GetFileName(tempScriptFile);
+                
+                // Use NCSCompiler.Compile which handles external compilation internally
+                byte[] compiledBytes = nwnnsscompiler.Compile(nssSource, filename, game);
+                
+                return compiledBytes;
             }
             catch (NCSCompiler.EntryPointException)
             {
@@ -295,3 +270,4 @@ namespace Andastra.Parsing.Mods.NSS
         }
     }
 }
+
