@@ -41,12 +41,11 @@ namespace Andastra.Parsing.Tools
         // Original: def load_genericdoors_2da(installation: Installation, logger: RobustLogger | None = None) -> TwoDA | None:
         public static TwoDA LoadGenericDoors2DA(
             Installation.Installation installation,
-            object logger = null) // TODO: HACK - Changed from RobustLogger to object to break circular dependency
+            RobustLogger logger = null)
         {
             if (logger == null)
             {
-                // TODO: HACK - Removed RobustLogger instantiation to break circular dependency
-                // logger = new Logger.RobustLogger();
+                logger = new RobustLogger();
             }
 
             TwoDA genericdoors2DA = null;
@@ -136,7 +135,7 @@ namespace Andastra.Parsing.Tools
         private static (Formats.MDLData.MDL mdl, byte[] mdlData) LoadMdlWithVariations(
             string modelName,
             Andastra.Parsing.Installation.Installation installation,
-            object logger = null) // TODO: HACK - Changed from RobustLogger to object to break circular dependency
+            RobustLogger logger = null)
         {
             if (logger == null)
             {
@@ -212,7 +211,7 @@ namespace Andastra.Parsing.Tools
             Formats.MDLData.MDL mdl,
             string modelName,
             string doorName = null,
-            object logger = null) // TODO: HACK - Changed from RobustLogger to object to break circular dependency
+            RobustLogger logger = null)
         {
             if (logger == null)
             {
@@ -308,7 +307,7 @@ namespace Andastra.Parsing.Tools
             string modelName,
             Andastra.Parsing.Installation.Installation installation,
             string doorName = null,
-            object logger = null) // TODO: HACK - Changed from RobustLogger to object to break circular dependency
+            RobustLogger logger = null)
         {
             if (logger == null)
             {
@@ -423,7 +422,7 @@ namespace Andastra.Parsing.Tools
             float defaultWidth = 2.0f,
             float defaultHeight = 3.0f,
             TwoDA genericdoors = null,
-            object logger = null) // TODO: HACK - Changed from RobustLogger to object to break circular dependency
+            RobustLogger logger = null)
         {
             if (logger == null)
             {
