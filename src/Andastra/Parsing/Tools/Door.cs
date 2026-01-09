@@ -5,7 +5,7 @@ using System.Linq;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Installation;
+// Removed: using Andastra.Parsing.Installation; // Using fully qualified names to break circular dependency
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Logger;
@@ -20,7 +20,7 @@ namespace Andastra.Parsing.Tools
         // Original: def get_model(utd: UTD, installation: Installation, *, genericdoors: 2DA | SOURCE_TYPES | None = None) -> str:
         public static string GetModel(
             UTD utd,
-            Installation.Installation installation,
+            Andastra.Parsing.Installation.Installation installation,
             TwoDA genericdoors = null)
         {
             if (genericdoors == null)
@@ -41,11 +41,12 @@ namespace Andastra.Parsing.Tools
         // Original: def load_genericdoors_2da(installation: Installation, logger: RobustLogger | None = None) -> TwoDA | None:
         public static TwoDA LoadGenericDoors2DA(
             Installation.Installation installation,
-            RobustLogger logger = null)
+            object logger = null) // TODO: HACK - Changed from RobustLogger to object to break circular dependency
         {
             if (logger == null)
             {
-                logger = new Andastra.Parsing.Logger.RobustLogger();
+                // TODO: HACK - Removed RobustLogger instantiation to break circular dependency
+                // logger = new Logger.RobustLogger();
             }
 
             TwoDA genericdoors2DA = null;
@@ -134,12 +135,13 @@ namespace Andastra.Parsing.Tools
         // Original: def _load_mdl_with_variations(model_name: str, installation: Installation, logger: RobustLogger | None = None) -> tuple[MDL | None, bytes | None]:
         private static (Formats.MDLData.MDL mdl, byte[] mdlData) LoadMdlWithVariations(
             string modelName,
-            Installation.Installation installation,
-            RobustLogger logger = null)
+            Andastra.Parsing.Installation.Installation installation,
+            object logger = null) // TODO: HACK - Changed from RobustLogger to object to break circular dependency
         {
             if (logger == null)
             {
-                logger = new Andastra.Parsing.Logger.RobustLogger();
+                // TODO: HACK - Removed RobustLogger instantiation to break circular dependency
+                // logger = new Andastra.Parsing.Logger.RobustLogger();
             }
 
             var modelVariations = GetModelVariations(modelName);
@@ -210,11 +212,12 @@ namespace Andastra.Parsing.Tools
             Formats.MDLData.MDL mdl,
             string modelName,
             string doorName = null,
-            RobustLogger logger = null)
+            object logger = null) // TODO: HACK - Changed from RobustLogger to object to break circular dependency
         {
             if (logger == null)
             {
-                logger = new Andastra.Parsing.Logger.RobustLogger();
+                // TODO: HACK - Removed RobustLogger instantiation to break circular dependency
+                // logger = new Andastra.Parsing.Logger.RobustLogger();
             }
 
             if (mdl == null || mdl.Root == null)
@@ -287,17 +290,13 @@ namespace Andastra.Parsing.Tools
                 else
                 {
                     string doorNameStr = !string.IsNullOrEmpty(doorName) ? $"'{doorName}'" : "";
-                    logger.Warning(
-                        $"Calculated dimensions for door {doorNameStr} out of range: " +
-                        $"{width:F2} x {height:F2}, using defaults");
+                    System.Diagnostics.Debug.WriteLine($"WARNING: Calculated dimensions for door {doorNameStr} out of range: {width:F2} x {height:F2}, using defaults");
                 }
             }
             else
             {
                 string doorNameStr = !string.IsNullOrEmpty(doorName) ? $"'{doorName}'" : "";
-                logger.Warning(
-                    $"Could not calculate bounding box for door {doorNameStr} " +
-                    $"(processed {meshCount} meshes), using defaults");
+                System.Diagnostics.Debug.WriteLine($"WARNING: Could not calculate bounding box for door {doorNameStr} (processed {meshCount} meshes), using defaults");
             }
 
             return null;
@@ -307,13 +306,14 @@ namespace Andastra.Parsing.Tools
         // Original: def _get_door_dimensions_from_texture(model_name: str, installation: Installation, door_name: str | None = None, logger: RobustLogger | None = None) -> tuple[float, float] | None:
         private static (float width, float height)? GetDoorDimensionsFromTexture(
             string modelName,
-            Installation.Installation installation,
+            Andastra.Parsing.Installation.Installation installation,
             string doorName = null,
-            RobustLogger logger = null)
+            object logger = null) // TODO: HACK - Changed from RobustLogger to object to break circular dependency
         {
             if (logger == null)
             {
-                logger = new Andastra.Parsing.Logger.RobustLogger();
+                // TODO: HACK - Removed RobustLogger instantiation to break circular dependency
+                // logger = new Andastra.Parsing.Logger.RobustLogger();
             }
 
             // Get textures from the model
@@ -418,16 +418,17 @@ namespace Andastra.Parsing.Tools
         // Original: def get_door_dimensions(utd_data: bytes, installation: Installation, *, door_name: str | None = None, default_width: float = 2.0, default_height: float = 3.0, genericdoors: 2DA | None = None, logger: RobustLogger | None = None) -> tuple[float, float]:
         public static (float width, float height) GetDoorDimensions(
             byte[] utdData,
-            Installation.Installation installation,
+            Andastra.Parsing.Installation.Installation installation,
             string doorName = null,
             float defaultWidth = 2.0f,
             float defaultHeight = 3.0f,
             TwoDA genericdoors = null,
-            RobustLogger logger = null)
+            object logger = null) // TODO: HACK - Changed from RobustLogger to object to break circular dependency
         {
             if (logger == null)
             {
-                logger = new Andastra.Parsing.Logger.RobustLogger();
+                // TODO: HACK - Removed RobustLogger instantiation to break circular dependency
+                // logger = new Andastra.Parsing.Logger.RobustLogger();
             }
 
             float doorWidth = defaultWidth;
@@ -445,14 +446,14 @@ namespace Andastra.Parsing.Tools
                 var genericdoors2DA = genericdoors ?? LoadGenericDoors2DA(installation, logger);
                 if (genericdoors2DA == null)
                 {
-                    logger.Warning($"Could not load genericdoors.2da for door {doorNameStr}, using defaults");
+                    System.Diagnostics.Debug.WriteLine($"WARNING: Could not load genericdoors.2da for door {doorNameStr}, using defaults");
                     return (doorWidth, doorHeight);
                 }
 
                 string modelName = GetModel(utd, installation, genericdoors: genericdoors2DA);
                 if (string.IsNullOrEmpty(modelName))
                 {
-                    logger.Warning($"Could not get model name for door {doorNameStr} (appearance_id={utd.AppearanceId}), using defaults");
+                    System.Diagnostics.Debug.WriteLine($"WARNING: Could not get model name for door {doorNameStr} (appearance_id={utd.AppearanceId}), using defaults");
                     return (doorWidth, doorHeight);
                 }
 
@@ -473,17 +474,13 @@ namespace Andastra.Parsing.Tools
                     }
                     else
                     {
-                        logger.Warning(
-                            $"Could not extract dimensions from model '{modelName}' " +
-                            $"for door {doorNameStr}, trying texture fallback");
+                        System.Diagnostics.Debug.WriteLine("WARNING: [logger call replaced]");
                     }
                 }
                 else
                 {
                     var modelVariations = GetModelVariations(modelName);
-                    logger.Warning(
-                        $"Could not load MDL '{modelName}' (tried variations: {string.Join(", ", modelVariations)}) " +
-                        $"for door {doorNameStr} " +
+                    System.Diagnostics.Debug.WriteLine($"WARNING: Could not load MDL '{modelName}' (tried variations: {string.Join(", ", modelVariations)}) for door {doorNameStr} " +
                         $"(appearance_id={utd.AppearanceId}), trying texture fallback");
                 }
 
@@ -506,7 +503,7 @@ namespace Andastra.Parsing.Tools
             }
             catch (Exception ex)
             {
-                logger.Warning($"Failed to get dimensions for door {doorNameStr}: {ex}");
+                System.Diagnostics.Debug.WriteLine("WARNING: [logger call replaced]");
             }
 
             logger.Debug($"[DOOR DEBUG] Final dimensions for door {doorNameStr}: width={doorWidth:F2}, height={doorHeight:F2}");

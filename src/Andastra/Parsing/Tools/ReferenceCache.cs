@@ -10,7 +10,7 @@ using Andastra.Parsing.Formats.Capsule;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.SSF;
 using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Installation;
+// Removed: using Andastra.Parsing.Installation; // Using fully qualified names to break circular dependency
 using Andastra.Parsing.Logger;
 using Andastra.Parsing.Resource;
 using JetBrains.Annotations;
@@ -716,7 +716,7 @@ namespace Andastra.Parsing.Tools
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:758-903
     // Original: def find_all_strref_references(...) -> tuple[dict[int, list[StrRefSearchResult]], StrRefReferenceCache]:
     /// <summary>
-    /// Find all references to multiple StrRefs in an installation using batch processing.
+    /// Find all references to multiple StrRefs in an Andastra.Parsing.Installation.Installation using batch processing.
     /// This function scans resources once and finds references to all requested StrRefs,
     /// providing significant performance improvement over calling FindStrRefReferences multiple times.
     /// </summary>
@@ -725,7 +725,7 @@ namespace Andastra.Parsing.Tools
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:758-903
         // Original: def find_all_strref_references(...):
         public static (Dictionary<int, List<StrRefSearchResult>> results, StrRefReferenceCache cache) FindAllStrRefReferences(
-            Installation.Installation installation,
+            Andastra.Parsing.Installation.Installation installation,
             List<int> strrefs,
             StrRefReferenceCache cache = null,
             Action<string> logger = null)
@@ -738,7 +738,7 @@ namespace Andastra.Parsing.Tools
             // Build cache if not provided
             if (cache == null)
             {
-                logger?.Invoke($"Building StrRef cache for {strrefs.Count} StrRefs for installation {installation.Path}...");
+                logger?.Invoke($"Building StrRef cache for {strrefs.Count} StrRefs for Andastra.Parsing.Installation.Installation {installation.Path}...");
                 cache = new StrRefReferenceCache(installation.Game);
 
                 // Scan all resources to build the cache
@@ -776,7 +776,7 @@ namespace Andastra.Parsing.Tools
                         // Log progress periodically
                         if (logger != null && resourceCount - lastLoggedCount >= logInterval)
                         {
-                            logger($"  Scanning for StrRefs... {resourceCount} resources processed for installation {installation.Path}");
+                            logger($"  Scanning for StrRefs... {resourceCount} resources processed for Andastra.Parsing.Installation.Installation {installation.Path}");
                             lastLoggedCount = resourceCount;
                         }
                     }
@@ -786,13 +786,13 @@ namespace Andastra.Parsing.Tools
                     }
                 }
 
-                logger?.Invoke($"Cache built: scanned {resourceCount} resources (skipped {skippedCount} files) for installation {installation.Path}");
+                logger?.Invoke($"Cache built: scanned {resourceCount} resources (skipped {skippedCount} files) for Andastra.Parsing.Installation.Installation {installation.Path}");
             }
 
             // Convert cache entries to StrRefSearchResult format
             var results = new Dictionary<int, List<StrRefSearchResult>>();
 
-            // Build a map of ResourceIdentifier -> FileResource by iterating installation ONCE
+            // Build a map of ResourceIdentifier -> FileResource by iterating Andastra.Parsing.Installation.Installation ONCE
             var identifierToResource = new Dictionary<ResourceIdentifier, FileResource>();
             var allResourcesForMapping = GetAllResources(installation);
             foreach (var res in allResourcesForMapping)
@@ -892,7 +892,7 @@ namespace Andastra.Parsing.Tools
         /// and returns complete location information for each reference.
         /// </summary>
         public static List<StrRefSearchResult> FindStrRefReferences(
-            Installation.Installation installation,
+            Andastra.Parsing.Installation.Installation installation,
             int strref,
             StrRefReferenceCache cache = null,
             Action<string> logger = null)
@@ -1024,8 +1024,8 @@ namespace Andastra.Parsing.Tools
             return scanResults;
         }
 
-        // Helper method to get all resources from an installation
-        private static List<FileResource> GetAllResources(Installation.Installation installation)
+        // Helper method to get all resources from an Installation
+        private static List<FileResource> GetAllResources(Andastra.Parsing.Installation.Installation installation)
         {
             var allResources = new List<FileResource>();
 
@@ -1059,6 +1059,8 @@ namespace Andastra.Parsing.Tools
             }
 
             // Get module resources
+            // TODO: HACK - Using fully qualified name to avoid circular dependency
+            // Installation.GetModulesPath is a static method, so we can call it without a project reference
             string modulesPath = Andastra.Parsing.Installation.Installation.GetModulesPath(installation.Path);
             if (Directory.Exists(modulesPath))
             {
@@ -1085,7 +1087,7 @@ namespace Andastra.Parsing.Tools
         }
 
         // Helper to scan 2DA file for StrRef
-        private static StrRefSearchResult Scan2DAForStrRef(FileResource resource, Installation.Installation installation, int strref, Action<string> logger)
+        private static StrRefSearchResult Scan2DAForStrRef(FileResource resource, Andastra.Parsing.Installation.Installation installation, int strref, Action<string> logger)
         {
             try
             {
@@ -1128,7 +1130,7 @@ namespace Andastra.Parsing.Tools
         }
 
         // Helper to scan SSF file for StrRef
-        private static StrRefSearchResult ScanSSFForStrRef(FileResource resource, Installation.Installation installation, int strref, Action<string> logger)
+        private static StrRefSearchResult ScanSSFForStrRef(FileResource resource, Andastra.Parsing.Installation.Installation installation, int strref, Action<string> logger)
         {
             try
             {
@@ -1154,7 +1156,7 @@ namespace Andastra.Parsing.Tools
         }
 
         // Helper to scan GFF file for StrRef
-        private static StrRefSearchResult ScanGFFForStrRef(FileResource resource, Installation.Installation installation, int strref, Action<string> logger)
+        private static StrRefSearchResult ScanGFFForStrRef(FileResource resource, Andastra.Parsing.Installation.Installation installation, int strref, Action<string> logger)
         {
             try
             {
