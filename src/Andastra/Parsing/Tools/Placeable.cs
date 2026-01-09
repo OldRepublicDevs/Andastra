@@ -18,7 +18,7 @@ namespace Andastra.Parsing.Tools
         // Original: def get_model(utp: UTP, installation: Installation, *, placeables: 2DA | SOURCE_TYPES | None = None) -> str:
         public static string GetModel(
             UTP utp,
-            Installation.Installation installation,
+            Andastra.Parsing.Installation.Installation installation,
             TwoDA placeables = null)
         {
             TwoDA placeables2DA;
@@ -43,7 +43,7 @@ namespace Andastra.Parsing.Tools
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/placeable.py:53-104
         // Original: def load_placeables_2da(installation: Installation, logger: RobustLogger | None = None) -> 2DA | None:
         public static TwoDA LoadPlaceables2DA(
-            Installation.Installation installation,
+            Andastra.Parsing.Installation.Installation installation,
             RobustLogger logger = null)
         {
             if (logger == null)
