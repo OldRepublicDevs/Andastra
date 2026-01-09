@@ -184,23 +184,23 @@ namespace Andastra.Parsing.Tools
         /// </summary>
         /// <remarks>
         /// WHAT THIS METHOD DOES:
-        /// 
+        ///
         /// This method moves all vertices in the walkmesh so that the walkmesh's center point
         /// is at (0, 0, 0). The center is calculated as the midpoint between the minimum and
         /// maximum X, Y, and Z coordinates of all vertices.
-        /// 
+        ///
         /// WHY THIS IS CRITICAL:
-        /// 
+        ///
         /// When extracting kits from game modules, the walkmeshes are in "world coordinates" -
         /// they have absolute positions in the game world. However, kits need walkmeshes centered
         /// at (0, 0, 0) because:
-        /// 
+        ///
         /// 1. PREVIEW IMAGE ALIGNMENT:
         ///    - The preview image is generated from the walkmesh and drawn CENTERED at the
         ///      component's position in the builder UI
         ///    - If the walkmesh isn't centered, the image and walkmesh won't align visually
         ///    - Users will see the image in one place but the walkmesh hitbox in another
-        /// 
+        ///
         /// 2. POSITIONING LOGIC:
         ///    - When a component is placed at position (50, 50, 0), the walkmesh is translated
         ///      by that amount from its ORIGINAL coordinates
@@ -208,39 +208,39 @@ namespace Andastra.Parsing.Tools
         ///      (150, 250, 0) - which is NOT where the user expects it
         ///    - If the walkmesh is centered at (0, 0, 0), translating by (50, 50, 0) gives
         ///      (50, 50, 0) - which IS where the user expects it
-        /// 
+        ///
         /// 3. TRANSFORMATION CONSISTENCY:
         ///    - Components can be rotated and flipped
         ///    - Rotations and flips are applied around the origin (0, 0, 0)
         ///    - If the walkmesh isn't centered, rotations/flips will move it unexpectedly
-        /// 
+        ///
         /// HOW IT WORKS:
-        /// 
+        ///
         /// 1. Get all vertices from the walkmesh
         /// 2. Find the minimum and maximum X, Y, Z values across all vertices
         /// 3. Calculate the center: center = (min + max) / 2
         /// 4. Translate all vertices by -center (move walkmesh so center is at origin)
-        /// 
+        ///
         /// Example:
         /// - Vertices range from (100, 200, 0) to (200, 300, 0)
         /// - Center = ((100+200)/2, (200+300)/2, (0+0)/2) = (150, 250, 0)
         /// - Translate by (-150, -250, 0)
         /// - New vertices range from (-50, -50, 0) to (50, 50, 0)
         /// - Walkmesh is now centered at (0, 0, 0)
-        /// 
+        ///
         /// BUG PREVENTION:
-        /// 
+        ///
         /// Without this fix, the following bugs occur:
         /// - Preview images don't match walkmesh positions in the builder
         /// - Components appear in wrong locations when placed
         /// - Rotations/flips move components unexpectedly
         /// - Walkmesh hitboxes don't align with visual representation
-        /// 
+        ///
         /// This method is called during kit extraction (ExtractKit) after loading walkmeshes
         /// from game modules, ensuring all components are properly centered before use.
-        /// 
+        ///
         /// ORIGINAL IMPLEMENTATION:
-        /// 
+        ///
         /// Based on PyKotor's _recenter_bwm() method. This fix addresses a critical alignment
         /// issue where game walkmeshes (in world coordinates) don't match the builder's expectations
         /// (centered coordinates).
