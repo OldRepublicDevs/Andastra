@@ -2053,7 +2053,7 @@ namespace TSLPatcher
         /// <summary>
         /// Recursively search GFF structure for fields containing a specific StrRef value.
         /// </summary>
-        public List<string> FindStrRefFieldsRecursive(Andastra.Parsing.Andastra.Parsing.Formats.GFF.GFFStruct gffStruct, int targetStrref, string currentPath = "")
+        public List<string> FindStrRefFieldsRecursive(Andastra.Parsing.Formats.GFF.GFFStruct gffStruct, int targetStrref, string currentPath = "")
         {
             var foundPaths = new List<string>();
 
@@ -2119,7 +2119,7 @@ namespace TSLPatcher
         /// <summary>
         /// Search 2DA file for cells containing a specific StrRef value.
         /// </summary>
-        private List<TwoDaCellReference> FindStrRefCellsInTwoDa(Andastra.Parsing.Andastra.Parsing.Formats.TwoDA.TwoDA twoda, int targetStrref)
+        private List<TwoDaCellReference> FindStrRefCellsInTwoDa(Andastra.Parsing.Formats.TwoDA.TwoDA twoda, int targetStrref)
         {
             var foundCells = new List<TwoDaCellReference>();
 
