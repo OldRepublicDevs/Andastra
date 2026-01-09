@@ -10,9 +10,9 @@ using Microsoft.Win32;
 namespace Andastra.Parsing.Tools
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/registry.py
-    // Original: Windows registry paths and game installation detection
+    // Original: Windows registry paths and game Andastra.Parsing.Installation.Installation detection
     /// <summary>
-    /// Windows registry paths and game installation detection.
+    /// Windows registry paths and game Andastra.Parsing.Installation.Installation detection.
     /// </summary>
     public static class Registry
     {
@@ -478,7 +478,7 @@ namespace Andastra.Parsing.Tools
             }
             else
             {
-                BioWareGame? determinedGameNullable = Installation.Installation.DetermineGame(installationPath);
+                BioWareGame? determinedGameNullable = Andastra.Parsing.Installation.Installation.DetermineGame(installationPath);
                 if (determinedGameNullable == null)
                 {
                     throw new ArgumentException($"Could not auto-determine the game k1 or k2 from '{installationPath}'. Try sending 'game' enum to prevent auto-detections like this.");

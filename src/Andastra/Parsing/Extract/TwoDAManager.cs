@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Installation;
+// using Andastra.Parsing.Installation; // Removed to break circular dependency
 using Andastra.Parsing.Resource;
 
 namespace Andastra.Parsing.Extract
@@ -39,7 +39,13 @@ namespace Andastra.Parsing.Extract
             return cols.Distinct().ToList();
         }
 
-        public static LookupResult2DA LookupInInstallation(Installation.Installation installation, string query, string dataType)
+        // Using delegates to avoid circular dependency (Extract → Installation)
+        // This allows TwoDAManager to work with Installation without referencing it directly
+        public static LookupResult2DA LookupInInstallation(
+            BioWareGame game,
+            System.Func<string, ResourceType, byte[]> lookupResourceFunc,
+            string query,
+            string dataType)
         {
             if (string.IsNullOrEmpty(query))
             {
@@ -47,7 +53,7 @@ namespace Andastra.Parsing.Extract
             }
 
             // Prefer K2 metadata if installation is TSL; otherwise default to K1
-            bool isK2 = installation.Game == BioWareGame.TSL;
+            bool isK2 = game == BioWareGame.TSL;
             var targets = TwoDARegistry.ColumnsFor(dataType, isK2);
             foreach (var kvp in targets)
             {
@@ -56,13 +62,13 @@ namespace Andastra.Parsing.Extract
                 string filename = fileKey.Split('-')[0]; // normalize suffixed keys
                 string resname = Path.GetFileNameWithoutExtension(filename);
 
-                var res = installation.Resources.LookupResource(resname, ResourceType.TwoDA);
-                if (res == null || res.Data == null)
+                byte[] resData = lookupResourceFunc(resname, ResourceType.TwoDA);
+                if (resData == null)
                 {
                     continue;
                 }
 
-                var twoda = new TwoDABinaryReader(res.Data).Load();
+                var twoda = new TwoDABinaryReader(resData).Load();
                 for (int rowIndex = 0; rowIndex < twoda.GetHeight(); rowIndex++)
                 {
                     var row = twoda.GetRow(rowIndex);

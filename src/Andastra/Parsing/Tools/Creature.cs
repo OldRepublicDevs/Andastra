@@ -4,7 +4,7 @@ using System.Linq;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Installation;
+// Removed: using Andastra.Parsing.Installation; // Using fully qualified names to break circular dependency
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
 using JetBrains.Annotations;
@@ -18,7 +18,7 @@ namespace Andastra.Parsing.Tools
         // Original: def get_body_model(utc: UTC, installation: Installation, *, appearance: 2DA | None = None, baseitems: 2DA | None = None) -> tuple[str | None, str | None]:
         public static (string bodyModel, string bodyTexture) GetBodyModel(
             Andastra.Parsing.Resource.Generics.UTC.UTC utc,
-            Installation.Installation installation,
+            Andastra.Parsing.Installation.Installation installation,
             TwoDA appearance = null,
             TwoDA baseitems = null)
         {
@@ -164,7 +164,7 @@ namespace Andastra.Parsing.Tools
         // Original: def get_weapon_models(utc: UTC, installation: Installation, *, appearance: 2DA | None = None, baseitems: 2DA | None = None) -> tuple[str | None, str | None]:
         public static (string rightHandModel, string leftHandModel) GetWeaponModels(
             Andastra.Parsing.Resource.Generics.UTC.UTC utc,
-            Installation.Installation installation,
+            Andastra.Parsing.Installation.Installation installation,
             TwoDA appearance = null,
             TwoDA baseitems = null)
         {
@@ -209,7 +209,7 @@ namespace Andastra.Parsing.Tools
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/creature.py:197-211
         // Original: def _load_hand_uti(installation: Installation, hand_resref: str, baseitems: 2DA) -> str | None:
         private static string LoadHandUti(
-            Installation.Installation installation,
+            Andastra.Parsing.Installation.Installation installation,
             string handResref,
             TwoDA baseitems)
         {
@@ -230,7 +230,7 @@ namespace Andastra.Parsing.Tools
         // Original: def get_head_model(utc: UTC, installation: Installation, *, appearance: 2DA | None = None, heads: 2DA | None = None) -> tuple[str | None, str | None]:
         public static (string model, string texture) GetHeadModel(
             Andastra.Parsing.Resource.Generics.UTC.UTC utc,
-            Installation.Installation installation,
+            Andastra.Parsing.Installation.Installation installation,
             TwoDA appearance = null,
             TwoDA heads = null)
         {
@@ -321,7 +321,7 @@ namespace Andastra.Parsing.Tools
         // Original: def get_mask_model(utc: UTC, installation: Installation) -> str | None:
         public static string GetMaskModel(
             Andastra.Parsing.Resource.Generics.UTC.UTC utc,
-            Installation.Installation installation)
+            Andastra.Parsing.Installation.Installation installation)
         {
             string model = null;
 

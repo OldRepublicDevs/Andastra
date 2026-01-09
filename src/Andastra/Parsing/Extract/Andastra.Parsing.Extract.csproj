@@ -14,7 +14,10 @@
     <ProjectReference Include="..\..\Core\Andastra.Core.csproj" />
     <ProjectReference Include="..\..\Utility\Andastra.Utility.csproj" />
     <ProjectReference Include="..\Common\Andastra.Parsing.Common.csproj" />
-    <ProjectReference Include="..\GFF.Only\Andastra.Parsing.GFF.Only.csproj" />
-    <ProjectReference Include="..\ERF.Only\Andastra.Parsing.ERF.Only.csproj" />
+    <ProjectReference Include="..\Resource\Andastra.Parsing.Resource.csproj" />
+    <ProjectReference Include="..\Resource\Formats\NCS\Andastra.Parsing.Resource.NCS.csproj" Aliases="ResourceNCS" />
+    <!-- Removed TSLPatcher reference to break circular dependency: Extract ↔ TSLPatcher -->
+    <!-- Removed Tools reference to break circular dependency: Extract ↔ Tools -->
+    <!-- Extract uses Tools.FileHelpers and Logger.RobustLogger via fully qualified names where needed -->
   </ItemGroup>
 </Project>

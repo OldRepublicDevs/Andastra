@@ -318,7 +318,7 @@ namespace Andastra.Parsing.Tools
             bool isErf = extension != null && (extension == ".erf" || extension == ".mod" || extension == ".hak" || extension == ".sav");
             bool isRim = extension == ".rim";
 
-            string rimsPath = Andastra.Parsing.Installation.Installation.GetRimsPath(installation.Path);
+            string rimsPath = Installation.Installation.GetRimsPath(installation.Path);
             string modulesPath = installation.ModulePath();
 
             RIM mainArchive = null;

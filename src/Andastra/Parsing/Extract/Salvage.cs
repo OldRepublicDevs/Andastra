@@ -1,5 +1,7 @@
+extern alias ResourceNCS; // Must be first - before all using statements
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
@@ -13,7 +15,9 @@ using Andastra.Parsing.Formats.LIP;
 using Andastra.Parsing.Formats.LTR;
 using Andastra.Parsing.Formats.MDL;
 using Andastra.Parsing.Formats.MDLData;
-using Andastra.Parsing.Formats.NCS;
+// Removed: using Andastra.Parsing.Formats.NCS; // Causes type conflict with Resource.NCS project
+using NCSResourceNCS = ResourceNCS::Andastra.Parsing.Formats.NCS.NCS;
+using NCSAutoResourceNCS = ResourceNCS::Andastra.Parsing.Formats.NCS.NCSAuto;
 using Andastra.Parsing.Formats.RIM;
 using Andastra.Parsing.Formats.SSF;
 using Andastra.Parsing.Formats.TLK;
@@ -28,7 +32,7 @@ using Andastra.Parsing.Resource.Generics.DLG;
 using Andastra.Parsing.Resource.Generics.UTC;
 using Andastra.Parsing.Resource.Generics.UTI;
 using Andastra.Parsing.Resource.Generics.UTM;
-using Andastra.Parsing.Tools;
+// using Andastra.Parsing.Tools; // Removed to break circular dependency, using fully qualified names instead
 using JetBrains.Annotations;
 
 namespace Andastra.Parsing.Extract
@@ -73,7 +77,9 @@ namespace Andastra.Parsing.Extract
                 {
                     foreach (var resource in erfContainer)
                     {
-                        new Andastra.Parsing.Logger.RobustLogger().Info($"Validating '{resource.ResRef}.{resource.ResType.Extension}'");
+                        // Using fully qualified name to avoid circular dependency (Extract ↔ TSLPatcher)
+                        // TODO: HACK - Using Debug.WriteLine to avoid circular dependency (Extract ↔ TSLPatcher)
+                        Debug.WriteLine($"INFO: Validating '{resource.ResRef}.{resource.ResType.Extension}'");
                         if (resource.ResType == ResourceType.NCS)
                         {
                             newErf.SetData(resource.ResRef.ToString(), resource.ResType, resource.Data);
@@ -85,14 +91,16 @@ namespace Andastra.Parsing.Extract
                             newData = strict ? newData : resource.Data;
                             if (newData == null)
                             {
-                                new Andastra.Parsing.Logger.RobustLogger().Info($"Not packaging unknown resource '{resource.ResRef}.{resource.ResType.Extension}'");
+                                // TODO: HACK - Using Debug.WriteLine to avoid circular dependency
+                                Debug.WriteLine($"INFO: Not packaging unknown resource '{resource.ResRef}.{resource.ResType.Extension}'");
                                 continue;
                             }
                             newErf.SetData(resource.ResRef.ToString(), resource.ResType, newData);
                         }
                         catch (Exception ex) when (ex is IOException || ex is ArgumentException)
                         {
-                            new Andastra.Parsing.Logger.RobustLogger().Error($" - Corrupted resource: '{resource.ResRef}.{resource.ResType.Extension}'");
+                            // TODO: HACK - Using Debug.WriteLine to avoid circular dependency
+                            Debug.WriteLine($"ERROR: - Corrupted resource: '{resource.ResRef}.{resource.ResType.Extension}'");
                         }
                     }
                 }
@@ -100,7 +108,9 @@ namespace Andastra.Parsing.Extract
                 {
                     foreach (var resource in rimContainer)
                     {
-                        new Andastra.Parsing.Logger.RobustLogger().Info($"Validating '{resource.ResRef}.{resource.ResType.Extension}'");
+                        // Using fully qualified name to avoid circular dependency (Extract ↔ TSLPatcher)
+                        // TODO: HACK - Using Debug.WriteLine to avoid circular dependency (Extract ↔ TSLPatcher)
+                        Debug.WriteLine($"INFO: Validating '{resource.ResRef}.{resource.ResType.Extension}'");
                         if (resource.ResType == ResourceType.NCS)
                         {
                             newRim.SetData(resource.ResRef.ToString(), resource.ResType, resource.Data);
@@ -112,25 +122,29 @@ namespace Andastra.Parsing.Extract
                             newData = strict ? newData : resource.Data;
                             if (newData == null)
                             {
-                                new Andastra.Parsing.Logger.RobustLogger().Info($"Not packaging unknown resource '{resource.ResRef}.{resource.ResType.Extension}'");
+                                // TODO: HACK - Using Debug.WriteLine to avoid circular dependency
+                                Debug.WriteLine($"INFO: Not packaging unknown resource '{resource.ResRef}.{resource.ResType.Extension}'");
                                 continue;
                             }
                             newRim.SetData(resource.ResRef.ToString(), resource.ResType, newData);
                         }
                         catch (Exception ex) when (ex is IOException || ex is ArgumentException)
                         {
-                            new Andastra.Parsing.Logger.RobustLogger().Error($" - Corrupted resource: '{resource.ResRef}.{resource.ResType.Extension}'");
+                            // TODO: HACK - Using Debug.WriteLine to avoid circular dependency
+                            Debug.WriteLine($"ERROR: - Corrupted resource: '{resource.ResRef}.{resource.ResType.Extension}'");
                         }
                     }
                 }
             }
             catch (Exception ex) when (ex is IOException || ex is ArgumentException)
             {
-                new Andastra.Parsing.Logger.RobustLogger().Error($"Corrupted ERF/RIM, could not salvage: '{capsuleObj}'");
+                // TODO: HACK - Using Debug.WriteLine to avoid circular dependency
+                Debug.WriteLine($"ERROR: Corrupted ERF/RIM, could not salvage: '{capsuleObj}'");
             }
 
             int resourceCount = newErf != null ? newErf.Count : (newRim != null ? newRim.Count : 0);
-            new Andastra.Parsing.Logger.RobustLogger().Info($"Returning salvaged ERF/RIM container with {resourceCount} total resources in it.");
+            // TODO: HACK - Using Debug.WriteLine to avoid circular dependency
+            Debug.WriteLine($"INFO: Returning salvaged ERF/RIM container with {resourceCount} total resources in it.");
             return newErf ?? (object)newRim;
         }
 
@@ -241,7 +255,8 @@ namespace Andastra.Parsing.Extract
                     catch (Exception strategyEx)
                     {
                         // If strategy fails, log and return original data (non-strict mode) or null (strict mode)
-                        new Andastra.Parsing.Logger.RobustLogger().Warning($"Salvage strategy failed for {restype.Extension}: {strategyEx.Message}");
+                        // TODO: HACK - Using Debug.WriteLine to avoid circular dependency
+                        Debug.WriteLine($"WARNING: Salvage strategy failed for {restype.Extension}: {strategyEx.Message}");
                         if (strict)
                         {
                             if (shouldRaise)
@@ -273,7 +288,8 @@ namespace Andastra.Parsing.Extract
                 // In strict mode, return null for unknown types; otherwise return data as-is
                 if (strict)
                 {
-                    new Andastra.Parsing.Logger.RobustLogger().Info($"No validation strategy available for resource type '{restype.Extension}', returning null (strict mode)");
+                    // TODO: HACK - Using Debug.WriteLine to avoid circular dependency
+                    Debug.WriteLine($"INFO: No validation strategy available for resource type '{restype.Extension}', returning null (strict mode)");
                     return null;
                 }
                 return data;
@@ -284,7 +300,8 @@ namespace Andastra.Parsing.Extract
                 {
                     throw;
                 }
-                new Andastra.Parsing.Logger.RobustLogger().Error($"Corrupted resource: {resource}", !(e is IOException || e is ArgumentException));
+                // TODO: HACK - Using Debug.WriteLine to avoid circular dependency
+                Debug.WriteLine($"ERROR: Corrupted resource: {resource}");
             }
             return null;
         }
@@ -333,7 +350,8 @@ namespace Andastra.Parsing.Extract
                 }
                 catch (Exception ex)
                 {
-                    new Andastra.Parsing.Logger.RobustLogger().Warning($"Corrupted LazyCapsule object passed to `validate_capsule` could not be loaded into memory: {ex.Message}");
+                    // TODO: HACK - Using Debug.WriteLine to avoid circular dependency
+                    Debug.WriteLine($"WARNING: Corrupted LazyCapsule object passed to `validate_capsule` could not be loaded into memory: {ex.Message}");
                     return null;
                 }
             }
@@ -352,7 +370,8 @@ namespace Andastra.Parsing.Extract
                 }
                 catch
                 {
-                    new Andastra.Parsing.Logger.RobustLogger().Warning($"Invalid path passed to `validate_capsule`: '{path}'");
+                    // TODO: HACK - Using Debug.WriteLine to avoid circular dependency
+                    Debug.WriteLine($"WARNING: Invalid path passed to `validate_capsule`: '{path}'");
                     return null;
                 }
             }
@@ -371,7 +390,8 @@ namespace Andastra.Parsing.Extract
                     }
                     catch
                     {
-                        new Andastra.Parsing.Logger.RobustLogger().Error("the binary data passed to `validate_capsule` could not be loaded as an ERF/RIM.");
+                        // TODO: HACK - Using Debug.WriteLine to avoid circular dependency
+                        Debug.WriteLine("ERROR: the binary data passed to `validate_capsule` could not be loaded as an ERF/RIM.");
                         return null;
                     }
                 }
@@ -391,7 +411,11 @@ namespace Andastra.Parsing.Extract
                 return null;
             }
 
-            if (FileHelpers.IsAnyErfTypeFile(fileResource.FilePath) || FileHelpers.IsRimFile(fileResource.FilePath))
+            // TODO: HACK - Inlined FileHelpers logic to avoid circular dependency (Extract ↔ Tools)
+            string ext = Path.GetExtension(fileResource.FilePath ?? "").ToLowerInvariant();
+            bool isErfType = ext == ".erf" || ext == ".mod" || ext == ".sav";
+            bool isRim = ext == ".rim";
+            if (isErfType || isRim)
             {
                 return ValidateCapsule(fileResource.FilePath);
             }
@@ -671,8 +695,9 @@ namespace Andastra.Parsing.Extract
                     try {
                         byte[] data = fileRes.GetData();
                         if (data == null) return null;
-                        NCS ncs = NCSAuto.ReadNcs(data);
-                        return NCSAuto.BytesNcs(ncs);
+                        // Using extern alias to resolve ambiguity between Resource.NCS and Resource projects
+                        NCSResourceNCS ncs = NCSAutoResourceNCS.ReadNcs(data);
+                        return NCSAutoResourceNCS.BytesNcs(ncs);
                     } catch { return null; }
                 }},
                 { ResourceType.SSF, (fileRes) => {

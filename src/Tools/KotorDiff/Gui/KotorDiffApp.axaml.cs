@@ -21,6 +21,24 @@ namespace KotorDiff.Gui
     // Original: class KotorDiffApp(ThemedApp): ... KotorDiff GUI application with dark/orange themed interface
     public partial class KotorDiffApp : Window
     {
+        // XAML-generated controls (manually declared for code-behind access)
+        private ComboBox Path1ComboBox;
+        private ComboBox Path2ComboBox;
+        private RadioButton Path1RadioInstall;
+        private RadioButton Path1RadioCustom;
+        private RadioButton Path2RadioInstall;
+        private RadioButton Path2RadioCustom;
+        private TextBox IniFilenameTextBox;
+        private ComboBox LogLevelComboBox;
+        private TextBox TslPatchDataTextBox;
+        private CheckBox CompareHashesCheckBox;
+        private TextBox OutputTextBox;
+        private Button RunDiffButton;
+        private Button Path1BrowseButton;
+        private Button Path2BrowseButton;
+        private Button TslPatchDataBrowseButton;
+        private ProgressBar ProgressBar;
+
         // KotorDiff-specific state
         // Matching Python: self.path1: str = ""; self.path2: str = ""; etc.
         private string _path1 = "";
@@ -40,6 +58,23 @@ namespace KotorDiff.Gui
         private void InitializeComponent()
         {
             AvaloniaXamlLoader.Load(this);
+            // Find controls from XAML
+            Path1ComboBox = this.FindControl<ComboBox>("Path1ComboBox");
+            Path2ComboBox = this.FindControl<ComboBox>("Path2ComboBox");
+            Path1RadioInstall = this.FindControl<RadioButton>("Path1RadioInstall");
+            Path1RadioCustom = this.FindControl<RadioButton>("Path1RadioCustom");
+            Path2RadioInstall = this.FindControl<RadioButton>("Path2RadioInstall");
+            Path2RadioCustom = this.FindControl<RadioButton>("Path2RadioCustom");
+            IniFilenameTextBox = this.FindControl<TextBox>("IniFilenameTextBox");
+            LogLevelComboBox = this.FindControl<ComboBox>("LogLevelComboBox");
+            TslPatchDataTextBox = this.FindControl<TextBox>("TslPatchDataTextBox");
+            CompareHashesCheckBox = this.FindControl<CheckBox>("CompareHashesCheckBox");
+            OutputTextBox = this.FindControl<TextBox>("OutputTextBox");
+            RunDiffButton = this.FindControl<Button>("RunDiffButton");
+            Path1BrowseButton = this.FindControl<Button>("Path1BrowseButton");
+            Path2BrowseButton = this.FindControl<Button>("Path2BrowseButton");
+            TslPatchDataBrowseButton = this.FindControl<Button>("TslPatchDataBrowseButton");
+            ProgressBar = this.FindControl<ProgressBar>("ProgressBar");
         }
 
         // Matching Python: def initialize_ui_controls(self): ... Initialize UI with dark-themed KotorDiff styling

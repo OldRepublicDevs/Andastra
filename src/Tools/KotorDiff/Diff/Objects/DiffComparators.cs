@@ -176,8 +176,8 @@ namespace KotorDiff.Diff.Objects
                 // Use StructuredDiffEngine for 2DA comparison
                 var structuredEngine = new StructuredDiffEngine();
                 var result = structuredEngine.Compare2DA(
-                    Andastra.Parsing.Formats.TwoDA.TwoDAAuto.Bytes2DA(left2da, Andastra.Parsing.Resource.ResourceType.TwoDA),
-                    Andastra.Parsing.Formats.TwoDA.TwoDAAuto.Bytes2DA(right2da, Andastra.Parsing.Resource.ResourceType.TwoDA),
+                    Andastra.Parsing.Formats.TwoDA.TwoDAAuto.Bytes2DA(left2da, Andastra.Parsing.Common.ResourceType.TwoDA),
+                    Andastra.Parsing.Formats.TwoDA.TwoDAAuto.Bytes2DA(right2da, Andastra.Parsing.Common.ResourceType.TwoDA),
                     leftId,
                     rightId);
 

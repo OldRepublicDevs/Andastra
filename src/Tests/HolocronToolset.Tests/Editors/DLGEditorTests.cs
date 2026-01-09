@@ -3319,7 +3319,7 @@ namespace HolocronToolset.Tests.Editors
             // Test 1: Press a key and verify it's added to KeysDown
             Key testKey = Key.A;
             editor.KeyPress(testKey, RawInputModifiers.None, PhysicalKey.KeyA, null);
-            
+
             // Verify key was added to KeysDown
             Assert.True(editor.KeysDown.Contains(testKey), "Key should be added to KeysDown when pressed");
 
@@ -3360,7 +3360,7 @@ namespace HolocronToolset.Tests.Editors
             {
                 keyModifiersProperty.SetValue(keyUpEventArgs, KeyModifiers.None);
             }
-            
+
             onKeyUpMethod.Invoke(editor, new object[] { keyUpEventArgs });
             Assert.False(editor.KeysDown.Contains(testKey), "Key should be removed from KeysDown when released");
             Assert.True(editor.KeysDown.Contains(testKey2), "Other key should still be in KeysDown");
