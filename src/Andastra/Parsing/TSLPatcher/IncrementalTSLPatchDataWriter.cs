@@ -7,27 +7,27 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Andastra.Parsing;
-using Common;
-using Extract;
-using Formats.Capsule;
-using Formats.GFF;
-using Formats.LIP;
-using Formats.SSF;
-using Formats.TLK;
-using Formats.TwoDA;
-using Memory;
-using Mods;
-using Mods.GFF;
-using Mods.NCS;
-using Mods.SSF;
-using Mods.TLK;
-using Mods.TwoDA;
-using Resource;
+using Andastra.Parsing.Common;
+using Andastra.Parsing.Extract;
+using Andastra.Parsing.Formats.Capsule;
+using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Formats.LIP;
+using Andastra.Parsing.Formats.SSF;
+using Andastra.Parsing.Formats.TLK;
+using Andastra.Parsing.Formats.TwoDA;
+using Andastra.Parsing.Memory;
+using Andastra.Parsing.Mods;
+using Andastra.Parsing.Mods.GFF;
+using Andastra.Parsing.Mods.NCS;
+using Andastra.Parsing.Mods.SSF;
+using Andastra.Parsing.Mods.TLK;
+using Andastra.Parsing.Mods.TwoDA;
+using Andastra.Parsing.Resource;
 // Removed: using Tools; // Removed to break circular dependency
 // Using fully qualified names directly in code instead
 using Andastra.Utility;
 using JetBrains.Annotations;
-using InstallationClass = Installation.Installation;
+using InstallationClass = Andastra.Parsing.Installation.Installation;
 using SystemTextEncoding = System.Text.Encoding;
 namespace TSLPatcher
 {
