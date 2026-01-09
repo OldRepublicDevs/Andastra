@@ -90,7 +90,8 @@ namespace Andastra.Parsing.Mods.NSS
                         game,
                         null,
                         null,
-                        new List<string> { tempFolder });
+                        new List<string> { tempFolder },
+                        null);
                     compiledBytes = NCSAuto.BytesNcs(ncs);
                     return compiledBytes;
                 }
