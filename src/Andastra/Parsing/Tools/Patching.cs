@@ -15,7 +15,7 @@ using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.RIM;
 using Andastra.Parsing.Formats.TLK;
 using Andastra.Parsing.Formats.TPC;
-using Andastra.Parsing.Installation;
+// Removed: using Andastra.Parsing.Installation; // Using fully qualified names to break circular dependency
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource.Generics.ARE;
@@ -901,11 +901,11 @@ namespace Andastra.Parsing.Tools
                 LogMessage(config, "Patching modules...");
                 if (config.K1ConvertGffs || config.TslConvertGffs)
                 {
-                    // Module validation would need Installation to expose _modules
+                    // Module validation would need Andastra.Parsing.Installation.Installation to expose _modules
                     LogMessage(config, "Module validation not yet fully implemented");
                 }
 
-                // Module patching would need Installation to expose _modules
+                // Module patching would need Andastra.Parsing.Installation.Installation to expose _modules
                 LogMessage(config, "Module patching not yet fully implemented");
             }
 
@@ -915,14 +915,14 @@ namespace Andastra.Parsing.Tools
             }
             string overridePath = kInstall.OverridePath();
             Directory.CreateDirectory(overridePath);
-            // Override patching would need Installation to expose override methods
+            // Override patching would need Andastra.Parsing.Installation.Installation to expose override methods
             LogMessage(config, "Override patching not yet fully implemented");
 
             if (config.IsPatching())
             {
                 LogMessage(config, "Extract and patch BIF data, saving to Override (will not overwrite)");
             }
-            // Core resource patching would need Installation to expose core_resources
+            // Core resource patching would need Andastra.Parsing.Installation.Installation to expose core_resources
             LogMessage(config, "Core resource patching not yet fully implemented");
 
             PatchFile(Path.Combine(kInstall.Path, "dialog.tlk"), config, processedFiles);

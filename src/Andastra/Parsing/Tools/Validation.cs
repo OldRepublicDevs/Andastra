@@ -14,7 +14,7 @@ namespace Andastra.Parsing.Tools
     {
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/validation.py:36-82
         // Original: def check_txi_files(installation: Installation, texture_names: list[str], *, search_locations: list[SearchLocation] | None = None) -> dict[str, list[Path]]:
-        public static Dictionary<string, List<string>> CheckTxiFiles(InstallationWrapper installation, List<string> textureNames, SearchLocation[] searchLocations = null)
+        public static Dictionary<string, List<string>> CheckTxiFiles(Installation installation, List<string> textureNames, SearchLocation[] searchLocations = null)
         {
             if (searchLocations == null)
             {
@@ -32,7 +32,7 @@ namespace Andastra.Parsing.Tools
             foreach (string texName in textureNames)
             {
                 var resId = new ResourceIdentifier(texName, ResourceType.TXI);
-                var locations = installation.Inner.Locations(new List<ResourceIdentifier> { resId }, searchLocations);
+                var locations = installation.Locations(new List<ResourceIdentifier> { resId }, searchLocations);
                 var foundPaths = new List<string>();
 
                 foreach (var kvp in locations)
@@ -55,7 +55,7 @@ namespace Andastra.Parsing.Tools
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/validation.py:85-124
         // Original: def check_2da_file(installation: Installation, twoda_name: str, *, search_locations: list[SearchLocation] | None = None) -> tuple[bool, list[Path]]:
-        public static (bool found, List<string> paths) Check2daFile(InstallationWrapper installation, string twodaName, SearchLocation[] searchLocations = null)
+        public static (bool found, List<string> paths) Check2daFile(Installation installation, string twodaName, SearchLocation[] searchLocations = null)
         {
             if (searchLocations == null)
             {
@@ -63,7 +63,7 @@ namespace Andastra.Parsing.Tools
             }
 
             var resId = new ResourceIdentifier(twodaName, ResourceType.TwoDA);
-            var locations = installation.Inner.Locations(new List<ResourceIdentifier> { resId }, searchLocations);
+            var locations = installation.Locations(new List<ResourceIdentifier> { resId }, searchLocations);
 
             var foundPaths = new List<string>();
             foreach (var kvp in locations)
@@ -83,13 +83,13 @@ namespace Andastra.Parsing.Tools
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/validation.py:335-383
         // Original: def validate_installation(installation: Installation, *, check_essential_files: bool = True) -> ValidationResult:
-        public static ValidationResult ValidateInstallation(InstallationWrapper installation, bool checkEssentialFiles = true)
+        public static ValidationResult ValidateInstallation(Installation installation, bool checkEssentialFiles = true)
         {
             var errors = new List<string>();
             var missingFiles = new List<string>();
 
             // Check Andastra.Parsing.Installation.Installation path exists
-            string installPath = installation.Inner.Path;
+            string installPath = installation.Path;
             if (!Directory.Exists(installPath))
             {
                 errors.Add($"Andastra.Parsing.Installation.Installation path does not exist: {installPath}");
