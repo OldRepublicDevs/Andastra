@@ -881,7 +881,7 @@ namespace TSLPatcher
                 // Get GFF field to 2DA mapping to identify relevant field names
                 // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:3363-3392
                 // Original: gff_field_to_2da_mapping = _get_gff_field_to_2da_mapping()
-                Dictionary<string, ResourceIdentifier> gffFieldTo2daMapping = ReferenceCacheHelpers.GffFieldTo2daMapping();
+                Dictionary<string, ResourceIdentifier> gffFieldTo2daMapping = Andastra.Parsing.Tools.ReferenceCacheHelpers.GffFieldTo2daMapping();
                 ResourceIdentifier target2daIdentifier = new ResourceIdentifier(twodaResname, ResourceType.TwoDA);
 
                 // Find all GFF field names that reference this 2DA file
