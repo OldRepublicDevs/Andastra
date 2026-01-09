@@ -135,8 +135,8 @@ namespace Andastra.Parsing.Mods.NSS
                             if (!isValidCompiler)
                             {
                                 logger.AddWarning(
-                                    "The nwnnsscomp.exe in the tslpatchdata folder is not the expected TSLPatcher version.\n" +
-                                    $"PyKotor has detected that the provided nwnnsscomp.exe is the '{detectedCompiler}' version.\n" +
+                                    "The nwnnsscomp.exe in the tslpatchdata folder validation failed.\n" +
+                                    "Using external compiler anyway.\n" +
                                     "PyKotor will compile regardless, but this may not yield the expected result.");
                             }
 
