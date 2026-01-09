@@ -41,7 +41,7 @@ namespace KotorDiff.Diff
             byte[] moddedData = null,
             string moddedPath = null,
             DiffContext context = null,
-            IncrementalTSLPatchDataWriter incrementalWriter = null,
+            global::TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null,
             bool createPatch = true)
         {
             if (logFunc == null)
@@ -116,7 +116,7 @@ namespace KotorDiff.Diff
             string capsuleDestination,
             string capsulePath = null,
             Action<string> logFunc = null,
-            IncrementalTSLPatchDataWriter incrementalWriter = null)
+            global::TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             if (logFunc == null)
             {
@@ -193,7 +193,7 @@ namespace KotorDiff.Diff
             string moddedPath = null,
             DiffContext context = null,
             Action<string> logFunc = null,
-            IncrementalTSLPatchDataWriter incrementalWriter = null)
+            global::TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             if (logFunc == null)
             {
@@ -420,7 +420,7 @@ namespace KotorDiff.Diff
         public static void ExtractAndAddCapsuleResources(
             string capsulePath,
             ModificationsByType modificationsByType,
-            IncrementalTSLPatchDataWriter incrementalWriter,
+            global::TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter,
             Action<string> logFunc)
         {
             try
