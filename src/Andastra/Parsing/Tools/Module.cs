@@ -34,7 +34,7 @@ namespace Andastra.Parsing.Tools
                 throw new ArgumentException("Specified file must end with the .mod extension");
             }
 
-            moduleRoot = Installation.Installation.GetModuleRoot(moduleRoot ?? filepath);
+            moduleRoot = Andastra.Parsing.Installation.Installation.GetModuleRoot(moduleRoot ?? filepath);
             var rRimFolderpath = rimFolderpath != null ? new CaseAwarePath(rimFolderpath) : new CaseAwarePath(Path.GetDirectoryName(filepath));
 
             string filepathRim = Path.Combine(rRimFolderpath.GetResolvedPath(), $"{moduleRoot}.rim");
@@ -79,7 +79,7 @@ namespace Andastra.Parsing.Tools
             string identifier,
             string prefix,
             string name,
-            Installation.Installation installation,
+            Andastra.Parsing.Installation.Installation installation,
             bool copyTextures = false,
             bool copyLightmaps = false,
             bool keepDoors = false,
