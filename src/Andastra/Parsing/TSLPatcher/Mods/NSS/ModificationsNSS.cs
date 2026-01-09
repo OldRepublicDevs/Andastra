@@ -122,7 +122,7 @@ namespace Andastra.Parsing.Mods.NSS
                     {
                         try
                         {
-                            var externalCompiler = new ExternalNCSCompiler(NwnnsscompPath);
+                            var externalCompiler = new NCSCompiler(NwnnsscompPath);
                             KnownExternalCompilers detectedCompiler;
                             try
                             {
@@ -288,7 +288,7 @@ namespace Andastra.Parsing.Mods.NSS
 
                 return null;
             }
-            catch (ExternalNCSCompiler.EntryPointException)
+            catch (NCSCompiler.EntryPointException)
             {
                 return null;
             }
