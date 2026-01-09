@@ -17,11 +17,11 @@ using Andastra.Parsing.Formats.TLK;
 using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Memory;
 using Andastra.Parsing.Mods;
-using Andastra.Parsing.Andastra.Parsing.Mods.GFF;
-using Andastra.Parsing.Andastra.Parsing.Mods.NCS;
-using Andastra.Parsing.Andastra.Parsing.Mods.SSF;
-using Andastra.Parsing.Andastra.Parsing.Mods.TLK;
-using Andastra.Parsing.Andastra.Parsing.Mods.TwoDA;
+using Andastra.Parsing.Mods.GFF;
+using Andastra.Parsing.Mods.NCS;
+using Andastra.Parsing.Mods.SSF;
+using Andastra.Parsing.Mods.TLK;
+using Andastra.Parsing.Mods.TwoDA;
 using Andastra.Parsing.Resource;
 // Removed: using Tools; // Removed to break circular dependency
 // Using fully qualified names directly in code instead
