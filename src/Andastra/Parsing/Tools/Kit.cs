@@ -32,7 +32,7 @@ namespace Andastra.Parsing.Tools
     {
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/kit.py:74-110
         // Original: def _get_resource_priority(location: LocationResult, installation: Installation) -> int:
-        private static int GetResourcePriority(LocationResult location, Installation.Installation installation)
+        private static int GetResourcePriority(LocationResult location, Andastra.Parsing.Installation.Installation installation)
         {
             string filepath = location.FilePath;
             string[] pathParts = filepath.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
@@ -55,7 +55,7 @@ namespace Andastra.Parsing.Tools
             {
                 return 3;
             }
-            // Files directly in installation root treated as Override priority
+            // Files directly in Andastra.Parsing.Installation.Installation root treated as Override priority
             if (Path.GetDirectoryName(filepath) == installation.Path)
             {
                 return 0;
@@ -66,9 +66,9 @@ namespace Andastra.Parsing.Tools
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/kit.py:262-288
         // Original: def find_module_file(installation: Installation, module_name: str) -> Path | None:
-        public static string FindModuleFile(Installation.Installation installation, string moduleName)
+        public static string FindModuleFile(Andastra.Parsing.Installation.Installation installation, string moduleName)
         {
-            string rimsPath = Andastra.Parsing.Installation.Installation.GetRimsPath(installation.Path);
+            string rimsPath = Andastra.Parsing.Andastra.Parsing.Installation.Installation.GetRimsPath(installation.Path);
             string modulesPath = installation.ModulePath();
 
             // Check rimsPath first, then modulesPath
@@ -282,7 +282,7 @@ namespace Andastra.Parsing.Tools
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/kit.py:291-1346
         // Original: def extract_kit(...)
         public static void ExtractKit(
-            Installation.Installation installation,
+            Andastra.Parsing.Installation.Installation installation,
             string moduleName,
             string outputPath,
             string kitId = null,
@@ -318,7 +318,7 @@ namespace Andastra.Parsing.Tools
             bool isErf = extension != null && (extension == ".erf" || extension == ".mod" || extension == ".hak" || extension == ".sav");
             bool isRim = extension == ".rim";
 
-            string rimsPath = Andastra.Parsing.Installation.Installation.GetRimsPath(installation.Path);
+            string rimsPath = Andastra.Parsing.Andastra.Parsing.Installation.Installation.GetRimsPath(installation.Path);
             string modulesPath = installation.ModulePath();
 
             RIM mainArchive = null;
@@ -1474,7 +1474,7 @@ namespace Andastra.Parsing.Tools
                         continue;
                     }
 
-                    // Try module first (fastest), then fall back to batched installation locations
+                    // Try module first (fastest), then fall back to batched Andastra.Parsing.Installation.Installation locations
                     foreach (string suffix in new[] { "0", "1", "2" })
                     {
                         string dwkKey = $"dwk{suffix}";
@@ -1497,7 +1497,7 @@ namespace Andastra.Parsing.Tools
                             }
                         }
 
-                        // Try batched installation locations if not found in module
+                        // Try batched Andastra.Parsing.Installation.Installation locations if not found in module
                         if (!dwkFound)
                         {
                             ResourceIdentifier dwkIdent = new ResourceIdentifier(dwkResname, ResourceType.DWK);
@@ -1608,7 +1608,7 @@ namespace Andastra.Parsing.Tools
                         }
                     }
 
-                    // Try batched installation locations
+                    // Try batched Andastra.Parsing.Installation.Installation locations
                     ResourceIdentifier pwkIdent = new ResourceIdentifier(placeableModelName, ResourceType.PWK);
                     if (pwkLocations.ContainsKey(pwkIdent) && pwkLocations[pwkIdent].Count > 0)
                     {
