@@ -17,11 +17,11 @@ using Andastra.Parsing.Formats.TLK;
 using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Memory;
 using Andastra.Parsing.Mods;
-using Andastra.Parsing.Mods.GFF;
-using Andastra.Parsing.Mods.NCS;
-using Andastra.Parsing.Mods.SSF;
-using Andastra.Parsing.Mods.TLK;
-using Andastra.Parsing.Mods.TwoDA;
+using Andastra.Parsing.Andastra.Parsing.Mods.GFF;
+using Andastra.Parsing.Andastra.Parsing.Mods.NCS;
+using Andastra.Parsing.Andastra.Parsing.Mods.SSF;
+using Andastra.Parsing.Andastra.Parsing.Mods.TLK;
+using Andastra.Parsing.Andastra.Parsing.Mods.TwoDA;
 using Andastra.Parsing.Resource;
 // Removed: using Tools; // Removed to break circular dependency
 // Using fully qualified names directly in code instead
@@ -1950,13 +1950,13 @@ namespace TSLPatcher
                         if (strrefFields.Count > 0)
                         {
                             // Create GFF modifications to replace StrRef with TLKMEMORY token
-                            var modifications = new Mods.GFF.ModificationsGFF(gffFile, replace: false, modifiers: null);
+                            var modifications = new Andastra.Parsing.Mods.GFF.ModificationsGFF(gffFile, replace: false, modifiers: null);
 
                             foreach (var fieldPath in strrefFields)
                             {
                                 // Create a TLKMEMORY modifier that replaces the StrRef field
-                                var fieldValue = new Mods.GFF.FieldValueTLKMemory(newTokenId);
-                                var modifier = new Mods.GFF.ModifyFieldGFF(fieldPath, fieldValue);
+                                var fieldValue = new Andastra.Parsing.Mods.GFF.FieldValueTLKMemory(newTokenId);
+                                var modifier = new Andastra.Parsing.Mods.GFF.ModifyFieldGFF(fieldPath, fieldValue);
                                 modifications.Modifiers.Add(modifier);
                             }
 
@@ -2009,19 +2009,19 @@ namespace TSLPatcher
                         if (strrefCells.Count > 0)
                         {
                             // Create 2DA modifications to replace StrRef with TLKMEMORY token
-                            var modifications = new Mods.TwoDA.Modifications2DA(twodaFile);
+                            var modifications = new Andastra.Parsing.Mods.TwoDA.Modifications2DA(twodaFile);
 
                             foreach (var cellRef in strrefCells)
                             {
                                 // Create a TLKMEMORY modifier that replaces the cell value
-                                var target = new Mods.TwoDA.Target(
-                                    Mods.TwoDA.TargetType.ROW_INDEX,
+                                var target = new Andastra.Parsing.Mods.TwoDA.Target(
+                                    Andastra.Parsing.Mods.TwoDA.TargetType.ROW_INDEX,
                                     cellRef.RowIndex);
-                                var cells = new Dictionary<string, Mods.TwoDA.RowValue>
+                                var cells = new Dictionary<string, Andastra.Parsing.Mods.TwoDA.RowValue>
                                 {
-                                    { cellRef.ColumnName, new Mods.TwoDA.RowValueTLKMemory(newTokenId) }
+                                    { cellRef.ColumnName, new Andastra.Parsing.Mods.TwoDA.RowValueTLKMemory(newTokenId) }
                                 };
-                                var modifier = new Mods.TwoDA.ChangeRow2DA(
+                                var modifier = new Andastra.Parsing.Mods.TwoDA.ChangeRow2DA(
                                     $"strref_{cellRef.RowIndex}_{cellRef.ColumnName}",
                                     target,
                                     cells);
