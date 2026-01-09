@@ -6495,4 +6495,5 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             return sb.ToString().Trim();
         }
     }
+    }
 }

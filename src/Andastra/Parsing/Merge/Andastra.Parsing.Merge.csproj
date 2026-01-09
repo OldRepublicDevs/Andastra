@@ -15,5 +15,7 @@
     <ProjectReference Include="..\..\Utility\Andastra.Utility.csproj" />
     <ProjectReference Include="..\Common\Andastra.Parsing.Common.csproj" />
     <ProjectReference Include="..\Extract\Andastra.Parsing.Extract.csproj" />
+    <ProjectReference Include="..\Installation\Andastra.Parsing.Installation.csproj" />
+    <ProjectReference Include="..\Tools\Andastra.Parsing.Tools.csproj" />
   </ItemGroup>
 </Project>

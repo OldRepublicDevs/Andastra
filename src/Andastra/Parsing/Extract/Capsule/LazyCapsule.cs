@@ -442,7 +442,9 @@ namespace Andastra.Parsing.Extract.Capsule
         /// </summary>
         public object AsCached()
         {
-            if (Andastra.Parsing.Tools.FileHelpers.IsAnyErfTypeFile(_filepath))
+            // TODO: HACK - Inlined FileHelpers.IsAnyErfTypeFile to avoid circular dependency (Extract ↔ Tools)
+            string ext = System.IO.Path.GetExtension(_filepath ?? "").ToLowerInvariant();
+            if (ext == ".erf" || ext == ".mod" || ext == ".sav")
             {
                 return AsCachedErf();
             }

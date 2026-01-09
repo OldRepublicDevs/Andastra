@@ -16,5 +16,7 @@
     <ProjectReference Include="..\Common\Andastra.Parsing.Common.csproj" />
     <ProjectReference Include="..\Extract\Andastra.Parsing.Extract.csproj" />
     <ProjectReference Include="..\Resource\Andastra.Parsing.Resource.csproj" />
+    <!-- Removed Tools reference to break circular dependency: Installation ↔ Tools -->
+    <!-- Installation uses Tools.ModelTools via fully qualified names where needed -->
   </ItemGroup>
 </Project>

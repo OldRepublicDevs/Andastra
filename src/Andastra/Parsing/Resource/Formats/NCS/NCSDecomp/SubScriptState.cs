@@ -787,11 +787,11 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                         List<ScriptNode.ScriptNode> children = this.current.GetChildren();
                         ScriptNode.ScriptNode last = children[children.Count - 1];
                         ScriptNode.ScriptNode secondLast = children[children.Count - 2];
-                        
+
                         // Extract expressions, handling both plain expressions and AExpressionStatement
                         AExpression lastExp = null;
                         AExpression secondLastExp = null;
-                        
+
                         if (last is AExpression lastExpDirect)
                         {
                             lastExp = lastExpDirect;
@@ -800,7 +800,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                         {
                             lastExp = lastExpStmt.GetExp();
                         }
-                        
+
                         if (secondLast is AExpression secondLastExpDirect)
                         {
                             secondLastExp = secondLastExpDirect;
@@ -809,7 +809,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                         {
                             secondLastExp = secondLastExpStmt.GetExp();
                         }
-                        
+
                         // Check if we have two expressions that could form a comparison
                         if (lastExp != null && secondLastExp != null)
                         {
@@ -825,7 +825,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                             Error($"DEBUG TransformConditionalJump (JZ): Created AConditionalExp from two expressions");
                         }
                     }
-                    
+
                     // If still no conditional expression, use what we have (might be a placeholder)
                     if (!(condExp is AConditionalExp))
                     {
@@ -2042,7 +2042,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                         right = this.BuildPlaceholderParam(1);
                     }
                 }
-                
+
                 exp = new AConditionalExp(left, right, NodeUtils.GetOp(node));
                 Error($"DEBUG TransformBinary: Created AConditionalExp with left={left?.GetType().Name ?? "null"}, right={right?.GetType().Name ?? "null"}, op={NodeUtils.GetOp(node)}, adding to children. Current has {this.current.Size()} children");
             }
@@ -2050,7 +2050,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             exp.Stackentry(this.stack.Get(1));
             this.current.AddChild((ScriptNode.ScriptNode)exp);
             Error($"DEBUG TransformBinary: END - Added {exp.GetType().Name} to children. Current now has {this.current.Size()} children");
-            
+
             // CRITICAL: After creating AConditionalExp, ensure no AUnaryExp remains in children
             // This prevents AUnaryExp from being output as a standalone statement
             if (NodeUtils.IsConditionalOp(node) && this.current.HasChildren())
@@ -2088,7 +2088,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                     }
                 }
             }
-            
+
             // Ensure AConditionalExp is not immediately wrapped by subsequent MOVSP
             // by marking that we just created a conditional expression
             this.CheckEnd(node);
