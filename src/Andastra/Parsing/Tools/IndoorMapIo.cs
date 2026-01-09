@@ -6,6 +6,7 @@ using System.Linq;
 using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Formats.RIM;
 using Andastra.Parsing.Resource;
+using ResourceType = Andastra.Parsing.Common.ResourceType;
 
 using JetBrains.Annotations;
 
