@@ -3,4 +3,10 @@
     <GenerateMSBuildEditorConfigFile>false</GenerateMSBuildEditorConfigFile>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
+  
+  <!-- Add explicit package references for packages that are built into .NET 9.0 but requested by transitive dependencies -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0' OR '$(TargetFramework)' == 'net9.0-windows'">
+    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
+  </ItemGroup>
 </Project>
