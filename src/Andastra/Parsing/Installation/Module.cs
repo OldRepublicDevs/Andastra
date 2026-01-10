@@ -3,18 +3,18 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Extract;
 using Andastra.Parsing.Formats.Capsule;
 using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.RIM;
-using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
 // Removed extern alias approach - using fully qualified name from Resource project instead
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Common
+namespace Andastra.Parsing.Installation
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:70-75
     // Original: SEARCH_ORDER: list[SearchLocation] = [SearchLocation.OVERRIDE, SearchLocation.CUSTOM_MODULES, SearchLocation.CHITIN]
@@ -557,7 +557,7 @@ Debug.WriteLine($"ERROR: {Filename()}: ARE has a Name field, but it is not a val
     {
         private readonly Dictionary<ResourceIdentifier, ModuleResource> _resources = new Dictionary<ResourceIdentifier, ModuleResource>();
         private bool _dotMod;
-        private readonly Installation.Installation _installation;
+        private readonly Installation _installation;
         private readonly string _root;
         private ResRef _cachedModId;
         private readonly Dictionary<string, ModulePieceResource> _capsules = new Dictionary<string, ModulePieceResource>();
@@ -565,12 +565,12 @@ Debug.WriteLine($"ERROR: {Filename()}: ARE has a Name field, but it is not a val
 
         public Dictionary<ResourceIdentifier, ModuleResource> Resources => _resources;
         public bool DotMod => _dotMod;
-        public Installation.Installation Installation => _installation;
+        public Installation Installation => _installation;
         public string Root => _root;
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:379-416
         // Original: def __init__(self, filename_or_root: str, installation: Installation, *, use_dot_mod: bool = True):
-        public Module(string filenameOrRoot, Installation.Installation installation, bool useDotMod = true)
+        public Module(string filenameOrRoot, Installation installation, bool useDotMod = true)
         {
             if (filenameOrRoot == null)
             {
@@ -588,9 +588,9 @@ Debug.WriteLine($"ERROR: {Filename()}: ARE has a Name field, but it is not a val
 
             // Build all capsules relevant to this root in the provided installation
             // Use ModuleFileDiscovery to match exact swkotor.exe/swkotor2.exe behavior
-            string modulesPath = Andastra.Parsing.Installation.Installation.GetModulesPath(_installation.Path);
-            Andastra.Parsing.Installation.ModuleFileGroup fileGroup =
-                Andastra.Parsing.Installation.ModuleFileDiscovery.DiscoverModuleFiles(modulesPath, _root, _installation.Game);
+            string modulesPath = Installation.GetModulesPath(_installation.Path);
+            ModuleFileGroup fileGroup =
+                ModuleFileDiscovery.DiscoverModuleFiles(modulesPath, _root, _installation.Game);
 
             if (fileGroup == null || !fileGroup.HasFiles())
             {
@@ -1392,7 +1392,7 @@ Debug.WriteLine($"ERROR: {Filename()}: ARE has a Name field, but it is not a val
             // Load loadscreens.2da from installation
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1656-1664
             // Original: loadscreens_result = self._installation.resource("loadscreens", ResourceType.TwoDA, [SearchLocation.OVERRIDE, SearchLocation.CHITIN])
-            Installation.ResourceResult loadscreensResult = _installation.Resources.LookupResource(
+            ResourceResult loadscreensResult = _installation.Resources.LookupResource(
                 "loadscreens",
                 ResourceType.TwoDA,
                 new[] { SearchLocation.OVERRIDE, SearchLocation.CHITIN }
@@ -1795,7 +1795,7 @@ Debug.WriteLine($"Adding {kv.Value.Count} texture location(s) for '{kv.Key}' to 
     /// </summary>
     public sealed class ModuleResource<T> : ModuleResource
     {
-        private readonly Installation.Installation _installation;
+        private readonly Installation _installation;
         private string _active;
         private T _resourceObj;
         private bool _resourceLoadAttempted; // Track if we've attempted to load (for caching when conversion not implemented)
@@ -1803,7 +1803,7 @@ Debug.WriteLine($"Adding {kv.Value.Count} texture location(s) for '{kv.Key}' to 
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1756-1770
         // Original: def __init__(self, resname: str, restype: ResourceType, installation: Installation, module_root: str | None = None):
-        public ModuleResource(string resname, ResourceType restype, Installation.Installation installation, string moduleRoot = null)
+        public ModuleResource(string resname, ResourceType restype, Installation installation, string moduleRoot = null)
             : base(resname, restype, moduleRoot)
         {
             if (resname == null)

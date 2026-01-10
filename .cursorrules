@@ -1,22 +1,74 @@
 # Andastra.NET AI Agent Rules (2026 Edition)
 
-You are an AI agent contributing to Andastra.NET, a .NET project for reverse-engineering and modding Knights of the Old Republic games. Adhere strictly to these rules for consistency, compatibility, and engine fidelity.
+You are an AI agent contributing to Andastra.NET, a .NET project for reverse-engineering and modding Knights of the Old Republic games. Your highest priority is **repository integrity, conflict avoidance in multi-agent workflows, and strict git discipline**. Follow every rule below exactly. Never skip or batch commits.
 
-## 1. Git Commits (Non-Negotiable)
+## 1. MANDATORY: Git Commit Discipline (Highest Priority – Non-Negotiable)
 
-Commit every file change (create, modify, delete, move) immediately.
+In multi-agent environments, conflicts arise quickly. To prevent them:
 
-Use conventional commits with optional scope:
+- **NEVER** use `git add .`, `git add -A`, or any wildcard/all-files command.
+- **ALWAYS** add and commit **one file at a time** (or a small logical group of tightly related files in one chained command).
+- **ALWAYS** chain `git add` and `git commit` on the **same line** using platform-appropriate separators to ensure atomic execution.
 
-- Types: `fix:`, `feat:`, `refactor:`, `docs:`, `chore:`, `test:`
-- Never use `git add .` or `-A`
+**Commits**
 
-| Platform  | Command Format                                      |
-|-----------|-----------------------------------------------------|
-| Windows   | `git add <file>; git commit -m "type(scope): message"` |
-| Unix      | `git add <file> && git commit -m "type(scope): message"` |
+- Use exact chained format: `git add <file1> <file2>; git commit -m "type(scope): message"` (Windows) **or** `git add <file1> <file2> && git commit -m "type(scope): message"` (Unix/Mac).
+- Only list modified/created/deleted/moved file(s) (no wildcards).
+- Commit messages MUST follow conventional commits (`type(optional scope): message`)
+  - Valid types: `feat:`, `fix:`, `refactor:`, `docs:`, `chore:`, `test:`
+  - Keep messages concise, lowercase, and descriptive.
+- Let pre-commit hooks run fully.
+- Limit to 2–3 commands per clean commit.
 
-Example: `feat(K2-camera): add camera system`
+**General**
+
+- Append `--no-pager` to paging commands.
+- Preserve working-tree changes.
+- Snapshot before cleanups (e.g., `git stash push --include-untracked`).
+- Get explicit user approval before destructive actions, quoting the command.
+
+### Exact Command Formats (MUST USE ONE OF THESE)
+
+| Platform | Command Format                                                                 |
+|----------|--------------------------------------------------------------------------------|
+| Windows  | `git add <file1> <file2>; git commit -m "type(scope): message"`                |
+| Unix/Mac | `git add <file1> <file2> && git commit -m "type(scope): message"`             |
+
+### CORRECT EXAMPLES
+
+```powershell
+git add Src/CameraSystem.cs; git commit -m "feat(K2-camera): add camera rotation logic"
+```
+
+```bash
+git add Src/Utils/MathHelper.cs Src/Utils/Vector.cs && git commit -m "refactor(math): simplify vector operations"
+```
+
+#### INCORRECT EXAMPLES (NEVER USE)
+
+```powershell
+git add .                  # Wrong: adds everything
+git add -A                 # Wrong: adds everything
+git add file.cs            # Wrong: missing commit
+git commit -m "..."        # Wrong: without prior add in chain
+git add file.md; git commit -m "Update file.md"  # Wrong: non-conventional message
+```
+
+### MANDATORY RESPONSE BEHAVIOR
+
+- After **any** file change or set of related changes, **YOU MUST** end your response with a fenced code block titled "Proposed Git Commands" containing the **exact** chained command(s) ready to copy-paste.
+- Then add exactly this confirmation line: `Git commits: Issued per rules ✅`
+- If no changes were made, state: `Git commits: No changes made ✅`
+
+Example response ending:
+
+```powershell
+git add Src/CameraSystem.cs; git commit -m "feat(K2-camera): implement freelook mode"
+```
+
+Git commits: Issued per rules ✅
+
+This step is never optional. It ensures atomic commits and proves rule adherence.
 
 ## 2. File Organization
 
@@ -63,24 +115,71 @@ public string GetContent([NotNull] int index, [CanBeNull] object something = nul
 }
 ```
 
-## 5. Incomplete Code Marking
+## 5. MANDATORY: Incomplete Code Policy (High Priority – Non-Negotiable)
+Large reverse-engineering tasks may require multiple passes, but **NEVER** leave unmarked stubs, placeholders, or incomplete implementations. Visibility is critical.
+
+- **PREFER AND AIM FOR**: Fully complete, production-ready code in every change. Implement the requested feature/mechanic fully.
+- **IF ANY CODE IS INCOMPLETE** (e.g., due to task size or missing info): **YOU MUST** mark it explicitly with `// TODO:` using the exact types below. Never use vague comments like "real implementation needed" without TODO.
+- **NEVER** write placeholder logic (e.g., `return false; // actual later`, empty methods, dummy data) without a TODO comment.
+- **PROHIBITED PHRASES** (without accompanying `// TODO:`):
+  - "real implementation"
+  - "actual implementation"
+  - "this is a placeholder"
+  - "would require"
+  - "stub"
+  - "temporary"
+  - "TBD"
+  - empty method bodies without comment
+
+**Exact TODO Format (MUST FOLLOW)**
 
 Always mark unfinished code with `// TODO:` + type + context.
 
-| Type         | Usage Pattern                                            |
-|--------------|----------------------------------------------------------|
-| STUB        | Missing implementation (e.g., engine function)           |
-| PLACEHOLDER | Temporary data/structure                                 |
-| FIXME       | Known issue (e.g., leak)                                 |
-| SIMPLIFIED  | Reduced fidelity (e.g., no optimization)                 |
-| HACK        | Workaround (e.g., reflection)                            |
+| Type         | Usage Pattern                                            | Example |
+|--------------|----------------------------------------------------------|---------|
+| STUB        | Missing implementation (e.g., engine function)           | `// TODO: STUB - Implement K2 event system (swkotor2.exe: 0x004eb750)` |
+| PLACEHOLDER | Temporary data/structure                                 | `// TODO: PLACEHOLDER - Replace with actual resource loading` |
+| FIXME       | Known issue (e.g., leak)                                 | `// TODO: FIXME - Memory leak in model unloading` |
+| SIMPLIFIED  | Reduced fidelity (e.g., no optimization)                 | `// TODO: SIMPLIFIED - Full animation blending not implemented` |
+| HACK        | Workaround (e.g., reflection)                            | `// TODO: HACK - Reflection workaround until API fixed` |
 
-Examples:
-
+**CORRECT EXAMPLES**
 ```csharp
-// TODO: STUB - Implement K2 event system (swkotor2.exe: 0x004eb750)
-// TODO: HACK - Reflection workaround until API fixed
+// TODO: STUB - Full parsing of K1 MDL binary header (reference needed)
+public void ParseHeader() { }
+
+// TODO: HACK - Force cast until proper interface added
+var model = (Model)obj;
 ```
+
+**INCORRECT EXAMPLES (NEVER USE)**
+```csharp
+// real implementation needed
+public void ParseHeader() { return; }
+
+// Placeholder for now
+int value = 0;
+
+// Simplified implementation - a full implementation would require:
+// - Loading the resource
+// - Parsing the resource
+// - Returning the resource
+public void ParseHeader() { return; }
+```
+
+**MANDATORY RESPONSE BEHAVIOR**
+- After any code change, **YOU MUST** end your response with a fenced block summarizing completeness:
+  - If fully complete: "Implementation status: Complete – No incomplete code or TODOs added ✅"
+  - If TODOs added: List them explicitly:
+```
+New TODOs introduced:
+- File.cs: Line 123 // TODO: STUB - ...
+- File2.cs: Line 45 // TODO: FIXME - ...
+```
+
+Implementation status: Incomplete sections marked per rules ⚠️
+```
+- This proves adherence and gives immediate visibility (searchable in chat/history).
 
 ## 6. Architecture Preferences
 

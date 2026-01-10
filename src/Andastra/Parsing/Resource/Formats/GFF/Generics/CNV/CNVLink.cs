@@ -4,7 +4,7 @@ using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Resource.Generics.CNV
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics.CNV
 {
     /// <summary>
     /// Represents a directed edge from a source node to a target node (CNVNode).

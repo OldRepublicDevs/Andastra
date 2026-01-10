@@ -3,7 +3,7 @@ using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
 
-namespace Andastra.Parsing.Resource.Generics
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics
 {
     // Engine references: swkotor2.exe:0x005acf30, swkotor.exe:0x0052b5c0 (FactionList loading)
     // Engine references: swkotor2.exe:0x005ad1a0, swkotor.exe:0x0052b830 (RepList loading)

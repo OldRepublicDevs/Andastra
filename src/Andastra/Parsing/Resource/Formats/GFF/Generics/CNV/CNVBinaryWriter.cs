@@ -5,7 +5,7 @@ using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
 
-namespace Andastra.Parsing.Resource.Generics.CNV
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics.CNV
 {
     // Matching pattern from GFFBinaryWriter and other GFF-based format writers
     // Original: CNVBinaryWriter for writing CNV conversation files

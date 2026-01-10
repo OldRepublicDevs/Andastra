@@ -3,7 +3,7 @@ using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
 
-namespace Andastra.Parsing.Resource.Generics
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics
 {
     /// <summary>
     /// Helper functions for converting between GFF format and IFO (Module Info) objects.

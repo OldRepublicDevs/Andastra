@@ -5,7 +5,7 @@ using System.Text.Json;
 using Andastra.Parsing.Common;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Resource.Generics.DLG.IO
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics.DLG.IO
 {
     /// <summary>
     /// Simple 2D vector for Twine position/size metadata.

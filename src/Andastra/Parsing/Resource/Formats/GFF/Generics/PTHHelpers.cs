@@ -5,7 +5,7 @@ using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
 
-namespace Andastra.Parsing.Resource.Generics
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics
 {
     // Engine references: swkotor2.exe:0x004e3650, swkotor.exe:0x00508400 (PTH loading)
     public static class PTHHelpers

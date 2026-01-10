@@ -264,7 +264,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
 
             try
             {
-                Andastra.Parsing.Installation.ResourceResult result = _installation.Resources.LookupResource(modelResRef, Andastra.Parsing.Resource.ResourceType.MDL);
+                Andastra.Parsing.Installation.ResourceResult result = _installation.Resources.LookupResource(modelResRef, Andastra.Parsing.Common.ResourceType.MDL);
                 if (result == null || result.Data == null)
                 {
                     return null;

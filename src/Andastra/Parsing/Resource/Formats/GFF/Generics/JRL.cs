@@ -5,7 +5,7 @@ using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Resource.Generics
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/jrl.py:83-88
     // Original: class JRLQuestPriority(IntEnum):

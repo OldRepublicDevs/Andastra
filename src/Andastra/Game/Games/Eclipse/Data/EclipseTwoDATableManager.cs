@@ -64,7 +64,7 @@ namespace Andastra.Runtime.Games.Eclipse.Data
             // Load from installation
             try
             {
-                ResourceResult resource = _installation.Resources.LookupResource(tableName, Andastra.Parsing.Resource.ResourceType.TwoDA);
+                ResourceResult resource = _installation.Resources.LookupResource(tableName, Andastra.Parsing.Common.ResourceType.TwoDA);
                 if (resource == null || resource.Data == null)
                 {
                     return null;

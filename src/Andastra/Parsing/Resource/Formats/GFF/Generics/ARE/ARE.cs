@@ -4,7 +4,7 @@ using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Resource.Generics.ARE
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics.ARE
 {
     /// <summary>
     /// Area Resource (ARE) file handler.

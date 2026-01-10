@@ -6,7 +6,7 @@ using Andastra.Parsing.Common;
 using Andastra.Parsing.Resource;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Resource.Generics.CNV
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics.CNV
 {
     /// <summary>
     /// Stores conversation data for Eclipse Engine games (Dragon Age, ).

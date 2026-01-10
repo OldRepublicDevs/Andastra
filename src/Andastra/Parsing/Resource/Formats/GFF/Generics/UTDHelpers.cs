@@ -6,7 +6,7 @@ using Andastra.Parsing.Resource;
 using static Andastra.Parsing.Common.GameExtensions;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
 
-namespace Andastra.Parsing.Resource.Generics
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utd.py
     // Original: construct_utd and dismantle_utd functions

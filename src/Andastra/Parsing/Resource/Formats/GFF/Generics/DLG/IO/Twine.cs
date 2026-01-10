@@ -11,7 +11,7 @@ using Andastra.Parsing.Common;
 using Andastra.Parsing.Resource.Generics.DLG;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Resource.Generics.DLG.IO
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics.DLG.IO
 {
     /// <summary>
     /// Twine format support for dialog system.

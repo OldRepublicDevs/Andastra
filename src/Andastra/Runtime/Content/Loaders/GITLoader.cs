@@ -95,7 +95,7 @@ namespace Andastra.Runtime.Content.Loaders
         /// </summary>
         public async Task<GITData> LoadAsync(string areaResRef, CancellationToken ct = default(CancellationToken))
         {
-            var id = new Andastra.Parsing.Resource.ResourceIdentifier(areaResRef, Andastra.Parsing.Resource.ResourceType.GIT);
+            var id = new Andastra.Parsing.Resource.ResourceIdentifier(areaResRef, Andastra.Parsing.Common.ResourceType.GIT);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {

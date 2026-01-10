@@ -59,7 +59,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
             try
             {
                 byte[] data = _resourceProvider.GetResourceBytesAsync(
-                    new Andastra.Parsing.Resource.ResourceIdentifier(resRef, Andastra.Parsing.Resource.ResourceType.DLG),
+                    new Andastra.Parsing.Resource.ResourceIdentifier(resRef, Andastra.Parsing.Common.ResourceType.DLG),
                     System.Threading.CancellationToken.None).Result;
 
                 if (data == null || data.Length == 0)

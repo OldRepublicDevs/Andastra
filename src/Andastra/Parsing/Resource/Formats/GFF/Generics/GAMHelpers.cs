@@ -6,7 +6,7 @@ using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
 using static Andastra.Parsing.Common.GameExtensions;
 
-namespace Andastra.Parsing.Resource.Generics
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics
 {
     // Matching pattern from other GFF-based format helpers (IFOHelpers, AREHelpers, etc.)
     // Original: construct_gam and dismantle_gam functions for GAM file format

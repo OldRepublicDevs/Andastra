@@ -6,7 +6,7 @@ using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
 
-namespace Andastra.Parsing.Resource.Generics.CNV
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics.CNV
 {
     // Matching pattern from GAMAuto and other GFF-based format auto classes
     // Original: read_cnv, write_cnv, bytes_cnv functions for CNV conversation format

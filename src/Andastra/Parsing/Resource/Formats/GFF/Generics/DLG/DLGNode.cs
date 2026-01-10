@@ -7,7 +7,7 @@ using Andastra.Parsing;
 using Andastra.Core.Common;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Resource.Generics.DLG
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics.DLG
 {
     /// <summary>
     /// Represents a node in the dialog graph (either DLGEntry or DLGReply).

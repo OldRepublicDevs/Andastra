@@ -2,11 +2,21 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Extract;
+using Andastra.Parsing.Extract.Capsule;
 using Andastra.Parsing.Formats.Capsule;
+using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Formats.MDLData;
+using Andastra.Parsing.Formats.RIM;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
+using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Resource.Generics.ARE;
+using Andastra.Parsing.Resource.Generics.DLG;
+using Andastra.Parsing.Tools;
+using Andastra.Parsing.Logger;
 using JetBrains.Annotations;
 
 namespace Andastra.Parsing.Common

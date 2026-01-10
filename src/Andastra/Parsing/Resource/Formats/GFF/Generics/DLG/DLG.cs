@@ -7,7 +7,7 @@ using Andastra.Parsing.Common;
 using Andastra.Parsing.Resource;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Resource.Generics.DLG
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics.DLG
 {
     /// <summary>
     /// Type of computer interface for dialog.

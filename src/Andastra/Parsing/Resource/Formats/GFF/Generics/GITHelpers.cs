@@ -8,7 +8,7 @@ using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Logger;
 using Andastra.Parsing.Resource;
 
-namespace Andastra.Parsing.Resource.Generics
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/git.py
     // Original: construct_git and dismantle_git functions

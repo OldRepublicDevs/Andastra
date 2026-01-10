@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Common.Script;
+using Andastra.Parsing.Formats.NCS.Compiler;
 
 namespace Andastra.Script
 {

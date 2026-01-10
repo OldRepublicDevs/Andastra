@@ -9,7 +9,7 @@ using Andastra.Parsing.Resource;
 using Andastra.Utility;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Resource.Generics
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics
 {
     /// <summary>
     /// Stores the path data for a module.

@@ -6,7 +6,7 @@ using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
 
-namespace Andastra.Parsing.Resource.Generics.ARE
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics.ARE
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py
     // Original: construct_are and dismantle_are functions

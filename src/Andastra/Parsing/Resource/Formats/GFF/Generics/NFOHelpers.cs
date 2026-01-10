@@ -2,7 +2,7 @@ using System;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 
-namespace Andastra.Parsing.Resource.Generics
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics
 {
     // Engine references: swkotor2.exe:0x00707290, swkotor.exe:0x006c8e50 (NFO loading)
     // Engine references: swkotor2.exe:0x004eb750, swkotor.exe:0x004b3110 (NFO serialization)

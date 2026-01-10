@@ -6,7 +6,7 @@ using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
 
-namespace Andastra.Parsing.Resource.Generics
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics
 {
     // Matching pattern from other GFF-based format auto classes (IFO, ARE, etc.)
     // Original: read_gam, write_gam, bytes_gam functions for GAM file format

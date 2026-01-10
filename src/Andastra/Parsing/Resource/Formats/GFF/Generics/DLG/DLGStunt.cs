@@ -4,7 +4,7 @@ using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Resource.Generics.DLG
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics.DLG
 {
     /// <summary>
     /// Represents a stunt model in a dialog.

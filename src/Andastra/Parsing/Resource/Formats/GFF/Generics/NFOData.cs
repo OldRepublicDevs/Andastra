@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Andastra.Parsing.Common;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Resource.Generics
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics
 {
     /// <summary>
     /// High-level representation of Odyssey (KotOR/KotOR2) save metadata stored in <c>savenfo.res</c>.
