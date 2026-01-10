@@ -10,7 +10,7 @@ using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics.DLG;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Resource.Generics.CNV
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics.CNV
 {
     // Matching pattern from DLGHelper
     // Original: construct_cnv, dismantle_cnv, read_cnv, bytes_cnv functions for CNV conversation format

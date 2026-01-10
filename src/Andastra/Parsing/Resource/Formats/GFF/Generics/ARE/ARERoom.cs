@@ -1,6 +1,6 @@
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Resource.Generics.ARE
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics.ARE
 {
     /// <summary>
     /// Represents a room definition within an area.

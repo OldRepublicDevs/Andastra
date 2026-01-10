@@ -5,7 +5,7 @@ using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
 using static Andastra.Parsing.Common.GameExtensions;
 
-namespace Andastra.Parsing.Resource.Generics
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utp.py
     // Original: construct_utp and dismantle_utp functions

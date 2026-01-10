@@ -4,7 +4,7 @@ using Andastra.Parsing.Common;
 using Andastra.Parsing.Resource;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Resource.Generics
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics
 {
     /// <summary>
     /// Stores module information.

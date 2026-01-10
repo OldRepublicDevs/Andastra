@@ -3759,7 +3759,7 @@ namespace HolocronToolset.Tests.Editors
             // Select the root item in the tree
             // In Avalonia, we need to set the SelectedItem on the TreeView
             // For testing, we'll directly call LoadLinkIntoUI or trigger selection
-            // Since we can't easily set TreeView.SelectedItem without the actual tree structure,
+            // FIXME: Since we can't easily set TreeView.SelectedItem without the actual tree structure,
             // we'll manually trigger the load by calling OnNodeUpdate after setting UI values
 
             // Matching Python: editor.ui.condition1ResrefEdit.set_combo_box_text("cond1")

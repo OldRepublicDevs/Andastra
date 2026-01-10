@@ -591,7 +591,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             try
             {
                 // Load UTS template bytes
-                var utsResourceId = new ResourceIdentifier(utsResRef, Andastra.Parsing.Resource.ResourceType.UTS);
+                var utsResourceId = new ResourceIdentifier(utsResRef, Andastra.Parsing.Common.ResourceType.UTS);
                 byte[] utsData = await _resourceProvider.GetResourceBytesAsync(utsResourceId, System.Threading.CancellationToken.None);
 
                 if (utsData == null || utsData.Length == 0)
@@ -677,24 +677,24 @@ namespace Andastra.Runtime.MonoGame.Rendering
             }
         }
 
-        private Andastra.Parsing.Resource.ResourceType ConvertResourceType(ResourceType type)
+        private Andastra.Parsing.Common.ResourceType ConvertResourceType(ResourceType type)
         {
             switch (type)
             {
                 case ResourceType.Texture:
-                    return Andastra.Parsing.Resource.ResourceType.TPC;
+                    return Andastra.Parsing.Common.ResourceType.TPC;
                 case ResourceType.Model:
-                    return Andastra.Parsing.Resource.ResourceType.MDL;
+                    return Andastra.Parsing.Common.ResourceType.MDL;
                 case ResourceType.Animation:
-                    return Andastra.Parsing.Resource.ResourceType.MDL;
+                    return Andastra.Parsing.Common.ResourceType.MDL;
                 case ResourceType.Sound:
-                    return Andastra.Parsing.Resource.ResourceType.WAV;
+                    return Andastra.Parsing.Common.ResourceType.WAV;
                 case ResourceType.Script:
-                    return Andastra.Parsing.Resource.ResourceType.NCS;
+                    return Andastra.Parsing.Common.ResourceType.NCS;
                 case ResourceType.UTSTemplate:
-                    return Andastra.Parsing.Resource.ResourceType.UTS;
+                    return Andastra.Parsing.Common.ResourceType.UTS;
                 default:
-                    return Andastra.Parsing.Resource.ResourceType.INVALID;
+                    return Andastra.Parsing.Common.ResourceType.INVALID;
             }
         }
     }

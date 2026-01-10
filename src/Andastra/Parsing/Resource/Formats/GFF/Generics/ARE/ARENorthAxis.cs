@@ -1,4 +1,4 @@
-namespace Andastra.Parsing.Resource.Generics.ARE
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics.ARE
 {
     /// <summary>
     /// Enumeration for ARE map north axis orientation.

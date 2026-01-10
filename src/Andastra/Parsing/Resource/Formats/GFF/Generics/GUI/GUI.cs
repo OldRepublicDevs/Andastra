@@ -3,7 +3,7 @@ using Andastra.Parsing.Common;
 using Andastra.Parsing.Resource;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Resource.Generics.GUI
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics.GUI
 {
     /// <summary>
     /// A class representing a GUI resource in KotOR games.

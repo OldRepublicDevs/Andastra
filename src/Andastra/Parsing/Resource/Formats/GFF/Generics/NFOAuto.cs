@@ -4,7 +4,7 @@ using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
 
-namespace Andastra.Parsing.Resource.Generics
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics
 {
     /// <summary>
     /// Auto-reader/writer for Odyssey save metadata (<c>NFO</c>) stored as a GFF.

@@ -4,7 +4,7 @@ using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Resource.Generics.GUI
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics.GUI
 {
     /// <summary>
     /// Base class for all GUI controls.

@@ -97,7 +97,7 @@ namespace Andastra.Runtime.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new Andastra.Parsing.Resource.ResourceIdentifier(templateResRef, Andastra.Parsing.Resource.ResourceType.UTC);
+            var id = new Andastra.Parsing.Resource.ResourceIdentifier(templateResRef, Andastra.Parsing.Common.ResourceType.UTC);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -117,7 +117,7 @@ namespace Andastra.Runtime.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new Andastra.Parsing.Resource.ResourceIdentifier(templateResRef, Andastra.Parsing.Resource.ResourceType.UTP);
+            var id = new Andastra.Parsing.Resource.ResourceIdentifier(templateResRef, Andastra.Parsing.Common.ResourceType.UTP);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -139,7 +139,7 @@ namespace Andastra.Runtime.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new Andastra.Parsing.Resource.ResourceIdentifier(templateResRef, Andastra.Parsing.Resource.ResourceType.UTD);
+            var id = new Andastra.Parsing.Resource.ResourceIdentifier(templateResRef, Andastra.Parsing.Common.ResourceType.UTD);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -161,7 +161,7 @@ namespace Andastra.Runtime.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new Andastra.Parsing.Resource.ResourceIdentifier(templateResRef, Andastra.Parsing.Resource.ResourceType.UTT);
+            var id = new Andastra.Parsing.Resource.ResourceIdentifier(templateResRef, Andastra.Parsing.Common.ResourceType.UTT);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -183,7 +183,7 @@ namespace Andastra.Runtime.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new Andastra.Parsing.Resource.ResourceIdentifier(templateResRef, Andastra.Parsing.Resource.ResourceType.UTW);
+            var id = new Andastra.Parsing.Resource.ResourceIdentifier(templateResRef, Andastra.Parsing.Common.ResourceType.UTW);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -205,7 +205,7 @@ namespace Andastra.Runtime.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new Andastra.Parsing.Resource.ResourceIdentifier(templateResRef, Andastra.Parsing.Resource.ResourceType.UTS);
+            var id = new Andastra.Parsing.Resource.ResourceIdentifier(templateResRef, Andastra.Parsing.Common.ResourceType.UTS);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -227,7 +227,7 @@ namespace Andastra.Runtime.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new Andastra.Parsing.Resource.ResourceIdentifier(templateResRef, Andastra.Parsing.Resource.ResourceType.UTE);
+            var id = new Andastra.Parsing.Resource.ResourceIdentifier(templateResRef, Andastra.Parsing.Common.ResourceType.UTE);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -249,7 +249,7 @@ namespace Andastra.Runtime.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new Andastra.Parsing.Resource.ResourceIdentifier(templateResRef, Andastra.Parsing.Resource.ResourceType.UTM);
+            var id = new Andastra.Parsing.Resource.ResourceIdentifier(templateResRef, Andastra.Parsing.Common.ResourceType.UTM);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {

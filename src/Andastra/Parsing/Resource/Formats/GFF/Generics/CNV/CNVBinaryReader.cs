@@ -4,7 +4,7 @@ using Andastra.Parsing;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
 
-namespace Andastra.Parsing.Resource.Generics.CNV
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics.CNV
 {
     // Matching pattern from GFFBinaryReader and other GFF-based format readers
     // Original: CNVBinaryReader for reading CNV conversation files

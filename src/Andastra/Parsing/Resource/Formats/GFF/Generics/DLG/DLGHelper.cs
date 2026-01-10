@@ -9,7 +9,7 @@ using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics.CNV;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Resource.Generics.DLG
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics.DLG
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/gff.py
     // Original: construct_dlg, dismantle_dlg, read_dlg, bytes_dlg functions

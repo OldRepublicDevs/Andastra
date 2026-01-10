@@ -9,7 +9,7 @@ using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Graphics.Common.Structs;
-using ResourceType = Andastra.Parsing.Resource.ResourceType;
+using ResourceType = Andastra.Parsing.Common.ResourceType;
 
 namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
 {
@@ -504,7 +504,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
 
                 // Try loading DDS texture from resource provider
                 // Based on DragonAge2.exe: DDS textures are stored with ResourceType.DDS in game archives
-                ResourceIdentifier ddsId = new ResourceIdentifier(resourceName, Andastra.Parsing.Resource.ResourceType.DDS);
+                ResourceIdentifier ddsId = new ResourceIdentifier(resourceName, Andastra.Parsing.Common.ResourceType.DDS);
                 try
                 {
                     Task<bool> existsTask = _resourceProvider.ExistsAsync(ddsId, CancellationToken.None);

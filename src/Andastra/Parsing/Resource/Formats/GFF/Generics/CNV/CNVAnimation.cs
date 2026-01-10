@@ -2,7 +2,7 @@ using System;
 using Andastra.Parsing;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Resource.Generics.CNV
+namespace Andastra.Parsing.Resource.Formats.GFF.Generics.CNV
 {
     /// <summary>
     /// Represents a unit of animation executed during a conversation node.
