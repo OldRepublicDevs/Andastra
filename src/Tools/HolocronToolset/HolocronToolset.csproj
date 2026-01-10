@@ -71,13 +71,13 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Andastra\Andastra.csproj" />
-    <ProjectReference Include="..\..\Andastra\Parsing\Minimal\Andastra.Parsing.Minimal.csproj" />
+    <ProjectReference Include="..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
   </ItemGroup>
   <!-- Resources -->
   <ItemGroup>
     <AvaloniaResource Include="Resources\**" />
   </ItemGroup>
-  <ItemGroup />
+  <!-- Exclude non-code directories from None and EmbeddedResource items -->
   <ItemGroup>
     <None Remove="Data\**" />
     <None Remove="Windows\**" />
@@ -90,12 +90,4 @@
     <EmbeddedResource Remove="Editors\**" />
     <EmbeddedResource Remove="Dialogs\**" />
   </ItemGroup>
-  <ItemGroup />
-  <ItemGroup></ItemGroup>
-  <ItemGroup />
-  <ItemGroup />
-  <ItemGroup />
-  <ItemGroup />
-  <ItemGroup />
-  <ItemGroup />
 </Project>
