@@ -4,6 +4,10 @@
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <!-- For .NET 9.0, these packages are built into the framework - prefer framework assemblies -->
     <AssetTargetFallback>$(AssetTargetFallback);net9.0</AssetTargetFallback>
+    <!-- Suppress NU1102 for System.Text.RegularExpressions and System.Threading.Tasks.Extensions -->
+    <!-- Microsoft.Extensions.* 10.0.1 requests >= 10.0.0 which doesn't exist, but we explicitly provide correct versions (4.3.1, 4.6.3) -->
+    <!-- These packages are built into .NET 9.0, so this is a valid suppression -->
+    <NoWarn>$(NoWarn);NU1102</NoWarn>
   </PropertyGroup>
   
   <!-- Override transitive dependency versions - Microsoft.Extensions.* 10.0.1 requests >= 10.0.0 which doesn't exist -->
