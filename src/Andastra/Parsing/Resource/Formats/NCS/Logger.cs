@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Logger
+namespace Andastra.Parsing.Resource.Formats.NCS
 {
     /// <summary>
     /// Stub logger implementation for NCS compiler to avoid circular dependencies
     /// </summary>
-    public class PatchLogger
+    public class NcsPatchLogger
     {
         public void AddError(string message)
         {
