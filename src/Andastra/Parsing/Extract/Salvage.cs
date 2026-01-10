@@ -1,4 +1,3 @@
-extern alias ResourceNCS; // Must be first - before all using statements
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -7,42 +6,39 @@ using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Extract;
 using Andastra.Parsing.Extract.Capsule;
-using Andastra.Parsing.Formats.BWM;
-using Andastra.Parsing.Formats.Capsule;
-using Andastra.Parsing.Formats.ERF;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.LIP;
-using Andastra.Parsing.Formats.LTR;
-using Andastra.Parsing.Formats.MDL;
-using Andastra.Parsing.Formats.MDLData;
-// Removed: using Andastra.Parsing.Formats.NCS; // Causes type conflict with Resource.NCS project
-using NCSResourceNCS = ResourceNCS::Andastra.Parsing.Formats.NCS.NCS;
-using NCSAutoResourceNCS = ResourceNCS::Andastra.Parsing.Formats.NCS.NCSAuto;
-using Andastra.Parsing.Formats.RIM;
-using Andastra.Parsing.Formats.SSF;
-using Andastra.Parsing.Formats.TLK;
-using Andastra.Parsing.Formats.TPC;
-using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Formats.VIS;
+using Andastra.Parsing.Resource.Formats.BWM;
+using Andastra.Parsing.Resource.Formats.ERF;
+using Andastra.Parsing.Resource.Formats.GFF;
+using Andastra.Parsing.Resource.Formats.LIP;
+using Andastra.Parsing.Resource.Formats.LTR;
+using Andastra.Parsing.Resource.Formats.MDL;
+using Andastra.Parsing.Resource.Formats.MDLData;
+// Removed: using Andastra.Parsing.Resource.Formats.NCS; // Causes type conflict with Resource.NCS project
+using Andastra.Parsing.Resource.Formats.RIM;
+using Andastra.Parsing.Resource.Formats.SSF;
+using Andastra.Parsing.Resource.Formats.TLK;
+using Andastra.Parsing.Resource.Formats.TPC;
+using Andastra.Parsing.Resource.Formats.TwoDA;
+using Andastra.Parsing.Resource.Formats.VIS;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Formats.LYT;
-using Andastra.Parsing.Resource.Generics;
-using Andastra.Parsing.Resource.Generics.ARE;
-using Andastra.Parsing.Resource.Generics.DLG;
-using Andastra.Parsing.Resource.Generics.UTC;
-using Andastra.Parsing.Resource.Generics.UTI;
-using Andastra.Parsing.Resource.Generics.UTM;
+using Andastra.Parsing.Resource.Formats.GFF.Generics;
+using Andastra.Parsing.Resource.Formats.GFF.Generics.ARE;
+using Andastra.Parsing.Resource.Formats.GFF.Generics.DLG;
+using Andastra.Parsing.Resource.Formats.GFF.Generics.UTC;
+using Andastra.Parsing.Resource.Formats.GFF.Generics.UTI;
+using Andastra.Parsing.Resource.Formats.GFF.Generics.UTM;
 // using Andastra.Parsing.Tools; // Removed to break circular dependency, using fully qualified names instead
 using JetBrains.Annotations;
 
 namespace Andastra.Parsing.Extract
 {
-    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/salvage.py
+    // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/salvage.py
     // Original: Handles resource data validation/salvage strategies
     [PublicAPI]
     public static class Salvage
     {
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/salvage.py:87-143
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/salvage.py:87-143
         // Original: def validate_capsule(...)
         [CanBeNull]
         public static object ValidateCapsule(
@@ -148,7 +144,7 @@ namespace Andastra.Parsing.Extract
             return newErf ?? (object)newRim;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/salvage.py:146-208
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/salvage.py:146-208
         // Original: def validate_resource(...)
         [CanBeNull]
         public static byte[] ValidateResource(
@@ -195,7 +191,7 @@ namespace Andastra.Parsing.Extract
                 }
 
                 // Validate non-GFF resource types using salvage strategies
-                // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/salvage.py:146-208
+                // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/salvage.py:146-208
                 // Original: validate_resource function provides salvage strategies for each resource type
                 Dictionary<ResourceType, Func<FileResource, object>> strategies = GetSalvageStrategies();
                 if (strategies.ContainsKey(restype))
@@ -306,7 +302,7 @@ namespace Andastra.Parsing.Extract
             return null;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/salvage.py:211-254
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/salvage.py:211-254
         // Original: def validate_gff(...)
         private static byte[] ValidateGff(GFF gff, ResourceType restype)
         {
@@ -328,14 +324,14 @@ namespace Andastra.Parsing.Extract
             }
             if (restype == ResourceType.UTC)
             {
-                var utc = Andastra.Parsing.Resource.Generics.UTC.UTCHelpers.ConstructUtc(gff);
-                return GFFAuto.BytesGff(Andastra.Parsing.Resource.Generics.UTC.UTCHelpers.DismantleUtc(utc), ResourceType.GFF);
+                var utc = Andastra.Parsing.Resource.Formats.GFF.Generics.UTC.UTCHelpers.ConstructUtc(gff);
+                return GFFAuto.BytesGff(Andastra.Parsing.Resource.Formats.GFF.Generics.UTC.UTCHelpers.DismantleUtc(utc), ResourceType.GFF);
             }
             // Other resource types would need their construct/dismantle functions ported
             return GFFAuto.BytesGff(gff, ResourceType.GFF);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/salvage.py:257-302
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/salvage.py:257-302
         // Original: def _load_as_erf_rim(...)
         [CanBeNull]
         private static object LoadAsErfRim(object capsuleObj)
@@ -344,7 +340,7 @@ namespace Andastra.Parsing.Extract
             {
                 try
                 {
-                    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/salvage.py:262
+                    // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/salvage.py:262
                     // Original: return capsule_obj.as_cached()
                     return lazyCapsule.AsCached();
                 }
@@ -448,7 +444,7 @@ namespace Andastra.Parsing.Extract
         /// Gets salvage strategies for different resource types.
         /// </summary>
         /// <remarks>
-        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/salvage.py:146-208
+        /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/salvage.py:146-208
         /// Original: validate_resource function provides salvage strategies for each resource type
         /// Each strategy attempts to read and re-serialize the resource to validate and repair corrupted data
         /// </remarks>

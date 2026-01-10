@@ -1,21 +1,17 @@
-extern alias ResourceNCS;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Common.Script;
-using NCS = ResourceNCS::Andastra.Parsing.Formats.NCS.NCS;
-using NCSAuto = ResourceNCS::Andastra.Parsing.Formats.NCS.NCSAuto;
-using NCSInstruction = ResourceNCS::Andastra.Parsing.Formats.NCS.NCSInstruction;
 
 namespace Andastra.Parsing.Tools
 {
-    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/scripts.py
+    // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/scripts.py
     // Original: Script utility functions for NCS bytecode manipulation
     public static class Scripts
     {
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/scripts.py:26-58
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/scripts.py:26-58
         // Original: def decompile_ncs_to_nss(ncs_path: Path, output_path: Path | None = None, *, game: Game, functions: list[ScriptFunction] | None = None, constants: list[ScriptConstant] | None = None) -> str:
         public static string DecompileNcsToNss(string ncsPath, string outputPath = null, BioWareGame game = BioWareGame.K1, List<ScriptFunction> functions = null, List<ScriptConstant> constants = null)
         {
@@ -30,7 +26,7 @@ namespace Andastra.Parsing.Tools
             return source;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/scripts.py:61-111
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/scripts.py:61-111
         // Original: def disassemble_ncs(ncs_path: Path, output_path: Path | None = None, *, game: Game | None = None, pretty: bool = True) -> str:
         public static string DisassembleNcs(string ncsPath, string outputPath = null, BioWareGame? game = null, bool pretty = true)
         {
@@ -77,7 +73,7 @@ namespace Andastra.Parsing.Tools
             return result;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/scripts.py:114-147
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/scripts.py:114-147
         // Original: def ncs_to_text(ncs_path: Path, output_path: Path | None = None, *, mode: str = "decompile", game: Game | None = None) -> str:
         public static string NcsToText(string ncsPath, string outputPath = null, string mode = "decompile", BioWareGame? game = null)
         {

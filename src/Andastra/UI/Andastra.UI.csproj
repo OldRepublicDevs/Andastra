@@ -16,5 +16,8 @@
     <PackageReference Include="Avalonia.Diagnostics" Version="11.3.10" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.10" />
     <PackageReference Include="Myra" Version="1.5.10" />
+    <!-- Explicitly resolve transitive dependencies from Microsoft.Extensions.* 10.0.1 -->
+    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
   </ItemGroup>
 </Project>
