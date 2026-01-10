@@ -10,6 +10,10 @@
     <!-- Use RestoreNoWarn to suppress restore errors (NU1102 is a restore error, not a warning) -->
     <RestoreNoWarn>$(RestoreNoWarn);NU1102</RestoreNoWarn>
     <NoWarn>$(NoWarn);NU1102</NoWarn>
+    <!-- Global override: force Microsoft.Extensions.* to use version 9.0.0 which doesn't have problematic dependencies -->
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="9.0.0" />
   </PropertyGroup>
   
   <!-- Override transitive dependency versions - Microsoft.Extensions.* 10.0.1 requests >= 10.0.0 which doesn't exist -->
