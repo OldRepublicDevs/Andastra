@@ -8,11 +8,9 @@ using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Extract;
 using Andastra.Parsing.Extract.Capsule;
-using Andastra.Parsing.Installation;
+using Andastra.Parsing.Extract.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Runtime.Content.Interfaces;
-using KotorSearchLocation = Andastra.Parsing.Installation.SearchLocation;
-using OdysseySearchLocation = Andastra.Runtime.Content.Interfaces.SearchLocation;
 
 namespace Andastra.Runtime.Content.ResourceProviders
 {
@@ -108,14 +106,14 @@ namespace Andastra.Runtime.Content.ResourceProviders
 
         public async Task<IReadOnlyList<Andastra.Runtime.Content.Interfaces.LocationResult>> LocateAsync(
             ResourceIdentifier id,
-            OdysseySearchLocation[] order,
+            Andastra.Runtime.Content.Interfaces.SearchLocation[] order,
             CancellationToken ct)
         {
             return await Task.Run(() =>
             {
                 ct.ThrowIfCancellationRequested();
 
-                KotorSearchLocation[] kotorOrder = order != null
+                Andastra.Parsing.Extract.Installation.SearchLocation[] kotorOrder = order != null
                     ? order.Select(ConvertSearchLocation).Where(l => l.HasValue).Select(l => l.Value).ToArray()
                     : null;
 
@@ -477,40 +475,40 @@ namespace Andastra.Runtime.Content.ResourceProviders
 
         #region Type Conversion
 
-        private static KotorSearchLocation? ConvertSearchLocation(OdysseySearchLocation location)
+        private static Andastra.Parsing.Extract.Installation.SearchLocation? ConvertSearchLocation(Andastra.Runtime.Content.Interfaces.SearchLocation location)
         {
             switch (location)
             {
-                case OdysseySearchLocation.Override: return KotorSearchLocation.OVERRIDE;
-                case OdysseySearchLocation.Module: return KotorSearchLocation.MODULES;
-                case OdysseySearchLocation.Chitin: return KotorSearchLocation.CHITIN;
-                case OdysseySearchLocation.TexturePacks: return KotorSearchLocation.TEXTURES_TPA;
+                case Andastra.Runtime.Content.Interfaces.SearchLocation.Override: return Andastra.Parsing.Extract.Installation.SearchLocation.OVERRIDE;
+                case Andastra.Runtime.Content.Interfaces.SearchLocation.Module: return Andastra.Parsing.Extract.Installation.SearchLocation.MODULES;
+                case Andastra.Runtime.Content.Interfaces.SearchLocation.Chitin: return Andastra.Parsing.Extract.Installation.SearchLocation.CHITIN;
+                case Andastra.Runtime.Content.Interfaces.SearchLocation.TexturePacks: return Andastra.Parsing.Extract.Installation.SearchLocation.TEXTURES_TPA;
                 default: return null;
             }
         }
 
-        private static OdysseySearchLocation ConvertBackSearchLocation(string path)
+        private static Andastra.Runtime.Content.Interfaces.SearchLocation ConvertBackSearchLocation(string path)
         {
             if (string.IsNullOrEmpty(path))
             {
-                return OdysseySearchLocation.Chitin;
+                return Andastra.Runtime.Content.Interfaces.SearchLocation.Chitin;
             }
 
             string lower = path.ToLowerInvariant();
             if (lower.Contains("override"))
             {
-                return OdysseySearchLocation.Override;
+                return Andastra.Runtime.Content.Interfaces.SearchLocation.Override;
             }
             if (lower.Contains("modules"))
             {
-                return OdysseySearchLocation.Module;
+                return Andastra.Runtime.Content.Interfaces.SearchLocation.Module;
             }
             if (lower.Contains("texturepacks"))
             {
-                return OdysseySearchLocation.TexturePacks;
+                return Andastra.Runtime.Content.Interfaces.SearchLocation.TexturePacks;
             }
 
-            return OdysseySearchLocation.Chitin;
+            return Andastra.Runtime.Content.Interfaces.SearchLocation.Chitin;
         }
 
         #endregion
