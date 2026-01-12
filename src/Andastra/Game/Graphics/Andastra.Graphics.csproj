@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateGlobalUsings>false</GenerateGlobalUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>Andastra.Graphics</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\Andastra.Core.csproj" />
+    <ProjectReference Include="..\..\Parsing\Andastra.Parsing.csproj" />
+    <ProjectReference Include="..\..\Runtime\Andastra.Runtime.csproj" />
+    <ProjectReference Include="..\..\Utility\Andastra.Utility.csproj" />
+    <!-- Explicitly resolve transitive dependencies from Microsoft.Extensions.* 10.0.1 -->
+    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" />
+    <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
+    <PackageReference Include="Stride.Core.Assets" Version="1.21.0" />
+    <PackageReference Include="Stride.Core.Mathematics" Version="1.21.0" />
+    <PackageReference Include="Stride.Core.Serialization" Version="1.21.0" />
+    <PackageReference Include="Stride.Engine" Version="1.21.0" />
+    <PackageReference Include="Stride.Graphics" Version="1.21.0" />
+    <PackageReference Include="Stride.Input" Version="1.21.0" />
+    
+  </ItemGroup>
+</Project>
