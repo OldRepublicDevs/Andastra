@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateGlobalUsings>false</GenerateGlobalUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>Andastra.Runtime</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Core\Andastra.Core.csproj" />
+    <ProjectReference Include="..\Parsing\Andastra.Parsing.csproj" />
+    <ProjectReference Include="..\Utility\Andastra.Utility.csproj" />
+    <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
+    <!-- Explicitly resolve transitive dependencies from Microsoft.Extensions.* 10.0.1 -->
+    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
+  </ItemGroup>
+</Project>

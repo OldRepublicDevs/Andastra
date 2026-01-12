@@ -1,7 +1,6 @@
 using Andastra.Runtime.Graphics;
 using Stride.Input;
-using GraphicsKeys = Andastra.Runtime.Graphics.Keys;
-using GraphicsVector2 = Andastra.Runtime.Graphics.Vector2;
+using Keys = Andastra.Runtime.Graphics.Keys;
 
 namespace Andastra.Runtime.Stride.Graphics
 {
@@ -55,27 +54,27 @@ namespace Andastra.Runtime.Stride.Graphics
             _inputManager = inputManager;
         }
 
-        public bool IsKeyDown(GraphicsKeys key)
+        public bool IsKeyDown(Keys key)
         {
             var strideKey = ConvertKey(key);
             return _inputManager.IsKeyDown(strideKey);
         }
 
-        public bool IsKeyUp(GraphicsKeys key)
+        public bool IsKeyUp(Keys key)
         {
             var strideKey = ConvertKey(key);
             // Stride InputManager doesn't have IsKeyUp, use !IsKeyDown instead
             return !_inputManager.IsKeyDown(strideKey);
         }
 
-        public GraphicsKeys[] GetPressedKeys()
+        public Keys[] GetPressedKeys()
         {
             // Stride doesn't have a direct GetPressedKeys method
             // We'll need to check all keys manually
-            var pressedKeys = new System.Collections.Generic.List<GraphicsKeys>();
-            foreach (GraphicsKeys key in System.Enum.GetValues(typeof(GraphicsKeys)))
+            var pressedKeys = new System.Collections.Generic.List<Keys>();
+            foreach (Keys key in System.Enum.GetValues(typeof(Keys)))
             {
-                if (key != GraphicsKeys.None && IsKeyDown(key))
+                if (key != Keys.None && IsKeyDown(key))
                 {
                     pressedKeys.Add(key);
                 }
@@ -83,138 +82,138 @@ namespace Andastra.Runtime.Stride.Graphics
             return pressedKeys.ToArray();
         }
 
-        private global::Stride.Input.Keys ConvertKey(GraphicsKeys key)
+        private global::Stride.Input.Keys ConvertKey(Keys key)
         {
             // Map our Keys enum to Stride's Keys enum
             switch (key)
             {
-                case GraphicsKeys.None:
+                case Keys.None:
                     return global::Stride.Input.Keys.None;
-                case GraphicsKeys.Back:
+                case Keys.Back:
                     return global::Stride.Input.Keys.Back;
-                case GraphicsKeys.Tab:
+                case Keys.Tab:
                     return global::Stride.Input.Keys.Tab;
-                case GraphicsKeys.Enter:
+                case Keys.Enter:
                     return global::Stride.Input.Keys.Enter;
-                case GraphicsKeys.Escape:
+                case Keys.Escape:
                     return global::Stride.Input.Keys.Escape;
-                case GraphicsKeys.Space:
+                case Keys.Space:
                     return global::Stride.Input.Keys.Space;
-                case GraphicsKeys.Up:
+                case Keys.Up:
                     return global::Stride.Input.Keys.Up;
-                case GraphicsKeys.Down:
+                case Keys.Down:
                     return global::Stride.Input.Keys.Down;
-                case GraphicsKeys.Left:
+                case Keys.Left:
                     return global::Stride.Input.Keys.Left;
-                case GraphicsKeys.Right:
+                case Keys.Right:
                     return global::Stride.Input.Keys.Right;
-                case GraphicsKeys.A:
+                case Keys.A:
                     return global::Stride.Input.Keys.A;
-                case GraphicsKeys.B:
+                case Keys.B:
                     return global::Stride.Input.Keys.B;
-                case GraphicsKeys.C:
+                case Keys.C:
                     return global::Stride.Input.Keys.C;
-                case GraphicsKeys.D:
+                case Keys.D:
                     return global::Stride.Input.Keys.D;
-                case GraphicsKeys.E:
+                case Keys.E:
                     return global::Stride.Input.Keys.E;
-                case GraphicsKeys.F:
+                case Keys.F:
                     return global::Stride.Input.Keys.F;
-                case GraphicsKeys.G:
+                case Keys.G:
                     return global::Stride.Input.Keys.G;
-                case GraphicsKeys.H:
+                case Keys.H:
                     return global::Stride.Input.Keys.H;
-                case GraphicsKeys.I:
+                case Keys.I:
                     return global::Stride.Input.Keys.I;
-                case GraphicsKeys.J:
+                case Keys.J:
                     return global::Stride.Input.Keys.J;
-                case GraphicsKeys.K:
+                case Keys.K:
                     return global::Stride.Input.Keys.K;
-                case GraphicsKeys.L:
+                case Keys.L:
                     return global::Stride.Input.Keys.L;
-                case GraphicsKeys.M:
+                case Keys.M:
                     return global::Stride.Input.Keys.M;
-                case GraphicsKeys.N:
+                case Keys.N:
                     return global::Stride.Input.Keys.N;
-                case GraphicsKeys.O:
+                case Keys.O:
                     return global::Stride.Input.Keys.O;
-                case GraphicsKeys.P:
+                case Keys.P:
                     return global::Stride.Input.Keys.P;
-                case GraphicsKeys.Q:
+                case Keys.Q:
                     return global::Stride.Input.Keys.Q;
-                case GraphicsKeys.R:
+                case Keys.R:
                     return global::Stride.Input.Keys.R;
-                case GraphicsKeys.S:
+                case Keys.S:
                     return global::Stride.Input.Keys.S;
-                case GraphicsKeys.T:
+                case Keys.T:
                     return global::Stride.Input.Keys.T;
-                case GraphicsKeys.U:
+                case Keys.U:
                     return global::Stride.Input.Keys.U;
-                case GraphicsKeys.V:
+                case Keys.V:
                     return global::Stride.Input.Keys.V;
-                case GraphicsKeys.W:
+                case Keys.W:
                     return global::Stride.Input.Keys.W;
-                case GraphicsKeys.X:
+                case Keys.X:
                     return global::Stride.Input.Keys.X;
-                case GraphicsKeys.Y:
+                case Keys.Y:
                     return global::Stride.Input.Keys.Y;
-                case GraphicsKeys.Z:
+                case Keys.Z:
                     return global::Stride.Input.Keys.Z;
-                case GraphicsKeys.D0:
+                case Keys.D0:
                     return global::Stride.Input.Keys.D0;
-                case GraphicsKeys.D1:
+                case Keys.D1:
                     return global::Stride.Input.Keys.D1;
-                case GraphicsKeys.D2:
+                case Keys.D2:
                     return global::Stride.Input.Keys.D2;
-                case GraphicsKeys.D3:
+                case Keys.D3:
                     return global::Stride.Input.Keys.D3;
-                case GraphicsKeys.D4:
+                case Keys.D4:
                     return global::Stride.Input.Keys.D4;
-                case GraphicsKeys.D5:
+                case Keys.D5:
                     return global::Stride.Input.Keys.D5;
-                case GraphicsKeys.D6:
+                case Keys.D6:
                     return global::Stride.Input.Keys.D6;
-                case GraphicsKeys.D7:
+                case Keys.D7:
                     return global::Stride.Input.Keys.D7;
-                case GraphicsKeys.D8:
+                case Keys.D8:
                     return global::Stride.Input.Keys.D8;
-                case GraphicsKeys.D9:
+                case Keys.D9:
                     return global::Stride.Input.Keys.D9;
-                case GraphicsKeys.F1:
+                case Keys.F1:
                     return global::Stride.Input.Keys.F1;
-                case GraphicsKeys.F2:
+                case Keys.F2:
                     return global::Stride.Input.Keys.F2;
-                case GraphicsKeys.F3:
+                case Keys.F3:
                     return global::Stride.Input.Keys.F3;
-                case GraphicsKeys.F4:
+                case Keys.F4:
                     return global::Stride.Input.Keys.F4;
-                case GraphicsKeys.F5:
+                case Keys.F5:
                     return global::Stride.Input.Keys.F5;
-                case GraphicsKeys.F6:
+                case Keys.F6:
                     return global::Stride.Input.Keys.F6;
-                case GraphicsKeys.F7:
+                case Keys.F7:
                     return global::Stride.Input.Keys.F7;
-                case GraphicsKeys.F8:
+                case Keys.F8:
                     return global::Stride.Input.Keys.F8;
-                case GraphicsKeys.F9:
+                case Keys.F9:
                     return global::Stride.Input.Keys.F9;
-                case GraphicsKeys.F10:
+                case Keys.F10:
                     return global::Stride.Input.Keys.F10;
-                case GraphicsKeys.F11:
+                case Keys.F11:
                     return global::Stride.Input.Keys.F11;
-                case GraphicsKeys.F12:
+                case Keys.F12:
                     return global::Stride.Input.Keys.F12;
-                case GraphicsKeys.LeftControl:
+                case Keys.LeftControl:
                     return global::Stride.Input.Keys.LeftCtrl;
-                case GraphicsKeys.RightControl:
+                case Keys.RightControl:
                     return global::Stride.Input.Keys.RightCtrl;
-                case GraphicsKeys.LeftShift:
+                case Keys.LeftShift:
                     return global::Stride.Input.Keys.LeftShift;
-                case GraphicsKeys.RightShift:
+                case Keys.RightShift:
                     return global::Stride.Input.Keys.RightShift;
-                case GraphicsKeys.LeftAlt:
+                case Keys.LeftAlt:
                     return global::Stride.Input.Keys.LeftAlt;
-                case GraphicsKeys.RightAlt:
+                case Keys.RightAlt:
                     return global::Stride.Input.Keys.RightAlt;
                 default:
                     return global::Stride.Input.Keys.None;
@@ -236,12 +235,12 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public int X => (int)_inputManager.MousePosition.X;
         public int Y => (int)_inputManager.MousePosition.Y;
-        public GraphicsVector2 Position => new GraphicsVector2(_inputManager.MousePosition.X, _inputManager.MousePosition.Y);
+        public Vector2 Position => new Vector2(_inputManager.MousePosition.X, _inputManager.MousePosition.Y);
         public int ScrollWheelValue => (int)_inputManager.MouseWheelDelta;
 
-        public ButtonState LeftButton => _inputManager.IsMouseButtonDown(global::Stride.Input.MouseButton.Left) ? ButtonState.Pressed : ButtonState.Released;
-        public ButtonState RightButton => _inputManager.IsMouseButtonDown(global::Stride.Input.MouseButton.Right) ? ButtonState.Pressed : ButtonState.Released;
-        public ButtonState MiddleButton => _inputManager.IsMouseButtonDown(global::Stride.Input.MouseButton.Middle) ? ButtonState.Pressed : ButtonState.Released;
+        public ButtonState LeftButton => _inputManager.IsMouseButtonDown(MouseButton.Left) ? ButtonState.Pressed : ButtonState.Released;
+        public ButtonState RightButton => _inputManager.IsMouseButtonDown(MouseButton.Right) ? ButtonState.Pressed : ButtonState.Released;
+        public ButtonState MiddleButton => _inputManager.IsMouseButtonDown(MouseButton.Middle) ? ButtonState.Pressed : ButtonState.Released;
         public ButtonState XButton1 => _inputManager.IsMouseButtonDown(global::Stride.Input.MouseButton.Extended1) ? ButtonState.Pressed : ButtonState.Released;
         public ButtonState XButton2 => _inputManager.IsMouseButtonDown(global::Stride.Input.MouseButton.Extended2) ? ButtonState.Pressed : ButtonState.Released;
 
@@ -249,22 +248,22 @@ namespace Andastra.Runtime.Stride.Graphics
         {
             switch (button)
             {
-                case Andastra.Runtime.Graphics.MouseButton.Left:
-                    return _inputManager.IsMouseButtonDown(global::Stride.Input.MouseButton.Left);
-                case Andastra.Runtime.Graphics.MouseButton.Right:
-                    return _inputManager.IsMouseButtonDown(global::Stride.Input.MouseButton.Right);
-                case Andastra.Runtime.Graphics.MouseButton.Middle:
-                    return _inputManager.IsMouseButtonDown(global::Stride.Input.MouseButton.Middle);
-                case Andastra.Runtime.Graphics.MouseButton.XButton1:
+                case MouseButton.Left:
+                    return _inputManager.IsMouseButtonDown(MouseButton.Left);
+                case MouseButton.Right:
+                    return _inputManager.IsMouseButtonDown(MouseButton.Right);
+                case MouseButton.Middle:
+                    return _inputManager.IsMouseButtonDown(MouseButton.Middle);
+                case MouseButton.XButton1:
                     return _inputManager.IsMouseButtonDown(global::Stride.Input.MouseButton.Extended1);
-                case Andastra.Runtime.Graphics.MouseButton.XButton2:
+                case MouseButton.XButton2:
                     return _inputManager.IsMouseButtonDown(global::Stride.Input.MouseButton.Extended2);
                 default:
                     return false;
             }
         }
 
-        public bool IsButtonUp(Andastra.Runtime.Graphics.MouseButton button)
+        public bool IsButtonUp(MouseButton button)
         {
             return !IsButtonDown(button);
         }
