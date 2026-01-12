@@ -5,8 +5,8 @@ using System.Runtime.InteropServices;
 using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
 using Microsoft.Xna.Framework;
-using XnaVector3 = Microsoft.Xna.Framework.Vector3;
-using XnaVector3 = Microsoft.Xna.Framework.Vector3;
+using XnaVector3 = Microsoft.Xna.Framework.XnaVector3;
+using XnaVector3 = Microsoft.Xna.Framework.XnaVector3;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Andastra.Runtime.MonoGame.Lighting
@@ -50,25 +50,25 @@ namespace Andastra.Runtime.MonoGame.Lighting
         /// <param name="shadowMap">Optional shadow map for soft shadow calculations (null if not available)</param>
         /// <param name="lightSpaceMatrix">Light space transformation matrix for shadow mapping</param>
         /// <returns>Lighting contribution (diffuse + specular) from the area light</returns>
-        public static System.Numerics.Vector3 CalculateAreaLightContribution(
+        public static System.Numerics.XnaVector3 CalculateAreaLightContribution(
             IDynamicLight light,
-            System.Numerics.Vector3 surfacePosition,
-            System.Numerics.Vector3 surfaceNormal,
-            System.Numerics.Vector3 viewDirection,
+            System.Numerics.XnaVector3 surfacePosition,
+            System.Numerics.XnaVector3 surfaceNormal,
+            System.Numerics.XnaVector3 viewDirection,
             IntPtr shadowMap,
             System.Numerics.Matrix4x4 lightSpaceMatrix)
         {
             if (light == null || light.Type != LightType.Area || !light.Enabled)
             {
-                return Vector3.Zero;
+                return XnaVector3.Zero;
             }
 
             // Calculate area light surface corners and orientation
             // Area lights are rectangular surfaces defined by position, direction, width, and height
             // Based on daorigins.exe: Area lights are oriented rectangles in 3D space
-            Vector3 lightForward = Vector3.Normalize(-light.Direction);
-            Vector3 lightRight = CalculateRightVector(lightForward);
-            Vector3 lightUp = Vector3.Cross(lightRight, lightForward);
+            XnaVector3 lightForward = XnaVector3.Normalize(-light.Direction);
+            XnaVector3 lightRight = CalculateRightVector(lightForward);
+            XnaVector3 lightUp = XnaVector3.Cross(lightRight, lightForward);
 
             // Calculate half dimensions
             float halfWidth = light.AreaWidth * 0.5f;
@@ -76,7 +76,7 @@ namespace Andastra.Runtime.MonoGame.Lighting
 
             // Generate sample points across the area light surface
             // Use stratified sampling for better coverage
-            List<Vector3> samplePoints = GenerateAreaLightSamples(
+            List<XnaVector3> samplePoints = GenerateAreaLightSamples(
                 light.Position,
                 lightRight,
                 lightUp,
@@ -85,14 +85,14 @@ namespace Andastra.Runtime.MonoGame.Lighting
                 AreaLightSamples);
 
             // Accumulate lighting contribution from all samples
-            Vector3 totalDiffuse = Vector3.Zero;
-            Vector3 totalSpecular = Vector3.Zero;
+            XnaVector3 totalDiffuse = XnaVector3.Zero;
+            XnaVector3 totalSpecular = XnaVector3.Zero;
 
-            foreach (Vector3 samplePoint in samplePoints)
+            foreach (XnaVector3 samplePoint in samplePoints)
             {
                 // Calculate direction from surface to this sample point
-                Vector3 lightDirection = Vector3.Normalize(samplePoint - surfacePosition);
-                float distance = Vector3.Distance(samplePoint, surfacePosition);
+                XnaVector3 lightDirection = XnaVector3.Normalize(samplePoint - surfacePosition);
+                float distance = XnaVector3.Distance(samplePoint, surfacePosition);
 
                 // Check if sample is within light radius
                 if (distance > light.Radius)
@@ -104,7 +104,7 @@ namespace Andastra.Runtime.MonoGame.Lighting
                 float distanceAttenuation = CalculateDistanceAttenuation(distance, light.Radius);
 
                 // Calculate Lambertian diffuse term (N dot L)
-                float nDotL = Math.Max(0.0f, Vector3.Dot(surfaceNormal, lightDirection));
+                float nDotL = Math.Max(0.0f, XnaVector3.Dot(surfaceNormal, lightDirection));
                 if (nDotL <= 0.0f)
                 {
                     continue; // Surface is facing away from light
@@ -125,7 +125,7 @@ namespace Andastra.Runtime.MonoGame.Lighting
                 // Calculate area light BRDF contribution
                 // Area lights require integration over the light surface
                 // We approximate this by sampling multiple points and averaging
-                Vector3 sampleContribution = CalculateAreaLightBrdf(
+                XnaVector3 sampleContribution = CalculateAreaLightBrdf(
                     light,
                     samplePoint,
                     surfacePosition,
@@ -142,10 +142,10 @@ namespace Andastra.Runtime.MonoGame.Lighting
             // Average the contributions (divide by number of samples)
             // This approximates the integral over the area light surface
             float sampleWeight = 1.0f / samplePoints.Count;
-            Vector3 finalContribution = (totalDiffuse + totalSpecular) * sampleWeight;
+            XnaVector3 finalContribution = (totalDiffuse + totalSpecular) * sampleWeight;
 
             // Apply light color and intensity
-            Vector3 lightColor = light.Color;
+            XnaVector3 lightColor = light.Color;
             if (light.UseTemperature)
             {
                 lightColor = DynamicLight.TemperatureToRgb(light.Temperature);
@@ -157,15 +157,15 @@ namespace Andastra.Runtime.MonoGame.Lighting
         /// <summary>
         /// Generates sample points across the area light surface using stratified sampling.
         /// </summary>
-        private static List<Vector3> GenerateAreaLightSamples(
-            Vector3 lightCenter,
-            Vector3 lightRight,
-            Vector3 lightUp,
+        private static List<XnaVector3> GenerateAreaLightSamples(
+            XnaVector3 lightCenter,
+            XnaVector3 lightRight,
+            XnaVector3 lightUp,
             float halfWidth,
             float halfHeight,
             int numSamples)
         {
-            List<Vector3> samples = new List<Vector3>();
+            List<XnaVector3> samples = new List<XnaVector3>();
 
             // Use stratified sampling for better coverage
             // Divide area into grid and sample within each cell
@@ -191,7 +191,7 @@ namespace Andastra.Runtime.MonoGame.Lighting
                 float localY = -halfHeight + cellY * cellHeight + jitterY * cellHeight;
 
                 // Transform to world space
-                Vector3 samplePoint = lightCenter + lightRight * localX + lightUp * localY;
+                XnaVector3 samplePoint = lightCenter + lightRight * localX + lightUp * localY;
                 samples.Add(samplePoint);
             }
 
@@ -214,19 +214,19 @@ namespace Andastra.Runtime.MonoGame.Lighting
         /// <summary>
         /// Calculates the right vector for the area light orientation.
         /// </summary>
-        private static Vector3 CalculateRightVector(Vector3 forward)
+        private static XnaVector3 CalculateRightVector(XnaVector3 forward)
         {
             // Choose an arbitrary up vector (typically world up)
-            Vector3 worldUp = Vector3.UnitY;
+            XnaVector3 worldUp = XnaVector3.UnitY;
 
             // If forward is parallel to world up, use a different reference
-            if (Math.Abs(Vector3.Dot(forward, worldUp)) > 0.9f)
+            if (Math.Abs(XnaVector3.Dot(forward, worldUp)) > 0.9f)
             {
-                worldUp = Vector3.UnitZ;
+                worldUp = XnaVector3.UnitZ;
             }
 
             // Calculate right vector as cross product
-            return Vector3.Normalize(Vector3.Cross(forward, worldUp));
+            return XnaVector3.Normalize(XnaVector3.Cross(forward, worldUp));
         }
 
         /// <summary>
@@ -260,7 +260,7 @@ namespace Andastra.Runtime.MonoGame.Lighting
         /// This CPU-side implementation reads depth texture and performs comparison
         /// </summary>
         private static float CalculateSoftShadowPcf(
-            Vector3 surfacePosition,
+            XnaVector3 surfacePosition,
             Matrix4x4 lightSpaceMatrix,
             IntPtr shadowMap,
             float shadowBias,
@@ -275,7 +275,7 @@ namespace Andastra.Runtime.MonoGame.Lighting
                 return 1.0f; // Avoid division by zero
             }
 
-            Vector3 projCoords = new Vector3(
+            XnaVector3 projCoords = new XnaVector3(
                 lightSpacePos.X / lightSpacePos.W,
                 lightSpacePos.Y / lightSpacePos.W,
                 lightSpacePos.Z / lightSpacePos.W);
@@ -545,13 +545,13 @@ namespace Andastra.Runtime.MonoGame.Lighting
         /// Calculates area light BRDF contribution (Bidirectional Reflectance Distribution Function).
         /// Implements physically-based lighting model for area lights.
         /// </summary>
-        private static Vector3 CalculateAreaLightBrdf(
+        private static XnaVector3 CalculateAreaLightBrdf(
             IDynamicLight light,
-            Vector3 lightSamplePoint,
-            Vector3 surfacePosition,
-            Vector3 surfaceNormal,
-            Vector3 lightDirection,
-            Vector3 viewDirection,
+            XnaVector3 lightSamplePoint,
+            XnaVector3 surfacePosition,
+            XnaVector3 surfaceNormal,
+            XnaVector3 lightDirection,
+            XnaVector3 viewDirection,
             float distanceAttenuation,
             float nDotL,
             float shadowFactor)
@@ -560,17 +560,17 @@ namespace Andastra.Runtime.MonoGame.Lighting
             // For area lights, we use the standard Lambertian BRDF
             // L_diffuse = (albedo / PI) * N dot L
             // We'll use a simple diffuse model here (albedo = 1.0 for simplicity)
-            Vector3 diffuse = new Vector3(nDotL, nDotL, nDotL) * (1.0f / (float)Math.PI);
+            XnaVector3 diffuse = new XnaVector3(nDotL, nDotL, nDotL) * (1.0f / (float)Math.PI);
 
             // Specular term (Blinn-Phong approximation)
             // For area lights, specular is more complex, but we'll use a simplified version
-            Vector3 halfVector = Vector3.Normalize(lightDirection + viewDirection);
-            float nDotH = Math.Max(0.0f, Vector3.Dot(surfaceNormal, halfVector));
+            XnaVector3 halfVector = XnaVector3.Normalize(lightDirection + viewDirection);
+            float nDotH = Math.Max(0.0f, XnaVector3.Dot(surfaceNormal, halfVector));
             float specularPower = 32.0f; // Typical specular power
             float specular = (float)Math.Pow(nDotH, specularPower);
 
             // Combine diffuse and specular
-            Vector3 brdf = diffuse + new Vector3(specular, specular, specular) * 0.1f;
+            XnaVector3 brdf = diffuse + new XnaVector3(specular, specular, specular) * 0.1f;
 
             // Apply distance attenuation and shadow factor
             return brdf * distanceAttenuation * shadowFactor;
@@ -582,12 +582,12 @@ namespace Andastra.Runtime.MonoGame.Lighting
         /// </summary>
         public static void CalculateBasicEffectApproximation(
             IDynamicLight light,
-            Vector3 surfacePosition,
-            out Vector3 direction,
-            out Vector3 color)
+            XnaVector3 surfacePosition,
+            out XnaVector3 direction,
+            out XnaVector3 color)
         {
-            direction = Vector3.Zero;
-            color = Vector3.Zero;
+            direction = XnaVector3.Zero;
+            color = XnaVector3.Zero;
 
             if (light == null || light.Type != LightType.Area || !light.Enabled)
             {
@@ -596,11 +596,11 @@ namespace Andastra.Runtime.MonoGame.Lighting
 
             // For BasicEffect, we approximate the area light as a directional light
             // pointing from the area light center to the surface position
-            Vector3 lightToSurface = Vector3.Normalize(surfacePosition - light.Position);
+            XnaVector3 lightToSurface = XnaVector3.Normalize(surfacePosition - light.Position);
             direction = lightToSurface;
 
             // Calculate distance attenuation
-            float distance = Vector3.Distance(light.Position, surfacePosition);
+            float distance = XnaVector3.Distance(light.Position, surfacePosition);
             float distanceAttenuation = CalculateDistanceAttenuation(distance, light.Radius);
 
             // Calculate area-based intensity scaling
@@ -609,12 +609,12 @@ namespace Andastra.Runtime.MonoGame.Lighting
             float areaFactor = 1.0f + (areaSize * 0.1f);
 
             // Calculate directional attenuation (cosine of angle between light direction and light-to-surface)
-            Vector3 lightForward = Vector3.Normalize(-light.Direction);
-            float cosAngle = Vector3.Dot(lightForward, lightToSurface);
+            XnaVector3 lightForward = XnaVector3.Normalize(-light.Direction);
+            float cosAngle = XnaVector3.Dot(lightForward, lightToSurface);
             float directionalAttenuation = Math.Max(0.0f, cosAngle);
 
             // Combine all factors
-            Vector3 lightColor = light.Color;
+            XnaVector3 lightColor = light.Color;
             if (light.UseTemperature)
             {
                 lightColor = DynamicLight.TemperatureToRgb(light.Temperature);
@@ -623,7 +623,7 @@ namespace Andastra.Runtime.MonoGame.Lighting
             color = lightColor * light.Intensity * distanceAttenuation * areaFactor * directionalAttenuation;
 
             // Clamp to valid color range
-            color = new Vector3(
+            color = new XnaVector3(
                 Math.Min(1.0f, Math.Max(0.0f, color.X)),
                 Math.Min(1.0f, Math.Max(0.0f, color.Y)),
                 Math.Min(1.0f, Math.Max(0.0f, color.Z)));
