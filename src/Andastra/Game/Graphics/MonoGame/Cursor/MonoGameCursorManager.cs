@@ -33,7 +33,7 @@ namespace Andastra.Runtime.MonoGame.Graphics.Cursor
         private readonly Installation _installation;
         private CursorType _currentCursorType;
         private bool _isPressed;
-        private Vector2 _position;
+        private System.Numerics.Vector2 _position;
         private bool _disposed;
 
         /// <summary>
@@ -84,7 +84,7 @@ namespace Andastra.Runtime.MonoGame.Graphics.Cursor
             set { _isPressed = value; }
         }
 
-        public Vector2 Position
+        public System.Numerics.Vector2 Position
         {
             get { return _position; }
             set { _position = value; }
