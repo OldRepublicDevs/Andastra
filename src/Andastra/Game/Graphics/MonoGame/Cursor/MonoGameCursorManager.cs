@@ -66,7 +66,7 @@ namespace Andastra.Runtime.MonoGame.Graphics.Cursor
             _installation = installation;
             _cursorCache = new Dictionary<CursorType, ICursor>();
             _currentCursorType = CursorType.Default;
-            _position = new Vector2(0, 0);
+            _position = new System.Numerics.Vector2(0, 0);
         }
 
         public ICursor CurrentCursor
