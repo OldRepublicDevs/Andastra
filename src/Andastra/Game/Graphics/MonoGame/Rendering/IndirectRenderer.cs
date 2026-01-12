@@ -5,8 +5,8 @@ using System.Runtime.InteropServices;
 using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
 using Microsoft.Xna.Framework;
-using XnaVector3 = Microsoft.Xna.Framework.Vector3;
-using XnaVector4 = Microsoft.Xna.Framework.Vector4;
+using XnaVector3 = Microsoft.Xna.Framework.XnaVector3;
+using XnaVector4 = Microsoft.Xna.Framework.XnaVector4;
 
 namespace Andastra.Runtime.MonoGame.Rendering
 {
@@ -76,7 +76,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             /// <summary>
             /// Bounding sphere center.
             /// </summary>
-            public Vector3 BoundingCenter;
+            public XnaVector3 BoundingCenter;
 
             /// <summary>
             /// Bounding sphere radius.
@@ -128,7 +128,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             /// <summary>
             /// Camera position in world space.
             /// </summary>
-            public Vector3 CameraPosition;
+            public XnaVector3 CameraPosition;
 
             /// <summary>
             /// Number of objects to process.
@@ -138,13 +138,13 @@ namespace Andastra.Runtime.MonoGame.Rendering
             /// <summary>
             /// LOD distance thresholds (4 levels: near, mid, far, very far).
             /// </summary>
-            public Vector4 LODDistances;
+            public XnaVector4 LODDistances;
 
             /// <summary>
-            /// Frustum planes (6 planes, each Vector4: normal.x, normal.y, normal.z, distance).
+            /// Frustum planes (6 planes, each XnaVector4: normal.x, normal.y, normal.z, distance).
             /// </summary>
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6)]
-            public Vector4[] FrustumPlanes;
+            public XnaVector4[] FrustumPlanes;
         }
 
         private readonly IDevice _device;
@@ -261,8 +261,8 @@ namespace Andastra.Runtime.MonoGame.Rendering
         /// <param name="projectionMatrix">Projection matrix.</param>
         /// <param name="frustumPlanes">Frustum planes for culling (6 planes: left, right, bottom, top, near, far).</param>
         /// <param name="cameraPosition">Camera position in world space for distance-based LOD.</param>
-        /// <param name="lodDistances">LOD distance thresholds (Vector4: near, mid, far, very far).</param>
-        public void ExecuteGPUCulling(Matrix viewMatrix, Matrix projectionMatrix, Vector4[] frustumPlanes, Vector3 cameraPosition, Vector4 lodDistances)
+        /// <param name="lodDistances">LOD distance thresholds (XnaVector4: near, mid, far, very far).</param>
+        public void ExecuteGPUCulling(Matrix viewMatrix, Matrix projectionMatrix, XnaVector4[] frustumPlanes, XnaVector3 cameraPosition, XnaVector4 lodDistances)
         {
             if (_currentObjectCount == 0 || _computePipeline == null || _bindingSet == null)
             {
@@ -284,7 +284,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
                 CameraPosition = cameraPosition,
                 ObjectCount = (uint)_currentObjectCount,
                 LODDistances = lodDistances,
-                FrustumPlanes = new Vector4[6]
+                FrustumPlanes = new XnaVector4[6]
             };
             Array.Copy(frustumPlanes, constants.FrustumPlanes, Math.Min(6, frustumPlanes.Length));
 
