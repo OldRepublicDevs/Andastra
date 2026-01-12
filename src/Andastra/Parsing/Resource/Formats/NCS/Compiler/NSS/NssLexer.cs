@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Andastra.Parsing.Formats.NCS.Compiler
+namespace Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS
 {
     /// <summary>
     /// NSS (NWScript Source) lexer/tokenizer.
@@ -561,7 +561,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
                 }
                 else
                 {
-                    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/lexer.py:322-335
+                    // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/lexer.py:322-335
                     // Original: def t_FLOAT_VALUE(self, t): r"[0-9]+\.[0-9]+f?|[0-9]f" / def t_INT_HEX_VALUE(self, t): "0x[0-9a-fA-F]+" / def t_INT_VALUE(self, t): "[0-9]+"
                     if (ch == '0' && chBaseIndex + 1 < data.Length && (data[chBaseIndex + 1] == 'x' || data[chBaseIndex + 1] == 'X'))
                     {

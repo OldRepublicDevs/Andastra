@@ -4,12 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Andastra.Parsing.Common.Script;
-using Andastra.Parsing.Formats.NCS;
-using Andastra.Parsing.Formats.NCS.Compiler.NSS;
-using MissingIncludeError = Andastra.Parsing.Formats.NCS.Compiler.NSS.MissingIncludeError;
-using ScriptDataType = Andastra.Parsing.Common.Script.DataType;
+using Andastra.Parsing.Resource.Formats.NCS;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST.Expressions;
 
-namespace Andastra.Parsing.Formats.NCS.Compiler
+namespace Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST
 {
     public class GlobalVariableDeclaration : TopLevelObject
     {
@@ -17,7 +16,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
         public DynamicDataType DataType { get; set; }
         public bool IsConst { get; set; }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:107
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:107
         // Original: def __init__(self, identifier: Identifier, data_type: DynamicDataType, is_const: bool = False):
         public GlobalVariableDeclaration(Identifier identifier, DynamicDataType dataType, bool isConst = false)
         {
@@ -28,45 +27,45 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
 
         public override void Compile(NCS ncs, CodeRoot root)
         {
-            if (DataType.Builtin == ScriptDataType.Int)
+            if (DataType.Builtin == Common.Script.DataType.Int)
             {
                 ncs.Add(NCSInstructionType.RSADDI, new List<object>());
             }
-            else if (DataType.Builtin == ScriptDataType.Float)
+            else if (DataType.Builtin == Common.Script.DataType.Float)
             {
                 ncs.Add(NCSInstructionType.RSADDF, new List<object>());
             }
-            else if (DataType.Builtin == ScriptDataType.String)
+            else if (DataType.Builtin == Common.Script.DataType.String)
             {
                 ncs.Add(NCSInstructionType.RSADDS, new List<object>());
             }
-            else if (DataType.Builtin == ScriptDataType.Object)
+            else if (DataType.Builtin == Common.Script.DataType.Object)
             {
                 ncs.Add(NCSInstructionType.RSADDO, new List<object>());
             }
-            else if (DataType.Builtin == ScriptDataType.Event)
+            else if (DataType.Builtin == Common.Script.DataType.Event)
             {
                 ncs.Add(NCSInstructionType.RSADDEVT, new List<object>());
             }
-            else if (DataType.Builtin == ScriptDataType.Location)
+            else if (DataType.Builtin == Common.Script.DataType.Location)
             {
                 ncs.Add(NCSInstructionType.RSADDLOC, new List<object>());
             }
-            else if (DataType.Builtin == ScriptDataType.Talent)
+            else if (DataType.Builtin == Common.Script.DataType.Talent)
             {
                 ncs.Add(NCSInstructionType.RSADDTAL, new List<object>());
             }
-            else if (DataType.Builtin == ScriptDataType.Effect)
+            else if (DataType.Builtin == Common.Script.DataType.Effect)
             {
                 ncs.Add(NCSInstructionType.RSADDEFF, new List<object>());
             }
-            else if (DataType.Builtin == ScriptDataType.Vector)
+            else if (DataType.Builtin == Common.Script.DataType.Vector)
             {
                 ncs.Add(NCSInstructionType.RSADDF, new List<object>());
                 ncs.Add(NCSInstructionType.RSADDF, new List<object>());
                 ncs.Add(NCSInstructionType.RSADDF, new List<object>());
             }
-            else if (DataType.Builtin == ScriptDataType.Struct)
+            else if (DataType.Builtin == Common.Script.DataType.Struct)
             {
                 string structName = DataType.Struct;
                 if (structName != null && root.StructMap.ContainsKey(structName))
@@ -79,7 +78,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
                     throw new CompileError(msg);
                 }
             }
-            else if (DataType.Builtin == ScriptDataType.Void)
+            else if (DataType.Builtin == Common.Script.DataType.Void)
             {
                 string msg = $"Cannot declare variable '{Identifier}' with void type\n" +
                             "  void can only be used as a function return type";
@@ -92,7 +91,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
                 throw new CompileError(msg);
             }
 
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:155
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:155
             // Original: root.add_scoped(self.identifier, self.data_type, is_const=self.is_const)
             root.AddScoped(Identifier, DataType, IsConst);
         }
@@ -105,7 +104,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
         public Expression Expression { get; set; }
         public bool IsConst { get; set; }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:65
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:65
         // Original: def __init__(self, identifier: Identifier, data_type: DynamicDataType, value: Expression, is_const: bool = False):
         public GlobalVariableInitialization(Identifier identifier, DynamicDataType dataType, Expression expression, bool isConst = false)
         {
@@ -115,11 +114,11 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
             IsConst = isConst;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:79
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:79
         // Original: def compile(self, ncs: NCS, root: CodeRoot):
         public override void Compile(NCS ncs, CodeRoot root)
         {
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:81
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:81
             // Original: declaration = GlobalVariableDeclaration(self.identifier, self.data_type, self.is_const)
             // Allocate storage for the global variable (this also registers it in the global scope)
             GlobalVariableDeclaration declaration = new GlobalVariableDeclaration(Identifier, DataType, IsConst);
@@ -198,7 +197,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
             string source = GetScript(root);
             CodeRoot t = nssParser.Parse(source);
 
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:857
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:857
             // Original: root.objects = t.objects + root.objects
             // Merge include objects (including nested IncludeScript nodes) so they are compiled.
             root.Objects = t.Objects.Concat(root.Objects).ToList();
@@ -216,7 +215,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
                 {
                     try
                     {
-                        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:879
+                        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:879
                         // Original: source_bytes = filepath.read_bytes(); source = source_bytes.decode(errors="ignore")
                         // Note: Using UTF-8 with fallback for .NET Core compatibility
                         byte[] sourceBytes = System.IO.File.ReadAllBytes(filepath);
@@ -240,7 +239,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
 
                 if (Library.ContainsKey(includeFilename))
                 {
-                    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:894
+                    // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:894
                     // Original: source = self.library[include_filename].decode(errors="ignore")
                     // Note: Using UTF-8 with fallback for .NET Core compatibility
                     source = System.Text.Encoding.UTF8.GetString(Library[includeFilename]);

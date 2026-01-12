@@ -1,9 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
-using Andastra.Parsing.Formats.NCS;
+using Andastra.Parsing.Resource.Formats.NCS;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST.Statements;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Formats.NCS.Compiler
+namespace Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST
 {
 
     /// <summary>
@@ -96,7 +97,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
             }
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:632-633
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:632-633
         public void AddScoped(Identifier identifier, DynamicDataType dataType, bool isConst = false)
         {
             // Insert at beginning to match Python's list.insert(0, ...)

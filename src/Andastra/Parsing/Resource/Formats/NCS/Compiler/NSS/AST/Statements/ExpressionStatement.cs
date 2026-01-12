@@ -1,12 +1,14 @@
-using Andastra.Parsing.Formats.NCS;
+using Andastra.Parsing.Resource.Formats.NCS;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
 using JetBrains.Annotations;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
 
-namespace Andastra.Parsing.Formats.NCS.Compiler
+namespace Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST.Statements
 {
 
     /// <summary>
     /// Represents an expression used as a statement (e.g., function call, assignment).
-    /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:2339-2382
+    /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:2339-2382
     /// </summary>
     public class ExpressionStatement : Statement
     {

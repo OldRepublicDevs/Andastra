@@ -1,13 +1,17 @@
 using System;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
 using System.Collections.Generic;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
 using Andastra.Parsing.Common.Script;
-using Andastra.Parsing.Formats.NCS;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
+using Andastra.Parsing.Resource.Formats.NCS;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
 
-namespace Andastra.Parsing.Formats.NCS.Compiler
+namespace Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST.Expressions
 {
     /// <summary>
     /// Represents a ternary conditional expression (condition ? trueExpr : falseExpr).
-    /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:1445-1505
+    /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:1445-1505
     /// </summary>
     public class TernaryConditionalExpression : Expression
     {

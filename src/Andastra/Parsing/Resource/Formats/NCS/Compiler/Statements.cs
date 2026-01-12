@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using Andastra.Parsing.Common.Script;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Formats.NCS.Compiler
+namespace Andastra.Parsing.Resource.Formats.NCS.Compiler
 {
 
 
@@ -187,7 +189,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
             Block = block;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:2596-2631
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:2596-2631
         public override object Compile(NCS ncs, [CanBeNull] CodeRoot root, CodeBlock block, NCSInstruction returnInstruction, NCSInstruction breakInstruction, [CanBeNull] NCSInstruction continueInstruction)
         {
             block.MarkBreakScope();
@@ -233,7 +235,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
             Block = block;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:2639-2683
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:2639-2683
         public override object Compile(NCS ncs, [CanBeNull] CodeRoot root, CodeBlock block, NCSInstruction returnInstruction, NCSInstruction breakInstruction, [CanBeNull] NCSInstruction continueInstruction)
         {
             block.MarkBreakScope();
@@ -302,7 +304,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
             Block = block;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:2699-2761
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:2699-2761
         public override object Compile(NCS ncs, [CanBeNull] CodeRoot root, CodeBlock block, NCSInstruction returnInstruction, NCSInstruction breakInstruction, [CanBeNull] NCSInstruction continueInstruction)
         {
             block.MarkBreakScope();

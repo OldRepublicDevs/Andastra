@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
 using JetBrains.Annotations;
 
 namespace Andastra.Parsing.Resource.Formats.NCS.Compiler

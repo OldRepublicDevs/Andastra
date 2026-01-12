@@ -1,18 +1,21 @@
 using System.Collections.Generic;
-using Andastra.Parsing.Formats.NCS;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
+using Andastra.Parsing.Resource.Formats.NCS;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
 using JetBrains.Annotations;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
 
-namespace Andastra.Parsing.Formats.NCS.Compiler
+namespace Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST.Statements
 {
 
     /// <summary>
     /// Represents a NOP (no operation) statement.
-    /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:2321
+    /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:2321
     /// Original: class NopStatement(Statement):
     /// </summary>
     public class NopStatement : Statement
     {
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:2322
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:2322
         // Original: def __init__(self, string: str):
         public string String { get; }
 
@@ -21,7 +24,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
             String = str;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:2326
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:2326
         // Original: def compile(self, ncs: NCS, root: CodeRoot, block: CodeBlock, return_instruction: NCSInstruction, break_instruction: NCSInstruction | None, continue_instruction: NCSInstruction | None) -> DynamicDataType:
         public override object Compile(
             NCS ncs,
@@ -31,7 +34,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
             [CanBeNull] NCSInstruction breakInstruction,
             [CanBeNull] NCSInstruction continueInstruction)
         {
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:2335
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:2335
             // Original: ncs.add(NCSInstructionType.NOP, args=[self.string])
             ncs.Add(NCSInstructionType.NOP, new List<object> { String });
             return DynamicDataType.VOID;
