@@ -184,7 +184,7 @@ namespace Andastra.Parsing.TSLPatcher.Mods.TLK
 
             byte[] bytes = File.ReadAllBytes(TlkFilePath);
             var reader = new TLKBinaryReader(bytes);
-            TLK lookupTlk = reader.Load();
+            Resource.Formats.TLK.TLK lookupTlk = reader.Load();
             if (string.IsNullOrEmpty(Text))
             {
                 Text = lookupTlk.String(ModIndex);

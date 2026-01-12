@@ -2166,7 +2166,7 @@ namespace Andastra.Parsing.Common
                 throw new FileNotFoundException($"Cannot create resource '{GetIdentifier()}' in override folder", overridePath);
             }
 
-            new Andastra.Parsing.Logger.RobustLogger().Warning($"Saving ModuleResource '{GetIdentifier()}' to the Override folder as it does not have any other paths available...");
+            new RobustLogger().Warning($"Saving ModuleResource '{GetIdentifier()}' to the Override folder as it does not have any other paths available...");
             string result = Path.Combine(_installation.OverridePath(), Filename());
             File.WriteAllBytes(result, resData);
             Activate(result);
