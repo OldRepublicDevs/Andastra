@@ -1,10 +1,15 @@
 using System.Collections.Generic;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
 using System.Linq;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
 using Andastra.Parsing.Common.Script;
-using Andastra.Parsing.Formats.NCS;
-using Andastra.Parsing.Formats.NCS.Compiler.NSS;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
+using Andastra.Parsing.Resource.Formats.NCS;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
 
-namespace Andastra.Parsing.Formats.NCS.Compiler
+namespace Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST.Expressions
 {
 
     /// <summary>
@@ -26,7 +31,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
             // Note: FieldAccess.Compile does NOT add to temp_stack, so we don't either
             DynamicDataType variableType = FieldAccess.Compile(ncs, root, block);
 
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:2909-2915
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:2909-2915
             // Original: if variable_type != DynamicDataType.INT:
             if (variableType.Builtin != DataType.Int)
             {
@@ -36,7 +41,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
                     $"  Variable: {varName}");
             }
 
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:2917
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:2917
             // Original: isglobal, variable_type, stack_index, is_const = self.field_access.get_scoped(block, root)
             GetScopedResult scoped = FieldAccess.GetScoped(block, root);
             bool isGlobal = scoped.IsGlobal;

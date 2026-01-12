@@ -6,11 +6,13 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.NCS;
-using Andastra.Parsing.Formats.NCS.NCSDecomp;
+using Andastra.Parsing.Resource.Formats.NCS;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp;
+using Andastra.Parsing.TSLPatcher.Logger;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Formats.NCS.Compiler
+namespace Andastra.Parsing.Resource.Formats.NCS.Compiler
 {
 
     /// <summary>
@@ -22,9 +24,9 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
         [CanBeNull]
         private readonly string _nwnnsscompPath;
         private readonly string _tempScriptFolder;
-        private readonly Logger.PatchLogger _logger;
+        private readonly PatchLogger _logger;
 
-        public NCSCompiler([CanBeNull] string nwnnsscompPath, string tempScriptFolder, Logger.PatchLogger logger)
+        public NCSCompiler([CanBeNull] string nwnnsscompPath, string tempScriptFolder, PatchLogger logger)
         {
             _nwnnsscompPath = nwnnsscompPath;
             _tempScriptFolder = tempScriptFolder ?? throw new ArgumentNullException(nameof(tempScriptFolder));

@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Andastra.Parsing.Common.Script;
-using Andastra.Parsing.Formats.NCS;
+using Andastra.Parsing.Resource.Formats.NCS;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Formats.NCS.Compiler
+namespace Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST
 {
 
     /// <summary>
@@ -27,7 +27,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
 
         /// <summary>
         /// Get scoped variable information for this field access.
-        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:974-1029
+        /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:974-1029
         /// </summary>
         public GetScopedResult GetScoped([CanBeNull] CodeBlock block, CodeRoot root)
         {

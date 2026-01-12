@@ -1,10 +1,15 @@
 using System.Collections.Generic;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
 using System.Linq;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
 using Andastra.Parsing.Common.Script;
-using Andastra.Parsing.Formats.NCS;
-using Andastra.Parsing.Formats.NCS.Compiler.NSS;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
+using Andastra.Parsing.Resource.Formats.NCS;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
 
-namespace Andastra.Parsing.Formats.NCS.Compiler
+namespace Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST.Expressions
 {
 
     /// <summary>

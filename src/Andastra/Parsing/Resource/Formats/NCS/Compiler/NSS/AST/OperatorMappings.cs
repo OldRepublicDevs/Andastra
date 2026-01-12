@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using Andastra.Parsing.Common.Script;
-using Andastra.Parsing.Formats.NCS;
+using Andastra.Parsing.Resource.Formats.NCS;
 
-namespace Andastra.Parsing.Formats.NCS.Compiler
+namespace Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST
 {
     /// <summary>
     /// Provides operator mappings for binary and unary operators.

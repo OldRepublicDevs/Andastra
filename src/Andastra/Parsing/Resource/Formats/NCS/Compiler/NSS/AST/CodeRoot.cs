@@ -2,10 +2,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Andastra.Parsing.Common.Script;
-using Andastra.Parsing.Formats.NCS.Compiler.NSS;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST.Expressions;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Formats.NCS.Compiler
+namespace Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST
 {
 
     /// <summary>
@@ -45,7 +46,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
             StructMap = new Dictionary<string, Struct>();
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:537-538
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:537-538
         public void AddScoped(Identifier identifier, DynamicDataType datatype, bool isConst = false)
         {
             _globalScope.Insert(0, new ScopedValue(identifier, datatype, isConst));
@@ -213,7 +214,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
             {
                 NCSInstruction scStart = FirstNonNop(FunctionMap["StartingConditional"].Instruction, ncs);
                 FunctionMap["StartingConditional"] = new FunctionReference(scStart, FunctionMap["StartingConditional"].Definition);
-                // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:417-423
+                // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:417-423
                 // Original: ncs.add(NCSInstructionType.RETN, args=[], index=entry_index) then JSR then RSADDI, all at entry_index
                 // Adding RETN first, then JSR, then RSADDI at the same index, so final order is RSADDI, JSR, RETN
                 // The external compiler places entry stub at BEGINNING (index 0) for StartingConditional too
@@ -266,7 +267,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
             object definition = funcMap.Definition;
             NCSInstruction startInstruction = funcMap.Instruction;
 
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:428-536
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:428-536
             DynamicDataType returnType = GetReturnType(definition);
             int returnTypeSize = 0;
             if (returnType == DynamicDataType.INT)
@@ -633,7 +634,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
             Parameters = parameters;
             Body = body;
 
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:731-732
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:731-732
             // Original: for param in parameters: block.add_scoped(param.identifier, param.data_type)
             // Parameters are added in forward order; add_scoped uses insert(0, ...) which reverses them
             foreach (FunctionParameter param in parameters)

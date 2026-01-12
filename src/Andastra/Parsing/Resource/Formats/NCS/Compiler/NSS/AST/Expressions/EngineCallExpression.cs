@@ -1,13 +1,19 @@
 using System;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
 using System.Collections.Generic;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
 using System.Linq;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
 using System.Numerics;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
 using Andastra.Parsing;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
 using Andastra.Parsing.Common.Script;
-using Andastra.Parsing.Formats.NCS;
-using CompileError = Andastra.Parsing.Formats.NCS.Compiler.NSS.CompileError;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
+using Andastra.Parsing.Resource.Formats.NCS;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
 
-namespace Andastra.Parsing.Formats.NCS.Compiler
+namespace Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST.Expressions
 {
 
     /// <summary>

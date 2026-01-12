@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Andastra.Parsing.Common.Script;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST.Expressions;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST.Statements;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Formats.NCS.Compiler.NSS
+namespace Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS
 {
     public class NssParser
     {
@@ -295,7 +298,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler.NSS
                 }
                 Advance(); // Now consume the struct keyword
 
-                // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/parser.py:162-183
+                // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/parser.py:162-183
                 // Original: struct_definition : STRUCT IDENTIFIER '{' struct_members '}' ';'
                 SkipWhitespaceAndComments();
                 // Parse struct name
@@ -2362,7 +2365,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler.NSS
             switch (lit.LiteralType)
             {
                 case NssLiteralType.Int:
-                    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/lexer.py:327-335
+                    // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/lexer.py:327-335
                     // Original: def t_INT_HEX_VALUE(self, t): "0x[0-9a-fA-F]+" / def t_INT_VALUE(self, t): "[0-9]+"
                     string literalText = lit.Literal;
                     if (!string.IsNullOrEmpty(literalText) &&

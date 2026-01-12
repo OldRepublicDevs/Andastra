@@ -1,4 +1,4 @@
-namespace Andastra.Parsing.Formats.NCS.Compiler.NSS
+namespace Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS
 {
 
     /// <summary>

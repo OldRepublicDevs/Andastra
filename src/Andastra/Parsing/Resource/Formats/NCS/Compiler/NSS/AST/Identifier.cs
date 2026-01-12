@@ -1,7 +1,7 @@
 using System;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Formats.NCS.Compiler
+namespace Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST
 {
 
     /// <summary>

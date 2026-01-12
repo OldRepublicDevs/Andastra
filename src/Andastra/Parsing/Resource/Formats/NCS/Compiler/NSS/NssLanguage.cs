@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Andastra.Parsing.Common;
 
-namespace Andastra.Parsing.Formats.NCS.Compiler
+namespace Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS
 {
     // Token base class and language definitions adapted from nss2csharp
 

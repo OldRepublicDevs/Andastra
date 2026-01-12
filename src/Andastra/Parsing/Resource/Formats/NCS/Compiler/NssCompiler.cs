@@ -5,12 +5,13 @@ using System.Text.RegularExpressions;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Common.Script;
-using Andastra.Parsing.Formats.NCS;
-using Andastra.Parsing.Formats.NCS.Compiler.NSS;
-using Andastra.Parsing.Formats.NCS.Optimizers;
+using Andastra.Parsing.Resource.Formats.NCS;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
+using Andastra.Parsing.Resource.Formats.NCS.Optimizers;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Formats.NCS.Compiler
+namespace Andastra.Parsing.Resource.Formats.NCS.Compiler
 {
 
     /// <summary>

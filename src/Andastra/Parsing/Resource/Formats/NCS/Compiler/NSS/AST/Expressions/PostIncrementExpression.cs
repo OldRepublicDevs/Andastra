@@ -1,10 +1,15 @@
 using System.Collections.Generic;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
 using System.Linq;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
 using Andastra.Parsing.Common.Script;
-using Andastra.Parsing.Formats.NCS;
-using Andastra.Parsing.Formats.NCS.Compiler.NSS;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
+using Andastra.Parsing.Resource.Formats.NCS;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST;
 
-namespace Andastra.Parsing.Formats.NCS.Compiler
+namespace Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS.AST.Expressions
 {
 
     /// <summary>
@@ -19,7 +24,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
             FieldAccess = fieldAccess ?? throw new System.ArgumentNullException(nameof(fieldAccess));
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:2872-2899
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:2872-2899
         public override DynamicDataType Compile(NCS ncs, CodeRoot root, CodeBlock block)
         {
             // Matching PyKotor classes.py line 2877

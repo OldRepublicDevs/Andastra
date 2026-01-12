@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Andastra.Parsing;
 using Andastra.Parsing.Common.Script;
-using Andastra.Parsing.Formats.NCS;
+using Andastra.Parsing.Resource.Formats.NCS;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Formats.NCS.Compiler
+namespace Andastra.Parsing.Resource.Formats.NCS.Compiler
 {
 
     /// <summary>
@@ -439,7 +439,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
         /// </summary>
         public void AdditionOp(NCSInstructionType instructionType = NCSInstructionType.ADDII)
         {
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/interpreter.py:1427
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/interpreter.py:1427
             // Original: def addition_op(self, instruction_type: NCSInstructionType | None = None):
             // Handle vector addition (ADDVV)
             if (instructionType == NCSInstructionType.ADDVV)
@@ -514,7 +514,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
         /// </summary>
         public void SubtractionOp(NCSInstructionType instructionType = NCSInstructionType.SUBII)
         {
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/interpreter.py:1482
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/interpreter.py:1482
             // Original: def subtraction_op(self, instruction_type: NCSInstructionType | None = None):
             // Handle vector subtraction (SUBVV)
             if (instructionType == NCSInstructionType.SUBVV)
@@ -577,7 +577,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
         /// </summary>
         public void MultiplicationOp(NCSInstructionType instructionType = NCSInstructionType.MULII)
         {
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/interpreter.py:1519
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/interpreter.py:1519
             // Original: def multiplication_op(self, instruction_type: NCSInstructionType | None = None):
             // Handle vector multiplication
             if (instructionType == NCSInstructionType.MULVF)
@@ -659,7 +659,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
         /// </summary>
         public void DivisionOp(NCSInstructionType instructionType = NCSInstructionType.DIVII)
         {
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/interpreter.py:1570
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/interpreter.py:1570
             // Original: def division_op(self, instruction_type: NCSInstructionType | None = None):
             // Handle vector division (DIVVF: vector / float)
             if (instructionType == NCSInstructionType.DIVVF)
