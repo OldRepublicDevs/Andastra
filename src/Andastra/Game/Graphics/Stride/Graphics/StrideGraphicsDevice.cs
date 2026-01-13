@@ -113,17 +113,24 @@ namespace Andastra.Game.Stride.Graphics
                     var presentParams = _device.Presenter?.Description;
                     if (presentParams != null)
                     {
-                        _currentViewport = new Viewport(
-                            0, 0,
-                            presentParams.BackBufferWidth,
-                            presentParams.BackBufferHeight,
-                            0.0f, 1.0f
-                        );
+                        _currentViewport = new GraphicsViewport
+                        {
+                            X = 0,
+                            Y = 0,
+                            Width = presentParams.BackBufferWidth,
+                            Height = presentParams.BackBufferHeight
+                        };
                     }
                     else
                     {
                         // Fallback to a default viewport
-                        _currentViewport = new StrideViewport(0, 0, 1920, 1080, 0.0f, 1.0f);
+                        _currentViewport = new GraphicsViewport
+                        {
+                            X = 0,
+                            Y = 0,
+                            Width = 1920,
+                            Height = 1080
+                        };
                     }
                 }
                 return _currentViewport;

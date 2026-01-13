@@ -252,7 +252,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             _engineApi = new OdysseyEngineApi(gameType);
 
             // Initialize script executor (unified OdysseyScriptExecutor handles both K1 and TSL)
-            _scriptExecutor = new OdysseyScriptExecutor(_world, _engineApi, _globals, _installation, _gameServicesContext);
+            _scriptExecutor = new OdysseyScriptExecutor(_world, _engineApi, _globals, _installation, null);
 
             // Initialize trigger system with script firing callback
             _triggerSystem = new TriggerSystem(_world, FireScriptEvent);
