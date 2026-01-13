@@ -1,14 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using BioWare.NET;
-using BioWare.NET.Common;
-using BioWare.NET.Extract;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
+using Andastra.Game.Games.Odyssey.Combat;
+using Andastra.Game.Games.Odyssey.Components;
+using Andastra.Game.Games.Odyssey.Dialogue;
+using Andastra.Game.Games.Odyssey.EngineApi;
+using Andastra.Game.Games.Odyssey.Input;
+using Andastra.Game.Games.Odyssey.Systems;
+using Andastra.Game.Scripting.Interfaces;
+using Andastra.Game.Scripting.VM;
 using Andastra.Runtime.Core;
 using Andastra.Runtime.Core.Actions;
-using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Core.Enums;
@@ -22,19 +24,12 @@ using Andastra.Runtime.Core.Movement;
 using Andastra.Runtime.Core.Navigation;
 using Andastra.Runtime.Core.Party;
 using Andastra.Runtime.Core.Plot;
-using Andastra.Game.Games.Odyssey.Combat;
-using Andastra.Game.Games.Odyssey.Components;
-using Andastra.Game.Games.Odyssey.Dialogue;
-using Andastra.Game.Games.Odyssey.EngineApi;
-using Andastra.Game.Games.Odyssey.Loading;
-using Andastra.Game.Games.Odyssey.Systems;
-using Andastra.Game.Games.Odyssey;
-using Andastra.Game.Games.Odyssey.Input;
-using Andastra.Game.Scripting.Interfaces;
-using Andastra.Game.Scripting.VM;
+using BioWare.NET.Common;
+using BioWare.NET.Extract;
 using JetBrains.Annotations;
-using GameDataManager = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager;
-using Systems = Andastra.Game.Games.Odyssey.Systems;
+using GameDataManager = Andastra.Game.Games.Odyssey.Data.GameDataManager;
+using TriggerSystem = Andastra.Runtime.Core.Triggers.TriggerSystem;
+using AIController = Andastra.Runtime.Core.AI.AIController;
 
 namespace Andastra.Game.Games.Odyssey.Game
 {
@@ -43,14 +38,14 @@ namespace Andastra.Game.Games.Odyssey.Game
     /// </summary>
     /// <remarks>
     /// Game Session System (Odyssey-specific):
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_006caab0 @ 0x006caab0 (server command parser, handles module commands)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x006caab0 @ 0x006caab0 (server command parser, handles module commands)
     /// - Located via string references: "GAMEINPROGRESS" @ 0x007c15c8, "ModuleLoaded" @ 0x007bdd70, "ModuleRunning" @ 0x007bdd58
     /// - Cross-engine analysis:
     ///   - Aurora (nwmain.exe): CServerExoApp::LoadModule, CNWSModule::LoadModule - similar module loading system, different file formats
     ///   - Eclipse (daorigins.exe, DragonAge2.exe, ): "LoadModule" - UnrealScript-based module loading, different architecture
     /// - Inheritance: Base class BaseGameSession (Runtime.Games.Common) - abstract game session, Odyssey override (Runtime.Games.Odyssey) - Odyssey-specific game session
     /// - Original implementation: Coordinates module loading, entity management, script execution, combat, AI, triggers, dialogue, party
-    /// - Module state: FUN_006caab0 sets module state flags (0=Idle, 1=ModuleLoaded, 2=ModuleRunning) in DAT_008283d4 structure
+    /// - Module state: 0x006caab0 sets module state flags (0=Idle, 1=ModuleLoaded, 2=ModuleRunning) in DAT_008283d4 structure
     /// - Game loop integration: Update() called every frame to update all systems (60 Hz fixed timestep)
     /// - System initialization order: Installation/ModuleLoader -> FactionManager -> PerceptionManager -> CombatManager -> PartySystem -> Engine API -> ScriptExecutor -> TriggerSystem/AIController/DialogueManager/EncounterSystem
     /// </remarks>
@@ -235,7 +230,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             // Located via string references: "2DAName" @ 0x007c3980, " 2DA file" @ 0x007c4674
             // Original implementation: GameDataManager loads and caches 2DA tables from installation
             _gameDataManager = new GameDataManager(_installation);
-            var gameDataProvider = new Andastra.Runtime.Games.Odyssey.Data.OdysseyGameDataProvider(_gameDataManager);
+            var gameDataProvider = new Andastra.Game.Games.Odyssey.Data.OdysseyGameDataProvider(_gameDataManager);
             _world.GameDataProvider = gameDataProvider;
 
             // Initialize game systems
@@ -266,7 +261,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             _triggerSystem = new TriggerSystem(_world, FireScriptEvent);
 
             // Initialize AI controller
-            _aiController = new AIController(_world, FireScriptEvent);
+            _aiController = new Aurora.Systems.AuroraAIController(_world, FireScriptEvent);
 
             // Initialize JRL loader for quest entry text lookup
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): JRL files contain quest entry text
@@ -374,11 +369,11 @@ namespace Andastra.Game.Games.Odyssey.Game
             }
 
             // Update module heartbeat (fires every 6 seconds)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00501fa0 @ 0x00501fa0 (module loading), FUN_00501fa0 reads "Mod_OnHeartbeat" script from module GFF
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00501fa0 @ 0x00501fa0 (module loading), 0x00501fa0 reads "Mod_OnHeartbeat" script from module GFF
             // Located via string references: "Mod_OnHeartbeat" @ 0x007be840
             // Original implementation: Module heartbeat fires every 6 seconds for module-level scripts
             // Module heartbeat script is loaded from Mod_OnHeartbeat field in module IFO GFF during module load
-            // Module state flags: 0=Idle, 1=ModuleLoaded, 2=ModuleRunning (set in FUN_006caab0 @ 0x006caab0)
+            // Module state flags: 0=Idle, 1=ModuleLoaded, 2=ModuleRunning (set in 0x006caab0 @ 0x006caab0)
             if (_currentModule != null)
             {
                 _moduleHeartbeatTimer += deltaTime;
@@ -397,32 +392,32 @@ namespace Andastra.Game.Games.Odyssey.Game
         /// <remarks>
         /// Based on exhaustive reverse engineering of swkotor.exe (K1) and swkotor2.exe (K2):
         ///
-        /// KOTOR 1 (swkotor.exe) - FUN_0067afb0 @ 0x0067afb0 (New Game Button Handler):
+        /// KOTOR 1 (swkotor.exe) - 0x0067afb0 @ 0x0067afb0 (New Game Button Handler):
         /// - Similar flow but loads "END_M01AA" (Endar Spire - Command Module)
         /// - Located via string reference: "END_M01AA" @ 0x00752f58
-        /// - Original implementation: FUN_005e5a90(aiStack_2c,"END_M01AA") sets module name
+        /// - Original implementation: 0x005e5a90(aiStack_2c,"END_M01AA") sets module name
         ///
-        /// KOTOR 2 (swkotor2.exe) - FUN_006d0b00 @ 0x006d0b00 (New Game Button Handler):
+        /// KOTOR 2 (swkotor2.exe) - 0x006d0b00 @ 0x006d0b00 (New Game Button Handler):
         /// - Called when "New Game" button is clicked after character creation completes
         /// - Located via string reference: "001ebo" @ 0x007cc028 (prologue module name)
-        /// - Main menu handler (FUN_006d2350 @ 0x006d2350) sets up button event handler at line 89:
-        ///   FUN_0041a340((void *)((int)this + 0x40c),0x27,this,0x6d0b00); // 0x27 = hover event
-        ///   FUN_0041a340((void *)((int)this + 0x40c),0,this,0x6d1160); // 0 = click event
-        /// - Complete flow from FUN_006d0b00:
-        ///   1. Line 23: FUN_0057a400() - Initialize game time/system time
-        ///   2. Line 24: FUN_00401380(DAT_008283d4) - Initialize module loading system
-        ///      - FUN_00401380 @ 0x00401380: Module initialization function
+        /// - Main menu handler (0x006d2350 @ 0x006d2350) sets up button event handler at line 89:
+        ///   0x0041a340((void *)((int)this + 0x40c),0x27,this,0x6d0b00); // 0x27 = hover event
+        ///   0x0041a340((void *)((int)this + 0x40c),0,this,0x6d1160); // 0 = click event
+        /// - Complete flow from 0x006d0b00:
+        ///   1. Line 23: 0x0057a400() - Initialize game time/system time
+        ///   2. Line 24: 0x00401380(DAT_008283d4) - Initialize module loading system
+        ///      - 0x00401380 @ 0x00401380: Module initialization function
         ///      - Prepares game state for module loading, sets up module loading context
-        ///   3. Line 29: FUN_00630a90(local_38,"001ebo") - Set default starting module to "001ebo"
+        ///   3. Line 29: 0x00630a90(local_38,"001ebo") - Set default starting module to "001ebo"
         ///      - "001ebo" is the prologue module (Ebon Hawk Interior, playing as T3-M4)
-        ///   4. Line 31: FUN_00630a90(local_40,"HD0:effects") - Load HD0:effects directory
+        ///   4. Line 31: 0x00630a90(local_40,"HD0:effects") - Load HD0:effects directory
         ///      - HD0:effects is a directory alias for effects resources
         ///   5. Lines 43-50: Check for alternative modules before using default:
-        ///      - FUN_00408df0(DAT_008283c0,local_30,0x7db,(undefined4 *)0x0) - Check module code 0x7db
-        ///      - If 0x7db fails: FUN_00408df0(DAT_008283c0,local_30,0xbba,(undefined4 *)0x0) - Check module code 0xbba
-        ///      - If both fail: FUN_00630d10(local_38,"001ebo") - Fallback to "001ebo"
-        ///   6. Line 62: FUN_0074a700(local_40[0],*(undefined4 *)((int)this + 0x1c),local_38) - Create and load module
-        ///      - FUN_0074a700 @ 0x0074a700: Module loader/creator function
+        ///      - 0x00408df0(DAT_008283c0,local_30,0x7db,(undefined4 *)0x0) - Check module code 0x7db
+        ///      - If 0x7db fails: 0x00408df0(DAT_008283c0,local_30,0xbba,(undefined4 *)0x0) - Check module code 0xbba
+        ///      - If both fail: 0x00630d10(local_38,"001ebo") - Fallback to "001ebo"
+        ///   6. Line 62: 0x0074a700(local_40[0],*(undefined4 *)((int)this + 0x1c),local_38) - Create and load module
+        ///      - 0x0074a700 @ 0x0074a700: Module loader/creator function
         ///      - Takes module name ("001ebo") and creates/loads the module into game world
         ///
         /// Module Selection Logic:
@@ -431,15 +426,15 @@ namespace Andastra.Game.Games.Odyssey.Game
         /// - If alternatives don't exist, falls back to default
         ///
         /// Module Initialization Sequence:
-        /// 1. FUN_00401380: Initialize module loading system (prepare game state)
+        /// 1. 0x00401380: Initialize module loading system (prepare game state)
         /// 2. Load HD0:effects directory (effects resources)
         /// 3. Determine starting module (check alternatives, fallback to default)
-        /// 4. FUN_0074a700: Create and load module object
+        /// 4. 0x0074a700: Create and load module object
         /// 5. Module loads areas, entities, scripts, etc.
         ///
         /// Character Creation Flow:
         /// Main Menu -> New Game Button -> Character Creation -> Character Creation Complete ->
-        /// FUN_006d0b00 (New Game Handler) -> Module Initialization -> Module Load -> Player Entity Creation
+        /// 0x006d0b00 (New Game Handler) -> Module Initialization -> Module Load -> Player Entity Creation
         ///
         /// Module name casing: Ghidra shows "001ebo" (lowercase) and "END_M01AA" (uppercase)
         /// Resource lookup is case-insensitive, we use lowercase to match BioWare.NET conventions
@@ -459,20 +454,20 @@ namespace Andastra.Game.Games.Odyssey.Game
             // Store character data for player entity creation after module load
             _pendingCharacterData = characterData;
 
-            // Determine starting module using exact logic from FUN_006d0b00 (swkotor2.exe: 0x006d0b00)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_006d0b00: Module selection logic
+            // Determine starting module using exact logic from 0x006d0b00 (swkotor2.exe: 0x006d0b00)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 0x006d0b00: Module selection logic
             string startingModule = DetermineStartingModule();
 
-            // Initialize module loading system (equivalent to FUN_00401380)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_00401380 @ 0x00401380: Module initialization
+            // Initialize module loading system (equivalent to 0x00401380)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 0x00401380 @ 0x00401380: Module initialization
             InitializeModuleLoading();
 
-            // Load HD0:effects directory (equivalent to FUN_00630a90(local_40,"HD0:effects"))
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_006d0b00 line 31: Load effects directory
+            // Load HD0:effects directory (equivalent to 0x00630a90(local_40,"HD0:effects"))
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 0x006d0b00 line 31: Load effects directory
             // Note: HD0:effects is a directory alias, resource system handles this automatically
 
             // Load module synchronously
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_0074a700 @ 0x0074a700: Module loader/creator function
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 0x0074a700 @ 0x0074a700: Module loader/creator function
             // Original implementation: Takes module name and creates/loads the module into game world
             // Module loading is synchronous in the original engine - all resources are loaded before gameplay begins
             bool success = LoadModule(startingModule);
@@ -487,11 +482,11 @@ namespace Andastra.Game.Games.Odyssey.Game
         }
 
         /// <summary>
-        /// Determines the starting module name using the exact logic from FUN_006d0b00 (swkotor2.exe: 0x006d0b00).
+        /// Determines the starting module name using the exact logic from 0x006d0b00 (swkotor2.exe: 0x006d0b00).
         /// </summary>
         /// <returns>The starting module name to load.</returns>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_006d0b00 @ 0x006d0b00 (New Game Button Handler):
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 0x006d0b00 @ 0x006d0b00 (New Game Button Handler):
         /// - Line 29: Sets default to "001ebo" (prologue module)
         /// - Lines 43-50: Checks for alternative modules with codes 0x7db and 0xbba
         /// - If alternatives don't exist, falls back to "001ebo"
@@ -507,15 +502,15 @@ namespace Andastra.Game.Games.Odyssey.Game
             }
 
             // Default starting modules based on game version
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_006d0b00 line 29: "001ebo" (K2 prologue)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 0x006d0b00 line 29: "001ebo" (K2 prologue)
             // Based on swkotor.exe: "END_M01AA" (K1 Endar Spire)
             string defaultModule = _settings.Game == KotorGame.K1 ? "end_m01aa" : "001ebo";
 
             // Check for alternative modules with codes 0x7db (MOD) and 0xbba (RIM) (K2 only)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_006d0b00 lines 43-50:
-            // - FUN_00408df0(DAT_008283c0,local_30,0x7db,(undefined4 *)0x0) - Check module code 0x7db (MOD resource type)
-            // - If 0x7db fails: FUN_00408df0(DAT_008283c0,local_30,0xbba,(undefined4 *)0x0) - Check module code 0xbba (RIM resource type)
-            // - If both fail: FUN_00630d10(local_38,"001ebo") - Fallback to "001ebo"
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 0x006d0b00 lines 43-50:
+            // - 0x00408df0(DAT_008283c0,local_30,0x7db,(undefined4 *)0x0) - Check module code 0x7db (MOD resource type)
+            // - If 0x7db fails: 0x00408df0(DAT_008283c0,local_30,0xbba,(undefined4 *)0x0) - Check module code 0xbba (RIM resource type)
+            // - If both fail: 0x00630d10(local_38,"001ebo") - Fallback to "001ebo"
             // Resource type codes: 0x7db = 2011 = MOD (.mod file), 0xbba = 3002 = RIM (.rim file)
             // The engine checks if a resource with the module name and specified type exists in the resource manager
             // This effectively checks if a .mod or .rim file exists for the module name
@@ -545,14 +540,14 @@ namespace Andastra.Game.Games.Odyssey.Game
 
         /// <summary>
         /// Checks if a module resource exists with the specified resource type.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_00408df0 @ 0x00408df0: Resource existence check
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 0x00408df0 @ 0x00408df0: Resource existence check
         /// </summary>
         /// <param name="moduleName">The module name to check.</param>
         /// <param name="resourceType">The resource type to check (MOD = 0x7db, RIM = 0xbba).</param>
         /// <returns>True if the module resource exists, false otherwise.</returns>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_00408df0 @ 0x00408df0:
-        /// - Calls FUN_00407300 to search for resources with the specified name and type
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 0x00408df0 @ 0x00408df0:
+        /// - Calls 0x00407300 to search for resources with the specified name and type
         /// - Returns non-zero if resource exists, zero if not found
         /// - Resource type 0x7db (MOD) checks for .mod files
         /// - Resource type 0xbba (RIM) checks for .rim files
@@ -605,13 +600,13 @@ namespace Andastra.Game.Games.Odyssey.Game
         }
 
         /// <summary>
-        /// Initializes the module loading system (equivalent to FUN_00401380 @ 0x00401380).
+        /// Initializes the module loading system (equivalent to 0x00401380 @ 0x00401380).
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_00401380 @ 0x00401380 (Module Initialization):
-        /// - Called early in FUN_006d0b00 (line 24) to prepare game state for module loading
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 0x00401380 @ 0x00401380 (Module Initialization):
+        /// - Called early in 0x006d0b00 (line 24) to prepare game state for module loading
         /// - Sets up module loading context and prepares game systems for the new module
-        /// - Original implementation: FUN_00401380(DAT_008283d4) initializes module loading system
+        /// - Original implementation: 0x00401380(DAT_008283d4) initializes module loading system
         /// - This function prepares the game state, clears previous module state, and sets up module loading context
         /// </remarks>
         private void InitializeModuleLoading()
@@ -619,7 +614,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             Console.WriteLine("[GameSession] Initializing module loading system");
 
             // Clear any existing module state
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_00401380: Clears previous module state
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 0x00401380: Clears previous module state
             if (_currentModule != null)
             {
                 _currentModule = null;
@@ -627,7 +622,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             }
 
             // Prepare game systems for module loading
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_00401380: Prepares game systems
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 0x00401380: Prepares game systems
             // This includes clearing entity lists, resetting world state, etc.
             // (Already done in StartNewGame by clearing world entities)
 
@@ -640,7 +635,7 @@ namespace Andastra.Game.Games.Odyssey.Game
         /// <param name="moduleName">The module name to load.</param>
         /// <returns>True if the module was loaded successfully, false otherwise.</returns>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_0074a700 @ 0x0074a700: Module loader/creator function
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 0x0074a700 @ 0x0074a700: Module loader/creator function
         /// - Takes module name and creates/loads the module into game world
         /// - Original implementation: Module loading is synchronous - all resources are loaded before gameplay begins
         /// - Module loading sequence:
@@ -650,7 +645,7 @@ namespace Andastra.Game.Games.Odyssey.Game
         ///   4. Register all entities from area into world
         ///   5. Spawn/reposition player at entry position
         /// - Located via string references: "ModuleLoaded" @ 0x007bdd70, "ModuleRunning" @ 0x007bdd58
-        /// - Module state flags: 0=Idle, 1=ModuleLoaded, 2=ModuleRunning (set in FUN_006caab0 @ 0x006caab0)
+        /// - Module state flags: 0=Idle, 1=ModuleLoaded, 2=ModuleRunning (set in 0x006caab0 @ 0x006caab0)
         /// </remarks>
         private bool LoadModule(string moduleName)
         {
@@ -666,7 +661,7 @@ namespace Andastra.Game.Games.Odyssey.Game
                 // Load module
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module loading loads IFO, ARE, GIT, LYT, VIS, walkmesh resources
                 // Located via string references: "MODULES:" @ 0x007b58b4, module resource loading
-                // Original implementation: FUN_0074a700 loads module resources synchronously
+                // Original implementation: 0x0074a700 loads module resources synchronously
                 RuntimeModule module = _moduleLoader.LoadModule(moduleName);
                 if (module == null)
                 {
@@ -817,7 +812,7 @@ namespace Andastra.Game.Games.Odyssey.Game
         /// <remarks>
         /// Based on swkotor.exe and swkotor2.exe: Player entity creation from character generation
         /// - Located via string references: Character generation finish() function, player entity creation
-        /// - Original implementation: FUN_005261b0 @ 0x005261b0 (load creature from UTC template), character generation creates player entity
+        /// - Original implementation: 0x005261b0 @ 0x005261b0 (load creature from UTC template), character generation creates player entity
         /// - Character creation flow:
         ///   1. Create entity with Tag "Player", IsPlayer flag, Faction Friendly1, Immortal flag
         ///   2. Set appearance (Appearance_Type, Gender, PortraitId)
@@ -990,7 +985,7 @@ namespace Andastra.Game.Games.Odyssey.Game
                 // KOTOR has 8 skills: COMPUTER_USE=0, DEMOLITIONS=1, STEALTH=2, AWARENESS=3, PERSUADE=4, REPAIR=5, SECURITY=6, TREAT_INJURY=7
                 // Based on swkotor.exe and swkotor2.exe: Skill calculation during character creation
                 // Located via string references: Skill allocation system in character creation
-                // Original implementation: FUN_005261b0 @ 0x005261b0 (load creature from UTC template)
+                // Original implementation: 0x005261b0 @ 0x005261b0 (load creature from UTC template)
                 // Skill ranks = INT modifier + allocated skill points from character creation
                 // - Level 1 characters start with 0 base skill ranks (no class levels yet)
                 // - INT modifier applies to all skills (keyability from skills.2da)
@@ -1061,8 +1056,8 @@ namespace Andastra.Game.Games.Odyssey.Game
             // Add starting feats from class
             // Based on swkotor.exe and swkotor2.exe: Starting feats come from class featgain.2da
             // Located via string references: "CSWClass::LoadFeatGain: can't load featgain.2da" @ swkotor.exe: 0x0074b370, swkotor2.exe: 0x007c46bc
-            // Original implementation: FUN_005bcf70 @ 0x005bcf70 (swkotor.exe), FUN_0060d1d0 @ 0x0060d1d0 (swkotor2.exe)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005d63d0 reads "FeatGain" column from classes.2da for each class, then calls FUN_0060d1d0 (LoadFeatGain)
+            // Original implementation: 0x005bcf70 @ 0x005bcf70 (swkotor.exe), 0x0060d1d0 @ 0x0060d1d0 (swkotor2.exe)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005d63d0 reads "FeatGain" column from classes.2da for each class, then calls 0x0060d1d0 (LoadFeatGain)
             // LoadFeatGain loads featgain.2da table, finds row by label (from FeatGain column), reads "_REG" and "_BON" columns
             // Each class has automatic feats granted at level 1 from featgain.2da
             if (_gameDataManager != null && creatureComp != null && creatureComp.FeatList != null)

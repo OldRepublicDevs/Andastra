@@ -3,6 +3,7 @@ using BioWare.NET.Common;
 using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Odyssey.EngineApi;
 using Andastra.Game.Scripting.Interfaces;
+using Andastra.Game.Games.Common;
 
 namespace Andastra.Game.Games.Odyssey.Profiles
 {
@@ -23,7 +24,7 @@ namespace Andastra.Game.Games.Odyssey.Profiles
     /// - Feature support: Pazaak, Swoop Racing, Turret minigames supported in K1 (not in K2)
     /// - Feature differences: K1 does not support Influence system, Prestige Classes, Combat Forms, Item Crafting
     /// - Based on swkotor.exe game version detection and resource loading
-    /// - FUN_00633270 @ 0x00633270 sets up all game directories including MODULES, OVERRIDE, SAVES
+    /// - 0x00633270 @ 0x00633270 sets up all game directories including MODULES, OVERRIDE, SAVES
     /// </remarks>
     public class OdysseyKotor1GameProfile : BaseEngineProfile
     {
@@ -37,9 +38,9 @@ namespace Andastra.Game.Games.Odyssey.Profiles
             get { return "Star Wars: Knights of the Old Republic"; }
         }
 
-        public override Andastra.Runtime.Engines.Common.EngineFamily EngineFamily
+        public override Andastra.Game.Games.Common.EngineFamily EngineFamily
         {
-            get { return Andastra.Runtime.Engines.Common.EngineFamily.Odyssey; }
+            get { return Andastra.Game.Games.Common.EngineFamily.Odyssey; }
         }
 
         public override IEngineApi CreateEngineApi()
@@ -47,12 +48,12 @@ namespace Andastra.Game.Games.Odyssey.Profiles
             return new EngineApi.OdysseyEngineApi(BioWareGame.K1);
         }
 
-        protected override Andastra.Runtime.Engines.Common.IResourceConfig CreateResourceConfig()
+        protected override Andastra.Game.Games.Common.IResourceConfig CreateResourceConfig()
         {
             return new Kotor1ResourceConfig();
         }
 
-        protected override Andastra.Runtime.Engines.Common.ITableConfig CreateTableConfig()
+        protected override Andastra.Game.Games.Common.ITableConfig CreateTableConfig()
         {
             return new Kotor1TableConfig();
         }
@@ -81,7 +82,7 @@ namespace Andastra.Game.Games.Odyssey.Profiles
             }
         }
 
-        private class Kotor1TableConfig : Andastra.Runtime.Engines.Common.ITableConfig
+        private class Kotor1TableConfig : Andastra.Game.Games.Common.ITableConfig
         {
             private static readonly List<string> _requiredTables = new List<string>
             {
@@ -132,4 +133,3 @@ namespace Andastra.Game.Games.Odyssey.Profiles
         }
     }
 }
-

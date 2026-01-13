@@ -4,6 +4,7 @@ using BioWare.NET.Common;
 using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Odyssey.EngineApi;
 using Andastra.Game.Scripting.Interfaces;
+using Andastra.Game.Games.Common;
 
 namespace Andastra.Game.Games.Odyssey.Profiles
 {
@@ -29,7 +30,7 @@ namespace Andastra.Game.Games.Odyssey.Profiles
     /// - K2-specific features: Workbench, Lab Station, Item Breakdown (crafting system)
     /// - K2 does not support Pazaak Den (replaced with Pazaak cards), supports Pazaak minigame
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) game version detection and resource loading
-    /// - FUN_00633270 @ 0x00633270 sets up all game directories including MODULES, OVERRIDE, SAVES
+    /// - 0x00633270 @ 0x00633270 sets up all game directories including MODULES, OVERRIDE, SAVES
     /// </remarks>
     public class OdysseyTheSithLordsGameProfile : BaseEngineProfile
     {
@@ -43,9 +44,9 @@ namespace Andastra.Game.Games.Odyssey.Profiles
             get { return "Star Wars: Knights of the Old Republic II - The Sith Lords"; }
         }
 
-        public override Andastra.Runtime.Engines.Common.EngineFamily EngineFamily
+        public override Andastra.Game.Games.Common.EngineFamily EngineFamily
         {
-            get { return Andastra.Runtime.Engines.Common.EngineFamily.Odyssey; }
+            get { return Andastra.Game.Games.Common.EngineFamily.Odyssey; }
         }
 
         public override IEngineApi CreateEngineApi()
@@ -53,12 +54,12 @@ namespace Andastra.Game.Games.Odyssey.Profiles
             return new EngineApi.OdysseyEngineApi(BioWareGame.K2);
         }
 
-        protected override Andastra.Runtime.Engines.Common.IResourceConfig CreateResourceConfig()
+        protected override Andastra.Game.Games.Common.IResourceConfig CreateResourceConfig()
         {
             return new TheSithLordsResourceConfig();
         }
 
-        protected override Andastra.Runtime.Engines.Common.ITableConfig CreateTableConfig()
+        protected override Andastra.Game.Games.Common.ITableConfig CreateTableConfig()
         {
             return new TheSithLordsTableConfig();
         }
@@ -100,7 +101,7 @@ namespace Andastra.Game.Games.Odyssey.Profiles
             }
         }
 
-        private class TheSithLordsTableConfig : Andastra.Runtime.Engines.Common.ITableConfig
+        private class TheSithLordsTableConfig : Andastra.Game.Games.Common.ITableConfig
         {
             private static readonly List<string> _requiredTables = new List<string>
             {
@@ -169,4 +170,3 @@ namespace Andastra.Game.Games.Odyssey.Profiles
         }
     }
 }
-

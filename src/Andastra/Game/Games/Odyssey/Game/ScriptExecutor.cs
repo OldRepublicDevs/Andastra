@@ -39,9 +39,9 @@ namespace Andastra.Game.Games.Odyssey
     ///
     /// Based on reverse engineering of:
     /// - swkotor.exe: Script execution functions (KOTOR1)
-    /// - swkotor2.exe: DispatchScriptEvent @ 0x004dd730, FUN_004dcfb0 @ 0x004dcfb0 (KOTOR2)
-    /// - Script execution: FUN_004dcfb0 dispatches script events and executes scripts
-    ///   - Function signature: `int FUN_004dcfb0(void *param_1, int param_2, void *param_3, int param_4)`
+    /// - swkotor2.exe: DispatchScriptEvent @ 0x004dd730, 0x004dcfb0 @ 0x004dcfb0 (KOTOR2)
+    /// - Script execution: 0x004dcfb0 dispatches script events and executes scripts
+    ///   - Function signature: `int 0x004dcfb0(void *param_1, int param_2, void *param_3, int param_4)`
     ///   - param_1: Entity pointer (owner of script)
     ///   - param_2: Script event type (CSWSSCRIPTEVENT_EVENTTYPE_* constant)
     ///   - param_3: Triggerer entity pointer (optional, can be null)
@@ -147,7 +147,7 @@ namespace Andastra.Game.Games.Odyssey
         ///
         /// Based on reverse engineering of:
         /// - swkotor.exe: Script execution context setup (KOTOR1)
-        /// - swkotor2.exe: FUN_005226d0 @ 0x005226d0 (script execution context setup, KOTOR2)
+        /// - swkotor2.exe: 0x005226d0 @ 0x005226d0 (script execution context setup, KOTOR2)
         /// - Engine API functions (Kotor1, TheSithLords) access AdditionalContext as IGameServicesContext
         /// - Script execution: Engine API functions check for VMExecutionContext.AdditionalContext
         ///   and cast to IGameServicesContext to access game services
@@ -185,7 +185,7 @@ namespace Andastra.Game.Games.Odyssey
     ///
     /// Based on reverse engineering of:
     /// - swkotor.exe: Script execution functions
-    /// - Script execution: FUN_004dcfb0 @ 0x004dcfb0 (similar to KOTOR2 but with K1-specific behavior)
+    /// - Script execution: 0x004dcfb0 @ 0x004dcfb0 (similar to KOTOR2 but with K1-specific behavior)
     /// - ExecuteScript NWScript function: Different implementation than KOTOR2 (doesn't use _runScriptVar)
     /// - Located via string references: KOTOR1-specific script event type definitions
     /// </remarks>
@@ -213,7 +213,7 @@ namespace Andastra.Game.Games.Odyssey
     /// - Enhanced script execution with additional context support
     ///
     /// Based on reverse engineering of:
-    /// - swkotor2.exe: DispatchScriptEvent @ 0x004dd730, FUN_004dcfb0 @ 0x004dcfb0
+    /// - swkotor2.exe: DispatchScriptEvent @ 0x004dd730, 0x004dcfb0 @ 0x004dcfb0
     /// - Script execution: Enhanced script execution with instruction budget tracking
     /// - ExecuteScript NWScript function: Uses _runScriptVar for script variable support
     /// - Located via string references: TSL-specific script event type definitions
