@@ -1656,7 +1656,7 @@ namespace Andastra.Game.Games.Odyssey
                     {
                         // Fire OnHeartbeat script event
                         // Located via string references: "OnHeartbeat" @ 0x007bd720 (swkotor2.exe)
-                        world.EventBus.FireScriptEvent(areaEntity, Core.Enums.ScriptEvent.OnHeartbeat, null);
+                        world.EventBus.FireScriptEvent(areaEntity, Andastra.Runtime.Core.Enums.ScriptEvent.OnHeartbeat, null);
                     }
                 }
             }
