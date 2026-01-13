@@ -230,7 +230,7 @@ namespace Andastra.Runtime.Core.Module
                 await UnloadCurrentModule();
 
                 // 6. Load new module
-                IModule newModule = await _moduleLoader.LoadModule(moduleResRef);
+                Runtime.Core.Interfaces.IModule newModule = await _moduleLoader.LoadModule(moduleResRef);
                 if (newModule == null)
                 {
                     throw new InvalidOperationException("Failed to load module: " + moduleResRef);
