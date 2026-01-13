@@ -2,7 +2,6 @@ using System;
 using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Games.Common;
 using Andastra.Game.Games.Common;
 
@@ -20,12 +19,11 @@ namespace Andastra.Runtime.Core.AI
     /// - This class is kept for backward compatibility but delegates to AIControllerSystem
     /// - Original implementation merged into Runtime.Games.Common.AIControllerSystem
     /// </remarks>
-    public class AIController : BaseAIControllerSystem
+    public class AIController
     {
         private readonly AIControllerSystem _aiControllerSystem;
 
         public AIController(IWorld world, CombatSystem combatSystem)
-            : base(world)
         {
             if (combatSystem == null)
             {
@@ -50,40 +48,10 @@ namespace Andastra.Runtime.Core.AI
         /// Updates AI for all NPCs.
         /// </summary>
         /// <param name="deltaTime">Time since last frame in seconds.</param>
-        public override void Update(float deltaTime)
+        public void Update(float deltaTime)
         {
             // Delegate to unified system
             _aiControllerSystem.Update(deltaTime);
-        }
-
-        /// <summary>
-        /// Fires heartbeat script for a creature.
-        /// Implemented for abstract method requirement - actual work done by unified system.
-        /// </summary>
-        protected override void FireHeartbeatScript(IEntity creature)
-        {
-            // Implementation not needed - unified system handles this via Update()
-            // This is only here to satisfy abstract method requirement
-        }
-
-        /// <summary>
-        /// Checks perception for a creature.
-        /// Implemented for abstract method requirement - actual work done by unified system.
-        /// </summary>
-        protected override void CheckPerception(IEntity creature)
-        {
-            // Implementation not needed - unified system handles this via Update()
-            // This is only here to satisfy abstract method requirement
-        }
-
-        /// <summary>
-        /// Handles combat AI for a creature.
-        /// Implemented for abstract method requirement - actual work done by unified system.
-        /// </summary>
-        protected override void HandleCombatAI(IEntity creature)
-        {
-            // Implementation not needed - unified system handles this via Update()
-            // This is only here to satisfy abstract method requirement
         }
 
         /// <summary>
