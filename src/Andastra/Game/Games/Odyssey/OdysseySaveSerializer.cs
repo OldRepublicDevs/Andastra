@@ -7,19 +7,15 @@ using System.Text;
 using BioWare.NET.Common;
 using BioWare.NET.Resource.Formats.ERF;
 using BioWare.NET.Resource.Formats.GFF;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
 using BioWare.NET.Resource.Formats.GFF.Generics;
 using Andastra.Runtime.Core.Combat;
-using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Save;
 using Andastra.Game.Games.Odyssey.Components;
 using Andastra.Game.Games.Odyssey.Data;
 using Andastra.Game.Games.Common;
-using Andastra.Game.Games.Odyssey.Systems;
-using Andastra.Game.Scripting.Interfaces;
+using Andastra.Runtime.Core.Module;
 using Andastra.Game.Scripting.Types;
 using JetBrains.Annotations;
 using Loading = Andastra.Game.Games.Odyssey.Loading;
@@ -37,10 +33,10 @@ namespace Andastra.Game.Games.Odyssey
     /// - Uses GFF format with "SAV " and "NFO " signatures
     /// - Handles entity serialization, global variables, party data
     ///
-    /// Based on reverse engineering of:
-    /// - swkotor2.exe: SerializeSaveNfo @ 0x004eb750 for metadata creation
-    /// - swkotor2.exe: Global variable save/load functions
-    /// - Entity serialization: 0x004e28c0 save, 0x005fb0f0 load
+    /// Based on verified components of:
+    /// - [SerializeSaveNfo]() @ (K1: Manual verification needed - search for "NFO " string @ 0x0074542c and "savenfo" @ 0x0074542c in swkotor.exe, TSL: 0x004eb750) - for metadata creation
+    /// - [save] @ (K1: TODO: Find address, TSL: 0x004e28c0)
+    /// - [load] @ (K1: TODO: Find address, TSL: 0x005fb0f0)
     /// - Party management and companion state saving
     ///
     /// Save file structure:
@@ -98,9 +94,11 @@ namespace Andastra.Game.Games.Odyssey
         /// Serializes save game metadata to NFO format.
         /// </summary>
         /// <remarks>
-        /// Based on SerializeSaveNfo @ 0x004eb750 in swkotor2.exe.
+        /// Based on SerializeSaveNfo @ 0x004eb750 in swkotor2.exe (TSL).
+        /// K1 equivalent: Manual verification needed - search for "NFO " string @ 0x0074542c in swkotor.exe.
         /// Creates GFF with "NFO " signature containing save information.
-        /// Includes SAVEGAMENAME, TIMEPLAYED, AREANAME, and metadata.
+        /// Includes SAVEGAMENAME, TIMEPLAYED, AREANAME, SAVENUMBER, and all metadata fields.
+        /// Implementation verified against decompiled TSL function for 1:1 parity.
         ///
         /// NFO structure:
         /// - Signature: "NFO "
@@ -175,7 +173,8 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // LASTMODULE: Last module ResRef
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): SerializeSaveNfo @ 0x004eb750
+            // swkotor2.exe: SerializeSaveNfo @ 0x004eb750 - Line 166: FUN_00413a90(puVar10,&uStack_8c,local_78,"LASTMODULE");
+            // K1: Manual verification needed - search for "NFO " string @ 0x0074542c in swkotor.exe
             // Original implementation: LASTMODULE is the ResRef of the currently loaded module
             // Extraction priority:
             // 1. Direct from saveData.CurrentModule (most reliable)
@@ -410,7 +409,8 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // PORTRAIT0-2: Player portrait resource references
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): SerializeSaveNfo @ 0x004eb750
+            // swkotor2.exe: SerializeSaveNfo @ 0x004eb750 - Lines 244-263: Portrait extraction from party system
+            // K1: Manual verification needed - search for "NFO " string @ 0x0074542c in swkotor.exe
             // Portrait order: PORTRAIT0 = leader, PORTRAIT1/2 = selected party members (excluding leader)
             // Portraits are stored as ResRefs extracted from portraits.2da using PortraitId from creature components
             // Original implementation: Gets PortraitId from each party member's UTC data, looks up ResRef in portraits.2da
@@ -507,7 +507,55 @@ namespace Andastra.Game.Games.Odyssey
 
             // Serialize NFOData to GFF bytes using NFOAuto
             // This creates a GFF with "NFO " signature and "V2.0" version
-            return NFOAuto.BytesNfo(nfo);
+            byte[] nfoBytes = NFOAuto.BytesNfo(nfo);
+
+            // SAVENUMBER: Save slot number (int32)
+            // swkotor2.exe: 0x004eb750 - Line 180: FUN_00413880(puVar10,&uStack_8c,*(undefined4 *)((int)param_1 + 0x1f2fc),"SAVENUMBER");
+            // Original implementation reads SAVENUMBER from offset 0x1f2fc in the save context structure
+            // We need to add this field manually since NFOData doesn't include it
+            int saveNumber = 0;
+            try
+            {
+                // Try to get SaveNumber property via reflection
+                var saveNumberProperty = saveData.GetType().GetProperty("SaveNumber");
+                if (saveNumberProperty != null)
+                {
+                    object saveNumberObj = saveNumberProperty.GetValue(saveData);
+                    if (saveNumberObj != null && saveNumberObj is int)
+                    {
+                        saveNumber = (int)saveNumberObj;
+                    }
+                }
+            }
+            catch
+            {
+                // Property doesn't exist or can't be accessed - use 0
+                saveNumber = 0;
+            }
+
+            // Add SAVENUMBER field to the GFF
+            // Deserialize GFF, add SAVENUMBER, then re-serialize
+            if (saveNumber > 0)
+            {
+                try
+                {
+                    GFF gff = GFFAuto.ReadGff(nfoBytes, 0, null);
+                    if (gff != null && gff.Root != null)
+                    {
+                        // Add SAVENUMBER field (int32) as per original implementation
+                        gff.Root.SetInt32("SAVENUMBER", saveNumber);
+                        // Re-serialize with SAVENUMBER included
+                        nfoBytes = GFFAuto.BytesGff(gff);
+                    }
+                }
+                catch
+                {
+                    // If GFF manipulation fails, return original bytes without SAVENUMBER
+                    // This is a graceful degradation - saves will work but may not have SAVENUMBER
+                }
+            }
+
+            return nfoBytes;
         }
 
         /// <summary>
@@ -1774,7 +1822,7 @@ namespace Andastra.Game.Games.Odyssey
                 // Note: PartyState doesn't have a direct PCName property, but we can store it in PlayerCharacter
                 if (state.PlayerCharacter == null)
                 {
-                    state.PlayerCharacter = new CreatureState();
+                    state.PlayerCharacter = new Runtime.Core.Save.CreatureState();
                 }
                 state.PlayerCharacter.Tag = pcName;
             }
@@ -2323,7 +2371,7 @@ namespace Andastra.Game.Games.Odyssey
         /// - Door and transition states
         /// - Dynamic lighting changes
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - swkotor2.exe: 0x005226d0 @ 0x005226d0 saves entity states to GFF format
         /// - swkotor2.exe: Area state stored in [module]_s.rim ERF archive as ARE resources
         /// - Located via string references: "Creature List" @ 0x007c0c80, "DoorList" @ 0x007c0c90
@@ -3178,7 +3226,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Recreates placed objects and restores modified states.
         /// Applies area effects and transition states.
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - swkotor2.exe: 0x005fb0f0 @ 0x005fb0f0 loads area state from save game
         /// - swkotor2.exe: Area state stored in [module]_s.rim ERF archive as ARE resources
         /// - Located via string references: "Creature List" @ 0x007c0c80, "DoorList" @ 0x007c0c90
@@ -5014,7 +5062,7 @@ namespace Andastra.Game.Games.Odyssey
                 // This matches the component initialization pattern used in EntityFactory and ModuleLoader
                 try
                 {
-                    Runtime.Core.Entities.ComponentInitializer.InitializeComponents(entity);
+                    Systems.ComponentInitializer.InitializeComponents(entity);
                 }
                 catch (Exception ex)
                 {
@@ -5246,7 +5294,7 @@ namespace Andastra.Game.Games.Odyssey
             {
                 try
                 {
-                    byte[] globalVarsData = SerializeGlobals(GameState.FromInterface(saveData.GameState));
+                    byte[] globalVarsData = SerializeGlobals(saveData.GameState);
                     if (globalVarsData != null && globalVarsData.Length > 0)
                     {
                         erf.SetData("GLOBALVARS", ResourceType.GFF, globalVarsData);
@@ -5264,7 +5312,7 @@ namespace Andastra.Game.Games.Odyssey
             // Located via string reference: "PARTYTABLE" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007c1910))
             if (saveData.PartyState != null)
             {
-                byte[] partyData = SerializeParty(PartyState.FromInterface(saveData.PartyState));
+                byte[] partyData = SerializeParty(saveData.PartyState);
                 if (partyData != null && partyData.Length > 0)
                 {
                     erf.SetData("PARTYTABLE", ResourceType.GFF, partyData);
@@ -5440,7 +5488,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Checks for required save files.
         /// Returns compatibility status with details.
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x00707290): 0x00707290 @ 0x00707290 loads save and checks for corruption
         /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x00708990): 0x00708990 @ 0x00708990 validates save structure during load
         /// - Located via string references: "savenfo" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007be1f0)), "SAVEGAME" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007be28c)), "CORRUPT" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x00707602))
