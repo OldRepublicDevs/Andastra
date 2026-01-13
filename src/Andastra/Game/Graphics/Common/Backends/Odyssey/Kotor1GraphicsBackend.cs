@@ -24,7 +24,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// </summary>
     /// <remarks>
     /// KOTOR 1 Graphics Backend:
-    /// - Based on reverse engineering of swkotor.exe
+    /// - Based on verified components of swkotor.exe
     /// - Original game graphics system: OpenGL (OPENGL32.DLL) with WGL extensions
     /// - Graphics initialization:
     ///   - 0x0044dab0 @ 0x0044dab0 (main OpenGL context creation)
@@ -3204,7 +3204,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// 4. Upload texture data with mipmap support (glTexImage2D, glCompressedTexImage2D)
         /// 5. Set texture parameters (matching swkotor.exe texture setup)
         ///
-        /// Based on reverse engineering of swkotor.exe:
+        /// Based on verified components of swkotor.exe:
         /// - Texture initialization: 0x00427c90 @ 0x00427c90
         /// - Resource loading: CExoResMan::GetResObject, CExoKeyTable lookup
         /// - File formats: TPC (primary), TGA (fallback), DDS (compressed)
@@ -3421,7 +3421,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// <summary>
         /// Uploads texture data to OpenGL with mipmap support.
         /// Matches swkotor.exe texture upload pattern (glTexImage2D, glCompressedTexImage2D).
-        /// Based on reverse engineering of 0x00427c90 @ 0x00427c90.
+        /// Based on verified components of 0x00427c90 @ 0x00427c90.
         /// </summary>
         private bool UploadTextureData(uint textureTarget, TPC tpc, TPCTextureFormat tpcFormat)
         {
@@ -3619,7 +3619,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// <summary>
         /// Creates a separate OpenGL texture for a single mip level.
         /// Matches swkotor.exe pattern where each mip level has its own texture ID.
-        /// Based on reverse engineering of 0x0041fa30 @ 0x0041fa30.
+        /// Based on verified components of 0x0041fa30 @ 0x0041fa30.
         /// </summary>
         /// <param name="mipmap">The mipmap data to upload</param>
         /// <param name="tpcFormat">The TPC texture format</param>

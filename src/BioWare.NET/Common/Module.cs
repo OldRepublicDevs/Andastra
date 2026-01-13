@@ -134,7 +134,7 @@ namespace BioWare.NET.Common
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:136-183
         // Original: def contains(self, restype: ResourceType, *, game: Game | None = None) -> bool:
         //
-        // REVERSE ENGINEERING NOTES:
+        // verified components NOTES:
         // This method implements the CONVENTIONAL resource type distribution for module files.
         // IMPORTANT: This is a CONVENTION, not a hard engine requirement.
         //

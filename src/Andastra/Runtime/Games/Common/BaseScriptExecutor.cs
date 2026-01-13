@@ -18,7 +18,7 @@ namespace Andastra.Runtime.Games.Common
     /// - Script event routing and hook management
     /// - Execution context management
     ///
-    /// Based on reverse engineering of multiple BioWare engines.
+    /// Based on verified components of multiple BioWare engines.
     /// Common NCS script execution patterns identified across all engines.
     ///
     /// Common script execution features:

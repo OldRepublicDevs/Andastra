@@ -210,7 +210,7 @@ namespace Andastra.Game.Stride.Graphics
         {
             if (cameraController is Runtime.Core.Camera.CameraController coreCameraController)
             {
-                return new Runtime.Stride.Camera.StrideDialogueCameraController(coreCameraController);
+                return new Game.Stride.Camera.StrideDialogueCameraController(coreCameraController);
             }
             throw new ArgumentException("Camera controller must be a CameraController instance", nameof(cameraController));
         }
@@ -220,7 +220,7 @@ namespace Andastra.Game.Stride.Graphics
             if (resourceProvider is Runtime.Content.Interfaces.IGameResourceProvider provider)
             {
                 var spatialAudio = CreateSpatialAudio();
-                return new Runtime.Stride.Audio.StrideSoundPlayer(provider, spatialAudio);
+                return new Audio.StrideSoundPlayer(provider, spatialAudio);
             }
             throw new ArgumentException("Resource provider must be an IGameResourceProvider instance", nameof(resourceProvider));
         }
@@ -229,7 +229,7 @@ namespace Andastra.Game.Stride.Graphics
         {
             if (resourceProvider is Runtime.Content.Interfaces.IGameResourceProvider provider)
             {
-                return new Runtime.Stride.Audio.StrideMusicPlayer(provider);
+                return new Game.Stride.Audio.StrideMusicPlayer(provider);
             }
             throw new ArgumentException("Resource provider must be an IGameResourceProvider instance", nameof(resourceProvider));
         }
@@ -239,7 +239,7 @@ namespace Andastra.Game.Stride.Graphics
             if (resourceProvider is Runtime.Content.Interfaces.IGameResourceProvider provider)
             {
                 var spatialAudio = CreateSpatialAudio();
-                return new Runtime.Stride.Audio.StrideVoicePlayer(provider, spatialAudio);
+                return new Game.Stride.Audio.StrideVoicePlayer(provider, spatialAudio);
             }
             throw new ArgumentException("Resource provider must be an IGameResourceProvider instance", nameof(resourceProvider));
         }

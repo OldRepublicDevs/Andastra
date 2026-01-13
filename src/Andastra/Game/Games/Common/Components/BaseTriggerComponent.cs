@@ -17,7 +17,7 @@ namespace Andastra.Game.Games.Common.Components
     /// - Common functionality: Geometry, IsEnabled, TriggerType, LinkedTo, LinkedToModule, IsTrap, TrapActive, TrapDetected, TrapDisarmed, TrapDetectDC, TrapDisarmDC, FireOnce, HasFired, ContainsPoint, ContainsEntity
     /// - Engine-specific: File format details, event handling, field names, transition systems, trap systems
     ///
-    /// Based on reverse engineering of trigger systems across multiple BioWare engines.
+    /// Based on verified components of trigger systems across multiple BioWare engines.
     ///
     /// Common structure across engines:
     /// - Geometry (IList&lt;Vector3&gt;): Polygon vertices defining trigger volume

@@ -117,7 +117,7 @@ namespace Andastra.Game.Games.Common
     ///      * Eclipse: Constructor takes IEngineProfile + Game enum (additional parameter)
     ///      * Pattern: BaseEngine takes profile, Eclipse adds game parameter for game type detection
     ///
-    /// 5. Cross-Engine Reverse Engineering References:
+    /// 5. Cross-Engine verified components References:
     ///    - Odyssey Engine (swkotor.exe, swkotor2.exe):
     ///      * 0x00404250 @ 0x00404250 (swkotor2.exe: WinMain equivalent, engine initialization)
     ///      * 0x00633270 @ 0x00633270 (swkotor2.exe: Sets up resource directories)

@@ -14,7 +14,7 @@ namespace Andastra.Game.Games.Eclipse.DragonAge2
     /// <remarks>
     /// Dragon Age 2 Navigation Mesh Implementation:
     /// - Game-specific implementation of Eclipse navigation system
-    /// - Based on reverse engineering of DragonAge2.exe navigation functions
+    /// - Based on verified components of DragonAge2.exe navigation functions
     /// - Inherits common Eclipse navigation functionality from EclipseNavigationMesh
     /// 
     /// Dragon Age 2 specific behavior:

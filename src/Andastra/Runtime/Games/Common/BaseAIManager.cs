@@ -15,16 +15,22 @@ namespace Andastra.Runtime.Games.Common
     /// - Handles perception, decision making, action execution
     /// - Provides foundation for engine-specific AI behaviors
     ///
-    /// Based on reverse engineering of:
+    /// Based on verified components of:
     /// - swkotor.exe: Basic AI with perception and combat
     /// - swkotor2.exe: Advanced AI with influence, factions, complex behaviors
     /// - nwmain.exe: D20-based AI with tactical positioning
     /// - daorigins.exe: Complex tactical AI with positioning and abilities
     /// - DragonAge2.exe: Enhanced Eclipse engine AI with improved combat behavior and party tactics
     ///   - Located via string references: "PackageAI" @ 0x00bf468c, "SetBehaviourMessage" @ 0x00bfc8b4
-    ///   - Combat system: "CombatTarget" @ 0x00bf4dc0, "InCombat" @ 0x00bf4c10, "Combatant" @ 0x00bf4664
-    ///   - Game mode: "GameModeCombat" @ 0x00beaf3c, "BInCombatMode" @ 0x00beeed2
-    ///   - Behavior system: "SetBehaviourMessage" @ 0x00bfc8b4 (UnrealScript message passing)
+    ///   - Combat system:
+    ///     - ["CombatTarget"] @ (K1: TODO: Find address, TSL: 0x00bf4dc0)
+    ///     - ["InCombat"]     @ (K1: TODO: Find address, TSL: 0x00bf4c10)
+    ///     - ["Combatant"]    @ (K1: TODO: Find address, TSL: 0x00bf4664)
+    ///   - Game mode:
+    ///     - ["GameModeCombat"] @ (K1: TODO: Find address, TSL: 0x00beaf3c)
+    ///     - ["BInCombatMode"] @ (K1: TODO: Find address, TSL: 0x00beeed2)
+    ///   - Behavior system:
+    ///     - ["SetBehaviourMessage"] @ (K1: TODO: Find address, TSL: 0x00bfc8b4) (UnrealScript message passing)
     ///   - Enhanced from daorigins.exe: Improved party coordination, better ability selection, refined positioning
     ///   - Uses same Eclipse engine architecture as daorigins.exe: UnrealScript event system, navigation mesh pathfinding
     ///   - AI update loop: Integrated with Unreal Engine 3 frame update system

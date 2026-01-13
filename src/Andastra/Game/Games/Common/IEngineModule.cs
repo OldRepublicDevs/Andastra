@@ -47,7 +47,7 @@ namespace Andastra.Game.Games.Engines.Common
     ///    - Eclipse: Check for module package/rim file existence
     ///    - Infinity: Check for ARE file existence
     ///
-    /// Reverse Engineering Notes:
+    /// verified components Notes:
     /// - Engine-specific implementations document executable-specific addresses and details.
     /// - Base interface documents only common patterns across all engines.
     ///

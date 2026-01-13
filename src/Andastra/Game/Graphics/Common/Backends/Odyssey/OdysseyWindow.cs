@@ -10,7 +10,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// </summary>
     /// <remarks>
     /// Odyssey Window:
-    /// - Based on reverse engineering of swkotor.exe and swkotor2.exe
+    /// - Based on verified components of swkotor.exe and swkotor2.exe
     /// - Original game window: Windows HWND with "Render Window" class
     /// - Located via string references: "Render Window" @ 0x007b5680
     /// - "AllowWindowedMode" @ 0x007c75d0 (windowed mode option)

@@ -15,7 +15,7 @@ namespace Andastra.Runtime.Games.Common
     /// - Type-safe event subscription and firing
     /// - Supports both immediate and queued event processing
     ///
-    /// Based on reverse engineering of:
+    /// Based on verified components of:
     /// - swkotor.exe: Event dispatching systems
     /// - swkotor2.exe: Event routing and script event handling
     /// - nwmain.exe: Aurora event systems

@@ -1,4 +1,3 @@
-using System;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Game.Games.Common.Dialogue;
 using JetBrains.Annotations;
@@ -15,7 +14,7 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
     /// - Error: "Error: dialogue can't find object '%s'!" @ 0x007c3730 (dialogue object lookup failure)
     /// - Cross-engine analysis:
     ///   - Aurora (nwmain.exe): CNWSDialog class, "ScriptDialogue" @ 0x140dddb80, "BeginConversation" @ ExecuteCommandBeginConversation, "EndConversation" @ 0x140de6f70
-    ///   - Eclipse (daorigins.exe, DragonAge2.exe, ): "Conversation" class, "ShowConversationGUIMessage", "Conversation.HandleResponseSelection" - UnrealScript-based dialogue system
+    ///   - Eclipse (daorigins.exe, DragonAge2.exe): "Conversation" class, "ShowConversationGUIMessage", "Conversation.HandleResponseSelection" - UnrealScript-based dialogue system
     /// - Inheritance: Base class BaseConversationContext (Runtime.Games.Common) - abstract conversation context, Odyssey override (Runtime.Games.Odyssey) - DLG-based dialogue
     /// - Original implementation: Manages conversation participants and speaker lookup for DLG-based dialogue system
     /// - Conversation participants: Owner (OBJECT_SELF), PC, PCSpeaker (GetPCSpeaker()), additional participants by tag (Speaker/Listener fields in DLG entries)

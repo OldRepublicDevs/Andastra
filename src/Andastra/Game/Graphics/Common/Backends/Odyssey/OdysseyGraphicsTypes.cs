@@ -263,7 +263,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// </summary>
     /// <remarks>
     /// OpenGL VBO Implementation:
-    /// - Based on reverse engineering of swkotor.exe and swkotor2.exe
+    /// - Based on verified components of swkotor.exe and swkotor2.exe
     /// - Original game: Uses DirectX vertex buffers, but OpenGL backend uses VBOs
     /// - xoreos: Uses glGenBuffers, glBufferData, glBindBuffer for VBO management
     /// - PyKotor: Uses glGenBuffers(1, &vbo), glBufferData(GL_ARRAY_BUFFER, ...) for VBO creation
@@ -469,7 +469,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// </summary>
     /// <remarks>
     /// OpenGL IBO Implementation:
-    /// - Based on reverse engineering of swkotor.exe and swkotor2.exe
+    /// - Based on verified components of swkotor.exe and swkotor2.exe
     /// - Original game: Uses DirectX index buffers, but OpenGL backend uses IBOs
     /// - xoreos: Uses glGenBuffers, glBufferData, glBindBuffer for IBO management
     /// - Matching xoreos indexbuffer.cpp: initGL(), updateGL(), destroyGL()
@@ -1162,7 +1162,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// </summary>
     /// <remarks>
     /// Odyssey Basic Effect:
-    /// - Based on reverse engineering of swkotor.exe and swkotor2.exe
+    /// - Based on verified components of swkotor.exe and swkotor2.exe
     /// - Original game graphics: OpenGL fixed-function pipeline (OPENGL32.dll @ 0x00809ce2)
     /// - Matrix application: Original engine uses glMatrixMode(GL_PROJECTION) and glMatrixMode(GL_MODELVIEW)
     /// - Based on xoreos implementation: graphics.cpp renderWorld() @ lines 1059-1081

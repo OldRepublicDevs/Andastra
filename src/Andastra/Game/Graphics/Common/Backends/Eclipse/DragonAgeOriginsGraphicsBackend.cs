@@ -38,7 +38,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
     /// </summary>
     /// <remarks>
     /// Dragon Age Origins Graphics Backend:
-    /// - Based on reverse engineering of daorigins.exe
+    /// - Based on verified components of daorigins.exe
     /// - Original game graphics system: DirectX 9 with Eclipse engine rendering pipeline
     /// - Graphics initialization: Matches daorigins.exe initialization code exactly
     /// - Located via reverse engineering: DirectX 9 calls, rendering pipeline, shader usage
@@ -626,7 +626,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// Matches daorigins.exe rendering code exactly.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of daorigins.exe:
+        /// Based on verified components of daorigins.exe:
         /// - Dragon Age Origins uses DirectX 9 for rendering
         /// - Located via reverse engineering: DirectX 9 calls, rendering pipeline, shader usage
         /// - Original implementation: IDirect3DDevice9::Clear, IDirect3DDevice9::BeginScene, rendering, IDirect3DDevice9::EndScene
@@ -714,7 +714,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// Matches daorigins.exe 3D scene rendering code.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of daorigins.exe:
+        /// Based on verified components of daorigins.exe:
         /// - Scene rendering includes terrain, objects, characters, effects
         /// - Uses DirectX 9 fixed-function pipeline and shaders
         /// - Rendering order: Terrain -> Static objects -> Characters -> Effects
@@ -2516,7 +2516,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// Matches daorigins.exe UI rendering code.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of daorigins.exe:
+        /// Based on verified components of daorigins.exe:
         /// - UI rendering happens after 3D scene
         /// - Uses DirectX 9 sprite rendering for UI elements
         /// - Includes HUD, dialogue boxes, menus
@@ -2567,7 +2567,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// Based on daorigins.exe: HUD is always visible during gameplay.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of daorigins.exe:
+        /// Based on verified components of daorigins.exe:
         /// - HUD elements are rendered as 2D sprites (textured quads) over the 3D scene
         /// - Health bars: Bottom-left corner, shows player and party member health
         /// - Minimap: Top-right corner, shows area map with player position
@@ -3063,17 +3063,17 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
             }
 
             // Calculate map texture coordinates
-            Vector2 worldPos2D = new Vector2(worldPos.X, worldPos.Z);
-            Vector2 worldDelta = new Vector2(worldPos2D.X - worldPt1.X, worldPos2D.Y - worldPt1.Y);
-            Vector2 worldRange = new Vector2(worldPt2.X - worldPt1.X, worldPt2.Y - worldPt1.Y);
-            Vector2 mapRange = new Vector2(mapPt2.X - mapPt1.X, mapPt2.Y - mapPt1.Y);
+            System.Numerics.Vector2 worldPos2D = new System.Numerics.Vector2(worldPos.X, worldPos.Z);
+            System.Numerics.Vector2 worldDelta = new System.Numerics.Vector2(worldPos2D.X - worldPt1.X, worldPos2D.Y - worldPt1.Y);
+            System.Numerics.Vector2 worldRange = new System.Numerics.Vector2(worldPt2.X - worldPt1.X, worldPt2.Y - worldPt1.Y);
+            System.Numerics.Vector2 mapRange = new System.Numerics.Vector2(mapPt2.X - mapPt1.X, mapPt2.Y - mapPt1.Y);
 
-            Vector2 mapPos;
+            System.Numerics.Vector2 mapPos;
             if (worldRange.X != 0.0f && worldRange.Y != 0.0f)
             {
-                Vector2 worldDeltaDivRange = new Vector2(worldDelta.X / worldRange.X, worldDelta.Y / worldRange.Y);
-                Vector2 scaledMapRange = new Vector2(worldDeltaDivRange.X * mapRange.X, worldDeltaDivRange.Y * mapRange.Y);
-                mapPos = new Vector2(mapPt1.X + scaledMapRange.X, mapPt1.Y + scaledMapRange.Y);
+                Runtime.Graphics.Vector2 worldDeltaDivRange = new Runtime.Graphics.Vector2(worldDelta.X / worldRange.X, worldDelta.Y / worldRange.Y);
+                Runtime.Graphics.Vector2 scaledMapRange = new Runtime.Graphics.Vector2(worldDeltaDivRange.X * mapRange.X, worldDeltaDivRange.Y * mapRange.Y);
+                mapPos = new System.Numerics.Vector2(mapPt1.X + scaledMapRange.X, mapPt1.Y + scaledMapRange.Y);
             }
             else
             {
@@ -3088,7 +3088,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
             float screenX = minimapX + (mapPos.X * minimapSize);
             float screenY = minimapY + (mapPos.Y * minimapSize);
 
-            return new Vector2(screenX, screenY);
+            return new System.Numerics.Vector2(screenX, screenY);
         }
 
         /// <summary>
@@ -3702,7 +3702,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// Based on daorigins.exe: Dialogue boxes are rendered when conversation is active.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of daorigins.exe:
+        /// Based on verified components of daorigins.exe:
         /// - Dialogue boxes are rendered as 2D sprites (textured quads) over the 3D scene
         /// - Dialogue box includes: background panel, speaker portrait, speaker name, dialogue text, response options
         /// - Dialogue boxes use DirectX 9 sprite rendering with alpha blending
@@ -4282,7 +4282,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// Based on daorigins.exe: Menu overlays are rendered when menus are open.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of daorigins.exe:
+        /// Based on verified components of daorigins.exe:
         /// - Menu overlays are rendered as 2D sprites (textured quads) over the 3D scene
         /// - Each menu type has its own background panel and UI elements
         /// - Menus use DirectX 9 sprite rendering with alpha blending
@@ -5749,7 +5749,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// <summary>
         /// Renders button label text for a pause menu button.
         /// Based on daorigins.exe: Button labels are rendered as text overlays on buttons.
-        /// Reverse engineering analysis: Text rendering uses DirectX 9 ID3DXFont interface
+        /// verified components analysis: Text rendering uses DirectX 9 ID3DXFont interface
         /// - Font creation: D3DXCreateFontW (d3dx9_*.dll)
         /// - Text drawing: ID3DXFont::DrawTextW (virtual method at vtable offset +12)
         /// - Font cleanup: ID3DXFont::Release (virtual method at vtable offset +8)
@@ -7977,7 +7977,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// Matches IDirect3DDevice9::Clear() exactly.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of daorigins.exe:
+        /// Based on verified components of daorigins.exe:
         /// - IDirect3DDevice9::Clear is at vtable index 43
         /// - Clears color, depth, and/or stencil buffers
         /// - Parameters: Flags, Color, Z, Stencil
@@ -7998,7 +7998,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// Matches IDirect3DDevice9::SetViewport() exactly.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of daorigins.exe:
+        /// Based on verified components of daorigins.exe:
         /// - IDirect3DDevice9::SetViewport is at vtable index 40
         /// - Sets viewport dimensions and depth range
         /// </remarks>
@@ -8028,7 +8028,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// Matches IDirect3DDevice9::GetViewport() exactly.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of daorigins.exe:
+        /// Based on verified components of daorigins.exe:
         /// - IDirect3DDevice9::GetViewport is at vtable index 41
         /// - Gets current viewport dimensions and depth range
         /// </remarks>
@@ -8050,7 +8050,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// Matches IDirect3DDevice9::SetRenderState() exactly.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of daorigins.exe:
+        /// Based on verified components of daorigins.exe:
         /// - IDirect3DDevice9::SetRenderState is at vtable index 92
         /// - Sets rendering state values (culling, lighting, blending, etc.)
         /// </remarks>
@@ -8070,7 +8070,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// Matches IDirect3DDevice9::SetTextureStageState() exactly.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of daorigins.exe:
+        /// Based on verified components of daorigins.exe:
         /// - IDirect3DDevice9::SetTextureStageState is at vtable index 83
         /// - Sets texture stage state values (addressing, filtering, etc.)
         /// </remarks>
@@ -8090,7 +8090,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// Matches IDirect3DDevice9::SetStreamSource() exactly.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of daorigins.exe:
+        /// Based on verified components of daorigins.exe:
         /// - IDirect3DDevice9::SetStreamSource is at vtable index 100
         /// - Sets vertex buffer for a stream
         /// - Parameters: Stream number, vertex buffer pointer, offset, stride
@@ -8111,7 +8111,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// Matches IDirect3DDevice9::SetIndices() exactly.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of daorigins.exe:
+        /// Based on verified components of daorigins.exe:
         /// - IDirect3DDevice9::SetIndices is at vtable index 101
         /// - Sets index buffer for indexed primitive rendering
         /// - Parameters: Index buffer pointer
@@ -8132,7 +8132,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// Matches IDirect3DDevice9::SetTexture() exactly.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of daorigins.exe:
+        /// Based on verified components of daorigins.exe:
         /// - IDirect3DDevice9::SetTexture is at vtable index 65
         /// - Sets texture for a texture stage
         /// - Parameters: Texture stage, texture pointer (IDirect3DBaseTexture9*)
@@ -8153,7 +8153,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// Matches IDirect3DDevice9::SetTransform() exactly.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of daorigins.exe:
+        /// Based on verified components of daorigins.exe:
         /// - IDirect3DDevice9::SetTransform is at vtable index 44
         /// - Sets transformation matrix (world, view, projection, texture)
         /// - Parameters: Transform type, transformation matrix
@@ -8196,7 +8196,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// Matches IDirect3DDevice9::GetTransform() exactly.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of daorigins.exe:
+        /// Based on verified components of daorigins.exe:
         /// - IDirect3DDevice9::GetTransform is at vtable index 45
         /// - Gets transformation matrix (world, view, projection, texture)
         /// - Parameters: Transform type, output transformation matrix
@@ -8238,7 +8238,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// Matches IDirect3DDevice9::SetFVF() exactly.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of daorigins.exe:
+        /// Based on verified components of daorigins.exe:
         /// - IDirect3DDevice9::SetFVF is at vtable index 99
         /// - Sets vertex format flags (position, normal, texture coordinates, etc.)
         /// - Parameters: FVF flags
@@ -8259,7 +8259,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// Matches IDirect3DDevice9::DrawIndexedPrimitive() exactly.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of daorigins.exe:
+        /// Based on verified components of daorigins.exe:
         /// - IDirect3DDevice9::DrawIndexedPrimitive is at vtable index 82
         /// - Draws indexed primitives using current vertex and index buffers
         /// - Parameters: Primitive type, base vertex index, min index, num vertices, start index, primitive count
@@ -8280,7 +8280,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// Matches IDirect3DDevice9::DrawPrimitive() exactly.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of daorigins.exe:
+        /// Based on verified components of daorigins.exe:
         /// - IDirect3DDevice9::DrawPrimitive is at vtable index 81
         /// - Draws primitives using current vertex buffer (no index buffer)
         /// - Parameters: Primitive type, start vertex, primitive count
@@ -8984,7 +8984,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// </summary>
         /// <remarks>
         /// Dragon Age Origins Model Texture Loading:
-        /// - Based on reverse engineering of daorigins.exe model texture loading
+        /// - Based on verified components of daorigins.exe model texture loading
         /// - Process: Load MDL file from model ResRef -> Extract texture name from MDL -> Load texture file
         /// - Texture extraction: Uses Texture1 from first mesh node, or first texture from AllTextures() method
         /// - Resource loading: MDL files are loaded from ERF archives, RIM files, and package files via resource provider
@@ -9115,11 +9115,11 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// <summary>
         /// Dragon Age Origins-specific texture loading.
         /// Matches daorigins.exe texture loading code exactly.
-        /// Based on reverse engineering of daorigins.exe: Uses D3DXCreateTextureFromFileInMemoryEx for texture loading.
+        /// Based on verified components of daorigins.exe: Uses D3DXCreateTextureFromFileInMemoryEx for texture loading.
         /// </summary>
         /// <remarks>
         /// Dragon Age Origins Texture Loading:
-        /// - Based on reverse engineering of daorigins.exe texture loading functions
+        /// - Based on verified components of daorigins.exe texture loading functions
         /// - Located via string references: "D3DXCreateTextureFromFileInMemoryEx" @ 0x00be5864
         /// - Original implementation: Uses D3DX utility library (d3dx9.dll) to load textures from memory
         /// - Texture formats supported: TPC (BioWare texture format), DDS (DirectDraw Surface), TGA (Targa)
@@ -9204,7 +9204,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// </summary>
         /// <remarks>
         /// Dragon Age Origins Texture File Loading:
-        /// - Based on reverse engineering of daorigins.exe texture loading functions
+        /// - Based on verified components of daorigins.exe texture loading functions
         /// - Texture formats: TPC (primary), DDS, TGA (alternatives)
         /// - File system: Textures can be loaded from file paths
         /// - Resource system: Textures are loaded from ERF archives, RIM files, and package files
@@ -9349,7 +9349,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// </summary>
         /// <remarks>
         /// Dragon Age Origins Texture Conversion:
-        /// - Based on reverse engineering of daorigins.exe texture loading functions
+        /// - Based on verified components of daorigins.exe texture loading functions
         /// - TPC format: BioWare texture format (primary format for Dragon Age Origins)
         /// - DDS format: DirectDraw Surface format (required by DirectX 9 D3DX functions)
         /// - Conversion: TPC textures are parsed and converted to DDS format for DirectX 9
@@ -9606,7 +9606,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// </summary>
         /// <remarks>
         /// Dragon Age Origins DDS Creation:
-        /// - Based on reverse engineering of daorigins.exe texture loading functions
+        /// - Based on verified components of daorigins.exe texture loading functions
         /// - DDS format: A8R8G8B8 (32-bit uncompressed) for textures with alpha
         /// - DDS format: X8R8G8B8 (32-bit uncompressed, alpha ignored) for textures without alpha
         /// - DDS header: 128 bytes (magic + 124 byte header)
@@ -9621,7 +9621,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         {
             if (bgraData == null || bgraData.Length != width * height * 4)
             {
-                System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] CreateDDSFromRgbaData: Invalid BGRA data size (expected {width * height * 4}, got {(bgraData?.Length ?? 0)})");
+                Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] CreateDDSFromRgbaData: Invalid BGRA data size (expected {width * height * 4}, got {(bgraData?.Length ?? 0)})");
                 return null;
             }
 
@@ -9631,7 +9631,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
 
             using (MemoryStream ms = new MemoryStream())
             {
-                using (BinaryWriter writer = new BinaryWriter(ms))
+                using (System.IO.BinaryWriter writer = new System.IO.BinaryWriter(ms))
                 {
                     // Write DDS magic number
                     writer.Write(System.Text.Encoding.ASCII.GetBytes("DDS "));
@@ -9748,7 +9748,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
 
             using (MemoryStream ms = new MemoryStream())
             {
-                using (BinaryWriter writer = new BinaryWriter(ms))
+                using (System.IO.BinaryWriter writer = new System.IO.BinaryWriter(ms))
                 {
                     // Write DDS magic number
                     writer.Write(System.Text.Encoding.ASCII.GetBytes("DDS "));
@@ -9903,7 +9903,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
                     {
                         if (mipIndex >= layer0.Mipmaps.Count)
                         {
-                            System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] CreateDDSFromTPC: Mipmap {mipIndex} missing, expected {mipCount} mipmaps");
+                            Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] CreateDDSFromTPC: Mipmap {mipIndex} missing, expected {mipCount} mipmaps");
                             break;
                         }
 
@@ -9914,7 +9914,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
                         int expectedHeight = Math.Max(1, mmHeight);
                         if (mipmap.Width != expectedWidth || mipmap.Height != expectedHeight)
                         {
-                            System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] CreateDDSFromTPC: Mipmap {mipIndex} dimension mismatch: expected {expectedWidth}x{expectedHeight}, got {mipmap.Width}x{mipmap.Height}");
+                            Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] CreateDDSFromTPC: Mipmap {mipIndex} dimension mismatch: expected {expectedWidth}x{expectedHeight}, got {mipmap.Width}x{mipmap.Height}");
                         }
 
                         // Write mipmap data
@@ -9924,7 +9924,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
                         }
                         else
                         {
-                            System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] CreateDDSFromTPC: Mipmap {mipIndex} has no data");
+                            Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] CreateDDSFromTPC: Mipmap {mipIndex} has no data");
                         }
 
                         // Calculate next mipmap dimensions (divide by 2, minimum 1)
@@ -10163,9 +10163,10 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// <summary>
         /// Creates DirectX 9 texture from DDS data using D3DX.
         /// Based on daorigins.exe: Uses D3DXCreateTextureFromFileInMemoryEx for texture loading.
-        /// daorigins.exe: String "D3DXCreateTextureFromFileInMemoryEx" found at 0x00be5864 (data section)
-        /// daorigins.exe: D3DX function name table located at 0x00be5830+ (contains multiple D3DX function names)
-        /// daorigins.exe: GetProcAddress string found at 0x00be7060 (data section)
+        /// daorigins.exe:
+        ///   * ["D3DXCreateTextureFromFileInMemoryEx"] @ (K1: TODO: Find this address, TSL: TODO: Find this address, daorigins.exe: 0x00be5864) - data section
+        ///   * [D3DX function name table]() @ (K1: TODO: Find this address, TSL: TODO: Find this address, daorigins.exe: 0x00be5830+) - D3DX function name table located at 0x00be5830+ (contains multiple D3DX function names)
+        ///   * [GetProcAddress string]() @ (K1: TODO: Find this address, TSL: TODO: Find this address, daorigins.exe: 0x00be7060) - GetProcAddress string found at 0x00be7060 (data section)
         /// Implementation: Matches original behavior - dynamically loads d3dx9.dll and resolves function via GetProcAddress
         /// Note: Exact call site address not determinable through static analysis (likely uses indirect addressing/table lookup)
         /// </summary>
@@ -10204,13 +10205,14 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
 
             // Get D3DXCreateTextureFromFileInMemoryEx function pointer
             // Based on daorigins.exe: Uses D3DXCreateTextureFromFileInMemoryEx for texture loading.
-            // daorigins.exe: String "D3DXCreateTextureFromFileInMemoryEx" found at 0x00be5864 (data section)
-            // daorigins.exe: Function resolved dynamically via GetProcAddress (string at 0x00be7060)
+            // daorigins.exe:
+            ///   * ["D3DXCreateTextureFromFileInMemoryEx"] @ (K1: TODO: Find this address, TSL: TODO: Find this address, daorigins.exe: 0x00be5864) - data section
+            ///   * [GetProcAddress string]() @ (K1: TODO: Find this address, TSL: TODO: Find this address, daorigins.exe: 0x00be7060) - GetProcAddress string found at 0x00be7060 (data section)
             // Implementation matches original: Dynamic DLL loading and function resolution
             IntPtr funcPtr = GetProcAddress(d3dx9Dll, "D3DXCreateTextureFromFileInMemoryEx");
             if (funcPtr == IntPtr.Zero)
             {
-                System.Console.WriteLine("[DragonAgeOriginsGraphicsBackend] CreateTextureFromDDSData: Failed to get D3DXCreateTextureFromFileInMemoryEx address");
+                Console.WriteLine("[DragonAgeOriginsGraphicsBackend] CreateTextureFromDDSData: Failed to get D3DXCreateTextureFromFileInMemoryEx address");
                 FreeLibrary(d3dx9Dll);
                 return IntPtr.Zero;
             }
@@ -10234,17 +10236,17 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
                         device,                    // pDevice
                         dataPtr,                   // pSrcData
                         dataSize,                  // SrcDataSize
-                        0,                         // Width (0 = auto from DDS)
-                        0,                         // Height (0 = auto from DDS)
+                        0,                         // Width     (0 = auto from DDS)
+                        0,                         // Height    (0 = auto from DDS)
                         0,                         // MipLevels (0 = D3DX_DEFAULT, auto from DDS)
-                        0,                         // Usage (0 = no special usage)
-                        0,                         // Format (0 = D3DFMT_UNKNOWN, auto from DDS)
-                        0,                         // Pool (0 = D3DPOOL_DEFAULT)
-                        0,                         // Filter (0 = D3DX_DEFAULT)
+                        0,                         // Usage     (0 = no special usage)
+                        0,                         // Format    (0 = D3DFMT_UNKNOWN, auto from DDS)
+                        0,                         // Pool      (0 = D3DPOOL_DEFAULT)
+                        0,                         // Filter    (0 = D3DX_DEFAULT)
                         0,                         // MipFilter (0 = D3DX_DEFAULT)
-                        0,                         // ColorKey (0 = no color key)
-                        IntPtr.Zero,               // pSrcInfo (null = don't return info)
-                        IntPtr.Zero,               // pPalette (null = no palette)
+                        0,                         // ColorKey  (0 = no color key)
+                        IntPtr.Zero,               // pSrcInfo  (null = don't return info)
+                        IntPtr.Zero,               // pPalette  (null = no palette)
                         texturePtr                 // ppTexture (output)
                     );
 

@@ -3,7 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using BioWare.NET.Diff;
+using BioWare.NET.TSLPatcher.Diff;
 using BioWare.NET.TSLPatcher.Mods;
 
 namespace KotorDiff.Diff
@@ -80,7 +80,7 @@ namespace KotorDiff.Diff
     {
         public override object Analyze(byte[] leftData, byte[] rightData, string identifier)
         {
-            var analyzer = new BioWare.NET.Diff.GffDiffAnalyzer();
+            var analyzer = new BioWare.NET.TSLPatcher.Diff.GffDiffAnalyzer();
             return analyzer.Analyze(leftData, rightData, identifier);
         }
     }
@@ -99,7 +99,7 @@ namespace KotorDiff.Diff
                 var rightTlk = rightReader.Load();
 
                 // Use existing TlkDiff comparison
-                var compareResult = BioWare.NET.Diff.TlkDiff.Compare(leftTlk, rightTlk);
+                var compareResult = BioWare.NET.TSLPatcher.Diff.TlkDiff.Compare(leftTlk, rightTlk);
 
                 // Generate ModificationsTLK from comparison result
                 string filename = System.IO.Path.GetFileName(identifier);
@@ -166,7 +166,7 @@ namespace KotorDiff.Diff
                 var rightSsf = rightReader.Load();
 
                 // Use existing SsfDiff comparison
-                var compareResult = BioWare.NET.Diff.SsfDiff.Compare(leftSsf, rightSsf);
+                var compareResult = BioWare.NET.TSLPatcher.Diff.SsfDiff.Compare(leftSsf, rightSsf);
 
                 // Generate ModificationsSSF from comparison result
                 string filename = System.IO.Path.GetFileName(identifier);

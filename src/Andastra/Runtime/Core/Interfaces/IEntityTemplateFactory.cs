@@ -14,7 +14,7 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - Tier 2 (Engine): OdysseyEntityTemplateFactory, AuroraEntityTemplateFactory, EclipseEntityTemplateFactory - Engine family implementations
     /// - Tier 3 (Game): Game-specific implementations inherit from engine subclasses when needed
     ///
-    /// Based on reverse engineering of entity template factory systems across multiple BioWare engines:
+    /// Based on verified components of entity template factory systems across multiple BioWare engines:
     /// - Odyssey (swkotor.exe, swkotor2.exe): UTC GFF templates, EntityFactory wrapper
     ///   - swkotor.exe: 0x0050a350 @ 0x0050a350 loads templates from GIT with TemplateResRef field
     ///   - swkotor2.exe: 0x005261b0 @ 0x005261b0 loads creature templates, 0x005fb0f0 @ 0x005fb0f0 loads template data

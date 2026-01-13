@@ -152,7 +152,8 @@ namespace Andastra.Game.Graphics.MonoGame.Lighting
                 lightColor = DynamicLight.TemperatureToRgb(light.Temperature);
             }
 
-            return finalContribution * lightColor * light.Intensity;
+            XnaVector3 result = finalContribution * lightColor * light.Intensity;
+            return new System.Numerics.Vector3(result.X, result.Y, result.Z);
         }
 
         /// <summary>
@@ -268,7 +269,7 @@ namespace Andastra.Game.Graphics.MonoGame.Lighting
             float shadowSoftness)
         {
             // Transform surface position to light space
-            Vector4 lightSpacePos = Vector4.Transform(new Vector4(surfacePosition, 1.0f), lightSpaceMatrix);
+            System.Numerics.Vector4 lightSpacePos = System.Numerics.Vector4.Transform(new System.Numerics.Vector4(surfacePosition.X, surfacePosition.Y, surfacePosition.Z, 1.0f), lightSpaceMatrix);
 
             // Perspective divide
             if (Math.Abs(lightSpacePos.W) < 0.0001f)
@@ -508,7 +509,7 @@ namespace Andastra.Game.Graphics.MonoGame.Lighting
                     // RGBA8: Depth may be stored in red channel as normalized value
                     // Or depth may be packed across channels
                     Color[] colorData = new Color[1];
-                    texture.GetData(0, new Rectangle(x, y, 1, 1), colorData, 0, 1);
+                    texture.GetData(0, new XnaRectangle(x, y, 1, 1), colorData, 0, 1);
 
                     // For D24S8 format read as Color:
                     // Depth is typically in RGB channels (24 bits total)
@@ -528,7 +529,7 @@ namespace Andastra.Game.Graphics.MonoGame.Lighting
                     // Unknown format - try to read as Color and use red channel
                     // This is a fallback for formats we don't explicitly handle
                     Color[] colorData = new Color[1];
-                    texture.GetData(0, new Rectangle(x, y, 1, 1), colorData, 0, 1);
+                    texture.GetData(0, new XnaRectangle(x, y, 1, 1), colorData, 0, 1);
 
                     // Use red channel as normalized depth (0.0-1.0)
                     return colorData[0].R / 255.0f;

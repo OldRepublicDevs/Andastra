@@ -155,7 +155,7 @@ namespace Andastra.Game.Games.Aurora.Components
             Data.AuroraGameDataProvider auroraProvider = gameDataProvider as Data.AuroraGameDataProvider;
             if (auroraProvider != null)
             {
-                return auroraProvider.GetFeat(featId);
+                return (IFeatData)auroraProvider.GetFeat(featId);
             }
 
             // Try AuroraTwoDATableManager (direct table access)
@@ -181,7 +181,7 @@ namespace Andastra.Game.Games.Aurora.Components
                 // Extract feat data from 2DA row
                 // Based on nwmain.exe: C2DA::GetInteger, C2DA::GetString access feat.2da columns
                 int? usesPerDay = SafeGetInteger(row, "usesperday");
-                return new Data.AuroraFeatData
+                return (IFeatData)new Data.AuroraFeatData
                 {
                     RowIndex = featId,
                     Label = row.Label(),

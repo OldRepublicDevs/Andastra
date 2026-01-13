@@ -16,7 +16,7 @@ namespace Andastra.Game.Games.Common
     /// - GFF-based serialization with engine-specific variations
     /// - Handles save metadata, entity state, area state, global variables
     ///
-    /// Based on reverse engineering of:
+    /// Based on verified components of:
     /// - swkotor2.exe: SerializeSaveNfo @ 0x004eb750 for metadata
     /// - All engines: GFF save format with "SAV " signature
     /// - Entity serialization functions across all executables

@@ -18,7 +18,7 @@ namespace Andastra.Game.Games.Common.Components
     /// - Common functionality: Open/Closed state, Locking, Hit Points, Transitions, Basic Operations
     /// - Engine-specific: File format details, transition systems, event handling, field names
     ///
-    /// Based on reverse engineering of:
+    /// Based on verified components of:
     /// - swkotor.exe: Door system with UTD template loading (0x0050a0e0, 0x00507810)
     /// - swkotor2.exe: Enhanced door system with transition support (0x00584f40 @ 0x00584f40, 0x00585ec0 @ 0x00585ec0, 0x00580ed0 @ 0x00580ed0)
     /// - nwmain.exe: Aurora door system using CNWSDoor class (LoadDoor @ 0x1404208a0, SaveDoor @ 0x1404228e0)

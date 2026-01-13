@@ -33,7 +33,7 @@ namespace Andastra.Game.Games.Eclipse.Fonts
     /// - Font loading: Loads font texture and metrics from game installation
     /// - Character mapping: Maps ASCII characters to texture coordinates using grid-based or TXI coordinate mapping
     /// 
-    /// Ghidra Reverse Engineering Analysis:
+    /// Ghidra verified components Analysis:
     /// - daorigins.exe: Uses DDS format for fonts (e.g., "screen.dds", "Arial12.dds")
     ///   String references: "screen.dds" @ 0x00af825c, "gpumemoryover.dds" @ 0x00ae4abc
     /// - DragonAge2.exe: Uses DDS format for fonts (e.g., "screen.dds", "savegame_screenshot.dds")

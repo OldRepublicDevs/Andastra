@@ -21,7 +21,7 @@ namespace Andastra.Game.Games.Aurora
     /// - Uses NCS (NWScript Compiled Script) bytecode format
     /// - Enhanced features compared to Odyssey (more script functions, better performance)
     ///
-    /// Based on reverse engineering of:
+    /// Based on verified components of:
     /// - nwmain.exe: ExecuteCommandExecuteScript @ 0x14051d5c0 (CNWSVirtualMachineCommands class)
     /// - nwmain.exe: CScriptEvent @ 0x1404c6490 (script event constructor)
     /// - Aurora script execution: More complex than Odyssey with enhanced VM features

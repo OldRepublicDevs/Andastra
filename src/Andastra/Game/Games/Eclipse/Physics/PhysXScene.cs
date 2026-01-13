@@ -12,7 +12,7 @@ namespace Andastra.Game.Games.Eclipse.Physics
     /// </summary>
     /// <remarks>
     /// PhysX Scene Descriptor:
-    /// - Based on reverse engineering of daorigins.exe/DragonAge2.exe PhysX scene initialization
+    /// - Based on verified components of daorigins.exe/DragonAge2.exe PhysX scene initialization
     /// - Original implementation: PxSceneDesc structure in PhysX SDK
     /// - Contains all parameters needed to create a PhysX scene
     /// - Matches PhysX 3.x scene descriptor structure used by Unreal Engine 3
@@ -220,7 +220,7 @@ namespace Andastra.Game.Games.Eclipse.Physics
     /// </summary>
     /// <remarks>
     /// PhysX Scene:
-    /// - Based on reverse engineering of daorigins.exe/DragonAge2.exe PhysX scene management
+    /// - Based on verified components of daorigins.exe/DragonAge2.exe PhysX scene management
     /// - Original implementation: PxScene class in PhysX SDK
     /// - Represents a physics simulation world containing rigid bodies, constraints, and collision shapes
     /// - Manages physics simulation state, collision detection, and constraint solving

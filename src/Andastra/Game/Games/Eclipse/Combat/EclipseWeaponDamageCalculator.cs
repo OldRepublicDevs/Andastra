@@ -176,7 +176,7 @@ namespace Andastra.Game.Games.Eclipse.Combat
         /// - NOTE: Ghidra analysis required to locate exact function addresses:
         ///   - daorigins.exe: Need to find weapon damage calculation function that determines ability modifier
         ///   - DragonAge2.exe: Need to verify ability selection logic matches daorigins.exe
-        ///   - /: May use different system (needs verification via Ghidra)
+        ///   - /: May use different system (needs verification )
         /// - Eclipse engines (Dragon Age Origins, Dragon Age 2) use simpler ability system than D20:
         ///   - Ranged weapons: Always use DEX modifier (daorigins.exe, DragonAge2.exe: ranged weapon damage uses Dexterity)
         ///   - Melee weapons: Always use STR modifier (daorigins.exe, DragonAge2.exe: melee weapon damage uses Strength)
@@ -252,7 +252,7 @@ namespace Andastra.Game.Games.Eclipse.Combat
                     int? weaponType = twoDARow.GetInteger("weapontype", null);
                     if (weaponType.HasValue)
                     {
-                        // NOTE: Exact weapontype values for ranged weapons need verification via Ghidra analysis
+                        // NOTE: Exact weapontype values for ranged weapons need verification  analysis
                         // Common ranged weapon types (may vary by game):
                         // Bows (weapontype = 5), crossbows (weapontype = 6), slings (weapontype = 10), thrown (weapontype = 11)
                         // These values are based on Aurora/Odyssey patterns and need verification for Eclipse engines

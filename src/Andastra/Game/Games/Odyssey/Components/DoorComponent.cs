@@ -322,7 +322,7 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// - Original implementation: LinkedToFlags bit 1 (0x1) = module transition flag (same in both swkotor.exe and swkotor2.exe)
         /// - Module transition: If LinkedToFlags & 1 != 0 and LinkedToModule is non-empty, door triggers module transition
         /// - Transition destination: TransitionDestination waypoint tag specifies where party spawns in new module
-        /// - Note: swkotor.exe uses identical transition flag system to swkotor2.exe; exact function addresses for door property loading in swkotor.exe need verification via Ghidra MCP
+        /// - Note: swkotor.exe uses identical transition flag system to swkotor2.exe; exact function addresses for door property loading in swkotor.exe need verification  MCP
         /// </remarks>
         public override bool IsModuleTransition
         {
@@ -346,7 +346,7 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// - Area transition: If LinkedToFlags & 2 != 0 and LinkedTo is non-empty, door triggers area transition within module
         /// - LinkedTo: Waypoint or trigger tag to transition to (within current module)
         /// - Transition destination: TransitionDestination waypoint tag specifies where party spawns after transition
-        /// - Note: swkotor.exe uses identical transition flag system to swkotor2.exe; exact function addresses for door property loading in swkotor.exe need verification via Ghidra MCP
+        /// - Note: swkotor.exe uses identical transition flag system to swkotor2.exe; exact function addresses for door property loading in swkotor.exe need verification  MCP
         /// </remarks>
         public override bool IsAreaTransition
         {

@@ -15,7 +15,7 @@ namespace Andastra.Runtime.Games.Common.Journal
     /// - Base classes MUST only contain functionality that is identical across ALL engines
     /// - Engine-specific details MUST be in subclasses (OdysseyJRLLoader, AuroraJRLLoader, EclipseJRLLoader)
     ///
-    /// Based on reverse engineering of JRL file loading systems across multiple BioWare engines.
+    /// Based on verified components of JRL file loading systems across multiple BioWare engines.
     ///
     /// Common functionality across engines:
     /// - JRL file loading from installation

@@ -9,8 +9,6 @@ using BioWare.NET.Resource.Formats.MDL;
 using BioWare.NET.Resource.Formats.TPC;
 using BioWare.NET.Resource.Formats.VIS;
 using BioWare.NET.Extract;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
 using BioWare.NET.Resource.Formats.LYT;
 using BioWare.NET.Resource.Formats.GFF.Generics;
 using BioWare.NET.Resource.Formats.GFF.Generics.ARE;
@@ -23,9 +21,8 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Module;
 using Andastra.Runtime.Core.Navigation;
-using Andastra.Runtime.Core.Save;
+using RuntimeCore = Andastra.Runtime.Core;
 using Andastra.Game.Games.Odyssey.Components;
-using Andastra.Game.Games.Odyssey.Loading;
 using JetBrains.Annotations;
 using InstResourceResult = BioWare.NET.Extract.ResourceResult;
 using KotorVector3 = System.Numerics.Vector3;
@@ -38,7 +35,6 @@ using PlaceableComponent = Andastra.Game.Games.Odyssey.Components.PlaceableCompo
 using ResRef = BioWare.NET.Common.ResRef;
 using RuntimeObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 using SoundComponent = Andastra.Game.Games.Odyssey.Components.SoundComponent;
-using Systems = Andastra.Game.Games.Odyssey.Systems;
 // Explicit type aliases to resolve ambiguity
 using SysVector3 = System.Numerics.Vector3;
 
@@ -48,13 +44,18 @@ namespace Andastra.Game.Games.Odyssey.Game
     /// Loads modules from KOTOR game files using BioWare.NET resource infrastructure.
     /// </summary>
     /// <remarks>
-    /// Module Loading Process (Odyssey-specific):
+    /// Module Loading Process:
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module loading system
-    /// - Located via string references: "MODULES:" @ 0x007b58b4, "MODULES" @ 0x007c6bc4
+    /// - Located via string references:
+    ///   * ["MODULES:"] @ (K1: TODO: Find address, TSL: 0x007b58b4)
+    ///   * ["MODULES"] @ (K1: TODO: Find address, TSL: 0x007c6bc4)
     /// - Cross-engine analysis:
-    ///   - Aurora (nwmain.exe): CNWSModule::LoadModule, CNWCModule::LoadModuleResources - similar module loading system, uses HAK files, different file formats
-    ///   - Eclipse (daorigins.exe, DragonAge2.exe, ): "LoadModule" - UnrealScript-based module loading, different architecture
-    /// - Inheritance: Base class BaseModuleLoader (Runtime.Games.Common) - abstract module loading, Odyssey override (Runtime.Games.Odyssey) - IFO/LYT/VIS/GIT/ARE-based module loading
+    ///   * Aurora: [CNWSModule::LoadModule]()  @ (nwmain.exe: 0x00...)
+    ///   * [CNWCModule::LoadModuleResources]() @ (nwmain.exe: 0x00...) - similar module loading system, uses HAK files, different file formats
+    ///   * Eclipse: ["LoadModule"] @ (daorigins.exe: TODO: 0x00..., DragonAge2.exe: TODO: 0x00...) - UnrealScript-based module loading, different architecture
+    /// - Inheritance:
+    ///   * Base class BaseModuleLoader (Runtime.Games.Common) - abstract module loading
+    ///   * Odyssey override (Runtime.Games.Odyssey) - IFO/LYT/VIS/GIT/ARE-based module loading
     /// - Directory setup: 0x00633270 @ 0x00633270 (sets up MODULES, OVERRIDE, SAVES, etc. directory aliases)
     ///   - Original implementation (from decompiled 0x00633270):
     ///     - Sets up directory aliases for resource lookup with both absolute ("d:\...") and relative (".\...") paths
@@ -178,7 +179,7 @@ namespace Andastra.Game.Games.Odyssey.Game
         /// Gets the current BioWare.NET Module for resource loading.
         /// </summary>
         [CanBeNull]
-        public BioWare.NET.Common.Module GetParsingModule()
+        public Module GetParsingModule()
         {
             if (_installation == null || string.IsNullOrEmpty(_currentModuleRoot))
             {
@@ -188,7 +189,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             try
             {
                 // Create a Module instance from the current module root
-                return new BioWare.NET.Common.Module(_currentModuleRoot, _installation);
+                return new Module(_currentModuleRoot, _installation);
             }
             catch (Exception ex)
             {
@@ -201,7 +202,7 @@ namespace Andastra.Game.Games.Odyssey.Game
         /// Gets the current module (alias for GetParsingModule for API compatibility).
         /// </summary>
         [CanBeNull]
-        public BioWare.NET.Common.Module GetCurrentModule()
+        public Module GetCurrentModule()
         {
             return GetParsingModule();
         }
@@ -457,7 +458,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             var entity = new Entity(World.ModuleObjectId, OdyObjectType.Invalid);
             entity.World = _world;
             entity.Tag = runtimeModule.ResRef;
-            entity.Position = System.Numerics.Vector3.Zero;
+            entity.Position = SysVector3.Zero;
             entity.Facing = 0f;
             entity.AreaId = 0;
 
@@ -465,12 +466,12 @@ namespace Andastra.Game.Games.Odyssey.Game
             // Module entities need IScriptHooksComponent for script execution
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module scripts require script hooks component
             // ComponentInitializer.InitializeComponents adds IScriptHooksComponent to all entities
-            Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
+            Systems.ComponentInitializer.InitializeComponents(entity);
 
             // Ensure IScriptHooksComponent is present (ComponentInitializer should add it, but verify for safety)
             if (!entity.HasComponent<IScriptHooksComponent>())
             {
-                entity.AddComponent(new Components.ScriptHooksComponent());
+                entity.AddComponent(new ScriptHooksComponent());
             }
 
             // Load module scripts into script hooks component
@@ -523,7 +524,8 @@ namespace Andastra.Game.Games.Odyssey.Game
 
         // Load module IFO (module info) file
         // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) module loading
-        // Located via string reference: "Module" @ 0x007bc4e0
+        // Located via string reference:
+        // - ["Module"] @ (K1: TODO: Find address, TSL: 0x007bc4e0)
         // Original implementation: Loads "module.ifo" from MODULES:\{moduleName}\ directory
         // IFO contains: EntryArea, EntryX/Y/Z, ModName, DawnHour, DuskHour, ModuleDescription, etc.
         private void LoadIFO(string moduleName)
@@ -626,8 +628,10 @@ namespace Andastra.Game.Games.Odyssey.Game
         /// </summary>
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) walkmesh loading system
-        /// Located via string references: "walkmesh" pathfinding functions, "?nwsareapathfind.cpp" @ 0x007be3ff
-        /// "BWM V1.0" @ 0x007c061c (BWM file signature)
+        /// Located via string references:
+        /// - ["walkmesh"] @ (K1: TODO: Find address, TSL: TODO: Find this address address) pathfinding functions
+        /// - ["?nwsareapathfind.cpp"] @ (K1: TODO: Find address, TSL: 0x007be3ff)
+        /// - ["BWM V1.0"] @ (K1: TODO: Find address, TSL: 0x007c061c) (BWM file signature)
         /// Original implementation:
         /// - Loads WOK (area walkmesh) files for each room in LYT
         /// - Combines all room walkmeshes into single navigation mesh
@@ -660,7 +664,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             }
 
             // Get Parsing Module for NavigationMeshFactory
-            BioWare.NET.Common.Module parsingModule = GetParsingModule();
+            Module parsingModule = GetParsingModule();
             if (parsingModule == null)
             {
                 Console.WriteLine("[ModuleLoader] WARNING: Cannot get Parsing Module, creating placeholder navmesh");
@@ -827,15 +831,15 @@ namespace Andastra.Game.Games.Odyssey.Game
                     // Script hooks
                     if (!string.IsNullOrEmpty(are.OnEnter.ToString()))
                     {
-                        area.SetScript(Core.Enums.ScriptEvent.OnEnter, are.OnEnter.ToString());
+                        area.SetScript(ScriptEvent.OnEnter, are.OnEnter.ToString());
                     }
                     if (!string.IsNullOrEmpty(are.OnExit.ToString()))
                     {
-                        area.SetScript(Core.Enums.ScriptEvent.OnExit, are.OnExit.ToString());
+                        area.SetScript(ScriptEvent.OnExit, are.OnExit.ToString());
                     }
                     if (!string.IsNullOrEmpty(are.OnHeartbeat.ToString()))
                     {
-                        area.SetScript(Core.Enums.ScriptEvent.OnHeartbeat, are.OnHeartbeat.ToString());
+                        area.SetScript(ScriptEvent.OnHeartbeat, are.OnHeartbeat.ToString());
                     }
 
                     Console.WriteLine("[ModuleLoader] Loaded ARE properties for " + areaResRef);
@@ -962,7 +966,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             IEntity entity = _world.CreateEntity(OdyObjectType.Waypoint, ToSysVector3(waypoint.Position), waypoint.Bearing);
 
             // Initialize waypoint components
-            Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
+            Andastra.Game.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
 
             // Set tag from GIT (GIT tag takes precedence over template tag)
             if (!string.IsNullOrEmpty(waypoint.Tag))
@@ -1013,7 +1017,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             entity.Tag = door.Tag;
 
             // Initialize components
-            Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
+            Andastra.Game.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
 
             // Load door template
             if (!string.IsNullOrEmpty(door.ResRef?.ToString()))
@@ -1037,7 +1041,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             IEntity entity = _world.CreateEntity(OdyObjectType.Placeable, ToSysVector3(placeable.Position), placeable.Bearing);
 
             // Initialize components
-            Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
+            Andastra.Game.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
 
             // Load placeable template
             if (!string.IsNullOrEmpty(placeable.ResRef?.ToString()))
@@ -1053,7 +1057,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             IEntity entity = _world.CreateEntity(OdyObjectType.Creature, ToSysVector3(creature.Position), creature.Bearing);
 
             // Initialize components
-            Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
+            Andastra.Game.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
 
             // Load creature template
             if (!string.IsNullOrEmpty(creature.ResRef?.ToString()))
@@ -1250,15 +1254,15 @@ namespace Andastra.Game.Games.Odyssey.Game
                         {
                             if (!string.IsNullOrEmpty(ute.OnEntered.ToString()))
                             {
-                                scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnEnter, ute.OnEntered.ToString());
+                                scriptsComponent.SetScript(ScriptEvent.OnEnter, ute.OnEntered.ToString());
                             }
                             if (!string.IsNullOrEmpty(ute.OnExit.ToString()))
                             {
-                                scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnExit, ute.OnExit.ToString());
+                                scriptsComponent.SetScript(ScriptEvent.OnExit, ute.OnExit.ToString());
                             }
                             if (!string.IsNullOrEmpty(ute.OnHeartbeat.ToString()))
                             {
-                                scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnHeartbeat, ute.OnHeartbeat.ToString());
+                                scriptsComponent.SetScript(ScriptEvent.OnHeartbeat, ute.OnHeartbeat.ToString());
                             }
                         }
                     }
@@ -1359,7 +1363,7 @@ namespace Andastra.Game.Games.Odyssey.Game
                     }
 
                     // Set renderable component appearance row
-                    Core.Interfaces.Components.IRenderableComponent renderable = entity.GetComponent<Core.Interfaces.Components.IRenderableComponent>();
+                    RuntimeCore.Interfaces.Components.IRenderableComponent renderable = entity.GetComponent<RuntimeCore.Interfaces.Components.IRenderableComponent>();
                     if (renderable != null)
                     {
                         renderable.AppearanceRow = utd.AppearanceId;
@@ -1369,11 +1373,11 @@ namespace Andastra.Game.Games.Odyssey.Game
                     IScriptHooksComponent scriptsComponent = entity.GetComponent<IScriptHooksComponent>();
                     if (scriptsComponent != null)
                     {
-                        scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnOpen, utd.OnOpen?.ToString());
-                        scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnClose, utd.OnClosed?.ToString());
-                        scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnFailToOpen, utd.OnOpenFailed?.ToString());
-                        scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnHeartbeat, utd.OnHeartbeat?.ToString());
-                        scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnClick, utd.OnClick?.ToString());
+                        scriptsComponent.SetScript(ScriptEvent.OnOpen, utd.OnOpen?.ToString());
+                        scriptsComponent.SetScript(ScriptEvent.OnClose, utd.OnClosed?.ToString());
+                        scriptsComponent.SetScript(ScriptEvent.OnFailToOpen, utd.OnOpenFailed?.ToString());
+                        scriptsComponent.SetScript(ScriptEvent.OnHeartbeat, utd.OnHeartbeat?.ToString());
+                        scriptsComponent.SetScript(ScriptEvent.OnClick, utd.OnClick?.ToString());
                     }
                 }
             }
@@ -1411,7 +1415,7 @@ namespace Andastra.Game.Games.Odyssey.Game
                     }
 
                     // Set renderable component appearance row
-                    Core.Interfaces.Components.IRenderableComponent renderable = entity.GetComponent<Core.Interfaces.Components.IRenderableComponent>();
+                    RuntimeCore.Interfaces.Components.IRenderableComponent renderable = entity.GetComponent<RuntimeCore.Interfaces.Components.IRenderableComponent>();
                     if (renderable != null)
                     {
                         renderable.AppearanceRow = utp.AppearanceId;
@@ -1421,10 +1425,10 @@ namespace Andastra.Game.Games.Odyssey.Game
                     IScriptHooksComponent scriptsComponent = entity.GetComponent<IScriptHooksComponent>();
                     if (scriptsComponent != null)
                     {
-                        scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnUsed, utp.OnUsed?.ToString());
-                        scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnHeartbeat, utp.OnHeartbeat?.ToString());
-                        scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnOpen, utp.OnOpen?.ToString());
-                        scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnClose, utp.OnClosed?.ToString());
+                        scriptsComponent.SetScript(ScriptEvent.OnUsed, utp.OnUsed?.ToString());
+                        scriptsComponent.SetScript(ScriptEvent.OnHeartbeat, utp.OnHeartbeat?.ToString());
+                        scriptsComponent.SetScript(ScriptEvent.OnOpen, utp.OnOpen?.ToString());
+                        scriptsComponent.SetScript(ScriptEvent.OnClose, utp.OnClosed?.ToString());
                     }
                 }
             }
@@ -1459,7 +1463,7 @@ namespace Andastra.Game.Games.Odyssey.Game
                     }
 
                     // Set renderable component appearance row
-                    Core.Interfaces.Components.IRenderableComponent renderable = entity.GetComponent<Core.Interfaces.Components.IRenderableComponent>();
+                    RuntimeCore.Interfaces.Components.IRenderableComponent renderable = entity.GetComponent<RuntimeCore.Interfaces.Components.IRenderableComponent>();
                     if (renderable != null)
                     {
                         renderable.AppearanceRow = utc.AppearanceId;
@@ -1479,12 +1483,12 @@ namespace Andastra.Game.Games.Odyssey.Game
                     IScriptHooksComponent scriptsComponent = entity.GetComponent<IScriptHooksComponent>();
                     if (scriptsComponent != null)
                     {
-                        scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnSpawn, utc.OnSpawn?.ToString());
-                        scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnDeath, utc.OnDeath?.ToString());
-                        scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnHeartbeat, utc.OnHeartbeat?.ToString());
-                        scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnConversation, utc.OnDialog?.ToString());
-                        scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnDamaged, utc.OnDamaged?.ToString());
-                        scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnPerception, utc.OnNotice?.ToString());
+                        scriptsComponent.SetScript(ScriptEvent.OnSpawn, utc.OnSpawn?.ToString());
+                        scriptsComponent.SetScript(ScriptEvent.OnDeath, utc.OnDeath?.ToString());
+                        scriptsComponent.SetScript(ScriptEvent.OnHeartbeat, utc.OnHeartbeat?.ToString());
+                        scriptsComponent.SetScript(ScriptEvent.OnConversation, utc.OnDialog?.ToString());
+                        scriptsComponent.SetScript(ScriptEvent.OnDamaged, utc.OnDamaged?.ToString());
+                        scriptsComponent.SetScript(ScriptEvent.OnPerception, utc.OnNotice?.ToString());
                         scriptsComponent.SetLocalString("Conversation", utc.Conversation?.ToString());
                     }
                 }
@@ -1676,7 +1680,7 @@ namespace Andastra.Game.Games.Odyssey.Game
                 playerSpawn.Tag = "wp_player_spawn";
 
                 // Initialize waypoint component
-                Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(playerSpawn);
+                Systems.ComponentInitializer.InitializeComponents(playerSpawn);
 
                 runtimeArea.AddEntity(playerSpawn);
             }

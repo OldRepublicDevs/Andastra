@@ -13,7 +13,7 @@ namespace Andastra.Runtime.Games.Common
     /// - Provides base implementation for screen management and visibility tracking
     /// - Engine-specific subclasses implement engine-specific UI features
     ///
-    /// Based on reverse engineering of UI systems across engines:
+    /// Based on verified components of UI systems across engines:
     /// - Odyssey: GUI panel-based UI system with screen stack
     /// - Aurora: Scene-based GUI system with message-based transitions
     /// - Eclipse: Advanced UI system with crafting and character progression screens

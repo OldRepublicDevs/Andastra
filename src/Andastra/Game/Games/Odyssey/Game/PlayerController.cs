@@ -18,36 +18,60 @@ namespace Andastra.Game.Games.Odyssey.Game
     /// <remarks>
     /// Player Controller:
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) player input/movement system
-    /// - Located via string references: "Player" @ 0x007be628 (player entity type), "PlayerList" @ 0x007bdcf4 (player list field)
-    /// - "GetPlayerList" @ 0x007bdd00 (get player list function), "Mod_PlayerList" @ 0x007be060 (module player list)
-    /// - "SetByPlayerParty" @ 0x007c1d04 (set by player party flag), "MaxPlayers" @ 0x007bdb48 (max players constant)
-    /// - "OnPlayerChange" @ 0x007bd9bc (player change event), "PlayerCreated" @ 0x007bf624 (player created flag)
-    /// - "PlayerOnly" @ 0x007c0ca8 (player only flag), "HD0:players" @ 0x007be674 (player directory path)
-    /// - "player" @ 0x007c28d8 (player constant), "PLAYER" @ 0x007c36f0 (player constant uppercase)
-    /// - Player data: "PCNAME" @ 0x007be194 (PC name field), "PT_PCNAME" @ 0x007c1904 (party table PC name)
-    /// - "GAMEINPROGRESS:PC" @ 0x007c1948 (game in progress PC flag), "PCAUTOSAVE" @ 0x007be320 (PC auto-save)
-    /// - "PCLevelAtSpawn" @ 0x007c1968 (PC level at spawn field), " [Player]" @ 0x007be200 (player suffix)
-    /// - "Players: " @ 0x007be20c (players prefix), ":: Server player list ::\n%s\n" @ 0x007cbbd4 (player list debug)
-    /// - Player stats: "G_PC_LEVEL" @ 0x007bf150 (global PC level), "G_PC_Light_Total" @ 0x007c2944 (global PC light side points)
-    /// - "G_PC_Dark_Total" @ 0x007c2958 (global PC dark side points), "PCGender" @ 0x007c84d8 (PC gender field)
-    /// - "PlayerClass" @ 0x007c2adc (player class field), "PlayerRace" @ 0x007c2c04 (player race field)
-    /// - Script events: "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_LEVEL_UP" @ 0x007bc5bc (player level up event, 0x6)
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_REST" @ 0x007bc620 (player rest event, 0x8)
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_DYING" @ 0x007bc6ac (player dying event, 0x9)
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_EXIT" @ 0x007bc974 (player exit event, 0x19)
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_ENTER" @ 0x007bc9a0 (player enter event, 0x1a)
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DESTROYPLAYERCREATURE" @ 0x007bc5ec (destroy player creature event, 0x5)
-    /// - Player animations: "DriveAnimRun_PC" @ 0x007c50cc (PC run animation)
-    /// - Player audio: "Volume_PC" @ 0x007c6110 (PC volume field), "MinVolumeDist_PC" @ 0x007c60c4, "MaxVolumeDist_PC" @ 0x007c60d8
-    /// - Player visual: "pz_playerliteoff" @ 0x007cc6ac, "PZ_PLAYERLITEOFF" @ 0x007cc6c0, "pz_playerliteon" @ 0x007cc6d4 (player lighting effects)
-    /// - "HEAL_PLAYER" @ 0x007cbd20 (heal player constant), "CSWMiniPlayer: Recreating gun bank %d" @ 0x007cb5c0 (player weapon bank error)
+    /// - Located via string references:
+    ///   * ["Player"]           @ (K1: TODO: Find address, TSL: 0x007be628) - player entity type
+    ///   * ["PlayerList"]       @ (K1: TODO: Find address, TSL: 0x007bdcf4) - player list field
+    ///   * ["GetPlayerList"]    @ (K1: TODO: Find address, TSL: 0x007bdd00) - get player list function, "Mod_PlayerList" @ (K1: TODO: Find address, TSL: 0x007be060) - module player list)
+    ///   * ["SetByPlayerParty"] @ (K1: TODO: Find address, TSL: 0x007c1d04) - set by player party flag
+    ///   * ["MaxPlayers"]       @ (K1: TODO: Find address, TSL: 0x007bdb48) - max players constant
+    ///   * ["OnPlayerChange"]   @ (K1: TODO: Find address, TSL: 0x007bd9bc) - player change event
+    ///   * ["PlayerCreated"]    @ (K1: TODO: Find address, TSL: 0x007bf624) - player created flag
+    ///   * ["PlayerOnly"]       @ (K1: TODO: Find address, TSL: 0x007c0ca8) - player only flag
+    ///   * ["HD0:players"]      @ (K1: TODO: Find address, TSL: 0x007be674) - player directory path
+    ///   * ["player"]           @ (K1: TODO: Find address, TSL: 0x007c28d8) - player constant
+    ///   * ["PLAYER"]           @ (K1: TODO: Find address, TSL: 0x007c36f0) - player constant uppercase
+    /// - Player data:
+    ///   * ["PCNAME"]           @ (K1: TODO: Find address, TSL: 0x007be194) - PC name field
+    ///   * ["PT_PCNAME"]        @ (K1: TODO: Find address, TSL: 0x007c1904) - party table PC name
+    ///   * ["GAMEINPROGRESS:PC"] @ (K1: TODO: Find address, TSL: 0x007c1948) - game in progress PC flag
+    ///   * ["PCAUTOSAVE"]       @ (K1: TODO: Find address, TSL: 0x007be320) - PC auto-save
+    ///   * ["PCLevelAtSpawn"]   @ (K1: TODO: Find address, TSL: 0x007c1968) - PC level at spawn field
+    ///   * [" [Player]"]        @ (K1: TODO: Find address, TSL: 0x007be200) - player suffix
+    ///   * ["Players: "]        @ (K1: TODO: Find address, TSL: 0x007be20c) - players prefix
+    ///   * [":: Server player list ::\n%s\n"] @ (K1: TODO: Find address, TSL: 0x007cbbd4) - player list debug
+    /// - Player stats:
+    ///   * ["G_PC_LEVEL"]       @ (K1: TODO: Find address, TSL: 0x007bf150) - global PC level
+    ///   * ["G_PC_Light_Total"] @ (K1: TODO: Find address, TSL: 0x007c2944) - global PC light side points
+    ///   * ["G_PC_Dark_Total"]  @ (K1: TODO: Find address, TSL: 0x007c2958) - global PC dark side points
+    ///   * ["PCGender"]         @ (K1: TODO: Find address, TSL: 0x007c84d8) - PC gender field
+    ///   * ["PlayerClass"]      @ (K1: TODO: Find address, TSL: 0x007c2adc) - player class field
+    ///   * ["PlayerRace"]       @ (K1: TODO: Find address, TSL: 0x007c2c04) - player race field
+    /// - Script events:
+    ///   * ["CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_LEVEL_UP"] @ (K1: TODO: Find address, TSL: 0x007bc5bc) - player level up event, 0x6
+    ///   * ["CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_REST"] @ (K1: TODO: Find address, TSL: 0x007bc620) - player rest event, 0x8
+    ///   * ["CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_DYING"] @ (K1: TODO: Find address, TSL: 0x007bc6ac) - player dying event, 0x9
+    ///   * ["CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_EXIT"] @ (K1: TODO: Find address, TSL: 0x007bc974) - player exit event, 0x19
+    ///   * ["CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_ENTER"] @ (K1: TODO: Find address, TSL: 0x007bc9a0) - player enter event, 0x1a
+    ///   * ["CSWSSCRIPTEVENT_EVENTTYPE_ON_DESTROYPLAYERCREATURE"] @ (K1: TODO: Find address, TSL: 0x007bc5ec) - destroy player creature event, 0x5
+    /// - Player animations:
+    ///   * ["DriveAnimRun_PC"] @ (K1: TODO: Find address, TSL: 0x007c50cc) - PC run animation
+    /// - Player audio:
+    ///   * ["Volume_PC"] @ (K1: TODO: Find address, TSL: 0x007c6110) - PC volume field
+    ///   * ["MinVolumeDist_PC"] @ (K1: TODO: Find address, TSL: 0x007c60c4) - min volume distance
+    ///   * ["MaxVolumeDist_PC"] @ (K1: TODO: Find address, TSL: 0x007c60d8) - max volume distance
+    /// - Player visual:
+    ///   * ["pz_playerliteoff"] @ (K1: TODO: Find address, TSL: 0x007cc6ac) - player lighting effects off
+    ///   * ["PZ_PLAYERLITEOFF"] @ (K1: TODO: Find address, TSL: 0x007cc6c0) - player lighting effects off constant
+    ///   * ["pz_playerliteon"] @ (K1: TODO: Find address, TSL: 0x007cc6d4) - player lighting effects on
+    ///   * ["HEAL_PLAYER"] @ (K1: TODO: Find address, TSL: 0x007cbd20) - heal player constant
+    ///   * ["CSWMiniPlayer: Recreating gun bank %d"] @ (K1: TODO: Find address, TSL: 0x007cb5c0) - player weapon bank error
     /// - Original implementation: Click-to-move with pathfinding, object selection, party control
     /// - Click-to-move: Click world position -> project onto walkmesh -> pathfind -> queue ActionMoveToLocation
     /// - Object interaction: Click entity -> queue ActionUseObject or ActionMoveToObject (based on entity type)
     /// - Right-click: Context menu or alternative action (examine, attack, etc.)
     /// - Party members follow leader, respond to same commands (party control system)
     /// - Movement speeds: Walk speed (default 2.5 units/sec), run speed (default 5.0 units/sec, can be modified by effects)
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005226d0 @ 0x005226d0 (player input handling and movement)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x005226d0) - player input handling and movement
     /// </remarks>
     public class PlayerController
     {

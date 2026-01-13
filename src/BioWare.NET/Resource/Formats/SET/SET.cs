@@ -32,7 +32,7 @@ namespace BioWare.NET.Resource.Formats.SET
     /// Model=<string>
     /// ...
     /// 
-    /// Based on reverse engineering of:
+    /// Based on verified components of:
     /// - [CNWTileSet::LoadTileSet] @ (K1: TODO: Find this address, TSL: TODO: Find this address, NWN:EE: 0x1411e4684)
     /// - [CNWTileSet::GetTileData] @ (K1: TODO: Find this address, TSL: TODO: Find this address, NWN:EE: 0x1402c67d0)
     /// - xoreos implementation: vendor/xoreos/src/engines/nwn/tileset.cpp

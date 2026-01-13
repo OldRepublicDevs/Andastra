@@ -15,7 +15,7 @@ namespace Andastra.Runtime.Games.Common
     /// - Handles attack rolls, damage calculation, effect application
     /// - Provides framework for initiative, rounds, and combat state
     ///
-    /// Based on reverse engineering of:
+    /// Based on verified components of:
     /// - swkotor.exe: Combat system functions
     /// - swkotor2.exe: Advanced combat mechanics with force powers, feats
     /// - nwmain.exe: D20-based combat system

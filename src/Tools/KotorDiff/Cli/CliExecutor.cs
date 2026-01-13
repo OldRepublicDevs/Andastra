@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using BioWare.NET.Installation;
+using BioWare.NET.Extract;
 using KotorDiff;
 using KotorDiff.AppCore;
 
@@ -80,7 +80,7 @@ namespace KotorDiff.Cli
                 {
                     // Try to create an Installation object (for KOTOR installations)
                     // Matching Python: installation = Installation(path_obj)
-                    var installation = new BioWare.NET.Installation.Installation(pathStr);
+                    var installation = new BioWare.NET.Extract.Installation(pathStr);
                     resolvedPaths.Add(installation);
                     if (isVerbose)
                     {

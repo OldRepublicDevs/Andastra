@@ -15,7 +15,7 @@ namespace Andastra.Runtime.Core.Actions
     /// <remarks>
     /// Use Item Action:
     /// - Common item usage system across all BioWare engines
-    /// - Based on reverse engineering of:
+    /// - Based on verified components of:
     ///   - swkotor.exe/swkotor2.exe: "OnUsed" @ 0x007c1f70, "i_useitemm" @ 0x007ccde0, "BTN_USEITEM" @ 0x007d1080
     ///   - swkotor2.exe: "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACTIVATE_ITEM" @ 0x007bc8f0, "Mod_OnActvtItem" @ 0x007be7f4
     ///   - nwmain.exe: Aurora item usage system (similar patterns)

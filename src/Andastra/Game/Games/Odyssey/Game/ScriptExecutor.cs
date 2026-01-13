@@ -38,7 +38,7 @@ namespace Andastra.Game.Games.Odyssey
     /// - Error handling: Returns 0 (FALSE) on script load failure or execution error
     /// - Instruction budget tracking: Tracks instruction count per entity for budget enforcement
     ///
-    /// Based on reverse engineering of:
+    /// Based on verified components of:
     /// - swkotor.exe: Script execution functions (KOTOR1)
     /// - swkotor2.exe: DispatchScriptEvent @ 0x004dd730, 0x004dcfb0 @ 0x004dcfb0 (KOTOR2)
     /// - Script execution: 0x004dcfb0 dispatches script events and executes scripts
@@ -146,7 +146,7 @@ namespace Andastra.Game.Games.Odyssey
         /// - JournalSystem: Quest and journal management
         /// - UISystem: UI screen and overlay management
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - swkotor.exe: Script execution context setup (KOTOR1)
         /// - swkotor2.exe: 0x005226d0 @ 0x005226d0 (script execution context setup, KOTOR2)
         /// - Engine API functions (Kotor1, TheSithLords) access AdditionalContext as IGameServicesContext

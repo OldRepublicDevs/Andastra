@@ -22,7 +22,7 @@ namespace Andastra.Game.Stride.Graphics
     /// </summary>
     /// <remarks>
     /// Entity Model Renderer:
-    /// - Cross-Engine Analysis (Reverse Engineered via Ghidra):
+    /// - Cross-Engine Analysis (Reverse Engineered ):
     ///   - Odyssey (swkotor.exe, swkotor2.exe):
     ///     - [CSWCCreature::LoadModel()] @ (K1: 0x0074f85c, TSL: 0x005261b0) - loads creature model from appearance.2da
     ///     - CSWCCreature::LoadModel @ (K1: TODO: Find this address, TSL: 0x007c82fc) - "Failed to load creature model '%s'." error string

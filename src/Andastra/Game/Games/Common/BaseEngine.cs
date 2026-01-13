@@ -89,7 +89,7 @@ namespace Andastra.Game.Games.Engines.Common
 
         public EngineFamily EngineFamily
         {
-            get { return _profile.EngineFamily; }
+            get { return (EngineFamily)_profile.EngineFamily; }
         }
 
         public IEngineProfile Profile

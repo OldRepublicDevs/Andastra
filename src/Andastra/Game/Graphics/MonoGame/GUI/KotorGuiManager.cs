@@ -11,6 +11,7 @@ using BioWare.NET.Resource.Formats.GFF.Generics.GUI;
 using Andastra.Runtime.Core.Audio;
 using Andastra.Game.Games.Common;
 using Andastra.Runtime.Graphics;
+using GraphicsVector2 = Andastra.Runtime.Graphics.Vector2;
 using Andastra.Game.Graphics.MonoGame.Graphics;
 using Andastra.Game.Graphics.MonoGame.Converters;
 using Andastra.Game.Graphics.MonoGame.Graphics;
@@ -18,7 +19,9 @@ using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using XnaVector2 = Microsoft.Xna.Framework.Vector2; using XnaColor = Microsoft.Xna.Framework.Color;
+using XnaVector2 = Microsoft.Xna.Framework.Vector2;
+using XnaColor = Microsoft.Xna.Framework.Color;
+using XnaSpriteEffects = Microsoft.Xna.Framework.Graphics.SpriteEffects;
 
 namespace Andastra.Game.Graphics.MonoGame.GUI
 {
@@ -45,7 +48,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
     /// - Button events: Handles button click events, dispatches to game systems
     /// - Font rendering: Loads bitmap fonts from ResRef using BitmapFont class with TXI metrics
     ///
-    /// Ghidra Reverse Engineering Analysis Required:
+    /// Ghidra verified components Analysis Required:
     /// - swkotor.exe: GUI font loading and text rendering functions (needs Ghidra address verification)
     /// - swkotor2.exe: 0x0070a2e0 @ 0x0070a2e0 demonstrates GUI loading pattern with button initialization (needs verification)
     /// - nwmain.exe: Aurora engine GUI system and font rendering (needs Ghidra analysis for equivalent implementation)
@@ -851,7 +854,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             else
             {
                 // Render solid color background if no texture
-                ParsingColor bgColor = panel.Color;
+                BioWare.NET.Common.Color bgColor = panel.Color;
                 if (bgColor.A > 0)
                 {
                     Texture2D pixel = GetPixelTexture();
@@ -912,7 +915,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             else
             {
                 // Render solid color background
-                ParsingColor bgColor = button.Color;
+                BioWare.NET.Common.Color bgColor = button.Color;
                 if (bgColor.A > 0)
                 {
                     Texture2D pixel = GetPixelTexture();
@@ -1277,11 +1280,11 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             else
             {
                 // Render solid color background if available
-                ParsingColor bgColor = protoItem.Color;
+                BioWare.NET.Common.Color bgColor = protoItem.Color;
                 if (bgColor.A > 0)
                 {
                     Texture2D pixel = GetPixelTexture();
-                    XnaColor tint = new Microsoft.Xna.Framework.Color(bgColor.R, bgColor.G, bgColor.B, bgColor.A);
+                    XnaColor tint = new XnaColor(bgColor.R, bgColor.G, bgColor.B, bgColor.A);
                     _spriteBatch.Draw(pixel, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
@@ -1296,7 +1299,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
 
                 if (protoItem.GuiText != null)
                 {
-                    textColor = new Microsoft.Xna.Framework.Color(
+                    textColor = new XnaColor(
                         protoItem.GuiText.Color.R,
                         protoItem.GuiText.Color.G,
                         protoItem.GuiText.Color.B,
@@ -1307,7 +1310,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 else
                 {
                     // Default text properties
-                    textColor = Microsoft.Xna.Framework.Color.White;
+                    textColor = XnaColor.White;
                     alignment = 1; // Left align
                     fontResRef = protoItem.Font;
                 }
@@ -1357,7 +1360,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 Texture2D scrollbarBgTexture = LoadTexture(scrollBar.Border.Fill.ToString());
                 if (scrollbarBgTexture != null)
                 {
-                    XnaColor tint = Microsoft.Xna.Framework.Color.White;
+                    XnaColor tint = XnaColor.White;
                     _spriteBatch.Draw(scrollbarBgTexture, new Microsoft.Xna.Framework.Rectangle((int)scrollbarPosition.X, (int)scrollbarPosition.Y, (int)scrollbarSize.X, (int)scrollbarSize.Y), tint);
                 }
             }
@@ -1380,7 +1383,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                     float thumbY = scrollbarPosition.Y + (scrollRatio * availableTrackHeight);
 
                     // Render thumb
-                    XnaColor thumbTint = Microsoft.Xna.Framework.Color.White;
+                    XnaColor thumbTint = XnaColor.White;
                     Microsoft.Xna.Framework.Rectangle thumbRect = new Microsoft.Xna.Framework.Rectangle((int)scrollbarPosition.X, (int)thumbY, (int)scrollbarSize.X, (int)thumbHeight);
                     _spriteBatch.Draw(thumbTexture, thumbRect, thumbTint);
                 }
@@ -1395,12 +1398,12 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                     // Render up arrow (top of scrollbar)
                     float upArrowSize = Math.Min(20.0f, scrollbarSize.Y * 0.1f);
                     Microsoft.Xna.Framework.Rectangle upArrowRect = new Microsoft.Xna.Framework.Rectangle((int)scrollbarPosition.X, (int)scrollbarPosition.Y, (int)scrollbarSize.X, (int)upArrowSize);
-                    _spriteBatch.Draw(arrowTexture, upArrowRect, Microsoft.Xna.Framework.Color.White);
+                    _spriteBatch.Draw(arrowTexture, upArrowRect, XnaColor.White);
 
                     // Render down arrow (bottom of scrollbar)
                     float downArrowY = scrollbarPosition.Y + scrollbarSize.Y - upArrowSize;
                     Microsoft.Xna.Framework.Rectangle downArrowRect = new Microsoft.Xna.Framework.Rectangle((int)scrollbarPosition.X, (int)downArrowY, (int)scrollbarSize.X, (int)upArrowSize);
-                    _spriteBatch.Draw(arrowTexture, downArrowRect, Microsoft.Xna.Framework.Color.White);
+                    _spriteBatch.Draw(arrowTexture, downArrowRect, XnaColor.White);
                 }
             }
         }
@@ -1416,7 +1419,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 Texture2D fillTexture = LoadTexture(progressBar.Border.Fill.ToString());
                 if (fillTexture != null)
                 {
-                    XnaColor tint = Microsoft.Xna.Framework.Color.White;
+                    XnaColor tint = XnaColor.White;
                     _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
@@ -1432,7 +1435,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                     Texture2D progressTexture = LoadTexture(progressBar.ProgressFillTexture.ToString());
                     if (progressTexture != null)
                     {
-                        XnaColor tint = Microsoft.Xna.Framework.Color.White;
+                        XnaColor tint = XnaColor.White;
                         _spriteBatch.Draw(progressTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, fillWidth, (int)size.Y), tint);
                     }
                 }
@@ -1475,7 +1478,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 Texture2D fillTexture = LoadTexture(borderToUse.Fill.ToString());
                 if (fillTexture != null)
                 {
-                    XnaColor tint = Microsoft.Xna.Framework.Color.White;
+                    XnaColor tint = XnaColor.White;
                     _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
@@ -1484,18 +1487,18 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 Texture2D fillTexture = LoadTexture(checkBox.Border.Fill.ToString());
                 if (fillTexture != null)
                 {
-                    XnaColor tint = Microsoft.Xna.Framework.Color.White;
+                    XnaColor tint = XnaColor.White;
                     _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
             else
             {
                 // Render solid color background
-                ParsingColor bgColor = checkBox.Color;
+                BioWare.NET.Common.Color bgColor = checkBox.Color;
                 if (bgColor.A > 0)
                 {
                     Texture2D pixel = GetPixelTexture();
-                    XnaColor tint = new Microsoft.Xna.Framework.Color(bgColor.R, bgColor.G, bgColor.B, bgColor.A);
+                    XnaColor tint = new XnaColor(bgColor.R, bgColor.G, bgColor.B, bgColor.A);
                     _spriteBatch.Draw(pixel, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
@@ -1557,7 +1560,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 int checkmarkX = (int)(position.X + (size.X - checkmarkSize) / 2);
                 int checkmarkY = (int)(position.Y + (size.Y - checkmarkSize) / 2);
 
-                XnaColor tint = Microsoft.Xna.Framework.Color.White;
+                XnaColor tint = XnaColor.White;
                 _spriteBatch.Draw(checkmarkTexture, new Microsoft.Xna.Framework.Rectangle(checkmarkX, checkmarkY, checkmarkSize, checkmarkSize), tint);
             }
             else
@@ -1581,7 +1584,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
 
                 // Draw checkmark using pixel texture
                 Texture2D pixel = GetPixelTexture();
-                XnaColor checkmarkColor = Microsoft.Xna.Framework.Color.White;
+                XnaColor checkmarkColor = XnaColor.White;
 
                 // Draw line 1 (bottom-left to center)
                 DrawLine(pixel, point1, point2, lineThickness, checkmarkColor);
@@ -1705,7 +1708,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 Texture2D fillTexture = LoadTexture(slider.Border.Fill.ToString());
                 if (fillTexture != null)
                 {
-                    XnaColor tint = Microsoft.Xna.Framework.Color.White;
+                    XnaColor tint = XnaColor.White;
                     _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
@@ -1849,7 +1852,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             }
 
             // Render thumb texture
-            XnaColor thumbTint = Microsoft.Xna.Framework.Color.White;
+            XnaColor thumbTint = XnaColor.White;
 
             // Apply rotation if specified (typically unused, but support it)
             float rotation = 0.0f;
@@ -1918,7 +1921,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 Texture2D fillTexture = LoadTexture(control.Border.Fill.ToString());
                 if (fillTexture != null)
                 {
-                    XnaColor tint = Microsoft.Xna.Framework.Color.White;
+                    XnaColor tint = XnaColor.White;
                     _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
@@ -1926,7 +1929,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             {
                 // Render solid color background
                 Texture2D pixel = GetPixelTexture();
-                XnaColor tint = new Microsoft.Xna.Framework.Color(control.Color.R, control.Color.G, control.Color.B, control.Color.A);
+                XnaColor tint = new XnaColor(control.Color.R, control.Color.G, control.Color.B, control.Color.A);
                 _spriteBatch.Draw(pixel, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
             }
         }
@@ -2010,7 +2013,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             if (!_textureCache.TryGetValue(pixelKey, out Texture2D pixel))
             {
                 pixel = new Texture2D(_graphicsDevice, 1, 1);
-                pixel.SetData(new[] { Microsoft.Xna.Framework.Color.White });
+                pixel.SetData(new[] { XnaColor.White });
                 _textureCache[pixelKey] = pixel;
             }
             return pixel;
@@ -2188,7 +2191,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 Dimension = selected.Dimension,
                 InnerOffset = selected.InnerOffset,
                 InnerOffsetY = selected.InnerOffsetY,
-                Color = selected.Color != null ? new BioWare.NET.Common.Color(selected.Color) : null,
+                Color = selected.Color != null ? new BioWare.NET.Common.Color(selected.Color.R, selected.Color.G, selected.Color.B, selected.Color.A) : null,
                 Pulsing = selected.Pulsing
             };
         }
@@ -2207,7 +2210,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 Dimension = hilightSelected.Dimension,
                 InnerOffset = hilightSelected.InnerOffset,
                 InnerOffsetY = hilightSelected.InnerOffsetY,
-                Color = hilightSelected.Color != null ? new BioWare.NET.Common.Color(hilightSelected.Color) : null,
+                Color = hilightSelected.Color != null ? new BioWare.NET.Common.Color(hilightSelected.Color.R, hilightSelected.Color.G, hilightSelected.Color.B, hilightSelected.Color.A) : null,
                 Pulsing = hilightSelected.Pulsing
             };
         }

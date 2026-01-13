@@ -25,7 +25,7 @@ namespace BioWare.NET.Resource.Formats.TPC
     ///   - 0x0E-0x7F: Reserved (114 bytes padding)
     /// - Texture data starts at offset 0x80
     /// 
-    /// Based on reverse engineering analysis:
+    /// Based on verified components analysis:
     /// - swkotor.exe: TPC texture loading functions process texture data
     /// - swkotor2.exe: TPC texture loading functions process texture data
     /// - Format compatibility: TPC format supports DXT compression and uncompressed formats

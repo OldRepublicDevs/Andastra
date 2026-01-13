@@ -50,7 +50,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
             }
 
             // NWN:EE-specific hardcoded resources
-            // Based on nwmain.exe (Enhanced Edition) reverse engineering analysis:
+            // Based on nwmain.exe (Enhanced Edition) verified components analysis:
             // - Enhanced Edition uses the same hardcoded resource system as original NWN
             // - Common hardcoded resources (DefaultModel, DefaultIcon, DefaultACSounds, fnt_default) are provided by base class
             // - Enhanced Edition does not introduce additional hardcoded resources beyond those in the base class

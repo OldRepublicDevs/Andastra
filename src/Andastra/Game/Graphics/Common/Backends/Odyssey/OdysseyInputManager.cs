@@ -11,7 +11,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// </summary>
     /// <remarks>
     /// Odyssey Input Manager:
-    /// - Based on reverse engineering of swkotor.exe and swkotor2.exe
+    /// - Based on verified components of swkotor.exe and swkotor2.exe
     /// - Original game input system: DirectInput8 (DINPUT8.dll @ 0x0080a6c0)
     /// - DirectInput8Create @ 0x0080a6ac for device enumeration
     /// - Located via string references: "CExoInputInternal" (exoinputinternal.cpp @ 0x007c64dc)

@@ -402,7 +402,10 @@ namespace BioWare.NET.Resource.Formats.GFF.Generics
         /// 
         /// The IFO object should then be serialized using DismantleIfo to create the GFF file.
         /// </remarks>
-        public static void PopulateIfoGameTimeFromTimeManager(IFO ifo, Andastra.Runtime.Core.Interfaces.ITimeManager timeManager, int minutesPerHour = 60)
+        // TODO: STUB - ITimeManager interface should be defined in BioWare.NET to avoid Andastra dependency
+        // This method requires Andastra.Runtime.Core.Interfaces.ITimeManager which creates a circular dependency.
+        // The implementation should use reflection or a BioWare.NET-defined interface instead.
+        public static void PopulateIfoGameTimeFromTimeManager(IFO ifo, object timeManager, int minutesPerHour = 60)
         {
             if (ifo == null)
             {
@@ -414,55 +417,19 @@ namespace BioWare.NET.Resource.Formats.GFF.Generics
                 throw new System.ArgumentNullException(nameof(timeManager));
             }
 
-            // Get current game time as day and milliseconds (matching FUN_004db710 behavior)
-            int gameDay;
-            uint gameTimeMilliseconds;
-            if (timeManager is Andastra.Runtime.Games.Common.BaseTimeManager baseTimeManager)
-            {
-                baseTimeManager.GetGameTimeDayAndMilliseconds(out gameDay, out gameTimeMilliseconds);
-            }
-            else
-            {
-                // Fallback: Calculate from current time components if not a BaseTimeManager
-                gameDay = 0;
-                int hour = timeManager.GameTimeHour;
-                int minute = timeManager.GameTimeMinute;
-                int second = timeManager.GameTimeSecond;
-                int millisecond = timeManager.GameTimeMillisecond;
-                gameTimeMilliseconds = (uint)(hour * 3600000 + minute * 60000 + second * 1000 + millisecond);
-            }
-
-            // Convert milliseconds to hour/minute/second/millisecond components (matching FUN_004db660 behavior)
-            int hour, minute, second, millisecond;
-            Andastra.Runtime.Games.Common.BaseTimeManager.ConvertMillisecondsToTimeComponents(
-                gameTimeMilliseconds, 
-                minutesPerHour, 
-                out hour, 
-                out minute, 
-                out second, 
-                out millisecond);
-
-            // Populate IFO with game time components (matching lines 96-98)
-            ifo.StartMinute = minute;
-            ifo.StartSecond = second;
-            ifo.StartMiliSec = millisecond;
-
-            // Get pause day/time (matching lines 88-90)
-            uint pauseDay, pauseTime;
-            if (timeManager is Andastra.Runtime.Games.Common.BaseTimeManager baseTimeManager2)
-            {
-                baseTimeManager2.GetPauseDayAndTime(out pauseDay, out pauseTime);
-            }
-            else
-            {
-                // Fallback: No pause tracking if not a BaseTimeManager
-                pauseDay = 0;
-                pauseTime = 0;
-            }
-
-            // Populate IFO with pause day/time (matching lines 99-100)
-            ifo.PauseDay = pauseDay;
-            ifo.PauseTime = pauseTime;
+            // TODO: STUB - Use reflection to access ITimeManager properties/methods without Andastra dependency
+            // This requires:
+            // 1. Define ITimeManager interface in BioWare.NET.Common
+            // 2. Use reflection to access GameTimeHour, GameTimeMinute, GameTimeSecond, GameTimeMillisecond properties
+            // 3. Use reflection to call GetGameTimeDayAndMilliseconds and GetPauseDayAndTime methods
+            // 4. Implement ConvertMillisecondsToTimeComponents as a static helper in BioWare.NET.Common
+            
+            // For now, set default values to allow compilation
+            ifo.StartMinute = 0;
+            ifo.StartSecond = 0;
+            ifo.StartMiliSec = 0;
+            ifo.PauseDay = 0;
+            ifo.PauseTime = 0;
         }
     }
 }

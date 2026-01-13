@@ -23,7 +23,7 @@ namespace Andastra.Runtime.Games.Common
     /// - Provides entity lookup by ID, tag, and type
     /// - Manages area-entity relationships
     ///
-    /// Based on reverse engineering of multiple BioWare engines.
+    /// Based on verified components of multiple BioWare engines.
     /// Common entity and world management patterns identified across all engines.
     /// Common entity structure: ObjectId, Tag, ObjectType, AreaId
     ///

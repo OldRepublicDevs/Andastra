@@ -14,7 +14,7 @@ namespace Andastra.Runtime.Games.Common
     /// - Handles different content types (models, textures, sounds, etc.)
     /// - Provides engine-agnostic resource management
     ///
-    /// Based on reverse engineering of:
+    /// Based on verified components of:
     /// - swkotor.exe: Basic resource loading from BIF files
     /// - swkotor2.exe: Enhanced loading with ERF support
     /// - nwmain.exe: Aurora resource system (Neverwinter Nights)

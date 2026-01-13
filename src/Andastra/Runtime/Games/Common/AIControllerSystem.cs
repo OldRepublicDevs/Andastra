@@ -31,7 +31,7 @@ namespace Andastra.Runtime.Games.Common
     /// - Random wandering: Odyssey uses ActionRandomWalk, Aurora/Eclipse use ActionMoveToLocation
     /// - Conversation checking: Eclipse has entity data-based checking, others use base implementation
     ///
-    /// Based on reverse engineering of:
+    /// Based on verified components of:
     /// - Odyssey: swkotor.exe/swkotor2.exe AI system
     /// - Aurora: nwmain.exe AI system with D20 perception
     /// - Eclipse: daorigins.exe/DragonAge2.exe AI system with UnrealScript integration

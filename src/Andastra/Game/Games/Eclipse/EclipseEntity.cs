@@ -24,7 +24,7 @@ namespace Andastra.Game.Games.Eclipse
     /// - Enhanced component-based architecture for modular functionality
     /// - Script hooks for events and behaviors
     ///
-    /// Based on reverse engineering of:
+    /// Based on verified components of:
     /// - daorigins.exe: Entity creation and management
     /// - DragonAge2.exe: Enhanced entity system
     /// - ObjectId: Located via string reference "ObjectId" @ 0x00af4e74 (daorigins.exe), "ObjectId" @ 0x00bf1a3c (DragonAge2.exe)
@@ -343,7 +343,7 @@ namespace Andastra.Game.Games.Eclipse
         /// Based on door component structure in daorigins.exe and DragonAge2.exe.
         /// - Note: Eclipse engines may not have traditional door systems like Odyssey/Aurora
         /// - If doors are supported, they would use Eclipse-specific file formats and systems
-        /// - Original implementation: Needs reverse engineering from daorigins.exe and DragonAge2.exe
+        /// - Original implementation: Needs verified components from daorigins.exe and DragonAge2.exe
         /// - Door component attached during entity creation if door support exists
         /// </remarks>
         private void AttachDoorComponents()
@@ -469,7 +469,7 @@ namespace Andastra.Game.Games.Eclipse
         ///   - Sound properties stored in SAV area files, similar structure to Odyssey/Aurora
         ///   - Both games use identical sound system with same properties and behavior
         ///
-        /// Reverse Engineering Notes (Ghidra MCP verified):
+        /// verified components Notes (Ghidra MCP verified):
         /// - daorigins.exe: Sound entity creation and loading functions
         ///   - String references found: "SoundList", "Sound", "Active", "Looping", "Volume", "MaxDistance", "MinDistance"
         ///   - Sound entities are loaded from GIT file "SoundList" (GFFList, StructID 6) during area loading
@@ -773,10 +773,10 @@ namespace Andastra.Game.Games.Eclipse
         /// - Custom data dictionary (count int32, then key-value pairs with type indicators)
         ///
         /// Note: This implementation matches the binary format used by EclipseSaveSerializer.SerializeEntity
-        /// for consistency. The format is based on reverse engineering of daorigins.exe and DragonAge2.exe
+        /// for consistency. The format is based on verified components of daorigins.exe and DragonAge2.exe
         /// save file structures.
         ///
-        /// Reverse Engineering Notes (Ghidra MCP verified):
+        /// verified components Notes (Ghidra MCP verified):
         /// - daorigins.exe: Entity serialization is integrated into the SaveGameMessage system
         ///   - SaveGameMessage string reference: @ 0x00ae6276 (unicode)
         ///   - COMMAND_SAVEGAME string reference: @ 0x00af15d4

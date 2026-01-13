@@ -5,8 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BioWare.NET.Extract;
-using BioWare.NET.Resource.Formats.Capsule;
-using BioWare.NET.Installation;
+using BioWare.NET.Extract.Capsule;
 
 namespace KotorDiff.Diff
 {
@@ -105,7 +104,7 @@ namespace KotorDiff.Diff
                 var results = new List<ComparableResource>();
                 try
                 {
-                    var capsule = new BioWare.NET.Resource.Formats.Capsule.Capsule(filePath.FullName);
+                    var capsule = new BioWare.NET.Extract.Capsule.Capsule(filePath.FullName);
                     foreach (var res in capsule)
                     {
                         string ext = res.ResType.Extension.ToLowerInvariant();

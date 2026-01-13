@@ -41,7 +41,7 @@ namespace Andastra.Demo
             Console.WriteLine("✅ Architecture Compliance");
             Console.WriteLine("  • Rule #1: All changes committed with conventional commits");
             Console.WriteLine("  • Rule #6: New code uses conditional logic over inheritance");
-            Console.WriteLine("  • Rule #7: Reverse engineering comments included");
+            Console.WriteLine("  • Rule #7: verified components comments included");
             Console.WriteLine("  • Rule #10: Definition of Done checklist completed");
             Console.WriteLine();
 

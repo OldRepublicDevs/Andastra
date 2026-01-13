@@ -6,9 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using BioWare.NET;
 using BioWare.NET.Extract;
-using BioWare.NET.Installation;
 using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.TSLPatcher.Mods;
@@ -38,8 +36,8 @@ namespace KotorDiff.Resolution
             Action<string> logFunc = null,
             bool compareHashes = true,
             ModificationsByType modificationsByType = null,
-            global::TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null,
-            Func<byte[], byte[], DiffContext, bool, ModificationsByType, Action<string>, global::TSLPatcher.IncrementalTSLPatchDataWriter, bool?> diffDataFunc = null)
+            IncrementalTSLPatchDataWriter incrementalWriter = null,
+            Func<byte[], byte[], DiffContext, bool, ModificationsByType, Action<string>, IncrementalTSLPatchDataWriter, bool?> diffDataFunc = null)
         {
             if (filesAndFoldersAndInstallations == null || filesAndFoldersAndInstallations.Count < 2)
             {
@@ -139,9 +137,9 @@ namespace KotorDiff.Resolution
             Action<string> logFunc = null,
             bool compareHashes = true,
             ModificationsByType modificationsByType = null,
-            global::TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null,
+            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null,
             List<Installation> additionalInstalls = null,
-            Func<byte[], byte[], DiffContext, bool, ModificationsByType, Action<string>, global::TSLPatcher.IncrementalTSLPatchDataWriter, bool?> diffDataFunc = null)
+            Func<byte[], byte[], DiffContext, bool, ModificationsByType, Action<string>, BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter, bool?> diffDataFunc = null)
         {
             if (logFunc == null)
             {
@@ -808,8 +806,8 @@ namespace KotorDiff.Resolution
             Action<string> logFunc = null,
             bool compareHashes = true,
             ModificationsByType modificationsByType = null,
-            global::TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null,
-            Func<byte[], byte[], DiffContext, bool, ModificationsByType, Action<string>, global::TSLPatcher.IncrementalTSLPatchDataWriter, bool?> diffDataFunc = null)
+            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null,
+            Func<byte[], byte[], DiffContext, bool, ModificationsByType, Action<string>, BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter, bool?> diffDataFunc = null)
         {
             if (logFunc == null)
             {

@@ -12,7 +12,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// - Base implementation: BaseItemComponent in Runtime.Games.Common.Components
     /// - Engine-specific implementations: OdysseyItemComponent, AuroraItemComponent, EclipseItemComponent, InfinityItemComponent
     ///
-    /// Based on reverse engineering of:
+    /// Based on verified components of:
     /// - Odyssey (swkotor.exe, swkotor2.exe): UTI GFF format
     ///   - swkotor.exe: Item component system with UTI template loading
     ///   - swkotor2.exe: Enhanced item system with upgrade support

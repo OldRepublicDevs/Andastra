@@ -17,7 +17,7 @@ namespace Andastra.Game.Games.Common.Components
     /// - Common functionality: Useability, Inventory, Static flag, Open/Closed state, Locking, Hit Points, Hardness, Animation State, Conversation
     /// - Engine-specific: File format details, trap systems, appearance systems, event handling, field names
     ///
-    /// Based on reverse engineering of:
+    /// Based on verified components of:
     /// - swkotor.exe: Placeable system with UTP template loading (LoadPlaceableFromGFF, SavePlaceableToGFF)
     /// - swkotor2.exe: Enhanced placeable system (0x00588010 @ 0x00588010, 0x00589520 @ 0x00589520)
     ///   - Located via string references: "Placeable" @ 0x007bc530, "Placeable List" @ 0x007bd260

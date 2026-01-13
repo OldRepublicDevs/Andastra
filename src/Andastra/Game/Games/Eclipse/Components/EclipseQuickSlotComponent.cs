@@ -15,12 +15,12 @@ namespace Andastra.Game.Games.Eclipse.Components
     /// - Quick slots: Variable number of slots (typically 12-24 slots depending on game version)
     /// - Quick slot types: Similar to Odyssey (0=item, 1=ability/talent)
     /// - Original implementation: Quick slots stored in save game GFF data (Quickslots, Quickslots1-4, QuickslotAbility, QuickslotItemTag fields in GFF)
-    /// - Quick slot storage: Save game serialization functions (function addresses to be determined via Ghidra)
+    /// - Quick slot storage: Save game serialization functions (function addresses to be determined )
     /// - Quick slot fields: Quickslots, Quickslots1, Quickslots2, Quickslots3, Quickslots4 in save game GFF format
     /// - Each quickslot entry contains: Ability ID (for talents/spells), Item Tag (for items)
     /// - Quick slot usage: Using a slot triggers appropriate action (ActionUseItem for items, ActionCastSpell/UseTalent for abilities)
-    /// - daorigins.exe: Eclipse quick slot system with talents and items (function addresses to be determined via Ghidra)
-    /// - DragonAge2.exe: Enhanced Eclipse quick slot system with additional features (function addresses to be determined via Ghidra)
+    /// - daorigins.exe: Eclipse quick slot system with talents and items (function addresses to be determined )
+    /// - DragonAge2.exe: Enhanced Eclipse quick slot system with additional features (function addresses to be determined )
     /// - Eclipse uses talents instead of feats/spells (talent system similar to Odyssey's force powers)
     /// - Eclipse supports multiple quick bar pages (Quickslots1-4) unlike Odyssey's single bar
     /// </remarks>

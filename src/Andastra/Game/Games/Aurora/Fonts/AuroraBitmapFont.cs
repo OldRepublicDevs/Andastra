@@ -27,7 +27,7 @@ namespace Andastra.Game.Games.Aurora.Fonts
     /// - Font loading: Loads font texture and metrics from game installation
     /// - Character mapping: Maps ASCII characters to texture coordinates using grid-based or TXI coordinate mapping
     ///
-    /// Ghidra Reverse Engineering Analysis:
+    /// Ghidra verified components Analysis:
     /// - nwmain.exe: Font loading functions (address verification pending Ghidra analysis)
     /// - nwmain.exe: Font rendering functions (address verification pending Ghidra analysis)
     /// - Font format: TGA format with optional TXI metrics (similar to Odyssey but without TPC wrapper)

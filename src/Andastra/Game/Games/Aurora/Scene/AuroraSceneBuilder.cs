@@ -27,7 +27,7 @@ namespace Andastra.Game.Games.Aurora.Scene
     /// - Tiles: Grid-based layout with tile visibility based on adjacency and portals
     /// - Graphics-agnostic: Works with any graphics backend (MonoGame, Stride, etc.)
     ///
-    /// Based on reverse engineering of nwmain.exe:
+    /// Based on verified components of nwmain.exe:
     /// - CNWSArea::LoadArea @ 0x140365160 - Main area loading function
     /// - CNWSArea::LoadTileList @ 0x14035f780 - Loads Tile_List from ARE file
     /// - CNWSArea::LoadTileSetInfo @ 0x14035faf0 - Loads tileset information

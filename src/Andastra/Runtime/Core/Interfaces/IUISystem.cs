@@ -13,7 +13,7 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - Screen management: Push/pop screen stack, modal overlays, screen transitions
     /// - Engine-specific implementations provide concrete functionality for their respective engines
     ///
-    /// Based on reverse engineering of UI systems across engines:
+    /// Based on verified components of UI systems across engines:
     /// - Odyssey (swkotor.exe, swkotor2.exe): GUI panel-based UI system with upgrade screens
     /// - Aurora (nwmain.exe): Scene-based GUI system with multiple panel types
     /// - Eclipse (daorigins.exe, DragonAge2.exe): Advanced UI system with crafting and inventory screens

@@ -18,15 +18,18 @@ using Andastra.Runtime.Core.GameLoop;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Journal;
+using RuntimeCore = Andastra.Runtime.Core;
 using Andastra.Runtime.Core.Module;
 using Andastra.Runtime.Core.Movement;
 using Andastra.Runtime.Core.Navigation;
 using Andastra.Runtime.Core.Party;
 using Andastra.Runtime.Core.Plot;
+using ModuleState = Andastra.Runtime.Core.Module.ModuleState;
 using BioWare.NET.Common;
 using BioWare.NET.Extract;
 using JetBrains.Annotations;
 using Andastra.Game.Games.Common;
+using Andastra.Game.Games.Odyssey.Systems;
 using GameDataManager = Andastra.Game.Games.Odyssey.Data.GameDataManager;
 using TriggerSystem = Andastra.Runtime.Core.Triggers.TriggerSystem;
 using AIControllerSystem = Andastra.Runtime.Games.Common.AIControllerSystem;
@@ -39,14 +42,26 @@ namespace Andastra.Game.Games.Odyssey.Game
     /// <remarks>
     /// Game Session System (Odyssey-specific):
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x006caab0 @ 0x006caab0 (server command parser, handles module commands)
-    /// - Located via string references: "GAMEINPROGRESS" @ 0x007c15c8, "ModuleLoaded" @ 0x007bdd70, "ModuleRunning" @ 0x007bdd58
+    /// - Located via string references:
+    ///   - ["GAMEINPROGRESS"] @ (K1: TODO: Find address, TSL: 0x007c15c8)
+    ///   - ["ModuleLoaded"] @ (K1: TODO: Find address, TSL: 0x007bdd70)
+    ///   - ["ModuleRunning"] @ (K1: TODO: Find address, TSL: 0x007bdd58)
     /// - Cross-engine analysis:
-    ///   - Aurora (nwmain.exe): CServerExoApp::LoadModule, CNWSModule::LoadModule - similar module loading system, different file formats
-    ///   - Eclipse (daorigins.exe, DragonAge2.exe, ): "LoadModule" - UnrealScript-based module loading, different architecture
-    /// - Inheritance: Base class BaseGameSession (Runtime.Games.Common) - abstract game session, Odyssey override (Runtime.Games.Odyssey) - Odyssey-specific game session
+    ///   - Aurora (nwmain.exe):
+    ///     - ["CServerExoApp::LoadModule"] @ (K1: TODO: Find address, TSL: TODO: Find this address address, NWN:EE: TODO: Find this address address)
+    ///     - ["CNWSModule::LoadModule"] @ (K1: TODO: Find address, TSL: TODO: Find this address address, NWN:EE: TODO: Find this address address) - similar module loading system, different file formats
+    ///   - Eclipse (daorigins.exe, DragonAge2.exe, ):
+    ///     - ["LoadModule"] @ (K1: TODO: Find address, TSL: TODO: Find this address address, NWN:EE: TODO: Find this address address) - UnrealScript-based module loading, different architecture
+    /// - Inheritance: Base class BaseGameSession (Andastra.Game.Games.Common) - abstract game session, Odyssey override (Runtime.Games.Odyssey) - Odyssey-specific game session
     /// - Original implementation: Coordinates module loading, entity management, script execution, combat, AI, triggers, dialogue, party
-    /// - Module state: 0x006caab0 sets module state flags (0=Idle, 1=ModuleLoaded, 2=ModuleRunning) in DAT_008283d4 structure
-    /// - Game loop integration: Update() called every frame to update all systems (60 Hz fixed timestep)
+        /// - Module state:
+        ///   - SetModuleState @ (K1: TODO: Find address, TSL: 0x006caab0) - sets module state flags
+        ///   - in ["DAT_008283d4"] @ (K1: TODO: Find address, TSL: TODO: 0x008283d4) structure:
+        ///     * 0=Idle
+        ///     * 1=ModuleLoaded
+        ///     * 2=ModuleRunning
+    /// - Game loop integration:
+    ///   - [Update]() @ (K1: TODO: Find address, TSL: TODO: Find this address address) - called every frame to update all systems (60 Hz fixed timestep)
     /// - System initialization order: Installation/ModuleLoader -> FactionManager -> PerceptionManager -> CombatManager -> PartySystem -> Engine API -> ScriptExecutor -> TriggerSystem/AIController/DialogueManager/EncounterSystem
     /// </remarks>
     public class GameSession
@@ -75,6 +90,7 @@ namespace Andastra.Game.Games.Odyssey.Game
         private readonly PlotSystem _plotSystem;
         private readonly FixedTimestepGameLoop _gameLoop;
         private readonly PlayerInputHandler _inputHandler;
+        private readonly ModuleStateManager _moduleStateManager;
 
         // Current game state
         private RuntimeModule _currentModule;
@@ -329,6 +345,10 @@ namespace Andastra.Game.Games.Odyssey.Game
             // Initialize fixed-timestep game loop
             _gameLoop = new FixedTimestepGameLoop(_world);
 
+            // Initialize module state manager (swkotor2.exe: 0x006caab0 @ 0x006caab0)
+            _moduleStateManager = new ModuleStateManager();
+            _moduleStateManager.SetModuleState(ModuleState.Idle);
+
             Console.WriteLine("[GameSession] Game session initialized");
         }
 
@@ -387,7 +407,7 @@ namespace Andastra.Game.Games.Odyssey.Game
         /// </summary>
         /// <param name="characterData">Optional character creation data. If provided, player entity will be created from this data. If null, a default player entity will be created.</param>
         /// <remarks>
-        /// Based on exhaustive reverse engineering of swkotor.exe (K1) and swkotor2.exe (K2):
+        /// Based on exhaustive verified components of swkotor.exe (K1) and swkotor2.exe (K2):
         ///
         /// KOTOR 1 (swkotor.exe) - 0x0067afb0 @ 0x0067afb0 (New Game Button Handler):
         /// - Similar flow but loads "END_M01AA" (Endar Spire - Command Module)
@@ -880,7 +900,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             }
 
             // Map Gender enum to integer (Male=0, Female=1)
-            int genderValue = characterData.Gender == Andastra.Runtime.Core.Game.Gender.Male ? 0 : 1;
+            int genderValue = characterData.Gender == Runtime.Core.Game.Gender.Male ? 0 : 1;
 
             // Get class data for HP/FP calculations
             GameDataManager.ClassData classData = _gameDataManager?.GetClass(classId);
@@ -948,7 +968,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             }
 
             // Set entity data for appearance, gender, name
-            if (playerEntity is Core.Entities.Entity concreteEntity)
+            if (playerEntity is RuntimeCore.Entities.Entity concreteEntity)
             {
                 concreteEntity.SetData("Appearance_Type", characterData.Appearance);
                 concreteEntity.SetData("Gender", genderValue);
@@ -1053,8 +1073,9 @@ namespace Andastra.Game.Games.Odyssey.Game
             // Add starting feats from class
             // Based on swkotor.exe and swkotor2.exe: Starting feats come from class featgain.2da
             // Located via string references: "CSWClass::LoadFeatGain: can't load featgain.2da" @ swkotor.exe: 0x0074b370, swkotor2.exe: 0x007c46bc
-            // Original implementation: 0x005bcf70 @ 0x005bcf70 (swkotor.exe), 0x0060d1d0 @ 0x0060d1d0 (swkotor2.exe)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005d63d0 reads "FeatGain" column from classes.2da for each class, then calls 0x0060d1d0 (LoadFeatGain)
+            // Original implementation:
+            // - ["CSWClass::LoadFeatGain"] @ (K1: 0x005bcf70, TSL: 0x0060d1d0)
+            // - 0x005d63d0 reads "FeatGain" column from classes.2da for each class, then calls 0x0060d1d0 (LoadFeatGain)
             // LoadFeatGain loads featgain.2da table, finds row by label (from FeatGain column), reads "_REG" and "_BON" columns
             // Each class has automatic feats granted at level 1 from featgain.2da
             if (_gameDataManager != null && creatureComp != null && creatureComp.FeatList != null)
@@ -1071,7 +1092,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             }
 
             // Initialize all other components (ComponentInitializer already handles this, but ensure they exist)
-            Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(playerEntity);
+            ComponentInitializer.InitializeComponents(playerEntity);
 
             // Add player to party as leader
             _partySystem?.SetPlayerCharacter(playerEntity);
@@ -1211,7 +1232,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             // Module entities need IScriptHooksComponent for script execution
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module scripts require script hooks component
             // ComponentInitializer.InitializeComponents adds IScriptHooksComponent to all entities
-            Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
+            Andastra.Game.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
 
             // Ensure IScriptHooksComponent is present (ComponentInitializer should add it, but verify for safety)
             if (!entity.HasComponent<IScriptHooksComponent>())
@@ -1492,7 +1513,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Quick slot system
             // Located via string references: "QuickSlot" @ inventory/ability system
             // Original implementation: Quick slots store items/abilities, using slot triggers use action
-            Core.Interfaces.Components.IQuickSlotComponent quickSlots = _playerEntity.GetComponent<Core.Interfaces.Components.IQuickSlotComponent>();
+            IQuickSlotComponent quickSlots = _playerEntity.GetComponent<IQuickSlotComponent>();
             if (quickSlots == null)
             {
                 return;
@@ -1513,11 +1534,11 @@ namespace Andastra.Game.Games.Odyssey.Game
                     // Queue ActionUseItem action
                     // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item usage system
                     // Original implementation: ActionUseItem queues item use action, applies item effects
-                    Core.Interfaces.Components.IActionQueueComponent actionQueue = _playerEntity.GetComponent<Core.Interfaces.Components.IActionQueueComponent>();
+                    IActionQueueComponent actionQueue = _playerEntity.GetComponent<IActionQueueComponent>();
                     if (actionQueue != null)
                     {
                         // Queue ActionUseItem action
-                        var useItemAction = new Core.Actions.ActionUseItem(item.ObjectId, _playerEntity.ObjectId);
+                        var useItemAction = new RuntimeCore.Actions.ActionUseItem(item.ObjectId, _playerEntity.ObjectId);
                         actionQueue.Add(useItemAction);
                     }
                 }
@@ -1533,11 +1554,11 @@ namespace Andastra.Game.Games.Odyssey.Game
                     // Located via string references: Quick slot system handles spell casting
                     // Original implementation: Quick slot ability usage casts spell at self or selected target
                     // Spell data (cast time, Force point cost, effects) is looked up from spells.2da via GameDataManager
-                    Core.Interfaces.Components.IActionQueueComponent actionQueue = _playerEntity.GetComponent<Core.Interfaces.Components.IActionQueueComponent>();
+                    IActionQueueComponent actionQueue = _playerEntity.GetComponent<IActionQueueComponent>();
                     if (actionQueue != null)
                     {
                         // Use GameDataManager for spell data lookup (spell cast time, Force point cost, effects)
-                        var castAction = new Core.Actions.ActionCastSpellAtObject(abilityId, _playerEntity.ObjectId, _gameDataManager);
+                        var castAction = new RuntimeCore.Actions.ActionCastSpellAtObject(abilityId, _playerEntity.ObjectId, _gameDataManager);
                         actionQueue.Add(castAction);
                     }
                 }

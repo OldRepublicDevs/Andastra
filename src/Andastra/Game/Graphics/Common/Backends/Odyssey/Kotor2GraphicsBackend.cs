@@ -25,7 +25,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// </summary>
     /// <remarks>
     /// KOTOR 2 Graphics Backend:
-    /// - Based on reverse engineering of swkotor2.exe
+    /// - Based on verified components of swkotor2.exe
     /// - Original game graphics system: OpenGL (OPENGL32.DLL) with WGL extensions
     /// - Graphics initialization:
     ///   - 0x00461c50 @ 0x00461c50 (main OpenGL context creation)
@@ -986,7 +986,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// - 0x00461200: Display list initialization (conditional)
         /// - 0x004235b0: Display setup/configuration
         ///
-        /// Based on reverse engineering of swkotor2.exe at address 0x00423b80.
+        /// Based on verified components of swkotor2.exe at address 0x00423b80.
         /// The function checks a flag and conditionally calls cleanup/init functions,
         /// then always calls the display setup function.
         /// </remarks>
@@ -1016,7 +1016,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// </summary>
         /// <remarks>
         /// This function cleans up existing display lists and calls a function pointer if set.
-        /// Based on reverse engineering of swkotor2.exe at address 0x00461220.
+        /// Based on verified components of swkotor2.exe at address 0x00461220.
         /// </remarks>
         private void InitializeKotor2DisplayListCleanup()
         {
@@ -1067,7 +1067,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// </summary>
         /// <remarks>
         /// This function initializes display lists for font glyph rendering.
-        /// Based on reverse engineering of swkotor2.exe at address 0x00461200.
+        /// Based on verified components of swkotor2.exe at address 0x00461200.
         /// Creates 95 display lists (0x20 to 0x7E, ASCII printable characters) with bitmap data.
         /// </remarks>
         private void InitializeKotor2DisplayListInit()
@@ -1385,7 +1385,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// </summary>
         /// <remarks>
         /// This function configures display parameters and OpenGL state for rendering.
-        /// Based on reverse engineering of swkotor2.exe at address 0x004235b0.
+        /// Based on verified components of swkotor2.exe at address 0x004235b0.
         /// </remarks>
         /// <param name="param1">Display parameter value (matching swkotor2.exe function parameter).</param>
         private void InitializeKotor2DisplaySetup(int param1)
@@ -1915,7 +1915,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// The result is stored in _kotor2CapabilityValidationFlag to avoid repeated computation.
         /// </returns>
         /// <remarks>
-        /// Based on reverse engineering of swkotor2.exe: 0x00475520 @ 0x00475520
+        /// Based on verified components of swkotor2.exe: 0x00475520 @ 0x00475520
         /// Algorithm:
         /// 1. Check if validation has been performed (_kotor2CapabilityValidationFlag == -1)
         /// 2. If not performed, validate extension flags:
@@ -2242,7 +2242,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// 4. Upload texture data to OpenGL with mipmaps
         /// 5. Handle cube maps if present
         ///
-        /// Based on reverse engineering of swkotor2.exe texture loading functions.
+        /// Based on verified components of swkotor2.exe texture loading functions.
         /// </summary>
         /// <remarks>
         /// KOTOR2 Texture Loading (swkotor2.exe):

@@ -13,7 +13,7 @@ namespace Andastra.Game.Games.Common.Journal
     /// - Base classes MUST only contain functionality that is identical across ALL engines
     /// - Engine-specific details MUST be in subclasses (OdysseyJournalSystem, AuroraJournalSystem, EclipseJournalSystem)
     ///
-    /// Based on reverse engineering of journal/quest systems across multiple BioWare engines.
+    /// Based on verified components of journal/quest systems across multiple BioWare engines.
     ///
     /// Common functionality across engines:
     /// - Quest registration and lookup by tag

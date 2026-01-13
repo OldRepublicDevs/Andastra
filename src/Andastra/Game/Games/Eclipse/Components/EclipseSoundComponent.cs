@@ -31,7 +31,7 @@ namespace Andastra.Game.Games.Eclipse.Components
     ///   - Sound properties stored in SAV area files, similar structure to Odyssey/Aurora
     ///   - Both games use identical sound system with same properties and behavior
     /// 
-    /// Reverse Engineering Notes (Ghidra MCP verified):
+    /// verified components Notes (Ghidra MCP verified):
     /// - daorigins.exe: Sound entity creation and loading functions
     ///   - String references found: "SoundList", "Sound", "Active", "Looping", "Volume", "MaxDistance", "MinDistance"
     ///   - Sound entities are loaded from GIT file "SoundList" (GFFList, StructID 6) during area loading

@@ -71,7 +71,7 @@ namespace Andastra.Game.Games.Aurora.Components
         /// - Faction reputation: Stored in faction table (similar to repute.2da but Aurora-specific format)
         /// - Personal reputation: Can override faction reputation for specific entity pairs
         /// - Temporary hostility: Tracked per-entity (stored in TemporaryHostileTargets HashSet from base class)
-        /// - Based on reverse engineering of nwmain.exe faction system
+        /// - Based on verified components of nwmain.exe faction system
         /// </remarks>
         public override bool IsHostile(IEntity other)
         {
@@ -132,7 +132,7 @@ namespace Andastra.Game.Games.Aurora.Components
         /// - Faction reputation: 0-10 = hostile, 11-89 = neutral, 90-100 = friendly
         /// - Personal reputation: Can override faction reputation for specific entity pairs
         /// - Temporary hostility: Tracked per-entity (stored in TemporaryHostileTargets HashSet from base class)
-        /// - Based on reverse engineering of nwmain.exe faction system
+        /// - Based on verified components of nwmain.exe faction system
         /// </remarks>
         public override bool IsFriendly(IEntity other)
         {

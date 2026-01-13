@@ -21,7 +21,7 @@ namespace BioWare.NET.Resource.Formats.TEX
     /// - BioWare variant: Simplified header similar to BioWare DDS format (width/height/bpp/dataSize/float, DXT1/DXT5 only, power-of-two)
     /// - Pixel formats: DXT1/DXT3/DXT5 compression, uncompressed RGB/RGBA/BGR/BGRA
     /// 
-    /// Based on reverse engineering analysis:
+    /// Based on verified components analysis:
     /// - daorigins.exe: TEX texture loading functions process texture data
     /// - DragonAge2.exe: TEX texture loading functions process texture data
     /// - Format compatibility: Eclipse TEX format supports DXT compression and uncompressed formats

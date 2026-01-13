@@ -19,14 +19,14 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     ///
     /// Cross-engine analysis:
     /// - Odyssey (swkotor.exe, swkotor2.exe): 12 slots (0-11), QuickSlot_* fields in UTC GFF, types: 0=item, 1=ability
-    ///   - swkotor.exe: Quick slot system (function addresses to be determined via Ghidra)
+    ///   - swkotor.exe: Quick slot system (function addresses to be determined )
     ///   - swkotor2.exe: 0x005226d0 @ 0x005226d0 saves QuickSlot_* fields, 0x005223a0 @ 0x005223a0 loads QuickSlot_* fields
     /// - Aurora (nwmain.exe, nwn2main.exe): 36 slots, QuickBar list in UTC GFF, QBObjectType field (0=empty, 1=item, 2=spell, 4=feat, etc.)
-    ///   - nwmain.exe: CNWSCreature::SaveQuickBar, CNWSCreature::LoadQuickBar (function addresses to be determined via Ghidra)
-    ///   - nwn2main.exe: Enhanced quick bar system (function addresses to be determined via Ghidra)
+    ///   - nwmain.exe: CNWSCreature::SaveQuickBar, CNWSCreature::LoadQuickBar (function addresses to be determined )
+    ///   - nwn2main.exe: Enhanced quick bar system (function addresses to be determined )
     /// - Eclipse (daorigins.exe, DragonAge2.exe): 24 slots, Quickslots/Quickslots1-4 fields in save game GFF, types: 0=item, 1=ability/talent
-    ///   - daorigins.exe: Quick slot system with talents (function addresses to be determined via Ghidra)
-    ///   - DragonAge2.exe: Enhanced quick slot system (function addresses to be determined via Ghidra)
+    ///   - daorigins.exe: Quick slot system with talents (function addresses to be determined )
+    ///   - DragonAge2.exe: Enhanced quick slot system (function addresses to be determined )
     /// </remarks>
     public interface IQuickSlotComponent : IComponent
     {

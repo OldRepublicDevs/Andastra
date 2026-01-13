@@ -18,41 +18,69 @@ namespace Andastra.Runtime.Core.Module
     /// <remarks>
     /// Module Transition System:
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) module transition system
-    /// - Located via string references: "Module" @ 0x007c1a70 (module object type), "ModuleName" @ 0x007bde2c (module name field)
-    /// - "LASTMODULE" @ 0x007be1d0 (last module global variable), "ModuleList" @ 0x007bdd3c (module list field)
-    /// - "ModuleLoaded" @ 0x007bdd70 (module loaded flag), "ModuleRunning" @ 0x007bdd58 (module running flag)
-    /// - "MODULES:" @ 0x007b58b4 (module debug prefix), ":MODULES" @ 0x007be258 (module path prefix)
-    /// - "LIVE%d:MODULES\" @ 0x007be680 (module path format), ".\modules" @ 0x007c6bcc (module directory), "d:\modules" @ 0x007c6bd8 (module directory)
-    /// - "MODULES" @ 0x007c6bc4 (modules constant), "MODULE" @ 0x007beab8 (module constant)
-    /// - Script events: "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c (module load event, 0x14), "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START" @ 0x007bc948 (module start event, 0x15)
-    /// - "OnModuleLeave" @ 0x007bee50 (module leave script), "OnModuleEnter" @ 0x007bee40 (module enter script)
-    /// - Transition events: "EVENT_AREA_TRANSITION" @ 0x007bcbdc (area transition event, case 0x10), "Mod_Transition" @ 0x007be8f0 (module transition script)
-    /// - Door transitions: "LinkedToModule" @ 0x007bd7bc (door module link field), "TransitionDestination" @ 0x007bd7a4 (transition waypoint field)
-    /// - Module save: "modulesave" @ 0x007bde20 (module save directory), "Module: %s" @ 0x007c79c8 (module debug output)
-    /// - "module000" @ 0x007cb9cc (default module name), ":: Module savegame list: %s.\n" @ 0x007cbbb4 (module save list debug)
-    /// - ":: Server mode: Module Running.\n" @ 0x007cbc44, ":: Server mode: Module Loaded.\n" @ 0x007cbc68 (module state debug)
+    /// - Located via string references:
+    ///   * ["Module"] @ (K1: TODO: Find this address, TSL: 0x007c1a70) - module object type
+    ///   * ["ModuleName"] @ (K1: TODO: Find this address, TSL: 0x007bde2c) - module name field
+    ///   * ["LASTMODULE"] @ (K1: TODO: Find this address, TSL: 0x007be1d0) - last module global variable
+    ///   * ["ModuleList"] @ (K1: TODO: Find this address, TSL: 0x007bdd3c) - module list field
+    ///   * ["ModuleLoaded"] @ (K1: TODO: Find this address, TSL: 0x007bdd70) - module loaded flag
+    ///   * ["ModuleRunning"] @ (K1: TODO: Find this address, TSL: 0x007bdd58) - module running flag
+    ///   * ["MODULES:"] @ (K1: TODO: Find this address, TSL: 0x007b58b4) - module debug prefix
+    ///   * [":MODULES"] @ (K1: TODO: Find this address, TSL: 0x007be258) - module path prefix
+    ///   * ["LIVE%d:MODULES\"] @ (K1: TODO: Find this address, TSL: 0x007be680) - module path format
+    ///   * [".\modules"] @ (K1: TODO: Find this address, TSL: 0x007c6bcc) - module directory
+    ///   * ["d:\modules"] @ (K1: TODO: Find this address, TSL: 0x007c6bd8) - module directory
+    ///   * ["MODULES"] @ (K1: TODO: Find this address, TSL: 0x007c6bc4) - modules constant
+    ///   * ["MODULE"] @ (K1: TODO: Find this address, TSL: 0x007beab8) - module constant
+    /// - Script events:
+    ///   * ["CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD"] @ (K1: TODO: Find this address, TSL: 0x007bc91c) - module load event (0x14)
+    ///   * ["CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START"] @ (K1: TODO: Find this address, TSL: 0x007bc948) - module start event (0x15)
     /// - Original implementation: 0x005226d0 @ 0x005226d0 saves module state including creature positions, door states, placeable states
     /// - Module loading sequence:
+    ///   * [PlayMoviesSequentially]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - plays movies sequentially (if provided) - BIK format, blocking playback
+    ///   * [ShowLoadingScreen]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - shows loading screen (LoadScreenResRef from IFO)
+    ///   * [SaveCurrentModuleState]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - saves current module state (creature positions, door/placeable states, triggered triggers)
+    ///   * [FireOnClientLeaveScript]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - fires OnClientLeave script on current module (before OnModuleLeave)
+    ///   * [FireOnModuleLeaveScript]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - fires OnModuleLeave script on current module (ScriptOnExit field in IFO)
+    ///   * [UnloadCurrentModule]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - unloads current module (destroy all
     ///   1. Play movies sequentially (if provided) - BIK format, blocking playback
-    ///   2. Show loading screen (LoadScreenResRef from IFO)
-    ///   3. Save current module state (creature positions, door/placeable states, triggered triggers)
+    ///   2. Show loading screen
+    ///     * [LoadScreenResRef]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - LoadScreenResRef from IFO
+    ///   3. Save current module state
+    ///     * [SaveCurrentModuleState]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - saves current module state (creature positions, door/placeable states, triggered triggers)
     ///   4. Fire OnClientLeave script on current module (before OnModuleLeave)
-    ///   4.5. Fire OnModuleLeave script on current module (ScriptOnExit field in IFO)
+    ///     * [FireOnModuleLeaveScript]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - fires OnModuleLeave script on current module (ScriptOnExit field in IFO)
     ///   5. Unload current module (destroy all entities, clear areas)
+    ///     * [UnloadCurrentModule]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - unloads current module (destroy all entities, clear areas)
+    ///     * [DestroyAllEntities]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - destroy all entities in current area
     ///   6. Load new module (IFO, ARE, GIT, LYT, VIS files via ModuleLoader)
+    ///     * [LoadNewModule]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - loads new module (IFO, ARE, GIT, LYT, VIS files via ModuleLoader)
     ///   7. Restore module state if previously visited (from SaveSystem module state cache)
+    ///     * [RestoreModuleState]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - restores module state if previously visited (from SaveSystem module state cache)
     ///   8. Position party at waypoint (TransitionDestination from door, or default entry waypoint)
+    ///     * [PositionPartyAt]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - positions party at waypoint (TransitionDestination from door, or default entry waypoint)
     ///   9. Fire OnModuleLoad script on new module (ScriptOnLoad field in IFO, executes before OnModuleStart)
+    ///     * [FireOnModuleLoadScript]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - fires OnModuleLoad script on new module (ScriptOnLoad field in IFO, executes before OnModuleStart)
     ///   10. Fire OnModuleStart script on new module (ScriptOnStart field in IFO, executes after OnModuleLoad)
+    ///     * [FireOnModuleStartScript]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - fires OnModuleStart script on new module (ScriptOnStart field in IFO, executes after OnModuleLoad)
     ///   10.5. Fire OnClientEnter script on new module (after OnModuleStart)
+    ///     * [FireOnClientEnterScript]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - fires OnClientEnter script on new module (after OnModuleStart)
     ///   11. Fire OnEnter script on current area for each party member (ScriptOnEnter field in ARE)
+    ///     * [FireOnEnterScript]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - fires OnEnter script on current area for each party member (ScriptOnEnter field in ARE)
     ///   12. Fire OnSpawn script on newly spawned creatures (ScriptSpawn field in UTC template)
+    ///     * [FireOnSpawnScript]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - fires OnSpawn script on newly spawned creatures (ScriptSpawn field in UTC template)
     ///   13. Hide loading screen
-    /// - Module state persistence: Module states saved per-module (creature positions, door/placeable states) persist across visits
-    /// - Waypoint positioning: Party members positioned in line perpendicular to waypoint facing (1.0 unit spacing)
-    /// - Loading screen: Displays LoadScreenResRef image from module IFO during transition
-    /// - Area transitions: Within-module area transitions (via door LinkedTo field) use faster path (no module unload/reload)
+    ///     * [HideLoadingScreen]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - hides loading screen
+    /// - Module state persistence:
+    ///     * [ModuleStatesSavedPerModule]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - Module states saved per-module (creature positions, door/placeable states) persist across visits
+    /// - Waypoint positioning:
+    ///     * [PartyMembersPositionedInLinePerpendicularToWaypointFacing]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - Party members positioned in line perpendicular to waypoint facing (1.0 unit spacing)
+    /// - Loading screen:
+    ///     * [LoadingScreenDisplaysLoadScreenResRefImageFromModuleIFODuringTransition]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - Displays LoadScreenResRef image from module IFO during transition
+    /// - Area transitions:
+    ///     * [WithinModuleAreaTransitionsViaDoorLinkedToFieldUseFasterPathNoModuleUnloadReload]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - Within-module area transitions (via door LinkedTo field) use faster path (no module unload/reload)
     /// - Based on module transition system in vendor/PyKotor/wiki/ and engine implementation plan
+    ///     * [ModuleTransitionSystemInVendorPyKotorWikiAndEngineImplementationPlan]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - Module transition system in vendor/PyKotor/wiki/ and engine implementation plan
     /// </remarks>
     public class ModuleTransitionSystem
     {
@@ -477,7 +505,7 @@ namespace Andastra.Runtime.Core.Module
         /// <summary>
         /// Restores module state.
         /// </summary>
-        private void RestoreModuleState(IModule module, ModuleState state)
+        private void RestoreModuleState(Runtime.Core.Interfaces.IModule module, ModuleState state)
         {
             // Restore creature states
             foreach (CreatureState creatureState in state.Creatures)
@@ -799,7 +827,7 @@ namespace Andastra.Runtime.Core.Module
     /// </summary>
     public interface IModuleLoader
     {
-        Task<IModule> LoadModule(string moduleResRef);
+        Task<Interfaces.IModule> LoadModule(string moduleResRef);
     }
 }
 

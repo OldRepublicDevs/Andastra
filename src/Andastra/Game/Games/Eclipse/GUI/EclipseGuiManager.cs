@@ -37,7 +37,7 @@ namespace Andastra.Game.Games.Eclipse.GUI
     /// - Structure: GFF root contains Tag, CONTROLS list with nested control structures
     /// - Verified via codebase analysis: GUIReader handles GFF-based format, ResourceType.GUI maps to .gui/.gff extension
     ///
-    /// Based on reverse engineering analysis:
+    /// Based on verified components analysis:
     /// - daorigins.exe: GUI loading functions use GFF format parser
     /// - DragonAge2.exe: GUI loading functions use GFF format parser
     /// - Format compatibility: Eclipse GUI format is compatible with Odyssey/Aurora GUI format

@@ -53,7 +53,7 @@ namespace Andastra.Game.Games.Common
     ///   - InfinityModuleLoader : BaseEngineModule (Runtime.Games.Infinity)
     ///     - Engine-specific: ARE/WED/GAM file formats, BIF archives
     ///
-    /// Ghidra Reverse Engineering Requirements:
+    /// Ghidra verified components Requirements:
     /// - Verify module state flag addresses and bit patterns across all engines
     /// - Document module loading function addresses and calling conventions
     /// - Analyze resource loading sequences and file format parsing

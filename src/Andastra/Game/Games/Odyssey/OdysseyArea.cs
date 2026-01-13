@@ -17,9 +17,6 @@ using Andastra.Runtime.Core.Navigation;
 using Andastra.Game.Games.Common;
 using Andastra.Runtime.Graphics;
 using JetBrains.Annotations;
-using ObjectType = BioWare.NET.Common.ObjectType;
-// Removed: ParsingIModule - IModule does not exist in BioWare.NET.Common
-// Use RuntimeIModule (Runtime.Core.Interfaces.IModule) instead if needed
 using RuntimeIModule = Andastra.Runtime.Core.Interfaces.IModule;
 using RuntimeObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 
@@ -35,7 +32,7 @@ namespace Andastra.Game.Games.Odyssey
     /// - Implements walkmesh navigation and area transitions
     /// - Supports stealth XP and area restrictions
     ///
-    /// Based on reverse engineering of:
+    /// Based on verified components of:
     /// - swkotor.exe: Area loading and management functions
     /// - swkotor2.exe: LoadAreaProperties @ 0x004e26d0, SaveAreaProperties @ 0x004e11d0
     /// - swkotor2.exe: DispatchEvent @ 0x004dcfb0 for area events
@@ -709,7 +706,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Parses GIT file GFF containing creature, door, placeable instances.
         /// Creates appropriate entity types and attaches components.
         ///
-        /// Function addresses (verified via Ghidra MCP):
+        /// Function addresses (verified  MCP):
         /// - swkotor.exe: 0x004dfbb0 @ 0x004dfbb0 loads creature instances from GIT
         ///   - Located via string reference: "Creature List" @ 0x007bd01c
         ///   - Reads ObjectId, TemplateResRef, XPosition, YPosition, ZPosition, XOrientation, YOrientation
@@ -1056,7 +1053,7 @@ namespace Andastra.Game.Games.Odyssey
         /// <remarks>
         /// Based on ARE file loading in swkotor2.exe.
         ///
-        /// Function addresses (verified via Ghidra MCP):
+        /// Function addresses (verified  MCP):
         /// - swkotor.exe: Area geometry loading functions
         /// - swkotor2.exe: ARE file parsing and walkmesh initialization
         /// - swkotor2.exe: LoadAreaProperties @ 0x004e26d0 (verified - loads AreaProperties struct from GFF)
@@ -1141,7 +1138,7 @@ namespace Andastra.Game.Games.Odyssey
         /// <remarks>
         /// Based on swkotor.exe/swkotor2.exe walkmesh loading system.
         ///
-        /// Function addresses (verified via Ghidra MCP):
+        /// Function addresses (verified  MCP):
         /// - swkotor.exe: Walkmesh loading from WOK files
         /// - swkotor2.exe: 0x0055aef0 @ 0x0055aef0 (verified - references "BWM V1.0" string, likely WriteBWMFile)
         /// - swkotor2.exe: 0x006160c0 @ 0x006160c0 (verified - references "BWM V1.0" string, likely ValidateBWMHeader)
@@ -1245,7 +1242,7 @@ namespace Andastra.Game.Games.Odyssey
             // Rebuild AABB tree using NavigationMesh static method
             // Based on NavigationMesh.BuildAabbTreeFromFaces - builds AABB tree from face data
             int faceCount = faceIndices.Length / 3;
-            Andastra.Runtime.Core.Navigation.NavigationMesh.AabbNode aabbRoot = Runtime.Core.Navigation.NavigationMesh.BuildAabbTreeFromFaces(vertices, faceIndices, surfaceMaterials, faceCount);
+            NavigationMesh.AabbNode aabbRoot = Runtime.Core.Navigation.NavigationMesh.BuildAabbTreeFromFaces(vertices, faceIndices, surfaceMaterials, faceCount);
 
             // Create OdysseyNavigationMesh with extracted data
             // Based on OdysseyNavigationMesh constructor: takes arrays and AABB root
@@ -1303,7 +1300,7 @@ namespace Andastra.Game.Games.Odyssey
         /// <remarks>
         /// Based on swkotor.exe and swkotor2.exe area lighting and fog initialization.
         ///
-        /// Function addresses (verified via reverse engineering references):
+        /// Function addresses (verified via verified components references):
         /// - swkotor.exe: Area lighting initialization during area loading
         /// - swkotor2.exe: Area lighting and fog setup during area property loading
         /// - Based on reone engine implementation: Area::loadAmbientColor pattern
@@ -1586,7 +1583,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Updates area heartbeat timer and fires OnHeartbeat scripts every 6 seconds.
         /// Processes pending area transitions and updates environmental effects.
         ///
-        /// Function addresses (verified via Ghidra MCP):
+        /// Function addresses (verified  MCP):
         /// - swkotor2.exe: 0x004e3ff0 @ 0x004e3ff0 (area update function called from game loop)
         ///   - Located via call from 0x004e9850 @ 0x004e9850 (main game update loop)
         ///   - Handles area heartbeat scripts and transition processing
@@ -1656,7 +1653,7 @@ namespace Andastra.Game.Games.Odyssey
                     {
                         // Fire OnHeartbeat script event
                         // Located via string references: "OnHeartbeat" @ 0x007bd720 (swkotor2.exe)
-                        world.EventBus.FireScriptEvent(areaEntity, Andastra.Runtime.Core.Enums.ScriptEvent.OnHeartbeat, null);
+                        world.EventBus.FireScriptEvent(areaEntity, ScriptEvent.OnHeartbeat, null);
                     }
                 }
             }
@@ -3247,7 +3244,7 @@ namespace Andastra.Game.Games.Odyssey
                     {
                         // Entity not registered with world - destroy directly
                         // Based on Entity.Destroy() implementation
-                        if (entity is Core.Entities.Entity concreteEntity)
+                        if (entity is Runtime.Core.Entities.Entity concreteEntity)
                         {
                             concreteEntity.Destroy();
                         }

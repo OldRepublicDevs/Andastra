@@ -115,7 +115,7 @@ namespace KotorDiff.Diff.Objects
                 }
 
                 // Use the existing GffDiff.Compare method
-                var compareResult = BioWare.NET.Diff.GffDiff.Compare(leftGff.Root, rightGff.Root);
+                var compareResult = BioWare.NET.TSLPatcher.Diff.GffDiff.Compare(leftGff.Root, rightGff.Root);
 
                 DiffType diffType = compareResult.Differences.Count == 0 ? DiffType.Identical : DiffType.Modified;
 
@@ -222,7 +222,7 @@ namespace KotorDiff.Diff.Objects
                 }
 
                 // Use the existing TlkDiff.Compare method
-                var compareResult = BioWare.NET.Diff.TlkDiff.Compare(leftTlk, rightTlk);
+                var compareResult = BioWare.NET.TSLPatcher.Diff.TlkDiff.Compare(leftTlk, rightTlk);
 
                 var entryDiffs = new List<TLKEntryDiff>();
 

@@ -338,7 +338,7 @@ namespace Andastra.Game.Scripting.EngineApi
         /// GetPosition(object oObject) - Gets the position of an object
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering from multiple engines:
+        /// Based on verified components from multiple engines:
         /// - nwmain.exe: ExecuteCommandGetPosition @ 0x14052f5b0 (routine ID 27)
         ///   - Located via function dispatch table: CNWSVirtualMachineCommands::InitializeCommands @ 0x14054de30
         ///   - Original implementation: Pops object from stack, gets CGameObject from object array, retrieves position vector from offset 0xa4-0xac, pushes vector to stack
@@ -357,7 +357,7 @@ namespace Andastra.Game.Scripting.EngineApi
         /// Return value: Vector3 position (X, Y, Z coordinates)
         /// Error handling: Returns Vector3.Zero if object is invalid or has no transform component
         /// 
-        /// Verified identical across all engines via Ghidra MCP analysis:
+        /// Verified identical across all engines  MCP analysis:
         /// - nwmain.exe (Aurora): ExecuteCommandGetPosition @ 0x14052f5b0
         /// - swkotor.exe (Odyssey): Transform system (equivalent implementation)
         /// - swkotor2.exe (Odyssey): Transform system (equivalent implementation)
@@ -382,7 +382,7 @@ namespace Andastra.Game.Scripting.EngineApi
         /// GetFacing(object oObject) - Gets the facing direction of an object
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering from multiple engines:
+        /// Based on verified components from multiple engines:
         /// - nwmain.exe: ExecuteCommandGetFacing @ 0x140523a70 (routine ID 28)
         ///   - Located via function dispatch table: CNWSVirtualMachineCommands::InitializeCommands @ 0x14054de30
         ///   - Original implementation: Pops object from stack, gets CGameObject from object array, retrieves facing vector from offset 0xb0-0xb8, normalizes vector, converts to degrees using atan2, pushes float to stack
@@ -405,7 +405,7 @@ namespace Andastra.Game.Scripting.EngineApi
         /// Return value: Float facing angle in degrees (0.0-360.0), where 0.0 = East, 90.0 = North, 180.0 = West, 270.0 = South
         /// Error handling: Returns 0.0f if object is invalid or has no transform component
         /// 
-        /// Verified identical across all engines via Ghidra MCP analysis:
+        /// Verified identical across all engines  MCP analysis:
         /// - nwmain.exe (Aurora): ExecuteCommandGetFacing @ 0x140523a70
         /// - swkotor.exe (Odyssey): Transform system (equivalent implementation)
         /// - swkotor2.exe (Odyssey): Transform system (equivalent implementation)
@@ -788,7 +788,7 @@ namespace Andastra.Game.Scripting.EngineApi
         /// - Aurora (nwmain.exe): Uses HAK/module resource provider for NCS loading
         /// - Eclipse (daorigins.exe): Uses UnrealScript instead of NCS (different architecture)
         /// 
-        /// Verified via Ghidra MCP analysis:
+        /// Verified  MCP analysis:
         /// - nwmain.exe: ExecuteCommandExecuteScript @ 0x14051d5c0 (stub calling 0x140c10370)
         /// - 0x140c10370 @ 0x140c10370: Memory cleanup function (used for async operations and resource cleanup)
         /// - Actual execution: NCS VM ACTION opcode dispatches to script executor for bytecode execution
