@@ -56,9 +56,22 @@ namespace Andastra.Game.Graphics.MonoGame.Camera
 
         /// <summary>
         /// Initializes default camera animations (angles 0-3).
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Default camera animation mappings
-        /// Located via string references: "CameraAnimation" @ 0x007c3460
+        /// Based on swkotor.exe and swkotor2.exe: Default camera animation mappings are implicit in the engine
+        /// Located via string references: "CameraAnimation" @ 0x007c3460 (swkotor2.exe)
+        /// Reverse engineered from swkotor.exe (KOTOR 1):
+        ///   - CSWSDialog::LoadDialog @ 0x005a2ae0 - Main dialogue loading function
+        ///   - LoadDialogCamera @ 0x0059eaa0 - Loads camera fields from dialogue entries
+        /// Reverse engineered from swkotor2.exe (KOTOR 2):
+        ///   - CSWSDialog_LoadDialog @ 0x005ea880 - Main dialogue loading function
+        ///   - CSWSDialogEntry_LoadCameraFields @ 0x005e5a20 - Reads CameraAnimation field from dialogue entries
+        /// Camera animation IDs 0-3 map directly to camera angles 0-3 (implicit/hardcoded mapping in both engines):
+        ///   - Animation ID 0 = Camera angle 0 (Speaker focus)
+        ///   - Animation ID 1 = Camera angle 1 (Listener focus)
+        ///   - Animation ID 2 = Camera angle 2 (Wide shot)
+        ///   - Animation ID 3 = Camera angle 3 (Over-shoulder)
         /// Original implementation: Default animations map to standard camera angles (0=speaker, 1=listener, 2=wide, 3=over-shoulder)
+        /// The mappings are implicit in the original engine - animation IDs 0-3 directly correspond to camera angle indices
+        /// This initialization function explicitly sets up these mappings for our implementation
         /// </summary>
         private void InitializeDefaultAnimations()
         {
