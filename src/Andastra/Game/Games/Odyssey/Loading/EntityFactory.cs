@@ -1,15 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Numerics;
-using BioWare.NET;
 using BioWare.NET.Common;
 using BioWare.NET.Resource.Formats.GFF;
-using BioWare.NET.Extract;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Game.Games.Odyssey.Components;
 using Andastra.Game.Games.Common.Components;
 using JetBrains.Annotations;
 using ObjectType = Andastra.Runtime.Core.Enums.ObjectType;
