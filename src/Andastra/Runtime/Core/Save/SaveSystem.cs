@@ -125,7 +125,8 @@ namespace Andastra.Runtime.Core.Save
         /// <param name="saveType">Type of save.</param>
         /// <returns>True if save succeeded.</returns>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): SerializeSaveNfo @ 0x004eb750
+        /// swkotor.exe: 0x004b333a (StallEventSaveGame) - Main save function, calls CSWGlobalVariableTable::Save @ 0x0052ad10
+        /// swkotor2.exe: 0x004eb750 (SerializeSaveNfo) - Main save function, calls SaveGlobalVariables @ 0x005ac670
         /// Located via string reference: "savenfo" @ 0x007be1f0
         /// Original implementation:
         /// 1. Creates save directory "SAVES:\{saveName}"
@@ -143,7 +144,7 @@ namespace Andastra.Runtime.Core.Save
         ///    - LIVECONTENT: Live content flags (bitmask)
         ///    - LIVE1-9: Live content entries (string array)
         /// 3. Creates savegame.sav (ERF with "MOD V1.0" signature) containing:
-        ///    - GLOBALVARS.res (global variable state)
+        ///    - GLOBALVARS.res (global variable state) - saved via SaveGlobalVariables @ 0x0052ad10 (K1) / 0x005ac670 (TSL)
         ///    - PARTYTABLE.res (party state)
         ///    - Module state files (entity positions, door/placeable states)
         /// 4. Progress updates at 5%, 10%, 15%, 20%, 25%, 30% completion milestones
@@ -186,9 +187,10 @@ namespace Andastra.Runtime.Core.Save
         /// Creates save data from current game state.
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): SerializeSaveNfo @ 0x004eb750
+        /// swkotor.exe: 0x004b333a (StallEventSaveGame) - Collects module info, game time, global variables (via CSWGlobalVariableTable::Save @ 0x0052ad10), party state, and area states
+        /// swkotor2.exe: 0x004eb750 (SerializeSaveNfo) - Collects module info, game time, global variables (via SaveGlobalVariables @ 0x005ac670), party state (via SavePartyTable @ 0x0057bd70), and area states
         /// Original implementation: Collects module info (current module, entry position/facing), game time (year/month/day/hour/minute),
-        /// global variables (via SaveGlobalVariables @ 0x005ac670), party state (via SavePartyTable @ 0x0057bd70), and area states.
+        /// global variables (via SaveGlobalVariables), party state (via SavePartyTable), and area states.
         /// Saves entity positions, HP, door/placeable states for current area.
         /// </remarks>
         private SaveGameData CreateSaveData(string saveName, SaveType saveType)
@@ -239,10 +241,16 @@ namespace Andastra.Runtime.Core.Save
         }
 
         // Save global variables to save data structure
-        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): SaveGlobalVariables @ 0x005ac670
-        // Located via string reference: "GLOBALVARS" @ 0x007c27bc
-        // Original implementation: Constructs path "{savePath}\GLOBALVARS", writes GFF file containing all global int/bool/string variables
-        // Uses reflection to access private dictionaries in ScriptGlobals (_globalInts, _globalBools, _globalStrings)
+        // swkotor.exe: 0x0052ad10 (CSWGlobalVariableTable::Save) - Constructs path "{savePath}\GLOBALVARS", calls WriteTable internally
+        // swkotor2.exe: 0x005ac670 (SaveGlobalVariables) - Constructs path "{savePath}\GLOBALVARS", calls FUN_005ab310 internally
+        // Located via string reference: "GLOBALVARS" @ 0x007484ec (K1), "GLOBALVARS" @ 0x007c27bc (TSL)
+        // Original implementation: Constructs path "{savePath}\GLOBALVARS", writes GFF file containing all global int/bool/string/location variables
+        // GFF structure: "GVT " signature, "V2.0" version, catalog lists (CatBoolean, CatNumber, CatLocation, CatString) with separate value arrays
+        // - CatBoolean (list of structs with "Name" field) + ValBoolean (binary byte array, 8 booleans per byte, LSB first)
+        // - CatNumber (list of structs with "Name" field) + ValNumber (binary byte array, one byte per number, range 0-255)
+        // - CatLocation (list of structs with "Name" field) + ValLocation (binary float array, 12 floats per location: x,y,z,ori_x,ori_y,ori_z,6 padding floats)
+        // - CatString (list of structs with "Name" field) + ValString (list of strings, indexed by CatString entry order)
+        // Uses reflection to access private dictionaries in ScriptGlobals (_globalInts, _globalBools, _globalStrings, _globalLocations)
         private void SaveGlobalVariables(SaveGameData saveData)
         {
             saveData.GlobalVariables = new GlobalVariableState();
@@ -257,7 +265,9 @@ namespace Andastra.Runtime.Core.Save
             var globalIntsField = globalsType.GetField("_globalInts", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             var globalBoolsField = globalsType.GetField("_globalBools", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             var globalStringsField = globalsType.GetField("_globalStrings", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var globalLocationsField = globalsType.GetField("_globalLocations", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
+            // Save integer variables (Numbers)
             if (globalIntsField != null)
             {
                 var intsDict = globalIntsField.GetValue(_globals) as Dictionary<string, int>;
@@ -270,6 +280,7 @@ namespace Andastra.Runtime.Core.Save
                 }
             }
 
+            // Save boolean variables (Booleans)
             if (globalBoolsField != null)
             {
                 var boolsDict = globalBoolsField.GetValue(_globals) as Dictionary<string, bool>;
@@ -282,6 +293,7 @@ namespace Andastra.Runtime.Core.Save
                 }
             }
 
+            // Save string variables (Strings)
             if (globalStringsField != null)
             {
                 var stringsDict = globalStringsField.GetValue(_globals) as Dictionary<string, string>;
@@ -290,6 +302,69 @@ namespace Andastra.Runtime.Core.Save
                     foreach (var kvp in stringsDict)
                     {
                         saveData.GlobalVariables.Strings[kvp.Key] = kvp.Value;
+                    }
+                }
+            }
+
+            // Save location variables (Locations)
+            // swkotor2.exe: 0x005ab310 - Location variables stored as 12 floats per entry (x,y,z,ori_x,ori_y,ori_z,6 padding floats)
+            // Location objects are converted to SavedLocation with Position (Vector3) and Facing (float)
+            if (globalLocationsField != null)
+            {
+                var locationsDict = globalLocationsField.GetValue(_globals) as Dictionary<string, object>;
+                if (locationsDict != null)
+                {
+                    foreach (var kvp in locationsDict)
+                    {
+                        // Convert location object to SavedLocation
+                        // Location objects can be of type Andastra.Game.Scripting.Types.Location
+                        var locationType = System.Type.GetType("Andastra.Game.Scripting.Types.Location");
+                        if (locationType != null && locationType.IsInstanceOfType(kvp.Value))
+                        {
+                            var location = kvp.Value;
+                            var positionProperty = locationType.GetProperty("Position");
+                            var facingProperty = locationType.GetProperty("Facing");
+
+                            if (positionProperty != null && facingProperty != null)
+                            {
+                                object positionValue = positionProperty.GetValue(location);
+                                object facingValue = facingProperty.GetValue(location);
+
+                                if (positionValue is Vector3 && facingValue is float)
+                                {
+                                    var savedLocation = new SavedLocation
+                                    {
+                                        Position = (Vector3)positionValue,
+                                        Facing = (float)facingValue,
+                                        AreaResRef = string.Empty // Global locations don't have area context
+                                    };
+                                    saveData.GlobalVariables.Locations[kvp.Key] = savedLocation;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // Fallback: Try to get Position and Facing properties directly
+                            var positionProperty = kvp.Value.GetType().GetProperty("Position");
+                            var facingProperty = kvp.Value.GetType().GetProperty("Facing");
+
+                            if (positionProperty != null && facingProperty != null)
+                            {
+                                object positionValue = positionProperty.GetValue(kvp.Value);
+                                object facingValue = facingProperty.GetValue(kvp.Value);
+
+                                if (positionValue is Vector3 && facingValue is float)
+                                {
+                                    var savedLocation = new SavedLocation
+                                    {
+                                        Position = (Vector3)positionValue,
+                                        Facing = (float)facingValue,
+                                        AreaResRef = string.Empty // Global locations don't have area context
+                                    };
+                                    saveData.GlobalVariables.Locations[kvp.Key] = savedLocation;
+                                }
+                            }
+                        }
                     }
                 }
             }
