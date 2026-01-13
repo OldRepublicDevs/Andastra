@@ -588,7 +588,7 @@ namespace Andastra.Game.Games.Eclipse.Lighting
 
                 // Create view matrix looking from light position towards target
                 // Based on Eclipse engine: View matrix transforms world space to light space
-                Matrix4x4 viewMatrix = MatrixHelper.CreateLookAt(lightPosition, targetPosition, upVector);
+                Matrix4x4 viewMatrix = Matrix4x4.CreateLookAt(lightPosition, targetPosition, upVector);
 
                 // Create orthographic projection matrix
                 // Orthographic projection: left, right, bottom, top, near, far
@@ -635,7 +635,7 @@ namespace Andastra.Game.Games.Eclipse.Lighting
 
                 // Create view matrix looking from light position towards target
                 // Based on Eclipse engine: View matrix transforms world space to light space
-                Matrix4x4 viewMatrix = MatrixHelper.CreateLookAt(lightPosition, targetPosition, upVector);
+                Matrix4x4 viewMatrix = Matrix4x4.CreateLookAt(lightPosition, targetPosition, upVector);
 
                 // Create orthographic projection matrix
                 // Moon uses same shadow map size as sun (can be made different if needed)
@@ -1121,7 +1121,7 @@ namespace Andastra.Game.Games.Eclipse.Lighting
         /// Sets fog parameters.
         /// </summary>
         /// <param name="fogSettings">Fog settings to apply.</param>
-        public void SetFog(Andastra.Runtime.Games.Eclipse.Lighting.FogSettings fogSettings)
+        public void SetFog(Andastra.Game.Games.Eclipse.Lighting.FogSettings fogSettings)
         {
             _fog = fogSettings;
         }
@@ -1130,7 +1130,7 @@ namespace Andastra.Game.Games.Eclipse.Lighting
         /// Gets current fog settings.
         /// </summary>
         /// <returns>Current fog settings.</returns>
-        public Andastra.Runtime.Games.Eclipse.Lighting.FogSettings GetFog()
+        public Andastra.Game.Games.Eclipse.Lighting.FogSettings GetFog()
         {
             return _fog;
         }
