@@ -2038,14 +2038,7 @@ namespace Andastra.Game.Games.Odyssey
                 Console.WriteLine($"[OdysseyArea] HandleDirectAreaTransition: Added entity {entity.Tag ?? "null"} ({entity.ObjectId}) to target area {targetAreaResRef}");
 
                 // Step 6: Update entity's AreaId
-                // Entity AreaId update after area transition (K1: inline after AddToArea @ 0x004fa100 / AddObjectToArea @ 0x0050dfd0, TSL: inline after AddToArea @ 0x00589ce0)
-                // Located via string references: "AreaId" @ 0x00746d10 (K1), "AreaId" @ 0x007bef48 (TSL)
-                // Original implementation: After entity is successfully added to target area via AddToArea/AddObjectToArea,
-                // the entity's GameObject.area_id field is updated to reflect the new area. This update happens inline in the
-                // area transition handler code, not within AddToArea itself. The area_id field is part of the base GameObject
-                // structure (offset 0x90 in GFF serialization, see LoadCreature @ 0x00500350 which reads AreaId from GFF).
-                // Pattern: AddToArea/AddObjectToArea adds entity to area's type-specific lists -> GetAreaId retrieves target area's ID -> entity.area_id = targetAreaId
-                // This ensures entity lookup by area_id (used in GetAreaByGameObjectID @ 0x004ae780) returns correct area after transition.
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entity AreaId is updated after successful area transition
                 uint targetAreaId = world.GetAreaId(targetArea);
                 if (targetAreaId != 0)
                 {
@@ -2812,7 +2805,10 @@ namespace Andastra.Game.Games.Odyssey
             catch (Exception ex)
             {
                 // Log error but don't throw - just return null to skip this room
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Room loading failures don't crash the game, rooms are just skipped
+                // swkotor.exe: Scene::SpawnRoom @ 0x00456f30 (lines 77-81): If FindModel returns null, function returns null instead of crashing
+                // swkotor.exe: CSWSArea::LoadRooms @ 0x00504870: Rooms are loaded sequentially; if any room fails, it's skipped and loading continues
+                // swkotor2.exe: CSWSArea::LoadAreaPropertiesAndRooms @ 0x004e3ff0: Room loading errors are handled gracefully - failed rooms are skipped, game continues
+                // Original engine behavior: Room loading failures don't crash the game, rooms are just skipped
                 Console.WriteLine($"[OdysseyArea] Failed to load room mesh '{modelResRef}': {ex.Message}");
                 return null;
             }
