@@ -205,7 +205,7 @@ namespace Andastra.Game.Games.Aurora
             // Orientation stored as XOrientation, YOrientation, ZOrientation in GFF structures
             if (!HasComponent<ITransformComponent>())
             {
-                var transformComponent = new AuroraTransformComponent();
+                var transformComponent = new BaseTransformComponent();
                 AddComponent<ITransformComponent>(transformComponent);
             }
 
@@ -1093,7 +1093,7 @@ namespace Andastra.Game.Games.Aurora
                 var transformComponent = GetComponent<ITransformComponent>();
                 if (transformComponent == null)
                 {
-                    transformComponent = new AuroraTransformComponent();
+                    transformComponent = new BaseTransformComponent();
                     AddComponent<ITransformComponent>(transformComponent);
                 }
 
