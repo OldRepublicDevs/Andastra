@@ -27,9 +27,10 @@ using Andastra.Runtime.Core.Plot;
 using BioWare.NET.Common;
 using BioWare.NET.Extract;
 using JetBrains.Annotations;
+using Andastra.Game.Games.Common;
 using GameDataManager = Andastra.Game.Games.Odyssey.Data.GameDataManager;
 using TriggerSystem = Andastra.Runtime.Core.Triggers.TriggerSystem;
-using AIController = Andastra.Runtime.Core.AI.AIController;
+using AIControllerSystem = Andastra.Runtime.Games.Common.AIControllerSystem;
 
 namespace Andastra.Game.Games.Odyssey.Game
 {
@@ -61,7 +62,7 @@ namespace Andastra.Game.Games.Odyssey.Game
 
         // Game systems
         private readonly TriggerSystem _triggerSystem;
-        private readonly AIController _aiController;
+        private readonly AIControllerSystem _aiController;
         private readonly ModuleTransitionSystem _moduleTransitionSystem;
         private readonly DialogueManager _dialogueManager;
         private readonly FactionManager _factionManager;
@@ -257,8 +258,8 @@ namespace Andastra.Game.Games.Odyssey.Game
             // Initialize trigger system with script firing callback
             _triggerSystem = new TriggerSystem(_world, FireScriptEvent);
 
-            // Initialize AI controller
-            _aiController = new Aurora.Systems.AuroraAIController(_world, FireScriptEvent);
+            // Initialize AI controller (unified system with Odyssey engine)
+            _aiController = new AIControllerSystem(_world, EngineFamily.Odyssey, FireScriptEvent);
 
             // Initialize JRL loader for quest entry text lookup
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): JRL files contain quest entry text
