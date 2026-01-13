@@ -169,9 +169,14 @@ namespace Andastra.Runtime.Core.Entities
 
         /// <summary>
         /// Gets or sets the area ID this entity belongs to.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90
-        /// Located via string reference: "AreaId" @ 0x007bef48
         /// </summary>
+        /// <remarks>
+        /// LoadAreaIdFromGFF @ (K1: TODO: Find this address, TSL: 0x005223a0): Loads AreaId from GFF at offset 0x90
+        /// Located via string reference: "AreaId" @ 0x007bef48
+        /// Original implementation: FUN_005223a0 @ 0x005223a0 in swkotor2.exe loads AreaId from GFF struct using field name "AreaId" (via FUN_00412d40)
+        /// and stores it at offset 0x90 in the entity structure.
+        /// Implementation: EntityFactory.Create*FromGit methods load AreaId from GIT struct using GetIntField("AreaId", 0).
+        /// </remarks>
         public uint AreaId { get; set; }
 
         /// <summary>

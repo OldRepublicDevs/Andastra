@@ -142,8 +142,11 @@ namespace Andastra.Game.Games.Odyssey
         /// Gets or sets the area ID this entity belongs to.
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90
+        /// LoadAreaIdFromGFF @ (K1: TODO: Find this address, TSL: 0x005223a0): Loads AreaId from GFF at offset 0x90
         /// Located via string reference: "AreaId" @ 0x007bef48
+        /// Original implementation: FUN_005223a0 @ 0x005223a0 in swkotor2.exe loads AreaId from GFF struct using field name "AreaId" (via FUN_00412d40)
+        /// and stores it at offset 0x90 in the entity structure.
+        /// Implementation: EntityFactory.Create*FromGit methods load AreaId from GIT struct using GetIntField("AreaId", 0).
         /// AreaId identifies which area the entity is located in.
         /// Set when entity is registered to an area in the world.
         /// </remarks>
@@ -254,7 +257,7 @@ namespace Andastra.Game.Games.Odyssey
         /// - Odyssey-specific: Uses CreatureComponent, StatsComponent, InventoryComponent, QuickSlotComponent, OdysseyFactionComponent
         /// - Component initialization: Properties loaded from entity template files (UTC) and can be modified at runtime
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - swkotor.exe: Creature initialization ([0x004af630] @ (K1: 0x004af630, TSL: TODO: Find this address) handles creature events)
         /// - swkotor2.exe: [0x005261b0] @ (K1: TODO: Find this address, TSL: 0x005261b0) loads creature from UTC template
         ///   - Calls [0x005fb0f0] @ (K1: TODO: Find this address, TSL: 0x005fb0f0) to load creature data from GFF

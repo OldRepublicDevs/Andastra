@@ -96,6 +96,11 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// <summary>
         /// Creates a creature from GIT instance struct.
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: 0x005223a0 @ 0x005223a0 loads creature instance data from GIT struct.
+        /// Loads AreaId from GFF at offset 0x90 (via 0x00412d40 with "AreaId" field name).
+        /// Located via string reference: "AreaId" @ 0x007bef48
+        /// </remarks>
         [CanBeNull]
         public IEntity CreateCreatureFromGit(GFFStruct gitStruct, Module module)
         {
@@ -108,6 +113,11 @@ namespace Andastra.Game.Games.Odyssey.Loading
 
             // Basic properties
             entity.Tag = GetResRefField(gitStruct, "Tag");
+
+            // Load AreaId from GIT struct (swkotor2.exe: 0x005223a0 loads AreaId from GFF at offset 0x90)
+            // Based on FUN_00412d40 call with "AreaId" field name in FUN_005223a0
+            uint areaId = (uint)GetIntField(gitStruct, "AreaId", 0);
+            entity.AreaId = areaId;
 
             // Set transform
             entity.Position = position;
@@ -327,6 +337,10 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// <summary>
         /// Creates a door from GIT instance struct.
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: 0x005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90.
+        /// Located via string reference: "AreaId" @ 0x007bef48
+        /// </remarks>
         [CanBeNull]
         public IEntity CreateDoorFromGit(GFFStruct gitStruct, Module module)
         {
@@ -337,6 +351,11 @@ namespace Andastra.Game.Games.Odyssey.Loading
             float facing = GetFacing(gitStruct);
 
             entity.Tag = GetResRefField(gitStruct, "Tag");
+            
+            // Load AreaId from GIT struct (swkotor2.exe: 0x005223a0 loads AreaId from GFF at offset 0x90)
+            uint areaId = (uint)GetIntField(gitStruct, "AreaId", 0);
+            entity.AreaId = areaId;
+            
             entity.Position = position;
             entity.Facing = facing;
 
@@ -442,6 +461,10 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// <summary>
         /// Creates a placeable from GIT instance struct.
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: 0x005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90.
+        /// Located via string reference: "AreaId" @ 0x007bef48
+        /// </remarks>
         [CanBeNull]
         public IEntity CreatePlaceableFromGit(GFFStruct gitStruct, Module module)
         {
@@ -452,6 +475,11 @@ namespace Andastra.Game.Games.Odyssey.Loading
             float facing = GetFacing(gitStruct);
 
             entity.Tag = GetResRefField(gitStruct, "Tag");
+            
+            // Load AreaId from GIT struct (swkotor2.exe: 0x005223a0 loads AreaId from GFF at offset 0x90)
+            uint areaId = (uint)GetIntField(gitStruct, "AreaId", 0);
+            entity.AreaId = areaId;
+            
             entity.Position = position;
             entity.Facing = facing;
 
@@ -634,6 +662,10 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// <summary>
         /// Creates a trigger from GIT instance struct.
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: 0x005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90.
+        /// Located via string reference: "AreaId" @ 0x007bef48
+        /// </remarks>
         [CanBeNull]
         public IEntity CreateTriggerFromGit(GFFStruct gitStruct)
         {
@@ -643,6 +675,11 @@ namespace Andastra.Game.Games.Odyssey.Loading
             System.Numerics.Vector3 position = GetPosition(gitStruct);
 
             entity.Tag = GetResRefField(gitStruct, "Tag");
+            
+            // Load AreaId from GIT struct (swkotor2.exe: 0x005223a0 loads AreaId from GFF at offset 0x90)
+            uint areaId = (uint)GetIntField(gitStruct, "AreaId", 0);
+            entity.AreaId = areaId;
+            
             entity.Position = position;
 
             // Trigger geometry
@@ -700,6 +737,10 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// <summary>
         /// Creates a waypoint from GIT instance struct.
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: 0x005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90.
+        /// Located via string reference: "AreaId" @ 0x007bef48
+        /// </remarks>
         [CanBeNull]
         public IEntity CreateWaypointFromGit(GFFStruct gitStruct)
         {
@@ -710,6 +751,11 @@ namespace Andastra.Game.Games.Odyssey.Loading
             float facing = GetFacing(gitStruct);
 
             entity.Tag = GetResRefField(gitStruct, "Tag");
+            
+            // Load AreaId from GIT struct (swkotor2.exe: 0x005223a0 loads AreaId from GFF at offset 0x90)
+            uint areaId = (uint)GetIntField(gitStruct, "AreaId", 0);
+            entity.AreaId = areaId;
+            
             entity.Position = position;
             entity.Facing = facing;
 
@@ -726,6 +772,10 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// <summary>
         /// Creates a sound from GIT instance struct.
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: 0x005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90.
+        /// Located via string reference: "AreaId" @ 0x007bef48
+        /// </remarks>
         [CanBeNull]
         public IEntity CreateSoundFromGit(GFFStruct gitStruct)
         {
@@ -735,6 +785,11 @@ namespace Andastra.Game.Games.Odyssey.Loading
             System.Numerics.Vector3 position = GetPosition(gitStruct);
 
             entity.Tag = GetResRefField(gitStruct, "Tag");
+            
+            // Load AreaId from GIT struct (swkotor2.exe: 0x005223a0 loads AreaId from GFF at offset 0x90)
+            uint areaId = (uint)GetIntField(gitStruct, "AreaId", 0);
+            entity.AreaId = areaId;
+            
             entity.Position = position;
 
             // Sound properties
@@ -774,6 +829,10 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// <summary>
         /// Creates a store from GIT instance struct.
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: 0x005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90.
+        /// Located via string reference: "AreaId" @ 0x007bef48
+        /// </remarks>
         [CanBeNull]
         public IEntity CreateStoreFromGit(GFFStruct gitStruct, Module module)
         {
@@ -783,6 +842,11 @@ namespace Andastra.Game.Games.Odyssey.Loading
             System.Numerics.Vector3 position = GetPosition(gitStruct);
 
             entity.Tag = GetResRefField(gitStruct, "Tag");
+            
+            // Load AreaId from GIT struct (swkotor2.exe: 0x005223a0 loads AreaId from GFF at offset 0x90)
+            uint areaId = (uint)GetIntField(gitStruct, "AreaId", 0);
+            entity.AreaId = areaId;
+            
             entity.Position = position;
 
             // Load template if specified
@@ -848,6 +912,10 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// <summary>
         /// Creates an encounter from GIT instance struct.
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: 0x005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90.
+        /// Located via string reference: "AreaId" @ 0x007bef48
+        /// </remarks>
         [CanBeNull]
         public IEntity CreateEncounterFromGit(GFFStruct gitStruct)
         {
@@ -857,6 +925,11 @@ namespace Andastra.Game.Games.Odyssey.Loading
             System.Numerics.Vector3 position = GetPosition(gitStruct);
 
             entity.Tag = GetResRefField(gitStruct, "Tag");
+            
+            // Load AreaId from GIT struct (swkotor2.exe: 0x005223a0 loads AreaId from GFF at offset 0x90)
+            uint areaId = (uint)GetIntField(gitStruct, "AreaId", 0);
+            entity.AreaId = areaId;
+            
             entity.Position = position;
 
             // Encounter properties
