@@ -1,13 +1,13 @@
 using Andastra.Runtime.Core.Actions;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Game.Games.Aurora.Actions;
+using Andastra.Game.Games.Common.Actions;
 using JetBrains.Annotations;
 
 namespace Andastra.Game.Games.Aurora.Components
 {
     /// <summary>
-    /// Component that wraps an AuroraActionQueue for entity action management in Aurora engine.
+    /// Component that wraps a BaseActionQueue for entity action management in Aurora engine.
     /// </summary>
     /// <remarks>
     /// Aurora Action Queue Component:
@@ -24,16 +24,16 @@ namespace Andastra.Game.Games.Aurora.Components
     /// - GroupActionId: Allows batching/clearing related actions together
     /// - CNWSObject class structure: Actions stored in CExoLinkedList at offset +0x100
     /// - Instruction count tracking: Accumulates instruction count from script executions during action processing
-    /// - Wraps AuroraActionQueue class to provide IActionQueueComponent interface
+    /// - Wraps BaseActionQueue class to provide IActionQueueComponent interface
     /// </remarks>
     public class AuroraActionQueueComponent : IActionQueueComponent
     {
-        private readonly AuroraActionQueue _actionQueue;
+        private readonly BaseActionQueue _actionQueue;
         private IEntity _owner;
 
         public AuroraActionQueueComponent()
         {
-            _actionQueue = new AuroraActionQueue();
+            _actionQueue = new BaseActionQueue();
         }
 
         public IEntity Owner

@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using JetBrains.Annotations;
@@ -12,7 +14,7 @@ namespace Andastra.Game.Games.Common.Components
     /// Base Quick Slot Component Implementation:
     /// - Common quick slot properties and methods across all engines
     /// - Handles base quick slot storage, item/ability assignment, slot type checking
-    /// - Provides base for engine-specific quick slot component implementations
+    /// - Engine-specific quick slot component classes (OdysseyQuickSlotComponent, AuroraQuickSlotComponent, EclipseQuickSlotComponent) have been merged
     /// - Cross-engine analysis: All engines share common quick slot structure patterns
     /// - Common functionality: Item slots, Ability slots, Slot type checking, Get/Set operations
     /// - Engine-specific: Number of slots, GFF field names, Serialization format, Function addresses, Ability ID format
@@ -35,7 +37,7 @@ namespace Andastra.Game.Games.Common.Components
     /// - SetQuickSlotAbility: Assigns ability to slot (clears item if present)
     /// </remarks>
     [PublicAPI]
-    public abstract class BaseQuickSlotComponent : IQuickSlotComponent
+    public class BaseQuickSlotComponent : IQuickSlotComponent
     {
         /// <summary>
         /// Dictionary mapping slot index to item entity.
@@ -48,6 +50,11 @@ namespace Andastra.Game.Games.Common.Components
         protected readonly Dictionary<int, int> AbilitySlots;
 
         /// <summary>
+        /// The engine family this component belongs to.
+        /// </summary>
+        private readonly EngineFamily _engineFamily;
+
+        /// <summary>
         /// The entity this component is attached to.
         /// </summary>
         public IEntity Owner { get; set; }
@@ -55,13 +62,44 @@ namespace Andastra.Game.Games.Common.Components
         /// <summary>
         /// Gets the maximum number of quick slots (engine-specific).
         /// </summary>
-        protected abstract int MaxQuickSlots { get; }
+        /// <remarks>
+        /// Engine-specific slot counts:
+        /// - Odyssey: 12 slots (0-11) - swkotor.exe, swkotor2.exe
+        /// - Aurora: 36 slots - nwmain.exe, nwn2main.exe (typically supports more slots than Odyssey)
+        /// - Eclipse: 24 slots - daorigins.exe, DragonAge2.exe (typically supports more slots than Odyssey)
+        /// </remarks>
+        protected int MaxQuickSlots
+        {
+            get
+            {
+                switch (_engineFamily)
+                {
+                    case EngineFamily.Odyssey:
+                        return 12; // Odyssey: 0-11 (12 slots total)
+                    case EngineFamily.Aurora:
+                        return 36; // Aurora: typically supports more slots than Odyssey
+                    case EngineFamily.Eclipse:
+                        return 24; // Eclipse: typically supports more slots than Odyssey
+                    default:
+                        return 12; // Default to Odyssey count
+                }
+            }
+        }
 
         /// <summary>
         /// Initializes a new instance of the base quick slot component.
         /// </summary>
-        protected BaseQuickSlotComponent()
+        /// <param name="owner">The entity this component is attached to.</param>
+        /// <param name="engineFamily">The engine family this component belongs to.</param>
+        public BaseQuickSlotComponent([NotNull] IEntity owner, EngineFamily engineFamily)
         {
+            if (owner == null)
+            {
+                throw new ArgumentNullException("owner");
+            }
+
+            Owner = owner;
+            _engineFamily = engineFamily;
             ItemSlots = new Dictionary<int, IEntity>();
             AbilitySlots = new Dictionary<int, int>();
         }

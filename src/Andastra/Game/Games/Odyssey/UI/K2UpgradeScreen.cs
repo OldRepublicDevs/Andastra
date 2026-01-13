@@ -17,7 +17,7 @@ namespace Andastra.Game.Games.Odyssey.UI
     /// K2 Upgrade Screen Implementation:
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00731a00 @ 0x00731a00 (constructor loads "upgradeitems_p")
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00730970 @ 0x00730970 (constructor loads "upcrystals" @ 0x00730c40)
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 (upgrade button click handler)
+    /// - CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 (upgrade button click handler)
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00729640 @ 0x00729640 (ApplyUpgrade implementation)
     /// - Located via string references: "upgradeitems_p" @ 0x007d09e4, "upcrystals" @ 0x007d09c8
     /// - Uses "upgradeitems_p" for regular items (not "upgradeitems" like K1)
@@ -288,7 +288,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// <returns>True if upgrade was removed.</returns>
         /// <remarks>
         /// Remove Upgrade Logic (K2):
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 lines 217-230 (removal logic)
+        /// - CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 lines 217-230 (removal logic)
         /// - Original implementation:
         ///   1. Gets upgrade item from slot array (offset 0x3d54)
         ///   2. Removes upgrade from slot array (sets to 0)
@@ -317,7 +317,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Find upgrade in slot
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 line 218 - gets upgrade from offset 0x3d54
+            // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 line 218 - gets upgrade from offset 0x3d54
             var upgrade = itemComponent.Upgrades.FirstOrDefault(u => u.Index == upgradeSlot);
             if (upgrade == null)
             {
@@ -326,7 +326,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Get upgrade item ResRef from tracked upgrade data
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 line 218 - gets item from slot array
+            // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 line 218 - gets item from slot array
             // We track upgrade ResRefs in _upgradeResRefMap for removal
             string upgradeKey = item.ObjectId.ToString() + "_" + upgradeSlot.ToString();
             string upgradeResRef = null;
@@ -344,7 +344,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             UTI upgradeUTI = LoadUpgradeUTITemplate(upgradeResRef);
 
             // Remove upgrade from item
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 line 219 - removes from array using 0x00431ec0
+            // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 line 219 - removes from array using 0x00431ec0
             itemComponent.RemoveUpgrade(upgrade);
 
             // Remove upgrade ResRef from tracking map
@@ -378,7 +378,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             if (!string.IsNullOrEmpty(upgradeResRef))
             {
                 // Get character entity using common base class method
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 - gets character from upgrade screen object
+                // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 - gets character from upgrade screen object
                 IEntity character = base.GetCharacterEntity();
 
                 // Create upgrade item entity and add to inventory

@@ -14239,6 +14239,259 @@ technique ColorGrading
                 return false;
             }
         }
+
+        /// <summary>
+        /// Extracts vertex positions from mesh data by reading directly from VertexBuffer.
+        /// </summary>
+        /// <param name="meshData">Mesh data containing VertexBuffer to read from.</param>
+        /// <param name="meshId">Mesh identifier (used for fallback to cached data).</param>
+        /// <returns>List of vertex positions extracted from VertexBuffer, or from cache if buffer read fails.</returns>
+        /// <remarks>
+        /// Based on daorigins.exe: 0x008f12a0 - Vertex data is read directly from GPU vertex buffer for collision shape updates.
+        /// DragonAge2.exe: 0x009a45b0 - Enhanced vertex buffer reading with support for multiple vertex formats.
+        ///
+        /// Implementation:
+        /// 1. Attempts to read vertex data directly from VertexBuffer
+        /// 2. Extracts position data from vertex format (Position is at offset 0 in most formats)
+        /// 3. Falls back to cached geometry data if buffer read fails or buffer is unavailable
+        /// </remarks>
+        private List<Vector3> ExtractVertexPositions(IRoomMeshData meshData, string meshId)
+        {
+            if (meshData == null || meshData.VertexBuffer == null)
+            {
+                // Fallback to cached data if buffer is unavailable
+                return ExtractVertexPositionsFromCache(meshId);
+            }
+
+            try
+            {
+                IVertexBuffer vertexBuffer = meshData.VertexBuffer;
+                int vertexCount = vertexBuffer.VertexCount;
+                int vertexStride = vertexBuffer.VertexStride;
+
+                if (vertexCount == 0)
+                {
+                    return ExtractVertexPositionsFromCache(meshId);
+                }
+
+                List<Vector3> positions = new List<Vector3>(vertexCount);
+
+                // Read vertex data based on vertex stride to determine format
+                // RoomVertex format: 36 bytes (Position 12, Normal 12, TexCoord 8, Color 4)
+                // XnaVertexPositionColor format: 16 bytes (Position 12, Color 4)
+                // Position is always at offset 0 (first 12 bytes = Vector3)
+
+                if (vertexStride == 36)
+                {
+                    // RoomVertex format: Position, Normal, TexCoord, Color
+                    // Read as RoomVertex struct
+                    RoomMeshRenderer.RoomVertex[] vertices = new RoomMeshRenderer.RoomVertex[vertexCount];
+                    vertexBuffer.GetData(vertices);
+
+                    for (int i = 0; i < vertexCount; i++)
+                    {
+                        positions.Add(vertices[i].Position);
+                    }
+                }
+                else if (vertexStride == 16)
+                {
+                    // XnaVertexPositionColor format: Position, Color
+                    // Read as XnaVertexPositionColor struct
+                    XnaVertexPositionColor[] vertices = new XnaVertexPositionColor[vertexCount];
+                    vertexBuffer.GetData(vertices);
+
+                    for (int i = 0; i < vertexCount; i++)
+                    {
+                        positions.Add(new Vector3(
+                            vertices[i].Position.X,
+                            vertices[i].Position.Y,
+                            vertices[i].Position.Z));
+                    }
+                }
+                else if (vertexStride >= 12)
+                {
+                    // Generic format: Position is at offset 0 (first 12 bytes = Vector3)
+                    // Read vertex buffer as raw bytes and extract positions
+                    // Based on daorigins.exe: 0x008f12a0 - Vertex data is read directly from GPU vertex buffer
+                    // DragonAge2.exe: 0x009a45b0 - Enhanced vertex buffer reading with support for multiple vertex formats
+                    int totalBytes = vertexCount * vertexStride;
+                    byte[] vertexData = new byte[totalBytes];
+                    
+                    // Read entire vertex buffer as byte array
+                    // IVertexBuffer.GetData<T> supports byte[] as T
+                    vertexBuffer.GetData(vertexData);
+
+                    // Extract positions from first 12 bytes of each vertex
+                    // Position is always at offset 0 in vertex format (3 floats = 12 bytes)
+                    for (int i = 0; i < vertexCount; i++)
+                    {
+                        int vertexOffset = i * vertexStride;
+                        
+                        // Extract 3 floats (12 bytes) starting at vertex offset
+                        // Use BitConverter.ToSingle to convert bytes to float (little-endian)
+                        float x = BitConverter.ToSingle(vertexData, vertexOffset);
+                        float y = BitConverter.ToSingle(vertexData, vertexOffset + 4);
+                        float z = BitConverter.ToSingle(vertexData, vertexOffset + 8);
+                        
+                        positions.Add(new Vector3(x, y, z));
+                    }
+                }
+                else
+                {
+                    // Vertex stride too small to contain position data
+                    return ExtractVertexPositionsFromCache(meshId);
+                }
+
+                return positions;
+            }
+            catch (Exception)
+            {
+                // If reading from buffer fails, fall back to cached data
+                return ExtractVertexPositionsFromCache(meshId);
+            }
+        }
+
+        /// <summary>
+        /// Extracts vertex positions from cached mesh geometry data (fallback method).
+        /// </summary>
+        /// <param name="meshId">Mesh identifier.</param>
+        /// <returns>List of vertex positions from cached geometry, or empty list if not cached.</returns>
+        private List<Vector3> ExtractVertexPositionsFromCache(string meshId)
+        {
+            if (string.IsNullOrEmpty(meshId))
+            {
+                return new List<Vector3>();
+            }
+
+            // Get cached geometry data
+            if (_cachedMeshGeometry.TryGetValue(meshId, out CachedMeshGeometry cachedGeometry))
+            {
+                if (cachedGeometry.Vertices != null)
+                {
+                    // Return a copy of the vertex list (so modifications don't affect cache)
+                    return new List<Vector3>(cachedGeometry.Vertices);
+                }
+            }
+
+            return new List<Vector3>();
+        }
+
+        /// <summary>
+        /// Extracts indices from mesh data by reading directly from IndexBuffer.
+        /// </summary>
+        /// <param name="meshData">Mesh data containing IndexBuffer to read from.</param>
+        /// <param name="meshId">Mesh identifier (used for fallback to cached data).</param>
+        /// <returns>List of indices extracted from IndexBuffer, or from cache if buffer read fails.</returns>
+        /// <remarks>
+        /// Based on daorigins.exe: 0x008f12a0 - Index data is read directly from GPU index buffer for collision shape updates.
+        /// DragonAge2.exe: 0x009a45b0 - Enhanced index buffer reading with support for 16-bit and 32-bit indices.
+        ///
+        /// Implementation:
+        /// 1. Attempts to read index data directly from IndexBuffer
+        /// 2. Handles both 16-bit and 32-bit index formats
+        /// 3. Falls back to cached geometry data if buffer read fails or buffer is unavailable
+        /// </remarks>
+        private List<int> ExtractIndices(IRoomMeshData meshData, string meshId)
+        {
+            if (meshData == null || meshData.IndexBuffer == null)
+            {
+                // Fallback to cached data if buffer is unavailable
+                return ExtractIndicesFromCache(meshId);
+            }
+
+            try
+            {
+                IIndexBuffer indexBuffer = meshData.IndexBuffer;
+                int indexCount = indexBuffer.IndexCount;
+
+                if (indexCount == 0)
+                {
+                    return ExtractIndicesFromCache(meshId);
+                }
+
+                // Read indices from buffer (handles both 16-bit and 32-bit formats internally)
+                int[] indices = new int[indexCount];
+                indexBuffer.GetData(indices);
+
+                return new List<int>(indices);
+            }
+            catch (Exception)
+            {
+                // If reading from buffer fails, fall back to cached data
+                return ExtractIndicesFromCache(meshId);
+            }
+        }
+
+        /// <summary>
+        /// Extracts indices from cached mesh geometry data (fallback method).
+        /// </summary>
+        /// <param name="meshId">Mesh identifier.</param>
+        /// <returns>List of indices from cached geometry, or empty list if not cached.</returns>
+        private List<int> ExtractIndicesFromCache(string meshId)
+        {
+            if (string.IsNullOrEmpty(meshId))
+            {
+                return new List<int>();
+            }
+
+            // Get cached geometry data
+            if (_cachedMeshGeometry.TryGetValue(meshId, out CachedMeshGeometry cachedGeometry))
+            {
+                if (cachedGeometry.Indices != null)
+                {
+                    // Return a copy of the index list (so modifications don't affect cache)
+                    return new List<int>(cachedGeometry.Indices);
+                }
+            }
+
+            return new List<int>();
+        }
+
+        /// <summary>
+        /// Cached mesh geometry data for collision shape updates.
+        /// </summary>
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Original geometry data is cached for physics collision shape generation.
+        /// </remarks>
+        private class CachedMeshGeometry
+        {
+            /// <summary>
+            /// Mesh identifier (model name/resref).
+            /// </summary>
+            public string MeshId { get; set; }
+
+            /// <summary>
+            /// Cached vertex positions (world space).
+            /// </summary>
+            public List<Vector3> Vertices { get; set; }
+
+            /// <summary>
+            /// Cached triangle indices (3 indices per triangle).
+            /// </summary>
+            public List<int> Indices { get; set; }
+
+            public CachedMeshGeometry()
+            {
+                MeshId = string.Empty;
+                Vertices = new List<Vector3>();
+                Indices = new List<int>();
+            }
+        }
+
+        /// <summary>
+        /// Modifying geometry requires navigation mesh updates if walkable areas are affected.
+        /// </summary>
+        public bool RequiresNavigationMeshUpdate => _modificationType == GeometryModificationType.Destroyed;
+
+        /// <summary>
+        /// Modifying geometry requires physics updates (collision shapes, debris).
+        /// </summary>
+        public bool RequiresPhysicsUpdate => true;
+
+        /// <summary>
+        /// Modifying geometry does not require lighting updates unless explosions create light.
+        /// </summary>
+        public bool RequiresLightingUpdate => false;
     }
 
     /// <summary>

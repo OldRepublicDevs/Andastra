@@ -14,19 +14,19 @@ namespace BioWare.NET.Resource.Formats.TEX
     /// - Supports Eclipse engine TEX format variants
     /// - Handles DXT compression formats (DXT1/DXT3/DXT5) and uncompressed formats
     /// - Converts all formats to RGBA for use with IGraphicsDevice.CreateTexture2D
-    /// 
+    ///
     /// Format Support:
     /// - Eclipse TEX: May have a simple header or be DDS-compatible
     /// - Standard DDS variant: TEX files may contain DDS data with optional TEX header
     /// - BioWare variant: Simplified header similar to BioWare DDS format (width/height/bpp/dataSize/float, DXT1/DXT5 only, power-of-two)
     /// - Pixel formats: DXT1/DXT3/DXT5 compression, uncompressed RGB/RGBA/BGR/BGRA
-    /// 
-    /// Based on verified components analysis:
+    ///
+    /// Based on reverse engineering analysis:
     /// - daorigins.exe: TEX texture loading functions process texture data
     /// - DragonAge2.exe: TEX texture loading functions process texture data
     /// - Format compatibility: Eclipse TEX format supports DXT compression and uncompressed formats
     /// - Located via string references: TEX file extensions and texture loading in Eclipse engine
-    /// 
+    ///
     /// Implementation details:
     /// - Attempts to parse as standard DDS first (TEX may be DDS-compatible)
     /// - Falls back to BioWare-style TEX header parsing

@@ -638,6 +638,10 @@ namespace Andastra.Game.Games.Odyssey.Game
                 _currentModuleName = null;
             }
 
+            // Set module state to Idle (swkotor2.exe: 0x006caab0 @ 0x006caab0)
+            // Module unloading clears state back to Idle
+            _moduleStateManager?.SetModuleState(ModuleState.Idle);
+
             // Prepare game systems for module loading
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 0x00401380: Prepares game systems
             // This includes clearing entity lists, resetting world state, etc.
@@ -687,12 +691,16 @@ namespace Andastra.Game.Games.Odyssey.Game
                 }
 
                 // Set current module
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module state is set after successful load
+                // SetModuleState @ (K1: TODO: Find address, TSL: 0x006caab0): Module state is set after successful load
                 // Original implementation: Module state flags updated in DAT_008283d4 structure
                 _currentModule = module;
                 _currentModuleName = moduleName;
                 _world.SetCurrentModule(module);
                 _moduleTransitionSystem?.SetCurrentModule(moduleName);
+
+                // Set module state to ModuleLoaded (swkotor2.exe: 0x006caab0 @ 0x006caab0)
+                // Module is loaded but OnModuleStart has not been called yet
+                _moduleStateManager?.SetModuleState(ModuleState.ModuleLoaded);
 
                 // Template factory is already set up in constructor using LazyOdysseyEntityTemplateFactory
                 // The lazy factory will automatically use the current module from ModuleLoader when needed
@@ -735,6 +743,13 @@ namespace Andastra.Game.Games.Odyssey.Game
                     }
                 }
 
+                // Fire OnModuleLoad script (swkotor2.exe: Mod_OnModLoad script execution)
+                // OnModuleLoad fires when module finishes loading, before player spawn
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): OnModuleLoad script execution
+                // Located via string references: "Mod_OnModLoad" @ IFO file, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c
+                // Original implementation: OnModuleLoad script executes after module resources are loaded but before player spawn
+                FireModuleScript(ScriptEvent.OnModuleLoad);
+
                 // Spawn player at entry position if not already spawned
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Player is spawned at Mod_Entry_X/Y/Z with Mod_Entry_Dir_X/Y facing
                 // Original implementation: Player entity created at module entry position after module load
@@ -749,6 +764,17 @@ namespace Andastra.Game.Games.Odyssey.Game
                     // Original implementation: Player position updated to module entry position
                     PositionPlayerAtEntry();
                 }
+
+                // Fire OnModuleStart script (swkotor2.exe: Mod_OnModStart script execution)
+                // OnModuleStart fires after player is spawned, before gameplay begins
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): OnModuleStart script execution
+                // Located via string references: "Mod_OnModStart" @ IFO file, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START" @ 0x007bc948
+                // Original implementation: OnModuleStart script executes after player spawn, before gameplay begins
+                FireModuleScript(ScriptEvent.OnModuleStart);
+
+                // Set module state to ModuleRunning (swkotor2.exe: 0x006caab0 @ 0x006caab0)
+                // Module is fully loaded, OnModuleStart has been called, gameplay is active
+                _moduleStateManager?.SetModuleState(ModuleState.ModuleRunning);
 
                 Console.WriteLine("[GameSession] Module loaded successfully: " + moduleName);
                 return true;
@@ -1276,6 +1302,39 @@ namespace Andastra.Game.Games.Odyssey.Game
             _world.RegisterEntity(entity);
 
             return entity;
+        }
+
+        /// <summary>
+        /// Fires a module script (OnModuleLoad, OnModuleStart, etc.).
+        /// </summary>
+        /// <param name="scriptEvent">The script event to fire.</param>
+        /// <remarks>
+        /// swkotor2.exe: Module script execution system
+        /// - Module scripts are executed with module entity as owner (OBJECT_SELF in script context)
+        /// - Module entity has fixed ObjectId 0x7F000002 (World.ModuleObjectId)
+        /// - Scripts are stored in module entity's IScriptHooksComponent
+        /// </remarks>
+        private void FireModuleScript(ScriptEvent scriptEvent)
+        {
+            if (_currentModule == null || _scriptExecutor == null)
+            {
+                return;
+            }
+
+            // Get module script
+            string scriptResRef = _currentModule.GetScript(scriptEvent);
+            if (string.IsNullOrEmpty(scriptResRef))
+            {
+                return;
+            }
+
+            // Execute module script with module entity as owner
+            // Module scripts use module entity with fixed ObjectId 0x7F000002 (World.ModuleObjectId)
+            IEntity moduleEntity = CreateOrGetModuleEntity(_currentModule);
+            if (moduleEntity != null)
+            {
+                _scriptExecutor.ExecuteScript(scriptResRef, moduleEntity, null);
+            }
         }
 
         /// <summary>
