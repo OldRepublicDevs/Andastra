@@ -40,9 +40,10 @@ namespace Andastra.Game.Games.Common.Components
     /// - OnLose: Fired when item is lost
     /// - OnEquip: Fired when item is equipped
     /// - OnActivate: Fired when item is activated/used
+    /// - Engine-specific item component classes (OdysseyItemComponent, AuroraItemComponent, EclipseItemComponent) have been merged
     /// </remarks>
     [PublicAPI]
-    public abstract class BaseItemComponent : IItemComponent
+    public class BaseItemComponent : IItemComponent
     {
         protected readonly List<ItemProperty> _properties;
         protected readonly List<ItemUpgrade> _upgrades;
