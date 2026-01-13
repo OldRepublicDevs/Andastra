@@ -416,25 +416,24 @@ namespace Andastra.Game.Games.Odyssey.Game
         /// - swkotor2_aspyr.exe: FUN_00882230 @ 0x00882230
         ///
         /// STRING REFERENCES:
-        /// - Module name "END_M01AA": swkotor.exe @ 0x00752f58
-        /// - Module name "001ebo": swkotor2.exe @ 0x007cc028, swkotor2_aspyr.exe @ 0x009a5ab0
-        /// - Resource directory "MODULES:": swkotor.exe @ 0x0073d90c, swkotor2.exe @ 0x007b58b4, swkotor2_aspyr.exe @ 0x00993e50
-        /// - Resource directory "HD0:effects": swkotor2.exe @ 0x007cc01c, swkotor2_aspyr.exe @ 0x009a5aa4
+        /// - Module name "END_M01AA": swkotor.exe @ 0x00752f58 (referenced at 0x0067b01b, 0x0067b0b9)
+        /// - Module name "001ebo": swkotor2.exe @ 0x007cc028 (referenced at 0x006d0b7d, 0x006d0c5e), swkotor2_aspyr.exe @ 0x009a5ab0 (referenced at 0x008822ba, 0x00882385)
+        /// - Resource directory "MODULES:": swkotor.exe @ 0x0073d90c (referenced at 0x0067b033, 0x0067b0c7), swkotor2.exe @ 0x007b58b4 (referenced at 0x006d0bdc, 0x006d0c6c), swkotor2_aspyr.exe @ 0x00993e50
+        /// - Resource directory "HD0:effects": swkotor2.exe @ 0x007cc01c (referenced at 0x006d0b95), swkotor2_aspyr.exe @ 0x009a5aa4 (referenced at 0x008822cb)
         ///
         /// GLOBAL DATA REFERENCES:
-        /// - ExoResMan (CExoResMan*): swkotor.exe @ 0x007a39e8
-        /// - ExoSound (CExoSound*): swkotor.exe @ 0x007a39ec
-        /// - DAT_008283d4 (CAppManager*): swkotor2.exe @ 0x008283d4, swkotor2_aspyr.exe @ 0x00a1b4a4
-        /// - DAT_008283c0 (CExoResMan*): swkotor2.exe @ 0x008283c0, swkotor2_aspyr.exe @ 0x00a1b490
-        /// - DAT_008283c4 (void*): swkotor2.exe @ 0x008283c4, swkotor2_aspyr.exe @ 0x00a1b494
-        /// - DAT_0074c5ec (int): swkotor.exe @ 0x0074c5ec
-        /// - DAT_007c5474 (int): swkotor2.exe @ 0x007c5474, swkotor2_aspyr.exe @ 0x0099c2a8
+        /// - ExoResMan (CExoResMan*): swkotor.exe @ 0x007a39e8 (used in CExoResMan::AddResourceDirectory @ 0x00408800, CExoResMan::Exists @ 0x00408bc0, CExoResMan::RemoveResourceDirectory @ 0x004088d0)
+        /// - ExoSound (CExoSound*): swkotor.exe @ 0x007a39ec (used in CExoSoundInternal::SetSoundMode @ 0x005d5e80)
+        /// - DAT_008283d4 (CAppManager*): swkotor2.exe @ 0x008283d4 (used in FUN_00401380 @ 0x00401380, FUN_006394b0 @ 0x006394b0), swkotor2_aspyr.exe @ 0x00a1b4a4 (used in FUN_00401bc0 @ 0x00401bc0, FUN_00741360 @ 0x00741360)
+        /// - DAT_008283c0 (CExoResMan*): swkotor2.exe @ 0x008283c0 (used in FUN_00408a30 @ 0x00408a30, FUN_00408df0 @ 0x00408df0, FUN_00408b00 @ 0x00408b00), swkotor2_aspyr.exe @ 0x00a1b490 (used in FUN_00711690 @ 0x00711690, FUN_00711ed0 @ 0x00711ed0, FUN_00711710 @ 0x00711710)
+        /// - DAT_008283c4 (void*): swkotor2.exe @ 0x008283c4 (used in FUN_00621ab0 @ 0x00621ab0), swkotor2_aspyr.exe @ 0x00a1b494 (used in FUN_0070bc60 @ 0x0070bc60)
+        /// - DAT_0074c5ec (int): swkotor.exe @ 0x0074c5ec (used in CExoSoundInternal::SetSoundMode @ 0x005d5e80)
+        /// - DAT_007c5474 (int): swkotor2.exe @ 0x007c5474 (used in FUN_00621ab0 @ 0x00621ab0), swkotor2_aspyr.exe @ 0x0099c2a8 (used in FUN_0070bc60 @ 0x0070bc60)
         ///
         /// RESOURCE TYPE CONSTANTS:
-        /// - MOD (Module): 0x7db (2011 decimal) - Used in swkotor2.exe @ 0x006d0c22, swkotor2_aspyr.exe @ 0x008822d1
-        /// - RIM (Resource Information Module): 0xbba (3002 decimal) - Used in swkotor2.exe @ 0x006d0c4b, swkotor2_aspyr.exe @ 0x008822e4
-        /// - MOD (Module): swkotor.exe uses MOD type constant (via CExoResMan::Exists with MOD parameter)
-        /// - RIM (Resource Information Module): swkotor.exe uses RIM type constant (via CExoResMan::Exists with RIM parameter)
+        /// - MOD (Module): 0x7db (2011 decimal) - Used in swkotor2.exe @ 0x006d0c22 (FUN_00408df0 call), swkotor2_aspyr.exe @ 0x008822d1 (FUN_00711ed0 call). swkotor.exe uses MOD type constant via CExoResMan::Exists() @ 0x00408bc0 with MOD parameter (no explicit constant value, uses ResourceType enum).
+        /// - RIM (Resource Information Module): 0xbba (3002 decimal) - Used in swkotor2.exe @ 0x006d0c4b (FUN_00408df0 call), swkotor2_aspyr.exe @ 0x008822e4 (FUN_00711ed0 call). swkotor.exe uses RIM type constant via CExoResMan::Exists() @ 0x00408bc0 with RIM parameter (no explicit constant value, uses ResourceType enum).
+        /// - DIRECTORY: Used in swkotor.exe @ 0x00408800 (CExoResMan::AddResourceDirectory calls AddKeyTable with DIRECTORY parameter), swkotor2.exe @ 0x00408a30 (FUN_00408a30), swkotor2_aspyr.exe @ 0x00711690 (FUN_00711690)
         ///
         /// PANEL FLAG CONSTANTS:
         /// - 0x600 (1536): Bit mask for panel state flags (swkotor.exe @ 0x0067afce)
