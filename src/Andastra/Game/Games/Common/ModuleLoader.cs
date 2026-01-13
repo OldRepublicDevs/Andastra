@@ -397,42 +397,139 @@ namespace Andastra.Game.Games.Engines.Common
             }
         }
 
-        // TODO: STUB - Aurora helper methods (merge from AuroraModuleLoader.cs - 2085 lines total)
+        // Aurora helper methods (merged from AuroraModuleLoader.cs)
+        
         private async Task<GFFStruct> LoadModuleInfoAuroraAsync(string moduleName)
         {
-            await Task.CompletedTask;
-            return null;
+            try
+            {
+                // Try to load Module.ifo from module directory
+                string modulePath = _auroraResourceProvider.ModulePath();
+                string moduleIfoPath = Path.Combine(modulePath, moduleName, "Module.ifo");
+
+                if (File.Exists(moduleIfoPath))
+                {
+                    byte[] ifoData = await Task.Run(() => File.ReadAllBytes(moduleIfoPath));
+                    var gff = GFF.FromBytes(ifoData);
+                    return gff.Root;
+                }
+
+                // Try loading from HAK files (Aurora-specific)
+                string hakPath = _auroraResourceProvider.HakPath();
+                if (Directory.Exists(hakPath))
+                {
+                    string[] hakFiles = Directory.GetFiles(hakPath, "*.hak", SearchOption.TopDirectoryOnly);
+                    foreach (string hakFilePath in hakFiles)
+                    {
+                        try
+                        {
+                            var erf = ERFAuto.ReadErf(hakFilePath);
+                            byte[] moduleIfoData = erf.Get(moduleName, ResourceType.IFO);
+                            if (moduleIfoData != null && moduleIfoData.Length > 0)
+                            {
+                                var gff = GFF.FromBytes(moduleIfoData);
+                                return gff.Root;
+                            }
+                        }
+                        catch
+                        {
+                            continue;
+                        }
+                    }
+                }
+
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private async Task LoadHakFilesAuroraAsync(string moduleName)
         {
+            // Load HAK files listed in Module.ifo
+            if (_currentModuleInfo == null)
+            {
+                return;
+            }
+
+            // TODO: STUB - Parse HAK file list from Module.ifo and load them (merge from AuroraModuleLoader.cs:491)
+            // HAK files are loaded and registered with the resource provider
             await Task.CompletedTask;
         }
 
         private string GetEntryAreaResRefAurora(GFFStruct moduleInfo)
         {
-            return null;
+            if (moduleInfo == null)
+            {
+                return null;
+            }
+
+            // Extract Mod_Entry_Area field from Module.ifo GFF structure
+            // Based on nwmain.exe: Mod_Entry_Area is a CResRef (ResRef) field
+            ResRef entryAreaResRef = moduleInfo.GetResRef("Mod_Entry_Area");
+
+            // Check if ResRef is blank (empty or field doesn't exist)
+            if (entryAreaResRef == null || entryAreaResRef.IsBlank())
+            {
+                return null;
+            }
+
+            // Convert ResRef to string and return
+            return entryAreaResRef.ToString();
         }
 
         private async Task<byte[]> LoadAreaFileAuroraAsync(string areaResRef)
         {
-            await Task.CompletedTask;
-            return null;
+            try
+            {
+                // Load ARE file from resource provider
+                byte[] areData = await Task.Run(() => _auroraResourceProvider.GetResource(areaResRef, ResourceType.ARE));
+                return areData;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private async Task<byte[]> LoadGitFileAuroraAsync(string areaResRef)
         {
-            await Task.CompletedTask;
-            return null;
+            try
+            {
+                // Load GIT file from resource provider
+                byte[] gitData = await Task.Run(() => _auroraResourceProvider.GetResource(areaResRef, ResourceType.GIT));
+                return gitData;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
+        // TODO: STUB - SpawnEntitiesFromGitAuroraAsync (merge from AuroraModuleLoader.cs:790 - complex entity spawning logic)
         private async Task SpawnEntitiesFromGitAuroraAsync(AuroraArea area, byte[] gitData)
         {
+            // This method spawns entities from GIT file:
+            // - Waypoints
+            // - Doors
+            // - Placeables
+            // - Creatures
+            // - Triggers
+            // - Sounds
+            // - Encounters
+            // - Stores
+            // Requires parsing GIT format and creating entities in world
             await Task.CompletedTask;
         }
 
+        // TODO: STUB - TriggerModuleLoadScriptsAuroraAsync (merge from AuroraModuleLoader.cs:2126)
         private async Task TriggerModuleLoadScriptsAuroraAsync(string moduleName)
         {
+            // Triggers module load scripts:
+            // - OnModuleLoad script from Module.ifo
+            // - OnClientEnter script
             await Task.CompletedTask;
         }
 
