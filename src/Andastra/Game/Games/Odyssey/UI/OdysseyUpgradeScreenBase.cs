@@ -7,7 +7,6 @@ using BioWare.NET.Common;
 using BioWare.NET.Resource.Formats.GFF;
 using BioWare.NET.Resource.Formats.TwoDA;
 using BioWare.NET.Extract;
-using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using BioWare.NET.Resource.Formats.GFF.Generics;
 using BioWare.NET.Resource.Formats.GFF.Generics.GUI;
@@ -885,14 +884,14 @@ namespace Andastra.Game.Games.Odyssey.UI
             {
                 case "BTN_UPGRADEITEM":
                     // Apply selected upgrade
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 line 215 - calls ApplyUpgrade
+                    // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 line 215 - calls ApplyUpgrade
                     // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 163 - calls ApplyUpgrade
                     HandleApplyUpgrade();
                     break;
 
                 case "BTN_BACK":
                     // Hide upgrade screen
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 - hides screen
+                    // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 - hides screen
                     // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 - hides screen
                     Hide();
                     break;
@@ -907,7 +906,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// Handles applying the selected upgrade to the item.
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 line 215 - calls ApplyUpgrade
+        /// CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 line 215 - calls ApplyUpgrade
         /// Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 163 - calls ApplyUpgrade
         /// Original implementation:
         /// - Gets selected upgrade slot (offset 0x18d0 in upgrade screen object)
@@ -923,7 +922,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Check if upgrade slot is selected
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 line 216 - checks selected slot
+            // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 line 216 - checks selected slot
             // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 164 - checks selected slot
             if (!_selectedUpgradeSlot.HasValue)
             {
@@ -934,7 +933,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             int upgradeSlot = _selectedUpgradeSlot.Value;
 
             // Get selected upgrade ResRef from list box
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 line 217 - gets selected item from LB_ITEMS
+            // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 line 217 - gets selected item from LB_ITEMS
             // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 165 - gets selected item from LB_ITEMS
             // List box CurrentValue property contains the selected item index
             string selectedUpgradeResRef = null;
@@ -943,7 +942,7 @@ namespace Andastra.Game.Games.Odyssey.UI
                 if (listBoxControl is GUIListBox listBox)
                 {
                     // Get selected index from CurrentValue property
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 - uses CurrentValue to get selected index
+                    // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 - uses CurrentValue to get selected index
                     // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 - uses CurrentValue to get selected index
                     if (listBox.CurrentValue.HasValue && listBox.CurrentValue.Value >= 0 && listBox.CurrentValue.Value < _currentUpgradeList.Count)
                     {
@@ -977,14 +976,14 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Apply upgrade to item
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 line 215 - calls ApplyUpgrade
+            // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 line 215 - calls ApplyUpgrade
             // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 163 - calls ApplyUpgrade
             bool success = ApplyUpgrade(_targetItem, upgradeSlot, selectedUpgradeResRef);
 
             if (success)
             {
                 // Refresh upgrade display to reflect changes
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 - refreshes display after applying upgrade
+                // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 - refreshes display after applying upgrade
                 // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 - refreshes display after applying upgrade
                 RefreshUpgradeDisplay();
             }

@@ -39,7 +39,7 @@ namespace Andastra.Runtime.Core.Module
     /// - Module loading sequence:
     ///   * [PlayMoviesSequentially]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - plays movies sequentially (if provided) - BIK format, blocking playback
     ///   * [ShowLoadingScreen]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - shows loading screen (LoadScreenResRef from IFO)
-    ///   * [SaveCurrentModuleState]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - saves current module state (creature positions, door/placeable states, triggered triggers)
+    ///   * [SaveCurrentSavedModuleState]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - saves current module state (creature positions, door/placeable states, triggered triggers)
     ///   * [FireOnClientLeaveScript]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - fires OnClientLeave script on current module (before OnModuleLeave)
     ///   * [FireOnModuleLeaveScript]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - fires OnModuleLeave script on current module (ScriptOnExit field in IFO)
     ///   * [UnloadCurrentModule]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - unloads current module (destroy all
@@ -47,7 +47,7 @@ namespace Andastra.Runtime.Core.Module
     ///   2. Show loading screen
     ///     * [LoadScreenResRef]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - LoadScreenResRef from IFO
     ///   3. Save current module state
-    ///     * [SaveCurrentModuleState]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - saves current module state (creature positions, door/placeable states, triggered triggers)
+    ///     * [SaveCurrentSavedModuleState]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - saves current module state (creature positions, door/placeable states, triggered triggers)
     ///   4. Fire OnClientLeave script on current module (before OnModuleLeave)
     ///     * [FireOnModuleLeaveScript]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - fires OnModuleLeave script on current module (ScriptOnExit field in IFO)
     ///   5. Unload current module (destroy all entities, clear areas)
@@ -56,7 +56,7 @@ namespace Andastra.Runtime.Core.Module
     ///   6. Load new module (IFO, ARE, GIT, LYT, VIS files via ModuleLoader)
     ///     * [LoadNewModule]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - loads new module (IFO, ARE, GIT, LYT, VIS files via ModuleLoader)
     ///   7. Restore module state if previously visited (from SaveSystem module state cache)
-    ///     * [RestoreModuleState]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - restores module state if previously visited (from SaveSystem module state cache)
+    ///     * [RestoreSavedModuleState]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - restores module state if previously visited (from SaveSystem module state cache)
     ///   8. Position party at waypoint (TransitionDestination from door, or default entry waypoint)
     ///     * [PositionPartyAt]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - positions party at waypoint (TransitionDestination from door, or default entry waypoint)
     ///   9. Fire OnModuleLoad script on new module (ScriptOnLoad field in IFO, executes before OnModuleStart)
@@ -72,7 +72,7 @@ namespace Andastra.Runtime.Core.Module
     ///   13. Hide loading screen
     ///     * [HideLoadingScreen]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - hides loading screen
     /// - Module state persistence:
-    ///     * [ModuleStatesSavedPerModule]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - Module states saved per-module (creature positions, door/placeable states) persist across visits
+    ///     * [SavedModuleStatesSavedPerModule]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - Module states saved per-module (creature positions, door/placeable states) persist across visits
     /// - Waypoint positioning:
     ///     * [PartyMembersPositionedInLinePerpendicularToWaypointFacing]() @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - Party members positioned in line perpendicular to waypoint facing (1.0 unit spacing)
     /// - Loading screen:
@@ -209,8 +209,8 @@ namespace Andastra.Runtime.Core.Module
                 // 3. Save current module state
                 if (_world.CurrentModule != null)
                 {
-                    ModuleState moduleState = SaveCurrentModuleState();
-                    _saveSystem.StoreModuleState(_world.CurrentModule.ResRef, moduleState);
+                    SavedModuleState moduleState = SaveCurrentSavedModuleState();
+                    _saveSystem.StoreSavedModuleState(_world.CurrentModule.ResRef, moduleState);
 
                     // 4. Fire OnClientLeave script (before OnModuleLeave)
                     // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Client leave script execution
@@ -273,12 +273,12 @@ namespace Andastra.Runtime.Core.Module
                 // 7. Check if we've been here before
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module state restoration
                 // Original implementation: Restores entity positions, door/placeable states if module was previously visited
-                if (_saveSystem.HasModuleState(moduleResRef))
+                if (_saveSystem.HasSavedModuleState(moduleResRef))
                 {
-                    ModuleState savedState = _saveSystem.GetModuleState(moduleResRef);
+                    SavedModuleState savedState = _saveSystem.GetSavedModuleState(moduleResRef);
                     if (savedState != null)
                     {
-                        RestoreModuleState(newModule, savedState);
+                        RestoreSavedModuleState(newModule, savedState);
                     }
                 }
 
@@ -438,9 +438,9 @@ namespace Andastra.Runtime.Core.Module
         /// <summary>
         /// Saves current module state.
         /// </summary>
-        private ModuleState SaveCurrentModuleState()
+        private SavedModuleState SaveCurrentSavedModuleState()
         {
-            ModuleState state = new ModuleState();
+            SavedModuleState state = new SavedModuleState();
 
             if (_world.CurrentModule == null)
             {
@@ -505,7 +505,7 @@ namespace Andastra.Runtime.Core.Module
         /// <summary>
         /// Restores module state.
         /// </summary>
-        private void RestoreModuleState(Runtime.Core.Interfaces.IModule module, ModuleState state)
+        private void RestoreSavedModuleState(Runtime.Core.Interfaces.IModule module, SavedModuleState state)
         {
             // Restore creature states
             foreach (CreatureState creatureState in state.Creatures)
@@ -776,13 +776,13 @@ namespace Andastra.Runtime.Core.Module
     /// <summary>
     /// Module state data.
     /// </summary>
-    public class ModuleState
+    public class SavedSavedModuleState
     {
         public List<CreatureState> Creatures { get; set; }
         public List<PlaceableState> Placeables { get; set; }
         public List<DoorState> Doors { get; set; }
 
-        public ModuleState()
+        public SavedModuleState()
         {
             Creatures = new List<CreatureState>();
             Placeables = new List<PlaceableState>();

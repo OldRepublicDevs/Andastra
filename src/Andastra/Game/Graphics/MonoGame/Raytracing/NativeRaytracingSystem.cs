@@ -2495,7 +2495,7 @@ namespace Andastra.Game.Graphics.MonoGame.Raytracing
             // - ClosestHit shader: returns 0.0 (fully shadowed) when ray hits geometry
             // - AnyHit shader: can be used for alpha testing
 
-            // Create shaders (in real implementation, these would be loaded from compiled shader bytecode)
+            // TODO: STUB -  Create shaders (in real implementation, these would be loaded from compiled shader bytecode)
             IShader rayGenShader = CreatePlaceholderShader(ShaderType.RayGeneration, "ShadowRayGen");
             IShader missShader = CreatePlaceholderShader(ShaderType.Miss, "ShadowMiss");
             IShader closestHitShader = CreatePlaceholderShader(ShaderType.ClosestHit, "ShadowClosestHit");
@@ -3127,10 +3127,30 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
                 Console.WriteLine($"[NativeRT] CompileHlslToBytecode: Empty HLSL source for {shaderName}");
                 return null;
             }
+            // Compiling shaders at runtime requires:
+            // 1. DXC compiler executable (for D3D12) or glslc (for Vulkan)
+            // 2. File system access to write temporary files
+            // 3. Process execution to run the compiler
+            //
+            // This is complex and error-prone. For a fully functional implementation,
+            // we would need to either:
+            // - Embed pre-compiled shader bytecode as resources
+            // - Use a shader compilation library (e.g., D3DCompiler, DXC library)
+            // - Provide shader source files that are compiled at build time
+            //
+            // TODO: STUB - For now, we return null and log that pre-compiled bytecode is required.
+            // The embedded HLSL source code is available for offline compilation.
+
+            Console.WriteLine($"[NativeRT] Runtime shader compilation not implemented for {backend} backend");
+            Console.WriteLine($"[NativeRT] Shader source code is embedded but must be compiled offline.");
+            Console.WriteLine($"[NativeRT] To compile {shaderName}:");
 
             switch (backend)
             {
                 case GraphicsBackend.Direct3D12:
+                    Console.WriteLine($"[NativeRT]   1. Save HLSL source to {shaderName}.hlsl");
+                    Console.WriteLine($"[NativeRT]   2. Run: dxc.exe -T cs_6_0 -E main {shaderName}.hlsl -Fo {shaderName}.dxil");
+                    Console.WriteLine($"[NativeRT]   3. Embed {shaderName}.dxil as resource or place in Shaders/ directory");
                     return CompileHlslToDxil(hlslSource, shaderName);
 
                 case GraphicsBackend.Vulkan:
@@ -3711,6 +3731,9 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
             // Shader identifiers are opaque handles obtained via IRaytracingPipeline.GetShaderIdentifier()
             // after the pipeline has been created. This populates the shader binding table with
             // the actual identifiers needed for DispatchRays.
+            // TODO: STUB -  Write SBT records (in real implementation, this would contain actual shader identifiers)
+            // TODO: STUB - For now, we'll write placeholder data - the actual shader identifiers would be
+            // retrieved from the pipeline state object after creation
             WriteShaderBindingTable();
 
             // Create initial binding set (will be updated each frame with current resources)
@@ -3965,6 +3988,13 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
                 // The binding set is only used as a fallback if push descriptors fail or aren't supported
                 Console.WriteLine($"[NativeRT] UpdateShadowBindingSet: Push descriptors supported, skipping binding set recreation. Descriptors will be pushed directly in command list for output texture {outputTexture}");
                 return;
+                // If push descriptors are supported, we can update the binding set in-place
+                // However, since IBindingSet doesn't have an Update method, we still need to recreate
+                // TODO: STUB -  In a real implementation with push descriptor support, we would use:
+                // commandList.PushDescriptorSet(_shadowBindingLayout, slot, outputTextureObj);
+                // TODO: STUB - For now, we'll recreate the binding set even with push descriptor support
+                // as the command list interface may not expose push descriptor methods
+                Console.WriteLine("[NativeRT] UpdateShadowBindingSet: Push descriptors supported but not yet implemented, recreating binding set");
             }
 
             // Recreate the binding set with the new output texture (only when push descriptors are not supported)
@@ -5435,7 +5465,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
             BitConverter.GetBytes(height).CopyTo(constantData, offset);
             offset += 4;
 
-            // Time delta (would be provided in real implementation)
+            // TODO: STUB -  Time delta (would be provided in real implementation)
             BitConverter.GetBytes(0.016f).CopyTo(constantData, offset); // ~60 FPS
             offset += 4;
 

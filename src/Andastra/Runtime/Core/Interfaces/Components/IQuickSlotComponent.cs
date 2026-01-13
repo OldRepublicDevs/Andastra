@@ -11,8 +11,10 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// - Base implementation: BaseQuickSlotComponent (Runtime.Games.Common.Components)
     /// - Engine-specific implementations:
     ///   - Odyssey: QuickSlotComponent → OdysseyQuickSlotComponent (swkotor.exe, swkotor2.exe)
-    ///   - Aurora: AuroraQuickSlotComponent (nwmain.exe, nwn2main.exe)
-    ///   - Eclipse: EclipseQuickSlotComponent (daorigins.exe, DragonAge2.exe)
+    ///   - Single implementation: BaseQuickSlotComponent (Andastra.Game.Games.Common.Components) handles all engines
+    ///     - Engine-specific quick slot component classes (OdysseyQuickSlotComponent, AuroraQuickSlotComponent, EclipseQuickSlotComponent) have been merged
+    ///     - Aurora: Based on nwmain.exe, nwn2main.exe (36 slots)
+    ///     - Eclipse: Based on daorigins.exe, DragonAge2.exe (24 slots)
     /// - Cross-engine analysis completed for all engines
     /// - Common functionality: Item slots, Ability slots, Slot type checking, Get/Set operations
     /// - Engine-specific details are in subclasses (number of slots, GFF field names, serialization formats, function addresses, ability ID formats)

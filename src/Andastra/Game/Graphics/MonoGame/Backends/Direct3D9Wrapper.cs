@@ -103,7 +103,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
             _settings = settings;
 
             // Get window handle from settings or use a default one
-            // In a real implementation, this would come from the game window
+            // TODO: STUB -  In a real implementation, this would come from the game window
             _windowHandle = GetWindowHandle(settings);
 
             // Initialize DirectX 9

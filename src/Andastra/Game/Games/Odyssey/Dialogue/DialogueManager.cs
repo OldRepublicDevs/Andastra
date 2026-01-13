@@ -1207,12 +1207,12 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
                 baseXP.HasValue &&
                 baseXP.Value > 0)
             {
-                // Step 1: Calculate base multiplier value (swkotor2.exe: 0x005e6870)
+                // Step 1: Calculate base multiplier value (swkotor2.exe: 0x005e6870 (ProcessPlotXPThreshold))
                 // Calculates: plotXpPercentage * _DAT_007b99b4 (base multiplier)
-                // This is param_2 passed to 0x0057eb20
+                // This is param_2 passed to AwardPlotXP
                 float multiplierValue = plotXpPercentage * PLOT_XP_BASE_MULTIPLIER;
 
-                // Step 2: Calculate final XP (swkotor2.exe: 0x0057eb20 @ 0x0057eb20)
+                // Step 2: Calculate final XP (swkotor2.exe: 0x0057eb20 (AwardPlotXP))
                 // Calculates: (plotXP * param_2) * _DAT_007b5f88 (additional multiplier)
                 // Where plotXP is baseXP from plot.2da and param_2 is multiplierValue from step 1
                 // Original implementation: (baseXP * multiplierValue) * additionalMultiplier

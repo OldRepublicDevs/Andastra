@@ -653,7 +653,7 @@ namespace HolocronToolset.Dialogs
             if (e != null)
             {
                 // Try to extract rate limit info from exception
-                // In a real implementation, we'd need to access response headers
+                // TODO: STUB -  In a real implementation, we'd need to access response headers
                 _rateLimitRemaining = 0;
             }
 

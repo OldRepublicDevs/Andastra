@@ -182,7 +182,7 @@ namespace Andastra.Runtime.Core.Video.Bink
             // Offset 0x10: Blit flags (or rects pointer - union field)
             // Note: This field is used as both BlitFlags (uint) and Rects pointer (IntPtr) depending on context.
             // In swkotor.exe: BinkCopyToBuffer uses as flags, BinkGetRects uses as pointer.
-            // Rects pointer is at the same offset but accessed differently - using explicit layout would require FieldOffset.
+            // TODO:  Rects pointer is at the same offset but accessed differently - using explicit layout would require FieldOffset.
             public uint BlitFlags;                // Blit operation flags (offset +0x10 in swkotor.exe line 22)
 
             // Offset 0x14: Buffer pointer
@@ -209,8 +209,8 @@ namespace Andastra.Runtime.Core.Video.Bink
         /// BINKSUMMARY structure - Summary information about a BIK file.
         /// Based on BINKW32.DLL verified components : _BinkGetSummary@8 analysis.
         /// Structure size: 31 int fields (0x1f * 4 = 124 bytes) based on initialization loop.
-        /// Matches original engine usage: swkotor.exe 0x00404c80 @ 0x00404c80 line 44 calls BinkGetSummary.
-        /// 
+        /// Matches original engine usage: swkotor.exe FUN_00404c80 @ 0x00404c80 line 44 calls BinkGetSummary.
+        ///
         /// Field mapping from BinkGetSummary decompilation:
         /// - [0] = Width (from param_1[0])
         /// - [1] = Height (from param_1[1])

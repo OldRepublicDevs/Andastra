@@ -6,10 +6,10 @@ namespace Andastra.Game.Graphics.MonoGame.PostProcessing
 {
     /// <summary>
     /// Temporal Anti-Aliasing (TAA) implementation.
-    /// 
+    ///
     /// TAA uses information from previous frames to reduce aliasing,
     /// providing high-quality anti-aliasing with minimal performance cost.
-    /// 
+    ///
     /// Features:
     /// - History buffer for previous frame
     /// - Motion vector reprojection
@@ -117,20 +117,20 @@ namespace Andastra.Game.Graphics.MonoGame.PostProcessing
         /// 4. Clamp reprojected history color to neighborhood AABB bounds (reduces ghosting)
         /// 5. Blend current frame with clamped history using temporal blend factor
         /// 6. Store result in history buffer for next frame
-        /// 
+        ///
         /// Blending formula:
         /// result = lerp(clampedHistory, current, blendFactor)
         /// where blendFactor typically ranges from 0.05-0.1 (5-10% current, 90-95% history)
-        /// 
+        ///
         /// Ghosting reduction:
         /// - Neighborhood clamping prevents history from contributing colors outside current frame's variance
         /// - Depth-based rejection discards history samples with large depth differences
         /// - Motion vector validation rejects samples with invalid or excessive motion
-        /// 
+        ///
         /// Performance considerations:
         /// - Shader-based implementation (recommended): Full GPU acceleration, minimal CPU overhead
         /// - CPU fallback: Works without shaders but significantly slower, suitable for testing/fallback
-        /// 
+        ///
         /// Based on implementations from:
         /// - Unreal Engine 4/5 TAA implementation
         /// - Unity HDRP Temporal Anti-Aliasing
@@ -313,7 +313,7 @@ namespace Andastra.Game.Graphics.MonoGame.PostProcessing
             // 3. Sample neighborhood and compute AABB
             // 4. Clamp history to AABB bounds
             // 5. Blend and write result
-            // 
+            //
             // However, reading/writing pixel data on CPU is very slow, so we use a simplified approach:
             // - First frame: Just copy current frame to history
             // - Subsequent frames: Blend current frame with history using SpriteBatch
@@ -373,7 +373,7 @@ namespace Andastra.Game.Graphics.MonoGame.PostProcessing
                 _spriteBatch.Draw(_historyBuffer, fullscreenRect, blendColor);
                 _spriteBatch.End();
 
-                // Note: Full CPU implementation would require:
+                // TODO: STUB -  Note: Full CPU implementation would require:
                 // - Reading pixel data from textures (GetData/SetData - very slow)
                 // - Reprojecting history using motion vectors
                 // - Computing neighborhood AABB and clamping

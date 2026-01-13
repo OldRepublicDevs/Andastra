@@ -10,8 +10,8 @@ namespace Andastra.Runtime.Core.Actions
     /// <remarks>
     /// Action Queue System:
     /// Legacy action queue class. New code should use engine-specific action queue classes:
-    /// - Odyssey: Runtime.Games.Odyssey.Actions.OdysseyActionQueue
-    /// - Aurora: Runtime.Games.Aurora.Actions.AuroraActionQueue
+    /// - BaseActionQueue (Andastra.Game.Games.Common.Actions) - Single implementation for all engines
+    ///   - Engine-specific action queue classes (OdysseyActionQueue, AuroraActionQueue) have been merged into BaseActionQueue
     /// - Common: Runtime.Games.Common.Actions.BaseActionQueue
     /// 
     /// This class is kept for backward compatibility. Core cannot depend on Games.Common due to circular dependency,

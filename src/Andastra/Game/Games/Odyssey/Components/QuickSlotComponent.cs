@@ -1,4 +1,6 @@
+using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
+using Andastra.Game.Games.Common.Components;
 using JetBrains.Annotations;
 
 namespace Andastra.Game.Games.Odyssey.Components
@@ -19,15 +21,16 @@ namespace Andastra.Game.Games.Odyssey.Components
     /// - Quick slot usage: Using a slot triggers ActionUseItem (for items) or ActionCastSpellAtObject (for abilities)
     /// - swkotor.exe: Quick slot system identical to swkotor2.exe (function addresses to be determined )
     /// - swkotor2.exe: Enhanced quick slot system with 12 slots (0x005226d0 @ 0x005226d0 saves, 0x005223a0 @ 0x005223a0 loads)
+    /// - Engine-specific quick slot component classes have been merged into BaseQuickSlotComponent
     /// </remarks>
-    public class QuickSlotComponent : OdysseyQuickSlotComponent
+    public class QuickSlotComponent : BaseQuickSlotComponent
     {
         /// <summary>
         /// Initializes a new instance of the Odyssey quick slot component.
         /// </summary>
         /// <param name="owner">The entity this component is attached to.</param>
         public QuickSlotComponent([NotNull] IEntity owner)
-            : base(owner)
+            : base(owner, EngineFamily.Odyssey)
         {
         }
     }
