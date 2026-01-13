@@ -694,6 +694,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                     Console.WriteLine("[NCS] Unimplemented function: " + routineId + " (" + funcName + ")");
                     return Variable.Void();
             }
+            return Variable.Void();
         }
 
         #region Basic Utility Functions
@@ -992,31 +993,13 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         #region Object Functions
 
-        // KOTOR1 uses base class implementation - no override needed
-        // Method removed to avoid hiding warning - switch statement calls base.Func_PrintObject
-        // Method removed to avoid hiding warning - switch statement calls base.Func_SetFacing
-        // Method removed to avoid hiding warning - switch statement calls base.Func_GetFacing
-        // Method removed to avoid hiding warning - switch statement calls base.Func_GetPosition
-        // Method removed to avoid hiding warning - switch statement calls base.Func_GetDistanceToObject
-
-        private new Variable Func_GetObjectType(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            IEntity entity = ResolveObject(objectId, ctx);
-            if (entity != null)
-            {
-                return Variable.FromInt((int)entity.ObjectType);
-            }
-            return Variable.FromInt(0);
-        }
-
         /// <summary>
         /// GetEnteringObject() - Get the object that last entered/triggered the caller
         /// </summary>
         /// <remarks>
         /// Based on swkotor.exe: GetEnteringObject implementation (routine ID 25)
-        /// Located via string references: "EVENT_ENTERED_TRIGGER" @ 0x007bce08 (case 2 in FUN_004dcfb0), "OnEnter" @ 0x007bd708
-        /// Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles EVENT_ENTERED_TRIGGER (case 2)
+        /// Located via string references: "EVENT_ENTERED_TRIGGER" @ 0x007bce08 (case 2 in 0x004dcfb0), "OnEnter" @ 0x007bd708
+        /// Event dispatching: 0x004dcfb0 @ 0x004dcfb0 handles EVENT_ENTERED_TRIGGER (case 2)
         /// Original implementation: Returns last entity that entered trigger/door/placeable
         /// For doors/placeables: Returns object that last triggered it
         /// For triggers/areas/modules/encounters: Returns object that last entered it
@@ -1050,8 +1033,8 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// </summary>
         /// <remarks>
         /// Based on swkotor.exe: GetExitingObject implementation (routine ID 26)
-        /// Located via string references: "EVENT_LEFT_TRIGGER" @ 0x007bcdf4 (case 3 in FUN_004dcfb0), "OnExit" @ 0x007bd700
-        /// Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles EVENT_LEFT_TRIGGER (case 3)
+        /// Located via string references: "EVENT_LEFT_TRIGGER" @ 0x007bcdf4 (case 3 in 0x004dcfb0), "OnExit" @ 0x007bd700
+        /// Event dispatching: 0x004dcfb0 @ 0x004dcfb0 handles EVENT_LEFT_TRIGGER (case 3)
         /// Original implementation: Returns last entity that exited trigger/door/placeable
         /// Works on triggers, areas of effect, modules, areas, and encounters
         /// </remarks>
@@ -1105,14 +1088,14 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                 return Variable.FromObject(ObjectInvalid);
             }
 
-            Core.Interfaces.Components.ITransformComponent targetTransform = target.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+            Runtime.Core.Interfaces.Components.ITransformComponent targetTransform = target.GetComponent<Runtime.Core.Interfaces.Components.ITransformComponent>();
             if (targetTransform == null)
             {
                 return Variable.FromObject(ObjectInvalid);
             }
 
             // Get all creatures in radius
-            IEnumerable<IEntity> entities = ctx.World.GetEntitiesInRadius(targetTransform.Position, 100f, Core.Enums.ObjectType.Creature);
+            IEnumerable<IEntity> entities = ctx.World.GetEntitiesInRadius(targetTransform.Position, 100f, Runtime.Core.Enums.ObjectType.Creature);
 
             // Filter and sort by criteria
             List<IEntity> matchingCreatures = new List<IEntity>();
@@ -1120,7 +1103,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             foreach (IEntity entity in entities)
             {
                 if (entity == target) continue;
-                if (entity.ObjectType != Core.Enums.ObjectType.Creature) continue;
+                if (entity.ObjectType != Runtime.Core.Enums.ObjectType.Creature) continue;
 
                 // Check first criteria
                 if (!MatchesCreatureCriteria(entity, firstCriteriaType, firstCriteriaValue, ctx))
@@ -1148,8 +1131,8 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             {
                 matchingCreatures.Sort((a, b) =>
                 {
-                    Core.Interfaces.Components.ITransformComponent aTransform = a.GetComponent<Core.Interfaces.Components.ITransformComponent>();
-                    Core.Interfaces.Components.ITransformComponent bTransform = b.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                    Runtime.Core.Interfaces.Components.ITransformComponent aTransform = a.GetComponent<Runtime.Core.Interfaces.Components.ITransformComponent>();
+                    Runtime.Core.Interfaces.Components.ITransformComponent bTransform = b.GetComponent<Runtime.Core.Interfaces.Components.ITransformComponent>();
                     if (aTransform == null || bTransform == null) return 0;
 
                     float distA = System.Numerics.Vector3.DistanceSquared(targetTransform.Position, aTransform.Position);
@@ -1205,14 +1188,14 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             }
 
             // Get all creatures in radius
-            IEnumerable<IEntity> entities = ctx.World.GetEntitiesInRadius(locationPos, 100f, Core.Enums.ObjectType.Creature);
+            IEnumerable<IEntity> entities = ctx.World.GetEntitiesInRadius(locationPos, 100f, Runtime.Core.Enums.ObjectType.Creature);
 
             // Filter and sort by criteria
             List<IEntity> matchingCreatures = new List<IEntity>();
 
             foreach (IEntity entity in entities)
             {
-                if (entity.ObjectType != Core.Enums.ObjectType.Creature) continue;
+                if (entity.ObjectType != Runtime.Core.Enums.ObjectType.Creature) continue;
 
                 // Check first criteria
                 if (!MatchesCreatureCriteria(entity, firstCriteriaType, firstCriteriaValue, ctx))
@@ -1240,8 +1223,8 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             {
                 matchingCreatures.Sort((a, b) =>
                 {
-                    Core.Interfaces.Components.ITransformComponent aTransform = a.GetComponent<Core.Interfaces.Components.ITransformComponent>();
-                    Core.Interfaces.Components.ITransformComponent bTransform = b.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                    Runtime.Core.Interfaces.Components.ITransformComponent aTransform = a.GetComponent<Runtime.Core.Interfaces.Components.ITransformComponent>();
+                    Runtime.Core.Interfaces.Components.ITransformComponent bTransform = b.GetComponent<Runtime.Core.Interfaces.Components.ITransformComponent>();
                     if (aTransform == null || bTransform == null) return 0;
 
                     float distA = System.Numerics.Vector3.DistanceSquared(locationPos, aTransform.Position);
@@ -1280,17 +1263,17 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                 return Variable.FromObject(ObjectInvalid);
             }
 
-            Core.Interfaces.Components.ITransformComponent targetTransform = target.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+            Runtime.Core.Interfaces.Components.ITransformComponent targetTransform = target.GetComponent<Runtime.Core.Interfaces.Components.ITransformComponent>();
             if (targetTransform == null)
             {
                 return Variable.FromObject(ObjectInvalid);
             }
 
             // Convert object type constant to ObjectType enum
-            Core.Enums.ObjectType typeMask = Core.Enums.ObjectType.All;
+            Runtime.Core.Enums.ObjectType typeMask = Runtime.Core.Enums.ObjectType.All;
             if (objectType != 32767) // Not OBJECT_TYPE_ALL
             {
-                typeMask = (Core.Enums.ObjectType)objectType;
+                typeMask = (Runtime.Core.Enums.ObjectType)objectType;
             }
 
             // Get all entities of the specified type
@@ -1299,7 +1282,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             {
                 if (entity == target) continue;
 
-                Core.Interfaces.Components.ITransformComponent entityTransform = entity.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                Runtime.Core.Interfaces.Components.ITransformComponent entityTransform = entity.GetComponent<Runtime.Core.Interfaces.Components.ITransformComponent>();
                 if (entityTransform != null)
                 {
                     float distance = Vector3.DistanceSquared(targetTransform.Position, entityTransform.Position);
@@ -1342,7 +1325,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             {
                 case 0: // CREATURE_TYPE_RACIAL_TYPE
                     // Check racial type from creature data
-                    if (creature is Core.Entities.Entity entity)
+                    if (creature is Runtime.Core.Entities.Entity entity)
                     {
                         int raceId = entity.GetData<int>("RaceId", 0);
                         return raceId == criteriaValue;
@@ -1430,7 +1413,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
                 case 4: // CREATURE_TYPE_IS_ALIVE
                     // TRUE = alive, FALSE = dead
-                    Core.Interfaces.Components.IStatsComponent stats = creature.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                    Runtime.Core.Interfaces.Components.IStatsComponent stats = creature.GetComponent<Runtime.Core.Interfaces.Components.IStatsComponent>();
                     if (stats != null)
                     {
                         bool isAlive = !stats.IsDead;
@@ -2348,7 +2331,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             }
 
             // Get LastUsedBy from entity data
-            if (ctx.Caller is Core.Entities.Entity entity)
+            if (ctx.Caller is Runtime.Core.Entities.Entity entity)
             {
                 uint lastUsedById = entity.GetData<uint>("LastUsedBy", ObjectInvalid);
                 if (lastUsedById != ObjectInvalid)
@@ -2372,7 +2355,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             }
 
             // Get LastOpenedBy from entity data
-            if (ctx.Caller is Core.Entities.Entity entity)
+            if (ctx.Caller is Runtime.Core.Entities.Entity entity)
             {
                 uint lastOpenedById = entity.GetData<uint>("LastOpenedBy", ObjectInvalid);
                 if (lastOpenedById != ObjectInvalid)
@@ -2396,7 +2379,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             }
 
             // Get LastClosedBy from entity data
-            if (ctx.Caller is Core.Entities.Entity entity)
+            if (ctx.Caller is Runtime.Core.Entities.Entity entity)
             {
                 uint lastClosedById = entity.GetData<uint>("LastClosedBy", ObjectInvalid);
                 if (lastClosedById != ObjectInvalid)
@@ -2420,7 +2403,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             }
 
             // Get LastLocked from entity data
-            if (ctx.Caller is Core.Entities.Entity entity)
+            if (ctx.Caller is Runtime.Core.Entities.Entity entity)
             {
                 uint lastLockedId = entity.GetData<uint>("LastLocked", ObjectInvalid);
                 if (lastLockedId != ObjectInvalid)
@@ -2444,7 +2427,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             }
 
             // Get LastUnlocked from entity data
-            if (ctx.Caller is Core.Entities.Entity entity)
+            if (ctx.Caller is Runtime.Core.Entities.Entity entity)
             {
                 uint lastUnlockedId = entity.GetData<uint>("LastUnlocked", ObjectInvalid);
                 if (lastUnlockedId != ObjectInvalid)
@@ -2475,7 +2458,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             }
 
             // Get PlotFlag from entity data
-            if (entity is Core.Entities.Entity concreteEntity)
+            if (entity is Entity concreteEntity)
             {
                 bool plotFlag = concreteEntity.GetData<bool>("PlotFlag", false);
                 return Variable.FromInt(plotFlag ? 1 : 0);
@@ -2500,7 +2483,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             }
 
             // Set PlotFlag on entity data
-            if (entity is Core.Entities.Entity concreteEntity)
+            if (entity is Runtime.Core.Entities.Entity concreteEntity)
             {
                 concreteEntity.SetData("PlotFlag", plotFlag != 0);
             }
@@ -2521,7 +2504,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             uint itemId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             IEntity item = ResolveObject(itemId, ctx);
 
-            if (item == null || item.ObjectType != Core.Enums.ObjectType.Item)
+            if (item == null || item.ObjectType != Runtime.Core.Enums.ObjectType.Item)
             {
                 return Variable.FromObject(ObjectInvalid);
             }
@@ -2649,7 +2632,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             }
 
             // Create item entity
-            IEntity itemEntity = ctx.World.CreateEntity(Core.Enums.ObjectType.Item, Vector3.Zero, 0f);
+            IEntity itemEntity = ctx.World.CreateEntity(Runtime.Core.Enums.ObjectType.Item, Vector3.Zero, 0f);
             if (itemEntity != null)
             {
                 // Set tag from template or use template name
@@ -2820,7 +2803,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             else
             {
                 // Default to actor's position
-                Core.Interfaces.Components.ITransformComponent transform = ctx.Caller.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                Runtime.Core.Interfaces.Components.ITransformComponent transform = ctx.Caller.GetComponent<Runtime.Core.Interfaces.Components.ITransformComponent>();
                 if (transform != null)
                 {
                     dropLocation = transform.Position;
@@ -2904,8 +2887,8 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                 return Variable.FromFloat(0f);
             }
 
-            Core.Interfaces.Components.ITransformComponent transformA = objectA.GetComponent<Core.Interfaces.Components.ITransformComponent>();
-            Core.Interfaces.Components.ITransformComponent transformB = objectB.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+            Runtime.Core.Interfaces.Components.ITransformComponent transformA = objectA.GetComponent<Runtime.Core.Interfaces.Components.ITransformComponent>();
+            Runtime.Core.Interfaces.Components.ITransformComponent transformB = objectB.GetComponent<Runtime.Core.Interfaces.Components.ITransformComponent>();
 
             if (transformA == null || transformB == null)
             {
@@ -2926,7 +2909,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// GetIsInCombat(object oCreature=OBJECT_SELF, int bOnlyCountReal=FALSE) - Returns TRUE if the creature is in combat
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GetIsInCombat implementation
         /// Located via string reference: "InCombatHPBase" @ 0x007bf224, "CombatRoundData" @ 0x007bf6b4
-        /// Original implementation: FUN_005119a0 @ 0x005119a0 checks combat state and active combat rounds
+        /// Original implementation: 0x005119a0 @ 0x005119a0 checks combat state and active combat rounds
         /// - If bOnlyCountReal=FALSE: Returns true if combat state is InCombat (any combat, including just targeted)
         /// - If bOnlyCountReal=TRUE: Returns true only if there's an active combat round (real combat, actively fighting)
         /// Comment from original: "RWT-OEI 09/30/04 - If you pass TRUE in as the second parameter then this function will only return true if the character is in REAL combat. If you don't know what that means, don't pass in TRUE."
@@ -2979,7 +2962,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             // Access CameraController through GameServicesContext
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                if (services.CameraController is Core.Camera.CameraController cameraController)
+                if (services.CameraController is Runtime.Core.Camera.CameraController cameraController)
                 {
                     // Set camera facing using SetFacing method (handles both chase and free camera modes)
                     cameraController.SetFacing(direction);
@@ -2989,9 +2972,6 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             return Variable.Void();
         }
 
-        /// <summary>
-        /// PlaySound(string sSoundName) - Plays a sound effect
-        /// </summary>
         /// <summary>
         /// PlaySound(string sSoundName) - Plays a sound effect
         /// Based on swkotor.exe: PlaySound plays WAV files as sound effects
@@ -3013,7 +2993,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                 {
                     // Get caller's position for 3D spatial audio
                     System.Numerics.Vector3? position = null;
-                    Core.Interfaces.Components.ITransformComponent transform = ctx.Caller.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                    Runtime.Core.Interfaces.Components.ITransformComponent transform = ctx.Caller.GetComponent<Runtime.Core.Interfaces.Components.ITransformComponent>();
                     if (transform != null)
                     {
                         // Convert BioWare.NET Vector3 to System.Numerics.Vector3
@@ -3178,7 +3158,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
-                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                Runtime.Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Runtime.Core.Interfaces.Components.IStatsComponent>();
                 if (stats != null)
                 {
                     return Variable.FromInt(stats.CurrentHP);
@@ -3203,7 +3183,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
-                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                Runtime.Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Runtime.Core.Interfaces.Components.IStatsComponent>();
                 if (stats != null)
                 {
                     return Variable.FromInt(stats.MaxHP);
@@ -3219,7 +3199,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
-                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                Runtime.Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Runtime.Core.Interfaces.Components.IStatsComponent>();
                 if (stats != null)
                 {
                     return Variable.FromInt(stats.IsDead ? 1 : 0);
@@ -3252,7 +3232,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             // GetIsNPC(object oCreature) - Returns TRUE if oCreature is an NPC (not a PC)
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             IEntity entity = ResolveObject(objectId, ctx);
-            if (entity != null && entity.ObjectType == Core.Enums.ObjectType.Creature)
+            if (entity != null && entity.ObjectType == Runtime.Core.Enums.ObjectType.Creature)
             {
                 // Check if entity is NOT the player entity
                 if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
@@ -3461,10 +3441,10 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                 if (target != null)
                 {
                     // Try to get dialogue resref from component or script hooks
-                    Core.Interfaces.Components.IScriptHooksComponent hooks = target.GetComponent<Core.Interfaces.Components.IScriptHooksComponent>();
+                    Runtime.Core.Interfaces.Components.IScriptHooksComponent hooks = target.GetComponent<Runtime.Core.Interfaces.Components.IScriptHooksComponent>();
                     if (hooks != null)
                     {
-                        string dialogueScript = hooks.GetScript(Core.Enums.ScriptEvent.OnConversation);
+                        string dialogueScript = hooks.GetScript(Runtime.Core.Enums.ScriptEvent.OnConversation);
                         if (!string.IsNullOrEmpty(dialogueScript))
                         {
                             resRef = dialogueScript;
@@ -3745,10 +3725,10 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                         // If no dialog resref provided, try to get from target's OnConversation script
                         if (string.IsNullOrEmpty(dialogResRef) && target != null)
                         {
-                            Core.Interfaces.Components.IScriptHooksComponent hooks = target.GetComponent<Core.Interfaces.Components.IScriptHooksComponent>();
+                            IScriptHooksComponent hooks = target.GetComponent<IScriptHooksComponent>();
                             if (hooks != null)
                             {
-                                string dialogueScript = hooks.GetScript(Core.Enums.ScriptEvent.OnConversation);
+                                string dialogueScript = hooks.GetScript(ScriptEvent.OnConversation);
                                 if (!string.IsNullOrEmpty(dialogueScript))
                                 {
                                     dialogResRef = dialogueScript;
@@ -3816,7 +3796,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         {
             // GetLastPerceived() - Get the object that was perceived in an OnPerception script
             // Returns OBJECT_INVALID if the caller is not a valid creature
-            if (ctx.Caller == null || ctx.Caller.ObjectType != Core.Enums.ObjectType.Creature)
+            if (ctx.Caller == null || ctx.Caller.ObjectType != Runtime.Core.Enums.ObjectType.Creature)
             {
                 return Variable.FromObject(ObjectInvalid);
             }
@@ -3840,7 +3820,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         {
             // GetLastPerceptionHeard() - Check if the last perception was heard
             // Returns 1 if heard, 0 if not heard or invalid
-            if (ctx.Caller == null || ctx.Caller.ObjectType != Core.Enums.ObjectType.Creature)
+            if (ctx.Caller == null || ctx.Caller.ObjectType != Runtime.Core.Enums.ObjectType.Creature)
             {
                 return Variable.FromInt(0);
             }
@@ -3861,7 +3841,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         {
             // GetLastPerceptionInaudible() - Check if the last perceived object has become inaudible
             // Returns 1 if inaudible, 0 if not inaudible or invalid
-            if (ctx.Caller == null || ctx.Caller.ObjectType != Core.Enums.ObjectType.Creature)
+            if (ctx.Caller == null || ctx.Caller.ObjectType != Runtime.Core.Enums.ObjectType.Creature)
             {
                 return Variable.FromInt(0);
             }
@@ -3882,7 +3862,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         {
             // GetLastPerceptionSeen() - Check if the last perceived object was seen
             // Returns 1 if seen, 0 if not seen or invalid
-            if (ctx.Caller == null || ctx.Caller.ObjectType != Core.Enums.ObjectType.Creature)
+            if (ctx.Caller == null || ctx.Caller.ObjectType != Runtime.Core.Enums.ObjectType.Creature)
             {
                 return Variable.FromInt(0);
             }
@@ -3903,7 +3883,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         {
             // GetLastPerceptionVanished() - Check if the last perceived object has vanished
             // Returns 1 if vanished, 0 if not vanished or invalid
-            if (ctx.Caller == null || ctx.Caller.ObjectType != Core.Enums.ObjectType.Creature)
+            if (ctx.Caller == null || ctx.Caller.ObjectType != Runtime.Core.Enums.ObjectType.Creature)
             {
                 return Variable.FromInt(0);
             }
@@ -3942,7 +3922,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
             // Persistent objects are typically stores or containers with inventory
             // Get items from inventory component
-            Core.Interfaces.Components.IInventoryComponent inventory = persistentObject.GetComponent<Core.Interfaces.Components.IInventoryComponent>();
+            Runtime.Core.Interfaces.Components.IInventoryComponent inventory = persistentObject.GetComponent<Runtime.Core.Interfaces.Components.IInventoryComponent>();
             if (inventory == null)
             {
                 return Variable.FromObject(ObjectInvalid);
@@ -4038,7 +4018,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
-                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                Runtime.Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Runtime.Core.Interfaces.Components.IStatsComponent>();
                 if (stats != null)
                 {
                     return Variable.FromInt(stats.GetSkillRank(skill));
@@ -4072,7 +4052,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
-                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                Runtime.Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Runtime.Core.Interfaces.Components.IStatsComponent>();
                 if (stats != null)
                 {
                     // Map ability type to Ability enum
@@ -4097,7 +4077,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
-                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                Runtime.Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Runtime.Core.Interfaces.Components.IStatsComponent>();
                 if (stats != null)
                 {
                     // Map ability type to Ability enum
@@ -4131,7 +4111,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
-                Core.Interfaces.Components.IInventoryComponent inventory = entity.GetComponent<Core.Interfaces.Components.IInventoryComponent>();
+                Runtime.Core.Interfaces.Components.IInventoryComponent inventory = entity.GetComponent<Runtime.Core.Interfaces.Components.IInventoryComponent>();
                 if (inventory != null)
                 {
                     IEntity item = inventory.GetItemInSlot(inventorySlot);
@@ -4150,12 +4130,12 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             uint itemId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
             IEntity item = ResolveObject(itemId, ctx);
 
-            if (item == null || item.ObjectType != Core.Enums.ObjectType.Item)
+            if (item == null || item.ObjectType != Runtime.Core.Enums.ObjectType.Item)
             {
                 return Variable.FromInt(0);
             }
 
-            Core.Interfaces.Components.IItemComponent itemComponent = item.GetComponent<Core.Interfaces.Components.IItemComponent>();
+            Runtime.Core.Interfaces.Components.IItemComponent itemComponent = item.GetComponent<Runtime.Core.Interfaces.Components.IItemComponent>();
             if (itemComponent != null)
             {
                 return Variable.FromInt(itemComponent.StackSize);
@@ -4401,7 +4381,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
-                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                Runtime.Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Runtime.Core.Interfaces.Components.IStatsComponent>();
                 if (stats != null)
                 {
                     return Variable.FromInt(stats.CurrentFP);
@@ -4417,7 +4397,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
-                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                Runtime.Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Runtime.Core.Interfaces.Components.IStatsComponent>();
                 if (stats != null)
                 {
                     return Variable.FromInt(stats.MaxFP);
@@ -4444,7 +4424,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                     // Based on swkotor.exe: PauseGame implementation
                     // Located via string references: Game pause system
                     // Original implementation: Pauses/unpauses all game systems except UI
-                    if (services.GameSession is Andastra.Runtime.Engines.Odyssey.Game.GameSession gameSession)
+                    if (services.GameSession is Andastra.Game.Games.Odyssey.Game.GameSession gameSession)
                     {
                         if (shouldPause)
                         {
@@ -4512,7 +4492,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             IEntity entity = ResolveObject(objectId, ctx);
 
-            if (entity == null || entity.ObjectType != Core.Enums.ObjectType.Creature)
+            if (entity == null || entity.ObjectType != Runtime.Core.Enums.ObjectType.Creature)
             {
                 return Variable.FromInt(0);
             }
@@ -4523,10 +4503,10 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             if (creatureComp != null)
             {
                 // Get GameDataManager from context to look up class data
-                Andastra.Runtime.Engines.Odyssey.Data.GameDataManager gameDataManager = null;
+               Data.GameDataManager gameDataManager = null;
                 if (ctx != null && ctx.World != null && ctx.World.GameDataProvider != null)
                 {
-                    Andastra.Runtime.Games.Odyssey.Data.OdysseyGameDataProvider odysseyProvider = ctx.World.GameDataProvider as Andastra.Runtime.Games.Odyssey.Data.OdysseyGameDataProvider;
+                    Data.OdysseyGameDataProvider odysseyProvider = ctx.World.GameDataProvider as Data.OdysseyGameDataProvider;
                     if (odysseyProvider != null)
                     {
                         gameDataManager = odysseyProvider.GameDataManager;
@@ -4844,7 +4824,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
                 // Check if entity is in the area by checking area's collections
                 bool inArea = false;
-                if (entity.ObjectType == Core.Enums.ObjectType.Creature)
+                if (entity.ObjectType == Runtime.Core.Enums.ObjectType.Creature)
                 {
                     foreach (IEntity creature in area.Creatures)
                     {
@@ -4855,7 +4835,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                         }
                     }
                 }
-                else if (entity.ObjectType == Core.Enums.ObjectType.Placeable)
+                else if (entity.ObjectType == Runtime.Core.Enums.ObjectType.Placeable)
                 {
                     foreach (IEntity placeable in area.Placeables)
                     {
@@ -4866,7 +4846,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                         }
                     }
                 }
-                else if (entity.ObjectType == Core.Enums.ObjectType.Door)
+                else if (entity.ObjectType == Runtime.Core.Enums.ObjectType.Door)
                 {
                     foreach (IEntity door in area.Doors)
                     {
@@ -4877,7 +4857,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                         }
                     }
                 }
-                else if (entity.ObjectType == Core.Enums.ObjectType.Trigger)
+                else if (entity.ObjectType == Runtime.Core.Enums.ObjectType.Trigger)
                 {
                     foreach (IEntity trigger in area.Triggers)
                     {
@@ -4888,7 +4868,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                         }
                     }
                 }
-                else if (entity.ObjectType == Core.Enums.ObjectType.Waypoint)
+                else if (entity.ObjectType == Runtime.Core.Enums.ObjectType.Waypoint)
                 {
                     foreach (IEntity waypoint in area.Waypoints)
                     {
@@ -4899,7 +4879,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                         }
                     }
                 }
-                else if (entity.ObjectType == Core.Enums.ObjectType.Sound)
+                else if (entity.ObjectType == Runtime.Core.Enums.ObjectType.Sound)
                 {
                     foreach (IEntity sound in area.Sounds)
                     {
@@ -4979,7 +4959,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             // GetMetaMagicFeat() - Returns the metamagic type of the last spell cast by the caller
             // Metamagic feats: METAMAGIC_EMPOWER (1), METAMAGIC_EXTEND (2), METAMAGIC_MAXIMIZE (4), METAMAGIC_QUICKEN (8)
 
-            if (ctx.Caller == null || ctx.Caller.ObjectType != Core.Enums.ObjectType.Creature)
+            if (ctx.Caller == null || ctx.Caller.ObjectType != Runtime.Core.Enums.ObjectType.Creature)
             {
                 return Variable.FromInt(-1);
             }
@@ -4996,7 +4976,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         /// <summary>
         /// GetRacialType(object oCreature=OBJECT_SELF) - Returns the racial type of a creature
-        /// Based on swkotor.exe: FUN_005261b0 @ 0x005261b0 (load creature from UTC template)
+        /// Based on swkotor.exe: 0x005261b0 @ 0x005261b0 (load creature from UTC template)
         /// Racial type is stored in CreatureComponent.RaceId (from UTC template)
         /// </summary>
         private Variable Func_GetRacialType(IReadOnlyList<Variable> args, IExecutionContext ctx)
@@ -5004,7 +4984,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             uint creatureId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             IEntity creature = ResolveObject(creatureId, ctx);
 
-            if (creature == null || creature.ObjectType != Core.Enums.ObjectType.Creature)
+            if (creature == null || creature.ObjectType != Runtime.Core.Enums.ObjectType.Creature)
             {
                 return Variable.FromInt(0);
             }
@@ -5026,7 +5006,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
-                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                Runtime.Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Runtime.Core.Interfaces.Components.IStatsComponent>();
                 if (stats != null)
                 {
                     return Variable.FromInt(stats.FortitudeSave);
@@ -5042,7 +5022,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
-                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                Runtime.Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Runtime.Core.Interfaces.Components.IStatsComponent>();
                 if (stats != null)
                 {
                     return Variable.FromInt(stats.ReflexSave);
@@ -5058,7 +5038,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
-                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                Runtime.Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Runtime.Core.Interfaces.Components.IStatsComponent>();
                 if (stats != null)
                 {
                     return Variable.FromInt(stats.WillSave);
@@ -5077,7 +5057,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
             if (caster != null)
             {
-                Core.Interfaces.Components.IStatsComponent stats = caster.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                Runtime.Core.Interfaces.Components.IStatsComponent stats = caster.GetComponent<Runtime.Core.Interfaces.Components.IStatsComponent>();
                 if (stats != null)
                 {
                     // Spell save DC = 10 + caster level + ability modifier (typically Wisdom or Charisma for Force powers)
@@ -5434,7 +5414,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                 }
 
                 // Get HP
-                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                Runtime.Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Runtime.Core.Interfaces.Components.IStatsComponent>();
                 if (stats != null)
                 {
                     int currentHP = stats.CurrentHP;
@@ -5497,7 +5477,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                 }
 
                 // Get HP
-                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                Runtime.Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Runtime.Core.Interfaces.Components.IStatsComponent>();
                 if (stats != null)
                 {
                     int currentHP = stats.CurrentHP;
@@ -5689,7 +5669,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// <remarks>
         /// Based on swkotor.exe: Faction relationship system
         /// Located via string reference: "neutral" @ 0x007c28a0
-        /// Original implementation: FUN_005acc10 @ 0x005acc10 sets faction reputation values including "neutral" (50)
+        /// Original implementation: 0x005acc10 @ 0x005acc10 sets faction reputation values including "neutral" (50)
         /// Neutral determination: Reputation value between HostileThreshold (10) and FriendlyThreshold (90)
         /// Faction system: Uses repute.2da table for base faction relationships, personal reputation overrides
         /// Neutral means: Not hostile (reputation > 10) and not friendly (reputation < 90)
@@ -5763,7 +5743,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             if (area != null)
             {
                 IEntity waypoint = area.GetObjectByTag(waypointTag, 0);
-                if (waypoint != null && waypoint.ObjectType == Core.Enums.ObjectType.Waypoint)
+                if (waypoint != null && waypoint.ObjectType == Runtime.Core.Enums.ObjectType.Waypoint)
                 {
                     return Variable.FromObject(waypoint.ObjectId);
                 }
@@ -5771,7 +5751,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
             // Fallback to world search
             IEntity found = ctx.World.GetEntityByTag(waypointTag, 0);
-            if (found != null && found.ObjectType == Core.Enums.ObjectType.Waypoint)
+            if (found != null && found.ObjectType == Runtime.Core.Enums.ObjectType.Waypoint)
             {
                 return Variable.FromObject(found.ObjectId);
             }
@@ -5858,7 +5838,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Faction component creation during entity faction change
                 // Original implementation: Creates new faction component and assigns it to entity
                 // Located via string references: "FactionID" @ 0x007c40b4 (swkotor2.exe)
-                // Function: FUN_005fb0f0 @ 0x005fb0f0 loads FactionID from creature template
+                // Function: 0x005fb0f0 @ 0x005fb0f0 loads FactionID from creature template
                 // Component initialization: Faction component should be initialized with FactionManager for proper reputation lookups
                 if (objectToChange is Andastra.Runtime.Core.Entities.Entity concreteEntity)
                 {
@@ -6080,9 +6060,9 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// - swkotor.exe: Function ID 509 referenced at 0x0041c54a and 0x0041c554 (function registration/dispatch setup)
         /// - swkotor2.exe: Function ID 509 referenced at 0x0041bf2a and 0x0041bf34 (identical pattern)
         /// - Module transition script: "Mod_Transition" @ 0x00745b68 (swkotor.exe), @ 0x007be8f0 (swkotor2.exe)
-        /// - Module transition handlers: FUN_00501fa0 @ 0x00501fa0 (swkotor2.exe) handles module loading and transition scripts
+        /// - Module transition handlers: 0x00501fa0 @ 0x00501fa0 (swkotor2.exe) handles module loading and transition scripts
         /// - Module state management: "ModuleLoaded" @ 0x00745078, "ModuleRunning" @ 0x00745060 (swkotor.exe)
-        /// - Module save system: FUN_004b2380 @ 0x004b2380 (swkotor.exe), FUN_004ea910 @ 0x004ea910 (swkotor2.exe) handle module name in save games
+        /// - Module save system: 0x004b2380 @ 0x004b2380 (swkotor.exe), 0x004ea910 @ 0x004ea910 (swkotor2.exe) handle module name in save games
         ///
         /// Original Engine Behavior (swkotor.exe/swkotor2.exe):
         /// - Validates module name parameter (returns immediately if empty)
@@ -6119,11 +6099,11 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// - If waypoint tag is provided, positions party at that waypoint
         /// - If waypoint tag is empty, uses default entry waypoint from module IFO
         /// - Party members positioned in line perpendicular to waypoint facing (1.0 unit spacing)
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 positions all party members at waypoint with spacing
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005226d0 @ 0x005226d0 positions all party members at waypoint with spacing
         ///
         /// Cross-Engine Equivalents:
         /// - swkotor2.exe: Same function ID (509), identical implementation pattern
-        ///   - Module transition: FUN_00501fa0 @ 0x00501fa0 handles module loading and "Mod_Transition" script execution
+        ///   - Module transition: 0x00501fa0 @ 0x00501fa0 handles module loading and "Mod_Transition" script execution
         ///   - Module state: "Mod_Transition" @ 0x007be8f0, "ModuleName" @ 0x007bde2c
         /// - nwmain.exe (Aurora): Similar function but different function ID, uses Module.ifo format
         ///   - Module loading: CNWSModule::LoadModule (needs Ghidra address verification)
@@ -6431,7 +6411,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             }
 
             // Convert object type constant to ObjectType enum
-            Core.Enums.ObjectType odyObjectType = Core.Enums.ObjectType.Creature; // Default
+            Runtime.Core.Enums.ObjectType odyObjectType = Runtime.Core.Enums.ObjectType.Creature; // Default
             ResourceType resourceType = ResourceType.UTC; // Default
 
             // Map NWScript object type constants to Odyssey ObjectType
@@ -6439,23 +6419,23 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             switch (objectType)
             {
                 case 1: // OBJECT_TYPE_CREATURE
-                    odyObjectType = Core.Enums.ObjectType.Creature;
+                    odyObjectType = Runtime.Core.Enums.ObjectType.Creature;
                     resourceType = ResourceType.UTC;
                     break;
                 case 2: // OBJECT_TYPE_ITEM
-                    odyObjectType = Core.Enums.ObjectType.Item;
+                    odyObjectType = Runtime.Core.Enums.ObjectType.Item;
                     resourceType = ResourceType.UTI;
                     break;
                 case 4: // OBJECT_TYPE_PLACEABLE
-                    odyObjectType = Core.Enums.ObjectType.Placeable;
+                    odyObjectType = Runtime.Core.Enums.ObjectType.Placeable;
                     resourceType = ResourceType.UTP;
                     break;
                 case 5: // OBJECT_TYPE_STORE
-                    odyObjectType = Core.Enums.ObjectType.Store;
+                    odyObjectType = Runtime.Core.Enums.ObjectType.Store;
                     resourceType = ResourceType.UTM;
                     break;
                 case 6: // OBJECT_TYPE_WAYPOINT
-                    odyObjectType = Core.Enums.ObjectType.Waypoint;
+                    odyObjectType = Runtime.Core.Enums.ObjectType.Waypoint;
                     resourceType = ResourceType.UTW;
                     break;
                 default:
@@ -6468,45 +6448,45 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             // Access ModuleLoader via GameServicesContext to get EntityFactory
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                if (services.ModuleLoader is Andastra.Runtime.Engines.Odyssey.Game.ModuleLoader moduleLoader)
+                if (services.ModuleLoader is Game.ModuleLoader moduleLoader)
                 {
-                    BioWare.NET.Common.Module parsingModule = moduleLoader.GetParsingModule();
+                    Module parsingModule = moduleLoader.GetParsingModule();
                     if (parsingModule == null)
                     {
                         return Variable.FromObject(ObjectInvalid);
                     }
 
                     // Convert position to System.Numerics.Vector3
-                    System.Numerics.Vector3 entityPosition = new System.Numerics.Vector3(position.X, position.Y, position.Z);
+                    Vector3 entityPosition = new Vector3(position.X, position.Y, position.Z);
 
                     // Create entity from template using EntityFactory
                     switch (odyObjectType)
                     {
-                        // case Core.Enums.ObjectType.Creature:
+                        // case Runtime.Core.Enums.ObjectType.Creature:
                         //     if (!string.IsNullOrEmpty(template))
                         //     {
                         //         entity = moduleLoader.EntityFactory.CreateCreatureFromTemplate(parsingModule, template, entityPosition, facing);
                         //     }
                         //     break;
-                        // case Core.Enums.ObjectType.Item:
+                        // case Runtime.Core.Enums.ObjectType.Item:
                         //     if (!string.IsNullOrEmpty(template))
                         //     {
                         //         entity = moduleLoader.EntityFactory.CreateItemFromTemplate(parsingModule, template, entityPosition, facing);
                         //     }
                         //     break;
-                        // case Core.Enums.ObjectType.Placeable:
+                        // case Runtime.Core.Enums.ObjectType.Placeable:
                         //     if (!string.IsNullOrEmpty(template))
                         //     {
                         //         entity = moduleLoader.EntityFactory.CreatePlaceableFromTemplate(parsingModule, template, entityPosition, facing);
                         //     }
                         //     break;
-                        // case Core.Enums.ObjectType.Store:
+                        // case Runtime.Core.Enums.ObjectType.Store:
                         //     if (!string.IsNullOrEmpty(template))
                         //     {
                         //         entity = moduleLoader.EntityFactory.CreateStoreFromTemplate(parsingModule, template, entityPosition, facing);
                         //     }
                         //     break;
-                        // case Core.Enums.ObjectType.Waypoint:
+                        // case Runtime.Core.Enums.ObjectType.Waypoint:
                         //     // Waypoints don't have templates in the same way, their "template" is often just their tag
                         //     entity = moduleLoader.EntityFactory.CreateWaypointFromTemplate(template, entityPosition, facing);
                         //     break;
@@ -6540,7 +6520,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             ctx.World.RegisterEntity(entity);
 
             // Add to current area (RuntimeArea has AddEntity method)
-            if (ctx.World.CurrentArea is Core.Module.RuntimeArea runtimeArea)
+            if (ctx.World.CurrentArea is Runtime.Core.Module.RuntimeArea runtimeArea)
             {
                 runtimeArea.AddEntity(entity);
             }
@@ -6554,7 +6534,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             // Rendering system: Uses IRenderableComponent.Opacity property for alpha blending during rendering
             if (useAppearAnimation != 0)
             {
-                if (entity is Core.Entities.Entity entityImpl)
+                if (entity is Runtime.Core.Entities.Entity entityImpl)
                 {
                     // Set appear animation flag and timing for fade-in system
                     // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Appear animation uses opacity fade-in from 0.0 to 1.0
@@ -6575,7 +6555,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                     entityImpl.SetData("AppearAnimationDuration", fadeDuration);
 
                     // Set initial opacity to 0.0 (fully transparent) - AppearAnimationFadeSystem will fade in to 1.0
-                    Core.Interfaces.Components.IRenderableComponent renderable = entity.GetComponent<Core.Interfaces.Components.IRenderableComponent>();
+                    IRenderableComponent renderable = entity.GetComponent<Runtime.Core.Interfaces.Components.IRenderableComponent>();
                     if (renderable != null)
                     {
                         renderable.Opacity = 0.0f;
@@ -6682,11 +6662,11 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             }
 
             // Convert object type constant to ObjectType enum
-            Core.Enums.ObjectType typeMask = Core.Enums.ObjectType.All;
+            Runtime.Core.Enums.ObjectType typeMask = Runtime.Core.Enums.ObjectType.All;
             if (objectType != 32767) // Not OBJECT_TYPE_ALL
             {
                 // Map NWScript object type constants
-                typeMask = (Core.Enums.ObjectType)objectType;
+                typeMask = (Runtime.Core.Enums.ObjectType)objectType;
             }
 
             // Get all entities of the specified type
@@ -6731,7 +6711,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             IEntity entity = ResolveObject(objectId, ctx);
-            if (entity == null || entity.ObjectType != Core.Enums.ObjectType.Creature)
+            if (entity == null || entity.ObjectType != Runtime.Core.Enums.ObjectType.Creature)
             {
                 return Variable.FromInt(0);
             }
@@ -6772,7 +6752,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             int featId = args[0].AsInt();
             uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
             IEntity entity = ResolveObject(objectId, ctx);
-            if (entity == null || entity.ObjectType != Core.Enums.ObjectType.Creature)
+            if (entity == null || entity.ObjectType != Runtime.Core.Enums.ObjectType.Creature)
             {
                 return Variable.FromInt(0);
             }
@@ -6784,10 +6764,10 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             }
 
             // Get GameDataManager from context to look up feat data
-            Andastra.Runtime.Engines.Odyssey.Data.GameDataManager gameDataManager = null;
+            Andastra.Game.Games.Odyssey.Data.GameDataManager gameDataManager = null;
             if (ctx != null && ctx.World != null && ctx.World.GameDataProvider != null)
             {
-                Andastra.Runtime.Games.Odyssey.Data.OdysseyGameDataProvider odysseyProvider = ctx.World.GameDataProvider as Andastra.Runtime.Games.Odyssey.Data.OdysseyGameDataProvider;
+                Data.OdysseyGameDataProvider odysseyProvider = ctx.World.GameDataProvider as Data.OdysseyGameDataProvider;
                 if (odysseyProvider != null)
                 {
                     gameDataManager = odysseyProvider.GameDataManager;
@@ -6819,7 +6799,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             int classPosition = args[0].AsInt();
             uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
             IEntity entity = ResolveObject(objectId, ctx);
-            if (entity == null || entity.ObjectType != Core.Enums.ObjectType.Creature)
+            if (entity == null || entity.ObjectType != Runtime.Core.Enums.ObjectType.Creature)
             {
                 return Variable.FromInt(-1); // CLASS_TYPE_INVALID
             }
@@ -6858,7 +6838,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             int classPosition = args[0].AsInt();
             uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
             IEntity entity = ResolveObject(objectId, ctx);
-            if (entity == null || entity.ObjectType != Core.Enums.ObjectType.Creature)
+            if (entity == null || entity.ObjectType != Runtime.Core.Enums.ObjectType.Creature)
             {
                 return Variable.FromInt(0);
             }
@@ -6896,7 +6876,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             int classType = args[0].AsInt();
             uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
             IEntity entity = ResolveObject(objectId, ctx);
-            if (entity == null || entity.ObjectType != Core.Enums.ObjectType.Creature)
+            if (entity == null || entity.ObjectType != Runtime.Core.Enums.ObjectType.Creature)
             {
                 return Variable.FromInt(0);
             }
@@ -7021,7 +7001,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             int propertyType = args.Count > 1 ? args[1].AsInt() : 0;
 
             IEntity item = ResolveObject(itemId, ctx);
-            if (item == null || item.ObjectType != Core.Enums.ObjectType.Item)
+            if (item == null || item.ObjectType != Runtime.Core.Enums.ObjectType.Item)
             {
                 return Variable.FromInt(0); // FALSE
             }
@@ -7056,8 +7036,8 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// </summary>
         /// <remarks>
         /// Based on swkotor.exe: GetClickingObject implementation (routine ID 326)
-        /// Located via string references: "OnClick" @ 0x007c1a20, "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED" @ 0x007bc704 (case 0x1e in FUN_004dcfb0)
-        /// Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED (case 0x1e)
+        /// Located via string references: "OnClick" @ 0x007c1a20, "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED" @ 0x007bc704 (case 0x1e in 0x004dcfb0)
+        /// Event dispatching: 0x004dcfb0 @ 0x004dcfb0 handles CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED (case 0x1e)
         /// Original implementation: Returns last entity that clicked trigger/door/placeable
         /// Note: This is identical to GetEnteringObject for triggers (both return the clicking entity)
         /// </remarks>
@@ -7069,7 +7049,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             }
 
             // Get from entity's custom data (stored when OnClick fires)
-            if (ctx.Caller is Andastra.Runtime.Core.Entities.Entity callerEntity)
+            if (ctx.Caller is Runtime.Core.Entities.Entity callerEntity)
             {
                 uint clickingId = callerEntity.GetData<uint>("LastClickingObjectId", 0);
                 if (clickingId != 0)
@@ -7154,8 +7134,8 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// <remarks>
         /// Based on swkotor.exe: SetItemStackSize implementation (routine ID 150)
         /// Located via string references: "StackSize" @ 0x007c0a34 (item stack size GFF field)
-        /// Item loading: FUN_0056a820 @ 0x0056a820 loads StackSize from GFF (reads uint16 from "StackSize" field)
-        /// Item saving: FUN_006203c0 @ 0x006203c0 saves StackSize to GFF (writes uint16 to "StackSize" field)
+        /// Item loading: 0x0056a820 @ 0x0056a820 loads StackSize from GFF (reads uint16 from "StackSize" field)
+        /// Item saving: 0x006203c0 @ 0x006203c0 saves StackSize to GFF (writes uint16 to "StackSize" field)
         /// Original implementation: Clamps stack size between 1 and max stack size from baseitems.2da "stacking" column
         /// Stack size stored as uint16 in item GFF structure
         /// </remarks>
@@ -7329,7 +7309,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             int doorAction = args[1].AsInt();
             IEntity door = ResolveObject(doorId, ctx);
 
-            if (door == null || door.ObjectType != Core.Enums.ObjectType.Door)
+            if (door == null || door.ObjectType != Runtime.Core.Enums.ObjectType.Door)
             {
                 return Variable.FromInt(0);
             }
@@ -7394,7 +7374,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             int placeableAction = args[1].AsInt();
             IEntity placeable = ResolveObject(placeableId, ctx);
 
-            if (placeable == null || placeable.ObjectType != Core.Enums.ObjectType.Placeable)
+            if (placeable == null || placeable.ObjectType != Runtime.Core.Enums.ObjectType.Placeable)
             {
                 return Variable.FromInt(0);
             }
@@ -7437,8 +7417,8 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// </summary>
         /// <remarks>
         /// Based on swkotor.exe: DoDoorAction implementation (routine ID 338)
-        /// Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN" @ 0x007bc844 (case 7 in FUN_004dcfb0), "CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED" @ 0x007bc72c
-        /// Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles door events (case 7 for EVENT_OPEN_OBJECT, case 0xd for EVENT_UNLOCK_OBJECT)
+        /// Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN" @ 0x007bc844 (case 7 in 0x004dcfb0), "CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED" @ 0x007bc72c
+        /// Event dispatching: 0x004dcfb0 @ 0x004dcfb0 handles door events (case 7 for EVENT_OPEN_OBJECT, case 0xd for EVENT_UNLOCK_OBJECT)
         /// Door actions: DOOR_ACTION_OPEN (0), DOOR_ACTION_UNLOCK (1), DOOR_ACTION_BASH (2), DOOR_ACTION_IGNORE (3), DOOR_ACTION_KNOCK (4)
         /// Original implementation: Performs the specified action on the door (opens, unlocks, bashes, ignores, or knocks)
         /// DOOR_ACTION_OPEN: Opens door if closed and unlocked (or lockable by script), fires EVENT_OPEN_OBJECT, executes OnOpen script
@@ -7458,7 +7438,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             int doorAction = args[1].AsInt();
             IEntity door = ResolveObject(doorId, ctx);
 
-            if (door == null || door.ObjectType != Core.Enums.ObjectType.Door)
+            if (door == null || door.ObjectType != Runtime.Core.Enums.ObjectType.Door)
             {
                 return Variable.Void();
             }
@@ -7499,9 +7479,9 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                         // Get caller's strength ability score
                         int strengthScore = 10; // Default
                         int strengthModifier = 0;
-                        if (ctx.Caller.ObjectType == Core.Enums.ObjectType.Creature)
+                        if (ctx.Caller.ObjectType == Runtime.Core.Enums.ObjectType.Creature)
                         {
-                            Core.Interfaces.Components.IStatsComponent stats = ctx.Caller.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                            Runtime.Core.Interfaces.Components.IStatsComponent stats = ctx.Caller.GetComponent<Runtime.Core.Interfaces.Components.IStatsComponent>();
                             if (stats != null)
                             {
                                 // Get strength ability score (0=Strength in D20 system)
@@ -7534,7 +7514,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                             // Fire OnDamaged script event if door still exists (HP > 0 means door wasn't destroyed)
                             if (doorComponent.HitPoints > 0 && ctx.World != null && ctx.World.EventBus != null)
                             {
-                                ctx.World.EventBus.FireScriptEvent(door, Core.Enums.ScriptEvent.OnDamaged, ctx.Caller);
+                                ctx.World.EventBus.FireScriptEvent(door, Runtime.Core.Enums.ScriptEvent.OnDamaged, ctx.Caller);
                             }
                         }
                     }
@@ -7560,7 +7540,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                             {
                                 // Get door position for 3D spatial audio
                                 System.Numerics.Vector3? position = null;
-                                Core.Interfaces.Components.ITransformComponent doorTransform = door.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                                Runtime.Core.Interfaces.Components.ITransformComponent doorTransform = door.GetComponent<Runtime.Core.Interfaces.Components.ITransformComponent>();
                                 if (doorTransform != null)
                                 {
                                     // Convert BioWare.NET Vector3 to System.Numerics.Vector3
@@ -7627,7 +7607,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             int npcIndex = args.Count > 0 ? args[0].AsInt() : 0;
 
             // Get NPC entity from PartyManager
-            if (ctx is Andastra.Runtime.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
             {
                 IEntity member = partyManager.GetAvailableMember(npcIndex);
                 if (member != null)
@@ -7667,7 +7647,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             influence = Math.Max(0, Math.Min(100, influence));
 
             // Get NPC entity from PartyManager and set influence
-            if (ctx is Andastra.Runtime.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
             {
                 IEntity member = partyManager.GetAvailableMember(npcIndex);
                 if (member != null)
@@ -7698,7 +7678,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             int modifier = args.Count > 1 ? args[1].AsInt() : 0;
 
             // Get NPC entity from PartyManager and modify influence
-            if (ctx is Andastra.Runtime.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
             {
                 IEntity member = partyManager.GetAvailableMember(npcIndex);
                 if (member != null)
@@ -7718,7 +7698,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             int index = args.Count > 0 ? args[0].AsInt() : 0;
 
             // Get party member at index (0 = leader, 1-2 = members)
-            if (ctx is Andastra.Runtime.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
             {
                 IEntity member = partyManager.GetMemberAtSlot(index);
                 if (member != null)
@@ -7734,7 +7714,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             int npcIndex = args.Count > 0 ? args[0].AsInt() : 0;
 
             // Check if NPC is available for party selection
-            if (ctx is Andastra.Runtime.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
             {
                 IEntity member = partyManager.GetAvailableMember(npcIndex);
                 if (member != null)
@@ -7756,7 +7736,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             }
 
             // Add NPC to available party members
-            if (ctx is Andastra.Runtime.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager && services.ModuleLoader is Andastra.Runtime.Engines.Odyssey.Game.ModuleLoader moduleLoader)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager && services.ModuleLoader is Andastra.Game.Games.Odyssey.Game.ModuleLoader moduleLoader)
             {
                 // Try to find existing entity by template tag first
                 IEntity existingEntity = ctx.World.GetEntityByTag(template, 0);
@@ -7777,7 +7757,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): AddAvailableNPCByTemplate implementation
                 // Located via string references: "TemplateResRef" @ 0x007bd00c, entity creation from UTC templates
                 // Original implementation: Creates creature from UTC template and adds to available party members
-                // Ghidra analysis: FUN_0057bd70 @ 0x0057bd70 saves party data, FUN_0057dcd0 @ 0x0057dcd0 loads party data
+                // Ghidra analysis: 0x0057bd70 @ 0x0057bd70 saves party data, 0x0057dcd0 @ 0x0057dcd0 loads party data
                 // EntityFactory accessed via ModuleLoader.EntityFactory property
                 // Get current module from ModuleLoader
                 BioWare.NET.Common.Module module = moduleLoader.GetCurrentModule();
@@ -7789,7 +7769,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
                     if (services.PlayerEntity != null)
                     {
-                        Core.Interfaces.Components.ITransformComponent playerTransform = services.PlayerEntity.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                        Runtime.Core.Interfaces.Components.ITransformComponent playerTransform = services.PlayerEntity.GetComponent<Runtime.Core.Interfaces.Components.ITransformComponent>();
                         if (playerTransform != null)
                         {
                             spawnPosition = playerTransform.Position;
@@ -7836,7 +7816,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             int npcIndex = args.Count > 0 ? args[0].AsInt() : 0;
 
             // Get NPC entity from PartyManager
-            if (ctx is Andastra.Runtime.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
             {
                 IEntity member = partyManager.GetAvailableMember(npcIndex);
                 if (member != null)
@@ -7861,7 +7841,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             int selectable = args.Count > 1 ? args[1].AsInt() : 1;
 
             // Get NPC entity from PartyManager and set selectability
-            if (ctx is Andastra.Runtime.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
             {
                 IEntity member = partyManager.GetAvailableMember(npcIndex);
                 if (member != null)
@@ -7911,14 +7891,14 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GetStealthXPEnabled @ routine ID 836
         /// Located via string references: "StealthXPEnabled" @ 0x007bd1b4
-        /// Ghidra analysis: FUN_004e26d0 @ 0x004e26d0 reads "StealthXPEnabled" from AreaProperties GFF structure
+        /// Ghidra analysis: 0x004e26d0 @ 0x004e26d0 reads "StealthXPEnabled" from AreaProperties GFF structure
         /// Stored at object offset +0x2f4 as byte (boolean) in area properties
         /// Original implementation: Reads boolean from GFF field "StealthXPEnabled" in AreaProperties
         /// </remarks>
         private Variable Func_GetStealthXPEnabled(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // Get stealth XP enabled state from current area
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e26d0 @ 0x004e26d0 reads StealthXPEnabled from AreaProperties GFF
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004e26d0 @ 0x004e26d0 reads StealthXPEnabled from AreaProperties GFF
             // Located via string references: "StealthXPEnabled" @ 0x007bd1b4
             // Original implementation: Reads boolean from AreaProperties GFF structure at offset +0x2f4
             if (ctx.World != null && ctx.World.CurrentArea != null)
@@ -7934,7 +7914,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): SetStealthXPEnabled @ routine ID 837
         /// Located via string references: "StealthXPEnabled" @ 0x007bd1b4
-        /// Ghidra analysis: FUN_004e11d0 @ 0x004e11d0 writes "StealthXPEnabled" to AreaProperties GFF structure
+        /// Ghidra analysis: 0x004e11d0 @ 0x004e11d0 writes "StealthXPEnabled" to AreaProperties GFF structure
         /// Stored at object offset +0x2f4 as byte (boolean) in area properties
         /// Original implementation: Writes boolean to GFF field "StealthXPEnabled" in AreaProperties
         /// </remarks>
@@ -7943,7 +7923,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             int enabled = args.Count > 0 ? args[0].AsInt() : 1;
 
             // Set stealth XP enabled state in current area
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e11d0 @ 0x004e11d0 writes StealthXPEnabled to AreaProperties GFF
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004e11d0 @ 0x004e11d0 writes StealthXPEnabled to AreaProperties GFF
             // Located via string references: "StealthXPEnabled" @ 0x007bd1b4
             // Original implementation: Writes boolean to AreaProperties GFF structure at offset +0x2f4
             if (ctx.World != null && ctx.World.CurrentArea != null)
@@ -7970,8 +7950,8 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         /// - Sets disableItemCreation flag (offset 0x18c8: 0 = false, 1 = true)
         /// - Sets disableUpgrade flag (offset 0x18cc: 0 = false, 1 = true)
         /// - Sets override2DA string (if provided, otherwise empty string)
-        /// - Initializes screen via FUN_0067c8f0
-        /// - Shows screen via GUI manager (FUN_0040bf90 adds to GUI manager, FUN_00638bb0 sets screen mode)
+        /// - Initializes screen via 0x0067c8f0
+        /// - Shows screen via GUI manager (0x0040bf90 adds to GUI manager, 0x00638bb0 sets screen mode)
         /// - If oItem is NOT invalid, then the player will be forced to upgrade oItem and only oItem
         /// - If oCharacter is NOT invalid, then that character's various skills will be used for:
         ///   - Upgrade availability checks (skill requirements)
@@ -7998,7 +7978,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             int disableUpgrade = args.Count > 3 ? args[3].AsInt() : 0;
             string override2DA = args.Count > 4 ? args[4].AsString() : string.Empty;
 
-            // Validate item exists if specified (original checks via FUN_004dc020 if item != OBJECT_INVALID)
+            // Validate item exists if specified (original checks via 0x004dc020 if item != OBJECT_INVALID)
             if (item != ObjectInvalid && ctx.World != null)
             {
                 IEntity itemEntity = ResolveObject(item, ctx);
@@ -8010,7 +7990,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             }
 
             // Get UI system from game services context
-            if (ctx is Andastra.Runtime.Scripting.VM.ExecutionContext execCtx &&
+            if (ctx is VMExecutionContext execCtx &&
                 execCtx.AdditionalContext is IGameServicesContext services &&
                 services.UISystem != null)
             {
@@ -8040,7 +8020,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             }
 
             // Get base item type from item component
-            Core.Interfaces.Components.IItemComponent itemComponent = item.GetComponent<Core.Interfaces.Components.IItemComponent>();
+            Runtime.Core.Interfaces.Components.IItemComponent itemComponent = item.GetComponent<Runtime.Core.Interfaces.Components.IItemComponent>();
             if (itemComponent != null)
             {
                 // BaseItem is the base item type ID from baseitems.2da
@@ -8083,7 +8063,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         private Variable Func_SWMG_GetPlayerInvincibility(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // Get swoop minigame invincibility state from player entity
-            if (ctx is Andastra.Runtime.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PlayerEntity != null)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PlayerEntity != null)
             {
                 bool invincible = services.PlayerEntity.GetData<bool>("SwoopMinigameInvincible", false);
                 return Variable.FromInt(invincible ? 1 : 0);
@@ -8097,7 +8077,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             int invincible = args.Count > 0 ? args[0].AsInt() : 0;
 
             // Store swoop minigame invincibility state in player entity
-            if (ctx is Andastra.Runtime.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PlayerEntity != null)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PlayerEntity != null)
             {
                 // Store invincibility state in player entity data
                 services.PlayerEntity.SetData("SwoopMinigameInvincible", invincible != 0);
@@ -8127,7 +8107,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             int featId = args[0].AsInt();
             uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
             IEntity entity = ResolveObject(objectId, ctx);
-            if (entity == null || entity.ObjectType != Core.Enums.ObjectType.Creature)
+            if (entity == null || entity.ObjectType != Runtime.Core.Enums.ObjectType.Creature)
             {
                 return Variable.FromInt(0);
             }
