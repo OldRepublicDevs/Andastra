@@ -59,6 +59,7 @@ namespace Andastra.Game.Games.Engines.Common
         // Odyssey-specific state
         private Installation _installation;
         private RuntimeModule _currentRuntimeModule;
+        private Andastra.Game.Games.Odyssey.Loading.ModuleLoader _odysseyInternalLoader;
         
         // Aurora-specific state
         private AuroraResourceProvider _auroraResourceProvider;
