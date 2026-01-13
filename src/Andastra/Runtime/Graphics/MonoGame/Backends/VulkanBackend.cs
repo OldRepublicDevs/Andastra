@@ -4,8 +4,13 @@ using System.Diagnostics;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Rendering;
-using Andastra.Runtime.Graphics.Common.Structs;
+using RuntimeGraphicsCapabilities = Andastra.Runtime.Graphics.Common.Structs.GraphicsCapabilities;
+using RuntimeTextureDescription = Andastra.Runtime.Graphics.Common.Structs.TextureDescription;
+using RuntimeBufferDescription = Andastra.Runtime.Graphics.Common.Structs.BufferDescription;
+using RuntimePipelineDescription = Andastra.Runtime.Graphics.Common.Structs.PipelineDescription;
 using Andastra.Game.Graphics.MonoGame.Interfaces;
+using Andastra.Game.Graphics.MonoGame.Rendering;
+using Andastra.Runtime.Graphics;
 
 namespace Andastra.Runtime.Graphics.MonoGame.Backends
 {
@@ -20,9 +25,9 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
     public class VulkanBackend : IGraphicsBackend
     {
         private bool _initialized;
-        private GraphicsCapabilities _capabilities;
-        private RenderSettings _settings;
-        private VulkanDevice _device;
+        private RuntimeGraphicsCapabilities _capabilities;
+        private Andastra.Game.Graphics.MonoGame.Rendering.RenderSettings _settings;
+        private Andastra.Game.Graphics.MonoGame.Backends.VulkanDevice _device;
 
         // Frame statistics tracking
         private FrameStatistics _lastFrameStats;
@@ -39,7 +44,7 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
             get { return GraphicsBackendType.Vulkan; }
         }
 
-        public GraphicsCapabilities Capabilities
+        public RuntimeGraphicsCapabilities Capabilities
         {
             get { return _capabilities; }
         }
@@ -54,7 +59,7 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
             get { return _capabilities.SupportsRaytracing; }
         }
 
-        public RenderSettings Settings
+        public Andastra.Game.Graphics.MonoGame.Rendering.RenderSettings Settings
         {
             get { return _settings; }
         }
@@ -64,7 +69,196 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
             get { return _device; }
         }
 
-        public bool Initialize(RenderSettings settings)
+        // TODO: STUB - Implement IGraphicsBackend interface members
+        public IGraphicsDevice GraphicsDevice
+        {
+            get { throw new NotImplementedException("GraphicsDevice property not yet implemented in VulkanBackend"); }
+        }
+
+        public IContentManager ContentManager
+        {
+            get { throw new NotImplementedException("ContentManager property not yet implemented in VulkanBackend"); }
+        }
+
+        public IWindow Window
+        {
+            get { throw new NotImplementedException("Window property not yet implemented in VulkanBackend"); }
+        }
+
+        public IInputManager InputManager
+        {
+            get { throw new NotImplementedException("InputManager property not yet implemented in VulkanBackend"); }
+        }
+
+        public bool SupportsVSync
+        {
+            get { return _initialized; }
+        }
+
+        // IGraphicsBackend interface methods
+        public void Initialize(int width, int height, string title, bool fullscreen = false)
+        {
+            if (_initialized)
+            {
+                return;
+            }
+
+            // Create RenderSettings from parameters
+            Andastra.Game.Graphics.MonoGame.Rendering.RenderSettings settings = new Andastra.Game.Graphics.MonoGame.Rendering.RenderSettings
+            {
+                Width = width,
+                Height = height,
+                Fullscreen = fullscreen
+            };
+
+            // Call the existing Initialize method
+            if (!Initialize(settings))
+            {
+                throw new InvalidOperationException("Failed to initialize Vulkan backend");
+            }
+        }
+
+        public void Run(Action<float> updateAction, Action drawAction)
+        {
+            if (!_initialized)
+            {
+                throw new InvalidOperationException("Backend must be initialized before running.");
+            }
+
+            // TODO: STUB - Implement Vulkan game loop
+            // When fully implemented, this should:
+            // - Create window using platform-specific windowing API (GLFW, SDL, or native Win32/X11/Cocoa)
+            // - Set up swap chain for presentation
+            // - Run main loop: while (!shouldExit) { updateAction(deltaTime); BeginFrame(); drawAction(); EndFrame(); }
+            // - Handle window events (resize, close, input)
+            // - Present swap chain images to screen
+            throw new NotImplementedException("Run method not yet implemented in VulkanBackend");
+        }
+
+        public void Exit()
+        {
+            // TODO: STUB - Implement exit handling
+            // When fully implemented, this should:
+            // - Set exit flag to stop game loop
+            // - Signal window to close
+            // - Clean up resources
+            throw new NotImplementedException("Exit method not yet implemented in VulkanBackend");
+        }
+
+        public IRoomMeshRenderer CreateRoomMeshRenderer()
+        {
+            if (!_initialized)
+            {
+                throw new InvalidOperationException("Backend must be initialized before creating renderers.");
+            }
+
+            // TODO: STUB - Implement Vulkan room mesh renderer
+            // When fully implemented, this should:
+            // - Create VulkanRoomMeshRenderer instance
+            // - Initialize with Vulkan device, command buffers, pipelines
+            // - Set up vertex/index buffer management for room geometry
+            throw new NotImplementedException("CreateRoomMeshRenderer not yet implemented in VulkanBackend");
+        }
+
+        public IEntityModelRenderer CreateEntityModelRenderer(object gameDataManager = null, object installation = null)
+        {
+            if (!_initialized)
+            {
+                throw new InvalidOperationException("Backend must be initialized before creating renderers.");
+            }
+
+            // TODO: STUB - Implement Vulkan entity model renderer
+            // When fully implemented, this should:
+            // - Create VulkanEntityModelRenderer instance
+            // - Initialize with Vulkan device, command buffers, pipelines
+            // - Set up model loading and rendering pipeline
+            throw new NotImplementedException("CreateEntityModelRenderer not yet implemented in VulkanBackend");
+        }
+
+        public ISpatialAudio CreateSpatialAudio()
+        {
+            // TODO: STUB - Implement Vulkan spatial audio
+            // When fully implemented, this should:
+            // - Create VulkanSpatialAudio instance or delegate to audio system
+            // - Set up 3D audio positioning using Vulkan-compatible audio library
+            throw new NotImplementedException("CreateSpatialAudio not yet implemented in VulkanBackend");
+        }
+
+        public object CreateDialogueCameraController(object cameraController)
+        {
+            if (cameraController == null)
+            {
+                throw new ArgumentNullException(nameof(cameraController));
+            }
+
+            // TODO: STUB - Implement Vulkan dialogue camera controller
+            // When fully implemented, this should:
+            // - Create VulkanDialogueCameraController instance
+            // - Wrap the provided camera controller with Vulkan-specific rendering
+            throw new NotImplementedException("CreateDialogueCameraController not yet implemented in VulkanBackend");
+        }
+
+        public object CreateSoundPlayer(object resourceProvider)
+        {
+            if (resourceProvider == null)
+            {
+                throw new ArgumentNullException(nameof(resourceProvider));
+            }
+
+            // TODO: STUB - Implement Vulkan sound player
+            // When fully implemented, this should:
+            // - Create VulkanSoundPlayer instance
+            // - Initialize with resource provider for loading audio files
+            // - Set up audio playback using Vulkan-compatible audio library
+            throw new NotImplementedException("CreateSoundPlayer not yet implemented in VulkanBackend");
+        }
+
+        public object CreateMusicPlayer(object resourceProvider)
+        {
+            if (resourceProvider == null)
+            {
+                throw new ArgumentNullException(nameof(resourceProvider));
+            }
+
+            // TODO: STUB - Implement Vulkan music player
+            // When fully implemented, this should:
+            // - Create VulkanMusicPlayer instance
+            // - Initialize with resource provider for loading music files
+            // - Set up background music playback using Vulkan-compatible audio library
+            throw new NotImplementedException("CreateMusicPlayer not yet implemented in VulkanBackend");
+        }
+
+        public object CreateVoicePlayer(object resourceProvider)
+        {
+            if (resourceProvider == null)
+            {
+                throw new ArgumentNullException(nameof(resourceProvider));
+            }
+
+            // TODO: STUB - Implement Vulkan voice player
+            // When fully implemented, this should:
+            // - Create VulkanVoicePlayer instance
+            // - Initialize with resource provider for loading voice files
+            // - Set up voice-over dialogue playback using Vulkan-compatible audio library
+            throw new NotImplementedException("CreateVoicePlayer not yet implemented in VulkanBackend");
+        }
+
+        public void SetVSync(bool enabled)
+        {
+            if (!_initialized)
+            {
+                return;
+            }
+
+            // TODO: STUB - Implement VSync setting
+            // When fully implemented, this should:
+            // - Set swap chain present mode to VK_PRESENT_MODE_FIFO_KHR (VSync on) or VK_PRESENT_MODE_IMMEDIATE_KHR (VSync off)
+            // - Recreate swap chain if needed
+            // - Apply changes immediately
+        }
+
+        // Internal Initialize method that takes RenderSettings
+        public bool Initialize(Andastra.Game.Graphics.MonoGame.Rendering.RenderSettings settings)
         {
             if (settings == null)
             {
@@ -84,9 +278,9 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
             uint graphicsQueueFamilyIndex;
             uint computeQueueFamilyIndex;
             uint transferQueueFamilyIndex;
-            GraphicsCapabilities capabilities;
+            RuntimeGraphicsCapabilities capabilities;
 
-            if (!VulkanDevice.CreateVulkanInstance(
+            if (!Andastra.Game.Graphics.MonoGame.Backends.VulkanDevice.CreateVulkanInstance(
                 out instance,
                 out physicalDevice,
                 out graphicsQueueFamilyIndex,
@@ -124,7 +318,7 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
             }
 
             // Create VulkanDevice wrapper
-            _device = new VulkanDevice(
+            _device = new Andastra.Game.Graphics.MonoGame.Backends.VulkanDevice(
                 device,
                 instance,
                 physicalDevice,
@@ -133,7 +327,7 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
                 transferQueue,
                 capabilities);
 
-            _capabilities = capabilities;
+            _capabilities = (GraphicsCapabilities)capabilities;
 
             // Initialize frame statistics tracking
             _lastFrameStats = new FrameStatistics();
@@ -269,7 +463,7 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
             // TODO: STUB - Resize swap chain
         }
 
-        public IntPtr CreateTexture(TextureDescription desc)
+        public IntPtr CreateTexture(RuntimeTextureDescription desc)
         {
             if (!_initialized)
             {
@@ -291,7 +485,7 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
             return false;
         }
 
-        public IntPtr CreateBuffer(BufferDescription desc)
+        public IntPtr CreateBuffer(RuntimeBufferDescription desc)
         {
             if (!_initialized)
             {
@@ -302,7 +496,7 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
             return IntPtr.Zero;
         }
 
-        public IntPtr CreatePipeline(PipelineDescription desc)
+        public IntPtr CreatePipeline(RuntimePipelineDescription desc)
         {
             if (!_initialized)
             {
@@ -364,7 +558,7 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
             out IntPtr graphicsQueue,
             out IntPtr computeQueue,
             out IntPtr transferQueue,
-            ref GraphicsCapabilities capabilities)
+            ref RuntimeGraphicsCapabilities capabilities)
         {
             device = IntPtr.Zero;
             graphicsQueue = IntPtr.Zero;
@@ -375,10 +569,10 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
             {
                 // Get required function pointers from VulkanDevice
                 // These should already be loaded by CreateVulkanInstance
-                System.Reflection.FieldInfo vkCreateDeviceField = typeof(VulkanDevice).GetField("vkCreateDevice", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-                System.Reflection.FieldInfo vkGetDeviceQueueField = typeof(VulkanDevice).GetField("vkGetDeviceQueue", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-                System.Reflection.FieldInfo vkGetPhysicalDeviceFeaturesField = typeof(VulkanDevice).GetField("vkGetPhysicalDeviceFeatures", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-                System.Reflection.FieldInfo vkEnumerateDeviceExtensionPropertiesField = typeof(VulkanDevice).GetField("vkEnumerateDeviceExtensionProperties", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+                System.Reflection.FieldInfo vkCreateDeviceField = typeof(Andastra.Game.Graphics.MonoGame.Backends.VulkanDevice).GetField("vkCreateDevice", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+                System.Reflection.FieldInfo vkGetDeviceQueueField = typeof(Andastra.Game.Graphics.MonoGame.Backends.VulkanDevice).GetField("vkGetDeviceQueue", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+                System.Reflection.FieldInfo vkGetPhysicalDeviceFeaturesField = typeof(Andastra.Game.Graphics.MonoGame.Backends.VulkanDevice).GetField("vkGetPhysicalDeviceFeatures", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+                System.Reflection.FieldInfo vkEnumerateDeviceExtensionPropertiesField = typeof(Andastra.Game.Graphics.MonoGame.Backends.VulkanDevice).GetField("vkEnumerateDeviceExtensionProperties", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
 
                 if (vkCreateDeviceField == null || vkGetDeviceQueueField == null || vkGetPhysicalDeviceFeaturesField == null)
                 {
@@ -396,7 +590,7 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
                 }
 
                 // Call public static method in VulkanDevice
-                return VulkanDevice.CreateVulkanDeviceInternal(
+                return Andastra.Game.Graphics.MonoGame.Backends.VulkanDevice.CreateVulkanDeviceInternal(
                     instance,
                     physicalDevice,
                     graphicsQueueFamilyIndex,
