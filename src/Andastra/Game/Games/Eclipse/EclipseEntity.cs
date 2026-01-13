@@ -204,7 +204,7 @@ namespace Andastra.Game.Games.Eclipse
             // XOrientation @ 0x00af4f40, YOrientation @ 0x00af4f30, ZOrientation @ 0x00af4f20 (daorigins.exe)
             if (!HasComponent<ITransformComponent>())
             {
-                var transformComponent = new EclipseTransformComponent();
+                var transformComponent = new BaseTransformComponent();
                 AddComponent<ITransformComponent>(transformComponent);
             }
 
