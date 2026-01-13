@@ -217,7 +217,7 @@ namespace Andastra.Game.Games.Aurora
 
         protected override World CreateWorld()
         {
-            var timeManager = new AuroraTimeManager();
+            var timeManager = new BaseTimeManager();
             return new World(timeManager);
         }
     }

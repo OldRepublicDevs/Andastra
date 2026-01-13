@@ -208,7 +208,7 @@ namespace Andastra.Game.Games.Engines.Eclipse
 
         protected override World CreateWorld()
         {
-            var timeManager = new EclipseTimeManager();
+            var timeManager = new BaseTimeManager();
             return new World(timeManager);
         }
     }
