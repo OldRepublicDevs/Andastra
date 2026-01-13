@@ -1453,7 +1453,7 @@ namespace Andastra.Runtime.Core.Save
             }
 
             // Get current module - needed for EntityFactory to load item templates
-            IModule currentModule = _world.CurrentModule;
+            Runtime.Core.Interfaces.IModule currentModule = _world.CurrentModule;
             if (currentModule == null)
             {
                 return null; // Cannot create items without module context
