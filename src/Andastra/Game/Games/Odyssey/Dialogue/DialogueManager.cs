@@ -1151,7 +1151,8 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
             }
 
             // Look up plot.2da row using PlotIndex
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057eb20 looks up plot.2da data
+            // swkotor2.exe: 0x0057eb20 (AwardPlotXP) looks up plot.2da data
+            // K1 (swkotor.exe): TODO - Find equivalent address (needs reverse engineering)
             TwoDA plotTable = _gameDataManager.GetTable("plot");
             if (plotTable == null)
             {
@@ -1191,13 +1192,13 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
                 plotAlreadyTriggered = _plotSystem.IsPlotTriggered(plotIndex);
             }
 
-            // Process plot XP (swkotor2.exe: 0x005e6870 @ 0x005e6870 -> 0x0057eb20 @ 0x0057eb20)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005e6870 checks if plotIndex != -1 and threshold < plotXpPercentage
+            // Process plot XP (swkotor2.exe: 0x005e6870 (ProcessPlotXPThreshold) -> 0x0057eb20 (AwardPlotXP))
+            // K1 (swkotor.exe): TODO - Find equivalent addresses (needs reverse engineering)
             // Original implementation flow:
-            //   1. Check threshold < plotXpPercentage
+            //   1. ProcessPlotXPThreshold checks if plotIndex != -1 and threshold < plotXpPercentage
             //   2. Calculate: plotXpPercentage * _DAT_007b99b4 (base multiplier)
-            //   3. Call 0x0057eb20 with plotIndex and calculated value
-            //   4. 0x0057eb20 calculates: (plotXP * param_2) * _DAT_007b5f88 (additional multiplier)
+            //   3. Call AwardPlotXP with plotIndex and calculated value
+            //   4. AwardPlotXP calculates: (plotXP * param_2) * _DAT_007b5f88 (additional multiplier)
             //   5. Award XP via 0x0057ccd0 (party XP award function)
             //   6. Notify journal system via 0x00681a10
             if (!plotAlreadyTriggered &&
@@ -1274,7 +1275,7 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
         /// <param name="questEntryIndex">Quest entry index from dialogue node (if available)</param>
         /// <remarks>
         /// Journal Notification for Plot XP (swkotor2.exe: 0x00681a10 @ 0x00681a10):
-        /// - Called from 0x0057eb20 when plot XP is awarded
+        /// - Called from AwardPlotXP (0x0057eb20) when plot XP is awarded
         /// - Original implementation:
         ///   1. Finds journal entry associated with plot/quest
         ///   2. Updates entry XPReward with plot XP amount

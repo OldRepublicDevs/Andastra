@@ -1963,7 +1963,7 @@ namespace Andastra.Runtime.Core.Save
         /// <param name="moduleResRef">The resource reference of the module to check.</param>
         /// <returns>True if the module has saved state, false otherwise.</returns>
         /// <remarks>
-        /// ValidateModuleState @ (K1: 0x004b3a20, TSL: 0x004ec180): Module state validation
+        /// ValidateModuleState @ (K1: TODO: Find via Ghidra reverse engineering, TSL: TODO: Find via Ghidra reverse engineering): Module state validation
         /// Original implementation: Verifies that area states belong to the specified module
         /// by checking if areas are present in the module's Mod_Area_list
         /// 
