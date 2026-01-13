@@ -70,7 +70,7 @@ namespace Andastra.Game.Core
             }
 
             // Create engine-specific time manager
-            var timeManager = new OdysseyTimeManager();
+            var timeManager = new BaseTimeManager();
 
             // Create world instance with engine-specific time manager
             _world = new World(timeManager);

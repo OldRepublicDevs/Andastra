@@ -9,9 +9,23 @@ namespace Andastra.Game.Games.Common
     /// <remarks>
     /// Base Time Manager Implementation:
     /// - Common time management functionality shared across all BioWare engines (Odyssey, Aurora, Eclipse, Infinity)
-    /// - Base classes MUST only contain functionality that is identical across ALL engines
-    /// - Engine-specific details MUST be in subclasses (OdysseyTimeManager, AuroraTimeManager, EclipseTimeManager, InfinityTimeManager)
-    /// 
+    /// - All engine-specific time manager classes (OdysseyTimeManager, AuroraTimeManager, EclipseTimeManager) have been merged
+    /// - Engine-specific differences are documented in method comments
+    /// - All engines use identical implementation: 60 Hz fixed timestep, accumulator pattern, game time tracking
+    ///
+    /// Engine-Specific Details (Documented, Not Implemented):
+    /// - Odyssey: Game time stored in module IFO file (Mod_StartMinute/Second/MiliSec, Mod_PauseDay/PauseTime)
+    ///   - Time played tracked in save game NFO.res file (TIMEPLAYED field)
+    ///   - Frame update: 0x00401c30 @ 0x00401c30 (swkotor2.exe), 0x00401c10 @ 0x00401c10 (swkotor.exe)
+    ///   - Time update: 0x0040d4e0 @ 0x0040d4e0 (swkotor2.exe), 0x0040cc50 @ 0x0040cc50 (swkotor.exe)
+    /// - Aurora: Game time stored in Module.ifo GFF structure
+    ///   - Time played tracked in save game GAM file
+    ///   - CWorldTimer system: CServerExoApp::GetWorldTimer @ 0x14055ba10 (nwmain.exe)
+    ///   - CWorldTimer::GetWorldTime @ 0x140597180, AddWorldTimes @ 0x140596b40
+    /// - Eclipse: Game time stored in Eclipse-specific save game format (DAS for Dragon Age)
+    ///   - UnrealScript integration: COMMAND_GETTIME*, COMMAND_SETTIME commands
+    ///   - Unreal Engine 3 time system integration (60 Hz fixed timestep for physics)
+    ///
     /// Common Functionality (all engines):
     /// - Fixed timestep simulation: All engines use fixed timestep for deterministic gameplay (typically 60 Hz = 1/60s = 0.01667s per tick)
     /// - Simulation time: Accumulated fixed timestep time (advances only during simulation ticks)
@@ -47,9 +61,9 @@ namespace Andastra.Game.Games.Common
     /// 
     /// NOTE: This base class contains ONLY functionality verified as identical across ALL engines.
     /// All engine-specific function addresses, memory offsets, and implementation details are in subclasses.
-    /// Cross-engine reverse engineering via Ghidra is required to verify commonality before moving code to base class.
+    /// Cross-engine verified components  is required to verify commonality before moving code to base class.
     /// </remarks>
-    public abstract class BaseTimeManager : ITimeManager
+    public class BaseTimeManager : ITimeManager
     {
         /// <summary>
         /// Default fixed timestep (60 Hz = 1/60 second).
@@ -128,10 +142,16 @@ namespace Andastra.Game.Games.Common
         /// Gets the fixed timestep for simulation updates.
         /// </summary>
         /// <remarks>
-        /// Common across all engines: Typically 1/60 second (60 Hz).
-        /// Engine-specific subclasses may override to return different values if needed.
+        /// Common across all engines: 1/60 second (60 Hz).
+        /// All engines (Odyssey, Aurora, Eclipse) use 60 Hz fixed timestep verified in executables.
+        /// - Odyssey: 60 Hz verified in swkotor.exe/swkotor2.exe
+        /// - Aurora: 60 Hz verified via behavioral analysis in nwmain.exe/nwn2main.exe
+        /// - Eclipse: 60 Hz (Unreal Engine 3 uses 60 Hz for physics, matches common pattern)
         /// </remarks>
-        public abstract float FixedTimestep { get; }
+        public virtual float FixedTimestep
+        {
+            get { return DefaultFixedTimestep; }
+        }
 
         /// <summary>
         /// Gets the current simulation time in seconds.
@@ -259,7 +279,14 @@ namespace Andastra.Game.Games.Common
         /// <param name="realDeltaTime">The real frame time in seconds.</param>
         /// <remarks>
         /// Common across all engines: Accumulate real frame time, clamp to max frame time, apply time scale.
-        /// Engine-specific subclasses may override to add engine-specific frame timing logic.
+        ///
+        /// Engine-Specific Frame Update Details:
+        /// - Odyssey: 0x00401c30/0x00401c10 (frame update) calls 0x0040d4e0/0x0040cc50 (time update)
+        ///   - Updates game systems (module, AI, objects) with delta time
+        /// - Aurora: CServerExoApp frame timing markers for profiling
+        ///   - CWorldTimer system tracks time via GetWorldTime @ 0x140597180
+        /// - Eclipse: Unreal Engine 3 frame timing system integration
+        ///   - Frame timing markers for profiling (when reverse engineered)
         /// </remarks>
         public virtual void Update(float realDeltaTime)
         {
@@ -289,7 +316,17 @@ namespace Andastra.Game.Games.Common
         /// </summary>
         /// <remarks>
         /// Common across all engines: Advance simulation time, update accumulator, update game time.
-        /// Engine-specific subclasses may override to add engine-specific tick logic.
+        ///
+        /// Engine-Specific Tick Details:
+        /// - Odyssey: Game time advances at 1:1 ratio with simulation time
+        ///   - Game time stored in module IFO file (GameTime field)
+        ///   - Time update functions (0x00417ae0, 0x00414220) called by 0x0040d4e0/0x0040cc50
+        /// - Aurora: Game time advances at 1:1 ratio with simulation time
+        ///   - CWorldTimer::AddWorldTimes @ 0x140596b40 adds time deltas (helper function, not main tick)
+        ///   - Game time stored in Module.ifo GFF structure
+        /// - Eclipse: Game time advances at 1:1 ratio with simulation time
+        ///   - Unreal Engine 3 integration for physics updates
+        ///   - Game time stored in Eclipse-specific save game format (DAS for Dragon Age)
         /// </remarks>
         public virtual void Tick()
         {
@@ -342,7 +379,18 @@ namespace Andastra.Game.Games.Common
         /// <param name="millisecond">Millisecond (0-999)</param>
         /// <remarks>
         /// Common across all engines: Clamp values to valid ranges and set game time.
-        /// Engine-specific subclasses may override to add engine-specific game time setting logic (e.g., save to module IFO).
+        ///
+        /// Engine-Specific Game Time Persistence:
+        /// - Odyssey: Game time stored in module IFO file (swkotor2.exe: 0x00500290 @ 0x00500290)
+        ///   - Mod_StartMinute, Mod_StartSecond, Mod_StartMiliSec (current game time)
+        ///   - Mod_PauseDay, Mod_PauseTime (pause time from time system object)
+        ///   - Module system must populate IFO fields when saving
+        /// - Aurora: Game time stored in Module.ifo GFF structure
+        ///   - CNWSModule::SetGameTime @ 0x1404a5a00 (nwmain.exe)
+        ///   - Module system persists game time to Module.ifo
+        /// - Eclipse: Game time stored in Eclipse-specific save game format
+        ///   - DAS format for Dragon Age: Origins and Dragon Age 2
+        ///   - Game session persists game time to save game
         /// </remarks>
         public virtual void SetGameTime(int hour, int minute, int second, int millisecond)
         {

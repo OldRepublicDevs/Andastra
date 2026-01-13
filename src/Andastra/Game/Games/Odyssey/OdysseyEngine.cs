@@ -69,7 +69,7 @@ namespace Andastra.Game.Games.Odyssey
 
         protected override World CreateWorld()
         {
-            var timeManager = new OdysseyTimeManager();
+            var timeManager = new BaseTimeManager();
             return new World(timeManager);
         }
     }
