@@ -2324,13 +2324,13 @@ namespace Andastra.Game.Games.Aurora
                 case Andastra.Runtime.Core.Enums.ObjectType.Door:
                     _doors.Remove(entity);
                     break;
-                case ObjectType.Trigger:
+                case Andastra.Runtime.Core.Enums.ObjectType.Trigger:
                     _triggers.Remove(entity);
                     break;
-                case ObjectType.Waypoint:
+                case Andastra.Runtime.Core.Enums.ObjectType.Waypoint:
                     _waypoints.Remove(entity);
                     break;
-                case ObjectType.Sound:
+                case Andastra.Runtime.Core.Enums.ObjectType.Sound:
                     _sounds.Remove(entity);
                     break;
             }
