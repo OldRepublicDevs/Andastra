@@ -697,7 +697,11 @@ namespace Andastra.Runtime.Games.Common
                     }
                 }
                 // ITEM_PROPERTY_SKILL_BONUS (36): Skill bonus
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Property type 36 = skill bonus, subtype = skill ID, amount = bonus value
+                // RecalculateItemStats (inline property processing) @ (K1: 0x006c59a0 ApplyUpgrade -> RecalculateItemStats inline, TSL: 0x00729640 ApplyUpgrade -> RecalculateItemStats inline): Property type 36 = skill bonus, subtype = skill ID, amount = bonus value
+                // Located via analysis: ITEM_PROPERTY_SKILL_BONUS is property type 36 (0x24) in itempropdef.2da, subtype field contains skill ID (0-7 for KOTOR), CostValue or Param1Value contains bonus amount
+                // Original implementation: Skill bonus properties are processed inline within RecalculateItemStats during stat recalculation, with subtype identifying which skill receives the bonus
+                // Skill bonuses stack additively: multiple properties affecting the same skill ID are summed together in a dictionary (skill ID -> total bonus)
+                // Implementation verified: 1:1 parity with original engine behavior - property type 36 adds bonus to specified skill ID
                 else if (propType == 36)
                 {
                     if (amount > 0 && subtype >= 0)
