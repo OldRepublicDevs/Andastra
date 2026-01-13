@@ -434,13 +434,14 @@ namespace Andastra.Runtime.Content.Save
         #region Global Variables
 
         // Serialize global variables to GFF format
-        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): SaveGlobalVariables @ 0x005ac670 (calls 0x005ab310 @ 0x005ab310 internally)
-        // Located via string reference: "GLOBALVARS" @ 0x007c27bc
+        // swkotor.exe: 0x0052ad10 (CSWGlobalVariableTable::Save) - Constructs path "{savePath}\GLOBALVARS", calls WriteTable internally
+        // swkotor2.exe: 0x005ac670 (SaveGlobalVariables) - Constructs path "{savePath}\GLOBALVARS", calls FUN_005ab310 @ 0x005ab310 internally
+        // Located via string reference: "GLOBALVARS" @ 0x007484ec (K1), "GLOBALVARS" @ 0x007c27bc (TSL)
         // Original implementation: Creates GFF with "GVT " signature and "V2.0" version string
         // Structure: Catalog lists (CatBoolean, CatNumber, CatLocation, CatString) with separate value arrays
-        // - CatBoolean (list of structs with "Name" field) + ValBoolean (binary byte array)
-        // - CatNumber (list of structs with "Name" field) + ValNumber (binary byte array)
-        // - CatLocation (list of structs with "Name" field) + ValLocation (binary float array, 12 floats per location)
+        // - CatBoolean (list of structs with "Name" field) + ValBoolean (binary byte array, 8 booleans per byte, LSB first)
+        // - CatNumber (list of structs with "Name" field) + ValNumber (binary byte array, one byte per number, range 0-255)
+        // - CatLocation (list of structs with "Name" field) + ValLocation (binary float array, 12 floats per location: x,y,z,ori_x,ori_y,ori_z,6 padding floats)
         // - CatString (list of structs with "Name" field) + ValString (list of strings, indexed by CatString entry order)
         private byte[] SerializeGlobalVariables(GlobalVariableState state)
         {
