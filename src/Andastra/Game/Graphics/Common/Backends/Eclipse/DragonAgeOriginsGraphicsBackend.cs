@@ -791,10 +791,10 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
 
             // Check if area is EclipseArea (Dragon Age Origins uses Eclipse engine)
             // Based on daorigins.exe: Areas are EclipseArea instances with room-based terrain
-            // Use reflection to get the type since we can't reference Andastra.Runtime.Games.Eclipse directly
+            // Use reflection to get the type since we can't reference Runtime.Games.Eclipse directly
             // (would create circular dependency: Graphics.Common -> Games.Eclipse -> Graphics.MonoGame -> Graphics.Common)
             Type eclipseAreaType = area.GetType();
-            if (eclipseAreaType.FullName != "Andastra.Runtime.Games.Eclipse.EclipseArea")
+            if (eclipseAreaType.FullName != "Runtime.Games.Eclipse.EclipseArea")
             {
                 // Not an Eclipse area - no terrain to render
                 return;
@@ -2134,8 +2134,8 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
                 // daorigins.exe: MDL parser reads vertex positions, normals, texture coordinates, and indices
                 // Use MDLOptimizedReader directly since MDLLoader requires IResourceProvider (not IGameResourceProvider)
                 // Then manually convert Content.MDL.MDLModel to Core.MDL.MDLModel using MDLLoader's conversion logic
-                Andastra.Runtime.Core.MDL.MDLModel mdlModel = null;
-                Andastra.Runtime.Content.MDL.MDLModel contentMdlModel;
+                Runtime.Core.MDL.MDLModel mdlModel = null;
+                Runtime.Content.MDL.MDLModel contentMdlModel;
                 using (var reader = new Andastra.Runtime.Content.MDL.MDLOptimizedReader(mdlData, mdxData))
                 {
                     contentMdlModel = reader.Load();
@@ -2144,7 +2144,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
                 // Convert Content.MDL.MDLModel to Core.MDL.MDLModel
                 if (contentMdlModel != null)
                 {
-                    mdlModel = Andastra.Runtime.Content.MDL.MDLLoader.ConvertToCoreModel(contentMdlModel);
+                    mdlModel = Runtime.Content.MDL.MDLLoader.ConvertToCoreModel(contentMdlModel);
                 }
 
                 if (mdlModel == null || mdlModel.RootNode == null)
@@ -2303,7 +2303,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// <param name="vertices">Output list of vertices</param>
         /// <param name="indices">Output list of indices</param>
         private void ExtractModelGeometry(
-            Andastra.Runtime.Core.MDL.MDLNodeData node,
+            Runtime.Core.MDL.MDLNodeData node,
             System.Numerics.Matrix4x4 parentTransform,
             System.Collections.Generic.List<ModelVertex> vertices,
             System.Collections.Generic.List<ushort> indices)
@@ -2368,7 +2368,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// <param name="vertices">Output list of vertices</param>
         /// <param name="indices">Output list of indices</param>
         private void ExtractMeshGeometry(
-            Andastra.Runtime.Core.MDL.MDLMeshData mesh,
+            Runtime.Core.MDL.MDLMeshData mesh,
             System.Numerics.Matrix4x4 transform,
             System.Collections.Generic.List<ModelVertex> vertices,
             System.Collections.Generic.List<ushort> indices)
@@ -2379,34 +2379,34 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
             }
 
             // Get texture coordinates (use TexCoords0 as primary texture coordinates)
-            System.Collections.Generic.List<Andastra.Runtime.Core.MDL.Vector2Data> texCoords;
+            System.Collections.Generic.List<Runtime.Core.MDL.Vector2Data> texCoords;
             if (mesh.TexCoords0 != null && mesh.TexCoords0.Length == mesh.Positions.Length)
             {
-                texCoords = new System.Collections.Generic.List<Andastra.Runtime.Core.MDL.Vector2Data>(mesh.TexCoords0);
+                texCoords = new System.Collections.Generic.List<Runtime.Core.MDL.Vector2Data>(mesh.TexCoords0);
             }
             else
             {
                 // No texture coordinates - use default (0, 0)
-                texCoords = new System.Collections.Generic.List<Andastra.Runtime.Core.MDL.Vector2Data>(mesh.Positions.Length);
+                texCoords = new System.Collections.Generic.List<Runtime.Core.MDL.Vector2Data>(mesh.Positions.Length);
                 for (int i = 0; i < mesh.Positions.Length; i++)
                 {
-                    texCoords.Add(new Andastra.Runtime.Core.MDL.Vector2Data(0.0f, 0.0f));
+                    texCoords.Add(new Runtime.Core.MDL.Vector2Data(0.0f, 0.0f));
                 }
             }
 
             // Get normals (calculate if missing)
-            System.Collections.Generic.List<Andastra.Runtime.Core.MDL.Vector3Data> normals;
+            System.Collections.Generic.List<Runtime.Core.MDL.Vector3Data> normals;
             if (mesh.Normals != null && mesh.Normals.Length == mesh.Positions.Length)
             {
-                normals = new System.Collections.Generic.List<Andastra.Runtime.Core.MDL.Vector3Data>(mesh.Normals);
+                normals = new System.Collections.Generic.List<Runtime.Core.MDL.Vector3Data>(mesh.Normals);
             }
             else
             {
                 // Calculate normals from face data if available
-                normals = new System.Collections.Generic.List<Andastra.Runtime.Core.MDL.Vector3Data>(mesh.Positions.Length);
+                normals = new System.Collections.Generic.List<Runtime.Core.MDL.Vector3Data>(mesh.Positions.Length);
                 for (int i = 0; i < mesh.Positions.Length; i++)
                 {
-                    normals.Add(new Andastra.Runtime.Core.MDL.Vector3Data(0.0f, 0.0f, 1.0f)); // Default normal
+                    normals.Add(new Runtime.Core.MDL.Vector3Data(0.0f, 0.0f, 1.0f)); // Default normal
                 }
 
                 // Calculate face normals and average them per vertex
@@ -2417,16 +2417,16 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
 
                     for (int i = 0; i < mesh.Faces.Length; i++)
                     {
-                        Andastra.Runtime.Core.MDL.MDLFaceData face = mesh.Faces[i];
+                        Runtime.Core.MDL.MDLFaceData face = mesh.Faces[i];
                         ushort v0 = (ushort)face.Vertex0;
                         ushort v1 = (ushort)face.Vertex1;
                         ushort v2 = (ushort)face.Vertex2;
 
                         if (v0 < mesh.Positions.Length && v1 < mesh.Positions.Length && v2 < mesh.Positions.Length)
                         {
-                            Andastra.Runtime.Core.MDL.Vector3Data p0 = mesh.Positions[v0];
-                            Andastra.Runtime.Core.MDL.Vector3Data p1 = mesh.Positions[v1];
-                            Andastra.Runtime.Core.MDL.Vector3Data p2 = mesh.Positions[v2];
+                            Runtime.Core.MDL.Vector3Data p0 = mesh.Positions[v0];
+                            Runtime.Core.MDL.Vector3Data p1 = mesh.Positions[v1];
+                            Runtime.Core.MDL.Vector3Data p2 = mesh.Positions[v2];
 
                             // Calculate face normal
                             System.Numerics.Vector3 edge1 = new System.Numerics.Vector3(p1.X - p0.X, p1.Y - p0.Y, p1.Z - p0.Z);
@@ -2457,7 +2457,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
                         {
                             vertexNormals[i] = new System.Numerics.Vector3(0.0f, 0.0f, 1.0f); // Default normal
                         }
-                        normals[i] = new Andastra.Runtime.Core.MDL.Vector3Data(vertexNormals[i].X, vertexNormals[i].Y, vertexNormals[i].Z);
+                        normals[i] = new Runtime.Core.MDL.Vector3Data(vertexNormals[i].X, vertexNormals[i].Y, vertexNormals[i].Z);
                     }
                 }
             }
@@ -2468,9 +2468,9 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
             // Transform and add vertices
             for (int i = 0; i < mesh.Positions.Length; i++)
             {
-                Andastra.Runtime.Core.MDL.Vector3Data pos = mesh.Positions[i];
-                Andastra.Runtime.Core.MDL.Vector3Data normal = normals[i];
-                Andastra.Runtime.Core.MDL.Vector2Data texCoord = texCoords[i];
+                Runtime.Core.MDL.Vector3Data pos = mesh.Positions[i];
+                Runtime.Core.MDL.Vector3Data normal = normals[i];
+                Runtime.Core.MDL.Vector2Data texCoord = texCoords[i];
 
                 // Transform position
                 System.Numerics.Vector3 position = new System.Numerics.Vector3(pos.X, pos.Y, pos.Z);
@@ -2810,7 +2810,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
                     if (playerTransform != null)
                     {
                         Vector3 playerWorldPos = playerTransform.Position;
-                        Vector2 minimapPlayerPos = CalculateMinimapPosition(playerWorldPos, currentArea, minimapX, minimapY, minimapSize);
+                        System.Numerics.Vector2 minimapPlayerPos = CalculateMinimapPosition(playerWorldPos, currentArea, minimapX, minimapY, minimapSize);
 
                         // Render player position indicator (small colored dot/arrow)
                         const float indicatorSize = 6.0f;
@@ -2835,7 +2835,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
                         if (partyTransform != null)
                         {
                             Vector3 partyWorldPos = partyTransform.Position;
-                            Vector2 minimapPartyPos = CalculateMinimapPosition(partyWorldPos, currentArea, minimapX, minimapY, minimapSize);
+                            System.Numerics.Vector2 minimapPartyPos = CalculateMinimapPosition(partyWorldPos, currentArea, minimapX, minimapY, minimapSize);
 
                             // Render party member position indicator (small colored dot)
                             const float indicatorSize = 4.0f;
@@ -3040,22 +3040,22 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// <param name="minimapY">Minimap Y position on screen.</param>
         /// <param name="minimapSize">Minimap size in pixels.</param>
         /// <returns>Screen position (X, Y) for minimap indicator.</returns>
-        private Vector2 CalculateMinimapPosition(Vector3 worldPos, IArea area, float minimapX, float minimapY, float minimapSize)
+        private System.Numerics.Vector2 CalculateMinimapPosition(System.Numerics.Vector3 worldPos, IArea area, float minimapX, float minimapY, float minimapSize)
         {
             // Based on ARE format: Coordinate mapping from world space to map texture space
             // MapPt1/MapPt2 are texture coordinates (0.0-1.0), WorldPt1/WorldPt2 are world coordinates
             // Formula: mapPos = MapPt1 + (worldPos - WorldPt1) * (MapPt2 - MapPt1) / (WorldPt2 - WorldPt1)
 
             // Default mapping if area doesn't provide map data
-            Vector2 mapPt1 = new Vector2(0.0f, 0.0f);
-            Vector2 mapPt2 = new Vector2(1.0f, 1.0f);
-            Vector2 worldPt1 = new Vector2(-100.0f, -100.0f);
+            System.Numerics.Vector2 mapPt1 = new System.Numerics.Vector2(0.0f, 0.0f);
+            System.Numerics.Vector2 mapPt2 = new System.Numerics.Vector2(1.0f, 1.0f);
+            System.Numerics.Vector2 worldPt1 = new System.Numerics.Vector2(-100.0f, -100.0f);
             Vector2 worldPt2 = new Vector2(100.0f, 100.0f);
 
             // Try to get map data from area (would be stored in ARE file Map structure)
             // For now, use default mapping - full implementation would read from ARE file
             // Use reflection to check if area is EclipseArea type
-            if (area != null && area.GetType().FullName == "Andastra.Runtime.Games.Eclipse.EclipseArea")
+            if (area != null && area.GetType().FullName == "Runtime.Games.Eclipse.EclipseArea")
             {
                 // EclipseArea would have map data properties from ARE file
                 // MapPt1, MapPt2, WorldPt1, WorldPt2, NorthAxis would be read from ARE
