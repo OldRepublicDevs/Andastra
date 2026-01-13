@@ -8,16 +8,22 @@ namespace Andastra.Runtime.Core.Actions
     /// </summary>
     /// <remarks>
     /// Play Animation Action:
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) animation system
-    /// - Located via string references: "Animation" @ 0x007c3440, "AnimList" @ 0x007c3694
+    /// - CSWSObject::AIActionPlayAnimation @ (K1: 0x0057d080, TSL: TODO: Find this address) animation system
+    /// - Located via string references: "Animation" @ 0x00746060 (K1), "Animation" @ 0x007bf604 (TSL)
+    /// - "EVENT_PLAY_ANIMATION" @ 0x00744b3c (K1), "EVENT_PLAY_ANIMATION" @ 0x007bcd74 (TSL)
     /// - "PlayAnim" @ 0x007c346c, "AnimLoop" @ 0x007c4c70 (animation loop flag)
     /// - "CurrentAnim" @ 0x007c38d4, "NextAnim" @ 0x007c38c8 (animation state tracking)
     /// - Animation timing: "frameStart" @ 0x007ba698, "frameEnd" @ 0x007ba668 (animation frame timing)
-    /// - ActionPlayAnimation NWScript function queues animation action to entity action queue
+    /// - ActionPlayAnimation NWScript function (routine 40) queues animation action to entity action queue
+    /// - Called from RunActions when action type is 6 (PlayAnimation) in action node structure
     /// - Original implementation: Plays animation on entity, supports speed and duration parameters
-    /// - Animation IDs reference animation indices in MDL animation arrays
+    /// - Animation IDs reference animation indices in MDL animation arrays (must be >= 10000 for NWScript)
     /// - Speed parameter controls playback rate (1.0 = normal, 2.0 = double speed, 0.5 = half speed)
     /// - Duration parameter controls how long animation plays (0 = play once, >0 = loop for duration)
+    /// - Action node structure: param_1+0x38 = animation ID, param_1+0x3c = speed, param_1+0x40 = duration
+    /// - Function reads animation length from client object, calculates duration based on speed
+    /// - Plays animation via vtable function (field31_0x7c) with animation ID and speed
+    /// - Returns action status: 0 = in progress, 1 = complete, 2 = failed, 3 = aborted
     /// - Action completes when animation finishes or duration expires
     /// </remarks>
     public class ActionPlayAnimation : ActionBase
@@ -41,12 +47,18 @@ namespace Andastra.Runtime.Core.Actions
 
         protected override ActionStatus ExecuteInternal(IEntity actor, float deltaTime)
         {
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ActionPlayAnimation implementation
-            // Located via string references: "Animation" @ 0x007c3440, "PlayAnim" @ 0x007c346c
-            // Original implementation: Plays animation on entity's animation component
-            // Animation ID references animation index in MDL animation array
-            // Speed parameter controls playback rate (1.0 = normal speed)
+            // CSWSObject::AIActionPlayAnimation @ (K1: 0x0057d080, TSL: TODO: Find this address): ActionPlayAnimation implementation
+            // Located via string references: "Animation" @ 0x00746060 (K1), "Animation" @ 0x007bf604 (TSL)
+            // Called from RunActions when action type is 6 (PlayAnimation) in action node structure
+            // Original implementation: Plays animation on entity's animation component via client object
+            // Animation ID references animation index in MDL animation array (must be >= 10000 for NWScript)
+            // Speed parameter controls playback rate (1.0 = normal speed, stored in field44_0xd8)
             // Duration parameter: 0 = play once, >0 = loop for specified duration
+            // Function calculates animation duration: animationLength / speed, or duration * 1000 if duration > 0
+            // Plays animation via vtable function (field31_0x7c) with animation ID (uVar3 & 0xffff)
+            // For fire-and-forget animations (duration = 0), checks AnimationFireAndForget flag
+            // Special handling for player creature: adjusts duration for lockpick/mine animations
+            // Action node structure offsets: +0x38 = animation ID, +0x3c = speed, +0x40 = duration, +0x44 = first run flag, +0x48 = complete flag, +0x4c = duration override
             if (!_started)
             {
                 _started = true;
