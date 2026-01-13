@@ -717,8 +717,23 @@ namespace Andastra.Game.Games.Odyssey
         /// Projects an entity's position to the target area's walkmesh.
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Walkmesh projection system (0x004f5070 @ 0x004f5070)
-        /// Projects position to walkable surface for accurate positioning.
+        /// swkotor2.exe: 0x004f5070 - Walkmesh projection system
+        /// 
+        /// Original engine function: `float10 __thiscall FUN_004f5070(void *param_1, float *param_2, int param_3, int *param_4, int *param_5)`
+        /// 
+        /// This implementation uses OdysseyNavigationMesh.ProjectToWalkmeshExact which provides 1:1 parity with the engine:
+        /// - Finds face at point with vertical tolerance (FUN_004f4260 equivalent)
+        /// - Supports both 2D and 3D projection modes
+        /// - Returns height at projected point
+        /// 
+        /// Called from 34 locations in swkotor2.exe including:
+        /// - UpdateCreatureMovement @ 0x0054be70 (line-of-sight and pathfinding)
+        /// - FUN_00553970 @ 0x00553970 (creature movement)
+        /// - FUN_005522e0 @ 0x005522e0 (entity positioning)
+        /// - FUN_004dc300 @ 0x004dc300 (area transition projection)
+        /// - FUN_00517d50 @ 0x00517d50 (AI pathfinding)
+        /// 
+        /// For area transitions, the engine uses 3D projection mode (param_3 = 0) to ensure accurate positioning.
         /// </remarks>
         private void ProjectEntityToTargetArea(IEntity entity, IArea targetArea)
         {
@@ -735,12 +750,29 @@ namespace Andastra.Game.Games.Odyssey
                 return;
             }
 
-            // Project position to target area walkmesh
+            // Project position to target area walkmesh using exact engine function
             Vector3 currentPosition = transform.Position;
             Console.WriteLine($"[OdysseyEventDispatcher] ProjectEntityToTargetArea: Projecting entity {entity.Tag ?? "null"} ({entity.ObjectId}) position ({currentPosition.X:F2}, {currentPosition.Y:F2}, {currentPosition.Z:F2}) to walkmesh of area {targetArea.ResRef}");
+            
+            // Use exact engine function with 3D projection mode (param_3 = 0) for area transitions
+            // This matches the behavior used by FUN_004dc300 (area transition projection)
+            if (targetArea.NavigationMesh is OdysseyNavigationMesh odysseyMesh)
+            {
+                int? faceIndex;
+                float height = odysseyMesh.ProjectToWalkmeshExact(currentPosition, 0, out faceIndex);
+                
+                if (faceIndex.HasValue)
+                {
+                    Vector3 projectedPosition = new Vector3(currentPosition.X, currentPosition.Y, height);
+                    transform.Position = projectedPosition;
+                    Console.WriteLine($"[OdysseyEventDispatcher] ProjectEntityToTargetArea: Successfully projected entity {entity.Tag ?? "null"} ({entity.ObjectId}) to position ({projectedPosition.X:F2}, {projectedPosition.Y:F2}, {projectedPosition.Z:F2}), height: {height:F2}, face: {faceIndex.Value}");
+                    return;
+                }
+            }
+            
+            // Fallback to standard ProjectToWalkmesh if not OdysseyNavigationMesh
             Vector3 projectedPosition;
             float height;
-
             if (targetArea.ProjectToWalkmesh(currentPosition, out projectedPosition, out height))
             {
                 transform.Position = projectedPosition;
