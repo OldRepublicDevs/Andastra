@@ -34,7 +34,7 @@ using Andastra.Game.Scripting.Interfaces;
 using Andastra.Game.Scripting.VM;
 using JetBrains.Annotations;
 using GameDataManager = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager;
-using Systems = Andastra.Runtime.Games.Odyssey.Systems;
+using Systems = Andastra.Game.Games.Odyssey.Systems;
 
 namespace Andastra.Game.Games.Odyssey.Game
 {
@@ -252,10 +252,9 @@ namespace Andastra.Game.Games.Odyssey.Game
             _partySystem = new PartySystem(_world, templateFactory);
             _combatManager = new CombatManager(_world, _factionManager, _partySystem);
 
-            // Initialize engine API (Kotor1 or TheSithLords based on settings)
-            _engineApi = _settings.Game == KotorGame.K1
-                ? (IEngineApi)new Andastra.Runtime.Engines.Odyssey.EngineApi.Kotor1()
-                : (IEngineApi)new Andastra.Runtime.Engines.Odyssey.EngineApi.TheSithLords();
+            // Initialize engine API (unified OdysseyEngineApi with conditional logic based on game type)
+            BioWareGame gameType = _settings.Game == KotorGame.K1 ? BioWareGame.K1 : BioWareGame.K2;
+            _engineApi = new OdysseyEngineApi(gameType);
 
             // Initialize script executor with game-specific subclass
             // Based on swkotor.exe (KOTOR1) vs swkotor2.exe (KOTOR2) script execution differences

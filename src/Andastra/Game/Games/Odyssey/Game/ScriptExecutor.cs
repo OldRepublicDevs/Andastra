@@ -6,12 +6,12 @@ using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Game.Games.Common;
-using Andastra.Runtime.Scripting.EngineApi;
-using Andastra.Runtime.Scripting.Interfaces;
-using Andastra.Runtime.Scripting.VM;
+using Andastra.Game.Scripting.EngineApi;
+using Andastra.Game.Scripting.Interfaces;
+using Andastra.Game.Scripting.VM;
 using JetBrains.Annotations;
-using EngineApi = Andastra.Runtime.Engines.Odyssey.EngineApi;
-using VM = Andastra.Runtime.Scripting.VM;
+using EngineApi = Andastra.Game.Games.Odyssey.EngineApi;
+using VM = Andastra.Game.Scripting.VM;
 
 namespace Andastra.Game.Games.Odyssey
 {
@@ -194,10 +194,10 @@ namespace Andastra.Game.Games.Odyssey
         public Kotor1ScriptExecutor([NotNull] IWorld world, [NotNull] IEngineApi engineApi, [NotNull] IScriptGlobals globals, [NotNull] Installation installation, [CanBeNull] IGameServicesContext servicesContext = null)
             : base(world, engineApi, globals, installation, servicesContext)
         {
-            // Validate that engine API is Kotor1
-            if (!(engineApi is EngineApi.Kotor1))
+            // Validate that engine API is OdysseyEngineApi with K1 game type
+            if (!(engineApi is EngineApi.OdysseyEngineApi odysseyApi) || !odysseyApi.Game.IsK1())
             {
-                throw new ArgumentException("Kotor1ScriptExecutor requires Kotor1 engine API", nameof(engineApi));
+                throw new ArgumentException("Kotor1ScriptExecutor requires OdysseyEngineApi with K1 game type", nameof(engineApi));
             }
         }
     }
@@ -224,10 +224,10 @@ namespace Andastra.Game.Games.Odyssey
         public Kotor2ScriptExecutor([NotNull] IWorld world, [NotNull] IEngineApi engineApi, [NotNull] IScriptGlobals globals, [NotNull] Installation installation, [CanBeNull] IGameServicesContext servicesContext = null)
             : base(world, engineApi, globals, installation, servicesContext)
         {
-            // Validate that engine API is TheSithLords
-            if (!(engineApi is EngineApi.TheSithLords))
+            // Validate that engine API is OdysseyEngineApi with TSL game type
+            if (!(engineApi is EngineApi.OdysseyEngineApi odysseyApi) || !odysseyApi.Game.IsTSL())
             {
-                throw new ArgumentException("Kotor2ScriptExecutor requires TheSithLords engine API", nameof(engineApi));
+                throw new ArgumentException("Kotor2ScriptExecutor requires OdysseyEngineApi with TSL game type", nameof(engineApi));
             }
         }
     }

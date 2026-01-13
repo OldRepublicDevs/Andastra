@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
+using BioWare.NET.Common;
 using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Odyssey.EngineApi;
-using Andastra.Runtime.Scripting.Interfaces;
+using Andastra.Game.Scripting.Interfaces;
 
 namespace Andastra.Game.Games.Odyssey.Profiles
 {
@@ -49,7 +50,7 @@ namespace Andastra.Game.Games.Odyssey.Profiles
 
         public override IEngineApi CreateEngineApi()
         {
-            return new EngineApi.TheSithLords();
+            return new EngineApi.OdysseyEngineApi(BioWareGame.K2);
         }
 
         protected override Andastra.Runtime.Engines.Common.IResourceConfig CreateResourceConfig()
