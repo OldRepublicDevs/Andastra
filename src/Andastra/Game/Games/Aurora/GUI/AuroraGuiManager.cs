@@ -285,7 +285,7 @@ namespace Andastra.Game.Games.Aurora.GUI
             // Render all controls recursively
             foreach (var control in _currentGui.Gui.Controls)
             {
-                RenderControl(control, Andastra.Runtime.Graphics.Vector2.Zero);
+                RenderControl(control, Runtime.Graphics.Vector2.Zero);
             }
 
             _spriteBatch.End();
@@ -450,7 +450,7 @@ namespace Andastra.Game.Games.Aurora.GUI
         /// <summary>
         /// Recursively renders a GUI control and its children.
         /// </summary>
-        private void RenderControl(GUIControl control, Andastra.Runtime.Graphics.Vector2 parentOffset)
+        private void RenderControl(GUIControl control, Runtime.Graphics.Vector2 parentOffset)
         {
             if (control == null)
             {
@@ -460,9 +460,9 @@ namespace Andastra.Game.Games.Aurora.GUI
             System.Numerics.Vector2 controlPosNum = control.Position;
             System.Numerics.Vector2 parentOffsetNum = new System.Numerics.Vector2(parentOffset.X, parentOffset.Y);
             System.Numerics.Vector2 controlPosResult = controlPosNum + parentOffsetNum;
-            Andastra.Runtime.Graphics.Vector2 controlPosition = new Andastra.Runtime.Graphics.Vector2(controlPosResult.X, controlPosResult.Y);
+            Andastra.Runtime.Graphics.Vector2 controlPosition = new Runtime.Graphics.Vector2(controlPosResult.X, controlPosResult.Y);
             System.Numerics.Vector2 controlSizeNum = control.Size;
-            Andastra.Runtime.Graphics.Vector2 controlSize = new Andastra.Runtime.Graphics.Vector2(controlSizeNum.X, controlSizeNum.Y);
+            Andastra.Runtime.Graphics.Vector2 controlSize = new Runtime.Graphics.Vector2(controlSizeNum.X, controlSizeNum.Y);
 
             // Render control based on type
             switch (control.GuiType)
@@ -498,7 +498,7 @@ namespace Andastra.Game.Games.Aurora.GUI
         /// <summary>
         /// Renders a panel control.
         /// </summary>
-        private void RenderPanel(GUIPanel panel, Andastra.Runtime.Graphics.Vector2 position, Andastra.Runtime.Graphics.Vector2 size)
+        private void RenderPanel(GUIPanel panel, Andastra.Runtime.Graphics.Vector2 position, Runtime.Graphics.Vector2 size)
         {
             // Render panel background using border fill texture if available
             if (panel.Border != null && !panel.Border.Fill.IsBlank())
@@ -507,8 +507,8 @@ namespace Andastra.Game.Games.Aurora.GUI
                 if (fillTexture != null)
                 {
                     float alpha = panel.Alpha;
-                    var color = new Andastra.Runtime.Graphics.Color(255, 255, 255, (byte)(255 * alpha));
-                    _spriteBatch.Draw(fillTexture, new Andastra.Runtime.Graphics.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), color);
+                    var color = new Runtime.Graphics.Color(255, 255, 255, (byte)(255 * alpha));
+                    _spriteBatch.Draw(fillTexture, new Runtime.Graphics.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), color);
                 }
             }
         }
@@ -516,7 +516,7 @@ namespace Andastra.Game.Games.Aurora.GUI
         /// <summary>
         /// Renders a button control.
         /// </summary>
-        private void RenderButton(GUIButton button, Andastra.Runtime.Graphics.Vector2 position, Andastra.Runtime.Graphics.Vector2 size)
+        private void RenderButton(GUIButton button, Andastra.Runtime.Graphics.Vector2 position, Runtime.Graphics.Vector2 size)
         {
             bool isHighlighted = string.Equals(_highlightedButtonTag, button.Tag, StringComparison.OrdinalIgnoreCase);
             bool isSelected = button.IsSelected.HasValue && button.IsSelected.Value != 0;
@@ -542,8 +542,8 @@ namespace Andastra.Game.Games.Aurora.GUI
                 ITexture2D fillTexture = LoadTexture(borderToUse.Fill.ToString());
                 if (fillTexture != null)
                 {
-                    var color = new Andastra.Runtime.Graphics.Color(255, 255, 255, 255);
-                    _spriteBatch.Draw(fillTexture, new Andastra.Runtime.Graphics.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), color);
+                    var color = new Runtime.Graphics.Color(255, 255, 255, 255);
+                    _spriteBatch.Draw(fillTexture, new Runtime.Graphics.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), color);
                 }
             }
 
@@ -551,7 +551,7 @@ namespace Andastra.Game.Games.Aurora.GUI
             if (button.GuiText != null && !string.IsNullOrEmpty(button.GuiText.Text))
             {
                 string text = button.GuiText.Text;
-                var textColor = new Andastra.Runtime.Graphics.Color(
+                var textColor = new Runtime.Graphics.Color(
                     button.GuiText.Color.R,
                     button.GuiText.Color.G,
                     button.GuiText.Color.B,
@@ -560,8 +560,8 @@ namespace Andastra.Game.Games.Aurora.GUI
                 BaseBitmapFont font = LoadFont(button.GuiText.Font.ToString());
                 if (font != null)
                 {
-                    Andastra.Runtime.Graphics.Vector2 textSize = font.MeasureString(text);
-                    Andastra.Runtime.Graphics.Vector2 textPos = CalculateTextPosition(button.GuiText.Alignment, position, size, textSize);
+                    Runtime.Graphics.Vector2 textSize = font.MeasureString(text);
+                    Runtime.Graphics.Vector2 textPos = CalculateTextPosition(button.GuiText.Alignment, position, size, textSize);
                     RenderBitmapText(font, text, textPos, textColor);
                 }
             }
@@ -570,12 +570,12 @@ namespace Andastra.Game.Games.Aurora.GUI
         /// <summary>
         /// Renders a label control.
         /// </summary>
-        private void RenderLabel(GUILabel label, Andastra.Runtime.Graphics.Vector2 position, Andastra.Runtime.Graphics.Vector2 size)
+        private void RenderLabel(GUILabel label, Andastra.Runtime.Graphics.Vector2 position, Runtime.Graphics.Vector2 size)
         {
             if (label.GuiText != null && !string.IsNullOrEmpty(label.GuiText.Text))
             {
                 string text = label.GuiText.Text;
-                var textColor = new Andastra.Runtime.Graphics.Color(
+                var textColor = new Runtime.Graphics.Color(
                     label.GuiText.Color.R,
                     label.GuiText.Color.G,
                     label.GuiText.Color.B,
@@ -584,8 +584,8 @@ namespace Andastra.Game.Games.Aurora.GUI
                 BaseBitmapFont font = LoadFont(label.GuiText.Font.ToString());
                 if (font != null)
                 {
-                    Andastra.Runtime.Graphics.Vector2 textSize = font.MeasureString(text);
-                    Andastra.Runtime.Graphics.Vector2 textPos = CalculateTextPosition(label.GuiText.Alignment, position, size, textSize);
+                    Runtime.Graphics.Vector2 textSize = font.MeasureString(text);
+                    Runtime.Graphics.Vector2 textPos = CalculateTextPosition(label.GuiText.Alignment, position, size, textSize);
                     RenderBitmapText(font, text, textPos, textColor);
                 }
             }
@@ -594,7 +594,7 @@ namespace Andastra.Game.Games.Aurora.GUI
         /// <summary>
         /// Renders a generic control.
         /// </summary>
-        private void RenderGenericControl(GUIControl control, Andastra.Runtime.Graphics.Vector2 position, Andastra.Runtime.Graphics.Vector2 size)
+        private void RenderGenericControl(GUIControl control, Andastra.Runtime.Graphics.Vector2 position, Runtime.Graphics.Vector2 size)
         {
             // Render border/background if available
             if (control.Border != null && !control.Border.Fill.IsBlank())
@@ -602,8 +602,8 @@ namespace Andastra.Game.Games.Aurora.GUI
                 ITexture2D fillTexture = LoadTexture(control.Border.Fill.ToString());
                 if (fillTexture != null)
                 {
-                    var color = new Andastra.Runtime.Graphics.Color(255, 255, 255, 255);
-                    _spriteBatch.Draw(fillTexture, new Andastra.Runtime.Graphics.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), color);
+                    var color = new Runtime.Graphics.Color(255, 255, 255, 255);
+                    _spriteBatch.Draw(fillTexture, new Runtime.Graphics.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), color);
                 }
             }
         }
@@ -611,7 +611,7 @@ namespace Andastra.Game.Games.Aurora.GUI
         /// <summary>
         /// Renders bitmap text character by character.
         /// </summary>
-        private void RenderBitmapText(BaseBitmapFont font, string text, Andastra.Runtime.Graphics.Vector2 position, Andastra.Runtime.Graphics.Color color)
+        private void RenderBitmapText(BaseBitmapFont font, string text, Andastra.Runtime.Graphics.Vector2 position, Runtime.Graphics.Color color)
         {
             if (font == null || string.IsNullOrEmpty(text))
             {
@@ -637,9 +637,9 @@ namespace Andastra.Game.Games.Aurora.GUI
                     ITexture2D texture = font.Texture;
 
                     // Draw character glyph
-                    var sourceRect = new Andastra.Runtime.Graphics.Rectangle(g.SourceX, g.SourceY, g.SourceWidth, g.SourceHeight);
-                    var destRect = new Andastra.Runtime.Graphics.Rectangle((int)x, (int)y, (int)g.Width, (int)g.Height);
-                    _spriteBatch.Draw(texture, destRect, sourceRect, color, 0.0f, Andastra.Runtime.Graphics.Vector2.Zero, Andastra.Runtime.Graphics.SpriteEffects.None, 0.0f);
+                    var sourceRect = new Runtime.Graphics.Rectangle(g.SourceX, g.SourceY, g.SourceWidth, g.SourceHeight);
+                    var destRect = new Runtime.Graphics.Rectangle((int)x, (int)y, (int)g.Width, (int)g.Height);
+                    _spriteBatch.Draw(texture, destRect, sourceRect, color, 0.0f, Andastra.Runtime.Graphics.Vector2.Zero, Runtime.Graphics.SpriteEffects.None, 0.0f);
 
                     x += g.Width + font.SpacingR;
                 }
@@ -766,7 +766,7 @@ namespace Andastra.Game.Games.Aurora.GUI
                 Dimension = selected.Dimension,
                 InnerOffset = selected.InnerOffset,
                 InnerOffsetY = selected.InnerOffsetY,
-                Color = selected.Color != null ? new BioWare.NET.Common.Color(selected.Color) : null,
+                Color = selected.Color != null ? new BioWare.NET.Common.Color(selected.Color.R, selected.Color.G, selected.Color.B, selected.Color.A) : null,
                 Pulsing = selected.Pulsing
             };
         }
@@ -785,7 +785,7 @@ namespace Andastra.Game.Games.Aurora.GUI
                 Dimension = hilightSelected.Dimension,
                 InnerOffset = hilightSelected.InnerOffset,
                 InnerOffsetY = hilightSelected.InnerOffsetY,
-                Color = hilightSelected.Color != null ? new BioWare.NET.Common.Color(hilightSelected.Color) : null,
+                Color = hilightSelected.Color != null ? new BioWare.NET.Common.Color(hilightSelected.Color.R, hilightSelected.Color.G, hilightSelected.Color.B, hilightSelected.Color.A) : null,
                 Pulsing = hilightSelected.Pulsing
             };
         }
