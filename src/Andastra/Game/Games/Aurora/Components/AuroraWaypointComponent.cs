@@ -1,3 +1,4 @@
+using Andastra.Runtime.Core.Enums;
 using Andastra.Game.Games.Common.Components;
 
 namespace Andastra.Game.Games.Aurora.Components
@@ -22,10 +23,12 @@ namespace Andastra.Game.Games.Aurora.Components
     /// - LocalizedName: CExoLocString-based localized name (handled via entity DisplayName property, not in component)
     /// - Tag: CExoString-based tag (handled via entity Tag property, not in component)
     /// - All common waypoint functionality is in BaseWaypointComponent
+    /// - Engine-specific waypoint component classes have been merged into BaseWaypointComponent
     /// </remarks>
     public class AuroraWaypointComponent : BaseWaypointComponent
     {
         public AuroraWaypointComponent()
+            : base(EngineFamily.Aurora)
         {
         }
     }
