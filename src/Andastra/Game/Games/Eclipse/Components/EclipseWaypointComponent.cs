@@ -1,3 +1,4 @@
+using Andastra.Runtime.Core.Enums;
 using Andastra.Game.Games.Common.Components;
 
 namespace Andastra.Game.Games.Eclipse.Components
@@ -16,10 +17,12 @@ namespace Andastra.Game.Games.Eclipse.Components
     /// Eclipse-specific details:
     /// - All common waypoint functionality is in BaseWaypointComponent
     /// - Engine-specific properties (if any) will be added here after reverse engineering
+    /// - Engine-specific waypoint component classes have been merged into BaseWaypointComponent
     /// </remarks>
     public class EclipseWaypointComponent : BaseWaypointComponent
     {
         public EclipseWaypointComponent()
+            : base(EngineFamily.Eclipse)
         {
         }
     }

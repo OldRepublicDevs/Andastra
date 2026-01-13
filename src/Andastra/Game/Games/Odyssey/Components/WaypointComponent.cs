@@ -1,3 +1,4 @@
+using Andastra.Runtime.Core.Enums;
 using Andastra.Game.Games.Common.Components;
 
 namespace Andastra.Game.Games.Odyssey.Components
@@ -21,46 +22,13 @@ namespace Andastra.Game.Games.Odyssey.Components
     /// - Waypoints used for: Module transitions (LinkedTo field), script positioning, area navigation, party spawning
     /// - STARTWAYPOINT: Special waypoint tag used for module entry positioning (party spawns at STARTWAYPOINT if no TransitionDestination)
     /// - Based on UTW file format documentation in vendor/PyKotor/wiki/
-    ///
-    /// Odyssey-specific properties:
-    /// - Appearance: Appearance type (for visual representation in editor)
-    /// - Description: Localized string reference (int) for waypoint description
+    /// - Engine-specific waypoint component classes have been merged into BaseWaypointComponent
     /// </remarks>
     public class OdysseyWaypointComponent : BaseWaypointComponent
     {
-        private int _appearance;
-        private int _description;
-
         public OdysseyWaypointComponent()
+            : base(EngineFamily.Odyssey)
         {
-            _appearance = 0;
-            _description = 0;
-        }
-
-        /// <summary>
-        /// Appearance type (for visual representation in editor).
-        /// </summary>
-        /// <remarks>
-        /// Odyssey-specific: Appearance identifier used in toolset for visual representation.
-        /// Based on Appearance field in UTW GFF structure.
-        /// </remarks>
-        public int Appearance
-        {
-            get => _appearance;
-            set => _appearance = value;
-        }
-
-        /// <summary>
-        /// Description (localized string reference).
-        /// </summary>
-        /// <remarks>
-        /// Odyssey-specific: Localized string reference (int) for waypoint description.
-        /// Based on Description field in UTW GFF structure.
-        /// </remarks>
-        public int Description
-        {
-            get => _description;
-            set => _description = value;
         }
     }
 }

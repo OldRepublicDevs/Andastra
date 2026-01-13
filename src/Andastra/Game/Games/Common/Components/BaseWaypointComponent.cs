@@ -1,3 +1,4 @@
+using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 
@@ -9,8 +10,7 @@ namespace Andastra.Game.Games.Common.Components
     /// <remarks>
     /// Base Waypoint Component Implementation:
     /// - Common waypoint functionality shared across all engines
-    /// - Base classes MUST only contain functionality that is identical across ALL engines
-    /// - Engine-specific details MUST be in subclasses (if any differences exist)
+    /// - Engine-specific waypoint component classes (OdysseyWaypointComponent, AuroraWaypointComponent, EclipseWaypointComponent) have been merged
     /// - Cross-engine analysis shows common waypoint component patterns across all engines.
     ///
     /// Common functionality across all engines:
@@ -23,10 +23,10 @@ namespace Andastra.Game.Games.Common.Components
     /// - Waypoints used for: Module transitions (LinkedTo field), script positioning, area navigation, party spawning
     /// - STARTWAYPOINT: Special waypoint tag used for module entry positioning (party spawns at STARTWAYPOINT if no TransitionDestination)
     ///
-    /// Engine-specific differences (handled in subclasses):
+    /// Engine-specific differences (merged into this class):
     /// - Odyssey: Appearance (int), Description (int - localized string reference)
     /// - Aurora: LocalizedName (CExoLocString) - handled via entity DisplayName property
-    /// - Eclipse/Infinity: May have different properties (to be determined via reverse engineering)
+    /// - Eclipse/Infinity: All common functionality, no engine-specific properties
     /// </remarks>
     public class BaseWaypointComponent : IComponent, IWaypointComponent
     {
@@ -34,18 +34,30 @@ namespace Andastra.Game.Games.Common.Components
         private string _mapNote;
         private bool _mapNoteEnabled;
         private bool _hasMapNote;
+        private readonly EngineFamily _engineFamily;
+        
+        // Odyssey-specific properties (only used when EngineFamily is Odyssey)
+        private int _appearance;
+        private int _description;
 
         public IEntity Owner { get; set; }
 
         public virtual void OnAttach() { }
         public virtual void OnDetach() { }
 
-        public BaseWaypointComponent()
+        /// <summary>
+        /// Initializes a new instance of the base waypoint component.
+        /// </summary>
+        /// <param name="engineFamily">The engine family this component belongs to.</param>
+        public BaseWaypointComponent(EngineFamily engineFamily = EngineFamily.Odyssey)
         {
+            _engineFamily = engineFamily;
             _templateResRef = string.Empty;
             _mapNote = string.Empty;
             _mapNoteEnabled = false;
             _hasMapNote = false;
+            _appearance = 0;
+            _description = 0;
         }
 
         /// <summary>
@@ -98,6 +110,34 @@ namespace Andastra.Game.Games.Common.Components
         {
             get => _hasMapNote;
             set => _hasMapNote = value;
+        }
+
+        /// <summary>
+        /// Appearance type (Odyssey-specific, for visual representation in editor).
+        /// </summary>
+        /// <remarks>
+        /// Odyssey-specific: Appearance identifier used in toolset for visual representation.
+        /// Based on Appearance field in UTW GFF structure.
+        /// Only used when EngineFamily is Odyssey.
+        /// </remarks>
+        public virtual int Appearance
+        {
+            get => _appearance;
+            set => _appearance = value;
+        }
+
+        /// <summary>
+        /// Description (Odyssey-specific, localized string reference).
+        /// </summary>
+        /// <remarks>
+        /// Odyssey-specific: Localized string reference (int) for waypoint description.
+        /// Based on Description field in UTW GFF structure.
+        /// Only used when EngineFamily is Odyssey.
+        /// </remarks>
+        public virtual int Description
+        {
+            get => _description;
+            set => _description = value;
         }
     }
 }
