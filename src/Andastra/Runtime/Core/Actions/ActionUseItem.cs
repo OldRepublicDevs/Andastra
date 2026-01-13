@@ -216,7 +216,7 @@ namespace Andastra.Runtime.Core.Actions
                 {
                     // Load baseitems.2da to get item class and consumable information
                     // swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - Base item stats loaded from baseitems.2da via GameDataProvider
-                    // swkotor2.exe: 0x005ff170 (FUN_005ff170) - Base item stats loaded from baseitems.2da via GameDataProvider
+                    // swkotor2.exe: 0x005ff170 (CSWBaseItemArray::Load) - Base item stats loaded from baseitems.2da via GameDataProvider
                     TwoDA baseitemsTable = null;
                     if (caster.World.GameDataProvider != null)
                     {
