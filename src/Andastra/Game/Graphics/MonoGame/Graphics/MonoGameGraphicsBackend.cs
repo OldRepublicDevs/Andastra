@@ -2,6 +2,8 @@ using System;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Game.Graphics.MonoGame.Graphics;
+using Andastra.Runtime.Core.Camera;
+using Andastra.Runtime.Content.Interfaces;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -173,7 +175,7 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
 
         public object CreateDialogueCameraController(object cameraController)
         {
-            if (cameraController is Core.Camera.CameraController coreCameraController)
+            if (cameraController is CameraController coreCameraController)
             {
                 return new Camera.MonoGameDialogueCameraController(coreCameraController);
             }
@@ -182,7 +184,7 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
 
         public object CreateSoundPlayer(object resourceProvider)
         {
-            if (resourceProvider is Content.Interfaces.IGameResourceProvider provider)
+            if (resourceProvider is IGameResourceProvider provider)
             {
                 var spatialAudio = CreateSpatialAudio();
                 var monoGameSpatialAudio = spatialAudio as MonoGameSpatialAudio;
@@ -194,7 +196,7 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
 
         public object CreateMusicPlayer(object resourceProvider)
         {
-            if (resourceProvider is Content.Interfaces.IGameResourceProvider provider)
+            if (resourceProvider is IGameResourceProvider provider)
             {
                 return new Audio.MonoGameMusicPlayer(provider);
             }
@@ -203,7 +205,7 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
 
         public object CreateVoicePlayer(object resourceProvider)
         {
-            if (resourceProvider is Content.Interfaces.IGameResourceProvider provider)
+            if (resourceProvider is IGameResourceProvider provider)
             {
                 var spatialAudio = CreateSpatialAudio();
                 var monoGameSpatialAudio = spatialAudio as MonoGameSpatialAudio;

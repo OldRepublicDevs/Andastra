@@ -23,7 +23,7 @@ namespace Andastra.Game.Graphics.Common.Backends
     /// </summary>
     /// <remarks>
     /// Odyssey Engine Graphics Backend:
-    /// - Based on reverse engineering of swkotor.exe and swkotor2.exe
+    /// - Based on verified components of swkotor.exe and swkotor2.exe
     /// - Original game graphics system: OpenGL (OPENGL32.DLL) with WGL extensions
     /// - Graphics initialization:
     ///   - swkotor.exe: 0x0044dab0 @ 0x0044dab0 (OpenGL context creation)
@@ -530,7 +530,7 @@ namespace Andastra.Game.Graphics.Common.Backends
 
         /// <summary>
         /// Common OpenGL context creation pattern shared by both KOTOR1 and KOTOR2.
-        /// Based on reverse engineering of swkotor.exe and swkotor2.exe.
+        /// Based on verified components of swkotor.exe and swkotor2.exe.
         /// </summary>
         /// <remarks>
         /// Common Pattern (both games):
@@ -571,7 +571,7 @@ namespace Andastra.Game.Graphics.Common.Backends
 
         /// <summary>
         /// Common texture initialization pattern shared by both KOTOR1 and KOTOR2.
-        /// Based on reverse engineering of swkotor.exe and swkotor2.exe.
+        /// Based on verified components of swkotor.exe and swkotor2.exe.
         /// </summary>
         /// <remarks>
         /// Common Pattern (both games):

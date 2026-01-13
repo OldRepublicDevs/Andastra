@@ -17,7 +17,7 @@ namespace Andastra.Game.Graphics.Common.Backends
     /// </summary>
     /// <remarks>
     /// Aurora Engine Graphics Backend:
-    /// - Based on reverse engineering of nwmain.exe
+    /// - Based on verified components of nwmain.exe
     /// - Original engine graphics system: DirectX 8/9 or OpenGL with custom rendering pipeline
     /// - Graphics initialization: Matches Aurora engine initialization code
     /// - Located via reverse engineering: DirectX/OpenGL calls, rendering pipeline, shader usage

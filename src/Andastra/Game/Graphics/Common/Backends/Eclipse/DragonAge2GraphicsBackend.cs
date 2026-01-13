@@ -22,7 +22,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
     /// </summary>
     /// <remarks>
     /// Dragon Age 2 Graphics Backend:
-    /// - Based on reverse engineering of DragonAge2.exe
+    /// - Based on verified components of DragonAge2.exe
     /// - Original game graphics system: DirectX 9 with Eclipse engine rendering pipeline
     /// - Graphics initialization: Matches DragonAge2.exe initialization code exactly
     /// - Located via reverse engineering: DirectX 9 calls, rendering pipeline, shader usage
@@ -82,7 +82,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// Matches DragonAge2.exe rendering code exactly.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of DragonAge2.exe:
+        /// Based on verified components of DragonAge2.exe:
         /// - Dragon Age 2 uses DirectX 9 for rendering
         /// - Located via reverse engineering: DirectX 9 calls, rendering pipeline, shader usage
         /// - Original implementation: IDirect3DDevice9::Clear, IDirect3DDevice9::BeginScene, rendering, IDirect3DDevice9::EndScene
@@ -168,7 +168,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// Matches DragonAge2.exe 3D scene rendering code.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of DragonAge2.exe:
+        /// Based on verified components of DragonAge2.exe:
         /// - Scene rendering includes terrain, objects, characters, effects
         /// - Uses DirectX 9 fixed-function pipeline and shaders
         /// - Rendering order: Terrain -> Static objects -> Characters -> Effects
@@ -201,7 +201,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// Matches DragonAge2.exe UI rendering code.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of DragonAge2.exe:
+        /// Based on verified components of DragonAge2.exe:
         /// - UI rendering happens after 3D scene
         /// - Uses DirectX 9 sprite rendering for UI elements
         /// - Includes HUD, dialogue boxes, menus
@@ -227,7 +227,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// Matches IDirect3DDevice9::Clear() exactly.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of DragonAge2.exe:
+        /// Based on verified components of DragonAge2.exe:
         /// - IDirect3DDevice9::Clear is at vtable index 43
         /// - Clears color, depth, and/or stencil buffers
         /// - Parameters: Flags, Color, Z, Stencil
@@ -248,7 +248,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// Matches IDirect3DDevice9::SetViewport() exactly.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of DragonAge2.exe:
+        /// Based on verified components of DragonAge2.exe:
         /// - IDirect3DDevice9::SetViewport is at vtable index 40
         /// - Sets viewport dimensions and depth range
         /// </remarks>
@@ -278,7 +278,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// Matches IDirect3DDevice9::SetRenderState() exactly.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of DragonAge2.exe:
+        /// Based on verified components of DragonAge2.exe:
         /// - IDirect3DDevice9::SetRenderState is at vtable index 92
         /// - Sets rendering state values (culling, lighting, blending, etc.)
         /// </remarks>
@@ -354,7 +354,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
         /// Matches DragonAge2.exe texture loading code exactly.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of DragonAge2.exe texture loading:
+        /// Based on verified components of DragonAge2.exe texture loading:
         /// - Dragon Age 2 uses DDS (DirectDraw Surface) format for textures
         /// - Located via string references: ".dds" extension found throughout executable
         /// - "D3DXCreateTextureFromFileInMemoryEx" @ 0x00d155f0 (D3DX texture loading function)

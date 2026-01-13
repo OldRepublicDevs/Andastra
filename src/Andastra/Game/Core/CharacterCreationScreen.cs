@@ -39,7 +39,7 @@ namespace Andastra.Game.Core
     /// - Load Screen: K1 uses "load_chargen", K2 uses "load_default"
     /// - Flow: Main Menu → Character Creation → Module Load
     ///
-    /// Based on reverse engineering of:
+    /// Based on verified components of:
     /// - swkotor.exe: Character generation functions
     /// - swkotor2.exe: Character generation functions
     /// - vendor/reone: CharacterGeneration class implementation
@@ -284,7 +284,7 @@ namespace Andastra.Game.Core
         /// - Manages step navigation and validation
         /// - Processes step-specific input (class selection, attributes, skills, feats, portrait, name)
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - swkotor.exe: Character generation input handling and update loop
         /// - swkotor2.exe: Character generation input handling and update loop
         /// - vendor/reone: CharacterGeneration::handle() and CharacterGeneration::update() methods
@@ -979,7 +979,7 @@ namespace Andastra.Game.Core
         /// - Renders navigation buttons (Next, Back, Cancel, Finish)
         /// - Updates GUI control states based on current step and selections
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - swkotor.exe: Character generation rendering functions
         /// - swkotor2.exe: Character generation rendering functions
         /// - vendor/reone: CharacterGeneration::draw() method

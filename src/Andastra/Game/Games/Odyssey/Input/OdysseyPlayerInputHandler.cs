@@ -14,7 +14,7 @@ namespace Andastra.Game.Games.Odyssey.Input
     /// <remarks>
     /// Odyssey Player Input Handler Base:
     /// - Common input handling logic shared between K1 (swkotor.exe) and K2 (swkotor2.exe)
-    /// - Based on reverse engineering of both swkotor.exe and swkotor2.exe input systems
+    /// - Based on verified components of both swkotor.exe and swkotor2.exe input systems
     /// - Located via string references:
     ///   - K1 (swkotor.exe): "Input" @ 0x007c2520, "Mouse" @ 0x007cb908, "Mouse Sensitivity" @ 0x007c85cc
     ///   - K2 (swkotor2.exe): "Input" @ 0x007c2520, "Mouse" @ 0x007cb908, "Mouse Sensitivity" @ 0x007c85cc

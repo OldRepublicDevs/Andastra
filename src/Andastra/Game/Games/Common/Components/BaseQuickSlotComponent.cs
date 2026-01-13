@@ -17,7 +17,7 @@ namespace Andastra.Game.Games.Common.Components
     /// - Common functionality: Item slots, Ability slots, Slot type checking, Get/Set operations
     /// - Engine-specific: Number of slots, GFF field names, Serialization format, Function addresses, Ability ID format
     ///
-    /// Based on reverse engineering of quick slot systems across multiple BioWare engines.
+    /// Based on verified components of quick slot systems across multiple BioWare engines.
     ///
     /// Common structure across engines:
     /// - Item slots: Dictionary mapping slot index to item entity

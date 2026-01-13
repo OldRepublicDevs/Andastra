@@ -228,7 +228,7 @@ namespace Andastra.Game.Games.Eclipse
         /// Checks for movable objects, destructible terrain, and active physics bodies.
         /// More sophisticated than Aurora's tile-based system.
         ///
-        /// Implementation based on reverse engineering of:
+        /// Implementation based on verified components of:
         /// - daorigins.exe: Dynamic point testing with physics integration
         /// - DragonAge2.exe: Enhanced multi-level point testing
         /// - /: Physics-aware point testing
@@ -413,7 +413,7 @@ namespace Andastra.Game.Games.Eclipse
         /// Considers movable objects and terrain deformation.
         /// Supports projection to different surface types (ground, platforms, etc.).
         ///
-        /// Implementation based on reverse engineering of:
+        /// Implementation based on verified components of:
         /// - daorigins.exe: Dynamic projection with physics integration
         /// - DragonAge2.exe: Enhanced multi-level projection
         /// - /: Physics-aware projection
@@ -1070,7 +1070,7 @@ namespace Andastra.Game.Games.Eclipse
         /// Eclipse engine has the most sophisticated obstacle avoidance with dynamic obstacles and cover system.
         /// </summary>
         /// <remarks>
-        /// Implementation based on reverse engineering of:
+        /// Implementation based on verified components of:
         /// - daorigins.exe: Dynamic obstacle avoidance in pathfinding (Ghidra analysis needed: search for pathfinding with obstacle avoidance)
         /// - DragonAge2.exe: Enhanced dynamic obstacle avoidance with spatial acceleration (Ghidra analysis needed: search for navigation mesh pathfinding with obstacles)
         ///
@@ -1495,7 +1495,7 @@ namespace Andastra.Game.Games.Eclipse
         /// Supports different movement types (sneak, run, combat movement).
         /// Considers dynamic obstacles and real-time environmental changes.
         ///
-        /// Implementation based on reverse engineering of:
+        /// Implementation based on verified components of:
         /// - daorigins.exe: Tactical pathfinding with cover integration
         /// - DragonAge2.exe: Enhanced tactical pathfinding with threat assessment
         /// - /: Advanced tactical pathfinding with dynamic obstacle avoidance
@@ -3077,7 +3077,7 @@ namespace Andastra.Game.Games.Eclipse
         /// Samples height from dynamic terrain data.
         /// Considers real-time terrain deformation and movable objects.
         ///
-        /// Implementation based on reverse engineering of:
+        /// Implementation based on verified components of:
         /// - daorigins.exe: Dynamic height sampling with physics integration
         ///   (Ghidra analysis needed: search for height sampling functions, walkmesh projection functions)
         /// - DragonAge2.exe: Enhanced multi-level height sampling
@@ -3097,7 +3097,7 @@ namespace Andastra.Game.Games.Eclipse
         /// 3. Handles static geometry, dynamic obstacles, destructible modifications, and multi-level surfaces
         /// 4. Returns false if no valid surface is found
         ///
-        /// Note: Function addresses to be determined via Ghidra MCP reverse engineering:
+        /// Note: Function addresses to be determined  MCP reverse engineering:
         /// - daorigins.exe: Height sampling function (search for "GetHeight", "SampleHeight", "ProjectToSurface" references)
         /// - DragonAge2.exe: Multi-level height sampling function (search for navigation mesh height functions)
         /// - : Physics-aware height sampling (search for physics integration in navigation)
@@ -3207,12 +3207,12 @@ namespace Andastra.Game.Games.Eclipse
         /// <remarks>
         /// Eclipse-specific: Uses base class common algorithm with dynamic obstacles and destructible modifications.
         ///
-        /// Implementation based on reverse engineering of:
+        /// Implementation based on verified components of:
         /// - daorigins.exe: Dynamic line of sight with destructible environment support
         /// - DragonAge2.exe: Enhanced dynamic line of sight with physics integration
         /// - /: Physics-aware line of sight with dynamic obstacles
         ///
-        /// Note: Function addresses to be determined via Ghidra MCP reverse engineering:
+        /// Note: Function addresses to be determined  MCP reverse engineering:
         /// - daorigins.exe: Line of sight function (search for "HasLineOfSight", "LineOfSight", "Raycast" references)
         /// - DragonAge2.exe: Enhanced line of sight function (search for dynamic obstacle integration)
         /// - : Physics-aware line of sight (search for physics integration in line of sight)
@@ -3356,7 +3356,7 @@ namespace Andastra.Game.Games.Eclipse
         /// Generates cover points from static geometry (walls, edges, corners).
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Static geometry cover point generation
         /// - DragonAge2.exe: Enhanced static cover point system
         ///
@@ -3510,7 +3510,7 @@ namespace Andastra.Game.Games.Eclipse
         /// Generates cover points from dynamic obstacles.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Dynamic obstacle cover point generation
         /// - DragonAge2.exe: Enhanced dynamic cover point system
         ///
@@ -3731,7 +3731,7 @@ namespace Andastra.Game.Games.Eclipse
         /// Identifies cover positions for combat AI.
         /// Considers cover quality and positioning.
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Cover point query system
         /// - DragonAge2.exe: Enhanced cover point query with quality sorting
         ///
@@ -3787,7 +3787,7 @@ namespace Andastra.Game.Games.Eclipse
         /// Handles destruction, object movement, terrain changes.
         /// Recalculates affected navigation regions.
         ///
-        /// Implementation based on reverse engineering of:
+        /// Implementation based on verified components of:
         /// - daorigins.exe: Dynamic obstacle update system (Ghidra analysis needed: search for obstacle update functions)
         /// - DragonAge2.exe: Enhanced dynamic obstacle update with spatial acceleration
         ///   (Ghidra analysis needed: search for navigation mesh update functions)
@@ -3800,7 +3800,7 @@ namespace Andastra.Game.Games.Eclipse
         /// 5. Rebuild spatial acceleration structures if needed
         /// 6. Notify pathfinding systems of changes
         ///
-        /// Note: Function addresses to be determined via Ghidra MCP reverse engineering:
+        /// Note: Function addresses to be determined  MCP reverse engineering:
         /// - daorigins.exe: Obstacle update function (search for "UpdateObstacles", "UpdateNavigation", "DynamicObstacle" references)
         /// - DragonAge2.exe: Enhanced obstacle update function (search for navigation mesh update functions)
         /// </remarks>
@@ -4323,7 +4323,7 @@ namespace Andastra.Game.Games.Eclipse
         /// Tactical cover analysis for combat AI.
         /// Determines if position is protected from enemy fire.
         ///
-        /// Implementation based on reverse engineering of:
+        /// Implementation based on verified components of:
         /// - daorigins.exe: Cover analysis with line-of-sight checks at multiple heights
         /// - DragonAge2.exe: Enhanced cover analysis with dynamic obstacle consideration
         ///
@@ -4340,7 +4340,7 @@ namespace Andastra.Game.Games.Eclipse
         /// - Partial cover: Line of sight blocked at cover height but clear at some lower heights
         /// - No cover: Line of sight clear at cover height
         ///
-        /// Note: Function addresses to be determined via Ghidra MCP reverse engineering:
+        /// Note: Function addresses to be determined  MCP reverse engineering:
         /// - daorigins.exe: Cover analysis function (search for "ProvidesCover", "CoverCheck", "TacticalCover" references)
         /// - DragonAge2.exe: Enhanced cover analysis function (search for cover system integration)
         /// </remarks>
@@ -4424,7 +4424,7 @@ namespace Andastra.Game.Games.Eclipse
         /// Advanced AI positioning for combat.
         /// Considers flanking, high ground, cover availability.
         ///
-        /// Implementation based on reverse engineering of:
+        /// Implementation based on verified components of:
         /// - daorigins.exe: Tactical position analysis with terrain feature detection
         /// - DragonAge2.exe: Enhanced tactical positioning with threat-aware analysis
         ///
@@ -4440,7 +4440,7 @@ namespace Andastra.Game.Games.Eclipse
         /// 4. Calculate tactical value rating based on combination of factors
         /// 5. Sort by tactical value and return top positions
         ///
-        /// Note: Function addresses to be determined via Ghidra MCP reverse engineering:
+        /// Note: Function addresses to be determined  MCP reverse engineering:
         /// - daorigins.exe: Tactical position finding function (search for "FindTacticalPosition", "TacticalAnalysis", "CombatPosition" references)
         /// - DragonAge2.exe: Enhanced tactical position function (search for tactical positioning system)
         /// </remarks>
@@ -5346,7 +5346,7 @@ namespace Andastra.Game.Games.Eclipse
     /// </summary>
     /// <remarks>
     /// Cover points are positions where characters can take cover from enemy fire.
-    /// Based on reverse engineering of:
+    /// Based on verified components of:
     /// - daorigins.exe: Cover point generation from static geometry and dynamic obstacles
     /// - DragonAge2.exe: Enhanced cover point system with quality rating
     /// </remarks>

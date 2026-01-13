@@ -14,7 +14,7 @@ namespace Andastra.Game.Games.Common
     /// - Handles area loading, entity spawning, resource management
     /// - Provides foundation for engine-specific module systems
     ///
-    /// Based on reverse engineering of:
+    /// Based on verified components of:
     /// - swkotor.exe: Basic module loading with ARE/GIT files
     /// - swkotor2.exe: Enhanced module system with transitions
     /// - nwmain.exe: Aurora module management

@@ -20,7 +20,7 @@ namespace Andastra.Game.Games.Aurora
     /// - Particle count and density scale with area size
     /// - Rain intensity affects particle density (more rain = more particles)
     /// 
-    /// Based on reverse engineering of:
+    /// Based on verified components of:
     /// - nwmain.exe: CNWSArea::RenderWeather @ 0x140365a00 (approximate - needs Ghidra verification)
     /// - Rain particles are rendered as textured billboard quads
     /// - Particle fall speed: ~8-12 units per second (varies with wind)

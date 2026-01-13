@@ -14,7 +14,7 @@ namespace Andastra.Game.Games.Common
     /// - Defines the interface for game session management that all engines must provide
     /// - Engine-specific implementations must be in concrete classes (OdysseyGameSession, AuroraGameSession, EclipseGameSession)
     ///
-    /// Cross-Engine Reverse Engineering Analysis:
+    /// Cross-Engine verified components Analysis:
     ///
     /// Common Module State Management Pattern (VERIFIED across Odyssey and Aurora):
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x006caab0 @ 0x006caab0 (server command parser)

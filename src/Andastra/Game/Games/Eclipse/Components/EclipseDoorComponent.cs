@@ -15,7 +15,7 @@ namespace Andastra.Game.Games.Eclipse.Components
     /// - Based on daorigins.exe and DragonAge2.exe (Dragon Age: Origins, Dragon Age II)
     /// - Note: Eclipse engines may not have traditional door systems like Odyssey/Aurora
     /// - If doors are supported, they would use Eclipse-specific file formats and systems
-    /// - Original implementation: Needs reverse engineering from daorigins.exe and DragonAge2.exe
+    /// - Original implementation: Needs verified components from daorigins.exe and DragonAge2.exe
     /// </remarks>
     public class EclipseDoorComponent : BaseDoorComponent
     {
@@ -31,7 +31,7 @@ namespace Andastra.Game.Games.Eclipse.Components
         /// Module Transition Check:
         /// - Eclipse engines may not support module transitions via doors
         /// - If supported, implementation would be Eclipse-specific
-        /// - Original implementation: Needs reverse engineering from daorigins.exe and DragonAge2.exe
+        /// - Original implementation: Needs verified components from daorigins.exe and DragonAge2.exe
         /// </remarks>
         public override bool IsModuleTransition
         {
@@ -45,7 +45,7 @@ namespace Andastra.Game.Games.Eclipse.Components
         /// Area Transition Check:
         /// - Eclipse engines may not support area transitions via doors
         /// - If supported, implementation would be Eclipse-specific
-        /// - Original implementation: Needs reverse engineering from daorigins.exe and DragonAge2.exe
+        /// - Original implementation: Needs verified components from daorigins.exe and DragonAge2.exe
         /// </remarks>
         public override bool IsAreaTransition
         {

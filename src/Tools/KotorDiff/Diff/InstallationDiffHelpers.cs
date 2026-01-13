@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using BioWare.NET.Resource.Formats.Capsule;
+using BioWare.NET.Extract.Capsule;
 using BioWare.NET.Resource.Formats.ERF;
 using BioWare.NET.Resource.Formats.GFF;
 using BioWare.NET.Resource.Formats.SSF;
@@ -43,7 +43,7 @@ namespace KotorDiff.Diff
             byte[] moddedData = null,
             string moddedPath = null,
             DiffContext context = null,
-            global::TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null,
+            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null,
             bool createPatch = true)
         {
             if (logFunc == null)
@@ -118,7 +118,7 @@ namespace KotorDiff.Diff
             string capsuleDestination,
             string capsulePath = null,
             Action<string> logFunc = null,
-            global::TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
+            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             if (logFunc == null)
             {
@@ -195,7 +195,7 @@ namespace KotorDiff.Diff
             string moddedPath = null,
             DiffContext context = null,
             Action<string> logFunc = null,
-            global::TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
+            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             if (logFunc == null)
             {
@@ -422,12 +422,12 @@ namespace KotorDiff.Diff
         public static void ExtractAndAddCapsuleResources(
             string capsulePath,
             ModificationsByType modificationsByType,
-            global::TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter,
+            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter,
             Action<string> logFunc)
         {
             try
             {
-                var capsule = new BioWare.NET.Resource.Formats.Capsule.Capsule(capsulePath);
+                var capsule = new BioWare.NET.Extract.Capsule.Capsule(capsulePath);
                 string capsuleName = Path.GetFileName(capsulePath);
 
                 // Determine destination based on capsule location and type

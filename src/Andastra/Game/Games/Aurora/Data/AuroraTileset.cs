@@ -30,7 +30,7 @@ namespace Andastra.Game.Games.Aurora.Data
     /// - [TILES] section: Count (number of tiles)
     /// - [TILE0], [TILE1], ... sections: Model (ResRef), TopLeft, TopLeftHeight, and other tile properties
     ///
-    /// Based on reverse engineering of nwmain.exe:
+    /// Based on verified components of nwmain.exe:
     /// - CNWTileSet::LoadTileSet @ 0x1402c6890 - Loads and parses SET file
     /// - CResSET::GetSectionEntryValue @ 0x1402cc370 - Reads section/entry values
     /// - CNWTileSet::GetTileData @ 0x1402c67d0 - Returns tile data for Tile_ID

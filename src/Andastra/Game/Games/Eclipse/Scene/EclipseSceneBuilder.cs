@@ -39,7 +39,7 @@ namespace Andastra.Game.Games.Eclipse.Scene
     /// - Room geometry comes from separate model files (not stored in ARE)
     /// - Room names are used as section identifiers for visibility culling
     ///
-    /// Based on reverse engineering of Eclipse engine area loading:
+    /// Based on verified components of Eclipse engine area loading:
     /// - daorigins.exe: Area loading system with room-based sections
     /// - DragonAge2.exe: Enhanced area loading with advanced features
     /// - ARE file format: Same GFF structure as Odyssey/Aurora engines

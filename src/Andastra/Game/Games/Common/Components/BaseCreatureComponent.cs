@@ -206,7 +206,7 @@ namespace Andastra.Game.Games.Common.Components
 
         /// <summary>
         /// Gets base attack bonus using classes.2da for accurate calculation.
-        /// Based on reverse engineering of swkotor.exe, swkotor2.exe, nwmain.exe:
+        /// Based on verified components of swkotor.exe, swkotor2.exe, nwmain.exe:
         /// - Each class has an attackbonustable column in classes.2da that references a BAB progression table
         /// - BAB progression tables (e.g., cls_atk_jedi_guardian.2da) contain BAB values per level
         /// - For multi-class characters, BAB from all classes is summed together
@@ -215,7 +215,7 @@ namespace Andastra.Game.Games.Common.Components
         /// <param name="gameDataProvider">Game data provider for accessing 2DA tables.</param>
         /// <returns>Total base attack bonus from all class levels.</returns>
         /// <remarks>
-        /// Based on reverse engineering of swkotor.exe, swkotor2.exe, nwmain.exe:
+        /// Based on verified components of swkotor.exe, swkotor2.exe, nwmain.exe:
         /// - swkotor2.exe: 0x005d63d0 @ 0x005d63d0 reads "attackbonustable" column from classes.2da
         /// - Attack bonus tables are named like "cls_atk_jedi_guardian" (referenced in classes.2da)
         /// - Each attack bonus table has rows for each level (row 0 = level 1, row 1 = level 2, etc.)

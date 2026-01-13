@@ -615,7 +615,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
             // Streaming resources are loaded on-demand as levels are entered
             // Eclipse Engine uses streaming for level-specific resources
             //
-            // Ghidra Reverse Engineering Analysis (daorigins.exe):
+            // Ghidra verified components Analysis (daorigins.exe):
             //   - "DragonAge::Streaming" namespace string found at 0x00ad7a34 (Unicode)
             //     * This is a namespace identifier for the streaming system
             //     * Located in data section, no direct cross-references found (likely used via lookup table)
@@ -791,7 +791,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
             // the original resource cannot be found. These are not embedded in the executable, but
             // rather are resource names that the engine knows to use as fallbacks.
             //
-            // Ghidra Reverse Engineering Analysis (daorigins.exe and DragonAge2.exe):
+            // Ghidra verified components Analysis (daorigins.exe and DragonAge2.exe):
             //   - Default resource name strings found in executables:
             //     * daorigins.exe: "default_missing" @ 0x00ae4a70 (Unicode string)
             //     * daorigins.exe: "Default_Missing.mat" @ 0x00b18708 (Unicode string)
@@ -863,7 +863,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
 
         /// <summary>
         /// Gets the hardcoded fallback resource name for a given resource type.
-        /// Based on reverse engineering analysis of daorigins.exe and DragonAge2.exe.
+        /// Based on verified components analysis of daorigins.exe and DragonAge2.exe.
         /// </summary>
         /// <param name="resType">The resource type to get a fallback for.</param>
         /// <param name="gameType">The game type (DA_ORIGINS or DA2) to determine game-specific fallbacks.</param>
@@ -884,7 +884,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
             }
 
             // Map resource types to their default fallback resource names
-            // Based on Ghidra reverse engineering of daorigins.exe and DragonAge2.exe
+            // Based on Ghidra verified components of daorigins.exe and DragonAge2.exe
             string extension = resType.Extension?.ToLowerInvariant() ?? "";
 
             // Material resources (MAT)

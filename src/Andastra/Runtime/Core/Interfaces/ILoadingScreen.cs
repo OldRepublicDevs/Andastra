@@ -20,7 +20,7 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - Loading hints: Random hints from loadscreenhints.2da displayed during loading
     /// - Engine-specific implementations provide concrete functionality for their respective engines
     ///
-    /// Based on reverse engineering of loading screen systems:
+    /// Based on verified components of loading screen systems:
     /// - Odyssey (swkotor.exe, swkotor2.exe): GUI panel-based loading screen with progress bar and hints
     /// - Aurora (nwmain.exe): Similar GUI panel-based loading screen system
     /// - Eclipse (daorigins.exe, DragonAge2.exe): Advanced loading screen with animated backgrounds

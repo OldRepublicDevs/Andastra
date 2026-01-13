@@ -31,7 +31,7 @@ namespace Andastra.Game.Games.Aurora
     /// - Implements walkmesh navigation and area transitions
     /// - Supports area effects and environmental systems
     ///
-    /// Based on reverse engineering of:
+    /// Based on verified components of:
     /// - nwmain.exe: Area loading and management functions
     /// - Aurora engine area properties and entity management
     /// - ARE/GIT format documentation in vendor/PyKotor/wiki/
@@ -2283,7 +2283,7 @@ namespace Andastra.Game.Games.Aurora
         /// Entities are removed from type-specific lists (creatures, placeables, doors, etc.)
         /// when they are destroyed or removed from the area.
         ///
-        /// Reverse Engineering Notes:
+        /// verified components Notes:
         /// - nwmain.exe: CNWSCreature::RemoveFromArea @ 0x14039e6b0 calls CNWSArea::RemoveObjectFromArea
         /// - CNWSArea::RemoveObjectFromArea removes entity from area's type-specific collections
         /// - Entity removal sequence: Remove from area collections, then remove from world collections

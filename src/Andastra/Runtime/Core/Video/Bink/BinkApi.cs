@@ -6,7 +6,7 @@ namespace Andastra.Runtime.Core.Video.Bink
     /// <summary>
     /// P/Invoke declarations for BINKW32.DLL (Bink Video decoder).
     /// Based on swkotor.exe/swkotor2.exe: Bink API usage
-    /// Located via Ghidra reverse engineering: 0x00404c80 @ 0x00404c80, 0x004053e0 @ 0x004053e0
+    /// Located  reverse engineering: 0x00404c80 @ 0x00404c80, 0x004053e0 @ 0x004053e0
     /// Original implementation: Uses BINKW32.DLL for BIK format video playback
     /// </summary>
     internal static class BinkApi
@@ -15,7 +15,7 @@ namespace Andastra.Runtime.Core.Video.Bink
 
         /// <summary>
         /// BINK structure - Main Bink video file handle.
-        /// Based on BINKW32.DLL reverse engineering via Ghidra: _BinkGetSummary@8 analysis.
+        /// Based on BINKW32.DLL verified components : _BinkGetSummary@8 analysis.
         /// Structure size: ~0x2b0 bytes (688 bytes) based on field offsets up to 0xc3 (195 dwords).
         /// Matches original engine usage: swkotor.exe 0x00404c80 @ 0x00404c80, 0x004053e0 @ 0x004053e0.
         /// </summary>
@@ -159,7 +159,7 @@ namespace Andastra.Runtime.Core.Video.Bink
 
         /// <summary>
         /// BINKBUFFER structure - Bink rendering buffer.
-        /// Based on BINKW32.DLL reverse engineering via Ghidra: _BinkBufferOpen@16 analysis.
+        /// Based on BINKW32.DLL verified components : _BinkBufferOpen@16 analysis.
         /// Matches original engine usage: swkotor.exe 0x00404c80 @ 0x00404c80 accesses:
         /// - +0x00 = BufferWidth
         /// - +0x04 = BufferHeight (accessed as *(iVar1 + 4))
@@ -207,7 +207,7 @@ namespace Andastra.Runtime.Core.Video.Bink
 
         /// <summary>
         /// BINKSUMMARY structure - Summary information about a BIK file.
-        /// Based on BINKW32.DLL reverse engineering via Ghidra: _BinkGetSummary@8 analysis.
+        /// Based on BINKW32.DLL verified components : _BinkGetSummary@8 analysis.
         /// Structure size: 31 int fields (0x1f * 4 = 124 bytes) based on initialization loop.
         /// Matches original engine usage: swkotor.exe 0x00404c80 @ 0x00404c80 line 44 calls BinkGetSummary.
         /// 
@@ -302,7 +302,7 @@ namespace Andastra.Runtime.Core.Video.Bink
 
         // Bink API function declarations
         // Based on swkotor.exe: Import table shows these functions are used
-        // Located via Ghidra: 0x00404c80 @ 0x00404c80 uses these functions
+        // Located : 0x00404c80 @ 0x00404c80 uses these functions
 
         /// <summary>
         /// Opens a BIK file for playback.

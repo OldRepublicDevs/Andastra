@@ -29,7 +29,7 @@ namespace Andastra.Game.Games.Odyssey.Fonts
     /// - Font loading: Loads font texture and TXI metrics from game installation
     /// - Character mapping: Maps ASCII characters to texture coordinates using TXI upperleftcoords/lowerrightcoords
     /// 
-    /// Ghidra Reverse Engineering Analysis:
+    /// Ghidra verified components Analysis:
     /// - swkotor.exe: Font loading functions (needs Ghidra address verification)
     /// - swkotor2.exe: Font rendering functions (needs Ghidra address verification)
     /// 

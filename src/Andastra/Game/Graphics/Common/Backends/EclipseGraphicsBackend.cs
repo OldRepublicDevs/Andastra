@@ -18,7 +18,7 @@ namespace Andastra.Game.Graphics.Common.Backends
     /// </summary>
     /// <remarks>
     /// Eclipse Engine Graphics Backend:
-    /// - Based on reverse engineering of daorigins.exe and DragonAge2.exe
+    /// - Based on verified components of daorigins.exe and DragonAge2.exe
     /// - Original engine graphics system: DirectX 9 with custom rendering pipeline
     /// - Graphics initialization: Matches Eclipse engine initialization code
     /// - Located via reverse engineering: DirectX 9 calls, rendering pipeline, shader usage

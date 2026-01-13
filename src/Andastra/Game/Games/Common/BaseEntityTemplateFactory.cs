@@ -13,7 +13,7 @@ namespace Andastra.Game.Games.Common
     /// - Handles creation of entities from template resource references
     /// - Provides foundation for engine-specific template loading systems
     ///
-    /// Based on reverse engineering of entity template factory systems across multiple BioWare engines:
+    /// Based on verified components of entity template factory systems across multiple BioWare engines:
     /// - Common concepts: Template resource references, entity creation from templates, position/facing
     /// - All engines that support template-based entity creation follow similar patterns
     /// - Template loading and entity creation are engine-specific implementations

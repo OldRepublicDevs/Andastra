@@ -10,11 +10,13 @@ namespace Andastra.Game.Games.Odyssey.Loading
     /// Wraps ModuleLoader to provide async interface.
     /// </summary>
     /// <remarks>
-    /// Module Loader (KOTOR Implementation):
+    /// Module Loader:
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) module loading system
-    /// - LoadModule @ 0x004f20d0 - Main module loading function (located via "MODULES:" @ 0x007b58b4)
+    /// - LoadModule @ (K1: TODO: Find this address, TSL: 0x004f20d0) - Main module loading function (located via "MODULES:" @ 0x007b58b4)
     /// - LoadModuleFromPath @ 0x004f3460 - Loads module from path with save integration (located via "MODULES:" @ 0x007b58b4)
-    /// - Located via string references: "MODULES:" @ 0x007b58b4, "Module" @ 0x007bc4e0
+    /// - Located via string references:
+    ///   * ["MODULES:"] @ 0x007b58b4
+    ///   * ["Module"] @ 0x007bc4e0
     /// - Original implementation: Loads modules from MODULES directory or module archives
     /// - Module loading sequence: IFO → ARE → GIT → LYT → VIS → entity spawning
     /// - This wrapper provides async interface for ModuleTransitionSystem
@@ -33,7 +35,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// </summary>
         /// <param name="moduleResRef">The module resource reference.</param>
         /// <returns>The loaded module.</returns>
-        public Task<IModule> LoadModule(string moduleResRef)
+        public Task<Runtime.Core.Interfaces.IModule> LoadModule(string moduleResRef)
         {
             if (string.IsNullOrEmpty(moduleResRef))
             {
@@ -44,7 +46,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
             return Task.Run(() =>
             {
                 RuntimeModule module = _moduleLoader.LoadModule(moduleResRef);
-                return (IModule)module;
+                return (Runtime.Core.Interfaces.IModule)module;
             });
         }
     }

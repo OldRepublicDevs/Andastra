@@ -16,7 +16,7 @@ namespace Andastra.Game.Stride.Converters
     /// </summary>
     /// <remarks>
     /// MDL to Stride Model Converter:
-    /// - Cross-Engine Analysis (Reverse Engineered via Ghidra):
+    /// - Cross-Engine Analysis (Reverse Engineered ):
     ///   - Odyssey (swkotor.exe, swkotor2.exe):
     ///     - Model loading: 0x005261b0 @ 0x005261b0 (swkotor2.exe) loads creature models
     ///     - String references: "Model" @ 0x007c1ca8, "ModelName" @ 0x007c1c8c (swkotor2.exe)

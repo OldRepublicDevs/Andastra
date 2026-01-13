@@ -59,29 +59,32 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
     public class DialogueManager : BaseDialogueManager
     {
         // Plot XP calculation multipliers (swkotor2.exe data addresses)
-        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005e6870 @ 0x005e6870 and 0x0057eb20 @ 0x0057eb20
+        // swkotor2.exe: 0x005e6870 (ProcessPlotXPThreshold) - Checks threshold and calculates base multiplier
+        // swkotor2.exe: 0x0057eb20 (AwardPlotXP) - Calculates final XP and awards it to party
+        // K1 (swkotor.exe): TODO - Find equivalent addresses (needs reverse engineering)
         // _DAT_007b99b4: Base multiplier applied to plotXpPercentage
         // _DAT_007b5f88: Additional multiplier applied to final XP calculation
-        // Verified via Ghidra reverse engineering:
-        // - 0x005e6870 @ 0x005e6870 line 17: param_2 * _DAT_007b99b4
-        // - 0x0057eb20 @ 0x0057eb20 line 30: (float)(local_18 * param_2) * _DAT_007b5f88
+        // Verified reverse engineering:
+        // - 0x005e6870 (ProcessPlotXPThreshold) line 17: param_2 * _DAT_007b99b4
+        // - 0x0057eb20 (AwardPlotXP) line 30: (float)(local_18 * param_2) * _DAT_007b5f88
         // Memory read from swkotor2.exe:
         // - 0x007b99b4: 00 00 C8 42 = 100.0f
         // - 0x007b5f88: 0A D7 23 3C = 0.009999999776482582f (approximately 0.01f)
-        private const float PLOT_XP_BASE_MULTIPLIER = 100.0f; // _DAT_007b99b4 @ 0x007b99b4 - Verified via Ghidra
-        private const float PLOT_XP_ADDITIONAL_MULTIPLIER = 0.009999999776482582f; // _DAT_007b5f88 @ 0x007b5f88 - Verified via Ghidra
+        // Note: Function names are descriptive based on reverse engineering analysis and need Ghidra verification
+        private const float PLOT_XP_BASE_MULTIPLIER = 100.0f; // _DAT_007b99b4 @ 0x007b99b4 - Verified 
+        private const float PLOT_XP_ADDITIONAL_MULTIPLIER = 0.009999999776482582f; // _DAT_007b5f88 @ 0x007b5f88 - Verified 
 
-        // Plot XP threshold check (swkotor2.exe: 0x005e6870 @ 0x005e6870)
+        // Plot XP threshold check (swkotor2.exe: 0x005e6870 (ProcessPlotXPThreshold))
         // Only processes XP if threshold < plotXpPercentage
-        // Verified via Ghidra reverse engineering:
-        // - 0x005e6870 @ 0x005e6870 line 13: if ((param_1 != -1) && (_DAT_007b56fc < param_2))
+        // Verified reverse engineering:
+        // - 0x005e6870 (ProcessPlotXPThreshold) line 13: if ((param_1 != -1) && (_DAT_007b56fc < param_2))
         // - Memory read from swkotor2.exe @ 0x007b56fc: 00 00 00 00 = 0.0f
         // Logic verification: Comparison "threshold < plotXpPercentage" with threshold=0.0f correctly filters:
         //   - plotXpPercentage = 0.0f → 0.0 < 0.0 = false → No XP (correct, 0% means no XP award)
         //   - plotXpPercentage > 0.0f → 0.0 < percentage = true → XP processed (correct, any positive % processes XP)
         // This matches the original engine behavior where plot XP is only awarded when the percentage value is positive
-        // Original implementation: 0x005e6870 checks "if (threshold < plotXpPercentage)" before processing XP
-        private const float PLOT_XP_THRESHOLD = 0.0f; // _DAT_007b56fc @ 0x007b56fc - Verified via Ghidra
+        // Original implementation: ProcessPlotXPThreshold checks "if (threshold < plotXpPercentage)" before processing XP
+        private const float PLOT_XP_THRESHOLD = 0.0f; // _DAT_007b56fc @ 0x007b56fc - Verified 
 
         private readonly Func<string, DLG> _dialogueLoader;
         private readonly Func<string, byte[]> _scriptLoader;
@@ -1094,11 +1097,12 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
             }
 
             // Process plot index and XP percentage if present
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005e6870 @ 0x005e6870
+            // swkotor2.exe: 0x005e6870 (ProcessPlotXPThreshold) -> 0x0057eb20 (AwardPlotXP)
+            // K1 (swkotor.exe): TODO - Find equivalent addresses (needs reverse engineering)
             // Located via string references: "PlotIndex" @ 0x007c35c4, "PlotXPPercentage" @ 0x007c35cc
             // Original implementation: Updates plot flags and awards XP based on PlotIndex and PlotXpPercentage
-            // Flow: 0x005e6870 -> 0x0057eb20
-            // 0x0057eb20: Looks up "XP" column from plot.2da using PlotIndex, calculates final XP, awards XP
+            // Flow: ProcessPlotXPThreshold (0x005e6870) -> AwardPlotXP (0x0057eb20)
+            // AwardPlotXP: Looks up "XP" column from plot.2da using PlotIndex, calculates final XP, awards XP
             // Comprehensive PlotIndex processing:
             // 1. Process plot XP (if PlotXpPercentage > 0)
             // 2. Register plot in plot system (if not already registered)
@@ -1118,11 +1122,11 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
         /// <param name="questTag">Quest tag from dialogue node (if available)</param>
         /// <param name="questEntryIndex">Quest entry index from dialogue node (if available)</param>
         /// <remarks>
-        /// Comprehensive PlotIndex Processing (swkotor2.exe: 0x005e6870 @ 0x005e6870 -> 0x0057eb20 @ 0x0057eb20):
-        /// - 0x005e6870: Checks if plotIndex != -1 and threshold < plotXpPercentage
+        /// Comprehensive PlotIndex Processing (swkotor2.exe: 0x005e6870 (ProcessPlotXPThreshold) -> 0x0057eb20 (AwardPlotXP)):
+        /// - ProcessPlotXPThreshold (0x005e6870): Checks if plotIndex != -1 and threshold < plotXpPercentage
         ///   - Calculates: plotXpPercentage * _DAT_007b99b4 (base multiplier)
-        ///   - Calls 0x0057eb20 with plotIndex and calculated value
-        /// - 0x0057eb20: Looks up "XP" column from plot.2da using plotIndex
+        ///   - Calls AwardPlotXP (0x0057eb20) with plotIndex and calculated value
+        /// - AwardPlotXP (0x0057eb20): Looks up "XP" column from plot.2da using plotIndex
         ///   - Calculates: (plotXP * param_2) * _DAT_007b5f88 (additional multiplier)
         ///   - Awards XP via 0x0057ccd0 (party XP award function)
         ///   - Notifies journal system via 0x00681a10

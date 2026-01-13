@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using BioWare.NET.Resource.Formats.Capsule;
+using BioWare.NET.Extract.Capsule;
 using BioWare.NET.Resource.Formats.GFF;
 using BioWare.NET.Resource.Formats.LIP;
 using BioWare.NET.Resource.Formats.SSF;

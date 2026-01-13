@@ -138,7 +138,7 @@ namespace BioWare.NET.Extract.Capsule
             }
         }
 
-        // REVERSE ENGINEERING NOTES (swkotor.exe / swkotor2.exe):
+        // verified components NOTES (swkotor.exe / swkotor2.exe):
         // RIM container format structure (matches engine behavior):
         // - Header: "RIM V1.0" (8 bytes)
         // - Reserved: uint32 (4 bytes)
@@ -186,7 +186,7 @@ namespace BioWare.NET.Extract.Capsule
             }
         }
 
-        // REVERSE ENGINEERING NOTES (swkotor.exe / swkotor2.exe):
+        // verified components NOTES (swkotor.exe / swkotor2.exe):
         // ERF/MOD container format structure (matches engine behavior):
         // - Header: "ERF V1.0" or "MOD V1.0" (8 bytes)
         // - Language count: uint32 (4 bytes)

@@ -27,10 +27,10 @@ namespace Andastra.Game.Games.Aurora.GUI
     /// <remarks>
     /// Aurora GUI Manager (nwmain.exe):
     /// - Based on nwmain.exe GUI system
-    /// - GUI format: Uses ResourceType.GUI (0x7ff / 2047) with GFF format, signature "GUI " (verified via Ghidra)
+    /// - GUI format: Uses ResourceType.GUI (0x7ff / 2047) with GFF format, signature "GUI " (verified )
     /// - Font rendering: Uses AuroraBitmapFont for text rendering
     ///
-    /// Ghidra Reverse Engineering Analysis (nwmain.exe):
+    /// Ghidra verified components Analysis (nwmain.exe):
     /// - CGuiPanel::LoadLayoutFileModelsAndTags @ 0x1401feba0: Loads GUI files using CResGFF with resource type 0x7ff (2047) and signature "GUI "
     ///   - Line 44: CResGFF::CResGFF(local_70, 0x7ff, "GUI ", pCVar14) - Creates GFF reader for GUI resource
     ///   - Line 47: CResGFF::GetTopLevelStruct - Gets root GFF struct
@@ -124,7 +124,7 @@ namespace Andastra.Game.Games.Aurora.GUI
                 // Lookup GUI resource from installation
                 // Based on Aurora engine (nwmain.exe): GUI files stored as ResourceType.GUI (0x7ff / 2047) in HAK/module/override archives
                 // Format: GFF-based with "GFF " signature (same as Odyssey/Eclipse engines)
-                // Verified via Ghidra: CGuiPanel::LoadLayoutFileModelsAndTags @ 0x1401feba0 line 44
+                // Verified : CGuiPanel::LoadLayoutFileModelsAndTags @ 0x1401feba0 line 44
                 // CResGFF::CResGFF(local_70, 0x7ff, "GUI ", pCVar14) - Creates GFF reader for GUI resource with signature "GUI "
                 // Resource loading: CExoResMan::Demand loads GUI resources as GFF format (nwmain.exe resource system)
                 var resourceResult = _installation.Resources.LookupResource(guiName, ResourceType.GUI, null, null);

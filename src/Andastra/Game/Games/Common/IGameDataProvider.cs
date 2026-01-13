@@ -14,7 +14,7 @@ namespace Andastra.Game.Games.Common
     ///   - Aurora (nwmain.exe): Uses C2DA class for 2DA table access via AuroraTwoDATableManager
     ///   - Eclipse (daorigins.exe, DragonAge2.exe): Uses 2DA tables via EclipseTwoDATableManager
     ///   - Infinity: Uses 2DA tables (similar to Eclipse)
-    /// - Based on reverse engineering of multiple BioWare engines.
+    /// - Based on verified components of multiple BioWare engines.
     /// - Common pattern: All engines store creature properties (radius, speed, etc.) in data tables indexed by appearance type
     /// 
     /// This interface extends Core.Interfaces.IGameDataProvider to maintain compatibility.

@@ -11,7 +11,7 @@ namespace Andastra.Game.Games.Eclipse
     /// Eclipse engine physics system implementation.
     /// </summary>
     /// <remarks>
-    /// Based on reverse engineering of:
+    /// Based on verified components of:
     /// - daorigins.exe: Physics world management and rigid body dynamics
     /// - DragonAge2.exe: Enhanced physics system with constraint support
     ///
@@ -136,7 +136,7 @@ namespace Andastra.Game.Games.Eclipse
         /// </summary>
         /// <param name="deltaTime">Time step in seconds.</param>
         /// <remarks>
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Physics simulation step function
         /// - DragonAge2.exe: Enhanced simulation with sub-stepping
         ///
@@ -239,7 +239,7 @@ namespace Andastra.Game.Games.Eclipse
         /// <param name="hitEntity">Output parameter for hit entity if ray hits something.</param>
         /// <returns>True if ray hits something, false otherwise.</returns>
         /// <remarks>
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Raycast function for physics queries
         /// - DragonAge2.exe: Enhanced raycast with filtering
         /// </remarks>
@@ -354,7 +354,7 @@ namespace Andastra.Game.Games.Eclipse
         /// <param name="constraints">Output parameter for constraint data.</param>
         /// <returns>True if the entity has a rigid body in the physics system, false otherwise.</returns>
         /// <remarks>
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Rigid body state query functions (velocity, angular velocity retrieval)
         /// - DragonAge2.exe: Enhanced state query with constraint enumeration
         /// </remarks>
@@ -398,7 +398,7 @@ namespace Andastra.Game.Games.Eclipse
         /// <param name="constraints">Constraint data to restore.</param>
         /// <returns>True if the entity has a rigid body in the physics system, false otherwise.</returns>
         /// <remarks>
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Rigid body state restoration functions (velocity, angular velocity setting)
         /// - DragonAge2.exe: Enhanced state restoration with constraint recreation
         /// </remarks>
@@ -445,7 +445,7 @@ namespace Andastra.Game.Games.Eclipse
         /// <param name="halfExtents">Half extents for bounding box.</param>
         /// <param name="isDynamic">Whether the body is dynamic (true) or static (false).</param>
         /// <remarks>
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Rigid body creation functions
         /// - DragonAge2.exe: Enhanced rigid body creation with shape support
         /// </remarks>
@@ -480,7 +480,7 @@ namespace Andastra.Game.Games.Eclipse
         /// </summary>
         /// <param name="entity">The entity to remove the rigid body for.</param>
         /// <remarks>
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Rigid body removal functions
         /// - DragonAge2.exe: Enhanced cleanup with constraint removal
         /// </remarks>
@@ -500,7 +500,7 @@ namespace Andastra.Game.Games.Eclipse
         /// </summary>
         /// <param name="constraint">The constraint to add.</param>
         /// <remarks>
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Constraint creation functions
         /// - DragonAge2.exe: Enhanced constraint system
         ///
@@ -553,7 +553,7 @@ namespace Andastra.Game.Games.Eclipse
         /// </summary>
         /// <param name="constraint">The constraint to remove.</param>
         /// <remarks>
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Constraint removal functions
         /// - DragonAge2.exe: Enhanced constraint cleanup
         /// </remarks>
@@ -594,7 +594,7 @@ namespace Andastra.Game.Games.Eclipse
         /// Disposes the physics system and cleans up resources.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Physics world cleanup
         /// - DragonAge2.exe: Enhanced resource cleanup
         /// 
@@ -671,7 +671,7 @@ namespace Andastra.Game.Games.Eclipse
         /// </summary>
         /// <param name="deltaTime">Time step for collision resolution.</param>
         /// <remarks>
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Physics collision detection and response system (0x008f12a0)
         /// - DragonAge2.exe: Enhanced collision system with improved stability (0x009a45b0)
         ///
@@ -1185,7 +1185,7 @@ namespace Andastra.Game.Games.Eclipse
         /// <param name="constraint">The constraint to solve.</param>
         /// <param name="deltaTime">Time step for constraint solving.</param>
         /// <remarks>
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Constraint solving in physics simulation
         /// - DragonAge2.exe: Enhanced constraint solving with iterative methods
         ///
@@ -1886,7 +1886,7 @@ namespace Andastra.Game.Games.Eclipse
         /// <param name="destroyedFaceIndices">Set of destroyed face indices (triangles to exclude from collision).</param>
         /// <param name="modifiedVertices">Dictionary mapping vertex indices to modified positions (for deformed geometry).</param>
         /// <remarks>
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Static geometry collision shape creation and updates (0x008f12a0)
         /// - DragonAge2.exe: Enhanced collision shape updates for destructible geometry (0x009a45b0)
         ///

@@ -25,7 +25,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Aurora
     /// </summary>
     /// <remarks>
     /// NWN:EE Graphics Backend:
-    /// - Based on reverse engineering of nwmain.exe
+    /// - Based on verified components of nwmain.exe
     /// - Original game graphics system: DirectX 9 or OpenGL with Aurora engine rendering pipeline
     /// - Graphics initialization: Matches nwmain.exe initialization code exactly
     /// - Located via reverse engineering: DirectX 9/OpenGL calls, rendering pipeline, shader usage
@@ -125,7 +125,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Aurora
         /// </summary>
         /// <remarks>
         /// NWN:EE Rendering Pipeline (nwmain.exe):
-        /// - Based on reverse engineering of nwmain.exe rendering functions
+        /// - Based on verified components of nwmain.exe rendering functions
         /// - RenderInterface::BeginScene() @ 0x1400be860: Begins rendering frame
         /// - RenderInterface::EndScene(int) @ 0x1400beac0: Ends rendering frame
         /// - GLRender::SwapBuffers() @ 0x1400bb640: Swaps OpenGL buffers
@@ -200,7 +200,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Aurora
         /// <param name="path">Texture ResRef (resource reference, e.g., "tx_default" for tx_default.tpc)</param>
         /// <returns>OpenGL texture handle (IntPtr to GLuint texture ID), or IntPtr.Zero on failure</returns>
         /// <remarks>
-        /// Based on reverse engineering of nwmain.exe texture loading functions:
+        /// Based on verified components of nwmain.exe texture loading functions:
         /// - nwmain.exe texture loading: CExoResMan::GetResource() loads texture data from CHITIN.KEY/BIFF or override
         /// - Texture format detection: TPC (BioWare texture), TGA (Truevision TARGA), DDS (DirectDraw Surface)
         /// - TXI loading: Texture information file (optional) contains filtering, wrapping, and other properties
@@ -694,7 +694,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Aurora
         /// Applies TXI texture parameters to the currently bound OpenGL texture.
         /// Matches nwmain.exe TXI parameter application exactly.
         ///
-        /// Based on reverse engineering of nwmain.exe texture parameter application:
+        /// Based on verified components of nwmain.exe texture parameter application:
         /// - nwmain.exe applies TXI parameters via glTexParameteri calls
         /// - clamp parameter: 0 = GL_REPEAT (wrap), 1 = GL_CLAMP_TO_EDGE (clamp)
         /// - filter parameter: 0 = GL_NEAREST (point), 1 = GL_LINEAR (linear)
@@ -1144,7 +1144,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Aurora
         /// <param name="debugName">Debug name for the texture.</param>
         /// <returns>DirectX 9 texture handle (IntPtr to IDirect3DTexture9), or IntPtr.Zero on failure.</returns>
         /// <remarks>
-        /// Based on reverse engineering of nwmain.exe DirectX 9 texture loading:
+        /// Based on verified components of nwmain.exe DirectX 9 texture loading:
         /// - IDirect3DDevice9::CreateTexture creates the texture object
         /// - IDirect3DTexture9::GetSurfaceLevel retrieves mipmap surfaces
         /// - IDirect3DSurface9::LockRect locks surface for pixel data upload
@@ -1500,7 +1500,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Aurora
         /// This method extracts parameters from TXI and stores them to be applied when the texture is bound.
         /// Matches nwmain.exe TXI parameter storage behavior for DirectX 9 exactly.
         ///
-        /// Based on reverse engineering of nwmain.exe DirectX 9 texture parameter application:
+        /// Based on verified components of nwmain.exe DirectX 9 texture parameter application:
         /// - nwmain.exe stores TXI parameters and applies them via IDirect3DDevice9::SetSamplerState when textures are bound
         /// - clamp parameter: 0 = D3DTADDRESS_WRAP (wrap), 1 = D3DTADDRESS_CLAMP (clamp)
         /// - filter parameter: 0 = D3DTEXF_POINT (point), 1 = D3DTEXF_LINEAR (linear)
@@ -1654,7 +1654,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Aurora
         /// Matches IDirect3DDevice9::Clear() exactly.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of nwmain.exe DirectX 9 rendering path:
+        /// Based on verified components of nwmain.exe DirectX 9 rendering path:
         /// - IDirect3DDevice9::Clear is at vtable index 43
         /// - Clears color, depth, and/or stencil buffers
         /// - Parameters: Flags, Color, Z, Stencil

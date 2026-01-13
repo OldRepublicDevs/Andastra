@@ -16,7 +16,7 @@ namespace Andastra.Runtime.Games.Common
     /// - Services accessible from scripts: PlayerEntity, SoundPlayer, UISystem, IsLoadingFromSave
     /// - Engine-specific services (DialogueManager, CombatManager, etc.) are provided by subclasses
     ///
-    /// Based on reverse engineering of script execution context systems:
+    /// Based on verified components of script execution context systems:
     /// - Common across all engines: Script execution context provides access to game services
     /// - Original implementation: NWScript execution context (IExecutionContext) provides access to game services
     /// - Engine API functions access AdditionalContext as IGameServicesContext to access game services

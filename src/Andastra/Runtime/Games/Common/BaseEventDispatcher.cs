@@ -12,7 +12,7 @@ namespace Andastra.Runtime.Games.Common
     /// - Maps event IDs to string names for debugging and logging
     /// - Routes events to appropriate handlers based on event type
     ///
-    /// Based on reverse engineering of multiple BioWare engines.
+    /// Based on verified components of multiple BioWare engines.
     /// Common event dispatching patterns identified across all engines.
     ///
     /// Common event types across engines:

@@ -5,8 +5,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using BioWare.NET;
-using BioWare.NET.Resource.Formats.Capsule;
-using BioWare.NET.Installation;
+using BioWare.NET.Extract.Capsule;
+using BioWare.NET.Extract;
 
 namespace KotorDiff.Diff
 {

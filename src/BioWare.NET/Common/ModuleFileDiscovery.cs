@@ -11,7 +11,7 @@ namespace BioWare.NET.Common
     /// Handles discovery and resolution of module files from the modules directory.
     /// Matches the exact behavior of module file discovery.
     /// 
-    /// Based on reverse engineering of module loading system.
+    /// Based on verified components of module loading system.
     /// 
     /// Loading Modes (K1: 0x004094a0, TSL: 0x004096b0):
     /// - Simple Mode (flag at offset 0x54 == 0): Loads .rim file directly, returns immediately
@@ -26,7 +26,7 @@ namespace BioWare.NET.Common
     /// 
     /// Note: .rim is NOT loaded in complex mode - only _a.rim or _adx.rim are loaded as replacements
     /// 
-    /// Reverse engineering evidence:
+    /// verified components evidence:
     /// - (K1: 0x004094a0, TSL: 0x004096b0) line 32: `if (*(int *)((int)param_1 + 0x54) == 0)` - simple mode check
     /// - (K1: 0x004094a0, TSL: 0x004096b0) line 61: Checks for _a.rim (ARE type 0xbba)
     /// - (K1: 0x004094a0, TSL: 0x004096b0) line 74: Checks for _adx.rim (ARE type 0xbba)

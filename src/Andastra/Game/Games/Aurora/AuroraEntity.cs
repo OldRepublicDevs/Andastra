@@ -24,7 +24,7 @@ namespace Andastra.Game.Games.Aurora
     /// - Component-based architecture for modular functionality
     /// - Script hooks for events and behaviors
     ///
-    /// Based on reverse engineering of:
+    /// Based on verified components of:
     /// - nwmain.exe: Entity creation and management
     /// - ObjectId: Located via string reference "ObjectId" @ 0x140ddb6f0
     /// - Tag: CExoString-based tag system, located via "m_sTag" @ 0x140ddafb4
@@ -636,7 +636,7 @@ namespace Andastra.Game.Games.Aurora
         /// Serializes ObjectId, Tag, components, and custom data.
         /// Uses Aurora-specific GFF save format.
         ///
-        /// Reverse Engineering Notes:
+        /// verified components Notes:
         /// - nwmain.exe: CNWSCreature::SaveCreature @ 0x1403a0a60
         ///   - Uses CResGFF::WriteField* functions to write GFF fields
         ///   - Writes ObjectId, DisplayName, DetectMode, StealthMode, MasterID, CreatureSize
@@ -1021,7 +1021,7 @@ namespace Andastra.Game.Games.Aurora
         /// Restores ObjectId, Tag, components, and custom data.
         /// Recreates component attachments and state.
         ///
-        /// Reverse Engineering Notes:
+        /// verified components Notes:
         /// - nwmain.exe: CNWSCreature::LoadCreature @ 0x1403975e0
         ///   - Uses CResGFF::ReadField* functions to read GFF fields
         ///   - Reads ObjectId, DisplayName, DetectMode, StealthMode, MasterID, CreatureSize

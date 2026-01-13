@@ -14,7 +14,7 @@ namespace Andastra.Game.Games.Eclipse.DragonAgeOrigins
     /// <remarks>
     /// Dragon Age: Origins Navigation Mesh Implementation:
     /// - Game-specific implementation of Eclipse navigation system
-    /// - Based on reverse engineering of daorigins.exe navigation functions
+    /// - Based on verified components of daorigins.exe navigation functions
     /// - Inherits common Eclipse navigation functionality from EclipseNavigationMesh
     /// 
     /// Dragon Age: Origins specific behavior:

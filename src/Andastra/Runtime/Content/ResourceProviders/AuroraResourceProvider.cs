@@ -112,7 +112,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
     /// 5. Hardcoded resources (engine-specific fallbacks)
     ///
     /// Note: Neverwinter Nights 2 (nwn2main.exe) uses similar architecture but function addresses differ.
-    /// Additional reverse engineering required for nwn2main.exe specific addresses.
+    /// Additional verified components required for nwn2main.exe specific addresses.
     /// </remarks>
     public class AuroraResourceProvider : IGameResourceProvider
     {
@@ -1405,7 +1405,7 @@ endmodel
         /// - HAK files are located in the "hak" directory under installation path
         /// - HAK filenames in Module.ifo do not include the .hak extension
         ///
-        /// Based on nwmain.exe reverse engineering (Ghidra MCP analysis):
+        /// Based on nwmain.exe verified components (Ghidra MCP analysis):
         /// - Module.ifo parsing functions reference Mod_HakList/Mod_Hak strings:
         ///   - "Mod_HakList" string @ 0x140def690, referenced by functions @ 0x14047f60e, 0x1404862d9
         ///   - "Mod_Hak" string @ 0x140def6a0, referenced by functions @ 0x14047f6b9, 0x140486325, 0x1409d5658

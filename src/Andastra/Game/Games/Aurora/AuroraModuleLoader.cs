@@ -62,7 +62,7 @@ namespace Andastra.Game.Games.Aurora
     /// 2. HAK files (in load order)
     /// 3. Base game resources
     ///
-    /// Ghidra Reverse Engineering Requirements:
+    /// Ghidra verified components Requirements:
     /// - nwmain.exe: CNWSModule::LoadModule function address and implementation
     /// - nwmain.exe: CServerExoApp::LoadModule function address and implementation
     /// - nwmain.exe: Module state flags and bit patterns
@@ -472,7 +472,7 @@ namespace Andastra.Game.Games.Aurora
         /// 4. Base game resources
         /// 5. Hardcoded resources (lowest priority)
         ///
-        /// Based on nwmain.exe reverse engineering (Ghidra MCP analysis):
+        /// Based on nwmain.exe verified components (Ghidra MCP analysis):
         /// - Module.ifo parsing functions reference Mod_HakList/Mod_Hak strings:
         ///   - "Mod_HakList" string @ 0x140def690, referenced by functions @ 0x14047f60e, 0x1404862d9
         ///   - "Mod_Hak" string @ 0x140def6a0, referenced by functions @ 0x14047f6b9, 0x140486325, 0x1409d5658

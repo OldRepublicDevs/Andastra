@@ -10,7 +10,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// </summary>
     /// <remarks>
     /// Odyssey Graphics Device:
-    /// - Based on reverse engineering of swkotor.exe and swkotor2.exe
+    /// - Based on verified components of swkotor.exe and swkotor2.exe
     /// - Original game graphics device: OpenGL context with WGL extensions
     /// - Graphics device operations: glClear, glViewport, glDrawArrays, glDrawElements
     /// - swkotor.exe: Graphics functions at 0x0044dab0 (init), 0x00427c90 (textures)

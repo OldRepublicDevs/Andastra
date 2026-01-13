@@ -17,7 +17,7 @@ namespace Andastra.Game.Games.Common.Components
     /// - Common functionality: FactionId, IsHostile, IsFriendly, IsNeutral, SetTemporaryHostile
     /// - Engine-specific: Faction relationship tables, reputation systems, hostility calculations
     ///
-    /// Based on reverse engineering of:
+    /// Based on verified components of:
     /// - swkotor.exe: Faction component system with repute.2da table (0x005b1b90 @ 0x005b1b90 loads faction data)
     /// - swkotor2.exe: Enhanced faction system with repute.2da table (0x005fb0f0 @ 0x005fb0f0 loads faction data)
     /// - nwmain.exe: Aurora faction system using CNWSFaction and CFactionManager (CNWSFaction @ 0x1404ad3e0, GetFaction @ 0x140357900)

@@ -15,7 +15,7 @@ namespace Andastra.Game.Games.Engines.Common
     /// - Provides default implementations for common IEngineGame functionality
     /// - Implements shared module state management logic verified across engines
     ///
-    /// Cross-Engine Reverse Engineering Analysis:
+    /// Cross-Engine verified components Analysis:
     ///
     /// Common Module State Management Pattern (VERIFIED across Odyssey and Aurora):
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x006caab0 @ 0x006caab0 (server command parser)

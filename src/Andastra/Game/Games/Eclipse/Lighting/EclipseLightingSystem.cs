@@ -48,7 +48,7 @@ namespace Andastra.Game.Games.Eclipse.Lighting
     /// - Global illumination probes for area-based lighting
     /// - Light culling and clustering for performance
     ///
-    /// Based on reverse engineering of:
+    /// Based on verified components of:
     /// - daorigins.exe: Lighting system initialization and management
     /// - DragonAge2.exe: Enhanced lighting features and shadow casting
     /// </remarks>

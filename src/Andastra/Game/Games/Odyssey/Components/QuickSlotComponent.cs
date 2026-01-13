@@ -17,7 +17,7 @@ namespace Andastra.Game.Games.Odyssey.Components
     /// - Quick slot fields: QuickSlot_0 through QuickSlot_11 (12 fields total) in UTC GFF format
     /// - Each QuickSlot_* field contains: Type (0=item, 1=ability), Item/ObjectId (for items), AbilityID (for abilities)
     /// - Quick slot usage: Using a slot triggers ActionUseItem (for items) or ActionCastSpellAtObject (for abilities)
-    /// - swkotor.exe: Quick slot system identical to swkotor2.exe (function addresses to be determined via Ghidra)
+    /// - swkotor.exe: Quick slot system identical to swkotor2.exe (function addresses to be determined )
     /// - swkotor2.exe: Enhanced quick slot system with 12 slots (0x005226d0 @ 0x005226d0 saves, 0x005223a0 @ 0x005223a0 loads)
     /// </remarks>
     public class QuickSlotComponent : OdysseyQuickSlotComponent

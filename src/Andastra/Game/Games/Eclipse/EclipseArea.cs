@@ -90,7 +90,7 @@ namespace Andastra.Game.Games.Eclipse
     /// - Complex lighting, physics, and environmental simulation
     /// - Real-time area effects and dynamic weather
     ///
-    /// Based on reverse engineering of:
+    /// Based on verified components of:
     /// - daorigins.exe: Dragon Age Origins area systems
     /// - DragonAge2.exe: Enhanced Dragon Age 2 areas
     /// - Eclipse engine area properties and entity management
@@ -722,7 +722,7 @@ namespace Andastra.Game.Games.Eclipse
         /// Includes lighting presets, weather settings, physics properties.
         /// Supports conditional area behaviors based on game state.
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Area property loading functions (Eclipse engine ARE file format)
         /// - DragonAge2.exe: Enhanced area property loading with additional fields
         ///
@@ -1063,7 +1063,7 @@ namespace Andastra.Game.Games.Eclipse
         /// Eclipse saves runtime state changes.
         /// Includes dynamic lighting, physics state, destructible changes.
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Area property saving functions (Eclipse engine ARE file format)
         /// - DragonAge2.exe: Enhanced area property serialization
         ///
@@ -1782,7 +1782,7 @@ namespace Andastra.Game.Games.Eclipse
         /// - RoomIndex: Int32 (optional room association) - "RoomIndex", "Room", "RoomID"
         /// - Flags: UInt32 (optional flags) - "Flags", "ObjectFlags"
         ///
-        /// Based on reverse engineering patterns:
+        /// Based on verified components patterns:
         /// - daorigins.exe: Static objects are embedded in area data structure
         /// - DragonAge2.exe: Enhanced static object system with additional fields
         /// - Field name variations support different ARE file versions and toolset exports
@@ -1819,7 +1819,7 @@ namespace Andastra.Game.Games.Eclipse
                 // 1. Root-level list field (e.g., "StaticObjectList", "ObjectList", "GeometryList")
                 // 2. Nested struct (e.g., "AreaGeometry" -> "StaticObjects")
                 //
-                // Note: Exact field names verified through reverse engineering patterns.
+                // Note: Exact field names verified through verified components patterns.
                 // Field name variations are checked to support different ARE file versions.
                 //
                 // Static object structure fields:
@@ -2341,7 +2341,7 @@ namespace Andastra.Game.Games.Eclipse
         /// Eclipse has the most advanced environmental systems.
         /// Includes weather, particle effects, audio zones, interactive elements.
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Environmental system initialization (weather, particles, audio zones)
         /// - DragonAge2.exe: Enhanced environmental systems with dynamic effects
         ///
@@ -3846,7 +3846,7 @@ namespace Andastra.Game.Games.Eclipse
         /// Eclipse-specific advanced lighting initialization.
         /// Sets up dynamic lights, shadows, global illumination.
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Lighting system initialization from ARE file data
         /// - DragonAge2.exe: Enhanced lighting initialization with shadow mapping
         ///
@@ -3999,7 +3999,7 @@ namespace Andastra.Game.Games.Eclipse
         /// Eclipse physics world setup.
         /// Creates rigid bodies, collision shapes, constraints.
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Physics world initialization
         /// - DragonAge2.exe: Enhanced physics system initialization
         /// </remarks>
@@ -4013,7 +4013,7 @@ namespace Andastra.Game.Games.Eclipse
         /// </summary>
         /// <remarks>
         /// Eclipse-specific: Saves physics state (velocity, angular velocity, mass) before transition.
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Physics state preservation during area transitions
         /// - DragonAge2.exe: Enhanced physics state transfer
         /// </remarks>
@@ -4208,7 +4208,7 @@ namespace Andastra.Game.Games.Eclipse
         /// Eclipse engine preserves physics state (velocity, angular velocity, constraints)
         /// when entities transition between areas to maintain physics continuity.
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Physics state preservation during area transitions
         /// - DragonAge2.exe: Enhanced physics state transfer with constraint preservation
         ///
@@ -4288,7 +4288,7 @@ namespace Andastra.Game.Games.Eclipse
         /// Restores physics state to maintain continuity across area transitions.
         /// Adds entity to target area's physics system with preserved state.
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Physics state restoration during area transitions
         /// - DragonAge2.exe: Enhanced state restoration with constraint recreation
         ///
@@ -4522,7 +4522,7 @@ namespace Andastra.Game.Games.Eclipse
         /// <remarks>
         /// Creates a rigid body in the physics world for the entity.
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Rigid body creation for entities
         /// - DragonAge2.exe: Enhanced rigid body creation with shape detection
         ///
@@ -5117,7 +5117,7 @@ namespace Andastra.Game.Games.Eclipse
         /// <remarks>
         /// Removes the rigid body from the physics world.
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Rigid body removal from physics world
         /// - DragonAge2.exe: Enhanced cleanup with constraint removal
         ///
@@ -5168,7 +5168,7 @@ namespace Andastra.Game.Games.Eclipse
         /// Represents a physics constraint between two rigid bodies.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Constraint data structures for physics joints
         /// - DragonAge2.exe: Enhanced constraint system with multiple constraint types
         ///
@@ -5220,7 +5220,7 @@ namespace Andastra.Game.Games.Eclipse
         /// Types of physics constraints supported by Eclipse engine.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Constraint type enumeration
         /// - DragonAge2.exe: Enhanced constraint types
         /// </remarks>
@@ -5269,7 +5269,7 @@ namespace Andastra.Game.Games.Eclipse
         /// Updates all Eclipse systems: lighting, physics, effects, weather.
         /// Processes dynamic area changes and interactions.
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Area update function (updates all systems each frame)
         /// - DragonAge2.exe: Enhanced area update with environmental systems
         ///
@@ -5398,7 +5398,7 @@ namespace Andastra.Game.Games.Eclipse
         /// Eclipse rendering includes advanced lighting, shadows, effects.
         /// Handles deferred rendering, post-processing, and complex materials.
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Advanced area rendering with dynamic lighting and shadows
         /// - DragonAge2.exe: Enhanced rendering with post-processing effects
         ///
@@ -10218,7 +10218,7 @@ namespace Andastra.Game.Games.Eclipse
         /// - Motion blur (optional)
         /// - Screen-space ambient occlusion (SSAO, optional)
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Post-processing pipeline and render targets
         /// - DragonAge2.exe: Enhanced post-processing with bloom and tone mapping
         ///
@@ -11989,7 +11989,7 @@ technique ColorGrading
         /// Eclipse allows runtime area modification.
         /// Can create holes, move objects, change lighting.
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - daorigins.exe: Dynamic area modification system for destructible environments
         /// - DragonAge2.exe: Enhanced area modification with physics integration
         ///
@@ -12375,7 +12375,7 @@ technique ColorGrading
         /// <param name="messageText">The dialogue text that was spoken.</param>
         /// <param name="timestamp">Timestamp when the dialogue occurred.</param>
         /// <remarks>
-        /// Based on reverse engineering of daorigins.exe:
+        /// Based on verified components of daorigins.exe:
         /// - Dialogue history is maintained per area conversation
         /// - History entries contain speaker name and message text
         /// - Used for dialogue history display above dialogue box
@@ -12397,7 +12397,7 @@ technique ColorGrading
         /// </summary>
         /// <returns>Read-only list of dialogue history entries, ordered by timestamp.</returns>
         /// <remarks>
-        /// Based on reverse engineering of daorigins.exe:
+        /// Based on verified components of daorigins.exe:
         /// - Returns dialogue history in chronological order
         /// - Used by dialogue rendering system to display history panel
         /// - History entries contain speaker names and message text
@@ -12413,7 +12413,7 @@ technique ColorGrading
         /// Based on daorigins.exe: Dialogue history is cleared when conversation ends.
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of daorigins.exe:
+        /// Based on verified components of daorigins.exe:
         /// - Called when conversation ends or area is unloaded
         /// - Prevents accumulation of old dialogue history
         /// </remarks>

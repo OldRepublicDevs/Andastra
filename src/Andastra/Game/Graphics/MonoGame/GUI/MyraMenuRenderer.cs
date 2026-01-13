@@ -14,7 +14,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
     /// </summary>
     /// <remarks>
     /// Myra Menu Renderer:
-    /// - Based on exhaustive reverse engineering of swkotor.exe and swkotor2.exe menu initialization
+    /// - Based on exhaustive verified components of swkotor.exe and swkotor2.exe menu initialization
     /// - swkotor2.exe: 0x006d2350 @ 0x006d2350 (menu constructor/initializer)
     /// - swkotor.exe: 0x0067c4c0 @ 0x0067c4c0 (menu constructor/initializer)
     ///
@@ -101,7 +101,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
         /// - Myra can work with or without Game instance, but having it enables full input handling and resource management
         /// - Desktop is created after environment setup to ensure proper Myra context
         /// - Root panel is configured to fill viewport for full-screen menu rendering
-        /// - Based on exhaustive reverse engineering of swkotor.exe and swkotor2.exe menu initialization
+        /// - Based on exhaustive verified components of swkotor.exe and swkotor2.exe menu initialization
         /// - swkotor2.exe: 0x006d2350 @ 0x006d2350 (menu constructor/initializer)
         /// - swkotor.exe: 0x0067c4c0 @ 0x0067c4c0 (menu constructor/initializer)
         /// </remarks>
@@ -293,7 +293,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
         /// - Desktop.Render() handles all rendering internally using Myra's SpriteBatch
         /// - If MyraEnvironment.Game is set, Myra uses the Game's rendering context automatically
         /// - If Game is not available, Myra uses the provided GraphicsDevice directly
-        /// - Based on exhaustive reverse engineering of swkotor.exe and swkotor2.exe menu rendering
+        /// - Based on exhaustive verified components of swkotor.exe and swkotor2.exe menu rendering
         /// - swkotor2.exe: Menu rendering pipeline (DirectX device presentation)
         /// - swkotor.exe: Menu rendering pipeline (DirectX device presentation)
         /// </remarks>

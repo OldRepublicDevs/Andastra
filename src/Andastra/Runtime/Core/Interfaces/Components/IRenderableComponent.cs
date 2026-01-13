@@ -5,7 +5,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// </summary>
     /// <remarks>
     /// Renderable Component Interface:
-    /// - Cross-Engine Analysis (Reverse Engineered via Ghidra):
+    /// - Cross-Engine Analysis (Reverse Engineered ):
     ///   - Odyssey Engine (swkotor.exe, swkotor2.exe):
     ///     - swkotor.exe: CSWCCreature::LoadModel() @ 0x0074f85c loads creature model from appearance.2da
     ///     - swkotor2.exe: 0x005261b0 @ 0x005261b0 loads creature model from appearance.2da row

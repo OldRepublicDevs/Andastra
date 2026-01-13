@@ -8,9 +8,8 @@ using BioWare.NET.TSLPatcher.Mods;
 using BioWare.NET;
 using BioWare.NET.Common;
 using BioWare.NET.Extract;
-using BioWare.NET.Installation;
 using BioWare.NET.TSLPatcher;
-using BioWare.NET.Resource.Formats.Capsule;
+using BioWare.NET.Extract.Capsule;
 using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using KotorDiff.Cache;
@@ -31,7 +30,7 @@ namespace KotorDiff.Diff
             Action<string> logFunc = null,
             bool compareHashes = true,
             ModificationsByType modificationsByType = null,
-            global::TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
+            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             try
             {
@@ -297,7 +296,7 @@ namespace KotorDiff.Diff
             Action<string> logFunc = null,
             bool compareHashes = true,
             ModificationsByType modificationsByType = null,
-            global::TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
+            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             bool? isSameResult = true;
             int processedCount = 0;
@@ -442,7 +441,7 @@ namespace KotorDiff.Diff
             bool compareHashes = true,
             ModificationsByType modificationsByType = null,
             Action<string> logFunc = null,
-            global::TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
+            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             if (logFunc == null)
             {
@@ -524,7 +523,7 @@ namespace KotorDiff.Diff
             DiffContext context,
             ModificationsByType modificationsByType,
             Action<string> logFunc,
-            global::TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
+            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             try
             {
@@ -579,7 +578,7 @@ namespace KotorDiff.Diff
             ModificationsByType modificationsByType,
             Action<string> logFunc,
             bool compareHashes,
-            global::TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
+            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             try
             {
@@ -635,7 +634,7 @@ namespace KotorDiff.Diff
             DiffContext context,
             ModificationsByType modificationsByType,
             Action<string> logFunc,
-            global::TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
+            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             try
             {
@@ -686,7 +685,7 @@ namespace KotorDiff.Diff
             ModificationsByType modificationsByType,
             Action<string> logFunc,
             bool compareHashes,
-            global::TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
+            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             try
             {
@@ -812,12 +811,12 @@ namespace KotorDiff.Diff
             }
 
             // Load capsules (composite module loading is handled by CompositeModuleCapsule if needed)
-            BioWare.NET.Resource.Formats.Capsule.Capsule file1Capsule = null;
-            BioWare.NET.Resource.Formats.Capsule.Capsule file2Capsule = null;
+            BioWare.NET.Extract.Capsule.Capsule file1Capsule = null;
+            BioWare.NET.Extract.Capsule.Capsule file2Capsule = null;
 
             try
             {
-                file1Capsule = new BioWare.NET.Resource.Formats.Capsule.Capsule(cFile1);
+                file1Capsule = new BioWare.NET.Extract.Capsule.Capsule(cFile1);
             }
             catch (Exception e)
             {
@@ -827,7 +826,7 @@ namespace KotorDiff.Diff
 
             try
             {
-                file2Capsule = new BioWare.NET.Resource.Formats.Capsule.Capsule(cFile2);
+                file2Capsule = new BioWare.NET.Extract.Capsule.Capsule(cFile2);
             }
             catch (Exception e)
             {
@@ -836,8 +835,8 @@ namespace KotorDiff.Diff
             }
 
             // Build dict of resources
-            var capsule1Resources = new Dictionary<string, BioWare.NET.Resource.Formats.Capsule.CapsuleResource>();
-            var capsule2Resources = new Dictionary<string, BioWare.NET.Resource.Formats.Capsule.CapsuleResource>();
+            var capsule1Resources = new Dictionary<string, BioWare.NET.Extract.Capsule.CapsuleResource>();
+            var capsule2Resources = new Dictionary<string, BioWare.NET.Extract.Capsule.CapsuleResource>();
 
             foreach (var res in file1Capsule)
             {
@@ -921,7 +920,7 @@ namespace KotorDiff.Diff
             Func<string, string, bool?> diffFilesFunc = null,
             DiffCache diffCache = null,
             ModificationsByType modificationsByType = null,
-            global::TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
+            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             if (logFunc == null)
             {
@@ -1355,7 +1354,7 @@ namespace KotorDiff.Diff
             string relPath,
             Action<string> logFunc,
             string file2Path,
-            global::TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter)
+            BioWare.NET.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter)
         {
             if (logFunc == null)
             {

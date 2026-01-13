@@ -17,7 +17,7 @@ namespace Andastra.Game.Games.Common.Components
     /// - Common functionality: BaseItem, StackSize, Charges, Cost, Identified, TemplateResRef, Properties, Upgrades
     /// - Engine-specific: File format details, upgrade systems, property calculations, event handling
     ///
-    /// Based on reverse engineering of:
+    /// Based on verified components of:
     /// - swkotor.exe: Item component system with UTI template loading
     /// - swkotor2.exe: Enhanced item system with upgrade support (0x005fb0f0 @ 0x005fb0f0 loads item templates)
     /// - nwmain.exe: Aurora item system using identical UTI format to Odyssey

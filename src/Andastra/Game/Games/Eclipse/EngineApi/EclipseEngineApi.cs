@@ -327,7 +327,7 @@ namespace Andastra.Game.Games.Engines.Eclipse.EngineApi
 
         // GetPosition and GetFacing are now implemented in BaseEngineApi
         // They are identical across all engines (Odyssey, Aurora, Eclipse, Infinity)
-        // Verified via Ghidra MCP analysis:
+        // Verified  MCP analysis:
         // - nwmain.exe: ExecuteCommandGetPosition @ 0x14052f5b0, ExecuteCommandGetFacing @ 0x140523a70
         // - swkotor.exe/swkotor2.exe: Equivalent transform system implementations
         // - daorigins.exe: Equivalent transform system implementations

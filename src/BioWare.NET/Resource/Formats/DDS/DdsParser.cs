@@ -20,7 +20,7 @@ namespace BioWare.NET.Resource.Formats.DDS
     /// - BioWare DDS: No magic, width/height/bpp/dataSize leading integers
     /// - Pixel formats: DXT1/DXT3/DXT5 compression, uncompressed RGB/RGBA/BGR/BGRA, 16-bit ARGB formats
     /// 
-    /// Based on reverse engineering analysis:
+    /// Based on verified components analysis:
     /// - daorigins.exe: DDS texture loading functions use DirectX DDS format parser
     /// - DragonAge2.exe: DDS texture loading functions use DirectX DDS format parser
     /// - Format compatibility: Eclipse engine uses standard DirectX DDS format

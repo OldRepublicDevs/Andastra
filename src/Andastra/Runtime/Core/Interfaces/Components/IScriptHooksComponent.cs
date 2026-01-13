@@ -14,7 +14,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     ///   - Aurora: Uses BaseScriptHooksComponent directly
     ///   - Eclipse: EclipseScriptHooksComponent (inherits from base, no differences)
     ///   - Infinity: InfinityScriptHooksComponent (inherits from base, no differences)
-    /// - Cross-engine analysis completed via Ghidra reverse engineering:
+    /// - Cross-engine analysis completed  reverse engineering:
     ///   - Odyssey: swkotor.exe, swkotor2.exe
     ///     - swkotor.exe: 0x004ebf20, 0x00500610, 0x0058e660, 0x0058da80 (script hooks save/load)
     ///     - swkotor2.exe: 0x005226d0 @ 0x005226d0 (save script hooks for creatures), 0x00585ec0 @ 0x00585ec0 (save script hooks for placeables), 0x00584f40 @ 0x00584f40 (save script hooks for doors), 0x0050c510 @ 0x0050c510 (load script hooks from UTC template)

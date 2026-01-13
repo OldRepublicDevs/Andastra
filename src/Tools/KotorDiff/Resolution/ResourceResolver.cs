@@ -7,8 +7,6 @@ using System.Linq;
 using BioWare.NET;
 using BioWare.NET.Extract;
 using BioWare.NET.Extract.Capsule;
-using BioWare.NET.Resource.Formats.Capsule;
-using BioWare.NET.Installation;
 using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using KotorDiff.Diff;

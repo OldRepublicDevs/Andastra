@@ -153,7 +153,7 @@ namespace Andastra.Game.Graphics.MonoGame.Rendering
         /// - Integrates with appearance.2da for creature model/texture resolution
         /// - Handles all entity types (Creatures, Placeables, Doors, etc.)
         ///
-        /// Based on original engine resource loading behavior (reverse engineered via Ghidra):
+        /// Based on original engine resource loading behavior (reverse engineered ):
         /// - swkotor2.exe: CSWCCreature::LoadModel() @ 0x007c82fc loads models on-demand when entities are created/rendered
         /// - swkotor2.exe: Model loading occurs via LoadModel functions (CSWCCreature::LoadModel, CSWCVisualEffect::LoadModel, etc.)
         /// - nwmain.exe: CExoEncapsulatedFile::ReadResource() @ 0x14018ca10 reads resources from encapsulated files on-demand

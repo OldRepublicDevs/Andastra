@@ -1494,7 +1494,7 @@ namespace Andastra.Game.Games.Eclipse
         /// - Character level requirements
         ///
         /// DragonAge2.exe: UpgradePrereqType @ 0x00c0583c - checks upgrade prerequisites
-        /// Full implementation based on reverse engineering of UpgradePrereqType function behavior.
+        /// Full implementation based on verified components of UpgradePrereqType function behavior.
         /// </remarks>
         private bool CheckUpgradePrerequisites(IItemComponent targetItem, IItemComponent upgradeItem, int upgradeSlot)
         {
@@ -1555,7 +1555,7 @@ namespace Andastra.Game.Games.Eclipse
                     // Pattern: PropertyName might indicate prerequisite type, Param1Value stores minimum level
                     // For now, we use CostValue as a potential indicator of minimum UpgradeLevel requirement
                     // If CostValue is in a reasonable range (1-10) and Param1 suggests level requirement
-                    // This is a heuristic approach until exact UpgradePrereqType format is verified via Ghidra
+                    // This is a heuristic approach until exact UpgradePrereqType format is verified 
                     if (utiProp.CostValue > 0 && utiProp.CostValue <= 10 && utiProp.Param1Value == 0)
                     {
                         // Potential UpgradeLevel requirement encoded in CostValue
@@ -1589,7 +1589,7 @@ namespace Andastra.Game.Games.Eclipse
                     // Pattern: PropertyName might indicate character level prerequisite type
                     // Param1Value or CostValue stores minimum character level
                     // Common pattern: If Param1 is outside ability range (0-5) and value is reasonable level (1-50)
-                    // This is a heuristic approach until exact format is verified via Ghidra
+                    // This is a heuristic approach until exact format is verified 
                     if (utiProp.Param1 > 5 && utiProp.Param1Value > 0 && utiProp.Param1Value <= 50)
                     {
                         // Potential character level requirement encoded in Param1Value
@@ -1640,7 +1640,7 @@ namespace Andastra.Game.Games.Eclipse
 
             // Parse upgrade dependency prerequisites from upgrade properties
             // Pattern: Properties might encode required upgrade ResRefs or UpgradeType IDs
-            // This is a heuristic approach - exact format needs verification via Ghidra
+            // This is a heuristic approach - exact format needs verification 
             if (upgradeUTI.Properties != null && upgradeUTI.Properties.Count > 0)
             {
                 foreach (var utiProp in upgradeUTI.Properties)
@@ -1740,7 +1740,7 @@ namespace Andastra.Game.Games.Eclipse
                 {
                     // Check if property encodes item quality/tier requirement
                     // Pattern: High CostValue or Param1Value might indicate quality requirement
-                    // This is a heuristic approach until exact format is verified via Ghidra
+                    // This is a heuristic approach until exact format is verified 
                     if (utiProp.CostValue > 50 && utiProp.CostValue <= 10000)
                     {
                         // Potential quality requirement encoded in CostValue

@@ -33,8 +33,8 @@ namespace Andastra.Game.Games.Odyssey.UI
     /// - Both check inventory using similar logic
     /// - Differences: K2 uses "upgradeitems_p", K1 uses "upgradeitems" for regular items
     /// - Differences: K2 has 6 upgrade slots for lightsabers, K1 has 4
-    /// - Based on swkotor.exe: 0x006c7630 (constructor), 0x006c6500 (button handler), 0x006c59a0 (ApplyUpgrade)
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00731a00 (constructor), 0x0072e260 (button handler), 0x00729640 (ApplyUpgrade)
+    /// - Based on swkotor.exe: 0x006c7630 (constructor), 0x006c6500 (CUpgradeScreen::OnButtonClick), 0x006c59a0 (ApplyUpgrade)
+    /// - Based on swkotor2.exe: 0x00731a00 (constructor), 0x0072e260 (CUpgradeScreen::OnButtonClick), 0x00729640 (ApplyUpgrade)
     /// </remarks>
     public abstract class OdysseyUpgradeScreenBase : BaseUpgradeScreen
     {
@@ -47,7 +47,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         private bool _guiInitialized;
 
         // Upgrade slot and list box state tracking
-        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 - tracks selected upgrade slot and list box selection
+        // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 - tracks selected upgrade slot and list box selection
         // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 - tracks selected upgrade slot and list box selection
         private int? _selectedUpgradeSlot;
         private List<string> _currentUpgradeList; // List of upgrade ResRefs currently displayed in LB_ITEMS
@@ -257,7 +257,7 @@ namespace Andastra.Game.Games.Odyssey.UI
                 HashSet<string> inventoryResRefs = GetCharacterInventoryResRefs(_character);
 
                 // Get column headers to check if required columns exist
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 - uses "UpgradeType" and "Template" columns
+                // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 - uses "UpgradeType" and "Template" columns
                 // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 - uses "UpgradeType" and "Template" columns
                 List<string> headers = upgradeTable.GetHeaders();
                 bool hasUpgradeTypeColumn = headers.Contains("UpgradeType", StringComparer.OrdinalIgnoreCase);
@@ -270,7 +270,7 @@ namespace Andastra.Game.Games.Odyssey.UI
                 }
 
                 // Iterate through upgrade table rows and filter by compatibility
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 lines 100-128, 144-172, 271-299
+                // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 lines 100-128, 144-172, 271-299
                 // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 lines 88-116
                 // Loop through all rows in upgrade table
                 for (int rowIndex = 0; rowIndex < upgradeTable.GetHeight(); rowIndex++)
@@ -278,7 +278,7 @@ namespace Andastra.Game.Games.Odyssey.UI
                     TwoDARow row = upgradeTable.GetRow(rowIndex);
 
                     // Check UpgradeType compatibility (this is the slot index)
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 line 102 - checks "UpgradeType" column
+                    // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 line 102 - checks "UpgradeType" column
                     // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 90 - checks "UpgradeType" column
                     // UpgradeType column specifies which slot this upgrade can be placed in
                     // Can be:
@@ -296,13 +296,13 @@ namespace Andastra.Game.Games.Odyssey.UI
                     }
 
                     // Check if UpgradeType matches the requested slot
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 line 107, 151, 278 - compares UpgradeType with slot
+                    // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 line 107, 151, 278 - compares UpgradeType with slot
                     // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 95 - compares UpgradeType with slot
                     bool slotMatches = false;
                     if (string.IsNullOrWhiteSpace(upgradeTypeValue) || upgradeTypeValue == "****")
                     {
                         // Empty UpgradeType - special case: for lightsaber crystals (slot 1), UpgradeType can be 0/empty
-                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 line 107 - checks if UpgradeType == 0
+                        // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 line 107 - checks if UpgradeType == 0
                         if (upgradeSlot == 1)
                         {
                             // For slot 1 (lightsaber crystals), empty UpgradeType is valid
@@ -333,7 +333,7 @@ namespace Andastra.Game.Games.Odyssey.UI
                     }
 
                     // Get Template ResRef from upgrade table row
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 line 108, 152, 279 - uses "Template" column
+                    // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 line 108, 152, 279 - uses "Template" column
                     // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 96, 98 - uses "Template" column
                     // Template column contains the upgrade item template ResRef
                     string upgradeResRef = null;
@@ -416,7 +416,7 @@ namespace Andastra.Game.Games.Odyssey.UI
                         }
 
                         // Upgrade is compatible, available in inventory, and meets skill requirements
-                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 line 79, 118, 162, 289 - checks if item found in inventory
+                        // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 line 79, 118, 162, 289 - checks if item found in inventory
                         // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 66, 106 - checks if item found in inventory
                         if (meetsSkillRequirements && !availableUpgrades.Contains(normalizedResRef, StringComparer.OrdinalIgnoreCase))
                         {
@@ -457,7 +457,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// <remarks>
         /// Remove Upgrade Logic (Odyssey Engine - K1 and K2):
         /// - Based on swkotor.exe: 0x006c6500 @ 0x006c6500 lines 165-180 (removal logic)
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 lines 217-230 (removal logic)
+        /// - CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 lines 217-230 (removal logic)
         /// - Original implementation flow:
         ///   1. Gets upgrade item from slot array (K1: offset 0x2f74, K2: offset 0x3d54)
         ///   2. Clears flag/bit associated with upgrade slot
@@ -490,7 +490,7 @@ namespace Andastra.Game.Games.Odyssey.UI
 
             // Find upgrade in slot
             // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 169 - gets upgrade from offset 0x2f74
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 line 218 - gets upgrade from offset 0x3d54
+            // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 line 218 - gets upgrade from offset 0x3d54
             var upgrade = itemComponent.Upgrades.FirstOrDefault(u => u.Index == upgradeSlot);
             if (upgrade == null)
             {
@@ -500,7 +500,7 @@ namespace Andastra.Game.Games.Odyssey.UI
 
             // Get upgrade item ResRef from tracked upgrade data
             // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 169 - gets item from slot array
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 line 218 - gets item from slot array
+            // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 line 218 - gets item from slot array
             // We track upgrade ResRefs in _upgradeResRefMap for removal
             string upgradeKey = item.ObjectId.ToString() + "_" + upgradeSlot.ToString();
             string upgradeResRef = null;
@@ -509,7 +509,7 @@ namespace Andastra.Game.Games.Odyssey.UI
                 // Upgrade ResRef not found in tracking map - cannot remove properties
                 // Still remove upgrade from item, but cannot restore properties
                 // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 176 - removes from array using 0x006857a0
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 line 219 - removes from array using 0x00431ec0
+                // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 line 219 - removes from array using 0x00431ec0
                 itemComponent.RemoveUpgrade(upgrade);
                 return true;
             }
@@ -523,7 +523,7 @@ namespace Andastra.Game.Games.Odyssey.UI
 
             // Remove upgrade from item
             // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 176 - removes from array using 0x006857a0
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 line 219 - removes from array using 0x00431ec0
+            // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 line 219 - removes from array using 0x00431ec0
             // This clears the upgrade slot and removes it from the item's upgrade list
             itemComponent.RemoveUpgrade(upgrade);
 
@@ -736,7 +736,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// </summary>
         /// <param name="upgradeSlot">Upgrade slot index (0-based).</param>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 - slot selection handler
+        /// CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 - slot selection handler
         /// Based on swkotor.exe: 0x006c6500 @ 0x006c6500 - slot selection handler
         /// Original implementation:
         /// - Sets selected slot index
@@ -761,7 +761,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// Refreshes the upgrade display with available upgrades.
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 - populates upgrade list
+        /// CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 - populates upgrade list
         /// Based on swkotor.exe: 0x006c6500 @ 0x006c6500 - populates upgrade list
         /// Original implementation:
         /// - Gets available upgrades for current item and slot
@@ -784,7 +784,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Get available upgrades for the selected slot
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 - gets available upgrades
+            // CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 - gets available upgrades
             // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 - gets available upgrades
             _currentUpgradeList = GetAvailableUpgrades(_targetItem, _selectedUpgradeSlot.Value);
 
@@ -796,7 +796,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// Updates the LB_ITEMS list box with the current upgrade list.
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 - populates LB_ITEMS list box
+        /// CUpgradeScreen::OnButtonClick @ (K1: CUpgradeScreen::OnButtonClick @ 0x006c6500, TSL: CUpgradeScreen::OnButtonClick @ 0x0072e260): 0x0072e260 @ 0x0072e260 - populates LB_ITEMS list box
         /// Based on swkotor.exe: 0x006c6500 @ 0x006c6500 - populates LB_ITEMS list box
         /// Original implementation:
         /// - Clears existing list box items

@@ -76,7 +76,7 @@ namespace Andastra.Game.Games.Aurora
     /// - More complex than Odyssey due to tile connectivity
     /// - Supports pathfinding across tile boundaries
     ///
-    /// Based on reverse engineering of:
+    /// Based on verified components of:
     /// - nwmain.exe: CNWSArea::GetTile @ 0x14035edc0 - Converts world coordinates to tile coordinates and returns tile pointer
     /// - nwmain.exe: CNWTile::GetLocation @ 0x1402c55a0 - Gets tile grid coordinates (X, Y) from tile structure
     /// - nwmain.exe: Tile validation checks bounds (0 <= tileX < width, 0 <= tileY < height)
@@ -168,7 +168,7 @@ namespace Andastra.Game.Games.Aurora
         /// 3. Check if tile has walkable surfaces using IsWalkable property
         /// 4. Handle boundary cases: points on tile edges check the containing tile
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - nwmain.exe: CNWSArea::GetTile @ 0x14035edc0 - Converts world coordinates to tile coordinates
         /// - nwmain.exe: CNWTile walkability checks - Tiles have walkable surface flags
         /// - Tile size constant: DAT_140dc2df4 (10.0f units per tile)
@@ -228,7 +228,7 @@ namespace Andastra.Game.Games.Aurora
         /// Projects to nearest walkable surface across tile boundaries.
         /// Handles height transitions between tiles.
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - nwmain.exe: CNWSArea::GetTile @ 0x14035edc0 - Converts world coordinates to tile coordinates
         /// - nwmain.exe: CNWTile walkmesh projection - Projects points to walkable tile surfaces
         /// - Tile-based projection: Unlike Odyssey's triangle-based walkmesh, Aurora uses tile-based surfaces
@@ -432,7 +432,7 @@ namespace Andastra.Game.Games.Aurora
         /// Samples height from tile-based terrain data.
         /// Handles tile boundary interpolation.
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - nwmain.exe: CNWSArea::GetTile @ 0x14035edc0 - Converts world coordinates to tile coordinates
         /// - nwmain.exe: CNWTile height sampling - Tiles store height transition data
         /// - Tile height transitions: Tile.Height property indicates number of height transitions
@@ -1185,7 +1185,7 @@ namespace Andastra.Game.Games.Aurora
         /// 5. Convert tile path back to world coordinates
         /// 6. Apply path smoothing using line-of-sight checks
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - nwmain.exe: CNWSArea::PlotGridPath @ 0x14036f510 - grid-based pathfinding
         /// - nwmain.exe: CNWSArea::InterTileDFSSoundPath @ 0x14036e260 - tile neighbor traversal
         /// - nwmain.exe: CPathfindInformation class - pathfinding context and obstacle data
@@ -1579,7 +1579,7 @@ namespace Andastra.Game.Games.Aurora
         /// 3. Calculate face index from tile coordinates: faceIndex = tileY * tileWidth + tileX
         /// 4. Return face index if valid, -1 if position is not on a valid walkable tile
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - nwmain.exe: CNWSArea::GetTile @ 0x14035edc0 - Converts world coordinates to tile coordinates
         /// - nwmain.exe: CNWTile::GetLocation @ 0x1402c55a0 - Gets tile grid coordinates
         /// - Tile size constant: DAT_140dc2df4 (10.0f units per tile)
@@ -1654,7 +1654,7 @@ namespace Andastra.Game.Games.Aurora
         /// 4. Use GetTileCenter to get the tile center point (world coordinates)
         /// 5. Return Vector3.Zero for invalid face indices
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - nwmain.exe: CNWSArea::GetTile @ 0x14035edc0 - Converts world coordinates to tile coordinates
         /// - nwmain.exe: CNWTile::GetLocation @ 0x1402c55a0 - Gets tile grid coordinates (X, Y) from tile structure
         /// - Tile center calculation: centerX = (tileX + 0.5) * TileSize, centerZ = (tileY + 0.5) * TileSize
@@ -1727,7 +1727,7 @@ namespace Andastra.Game.Games.Aurora
         /// 5. Convert each neighbor tile back to a face index: faceIndex = tileY * tileWidth + tileX
         /// 6. Return only walkable faces (GetTileNeighbors already filters for walkable tiles)
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - nwmain.exe: CNWSArea::InterTileDFSSoundPath @ 0x14036e260 - Tile neighbor traversal
         /// - nwmain.exe: CNWSArea::PlotGridPath @ 0x14036f510 - Grid-based pathfinding uses adjacent tiles
         /// - nwmain.exe: CNWSArea::GetTile @ 0x14035edc0 - Tile coordinate conversion and validation
@@ -1827,7 +1827,7 @@ namespace Andastra.Game.Games.Aurora
         /// 3. Check if tile is valid using IsTileValid
         /// 4. Check if tile is loaded and has walkable surfaces
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - nwmain.exe: CNWSArea::GetTile @ 0x14035edc0 - Tile coordinate conversion and validation
         /// - nwmain.exe: CNWTile walkability checks - Tiles have walkable surface flags
         /// - Face index calculation: faceIndex = tileY * tileWidth + tileX (from FindFaceAt)
@@ -1910,7 +1910,7 @@ namespace Andastra.Game.Games.Aurora
         /// 5. Return tile's SurfaceMaterial property
         /// 6. Return 0 (Undefined) for invalid face indices or unloaded tiles
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - nwmain.exe: CNWSArea::GetTile @ 0x14035edc0 - Tile coordinate conversion and validation
         /// - nwmain.exe: CNWTileSet::GetTileData() - Tile surface material lookup from tileset
         /// - Face index calculation: faceIndex = tileY * tileWidth + tileX (from FindFaceAt)

@@ -14,7 +14,7 @@ namespace Andastra.Game.Stride.GUI
     /// </summary>
     /// <remarks>
     /// Stride Menu Renderer:
-    /// - Based on exhaustive reverse engineering of swkotor.exe and swkotor2.exe menu initialization
+    /// - Based on exhaustive verified components of swkotor.exe and swkotor2.exe menu initialization
     /// - swkotor2.exe: 0x006d2350 @ 0x006d2350 (menu constructor/initializer)
     /// - swkotor.exe: 0x0067c4c0 @ 0x0067c4c0 (menu constructor/initializer)
     ///

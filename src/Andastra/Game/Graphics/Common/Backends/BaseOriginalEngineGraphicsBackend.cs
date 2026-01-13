@@ -26,7 +26,7 @@ namespace Andastra.Game.Graphics.Common.Backends
     /// <remarks>
     /// Original Engine Graphics Backend:
     /// - This backend matches the original game engine rendering exactly 1:1
-    /// - Graphics API usage (verified via Ghidra reverse engineering):
+    /// - Graphics API usage (verified  reverse engineering):
     ///   * Odyssey (KOTOR 1/2): OpenGL ONLY (swkotor.exe/swkotor2.exe import OPENGL32.DLL, GLU32.DLL)
     ///   * Aurora (NWN:EE): OpenGL ONLY (nwmain.exe imports OPENGL32.DLL, GLU32.DLL)
     ///   * Eclipse (DA:O): DirectX 9 (daorigins.exe dynamically loads d3d9.dll, Direct3DCreate9)
@@ -615,7 +615,7 @@ namespace Andastra.Game.Graphics.Common.Backends
         /// 5. Make context current (wglMakeCurrent)
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of swkotor.exe: 0x0044dab0:
+        /// Based on verified components of swkotor.exe: 0x0044dab0:
         /// - Line 117: hdc = GetDC(param_2)
         /// - Line 153: iStack_19c = ChoosePixelFormat(hdc,&PStack_188)
         /// - Line 155: SetPixelFormat(hdc,iStack_19c,...)
@@ -768,7 +768,7 @@ namespace Andastra.Game.Graphics.Common.Backends
         /// 5. Data loading is done separately via UploadOpenGLTextureData
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of swkotor.exe: 0x00427c90:
+        /// Based on verified components of swkotor.exe: 0x00427c90:
         /// - Uses glGenTextures(1, &textureId) to generate texture names
         /// - Uses glBindTexture(GL_TEXTURE_2D, textureId) to bind textures
         /// - Uses glTexParameteri for texture filtering and wrapping

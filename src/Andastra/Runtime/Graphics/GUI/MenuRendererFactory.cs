@@ -13,7 +13,7 @@ namespace Andastra.Runtime.Graphics.Common.GUI
     /// Menu Renderer Factory:
     /// - Creates appropriate menu renderer based on graphics backend (MonoGame, Stride)
     /// - Menu renderers are backend-specific but engine-agnostic (work for all engines)
-    /// - Based on exhaustive reverse engineering of original engine menu initialization
+    /// - Based on exhaustive verified components of original engine menu initialization
     /// - All engines (Odyssey, Aurora, Eclipse, Infinity) use the same menu renderer interface
     /// - Engine-specific menu initialization is handled by the game session, not the renderer
     /// </remarks>
@@ -68,7 +68,7 @@ namespace Andastra.Runtime.Graphics.Common.GUI
         /// - Extracts the underlying MonoGame GraphicsDevice from the IGraphicsDevice wrapper
         /// - Creates MyraMenuRenderer with the extracted GraphicsDevice
         /// - Handles errors gracefully with detailed logging
-        /// - Based on exhaustive reverse engineering of swkotor.exe and swkotor2.exe menu initialization
+        /// - Based on exhaustive verified components of swkotor.exe and swkotor2.exe menu initialization
         /// - All engines (Odyssey, Aurora, Eclipse, Infinity) use the same menu renderer interface
         /// </remarks>
         private static BaseMenuRenderer CreateMonoGameMenuRenderer(IGraphicsDevice graphicsDevice)
@@ -181,7 +181,7 @@ namespace Andastra.Runtime.Graphics.Common.GUI
         /// - Extracts the underlying Stride GraphicsDevice from the IGraphicsDevice wrapper
         /// - Creates StrideMenuRenderer with the extracted GraphicsDevice
         /// - Handles errors gracefully with detailed logging
-        /// - Based on exhaustive reverse engineering of swkotor.exe and swkotor2.exe menu initialization
+        /// - Based on exhaustive verified components of swkotor.exe and swkotor2.exe menu initialization
         /// - swkotor2.exe: 0x006d2350 @ 0x006d2350 (menu constructor/initializer)
         /// - swkotor.exe: 0x0067c4c0 @ 0x0067c4c0 (menu constructor/initializer)
         /// - All engines (Odyssey, Aurora, Eclipse, Infinity) use the same menu renderer interface
@@ -357,7 +357,7 @@ namespace Andastra.Runtime.Graphics.Common.GUI
         /// - This is necessary because the wrapper doesn't expose the underlying device publicly
         /// - Handles reflection errors gracefully with detailed logging
         /// - Returns null if the field cannot be accessed or is null
-        /// - Based on exhaustive reverse engineering of swkotor.exe and swkotor2.exe menu initialization
+        /// - Based on exhaustive verified components of swkotor.exe and swkotor2.exe menu initialization
         /// - swkotor2.exe: 0x006d2350 @ 0x006d2350 (menu constructor/initializer)
         /// - swkotor.exe: 0x0067c4c0 @ 0x0067c4c0 (menu constructor/initializer)
         /// </remarks>

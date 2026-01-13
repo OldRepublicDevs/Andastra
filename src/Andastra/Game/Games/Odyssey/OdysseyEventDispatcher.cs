@@ -759,13 +759,13 @@ namespace Andastra.Game.Games.Odyssey
             if (targetArea.NavigationMesh is OdysseyNavigationMesh odysseyMesh)
             {
                 int? faceIndex;
-                float height = odysseyMesh.ProjectToWalkmeshExact(currentPosition, 0, out faceIndex);
+                float exactHeight = odysseyMesh.ProjectToWalkmeshExact(currentPosition, 0, out faceIndex);
                 
                 if (faceIndex.HasValue)
                 {
-                    Vector3 projectedPosition = new Vector3(currentPosition.X, currentPosition.Y, height);
-                    transform.Position = projectedPosition;
-                    Console.WriteLine($"[OdysseyEventDispatcher] ProjectEntityToTargetArea: Successfully projected entity {entity.Tag ?? "null"} ({entity.ObjectId}) to position ({projectedPosition.X:F2}, {projectedPosition.Y:F2}, {projectedPosition.Z:F2}), height: {height:F2}, face: {faceIndex.Value}");
+                    Vector3 exactProjectedPosition = new Vector3(currentPosition.X, currentPosition.Y, exactHeight);
+                    transform.Position = exactProjectedPosition;
+                    Console.WriteLine($"[OdysseyEventDispatcher] ProjectEntityToTargetArea: Successfully projected entity {entity.Tag ?? "null"} ({entity.ObjectId}) to position ({exactProjectedPosition.X:F2}, {exactProjectedPosition.Y:F2}, {exactProjectedPosition.Z:F2}), height: {exactHeight:F2}, face: {faceIndex.Value}");
                     return;
                 }
             }
