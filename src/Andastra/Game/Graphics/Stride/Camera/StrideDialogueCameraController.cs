@@ -175,7 +175,7 @@ namespace Andastra.Game.Stride.Camera
         /// - The system automatically detects camera hooks from MDL models when available
         /// - If camera hooks are found in the speaker/listener models, they are used for precise positioning
         /// - If no camera hooks are available, the system falls back to predefined camera angles
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x006c6020 @ 0x006c6020 searches MDL node tree for "camerahook" nodes
+        /// swkotor2.exe: 0x006c6020 (SearchMDLNodeTreeForCameraHook) - Searches MDL node tree for "camerahook" nodes
         /// Original implementation: Queries MDL model for nodes named "camerahook{N}" and uses their world-space positions
         /// </summary>
         /// <param name="animId">The camera animation ID.</param>
@@ -203,7 +203,7 @@ namespace Andastra.Game.Stride.Camera
                 // Original implementation: Queries MDL model for nodes named "camerahook{N}" and uses their world-space positions
                 // Camera hooks are MDL dummy nodes that define precise camera positions relative to character models
                 // The GetCameraHookPosition method searches MDL node tree recursively for "camerahook{N}" nodes
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x006c6020 @ 0x006c6020 searches MDL node tree for "camerahook" nodes
+                // swkotor2.exe: 0x006c6020 (SearchMDLNodeTreeForCameraHook) - Searches MDL node tree for "camerahook" nodes
                 // Implementation:
                 //   1. Constructs camera hook node name (format: "camerahook{N}" where N is hookIndex)
                 //   2. Searches MDL model node tree recursively for matching node name
@@ -225,7 +225,7 @@ namespace Andastra.Game.Stride.Camera
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Automatic camera hook detection when animation doesn't explicitly specify hooks
                 // Original implementation: If speaker/listener models have camera hooks, use them for precise positioning
                 // This provides automatic camera hook support without requiring manual registration
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x006c6020 @ 0x006c6020 searches MDL node tree for "camerahook" nodes
+                // swkotor2.exe: 0x006c6020 (SearchMDLNodeTreeForCameraHook) - Searches MDL node tree for "camerahook" nodes
                 // Located via string references: "camerahook" @ 0x007c7dac, "camerahook%d" @ 0x007d0448
                 // Original implementation: Searches MDL model node tree recursively for nodes named "camerahook{N}"
                 bool hooksFound = false;
