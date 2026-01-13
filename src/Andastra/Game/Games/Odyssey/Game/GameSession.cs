@@ -472,7 +472,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             _pendingCharacterData = characterData;
 
             // Determine starting module using exact logic from 0x006d0b00 (swkotor2.exe: 0x006d0b00)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 0x006d0b00: Module selection logic
+            // OnNewGameButtonClicked @ (K1: TODO: Find this address, TSL: 0x006d0b00): Module selection logic
             string startingModule = DetermineStartingModule();
 
             // Initialize module loading system (equivalent to 0x00401380)
@@ -480,7 +480,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             InitializeModuleLoading();
 
             // Load HD0:effects directory (equivalent to 0x00630a90(local_40,"HD0:effects"))
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 0x006d0b00 line 31: Load effects directory
+            // OnNewGameButtonClicked @ (K1: TODO: Find this address, TSL: 0x006d0b00) line 31: Load effects directory
             // Note: HD0:effects is a directory alias, resource system handles this automatically
 
             // Load module synchronously
@@ -503,7 +503,7 @@ namespace Andastra.Game.Games.Odyssey.Game
         /// </summary>
         /// <returns>The starting module name to load.</returns>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 0x006d0b00 @ 0x006d0b00 (New Game Button Handler):
+        /// OnNewGameButtonClicked @ (K1: TODO: Find this address, TSL: 0x006d0b00) (New Game Button Handler):
         /// - Line 29: Sets default to "001ebo" (prologue module)
         /// - Lines 43-50: Checks for alternative modules with codes 0x7db and 0xbba
         /// - If alternatives don't exist, falls back to "001ebo"
@@ -519,12 +519,12 @@ namespace Andastra.Game.Games.Odyssey.Game
             }
 
             // Default starting modules based on game version
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 0x006d0b00 line 29: "001ebo" (K2 prologue)
+            // OnNewGameButtonClicked @ (K1: TODO: Find this address, TSL: 0x006d0b00) line 29: "001ebo" (K2 prologue)
             // Based on swkotor.exe: "END_M01AA" (K1 Endar Spire)
             string defaultModule = _settings.Game == KotorGame.K1 ? "end_m01aa" : "001ebo";
 
             // Check for alternative modules with codes 0x7db (MOD) and 0xbba (RIM) (K2 only)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 0x006d0b00 lines 43-50:
+            // OnNewGameButtonClicked @ (K1: TODO: Find this address, TSL: 0x006d0b00) lines 43-50:
             // - 0x00408df0(DAT_008283c0,local_30,0x7db,(undefined4 *)0x0) - Check module code 0x7db (MOD resource type)
             // - If 0x7db fails: 0x00408df0(DAT_008283c0,local_30,0xbba,(undefined4 *)0x0) - Check module code 0xbba (RIM resource type)
             // - If both fail: 0x00630d10(local_38,"001ebo") - Fallback to "001ebo"
