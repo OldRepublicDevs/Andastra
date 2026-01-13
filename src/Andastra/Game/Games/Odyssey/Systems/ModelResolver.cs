@@ -34,7 +34,7 @@ namespace Andastra.Game.Games.Odyssey.Systems
     ///   - ["ModelType"]         @ (K1: TODO: Find this address, TSL: 0x007c4568) - model type field variant
     ///   - ["MODEL01"]             @ (K1: TODO: Find this address, TSL: 0x007c4b48) - model variation fields,
     ///   - ["MODEL02"]             @ (K1: TODO: Find this address, TSL: 0x007c4b34) - model variation fields,
-    ///   - ["MODEL03"]             @ (K1: 0x0074b8ec, TSL: 0x007c4b20) - model variation fields
+    ///   - ["MODEL03"]             @ (K1: TODO: Find this address, TSL: 0x007c4b20) - model variation fields
     /// - Model loading errors:
     ///   - ["CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ (K1: TODO: Find this address, TSL: 0x007c82fc) - model loading error
     ///   - ["CSWCCreatureAppearance::CreateBTypeBody(): Failed to load model '%s'." @ (K1: TODO: Find this address, TSL: 0x007cdc40) - model loading error
@@ -51,21 +51,11 @@ namespace Andastra.Game.Games.Odyssey.Systems
     public static class ModelResolver
     {
         /// <summary>
-        /// Resolves the model ResRef for a creature based on appearance type and body variation.
+        /// Resolves the model ResRef for a creature based on appearance type.
         /// </summary>
-        /// <remarks>
-        /// swkotor2.exe: 0x005261b0 - resolves creature model from appearance.2da row, based on appearance type and body variation
-        /// 
-        /// Model resolution logic:
-        /// - For ModelType "B" (Character) or "P" (Player): Uses model columns (modela through modeln) based on body variation
-        ///   - Body variation 0 = modela, 1 = modelb, ..., 13 = modeln
-        ///   - Body variation is typically determined by equipped armor (from baseitems.2da "bodyvar" column)
-        /// - For other ModelTypes ("S", "F", "L"): Uses "race" column (single model for the appearance)
-        /// - Falls back to modela if body variation is out of range or model column is empty
-        /// </remarks>
         /// <param name="gameData">Game data manager for 2DA lookups.</param>
         /// <param name="appearanceType">Appearance type index into appearance.2da.</param>
-        /// <param name="bodyVariation">Body variation (0 = ["modela"], 1 = ["modelb"], ..., 13 = ["modeln"]).</param>
+        /// <param name="bodyVariation">Body variation (0 = ["ModelA"], 1 = ["ModelB"], etc.).</param>
         /// <returns>Model ResRef or null if not found.</returns>
         [CanBeNull]
         public static string ResolveCreatureModel([NotNull] GameDataManager gameData, int appearanceType, int bodyVariation = 0)
@@ -81,33 +71,17 @@ namespace Andastra.Game.Games.Odyssey.Systems
                 return null;
             }
 
-            // For Character (B) or Player (P) model types, use model columns based on body variation
-            // For other model types (S, F, L), use the race column (single model)
-            string modelType = appearance.ModelType;
-            if (modelType == "B" || modelType == "P")
+            // Use modela for variation 0, modelb for variation 1, etc.
+            // Based on appearance.2da: modela, modelb, modelc, etc. columns
+            switch (bodyVariation)
             {
-                // Use model columns (modela through modeln) based on body variation
-                // Body variation 0 = modela, 1 = modelb, ..., 13 = modeln
-                string modelResRef = appearance.GetModelByVariation(bodyVariation);
-                
-                // If the specific variation model is empty, try to fall back to modela
-                if (string.IsNullOrEmpty(modelResRef))
-                {
-                    modelResRef = appearance.ModelA;
-                }
-                
-                // If modela is also empty, fall back to race column
-                if (string.IsNullOrEmpty(modelResRef))
-                {
-                    modelResRef = appearance.Race;
-                }
-                
-                return modelResRef;
-            }
-            else
-            {
-                // For Simple (S), Droid (F), or Large (L) model types, use race column
-                return appearance.Race;
+                case 0:
+                    return appearance.ModelA;
+                case 1:
+                    return appearance.ModelB;
+                default:
+                    // Fallback to modela if variation is out of range
+                    return appearance.ModelA;
             }
         }
 
