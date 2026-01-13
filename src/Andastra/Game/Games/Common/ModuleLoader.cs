@@ -267,10 +267,87 @@ namespace Andastra.Game.Games.Engines.Common
             await Task.CompletedTask;
         }
 
-        // TODO: STUB - Eclipse module loading implementation
-        // Merge from EclipseModuleLoader.cs and DragonAgeModuleLoader.cs
+        // Eclipse module loading implementation
+        // Merged from EclipseModuleLoader.cs and DragonAgeModuleLoader.cs
         private async Task LoadModuleEclipseAsync(string moduleName, [CanBeNull] Action<float> progressCallback)
         {
+            progressCallback?.Invoke(0.1f);
+
+            // Set module ID early so it can be used in resource loading
+            _currentModuleId = moduleName;
+
+            // Load module from MODULES directory (Dragon Age modules)
+            string packagesPath = _eclipseResourceProvider.PackagePath();
+            string fullModulePath = Path.Combine(packagesPath, moduleName);
+
+            if (!Directory.Exists(fullModulePath))
+            {
+                throw new DirectoryNotFoundException($"Module directory not found: {fullModulePath}");
+            }
+
+            progressCallback?.Invoke(0.3f);
+
+            // Load module resources (RIM files)
+            await LoadDragonAgeModuleResourcesAsync(fullModulePath, progressCallback);
+
+            // Set module name and state
+            _currentModuleName = moduleName;
+            progressCallback?.Invoke(0.9f);
+        }
+
+        // Load Dragon Age module resources (RIM files)
+        private async Task LoadDragonAgeModuleResourcesAsync(string modulePath, [CanBeNull] Action<float> progressCallback)
+        {
+            progressCallback?.Invoke(0.4f);
+
+            // Load module.rim file if it exists
+            string moduleRimPath = Path.Combine(modulePath, "module.rim");
+            if (File.Exists(moduleRimPath))
+            {
+                try
+                {
+                    var rim = BioWare.NET.Resource.Formats.RIM.RIMAuto.ReadRim(moduleRimPath);
+                    _eclipseResourceProvider.AddRimFile(moduleRimPath);
+                    _loadedModuleRimPath = moduleRimPath;
+                }
+                catch (InvalidDataException ex)
+                {
+                    throw new InvalidDataException($"Failed to parse module RIM file: {moduleRimPath}. The RIM file may be corrupted or in an unsupported format.", ex);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Error loading module RIM file: {moduleRimPath}", ex);
+                }
+            }
+
+            // Load module extension RIM files if they exist (e.g., module001x.rim)
+            try
+            {
+                string[] extensionRimFiles = Directory.GetFiles(modulePath, "*x.rim");
+                foreach (string extensionRimPath in extensionRimFiles)
+                {
+                    try
+                    {
+                        var extensionRim = BioWare.NET.Resource.Formats.RIM.RIMAuto.ReadRim(extensionRimPath);
+                        _eclipseResourceProvider.AddRimFile(extensionRimPath);
+                        _loadedModuleExtensionRimPaths.Add(extensionRimPath);
+                    }
+                    catch (InvalidDataException ex)
+                    {
+                        throw new InvalidDataException($"Failed to parse module extension RIM file: {extensionRimPath}. The RIM file may be corrupted or in an unsupported format.", ex);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception($"Error loading module extension RIM file: {extensionRimPath}", ex);
+                    }
+                }
+            }
+            catch (DirectoryNotFoundException)
+            {
+                // Module directory doesn't exist (shouldn't happen, but handle gracefully)
+            }
+
+            progressCallback?.Invoke(0.6f);
             await Task.CompletedTask;
         }
 
