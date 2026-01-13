@@ -732,8 +732,9 @@ namespace Andastra.Game.Games.Odyssey
         /// Saves quest states, player choices, persistent variables.
         /// Uses GFF format with variable categories.
         ///
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005ac670 @ 0x005ac670 (calls 0x005ab310 @ 0x005ab310 internally)
-        /// Located via string reference: "GLOBALVARS" @ 0x007c27bc
+        /// swkotor.exe: 0x0052ad10 (CSWGlobalVariableTable::Save) - Constructs path and calls WriteTable @ 0x005299b0
+        /// swkotor2.exe: 0x005ac670 (CSWGlobalVariableTable::Save) - Constructs path and calls WriteTable @ 0x005ab310
+        /// Located via string reference: "GLOBALVARS" @ 0x007484ec (K1) / 0x007c27bc (TSL)
         /// Original implementation: Creates GFF with "GLOB" signature (for save games) containing VariableList array
         /// GFF structure: VariableList array with VariableName, VariableType, VariableValue fields
         /// VariableType values: 0 = BOOLEAN, 1 = INT, 3 = STRING
@@ -760,7 +761,8 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Create GFF with VariableList structure
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005ac670 @ 0x005ac670
+            // swkotor.exe: 0x0052ad10 (CSWGlobalVariableTable::Save) - Creates GFF structure
+            // swkotor2.exe: 0x005ac670 (CSWGlobalVariableTable::Save) - Creates GFF structure
             // GLOB GFF structure: VariableList array with VariableName, VariableType, VariableValue
             var gff = new GFF();
             var root = gff.Root;
@@ -769,8 +771,9 @@ namespace Andastra.Game.Games.Odyssey
 
             // Get all global variable names from game state
             // Based on IGameState interface: GetGlobalNames() returns all variable names
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005ac670 @ 0x005ac670 - no explicit error handling in original,
-            // but we handle cases where GetGlobalNames is not implemented or fails gracefully
+            // swkotor.exe: 0x005299b0 (CSWGlobalVariableTable::WriteTable) - Iterates through identifier table
+            // swkotor2.exe: 0x005ab310 (CSWGlobalVariableTable::WriteTable) - Iterates through identifier table
+            // No explicit error handling in original, but we handle cases where GetGlobalNames is not implemented or fails gracefully
             IEnumerable<string> globalNames;
             try
             {
@@ -814,7 +817,9 @@ namespace Andastra.Game.Games.Odyssey
             var processedVariables = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             // Iterate through all global variable names and serialize them by type
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Processes each variable type separately
+            // swkotor.exe: 0x005299b0 (CSWGlobalVariableTable::WriteTable) - Processes each variable type separately
+            // swkotor2.exe: 0x005ab310 (CSWGlobalVariableTable::WriteTable) - Processes each variable type separately
+            // The original engine iterates through variables stored in separate typed dictionaries and serializes them by type
             foreach (string varName in globalNames)
             {
                 if (string.IsNullOrEmpty(varName) || processedVariables.Contains(varName))
@@ -831,7 +836,10 @@ namespace Andastra.Game.Games.Odyssey
 
                 // Determine variable type by attempting to retrieve it as each type
                 // Priority: bool (type 0), int (type 1), string (type 3)
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Variables are stored in separate typed dictionaries
+                // swkotor.exe: 0x005299b0 (CSWGlobalVariableTable::WriteTable) - Variables are stored in separate typed dictionaries
+                // swkotor2.exe: 0x005ab310 (CSWGlobalVariableTable::WriteTable) - Variables are stored in separate typed dictionaries
+                // The original engine maintains separate arrays for each variable type (bool, int, location, string) in memory.
+                // Variable type is determined by the top 2 bits of the identifier word: 0=bool, 1=int, 2=location, 3=string.
                 // The IGameState interface routes GetGlobal<T> to the appropriate dictionary based on T
                 // Based on SaveSystem implementation: ScriptGlobals uses separate dictionaries (_globalBools, _globalInts, _globalStrings)
 
@@ -5381,7 +5389,8 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Add GLOBALVARS.res (global variable state)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005ac670 @ 0x005ac670 saves global variables
+            // swkotor.exe: 0x0052ad10 (CSWGlobalVariableTable::Save) - Saves global variables to GFF
+            // swkotor2.exe: 0x005ac670 (CSWGlobalVariableTable::Save) - Saves global variables to GFF
             if (saveData.GameState != null)
             {
                 try
