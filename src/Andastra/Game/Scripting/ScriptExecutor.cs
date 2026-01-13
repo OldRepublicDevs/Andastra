@@ -61,7 +61,11 @@ namespace Andastra.Game.Scripting
         /// </summary>
         /// <remarks>
         /// Odyssey-specific script execution using Installation resource provider.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) script loading and execution patterns.
+        /// ExecuteCommandExecuteScript @ (K1: 0x00535b70, TSL: TODO: Find this address) script loading and execution patterns.
+        /// - K1: ExecuteCommandExecuteScript @ 0x00535b70 (swkotor.exe) - Command handler for ExecuteScript NWScript command, processes script ResRef and object ID from VM stack, calls CVirtualMachine::RunScript @ 0x005d45d0 for actual execution. Registered at command index 8 in CSWVirtualMachineCommands::InitializeCommands @ 0x0054c960.
+        /// - TSL: Equivalent function address needs verification (expected similar pattern in swkotor2.exe).
+        /// - Script loading: Loads NCS bytecode from resource provider (Installation.Resources.LookupResource or IGameResourceProvider.GetResourceBytes).
+        /// - Script execution: Executes NCS bytecode via NcsVm with entity as caller (OBJECT_SELF), creates ExecutionContext with owner and triggerer.
         /// </remarks>
         public int ExecuteScript(string scriptResRef, IEntity owner, IEntity triggerer)
         {
