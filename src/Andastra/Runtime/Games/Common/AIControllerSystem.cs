@@ -1,13 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using Andastra.Runtime.Core.Actions;
 using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
+using Andastra.Runtime.Core.Entities;
 using Andastra.Game.Games.Common;
 using JetBrains.Annotations;
+using EffectType = Andastra.Runtime.Core.Combat.EffectType;
 
 namespace Andastra.Runtime.Games.Common
 {
@@ -34,13 +37,20 @@ namespace Andastra.Runtime.Games.Common
     /// - Eclipse: daorigins.exe/DragonAge2.exe AI system with UnrealScript integration
     /// </remarks>
     [PublicAPI]
-    public class AIControllerSystem : BaseAIControllerSystem
+    public class AIControllerSystem
     {
+        private readonly IWorld _world;
         private readonly EngineFamily _engineFamily;
         private readonly Action<IEntity, ScriptEvent, IEntity> _fireScriptEvent;
+        private readonly Dictionary<IEntity, float> _heartbeatTimers;
+        private readonly Dictionary<IEntity, float> _perceptionTimers;
         private readonly Dictionary<IEntity, IdleState> _idleStates;
         private readonly Dictionary<IEntity, float> _idleTimers;
         private readonly Random _random;
+
+        // Constants
+        private const float HeartbeatInterval = 6.0f;
+        private const float PerceptionUpdateInterval = 0.5f;
 
         // Engine-specific idle behavior constants
         private readonly float _idleWanderRadius;
@@ -50,10 +60,12 @@ namespace Andastra.Runtime.Games.Common
         private readonly float _patrolWaitTime;
 
         public AIControllerSystem([NotNull] IWorld world, EngineFamily engineFamily, Action<IEntity, ScriptEvent, IEntity> fireScriptEvent)
-            : base(world)
         {
+            _world = world ?? throw new ArgumentNullException(nameof(world));
             _engineFamily = engineFamily;
             _fireScriptEvent = fireScriptEvent ?? throw new ArgumentNullException(nameof(fireScriptEvent));
+            _heartbeatTimers = new Dictionary<IEntity, float>();
+            _perceptionTimers = new Dictionary<IEntity, float>();
             _idleStates = new Dictionary<IEntity, IdleState>();
             _idleTimers = new Dictionary<IEntity, float>();
             _random = new Random();
@@ -95,9 +107,183 @@ namespace Andastra.Runtime.Games.Common
         }
 
         /// <summary>
+        /// Updates AI for all NPCs in the world.
+        /// </summary>
+        public virtual void Update(float deltaTime)
+        {
+            if (_world.CurrentArea == null)
+            {
+                return;
+            }
+
+            // Get all creatures in the current area
+            var creatures = GetCreaturesInCurrentArea();
+
+            foreach (var entity in creatures)
+            {
+                UpdateCreatureAI(entity, deltaTime);
+            }
+        }
+
+        /// <summary>
+        /// Gets all creatures in the current area.
+        /// </summary>
+        private IEnumerable<IEntity> GetCreaturesInCurrentArea()
+        {
+            return _world.GetEntitiesInRadius(
+                System.Numerics.Vector3.Zero,
+                float.MaxValue,
+                ObjectType.Creature);
+        }
+
+        /// <summary>
+        /// Updates heartbeat timer for a creature.
+        /// </summary>
+        private void UpdateHeartbeat(IEntity creature, float deltaTime)
+        {
+            if (!_heartbeatTimers.ContainsKey(creature))
+            {
+                _heartbeatTimers[creature] = 0f;
+            }
+
+            _heartbeatTimers[creature] += deltaTime;
+
+            if (_heartbeatTimers[creature] >= HeartbeatInterval)
+            {
+                _heartbeatTimers[creature] = 0f;
+                FireHeartbeatScript(creature);
+            }
+        }
+
+        /// <summary>
+        /// Updates perception timer for a creature.
+        /// </summary>
+        private void UpdatePerception(IEntity creature, float deltaTime)
+        {
+            if (!_perceptionTimers.ContainsKey(creature))
+            {
+                _perceptionTimers[creature] = 0f;
+            }
+
+            _perceptionTimers[creature] += deltaTime;
+
+            if (_perceptionTimers[creature] >= PerceptionUpdateInterval)
+            {
+                _perceptionTimers[creature] = 0f;
+                CheckPerception(creature);
+            }
+        }
+
+        /// <summary>
+        /// Checks if creature is player-controlled.
+        /// </summary>
+        private bool IsPlayerControlled(IEntity creature)
+        {
+            if (creature == null)
+            {
+                return false;
+            }
+
+            // Check if creature has a tag indicating it's the player
+            string tag = creature.Tag ?? string.Empty;
+            return tag.Equals("Player", StringComparison.OrdinalIgnoreCase) ||
+                   tag.Equals("PC", StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Checks if creature is in conversation.
+        /// </summary>
+        private bool IsInConversation(IEntity creature)
+        {
+            if (_engineFamily == EngineFamily.Eclipse)
+            {
+                if (creature == null || !creature.IsValid)
+                {
+                    return false;
+                }
+
+                if (creature is Entity concreteEntity)
+                {
+                    bool inConversation = concreteEntity.GetData<bool>("InConversation", false);
+                    if (inConversation)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Checks if creature is in combat.
+        /// </summary>
+        private bool IsInCombat(IEntity creature)
+        {
+            if (creature == null || !creature.IsValid)
+            {
+                return false;
+            }
+
+            // Check if creature's HP is below max (recently damaged)
+            IStatsComponent stats = creature.GetComponent<IStatsComponent>();
+            if (stats != null && stats.CurrentHP < stats.MaxHP)
+            {
+                return true;
+            }
+
+            // Check perception for hostile creatures
+            IPerceptionComponent perception = creature.GetComponent<IPerceptionComponent>();
+            if (perception != null)
+            {
+                IFactionComponent faction = creature.GetComponent<IFactionComponent>();
+                if (faction != null)
+                {
+                    // Check all seen objects for hostile creatures
+                    foreach (IEntity seenEntity in perception.GetSeenObjects())
+                    {
+                        if (seenEntity == null || !seenEntity.IsValid)
+                        {
+                            continue;
+                        }
+
+                        if (faction.IsHostile(seenEntity))
+                        {
+                            IStatsComponent seenStats = seenEntity.GetComponent<IStatsComponent>();
+                            if (seenStats != null && seenStats.CurrentHP > 0)
+                            {
+                                return true;
+                            }
+                        }
+                    }
+
+                    // Check all heard objects for hostile creatures
+                    foreach (IEntity heardEntity in perception.GetHeardObjects())
+                    {
+                        if (heardEntity == null || !heardEntity.IsValid)
+                        {
+                            continue;
+                        }
+
+                        if (faction.IsHostile(heardEntity))
+                        {
+                            IStatsComponent heardStats = heardEntity.GetComponent<IStatsComponent>();
+                            if (heardStats != null && heardStats.CurrentHP > 0)
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Fires heartbeat script for a creature.
         /// </summary>
-        protected override void FireHeartbeatScript(IEntity creature)
+        private void FireHeartbeatScript(IEntity creature)
         {
             IScriptHooksComponent scriptHooks = creature.GetComponent<IScriptHooksComponent>();
             if (scriptHooks != null)
@@ -113,7 +299,7 @@ namespace Andastra.Runtime.Games.Common
         /// <summary>
         /// Checks perception for a creature.
         /// </summary>
-        protected override void CheckPerception(IEntity creature)
+        private void CheckPerception(IEntity creature)
         {
             IPerceptionComponent perception = creature.GetComponent<IPerceptionComponent>();
             if (perception == null)
@@ -379,7 +565,7 @@ namespace Andastra.Runtime.Games.Common
         /// <summary>
         /// Handles combat AI for a creature.
         /// </summary>
-        protected override void HandleCombatAI(IEntity creature)
+        private void HandleCombatAI(IEntity creature)
         {
             IEntity nearestEnemy = FindNearestEnemy(creature);
             if (nearestEnemy != null)
@@ -455,21 +641,62 @@ namespace Andastra.Runtime.Games.Common
         /// <summary>
         /// Updates AI for a single creature, including idle behavior timing.
         /// </summary>
-        protected override void UpdateCreatureAI(IEntity creature, float deltaTime)
+        private void UpdateCreatureAI(IEntity creature, float deltaTime)
         {
+            // Skip if creature is invalid or is player-controlled
+            if (creature == null || !creature.IsValid)
+            {
+                return;
+            }
+
+            // Check if this is a player character (skip AI)
+            if (IsPlayerControlled(creature))
+            {
+                return;
+            }
+
+            // Check if creature is in conversation (skip AI during dialogue)
+            if (IsInConversation(creature))
+            {
+                return;
+            }
+
+            // Process action queue first
+            IActionQueueComponent actionQueue = creature.GetComponent<IActionQueueComponent>();
+            if (actionQueue != null && actionQueue.CurrentAction != null)
+            {
+                // Action queue is processing, let it continue
+                return;
+            }
+
+            // Update idle timer
             if (!_idleTimers.ContainsKey(creature))
             {
                 _idleTimers[creature] = 0f;
             }
             _idleTimers[creature] += deltaTime;
 
-            base.UpdateCreatureAI(creature, deltaTime);
+            // Update heartbeat timer
+            UpdateHeartbeat(creature, deltaTime);
+
+            // Update perception
+            UpdatePerception(creature, deltaTime);
+
+            // Default combat behavior
+            if (IsInCombat(creature))
+            {
+                HandleCombatAI(creature);
+            }
+            else
+            {
+                HandleIdleAI(creature);
+            }
         }
 
         /// <summary>
         /// Handles idle AI for a creature.
         /// </summary>
-        protected override void HandleIdleAI(IEntity creature)
+        private void HandleIdleAI(IEntity creature)
         {
             if (creature == null || !creature.IsValid)
             {
@@ -759,39 +986,16 @@ namespace Andastra.Runtime.Games.Common
             return waypoints;
         }
 
-        /// <summary>
-        /// Checks if creature is in conversation (Eclipse-specific override).
-        /// </summary>
-        protected override bool IsInConversation(IEntity creature)
-        {
-            if (_engineFamily == EngineFamily.Eclipse)
-            {
-                if (creature == null || !creature.IsValid)
-                {
-                    return false;
-                }
-
-                if (creature is Entity concreteEntity)
-                {
-                    bool inConversation = concreteEntity.GetData<bool>("InConversation", false);
-                    if (inConversation)
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return base.IsInConversation(creature);
-        }
 
         /// <summary>
-        /// Cleans up idle state for a destroyed entity.
+        /// Cleans up AI state for a destroyed entity.
         /// </summary>
-        public override void OnEntityDestroyed(IEntity entity)
+        public virtual void OnEntityDestroyed(IEntity entity)
         {
-            base.OnEntityDestroyed(entity);
             if (entity != null)
             {
+                _heartbeatTimers.Remove(entity);
+                _perceptionTimers.Remove(entity);
                 _idleStates.Remove(entity);
                 _idleTimers.Remove(entity);
             }
