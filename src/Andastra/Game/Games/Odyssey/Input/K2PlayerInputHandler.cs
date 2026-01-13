@@ -7,6 +7,7 @@ using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Movement;
 using Andastra.Runtime.Core.Party;
 using Andastra.Game.Games.Odyssey.Components;
+using Andastra.Game.Games.Odyssey.Systems;
 
 namespace Andastra.Game.Games.Odyssey.Input
 {
@@ -15,7 +16,9 @@ namespace Andastra.Game.Games.Odyssey.Input
     /// </summary>
     /// <remarks>
     /// K2 Player Input Handler:
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) input system further analysis
+    /// - Input processing system (swkotor2.exe): Cursor mode determination and input handling
+    /// - UpdateCreatureMovement @ 0x0054be70: Handles movement updates during input processing
+    /// - SerializeCreature_K2 @ 0x005226d0: NOT related to input (saves creature data to GFF)
     /// - Located via string references: "Mouse Sensitivity" @ 0x007c85cc, "Mouse Look" @ 0x007c8608, "Reverse Mouse Buttons" @ 0x007c8628
     /// - "EnableHardwareMouse" @ 0x007c71c8, "Enable Mouse Teleporting To Buttons" @ 0x007c85a8
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED" @ 0x007bc704, "OnClick" @ 0x007c1a20
@@ -64,15 +67,18 @@ namespace Andastra.Game.Games.Odyssey.Input
         /// <param name="hoveredEntity">The entity under the cursor.</param>
         /// <returns>The appropriate cursor mode.</returns>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) reverse engineering:
+        /// Cursor mode determination with combat form support (swkotor2.exe):
         /// - K2 has Combat Forms which can affect cursor display (attack cursor variations)
-        /// - 0x005226d0 @ 0x005226d0 processes input and determines cursor mode
+        /// - Cursor mode determination is part of the input processing system (exact function address TBD)
+        /// - UpdateCreatureMovement @ 0x0054be70 handles movement updates during input processing
+        /// - SerializeCreature_K2 @ 0x005226d0 is NOT related to input processing (saves creature data to GFF)
         /// - K2-specific: Combat forms (Juyo, Makashi, etc.) affect cursor appearance when hovering over hostile targets
         /// - Combat forms are stored as "ActiveCombatForm" in entity data (int value matching CombatForm enum)
         /// - Lightsaber forms (258-264) affect attack cursor display
         /// - Force forms (265-268) do not affect cursor display (use standard Attack cursor)
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Combat forms are tracked in entity stats/combat state
+        /// - Combat forms are tracked in entity stats/combat state
         /// - Original implementation: swkotor2.exe checks active combat form when determining attack cursor
+        /// - Further reverse engineering needed: Exact function address for cursor mode determination in input processing system
         /// </remarks>
         protected override CursorMode DetermineCursorMode(IEntity hoveredEntity)
         {
@@ -128,12 +134,13 @@ namespace Andastra.Game.Games.Odyssey.Input
         /// </summary>
         /// <returns>The active combat form, or None if no form is active or leader is not available.</returns>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) reverse engineering:
+        /// Active combat form retrieval (swkotor2.exe):
         /// - Combat forms are stored as "ActiveCombatForm" in entity data
         /// - GetIsFormActive NWScript function checks if specific form is active
         /// - Form values match CombatForm enum constants (258-268 for lightsaber/force forms)
         /// - Original implementation: swkotor2.exe stores active form in creature data structure
         /// - Form activation: Set via SetIsFormActive NWScript function or combat form selection UI
+        /// - Further reverse engineering needed: Exact function address for GetIsFormActive NWScript implementation
         /// </remarks>
         private CombatForm GetActiveCombatForm()
         {
@@ -145,8 +152,9 @@ namespace Andastra.Game.Games.Odyssey.Input
             }
 
             // Get active combat form from entity data (stored as "ActiveCombatForm")
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ActiveCombatForm is stored as int in entity data
+            // ActiveCombatForm is stored as int in entity data (swkotor2.exe)
             // Located via string references: GetIsFormActive function checks "ActiveCombatForm" data
+            // Further reverse engineering needed: Exact function address for GetIsFormActive NWScript implementation
             if (leader.HasData("ActiveCombatForm"))
             {
                 int activeFormValue = leader.GetData<int>("ActiveCombatForm", 0);
@@ -168,11 +176,13 @@ namespace Andastra.Game.Games.Odyssey.Input
         /// </summary>
         /// <returns>The attack range for the current weapon.</returns>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) reverse engineering:
+        /// Attack range calculation with K2-specific features (swkotor2.exe):
         /// - K2 has prestige classes which can affect weapon proficiency and range
         /// - Combat forms can affect attack range in some cases
         /// - Base weapon range calculation is similar to K1, but with K2-specific modifiers
         /// - Located via string references: Weapon range calculations in combat system
+        /// - Reads maxattackrange from baseitems.2da using BaseItem ID
+        /// - Further reverse engineering needed: Exact function address for weapon range calculation
         /// </remarks>
         protected override float GetAttackRange()
         {
@@ -184,9 +194,10 @@ namespace Andastra.Game.Games.Odyssey.Input
             }
 
             // Get equipped weapon from main hand (slot 4)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): INVENTORY_SLOT_RIGHTWEAPON = 4
+            // INVENTORY_SLOT_RIGHTWEAPON = 4 (swkotor2.exe)
             // Located via string references: "INVENTORY_SLOT_RIGHTWEAPON" = 4
             // Original implementation: Gets equipped weapon from right hand slot
+            // Further reverse engineering needed: Exact function address for inventory slot access
             IInventoryComponent inventory = leader.GetComponent<IInventoryComponent>();
             if (inventory == null)
             {
@@ -211,12 +222,13 @@ namespace Andastra.Game.Games.Odyssey.Input
             }
 
             // Get base item ID from weapon component and look up attack range from baseitems.2da
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) weapon system
+            // Weapon system (swkotor2.exe): Reads maxattackrange from baseitems.2da using BaseItem ID
             // Located via string references: "WeaponType" in baseitems.2da, "maxattackrange" column
             // Original implementation: Reads maxattackrange from baseitems.2da using BaseItem ID
             // xoreos implementation: Item::getMaxAttackRange() @ vendor/xoreos/src/engines/kotorbase/item.cpp:74
             //   Reads _maxAttackRange = twoDA.getFloat("maxattackrange") from baseitems.2da
             // PyKotor documentation: baseitems.2da has "maxattackrange" column (Integer) for maximum attack range
+            // Further reverse engineering needed: Exact function address for baseitems.2da lookup
             IItemComponent itemComponent = weapon.GetComponent<IItemComponent>();
             if (itemComponent != null && World?.GameDataProvider != null)
             {
@@ -224,7 +236,7 @@ namespace Andastra.Game.Games.Odyssey.Input
                 if (baseItemId >= 0)
                 {
                     // Read maxattackrange from baseitems.2da using GameDataProvider
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Reads maxattackrange column from baseitems.2da row indexed by BaseItem ID
+                    // Reads maxattackrange column from baseitems.2da row indexed by BaseItem ID (swkotor2.exe)
                     float maxAttackRange = World.GameDataProvider.GetTableFloat("baseitems", baseItemId, "maxattackrange", 0.0f);
                     if (maxAttackRange > 0.0f)
                     {
@@ -235,7 +247,7 @@ namespace Andastra.Game.Games.Odyssey.Input
                     }
 
                     // Fallback: Check if ranged weapon to use default ranged range
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Ranged weapons have longer default range than melee
+                    // Ranged weapons have longer default range than melee (swkotor2.exe)
                     // Read rangedweapon flag from baseitems.2da to determine if ranged
                     int rangedWeapon = (int)World.GameDataProvider.GetTableFloat("baseitems", baseItemId, "rangedweapon", 0.0f);
                     if (rangedWeapon != 0)
@@ -257,12 +269,11 @@ namespace Andastra.Game.Games.Odyssey.Input
         /// <param name="entity">The entity to check.</param>
         /// <returns>True if the entity is hostile.</returns>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) reverse engineering:
+        /// Hostility check with K2 Influence system (swkotor2.exe):
         /// - K2 has an Influence system that can affect faction relationships
         /// - Party member influence can change how NPCs react (hostile/friendly)
         /// - Base hostility check is similar to K1, but with K2-specific influence modifiers
         /// - Located via string references: Faction system, influence system
-        /// - swkotor2.exe: 0x005226d0 @ 0x005226d0 (player input handling) checks influence when determining hostility
         /// - Influence system: Party member influence (0-100, 50 = neutral) affects NPC reactions
         /// - High influence (80-100) with certain party members can make NPCs more friendly
         /// - Low influence (0-20) can make NPCs more hostile
@@ -275,6 +286,7 @@ namespace Andastra.Game.Games.Odyssey.Input
         ///   - Influence modifier is averaged across active party members
         ///   - Modified reputation = base reputation + influence modifier
         ///   - Hostility threshold: reputation <= 10 = hostile
+        /// - Further reverse engineering needed: Exact function address for influence-based hostility check
         /// </remarks>
         protected override bool IsHostile(IEntity entity)
         {
@@ -331,10 +343,11 @@ namespace Andastra.Game.Games.Odyssey.Input
         /// </summary>
         /// <returns>The FactionManager instance, or null if not available.</returns>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) reverse engineering:
+        /// FactionManager access (swkotor2.exe):
         /// - FactionManager is accessible through entity components or world context
         /// - FactionComponent has reference to FactionManager for reputation lookups
         /// - Original implementation: FactionManager is stored in GameSession and accessible through components
+        /// - Further reverse engineering needed: Exact function address for FactionManager access
         /// </remarks>
         private FactionManager GetFactionManager()
         {
@@ -370,7 +383,7 @@ namespace Andastra.Game.Games.Odyssey.Input
         /// <param name="targetEntity">The target entity to check influence effects for.</param>
         /// <returns>The reputation modifier (-20 to +20) based on party influence.</returns>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) reverse engineering:
+        /// Influence-based reputation modifier calculation (swkotor2.exe):
         /// - Influence system affects how NPCs react to the party
         /// - Each active party member's influence (0-100, 50 = neutral) contributes to reputation modifier
         /// - High influence (80-100): Positive modifier (makes NPCs more friendly)
@@ -383,6 +396,7 @@ namespace Andastra.Game.Games.Odyssey.Input
         ///   - Average modifier across all active party members
         /// - Original implementation: swkotor2.exe calculates influence modifier when determining hostility
         /// - Some NPCs may have specific relationships with certain party members (not implemented here, would require NPC-specific data)
+        /// - Further reverse engineering needed: Exact function address for influence modifier calculation
         /// </remarks>
         private int CalculateInfluenceReputationModifier(IEntity targetEntity)
         {
